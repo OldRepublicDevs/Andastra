@@ -73,11 +73,12 @@ Current test coverage includes:
 - ✅ PatcherConfig (configuration management)
 - ✅ LogLevel (enum behavior)
 - ✅ PatcherNamespace (namespace handling)
-- 🚧 2DA modifications (planned)
-- 🚧 GFF modifications (planned)
-- 🚧 TLK modifications (planned)
-- 🚧 SSF modifications (planned)
-- 🚧 Config reader/INI parsing (planned)
+- ✅ 2DA modifications
+- ✅ GFF modifications
+- ✅ TLK modifications
+- ✅ SSF modifications
+- 🚧 NSS/NCS modifications
+- ✅ Config reader/INI parsing
 
 ## Building
 
