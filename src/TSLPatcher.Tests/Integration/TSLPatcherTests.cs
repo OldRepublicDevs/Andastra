@@ -34,7 +34,7 @@ public class TSLPatcherTests
         // It sets CaseInsensitive = false.
         parser.Configuration.CaseInsensitive = false;
 
-        var iniData = parser.Parse(iniText);
+        IniParser.Model.IniData iniData = parser.Parse(iniText);
         var config = new PatcherConfig();
 
         string actualModPath = string.IsNullOrEmpty(modPath) ? Path.GetTempPath() : modPath;
@@ -68,7 +68,7 @@ public class TSLPatcherTests
             Col1=X
         ";
 
-        var config = SetupIniAndConfig(iniText);
+        PatcherConfig config = SetupIniAndConfig(iniText);
         var memory = new PatcherMemory();
         var logger = new PatchLogger();
 
@@ -113,7 +113,7 @@ public class TSLPatcherTests
             Col1=X
         ";
 
-        var config = SetupIniAndConfig(iniText);
+        PatcherConfig config = SetupIniAndConfig(iniText);
         var memory = new PatcherMemory();
         var logger = new PatchLogger();
 
@@ -145,7 +145,7 @@ public class TSLPatcherTests
             Col2=new_b
         ";
 
-        var config = SetupIniAndConfig(iniText);
+        PatcherConfig config = SetupIniAndConfig(iniText);
         var memory = new PatcherMemory();
         var logger = new PatchLogger();
 
@@ -154,7 +154,7 @@ public class TSLPatcherTests
 
         // Assert
         twoda.GetHeight().Should().Be(2);
-        var newRow = twoda.GetRow(1);
+        TwoDARow newRow = twoda.GetRow(1);
         newRow.GetString("Col1").Should().Be("new_a");
         newRow.GetString("Col2").Should().Be("new_b");
     }
@@ -178,7 +178,7 @@ public class TSLPatcherTests
             Col1=modified_a
         ";
 
-        var config = SetupIniAndConfig(iniText);
+        PatcherConfig config = SetupIniAndConfig(iniText);
         var memory = new PatcherMemory();
         var logger = new PatchLogger();
 
@@ -187,7 +187,7 @@ public class TSLPatcherTests
 
         // Assert
         twoda.GetHeight().Should().Be(2);
-        var copiedRow = twoda.GetRow(1);
+        TwoDARow copiedRow = twoda.GetRow(1);
         copiedRow.GetString("Col1").Should().Be("modified_a"); // Modified
         copiedRow.GetString("Col2").Should().Be("b"); // Copied from row 0
     }
@@ -226,7 +226,7 @@ public class TSLPatcherTests
             Value=123
         ";
 
-        var config = SetupIniAndConfig(iniText);
+        PatcherConfig config = SetupIniAndConfig(iniText);
         config.PatchesGFF[0].Apply(gff, memory, logger, Game.K1);
 
         // Expected:
@@ -235,7 +235,7 @@ public class TSLPatcherTests
 
         gff.Root.Exists("SomeStruct").Should().BeTrue();
         gff.Root.GetFieldType("SomeStruct").Should().Be(GFFFieldType.Struct);
-        var someStruct = gff.Root.GetStruct("SomeStruct");
+        GFFStruct someStruct = gff.Root.GetStruct("SomeStruct");
         someStruct.Should().NotBeNull();
         someStruct!.StructId.Should().Be(321);
 
@@ -268,12 +268,12 @@ public class TSLPatcherTests
             StrRef=2DAMEMORY5
         ";
 
-        var config = SetupIniAndConfig(iniText);
+        PatcherConfig config = SetupIniAndConfig(iniText);
         config.PatchesGFF[0].Apply(gff, memory, logger, Game.K1);
 
         gff.Root.Exists("Field1").Should().BeTrue();
         gff.Root.GetFieldType("Field1").Should().Be(GFFFieldType.LocalizedString);
-        var locString = gff.Root.GetLocString("Field1");
+        LocalizedString locString = gff.Root.GetLocString("Field1");
         locString.StringRef.Should().Be(123);
     }
 
@@ -310,11 +310,11 @@ public class TSLPatcherTests
             Value=42
         ";
 
-        var config = SetupIniAndConfig(iniText);
+        PatcherConfig config = SetupIniAndConfig(iniText);
         config.PatchesGFF[0].Apply(gff, memory, logger, Game.K1);
 
         // Verify:
-        var parentStruct = gff.Root.GetStruct("ParentStruct");
+        GFFStruct parentStruct = gff.Root.GetStruct("ParentStruct");
         parentStruct.Should().NotBeNull();
 
         bool atRoot = gff.Root.Exists("ChildField");

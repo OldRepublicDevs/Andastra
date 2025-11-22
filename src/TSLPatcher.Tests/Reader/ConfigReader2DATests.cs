@@ -58,16 +58,16 @@ ChangeRow0=RowLabel0
 [RowLabel0]
 LabelIndex=5
 ";
-        var ini = _parser.Parse(iniText);
+        IniData ini = _parser.Parse(iniText);
         var config = new PatcherConfig();
         var reader = new ConfigReader(ini, _tempDir, null, _modPath);
 
         // Act
-        var result = reader.Load(config);
+        PatcherConfig result = reader.Load(config);
 
         // Assert
         result.Patches2DA.Should().Contain(p => p.SaveAs == "appearance.2da");
-        var modifiers = result.Patches2DA.First(p => p.SaveAs == "appearance.2da").Modifiers;
+        List<Modify2DA> modifiers = result.Patches2DA.First(p => p.SaveAs == "appearance.2da").Modifiers;
         modifiers.Should().HaveCount(1);
 
         var changeRow = modifiers[0] as ChangeRow2DA;
@@ -89,12 +89,12 @@ ChangeRow0=RowLabel0
 [RowLabel0]
 RowIndex=5
 ";
-        var ini = _parser.Parse(iniText);
+        IniData ini = _parser.Parse(iniText);
         var config = new PatcherConfig();
         var reader = new ConfigReader(ini, _tempDir, null, _modPath);
 
         // Act
-        var result = reader.Load(config);
+        PatcherConfig result = reader.Load(config);
 
         // Assert
         var changeRow = result.Patches2DA.First(p => p.SaveAs == "appearance.2da").Modifiers[0] as ChangeRow2DA;
@@ -119,12 +119,12 @@ ChangeRow0=RowLabel0
 [RowLabel0]
 RowLabel=P_BastilaBB
 ";
-        var ini = _parser.Parse(iniText);
+        IniData ini = _parser.Parse(iniText);
         var config = new PatcherConfig();
         var reader = new ConfigReader(ini, _tempDir, null, _modPath);
 
         // Act
-        var result = reader.Load(config);
+        PatcherConfig result = reader.Load(config);
 
         // Assert
         var changeRow = result.Patches2DA.First(p => p.SaveAs == "appearance.2da").Modifiers[0] as ChangeRow2DA;
@@ -149,12 +149,12 @@ ChangeRow0=RowLabel0
 [RowLabel0]
 LabelIndex=10
 ";
-        var ini = _parser.Parse(iniText);
+        IniData ini = _parser.Parse(iniText);
         var config = new PatcherConfig();
         var reader = new ConfigReader(ini, _tempDir, null, _modPath);
 
         // Act
-        var result = reader.Load(config);
+        PatcherConfig result = reader.Load(config);
 
         // Assert
         var changeRow = result.Patches2DA.First(p => p.SaveAs == "appearance.2da").Modifiers[0] as ChangeRow2DA;
@@ -182,12 +182,12 @@ RowIndex=5
 2DAMEMORY1=RowLabel
 2DAMEMORY2=normalhead
 ";
-        var ini = _parser.Parse(iniText);
+        IniData ini = _parser.Parse(iniText);
         var config = new PatcherConfig();
         var reader = new ConfigReader(ini, _tempDir, null, _modPath);
 
         // Act
-        var result = reader.Load(config);
+        PatcherConfig result = reader.Load(config);
 
         // Assert
         var changeRow = result.Patches2DA.First(p => p.SaveAs == "appearance.2da").Modifiers[0] as ChangeRow2DA;
@@ -202,6 +202,37 @@ RowIndex=5
         var store2 = changeRow.Store2DA[2] as RowValueRowCell;
         store2.Should().NotBeNull();
         store2!.Column.Should().Be("normalhead");
+    }
+
+    [Fact]
+    public void TwoDA_ChangeRow_ShouldLoadStore2DAMemoryWithTokenId5()
+    {
+        // Arrange - Test with token ID 5 to verify it works for higher token IDs
+        // This matches the exact INI text from the failing integration test
+        string iniText = @"
+[2DAList]
+Table0=test.2da
+
+[test.2da]
+ChangeRow0=change_row_0
+
+[change_row_0]
+RowIndex=1
+2DAMEMORY5=RowLabel
+";
+        IniData ini = _parser.Parse(iniText);
+        var config = new PatcherConfig();
+        var reader = new ConfigReader(ini, _tempDir, null, _modPath);
+
+        // Act
+        PatcherConfig result = reader.Load(config);
+
+        // Assert
+        var changeRow = result.Patches2DA.First(p => p.SaveAs == "test.2da").Modifiers[0] as ChangeRow2DA;
+        changeRow.Should().NotBeNull();
+        changeRow!.Store2DA.Should().HaveCount(1, $"Store2DA should have 1 entry, but has keys: {string.Join(", ", changeRow.Store2DA.Keys)}");
+        changeRow.Store2DA.Should().ContainKey(5);
+        changeRow.Store2DA[5].Should().BeOfType<RowValueRowLabel>();
     }
 
     [Fact]
@@ -221,12 +252,12 @@ normalhead=123
 backuphead=StrRef5
 modelj=2DAMEMORY3
 ";
-        var ini = _parser.Parse(iniText);
+        IniData ini = _parser.Parse(iniText);
         var config = new PatcherConfig();
         var reader = new ConfigReader(ini, _tempDir, null, _modPath);
 
         // Act
-        var result = reader.Load(config);
+        PatcherConfig result = reader.Load(config);
 
         // Assert
         var changeRow = result.Patches2DA.First(p => p.SaveAs == "appearance.2da").Modifiers[0] as ChangeRow2DA;
@@ -266,12 +297,12 @@ AddRow0=NewSpell
 [NewSpell]
 label=new_spell_123
 ";
-        var ini = _parser.Parse(iniText);
+        IniData ini = _parser.Parse(iniText);
         var config = new PatcherConfig();
         var reader = new ConfigReader(ini, _tempDir, null, _modPath);
 
         // Act
-        var result = reader.Load(config);
+        PatcherConfig result = reader.Load(config);
 
         // Assert
         var addRow = result.Patches2DA.First(p => p.SaveAs == "spells.2da").Modifiers[0] as AddRow2DA;
@@ -294,12 +325,12 @@ AddRow0=NewSpell
 label=my_custom_spell
 name=12345
 ";
-        var ini = _parser.Parse(iniText);
+        IniData ini = _parser.Parse(iniText);
         var config = new PatcherConfig();
         var reader = new ConfigReader(ini, _tempDir, null, _modPath);
 
         // Act
-        var result = reader.Load(config);
+        PatcherConfig result = reader.Load(config);
 
         // Assert
         var addRow = result.Patches2DA.First(p => p.SaveAs == "spells.2da").Modifiers[0] as AddRow2DA;
@@ -322,12 +353,12 @@ ExclusiveColumn=label
 label=unique_spell
 name=12345
 ";
-        var ini = _parser.Parse(iniText);
+        IniData ini = _parser.Parse(iniText);
         var config = new PatcherConfig();
         var reader = new ConfigReader(ini, _tempDir, null, _modPath);
 
         // Act
-        var result = reader.Load(config);
+        PatcherConfig result = reader.Load(config);
 
         // Assert
         var addRow = result.Patches2DA.First(p => p.SaveAs == "spells.2da").Modifiers[0] as AddRow2DA;
@@ -351,12 +382,12 @@ label=new_spell
 2DAMEMORY1=RowLabel
 2DAMEMORY2=name
 ";
-        var ini = _parser.Parse(iniText);
+        IniData ini = _parser.Parse(iniText);
         var config = new PatcherConfig();
         var reader = new ConfigReader(ini, _tempDir, null, _modPath);
 
         // Act
-        var result = reader.Load(config);
+        PatcherConfig result = reader.Load(config);
 
         // Assert
         var addRow = result.Patches2DA.First(p => p.SaveAs == "spells.2da").Modifiers[0] as AddRow2DA;
@@ -392,12 +423,12 @@ CopyRow0=CopyLabel
 RowIndex=5
 label=copied_row
 ";
-        var ini = _parser.Parse(iniText);
+        IniData ini = _parser.Parse(iniText);
         var config = new PatcherConfig();
         var reader = new ConfigReader(ini, _tempDir, null, _modPath);
 
         // Act
-        var result = reader.Load(config);
+        PatcherConfig result = reader.Load(config);
 
         // Assert
         var copyRow = result.Patches2DA.First(p => p.SaveAs == "appearance.2da").Modifiers[0] as CopyRow2DA;
@@ -420,12 +451,12 @@ CopyRow0=CopyLabel
 RowIndex=5
 label=copied_row
 ";
-        var ini = _parser.Parse(iniText);
+        IniData ini = _parser.Parse(iniText);
         var config = new PatcherConfig();
         var reader = new ConfigReader(ini, _tempDir, null, _modPath);
 
         // Act
-        var result = reader.Load(config);
+        PatcherConfig result = reader.Load(config);
 
         // Assert
         var copyRow = result.Patches2DA.First(p => p.SaveAs == "appearance.2da").Modifiers[0] as CopyRow2DA;
@@ -452,12 +483,12 @@ RowIndex=5
 ExclusiveColumn=label
 label=unique_copy
 ";
-        var ini = _parser.Parse(iniText);
+        IniData ini = _parser.Parse(iniText);
         var config = new PatcherConfig();
         var reader = new ConfigReader(ini, _tempDir, null, _modPath);
 
         // Act
-        var result = reader.Load(config);
+        PatcherConfig result = reader.Load(config);
 
         // Assert
         var copyRow = result.Patches2DA.First(p => p.SaveAs == "appearance.2da").Modifiers[0] as CopyRow2DA;
@@ -480,12 +511,12 @@ RowIndex=5
 label=new_label
 normalhead=999
 ";
-        var ini = _parser.Parse(iniText);
+        IniData ini = _parser.Parse(iniText);
         var config = new PatcherConfig();
         var reader = new ConfigReader(ini, _tempDir, null, _modPath);
 
         // Act
-        var result = reader.Load(config);
+        PatcherConfig result = reader.Load(config);
 
         // Assert
         var copyRow = result.Patches2DA.First(p => p.SaveAs == "appearance.2da").Modifiers[0] as CopyRow2DA;
@@ -515,12 +546,12 @@ Table0=appearance.2da
 [appearance.2da]
 AddColumn0=newcolumn
 ";
-        var ini = _parser.Parse(iniText);
+        IniData ini = _parser.Parse(iniText);
         var config = new PatcherConfig();
         var reader = new ConfigReader(ini, _tempDir, null, _modPath);
 
         // Act
-        var result = reader.Load(config);
+        PatcherConfig result = reader.Load(config);
 
         // Assert
         var addColumn = result.Patches2DA.First(p => p.SaveAs == "appearance.2da").Modifiers[0] as AddColumn2DA;
@@ -539,12 +570,12 @@ Table0=appearance.2da
 [appearance.2da]
 AddColumn0=newcolumn(123)
 ";
-        var ini = _parser.Parse(iniText);
+        IniData ini = _parser.Parse(iniText);
         var config = new PatcherConfig();
         var reader = new ConfigReader(ini, _tempDir, null, _modPath);
 
         // Act
-        var result = reader.Load(config);
+        PatcherConfig result = reader.Load(config);
 
         // Assert
         var addColumn = result.Patches2DA.First(p => p.SaveAs == "appearance.2da").Modifiers[0] as AddColumn2DA;

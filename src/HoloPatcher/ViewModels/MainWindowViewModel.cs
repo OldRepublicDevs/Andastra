@@ -91,13 +91,13 @@ public partial class MainWindowViewModel : ViewModelBase
     [RelayCommand]
     private async Task BrowseMod()
     {
-        var window = GetMainWindow();
+        Window? window = GetMainWindow();
         if (window == null)
         {
             return;
         }
 
-        var folders = await window.StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
+        IReadOnlyList<IStorageFolder> folders = await window.StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
         {
             Title = "Select Mod Directory",
             AllowMultiple = false
@@ -113,13 +113,13 @@ public partial class MainWindowViewModel : ViewModelBase
     [RelayCommand]
     private async Task BrowseGamePath()
     {
-        var window = GetMainWindow();
+        Window? window = GetMainWindow();
         if (window == null)
         {
             return;
         }
 
-        var folders = await window.StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
+        IReadOnlyList<IStorageFolder> folders = await window.StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
         {
             Title = "Select KOTOR Directory",
             AllowMultiple = false
@@ -154,7 +154,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
             await Task.Run(() =>
             {
-                var selectedNs = _loadedNamespaces.FirstOrDefault(ns => ns.Name == SelectedNamespace);
+                PatcherNamespace? selectedNs = _loadedNamespaces.FirstOrDefault(ns => ns.Name == SelectedNamespace);
                 if (selectedNs == null)
                 {
                     throw new InvalidOperationException("Selected namespace not found.");
@@ -173,7 +173,7 @@ public partial class MainWindowViewModel : ViewModelBase
                     TslPatchDataPath = tslPatchDataPath
                 };
 
-                var config = installer.Config();
+                PatcherConfig config = installer.Config();
                 ProgressMaximum = config.InstallList.Count + config.Patches2DA.Count +
                                  config.PatchesGFF.Count + config.PatchesNSS.Count +
                                  config.PatchesSSF.Count;
@@ -206,7 +206,7 @@ public partial class MainWindowViewModel : ViewModelBase
     [RelayCommand]
     private void Exit()
     {
-        var window = GetMainWindow();
+        Window? window = GetMainWindow();
         window?.Close();
     }
 
@@ -252,7 +252,7 @@ public partial class MainWindowViewModel : ViewModelBase
                     {
                         Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(async () =>
                         {
-                            var box = MessageBoxManager.GetMessageBoxStandard(title, msg, ButtonEnum.Ok, Icon.Error);
+                            MsBox.Avalonia.Base.IMsBox<ButtonResult> box = MessageBoxManager.GetMessageBoxStandard(title, msg, ButtonEnum.Ok, Icon.Error);
                             await box.ShowAsync();
                         }).Wait();
                     },
@@ -261,8 +261,8 @@ public partial class MainWindowViewModel : ViewModelBase
                         bool result = false;
                         Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(async () =>
                         {
-                            var box = MessageBoxManager.GetMessageBoxStandard(title, msg, ButtonEnum.YesNo, Icon.Question);
-                            var res = await box.ShowAsync();
+                            MsBox.Avalonia.Base.IMsBox<ButtonResult> box = MessageBoxManager.GetMessageBoxStandard(title, msg, ButtonEnum.YesNo, Icon.Question);
+                            ButtonResult res = await box.ShowAsync();
                             result = res == ButtonResult.Yes;
                         }).Wait();
                         return result;
@@ -272,8 +272,8 @@ public partial class MainWindowViewModel : ViewModelBase
                         bool? result = null;
                         Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(async () =>
                         {
-                            var box = MessageBoxManager.GetMessageBoxStandard(title, msg, ButtonEnum.YesNoCancel, Icon.Question);
-                            var res = await box.ShowAsync();
+                            MsBox.Avalonia.Base.IMsBox<ButtonResult> box = MessageBoxManager.GetMessageBoxStandard(title, msg, ButtonEnum.YesNoCancel, Icon.Question);
+                            ButtonResult res = await box.ShowAsync();
                             if (res == ButtonResult.Yes)
                             {
                                 result = true;
@@ -409,7 +409,7 @@ public partial class MainWindowViewModel : ViewModelBase
                 Avalonia.Threading.Dispatcher.UIThread.Post(() =>
                 {
                     Namespaces.Clear();
-                    foreach (var ns in _loadedNamespaces)
+                    foreach (PatcherNamespace ns in _loadedNamespaces)
                     {
                         string displayName = !string.IsNullOrWhiteSpace(ns.Name) ? ns.Name : ns.ChangesFilePath();
                         Namespaces.Add(displayName);

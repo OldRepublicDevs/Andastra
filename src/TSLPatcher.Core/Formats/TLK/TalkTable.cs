@@ -49,7 +49,7 @@ public class TalkTable
             return "";
         }
 
-        var tlkData = ExtractCommonTlkData(reader, stringref);
+        TLKData tlkData = ExtractCommonTlkData(reader, stringref);
         reader.Seek((int)(textsOffset + tlkData.TextOffset));
         return reader.ReadString(tlkData.TextLength);
     }
@@ -79,7 +79,7 @@ public class TalkTable
             return ResRef.FromBlank();
         }
 
-        var tlkData = ExtractCommonTlkData(reader, stringref);
+        TLKData tlkData = ExtractCommonTlkData(reader, stringref);
         return new ResRef(tlkData.Voiceover);
     }
 
@@ -108,7 +108,7 @@ public class TalkTable
             return new StringResult("", ResRef.FromBlank());
         }
 
-        var tlkData = ExtractCommonTlkData(reader, stringref);
+        TLKData tlkData = ExtractCommonTlkData(reader, stringref);
         reader.Seek((int)(textsOffset + tlkData.TextOffset));
         string text = reader.ReadString(tlkData.TextLength);
         ResRef sound = new(tlkData.Voiceover);
@@ -148,7 +148,7 @@ public class TalkTable
                 continue;
             }
 
-            var tlkData = ExtractCommonTlkData(reader, stringref);
+            TLKData tlkData = ExtractCommonTlkData(reader, stringref);
             reader.Seek((int)(textsOffset + tlkData.TextOffset));
             string text = reader.ReadString(tlkData.TextLength);
             ResRef sound = new(tlkData.Voiceover);

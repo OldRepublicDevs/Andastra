@@ -30,7 +30,7 @@ public class Modifications2DA : PatcherModifications
         PatchLogger logger,
         Game game)
     {
-        var twoda = new TwoDABinaryReader(source).Load();
+        Formats.TwoDA.TwoDA twoda = new TwoDABinaryReader(source).Load();
         Apply(twoda, memory, logger, game);
         return new TwoDABinaryWriter(twoda).Write();
     }
@@ -47,7 +47,7 @@ public class Modifications2DA : PatcherModifications
             return;
         }
 
-        foreach (var modifier in Modifiers)
+        foreach (Modify2DA modifier in Modifiers)
         {
             try
             {

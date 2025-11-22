@@ -306,7 +306,7 @@ public class RawBinaryWriterFile : RawBinaryWriter
         tempWriter.WriteUInt32((uint)value.Count, bigEndian);
 
         // Write all substrings
-        foreach (var (language, gender, text) in value)
+        foreach ((Language language, Gender gender, string text) in value)
         {
             int stringId = LocalizedString.SubstringId(language, gender);
             tempWriter.WriteUInt32((uint)stringId, bigEndian);
@@ -584,7 +584,7 @@ public class RawBinaryWriterMemory : RawBinaryWriter
         tempWriter.WriteUInt32((uint)value.Count, bigEndian);
 
         // Write all substrings
-        foreach (var (language, gender, text) in value)
+        foreach ((Language language, Gender gender, string text) in value)
         {
             int stringId = LocalizedString.SubstringId(language, gender);
             tempWriter.WriteUInt32((uint)stringId, bigEndian);

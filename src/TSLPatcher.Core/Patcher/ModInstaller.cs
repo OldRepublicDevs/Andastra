@@ -536,7 +536,7 @@ public class ModInstaller
                 config.PatchesTLK.ReplaceFile);
 
             // Copy all modifiers
-            foreach (var modifier in config.PatchesTLK.Modifiers)
+            foreach (Mods.TLK.ModifyTLK modifier in config.PatchesTLK.Modifiers)
             {
                 femaleTlkPatches.Modifiers.Add(modifier);
             }

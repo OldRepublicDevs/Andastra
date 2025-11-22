@@ -74,7 +74,7 @@ public class PatcherConfig
 
         // Recursively get nested modifiers
         var allNested = new List<ModifyGFF>(nestedModifiers);
-        foreach (var gffModifier in nestedModifiers.ToList())
+        foreach (ModifyGFF? gffModifier in nestedModifiers.ToList())
         {
             if (gffModifier is AddFieldGFF || gffModifier is AddStructToListGFF)
             {
@@ -92,9 +92,9 @@ public class PatcherConfig
     {
         var flattenedGffPatches = new List<ModifyGFF>();
 
-        foreach (var gffPatch in PatchesGFF)
+        foreach (ModificationsGFF gffPatch in PatchesGFF)
         {
-            foreach (var gffModifier in gffPatch.Modifiers)
+            foreach (ModifyGFF gffModifier in gffPatch.Modifiers)
             {
                 // Skip memory modifiers (they don't count as patches)
                 bool isMemoryModifier = gffModifier is Memory2DAModifierGFF;
@@ -106,7 +106,7 @@ public class PatcherConfig
                 // Only AddFieldGFF and AddStructToListGFF have modifiers attribute
                 if (gffModifier is AddFieldGFF addField && addField.Modifiers.Count > 0)
                 {
-                    var nestedModifiers = GetNestedGffPatches(addField);
+                    List<ModifyGFF> nestedModifiers = GetNestedGffPatches(addField);
                     // Nested modifiers will reference the item from the flattened list
                     // Clear and re-add to update the modifier's nested modifiers
                     addField.Modifiers.Clear();
@@ -115,7 +115,7 @@ public class PatcherConfig
                 }
                 else if (gffModifier is AddStructToListGFF addStruct && addStruct.Modifiers.Count > 0)
                 {
-                    var nestedModifiers = GetNestedGffPatches(addStruct);
+                    List<ModifyGFF> nestedModifiers = GetNestedGffPatches(addStruct);
                     // Clear and re-add to update the modifier's nested modifiers
                     addStruct.Modifiers.Clear();
                     addStruct.Modifiers.AddRange(nestedModifiers);

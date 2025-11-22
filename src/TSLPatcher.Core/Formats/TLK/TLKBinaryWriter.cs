@@ -38,13 +38,13 @@ public class TLKBinaryWriter
         Encoding encoding = GetEncodingForLanguage(_tlk.Language);
 
         // Write all entry headers
-        foreach (var entry in _tlk.Entries)
+        foreach (TLKEntry entry in _tlk.Entries)
         {
             WriteEntry(writer, entry, ref textOffset, encoding);
         }
 
         // Write all entry texts
-        foreach (var entry in _tlk.Entries)
+        foreach (TLKEntry entry in _tlk.Entries)
         {
             byte[] textBytes = encoding.GetBytes(entry.Text);
             writer.Write(textBytes);

@@ -21,14 +21,14 @@ public class TLKFormatTests
     {
         // test_binary_io from Python
         var reader = new TLKBinaryReader(BinaryTestFile);
-        var tlk = reader.Load();
+        TLK tlk = reader.Load();
         ValidateIO(tlk);
 
         var writer = new TLKBinaryWriter(tlk);
         byte[] data = writer.Write();
 
         var newReader = new TLKBinaryReader(data);
-        var newTlk = newReader.Load();
+        TLK newTlk = newReader.Load();
         ValidateIO(newTlk);
     }
 
@@ -39,7 +39,7 @@ public class TLKFormatTests
         tlk.Entries.Count.Should().BeGreaterThan(0);
 
         // Test first entry
-        var firstEntry = tlk.Entries[0];
+        TLKEntry firstEntry = tlk.Entries[0];
         firstEntry.Text.Should().NotBeNullOrEmpty();
 
         // Test that we can access entries by index

@@ -39,10 +39,10 @@ public class ERF : IEnumerable<ERFResource>
         get
         {
             string lowerResname = resname.ToLowerInvariant();
-            var key = _resourceDict.Keys.FirstOrDefault(k =>
+            ResourceIdentifier? key = _resourceDict.Keys.FirstOrDefault(k =>
                 k.ResName.ToLowerInvariant() == lowerResname);
 
-            if (key != null && _resourceDict.TryGetValue(key, out var resource))
+            if (key != null && _resourceDict.TryGetValue(key, out ERFResource? resource))
             {
                 return resource;
             }
@@ -58,7 +58,7 @@ public class ERF : IEnumerable<ERFResource>
     {
         get
         {
-            if (_resourceDict.TryGetValue(identifier, out var resource))
+            if (_resourceDict.TryGetValue(identifier, out ERFResource? resource))
             {
                 return resource;
             }
@@ -71,7 +71,7 @@ public class ERF : IEnumerable<ERFResource>
         var ident = new ResourceIdentifier(resname, restype);
         var resref = new ResRef(ident.ResName);
 
-        if (_resourceDict.TryGetValue(ident, out var resource))
+        if (_resourceDict.TryGetValue(ident, out ERFResource? resource))
         {
             // Update existing resource
             resource.ResRef = resref;
@@ -90,13 +90,13 @@ public class ERF : IEnumerable<ERFResource>
     public byte[]? Get(string resname, ResourceType restype)
     {
         var ident = new ResourceIdentifier(resname, restype);
-        return _resourceDict.TryGetValue(ident, out var resource) ? resource.Data : null;
+        return _resourceDict.TryGetValue(ident, out ERFResource? resource) ? resource.Data : null;
     }
 
     public void Remove(string resname, ResourceType restype)
     {
         var key = new ResourceIdentifier(resname, restype);
-        if (_resourceDict.Remove(key, out var resource))
+        if (_resourceDict.Remove(key, out ERFResource? resource))
         {
             _resources.Remove(resource);
         }
@@ -105,7 +105,7 @@ public class ERF : IEnumerable<ERFResource>
     public RIM.RIM ToRim()
     {
         var rim = new RIM.RIM();
-        foreach (var resource in _resources)
+        foreach (ERFResource resource in _resources)
         {
             rim.SetData(resource.ResRef.ToString(), resource.ResType, resource.Data);
         }
@@ -131,7 +131,7 @@ public class ERF : IEnumerable<ERFResource>
         var hash = new HashCode();
         hash.Add(ErfType);
         hash.Add(IsSaveErf);
-        foreach (var resource in _resources.OrderBy(r => r.GetHashCode()))
+        foreach (ERFResource? resource in _resources.OrderBy(r => r.GetHashCode()))
         {
             hash.Add(resource);
         }

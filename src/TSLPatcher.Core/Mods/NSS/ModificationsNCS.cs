@@ -64,7 +64,7 @@ public class ModificationsNCS : PatcherModifications
         using var stream = new System.IO.MemoryStream(ncsBytes);
         using var writer = new System.IO.BinaryWriter(stream);
 
-        foreach (var (tokenType, offset, tokenIdOrValue) in HackData)
+        foreach ((string tokenType, int offset, int tokenIdOrValue) in HackData)
         {
             logger.AddVerbose($"HACKList {SourceFile}: seeking to offset {offset:#X}");
             writer.Seek(offset, System.IO.SeekOrigin.Begin);

@@ -29,13 +29,13 @@ public abstract class PatcherModifications
 {
     public const string DEFAULT_DESTINATION = "Override";
 
-    public string SourceFile { get; set; }
-    public string SourceFolder { get; set; } = ".";
-    public string SaveAs { get; set; }
-    public bool ReplaceFile { get; set; }
-    public string Destination { get; set; } = DEFAULT_DESTINATION;
-    public string Action { get; set; } = "Patch ";
-    public string OverrideTypeValue { get; set; } = OverrideType.WARN;
+    public virtual string SourceFile { get; set; }
+    public virtual string SourceFolder { get; set; } = ".";
+    public virtual string SaveAs { get; set; }
+    public virtual bool ReplaceFile { get; set; }
+    public virtual string Destination { get; set; } = DEFAULT_DESTINATION;
+    public virtual string Action { get; set; } = "Patch ";
+    public virtual string OverrideTypeValue { get; set; } = OverrideType.WARN;
 
     /// <summary>
     /// Determines how !ReplaceFile will be handled.
@@ -43,7 +43,7 @@ public abstract class PatcherModifications
     /// In InstallList/CompileList, if this is True and !ReplaceFile is False or File#=file_to_install.ext,
     /// the resource will be skipped if the resource already exists.
     /// </summary>
-    public bool SkipIfNotReplace { get; set; }
+    public virtual bool SkipIfNotReplace { get; set; }
 
     protected PatcherModifications(string sourcefile, bool? replace = null)
     {
@@ -105,16 +105,27 @@ public abstract class PatcherModifications
             Destination = destination;
             fileSectionDict.Remove("!Destination");
         }
+        else if (fileSectionDict.TryGetValue("Destination", out string? destinationNoExcl))
+        {
+            Destination = destinationNoExcl;
+            fileSectionDict.Remove("Destination");
+        }
         else
         {
             Destination = destinationFallback;
         }
 
         // !ReplaceFile=1 is prioritized, see Stoffe's HLFP mod v2.1 for reference
+        // Also handle ReplaceFile without exclamation mark (for SSF compatibility)
         if (fileSectionDict.TryGetValue("!ReplaceFile", out string? replaceFile))
         {
             ReplaceFile = ConvertToBool(replaceFile);
             fileSectionDict.Remove("!ReplaceFile");
+        }
+        else if (fileSectionDict.TryGetValue("ReplaceFile", out string? replaceFileNoExcl))
+        {
+            ReplaceFile = ConvertToBool(replaceFileNoExcl);
+            fileSectionDict.Remove("ReplaceFile");
         }
 
         // TSLPatcher defaults to "ignore". However realistically, Override file shadowing is

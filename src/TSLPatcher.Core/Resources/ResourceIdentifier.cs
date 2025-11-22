@@ -37,7 +37,7 @@ public class ResourceIdentifier : IEquatable<ResourceIdentifier>
         int chosenSuffixLength = 0;
 
         // Get all known resource types via reflection
-        var knownTypes = typeof(ResourceType).GetFields(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static)
+        System.Collections.Generic.IEnumerable<ResourceType> knownTypes = typeof(ResourceType).GetFields(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static)
             .Where(f => f.FieldType == typeof(ResourceType))
             .Select(f => (ResourceType)f.GetValue(null)!)
             .Where(rt => rt != null && !rt.IsInvalid);

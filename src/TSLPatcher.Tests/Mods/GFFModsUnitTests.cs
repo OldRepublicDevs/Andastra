@@ -23,7 +23,7 @@ public class GFFModsUnitTests
         var memory = new PatcherMemory();
         var config = new ModificationsGFF("", false, new List<ModifyGFF> { new ModifyFieldGFF("Field1", new FieldValueConstant(2)) });
 
-        var bytes = config.PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
+        object bytes = config.PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
         var patchedGff = GFF.FromBytes((byte[])bytes);
 
         patchedGff.Root.GetUInt8("Field1").Should().Be(2);
@@ -38,7 +38,7 @@ public class GFFModsUnitTests
         var memory = new PatcherMemory();
         var config = new ModificationsGFF("", false, new List<ModifyGFF> { new ModifyFieldGFF("Field1", new FieldValueConstant(2)) });
 
-        var bytes = config.PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
+        object bytes = config.PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
         var patchedGff = GFF.FromBytes((byte[])bytes);
 
         patchedGff.Root.GetInt8("Field1").Should().Be(2);
@@ -53,7 +53,7 @@ public class GFFModsUnitTests
         var memory = new PatcherMemory();
         var config = new ModificationsGFF("", false, new List<ModifyGFF> { new ModifyFieldGFF("Field1", new FieldValueConstant(2)) });
 
-        var bytes = config.PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
+        object bytes = config.PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
         var patchedGff = GFF.FromBytes((byte[])bytes);
 
         patchedGff.Root.GetUInt16("Field1").Should().Be(2);
@@ -68,7 +68,7 @@ public class GFFModsUnitTests
         var memory = new PatcherMemory();
         var config = new ModificationsGFF("", false, new List<ModifyGFF> { new ModifyFieldGFF("Field1", new FieldValueConstant(2)) });
 
-        var bytes = config.PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
+        object bytes = config.PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
         var patchedGff = GFF.FromBytes((byte[])bytes);
 
         patchedGff.Root.GetInt16("Field1").Should().Be(2);
@@ -83,7 +83,7 @@ public class GFFModsUnitTests
         var memory = new PatcherMemory();
         var config = new ModificationsGFF("", false, new List<ModifyGFF> { new ModifyFieldGFF("Field1", new FieldValueConstant(2)) });
 
-        var bytes = config.PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
+        object bytes = config.PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
         var patchedGff = GFF.FromBytes((byte[])bytes);
 
         patchedGff.Root.GetUInt32("Field1").Should().Be(2u);
@@ -98,7 +98,7 @@ public class GFFModsUnitTests
         var memory = new PatcherMemory();
         var config = new ModificationsGFF("", false, new List<ModifyGFF> { new ModifyFieldGFF("Field1", new FieldValueConstant(2)) });
 
-        var bytes = config.PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
+        object bytes = config.PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
         var patchedGff = GFF.FromBytes((byte[])bytes);
 
         patchedGff.Root.GetInt32("Field1").Should().Be(2);
@@ -113,7 +113,7 @@ public class GFFModsUnitTests
         var memory = new PatcherMemory();
         var config = new ModificationsGFF("", false, new List<ModifyGFF> {  new ModifyFieldGFF("Field1", new FieldValueConstant(2UL))  });
 
-        var bytes = config.PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
+        object bytes = config.PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
         var patchedGff = GFF.FromBytes((byte[])bytes);
 
         patchedGff.Root.GetUInt64("Field1").Should().Be(2UL);
@@ -128,7 +128,7 @@ public class GFFModsUnitTests
         var memory = new PatcherMemory();
         var config = new ModificationsGFF("", false, new List<ModifyGFF> {  new ModifyFieldGFF("Field1", new FieldValueConstant(2L))  });
 
-        var bytes = config.PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
+        object bytes = config.PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
         var patchedGff = GFF.FromBytes((byte[])bytes);
 
         patchedGff.Root.GetInt64("Field1").Should().Be(2L);
@@ -143,7 +143,7 @@ public class GFFModsUnitTests
         var memory = new PatcherMemory();
         var config = new ModificationsGFF("", false, new List<ModifyGFF> {  new ModifyFieldGFF("Field1", new FieldValueConstant(2.345f))  });
 
-        var bytes = config.PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
+        object bytes = config.PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
         var patchedGff = GFF.FromBytes((byte[])bytes);
 
         patchedGff.Root.GetSingle("Field1").Should().BeApproximately(2.345f, 0.0001f);
@@ -158,7 +158,7 @@ public class GFFModsUnitTests
         var memory = new PatcherMemory();
         var config = new ModificationsGFF("", false, new List<ModifyGFF> {  new ModifyFieldGFF("Field1", new FieldValueConstant(2.345678))  });
 
-        var bytes = config.PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
+        object bytes = config.PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
         var patchedGff = GFF.FromBytes((byte[])bytes);
 
         patchedGff.Root.GetDouble("Field1").Should().BeApproximately(2.345678, 0.000001);
@@ -173,7 +173,7 @@ public class GFFModsUnitTests
         var memory = new PatcherMemory();
         var config = new ModificationsGFF("", false, new List<ModifyGFF> {  new ModifyFieldGFF("Field1", new FieldValueConstant("def"))  });
 
-        var bytes = config.PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
+        object bytes = config.PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
         var patchedGff = GFF.FromBytes((byte[])bytes);
 
         patchedGff.Root.GetValue("Field1").Should().Be("def");
@@ -192,7 +192,7 @@ public class GFFModsUnitTests
             new List<ModifyGFF> { new ModifyFieldGFF("Field1", new FieldValueConstant(new LocalizedStringDelta(new FieldValueConstant(1)))) }
         );
 
-        var bytes = config.PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
+        object bytes = config.PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
         var patchedGff = GFF.FromBytes((byte[])bytes);
 
         patchedGff.Root.GetLocString("Field1").StringRef.Should().Be(1);
@@ -207,10 +207,10 @@ public class GFFModsUnitTests
         var memory = new PatcherMemory();
         var config = new ModificationsGFF("", false, new List<ModifyGFF> {  new ModifyFieldGFF("Field1", new FieldValueConstant(new Vector3(1, 2, 3)))  });
 
-        var bytes = config.PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
+        object bytes = config.PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
         var patchedGff = GFF.FromBytes((byte[])bytes);
 
-        var vector = patchedGff.Root.GetVector3("Field1");
+        Vector3 vector = patchedGff.Root.GetVector3("Field1");
         vector.X.Should().BeApproximately(1f, 0.0001f);
         vector.Y.Should().BeApproximately(2f, 0.0001f);
         vector.Z.Should().BeApproximately(3f, 0.0001f);
@@ -225,10 +225,10 @@ public class GFFModsUnitTests
         var memory = new PatcherMemory();
         var config = new ModificationsGFF("", false, new List<ModifyGFF> {  new ModifyFieldGFF("Field1", new FieldValueConstant(new Vector4(1, 2, 3, 4)))  });
 
-        var bytes = config.PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
+        object bytes = config.PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
         var patchedGff = GFF.FromBytes((byte[])bytes);
 
-        var vector = patchedGff.Root.GetVector4("Field1");
+        Vector4 vector = patchedGff.Root.GetVector4("Field1");
         vector.X.Should().BeApproximately(1f, 0.0001f);
         vector.Y.Should().BeApproximately(2f, 0.0001f);
         vector.Z.Should().BeApproximately(3f, 0.0001f);
@@ -240,18 +240,18 @@ public class GFFModsUnitTests
     {
         var gff = new GFF();
         gff.Root.SetList("List", new GFFList());
-        var gffList = gff.Root.GetList("List");
-        var gffStruct = gffList.Add(0);
+        GFFList gffList = gff.Root.GetList("List");
+        GFFStruct gffStruct = gffList.Add(0);
         gffStruct.SetString("String", "".ToString());
 
         var memory = new PatcherMemory();
         var config = new ModificationsGFF("", false, new List<ModifyGFF> {  new ModifyFieldGFF("List\\0\\String", new FieldValueConstant("abc"))  });
 
-        var bytes = config.PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
+        object bytes = config.PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
         var patchedGff = GFF.FromBytes((byte[])bytes);
 
-        var patchedList = patchedGff.Root.GetList("List");
-        var patchedStruct = patchedList.At(0);
+        GFFList patchedList = patchedGff.Root.GetList("List");
+        GFFStruct? patchedStruct = patchedList.At(0);
         patchedStruct.Should().NotBeNull();
         patchedStruct!.GetValue("String").Should().Be("abc");
     }
@@ -271,7 +271,7 @@ public class GFFModsUnitTests
             new ModifyFieldGFF("Integer", new FieldValue2DAMemory(5))
          });
 
-        var bytes = config.PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
+        object bytes = config.PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
         var patchedGff = GFF.FromBytes((byte[])bytes);
 
         patchedGff.Root.GetValue("String").Should().Be("123");
@@ -289,7 +289,7 @@ public class GFFModsUnitTests
 
         var config = new ModificationsGFF("", false, new List<ModifyGFF> {  new ModifyFieldGFF("StrRef", new FieldValueTLKMemory(10))  });
 
-        var bytes = config.PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
+        object bytes = config.PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
         var patchedGff = GFF.FromBytes((byte[])bytes);
 
         patchedGff.Root.GetUInt32("StrRef").Should().Be(999);
@@ -310,7 +310,7 @@ public class GFFModsUnitTests
             new ModifyFieldGFF("Field3", new FieldValueConstant(200))
          });
 
-        var bytes = config.PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
+        object bytes = config.PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
         var patchedGff = GFF.FromBytes((byte[])bytes);
 
         patchedGff.Root.GetUInt8("Field1").Should().Be(10);

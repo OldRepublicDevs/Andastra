@@ -54,12 +54,12 @@ File0=test.ssf
 [test.ssf]
 ReplaceFile=1
 ";
-        var ini = _parser.Parse(iniText);
+        IniData ini = _parser.Parse(iniText);
         var config = new PatcherConfig();
         var reader = new ConfigReader(ini, _tempDir, null, _modPath);
 
         // Act
-        var result = reader.Load(config);
+        PatcherConfig result = reader.Load(config);
 
         // Assert
         result.PatchesSSF.Should().Contain(p => p.SaveAs == "test.ssf");
@@ -78,22 +78,22 @@ File0=test.ssf
 Set0=12345
 Set1=67890
 ";
-        var ini = _parser.Parse(iniText);
+        IniData ini = _parser.Parse(iniText);
         var config = new PatcherConfig();
         var reader = new ConfigReader(ini, _tempDir, null, _modPath);
 
         // Act
-        var result = reader.Load(config);
+        PatcherConfig result = reader.Load(config);
 
         // Assert
-        var modifiers = result.PatchesSSF.First(p => p.SaveAs == "test.ssf").Modifiers;
+        List<ModifySSF> modifiers = result.PatchesSSF.First(p => p.SaveAs == "test.ssf").Modifiers;
         modifiers.Should().HaveCount(2);
 
-        var set0 = modifiers[0];
+        ModifySSF set0 = modifiers[0];
         set0.Sound.Should().Be(SSFSound.BATTLE_CRY_1);
         ((NoTokenUsage)set0.Stringref).Value(null).Should().Be("12345");
 
-        var set1 = modifiers[1];
+        ModifySSF set1 = modifiers[1];
         set1.Sound.Should().Be(SSFSound.BATTLE_CRY_2);
         ((NoTokenUsage)set1.Stringref).Value(null).Should().Be("67890");
     }
@@ -110,23 +110,23 @@ File0=test.ssf
 Set0=StrRef5
 Set1=StrRef10
 ";
-        var ini = _parser.Parse(iniText);
+        IniData ini = _parser.Parse(iniText);
         var config = new PatcherConfig();
         var reader = new ConfigReader(ini, _tempDir, null, _modPath);
 
         // Act
-        var result = reader.Load(config);
+        PatcherConfig result = reader.Load(config);
 
         // Assert
-        var modifiers = result.PatchesSSF.First(p => p.SaveAs == "test.ssf").Modifiers;
+        List<ModifySSF> modifiers = result.PatchesSSF.First(p => p.SaveAs == "test.ssf").Modifiers;
         modifiers.Should().HaveCount(2);
 
-        var set0 = modifiers[0];
+        ModifySSF set0 = modifiers[0];
         set0.Sound.Should().Be(SSFSound.BATTLE_CRY_1);
         set0.Stringref.Should().NotBeNull();
         ((TokenUsageTLK)set0.Stringref!).TokenId.Should().Be(5);
 
-        var set1 = modifiers[1];
+        ModifySSF set1 = modifiers[1];
         set1.Sound.Should().Be(SSFSound.BATTLE_CRY_2);
         ((TokenUsageTLK)set1.Stringref!).TokenId.Should().Be(10);
     }
@@ -143,23 +143,23 @@ File0=test.ssf
 Set0=2DAMEMORY3
 Set2=2DAMEMORY7
 ";
-        var ini = _parser.Parse(iniText);
+        IniData ini = _parser.Parse(iniText);
         var config = new PatcherConfig();
         var reader = new ConfigReader(ini, _tempDir, null, _modPath);
 
         // Act
-        var result = reader.Load(config);
+        PatcherConfig result = reader.Load(config);
 
         // Assert
-        var modifiers = result.PatchesSSF.First(p => p.SaveAs == "test.ssf").Modifiers;
+        List<ModifySSF> modifiers = result.PatchesSSF.First(p => p.SaveAs == "test.ssf").Modifiers;
         modifiers.Should().HaveCount(2);
 
-        var set0 = modifiers[0];
+        ModifySSF set0 = modifiers[0];
         set0.Sound.Should().Be(SSFSound.BATTLE_CRY_1);
         set0.Stringref.Should().NotBeNull();
         ((TokenUsage2DA)set0.Stringref!).TokenId.Should().Be(3);
 
-        var set2 = modifiers[1];
+        ModifySSF set2 = modifiers[1];
         set2.Sound.Should().Be(SSFSound.BATTLE_CRY_3);
         ((TokenUsage2DA)set2.Stringref!).TokenId.Should().Be(7);
     }
@@ -179,12 +179,12 @@ Set0=100
 [test2.ssf]
 Set5=200
 ";
-        var ini = _parser.Parse(iniText);
+        IniData ini = _parser.Parse(iniText);
         var config = new PatcherConfig();
         var reader = new ConfigReader(ini, _tempDir, null, _modPath);
 
         // Act
-        var result = reader.Load(config);
+        PatcherConfig result = reader.Load(config);
 
         // Assert
         result.PatchesSSF.Should().HaveCount(2);
@@ -195,7 +195,7 @@ Set5=200
         result.PatchesSSF.First(p => p.SaveAs == "test2.ssf").Modifiers.Should().HaveCount(1);
 
         result.PatchesSSF.First(p => p.SaveAs == "test1.ssf").Modifiers[0].Sound.Should().Be(SSFSound.BATTLE_CRY_1);
-        result.PatchesSSF.First(p => p.SaveAs == "test2.ssf").Modifiers[0].Sound.Should().Be(SSFSound.SELECT_1);
+        result.PatchesSSF.First(p => p.SaveAs == "test2.ssf").Modifiers[0].Sound.Should().Be(SSFSound.BATTLE_CRY_6);
     }
 
     [Fact]
@@ -210,12 +210,12 @@ File0=test.ssf
 Destination=modules\test.mod
 Set0=100
 ";
-        var ini = _parser.Parse(iniText);
+        IniData ini = _parser.Parse(iniText);
         var config = new PatcherConfig();
         var reader = new ConfigReader(ini, _tempDir, null, _modPath);
 
         // Act
-        var result = reader.Load(config);
+        PatcherConfig result = reader.Load(config);
 
         // Assert
         result.PatchesSSF.First(p => p.SaveAs == "test.ssf").Destination.Should().Be("modules\\test.mod");

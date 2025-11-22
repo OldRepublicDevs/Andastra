@@ -23,7 +23,7 @@ public class TwoDAIntegrationTests : IntegrationTestBase
     public void ChangeRow_ExistingRowIndex_ShouldModifyCorrectRow()
     {
         // Arrange
-        var twoda = CreateTest2DA(
+        TwoDA twoda = CreateTest2DA(
             new[] { "Col1", "Col2", "Col3" },
             new[]
             {
@@ -31,8 +31,8 @@ public class TwoDAIntegrationTests : IntegrationTestBase
                 ("1", new[] { "d", "e", "f" })
             });
 
-        var target = new Target(TargetType.ROW_INDEX, new RowValueConstant("0"));
-        var change = new ChangeRow2DA("Test", target, null, null);
+        var target = new Target(TargetType.ROW_INDEX, 0);
+        var change = new ChangeRow2DA("Test", target, new Dictionary<string, RowValue>(), null);
         change.Cells["Col1"] = new RowValueConstant("x");
         change.Cells["Col2"] = new RowValueConstant("y");
         change.Cells["Col3"] = new RowValueConstant("z");
@@ -52,7 +52,7 @@ public class TwoDAIntegrationTests : IntegrationTestBase
     public void ChangeRow_ExistingRowLabel_ShouldModifyCorrectRow()
     {
         // Arrange
-        var twoda = CreateTest2DA(
+        TwoDA twoda = CreateTest2DA(
             new[] { "Col1", "Col2", "Col3" },
             new[]
             {
@@ -61,7 +61,7 @@ public class TwoDAIntegrationTests : IntegrationTestBase
             });
 
         var target = new Target(TargetType.ROW_LABEL, new RowValueConstant("Row1"));
-        var change = new ChangeRow2DA("Test", target, null, null);
+        var change = new ChangeRow2DA("Test", target, new Dictionary<string, RowValue>(), null);
         change.Cells["Col1"] = new RowValueConstant("x");
         change.Cells["Col2"] = new RowValueConstant("y");
 
@@ -77,9 +77,9 @@ public class TwoDAIntegrationTests : IntegrationTestBase
     [Fact]
     public void ChangeRow_ExistingLabelIndex_ShouldModifyCorrectRow()
     {
-        // Arrange
-        var twoda = CreateTest2DA(
-            new[] { "Col1", "Col2", "Col3" },
+        // Arrange - LABEL_COLUMN searches for a column named "label", not row labels
+        TwoDA twoda = CreateTest2DA(
+            new[] { "label", "Col2", "Col3" },
             new[]
             {
                 ("Row0", new[] { "a", "b", "c" }),
@@ -87,24 +87,24 @@ public class TwoDAIntegrationTests : IntegrationTestBase
                 ("Row2", new[] { "g", "h", "i" })
             });
 
-        var target = new Target(TargetType.LABEL_COLUMN, new RowValueConstant("1"));
-        var change = new ChangeRow2DA("Test", target, null, null);
-        change.Cells["Col1"] = new RowValueConstant("modified");
+        var target = new Target(TargetType.LABEL_COLUMN, new RowValueConstant("d"));
+        var change = new ChangeRow2DA("Test", target, new Dictionary<string, RowValue>(), null);
+        change.Cells["Col2"] = new RowValueConstant("modified");
 
         // Act
         change.Apply(twoda, Memory);
 
         // Assert
-        AssertCellValue(twoda, "Row1", "Col1", "modified");
-        AssertCellValue(twoda, "Row0", "Col1", "a");
-        AssertCellValue(twoda, "Row2", "Col1", "g");
+        AssertCellValue(twoda, "Row1", "Col2", "modified");
+        AssertCellValue(twoda, "Row0", "Col2", "b");
+        AssertCellValue(twoda, "Row2", "Col2", "h");
     }
 
     [Fact]
     public void ChangeRow_AssignTLKMemory_ShouldUseTokenValue()
     {
         // Arrange
-        var twoda = CreateTest2DA(
+        TwoDA twoda = CreateTest2DA(
             new[] { "name", "description" },
             new[]
             {
@@ -113,8 +113,8 @@ public class TwoDAIntegrationTests : IntegrationTestBase
 
         Memory.MemoryStr[5] = 12345;
 
-        var target = new Target(TargetType.ROW_INDEX, new RowValueConstant("0"));
-        var change = new ChangeRow2DA("Test", target, null, null);
+        var target = new Target(TargetType.ROW_INDEX, 0);
+        var change = new ChangeRow2DA("Test", target, new Dictionary<string, RowValue>(), null);
         change.Cells["name"] = new RowValueTLKMemory(5);
 
         // Act
@@ -129,7 +129,7 @@ public class TwoDAIntegrationTests : IntegrationTestBase
     public void ChangeRow_Assign2DAMemory_ShouldUseTokenValue()
     {
         // Arrange
-        var twoda = CreateTest2DA(
+        TwoDA twoda = CreateTest2DA(
             new[] { "appearance", "health" },
             new[]
             {
@@ -138,8 +138,8 @@ public class TwoDAIntegrationTests : IntegrationTestBase
 
         Memory.Memory2DA[3] = "999";
 
-        var target = new Target(TargetType.ROW_INDEX, new RowValueConstant("0"));
-        var change = new ChangeRow2DA("Test", target, null, null);
+        var target = new Target(TargetType.ROW_INDEX, 0);
+        var change = new ChangeRow2DA("Test", target, new Dictionary<string, RowValue>(), null);
         change.Cells["appearance"] = new RowValue2DAMemory(3);
 
         // Act
@@ -153,7 +153,7 @@ public class TwoDAIntegrationTests : IntegrationTestBase
     public void ChangeRow_AssignHigh_ShouldUseHighestValue()
     {
         // Arrange
-        var twoda = CreateTest2DA(
+        TwoDA twoda = CreateTest2DA(
             new[] { "id", "value" },
             new[]
             {
@@ -162,8 +162,8 @@ public class TwoDAIntegrationTests : IntegrationTestBase
                 ("2", new[] { "3", "30" })
             });
 
-        var target = new Target(TargetType.ROW_INDEX, new RowValueConstant("0"));
-        var change = new ChangeRow2DA("Test", target, null, null);
+        var target = new Target(TargetType.ROW_INDEX, 0);
+        var change = new ChangeRow2DA("Test", target, new Dictionary<string, RowValue>(), null);
         change.Cells["id"] = new RowValueHigh("id");
 
         // Act
@@ -178,7 +178,7 @@ public class TwoDAIntegrationTests : IntegrationTestBase
     public void ChangeRow_Set2DAMemory_RowIndex_ShouldStoreRowIndex()
     {
         // Arrange
-        var twoda = CreateTest2DA(
+        TwoDA twoda = CreateTest2DA(
             new[] { "Col1", "Col2" },
             new[]
             {
@@ -186,8 +186,8 @@ public class TwoDAIntegrationTests : IntegrationTestBase
                 ("1", new[] { "c", "d" })
             });
 
-        var target = new Target(TargetType.ROW_INDEX, new RowValueConstant("1"));
-        var change = new ChangeRow2DA("Test", target, null, null);
+        var target = new Target(TargetType.ROW_INDEX, 1);
+        var change = new ChangeRow2DA("Test", target, new Dictionary<string, RowValue>(), null);
         change.Store2DA[0] = new RowValueRowIndex();
         change.Cells["Col1"] = new RowValueConstant("modified");
 
@@ -202,7 +202,7 @@ public class TwoDAIntegrationTests : IntegrationTestBase
     public void ChangeRow_Set2DAMemory_RowLabel_ShouldStoreRowLabel()
     {
         // Arrange
-        var twoda = CreateTest2DA(
+        TwoDA twoda = CreateTest2DA(
             new[] { "Col1", "Col2" },
             new[]
             {
@@ -211,7 +211,7 @@ public class TwoDAIntegrationTests : IntegrationTestBase
             });
 
         var target = new Target(TargetType.ROW_LABEL, new RowValueConstant("TestLabel"));
-        var change = new ChangeRow2DA("Test", target, null, null);
+        var change = new ChangeRow2DA("Test", target, new Dictionary<string, RowValue>(), null);
         change.Store2DA[1] = new RowValueRowLabel();
 
         // Act
@@ -225,15 +225,15 @@ public class TwoDAIntegrationTests : IntegrationTestBase
     public void ChangeRow_Set2DAMemory_ColumnLabel_ShouldStoreCellValue()
     {
         // Arrange
-        var twoda = CreateTest2DA(
+        TwoDA twoda = CreateTest2DA(
             new[] { "name", "value" },
             new[]
             {
                 ("0", new[] { "TestName", "100" })
             });
 
-        var target = new Target(TargetType.ROW_INDEX, new RowValueConstant("0"));
-        var change = new ChangeRow2DA("Test", target, null, null);
+        var target = new Target(TargetType.ROW_INDEX, 0);
+        var change = new ChangeRow2DA("Test", target, new Dictionary<string, RowValue>(), null);
         change.Store2DA[2] = new RowValueRowCell("value");
 
         // Act
@@ -251,7 +251,7 @@ public class TwoDAIntegrationTests : IntegrationTestBase
     public void AddRow_RowLabel_UseMaxRowLabel_ShouldGenerateNewLabel()
     {
         // Arrange
-        var twoda = CreateTest2DA(
+        TwoDA twoda = CreateTest2DA(
             new[] { "Col1", "Col2" },
             new[]
             {
@@ -260,7 +260,7 @@ public class TwoDAIntegrationTests : IntegrationTestBase
                 ("5", new[] { "e", "f" })
             });
 
-        var add = new AddRow2DA("Test", null, "RowLabel", null, null, null);
+        var add = new AddRow2DA("Test", null, null, new Dictionary<string, RowValue>(), null, null);
         add.Cells["Col1"] = new RowValueConstant("new");
         add.Cells["Col2"] = new RowValueConstant("row");
 
@@ -277,14 +277,14 @@ public class TwoDAIntegrationTests : IntegrationTestBase
     public void AddRow_RowLabel_UseConstant_ShouldUseProvidedLabel()
     {
         // Arrange
-        var twoda = CreateTest2DA(
+        TwoDA twoda = CreateTest2DA(
             new[] { "Col1", "Col2" },
             new[]
             {
                 ("0", new[] { "a", "b" })
             });
 
-        var add = new AddRow2DA("Test", null, "CustomLabel", null, null, null);
+        var add = new AddRow2DA("Test", null, "CustomLabel", new Dictionary<string, RowValue>(), null, null);
         add.Cells["Col1"] = new RowValueConstant("x");
         add.Cells["Col2"] = new RowValueConstant("y");
 
@@ -301,14 +301,14 @@ public class TwoDAIntegrationTests : IntegrationTestBase
     public void AddRow_Exclusive_NotExists_ShouldAddRow()
     {
         // Arrange
-        var twoda = CreateTest2DA(
+        TwoDA twoda = CreateTest2DA(
             new[] { "label", "value" },
             new[]
             {
                 ("0", new[] { "existing", "100" })
             });
 
-        var add = new AddRow2DA("Test", "label", "NewRow", null, null, null);
+        var add = new AddRow2DA("Test", "label", "NewRow", new Dictionary<string, RowValue>(), null, null);
         add.Cells["label"] = new RowValueConstant("unique");
         add.Cells["value"] = new RowValueConstant("200");
 
@@ -324,14 +324,14 @@ public class TwoDAIntegrationTests : IntegrationTestBase
     public void AddRow_Exclusive_Exists_ShouldSkipAddition()
     {
         // Arrange
-        var twoda = CreateTest2DA(
+        TwoDA twoda = CreateTest2DA(
             new[] { "label", "value" },
             new[]
             {
                 ("0", new[] { "existing", "100" })
             });
 
-        var add = new AddRow2DA("Test", "label", "NewRow", null, null, null);
+        var add = new AddRow2DA("Test", "label", "NewRow", new Dictionary<string, RowValue>(), null, null);
         add.Cells["label"] = new RowValueConstant("existing");
         add.Cells["value"] = new RowValueConstant("200");
 
@@ -347,14 +347,14 @@ public class TwoDAIntegrationTests : IntegrationTestBase
     public void AddRow_Exclusive_None_ShouldAlwaysAdd()
     {
         // Arrange
-        var twoda = CreateTest2DA(
+        TwoDA twoda = CreateTest2DA(
             new[] { "label", "value" },
             new[]
             {
                 ("0", new[] { "existing", "100" })
             });
 
-        var add = new AddRow2DA("Test", null, "NewRow", null, null, null);
+        var add = new AddRow2DA("Test", null, "NewRow", new Dictionary<string, RowValue>(), null, null);
         add.Cells["label"] = new RowValueConstant("existing");
         add.Cells["value"] = new RowValueConstant("200");
 
@@ -371,7 +371,7 @@ public class TwoDAIntegrationTests : IntegrationTestBase
     public void AddRow_Store2DAMemory_RowIndex_ShouldStoreIndex()
     {
         // Arrange
-        var twoda = CreateTest2DA(
+        TwoDA twoda = CreateTest2DA(
             new[] { "Col1" },
             new[]
             {
@@ -379,7 +379,7 @@ public class TwoDAIntegrationTests : IntegrationTestBase
                 ("1", new[] { "b" })
             });
 
-        var add = new AddRow2DA("Test", null, "2", null, null, null);
+        var add = new AddRow2DA("Test", null, "2", new Dictionary<string, RowValue>(), null, null);
         add.Store2DA[0] = new RowValueRowIndex();
         add.Cells["Col1"] = new RowValueConstant("c");
 
@@ -394,14 +394,14 @@ public class TwoDAIntegrationTests : IntegrationTestBase
     public void AddRow_Store2DAMemory_RowLabel_ShouldStoreLabel()
     {
         // Arrange
-        var twoda = CreateTest2DA(
+        TwoDA twoda = CreateTest2DA(
             new[] { "Col1" },
             new[]
             {
                 ("0", new[] { "a" })
             });
 
-        var add = new AddRow2DA("Test", null, "NewLabel", null, null, null);
+        var add = new AddRow2DA("Test", null, "NewLabel", new Dictionary<string, RowValue>(), null, null);
         add.Store2DA[1] = new RowValueRowLabel();
         add.Cells["Col1"] = new RowValueConstant("b");
 
@@ -416,14 +416,14 @@ public class TwoDAIntegrationTests : IntegrationTestBase
     public void AddRow_Store2DAMemory_Cell_ShouldStoreCellValue()
     {
         // Arrange
-        var twoda = CreateTest2DA(
+        TwoDA twoda = CreateTest2DA(
             new[] { "name", "value" },
             new[]
             {
                 ("0", new[] { "Test", "100" })
             });
 
-        var add = new AddRow2DA("Test", null, "1", null, null, null);
+        var add = new AddRow2DA("Test", null, "1", new Dictionary<string, RowValue>(), null, null);
         add.Store2DA[2] = new RowValueRowCell("value");
         add.Cells["name"] = new RowValueConstant("New");
         add.Cells["value"] = new RowValueConstant("999");
@@ -443,7 +443,7 @@ public class TwoDAIntegrationTests : IntegrationTestBase
     public void CopyRow_ExistingRowIndex_ShouldCopyAndModify()
     {
         // Arrange
-        var twoda = CreateTest2DA(
+        TwoDA twoda = CreateTest2DA(
             new[] { "Col1", "Col2", "Col3" },
             new[]
             {
@@ -451,8 +451,8 @@ public class TwoDAIntegrationTests : IntegrationTestBase
                 ("1", new[] { "d", "e", "f" })
             });
 
-        var source = new Target(TargetType.ROW_INDEX, new RowValueConstant("0"));
-        var copy = new CopyRow2DA("Test", source, null, "NewRow", null, null, null);
+        var source = new Target(TargetType.ROW_INDEX, 0);
+        var copy = new CopyRow2DA("Test", source, null, "NewRow", new Dictionary<string, RowValue>(), null, null);
         copy.Cells["Col1"] = new RowValueConstant("modified");
 
         // Act
@@ -469,7 +469,7 @@ public class TwoDAIntegrationTests : IntegrationTestBase
     public void CopyRow_ExistingRowLabel_ShouldCopyCorrectRow()
     {
         // Arrange
-        var twoda = CreateTest2DA(
+        TwoDA twoda = CreateTest2DA(
             new[] { "Col1", "Col2" },
             new[]
             {
@@ -478,7 +478,7 @@ public class TwoDAIntegrationTests : IntegrationTestBase
             });
 
         var source = new Target(TargetType.ROW_LABEL, new RowValueConstant("SourceRow"));
-        var copy = new CopyRow2DA("Test", source, null, "CopiedRow", null, null, null);
+        var copy = new CopyRow2DA("Test", source, null, "CopiedRow", new Dictionary<string, RowValue>(), null, null);
 
         // Act
         copy.Apply(twoda, Memory);
@@ -492,15 +492,15 @@ public class TwoDAIntegrationTests : IntegrationTestBase
     public void CopyRow_Exclusive_NotExists_ShouldCopy()
     {
         // Arrange
-        var twoda = CreateTest2DA(
+        TwoDA twoda = CreateTest2DA(
             new[] { "label", "value" },
             new[]
             {
                 ("0", new[] { "existing", "100" })
             });
 
-        var source = new Target(TargetType.ROW_INDEX, new RowValueConstant("0"));
-        var copy = new CopyRow2DA("Test", source, "label", "NewRow", null, null, null);
+        var source = new Target(TargetType.ROW_INDEX, 0);
+        var copy = new CopyRow2DA("Test", source, "label", "NewRow", new Dictionary<string, RowValue>(), null, null);
         copy.Cells["label"] = new RowValueConstant("unique");
 
         // Act
@@ -514,15 +514,15 @@ public class TwoDAIntegrationTests : IntegrationTestBase
     public void CopyRow_Exclusive_Exists_ShouldSkipCopy()
     {
         // Arrange
-        var twoda = CreateTest2DA(
+        TwoDA twoda = CreateTest2DA(
             new[] { "label", "value" },
             new[]
             {
                 ("0", new[] { "existing", "100" })
             });
 
-        var source = new Target(TargetType.ROW_INDEX, new RowValueConstant("0"));
-        var copy = new CopyRow2DA("Test", source, "label", "NewRow", null, null, null);
+        var source = new Target(TargetType.ROW_INDEX, 0);
+        var copy = new CopyRow2DA("Test", source, "label", "NewRow", new Dictionary<string, RowValue>(), null, null);
         copy.Cells["label"] = new RowValueConstant("existing");
 
         // Act
@@ -536,15 +536,15 @@ public class TwoDAIntegrationTests : IntegrationTestBase
     public void CopyRow_Store2DAMemory_RowIndex_ShouldStoreNewIndex()
     {
         // Arrange
-        var twoda = CreateTest2DA(
+        TwoDA twoda = CreateTest2DA(
             new[] { "Col1" },
             new[]
             {
                 ("0", new[] { "a" })
             });
 
-        var source = new Target(TargetType.ROW_INDEX, new RowValueConstant("0"));
-        var copy = new CopyRow2DA("Test", source, null, "1", null, null, null);
+        var source = new Target(TargetType.ROW_INDEX, 0);
+        var copy = new CopyRow2DA("Test", source, null, "1", new Dictionary<string, RowValue>(), null, null);
         copy.Store2DA[0] = new RowValueRowIndex();
 
         // Act
@@ -558,15 +558,15 @@ public class TwoDAIntegrationTests : IntegrationTestBase
     public void CopyRow_Store2DAMemory_RowLabel_ShouldStoreNewLabel()
     {
         // Arrange
-        var twoda = CreateTest2DA(
+        TwoDA twoda = CreateTest2DA(
             new[] { "Col1" },
             new[]
             {
                 ("0", new[] { "a" })
             });
 
-        var source = new Target(TargetType.ROW_INDEX, new RowValueConstant("0"));
-        var copy = new CopyRow2DA("Test", source, null, "CopiedLabel", null, null, null);
+        var source = new Target(TargetType.ROW_INDEX, 0);
+        var copy = new CopyRow2DA("Test", source, null, "CopiedLabel", new Dictionary<string, RowValue>(), null, null);
         copy.Store2DA[1] = new RowValueRowLabel();
 
         // Act
@@ -580,15 +580,15 @@ public class TwoDAIntegrationTests : IntegrationTestBase
     public void CopyRow_Store2DAMemory_Cell_ShouldStoreCellValue()
     {
         // Arrange
-        var twoda = CreateTest2DA(
+        TwoDA twoda = CreateTest2DA(
             new[] { "name", "value" },
             new[]
             {
                 ("0", new[] { "Test", "999" })
             });
 
-        var source = new Target(TargetType.ROW_INDEX, new RowValueConstant("0"));
-        var copy = new CopyRow2DA("Test", source, null, "1", null, null, null);
+        var source = new Target(TargetType.ROW_INDEX, 0);
+        var copy = new CopyRow2DA("Test", source, null, "1", new Dictionary<string, RowValue>(), null, null);
         copy.Store2DA[2] = new RowValueRowCell("value");
 
         // Act
@@ -606,7 +606,7 @@ public class TwoDAIntegrationTests : IntegrationTestBase
     public void AddColumn_Empty_ShouldAddColumnWithEmptyCells()
     {
         // Arrange
-        var twoda = CreateTest2DA(
+        TwoDA twoda = CreateTest2DA(
             new[] { "Col1", "Col2" },
             new[]
             {
@@ -629,7 +629,7 @@ public class TwoDAIntegrationTests : IntegrationTestBase
     public void AddColumn_WithDefaultValue_ShouldFillCells()
     {
         // Arrange
-        var twoda = CreateTest2DA(
+        TwoDA twoda = CreateTest2DA(
             new[] { "Col1" },
             new[]
             {
@@ -652,7 +652,7 @@ public class TwoDAIntegrationTests : IntegrationTestBase
     public void AddColumn_AlreadyExists_ShouldNotAddDuplicate()
     {
         // Arrange
-        var twoda = CreateTest2DA(
+        TwoDA twoda = CreateTest2DA(
             new[] { "Col1", "Col2" },
             new[]
             {
@@ -660,9 +660,11 @@ public class TwoDAIntegrationTests : IntegrationTestBase
             });
 
         var addColumn = new AddColumn2DA("add_col_0", "Col1", "****", new Dictionary<int, RowValue>(), new Dictionary<string, RowValue>());
+        var config = new Modifications2DA("");
+        config.Modifiers.Add(addColumn);
 
         // Act
-        addColumn.Apply(twoda, Memory);
+        config.Apply(twoda, Memory, Logger, Game.K1);
 
         // Assert
         twoda.GetHeaders().Count(c => c == "Col1").Should().Be(1);
@@ -672,7 +674,7 @@ public class TwoDAIntegrationTests : IntegrationTestBase
     public void AddColumn_Multiple_ShouldAddAllColumns()
     {
         // Arrange
-        var twoda = CreateTest2DA(
+        TwoDA twoda = CreateTest2DA(
             new[] { "Col1" },
             new[]
             {
@@ -707,8 +709,8 @@ AddColumn0=add_column_0
 ColumnLabel=Col3
 DefaultValue=****
 ";
-        var config = SetupIniAndConfig(iniText);
-        var twoda = CreateTest2DA(
+        Core.Config.PatcherConfig config = SetupIniAndConfig(iniText);
+        TwoDA twoda = CreateTest2DA(
             new[] { "Col1", "Col2" },
             new[]
             {
@@ -739,8 +741,8 @@ AddColumn0=add_column_0
 ColumnLabel=Col3
 DefaultValue=X
 ";
-        var config = SetupIniAndConfig(iniText);
-        var twoda = CreateTest2DA(
+        Core.Config.PatcherConfig config = SetupIniAndConfig(iniText);
+        TwoDA twoda = CreateTest2DA(
             new[] { "Col1", "Col2" },
             new[]
             {
@@ -772,8 +774,8 @@ ColumnLabel=Col3
 DefaultValue=****
 I0=X
 ";
-        var config = SetupIniAndConfig(iniText);
-        var twoda = CreateTest2DA(
+        Core.Config.PatcherConfig config = SetupIniAndConfig(iniText);
+        TwoDA twoda = CreateTest2DA(
             new[] { "Col1", "Col2" },
             new[]
             {
@@ -805,8 +807,8 @@ ColumnLabel=Col3
 DefaultValue=****
 L1=2DAMEMORY5
 ";
-        var config = SetupIniAndConfig(iniText);
-        var twoda = CreateTest2DA(
+        Core.Config.PatcherConfig config = SetupIniAndConfig(iniText);
+        TwoDA twoda = CreateTest2DA(
             new[] { "Col1", "Col2" },
             new[]
             {
@@ -839,8 +841,8 @@ ColumnLabel=Col3
 DefaultValue=****
 L1=StrRef5
 ";
-        var config = SetupIniAndConfig(iniText);
-        var twoda = CreateTest2DA(
+        Core.Config.PatcherConfig config = SetupIniAndConfig(iniText);
+        TwoDA twoda = CreateTest2DA(
             new[] { "Col1", "Col2" },
             new[]
             {
@@ -875,8 +877,8 @@ I0=X
 I1=Y
 2DAMEMORY0=I0
 ";
-        var config = SetupIniAndConfig(iniText);
-        var twoda = CreateTest2DA(
+        Core.Config.PatcherConfig config = SetupIniAndConfig(iniText);
+        TwoDA twoda = CreateTest2DA(
             new[] { "Col1", "Col2" },
             new[]
             {
@@ -911,8 +913,8 @@ I0=X
 I1=Y
 2DAMEMORY0=L1
 ";
-        var config = SetupIniAndConfig(iniText);
-        var twoda = CreateTest2DA(
+        Core.Config.PatcherConfig config = SetupIniAndConfig(iniText);
+        TwoDA twoda = CreateTest2DA(
             new[] { "Col1", "Col2" },
             new[]
             {

@@ -25,7 +25,7 @@ public class SSFFormatTests
     {
         // Read from actual test file
         var reader = new SSFBinaryReader(BinaryTestFile);
-        var ssf = reader.Load();
+        SSF ssf = reader.Load();
         ValidateIO(ssf);
 
         // Write to bytes and read back
@@ -33,7 +33,7 @@ public class SSFFormatTests
         byte[] data = writer.Write();
 
         var newReader = new SSFBinaryReader(data);
-        var newSsf = newReader.Load();
+        SSF newSsf = newReader.Load();
         ValidateIO(newSsf);
     }
 

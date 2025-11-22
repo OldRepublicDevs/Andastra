@@ -42,8 +42,8 @@ public class TlkModificationTests
 
         // Assert
         Assert.Equal(4, dialogTlk.Count);
-        var entry2 = dialogTlk.Get(2);
-        var entry3 = dialogTlk.Get(3);
+        TLKEntry? entry2 = dialogTlk.Get(2);
+        TLKEntry? entry3 = dialogTlk.Get(3);
         Assert.NotNull(entry2);
         Assert.NotNull(entry3);
         Assert.Equal("Append2", entry2.Text);
@@ -93,8 +93,8 @@ public class TlkModificationTests
 
         // Assert
         Assert.Equal(4, dialogTlk.Count);
-        var entry1 = dialogTlk.Get(1);
-        var entry2 = dialogTlk.Get(2);
+        TLKEntry? entry1 = dialogTlk.Get(1);
+        TLKEntry? entry2 = dialogTlk.Get(2);
         Assert.NotNull(entry1);
         Assert.NotNull(entry2);
         Assert.Equal("Replace2", entry1.Text);

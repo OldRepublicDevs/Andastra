@@ -61,7 +61,7 @@ public static class BinaryExtensions
         for (int i = 0; i < stringCount; i++)
         {
             uint stringId = reader.ReadUInt32();
-            var (language, gender) = LocalizedString.SubstringPair((int)stringId);
+            (Language language, Gender gender) = LocalizedString.SubstringPair((int)stringId);
             uint length = reader.ReadUInt32();
 
             // Get encoding for the language
@@ -92,7 +92,7 @@ public static class BinaryExtensions
         tempWriter.Write((uint)value.Count);
 
         // Write all substrings
-        foreach (var (language, gender, text) in value)
+        foreach ((Language language, Gender gender, string text) in value)
         {
             int stringId = LocalizedString.SubstringId(language, gender);
             tempWriter.Write((uint)stringId);

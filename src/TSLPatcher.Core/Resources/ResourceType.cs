@@ -52,14 +52,14 @@ public class ResourceType
     public static ResourceType FromExtension(string extension)
     {
         string ext = extension.TrimStart('.').ToLower();
-        return _byExtension.TryGetValue(ext, out var type)
+        return _byExtension.TryGetValue(ext, out ResourceType? type)
             ? type
             : new ResourceType(-1, ext, "Unknown", "binary", isInvalid: true);
     }
 
     public static ResourceType FromTypeId(int typeId)
     {
-        return _byTypeId.TryGetValue(typeId, out var type)
+        return _byTypeId.TryGetValue(typeId, out ResourceType? type)
             ? type
             : new ResourceType(typeId, "", "Unknown", "binary", isInvalid: true);
     }

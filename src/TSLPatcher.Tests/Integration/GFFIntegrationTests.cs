@@ -207,7 +207,7 @@ public class GFFIntegrationTests : IntegrationTestBase
         modify.Apply(gff.Root, Memory, Logger, Game.K1);
 
         // Assert
-        var result = gff.Root.GetVector3("Position");
+        Vector3 result = gff.Root.GetVector3("Position");
         result.X.Should().BeApproximately(10, 0.0001f);
         result.Y.Should().BeApproximately(20, 0.0001f);
         result.Z.Should().BeApproximately(30, 0.0001f);
@@ -227,7 +227,7 @@ public class GFFIntegrationTests : IntegrationTestBase
         modify.Apply(gff.Root, Memory, Logger, Game.K1);
 
         // Assert
-        var result = gff.Root.GetVector4("Rotation");
+        Vector4 result = gff.Root.GetVector4("Rotation");
         result.X.Should().BeApproximately(0, 0.0001f);
         result.Y.Should().BeApproximately(1, 0.0001f);
     }
@@ -249,7 +249,7 @@ public class GFFIntegrationTests : IntegrationTestBase
         modify.Apply(gff.Root, Memory, Logger, Game.K1);
 
         // Assert
-        var result = gff.Root.GetLocString("Description");
+        LocalizedString result = gff.Root.GetLocString("Description");
         result.StringRef.Should().Be(200);
         result.Get(Language.English, Gender.Male).Should().Be("New text");
     }
@@ -305,7 +305,7 @@ public class GFFIntegrationTests : IntegrationTestBase
         modify.Apply(gff.Root, Memory, Logger, Game.K1);
 
         // Assert
-        var result = gff.Root.GetStruct("OuterStruct");
+        GFFStruct result = gff.Root.GetStruct("OuterStruct");
         result.GetValue("InnerField").Should().Be("NewValue");
     }
 
@@ -375,7 +375,7 @@ public class GFFIntegrationTests : IntegrationTestBase
 
         // Assert
         gff.Root.Exists("NewVector").Should().BeTrue();
-        var result = gff.Root.GetVector3("NewVector");
+        Vector3 result = gff.Root.GetVector3("NewVector");
         result.X.Should().BeApproximately(1, 0.0001f);
         result.Y.Should().BeApproximately(2, 0.0001f);
         result.Z.Should().BeApproximately(3, 0.0001f);
@@ -395,7 +395,7 @@ public class GFFIntegrationTests : IntegrationTestBase
         add.Apply(gff.Root, Memory, Logger, Game.K1);
 
         // Assert
-        var result = gff.Root.GetStruct("OuterStruct");
+        GFFStruct result = gff.Root.GetStruct("OuterStruct");
         result.Exists("NewField").Should().BeTrue();
         result.GetInt32("NewField").Should().Be(100);
     }
@@ -415,7 +415,7 @@ public class GFFIntegrationTests : IntegrationTestBase
         add.Apply(gff.Root, Memory, Logger, Game.K1);
 
         // Assert
-        var result = gff.Root.GetLocString("Description");
+        LocalizedString result = gff.Root.GetLocString("Description");
         result.StringRef.Should().Be(100);
         result.Get(Language.English, Gender.Male).Should().Be("English text");
         result.Get(Language.French, Gender.Male).Should().Be("French text");
@@ -441,7 +441,7 @@ public class GFFIntegrationTests : IntegrationTestBase
         add.Apply(gff.Root, Memory, Logger, Game.K1);
 
         // Assert
-        var result = gff.Root.GetList("ItemList");
+        GFFList result = gff.Root.GetList("ItemList");
         result.Count.Should().Be(1);
         result[0].GetValue("Tag").Should().Be("item001");
     }
@@ -463,7 +463,7 @@ public class GFFIntegrationTests : IntegrationTestBase
         add.Apply(gff.Root, Memory, Logger, Game.K1);
 
         // Assert
-        var result = gff.Root.GetList("ItemList");
+        GFFList result = gff.Root.GetList("ItemList");
         result[0].GetValue("Tag").Should().Be("item001");
         result[0].GetInt32("StackSize").Should().Be(10);
     }
@@ -536,19 +536,19 @@ Path=List
 Label=
 TypeId=1
 ";
-        var config = SetupIniAndConfig(iniText);
+        Core.Config.PatcherConfig config = SetupIniAndConfig(iniText);
         var gff = new GFF();
         var gffList = new GFFList();
         gff.Root.SetList("List", gffList);
 
         var memory = new PatcherMemory();
         var writer = new GFFBinaryWriter(gff);
-        var bytes = writer.Write();
-        var patchedBytes = (byte[])config.PatchesGFF.First(p => p.SaveAs == "test.gff").PatchResource(bytes, memory, new PatchLogger(), Game.K1);
+        byte[] bytes = writer.Write();
+        byte[] patchedBytes = (byte[])config.PatchesGFF.First(p => p.SaveAs == "test.gff").PatchResource(bytes, memory, new PatchLogger(), Game.K1);
         var reader = new GFFBinaryReader(patchedBytes);
-        var patchedGff = reader.Load();
+        GFF patchedGff = reader.Load();
 
-        var list = patchedGff.Root.GetList("List");
+        GFFList list = patchedGff.Root.GetList("List");
         list.Should().NotBeNull();
         list!.Count.Should().Be(3);
         list[0].StructId.Should().Be(5);
@@ -580,18 +580,18 @@ Label=
 TypeId=0
 2DAMEMORY12=ListIndex
 ";
-        var config = SetupIniAndConfig(iniText);
+        Core.Config.PatcherConfig config = SetupIniAndConfig(iniText);
         var gff = new GFF();
         gff.Root.SetList("List", new GFFList());
 
         var memory = new PatcherMemory();
         var writer = new GFFBinaryWriter(gff);
-        var bytes = writer.Write();
-        var patchedBytes = (byte[])config.PatchesGFF.First(p => p.SaveAs == "test.gff").PatchResource(bytes, memory, new PatchLogger(), Game.K1);
+        byte[] bytes = writer.Write();
+        byte[] patchedBytes = (byte[])config.PatchesGFF.First(p => p.SaveAs == "test.gff").PatchResource(bytes, memory, new PatchLogger(), Game.K1);
         var reader = new GFFBinaryReader(patchedBytes);
-        var patchedGff = reader.Load();
+        GFF patchedGff = reader.Load();
 
-        var list = patchedGff.Root.GetList("List");
+        GFFList list = patchedGff.Root.GetList("List");
         list.Should().NotBeNull();
         list!.Count.Should().Be(2);
         memory.Memory2DA[12].Should().Be("1");

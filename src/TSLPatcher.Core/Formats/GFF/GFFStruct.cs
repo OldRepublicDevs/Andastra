@@ -26,12 +26,12 @@ public class GFFStruct(int structId = 0) : IEnumerable<(string label, GFFFieldTy
 
     public GFFFieldType? GetFieldType(string label)
     {
-        return _fields.TryGetValue(label, out var field) ? field.FieldType : null;
+        return _fields.TryGetValue(label, out GFFField? field) ? field.FieldType : null;
     }
 
     public bool TryGetFieldType(string label, out GFFFieldType fieldType)
     {
-        if (_fields.TryGetValue(label, out var field))
+        if (_fields.TryGetValue(label, out GFFField? field))
         {
             fieldType = field.FieldType;
             return true;
@@ -42,12 +42,12 @@ public class GFFStruct(int structId = 0) : IEnumerable<(string label, GFFFieldTy
 
     public object? GetValue(string label, object? defaultValue = null)
     {
-        return _fields.TryGetValue(label, out var field) ? field.Value : defaultValue;
+        return _fields.TryGetValue(label, out GFFField? field) ? field.Value : defaultValue;
     }
 
     public T? Acquire<T>(string label, T? defaultValue = default)
     {
-        if (!_fields.TryGetValue(label, out var field))
+        if (!_fields.TryGetValue(label, out GFFField? field))
         {
             return defaultValue;
         }
@@ -77,7 +77,7 @@ public class GFFStruct(int structId = 0) : IEnumerable<(string label, GFFFieldTy
 
     public bool TryGetLocString(string label, out LocalizedString? value)
     {
-        if (_fields.TryGetValue(label, out var field) && field.Value is LocalizedString locString)
+        if (_fields.TryGetValue(label, out GFFField? field) && field.Value is LocalizedString locString)
         {
             value = locString;
             return true;
@@ -88,7 +88,7 @@ public class GFFStruct(int structId = 0) : IEnumerable<(string label, GFFFieldTy
 
     public bool TryGetStruct(string label, out GFFStruct? value)
     {
-        if (_fields.TryGetValue(label, out var field) && field.Value is GFFStruct gffStruct)
+        if (_fields.TryGetValue(label, out GFFField? field) && field.Value is GFFStruct gffStruct)
         {
             value = gffStruct;
             return true;
@@ -99,7 +99,7 @@ public class GFFStruct(int structId = 0) : IEnumerable<(string label, GFFFieldTy
 
     public bool TryGetList(string label, out GFFList? value)
     {
-        if (_fields.TryGetValue(label, out var field) && field.Value is GFFList gffList)
+        if (_fields.TryGetValue(label, out GFFField? field) && field.Value is GFFList gffList)
         {
             value = gffList;
             return true;
@@ -135,7 +135,7 @@ public class GFFStruct(int structId = 0) : IEnumerable<(string label, GFFFieldTy
 
     public IEnumerator<(string label, GFFFieldType fieldType, object value)> GetEnumerator()
     {
-        foreach (var (label, field) in _fields)
+        foreach ((string label, GFFField field) in _fields)
         {
             yield return (label, field.FieldType, field.Value);
         }
@@ -148,7 +148,7 @@ public class GFFStruct(int structId = 0) : IEnumerable<(string label, GFFFieldTy
         get => GetValue(label) ?? throw new KeyError(label, "Field does not exist in this GFFStruct");
         set
         {
-            if (_fields.TryGetValue(label, out var field))
+            if (_fields.TryGetValue(label, out GFFField? field))
             {
                 _fields[label] = new GFFField(field.FieldType, value);
             }

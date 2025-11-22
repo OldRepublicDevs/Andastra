@@ -19,7 +19,7 @@ public class TwoDAModsAddColumnUnitTests
     private TwoDAFile CreateTestTwoDA(string[] columns, params (string label, string[] values)[] rows)
     {
         var twoda = new TwoDAFile(columns.ToList());
-        foreach (var (label, values) in rows)
+        foreach ((string label, string[] values) in rows)
         {
             var cells = new Dictionary<string, object>();
             for (int i = 0; i < values.Length && i < columns.Length; i++)
@@ -34,7 +34,7 @@ public class TwoDAModsAddColumnUnitTests
     [Fact]
     public void AddColumn_Empty_ShouldAddEmptyColumn()
     {
-        var twoda = CreateTestTwoDA(
+        TwoDAFile twoda = CreateTestTwoDA(
             new[] { "Col1", "Col2" },
             ("0", new[] { "a", "b" }),
             ("1", new[] { "c", "d" })
@@ -63,7 +63,7 @@ public class TwoDAModsAddColumnUnitTests
     [Fact]
     public void AddColumn_WithDefault_ShouldFillWithDefaultValue()
     {
-        var twoda = CreateTestTwoDA(
+        TwoDAFile twoda = CreateTestTwoDA(
             new[] { "Col1", "Col2" },
             ("0", new[] { "a", "b" }),
             ("1", new[] { "c", "d" })
@@ -92,7 +92,7 @@ public class TwoDAModsAddColumnUnitTests
     [Fact]
     public void AddColumn_RowIndexConstant_ShouldSetSpecificRowValue()
     {
-        var twoda = CreateTestTwoDA(
+        TwoDAFile twoda = CreateTestTwoDA(
             new[] { "Col1", "Col2" },
             ("0", new[] { "a", "b" }),
             ("1", new[] { "c", "d" })
@@ -121,7 +121,7 @@ public class TwoDAModsAddColumnUnitTests
     [Fact]
     public void AddColumn_RowLabel2DAMemory_ShouldUseMemoryValue()
     {
-        var twoda = CreateTestTwoDA(
+        TwoDAFile twoda = CreateTestTwoDA(
             new[] { "Col1", "Col2" },
             ("0", new[] { "a", "b" }),
             ("1", new[] { "c", "d" })
@@ -151,7 +151,7 @@ public class TwoDAModsAddColumnUnitTests
     [Fact]
     public void AddColumn_RowLabelTLKMemory_ShouldUseMemoryValue()
     {
-        var twoda = CreateTestTwoDA(
+        TwoDAFile twoda = CreateTestTwoDA(
             new[] { "Col1", "Col2" },
             ("0", new[] { "a", "b" }),
             ("1", new[] { "c", "d" })
@@ -181,7 +181,7 @@ public class TwoDAModsAddColumnUnitTests
     [Fact]
     public void AddColumn_Store2DAMemoryFromIndex_ShouldStoreValue()
     {
-        var twoda = CreateTestTwoDA(
+        TwoDAFile twoda = CreateTestTwoDA(
             new[] { "Col1", "Col2" },
             ("0", new[] { "a", "b" }),
             ("1", new[] { "c", "d" })
@@ -216,7 +216,7 @@ public class TwoDAModsAddColumnUnitTests
     [Fact]
     public void AddColumn_Store2DAMemoryFromLabel_ShouldStoreValue()
     {
-        var twoda = CreateTestTwoDA(
+        TwoDAFile twoda = CreateTestTwoDA(
             new[] { "Col1", "Col2" },
             ("0", new[] { "a", "b" }),
             ("1", new[] { "c", "d" })
@@ -251,7 +251,7 @@ public class TwoDAModsAddColumnUnitTests
     [Fact]
     public void AddColumn_WithMultipleIndexAndLabelInserts_ShouldApplyAll()
     {
-        var twoda = CreateTestTwoDA(
+        TwoDAFile twoda = CreateTestTwoDA(
             new[] { "Col1" },
             ("0", new[] { "a" }),
             ("1", new[] { "b" }),
@@ -279,7 +279,7 @@ public class TwoDAModsAddColumnUnitTests
     [Fact]
     public void AddColumn_OverwritesIndexWithLabel_ShouldUseLastSet()
     {
-        var twoda = CreateTestTwoDA(
+        TwoDAFile twoda = CreateTestTwoDA(
             new[] { "Col1" },
             ("5", new[] { "a" })
         );
@@ -306,7 +306,7 @@ public class TwoDAModsAddColumnUnitTests
     [Fact]
     public void AddColumn_ToEmptyTable_ShouldStillAddColumn()
     {
-        var twoda = CreateTestTwoDA(new[] { "Col1" });
+        TwoDAFile twoda = CreateTestTwoDA(new[] { "Col1" });
 
         var memory = new PatcherMemory();
         var logger = new PatchLogger();
@@ -330,7 +330,7 @@ public class TwoDAModsAddColumnUnitTests
     [Fact]
     public void AddColumn_MultipleColumns_ShouldAddInOrder()
     {
-        var twoda = CreateTestTwoDA(
+        TwoDAFile twoda = CreateTestTwoDA(
             new[] { "Col1" },
             ("0", new[] { "a" })
         );

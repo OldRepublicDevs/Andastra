@@ -39,7 +39,7 @@ public class NamespaceReader
         parser.Configuration.CaseInsensitive = true;
 
         string iniText = File.ReadAllText(path);
-        var ini = parser.Parse(iniText);
+        IniData ini = parser.Parse(iniText);
 
         return new NamespaceReader(ini).Load();
     }
@@ -50,7 +50,7 @@ public class NamespaceReader
     public List<PatcherNamespace> Load()
     {
         // Find the [Namespaces] section (case-insensitive)
-        var namespacesSection = _ini.Sections.FirstOrDefault(s =>
+        SectionData? namespacesSection = _ini.Sections.FirstOrDefault(s =>
             s.SectionName.Equals("Namespaces", StringComparison.OrdinalIgnoreCase));
 
         if (namespacesSection == null)
@@ -60,12 +60,12 @@ public class NamespaceReader
 
         var namespaces = new List<PatcherNamespace>();
 
-        foreach (var keyData in namespacesSection.Keys)
+        foreach (KeyData? keyData in namespacesSection.Keys)
         {
             string namespaceId = keyData.Value;
 
             // Find the section for this namespace (case-insensitive)
-            var namespaceSection = _ini.Sections.FirstOrDefault(s =>
+            SectionData? namespaceSection = _ini.Sections.FirstOrDefault(s =>
                 s.SectionName.Equals(namespaceId, StringComparison.OrdinalIgnoreCase));
 
             if (namespaceSection == null)

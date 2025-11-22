@@ -182,7 +182,7 @@ public class LocalizedStringDelta : LocalizedString
         }
 
         // Copy all language/gender/text entries
-        foreach (var (language, gender, text) in this)
+        foreach ((Language language, Gender gender, string text) in this)
         {
             locstring.SetData(language, gender, text);
         }

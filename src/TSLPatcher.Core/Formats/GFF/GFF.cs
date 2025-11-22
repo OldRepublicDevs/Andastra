@@ -23,7 +23,7 @@ public class GFF
     {
         root ??= Root;
 
-        foreach (var (label, fieldType, value) in root)
+        foreach ((string label, GFFFieldType fieldType, object value) in root)
         {
             int lengthOrId = -2;
 
@@ -47,7 +47,7 @@ public class GFF
             else if (fieldType == GFFFieldType.List && value is GFFList listValue)
             {
                 int i = 0;
-                foreach (var item in listValue)
+                foreach (GFFStruct item in listValue)
                 {
                     string listIndentStr = new string(' ', indent * 2);
                     string listLabelStr = $"  {listIndentStr}[Struct {i}]".PadRight(columnLen);

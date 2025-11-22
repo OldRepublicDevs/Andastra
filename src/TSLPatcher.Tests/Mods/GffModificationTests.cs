@@ -26,7 +26,7 @@ public class GffModificationTests
         });
 
         // Act
-        var bytes = config.PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
+        object bytes = config.PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
         gff = GFF.FromBytes((byte[])bytes);
 
         // Assert
@@ -47,7 +47,7 @@ public class GffModificationTests
         });
 
         // Act
-        var bytes = config.PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
+        object bytes = config.PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
         gff = GFF.FromBytes((byte[])bytes);
 
         // Assert
@@ -68,7 +68,7 @@ public class GffModificationTests
         });
 
         // Act
-        var bytes = config.PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
+        object bytes = config.PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
         gff = GFF.FromBytes((byte[])bytes);
 
         // Assert
@@ -89,7 +89,7 @@ public class GffModificationTests
         });
 
         // Act
-        var bytes = config.PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
+        object bytes = config.PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
         gff = GFF.FromBytes((byte[])bytes);
 
         // Assert
@@ -110,7 +110,7 @@ public class GffModificationTests
         });
 
         // Act
-        var bytes = config.PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
+        object bytes = config.PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
         gff = GFF.FromBytes((byte[])bytes);
 
         // Assert
@@ -131,7 +131,7 @@ public class GffModificationTests
         });
 
         // Act
-        var bytes = config.PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
+        object bytes = config.PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
         gff = GFF.FromBytes((byte[])bytes);
 
         // Assert
@@ -152,7 +152,7 @@ public class GffModificationTests
         });
 
         // Act
-        var bytes = config.PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
+        object bytes = config.PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
         gff = GFF.FromBytes((byte[])bytes);
 
         // Assert
@@ -173,7 +173,7 @@ public class GffModificationTests
         });
 
         // Act
-        var bytes = config.PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
+        object bytes = config.PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
         gff = GFF.FromBytes((byte[])bytes);
 
         // Assert
@@ -196,11 +196,11 @@ public class GffModificationTests
         });
 
         // Act
-        var bytes = config.PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
+        object bytes = config.PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
         gff = GFF.FromBytes((byte[])bytes);
 
         // Assert
-        var locstring = gff.Root.GetLocString("Field1");
+        LocalizedString locstring = gff.Root.GetLocString("Field1");
         Assert.NotNull(locstring);
         Assert.Equal(200, locstring.StringRef);
     }
@@ -219,7 +219,7 @@ public class GffModificationTests
         });
 
         // Act
-        var bytes = config.PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
+        object bytes = config.PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
         gff = GFF.FromBytes((byte[])bytes);
 
         // Assert
@@ -243,11 +243,11 @@ public class GffModificationTests
         });
 
         // Act
-        var bytes = config.PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
+        object bytes = config.PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
         gff = GFF.FromBytes((byte[])bytes);
 
         // Assert
-        var parentStruct = gff.Root.GetStruct("Parent");
+        GFFStruct parentStruct = gff.Root.GetStruct("Parent");
         Assert.NotNull(parentStruct);
         Assert.True(parentStruct.Exists("ChildField"));
         Assert.Equal(100, parentStruct.GetInt32("ChildField"));

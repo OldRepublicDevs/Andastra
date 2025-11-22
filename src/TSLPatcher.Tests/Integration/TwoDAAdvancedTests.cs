@@ -17,7 +17,7 @@ public class TwoDAAdvancedTests : IntegrationTestBase
     public void AddColumn_Empty_ShouldFillWithStars()
     {
         // Arrange
-        var twoda = CreateTest2DA(
+        TwoDA twoda = CreateTest2DA(
             new[] { "Col1", "Col2" },
             new[]
             {
@@ -40,7 +40,7 @@ public class TwoDAAdvancedTests : IntegrationTestBase
     public void AddColumn_WithDefault_ShouldFillAllRows()
     {
         // Arrange
-        var twoda = CreateTest2DA(
+        TwoDA twoda = CreateTest2DA(
             new[] { "Col1" },
             new[]
             {
@@ -64,7 +64,7 @@ public class TwoDAAdvancedTests : IntegrationTestBase
     public void AddColumn_RowIndexConstant_ShouldSetSpecificRow()
     {
         // Arrange
-        var twoda = CreateTest2DA(
+        TwoDA twoda = CreateTest2DA(
             new[] { "Col1" },
             new[]
             {
@@ -81,8 +81,8 @@ Table0=test.2da
 AddColumn0=NewCol(default)
 RowIndex1=special_value
 ";
-        var config = SetupIniAndConfig(iniText);
-        var modifications = config.Patches2DA.First(p => p.SaveAs == "test.2da");
+        Core.Config.PatcherConfig config = SetupIniAndConfig(iniText);
+        Modifications2DA modifications = config.Patches2DA.First(p => p.SaveAs == "test.2da");
 
         // Act
         modifications.Apply(twoda, Memory, Logger, Game.K1);
@@ -97,7 +97,7 @@ RowIndex1=special_value
     public void AddColumn_RowLabel2DAMemory_ShouldUseTokenValue()
     {
         // Arrange
-        var twoda = CreateTest2DA(
+        TwoDA twoda = CreateTest2DA(
             new[] { "Col1" },
             new[]
             {
@@ -116,8 +116,8 @@ Table0=test.2da
 AddColumn0=NewCol(default)
 RowLabel(row1)=2DAMEMORY3
 ";
-        var config = SetupIniAndConfig(iniText);
-        var modifications = config.Patches2DA.First(p => p.SaveAs == "test.2da");
+        Core.Config.PatcherConfig config = SetupIniAndConfig(iniText);
+        Modifications2DA modifications = config.Patches2DA.First(p => p.SaveAs == "test.2da");
 
         // Act
         modifications.Apply(twoda, Memory, Logger, Game.K1);
@@ -130,7 +130,7 @@ RowLabel(row1)=2DAMEMORY3
     public void AddColumn_RowLabelTLKMemory_ShouldUseTokenValue()
     {
         // Arrange
-        var twoda = CreateTest2DA(
+        TwoDA twoda = CreateTest2DA(
             new[] { "Col1" },
             new[]
             {
@@ -148,8 +148,8 @@ Table0=test.2da
 AddColumn0=NewCol(default)
 RowLabel(row1)=StrRef5
 ";
-        var config = SetupIniAndConfig(iniText);
-        var modifications = config.Patches2DA.First(p => p.SaveAs == "test.2da");
+        Core.Config.PatcherConfig config = SetupIniAndConfig(iniText);
+        Modifications2DA modifications = config.Patches2DA.First(p => p.SaveAs == "test.2da");
 
         // Act
         modifications.Apply(twoda, Memory, Logger, Game.K1);
@@ -162,7 +162,7 @@ RowLabel(row1)=StrRef5
     public void AddColumn_2DAMemoryIndex_ShouldStoreColumnIndex()
     {
         // Arrange
-        var twoda = CreateTest2DA(
+        TwoDA twoda = CreateTest2DA(
             new[] { "Col1", "Col2" },
             new[]
             {
@@ -177,8 +177,8 @@ Table0=test.2da
 AddColumn0=NewCol
 2DAMEMORY0=ColumnIndex
 ";
-        var config = SetupIniAndConfig(iniText);
-        var modifications = config.Patches2DA.First(p => p.SaveAs == "test.2da");
+        Core.Config.PatcherConfig config = SetupIniAndConfig(iniText);
+        Modifications2DA modifications = config.Patches2DA.First(p => p.SaveAs == "test.2da");
 
         // Act
         modifications.Apply(twoda, Memory, Logger, Game.K1);
@@ -191,7 +191,7 @@ AddColumn0=NewCol
     public void AddColumn_2DAMemoryLine_ShouldStoreColumnLabel()
     {
         // Arrange
-        var twoda = CreateTest2DA(
+        TwoDA twoda = CreateTest2DA(
             new[] { "Col1", "Col2" },
             new[]
             {
@@ -206,8 +206,8 @@ Table0=test.2da
 AddColumn0=MyNewColumn
 2DAMEMORY1=ColumnLabel
 ";
-        var config = SetupIniAndConfig(iniText);
-        var modifications = config.Patches2DA.First(p => p.SaveAs == "test.2da");
+        Core.Config.PatcherConfig config = SetupIniAndConfig(iniText);
+        Modifications2DA modifications = config.Patches2DA.First(p => p.SaveAs == "test.2da");
 
         // Act
         modifications.Apply(twoda, Memory, Logger, Game.K1);
@@ -220,7 +220,7 @@ AddColumn0=MyNewColumn
     public void ChangeRow_WithAllRowValueTypes_ShouldApplyCorrectly()
     {
         // Arrange
-        var twoda = CreateTest2DA(
+        TwoDA twoda = CreateTest2DA(
             new[] { "id", "name", "value", "ref" },
             new[]
             {
@@ -232,8 +232,8 @@ AddColumn0=MyNewColumn
         Memory.Memory2DA[10] = "999";
         Memory.MemoryStr[20] = 12345;
 
-        var target = new Target(TargetType.ROW_INDEX, new RowValueConstant("1"));
-        var change = new ChangeRow2DA("Test", target, null, null);
+        var target = new Target(TargetType.ROW_INDEX, 1);
+        var change = new ChangeRow2DA("Test", target, new Dictionary<string, RowValue>(), null);
         change.Cells["id"] = new RowValueHigh("id");
         change.Cells["name"] = new RowValueConstant("Modified");
         change.Cells["value"] = new RowValue2DAMemory(10);
@@ -253,7 +253,7 @@ AddColumn0=MyNewColumn
     public void AddRow_WithAllCellTypes_ShouldPopulateCorrectly()
     {
         // Arrange
-        var twoda = CreateTest2DA(
+        TwoDA twoda = CreateTest2DA(
             new[] { "id", "name", "value", "index", "label", "cell" },
             new[]
             {
@@ -263,7 +263,7 @@ AddColumn0=MyNewColumn
         Memory.Memory2DA[5] = "from_token";
         Memory.MemoryStr[6] = 54321;
 
-        var add = new AddRow2DA("Test", null, "1", null, null, null);
+        var add = new AddRow2DA("Test", null, "1", new Dictionary<string, RowValue>(), null, null);
         add.Cells["id"] = new RowValueHigh("id");
         add.Cells["name"] = new RowValueConstant("NewRow");
         add.Cells["value"] = new RowValue2DAMemory(5);
@@ -287,7 +287,7 @@ AddColumn0=MyNewColumn
     public void CopyRow_WithOverrides_ShouldMergeProperly()
     {
         // Arrange
-        var twoda = CreateTest2DA(
+        TwoDA twoda = CreateTest2DA(
             new[] { "id", "name", "health", "damage" },
             new[]
             {
@@ -295,7 +295,7 @@ AddColumn0=MyNewColumn
             });
 
         var source = new Target(TargetType.ROW_LABEL, new RowValueConstant("original"));
-        var copy = new CopyRow2DA("Test", source, null, "copy", null, null, null);
+        var copy = new CopyRow2DA("Test", source, null, "copy", new Dictionary<string, RowValue>(), null, null);
         copy.Cells["id"] = new RowValueHigh("id");
         copy.Cells["name"] = new RowValueConstant("Copy");
         // health and damage should be copied from source
@@ -314,7 +314,7 @@ AddColumn0=MyNewColumn
     public void ComplexWorkflow_MultipleOperations_ShouldApplyInOrder()
     {
         // Arrange
-        var twoda = CreateTest2DA(
+        TwoDA twoda = CreateTest2DA(
             new[] { "id", "name" },
             new[]
             {
@@ -346,8 +346,8 @@ label=2
 id=3
 name=Copied
 ";
-        var config = SetupIniAndConfig(iniText);
-        var modifications = config.Patches2DA.First(p => p.SaveAs == "test.2da");
+        Core.Config.PatcherConfig config = SetupIniAndConfig(iniText);
+        Modifications2DA modifications = config.Patches2DA.First(p => p.SaveAs == "test.2da");
 
         // Act
         modifications.Apply(twoda, Memory, Logger, Game.K1);
@@ -364,22 +364,22 @@ name=Copied
     public void ExclusiveColumn_MultipleAttempts_ShouldOnlyAddOnce()
     {
         // Arrange
-        var twoda = CreateTest2DA(
+        TwoDA twoda = CreateTest2DA(
             new[] { "unique_id", "name" },
             new[]
             {
                 ("0", new[] { "100", "Existing" })
             });
 
-        var add1 = new AddRow2DA("Test1", "unique_id", "1", null, null, null);
+        var add1 = new AddRow2DA("Test1", "unique_id", "1", new Dictionary<string, RowValue>(), null, null);
         add1.Cells["unique_id"] = new RowValueConstant("200");
         add1.Cells["name"] = new RowValueConstant("First");
 
-        var add2 = new AddRow2DA("Test2", "unique_id", "2", null, null, null);
+        var add2 = new AddRow2DA("Test2", "unique_id", "2", new Dictionary<string, RowValue>(), null, null);
         add2.Cells["unique_id"] = new RowValueConstant("200"); // Same value
         add2.Cells["name"] = new RowValueConstant("Second");
 
-        var add3 = new AddRow2DA("Test3", "unique_id", "3", null, null, null);
+        var add3 = new AddRow2DA("Test3", "unique_id", "3", new Dictionary<string, RowValue>(), null, null);
         add3.Cells["unique_id"] = new RowValueConstant("300"); // Different value
         add3.Cells["name"] = new RowValueConstant("Third");
 
@@ -398,7 +398,7 @@ name=Copied
     public void HighValue_EmptyColumn_ShouldReturnZero()
     {
         // Arrange
-        var twoda = CreateTest2DA(
+        TwoDA twoda = CreateTest2DA(
             new[] { "id", "empty_col" },
             new[]
             {
@@ -406,7 +406,7 @@ name=Copied
                 ("1", new[] { "2", "****" })
             });
 
-        var add = new AddRow2DA("Test", null, "2", null, null, null);
+        var add = new AddRow2DA("Test", null, "2", new Dictionary<string, RowValue>(), null, null);
         add.Cells["id"] = new RowValueConstant("3");
         add.Cells["empty_col"] = new RowValueHigh("empty_col");
 
@@ -421,14 +421,14 @@ name=Copied
     public void RowValueRowCell_ShouldGetValueFromSpecifiedColumn()
     {
         // Arrange
-        var twoda = CreateTest2DA(
+        TwoDA twoda = CreateTest2DA(
             new[] { "id", "reference", "data" },
             new[]
             {
                 ("0", new[] { "10", "20", "30" })
             });
 
-        var add = new AddRow2DA("Test", null, "1", null, null, null);
+        var add = new AddRow2DA("Test", null, "1", new Dictionary<string, RowValue>(), null, null);
         add.Cells["id"] = new RowValueConstant("15");
         add.Cells["reference"] = new RowValueRowCell("id");
         add.Cells["data"] = new RowValueRowCell("reference");

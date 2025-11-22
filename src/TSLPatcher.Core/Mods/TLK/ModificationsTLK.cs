@@ -39,7 +39,7 @@ public class ModificationsTLK : PatcherModifications
         Game game)
     {
         var reader = new TLKBinaryReader(source);
-        var dialog = reader.Load();
+        Formats.TLK.TLK dialog = reader.Load();
         Apply(dialog, memory, logger, game);
 
         var writer = new TLKBinaryWriter(dialog);
@@ -54,10 +54,17 @@ public class ModificationsTLK : PatcherModifications
     {
         if (mutableData is Formats.TLK.TLK dialog)
         {
-            foreach (var modifier in Modifiers)
+            foreach (ModifyTLK modifier in Modifiers)
             {
-                modifier.Apply(dialog, memory);
-                logger.CompletePatch();
+                try
+                {
+                    modifier.Apply(dialog, memory);
+                    logger.CompletePatch();
+                }
+                catch (System.IndexOutOfRangeException ex)
+                {
+                    logger.AddWarning(ex.Message);
+                }
             }
         }
         else
@@ -74,8 +81,8 @@ public class ModificationsTLK : PatcherModifications
 public class ModifyTLK
 {
     public string? TlkFilePath { get; set; }
-    public string Text { get; set; } = "";
-    public string Sound { get; set; } = "";
+    public string? Text { get; set; } = "";
+    public string? Sound { get; set; } = "";
 
     public int ModIndex { get; set; }
     public int TokenId { get; set; }
@@ -93,12 +100,14 @@ public class ModifyTLK
         Load();
         if (IsReplacement)
         {
-            dialog.Replace(TokenId, Text, Sound);
-            memory.MemoryStr[TokenId] = TokenId;
+            // For replacements, use ModIndex if it differs from TokenId, otherwise use TokenId
+            int stringrefToReplace = ModIndex != TokenId ? ModIndex : TokenId;
+            dialog.Replace(stringrefToReplace, Text, Sound ?? "");
+            // Replace operations do NOT store memory tokens
         }
         else
         {
-            int stringref = dialog.Add(Text, Sound);
+            int stringref = dialog.Add(Text ?? "", Sound ?? "");
             memory.MemoryStr[TokenId] = stringref;
         }
     }
@@ -111,7 +120,7 @@ public class ModifyTLK
         }
 
         var lookupTlk = new TalkTable(TlkFilePath);
-        var result = lookupTlk.GetStringResult(ModIndex);
+        StringResult result = lookupTlk.GetStringResult(ModIndex);
 
         if (string.IsNullOrEmpty(Text))
         {

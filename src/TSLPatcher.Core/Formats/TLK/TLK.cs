@@ -28,7 +28,7 @@ public class TLK(Common.Language language = Common.Language.English) : IEnumerab
         return Entries.Count - 1;
     }
 
-    public void Replace(int stringref, string text, string soundResref = "")
+    public void Replace(int stringref, string? text, string soundResref = "")
     {
         if (stringref < 0 || stringref >= Entries.Count)
         {
@@ -38,10 +38,12 @@ public class TLK(Common.Language language = Common.Language.English) : IEnumerab
         string oldText = Entries[stringref].Text;
         ResRef oldSound = Entries[stringref].Voiceover;
 
-        Entries[stringref] = new TLKEntry(
-            !string.IsNullOrEmpty(text) ? text : oldText,
-            !string.IsNullOrEmpty(soundResref) ? new ResRef(soundResref) : oldSound
-        );
+        // If text is null, use empty string (clears the text)
+        // If text is empty, preserve old text (Python behavior)
+        string newText = text == null ? "" : (string.IsNullOrEmpty(text) ? oldText : text);
+        ResRef newSound = string.IsNullOrEmpty(soundResref) ? oldSound : new ResRef(soundResref);
+
+        Entries[stringref] = new TLKEntry(newText, newSound);
     }
 
     public void Resize(int size)
@@ -96,7 +98,7 @@ public class TLK(Common.Language language = Common.Language.English) : IEnumerab
     /// </summary>
     public string String(int stringref)
     {
-        var entry = Get(stringref);
+        TLKEntry? entry = Get(stringref);
         return entry?.Text ?? "";
     }
 

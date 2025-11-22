@@ -25,7 +25,7 @@ public class SSFModsUnitTests
             new ModifySSF(SSFSound.BATTLE_CRY_1, new NoTokenUsage(5))
         });
 
-        var bytes = config.PatchResource(ssf.ToBytes(), memory, new PatchLogger(), Game.K1);
+        object bytes = config.PatchResource(ssf.ToBytes(), memory, new PatchLogger(), Game.K1);
         var patchedSsf = SSF.FromBytes((byte[])bytes);
 
         patchedSsf.Get(SSFSound.BATTLE_CRY_1).Should().Be(5);
@@ -43,7 +43,7 @@ public class SSFModsUnitTests
             new ModifySSF(SSFSound.BATTLE_CRY_2, new TokenUsage2DA(5))
         });
 
-        var bytes = config.PatchResource(ssf.ToBytes(), memory, new PatchLogger(), Game.K1);
+        object bytes = config.PatchResource(ssf.ToBytes(), memory, new PatchLogger(), Game.K1);
         var patchedSsf = SSF.FromBytes((byte[])bytes);
 
         patchedSsf.Get(SSFSound.BATTLE_CRY_2).Should().Be(123);
@@ -61,7 +61,7 @@ public class SSFModsUnitTests
             new ModifySSF(SSFSound.BATTLE_CRY_3, new TokenUsageTLK(5))
         });
 
-        var bytes = config.PatchResource(ssf.ToBytes(), memory, new PatchLogger(), Game.K1);
+        object bytes = config.PatchResource(ssf.ToBytes(), memory, new PatchLogger(), Game.K1);
         var patchedSsf = SSF.FromBytes((byte[])bytes);
 
         patchedSsf.Get(SSFSound.BATTLE_CRY_3).Should().Be(321);
@@ -82,7 +82,7 @@ public class SSFModsUnitTests
             new ModifySSF(SSFSound.SELECT_2, new NoTokenUsage(50))
         });
 
-        var bytes = config.PatchResource(ssf.ToBytes(), memory, new PatchLogger(), Game.K1);
+        object bytes = config.PatchResource(ssf.ToBytes(), memory, new PatchLogger(), Game.K1);
         var patchedSsf = SSF.FromBytes((byte[])bytes);
 
         patchedSsf.Get(SSFSound.BATTLE_CRY_1).Should().Be(10);
@@ -110,7 +110,7 @@ public class SSFModsUnitTests
             new ModifySSF(SSFSound.SELECT_1, new TokenUsageTLK(4))
         });
 
-        var bytes = config.PatchResource(ssf.ToBytes(), memory, new PatchLogger(), Game.K1);
+        object bytes = config.PatchResource(ssf.ToBytes(), memory, new PatchLogger(), Game.K1);
         var patchedSsf = SSF.FromBytes((byte[])bytes);
 
         patchedSsf.Get(SSFSound.BATTLE_CRY_1).Should().Be(100);
@@ -130,7 +130,7 @@ public class SSFModsUnitTests
             new ModifySSF(SSFSound.CRITICAL_HIT, new NoTokenUsage(999))
         });
 
-        var bytes = config.PatchResource(ssf.ToBytes(), memory, new PatchLogger(), Game.K1);
+        object bytes = config.PatchResource(ssf.ToBytes(), memory, new PatchLogger(), Game.K1);
         var patchedSsf = SSF.FromBytes((byte[])bytes);
 
         patchedSsf.Get(SSFSound.CRITICAL_HIT).Should().Be(999);
@@ -151,7 +151,7 @@ public class SSFModsUnitTests
             new ModifySSF(SSFSound.BATTLE_CRY_2, new NoTokenUsage(200))
         });
 
-        var bytes = config.PatchResource(ssf.ToBytes(), memory, new PatchLogger(), Game.K1);
+        object bytes = config.PatchResource(ssf.ToBytes(), memory, new PatchLogger(), Game.K1);
         var patchedSsf = SSF.FromBytes((byte[])bytes);
 
         patchedSsf.Get(SSFSound.BATTLE_CRY_1).Should().Be(100);
@@ -171,7 +171,7 @@ public class SSFModsUnitTests
         });
 
         var logger = new PatchLogger();
-        var bytes = config.PatchResource(ssf.ToBytes(), memory, logger, Game.K1);
+        object bytes = config.PatchResource(ssf.ToBytes(), memory, logger, Game.K1);
         var patchedSsf = SSF.FromBytes((byte[])bytes);
 
         // Should default to 0 or -1 when token not found
@@ -192,7 +192,7 @@ public class SSFModsUnitTests
         }
 
         var config = new ModificationsSSF("", false, false, modifiers);
-        var bytes = config.PatchResource(ssf.ToBytes(), memory, new PatchLogger(), Game.K1);
+        object bytes = config.PatchResource(ssf.ToBytes(), memory, new PatchLogger(), Game.K1);
         var patchedSsf = SSF.FromBytes((byte[])bytes);
 
         value = 1;

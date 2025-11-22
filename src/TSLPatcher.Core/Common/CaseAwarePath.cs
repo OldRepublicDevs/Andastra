@@ -263,7 +263,7 @@ public class CaseAwarePath
         int maxMatching = -1;
         CaseAwarePath? closestMatch = null;
 
-        foreach (var item in items)
+        foreach (CaseAwarePath item in items)
         {
             string itemStr = item.ToString();
             int matchingChars = GetMatchingCharactersCount(itemStr, target);

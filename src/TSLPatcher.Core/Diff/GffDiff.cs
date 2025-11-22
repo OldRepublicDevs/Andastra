@@ -99,8 +99,8 @@ public static class GffDiff
         int count = Math.Max(original.Count, modified.Count);
         for (int i = 0; i < count; i++)
         {
-            var origItem = i < original.Count ? original.At(i) : null;
-            var modItem = i < modified.Count ? modified.At(i) : null;
+            GFFStruct? origItem = i < original.Count ? original.At(i) : null;
+            GFFStruct? modItem = i < modified.Count ? modified.At(i) : null;
             string itemPath = $"{currentPath}/{i}";
 
             if (origItem == null)
@@ -137,7 +137,7 @@ public static class GffDiff
     public static Dictionary<string, object?> FlattenDifferences(GffCompareResult result)
     {
         var flat = new Dictionary<string, object?>();
-        foreach (var (path, _, newValue) in result.Differences)
+        foreach ((string path, object _, object newValue) in result.Differences)
         {
             // Normalize path separator
             string normalizedPath = path.Replace("\\", "/");
@@ -150,10 +150,10 @@ public static class GffDiff
     {
         var root = new Dictionary<string, object?>();
 
-        foreach (var kvp in flatChanges)
+        foreach (KeyValuePair<string, object?> kvp in flatChanges)
         {
             string[] parts = kvp.Key.Split('/');
-            var currentDict = root;
+            Dictionary<string, object?> currentDict = root;
 
             for (int i = 0; i < parts.Length - 1; i++)
             {
@@ -197,7 +197,7 @@ public static class GffDiff
         var values = new Dictionary<string, object?>();
         var sections = new Dictionary<string, Dictionary<string, object?>>();
 
-        foreach (var kvp in dict)
+        foreach (KeyValuePair<string, object?> kvp in dict)
         {
             if (kvp.Value is Dictionary<string, object?> nestedDict)
             {
@@ -217,7 +217,7 @@ public static class GffDiff
                 sb.AppendLine($"[{sectionPrefix}]");
             }
 
-            foreach (var kvp in values)
+            foreach (KeyValuePair<string, object?> kvp in values)
             {
                 string key = kvp.Key;
                 string valStr = FormatValue(kvp.Value);
@@ -227,7 +227,7 @@ public static class GffDiff
         }
 
         // Recurse for sections
-        foreach (var kvp in sections)
+        foreach (KeyValuePair<string, Dictionary<string, object?>> kvp in sections)
         {
             string nextSection = string.IsNullOrEmpty(sectionPrefix) ? kvp.Key : $"{sectionPrefix}.{kvp.Key}";
             // If sectionPrefix is empty, we might be at root. Root usually doesn't have [Root] section in TSLPatcher unless specified.

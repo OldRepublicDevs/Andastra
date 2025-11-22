@@ -19,7 +19,7 @@ public abstract class Modify2DA
         TwoDARow row)
     {
         var result = new Dictionary<string, string>();
-        foreach (var (column, value) in cells)
+        foreach ((string column, RowValue value) in cells)
         {
             result[column] = value.Value(memory, twoda, row);
         }
@@ -64,15 +64,15 @@ public class ChangeRow2DA : Modify2DA
             throw new WarningError($"The source row was not found during the search: ({Target.TargetType}, {Target.Value})");
         }
 
-        var cells = Unpack(Cells, memory, twoda, sourceRow);
+        Dictionary<string, string> cells = Unpack(Cells, memory, twoda, sourceRow);
         sourceRow.UpdateValues(cells);
 
-        foreach (var (tokenId, value) in Store2DA)
+        foreach ((int tokenId, RowValue value) in Store2DA)
         {
             memory.Memory2DA[tokenId] = value.Value(memory, twoda, sourceRow);
         }
 
-        foreach (var (tokenId, value) in StoreTLK)
+        foreach ((int tokenId, RowValue value) in StoreTLK)
         {
             memory.MemoryStr[tokenId] = int.Parse(value.Value(memory, twoda, sourceRow));
         }
@@ -123,7 +123,7 @@ public class AddRow2DA : Modify2DA
             }
 
             string exclusiveValue = Cells[ExclusiveColumn].Value(memory, twoda, null);
-            foreach (var row in twoda)
+            foreach (TwoDARow row in twoda)
             {
                 if (row.GetString(ExclusiveColumn) == exclusiveValue)
                 {
@@ -135,23 +135,23 @@ public class AddRow2DA : Modify2DA
 
         if (targetRow == null)
         {
-            string rowLabel = RowLabel ?? twoda.GetHeight().ToString();
+            string rowLabel = RowLabel ?? twoda.LabelMax().ToString();
             int index = twoda.AddRow(rowLabel, new Dictionary<string, object>());
             targetRow = twoda.GetRow(index);
             targetRow.UpdateValues(Unpack(Cells, memory, twoda, targetRow));
         }
         else
         {
-            var cells = Unpack(Cells, memory, twoda, targetRow);
+            Dictionary<string, string> cells = Unpack(Cells, memory, twoda, targetRow);
             targetRow.UpdateValues(cells);
         }
 
-        foreach (var (tokenId, value) in Store2DA)
+        foreach ((int tokenId, RowValue value) in Store2DA)
         {
             memory.Memory2DA[tokenId] = value.Value(memory, twoda, targetRow);
         }
 
-        foreach (var (tokenId, value) in StoreTLK)
+        foreach ((int tokenId, RowValue value) in StoreTLK)
         {
             memory.MemoryStr[tokenId] = int.Parse(value.Value(memory, twoda, targetRow));
         }
@@ -196,7 +196,7 @@ public class CopyRow2DA : Modify2DA
     public override void Apply(Core.Formats.TwoDA.TwoDA twoda, PatcherMemory memory)
     {
         TwoDARow? sourceRow = Target.Search(twoda, memory);
-        string rowLabel = RowLabel ?? twoda.GetHeight().ToString();
+        string rowLabel = RowLabel ?? twoda.LabelMax().ToString();
 
         if (sourceRow == null)
         {
@@ -213,7 +213,7 @@ public class CopyRow2DA : Modify2DA
             }
 
             string exclusiveValue = Cells[ExclusiveColumn].Value(memory, twoda, null);
-            foreach (var row in twoda)
+            foreach (TwoDARow row in twoda)
             {
                 if (row.GetString(ExclusiveColumn) == exclusiveValue)
                 {
@@ -226,7 +226,7 @@ public class CopyRow2DA : Modify2DA
         if (targetRow != null)
         {
             // If the row already exists (based on exclusive_column) then we update the cells
-            var cells = Unpack(Cells, memory, twoda, targetRow);
+            Dictionary<string, string> cells = Unpack(Cells, memory, twoda, targetRow);
             targetRow.UpdateValues(cells);
         }
         else
@@ -234,16 +234,16 @@ public class CopyRow2DA : Modify2DA
             // Otherwise, we add the new row instead
             int index = twoda.CopyRow(sourceRow, rowLabel, new Dictionary<string, object>());
             targetRow = twoda.GetRow(index);
-            var cells = Unpack(Cells, memory, twoda, targetRow);
+            Dictionary<string, string> cells = Unpack(Cells, memory, twoda, targetRow);
             targetRow.UpdateValues(cells);
         }
 
-        foreach (var (tokenId, value) in Store2DA)
+        foreach ((int tokenId, RowValue value) in Store2DA)
         {
             memory.Memory2DA[tokenId] = value.Value(memory, twoda, targetRow);
         }
 
-        foreach (var (tokenId, value) in StoreTLK)
+        foreach ((int tokenId, RowValue value) in StoreTLK)
         {
             memory.MemoryStr[tokenId] = int.Parse(value.Value(memory, twoda, targetRow));
         }
@@ -293,7 +293,7 @@ public class AddColumn2DA : Modify2DA
 
         for (int i = 0; i < twoda.GetHeight(); i++)
         {
-            var row = twoda.GetRow(i);
+            TwoDARow row = twoda.GetRow(i);
             string cellValue = Default;
 
             // Check if there's an index-specific value
@@ -310,24 +310,40 @@ public class AddColumn2DA : Modify2DA
             twoda.SetCellString(i, Header, cellValue);
         }
 
-        foreach (var (tokenId, value) in Store2DA)
+        foreach ((int tokenId, string value) in Store2DA)
         {
-            // value should be a string like "I0" or "L1"
+            // value should be a string like "I0", "L1", or just "0" (numeric string = index)
             if (value.StartsWith("I"))
             {
                 int rowIndex = int.Parse(value.Substring(1));
-                var row = twoda.GetRow(rowIndex);
+                TwoDARow row = twoda.GetRow(rowIndex);
                 memory.Memory2DA[tokenId] = row.GetString(Header);
             }
             else if (value.StartsWith("L"))
             {
                 string rowLabel = value.Substring(1);
-                var row = twoda.FindRow(rowLabel);
+                TwoDARow? row = twoda.FindRow(rowLabel);
                 if (row == null)
                 {
                     throw new WarningError($"Could not find row with label '{rowLabel}' when storing 2DA memory");
                 }
                 memory.Memory2DA[tokenId] = row.GetString(Header);
+            }
+            else if (int.TryParse(value, out int rowIndex))
+            {
+                // Numeric string without prefix: try as label first, then as index
+                TwoDARow? row = twoda.FindRow(value);
+                if (row != null)
+                {
+                    // Matches a row label
+                    memory.Memory2DA[tokenId] = row.GetString(Header);
+                }
+                else
+                {
+                    // Treat as row index
+                    row = twoda.GetRow(rowIndex);
+                    memory.Memory2DA[tokenId] = row.GetString(Header);
+                }
             }
             else
             {

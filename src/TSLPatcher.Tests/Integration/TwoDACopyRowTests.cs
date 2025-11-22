@@ -28,8 +28,8 @@ CopyRow0=copy_row_0
 RowIndex=0
 Col2=X
 ";
-        var config = SetupIniAndConfig(iniText);
-        var twoda = CreateTest2DA(
+        PatcherConfig config = SetupIniAndConfig(iniText);
+        TwoDA twoda = CreateTest2DA(
             new[] { "Col1", "Col2" },
             new[]
             {
@@ -39,7 +39,7 @@ Col2=X
         );
 
         var memory = new PatcherMemory();
-        var bytes = config.Patches2DA.First(p => p.SaveAs == "test.2da").PatchResource(twoda.ToBytes(), memory, new PatchLogger(), Game.K1);
+        object bytes = config.Patches2DA.First(p => p.SaveAs == "test.2da").PatchResource(twoda.ToBytes(), memory, new PatchLogger(), Game.K1);
         var patchedTwoda = TwoDA.FromBytes((byte[])bytes);
 
         patchedTwoda.GetHeight().Should().Be(3);
@@ -61,8 +61,8 @@ CopyRow0=copy_row_0
 RowLabel=1
 Col2=X
 ";
-        var config = SetupIniAndConfig(iniText);
-        var twoda = CreateTest2DA(
+        PatcherConfig config = SetupIniAndConfig(iniText);
+        TwoDA twoda = CreateTest2DA(
             new[] { "Col1", "Col2" },
             new[]
             {
@@ -95,8 +95,8 @@ ExclusiveColumn=Col1
 Col1=c
 Col2=d
 ";
-        var config = SetupIniAndConfig(iniText);
-        var twoda = CreateTest2DA(
+        PatcherConfig config = SetupIniAndConfig(iniText);
+        TwoDA twoda = CreateTest2DA(
             new[] { "Col1", "Col2" },
             new[] { ("0", new[] { "a", "b" }) }
         );
@@ -126,8 +126,8 @@ ExclusiveColumn=Col1
 Col1=a
 Col2=X
 ";
-        var config = SetupIniAndConfig(iniText);
-        var twoda = CreateTest2DA(
+        PatcherConfig config = SetupIniAndConfig(iniText);
+        TwoDA twoda = CreateTest2DA(
             new[] { "Col1", "Col2" },
             new[] { ("0", new[] { "a", "b" }) }
         );
@@ -163,8 +163,8 @@ RowLabel=r2
 Col1=e
 Col2=f
 ";
-        var config = SetupIniAndConfig(iniText);
-        var twoda = CreateTest2DA(
+        PatcherConfig config = SetupIniAndConfig(iniText);
+        TwoDA twoda = CreateTest2DA(
             new[] { "Col1", "Col2" },
             new[] { ("0", new[] { "a", "b" }) }
         );
@@ -193,8 +193,8 @@ CopyRow0=copy_row_0
 RowIndex=0
 NewRowLabel=r2
 ";
-        var config = SetupIniAndConfig(iniText);
-        var twoda = CreateTest2DA(
+        PatcherConfig config = SetupIniAndConfig(iniText);
+        TwoDA twoda = CreateTest2DA(
             new[] { "Col1", "Col2", "Col3" },
             new[]
             {
@@ -226,8 +226,8 @@ RowIndex=0
 Col1=high()
 Col2=high()
 ";
-        var config = SetupIniAndConfig(iniText);
-        var twoda = CreateTest2DA(
+        PatcherConfig config = SetupIniAndConfig(iniText);
+        TwoDA twoda = CreateTest2DA(
             new[] { "Col1", "Col2" },
             new[]
             {
@@ -259,8 +259,8 @@ RowIndex=0
 Col1=StrRef5
 Col2=StrRef6
 ";
-        var config = SetupIniAndConfig(iniText);
-        var twoda = CreateTest2DA(
+        PatcherConfig config = SetupIniAndConfig(iniText);
+        TwoDA twoda = CreateTest2DA(
             new[] { "Col1", "Col2" },
             new[]
             {
@@ -295,8 +295,8 @@ RowIndex=0
 Col1=2DAMEMORY5
 Col2=2DAMEMORY6
 ";
-        var config = SetupIniAndConfig(iniText);
-        var twoda = CreateTest2DA(
+        PatcherConfig config = SetupIniAndConfig(iniText);
+        TwoDA twoda = CreateTest2DA(
             new[] { "Col1", "Col2" },
             new[]
             {
@@ -330,8 +330,8 @@ CopyRow0=copy_row_0
 RowIndex=0
 2DAMEMORY5=RowIndex
 ";
-        var config = SetupIniAndConfig(iniText);
-        var twoda = CreateTest2DA(
+        PatcherConfig config = SetupIniAndConfig(iniText);
+        TwoDA twoda = CreateTest2DA(
             new[] { "Col1" },
             new[]
             {
@@ -369,8 +369,8 @@ RowLabel=2
 Col1=Y
 2DAMEMORY6=RowIndex
 ";
-        var config = SetupIniAndConfig(iniText);
-        var twoda = CreateTest2DA(
+        PatcherConfig config = SetupIniAndConfig(iniText);
+        TwoDA twoda = CreateTest2DA(
             new[] { "Col1" },
             new[] { ("0", new[] { "X" }) }
         );

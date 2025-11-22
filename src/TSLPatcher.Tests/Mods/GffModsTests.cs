@@ -31,7 +31,7 @@ public class GffModsTests
         var writer = new GFFBinaryWriter(gff);
         byte[] gffBytes = writer.Write();
         byte[] patchedBytes = (byte[])config.PatchResource(gffBytes, memory, logger, Game.K2);
-        var patchedGff = new GFFBinaryReader(patchedBytes).Load();
+        GFF patchedGff = new GFFBinaryReader(patchedBytes).Load();
 
         patchedGff.Root.GetUInt8("Field1").Should().Be(2);
     }
@@ -51,7 +51,7 @@ public class GffModsTests
         var writer = new GFFBinaryWriter(gff);
         byte[] gffBytes = writer.Write();
         byte[] patchedBytes = (byte[])config.PatchResource(gffBytes, memory, logger, Game.K2);
-        var patchedGff = new GFFBinaryReader(patchedBytes).Load();
+        GFF patchedGff = new GFFBinaryReader(patchedBytes).Load();
 
         patchedGff.Root.GetInt8("Field1").Should().Be(2);
     }
@@ -71,7 +71,7 @@ public class GffModsTests
         var writer = new GFFBinaryWriter(gff);
         byte[] gffBytes = writer.Write();
         byte[] patchedBytes = (byte[])config.PatchResource(gffBytes, memory, logger, Game.K2);
-        var patchedGff = new GFFBinaryReader(patchedBytes).Load();
+        GFF patchedGff = new GFFBinaryReader(patchedBytes).Load();
 
         patchedGff.Root.GetUInt16("Field1").Should().Be(2);
     }
@@ -91,7 +91,7 @@ public class GffModsTests
         var writer = new GFFBinaryWriter(gff);
         byte[] gffBytes = writer.Write();
         byte[] patchedBytes = (byte[])config.PatchResource(gffBytes, memory, logger, Game.K2);
-        var patchedGff = new GFFBinaryReader(patchedBytes).Load();
+        GFF patchedGff = new GFFBinaryReader(patchedBytes).Load();
 
         patchedGff.Root.GetInt16("Field1").Should().Be(2);
     }
@@ -111,7 +111,7 @@ public class GffModsTests
         var writer = new GFFBinaryWriter(gff);
         byte[] gffBytes = writer.Write();
         byte[] patchedBytes = (byte[])config.PatchResource(gffBytes, memory, logger, Game.K2);
-        var patchedGff = new GFFBinaryReader(patchedBytes).Load();
+        GFF patchedGff = new GFFBinaryReader(patchedBytes).Load();
 
         patchedGff.Root.GetUInt32("Field1").Should().Be(2);
     }
@@ -131,7 +131,7 @@ public class GffModsTests
         var writer = new GFFBinaryWriter(gff);
         byte[] gffBytes = writer.Write();
         byte[] patchedBytes = (byte[])config.PatchResource(gffBytes, memory, logger, Game.K2);
-        var patchedGff = new GFFBinaryReader(patchedBytes).Load();
+        GFF patchedGff = new GFFBinaryReader(patchedBytes).Load();
 
         patchedGff.Root.GetInt32("Field1").Should().Be(2);
     }
@@ -151,7 +151,7 @@ public class GffModsTests
         var writer = new GFFBinaryWriter(gff);
         byte[] gffBytes = writer.Write();
         byte[] patchedBytes = (byte[])config.PatchResource(gffBytes, memory, logger, Game.K2);
-        var patchedGff = new GFFBinaryReader(patchedBytes).Load();
+        GFF patchedGff = new GFFBinaryReader(patchedBytes).Load();
 
         patchedGff.Root.GetUInt64("Field1").Should().Be(2);
     }
@@ -171,7 +171,7 @@ public class GffModsTests
         var writer = new GFFBinaryWriter(gff);
         byte[] gffBytes = writer.Write();
         byte[] patchedBytes = (byte[])config.PatchResource(gffBytes, memory, logger, Game.K2);
-        var patchedGff = new GFFBinaryReader(patchedBytes).Load();
+        GFF patchedGff = new GFFBinaryReader(patchedBytes).Load();
 
         patchedGff.Root.GetInt64("Field1").Should().Be(2);
     }
@@ -195,7 +195,7 @@ public class GffModsTests
         var writer = new GFFBinaryWriter(gff);
         byte[] gffBytes = writer.Write();
         byte[] patchedBytes = (byte[])config.PatchResource(gffBytes, memory, logger, Game.K2);
-        var patchedGff = new GFFBinaryReader(patchedBytes).Load();
+        GFF patchedGff = new GFFBinaryReader(patchedBytes).Load();
 
         patchedGff.Root.GetSingle("Field1").Should().BeApproximately(2.345f, 0.0001f);
     }
@@ -215,7 +215,7 @@ public class GffModsTests
         var writer = new GFFBinaryWriter(gff);
         byte[] gffBytes = writer.Write();
         byte[] patchedBytes = (byte[])config.PatchResource(gffBytes, memory, logger, Game.K2);
-        var patchedGff = new GFFBinaryReader(patchedBytes).Load();
+        GFF patchedGff = new GFFBinaryReader(patchedBytes).Load();
 
         patchedGff.Root.GetDouble("Field1").Should().Be(2.345678);
     }
@@ -239,7 +239,7 @@ public class GffModsTests
         var writer = new GFFBinaryWriter(gff);
         byte[] gffBytes = writer.Write();
         byte[] patchedBytes = (byte[])config.PatchResource(gffBytes, memory, logger, Game.K2);
-        var patchedGff = new GFFBinaryReader(patchedBytes).Load();
+        GFF patchedGff = new GFFBinaryReader(patchedBytes).Load();
 
         patchedGff.Root.GetValue("Field1").Should().Be("def");
     }
@@ -261,9 +261,9 @@ public class GffModsTests
         var writer = new GFFBinaryWriter(gff);
         byte[] gffBytes = writer.Write();
         byte[] patchedBytes = (byte[])config.PatchResource(gffBytes, memory, logger, Game.K2);
-        var patchedGff = new GFFBinaryReader(patchedBytes).Load();
+        GFF patchedGff = new GFFBinaryReader(patchedBytes).Load();
 
-        var locString = patchedGff.Root.GetLocString("Field1");
+        LocalizedString locString = patchedGff.Root.GetLocString("Field1");
         locString.Get(Language.English, Gender.Male).Should().Be("test");
     }
 
@@ -282,7 +282,7 @@ public class GffModsTests
         var writer = new GFFBinaryWriter(gff);
         byte[] gffBytes = writer.Write();
         byte[] patchedBytes = (byte[])config.PatchResource(gffBytes, memory, logger, Game.K2);
-        var patchedGff = new GFFBinaryReader(patchedBytes).Load();
+        GFF patchedGff = new GFFBinaryReader(patchedBytes).Load();
 
         patchedGff.Root.GetVector3("Field1").Should().Be(new Vector3(1, 2, 3));
     }
@@ -302,7 +302,7 @@ public class GffModsTests
         var writer = new GFFBinaryWriter(gff);
         byte[] gffBytes = writer.Write();
         byte[] patchedBytes = (byte[])config.PatchResource(gffBytes, memory, logger, Game.K2);
-        var patchedGff = new GFFBinaryReader(patchedBytes).Load();
+        GFF patchedGff = new GFFBinaryReader(patchedBytes).Load();
 
         patchedGff.Root.GetVector4("Field1").Should().Be(new Vector4(1, 2, 3, 4));
     }
@@ -317,8 +317,8 @@ public class GffModsTests
         // Python test: test_modify_nested
         var gff = new GFF();
         gff.Root.SetList("List", new GFFList());
-        var gffList = gff.Root.GetList("List");
-        var gffStruct = gffList.Add();
+        GFFList gffList = gff.Root.GetList("List");
+        GFFStruct gffStruct = gffList.Add();
         gffStruct.SetString("String", "".ToString());
 
         var memory = new PatcherMemory();
@@ -329,10 +329,10 @@ public class GffModsTests
         var writer = new GFFBinaryWriter(gff);
         byte[] gffBytes = writer.Write();
         byte[] patchedBytes = (byte[])config.PatchResource(gffBytes, memory, logger, Game.K2);
-        var patchedGff = new GFFBinaryReader(patchedBytes).Load();
+        GFF patchedGff = new GFFBinaryReader(patchedBytes).Load();
 
-        var patchedList = patchedGff.Root.GetList("List");
-        var patchedStruct = patchedList.At(0);
+        GFFList patchedList = patchedGff.Root.GetList("List");
+        GFFStruct? patchedStruct = patchedList.At(0);
         patchedStruct!.GetValue("String").Should().Be("abc");
     }
 
@@ -353,7 +353,7 @@ public class GffModsTests
         var writer = new GFFBinaryWriter(gff);
         byte[] gffBytes = writer.Write();
         byte[] patchedBytes = (byte[])config.PatchResource(gffBytes, memory, logger, Game.K2);
-        var patchedGff = new GFFBinaryReader(patchedBytes).Load();
+        GFF patchedGff = new GFFBinaryReader(patchedBytes).Load();
 
         patchedGff.Root.GetValue("String").Should().Be("123");
         patchedGff.Root.GetUInt8("Integer").Should().Be(123);
@@ -376,7 +376,7 @@ public class GffModsTests
         var writer = new GFFBinaryWriter(gff);
         byte[] gffBytes = writer.Write();
         byte[] patchedBytes = (byte[])config.PatchResource(gffBytes, memory, logger, Game.K2);
-        var patchedGff = new GFFBinaryReader(patchedBytes).Load();
+        GFF patchedGff = new GFFBinaryReader(patchedBytes).Load();
 
         patchedGff.Root.GetValue("String").Should().Be("123");
         patchedGff.Root.GetUInt8("Integer").Should().Be(123);
@@ -407,7 +407,7 @@ public class GffModsTests
         var writer = new GFFBinaryWriter(gff);
         byte[] gffBytes = writer.Write();
         byte[] patchedBytes = (byte[])config.PatchResource(gffBytes, memory, logger, Game.K2);
-        var patchedGff = new GFFBinaryReader(patchedBytes).Load();
+        GFF patchedGff = new GFFBinaryReader(patchedBytes).Load();
 
         patchedGff.Root.GetList("List").Should().NotBeNull();
         patchedGff.Root.GetList("List").At(0).Should().NotBeNull();
@@ -421,7 +421,7 @@ public class GffModsTests
         var gff = new GFF();
         var gffList = new GFFList();
         gff.Root.SetList("List", gffList);
-        var gffStruct = gffList.Add(0);
+        GFFStruct gffStruct = gffList.Add(0);
 
         var memory = new PatcherMemory();
         var logger = new PatchLogger();
@@ -439,10 +439,10 @@ public class GffModsTests
         var writer = new GFFBinaryWriter(gff);
         byte[] gffBytes = writer.Write();
         byte[] patchedBytes = (byte[])config.PatchResource(gffBytes, memory, logger, Game.K2);
-        var patchedGff = new GFFBinaryReader(patchedBytes).Load();
+        GFF patchedGff = new GFFBinaryReader(patchedBytes).Load();
 
-        var patchedList = patchedGff.Root.GetList("List");
-        var patchedStruct = patchedList.At(0);
+        GFFList patchedList = patchedGff.Root.GetList("List");
+        GFFStruct? patchedStruct = patchedList.At(0);
         patchedStruct!.GetValue("String").Should().Be("abc");
     }
 
@@ -461,7 +461,7 @@ public class GffModsTests
         var writer = new GFFBinaryWriter(gff);
         byte[] gffBytes = writer.Write();
         byte[] patchedBytes = (byte[])config.PatchResource(gffBytes, memory, logger, Game.K2);
-        var patchedGff = new GFFBinaryReader(patchedBytes).Load();
+        GFF patchedGff = new GFFBinaryReader(patchedBytes).Load();
 
         patchedGff.Root.GetValue("String").Should().Be("123");
         patchedGff.Root.GetUInt8("Integer").Should().Be(123);
@@ -482,7 +482,7 @@ public class GffModsTests
         var writer = new GFFBinaryWriter(gff);
         byte[] gffBytes = writer.Write();
         byte[] patchedBytes = (byte[])config.PatchResource(gffBytes, memory, logger, Game.K2);
-        var patchedGff = new GFFBinaryReader(patchedBytes).Load();
+        GFF patchedGff = new GFFBinaryReader(patchedBytes).Load();
 
         patchedGff.Root.GetValue("String").Should().Be("123");
         patchedGff.Root.GetUInt8("Integer").Should().Be(123);
@@ -514,7 +514,7 @@ public class GffModsTests
         var writer = new GFFBinaryWriter(gff);
         byte[] gffBytes = writer.Write();
         byte[] patchedBytes = (byte[])config.PatchResource(gffBytes, memory, logger, Game.K2);
-        var patchedGff = new GFFBinaryReader(patchedBytes).Load();
+        GFF patchedGff = new GFFBinaryReader(patchedBytes).Load();
 
         patchedGff.Root.GetLocString("Field1").StringRef.Should().Be(123);
     }
@@ -541,9 +541,9 @@ public class GffModsTests
         var writer = new GFFBinaryWriter(gff);
         byte[] gffBytes = writer.Write();
         byte[] patchedBytes = (byte[])config.PatchResource(gffBytes, memory, logger, Game.K2);
-        var patchedGff = new GFFBinaryReader(patchedBytes).Load();
+        GFF patchedGff = new GFFBinaryReader(patchedBytes).Load();
 
-        var patchedList = patchedGff.Root.GetList("List");
+        GFFList patchedList = patchedGff.Root.GetList("List");
         patchedList.At(0)!.StructId.Should().Be(5);
         patchedList.At(1)!.StructId.Should().Be(3);
         patchedList.At(2)!.StructId.Should().Be(1);

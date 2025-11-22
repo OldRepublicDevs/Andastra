@@ -54,16 +54,16 @@ File0=test.utc
 [test.utc]
 Appearance_Type=123
 ";
-        var ini = _parser.Parse(iniText);
+        IniData ini = _parser.Parse(iniText);
         var config = new PatcherConfig();
         var reader = new ConfigReader(ini, _tempDir, null, _modPath);
 
         // Act
-        var result = reader.Load(config);
+        PatcherConfig result = reader.Load(config);
 
         // Assert
         result.PatchesGFF.Should().Contain(p => p.SaveAs == "test.utc");
-        var modifiers = result.PatchesGFF.First(p => p.SaveAs == "test.utc").Modifiers;
+        List<ModifyGFF> modifiers = result.PatchesGFF.First(p => p.SaveAs == "test.utc").Modifiers;
         modifiers.Should().HaveCount(1);
 
         var modify = modifiers[0] as ModifyFieldGFF;
@@ -86,12 +86,12 @@ File0=test.utc
 [test.utc]
 FirstName=TestName
 ";
-        var ini = _parser.Parse(iniText);
+        IniData ini = _parser.Parse(iniText);
         var config = new PatcherConfig();
         var reader = new ConfigReader(ini, _tempDir, null, _modPath);
 
         // Act
-        var result = reader.Load(config);
+        PatcherConfig result = reader.Load(config);
 
         // Assert
         var modify = result.PatchesGFF.First(p => p.SaveAs == "test.utc").Modifiers[0] as ModifyFieldGFF;
@@ -112,12 +112,12 @@ File0=test.utc
 [test.utc]
 ChallengeRating=5.5
 ";
-        var ini = _parser.Parse(iniText);
+        IniData ini = _parser.Parse(iniText);
         var config = new PatcherConfig();
         var reader = new ConfigReader(ini, _tempDir, null, _modPath);
 
         // Act
-        var result = reader.Load(config);
+        PatcherConfig result = reader.Load(config);
 
         // Assert
         var modify = result.PatchesGFF.First(p => p.SaveAs == "test.utc").Modifiers[0] as ModifyFieldGFF;
@@ -138,12 +138,12 @@ File0=test.utc
 [test.utc]
 Description=StrRef5
 ";
-        var ini = _parser.Parse(iniText);
+        IniData ini = _parser.Parse(iniText);
         var config = new PatcherConfig();
         var reader = new ConfigReader(ini, _tempDir, null, _modPath);
 
         // Act
-        var result = reader.Load(config);
+        PatcherConfig result = reader.Load(config);
 
         // Assert
         var modify = result.PatchesGFF.First(p => p.SaveAs == "test.utc").Modifiers[0] as ModifyFieldGFF;
@@ -165,12 +165,12 @@ File0=test.utc
 [test.utc]
 Appearance_Type=2DAMEMORY3
 ";
-        var ini = _parser.Parse(iniText);
+        IniData ini = _parser.Parse(iniText);
         var config = new PatcherConfig();
         var reader = new ConfigReader(ini, _tempDir, null, _modPath);
 
         // Act
-        var result = reader.Load(config);
+        PatcherConfig result = reader.Load(config);
 
         // Assert
         var modify = result.PatchesGFF.First(p => p.SaveAs == "test.utc").Modifiers[0] as ModifyFieldGFF;
@@ -192,12 +192,12 @@ File0=test.utc
 [test.utc]
 ScriptEndRound\1\ScriptEndRound=k_ai_master
 ";
-        var ini = _parser.Parse(iniText);
+        IniData ini = _parser.Parse(iniText);
         var config = new PatcherConfig();
         var reader = new ConfigReader(ini, _tempDir, null, _modPath);
 
         // Act
-        var result = reader.Load(config);
+        PatcherConfig result = reader.Load(config);
 
         // Assert
         var modify = result.PatchesGFF.First(p => p.SaveAs == "test.utc").Modifiers[0] as ModifyFieldGFF;
@@ -223,12 +223,12 @@ FieldType=Int
 Label=CustomInt
 Value=999
 ";
-        var ini = _parser.Parse(iniText);
+        IniData ini = _parser.Parse(iniText);
         var config = new PatcherConfig();
         var reader = new ConfigReader(ini, _tempDir, null, _modPath);
 
         // Act
-        var result = reader.Load(config);
+        PatcherConfig result = reader.Load(config);
 
         // Assert
         var addField = result.PatchesGFF.First(p => p.SaveAs == "test.utc").Modifiers[0] as AddFieldGFF;
@@ -253,16 +253,16 @@ File0=test.utc
 AddField0=NewField
 
 [NewField]
-FieldType=CExoString
+FieldType=ExoString
 Label=CustomString
 Value=TestString
 ";
-        var ini = _parser.Parse(iniText);
+        IniData ini = _parser.Parse(iniText);
         var config = new PatcherConfig();
         var reader = new ConfigReader(ini, _tempDir, null, _modPath);
 
         // Act
-        var result = reader.Load(config);
+        PatcherConfig result = reader.Load(config);
 
         // Assert
         var addField = result.PatchesGFF.First(p => p.SaveAs == "test.utc").Modifiers[0] as AddFieldGFF;
@@ -290,12 +290,12 @@ FieldType=Vector
 Label=Position
 Value=1.0 2.0 3.0
 ";
-        var ini = _parser.Parse(iniText);
+        IniData ini = _parser.Parse(iniText);
         var config = new PatcherConfig();
         var reader = new ConfigReader(ini, _tempDir, null, _modPath);
 
         // Act
-        var result = reader.Load(config);
+        PatcherConfig result = reader.Load(config);
 
         // Assert
         var addField = result.PatchesGFF.First(p => p.SaveAs == "test.utc").Modifiers[0] as AddFieldGFF;
@@ -304,7 +304,7 @@ Value=1.0 2.0 3.0
 
         var value = addField.Value as FieldValueConstant;
         value.Should().NotBeNull();
-        var vectorValue = value!.Value(null, GFFFieldType.Vector3);
+        object vectorValue = value!.Value(null, GFFFieldType.Vector3);
         vectorValue.Should().BeOfType<Vector3>();
         var vector = (Vector3)vectorValue;
         vector.X.Should().BeApproximately(1.0f, 0.0001f);
@@ -329,12 +329,12 @@ Label=CustomInt
 Value=123
 Path=ItemList\0
 ";
-        var ini = _parser.Parse(iniText);
+        IniData ini = _parser.Parse(iniText);
         var config = new PatcherConfig();
         var reader = new ConfigReader(ini, _tempDir, null, _modPath);
 
         // Act
-        var result = reader.Load(config);
+        PatcherConfig result = reader.Load(config);
 
         // Assert
         var addField = result.PatchesGFF.First(p => p.SaveAs == "test.utc").Modifiers[0] as AddFieldGFF;
@@ -357,12 +357,12 @@ AddStruct0=NewStruct
 TypeId=0
 Path=ItemList
 ";
-        var ini = _parser.Parse(iniText);
+        IniData ini = _parser.Parse(iniText);
         var config = new PatcherConfig();
         var reader = new ConfigReader(ini, _tempDir, null, _modPath);
 
         // Act
-        var result = reader.Load(config);
+        PatcherConfig result = reader.Load(config);
 
         // Assert
         var addStruct = result.PatchesGFF.First(p => p.SaveAs == "test.utc").Modifiers[0] as AddStructToListGFF;
@@ -390,12 +390,12 @@ AddField0=2DAMEMORY5
 Path=SomeField
 2DAMEMORY5=appearance
 ";
-        var ini = _parser.Parse(iniText);
+        IniData ini = _parser.Parse(iniText);
         var config = new PatcherConfig();
         var reader = new ConfigReader(ini, _tempDir, null, _modPath);
 
         // Act
-        var result = reader.Load(config);
+        PatcherConfig result = reader.Load(config);
 
         // Assert
         var memory2DA = result.PatchesGFF.First(p => p.SaveAs == "test.utc").Modifiers[0] as Memory2DAModifierGFF;
@@ -419,12 +419,12 @@ Appearance_Type=100
 [test2.utc]
 Appearance_Type=200
 ";
-        var ini = _parser.Parse(iniText);
+        IniData ini = _parser.Parse(iniText);
         var config = new PatcherConfig();
         var reader = new ConfigReader(ini, _tempDir, null, _modPath);
 
         // Act
-        var result = reader.Load(config);
+        PatcherConfig result = reader.Load(config);
 
         // Assert
         result.PatchesGFF.Should().HaveCount(2);

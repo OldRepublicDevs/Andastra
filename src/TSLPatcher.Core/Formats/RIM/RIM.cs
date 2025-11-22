@@ -28,7 +28,7 @@ public class RIM : IEnumerable<RIMResource>
     {
         get
         {
-            var resource = _resources.FirstOrDefault(r =>
+            RIMResource? resource = _resources.FirstOrDefault(r =>
                 r.ResRef.ToString().Equals(resname, StringComparison.OrdinalIgnoreCase));
 
             if (resource != null)
@@ -42,7 +42,7 @@ public class RIM : IEnumerable<RIMResource>
 
     public void SetData(string resname, ResourceType restype, byte[] data)
     {
-        var resource = _resources.FirstOrDefault(r =>
+        RIMResource? resource = _resources.FirstOrDefault(r =>
             r.ResRef.ToString().Equals(resname, StringComparison.OrdinalIgnoreCase) &&
             r.ResType == restype);
 
@@ -60,7 +60,7 @@ public class RIM : IEnumerable<RIMResource>
 
     public byte[]? Get(string resname, ResourceType restype)
     {
-        var resource = _resources.FirstOrDefault(r =>
+        RIMResource? resource = _resources.FirstOrDefault(r =>
             r.ResRef.ToString().Equals(resname, StringComparison.OrdinalIgnoreCase) &&
             r.ResType == restype);
 
@@ -77,7 +77,7 @@ public class RIM : IEnumerable<RIMResource>
     public ERF.ERF ToErf()
     {
         var erf = new ERF.ERF();
-        foreach (var resource in _resources)
+        foreach (RIMResource resource in _resources)
         {
             erf.SetData(resource.ResRef.ToString(), resource.ResType, resource.Data);
         }
@@ -87,11 +87,11 @@ public class RIM : IEnumerable<RIMResource>
     public static RIM operator +(RIM a, RIM b)
     {
         var combined = new RIM();
-        foreach (var resource in a._resources)
+        foreach (RIMResource resource in a._resources)
         {
             combined.SetData(resource.ResRef.ToString(), resource.ResType, resource.Data);
         }
-        foreach (var resource in b._resources)
+        foreach (RIMResource resource in b._resources)
         {
             combined.SetData(resource.ResRef.ToString(), resource.ResType, resource.Data);
         }
@@ -114,7 +114,7 @@ public class RIM : IEnumerable<RIMResource>
     public override int GetHashCode()
     {
         var hash = new HashCode();
-        foreach (var resource in _resources.OrderBy(r => r.GetHashCode()))
+        foreach (RIMResource? resource in _resources.OrderBy(r => r.GetHashCode()))
         {
             hash.Add(resource);
         }
@@ -126,7 +126,7 @@ public class RIM : IEnumerable<RIMResource>
     public IEnumerator<RIMResource> GetEnumerator()
     {
         // Return copies like Python does
-        foreach (var resource in _resources)
+        foreach (RIMResource resource in _resources)
         {
             yield return new RIMResource(resource.ResRef, resource.ResType, resource.Data);
         }

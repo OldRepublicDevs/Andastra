@@ -101,7 +101,7 @@ public class TLKBinaryReader : BinaryFormatReaderBase
 
     private void LoadEntry(int stringref)
     {
-        var entry = _tlk!.Entries[stringref];
+        TLKEntry entry = _tlk!.Entries[stringref];
 
         uint entryFlags = Reader.ReadUInt32();
         string soundResref = Encoding.ASCII.GetString(Reader.ReadBytes(16)).TrimEnd('\0');
@@ -122,8 +122,8 @@ public class TLKBinaryReader : BinaryFormatReaderBase
 
     private void LoadText(int stringref)
     {
-        var textHeader = _textHeaders[stringref];
-        var entry = _tlk!.Entries[stringref];
+        (int offset, int length) textHeader = _textHeaders[stringref];
+        TLKEntry entry = _tlk!.Entries[stringref];
 
         Reader.BaseStream.Seek(textHeader.offset + _textsOffset, SeekOrigin.Begin);
 

@@ -30,7 +30,7 @@ public class RIMBinaryWriter
         writer.Write(Encoding.ASCII.GetBytes("RIM "));
         writer.Write(Encoding.ASCII.GetBytes("V1.0"));
 
-        var resources = _rim.GetResources();
+        List<RIMResource> resources = _rim.GetResources();
         uint entryCount = (uint)resources.Count;
         uint offsetToKeys = 120;
 
@@ -52,7 +52,7 @@ public class RIMBinaryWriter
         uint currentOffset = offsetToData;
         uint currentId = 0;
 
-        foreach (var res in resources)
+        foreach (RIMResource res in resources)
         {
             byte[] resRefBytes = Encoding.ASCII.GetBytes(res.ResRef.ToString());
             byte[] paddedResRef = new byte[16];
@@ -68,7 +68,7 @@ public class RIMBinaryWriter
         }
 
         // Resource Data
-        foreach (var res in resources)
+        foreach (RIMResource res in resources)
         {
             writer.Write(res.Data);
         }

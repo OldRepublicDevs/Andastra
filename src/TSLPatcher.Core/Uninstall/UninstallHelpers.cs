@@ -30,7 +30,7 @@ public static class UninstallHelpers
     /// <param name="gamePath">The path to the game installation directory</param>
     public static void UninstallAllMods(string gamePath)
     {
-        var game = Core.Installation.Installation.DetermineGame(gamePath);
+        Game? game = Core.Installation.Installation.DetermineGame(gamePath);
         if (game == null)
         {
             throw new ArgumentException($"Unable to determine game type at path: {gamePath}");
@@ -43,7 +43,7 @@ public static class UninstallHelpers
         string dialogTlkPath = Path.Combine(gamePath, "dialog.tlk");
         if (File.Exists(dialogTlkPath))
         {
-            var dialogTlk = new TLKBinaryReader(File.ReadAllBytes(dialogTlkPath)).Load();
+            TLK dialogTlk = new TLKBinaryReader(File.ReadAllBytes(dialogTlkPath)).Load();
 
             // Trim TLK entries based on game type
             int maxEntries = game == Game.K1 ? 49265 : 136329;

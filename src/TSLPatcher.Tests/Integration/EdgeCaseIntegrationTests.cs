@@ -30,8 +30,8 @@ label=0
 Col1=value1
 Col2=value2
 ";
-        var config = SetupIniAndConfig(iniText);
-        var twoda = CreateTest2DA(new[] { "Col1", "Col2" }, Array.Empty<(string label, string[] values)>());
+        PatcherConfig config = SetupIniAndConfig(iniText);
+        TwoDA twoda = CreateTest2DA(new[] { "Col1", "Col2" }, Array.Empty<(string, string[])>());
 
         var memory = new PatcherMemory();
         config.Patches2DA.First(p => p.SaveAs == "test.2da").Apply(twoda, memory, new PatchLogger(), Game.K1);
@@ -71,8 +71,8 @@ label=third
 id=100
 value=three
 ";
-        var config = SetupIniAndConfig(iniText);
-        var twoda = CreateTest2DA(new[] { "id", "value" }, Array.Empty<(string label, string[] values)>());
+        PatcherConfig config = SetupIniAndConfig(iniText);
+        TwoDA twoda = CreateTest2DA(new[] { "id", "value" }, Array.Empty<(string, string[])>());
 
         var memory = new PatcherMemory();
         config.Patches2DA.First(p => p.SaveAs == "test.2da").Apply(twoda, memory, new PatchLogger(), Game.K1);
@@ -101,8 +101,8 @@ Col1=first
 RowLabel=same_label
 Col1=second
 ";
-        var config = SetupIniAndConfig(iniText);
-        var twoda = CreateTest2DA(new[] { "Col1" }, Array.Empty<(string label, string[] values)>());
+        PatcherConfig config = SetupIniAndConfig(iniText);
+        TwoDA twoda = CreateTest2DA(new[] { "Col1" }, Array.Empty<(string, string[])>());
 
         var memory = new PatcherMemory();
         config.Patches2DA.First(p => p.SaveAs == "test.2da").Apply(twoda, memory, new PatchLogger(), Game.K1);
@@ -126,16 +126,16 @@ CopyRow0=copy_missing
 RowIndex=999
 label=copied
 ";
-        var config = SetupIniAndConfig(iniText);
-        var twoda = CreateTest2DA(
+        PatcherConfig config = SetupIniAndConfig(iniText);
+        TwoDA twoda = CreateTest2DA(
             new[] { "Col1" },
             new[] { ("0", new[] { "a" }) }
         );
 
         var memory = new PatcherMemory();
-        
+
         // Should not throw, might add nothing or handle error gracefully
-        var action = () => config.Patches2DA.First(p => p.SaveAs == "test.2da").Apply(twoda, memory, new PatchLogger(), Game.K1);
+        Action action = () => config.Patches2DA.First(p => p.SaveAs == "test.2da").Apply(twoda, memory, new PatchLogger(), Game.K1);
         action.Should().NotThrow();
     }
 
@@ -153,15 +153,15 @@ ChangeRow0=change1
 RowIndex=0
 NonExistentColumn=value
 ";
-        var config = SetupIniAndConfig(iniText);
-        var twoda = CreateTest2DA(
+        PatcherConfig config = SetupIniAndConfig(iniText);
+        TwoDA twoda = CreateTest2DA(
             new[] { "Col1" },
             new[] { ("0", new[] { "a" }) }
         );
 
         var memory = new PatcherMemory();
-        
-        var action = () => config.Patches2DA.First(p => p.SaveAs == "test.2da").Apply(twoda, memory, new PatchLogger(), Game.K1);
+
+        Action action = () => config.Patches2DA.First(p => p.SaveAs == "test.2da").Apply(twoda, memory, new PatchLogger(), Game.K1);
         action.Should().NotThrow();
     }
 
@@ -179,15 +179,15 @@ AddRow0=row1
 label=new
 Col1=high()
 ";
-        var config = SetupIniAndConfig(iniText);
-        var twoda = CreateTest2DA(new[] { "Col1" }, Array.Empty<(string label, string[] values)>());
+        PatcherConfig config = SetupIniAndConfig(iniText);
+        TwoDA twoda = CreateTest2DA(new[] { "Col1" }, Array.Empty<(string, string[])>());
 
         var memory = new PatcherMemory();
         config.Patches2DA.First(p => p.SaveAs == "test.2da").Apply(twoda, memory, new PatchLogger(), Game.K1);
 
         twoda.GetHeight().Should().Be(1);
         // High of empty should be 1 or 0+1
-        var value = int.Parse(twoda.GetCellString(0, "Col1"));
+        int value = int.Parse(twoda.GetCellString(0, "Col1"));
         value.Should().BeGreaterOrEqualTo(0);
     }
 
@@ -205,8 +205,8 @@ AddRow0=row1
 label=new
 Col1=high()
 ";
-        var config = SetupIniAndConfig(iniText);
-        var twoda = CreateTest2DA(
+        PatcherConfig config = SetupIniAndConfig(iniText);
+        TwoDA twoda = CreateTest2DA(
             new[] { "Col1" },
             new[]
             {
@@ -220,7 +220,7 @@ Col1=high()
 
         twoda.GetHeight().Should().Be(3);
         // Should skip non-numeric and use 123 as highest
-        var value = twoda.GetCellString(2, "Col1");
+        string value = twoda.GetCellString(2, "Col1");
         value.Should().NotBeNullOrEmpty();
     }
 
@@ -240,15 +240,15 @@ Path=Deep\\Nested\\Path
 Label=Value
 Value=42
 ";
-        var config = SetupIniAndConfig(iniText);
+        PatcherConfig config = SetupIniAndConfig(iniText);
         var gff = new GFF();
 
         var memory = new PatcherMemory();
-        var bytes = config.PatchesGFF.First(p => p.SaveAs == "test.gff").PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
+        object bytes = config.PatchesGFF.First(p => p.SaveAs == "test.gff").PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
         var patchedGff = GFF.FromBytes((byte[])bytes);
 
         // Should create the nested structure
-        var action = () => patchedGff.Root.GetStruct("Deep");
+        Func<GFFStruct> action = () => patchedGff.Root.GetStruct("Deep");
         action.Should().NotThrow();
     }
 
@@ -262,13 +262,13 @@ File0=test.gff
 [test.gff]
 NonExistentField=123
 ";
-        var config = SetupIniAndConfig(iniText);
+        PatcherConfig config = SetupIniAndConfig(iniText);
         var gff = new GFF();
         gff.Root.SetInt32("ExistingField", 1);
 
         var memory = new PatcherMemory();
-        
-        var action = () => config.PatchesGFF.First(p => p.SaveAs == "test.gff").PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
+
+        Func<object> action = () => config.PatchesGFF.First(p => p.SaveAs == "test.gff").PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
         action.Should().NotThrow();
     }
 
@@ -286,8 +286,8 @@ AddRow0=row1
 label=new
 value=2DAMEMORY99
 ";
-        var config = SetupIniAndConfig(iniText);
-        var twoda = CreateTest2DA(new[] { "value" }, Array.Empty<(string label, string[] values)>());
+        PatcherConfig config = SetupIniAndConfig(iniText);
+        TwoDA twoda = CreateTest2DA(new[] { "value" }, Array.Empty<(string, string[])>());
 
         var memory = new PatcherMemory();
         // Don't set Memory2DA[99]
@@ -296,7 +296,7 @@ value=2DAMEMORY99
 
         twoda.GetHeight().Should().Be(1);
         // Should handle missing token gracefully
-        var value = twoda.GetCellString(0, "value");
+        string value = twoda.GetCellString(0, "value");
         value.Should().NotBeNull();
     }
 
@@ -314,8 +314,8 @@ AddColumn0=newcol
 ColumnLabel=NewCol
 DefaultValue=X
 ";
-        var config = SetupIniAndConfig(iniText);
-        var twoda = CreateTest2DA(
+        PatcherConfig config = SetupIniAndConfig(iniText);
+        TwoDA twoda = CreateTest2DA(
             new[] { "Col1" },
             new[]
             {
@@ -345,8 +345,8 @@ ChangeRow0=change1
 LabelIndex=42
 Col1=changed
 ";
-        var config = SetupIniAndConfig(iniText);
-        var twoda = CreateTest2DA(
+        PatcherConfig config = SetupIniAndConfig(iniText);
+        TwoDA twoda = CreateTest2DA(
             new[] { "Col1" },
             new[]
             {
@@ -375,14 +375,14 @@ FieldType=Struct
 Path=
 Label=TestStruct
 ";
-        var config = SetupIniAndConfig(iniText);
+        PatcherConfig config = SetupIniAndConfig(iniText);
         var gff = new GFF();
 
         var memory = new PatcherMemory();
-        var bytes = config.PatchesGFF.First(p => p.SaveAs == "test.gff").PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
+        object bytes = config.PatchesGFF.First(p => p.SaveAs == "test.gff").PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
         var patchedGff = GFF.FromBytes((byte[])bytes);
 
-        var struct1 = patchedGff.Root.GetStruct("TestStruct");
+        GFFStruct struct1 = patchedGff.Root.GetStruct("TestStruct");
         struct1.Should().NotBeNull();
         struct1!.StructId.Should().Be(0);
     }
@@ -411,9 +411,9 @@ AddRow0=row2
 label=t2
 value=2DAMEMORY0
 ";
-        var config = SetupIniAndConfig(iniText);
-        var twoda1 = CreateTest2DA(new[] { "value" }, Array.Empty<(string label, string[] values)>());
-        var twoda2 = CreateTest2DA(new[] { "value" }, Array.Empty<(string label, string[] values)>());
+        PatcherConfig config = SetupIniAndConfig(iniText);
+        TwoDA twoda1 = CreateTest2DA(new[] { "value" }, Array.Empty<(string, string[])>());
+        TwoDA twoda2 = CreateTest2DA(new[] { "value" }, Array.Empty<(string, string[])>());
 
         var memory = new PatcherMemory();
         
@@ -439,12 +439,12 @@ AddRow0=row1
 RowLabel=VeryLongRowLabelThatExceedsNormalLengthExpectations_12345678901234567890
 Col1=value
 ";
-        var config = SetupIniAndConfig(iniText);
-        var twoda = CreateTest2DA(new[] { "Col1" }, Array.Empty<(string label, string[] values)>());
+        PatcherConfig config = SetupIniAndConfig(iniText);
+        TwoDA twoda = CreateTest2DA(new[] { "Col1" }, Array.Empty<(string, string[])>());
 
         var memory = new PatcherMemory();
-        
-        var action = () => config.Patches2DA.First(p => p.SaveAs == "test.2da").Apply(twoda, memory, new PatchLogger(), Game.K1);
+
+        Action action = () => config.Patches2DA.First(p => p.SaveAs == "test.2da").Apply(twoda, memory, new PatchLogger(), Game.K1);
         action.Should().NotThrow();
         
         if (twoda.GetHeight() > 0)

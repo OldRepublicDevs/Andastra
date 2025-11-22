@@ -23,7 +23,7 @@ public class LocalizedString : IEquatable<LocalizedString>, IEnumerable<(Languag
         StringRef = stringRef;
         if (substrings != null)
         {
-            foreach (var (key, value) in substrings)
+            foreach ((int key, string value) in substrings)
             {
                 _substrings[key] = value;
             }
@@ -87,9 +87,9 @@ public class LocalizedString : IEquatable<LocalizedString>, IEnumerable<(Languag
 
     public IEnumerator<(Language, Gender, string)> GetEnumerator()
     {
-        foreach (var (substringId, text) in _substrings)
+        foreach ((int substringId, string text) in _substrings)
         {
-            var (language, gender) = SubstringPair(substringId);
+            (Language language, Gender gender) = SubstringPair(substringId);
             yield return (language, gender, text);
         }
     }
@@ -110,7 +110,7 @@ public class LocalizedString : IEquatable<LocalizedString>, IEnumerable<(Languag
         }
 
         // Return first available substring
-        foreach (var (_, _, text) in this)
+        foreach ((Language _, Gender _, string text) in this)
         {
             return text;
         }
@@ -178,7 +178,7 @@ public class LocalizedString : IEquatable<LocalizedString>, IEnumerable<(Languag
     public static LocalizedString FromDictionary(Dictionary<string, object> data)
     {
         int stringRef = Convert.ToInt32(data["stringref"]);
-        var substrings = data.TryGetValue("substrings", out object? subsObj) && subsObj is Dictionary<int, string> subs
+        Dictionary<int, string>? substrings = data.TryGetValue("substrings", out object? subsObj) && subsObj is Dictionary<int, string> subs
             ? subs
             : null;
         return new LocalizedString(stringRef, substrings);

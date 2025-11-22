@@ -82,7 +82,7 @@ public class ModUninstallerTests : IDisposable
         bool errorShown = false;
 
         // Act
-        var result = ModUninstaller.GetMostRecentBackup(
+        CaseAwarePath? result = ModUninstaller.GetMostRecentBackup(
             backupPath,
             (title, msg) => errorShown = true
         );
@@ -112,7 +112,7 @@ public class ModUninstallerTests : IDisposable
         var backupPath = new CaseAwarePath(_backupDir);
 
         // Act
-        var result = ModUninstaller.GetMostRecentBackup(backupPath);
+        CaseAwarePath? result = ModUninstaller.GetMostRecentBackup(backupPath);
 
         // Assert
         result.Should().NotBeNull();
@@ -130,7 +130,7 @@ public class ModUninstallerTests : IDisposable
         bool errorShown = false;
 
         // Act
-        var result = ModUninstaller.GetMostRecentBackup(
+        CaseAwarePath? result = ModUninstaller.GetMostRecentBackup(
             backupPath,
             (title, msg) => errorShown = true
         );
@@ -201,7 +201,7 @@ public class ModUninstallerTests : IDisposable
         );
 
         // Act
-        var (backupPath, existingFiles, filesInBackup, folderCount) = uninstaller.GetBackupInfo();
+        (CaseAwarePath backupPath, HashSet<string> existingFiles, List<CaseAwarePath> filesInBackup, int folderCount) = uninstaller.GetBackupInfo();
 
         // Assert
         backupPath.Should().NotBeNull();

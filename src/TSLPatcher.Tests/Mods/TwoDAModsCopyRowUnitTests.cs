@@ -18,7 +18,7 @@ public class TwoDAModsCopyRowUnitTests
     private TwoDAFile CreateTestTwoDA(List<string> columns, params (string label, Dictionary<string, object> data)[] rows)
     {
         var twoda = new TwoDAFile(columns);
-        foreach (var (label, data) in rows)
+        foreach ((string label, Dictionary<string, object> data) in rows)
         {
             twoda.AddRow(label, data);
         }
@@ -28,7 +28,7 @@ public class TwoDAModsCopyRowUnitTests
     [Fact]
     public void CopyRow_ByRowIndex_ShouldCopyAndModify()
     {
-        var twoda = CreateTestTwoDA(
+        TwoDAFile twoda = CreateTestTwoDA(
             new List<string> { "Col1", "Col2" },
             ("0", new Dictionary<string, object> { { "Col1", "a" }, { "Col2", "b" } }),
             ("1", new Dictionary<string, object> { { "Col1", "c" }, { "Col2", "d" } })
@@ -46,7 +46,7 @@ public class TwoDAModsCopyRowUnitTests
             new Dictionary<string, RowValue> { { "Col2", new RowValueConstant("X") } }
         ));
 
-        var bytes = config.PatchResource(twoda.ToBytes(), memory, logger, Game.K1);
+        object bytes = config.PatchResource(twoda.ToBytes(), memory, logger, Game.K1);
         var patchedTwoda = TwoDAFile.FromBytes((byte[])bytes);
 
         patchedTwoda.GetHeight().Should().Be(3);
@@ -57,7 +57,7 @@ public class TwoDAModsCopyRowUnitTests
     [Fact]
     public void CopyRow_ByRowLabel_ShouldCopyAndModify()
     {
-        var twoda = CreateTestTwoDA(
+        TwoDAFile twoda = CreateTestTwoDA(
             new List<string> { "Col1", "Col2" },
             ("0", new Dictionary<string, object> { { "Col1", "a" }, { "Col2", "b" } }),
             ("1", new Dictionary<string, object> { { "Col1", "c" }, { "Col2", "d" } })
@@ -85,7 +85,7 @@ public class TwoDAModsCopyRowUnitTests
     [Fact]
     public void CopyRow_ExclusiveNotExists_ShouldAddRow()
     {
-        var twoda = CreateTestTwoDA(
+        TwoDAFile twoda = CreateTestTwoDA(
             new List<string> { "Col1", "Col2" },
             ("0", new Dictionary<string, object> { { "Col1", "a" }, { "Col2", "b" } })
         );
@@ -117,7 +117,7 @@ public class TwoDAModsCopyRowUnitTests
     [Fact]
     public void CopyRow_ExclusiveExists_ShouldUpdateExisting()
     {
-        var twoda = CreateTestTwoDA(
+        TwoDAFile twoda = CreateTestTwoDA(
             new List<string> { "Col1", "Col2" },
             ("0", new Dictionary<string, object> { { "Col1", "a" }, { "Col2", "b" } })
         );
@@ -149,7 +149,7 @@ public class TwoDAModsCopyRowUnitTests
     [Fact]
     public void CopyRow_NoExclusive_ShouldAlwaysAdd()
     {
-        var twoda = CreateTestTwoDA(
+        TwoDAFile twoda = CreateTestTwoDA(
             new List<string> { "Col1", "Col2" },
             ("0", new Dictionary<string, object> { { "Col1", "a" }, { "Col2", "b" } })
         );
@@ -193,7 +193,7 @@ public class TwoDAModsCopyRowUnitTests
     [Fact]
     public void CopyRow_WithNewRowLabel_ShouldUseProvidedLabel()
     {
-        var twoda = CreateTestTwoDA(
+        TwoDAFile twoda = CreateTestTwoDA(
             new List<string> { "Col1", "Col2", "Col3" },
             ("0", new Dictionary<string, object> { { "Col1", "a" }, { "Col2", "b" } }),
             ("1", new Dictionary<string, object> { { "Col1", "c" }, { "Col2", "d" } })
@@ -221,7 +221,7 @@ public class TwoDAModsCopyRowUnitTests
     [Fact]
     public void CopyRow_WithHigh_ShouldCalculateHighest()
     {
-        var twoda = CreateTestTwoDA(
+        TwoDAFile twoda = CreateTestTwoDA(
             new List<string> { "Col1", "Col2", "Col3" },
             ("0", new Dictionary<string, object> { { "Col1", "a" }, { "Col2", "1" } }),
             ("1", new Dictionary<string, object> { { "Col1", "c" }, { "Col2", "2" } })
@@ -249,7 +249,7 @@ public class TwoDAModsCopyRowUnitTests
     [Fact]
     public void CopyRow_WithTLKMemory_ShouldUseMemoryValue()
     {
-        var twoda = CreateTestTwoDA(
+        TwoDAFile twoda = CreateTestTwoDA(
             new List<string> { "Col1", "Col2", "Col3" },
             ("0", new Dictionary<string, object> { { "Col1", "a" }, { "Col2", "1" } }),
             ("1", new Dictionary<string, object> { { "Col1", "c" }, { "Col2", "2" } })
@@ -277,7 +277,7 @@ public class TwoDAModsCopyRowUnitTests
     [Fact]
     public void CopyRow_With2DAMemory_ShouldUseMemoryValue()
     {
-        var twoda = CreateTestTwoDA(new List<string> { "Col1", "Col2" },
+        TwoDAFile twoda = CreateTestTwoDA(new List<string> { "Col1", "Col2" },
             ("0", new Dictionary<string, object> { { "Col1", "a" }, { "Col2", "1" } }),
             ("1", new Dictionary<string, object> { { "Col1", "c" }, { "Col2", "2" } })
         );
@@ -304,7 +304,7 @@ public class TwoDAModsCopyRowUnitTests
     [Fact]
     public void CopyRow_Store2DAMemoryRowIndex_ShouldStoreNewRowIndex()
     {
-        var twoda = CreateTestTwoDA(new List<string> { "Col1" },
+        TwoDAFile twoda = CreateTestTwoDA(new List<string> { "Col1" },
             ("0", new Dictionary<string, object> { { "Col1", "a" } }),
             ("1", new Dictionary<string, object> { { "Col1", "b" } })
         );

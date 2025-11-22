@@ -466,7 +466,7 @@ public class RawBinaryReader : IDisposable
         for (int i = 0; i < stringCount; i++)
         {
             uint stringId = ReadUInt32();
-            var (language, gender) = LocalizedString.SubstringPair((int)stringId);
+            (Language language, Gender gender) = LocalizedString.SubstringPair((int)stringId);
             uint length = ReadUInt32();
 
             // Get encoding for the language

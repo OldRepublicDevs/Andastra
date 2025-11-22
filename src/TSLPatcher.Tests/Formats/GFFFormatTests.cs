@@ -19,7 +19,7 @@ public class GFFFormatTests
     public void TestBinaryIO()
     {
         // Read GFF file
-        var gff = new GFFBinaryReader(TestGffFile).Load();
+        GFF gff = new GFFBinaryReader(TestGffFile).Load();
         ValidateIO(gff);
 
         // Write and re-read to validate round-trip
@@ -48,7 +48,7 @@ public class GFFFormatTests
         gff.Root.GetVector4("orientation").Should().Be(new Vector4(1, 2, 3, 4));
         gff.Root.GetVector3("position").Should().Be(new Vector3(11, 22, 33));
 
-        var locstring = gff.Root.GetLocString("locstring");
+        LocalizedString locstring = gff.Root.GetLocString("locstring");
         locstring.StringRef.Should().Be(-1);
         locstring.Count.Should().Be(2);
         locstring.Get(Language.English, Gender.Male).Should().Be("male_eng");

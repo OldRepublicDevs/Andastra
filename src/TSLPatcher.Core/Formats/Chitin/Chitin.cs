@@ -53,9 +53,9 @@ public class Chitin : IEnumerable<FileResource>
         _resources.Clear();
         _resourceDict.Clear();
 
-        var (keys, bifs) = GetChitinData();
+        (Dictionary<uint, string> keys, List<string> bifs) = GetChitinData();
 
-        foreach (var bif in bifs)
+        foreach (string bif in bifs)
         {
             _resourceDict[bif] = new List<FileResource>();
             string absoluteBifPath = Path.Combine(_basePath, bif);
@@ -149,7 +149,7 @@ public class Chitin : IEnumerable<FileResource>
         }
 
         var bifs = new List<string>();
-        foreach (var (offset, length) in files)
+        foreach ((uint offset, ushort length) in files)
         {
             reader.Seek((int)offset);
             string bif = reader.ReadString(length);
@@ -179,7 +179,7 @@ public class Chitin : IEnumerable<FileResource>
     public byte[]? GetResource(string resref, ResourceType restype)
     {
         var query = new ResourceIdentifier(resref, restype);
-        var resource = _resources.FirstOrDefault(r =>
+        FileResource? resource = _resources.FirstOrDefault(r =>
             string.Equals(r.ResName, resref, StringComparison.OrdinalIgnoreCase) &&
             r.ResType == restype);
 
@@ -209,7 +209,7 @@ public class Chitin : IEnumerable<FileResource>
     /// </summary>
     public List<FileResource> GetBifResources(string bifFilename)
     {
-        if (_resourceDict.TryGetValue(bifFilename, out var resources))
+        if (_resourceDict.TryGetValue(bifFilename, out List<FileResource>? resources))
         {
             return new List<FileResource>(resources);
         }

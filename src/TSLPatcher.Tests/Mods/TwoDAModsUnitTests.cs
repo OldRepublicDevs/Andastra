@@ -142,7 +142,7 @@ public class TwoDAModsUnitTests
     [Fact]
     public void ChangeRow_With2DAMemory_ShouldUseMemoryValue()
     {
-        var twoda = CreateTestTwoDA(
+        TwoDAFile twoda = CreateTestTwoDA(
             new[] { "Col1", "Col2", "Col3" },
             ("0", new[] { "a", "b", "c" }),
             ("1", new[] { "d", "e", "f" })
@@ -175,7 +175,7 @@ public class TwoDAModsUnitTests
     [Fact]
     public void ChangeRow_WithHigh_ShouldCalculateHighestValue()
     {
-        var twoda = CreateTestTwoDA(
+        TwoDAFile twoda = CreateTestTwoDA(
             new[] { "Col1", "Col2", "Col3" },
             ("0", new[] { " ", "3", "5" }),
             ("1", new[] { "2", "4", "6" })
@@ -206,7 +206,7 @@ public class TwoDAModsUnitTests
     [Fact]
     public void ChangeRow_Store2DAMemoryRowIndex_ShouldStoreIndex()
     {
-        var twoda = CreateTestTwoDA(
+        TwoDAFile twoda = CreateTestTwoDA(
             new[] { "Col1", "Col2", "Col3" },
             ("0", new[] { "a", "b", "c" }),
             ("1", new[] { "d", "e", "f" })
@@ -235,7 +235,7 @@ public class TwoDAModsUnitTests
     [Fact]
     public void ChangeRow_Store2DAMemoryRowLabel_ShouldStoreLabel()
     {
-        var twoda = CreateTestTwoDA(
+        TwoDAFile twoda = CreateTestTwoDA(
             new[] { "Col1", "Col2", "Col3" },
             ("0", new[] { "a", "b", "c" }),
             ("r1", new[] { "d", "e", "f" })
@@ -264,7 +264,7 @@ public class TwoDAModsUnitTests
     [Fact]
     public void ChangeRow_Store2DAMemoryColumnLabel_ShouldStoreValue()
     {
-        var twoda = CreateTestTwoDA(
+        TwoDAFile twoda = CreateTestTwoDA(
             new[] { "label", "Col2", "Col3" },
             ("0", new[] { "a", "b", "c" }),
             ("1", new[] { "d", "e", "f" })
@@ -293,7 +293,7 @@ public class TwoDAModsUnitTests
     [Fact]
     public void AddRow_AutoRowLabel_ShouldIncrementFromMax()
     {
-        var twoda = CreateTestTwoDA(new[] { "Col1" }, ("0", new string[0]));
+        TwoDAFile twoda = CreateTestTwoDA(new[] { "Col1" }, ("0", new string[0]));
 
         var memory = new PatcherMemory();
         var logger = new PatchLogger();
@@ -313,7 +313,7 @@ public class TwoDAModsUnitTests
     [Fact]
     public void AddRow_ExplicitRowLabel_ShouldUseProvidedLabel()
     {
-        var twoda = CreateTestTwoDA(new[] { "Col1" });
+        TwoDAFile twoda = CreateTestTwoDA(new[] { "Col1" });
 
         var memory = new PatcherMemory();
         var logger = new PatchLogger();
@@ -330,7 +330,7 @@ public class TwoDAModsUnitTests
     [Fact]
     public void AddRow_ExclusiveColumnNotExists_ShouldAddRow()
     {
-        var twoda = CreateTestTwoDA(
+        TwoDAFile twoda = CreateTestTwoDA(
             new[] { "Col1", "Col2", "Col3" },
             ("0", new[] { "a", "b", "c" }),
             ("1", new[] { "d", "e", "f" })
@@ -364,7 +364,7 @@ public class TwoDAModsUnitTests
     [Fact]
     public void AddRow_ExclusiveColumnExists_ShouldUpdateExisting()
     {
-        var twoda = CreateTestTwoDA(
+        TwoDAFile twoda = CreateTestTwoDA(
             new[] { "Col1", "Col2", "Col3" },
             ("0", new[] { "a", "b", "c" }),
             ("1", new[] { "d", "e", "f" })
@@ -397,7 +397,7 @@ public class TwoDAModsUnitTests
     [Fact]
     public void AddRow_NoExclusiveColumn_ShouldAlwaysAdd()
     {
-        var twoda = CreateTestTwoDA(
+        TwoDAFile twoda = CreateTestTwoDA(
             new[] { "Col1", "Col2", "Col3" },
             ("0", new[] { "a", "b", "c" }),
             ("1", new[] { "d", "e", "f" })

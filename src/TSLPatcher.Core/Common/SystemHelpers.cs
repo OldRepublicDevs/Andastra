@@ -18,7 +18,7 @@ public static class SystemHelpers
         }
 
         // Process files
-        foreach (var file in dirInfo.GetFiles("*", SearchOption.AllDirectories))
+        foreach (FileInfo file in dirInfo.GetFiles("*", SearchOption.AllDirectories))
         {
             try
             {
@@ -35,7 +35,7 @@ public static class SystemHelpers
         }
 
         // Process directories
-        foreach (var dir in dirInfo.GetDirectories("*", SearchOption.AllDirectories))
+        foreach (DirectoryInfo dir in dirInfo.GetDirectories("*", SearchOption.AllDirectories))
         {
             try
             {
@@ -78,13 +78,13 @@ public static class SystemHelpers
     private static void ProcessDirectoryCase(DirectoryInfo dir, Action<string> logAction)
     {
         // 1. Process subdirectories first (depth-first)
-        foreach (var subDir in dir.GetDirectories())
+        foreach (DirectoryInfo subDir in dir.GetDirectories())
         {
             ProcessDirectoryCase(subDir, logAction);
         }
 
         // 2. Rename files in this directory
-        foreach (var file in dir.GetFiles())
+        foreach (FileInfo file in dir.GetFiles())
         {
             string newName = file.Name.ToLowerInvariant();
             if (file.Name != newName)
@@ -148,7 +148,7 @@ public static class SystemHelpers
     private static void FixCaseRecursiveInternal(DirectoryInfo dir, Action<string> logAction)
     {
         // Subdirectories
-        foreach (var subDir in dir.GetDirectories())
+        foreach (DirectoryInfo subDir in dir.GetDirectories())
         {
             // Recurse first
             FixCaseRecursiveInternal(subDir, logAction);
@@ -163,7 +163,7 @@ public static class SystemHelpers
         }
 
         // Files
-        foreach (var file in dir.GetFiles())
+        foreach (FileInfo file in dir.GetFiles())
         {
             string name = file.Name;
             string newName = name.ToLowerInvariant();

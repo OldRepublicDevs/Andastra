@@ -141,7 +141,7 @@ public class Capsule : IEnumerable<CapsuleResource>
             entries.Add((resref, restype, resid, offset, size));
         }
 
-        foreach (var entry in entries)
+        foreach ((string resref, uint restype, uint resid, uint offset, uint size) entry in entries)
         {
             reader.BaseStream.Seek(entry.offset, SeekOrigin.Begin);
             byte[] data = reader.ReadBytes((int)entry.size);
@@ -200,23 +200,23 @@ public class Capsule : IEnumerable<CapsuleResource>
         if (_capsuleType == CapsuleType.RIM)
         {
             var rim = new RIM.RIM();
-            foreach (var res in _resources)
+            foreach (CapsuleResource res in _resources)
             {
                 rim.SetData(res.ResName, res.ResType, res.Data);
             }
             var writer = new RIM.RIMBinaryWriter(rim);
-            using var fs = File.Create(_path.GetResolvedPath());
+            using FileStream fs = File.Create(_path.GetResolvedPath());
             writer.Write(fs);
         }
         else
         {
             var erf = new ERF.ERF(_capsuleType == CapsuleType.MOD ? ERF.ERFType.MOD : ERF.ERFType.ERF, true);
-            foreach (var res in _resources)
+            foreach (CapsuleResource res in _resources)
             {
                 erf.SetData(res.ResName, res.ResType, res.Data);
             }
             var writer = new ERF.ERFBinaryWriter(erf);
-            using var fs = File.Create(_path.GetResolvedPath());
+            using FileStream fs = File.Create(_path.GetResolvedPath());
             writer.Write(fs);
         }
     }
@@ -228,7 +228,7 @@ public class Capsule : IEnumerable<CapsuleResource>
 
     public byte[]? GetResource(string resname, ResourceType restype)
     {
-        var resource = _resources.FirstOrDefault(r =>
+        CapsuleResource? resource = _resources.FirstOrDefault(r =>
             string.Equals(r.ResName, resname, StringComparison.OrdinalIgnoreCase) &&
             r.ResType == restype);
         return resource?.Data;
@@ -236,7 +236,7 @@ public class Capsule : IEnumerable<CapsuleResource>
 
     public void SetResource(string resname, ResourceType restype, byte[] data)
     {
-        var existing = _resources.FirstOrDefault(r =>
+        CapsuleResource? existing = _resources.FirstOrDefault(r =>
             string.Equals(r.ResName, resname, StringComparison.OrdinalIgnoreCase) &&
             r.ResType == restype);
 
@@ -260,7 +260,7 @@ public class Capsule : IEnumerable<CapsuleResource>
     /// </summary>
     public bool RemoveResource(string resname, ResourceType restype)
     {
-        var existing = _resources.FirstOrDefault(r =>
+        CapsuleResource? existing = _resources.FirstOrDefault(r =>
             string.Equals(r.ResName, resname, StringComparison.OrdinalIgnoreCase) &&
             r.ResType == restype);
 

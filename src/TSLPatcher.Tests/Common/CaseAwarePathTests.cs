@@ -22,8 +22,8 @@ public class CaseAwarePathTests
     public void Constructor_ShouldAcceptValidStrings()
     {
         // Python test: test_new_valid_str_argument
-        var act1 = () => new CaseAwarePath(@"C:\path\to\dir");
-        var act2 = () => new CaseAwarePath("/path/to/dir");
+        Func<CaseAwarePath> act1 = () => new CaseAwarePath(@"C:\path\to\dir");
+        Func<CaseAwarePath> act2 = () => new CaseAwarePath("/path/to/dir");
 
         act1.Should().NotThrow();
         act2.Should().NotThrow();
@@ -33,7 +33,7 @@ public class CaseAwarePathTests
     public void Constructor_ShouldRejectInvalidTypes()
     {
         // Python test: test_new_invalid_argument
-        var act = () => new CaseAwarePath(123 as object);
+        Func<CaseAwarePath> act = () => new CaseAwarePath(123 as object);
 
         act.Should().Throw<ArgumentException>();
     }
@@ -240,7 +240,7 @@ public class CaseAwarePathTests
     {
         // Python test: test_normal (TestSplitFilename)
         var path = new CaseAwarePath("file.txt");
-        var (stem, ext) = path.SplitFilename();
+        (string stem, string ext) = path.SplitFilename();
 
         stem.Should().Be("file");
         ext.Should().Be("txt");
@@ -251,12 +251,12 @@ public class CaseAwarePathTests
     {
         // Python test: test_multiple_dots
         var path1 = new CaseAwarePath("file.with.dots.txt");
-        var (stem1, ext1) = path1.SplitFilename(dots: 2);
+        (string stem1, string ext1) = path1.SplitFilename(dots: 2);
         stem1.Should().Be("file.with");
         ext1.Should().Be("dots.txt");
 
         var path2 = new CaseAwarePath("test.asdf.qwerty.tlk.xml");
-        var (stem2, ext2) = path2.SplitFilename(dots: 2);
+        (string stem2, string ext2) = path2.SplitFilename(dots: 2);
         stem2.Should().Be("test.asdf.qwerty");
         ext2.Should().Be("tlk.xml");
     }
@@ -266,7 +266,7 @@ public class CaseAwarePathTests
     {
         // Python test: test_no_dots
         var path = new CaseAwarePath("filename");
-        var (stem, ext) = path.SplitFilename();
+        (string stem, string ext) = path.SplitFilename();
 
         stem.Should().Be("filename");
         ext.Should().Be("");
@@ -277,7 +277,7 @@ public class CaseAwarePathTests
     {
         // Python test: test_negative_dots
         var path = new CaseAwarePath("left.right.txt");
-        var (stem, ext) = path.SplitFilename(dots: -1);
+        (string stem, string ext) = path.SplitFilename(dots: -1);
 
         stem.Should().Be("right.txt");
         ext.Should().Be("left");
@@ -289,11 +289,11 @@ public class CaseAwarePathTests
         // Python test: test_more_dots_than_parts
         var path = new CaseAwarePath("file.txt");
 
-        var (stem1, ext1) = path.SplitFilename(dots: 3);
+        (string stem1, string ext1) = path.SplitFilename(dots: 3);
         stem1.Should().Be("file");
         ext1.Should().Be("txt");
 
-        var (stem2, ext2) = path.SplitFilename(dots: -3);
+        (string stem2, string ext2) = path.SplitFilename(dots: -3);
         stem2.Should().Be("file");
         ext2.Should().Be("txt");
     }
@@ -303,7 +303,7 @@ public class CaseAwarePathTests
     {
         // Python test: test_invalid_dots
         var path = new CaseAwarePath("file.txt");
-        var act = () => path.SplitFilename(dots: 0);
+        Func<(string stem, string ext)> act = () => path.SplitFilename(dots: 0);
 
         act.Should().Throw<ArgumentException>();
     }

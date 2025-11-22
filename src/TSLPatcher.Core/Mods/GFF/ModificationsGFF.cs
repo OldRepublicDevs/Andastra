@@ -30,7 +30,7 @@ public class ModificationsGFF : PatcherModifications
         Game game)
     {
         var reader = new GFFBinaryReader(source);
-        var gff = reader.Load();
+        Formats.GFF.GFF gff = reader.Load();
         Apply(gff, memory, logger, game);
         var writer = new GFFBinaryWriter(gff);
         return writer.Write();
@@ -44,7 +44,7 @@ public class ModificationsGFF : PatcherModifications
     {
         if (mutableData is Formats.GFF.GFF gff)
         {
-            foreach (var modifier in Modifiers)
+            foreach (ModifyGFF modifier in Modifiers)
             {
                 modifier.Apply(gff.Root, memory, logger, game);
             }

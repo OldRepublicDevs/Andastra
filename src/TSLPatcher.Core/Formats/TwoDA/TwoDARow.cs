@@ -18,7 +18,7 @@ public class TwoDARow(string rowLabel, Dictionary<string, string> rowData)
 
     public void UpdateValues(Dictionary<string, string> values)
     {
-        foreach (var (column, cell) in values)
+        foreach ((string column, string cell) in values)
         {
             SetString(column, cell);
         }

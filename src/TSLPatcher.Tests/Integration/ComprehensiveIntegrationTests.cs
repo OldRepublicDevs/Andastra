@@ -46,13 +46,13 @@ StrRefField=StrRef0
 IndexField=2DAMEMORY5
 ";
         // Create append.tlk
-        var appendTlk = CreateTestTLK(new[] { ("Test String", "") });
+        TLK appendTlk = CreateTestTLK(new[] { ("Test String", "") });
         SaveTestTLK("append.tlk", appendTlk);
 
-        var config = SetupIniAndConfig(iniText);
-        
+        PatcherConfig config = SetupIniAndConfig(iniText);
+
         // Setup data
-        var twoda = CreateTest2DA(new[] { "label", "strref_col" }, Array.Empty<(string label, string[] values)>());
+        TwoDA twoda = CreateTest2DA(new[] { "label", "strref_col" }, Array.Empty<(string, string[])>());
         var gff = new GFF();
         var tlk = new TLK();
         tlk.Add("Original");
@@ -62,7 +62,7 @@ IndexField=2DAMEMORY5
         // Apply all patches
         config.PatchesTLK.Apply(tlk, memory, new PatchLogger(), Game.K1);
         config.Patches2DA.First(p => p.SaveAs == "test.2da").Apply(twoda, memory, new PatchLogger(), Game.K1);
-        var gffBytes = (byte[])config.PatchesGFF.First(p => p.SaveAs == "test.gff").PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
+        byte[] gffBytes = (byte[])config.PatchesGFF.First(p => p.SaveAs == "test.gff").PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
         var patchedGff = GFF.FromBytes(gffBytes);
 
         // Verify TLK
@@ -112,8 +112,8 @@ ColumnLabel=Col3
 DefaultValue=def
 I0=special
 ";
-        var config = SetupIniAndConfig(iniText);
-        var twoda = CreateTest2DA(
+        PatcherConfig config = SetupIniAndConfig(iniText);
+        TwoDA twoda = CreateTest2DA(
             new[] { "Col1", "Col2" },
             new[]
             {
@@ -176,19 +176,19 @@ Label=
 TypeId=200
 2DAMEMORY0=ListIndex
 ";
-        var config = SetupIniAndConfig(iniText);
+        PatcherConfig config = SetupIniAndConfig(iniText);
         var gff = new GFF();
         gff.Root.SetList("ItemList", new GFFList());
 
         var memory = new PatcherMemory();
-        var bytes = config.PatchesGFF.First(p => p.SaveAs == "test.gff").PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
+        object bytes = config.PatchesGFF.First(p => p.SaveAs == "test.gff").PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
         var patchedGff = GFF.FromBytes((byte[])bytes);
 
-        var parent = patchedGff.Root.GetStruct("Parent");
+        GFFStruct parent = patchedGff.Root.GetStruct("Parent");
         parent.Should().NotBeNull();
         parent!.GetInt32("ChildValue").Should().Be(42);
 
-        var list = patchedGff.Root.GetList("ItemList");
+        GFFList list = patchedGff.Root.GetList("ItemList");
         list.Should().NotBeNull();
         list!.Count.Should().Be(1);
         list[0].StructId.Should().Be(200);
@@ -208,14 +208,14 @@ Battlecry 1=100
 Battlecry 2=2DAMEMORY5
 Battlecry 3=StrRef7
 ";
-        var config = SetupIniAndConfig(iniText);
+        PatcherConfig config = SetupIniAndConfig(iniText);
         var ssf = new SSF();
 
         var memory = new PatcherMemory();
         memory.Memory2DA[5] = "200";
         memory.MemoryStr[7] = 300;
 
-        var bytes = config.PatchesSSF.First(p => p.SaveAs == "test.ssf").PatchResource(ssf.ToBytes(), memory, new PatchLogger(), Game.K1);
+        object bytes = config.PatchesSSF.First(p => p.SaveAs == "test.ssf").PatchResource(ssf.ToBytes(), memory, new PatchLogger(), Game.K1);
         var patchedSsf = SSF.FromBytes((byte[])bytes);
 
         patchedSsf.Get(SSFSound.BATTLE_CRY_1).Should().Be(100);
@@ -262,8 +262,8 @@ label=duplicate_copy
 id=1
 value=also_conflict
 ";
-        var config = SetupIniAndConfig(iniText);
-        var twoda = CreateTest2DA(
+        PatcherConfig config = SetupIniAndConfig(iniText);
+        TwoDA twoda = CreateTest2DA(
             new[] { "id", "value" },
             new[]
             {
@@ -280,10 +280,10 @@ value=also_conflict
         // Original row updated by add_duplicate
         twoda.GetCellString(0, "id").Should().Be("1");
         twoda.GetCellString(0, "value").Should().Be("also_conflict"); // last update wins
-        
+
         // New unique entries
-        var row1Id = twoda.GetCellString(1, "id");
-        var row2Id = twoda.GetCellString(2, "id");
+        string row1Id = twoda.GetCellString(1, "id");
+        string row2Id = twoda.GetCellString(2, "id");
         
         (row1Id == "100" || row2Id == "100").Should().BeTrue();
         (row1Id == "200" || row2Id == "200").Should().BeTrue();
@@ -310,8 +310,8 @@ col3=100
 RowIndex=0
 col1=high()
 ";
-        var config = SetupIniAndConfig(iniText);
-        var twoda = CreateTest2DA(
+        PatcherConfig config = SetupIniAndConfig(iniText);
+        TwoDA twoda = CreateTest2DA(
             new[] { "col1", "col2", "col3" },
             new[]
             {
@@ -327,10 +327,10 @@ col1=high()
         
         // Changed row should have high from col1
         twoda.GetCellString(0, "col1").Should().Be("8"); // high of col1 was 7, but we're setting it to high()
-        
+
         // New row should have high values
-        var newCol1 = int.Parse(twoda.GetCellString(2, "col1"));
-        var newCol2 = int.Parse(twoda.GetCellString(2, "col2"));
+        int newCol1 = int.Parse(twoda.GetCellString(2, "col1"));
+        int newCol2 = int.Parse(twoda.GetCellString(2, "col2"));
         
         newCol1.Should().BeGreaterThan(7); // Should be higher than previous high
         newCol2.Should().BeGreaterThan(10); // Should be higher than previous high
@@ -375,17 +375,17 @@ Battlecry 1=StrRef0
 Battlecry 2=2DAMEMORY0
 ";
         // Create TLK file
-        var appendTlk = CreateTestTLK(new[]
+        TLK appendTlk = CreateTestTLK(new[]
         {
             ("String0", ""),
             ("String1", "")
         });
         SaveTestTLK("append.tlk", appendTlk);
 
-        var config = SetupIniAndConfig(iniText);
+        PatcherConfig config = SetupIniAndConfig(iniText);
         
         var tlk = new TLK();
-        var twoda = CreateTest2DA(new[] { "label", "value" }, Array.Empty<(string label, string[] values)>());
+        TwoDA twoda = CreateTest2DA(new[] { "label", "value" }, Array.Empty<(string, string[])>());
         var gff = new GFF();
         var ssf = new SSF();
 
@@ -394,9 +394,9 @@ Battlecry 2=2DAMEMORY0
         // Apply all patches
         config.PatchesTLK.Apply(tlk, memory, new PatchLogger(), Game.K1);
         config.Patches2DA.First(p => p.SaveAs == "test.2da").Apply(twoda, memory, new PatchLogger(), Game.K1);
-        var gffBytes = (byte[])config.PatchesGFF.First(p => p.SaveAs == "test.gff").PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
+        byte[] gffBytes = (byte[])config.PatchesGFF.First(p => p.SaveAs == "test.gff").PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
         var patchedGff = GFF.FromBytes(gffBytes);
-        var ssfBytes = (byte[])config.PatchesSSF.First(p => p.SaveAs == "test.ssf").PatchResource(ssf.ToBytes(), memory, new PatchLogger(), Game.K1);
+        byte[] ssfBytes = (byte[])config.PatchesSSF.First(p => p.SaveAs == "test.ssf").PatchResource(ssf.ToBytes(), memory, new PatchLogger(), Game.K1);
         var patchedSsf = SSF.FromBytes(ssfBytes);
 
         // Verify all modifications

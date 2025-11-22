@@ -24,7 +24,7 @@ public class TwoDABinaryWriter
         using var ms = new MemoryStream();
         using var writer = new BinaryWriter(ms);
 
-        var headers = _twoda.GetHeaders();
+        List<string> headers = _twoda.GetHeaders();
 
         // Write header
         writer.Write(Encoding.ASCII.GetBytes("2DA "));
@@ -53,7 +53,7 @@ public class TwoDABinaryWriter
         var cellOffsets = new List<int>();
         int dataSize = 0;
 
-        foreach (var row in _twoda)
+        foreach (TwoDARow row in _twoda)
         {
             foreach (string header in _twoda.GetHeaders())
             {

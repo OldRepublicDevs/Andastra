@@ -116,7 +116,7 @@ public class ModUninstaller(CaseAwarePath backupsLocationPath, CaseAwarePath gam
         }
 
         // Copy each file from the backup folder to the destination restoring the file structure
-        foreach (var file in filesInBackup)
+        foreach (CaseAwarePath file in filesInBackup)
         {
             if (file.Name == "remove these files.txt")
             {
@@ -151,7 +151,7 @@ public class ModUninstaller(CaseAwarePath backupsLocationPath, CaseAwarePath gam
         Action<string, string>? showErrorDialog = null,
         Func<string, string, bool>? showYesNoDialog = null)
     {
-        var mostRecentBackupFolder = GetMostRecentBackup(_backupsLocationPath, showErrorDialog);
+        CaseAwarePath? mostRecentBackupFolder = GetMostRecentBackup(_backupsLocationPath, showErrorDialog);
         if (mostRecentBackupFolder == null)
         {
             return (null, new HashSet<string>(), new List<CaseAwarePath>(), 0);
@@ -210,7 +210,7 @@ public class ModUninstaller(CaseAwarePath backupsLocationPath, CaseAwarePath gam
         Func<string, string, bool>? showYesNoDialog = null,
         Func<string, string, bool?>? showYesNoCancelDialog = null)
     {
-        var (mostRecentBackupFolder, existingFiles, filesInBackup, folderCount) = GetBackupInfo(showErrorDialog, showYesNoDialog);
+        (CaseAwarePath mostRecentBackupFolder, HashSet<string> existingFiles, List<CaseAwarePath> filesInBackup, int folderCount) = GetBackupInfo(showErrorDialog, showYesNoDialog);
 
         if (mostRecentBackupFolder == null)
         {
@@ -222,7 +222,7 @@ public class ModUninstaller(CaseAwarePath backupsLocationPath, CaseAwarePath gam
         // Show files to be restored if there are less than 6
         if (filesInBackup.Count < 6)
         {
-            foreach (var item in filesInBackup)
+            foreach (CaseAwarePath item in filesInBackup)
             {
                 string relativePath = Path.GetRelativePath(mostRecentBackupFolder, item);
                 _logger.AddNote($"Would restore file '{relativePath}'");

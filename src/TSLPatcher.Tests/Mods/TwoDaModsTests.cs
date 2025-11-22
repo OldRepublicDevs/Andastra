@@ -101,7 +101,7 @@ public class TwoDaModsTests
         var writer = new TwoDABinaryWriter(twoda);
         byte[] twodaBytes = writer.Write();
         byte[] patchedBytes = (byte[])config.PatchResource(twodaBytes, memory, logger, Game.K2);
-        var patchedTwoda = new TwoDABinaryReader(patchedBytes).Load();
+        TwoDAFile patchedTwoda = new TwoDABinaryReader(patchedBytes).Load();
 
         patchedTwoda.GetColumn("Col1").Should().BeEquivalentTo("0", "1");
         patchedTwoda.GetColumn("Col2").Should().BeEquivalentTo("b", "e");
@@ -453,7 +453,7 @@ public class TwoDaModsTests
         var writer = new TwoDABinaryWriter(twoda);
         byte[] twodaBytes = writer.Write();
         byte[] patchedBytes = (byte[])config.PatchResource(twodaBytes, memory, logger, Game.K2);
-        var patchedTwoda = new TwoDABinaryReader(patchedBytes).Load();
+        TwoDAFile patchedTwoda = new TwoDABinaryReader(patchedBytes).Load();
 
         patchedTwoda.GetHeight().Should().Be(3);
         patchedTwoda.GetColumn("Col1").Should().BeEquivalentTo("a", "c", "a");

@@ -71,7 +71,7 @@ public class ConfigReaderTLKTests : IDisposable
     private void CreateTestTLKFile(string filename, (string text, string sound)[] entries)
     {
         var tlk = new TLK(Core.Common.Language.English);
-        foreach (var (text, sound) in entries)
+        foreach ((string text, string sound) in entries)
         {
             tlk.Add(text, sound);
         }
@@ -93,23 +93,23 @@ AppendFile0=modifications.tlk
 1=1
 2=2
 ";
-        var ini = _parser.Parse(iniText);
+        IniData ini = _parser.Parse(iniText);
         var config = new PatcherConfig();
         var reader = new ConfigReader(ini, _tempDir, null, _modPath);
 
         // Act
-        var result = reader.Load(config);
+        PatcherConfig result = reader.Load(config);
 
         // Assert
         result.PatchesTLK.Modifiers.Should().HaveCount(3);
 
-        var mod0 = result.PatchesTLK.Modifiers.First(m => m.TokenId == 0);
+        ModifyTLK mod0 = result.PatchesTLK.Modifiers.First(m => m.TokenId == 0);
         mod0.IsReplacement.Should().BeFalse();
         mod0.TlkFilePath.Should().Contain("modifications.tlk");
         mod0.ModIndex.Should().Be(0);
 
         // Load the actual data
-        foreach (var mod in result.PatchesTLK.Modifiers)
+        foreach (ModifyTLK mod in result.PatchesTLK.Modifiers)
         {
             mod.Load();
         }
@@ -130,12 +130,12 @@ ReplaceFile0=modifications.tlk
 0=0
 1=1
 ";
-        var ini = _parser.Parse(iniText);
+        IniData ini = _parser.Parse(iniText);
         var config = new PatcherConfig();
         var reader = new ConfigReader(ini, _tempDir, null, _modPath);
 
         // Act
-        var result = reader.Load(config);
+        PatcherConfig result = reader.Load(config);
 
         // Assert
         result.PatchesTLK.Modifiers.Should().HaveCount(2);
@@ -152,23 +152,23 @@ StrRef0=0
 StrRef1=1
 StrRef2=2
 ";
-        var ini = _parser.Parse(iniText);
+        IniData ini = _parser.Parse(iniText);
         var config = new PatcherConfig();
         var reader = new ConfigReader(ini, _tempDir, null, _modPath);
 
         // Act
-        var result = reader.Load(config);
+        PatcherConfig result = reader.Load(config);
 
         // Assert
         result.PatchesTLK.Modifiers.Should().HaveCount(3);
 
-        var mod0 = result.PatchesTLK.Modifiers.First(m => m.TokenId == 0);
+        ModifyTLK mod0 = result.PatchesTLK.Modifiers.First(m => m.TokenId == 0);
         mod0.TlkFilePath.Should().Contain("append.tlk");
         mod0.ModIndex.Should().Be(0);
         mod0.IsReplacement.Should().BeFalse();
 
         // Load the actual data
-        foreach (var mod in result.PatchesTLK.Modifiers)
+        foreach (ModifyTLK mod in result.PatchesTLK.Modifiers)
         {
             mod.Load();
         }
@@ -186,17 +186,17 @@ StrRef2=2
 StrRef0=Direct text entry
 StrRef1=Another entry
 ";
-        var ini = _parser.Parse(iniText);
+        IniData ini = _parser.Parse(iniText);
         var config = new PatcherConfig();
         var reader = new ConfigReader(ini, _tempDir, null, _modPath);
 
         // Act
-        var result = reader.Load(config);
+        PatcherConfig result = reader.Load(config);
 
         // Assert
         result.PatchesTLK.Modifiers.Should().HaveCount(2);
 
-        var mod0 = result.PatchesTLK.Modifiers.First(m => m.TokenId == 0);
+        ModifyTLK mod0 = result.PatchesTLK.Modifiers.First(m => m.TokenId == 0);
         mod0.Text.Should().Be("Direct text entry");
         mod0.TlkFilePath.Should().BeNull();
     }
@@ -210,17 +210,17 @@ StrRef1=Another entry
 StrRef0=Test text
 StrRef0Sound=test_sound
 ";
-        var ini = _parser.Parse(iniText);
+        IniData ini = _parser.Parse(iniText);
         var config = new PatcherConfig();
         var reader = new ConfigReader(ini, _tempDir, null, _modPath);
 
         // Act
-        var result = reader.Load(config);
+        PatcherConfig result = reader.Load(config);
 
         // Assert
         result.PatchesTLK.Modifiers.Should().HaveCount(1);
 
-        var mod0 = result.PatchesTLK.Modifiers.First();
+        ModifyTLK mod0 = result.PatchesTLK.Modifiers.First();
         mod0.Text.Should().Be("Test text");
         mod0.Sound?.ToString().Should().Be("test_sound");
     }
@@ -242,24 +242,24 @@ AppendFile1=append.tlk
 2=0
 3=1
 ";
-        var ini = _parser.Parse(iniText);
+        IniData ini = _parser.Parse(iniText);
         var config = new PatcherConfig();
         var reader = new ConfigReader(ini, _tempDir, null, _modPath);
 
         // Act
-        var result = reader.Load(config);
+        PatcherConfig result = reader.Load(config);
 
         // Assert
         result.PatchesTLK.Modifiers.Should().HaveCount(4);
 
-        var mod0 = result.PatchesTLK.Modifiers.First(m => m.TokenId == 0);
-        var mod2 = result.PatchesTLK.Modifiers.First(m => m.TokenId == 2);
+        ModifyTLK mod0 = result.PatchesTLK.Modifiers.First(m => m.TokenId == 0);
+        ModifyTLK mod2 = result.PatchesTLK.Modifiers.First(m => m.TokenId == 2);
 
         mod0.TlkFilePath.Should().Contain("test.tlk");
         mod2.TlkFilePath.Should().Contain("append.tlk");
 
         // Load the actual data
-        foreach (var mod in result.PatchesTLK.Modifiers)
+        foreach (ModifyTLK mod in result.PatchesTLK.Modifiers)
         {
             mod.Load();
         }

@@ -102,7 +102,7 @@ public class ModificationsNSS : PatcherModifications
     private void IterateAndReplaceTokens2DA(string tokenName, Dictionary<int, string> memoryDict, MutableString nssSource, PatchLogger logger)
     {
         string searchPattern = $@"#{tokenName}\d+#";
-        var match = Regex.Match(nssSource.Value, searchPattern);
+        Match match = Regex.Match(nssSource.Value, searchPattern);
 
         while (match.Success)
         {
@@ -129,7 +129,7 @@ public class ModificationsNSS : PatcherModifications
     private void IterateAndReplaceTokensStr(string tokenName, Dictionary<int, int> memoryDict, MutableString nssSource, PatchLogger logger)
     {
         string searchPattern = $@"#{tokenName}\d+#";
-        var match = Regex.Match(nssSource.Value, searchPattern);
+        Match match = Regex.Match(nssSource.Value, searchPattern);
 
         while (match.Success)
         {

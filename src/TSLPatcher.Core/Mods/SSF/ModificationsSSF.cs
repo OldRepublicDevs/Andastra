@@ -24,7 +24,15 @@ public class ModifySSF
 
     public void Apply(Formats.SSF.SSF ssf, PatcherMemory memory)
     {
-        ssf.SetData(Sound, int.Parse(Stringref.Value(memory)));
+        try
+        {
+            ssf.SetData(Sound, int.Parse(Stringref.Value(memory)));
+        }
+        catch (System.Collections.Generic.KeyNotFoundException)
+        {
+            // Missing token defaults to 0
+            ssf.SetData(Sound, 0);
+        }
     }
 }
 
@@ -46,7 +54,7 @@ public class ModificationsSSF(string filename, bool replaceFile, bool _noReplace
         Game game)
     {
         var reader = new SSFBinaryReader(source);
-        var ssf = reader.Load();
+        Formats.SSF.SSF ssf = reader.Load();
         Apply(ssf, memory, logger, game);
 
         var writer = new SSFBinaryWriter(ssf);
@@ -64,7 +72,7 @@ public class ModificationsSSF(string filename, bool replaceFile, bool _noReplace
             throw new ArgumentException($"Expected SSF object, got {mutableData.GetType().Name}");
         }
 
-        foreach (var modifier in Modifiers)
+        foreach (ModifySSF modifier in Modifiers)
         {
             modifier.Apply(ssf, memory);
         }

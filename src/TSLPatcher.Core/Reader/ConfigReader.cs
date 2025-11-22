@@ -65,7 +65,7 @@ public class ConfigReader
         parser.Configuration.CaseInsensitive = false;
 
         string iniText = File.ReadAllText(filePath);
-        var ini = parser.Parse(iniText);
+        IniData ini = parser.Parse(iniText);
 
         string modPath = Path.GetDirectoryName(filePath) ?? string.Empty;
         string tslPatchDataPath = Path.Combine(modPath, "tslpatchdata");
@@ -95,7 +95,7 @@ public class ConfigReader
 
         // Check for orphaned sections
         var allSections = _ini.Sections.Select(s => s.SectionName).ToHashSet();
-        var orphanedSections = allSections.Except(_previouslyParsedSections);
+        IEnumerable<string> orphanedSections = allSections.Except(_previouslyParsedSections);
         if (orphanedSections.Any())
         {
             string orphanedStr = string.Join("\n", orphanedSections);
@@ -121,7 +121,7 @@ public class ConfigReader
     private static Dictionary<string, string> SectionToDictionary(KeyDataCollection section)
     {
         var dict = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-        foreach (var keyData in section)
+        foreach (KeyData? keyData in section)
         {
             dict[keyData.KeyName] = keyData.Value;
         }
@@ -140,13 +140,13 @@ public class ConfigReader
         }
 
         _log.AddNote("Loading [Settings] section from ini...");
-        var settings = _ini[settingsSection];
+        KeyDataCollection settings = _ini[settingsSection];
 
         Config.WindowTitle = GetValue(settings, "WindowCaption") ?? string.Empty;
         Config.ConfirmMessage = GetValue(settings, "ConfirmMessage") ?? string.Empty;
 
         // Parse Required files
-        foreach (var key in settings)
+        foreach (KeyData? key in settings)
         {
             string lowerKey = key.KeyName.ToLower();
             if (lowerKey == "required" || (lowerKey.StartsWith("required") &&
@@ -219,8 +219,8 @@ public class ConfigReader
 
         _log.AddNote("Loading [InstallList] patches from ini...");
 
-        var installList = _ini[installListSection];
-        foreach (var folderEntry in installList)
+        KeyDataCollection installList = _ini[installListSection];
+        foreach (KeyData? folderEntry in installList)
         {
             string foldername = folderEntry.Value;
             string folderKey = folderEntry.KeyName;
@@ -237,7 +237,7 @@ public class ConfigReader
             Dictionary<string, string> folderDict = SectionToDictionary(folderSection);
             string sourcefolder = folderDict.TryGetValue("!SourceFolder", out string? sf) ? sf : ".";
 
-            foreach (var kvp in folderDict)
+            foreach (KeyValuePair<string, string> kvp in folderDict)
             {
                 if (kvp.Key.StartsWith("!", StringComparison.Ordinal))
                 {
@@ -296,7 +296,22 @@ public class ConfigReader
 
         Config.PatchesTLK.PopTslPatcherVars(tlkDict, defaultDestination: ModificationsTLK.DefaultDestination, defaultSourceFolder: ".");
 
+        // If SourceFile is not set, try to find a TLK file section
+        if (string.IsNullOrEmpty(Config.PatchesTLK.SourceFile))
+        {
+            // Look for sections that look like TLK files (end with .tlk)
+            foreach (SectionData? section in _ini.Sections)
+            {
+                if (section.SectionName.EndsWith(".tlk", StringComparison.OrdinalIgnoreCase))
+                {
+                    Config.PatchesTLK.SourceFile = section.SectionName;
+                    break;
+                }
+            }
+        }
+
         bool syntaxErrorCaught = false;
+        Dictionary<int, ModifyTLK> modifierDict = new(); // Track modifiers by token ID for Sound directives
 
         foreach ((string key, string value) in tlkDict)
         {
@@ -314,15 +329,58 @@ public class ConfigReader
             {
                 if (lowerKey.StartsWith("strref"))
                 {
-                    int dialogTlkIndex = int.Parse(lowerKey.Substring(6));
-                    int modTlkIndex = int.Parse(value);
+                    string suffix = lowerKey.Substring(6);
+                    bool isSound = suffix.EndsWith("sound");
+                    int dialogTlkIndex = int.Parse(isSound ? suffix.Substring(0, suffix.Length - 5) : suffix);
 
-                    ModifyTLK modifier = new ModifyTLK(dialogTlkIndex, false)
+                    if (isSound)
                     {
-                        ModIndex = modTlkIndex,
-                        TlkFilePath = Path.Combine(_modPath, Config.PatchesTLK.SourceFolder, Config.PatchesTLK.SourceFile)
-                    };
-                    Config.PatchesTLK.Modifiers.Add(modifier);
+                        // Sound directive: StrRef0Sound=test_sound
+                        if (modifierDict.TryGetValue(dialogTlkIndex, out ModifyTLK? existingModifier))
+                        {
+                            existingModifier.Sound = value;
+                        }
+                        else
+                        {
+                            // Create new modifier if StrRef entry doesn't exist yet
+                            ModifyTLK modifier = new ModifyTLK(dialogTlkIndex, false)
+                            {
+                                Sound = value
+                            };
+                            modifierDict[dialogTlkIndex] = modifier;
+                            Config.PatchesTLK.Modifiers.Add(modifier);
+                        }
+                    }
+                    else
+                    {
+                        // Check if value is a number (file reference) or direct text
+                        if (int.TryParse(value, out int modTlkIndex))
+                        {
+                            // File reference format: StrRef0=5 (loads from TLK file)
+                            string tlkFilePath = string.IsNullOrEmpty(Config.PatchesTLK.SourceFile)
+                                ? Path.Combine(_modPath, Config.PatchesTLK.SourceFolder, "dialog.tlk") // Default to dialog.tlk
+                                : Path.Combine(_modPath, Config.PatchesTLK.SourceFolder, Config.PatchesTLK.SourceFile);
+                            
+                            ModifyTLK modifier = new ModifyTLK(dialogTlkIndex, false)
+                            {
+                                ModIndex = modTlkIndex,
+                                TlkFilePath = tlkFilePath
+                            };
+                            modifierDict[dialogTlkIndex] = modifier;
+                            Config.PatchesTLK.Modifiers.Add(modifier);
+                        }
+                        else
+                        {
+                            // Direct text format: StrRef0=Direct text entry
+                            ModifyTLK modifier = new ModifyTLK(dialogTlkIndex, false)
+                            {
+                                Text = value,
+                                TlkFilePath = null
+                            };
+                            modifierDict[dialogTlkIndex] = modifier;
+                            Config.PatchesTLK.Modifiers.Add(modifier);
+                        }
+                    }
                 }
                 else if (replaceFile || appendFile)
                 {
@@ -426,7 +484,7 @@ public class ConfigReader
         string? defaultDestination = GetValue(twodaList, "!DefaultDestination") ?? Modifications2DA.DefaultDestination;
         string? defaultSourceFolder = GetValue(twodaList, "!DefaultSourceFolder") ?? ".";
 
-        foreach (var entry in twodaList.Where(k =>
+        foreach (KeyData? entry in twodaList.Where(k =>
             !k.KeyName.StartsWith("!", StringComparison.Ordinal)))
         {
             string identifier = entry.KeyName;
@@ -459,14 +517,25 @@ public class ConfigReader
                 }
 
                 string? nextSectionName = GetSectionName(modificationId);
-                if (nextSectionName == null)
+                KeyDataCollection? modificationIdsDict = null;
+                
+                if (nextSectionName != null)
+                {
+                    modificationIdsDict = _ini[nextSectionName];
+                }
+                else if (key.StartsWith("addcolumn", StringComparison.OrdinalIgnoreCase))
+                {
+                    // AddColumn can use the identifier directly as the column name if no section exists
+                    // Create an empty KeyDataCollection to pass to Discern2DA
+                    modificationIdsDict = new KeyDataCollection();
+                }
+                else
                 {
                     throw new KeyNotFoundException(
                         string.Format(SectionNotFoundError, modificationId) +
                         string.Format(ReferencesTracebackMsg, key, modificationId, fileSection));
                 }
 
-                KeyDataCollection? modificationIdsDict = _ini[nextSectionName];
                 Modify2DA? manipulation = Discern2DA(key, modificationId, modificationIdsDict);
                 if (manipulation != null)
                 {
@@ -529,7 +598,23 @@ public class ConfigReader
                     continue;
                 }
 
-                if (!Enum.TryParse<SSFSound>(name, true, out var soundType))
+                SSFSound soundType;
+                string lowerName = name.ToLower();
+                
+                // Handle "Set0", "Set1", etc. mapping to SSFSound enum by index
+                if (lowerName.StartsWith("set") && lowerName.Length > 3 && int.TryParse(name.AsSpan(3), out int setIndex))
+                {
+                    if (Enum.IsDefined(typeof(SSFSound), setIndex))
+                    {
+                        soundType = (SSFSound)setIndex;
+                    }
+                    else
+                    {
+                        _log.AddWarning($"Invalid SSF Set index '{setIndex}' in [{file}], skipping...");
+                        continue;
+                    }
+                }
+                else if (!Enum.TryParse<SSFSound>(name, true, out soundType))
                 {
                     // Attempt to match by integer value just in case
                     if (int.TryParse(name, out int soundId) && Enum.IsDefined(typeof(SSFSound), soundId))
@@ -556,15 +641,31 @@ public class ConfigReader
                 TokenUsage usage;
                 string lowerValue = value.ToLower();
 
-                if (lowerValue.StartsWith("strref") && value.Length > 6 && value.Substring(6).All(char.IsDigit))
+                if (lowerValue.StartsWith("strref") && value.Length > 6)
                 {
-                    int id = int.Parse(value.Substring(6));
-                    usage = new TokenUsageTLK(id);
+                    string remainder = value.Substring(6);
+                    if (remainder.All(char.IsDigit))
+                    {
+                        int id = int.Parse(remainder);
+                        usage = new TokenUsageTLK(id);
+                    }
+                    else
+                    {
+                        usage = new NoTokenUsage(value);
+                    }
                 }
-                else if (lowerValue.StartsWith("2damemory") && value.Length > 9 && value.Substring(9).All(char.IsDigit))
+                else if (lowerValue.StartsWith("2damemory") && value.Length > 9)
                 {
-                    int id = int.Parse(value.Substring(9));
-                    usage = new TokenUsage2DA(id);
+                    string remainder = value.Substring(9);
+                    if (remainder.All(char.IsDigit))
+                    {
+                        int id = int.Parse(remainder);
+                        usage = new TokenUsage2DA(id);
+                    }
+                    else
+                    {
+                        usage = new NoTokenUsage(value);
+                    }
                 }
                 else
                 {
@@ -793,7 +894,7 @@ public class ConfigReader
         string? rawValue = GetValue(section, "Value");
         if (rawValue != null)
         {
-            var val = FieldValueFromType(rawValue, fieldType);
+            FieldValue? val = FieldValueFromType(rawValue, fieldType);
             if (val == null)
             {
                 throw new InvalidOperationException($"Could not parse fieldtype '{fieldType}' in [{identifier}]");
@@ -830,7 +931,7 @@ public class ConfigReader
 
     private ModifyFieldGFF ParseModifyFieldGFF(string identifier, string key, string value)
     {
-        var fieldValue = FieldValueFromUnknown(value);
+        FieldValue fieldValue = FieldValueFromUnknown(value);
         string lowerKey = key.ToLower();
 
         if (lowerKey.Contains("(strref)"))
@@ -856,7 +957,7 @@ public class ConfigReader
 
     private FieldValue FieldValueFromUnknown(string rawValue)
     {
-        var memoryVal = FieldValueFromMemory(rawValue);
+        FieldValue? memoryVal = FieldValueFromMemory(rawValue);
         if (memoryVal != null)
         {
             return memoryVal;
@@ -873,13 +974,38 @@ public class ConfigReader
 
     private FieldValue? FieldValueFromType(string rawValue, GFFFieldType type)
     {
-        var memoryVal = FieldValueFromMemory(rawValue);
+        FieldValue? memoryVal = FieldValueFromMemory(rawValue);
         if (memoryVal != null)
         {
             return memoryVal;
         }
 
-        // Conversion logic
+        // Parse Vector3 and Vector4 values
+        if (type == GFFFieldType.Vector3)
+        {
+            string[] parts = rawValue.Trim().Split(new[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+            if (parts.Length == 3 && 
+                float.TryParse(parts[0], out float x) && 
+                float.TryParse(parts[1], out float y) && 
+                float.TryParse(parts[2], out float z))
+            {
+                return new FieldValueConstant(new Vector3(x, y, z));
+            }
+        }
+        else if (type == GFFFieldType.Vector4)
+        {
+            string[] parts = rawValue.Trim().Split(new[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+            if (parts.Length == 4 && 
+                float.TryParse(parts[0], out float x) && 
+                float.TryParse(parts[1], out float y) && 
+                float.TryParse(parts[2], out float z) &&
+                float.TryParse(parts[3], out float w))
+            {
+                return new FieldValueConstant(new Vector4(x, y, z, w));
+            }
+        }
+
+        // Conversion logic for other types
         return new FieldValueConstant(rawValue);
     }
 
@@ -923,6 +1049,7 @@ public class ConfigReader
             "exolocstring" => GFFFieldType.LocalizedString,
             "position" => GFFFieldType.Vector3,
             "orientation" => GFFFieldType.Vector4,
+            "vector" => GFFFieldType.Vector3, // "Vector" defaults to Vector3 (determined by value components)
             "struct" => GFFFieldType.Struct,
             "list" => GFFFieldType.List,
             "binary" => GFFFieldType.Binary,
@@ -945,7 +1072,7 @@ public class ConfigReader
         }
 
         _log.AddNote("Loading [CompileList] patches from ini...");
-        var compileList = _ini[compileListSection];
+        KeyDataCollection compileList = _ini[compileListSection];
 
         string defaultDestination = GetValue(compileList, "!DefaultDestination") ?? ModificationsNSS.DefaultDestination;
         string defaultSourceFolder = GetValue(compileList, "!DefaultSourceFolder") ?? ".";
@@ -958,7 +1085,7 @@ public class ConfigReader
                 : null;
         }
 
-        foreach (var entry in compileList.Where(k =>
+        foreach (KeyData? entry in compileList.Where(k =>
             !k.KeyName.StartsWith("!", StringComparison.Ordinal)))
         {
             string identifier = entry.KeyName;
@@ -975,8 +1102,8 @@ public class ConfigReader
             string? optionalFileSection = GetSectionName(file);
             if (optionalFileSection != null)
             {
-                var fileSectionData = _ini[optionalFileSection];
-                var fileDict = SectionToDictionary(fileSectionData);
+                KeyDataCollection fileSectionData = _ini[optionalFileSection];
+                Dictionary<string, string> fileDict = SectionToDictionary(fileSectionData);
                 modifications.PopTslPatcherVars(fileDict, defaultDestination: defaultDestination, defaultSourceFolder: defaultSourceFolder);
             }
 
@@ -998,12 +1125,12 @@ public class ConfigReader
         }
 
         _log.AddNote("Loading [HACKList] patches from ini...");
-        var hackList = _ini[hackListSection];
+        KeyDataCollection hackList = _ini[hackListSection];
 
         string defaultDestination = GetValue(hackList, "!DefaultDestination") ?? "Override";
         string defaultSourceFolder = GetValue(hackList, "!DefaultSourceFolder") ?? ".";
 
-        foreach (var entry in hackList.Where(k =>
+        foreach (KeyData? entry in hackList.Where(k =>
             !k.KeyName.StartsWith("!", StringComparison.Ordinal)))
         {
             string identifier = entry.KeyName;
@@ -1024,11 +1151,11 @@ public class ConfigReader
                     string.Format(ReferencesTracebackMsg, identifier, file, hackListSection));
             }
 
-            var fileSectionData = _ini[fileSection];
-            var fileDict = SectionToDictionary(fileSectionData);
+            KeyDataCollection fileSectionData = _ini[fileSection];
+            Dictionary<string, string> fileDict = SectionToDictionary(fileSectionData);
             modifications.PopTslPatcherVars(fileDict, defaultDestination: defaultDestination, defaultSourceFolder: defaultSourceFolder);
 
-            foreach (var hackEntry in fileDict)
+            foreach (KeyValuePair<string, string> hackEntry in fileDict)
             {
                 if (hackEntry.Key.StartsWith("!", StringComparison.Ordinal))
                 {
@@ -1105,13 +1232,13 @@ public class ConfigReader
 
         if (lowercaseKey.StartsWith("changerow"))
         {
-            var target = Target2DA(identifier, modifiers);
+            Target? target = Target2DA(identifier, modifiers);
             if (target == null)
             {
                 return null;
             }
 
-            var (cells, store2da, storeTlk) = Cells2DA(identifier, modifiers);
+            (Dictionary<string, RowValue> cells, Dictionary<int, RowValue> store2da, Dictionary<int, RowValue> storeTlk) = Cells2DA(identifier, modifiers);
             return new ChangeRow2DA(identifier, target, cells, store2da, storeTlk);
         }
 
@@ -1119,13 +1246,13 @@ public class ConfigReader
         {
             string? exclusiveColumn = GetValue(modifiers, "ExclusiveColumn");
             string? rowLabel = RowLabel2DA(identifier, modifiers);
-            var (cells, store2da, storeTlk) = Cells2DA(identifier, modifiers);
+            (Dictionary<string, RowValue> cells, Dictionary<int, RowValue> store2da, Dictionary<int, RowValue> storeTlk) = Cells2DA(identifier, modifiers);
             return new AddRow2DA(identifier, exclusiveColumn, rowLabel, cells, store2da, storeTlk);
         }
 
         if (lowercaseKey.StartsWith("copyrow"))
         {
-            var target = Target2DA(identifier, modifiers);
+            Target? target = Target2DA(identifier, modifiers);
             if (target == null)
             {
                 return null;
@@ -1133,7 +1260,7 @@ public class ConfigReader
 
             string? exclusiveColumn = GetValue(modifiers, "ExclusiveColumn");
             string? rowLabel = RowLabel2DA(identifier, modifiers);
-            var (cells, store2da, storeTlk) = Cells2DA(identifier, modifiers);
+            (Dictionary<string, RowValue> cells, Dictionary<int, RowValue> store2da, Dictionary<int, RowValue> storeTlk) = Cells2DA(identifier, modifiers);
             return new CopyRow2DA(identifier, target, exclusiveColumn, rowLabel, cells, store2da, storeTlk);
         }
 
@@ -1189,12 +1316,8 @@ public class ConfigReader
             return new Target(targetType, new RowValue2DAMemory(tokenId));
         }
 
-        if (isInt)
-        {
-            return new Target(targetType, int.Parse(rawValue));
-        }
-
-        return new Target(targetType, rawValue);
+        // Always create RowValueConstant for consistency with test expectations
+        return new Target(targetType, new RowValueConstant(rawValue));
     }
 
     private (Dictionary<string, RowValue>, Dictionary<int, RowValue>, Dictionary<int, RowValue>) Cells2DA(
@@ -1205,22 +1328,24 @@ public class ConfigReader
         var store2da = new Dictionary<int, RowValue>();
         var storeTlk = new Dictionary<int, RowValue>();
 
-        foreach (var modifier in modifiers)
+        foreach (KeyData? modifier in modifiers)
         {
             string modifierKey = modifier.KeyName;
             string value = modifier.Value;
             string lowerModifier = modifierKey.ToLower().Trim();
             string lowerValue = value.ToLower();
 
+            // Match Python: lower_modifier.startswith("2damemory") and len(lower_modifier) > len("2damemory") and modifier[len("2damemory") :].isdigit()
             bool isStore2da = lowerModifier.StartsWith("2damemory") &&
-                              modifierKey.Length > 9 &&
-                              modifierKey.Substring(9).All(char.IsDigit);
+                              lowerModifier.Length > 9 &&
+                              modifierKey.Substring(9).Trim().All(char.IsDigit);
 
             bool isStoreTlk = modifierKey.StartsWith("strref", StringComparison.OrdinalIgnoreCase) &&
                               modifierKey.Length > 6 &&
                               modifierKey.Substring(6).All(char.IsDigit);
 
             bool isRowLabel = lowerModifier == "rowlabel" || lowerModifier == "newrowlabel";
+            bool isTargetKey = lowerModifier == "rowindex" || lowerModifier == "rowlabel" || lowerModifier == "labelindex" || lowerModifier == "exclusivecolumn";
 
             RowValue? rowValue = null;
 
@@ -1261,7 +1386,7 @@ public class ConfigReader
 
             if (isStore2da)
             {
-                int tokenId = int.Parse(modifierKey.Substring(9));
+                int tokenId = int.Parse(modifierKey.Substring(9).Trim());
                 store2da[tokenId] = rowValue;
             }
             else if (isStoreTlk)
@@ -1269,7 +1394,7 @@ public class ConfigReader
                 int tokenId = int.Parse(modifierKey.Substring(6));
                 storeTlk[tokenId] = rowValue;
             }
-            else if (!isRowLabel)
+            else if (!isRowLabel && !isTargetKey)
             {
                 cells[modifierKey] = rowValue;
             }
@@ -1285,21 +1410,21 @@ public class ConfigReader
 
     private AddColumn2DA ReadAddColumn(KeyDataCollection modifiers, string identifier)
     {
-        string? header = GetValue(modifiers, "ColumnLabel");
-        if (header == null)
-        {
-            throw new KeyNotFoundException($"Missing 'ColumnLabel' in [{identifier}]");
-        }
+        // Use identifier as header if ColumnLabel is not specified (for simple AddColumn0=columnname syntax)
+        string? header = GetValue(modifiers, "ColumnLabel") ?? identifier;
 
+        // DefaultValue is optional, defaults to empty string
         string? defaultValue = GetValue(modifiers, "DefaultValue");
         if (defaultValue == null)
         {
-            throw new KeyNotFoundException($"Missing 'DefaultValue' in [{identifier}]");
+            defaultValue = string.Empty;
+        }
+        else
+        {
+            defaultValue = defaultValue == "****" ? string.Empty : defaultValue;
         }
 
-        defaultValue = defaultValue == "****" ? string.Empty : defaultValue;
-
-        var (indexInsert, labelInsert, store2da) = ColumnInserts2DA(identifier, modifiers);
+        (Dictionary<int, RowValue> indexInsert, Dictionary<string, RowValue> labelInsert, Dictionary<int, string> store2da) = ColumnInserts2DA(identifier, modifiers);
 
         return new AddColumn2DA(identifier, header, defaultValue, indexInsert, labelInsert, store2da);
     }
@@ -1312,7 +1437,7 @@ public class ConfigReader
         var labelInsert = new Dictionary<string, RowValue>();
         var store2da = new Dictionary<int, string>();
 
-        foreach (var modifier in modifiers)
+        foreach (KeyData? modifier in modifiers)
         {
             string modifierKey = modifier.KeyName;
             string value = modifier.Value;

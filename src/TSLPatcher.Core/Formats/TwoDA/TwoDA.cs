@@ -83,7 +83,7 @@ public class TwoDA : IEnumerable<TwoDARow>
         }
 
         _headers.Add(header);
-        foreach (var row in _rows)
+        foreach (Dictionary<string, string> row in _rows)
         {
             row[header] = "";
         }
@@ -93,7 +93,7 @@ public class TwoDA : IEnumerable<TwoDARow>
     {
         if (_headers.Contains(header))
         {
-            foreach (var row in _rows)
+            foreach (Dictionary<string, string> row in _rows)
             {
                 row.Remove(header);
             }
@@ -124,7 +124,7 @@ public class TwoDA : IEnumerable<TwoDARow>
     public int? RowIndex(TwoDARow row)
     {
         int index = 0;
-        foreach (var searching in this)
+        foreach (TwoDARow searching in this)
         {
             if (searching.Equals(row))
             {
@@ -136,6 +136,22 @@ public class TwoDA : IEnumerable<TwoDARow>
         return null;
     }
 
+    /// <summary>
+    /// Finds the maximum numeric label and returns the next integer.
+    /// </summary>
+    public int LabelMax()
+    {
+        int maxFound = -1;
+        foreach (string label in _labels)
+        {
+            if (int.TryParse(label, out int labelValue))
+            {
+                maxFound = Math.Max(labelValue, maxFound);
+            }
+        }
+        return maxFound + 1;
+    }
+
     public int AddRow(string? rowLabel = null, Dictionary<string, object>? cells = null)
     {
         var newRow = new Dictionary<string, string>();
@@ -145,7 +161,7 @@ public class TwoDA : IEnumerable<TwoDARow>
         if (cells != null)
         {
             var convertedCells = new Dictionary<string, string>();
-            foreach (var (key, value) in cells)
+            foreach ((string key, object value) in cells)
             {
                 convertedCells[key] = value?.ToString() ?? "";
             }
@@ -173,9 +189,9 @@ public class TwoDA : IEnumerable<TwoDARow>
 
     public int CopyRow(int rowIndex, string? newLabel = null)
     {
-        var row = GetRow(rowIndex);
+        TwoDARow row = GetRow(rowIndex);
         var cellsCopy = new Dictionary<string, object>();
-        foreach (var (header, value) in row.GetData())
+        foreach ((string header, string value) in row.GetData())
         {
             cellsCopy[header] = value;
         }
@@ -192,7 +208,7 @@ public class TwoDA : IEnumerable<TwoDARow>
 
         overrideCells ??= new Dictionary<string, object>();
         var convertedCells = new Dictionary<string, string>();
-        foreach (var (key, value) in overrideCells)
+        foreach ((string key, object value) in overrideCells)
         {
             convertedCells[key] = value?.ToString() ?? "";
         }

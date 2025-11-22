@@ -30,9 +30,10 @@ public class Target
         TargetType = targetType;
         Value = value;
 
-        if (targetType == TargetType.ROW_INDEX && value is string)
+        // Allow RowValueConstant for ROW_INDEX (it will be resolved to int in Search)
+        if (targetType == TargetType.ROW_INDEX && value is string && !(value is RowValue))
         {
-            throw new ArgumentException("Target value must be int if type is row index.");
+            throw new ArgumentException("Target value must be int or RowValue if type is row index.");
         }
     }
 
@@ -49,7 +50,7 @@ public class Target
     {
         object value = Value;
 
-        // Resolve memory references
+        // Resolve memory references and RowValue types
         if (Value is RowValueTLKMemory tlkMem)
         {
             value = tlkMem.Value(memory, twoda, null);
@@ -57,6 +58,10 @@ public class Target
         else if (Value is RowValue2DAMemory twodaMem)
         {
             value = twodaMem.Value(memory, twoda, null);
+        }
+        else if (Value is RowValue rowValue)
+        {
+            value = rowValue.Value(memory, twoda, null);
         }
 
         TwoDARow? sourceRow = null;
@@ -72,20 +77,20 @@ public class Target
                 break;
 
             case TargetType.LABEL_COLUMN:
-                var headers = twoda.GetHeaders();
+                System.Collections.Generic.List<string> headers = twoda.GetHeaders();
                 if (!headers.Contains("label"))
                 {
                     throw new WarningError($"'label' could not be found in the twoda's headers: ({TargetType}, {value})");
                 }
 
-                var columnValues = twoda.GetColumn("label");
+                System.Collections.Generic.List<string> columnValues = twoda.GetColumn("label");
                 string valueStr = value.ToString() ?? "";
                 if (!columnValues.Contains(valueStr))
                 {
                     throw new WarningError($"The value '{value}' could not be found in the twoda's columns");
                 }
 
-                foreach (var row in twoda)
+                foreach (TwoDARow row in twoda)
                 {
                     if (row.GetString("label") == value.ToString())
                     {

@@ -54,14 +54,14 @@ public class InstallationResourceManager
             SearchLocation.CHITIN
         };
 
-        var locations = LocateResource(resname, restype, order, moduleRoot);
+        List<LocationResult> locations = LocateResource(resname, restype, order, moduleRoot);
         if (locations.Count == 0)
         {
             return null;
         }
 
         // Return first match (highest priority)
-        var location = locations[0];
+        LocationResult location = locations[0];
         byte[] data = File.ReadAllBytes(location.FilePath);
 
         // If inside a capsule, need to extract at offset
@@ -97,7 +97,7 @@ public class InstallationResourceManager
         var results = new List<LocationResult>();
         var query = new ResourceIdentifier(resname, restype);
 
-        foreach (var location in order)
+        foreach (SearchLocation location in order)
         {
             switch (location)
             {
@@ -128,9 +128,9 @@ public class InstallationResourceManager
         if (_overrideResources == null)
             return results;
 
-        foreach (var resourceList in _overrideResources.Values)
+        foreach (List<FileResource> resourceList in _overrideResources.Values)
         {
-            var resource = resourceList.FirstOrDefault(r =>
+            FileResource? resource = resourceList.FirstOrDefault(r =>
                 r.ResName.Equals(query.ResName, StringComparison.OrdinalIgnoreCase) &&
                 r.ResType == query.ResType);
 
@@ -153,7 +153,7 @@ public class InstallationResourceManager
         if (_moduleResources == null)
             return results;
 
-        var modulesToSearch = _moduleResources;
+        Dictionary<string, List<FileResource>> modulesToSearch = _moduleResources;
 
         // Filter by module root if specified
         if (!string.IsNullOrEmpty(moduleRoot))
@@ -163,9 +163,9 @@ public class InstallationResourceManager
                 .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
         }
 
-        foreach (var resourceList in modulesToSearch.Values)
+        foreach (List<FileResource> resourceList in modulesToSearch.Values)
         {
-            var resource = resourceList.FirstOrDefault(r =>
+            FileResource? resource = resourceList.FirstOrDefault(r =>
                 r.ResName.Equals(query.ResName, StringComparison.OrdinalIgnoreCase) &&
                 r.ResType == query.ResType);
 
@@ -188,7 +188,7 @@ public class InstallationResourceManager
         if (_chitin == null)
             return results;
 
-        var resource = _chitin.GetResourceInfo(query.ResName, query.ResType);
+        FileResource? resource = _chitin.GetResourceInfo(query.ResName, query.ResType);
         if (resource != null)
         {
             var location = new LocationResult(resource.FilePath, resource.Offset, resource.Size);
@@ -249,9 +249,9 @@ public class InstallationResourceManager
         if (!Directory.Exists(path))
             return resources;
 
-        var searchOption = recursive ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly;
+        SearchOption searchOption = recursive ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly;
 
-        foreach (var file in Directory.GetFiles(path, "*.*", searchOption))
+        foreach (string file in Directory.GetFiles(path, "*.*", searchOption))
         {
             try
             {
@@ -295,7 +295,7 @@ public class InstallationResourceManager
         if (!Directory.Exists(path))
             return modules;
 
-        foreach (var file in Directory.GetFiles(path))
+        foreach (string file in Directory.GetFiles(path))
         {
             string ext = Path.GetExtension(file).ToLowerInvariant();
             if (ext is not (".rim" or ".mod" or ".erf"))

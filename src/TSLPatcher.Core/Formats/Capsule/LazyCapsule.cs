@@ -191,7 +191,7 @@ public class LazyCapsule : IEnumerable<FileResource>
     /// </summary>
     public byte[]? GetResource(string resname, ResourceType restype)
     {
-        var resource = GetResources().FirstOrDefault(r =>
+        FileResource? resource = GetResources().FirstOrDefault(r =>
             string.Equals(r.ResName, resname, StringComparison.OrdinalIgnoreCase) &&
             r.ResType == restype);
 
@@ -222,7 +222,7 @@ public class LazyCapsule : IEnumerable<FileResource>
     public void Add(string resname, ResourceType restype, byte[] data)
     {
         // Need to load all resources, modify, and save
-        var fullCapsule = ToCapsule();
+        Capsule fullCapsule = ToCapsule();
         fullCapsule.SetResource(resname, restype, data);
         fullCapsule.Save();
 
@@ -235,7 +235,7 @@ public class LazyCapsule : IEnumerable<FileResource>
     /// </summary>
     public bool Delete(string resname, ResourceType restype)
     {
-        var fullCapsule = ToCapsule();
+        Capsule fullCapsule = ToCapsule();
         bool removed = fullCapsule.RemoveResource(resname, restype);
         if (removed)
         {

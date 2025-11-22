@@ -36,11 +36,11 @@ Label=InnerField
 Value=123
 Path=TestStruct
 ";
-        var config = SetupIniAndConfig(iniText);
+        Core.Config.PatcherConfig config = SetupIniAndConfig(iniText);
 
         // Assert
         config.PatchesGFF.Should().Contain(p => p.SaveAs == "test.gff");
-        var modifiers = config.PatchesGFF.First(p => p.SaveAs == "test.gff").Modifiers;
+        List<ModifyGFF> modifiers = config.PatchesGFF.First(p => p.SaveAs == "test.gff").Modifiers;
         modifiers.Should().HaveCount(2);
 
         var addStruct = modifiers[0] as AddFieldGFF;
@@ -55,12 +55,12 @@ Path=TestStruct
 
         // Act - Apply to actual GFF
         var gff = new GFF();
-        var modifications = config.PatchesGFF.First(p => p.SaveAs == "test.gff");
+        ModificationsGFF modifications = config.PatchesGFF.First(p => p.SaveAs == "test.gff");
         modifications.Apply(gff, Memory, Logger, Game.K1);
 
         // Assert
         gff.Root.Exists("TestStruct").Should().BeTrue();
-        var testStruct = gff.Root.GetStruct("TestStruct");
+        GFFStruct testStruct = gff.Root.GetStruct("TestStruct");
         testStruct.Exists("InnerField").Should().BeTrue();
         testStruct.GetUInt8("InnerField").Should().Be(123);
     }
@@ -83,16 +83,16 @@ Value(strref)=100
 Value(lang0)=English text
 Value(lang2)=French text
 ";
-        var config = SetupIniAndConfig(iniText);
+        Core.Config.PatcherConfig config = SetupIniAndConfig(iniText);
 
         // Act
         var gff = new GFF();
-        var modifications = config.PatchesGFF.First(p => p.SaveAs == "test.gff");
+        ModificationsGFF modifications = config.PatchesGFF.First(p => p.SaveAs == "test.gff");
         modifications.Apply(gff, Memory, Logger, Game.K1);
 
         // Assert
         gff.Root.Exists("Description").Should().BeTrue();
-        var locString = gff.Root.GetLocString("Description");
+        LocalizedString locString = gff.Root.GetLocString("Description");
         locString.StringRef.Should().Be(100);
         locString.Get(Language.English, Gender.Male).Should().Be("English text");
         locString.Get(Language.French, Gender.Male).Should().Be("French text");
@@ -121,15 +121,15 @@ Label=InnerField
 Value=42
 Path=OuterStruct
 ";
-        var config = SetupIniAndConfig(iniText);
+        Core.Config.PatcherConfig config = SetupIniAndConfig(iniText);
 
         // Act
         var gff = new GFF();
-        var modifications = config.PatchesGFF.First(p => p.SaveAs == "test.gff");
+        ModificationsGFF modifications = config.PatchesGFF.First(p => p.SaveAs == "test.gff");
         modifications.Apply(gff, Memory, Logger, Game.K1);
 
         // Assert
-        var outerStruct = gff.Root.GetStruct("OuterStruct");
+        GFFStruct outerStruct = gff.Root.GetStruct("OuterStruct");
         outerStruct.GetUInt8("InnerField").Should().Be(42);
     }
 
@@ -156,7 +156,7 @@ Label=DeepField
 Value=99
 Path=Level1\Level2
 ";
-        var config = SetupIniAndConfig(iniText);
+        Core.Config.PatcherConfig config = SetupIniAndConfig(iniText);
 
         // Create a GFF with nested structures
         var gff = new GFF();
@@ -166,12 +166,12 @@ Path=Level1\Level2
         gff.Root.SetStruct("Level1", level1);
 
         // Act
-        var modifications = config.PatchesGFF.First(p => p.SaveAs == "test.gff");
+        ModificationsGFF modifications = config.PatchesGFF.First(p => p.SaveAs == "test.gff");
         modifications.Apply(gff, Memory, Logger, Game.K1);
 
         // Assert
-        var level1Result = gff.Root.GetStruct("Level1");
-        var level2Result = level1Result.GetStruct("Level2");
+        GFFStruct level1Result = gff.Root.GetStruct("Level1");
+        GFFStruct level2Result = level1Result.GetStruct("Level2");
         level2Result.GetUInt8("DeepField").Should().Be(99);
     }
 
@@ -205,16 +205,16 @@ Label=FieldInB
 Value=77
 Path=StructA\StructB
 ";
-        var config = SetupIniAndConfig(iniText);
+        Core.Config.PatcherConfig config = SetupIniAndConfig(iniText);
 
         // Act
         var gff = new GFF();
-        var modifications = config.PatchesGFF.First(p => p.SaveAs == "test.gff");
+        ModificationsGFF modifications = config.PatchesGFF.First(p => p.SaveAs == "test.gff");
         modifications.Apply(gff, Memory, Logger, Game.K1);
 
         // Assert
-        var structA = gff.Root.GetStruct("StructA");
-        var structB = structA.GetStruct("StructB");
+        GFFStruct structA = gff.Root.GetStruct("StructA");
+        GFFStruct structB = structA.GetStruct("StructB");
         structB.GetUInt8("FieldInB").Should().Be(77);
     }
 
@@ -235,7 +235,7 @@ Label=SentinelField
 Value=55
 Path=\ExistingStruct
 ";
-        var config = SetupIniAndConfig(iniText);
+        Core.Config.PatcherConfig config = SetupIniAndConfig(iniText);
 
         // Create GFF with existing struct
         var gff = new GFF();
@@ -243,11 +243,11 @@ Path=\ExistingStruct
         gff.Root.SetStruct("ExistingStruct", existingStruct);
 
         // Act
-        var modifications = config.PatchesGFF.First(p => p.SaveAs == "test.gff");
+        ModificationsGFF modifications = config.PatchesGFF.First(p => p.SaveAs == "test.gff");
         modifications.Apply(gff, Memory, Logger, Game.K1);
 
         // Assert
-        var existingStructResult = gff.Root.GetStruct("ExistingStruct");
+        GFFStruct existingStructResult = gff.Root.GetStruct("ExistingStruct");
         existingStructResult.GetUInt8("SentinelField").Should().Be(55);
     }
 
@@ -267,11 +267,11 @@ FieldType=Byte
 Label=RootField
 Value=88
 ";
-        var config = SetupIniAndConfig(iniText);
+        Core.Config.PatcherConfig config = SetupIniAndConfig(iniText);
 
         // Act
         var gff = new GFF();
-        var modifications = config.PatchesGFF.First(p => p.SaveAs == "test.gff");
+        ModificationsGFF modifications = config.PatchesGFF.First(p => p.SaveAs == "test.gff");
         modifications.Apply(gff, Memory, Logger, Game.K1);
 
         // Assert
@@ -294,7 +294,7 @@ AddStruct0=new_item
 TypeId=0
 Path=ItemList
 ";
-        var config = SetupIniAndConfig(iniText);
+        Core.Config.PatcherConfig config = SetupIniAndConfig(iniText);
 
         // Create GFF with list
         var gff = new GFF();
@@ -302,11 +302,11 @@ Path=ItemList
         gff.Root.SetList("ItemList", itemList);
 
         // Act
-        var modifications = config.PatchesGFF.First(p => p.SaveAs == "test.gff");
+        ModificationsGFF modifications = config.PatchesGFF.First(p => p.SaveAs == "test.gff");
         modifications.Apply(gff, Memory, Logger, Game.K1);
 
         // Assert
-        var resultList = gff.Root.GetList("ItemList");
+        GFFList resultList = gff.Root.GetList("ItemList");
         resultList.Count.Should().BeGreaterThan(0);
     }
 
@@ -321,7 +321,7 @@ File0=test.gff
 [test.gff]
 Level1\Level2\Level3\DeepField=999
 ";
-        var config = SetupIniAndConfig(iniText);
+        Core.Config.PatcherConfig config = SetupIniAndConfig(iniText);
 
         // Create deeply nested structure
         var gff = new GFF();
@@ -334,13 +334,13 @@ Level1\Level2\Level3\DeepField=999
         gff.Root.SetStruct("Level1", level1);
 
         // Act
-        var modifications = config.PatchesGFF.First(p => p.SaveAs == "test.gff");
+        ModificationsGFF modifications = config.PatchesGFF.First(p => p.SaveAs == "test.gff");
         modifications.Apply(gff, Memory, Logger, Game.K1);
 
         // Assert
-        var level1Result = gff.Root.GetStruct("Level1");
-        var level2Result = level1Result.GetStruct("Level2");
-        var level3Result = level2Result.GetStruct("Level3");
+        GFFStruct level1Result = gff.Root.GetStruct("Level1");
+        GFFStruct level2Result = level1Result.GetStruct("Level2");
+        GFFStruct level3Result = level2Result.GetStruct("Level3");
         level3Result.GetInt32("DeepField").Should().Be(999);
     }
 
@@ -355,21 +355,21 @@ File0=test.gff
 [test.gff]
 ItemList\0\Tag=modified_tag
 ";
-        var config = SetupIniAndConfig(iniText);
+        Core.Config.PatcherConfig config = SetupIniAndConfig(iniText);
 
         // Create GFF with list containing a struct
         var gff = new GFF();
         var itemList = new GFFList();
-        var item = itemList.Add(0);
+        GFFStruct item = itemList.Add(0);
         item.SetString("Tag", "original_tag");
         gff.Root.SetList("ItemList", itemList);
 
         // Act
-        var modifications = config.PatchesGFF.First(p => p.SaveAs == "test.gff");
+        ModificationsGFF modifications = config.PatchesGFF.First(p => p.SaveAs == "test.gff");
         modifications.Apply(gff, Memory, Logger, Game.K1);
 
         // Assert
-        var resultList = gff.Root.GetList("ItemList");
+        GFFList resultList = gff.Root.GetList("ItemList");
         resultList[0].GetValue("Tag").Should().Be("modified_tag");
     }
 
@@ -388,7 +388,7 @@ AddField0=2DAMEMORY5
 Path=Nested\Field
 2DAMEMORY5=appearance
 ";
-        var config = SetupIniAndConfig(iniText);
+        Core.Config.PatcherConfig config = SetupIniAndConfig(iniText);
 
         // Create GFF with nested structure
         var gff = new GFF();
@@ -397,7 +397,7 @@ Path=Nested\Field
         gff.Root.SetStruct("Nested", nested);
 
         // Act
-        var modifications = config.PatchesGFF.First(p => p.SaveAs == "test.gff");
+        ModificationsGFF modifications = config.PatchesGFF.First(p => p.SaveAs == "test.gff");
         modifications.Apply(gff, Memory, Logger, Game.K1);
 
         // Assert
@@ -435,7 +435,7 @@ Label=Field3
 Value=3
 Path=TestStruct
 ";
-        var config = SetupIniAndConfig(iniText);
+        Core.Config.PatcherConfig config = SetupIniAndConfig(iniText);
 
         // Create GFF with struct
         var gff = new GFF();
@@ -443,11 +443,11 @@ Path=TestStruct
         gff.Root.SetStruct("TestStruct", testStruct);
 
         // Act
-        var modifications = config.PatchesGFF.First(p => p.SaveAs == "test.gff");
+        ModificationsGFF modifications = config.PatchesGFF.First(p => p.SaveAs == "test.gff");
         modifications.Apply(gff, Memory, Logger, Game.K1);
 
         // Assert
-        var result = gff.Root.GetStruct("TestStruct");
+        GFFStruct result = gff.Root.GetStruct("TestStruct");
         result.GetUInt8("Field1").Should().Be(1);
         result.GetUInt8("Field2").Should().Be(2);
         result.GetUInt8("Field3").Should().Be(3);
@@ -470,14 +470,14 @@ FieldType=Byte
 Label=NewField
 Value=42
 ";
-        var config = SetupIniAndConfig(iniText);
+        Core.Config.PatcherConfig config = SetupIniAndConfig(iniText);
 
         // Create GFF with existing field
         var gff = new GFF();
         gff.Root.SetString("ExistingField", "original_value".ToString());
 
         // Act
-        var modifications = config.PatchesGFF.First(p => p.SaveAs == "test.gff");
+        ModificationsGFF modifications = config.PatchesGFF.First(p => p.SaveAs == "test.gff");
         modifications.Apply(gff, Memory, Logger, Game.K1);
 
         // Assert

@@ -277,7 +277,7 @@ public class Installation
 
         var roots = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-        foreach (var file in Directory.GetFiles(modulesPath))
+        foreach (string file in Directory.GetFiles(modulesPath))
         {
             string ext = System.IO.Path.GetExtension(file).ToLowerInvariant();
             if (ext is ".rim" or ".mod" or ".erf")
@@ -304,7 +304,7 @@ public class Installation
 
         var files = new List<string>();
 
-        foreach (var file in Directory.GetFiles(modulesPath))
+        foreach (string file in Directory.GetFiles(modulesPath))
         {
             string ext = System.IO.Path.GetExtension(file).ToLowerInvariant();
             if (ext is ".rim" or ".mod" or ".erf")

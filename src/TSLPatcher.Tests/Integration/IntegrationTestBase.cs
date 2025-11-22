@@ -61,7 +61,7 @@ public abstract class IntegrationTestBase : IDisposable
     /// </summary>
     protected PatcherConfig SetupIniAndConfig(string iniText, string? modPath = null)
     {
-        var ini = Parser.Parse(iniText);
+        IniData ini = Parser.Parse(iniText);
         var config = new PatcherConfig();
         string actualModPath = modPath ?? TempDir;
 
@@ -78,7 +78,7 @@ public abstract class IntegrationTestBase : IDisposable
     {
         var twoda = new TwoDA(columns.ToList());
 
-        foreach (var (label, values) in rows)
+        foreach ((string label, string[] values) in rows)
         {
             var cells = new Dictionary<string, object>();
             for (int i = 0; i < values.Length && i < columns.Length; i++)
@@ -97,7 +97,7 @@ public abstract class IntegrationTestBase : IDisposable
     protected TLK CreateTestTLK((string text, string sound)[] entries)
     {
         var tlk = new TLK(Language.English);
-        foreach (var (text, sound) in entries)
+        foreach ((string text, string sound) in entries)
         {
             tlk.Add(text, sound);
         }

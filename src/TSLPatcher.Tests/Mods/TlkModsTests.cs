@@ -135,7 +135,7 @@ public class TlkModsTests
 
         // Read back the patched TLK
         var reader = new TLKBinaryReader(patchedBytes);
-        var patchedTlk = reader.Load();
+        TLK patchedTlk = reader.Load();
 
         patchedTlk.Count.Should().Be(3);
         patchedTlk[0].Text.Should().Be("Original1");

@@ -67,7 +67,7 @@ public class ERFBinaryWriter
 
         // Keys
         uint currentId = 0;
-        foreach (var res in resources)
+        foreach (ERFResource? res in resources)
         {
             byte[] resRefBytes = Encoding.ASCII.GetBytes(res.ResRef.ToString());
             byte[] paddedResRef = new byte[16];
@@ -81,7 +81,7 @@ public class ERFBinaryWriter
 
         // Resources Info
         uint currentOffset = offsetToResourceData;
-        foreach (var res in resources)
+        foreach (ERFResource? res in resources)
         {
             writer.Write(currentOffset);
             writer.Write((uint)res.Data.Length);
@@ -89,7 +89,7 @@ public class ERFBinaryWriter
         }
 
         // Resource Data
-        foreach (var res in resources)
+        foreach (ERFResource? res in resources)
         {
             writer.Write(res.Data);
         }

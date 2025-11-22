@@ -17,7 +17,7 @@ public class TwoDAFormatTests
     public void TestBinaryIO()
     {
         // Read 2DA file
-        var twoda = new TwoDABinaryReader(TestTwoDAFile).Load();
+        TwoDA twoda = new TwoDABinaryReader(TestTwoDAFile).Load();
         ValidateIO(twoda);
 
         // Write and re-read to validate round-trip

@@ -103,7 +103,7 @@ public class TLKModsUnitTests
         var dialogTlk = new TLK();
         config.Apply(dialogTlk, memory, new PatchLogger(), Game.K1);
 
-        var entry = dialogTlk.Get(0);
+        TLKEntry? entry = dialogTlk.Get(0);
         entry.Should().NotBeNull();
         entry!.Voiceover.ToString().Should().Be("testsound");
     }

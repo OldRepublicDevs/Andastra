@@ -80,7 +80,7 @@ class Program
 
             if (File.Exists(namespacesIniPath))
             {
-                var namespaces = NamespaceReader.FromFilePath(namespacesIniPath);
+                System.Collections.Generic.List<PatcherNamespace> namespaces = NamespaceReader.FromFilePath(namespacesIniPath);
                 PatcherNamespace? ns = null;
 
                 if (!string.IsNullOrEmpty(namespaceName))

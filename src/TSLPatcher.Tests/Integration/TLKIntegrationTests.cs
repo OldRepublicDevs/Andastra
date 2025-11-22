@@ -22,7 +22,7 @@ public class TLKIntegrationTests : IntegrationTestBase
     public void TLK_Append_ShouldAddNewEntry()
     {
         // Arrange
-        var tlk = CreateTestTLK(new[]
+        TLK tlk = CreateTestTLK(new[]
         {
             ("Entry 0", "vo_0"),
             ("Entry 1", "vo_1")
@@ -47,15 +47,14 @@ public class TLKIntegrationTests : IntegrationTestBase
     public void TLK_Replace_ShouldModifyExistingEntry()
     {
         // Arrange
-        var tlk = CreateTestTLK(new[]
+        TLK tlk = CreateTestTLK(new[]
         {
             ("Entry 0", "vo_0"),
             ("Entry 1", "vo_1"),
             ("Entry 2", "vo_2")
         });
 
-        var modify = new ModifyTLK(0, true);
-        modify.ModIndex = 1;
+        var modify = new ModifyTLK(1, true);
         modify.Text = "Modified Entry";
         modify.Sound = new ResRef("modified_vo");
 
@@ -74,7 +73,7 @@ public class TLKIntegrationTests : IntegrationTestBase
     public void TLK_AppendMultiple_ShouldAddAllEntries()
     {
         // Arrange
-        var tlk = CreateTestTLK(new[]
+        TLK tlk = CreateTestTLK(new[]
         {
             ("Entry 0", "vo_0")
         });
@@ -103,7 +102,7 @@ public class TLKIntegrationTests : IntegrationTestBase
     public void TLK_WithMemoryTokens_ShouldStoreStrRef()
     {
         // Arrange
-        var tlk = CreateTestTLK(new[]
+        TLK tlk = CreateTestTLK(new[]
         {
             ("Entry 0", "vo_0")
         });
@@ -125,7 +124,7 @@ public class TLKIntegrationTests : IntegrationTestBase
     public void TLK_LoadFromFile_ShouldPopulateFromTLK()
     {
         // Arrange
-        var sourceTlk = CreateTestTLK(new[]
+        TLK sourceTlk = CreateTestTLK(new[]
         {
             ("Source 0", "src_0"),
             ("Source 1", "src_1"),
@@ -134,7 +133,7 @@ public class TLKIntegrationTests : IntegrationTestBase
         string tlkPath = Path.Combine(TslPatchDataPath, "source.tlk");
         SaveTestTLK("source.tlk", sourceTlk);
 
-        var targetTlk = CreateTestTLK(new[]
+        TLK targetTlk = CreateTestTLK(new[]
         {
             ("Entry 0", "vo_0")
         });
@@ -158,7 +157,7 @@ public class TLKIntegrationTests : IntegrationTestBase
     public void TLK_ReplaceWithNull_ShouldClearText()
     {
         // Arrange
-        var tlk = CreateTestTLK(new[]
+        TLK tlk = CreateTestTLK(new[]
         {
             ("Entry 0", "vo_0"),
             ("Entry 1", "vo_1")
@@ -182,7 +181,7 @@ public class TLKIntegrationTests : IntegrationTestBase
     public void TLK_ComplexWorkflow_ShouldHandleMixedOperations()
     {
         // Arrange
-        var tlk = CreateTestTLK(new[]
+        TLK tlk = CreateTestTLK(new[]
         {
             ("Entry 0", "vo_0"),
             ("Entry 1", "vo_1"),
@@ -225,14 +224,14 @@ StrRef1=1
 1=1
 ";
         // Create append.tlk file
-        var appendTlk = CreateTestTLK(new[]
+        TLK appendTlk = CreateTestTLK(new[]
         {
             ("Append2", ""),
             ("Append1", "")
         });
         SaveTestTLK("append.tlk", appendTlk);
 
-        var config = SetupIniAndConfig(iniText);
+        Core.Config.PatcherConfig config = SetupIniAndConfig(iniText);
         var dialogTlk = new TLK();
         dialogTlk.Add("Old1");
         dialogTlk.Add("Old2");
@@ -259,14 +258,14 @@ ReplaceFile0=replace.tlk
 2=1
 ";
         // Create replace.tlk file
-        var replaceTlk = CreateTestTLK(new[]
+        TLK replaceTlk = CreateTestTLK(new[]
         {
             ("Replace2", ""),
             ("Replace3", "")
         });
         SaveTestTLK("replace.tlk", replaceTlk);
 
-        var config = SetupIniAndConfig(iniText);
+        Core.Config.PatcherConfig config = SetupIniAndConfig(iniText);
         var dialogTlk = new TLK();
         dialogTlk.Add("Old1");
         dialogTlk.Add("Old2");

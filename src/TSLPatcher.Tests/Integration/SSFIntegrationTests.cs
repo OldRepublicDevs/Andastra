@@ -179,11 +179,11 @@ File0=test.ssf
 [test.ssf]
 Battlecry 1=5
 ";
-        var config = SetupIniAndConfig(iniText);
+        Core.Config.PatcherConfig config = SetupIniAndConfig(iniText);
         var ssf = new SSF();
 
         var memory = new PatcherMemory();
-        var bytes = config.PatchesSSF.First(p => p.SaveAs == "test.ssf").PatchResource(ssf.ToBytes(), memory, new PatchLogger(), Game.K1);
+        object bytes = config.PatchesSSF.First(p => p.SaveAs == "test.ssf").PatchResource(ssf.ToBytes(), memory, new PatchLogger(), Game.K1);
         var patchedSsf = SSF.FromBytes((byte[])bytes);
 
         patchedSsf.Get(SSFSound.BATTLE_CRY_1).Should().Be(5);
@@ -199,12 +199,12 @@ File0=test.ssf
 [test.ssf]
 Battlecry 2=2DAMEMORY5
 ";
-        var config = SetupIniAndConfig(iniText);
+        Core.Config.PatcherConfig config = SetupIniAndConfig(iniText);
         var ssf = new SSF();
 
         var memory = new PatcherMemory();
         memory.Memory2DA[5] = "123";
-        var bytes = config.PatchesSSF.First(p => p.SaveAs == "test.ssf").PatchResource(ssf.ToBytes(), memory, new PatchLogger(), Game.K1);
+        object bytes = config.PatchesSSF.First(p => p.SaveAs == "test.ssf").PatchResource(ssf.ToBytes(), memory, new PatchLogger(), Game.K1);
         var patchedSsf = SSF.FromBytes((byte[])bytes);
 
         patchedSsf.Get(SSFSound.BATTLE_CRY_2).Should().Be(123);
@@ -220,12 +220,12 @@ File0=test.ssf
 [test.ssf]
 Battlecry 3=StrRef7
 ";
-        var config = SetupIniAndConfig(iniText);
+        Core.Config.PatcherConfig config = SetupIniAndConfig(iniText);
         var ssf = new SSF();
 
         var memory = new PatcherMemory();
         memory.MemoryStr[7] = 456;
-        var bytes = config.PatchesSSF.First(p => p.SaveAs == "test.ssf").PatchResource(ssf.ToBytes(), memory, new PatchLogger(), Game.K1);
+        object bytes = config.PatchesSSF.First(p => p.SaveAs == "test.ssf").PatchResource(ssf.ToBytes(), memory, new PatchLogger(), Game.K1);
         var patchedSsf = SSF.FromBytes((byte[])bytes);
 
         patchedSsf.Get(SSFSound.BATTLE_CRY_3).Should().Be(456);

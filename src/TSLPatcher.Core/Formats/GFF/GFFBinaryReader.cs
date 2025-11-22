@@ -251,7 +251,7 @@ public class GFFBinaryReader : BinaryFormatReaderBase
         foreach (int structIndex in listIndices)
         {
             value.Add(0);
-            var child = value.At(value.Count - 1);
+            GFFStruct? child = value.At(value.Count - 1);
             if (child != null)
             {
                 LoadStruct(child, structIndex);

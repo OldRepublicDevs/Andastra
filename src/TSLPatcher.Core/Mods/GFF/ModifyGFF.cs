@@ -98,7 +98,7 @@ public class ModifyFieldGFF : ModifyGFF
             return;
         }
 
-        var (navigatedStruct, label) = NavigateToField(rootStruct, Path);
+        (GFFStruct navigatedStruct, string label) = NavigateToField(rootStruct, Path);
         if (navigatedStruct == null)
         {
             logger.AddError($"Could not navigate to path: {Path}");
@@ -118,7 +118,7 @@ public class ModifyFieldGFF : ModifyGFF
         // Handle !FieldPath (string path stored in value)
         if (value is string strValue && (strValue.Contains('/') || strValue.Contains('\\')))
         {
-            var (srcStruct, srcLabel) = NavigateToField(rootStruct, strValue);
+            (GFFStruct srcStruct, string srcLabel) = NavigateToField(rootStruct, strValue);
             if (srcStruct != null && srcStruct.TryGetFieldType(srcLabel, out GFFFieldType srcType))
             {
                 value = srcStruct.GetValue(srcLabel)!;
@@ -137,6 +137,17 @@ public class ModifyFieldGFF : ModifyGFF
             delta.Apply(original!, memory);
             navigatedStruct.SetLocString(label, original!);
             return;
+        }
+
+        // Handle LocalizedString field with int value (from TLKMemory) - set StringRef directly
+        if (fieldType == GFFFieldType.LocalizedString && value is int intValue)
+        {
+            if (navigatedStruct.TryGetLocString(label, out Common.LocalizedString? original))
+            {
+                original!.StringRef = intValue;
+                navigatedStruct.SetLocString(label, original!);
+                return;
+            }
         }
 
         // Set the field based on type
@@ -293,7 +304,7 @@ public class AddFieldGFF : ModifyGFF
                 navigatedStruct.SetResRef(Label, value as Common.ResRef ?? Common.ResRef.FromBlank());
                 break;
             case GFFFieldType.LocalizedString:
-                if (value is LocalizedStringDelta delta && navigatedStruct.TryGetLocString(Label, out var existing))
+                if (value is LocalizedStringDelta delta && navigatedStruct.TryGetLocString(Label, out LocalizedString? existing))
                 {
                     delta.Apply(existing!, memory);
                 }
@@ -503,7 +514,7 @@ public class Memory2DAModifierGFF : ModifyGFF
             destPath = Path;
         }
 
-        var (destStruct, destLabel) = NavigateToField(rootStruct, destPath);
+        (GFFStruct destStruct, string destLabel) = NavigateToField(rootStruct, destPath);
         if (destStruct == null)
         {
             // If destination navigation fails, maybe we are just updating the memory token itself
@@ -518,9 +529,9 @@ public class Memory2DAModifierGFF : ModifyGFF
         }
 
         // Try to navigate source as path
-        var (srcStruct, srcLabel) = NavigateToField(rootStruct, srcPath);
+        (GFFStruct srcStruct, string srcLabel) = NavigateToField(rootStruct, srcPath);
 
-        if (srcStruct != null && !string.IsNullOrEmpty(srcLabel) && srcStruct.TryGetFieldType(srcLabel, out var srcType))
+        if (srcStruct != null && !string.IsNullOrEmpty(srcLabel) && srcStruct.TryGetFieldType(srcLabel, out GFFFieldType srcType))
         {
             object? val = srcStruct.GetValue(srcLabel);
 
@@ -538,7 +549,7 @@ public class Memory2DAModifierGFF : ModifyGFF
         else
         {
             // Source is just a value in memory
-            if (destStruct != null && !string.IsNullOrEmpty(destLabel) && destStruct.TryGetFieldType(destLabel, out var destType))
+            if (destStruct != null && !string.IsNullOrEmpty(destLabel) && destStruct.TryGetFieldType(destLabel, out GFFFieldType destType))
             {
                 // Value to Field copy
                 // We need to convert srcPath (which is the value string) to destType

@@ -138,7 +138,7 @@ public class GFFBinaryWriter
             _structWriter.Write((uint)_fieldCount);
             _structWriter.Write((uint)fieldCount);
 
-            foreach (var (label, fieldType, value) in gffStruct)
+            foreach ((string label, GFFFieldType fieldType, object value) in gffStruct)
             {
                 BuildField(label, value, fieldType);
             }
@@ -164,7 +164,7 @@ public class GFFBinaryWriter
         }
 
         int index = 0;
-        foreach (var (label, fieldType, value) in gffStruct)
+        foreach ((string label, GFFFieldType fieldType, object value) in gffStruct)
         {
             long currentPos = _fieldIndicesWriter.BaseStream.Position;
             _fieldIndicesWriter.BaseStream.Seek(pos + index * 4, SeekOrigin.Begin);
@@ -190,7 +190,7 @@ public class GFFBinaryWriter
         }
 
         int index = 0;
-        foreach (var gffStruct in gffList)
+        foreach (GFFStruct gffStruct in gffList)
         {
             long currentPos = _listIndicesWriter.BaseStream.Position;
             _listIndicesWriter.BaseStream.Seek(indexStartPos + index * 4, SeekOrigin.Begin);
