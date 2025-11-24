@@ -7,7 +7,8 @@ using Xunit;
 using TSLPatcher.Tests.Common;
 using static TSLPatcher.Core.Formats.RIM.RIMAuto;
 
-namespace TSLPatcher.Tests.Formats;
+namespace TSLPatcher.Tests.Formats
+{
 
 /// <summary>
 /// Tests for RIM binary I/O operations.
@@ -105,5 +106,6 @@ public class RIMFormatTests
         Action act2 = () => WriteRim(rim, ".", ResourceType.INVALID);
         act2.Should().Throw<ArgumentException>().WithMessage("*Unsupported format*");
     }
+}
 }
 

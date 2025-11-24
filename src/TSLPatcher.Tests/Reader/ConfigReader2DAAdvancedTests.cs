@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using FluentAssertions;
@@ -9,7 +10,8 @@ using TSLPatcher.Core.Mods.TwoDA;
 using TSLPatcher.Core.Reader;
 using Xunit;
 
-namespace TSLPatcher.Tests.Reader;
+namespace TSLPatcher.Tests.Reader
+{
 
 /// <summary>
 /// Advanced ConfigReader tests for 2DA section parsing.
@@ -387,5 +389,6 @@ col2=value2
         result.Patches2DA.First(p => p.SaveAs == "table2.2da").Modifiers.Should().HaveCount(1);
         result.Patches2DA.First(p => p.SaveAs == "table2.2da").Modifiers[0].Should().BeOfType<AddRow2DA>();
     }
+}
 }
 

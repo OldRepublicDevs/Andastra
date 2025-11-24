@@ -47,6 +47,7 @@
   <!-- Package References - Use versions compatible with .NET Framework 4.8 -->
   <ItemGroup>
     <PackageReference Include="ini-parser-netstandard" Version="2.5.2" />
+    <PackageReference Include="JetBrains.Annotations" Version="2023.3.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.0" />
     <PackageReference Include="sly" Version="3.5.0" />
     <!-- System.Text.Json: Use version compatible with net48 -->

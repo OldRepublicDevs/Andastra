@@ -10,7 +10,8 @@ using TSLPatcher.Core.Mods.TLK;
 using TSLPatcher.Core.Resources;
 using Xunit;
 
-namespace TSLPatcher.Tests.Integration;
+namespace TSLPatcher.Tests.Integration
+{
 
 /// <summary>
 /// Integration tests for TLK patching workflows.
@@ -289,5 +290,6 @@ ReplaceFile0=replace.tlk
         memory.MemoryStr.Should().NotContainKey(1);
         memory.MemoryStr.Should().NotContainKey(2);
     }
+}
 }
 

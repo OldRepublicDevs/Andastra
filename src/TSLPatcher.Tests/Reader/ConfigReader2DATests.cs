@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using FluentAssertions;
@@ -10,7 +11,8 @@ using TSLPatcher.Core.Mods.TwoDA;
 using TSLPatcher.Core.Reader;
 using Xunit;
 
-namespace TSLPatcher.Tests.Reader;
+namespace TSLPatcher.Tests.Reader
+{
 
 /// <summary>
 /// Tests for ConfigReader 2DA parsing functionality.
@@ -726,5 +728,6 @@ DefaultValue=123
     }
 
     #endregion
+}
 }
 

@@ -1,131 +1,140 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using JetBrains.Annotations;
 
-namespace TSLPatcher.Core.Formats.TwoDA;
-
-/// <summary>
-/// Represents a single row in a TwoDA file.
-/// </summary>
-public class TwoDARow(string rowLabel, Dictionary<string, string> rowData)
+namespace TSLPatcher.Core.Formats.TwoDA
 {
-    private readonly string _rowLabel = rowLabel;
-    private readonly Dictionary<string, string> _data = rowData;
 
-    public string Label() => _rowLabel;
-
-    public Dictionary<string, string> GetData() => new(_data);
-
-    public void UpdateValues(Dictionary<string, string> values)
+    /// <summary>
+    /// Represents a single row in a TwoDA file.
+    /// </summary>
+    public class TwoDARow
     {
-        foreach ((string column, string cell) in values)
+        private readonly string _rowLabel;
+        private readonly Dictionary<string, string> _data;
+
+        public TwoDARow(string rowLabel, Dictionary<string, string> rowData)
         {
-            SetString(column, cell);
+            _rowLabel = rowLabel;
+            _data = rowData;
         }
-    }
 
-    public string GetString(string header, string? context = null)
-    {
-        if (!_data.ContainsKey(header))
+        public string Label() => _rowLabel;
+
+        public Dictionary<string, string> GetData() => new Dictionary<string, string>(_data);
+
+        public void UpdateValues(Dictionary<string, string> values)
         {
-            string msg = $"The header '{header}' does not exist.";
-            if (context != null)
+            foreach ((string column, string cell) in values)
             {
-                msg += $" Context: {context}";
+                SetString(column, cell);
+            }
+        }
+
+        public string GetString(string header, [CanBeNull] string context = null)
+        {
+            if (!_data.ContainsKey(header))
+            {
+                string msg = $"The header '{header}' does not exist.";
+                if (context != null)
+                {
+                    msg += $" Context: {context}";
+                }
+
+                throw new KeyNotFoundException(msg);
+            }
+            return _data[header];
+        }
+
+        public int? GetInteger(string header, int? defaultValue = null)
+        {
+            string cellValue = GetString(header);
+            if (string.IsNullOrWhiteSpace(cellValue) || cellValue == "****")
+            {
+                return defaultValue;
             }
 
-            throw new KeyNotFoundException(msg);
-        }
-        return _data[header];
-    }
+            if (int.TryParse(cellValue, out int result))
+            {
+                return result;
+            }
 
-    public int? GetInteger(string header, int? defaultValue = null)
-    {
-        string cellValue = GetString(header);
-        if (string.IsNullOrWhiteSpace(cellValue) || cellValue == "****")
-        {
             return defaultValue;
         }
 
-        if (int.TryParse(cellValue, out int result))
+        public float? GetFloat(string header, float? defaultValue = null)
         {
-            return result;
-        }
+            string cellValue = GetString(header);
+            if (string.IsNullOrWhiteSpace(cellValue) || cellValue == "****")
+            {
+                return defaultValue;
+            }
 
-        return defaultValue;
-    }
+            if (float.TryParse(cellValue, out float result))
+            {
+                return result;
+            }
 
-    public float? GetFloat(string header, float? defaultValue = null)
-    {
-        string cellValue = GetString(header);
-        if (string.IsNullOrWhiteSpace(cellValue) || cellValue == "****")
-        {
             return defaultValue;
         }
 
-        if (float.TryParse(cellValue, out float result))
+        public bool? GetBoolean(string header, bool? defaultValue = null)
         {
-            return result;
+            int? intValue = GetInteger(header);
+            if (intValue == null)
+            {
+                return defaultValue;
+            }
+
+            return intValue != 0;
         }
 
-        return defaultValue;
-    }
-
-    public bool? GetBoolean(string header, bool? defaultValue = null)
-    {
-        int? intValue = GetInteger(header);
-        if (intValue == null)
+        public void SetString(string header, string value)
         {
-            return defaultValue;
+            if (!_data.ContainsKey(header))
+            {
+                throw new KeyNotFoundException($"The header '{header}' does not exist.");
+            }
+
+            _data[header] = value;
         }
 
-        return intValue != 0;
-    }
-
-    public void SetString(string header, string value)
-    {
-        if (!_data.ContainsKey(header))
+        public void SetInteger(string header, int value)
         {
-            throw new KeyNotFoundException($"The header '{header}' does not exist.");
+            SetString(header, value.ToString());
         }
 
-        _data[header] = value;
-    }
-
-    public void SetInteger(string header, int value)
-    {
-        SetString(header, value.ToString());
-    }
-
-    public void SetFloat(string header, float value)
-    {
-        SetString(header, value.ToString());
-    }
-
-    public void SetBoolean(string header, bool value)
-    {
-        SetString(header, value ? "1" : "0");
-    }
-
-    public override bool Equals(object? obj)
-    {
-        if (obj is TwoDARow other)
+        public void SetFloat(string header, float value)
         {
-            return _rowLabel == other._rowLabel &&
-                   _data.Count == other._data.Count &&
-                   _data.All(kvp => other._data.TryGetValue(kvp.Key, out string? value) && value == kvp.Value);
+            SetString(header, value.ToString());
         }
-        return false;
-    }
 
-    public override int GetHashCode()
-    {
-        return HashCode.Combine(_rowLabel, string.Join(",", _data.OrderBy(kvp => kvp.Key).Select(kvp => $"{kvp.Key}={kvp.Value}")));
-    }
+        public void SetBoolean(string header, bool value)
+        {
+            SetString(header, value ? "1" : "0");
+        }
 
-    public override string ToString()
-    {
-        return $"TwoDARow(row_label={_rowLabel}, row_data={{{string.Join(", ", _data.Select(kvp => $"{kvp.Key}={kvp.Value}"))}}}";
+        public override bool Equals([CanBeNull] object obj)
+        {
+            if (obj is TwoDARow other)
+            {
+                return _rowLabel == other._rowLabel &&
+                       _data.Count == other._data.Count &&
+                       _data.All(kvp => other._data.TryGetValue(kvp.Key, out string value) && value == kvp.Value);
+            }
+            return false;
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(_rowLabel, string.Join(",", _data.OrderBy(kvp => kvp.Key).Select(kvp => $"{kvp.Key}={kvp.Value}")));
+        }
+
+        public override string ToString()
+        {
+            return $"TwoDARow(row_label={_rowLabel}, row_data={{{string.Join(", ", _data.Select(kvp => $"{kvp.Key}={kvp.Value}"))}}}";
+        }
     }
 }
 

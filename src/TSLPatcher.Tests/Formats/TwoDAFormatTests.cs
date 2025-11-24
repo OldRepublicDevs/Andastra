@@ -8,7 +8,8 @@ using Xunit;
 using TSLPatcher.Tests.Common;
 using static TSLPatcher.Core.Formats.TwoDA.TwoDAAuto;
 
-namespace TSLPatcher.Tests.Formats;
+namespace TSLPatcher.Tests.Formats
+{
 
 /// <summary>
 /// Tests for 2DA binary I/O.
@@ -99,5 +100,6 @@ public class TwoDAFormatTests
 
         twoda.LabelMax().Should().Be(3);
     }
+}
 }
 

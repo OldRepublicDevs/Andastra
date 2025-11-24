@@ -4,7 +4,8 @@ using TSLPatcher.Core.Common;
 using TSLPatcher.Core.Formats.NCS;
 using Xunit;
 
-namespace TSLPatcher.Tests.Formats;
+namespace TSLPatcher.Tests.Formats
+{
 
 /// <summary>
 /// Tests for NCS compiler functionality.
@@ -66,5 +67,6 @@ public class NCSCompilerTests
     // - And many more...
     
     // TODO: Port all remaining test methods from test_ncs_compiler.py when compiler is ready
+}
 }
 

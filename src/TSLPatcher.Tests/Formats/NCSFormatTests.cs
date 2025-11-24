@@ -5,7 +5,8 @@ using TSLPatcher.Core.Formats.NCS;
 using Xunit;
 using TSLPatcher.Tests.Common;
 
-namespace TSLPatcher.Tests.Formats;
+namespace TSLPatcher.Tests.Formats
+{
 
 /// <summary>
 /// Tests for NCS binary I/O operations.
@@ -68,5 +69,6 @@ public class NCSFormatTests
         // Python: self.assertEqual(BinaryReader.load_file(BINARY_TEST_FILE), bytes_ncs(ncs))
         // This validates byte-identical output - now implemented in TestBinaryIO
     }
+}
 }
 

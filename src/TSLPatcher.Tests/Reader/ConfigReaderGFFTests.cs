@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using FluentAssertions;
@@ -11,7 +12,8 @@ using TSLPatcher.Core.Mods.GFF;
 using TSLPatcher.Core.Reader;
 using Xunit;
 
-namespace TSLPatcher.Tests.Reader;
+namespace TSLPatcher.Tests.Reader
+{
 
 /// <summary>
 /// Tests for ConfigReader GFF parsing functionality.
@@ -454,5 +456,6 @@ Appearance_Type=200
         result.PatchesGFF.Should().Contain(p => p.SaveAs == "test1.utc");
         result.PatchesGFF.Should().Contain(p => p.SaveAs == "test2.utc");
     }
+}
 }
 

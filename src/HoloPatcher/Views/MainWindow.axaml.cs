@@ -1,12 +1,14 @@
 using Avalonia.Controls;
 
-namespace HoloPatcher.Views;
-
-public partial class MainWindow : Window
+namespace HoloPatcher.Views
 {
-    public MainWindow()
+
+    public partial class MainWindow : Window
     {
-        InitializeComponent();
+        public MainWindow()
+        {
+            InitializeComponent();
+        }
     }
 }
 

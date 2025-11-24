@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using FluentAssertions;
 using TSLPatcher.Core.Common;
 using TSLPatcher.Core.Formats.SSF;
@@ -7,7 +8,8 @@ using TSLPatcher.Core.Memory;
 using TSLPatcher.Core.Mods.SSF;
 using Xunit;
 
-namespace TSLPatcher.Tests.Integration;
+namespace TSLPatcher.Tests.Integration
+{
 
 /// <summary>
 /// Integration tests for SSF patching workflows.
@@ -230,5 +232,6 @@ Battlecry 3=StrRef7
 
         patchedSsf.Get(SSFSound.BATTLE_CRY_3).Should().Be(456);
     }
+}
 }
 

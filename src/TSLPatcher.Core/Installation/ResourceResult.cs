@@ -1,43 +1,48 @@
 using System;
+using JetBrains.Annotations;
 using TSLPatcher.Core.Resources;
 
-namespace TSLPatcher.Core.Installation;
-
-/// <summary>
-/// Represents a resource retrieved from an installation.
-/// Contains the resource data along with metadata about its location.
-/// </summary>
-public class ResourceResult
+namespace TSLPatcher.Core.Installation
 {
-    public string ResName { get; }
-    public ResourceType ResType { get; }
-    public string FilePath { get; }
-    public byte[] Data { get; }
 
-    private FileResource? _fileResource;
-
-    public ResourceResult(string resName, ResourceType resType, string filePath, byte[] data)
+    /// <summary>
+    /// Represents a resource retrieved from an installation.
+    /// Contains the resource data along with metadata about its location.
+    /// </summary>
+    public class ResourceResult
     {
-        ResName = resName ?? throw new ArgumentNullException(nameof(resName));
-        ResType = resType;
-        FilePath = filePath ?? throw new ArgumentNullException(nameof(filePath));
-        Data = data ?? throw new ArgumentNullException(nameof(data));
-    }
+        public string ResName { get; }
+        public ResourceType ResType { get; }
+        public string FilePath { get; }
+        public byte[] Data { get; }
 
-    public void SetFileResource(FileResource fileResource)
-    {
-        _fileResource = fileResource;
-    }
+        [CanBeNull]
+        private FileResource _fileResource;
 
-    public FileResource? GetFileResource() => _fileResource;
+        public ResourceResult(string resName, ResourceType resType, string filePath, byte[] data)
+        {
+            ResName = resName ?? throw new ArgumentNullException(nameof(resName));
+            ResType = resType;
+            FilePath = filePath ?? throw new ArgumentNullException(nameof(filePath));
+            Data = data ?? throw new ArgumentNullException(nameof(data));
+        }
 
-    public ResourceIdentifier GetIdentifier() => new(ResName, ResType);
+        public void SetFileResource(FileResource fileResource)
+        {
+            _fileResource = fileResource;
+        }
 
-    public int Size => Data.Length;
+        [CanBeNull]
+        public FileResource GetFileResource() => _fileResource;
 
-    public override string ToString()
-    {
-        return $"{ResName}.{ResType.Extension} ({Size} bytes) from {FilePath}";
+        public ResourceIdentifier GetIdentifier() => new ResourceIdentifier(ResName, ResType);
+
+        public int Size => Data.Length;
+
+        public override string ToString()
+        {
+            return $"{ResName}.{ResType.Extension} ({Size} bytes) from {FilePath}";
+        }
     }
 }
 

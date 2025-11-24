@@ -6,7 +6,8 @@ using TSLPatcher.Core.Memory;
 using TSLPatcher.Core.Mods.SSF;
 using Xunit;
 
-namespace TSLPatcher.Tests.Mods;
+namespace TSLPatcher.Tests.Mods
+{
 
 /// <summary>
 /// Tests for SSF modification functionality
@@ -83,5 +84,6 @@ public class SsfModsTests
 
         ssf.Get(SSFSound.BATTLE_CRY_3).Should().Be(321);
     }
+}
 }
 

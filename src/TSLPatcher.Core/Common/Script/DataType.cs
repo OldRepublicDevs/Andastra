@@ -1,6 +1,7 @@
 using System;
 
-namespace TSLPatcher.Core.Common.Script;
+namespace TSLPatcher.Core.Common.Script
+{
 
 /// <summary>
 /// NWScript data types.
@@ -27,5 +28,6 @@ public enum DataType
     Talent,
     Action,
     Struct
+}
 }
 

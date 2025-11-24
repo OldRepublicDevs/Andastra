@@ -1,4 +1,5 @@
-namespace TSLPatcher.Core.Formats.NCS;
+namespace TSLPatcher.Core.Formats.NCS
+{
 
 /// <summary>
 /// Base interface for NCS bytecode optimizers.
@@ -23,5 +24,6 @@ public abstract class NCSOptimizerBase : INCSOptimizer
     {
         InstructionsCleared = 0;
     }
+}
 }
 

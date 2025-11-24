@@ -2,7 +2,8 @@ using FluentAssertions;
 using TSLPatcher.Core.Config;
 using Xunit;
 
-namespace TSLPatcher.Tests.Config;
+namespace TSLPatcher.Tests.Config
+{
 
 /// <summary>
 /// Tests for LogLevel enum
@@ -59,5 +60,6 @@ public class LogLevelTests
         (LogLevel.Errors > LogLevel.General).Should().BeTrue();
         (LogLevel.General > LogLevel.Nothing).Should().BeTrue();
     }
+}
 }
 

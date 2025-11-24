@@ -2,7 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace TSLPatcher.Core.Common.Script;
+namespace TSLPatcher.Core.Common.Script
+{
 
 /// <summary>
 /// Represents a NWScript function signature.
@@ -39,5 +40,6 @@ public class ScriptFunction
         string paramStr = string.Join(", ", Params.Select(p => p.ToString()));
         return $"{ReturnType.ToScriptString()} {Name}({paramStr})";
     }
+}
 }
 

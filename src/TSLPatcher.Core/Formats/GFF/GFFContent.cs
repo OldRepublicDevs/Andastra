@@ -1,87 +1,89 @@
-namespace TSLPatcher.Core.Formats.GFF;
-
-/// <summary>
-/// The different resources that the GFF can represent.
-/// </summary>
-public enum GFFContent
+namespace TSLPatcher.Core.Formats.GFF
 {
-    GFF,
-    BIC,
-    BTC,
-    BTD,
-    BTE,
-    BTI,
-    BTP,
-    BTM,
-    BTT,
-    UTC,
-    UTD,
-    UTE,
-    UTI,
-    UTP,
-    UTS,
-    UTM,
-    UTT,
-    UTW,
-    ARE,
-    DLG,
-    FAC,
-    GIT,
-    GUI,
-    IFO,
-    ITP,
-    JRL,
-    PTH,
-    NFO,
-    PT,
-    GVT,
-    INV
-}
 
-public static class GFFContentExtensions
-{
-    public static string ToFourCC(this GFFContent content)
+    /// <summary>
+    /// The different resources that the GFF can represent.
+    /// </summary>
+    public enum GFFContent
     {
-        return content.ToString().PadRight(4);
+        GFF,
+        BIC,
+        BTC,
+        BTD,
+        BTE,
+        BTI,
+        BTP,
+        BTM,
+        BTT,
+        UTC,
+        UTD,
+        UTE,
+        UTI,
+        UTP,
+        UTS,
+        UTM,
+        UTT,
+        UTW,
+        ARE,
+        DLG,
+        FAC,
+        GIT,
+        GUI,
+        IFO,
+        ITP,
+        JRL,
+        PTH,
+        NFO,
+        PT,
+        GVT,
+        INV
     }
 
-    public static GFFContent FromFourCC(string fourCC)
+    public static class GFFContentExtensions
     {
-        return fourCC.Trim() switch
+        public static string ToFourCC(this GFFContent content)
         {
-            "GFF" => GFFContent.GFF,
-            "BIC" => GFFContent.BIC,
-            "BTC" => GFFContent.BTC,
-            "BTD" => GFFContent.BTD,
-            "BTE" => GFFContent.BTE,
-            "BTI" => GFFContent.BTI,
-            "BTP" => GFFContent.BTP,
-            "BTM" => GFFContent.BTM,
-            "BTT" => GFFContent.BTT,
-            "UTC" => GFFContent.UTC,
-            "UTD" => GFFContent.UTD,
-            "UTE" => GFFContent.UTE,
-            "UTI" => GFFContent.UTI,
-            "UTP" => GFFContent.UTP,
-            "UTS" => GFFContent.UTS,
-            "UTM" => GFFContent.UTM,
-            "UTT" => GFFContent.UTT,
-            "UTW" => GFFContent.UTW,
-            "ARE" => GFFContent.ARE,
-            "DLG" => GFFContent.DLG,
-            "FAC" => GFFContent.FAC,
-            "GIT" => GFFContent.GIT,
-            "GUI" => GFFContent.GUI,
-            "IFO" => GFFContent.IFO,
-            "ITP" => GFFContent.ITP,
-            "JRL" => GFFContent.JRL,
-            "PTH" => GFFContent.PTH,
-            "NFO" => GFFContent.NFO,
-            "PT" => GFFContent.PT,
-            "GVT" => GFFContent.GVT,
-            "INV" => GFFContent.INV,
-            _ => GFFContent.GFF
-        };
+            return content.ToString().PadRight(4);
+        }
+
+        public static GFFContent FromFourCC(string fourCC)
+        {
+            switch (fourCC.Trim())
+            {
+                case "GFF": return GFFContent.GFF;
+                case "BIC": return GFFContent.BIC;
+                case "BTC": return GFFContent.BTC;
+                case "BTD": return GFFContent.BTD;
+                case "BTE": return GFFContent.BTE;
+                case "BTI": return GFFContent.BTI;
+                case "BTP": return GFFContent.BTP;
+                case "BTM": return GFFContent.BTM;
+                case "BTT": return GFFContent.BTT;
+                case "UTC": return GFFContent.UTC;
+                case "UTD": return GFFContent.UTD;
+                case "UTE": return GFFContent.UTE;
+                case "UTI": return GFFContent.UTI;
+                case "UTP": return GFFContent.UTP;
+                case "UTS": return GFFContent.UTS;
+                case "UTM": return GFFContent.UTM;
+                case "UTT": return GFFContent.UTT;
+                case "UTW": return GFFContent.UTW;
+                case "ARE": return GFFContent.ARE;
+                case "DLG": return GFFContent.DLG;
+                case "FAC": return GFFContent.FAC;
+                case "GIT": return GFFContent.GIT;
+                case "GUI": return GFFContent.GUI;
+                case "IFO": return GFFContent.IFO;
+                case "ITP": return GFFContent.ITP;
+                case "JRL": return GFFContent.JRL;
+                case "PTH": return GFFContent.PTH;
+                case "NFO": return GFFContent.NFO;
+                case "PT": return GFFContent.PT;
+                case "GVT": return GFFContent.GVT;
+                case "INV": return GFFContent.INV;
+                default: return GFFContent.GFF;
+            }
+        }
     }
 }
 

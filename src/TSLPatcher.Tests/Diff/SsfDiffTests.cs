@@ -3,7 +3,8 @@ using TSLPatcher.Core.Diff;
 using TSLPatcher.Core.Formats.SSF;
 using Xunit;
 
-namespace TSLPatcher.Tests.Diff;
+namespace TSLPatcher.Tests.Diff
+{
 
 /// <summary>
 /// Tests for SSF diff functionality
@@ -25,4 +26,5 @@ public class SsfDiffTests
         result.ChangedSounds.Should().Contain(SSFSound.BATTLE_CRY_1);
         result.ChangedSounds[SSFSound.BATTLE_CRY_1].Should().Be(2);
     }
+}
 }

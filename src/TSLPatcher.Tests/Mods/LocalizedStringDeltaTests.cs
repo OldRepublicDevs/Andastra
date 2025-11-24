@@ -4,7 +4,8 @@ using TSLPatcher.Core.Memory;
 using TSLPatcher.Core.Mods.GFF;
 using Xunit;
 
-namespace TSLPatcher.Tests.Mods;
+namespace TSLPatcher.Tests.Mods
+{
 
 /// <summary>
 /// Tests for LocalizedStringDelta apply operations.
@@ -85,5 +86,6 @@ public class LocalizedStringDeltaTests
         locstring.Get(Language.German, Gender.Male).Should().Be("2");
         locstring.Get(Language.French, Gender.Male).Should().Be("b");
     }
+}
 }
 

@@ -2,37 +2,39 @@ using System;
 using System.Collections.Generic;
 using TSLPatcher.Core.Formats.SSF;
 
-namespace TSLPatcher.Core.Diff;
-
-public class SsfCompareResult
+namespace TSLPatcher.Core.Diff
 {
-    public Dictionary<SSFSound, int> ChangedSounds { get; } = new();
-}
 
-public static class SsfDiff
-{
-    public static SsfCompareResult Compare(SSF original, SSF modified)
+    public class SsfCompareResult
     {
-        var result = new SsfCompareResult();
+        public Dictionary<SSFSound, int> ChangedSounds { get; } = new Dictionary<SSFSound, int>();
+    }
 
-        foreach (SSFSound sound in Enum.GetValues(typeof(SSFSound)))
+    public static class SsfDiff
+    {
+        public static SsfCompareResult Compare(SSF original, SSF modified)
         {
-            // Valid indices are 0-27 based on SSF implementation
-            if ((int)sound < 0 || (int)sound >= 28)
+            var result = new SsfCompareResult();
+
+            foreach (SSFSound sound in Enum.GetValues(typeof(SSFSound)))
             {
-                continue;
+                // Valid indices are 0-27 based on SSF implementation
+                if ((int)sound < 0 || (int)sound >= 28)
+                {
+                    continue;
+                }
+
+                int origVal = original[sound];
+                int modVal = modified[sound];
+
+                if (origVal != modVal)
+                {
+                    result.ChangedSounds[sound] = modVal;
+                }
             }
 
-            int origVal = original[sound];
-            int modVal = modified[sound];
-
-            if (origVal != modVal)
-            {
-                result.ChangedSounds[sound] = modVal;
-            }
+            return result;
         }
-
-        return result;
     }
 }
 

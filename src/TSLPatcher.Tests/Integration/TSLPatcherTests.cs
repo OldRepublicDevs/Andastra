@@ -14,7 +14,8 @@ using TSLPatcher.Core.Mods.TwoDA;
 using TSLPatcher.Core.Reader;
 using Xunit;
 
-namespace TSLPatcher.Tests.Integration;
+namespace TSLPatcher.Tests.Integration
+{
 
 /// <summary>
 /// Integration tests for TSLPatcher functionality
@@ -335,4 +336,5 @@ public class TSLPatcherTests
     }
 
     #endregion
+}
 }

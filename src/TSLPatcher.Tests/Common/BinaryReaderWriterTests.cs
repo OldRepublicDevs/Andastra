@@ -5,7 +5,8 @@ using FluentAssertions;
 using TSLPatcher.Core.Common;
 using Xunit;
 
-namespace TSLPatcher.Tests.Common;
+namespace TSLPatcher.Tests.Common
+{
 
 /// <summary>
 /// Tests for BinaryReader and BinaryWriter.
@@ -290,5 +291,6 @@ public class BinaryReaderPortedTests
         actualFloat.Should().BeApproximately(expectedFloat, 0.00001f);
         actualDouble.Should().BeApproximately(expectedDouble, 0.00001);
     }
+}
 }
 

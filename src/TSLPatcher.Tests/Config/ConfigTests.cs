@@ -11,7 +11,8 @@ using TSLPatcher.Core.Patcher;
 using TSLPatcher.Core.Resources;
 using Xunit;
 
-namespace TSLPatcher.Tests.Config;
+namespace TSLPatcher.Tests.Config
+{
 
 /// <summary>
 /// Tests for configuration and patching functionality
@@ -709,4 +710,5 @@ public class ConfigTests : IDisposable
     }
 
     #endregion
+}
 }

@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using JetBrains.Annotations;
 
 namespace TSLPatcher.Core.Formats.SSF
 {
@@ -39,7 +40,7 @@ namespace TSLPatcher.Core.Formats.SSF
             set => _sounds[(int)sound] = value;
         }
 
-        public override bool Equals(object? obj)
+        public override bool Equals([CanBeNull] object obj)
         {
             if (obj is SSF other)
             {
@@ -50,7 +51,7 @@ namespace TSLPatcher.Core.Formats.SSF
 
         public override int GetHashCode()
         {
-            HashCode hash = new();
+            HashCode hash = new HashCode();
             foreach (int sound in _sounds)
             {
                 hash.Add(sound);

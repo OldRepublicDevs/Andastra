@@ -3,7 +3,8 @@ using TSLPatcher.Core.Memory;
 using TSLPatcher.Core.Mods.GFF;
 using Xunit;
 
-namespace TSLPatcher.Tests.Memory;
+namespace TSLPatcher.Tests.Memory
+{
 
 /// <summary>
 /// Tests for LocalizedStringDelta (ported from test_memory.py)
@@ -95,5 +96,6 @@ public class LocalizedStringDeltaTests
         Assert.Equal("2", locstring.Get(Language.German, Gender.Male));
         Assert.Equal("b", locstring.Get(Language.French, Gender.Male));
     }
+}
 }
 

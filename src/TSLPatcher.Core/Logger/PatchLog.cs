@@ -1,6 +1,7 @@
 using System;
 
-namespace TSLPatcher.Core.Logger;
+namespace TSLPatcher.Core.Logger
+{
 
 /// <summary>
 /// Represents a single log entry in the patching process
@@ -21,5 +22,6 @@ public class PatchLog
     public string FormattedMessage => $"[{LogType}] [{Timestamp:HH:mm:ss}] {Message}";
 
     public override string ToString() => FormattedMessage;
+}
 }
 

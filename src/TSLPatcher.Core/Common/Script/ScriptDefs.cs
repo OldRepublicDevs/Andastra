@@ -2,18 +2,19 @@ using System.Collections.Generic;
 using TSLPatcher.Core.Common;
 using TSLPatcher.Core.Common.Script;
 
-namespace TSLPatcher.Core.Common.Script;
-
-/// <summary>
-/// NWScript constant and function definitions for KOTOR and TSL.
-/// 1:1 port from pykotor.common.scriptdefs
-/// </summary>
-public static class ScriptDefs
+namespace TSLPatcher.Core.Common.Script
 {
+
     /// <summary>
-    /// KOTOR (Knights of the Old Republic) script constants.
+    /// NWScript constant and function definitions for KOTOR and TSL.
+    /// 1:1 port from pykotor.common.scriptdefs
     /// </summary>
-    public static readonly List<ScriptConstant> KOTOR_CONSTANTS = new()
+    public static class ScriptDefs
+    {
+        /// <summary>
+        /// KOTOR (Knights of the Old Republic) script constants.
+        /// </summary>
+        public static readonly List<ScriptConstant> KOTOR_CONSTANTS = new List<ScriptConstant>()
     {
         new ScriptConstant(DataType.Int, "NUM_INVENTORY_SLOTS", 18),
         new ScriptConstant(DataType.Int, "TRUE", 1),
@@ -1506,10 +1507,10 @@ public static class ScriptDefs
         new ScriptConstant(DataType.Int, "LIVE_CONTENT_PKG6", 6),
     };
 
-    /// <summary>
-    /// TSL (The Sith Lords) script constants.
-    /// </summary>
-    public static readonly List<ScriptConstant> TSL_CONSTANTS = new()
+        /// <summary>
+        /// TSL (The Sith Lords) script constants.
+        /// </summary>
+        public static readonly List<ScriptConstant> TSL_CONSTANTS = new List<ScriptConstant>()
     {
         new ScriptConstant(DataType.Int, "NUM_INVENTORY_SLOTS", 20),
         new ScriptConstant(DataType.Int, "TRUE", 1),
@@ -3322,10 +3323,10 @@ public static class ScriptDefs
         new ScriptConstant(DataType.Int, "FORFEIT_NO_ITEM_BUT_SHIELD", 128),
     };
 
-    /// <summary>
-    /// KOTOR (Knights of the Old Republic) script functions.
-    /// </summary>
-    public static readonly List<ScriptFunction> KOTOR_FUNCTIONS = new()
+        /// <summary>
+        /// KOTOR (Knights of the Old Republic) script functions.
+        /// </summary>
+        public static readonly List<ScriptFunction> KOTOR_FUNCTIONS = new List<ScriptFunction>()
     {
         new ScriptFunction(
             DataType.Int,
@@ -16561,10 +16562,10 @@ void YavinHackCloseDoor( object oidDoor );"
         ),
     };
 
-    /// <summary>
-    /// TSL (The Sith Lords) script functions.
-    /// </summary>
-    public static readonly List<ScriptFunction> TSL_FUNCTIONS = new()
+        /// <summary>
+        /// TSL (The Sith Lords) script functions.
+        /// </summary>
+        public static readonly List<ScriptFunction> TSL_FUNCTIONS = new List<ScriptFunction>()
     {
         new ScriptFunction(
             DataType.Int,
@@ -31426,4 +31427,5 @@ void RebuildPartyTable();",
 void RebuildPartyTable();"
         ),
     };
+    }
 }

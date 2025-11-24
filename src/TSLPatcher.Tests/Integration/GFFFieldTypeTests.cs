@@ -1,3 +1,4 @@
+using System.Linq;
 using FluentAssertions;
 using TSLPatcher.Core.Common;
 using TSLPatcher.Core.Config;
@@ -6,7 +7,8 @@ using TSLPatcher.Core.Memory;
 using TSLPatcher.Core.Logger;
 using Xunit;
 
-namespace TSLPatcher.Tests.Integration;
+namespace TSLPatcher.Tests.Integration
+{
 
 /// <summary>
 /// Integration tests for GFF field type modifications.
@@ -494,5 +496,6 @@ Value=StrRef6
 
         patchedGff.Root.GetInt32("Field1").Should().Be(666);
     }
+}
 }
 

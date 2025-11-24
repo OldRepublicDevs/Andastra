@@ -1,44 +1,48 @@
 using System.Collections;
 using System.Collections.Generic;
+using JetBrains.Annotations;
 
-namespace TSLPatcher.Core.Formats.GFF;
-
-/// <summary>
-/// A collection of GFFStructs.
-/// </summary>
-public class GFFList : IEnumerable<GFFStruct>
+namespace TSLPatcher.Core.Formats.GFF
 {
-    private readonly List<GFFStruct> _structs = new();
 
-    public int Count => _structs.Count;
-
-    public GFFStruct Add(int structId = 0)
+    /// <summary>
+    /// A collection of GFFStructs.
+    /// </summary>
+    public class GFFList : IEnumerable<GFFStruct>
     {
-        var newStruct = new GFFStruct(structId);
-        _structs.Add(newStruct);
-        return newStruct;
-    }
+        private readonly List<GFFStruct> _structs = new List<GFFStruct>();
 
-    public GFFStruct? At(int index)
-    {
-        return index < _structs.Count ? _structs[index] : null;
-    }
+        public int Count => _structs.Count;
 
-    public void Remove(int index)
-    {
-        if (index >= 0 && index < _structs.Count)
+        public GFFStruct Add(int structId = 0)
         {
-            _structs.RemoveAt(index);
+            var newStruct = new GFFStruct(structId);
+            _structs.Add(newStruct);
+            return newStruct;
         }
-    }
 
-    public GFFStruct this[int index]
-    {
-        get => _structs[index];
-        set => _structs[index] = value;
-    }
+        [CanBeNull]
+        public GFFStruct At(int index)
+        {
+            return index < _structs.Count ? _structs[index] : null;
+        }
 
-    public IEnumerator<GFFStruct> GetEnumerator() => _structs.GetEnumerator();
-    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+        public void Remove(int index)
+        {
+            if (index >= 0 && index < _structs.Count)
+            {
+                _structs.RemoveAt(index);
+            }
+        }
+
+        public GFFStruct this[int index]
+        {
+            get => _structs[index];
+            set => _structs[index] = value;
+        }
+
+        public IEnumerator<GFFStruct> GetEnumerator() => _structs.GetEnumerator();
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+    }
 }
 

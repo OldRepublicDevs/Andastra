@@ -1,134 +1,144 @@
 using System;
 using System.Linq;
+using JetBrains.Annotations;
 
-namespace TSLPatcher.Core.Resources;
-
-/// <summary>
-/// Class for storing resource name and type, facilitating case-insensitive object comparisons
-/// and hashing equal to their string representations.
-/// </summary>
-public class ResourceIdentifier : IEquatable<ResourceIdentifier>
+namespace TSLPatcher.Core.Resources
 {
-    public string ResName { get; }
-    public ResourceType ResType { get; }
 
-    private readonly string _cachedFilenameStr;
-    private readonly string _lowerResName;
-
-    public ResourceIdentifier(string resName, ResourceType resType)
+    /// <summary>
+    /// Class for storing resource name and type, facilitating case-insensitive object comparisons
+    /// and hashing equal to their string representations.
+    /// </summary>
+    public class ResourceIdentifier : IEquatable<ResourceIdentifier>
     {
-        ResName = resName;
-        ResType = resType;
+        public string ResName { get; }
+        public ResourceType ResType { get; }
 
-        string ext = resType.Extension;
-        string suffix = string.IsNullOrEmpty(ext) ? "" : $".{ext}";
-        _cachedFilenameStr = $"{resName}{suffix}".ToLower();
-        _lowerResName = resName.ToLower();
-    }
+        private readonly string _cachedFilenameStr;
+        private readonly string _lowerResName;
 
-    public static ResourceIdentifier FromPath(string path)
-    {
-        string filename = System.IO.Path.GetFileName(path);
-        string lowerFilename = filename.ToLowerInvariant();
-
-        // Find the best matching ResourceType by trying to match extension
-        // Since ResourceType is a class with static fields, we try the most common ones first
-        ResourceType? chosenResType = null;
-        int chosenSuffixLength = 0;
-
-        // Get all known resource types via reflection
-        System.Collections.Generic.IEnumerable<ResourceType> knownTypes = typeof(ResourceType).GetFields(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static)
-            .Where(f => f.FieldType == typeof(ResourceType))
-            .Select(f => (ResourceType)f.GetValue(null)!)
-            .Where(rt => rt != null && !rt.IsInvalid);
-
-        foreach (ResourceType candidate in knownTypes)
+        public ResourceIdentifier(string resName, ResourceType resType)
         {
-            string extension = candidate.Extension;
-            if (string.IsNullOrEmpty(extension))
-                continue;
+            ResName = resName;
+            ResType = resType;
 
-            string suffix = $".{extension}";
-            if (lowerFilename.EndsWith(suffix, StringComparison.OrdinalIgnoreCase) && suffix.Length > chosenSuffixLength)
+            string ext = resType.Extension;
+            string suffix = string.IsNullOrEmpty(ext) ? "" : $".{ext}";
+            _cachedFilenameStr = $"{resName}{suffix}".ToLower();
+            _lowerResName = resName.ToLower();
+        }
+
+        public static ResourceIdentifier FromPath(string path)
+        {
+            string filename = System.IO.Path.GetFileName(path);
+            string lowerFilename = filename.ToLowerInvariant();
+
+            // Find the best matching ResourceType by trying to match extension
+            // [CanBeNull] Since ResourceType is a class with static fields, we try the most common ones first
+            ResourceType chosenResType = null;
+            int chosenSuffixLength = 0;
+
+            // Get all known resource types via reflection
+            System.Collections.Generic.IEnumerable<ResourceType> knownTypes = typeof(ResourceType).GetFields(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static)
+                .Where(f => f.FieldType == typeof(ResourceType))
+                .Select(f => (ResourceType)f.GetValue(null))
+                .Where(rt => rt != null && !rt.IsInvalid);
+
+            foreach (ResourceType candidate in knownTypes)
             {
-                chosenResType = candidate;
-                chosenSuffixLength = suffix.Length;
+                string extension = candidate.Extension;
+                if (string.IsNullOrEmpty(extension))
+                {
+                    continue;
+                }
+
+                string suffix = $".{extension}";
+                if (lowerFilename.EndsWith(suffix, StringComparison.OrdinalIgnoreCase) && suffix.Length > chosenSuffixLength)
+                {
+                    chosenResType = candidate;
+                    chosenSuffixLength = suffix.Length;
+                }
             }
+
+            if (chosenResType != null && chosenSuffixLength > 0)
+            {
+                string resname = filename.Substring(0, filename.Length - chosenSuffixLength);
+                return new ResourceIdentifier(resname, chosenResType);
+            }
+
+            // Fallback: use Path methods
+            string stem = System.IO.Path.GetFileNameWithoutExtension(path);
+            string ext = System.IO.Path.GetExtension(path);
+            ResourceType restype = ResourceType.FromExtension(ext);
+            return new ResourceIdentifier(stem, restype);
         }
 
-        if (chosenResType != null && chosenSuffixLength > 0)
+        public ResourceIdentifier Validate()
         {
-            string resname = filename[..^chosenSuffixLength];
-            return new ResourceIdentifier(resname, chosenResType);
+            if (ResType == ResourceType.INVALID || ResType.IsInvalid)
+            {
+                throw new InvalidOperationException($"Invalid resource: '{this}'");
+            }
+            return this;
         }
 
-        // Fallback: use Path methods
-        string stem = System.IO.Path.GetFileNameWithoutExtension(path);
-        string ext = System.IO.Path.GetExtension(path);
-        ResourceType restype = ResourceType.FromExtension(ext);
-        return new ResourceIdentifier(stem, restype);
-    }
+        public (string, ResourceType) Unpack() => (ResName, ResType);
 
-    public ResourceIdentifier Validate()
-    {
-        if (ResType == ResourceType.INVALID || ResType.IsInvalid)
+        public string LowerResName => _lowerResName;
+
+        public override string ToString() => _cachedFilenameStr;
+
+        public override int GetHashCode() => _cachedFilenameStr.GetHashCode();
+
+        public override bool Equals([CanBeNull] object obj)
         {
-            throw new InvalidOperationException($"Invalid resource: '{this}'");
-        }
-        return this;
-    }
+            if (ReferenceEquals(this, obj))
+            {
+                return true;
+            }
 
-    public (string, ResourceType) Unpack() => (ResName, ResType);
+            if (obj is ResourceIdentifier other)
+            {
+                return Equals(other);
+            }
 
-    public string LowerResName => _lowerResName;
+            if (obj is string str)
+            {
+                return _cachedFilenameStr == str.ToLower();
+            }
 
-    public override string ToString() => _cachedFilenameStr;
-
-    public override int GetHashCode() => _cachedFilenameStr.GetHashCode();
-
-    public override bool Equals(object? obj)
-    {
-        if (ReferenceEquals(this, obj))
-        {
-            return true;
-        }
-
-        return obj switch
-        {
-            ResourceIdentifier other => Equals(other),
-            string str => _cachedFilenameStr == str.ToLower(),
-            _ => false
-        };
-    }
-
-    public bool Equals(ResourceIdentifier? other)
-    {
-        if (other is null)
-        {
             return false;
         }
 
-        if (ReferenceEquals(this, other))
+        public bool Equals([CanBeNull] ResourceIdentifier other)
         {
-            return true;
+            if (other is null)
+            {
+                return false;
+            }
+
+            if (ReferenceEquals(this, other))
+            {
+                return true;
+            }
+
+            return _cachedFilenameStr == other._cachedFilenameStr;
         }
 
-        return _cachedFilenameStr == other._cachedFilenameStr;
-    }
-
-    public static bool operator ==(ResourceIdentifier? left, ResourceIdentifier? right)
-    {
-        if (left is null)
+        public static bool operator ==([CanBeNull] ResourceIdentifier left, [CanBeNull] ResourceIdentifier right)
         {
-            return right is null;
+            if (left is null)
+            {
+                return right is null;
+            }
+
+            return left.Equals(right);
         }
 
-        return left.Equals(right);
-    }
-
-    public static bool operator !=(ResourceIdentifier? left, ResourceIdentifier? right)
-    {
-        return !(left == right);
+        public static bool operator !=([CanBeNull] ResourceIdentifier left, [CanBeNull] ResourceIdentifier right)
+        {
+            return !(left == right);
+        }
     }
 }
 

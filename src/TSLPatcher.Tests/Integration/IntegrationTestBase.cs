@@ -12,7 +12,8 @@ using TSLPatcher.Core.Logger;
 using TSLPatcher.Core.Memory;
 using TSLPatcher.Core.Reader;
 
-namespace TSLPatcher.Tests.Integration;
+namespace TSLPatcher.Tests.Integration
+{
 
 /// <summary>
 /// Base class for integration tests providing common setup/teardown and helper methods.
@@ -146,5 +147,6 @@ public abstract class IntegrationTestBase : IDisposable
             throw new Exception($"Expected cell [{rowIndex},{columnLabel}] to be '{expectedValue}' but was '{actualValue}'");
         }
     }
+}
 }
 

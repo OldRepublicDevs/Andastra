@@ -5,7 +5,8 @@ using TSLPatcher.Core.Formats.TLK;
 using TSLPatcher.Tests.Common;
 using Xunit;
 
-namespace TSLPatcher.Tests.Formats;
+namespace TSLPatcher.Tests.Formats
+{
 
 /// <summary>
 /// Tests for TalkTable (read-only TLK accessor).
@@ -48,5 +49,6 @@ public class TalkTableTests
     {
         _talkTable.Size().Should().Be(3);
     }
+}
 }
 

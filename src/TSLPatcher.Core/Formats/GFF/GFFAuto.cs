@@ -2,7 +2,8 @@ using System;
 using System.IO;
 using TSLPatcher.Core.Resources;
 
-namespace TSLPatcher.Core.Formats.GFF;
+namespace TSLPatcher.Core.Formats.GFF
+{
 
 /// <summary>
 /// Auto-detection and convenience functions for GFF files.
@@ -37,5 +38,6 @@ public static class GFFAuto
         var writer = new GFFBinaryWriter(gff);
         return writer.Write();
     }
+}
 }
 

@@ -1,34 +1,38 @@
 using System;
+using JetBrains.Annotations;
 
-namespace TSLPatcher.Core.Common.Script;
-
-/// <summary>
-/// Represents a parameter in a NWScript function signature.
-/// 
-/// References:
-///     vendor/xoreos-tools/src/nwscript/ (NWScript parameter definitions)
-///     vendor/KotOR.js/src/nwscript/NWScriptDefK1.ts (K1 function parameters)
-/// </summary>
-public class ScriptParam
+namespace TSLPatcher.Core.Common.Script
 {
-    public DataType DataType { get; set; }
-    public string Name { get; set; }
-    public object? Default { get; set; }
 
-    public ScriptParam(DataType dataType, string name, object? defaultValue = null)
+    /// <summary>
+    /// Represents a parameter in a NWScript function signature.
+    /// 
+    /// References:
+    ///     vendor/xoreos-tools/src/nwscript/ (NWScript parameter definitions)
+    ///     vendor/KotOR.js/src/nwscript/NWScriptDefK1.ts (K1 function parameters)
+    /// </summary>
+    public class ScriptParam
     {
-        DataType = dataType;
-        Name = name ?? throw new ArgumentNullException(nameof(name));
-        Default = defaultValue;
-    }
+        public DataType DataType { get; set; }
+        public string Name { get; set; }
+        [CanBeNull]
+        public object Default { get; set; }
 
-    public override string ToString()
-    {
-        if (Default != null)
+        public ScriptParam(DataType dataType, string name, [CanBeNull] object defaultValue = null)
         {
-            return $"{DataType.ToScriptString()} {Name} = {Default}";
+            DataType = dataType;
+            Name = name ?? throw new ArgumentNullException(nameof(name));
+            Default = defaultValue;
         }
-        return $"{DataType.ToScriptString()} {Name}";
+
+        public override string ToString()
+        {
+            if (Default != null)
+            {
+                return $"{DataType.ToScriptString()} {Name} = {Default}";
+            }
+            return $"{DataType.ToScriptString()} {Name}";
+        }
     }
 }
 

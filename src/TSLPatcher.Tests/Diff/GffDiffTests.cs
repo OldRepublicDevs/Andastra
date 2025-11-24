@@ -4,7 +4,8 @@ using TSLPatcher.Core.Diff;
 using TSLPatcher.Core.Formats.GFF;
 using Xunit;
 
-namespace TSLPatcher.Tests.Diff;
+namespace TSLPatcher.Tests.Diff
+{
 
 /// <summary>
 /// Tests for GFF diff functionality
@@ -214,4 +215,5 @@ public class GffDiffTests
         ini.Should().Contain("[Section]");
         ini.Should().Contain("Field=new");
     }
+}
 }

@@ -13,7 +13,8 @@ using TSLPatcher.Core.Logger;
 using TSLPatcher.Core.Reader;
 using Xunit;
 
-namespace TSLPatcher.Tests.Reader;
+namespace TSLPatcher.Tests.Reader
+{
 
 /// <summary>
 /// ConfigReader tests for GFF path handling edge cases.
@@ -342,5 +343,6 @@ StrRef=2DAMEMORY5
 
         patched.Root.GetLocString("Field1").StringRef.Should().Be(123);
     }
+}
 }
 

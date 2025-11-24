@@ -3,7 +3,8 @@ using TSLPatcher.Core.Diff;
 using TSLPatcher.Core.Formats.TLK;
 using Xunit;
 
-namespace TSLPatcher.Tests.Diff;
+namespace TSLPatcher.Tests.Diff
+{
 
 /// <summary>
 /// Tests for TLK diff functionality
@@ -59,4 +60,5 @@ public class TlkDiffTests
         result.ChangedEntries[0].Text.Should().BeNull();
         result.ChangedEntries[0].Sound.Should().Be("Sound2");
     }
+}
 }

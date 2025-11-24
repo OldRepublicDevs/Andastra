@@ -1,4 +1,5 @@
-namespace TSLPatcher.Core.Config;
+namespace TSLPatcher.Core.Config
+{
 
 /// <summary>
 /// Log level configuration for the patcher
@@ -32,5 +33,6 @@ public enum LogLevel
     /// information that may be useful for a Modder to see what is happening. Intended for Debugging.
     /// </summary>
     Full = 4
+}
 }
 

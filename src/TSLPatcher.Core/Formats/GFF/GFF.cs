@@ -1,80 +1,86 @@
 using System;
+using JetBrains.Annotations;
 
-namespace TSLPatcher.Core.Formats.GFF;
-
-/// <summary>
-/// Represents the data of a GFF file.
-/// </summary>
-public class GFF
+namespace TSLPatcher.Core.Formats.GFF
 {
-    public GFFContent Content { get; set; }
-    public GFFStruct Root { get; set; }
-
-    public GFF(GFFContent content = GFFContent.GFF)
-    {
-        Content = content;
-        Root = new GFFStruct(-1);
-    }
 
     /// <summary>
-    /// Print a tree representation of the GFF structure (for debugging).
+    /// Represents the data of a GFF file.
     /// </summary>
-    public void PrintTree(GFFStruct? root = null, int indent = 0, int columnLen = 40)
+    public class GFF
     {
-        root ??= Root;
+        public GFFContent Content { get; set; }
+        public GFFStruct Root { get; set; }
 
-        foreach ((string label, GFFFieldType fieldType, object value) in root)
+        public GFF(GFFContent content = GFFContent.GFF)
         {
-            int lengthOrId = -2;
+            Content = content;
+            Root = new GFFStruct(-1);
+        }
 
-            if (fieldType == GFFFieldType.Struct && value is GFFStruct gffStruct)
+        /// <summary>
+        /// Print a tree representation of the GFF structure (for debugging).
+        /// </summary>
+        public void PrintTree([CanBeNull] GFFStruct root = null, int indent = 0, int columnLen = 40)
+        {
+            if (root == null)
             {
-                lengthOrId = gffStruct.StructId;
-            }
-            else if (fieldType == GFFFieldType.List && value is GFFList gffList)
-            {
-                lengthOrId = gffList.Count;
+                root = Root;
             }
 
-            string indentStr = new string(' ', indent * 2);
-            string labelStr = (indentStr + label).PadRight(columnLen);
-            Console.WriteLine($"{labelStr}  {lengthOrId}");
+            foreach ((string label, GFFFieldType fieldType, object value) in root)
+            {
+                int lengthOrId = -2;
 
-            if (fieldType == GFFFieldType.Struct && value is GFFStruct structValue)
-            {
-                PrintTree(structValue, indent + 1, columnLen);
-            }
-            else if (fieldType == GFFFieldType.List && value is GFFList listValue)
-            {
-                int i = 0;
-                foreach (GFFStruct item in listValue)
+                if (fieldType == GFFFieldType.Struct && value is GFFStruct gffStruct)
                 {
-                    string listIndentStr = new string(' ', indent * 2);
-                    string listLabelStr = $"  {listIndentStr}[Struct {i}]".PadRight(columnLen);
-                    Console.WriteLine($"{listLabelStr}  {item.StructId}");
-                    PrintTree(item, indent + 2, columnLen);
-                    i++;
+                    lengthOrId = gffStruct.StructId;
+                }
+                else if (fieldType == GFFFieldType.List && value is GFFList gffList)
+                {
+                    lengthOrId = gffList.Count;
+                }
+
+                string indentStr = new string(' ', indent * 2);
+                string labelStr = (indentStr + label).PadRight(columnLen);
+                Console.WriteLine($"{labelStr}  {lengthOrId}");
+
+                if (fieldType == GFFFieldType.Struct && value is GFFStruct structValue)
+                {
+                    PrintTree(structValue, indent + 1, columnLen);
+                }
+                else if (fieldType == GFFFieldType.List && value is GFFList listValue)
+                {
+                    int i = 0;
+                    foreach (GFFStruct item in listValue)
+                    {
+                        string listIndentStr = new string(' ', indent * 2);
+                        string listLabelStr = $"  {listIndentStr}[Struct {i}]".PadRight(columnLen);
+                        Console.WriteLine($"{listLabelStr}  {item.StructId}");
+                        PrintTree(item, indent + 2, columnLen);
+                        i++;
+                    }
                 }
             }
         }
-    }
 
-    /// <summary>
-    /// Serializes the GFF to a byte array.
-    /// </summary>
-    public byte[] ToBytes()
-    {
-        var writer = new GFFBinaryWriter(this);
-        return writer.Write();
-    }
+        /// <summary>
+        /// Serializes the GFF to a byte array.
+        /// </summary>
+        public byte[] ToBytes()
+        {
+            var writer = new GFFBinaryWriter(this);
+            return writer.Write();
+        }
 
-    /// <summary>
-    /// Deserializes a GFF from a byte array.
-    /// </summary>
-    public static GFF FromBytes(byte[] data)
-    {
-        var reader = new GFFBinaryReader(data);
-        return reader.Load();
+        /// <summary>
+        /// Deserializes a GFF from a byte array.
+        /// </summary>
+        public static GFF FromBytes(byte[] data)
+        {
+            var reader = new GFFBinaryReader(data);
+            return reader.Load();
+        }
     }
 }
 

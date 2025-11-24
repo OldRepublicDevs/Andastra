@@ -1,7 +1,8 @@
 using System;
 using System.Collections.Generic;
 
-namespace TSLPatcher.Core.Common;
+namespace TSLPatcher.Core.Common
+{
 
 /// <summary>
 /// Exception thrown when a required key is not found in memory or a dictionary.
@@ -16,5 +17,6 @@ public class KeyError : KeyNotFoundException
     public KeyError(string message, Exception innerException) : base(message, innerException)
     {
     }
+}
 }
 

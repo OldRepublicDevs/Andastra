@@ -6,7 +6,8 @@ using TSLPatcher.Core.Common.Script;
 using TSLPatcher.Core.Formats.NCS.Compiler;
 using Xunit;
 
-namespace TSLPatcher.Tests.Formats;
+namespace TSLPatcher.Tests.Formats
+{
 
 /// <summary>
 /// Tests for NCS interpreter/stack functionality.
@@ -117,5 +118,6 @@ public class NCSInterpreterTests
         stack.Peek(-20).Value.Should().Be(5.0);
         stack.Peek(-16).Value.Should().Be(6.0);
     }
+}
 }
 

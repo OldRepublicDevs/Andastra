@@ -12,7 +12,8 @@ using TSLPatcher.Core.Reader;
 using TSLPatcher.Core.Resources;
 using Xunit;
 
-namespace TSLPatcher.Tests.Reader;
+namespace TSLPatcher.Tests.Reader
+{
 
 /// <summary>
 /// Tests for ConfigReader TLK parsing functionality.
@@ -555,5 +556,6 @@ AppendFile1=append.tlk
         mod0.Text.Should().Be("Entry 0");
         mod2.Text.Should().Be("Append 0");
     }
+}
 }
 

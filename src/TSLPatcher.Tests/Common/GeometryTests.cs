@@ -3,7 +3,8 @@ using FluentAssertions;
 using TSLPatcher.Core.Common;
 using Xunit;
 
-namespace TSLPatcher.Tests.Common;
+namespace TSLPatcher.Tests.Common
+{
 
 /// <summary>
 /// Tests for geometry types (Vector2, Vector3, Vector4, Face, Polygon2).
@@ -193,5 +194,6 @@ public class GeometryTests
             return new Vector4((float)qx, (float)qy, (float)qz, (float)qw);
         }
     }
+}
 }
 

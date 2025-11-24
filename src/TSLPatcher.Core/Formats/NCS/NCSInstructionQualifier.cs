@@ -1,4 +1,5 @@
-namespace TSLPatcher.Core.Formats.NCS;
+namespace TSLPatcher.Core.Formats.NCS
+{
 
 /// <summary>
 /// Type qualifiers for NCS instructions.
@@ -30,5 +31,6 @@ public enum NCSInstructionQualifier : byte
     VectorVector = 0x3A,
     VectorFloat = 0x3B,
     FloatVector = 0x3C
+}
 }
 

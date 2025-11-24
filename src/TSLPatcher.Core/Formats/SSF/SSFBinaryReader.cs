@@ -3,7 +3,8 @@ using System.IO;
 using System.Text;
 using TSLPatcher.Core.Formats;
 
-namespace TSLPatcher.Core.Formats.SSF;
+namespace TSLPatcher.Core.Formats.SSF
+{
 
 /// <summary>
 /// Reads SSF (Sound Set File) binary data.
@@ -92,5 +93,6 @@ public class SSFBinaryReader : BinaryFormatReaderBase
         uint value = Reader.ReadUInt32();
         return value == 0xFFFFFFFF ? -1 : (int)value;
     }
+}
 }
 

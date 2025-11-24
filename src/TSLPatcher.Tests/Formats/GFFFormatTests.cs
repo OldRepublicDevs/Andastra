@@ -8,7 +8,8 @@ using Xunit;
 using TSLPatcher.Tests.Common;
 using static TSLPatcher.Core.Formats.GFF.GFFAuto;
 
-namespace TSLPatcher.Tests.Formats;
+namespace TSLPatcher.Tests.Formats
+{
 
 /// <summary>
 /// Tests for GFF binary I/O.
@@ -150,5 +151,6 @@ public class GFFFormatTests
             }
         }
     }
+}
 }
 

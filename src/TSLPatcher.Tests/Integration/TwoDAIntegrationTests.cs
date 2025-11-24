@@ -9,7 +9,8 @@ using TSLPatcher.Core.Memory;
 using TSLPatcher.Core.Mods.TwoDA;
 using Xunit;
 
-namespace TSLPatcher.Tests.Integration;
+namespace TSLPatcher.Tests.Integration
+{
 
 /// <summary>
 /// Integration tests for 2DA patching workflows.
@@ -934,5 +935,6 @@ I1=Y
     }
 
     #endregion
+}
 }
 

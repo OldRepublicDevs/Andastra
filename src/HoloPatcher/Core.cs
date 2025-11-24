@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using JetBrains.Annotations;
 using TSLPatcher.Core.Common;
 using TSLPatcher.Core.Config;
 using TSLPatcher.Core.Installation;
@@ -58,11 +59,12 @@ namespace HoloPatcher
         /// </summary>
         public class NamespaceInfo
         {
-            public ConfigReader ConfigReader { get; set; } = null!;
+            public ConfigReader ConfigReader { get; set; }
             public LogLevel LogLevel { get; set; }
             public int? GameNumber { get; set; }
-            public List<string> GamePaths { get; set; } = new();
-            public string? InfoContent { get; set; }
+            public List<string> GamePaths { get; set; } = new List<string>();
+            [CanBeNull]
+            public string InfoContent { get; set; }
         }
 
         /// <summary>
@@ -93,7 +95,8 @@ namespace HoloPatcher
             CaseAwarePath changesPath = tslPatchDataPath.Combine("changes.ini");
 
             List<PatcherNamespace> namespaces;
-            ConfigReader? configReader = null;
+            // Can be null if no config reader is needed
+            ConfigReader configReader = null;
 
             if (namespacePath.IsFile())
             {
@@ -131,9 +134,10 @@ namespace HoloPatcher
             string modPath,
             List<PatcherNamespace> namespaces,
             string selectedNamespaceName,
-            ConfigReader? configReader = null)
+            [CanBeNull] ConfigReader configReader = null)
         {
-            PatcherNamespace? namespaceOption = namespaces.FirstOrDefault(x => x.Name == selectedNamespaceName);
+            // Can be null if namespace not found
+            PatcherNamespace namespaceOption = namespaces.FirstOrDefault(x => x.Name == selectedNamespaceName);
             if (namespaceOption == null)
             {
                 throw new ArgumentException($"Namespace '{selectedNamespaceName}' not found in namespaces list");
@@ -149,19 +153,21 @@ namespace HoloPatcher
             }
 
             int? gameNumber = reader.Config.GameNumber;
-            Game? game = gameNumber.HasValue ? (Game)gameNumber.Value : null;
+            // Can be null if game number not set
+            Game? game = gameNumber.HasValue ? (Game?)gameNumber.Value : null;
 
-            List<string> gamePaths = new();
+            var gamePaths = new List<string>();
             if (game.HasValue)
             {
                 // Find KOTOR paths - simplified version, should use proper path detection
                 Dictionary<Game, List<string>> detectedPaths = FindKotorPathsFromDefault();
-                if (detectedPaths.TryGetValue(game.Value, out List<string>? paths))
+                // Can be null if paths not found
+                if (detectedPaths.TryGetValue(game.Value, out List<string> paths))
                 {
                     gamePaths.AddRange(paths);
                 }
                 // If TSL, also include K1 paths
-                if (game.Value == Game.TSL && detectedPaths.TryGetValue(Game.K1, out List<string>? k1Paths))
+                if (game.Value == Game.TSL && detectedPaths.TryGetValue(Game.K1, out List<string> k1Paths))
                 {
                     gamePaths.AddRange(k1Paths);
                 }
@@ -171,7 +177,8 @@ namespace HoloPatcher
             var infoRtfPath = new CaseAwarePath(modPath, "tslpatchdata", namespaceOption.RtfFilePath());
             var infoRtePath = new CaseAwarePath(infoRtfPath.GetResolvedPath().Replace(".rtf", ".rte"));
 
-            string? infoContent = null;
+            // Can be null if info file not found
+            string infoContent = null;
             if (infoRtePath.IsFile())
             {
                 byte[] data = File.ReadAllBytes(infoRtePath.GetResolvedPath());
@@ -223,7 +230,8 @@ namespace HoloPatcher
         /// </summary>
         public static string GetNamespaceDescription(List<PatcherNamespace> namespaces, string selectedNamespaceName)
         {
-            PatcherNamespace? namespaceOption = namespaces.FirstOrDefault(x => x.Name == selectedNamespaceName);
+            // Can be null if namespace not found
+            PatcherNamespace namespaceOption = namespaces.FirstOrDefault(x => x.Name == selectedNamespaceName);
             return namespaceOption?.Description ?? "";
         }
 
@@ -247,7 +255,8 @@ namespace HoloPatcher
         /// <summary>
         /// Gets confirmation message if mod requires it.
         /// </summary>
-        public static string? GetConfirmMessage(ModInstaller installer)
+        [CanBeNull]
+        public static string GetConfirmMessage(ModInstaller installer)
         {
             string msg = installer.Config().ConfirmMessage?.Trim() ?? "";
             return !string.IsNullOrEmpty(msg) && msg != "N/A" ? msg : null;
@@ -263,9 +272,10 @@ namespace HoloPatcher
             string selectedNamespaceName,
             PatchLogger logger,
             CancellationToken cancellationToken,
-            Action<int>? progressCallback = null)
+            [CanBeNull] Action<int> progressCallback = null)
         {
-            PatcherNamespace? namespaceOption = namespaces.FirstOrDefault(x => x.Name == selectedNamespaceName);
+            // Can be null if namespace not found
+            PatcherNamespace namespaceOption = namespaces.FirstOrDefault(x => x.Name == selectedNamespaceName);
             if (namespaceOption == null)
             {
                 throw new ArgumentException($"Namespace '{selectedNamespaceName}' not found in namespaces list");
@@ -312,7 +322,8 @@ namespace HoloPatcher
             string selectedNamespaceName,
             PatchLogger logger)
         {
-            PatcherNamespace? namespaceOption = namespaces.FirstOrDefault(x => x.Name == selectedNamespaceName);
+            // Can be null if namespace not found
+            PatcherNamespace namespaceOption = namespaces.FirstOrDefault(x => x.Name == selectedNamespaceName);
             if (namespaceOption == null)
             {
                 throw new ArgumentException($"Namespace '{selectedNamespaceName}' not found in namespaces list");
@@ -332,9 +343,9 @@ namespace HoloPatcher
             string modPath,
             string gamePath,
             PatchLogger logger,
-            Func<string, string, bool>? showYesNoDialog = null,
-            Func<string, string, bool?>? showYesNoCancelDialog = null,
-            Action<string, string>? showErrorDialog = null)
+            [CanBeNull] Func<string, string, bool> showYesNoDialog = null,
+            [CanBeNull] Func<string, string, bool?> showYesNoCancelDialog = null,
+            [CanBeNull] Action<string, string> showErrorDialog = null)
         {
             string backupParentFolder = Path.Combine(modPath, "backup");
             if (!Directory.Exists(backupParentFolder))

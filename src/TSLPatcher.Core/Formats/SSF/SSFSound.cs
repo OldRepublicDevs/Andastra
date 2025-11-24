@@ -1,4 +1,5 @@
-namespace TSLPatcher.Core.Formats.SSF;
+namespace TSLPatcher.Core.Formats.SSF
+{
 
 /// <summary>
 /// Represents the different types of sounds in an SSF file.
@@ -34,4 +35,5 @@ public enum SSFSound
     SEPARATED_FROM_PARTY = 25,
     REJOINED_PARTY = 26,
     POISONED = 27
+}
 }

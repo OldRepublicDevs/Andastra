@@ -7,7 +7,8 @@ using TSLPatcher.Core.Formats.NCS.Compiler;
 using TSLPatcher.Core.Formats.NCS.Optimizers;
 using Xunit;
 
-namespace TSLPatcher.Tests.Formats;
+namespace TSLPatcher.Tests.Formats
+{
 
 /// <summary>
 /// Tests for NCS optimizers.
@@ -77,5 +78,6 @@ public class NCSOptimizerTests
         interpreter.ActionSnapshots[1].ArgValues[0].Value.Should().Be(2);
         interpreter.ActionSnapshots[2].ArgValues[0].Value.Should().Be(1);
     }
+}
 }
 

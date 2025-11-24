@@ -1,19 +1,20 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace TSLPatcher.Core.Common.Script;
-
-/// <summary>
-/// NWScript library include files for KOTOR and TSL.
-/// 1:1 port from pykotor.common.scriptlib
-/// </summary>
-public static class ScriptLib
+namespace TSLPatcher.Core.Common.Script
 {
+
     /// <summary>
-    /// KOTOR (Knights of the Old Republic) script library includes.
-    /// Maps include file names to their source code content.
+    /// NWScript library include files for KOTOR and TSL.
+    /// 1:1 port from pykotor.common.scriptlib
     /// </summary>
-    public static readonly Dictionary<string, byte[]> KOTOR_LIBRARY = new()
+    public static class ScriptLib
+    {
+        /// <summary>
+        /// KOTOR (Knights of the Old Republic) script library includes.
+        /// Maps include file names to their source code content.
+        /// </summary>
+        public static readonly Dictionary<string, byte[]> KOTOR_LIBRARY = new Dictionary<string, byte[]>()
     {
         { "k_inc_cheat", Encoding.UTF8.GetBytes(@"//:: k_inc_cheat
 /*
@@ -19904,11 +19905,11 @@ void ZN_MoveToController(object oController, object oFollower)
 ") },
     };
 
-    /// <summary>
-    /// TSL (The Sith Lords) script library includes.
-    /// Maps include file names to their source code content.
-    /// </summary>
-    public static readonly Dictionary<string, byte[]> TSL_LIBRARY = new()
+        /// <summary>
+        /// TSL (The Sith Lords) script library includes.
+        /// Maps include file names to their source code content.
+        /// </summary>
+        public static readonly Dictionary<string, byte[]> TSL_LIBRARY = new Dictionary<string, byte[]>()
     {
         { "a_global_inc", Encoding.UTF8.GetBytes(@"
 //:: a_global_inc
@@ -42924,4 +42925,5 @@ void Do711UserDef(object oPartyMember,int pUserEvent)
 }
 ") },
     };
+    }
 }

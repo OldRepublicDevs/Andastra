@@ -3,7 +3,8 @@ using FluentAssertions;
 using TSLPatcher.Core.Common;
 using Xunit;
 
-namespace TSLPatcher.Tests.Formats;
+namespace TSLPatcher.Tests.Formats
+{
 
 /// <summary>
 /// Granular tests for NCS roundtrip compilation/decompilation.
@@ -163,5 +164,6 @@ public class NCSRoundtripGranularTests
         // TODO: Implement when compile/decompile are available
         throw new NotImplementedException("Test requires full NSS compiler and NCS decompiler implementation");
     }
+}
 }
 

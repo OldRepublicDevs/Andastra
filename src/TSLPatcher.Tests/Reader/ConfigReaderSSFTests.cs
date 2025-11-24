@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using FluentAssertions;
@@ -11,7 +12,8 @@ using TSLPatcher.Core.Mods.SSF;
 using TSLPatcher.Core.Reader;
 using Xunit;
 
-namespace TSLPatcher.Tests.Reader;
+namespace TSLPatcher.Tests.Reader
+{
 
 /// <summary>
 /// Tests for ConfigReader SSF parsing functionality.
@@ -297,5 +299,6 @@ Poisoned=28
         ModifySSF mod_poisoned = modifiers[27];
         mod_poisoned.Sound.Should().Be(SSFSound.POISONED);
     }
+}
 }
 

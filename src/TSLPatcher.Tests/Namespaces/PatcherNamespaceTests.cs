@@ -2,7 +2,8 @@ using FluentAssertions;
 using TSLPatcher.Core.Namespaces;
 using Xunit;
 
-namespace TSLPatcher.Tests.Namespaces;
+namespace TSLPatcher.Tests.Namespaces
+{
 
 /// <summary>
 /// Tests for PatcherNamespace functionality
@@ -153,5 +154,6 @@ public class PatcherNamespaceTests
         result.Should().Contain("mod1");
         result.Should().Contain("Test Mod");
     }
+}
 }
 

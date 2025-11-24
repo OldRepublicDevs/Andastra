@@ -4,283 +4,291 @@ using System.IO;
 using TSLPatcher.Core.Common;
 using TSLPatcher.Core.Logger;
 using TSLPatcher.Core.Memory;
+using JetBrains.Annotations;
 
-namespace TSLPatcher.Core.Mods.NSS;
-
-/// <summary>
-/// NCS modification algorithms for TSLPatcher/HoloPatcher.
-/// 
-/// This module implements NCS bytecode modification logic for applying patches from changes.ini files.
-/// Handles byte-level modifications for memory tokens (StrRef, 2DAMemory) in compiled scripts.
-/// 
-/// References:
-/// ----------
-///     vendor/TSLPatcher/TSLPatcher.pl - Perl NCS modification logic (likely unfinished)
-///     vendor/Kotor.NET/Kotor.NET.Patcher/ - Incomplete C# patcher
-/// </summary>
-
-/// <summary>
-/// Token types for NCS bytecode modifications.
-/// 1:1 port from Python NCSTokenType enum
-/// </summary>
-public enum NCSTokenType
+namespace TSLPatcher.Core.Mods.NSS
 {
-    /// <summary>16-bit unsigned TLK string reference</summary>
-    STRREF,
-    /// <summary>32-bit signed TLK string reference (CONSTI instruction)</summary>
-    STRREF32,
-    /// <summary>16-bit unsigned 2DA memory reference</summary>
-    MEMORY_2DA,
-    /// <summary>32-bit signed 2DA memory reference (CONSTI instruction)</summary>
-    MEMORY_2DA32,
-    /// <summary>32-bit unsigned integer literal</summary>
-    UINT32,
-    /// <summary>16-bit unsigned integer literal</summary>
-    UINT16,
-    /// <summary>8-bit unsigned integer literal</summary>
-    UINT8
-}
-
-/// <summary>
-/// Represents a single NCS bytecode modification operation.
-/// 1:1 port from Python ModifyNCS class
-/// </summary>
-public class ModifyNCS
-{
-    public NCSTokenType TokenType { get; }
-    public int Offset { get; }
-    public int TokenIdOrValue { get; }
 
     /// <summary>
-    /// Initialize an NCS modification.
+    /// NCS modification algorithms for TSLPatcher/HoloPatcher.
     /// 
-    /// Args:
-    /// ----
-    ///     token_type: Type of modification (NCSTokenType enum)
-    ///     offset: Byte offset in the NCS file to write to
-    ///     token_id_or_value: Token ID for memory lookup or direct value to write
+    /// This module implements NCS bytecode modification logic for applying patches from changes.ini files.
+    /// Handles byte-level modifications for memory tokens (StrRef, 2DAMemory) in compiled scripts.
+    /// 
+    /// References:
+    /// ----------
+    ///     vendor/TSLPatcher/TSLPatcher.pl - Perl NCS modification logic (likely unfinished)
+    ///     vendor/Kotor.NET/Kotor.NET.Patcher/ - Incomplete C# patcher
     /// </summary>
-    public ModifyNCS(NCSTokenType tokenType, int offset, int tokenIdOrValue)
+
+    /// <summary>
+    /// Token types for NCS bytecode modifications.
+    /// 1:1 port from Python NCSTokenType enum
+    /// </summary>
+    public enum NCSTokenType
     {
-        TokenType = tokenType;
-        Offset = offset;
-        TokenIdOrValue = tokenIdOrValue;
+        /// <summary>16-bit unsigned TLK string reference</summary>
+        STRREF,
+        /// <summary>32-bit signed TLK string reference (CONSTI instruction)</summary>
+        STRREF32,
+        /// <summary>16-bit unsigned 2DA memory reference</summary>
+        MEMORY_2DA,
+        /// <summary>32-bit signed 2DA memory reference (CONSTI instruction)</summary>
+        MEMORY_2DA32,
+        /// <summary>32-bit unsigned integer literal</summary>
+        UINT32,
+        /// <summary>16-bit unsigned integer literal</summary>
+        UINT16,
+        /// <summary>8-bit unsigned integer literal</summary>
+        UINT8
     }
 
     /// <summary>
-    /// Apply the NCS modification to the bytecode.
-    /// 
-    /// Args:
-    /// ----
-    ///     writer: BinaryWriter positioned in the NCS bytearray
-    ///     memory: PatcherMemory object for token lookups
-    ///     logger: PatchLogger for logging operations
-    ///     sourcefile: Name of the source file being modified (for logging)
+    /// Represents a single NCS bytecode modification operation.
+    /// 1:1 port from Python ModifyNCS class
     /// </summary>
-    public void Apply(BinaryWriter writer, PatcherMemory memory, PatchLogger logger, string sourcefile)
+    public class ModifyNCS
     {
-        logger.AddVerbose($"HACKList {sourcefile}: seeking to offset {Offset:#X}");
-        writer.Seek(Offset, SeekOrigin.Begin);
+        public NCSTokenType TokenType { get; }
+        public int Offset { get; }
+        public int TokenIdOrValue { get; }
 
-        switch (TokenType)
+        /// <summary>
+        /// Initialize an NCS modification.
+        /// 
+        /// Args:
+        /// ----
+        ///     token_type: Type of modification (NCSTokenType enum)
+        ///     offset: Byte offset in the NCS file to write to
+        ///     token_id_or_value: Token ID for memory lookup or direct value to write
+        /// </summary>
+        public ModifyNCS(NCSTokenType tokenType, int offset, int tokenIdOrValue)
         {
-            case NCSTokenType.STRREF:
-                WriteStrRef(writer, memory, logger, sourcefile);
-                break;
-            case NCSTokenType.STRREF32:
-                WriteStrRef32(writer, memory, logger, sourcefile);
-                break;
-            case NCSTokenType.MEMORY_2DA:
-                Write2DAMemory(writer, memory, logger, sourcefile);
-                break;
-            case NCSTokenType.MEMORY_2DA32:
-                Write2DAMemory32(writer, memory, logger, sourcefile);
-                break;
-            case NCSTokenType.UINT32:
-                WriteUInt32(writer, logger, sourcefile);
-                break;
-            case NCSTokenType.UINT16:
-                WriteUInt16(writer, logger, sourcefile);
-                break;
-            case NCSTokenType.UINT8:
-                WriteUInt8(writer, logger, sourcefile);
-                break;
-            default:
-                throw new InvalidOperationException($"Unknown token type '{TokenType}' in HACKList patch");
+            TokenType = tokenType;
+            Offset = offset;
+            TokenIdOrValue = tokenIdOrValue;
         }
-    }
 
-    /// <summary>Write a 16-bit unsigned TLK string reference.</summary>
-    private void WriteStrRef(BinaryWriter writer, PatcherMemory memory, PatchLogger logger, string sourcefile)
-    {
-        if (!memory.MemoryStr.TryGetValue(TokenIdOrValue, out int memoryStrval))
+        /// <summary>
+        /// Apply the NCS modification to the bytecode.
+        /// 
+        /// Args:
+        /// ----
+        ///     writer: BinaryWriter positioned in the NCS bytearray
+        ///     memory: PatcherMemory object for token lookups
+        ///     logger: PatchLogger for logging operations
+        ///     sourcefile: Name of the source file being modified (for logging)
+        /// </summary>
+        public void Apply(BinaryWriter writer, PatcherMemory memory, PatchLogger logger, string sourcefile)
         {
-            throw new KeyNotFoundException($"StrRef{TokenIdOrValue} was not defined before use");
-        }
-        int value = memory.MemoryStr[TokenIdOrValue];
-        logger.AddVerbose($"HACKList {sourcefile}: writing unsigned WORD (16-bit) {value} at offset {Offset:#X}");
-        WriteUInt16BigEndian(writer, (ushort)value);
-    }
+            logger.AddVerbose($"HACKList {sourcefile}: seeking to offset {Offset:#X}");
+            writer.Seek(Offset, SeekOrigin.Begin);
 
-    /// <summary>Write a 32-bit signed TLK string reference (CONSTI instruction).</summary>
-    private void WriteStrRef32(BinaryWriter writer, PatcherMemory memory, PatchLogger logger, string sourcefile)
-    {
-        if (!memory.MemoryStr.TryGetValue(TokenIdOrValue, out int memoryStrval))
-        {
-            throw new KeyNotFoundException($"StrRef{TokenIdOrValue} was not defined before use");
-        }
-        int value = memory.MemoryStr[TokenIdOrValue];
-        logger.AddVerbose($"HACKList {sourcefile}: writing signed DWORD (32-bit) {value} at offset {Offset:#X}");
-        WriteInt32BigEndian(writer, value);
-    }
-
-    /// <summary>Write a 16-bit unsigned 2DA memory reference.</summary>
-    private void Write2DAMemory(BinaryWriter writer, PatcherMemory memory, PatchLogger logger, string sourcefile)
-    {
-        if (!memory.Memory2DA.TryGetValue(TokenIdOrValue, out string? memoryVal))
-        {
-            throw new KeyNotFoundException($"2DAMEMORY{TokenIdOrValue} was not defined before use");
-        }
-        if (memoryVal != null && (memoryVal.Contains('/') || memoryVal.Contains('\\')))
-        {
-            throw new InvalidOperationException($"Memory value cannot be !FieldPath in [HACKList] patches, got '{memoryVal}'");
-        }
-        int value = int.Parse(memoryVal ?? "0");
-        logger.AddVerbose($"HACKList {sourcefile}: writing unsigned WORD (16-bit) {value} at offset {Offset:#X}");
-        WriteUInt16BigEndian(writer, (ushort)value);
-    }
-
-    /// <summary>Write a 32-bit signed 2DA memory reference (CONSTI instruction).</summary>
-    private void Write2DAMemory32(BinaryWriter writer, PatcherMemory memory, PatchLogger logger, string sourcefile)
-    {
-        if (!memory.Memory2DA.TryGetValue(TokenIdOrValue, out string? memoryVal))
-        {
-            throw new KeyNotFoundException($"2DAMEMORY{TokenIdOrValue} was not defined before use");
-        }
-        if (memoryVal != null && (memoryVal.Contains('/') || memoryVal.Contains('\\')))
-        {
-            throw new InvalidOperationException($"Memory value cannot be !FieldPath in [HACKList] patches, got '{memoryVal}'");
-        }
-        int value = int.Parse(memoryVal ?? "0");
-        logger.AddVerbose($"HACKList {sourcefile}: writing signed DWORD (32-bit) {value} at offset {Offset:#X}");
-        WriteInt32BigEndian(writer, value);
-    }
-
-    /// <summary>Write a 32-bit unsigned integer literal.</summary>
-    private void WriteUInt32(BinaryWriter writer, PatchLogger logger, string sourcefile)
-    {
-        int value = TokenIdOrValue;
-        logger.AddVerbose($"HACKList {sourcefile}: writing unsigned DWORD (32-bit) {value} at offset {Offset:#X}");
-        WriteUInt32BigEndian(writer, (uint)value);
-    }
-
-    /// <summary>Write a 16-bit unsigned integer literal.</summary>
-    private void WriteUInt16(BinaryWriter writer, PatchLogger logger, string sourcefile)
-    {
-        int value = TokenIdOrValue;
-        logger.AddVerbose($"HACKList {sourcefile}: writing unsigned WORD (16-bit) {value} at offset {Offset:#X}");
-        WriteUInt16BigEndian(writer, (ushort)value);
-    }
-
-    /// <summary>Write an 8-bit unsigned integer literal.</summary>
-    private void WriteUInt8(BinaryWriter writer, PatchLogger logger, string sourcefile)
-    {
-        int value = TokenIdOrValue;
-        logger.AddVerbose($"HACKList {sourcefile}: writing unsigned BYTE (8-bit) {value} at offset {Offset:#X}");
-        writer.Write((byte)value);
-    }
-
-    private static void WriteUInt16BigEndian(BinaryWriter writer, ushort value)
-    {
-        writer.Write((byte)((value >> 8) & 0xFF));
-        writer.Write((byte)(value & 0xFF));
-    }
-
-    private static void WriteUInt32BigEndian(BinaryWriter writer, uint value)
-    {
-        writer.Write((byte)((value >> 24) & 0xFF));
-        writer.Write((byte)((value >> 16) & 0xFF));
-        writer.Write((byte)((value >> 8) & 0xFF));
-        writer.Write((byte)(value & 0xFF));
-    }
-
-    private static void WriteInt32BigEndian(BinaryWriter writer, int value)
-    {
-        writer.Write((byte)((value >> 24) & 0xFF));
-        writer.Write((byte)((value >> 16) & 0xFF));
-        writer.Write((byte)((value >> 8) & 0xFF));
-        writer.Write((byte)(value & 0xFF));
-    }
-}
-
-/// <summary>
-/// Container for NCS (compiled NWScript) modifications.
-/// 1:1 port from Python ModificationsNCS in pykotor/tslpatcher/mods/ncs.py
-/// </summary>
-public class ModificationsNCS : PatcherModifications
-{
-    public List<ModifyNCS> Modifiers { get; set; } = new();
-
-    public ModificationsNCS(string filename, bool? replace = null, List<ModifyNCS>? modifiers = null)
-        : base(filename, replace)
-    {
-        Action = "Hack ";
-        Modifiers = modifiers ?? new List<ModifyNCS>();
-    }
-
-    public override object PatchResource(
-        byte[] source,
-        PatcherMemory memory,
-        PatchLogger logger,
-        Game game)
-    {
-        byte[] ncsBytearray = (byte[])source.Clone();
-        Apply(ncsBytearray, memory, logger, game);
-        return ncsBytearray;
-    }
-
-    /// <summary>
-    /// Apply all NCS modifications to the bytecode.
-    /// 
-    /// Args:
-    /// ----
-    ///     mutable_data: bytearray - The NCS bytecode to modify in-place
-    ///     memory: PatcherMemory - Memory context for token lookups
-    ///     logger: PatchLogger - Logger for recording operations
-    ///     game: Game - The game being patched (unused but required by interface)
-    /// </summary>
-    public override void Apply(
-        object mutableData,
-        PatcherMemory memory,
-        PatchLogger logger,
-        Game game)
-    {
-        if (mutableData is byte[] ncsBytearray)
-        {
-            using var stream = new MemoryStream(ncsBytearray);
-            using var writer = new BinaryWriter(stream);
-            foreach (ModifyNCS modifier in Modifiers)
+            switch (TokenType)
             {
-                modifier.Apply(writer, memory, logger, SourceFile);
+                case NCSTokenType.STRREF:
+                    WriteStrRef(writer, memory, logger, sourcefile);
+                    break;
+                case NCSTokenType.STRREF32:
+                    WriteStrRef32(writer, memory, logger, sourcefile);
+                    break;
+                case NCSTokenType.MEMORY_2DA:
+                    Write2DAMemory(writer, memory, logger, sourcefile);
+                    break;
+                case NCSTokenType.MEMORY_2DA32:
+                    Write2DAMemory32(writer, memory, logger, sourcefile);
+                    break;
+                case NCSTokenType.UINT32:
+                    WriteUInt32(writer, logger, sourcefile);
+                    break;
+                case NCSTokenType.UINT16:
+                    WriteUInt16(writer, logger, sourcefile);
+                    break;
+                case NCSTokenType.UINT8:
+                    WriteUInt8(writer, logger, sourcefile);
+                    break;
+                default:
+                    throw new InvalidOperationException($"Unknown token type '{TokenType}' in HACKList patch");
             }
         }
-        else
+
+        /// <summary>Write a 16-bit unsigned TLK string reference.</summary>
+        private void WriteStrRef(BinaryWriter writer, PatcherMemory memory, PatchLogger logger, string sourcefile)
         {
-            logger.AddError($"Expected byte[] for ModificationsNCS, but got {mutableData.GetType().Name}");
+            if (!memory.MemoryStr.TryGetValue(TokenIdOrValue, out int memoryStrval))
+            {
+                throw new KeyNotFoundException($"StrRef{TokenIdOrValue} was not defined before use");
+            }
+            int value = memory.MemoryStr[TokenIdOrValue];
+            logger.AddVerbose($"HACKList {sourcefile}: writing unsigned WORD (16-bit) {value} at offset {Offset:#X}");
+            WriteUInt16BigEndian(writer, (ushort)value);
+        }
+
+        /// <summary>Write a 32-bit signed TLK string reference (CONSTI instruction).</summary>
+        private void WriteStrRef32(BinaryWriter writer, PatcherMemory memory, PatchLogger logger, string sourcefile)
+        {
+            if (!memory.MemoryStr.TryGetValue(TokenIdOrValue, out int memoryStrval))
+            {
+                throw new KeyNotFoundException($"StrRef{TokenIdOrValue} was not defined before use");
+            }
+            int value = memory.MemoryStr[TokenIdOrValue];
+            logger.AddVerbose($"HACKList {sourcefile}: writing signed DWORD (32-bit) {value} at offset {Offset:#X}");
+            WriteInt32BigEndian(writer, value);
+        }
+
+        /// <summary>Write a 16-bit unsigned 2DA memory reference.</summary>
+        private void Write2DAMemory(BinaryWriter writer, PatcherMemory memory, PatchLogger logger, string sourcefile)
+        {
+            // Can be null if not found
+            if (!memory.Memory2DA.TryGetValue(TokenIdOrValue, out string memoryVal))
+            {
+                throw new KeyNotFoundException($"2DAMEMORY{TokenIdOrValue} was not defined before use");
+            }
+            if (memoryVal != null && (memoryVal.Contains('/') || memoryVal.Contains('\\')))
+            {
+                throw new InvalidOperationException($"Memory value cannot be !FieldPath in [HACKList] patches, got '{memoryVal}'");
+            }
+            int value = int.Parse(memoryVal ?? "0");
+            logger.AddVerbose($"HACKList {sourcefile}: writing unsigned WORD (16-bit) {value} at offset {Offset:#X}");
+            WriteUInt16BigEndian(writer, (ushort)value);
+        }
+
+        /// <summary>Write a 32-bit signed 2DA memory reference (CONSTI instruction).</summary>
+        private void Write2DAMemory32(BinaryWriter writer, PatcherMemory memory, PatchLogger logger, string sourcefile)
+        {
+            // Can be null if not found
+            if (!memory.Memory2DA.TryGetValue(TokenIdOrValue, out string memoryVal))
+            {
+                throw new KeyNotFoundException($"2DAMEMORY{TokenIdOrValue} was not defined before use");
+            }
+            if (memoryVal != null && (memoryVal.Contains('/') || memoryVal.Contains('\\')))
+            {
+                throw new InvalidOperationException($"Memory value cannot be !FieldPath in [HACKList] patches, got '{memoryVal}'");
+            }
+            int value = int.Parse(memoryVal ?? "0");
+            logger.AddVerbose($"HACKList {sourcefile}: writing signed DWORD (32-bit) {value} at offset {Offset:#X}");
+            WriteInt32BigEndian(writer, value);
+        }
+
+        /// <summary>Write a 32-bit unsigned integer literal.</summary>
+        private void WriteUInt32(BinaryWriter writer, PatchLogger logger, string sourcefile)
+        {
+            int value = TokenIdOrValue;
+            logger.AddVerbose($"HACKList {sourcefile}: writing unsigned DWORD (32-bit) {value} at offset {Offset:#X}");
+            WriteUInt32BigEndian(writer, (uint)value);
+        }
+
+        /// <summary>Write a 16-bit unsigned integer literal.</summary>
+        private void WriteUInt16(BinaryWriter writer, PatchLogger logger, string sourcefile)
+        {
+            int value = TokenIdOrValue;
+            logger.AddVerbose($"HACKList {sourcefile}: writing unsigned WORD (16-bit) {value} at offset {Offset:#X}");
+            WriteUInt16BigEndian(writer, (ushort)value);
+        }
+
+        /// <summary>Write an 8-bit unsigned integer literal.</summary>
+        private void WriteUInt8(BinaryWriter writer, PatchLogger logger, string sourcefile)
+        {
+            int value = TokenIdOrValue;
+            logger.AddVerbose($"HACKList {sourcefile}: writing unsigned BYTE (8-bit) {value} at offset {Offset:#X}");
+            writer.Write((byte)value);
+        }
+
+        private static void WriteUInt16BigEndian(BinaryWriter writer, ushort value)
+        {
+            writer.Write((byte)((value >> 8) & 0xFF));
+            writer.Write((byte)(value & 0xFF));
+        }
+
+        private static void WriteUInt32BigEndian(BinaryWriter writer, uint value)
+        {
+            writer.Write((byte)((value >> 24) & 0xFF));
+            writer.Write((byte)((value >> 16) & 0xFF));
+            writer.Write((byte)((value >> 8) & 0xFF));
+            writer.Write((byte)(value & 0xFF));
+        }
+
+        private static void WriteInt32BigEndian(BinaryWriter writer, int value)
+        {
+            writer.Write((byte)((value >> 24) & 0xFF));
+            writer.Write((byte)((value >> 16) & 0xFF));
+            writer.Write((byte)((value >> 8) & 0xFF));
+            writer.Write((byte)(value & 0xFF));
         }
     }
 
-    public override void PopTslPatcherVars(
-        Dictionary<string, string> fileSectionDict,
-        string? defaultDestination = null,
-        string defaultSourceFolder = ".")
+    /// <summary>
+    /// Container for NCS (compiled NWScript) modifications.
+    /// 1:1 port from Python ModificationsNCS in pykotor/tslpatcher/mods/ncs.py
+    /// </summary>
+    public class ModificationsNCS : PatcherModifications
     {
-        base.PopTslPatcherVars(fileSectionDict, defaultDestination, defaultSourceFolder);
-        if (fileSectionDict.TryGetValue("ReplaceFile", out string? replaceFile))
+        public List<ModifyNCS> Modifiers { get; set; } = new List<ModifyNCS>();
+
+        public ModificationsNCS(string filename, bool? replace = null, [CanBeNull] List<ModifyNCS> modifiers = null)
+            : base(filename, replace)
         {
-            ReplaceFile = ConvertToBool(replaceFile);
-            fileSectionDict.Remove("ReplaceFile");
+            Action = "Hack ";
+            Modifiers = modifiers ?? new List<ModifyNCS>();
         }
-        // NOTE: tslpatcher's hacklist does NOT prefix with an exclamation point.
+
+        public override object PatchResource(
+            byte[] source,
+            PatcherMemory memory,
+            PatchLogger logger,
+            Game game)
+        {
+            byte[] ncsBytearray = (byte[])source.Clone();
+            Apply(ncsBytearray, memory, logger, game);
+            return ncsBytearray;
+        }
+
+        /// <summary>
+        /// Apply all NCS modifications to the bytecode.
+        /// 
+        /// Args:
+        /// ----
+        ///     mutable_data: bytearray - The NCS bytecode to modify in-place
+        ///     memory: PatcherMemory - Memory context for token lookups
+        ///     logger: PatchLogger - Logger for recording operations
+        ///     game: Game - The game being patched (unused but required by interface)
+        /// </summary>
+        public override void Apply(
+            object mutableData,
+            PatcherMemory memory,
+            PatchLogger logger,
+            Game game)
+        {
+            if (mutableData is byte[] ncsBytearray)
+            {
+                using (var stream = new MemoryStream(ncsBytearray))
+                using (var writer = new BinaryWriter(stream))
+                {
+                    foreach (ModifyNCS modifier in Modifiers)
+                    {
+                        modifier.Apply(writer, memory, logger, SourceFile);
+                    }
+                }
+            }
+            else
+            {
+                logger.AddError($"Expected byte[] for ModificationsNCS, but got {mutableData.GetType().Name}");
+            }
+        }
+
+        public override void PopTslPatcherVars(
+            Dictionary<string, string> fileSectionDict,
+            [CanBeNull] string defaultDestination = null,
+            [NotNull] string defaultSourceFolder = ".")
+        {
+            base.PopTslPatcherVars(fileSectionDict, defaultDestination, defaultSourceFolder);
+            // Can be null if not found
+            if (fileSectionDict.TryGetValue("ReplaceFile", out string replaceFile))
+            {
+                ReplaceFile = ConvertToBool(replaceFile);
+                fileSectionDict.Remove("ReplaceFile");
+            }
+            // NOTE: tslpatcher's hacklist does NOT prefix with an exclamation point.
+        }
     }
 }

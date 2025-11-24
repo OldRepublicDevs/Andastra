@@ -7,7 +7,8 @@ using TSLPatcher.Core.Resources;
 using Xunit;
 using static TSLPatcher.Core.Formats.TLK.TLKAuto;
 
-namespace TSLPatcher.Tests.Formats;
+namespace TSLPatcher.Tests.Formats
+{
 
 /// <summary>
 /// Tests for TLK binary I/O operations.
@@ -135,6 +136,7 @@ public class TLKFormatTests
         Action act2 = () => WriteTlk(tlk, ".", ResourceType.INVALID);
         act2.Should().Throw<ArgumentException>().WithMessage("*Unsupported format*");
     }
+}
 }
 
 

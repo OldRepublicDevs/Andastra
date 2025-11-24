@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using FluentAssertions;
@@ -9,7 +10,8 @@ using TSLPatcher.Core.Logger;
 using TSLPatcher.Core.Mods.TwoDA;
 using Xunit;
 
-namespace TSLPatcher.Tests.Integration;
+namespace TSLPatcher.Tests.Integration
+{
 
 /// <summary>
 /// Integration tests for 2DA memory token operations.
@@ -568,5 +570,6 @@ Col1=test
         twoda.GetCellString(1, "Col1").Should().Be("test");
         memory.Memory2DA[5].Should().Be("1");
     }
+}
 }
 

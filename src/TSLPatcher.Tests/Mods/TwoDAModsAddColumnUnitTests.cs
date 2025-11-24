@@ -9,7 +9,8 @@ using TSLPatcher.Core.Mods.TwoDA;
 using Xunit;
 using TwoDAFile = TSLPatcher.Core.Formats.TwoDA.TwoDA;
 
-namespace TSLPatcher.Tests.Mods;
+namespace TSLPatcher.Tests.Mods
+{
 
 /// <summary>
 /// Unit tests for AddColumn2DA modifications without using ConfigReader.
@@ -291,5 +292,6 @@ public class TwoDAModsAddColumnUnitTests
         twoda.GetCellString(0, "Col3").Should().Be("Y");
         twoda.GetCellString(0, "Col4").Should().Be("Z");
     }
+}
 }
 

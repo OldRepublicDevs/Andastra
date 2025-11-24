@@ -2,7 +2,8 @@ using System;
 using System.IO;
 using TSLPatcher.Core.Resources;
 
-namespace TSLPatcher.Core.Formats.TLK;
+namespace TSLPatcher.Core.Formats.TLK
+{
 
 /// <summary>
 /// Auto-detection and convenience functions for TLK files.
@@ -45,5 +46,6 @@ public static class TLKAuto
     {
         return BytesTlk(tlk, ResourceType.TLK);
     }
+}
 }
 

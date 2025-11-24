@@ -4,102 +4,102 @@ using System.IO;
 using System.Linq;
 using IniParser;
 using IniParser.Model;
+using JetBrains.Annotations;
 using TSLPatcher.Core.Common;
 using TSLPatcher.Core.Namespaces;
 
-namespace TSLPatcher.Core.Reader;
-
-/// <summary>
-/// Responsible for reading and loading namespaces from the namespaces.ini file.
-/// </summary>
-public class NamespaceReader
+namespace TSLPatcher.Core.Reader
 {
-    private readonly IniData _ini;
-
-    public List<PatcherNamespace> Namespaces { get; } = new();
-
-    public NamespaceReader(IniData ini)
-    {
-        _ini = ini ?? throw new ArgumentNullException(nameof(ini));
-    }
 
     /// <summary>
-    /// Loads namespaces from an INI file at the specified path.
+    /// Responsible for reading and loading namespaces from the namespaces.ini file.
     /// </summary>
-    public static List<PatcherNamespace> FromFilePath(string path)
+    public class NamespaceReader
     {
-        if (!File.Exists(path))
+        private readonly IniData _ini;
+
+        public List<PatcherNamespace> Namespaces { get; } = new List<PatcherNamespace>();
+
+        public NamespaceReader(IniData ini)
         {
-            throw new FileNotFoundException($"Namespaces file not found: {path}", path);
+            _ini = ini ?? throw new ArgumentNullException(nameof(ini));
         }
 
-        var parser = new IniParser.Parser.IniDataParser();
-        parser.Configuration.AllowDuplicateKeys = true;
-        parser.Configuration.AllowDuplicateSections = true;
-        parser.Configuration.CaseInsensitive = true;
-
-        string iniText = File.ReadAllText(path);
-        IniData ini = parser.Parse(iniText);
-
-        return new NamespaceReader(ini).Load();
-    }
-
-    /// <summary>
-    /// Load and parse all namespaces from the INI data.
-    /// </summary>
-    public List<PatcherNamespace> Load()
-    {
-        // Find the [Namespaces] section (case-insensitive)
-        SectionData? namespacesSection = _ini.Sections.FirstOrDefault(s =>
-            s.SectionName.Equals("Namespaces", StringComparison.OrdinalIgnoreCase));
-
-        if (namespacesSection == null)
+        /// <summary>
+        /// Loads namespaces from an INI file at the specified path.
+        /// </summary>
+        public static List<PatcherNamespace> FromFilePath(string path)
         {
-            throw new KeyNotFoundException("The [Namespaces] section was not found in the ini");
-        }
-
-        var namespaces = new List<PatcherNamespace>();
-
-        foreach (KeyData? keyData in namespacesSection.Keys)
-        {
-            string namespaceId = keyData.Value;
-
-            // Find the section for this namespace (case-insensitive)
-            SectionData? namespaceSection = _ini.Sections.FirstOrDefault(s =>
-                s.SectionName.Equals(namespaceId, StringComparison.OrdinalIgnoreCase));
-
-            if (namespaceSection == null)
+            if (!File.Exists(path))
             {
-                throw new KeyNotFoundException(
-                    $"The '[{namespaceId}]' section was not found in the 'namespaces.ini' file, " +
-                    $"referenced by '{keyData.KeyName}={namespaceId}' in [{namespacesSection.SectionName}].");
+                throw new FileNotFoundException($"Namespaces file not found: {path}", path);
             }
 
-            // Required fields
-            string iniFilename = GetValue(namespaceSection, "IniName")
-                ?? throw new KeyNotFoundException($"IniName not found in [{namespaceSection.SectionName}]");
-            string infoFilename = GetValue(namespaceSection, "InfoName")
-                ?? throw new KeyNotFoundException($"InfoName not found in [{namespaceSection.SectionName}]");
+            var parser = new IniParser.Parser.IniDataParser();
+            parser.Configuration.AllowDuplicateKeys = true;
+            parser.Configuration.AllowDuplicateSections = true;
+            parser.Configuration.CaseInsensitive = true;
 
-            var ns = new PatcherNamespace(iniFilename, infoFilename)
-            {
-                // Optional fields
-                DataFolderPath = GetValue(namespaceSection, "DataPath") ?? string.Empty,
-                Name = GetValue(namespaceSection, "Name")?.Trim() ?? string.Empty,
-                Description = GetValue(namespaceSection, "Description") ?? string.Empty,
-                NamespaceId = namespaceSection.SectionName
-            };
+            string iniText = File.ReadAllText(path);
+            IniData ini = parser.Parse(iniText);
 
-            namespaces.Add(ns);
+            return new NamespaceReader(ini).Load();
         }
 
-        return namespaces;
-    }
+        /// <summary>
+        /// Load and parse all namespaces from the INI data.
+        /// </summary>
+        public List<PatcherNamespace> Load()
+        {
+            // Find the [Namespaces] section (case-insensitive)
+            SectionData namespacesSection = _ini.Sections.FirstOrDefault(s =>
+                s.SectionName.Equals("Namespaces", StringComparison.OrdinalIgnoreCase));
 
-    private static string? GetValue(SectionData section, string key)
-    {
-        return section.Keys.FirstOrDefault(k =>
-            k.KeyName.Equals(key, StringComparison.OrdinalIgnoreCase))?.Value;
+            if (namespacesSection == null)
+            {
+                throw new KeyNotFoundException("The [Namespaces] section was not found in the ini");
+            }
+
+            var namespaces = new List<PatcherNamespace>();
+
+            foreach (KeyData keyData in namespacesSection.Keys)
+            {
+                string namespaceId = keyData.Value;
+
+                // Find the section for this namespace (case-insensitive)
+                SectionData namespaceSection = _ini.Sections.FirstOrDefault(s =>
+                    s.SectionName.Equals(namespaceId, StringComparison.OrdinalIgnoreCase)) ?? throw new KeyNotFoundException(
+                        $"The '[{namespaceId}]' section was not found in the 'namespaces.ini' file, " +
+                        $"referenced by '{keyData.KeyName}={namespaceId}' in [{namespacesSection.SectionName}].");
+
+                // Required fields
+
+                string iniFilename = GetValue(namespaceSection, "IniName")
+                    ?? throw new KeyNotFoundException($"IniName not found in [{namespaceSection.SectionName}]");
+                string infoFilename = GetValue(namespaceSection, "InfoName")
+                    ?? throw new KeyNotFoundException($"InfoName not found in [{namespaceSection.SectionName}]");
+
+                var ns = new PatcherNamespace(iniFilename, infoFilename)
+                {
+                    // Optional fields
+                    DataFolderPath = GetValue(namespaceSection, "DataPath") ?? string.Empty,
+                    Name = GetValue(namespaceSection, "Name")?.Trim() ?? string.Empty,
+                    Description = GetValue(namespaceSection, "Description") ?? string.Empty,
+                    NamespaceId = namespaceSection.SectionName
+                };
+
+                namespaces.Add(ns);
+            }
+
+            return namespaces;
+        }
+
+        [CanBeNull]
+        private static string GetValue(SectionData section, string key)
+        {
+            return section.Keys.FirstOrDefault(k =>
+                k.KeyName.Equals(key, StringComparison.OrdinalIgnoreCase))?.Value;
+        }
     }
 }
 

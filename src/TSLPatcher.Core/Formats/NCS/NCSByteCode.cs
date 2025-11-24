@@ -1,4 +1,5 @@
-namespace TSLPatcher.Core.Formats.NCS;
+namespace TSLPatcher.Core.Formats.NCS
+{
 
 /// <summary>
 /// NCS bytecode opcodes.
@@ -61,5 +62,6 @@ public enum NCSByteCode : byte
     STORE_STATE = 0x2C,
     NOP = 0x2D,
     NOP2 = 0x2D
+}
 }
 

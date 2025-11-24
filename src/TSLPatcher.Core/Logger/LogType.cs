@@ -1,4 +1,5 @@
-namespace TSLPatcher.Core.Logger;
+namespace TSLPatcher.Core.Logger
+{
 
 /// <summary>
 /// Represents the type of log entry
@@ -9,5 +10,6 @@ public enum LogType
     Note = 1,
     Warning = 2,
     Error = 3
+}
 }
 

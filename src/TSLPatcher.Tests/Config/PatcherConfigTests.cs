@@ -2,7 +2,8 @@ using FluentAssertions;
 using TSLPatcher.Core.Config;
 using Xunit;
 
-namespace TSLPatcher.Tests.Config;
+namespace TSLPatcher.Tests.Config
+{
 
 /// <summary>
 /// Tests for PatcherConfig functionality
@@ -135,5 +136,6 @@ public class PatcherConfigTests
         // Assert
         config.IgnoreFileExtensions.Should().BeTrue();
     }
+}
 }
 

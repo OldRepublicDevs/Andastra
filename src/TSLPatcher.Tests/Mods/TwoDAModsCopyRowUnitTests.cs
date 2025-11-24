@@ -8,7 +8,8 @@ using TSLPatcher.Core.Mods.TwoDA;
 using Xunit;
 using TwoDAFile = TSLPatcher.Core.Formats.TwoDA.TwoDA;
 
-namespace TSLPatcher.Tests.Mods;
+namespace TSLPatcher.Tests.Mods
+{
 
 /// <summary>
 /// Unit tests for CopyRow2DA modifications without using ConfigReader.
@@ -328,5 +329,6 @@ public class TwoDAModsCopyRowUnitTests
         twoda.GetHeight().Should().Be(3);
         memory.Memory2DA[5].Should().Be("2");
     }
+}
 }
 

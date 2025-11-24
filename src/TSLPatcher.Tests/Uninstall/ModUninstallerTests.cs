@@ -8,7 +8,8 @@ using TSLPatcher.Core.Logger;
 using TSLPatcher.Core.Uninstall;
 using Xunit;
 
-namespace TSLPatcher.Tests.Uninstall;
+namespace TSLPatcher.Tests.Uninstall
+{
 
 /// <summary>
 /// Tests for ModUninstaller functionality
@@ -81,8 +82,8 @@ public class ModUninstallerTests : IDisposable
         var backupPath = new CaseAwarePath(_backupDir);
         bool errorShown = false;
 
-        // Act
-        CaseAwarePath? result = ModUninstaller.GetMostRecentBackup(
+        // [CanBeNull] Act
+        CaseAwarePath result= ModUninstaller.GetMostRecentBackup(
             backupPath,
             (title, msg) => errorShown = true
         );
@@ -111,8 +112,8 @@ public class ModUninstallerTests : IDisposable
 
         var backupPath = new CaseAwarePath(_backupDir);
 
-        // Act
-        CaseAwarePath? result = ModUninstaller.GetMostRecentBackup(backupPath);
+        // [CanBeNull] Act
+        CaseAwarePath result= ModUninstaller.GetMostRecentBackup(backupPath);
 
         // Assert
         result.Should().NotBeNull();
@@ -129,8 +130,8 @@ public class ModUninstallerTests : IDisposable
         var backupPath = new CaseAwarePath(_backupDir);
         bool errorShown = false;
 
-        // Act
-        CaseAwarePath? result = ModUninstaller.GetMostRecentBackup(
+        // [CanBeNull] Act
+        CaseAwarePath result= ModUninstaller.GetMostRecentBackup(
             backupPath,
             (title, msg) => errorShown = true
         );
@@ -269,5 +270,6 @@ public class ModUninstallerTests : IDisposable
         // Assert
         result.Should().BeFalse();
     }
+}
 }
 

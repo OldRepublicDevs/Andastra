@@ -1,4 +1,5 @@
-namespace TSLPatcher.Core.Namespaces;
+namespace TSLPatcher.Core.Namespaces
+{
 
 /// <summary>
 /// Represents a namespace entry from namespaces.ini
@@ -45,5 +46,6 @@ public class PatcherNamespace
     }
 
     public override string ToString() => $"{NamespaceId}: {Name}";
+}
 }
 

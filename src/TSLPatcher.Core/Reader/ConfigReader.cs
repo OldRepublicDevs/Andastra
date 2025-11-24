@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using IniParser;
 using IniParser.Model;
+using JetBrains.Annotations;
 using TSLPatcher.Core.Common;
 using TSLPatcher.Core.Config;
 using TSLPatcher.Core.Formats.GFF;
@@ -17,7 +18,8 @@ using TSLPatcher.Core.Mods.SSF;
 using TSLPatcher.Core.Mods.TLK;
 using TSLPatcher.Core.Mods.TwoDA;
 
-namespace TSLPatcher.Core.Reader;
+namespace TSLPatcher.Core.Reader
+{
 
 /// <summary>
 /// Reads and parses TSLPatcher configuration files (changes.ini).
@@ -28,11 +30,12 @@ public class ConfigReader
     private const string SectionNotFoundError = "The [{0}] section was not found in the ini";
     private const string ReferencesTracebackMsg = ", referenced by '{0}={1}' in [{2}]";
 
-    private readonly HashSet<string> _previouslyParsedSections = new();
+    private readonly HashSet<string> _previouslyParsedSections = new HashSet<string>();
     private readonly IniData _ini;
     private readonly string _modPath;
     // path to the tslpatchdata, optional but we'll use it here for the nwnnsscomp.exe if it exists.
-    private readonly string? _tslPatchDataPath;
+    [CanBeNull]
+    private readonly string _tslPatchDataPath;
     private readonly PatchLogger _log;
 
     public PatcherConfig Config { get; private set; }
@@ -43,8 +46,8 @@ public class ConfigReader
     public ConfigReader(
         IniData ini,
         string modPath,
-        PatchLogger? logger = null,
-        string? tslPatchDataPath = null)
+        [CanBeNull] PatchLogger logger = null,
+        [CanBeNull] string tslPatchDataPath = null)
     {
         _previouslyParsedSections = new HashSet<string>();
         _ini = ini ?? throw new ArgumentNullException(nameof(ini));
@@ -77,8 +80,8 @@ public class ConfigReader
     /// </summary>
     public static ConfigReader FromFilePath(
         string filePath,
-        PatchLogger? logger = null,
-        string? tslPatchDataPath = null)
+        [CanBeNull] PatchLogger logger = null,
+        [CanBeNull] string tslPatchDataPath = null)
     {
         string resolvedFilePath = Path.GetFullPath(filePath);
 
@@ -138,9 +141,11 @@ public class ConfigReader
     /// <summary>
     /// Resolves the case-insensitive section name string if found and returns the case-sensitive correct section name.
     /// </summary>
-    private string? GetSectionName(string sectionName)
+    [CanBeNull]
+    private string GetSectionName(string sectionName)
     {
-        string? s = _ini.Sections.FirstOrDefault(section =>
+        // Can be null if section not found
+        string s = _ini.Sections.FirstOrDefault(section =>
             section.SectionName.Equals(sectionName, StringComparison.OrdinalIgnoreCase))?.SectionName;
         if (s != null)
         {
@@ -154,7 +159,8 @@ public class ConfigReader
     /// </summary>
     private void LoadSettings()
     {
-        string? settingsSection = GetSectionName("settings");
+        // Can be null if section not found
+        string settingsSection = GetSectionName("settings");
         if (settingsSection == null)
         {
             _log.AddWarning("[Settings] section missing from ini.");
@@ -200,7 +206,8 @@ public class ConfigReader
         // HoloPatcher optional
         Config.IgnoreFileExtensions = bool.TryParse(settingsIni.GetValueOrDefault("IgnoreExtensions"), out bool ign) && ign;
 
-        string? lookupGameNumber = settingsIni.GetValueOrDefault("LookupGameNumber");
+        // Can be null if key not found
+        string lookupGameNumber = settingsIni.GetValueOrDefault("LookupGameNumber");
         if (lookupGameNumber != null)
         {
             lookupGameNumber = lookupGameNumber.Trim();
@@ -230,7 +237,8 @@ public class ConfigReader
     /// </summary>
     private void LoadInstallList()
     {
-        string? installListSection = GetSectionName("InstallList");
+        // Can be null if section not found
+        string installListSection = GetSectionName("InstallList");
         if (installListSection == null)
         {
             _log.AddNote("[InstallList] section missing from ini.");
@@ -240,19 +248,17 @@ public class ConfigReader
         _log.AddNote("Loading [InstallList] patches from ini...");
         foreach ((string folderKey, string foldername) in _ini[installListSection].Select(k => (k.KeyName, k.Value)))
         {
-            string? foldernameSection = GetSectionName(folderKey);
-            if (foldernameSection == null)
-            {
-                throw new KeyNotFoundException(string.Format(SectionNotFoundError, foldername) + string.Format(ReferencesTracebackMsg, folderKey, foldername, installListSection));
-            }
-
-            Dictionary<string, string> folderSectionDict = SectionToDictionary(_ini[foldernameSection]);
+            // Can be null if section not found
+            string foldernameSection = GetSectionName(folderKey)
+                ?? throw new KeyNotFoundException(string.Format(SectionNotFoundError, foldername) + string.Format(ReferencesTracebackMsg, folderKey, foldername, installListSection));
+                Dictionary<string, string> folderSectionDict = SectionToDictionary(_ini[foldernameSection]);
             // !SourceFolder: Relative path from mod_path (which is typically the tslpatchdata folder) to source files.
             // Default value "." refers to mod_path itself (the tslpatchdata folder), not its parent.
             // For example: if mod_path = "C:/Mod/tslpatchdata", then:
             //   - !SourceFolder="." resolves to "C:/Mod/tslpatchdata"
             //   - !SourceFolder="textures" resolves to "C:/Mod/tslpatchdata/textures"
-            string sourcefolder = folderSectionDict.TryGetValue("!SourceFolder", out string? sf) ? sf : ".";
+            // Can be null if key not found
+            string sourcefolder = folderSectionDict.TryGetValue("!SourceFolder", out string sf) ? sf : ".";
             folderSectionDict.Remove("!SourceFolder");
             foreach ((string fileKey, string filename) in folderSectionDict)
             {
@@ -266,7 +272,8 @@ public class ConfigReader
                 Config.InstallList.Add(fileInstall);
 
                 // Optional according to TSLPatcher readme
-                string? fileSectionName = GetSectionName(filename);
+                // Can be null if section not found
+                string fileSectionName = GetSectionName(filename);
                 if (fileSectionName != null)
                 {
                     Dictionary<string, string> fileSectionDict = SectionToDictionary(_ini[fileSectionName]);
@@ -288,7 +295,8 @@ public class ConfigReader
     /// </summary>
     private void LoadTLKList()
     {
-        string? tlkListSection = GetSectionName("tlklist");
+        // Can be null if section not found
+        string tlkListSection = GetSectionName("tlklist");
         if (tlkListSection == null)
         {
             _log.AddNote("[TLKList] section missing from ini.");
@@ -298,14 +306,16 @@ public class ConfigReader
         _log.AddNote("Loading [TLKList] patches from ini...");
         Dictionary<string, string> tlkListEdits = SectionToDictionary(_ini[tlkListSection]);
 
-        string defaultDestination = tlkListEdits.TryGetValue("!DefaultDestination", out string? dd) ? dd : ModificationsTLK.DefaultDestination;
+        // Can be null if key not found
+        string defaultDestination = tlkListEdits.TryGetValue("!DefaultDestination", out string dd) ? dd : ModificationsTLK.DefaultDestination;
         tlkListEdits.Remove("!DefaultDestination");
         // !DefaultSourceFolder: Relative path from mod_path (which is typically the tslpatchdata folder) to source files.
         // Default value "." refers to mod_path itself (the tslpatchdata folder), not its parent.
         // For example: if mod_path = "C:/Mod/tslpatchdata", then:
         //   - !DefaultSourceFolder="." resolves to "C:/Mod/tslpatchdata"
         //   - !DefaultSourceFolder="textures" resolves to "C:/Mod/tslpatchdata/textures"
-        string defaultSourcefolder = tlkListEdits.TryGetValue("!DefaultSourceFolder", out string? dsf) ? dsf : ".";
+        // Can be null if key not found
+        string defaultSourcefolder = tlkListEdits.TryGetValue("!DefaultSourceFolder", out string dsf) ? dsf : ".";
         tlkListEdits.Remove("!DefaultSourceFolder");
         Config.PatchesTLK.PopTslPatcherVars(tlkListEdits, defaultDestination, defaultSourcefolder);
 
@@ -346,7 +356,8 @@ public class ConfigReader
                 }
                 else if (replaceFile || appendFile)
                 {
-                    string? nextSectionName = GetSectionName(value);
+                    // Can be null if section not found
+                    string nextSectionName = GetSectionName(value);
                     if (nextSectionName == null)
                     {
                         syntaxErrorCaught = true;
@@ -424,7 +435,8 @@ public class ConfigReader
     /// </summary>
     private void Load2DAList()
     {
-        string? twodaSectionName = GetSectionName("2DAList");
+        // Can be null if section not found
+        string twodaSectionName = GetSectionName("2DAList");
         if (twodaSectionName == null)
         {
             _log.AddNote("[2DAList] section missing from ini.");
@@ -434,18 +446,21 @@ public class ConfigReader
         _log.AddNote("Loading [2DAList] patches from ini...");
 
         Dictionary<string, string> twodaSectionDict = SectionToDictionary(_ini[twodaSectionName]);
-        string defaultDestination = twodaSectionDict.TryGetValue("!DefaultDestination", out string? dd) ? dd : Modifications2DA.DefaultDestination;
+        // Can be null if key not found
+        string defaultDestination = twodaSectionDict.TryGetValue("!DefaultDestination", out string dd) ? dd : Modifications2DA.DefaultDestination;
         twodaSectionDict.Remove("!DefaultDestination");
         // !DefaultSourceFolder: Relative path from mod_path (which is typically the tslpatchdata folder) to source files.
         // Default value "." refers to mod_path itself (the tslpatchdata folder), not its parent.
         // For example: if mod_path = "C:/Mod/tslpatchdata", then:
         //   - !DefaultSourceFolder="." resolves to "C:/Mod/tslpatchdata"
         //   - !DefaultSourceFolder="2da" resolves to "C:/Mod/tslpatchdata/2da"
-        string defaultSourceFolder = twodaSectionDict.TryGetValue("!DefaultSourceFolder", out string? dsf) ? dsf : ".";
+        // Can be null if key not found
+        string defaultSourceFolder = twodaSectionDict.TryGetValue("!DefaultSourceFolder", out string dsf) ? dsf : ".";
         twodaSectionDict.Remove("!DefaultSourceFolder");
         foreach ((string identifier, string file) in twodaSectionDict)
         {
-            string? fileSection = GetSectionName(file);
+            // Can be null if section not found
+            string fileSection = GetSectionName(file);
             if (fileSection == null)
             {
                 throw new KeyNotFoundException(string.Format(SectionNotFoundError, file) + string.Format(ReferencesTracebackMsg, identifier, file, twodaSectionName));
@@ -466,14 +481,16 @@ public class ConfigReader
                     continue;
                 }
 
-                string? nextSectionName = GetSectionName(modificationId);
+                // Can be null if section not found
+                string nextSectionName = GetSectionName(modificationId);
                 if (nextSectionName == null)
                 {
                     throw new KeyNotFoundException(string.Format(SectionNotFoundError, modificationId) + string.Format(ReferencesTracebackMsg, key, modificationId, fileSection));
                 }
 
                 Dictionary<string, string> modificationIdsDict = SectionToDictionary(_ini[modificationId]);
-                Modify2DA? manipulation = Discern2DA(key, modificationId, modificationIdsDict);
+                // Can be null if manipulation cannot be created
+                Modify2DA manipulation = Discern2DA(key, modificationId, modificationIdsDict);
                 if (manipulation == null)
                 {
                     // Discern2DA returns null when the modification section is invalid or missing required fields.
@@ -505,7 +522,8 @@ public class ConfigReader
     /// </summary>
     private void LoadSSFList()
     {
-        string? ssfListSection = GetSectionName("SSFList");
+        // Can be null if section not found
+        string ssfListSection = GetSectionName("SSFList");
         if (ssfListSection == null)
         {
             _log.AddNote("[SSFList] section missing from ini.");
@@ -515,19 +533,22 @@ public class ConfigReader
         _log.AddNote("Loading [SSFList] patches from ini...");
 
         Dictionary<string, string> ssfSectionDict = SectionToDictionary(_ini[ssfListSection]);
-        string defaultDestination = ssfSectionDict.TryGetValue("!DefaultDestination", out string? dd) ? dd : ModificationsSSF.DefaultDestination;
+        // Can be null if key not found
+        string defaultDestination = ssfSectionDict.TryGetValue("!DefaultDestination", out string dd) ? dd : ModificationsSSF.DefaultDestination;
         ssfSectionDict.Remove("!DefaultDestination");
         // !DefaultSourceFolder: Relative path from mod_path (which is typically the tslpatchdata folder) to source files.
         // Default value "." refers to mod_path itself (the tslpatchdata folder), not its parent.
         // For example: if mod_path = "C:/Mod/tslpatchdata", then:
         //   - !DefaultSourceFolder="." resolves to "C:/Mod/tslpatchdata"
         //   - !DefaultSourceFolder="voices" resolves to "C:/Mod/tslpatchdata/voices"
-        string defaultSourceFolder = ssfSectionDict.TryGetValue("!DefaultSourceFolder", out string? dsf) ? dsf : ".";
+        // Can be null if key not found
+        string defaultSourceFolder = ssfSectionDict.TryGetValue("!DefaultSourceFolder", out string dsf) ? dsf : ".";
         ssfSectionDict.Remove("!DefaultSourceFolder");
 
         foreach ((string identifier, string file) in ssfSectionDict)
         {
-            string? ssfFileSection = GetSectionName(file);
+            // Can be null if section not found
+            string ssfFileSection = GetSectionName(file);
             if (ssfFileSection == null)
             {
                 throw new KeyNotFoundException(string.Format(SectionNotFoundError, file) + string.Format(ReferencesTracebackMsg, identifier, file, ssfListSection));
@@ -583,7 +604,8 @@ public class ConfigReader
     /// </summary>
     private void LoadGFFList()
     {
-        string? gffListSection = GetSectionName("GFFList");
+        // Can be null if section not found
+        string gffListSection = GetSectionName("GFFList");
         if (gffListSection == null)
         {
             _log.AddNote("[GFFList] section missing from ini.");
@@ -592,19 +614,22 @@ public class ConfigReader
 
         _log.AddNote("Loading [GFFList] patches from ini...");
         Dictionary<string, string> gffSectionDict = SectionToDictionary(_ini[gffListSection]);
-        string defaultDestination = gffSectionDict.TryGetValue("!DefaultDestination", out string? dd) ? dd : ModificationsGFF.DefaultDestination;
+        // Can be null if key not found
+        string defaultDestination = gffSectionDict.TryGetValue("!DefaultDestination", out string dd) ? dd : ModificationsGFF.DefaultDestination;
         gffSectionDict.Remove("!DefaultDestination");
         // !DefaultSourceFolder: Relative path from mod_path (which is typically the tslpatchdata folder) to source files.
         // Default value "." refers to mod_path itself (the tslpatchdata folder), not its parent.
         // For example: if mod_path = "C:/Mod/tslpatchdata", then:
         //   - !DefaultSourceFolder="." resolves to "C:/Mod/tslpatchdata"
         //   - !DefaultSourceFolder="gff" resolves to "C:/Mod/tslpatchdata/gff"
-        string defaultSourceFolder = gffSectionDict.TryGetValue("!DefaultSourceFolder", out string? dsf) ? dsf : ".";
+        // Can be null if key not found
+        string defaultSourceFolder = gffSectionDict.TryGetValue("!DefaultSourceFolder", out string dsf) ? dsf : ".";
         gffSectionDict.Remove("!DefaultSourceFolder");
 
         foreach ((string identifier, string file) in gffSectionDict)
         {
-            string? fileSectionName = GetSectionName(file);
+            // Can be null if section not found
+            string fileSectionName = GetSectionName(file);
             if (fileSectionName == null)
             {
                 throw new KeyNotFoundException(string.Format(SectionNotFoundError, file) + string.Format(ReferencesTracebackMsg, identifier, file, gffListSection));
@@ -619,12 +644,14 @@ public class ConfigReader
 
             foreach ((string key, string value) in fileSectionDict)
             {
-                ModifyGFF? modifier;
+                // Can be null if modifier cannot be created
+                ModifyGFF modifier;
 
                 string lowercaseKey = key.ToLower();
                 if (lowercaseKey.StartsWith("addfield"))
                 {
-                    string? nextGffSection = GetSectionName(value);
+                    // Can be null if section not found
+                    string nextGffSection = GetSectionName(value);
                     if (nextGffSection == null)
                     {
                         throw new KeyNotFoundException(string.Format(SectionNotFoundError, value) + string.Format(ReferencesTracebackMsg, key, value, fileSectionName));
@@ -638,12 +665,14 @@ public class ConfigReader
                     if (value.ToLower() == "!fieldpath")
                     {
                         // Python: When value is "!FieldPath", check if there's a [!FieldPath] section with Path=
-                        string? fieldPathSectionName = GetSectionName(value);
+                        // Can be null if section not found
+                        string fieldPathSectionName = GetSectionName(value);
                         string path = string.Empty;
                         if (fieldPathSectionName != null)
                         {
                             Dictionary<string, string> fieldPathSection = SectionToDictionary(_ini[fieldPathSectionName]);
-                            if (fieldPathSection.TryGetValue("Path", out string? pathValue))
+                            // Can be null if key not found
+                            if (fieldPathSection.TryGetValue("Path", out string pathValue))
                             {
                                 path = pathValue.Replace("\\", "/");
                             }
@@ -691,7 +720,8 @@ public class ConfigReader
     /// </summary>
     private void LoadCompileList()
     {
-        string? compilelistSection = GetSectionName("CompileList");
+        // Can be null if section not found
+        string compilelistSection = GetSectionName("CompileList");
         if (compilelistSection == null)
         {
             _log.AddNote("[CompileList] section missing from ini.");
@@ -700,20 +730,23 @@ public class ConfigReader
 
         _log.AddNote("Loading [CompileList] patches from ini...");
         Dictionary<string, string> compilelistSectionDict = SectionToDictionary(_ini[compilelistSection]);
-        string defaultDestination = compilelistSectionDict.TryGetValue("!DefaultDestination", out string? dd) ? dd : ModificationsNSS.DefaultDestination;
+        // Can be null if key not found
+        string defaultDestination = compilelistSectionDict.TryGetValue("!DefaultDestination", out string dd) ? dd : ModificationsNSS.DefaultDestination;
         compilelistSectionDict.Remove("!DefaultDestination");
         // !DefaultSourceFolder: Relative path from mod_path (which is typically the tslpatchdata folder) to source files.
         // Default value "." refers to mod_path itself (the tslpatchdata folder), not its parent.
         // For example: if mod_path = "C:/Mod/tslpatchdata", then:
         //   - !DefaultSourceFolder="." resolves to "C:/Mod/tslpatchdata"
         //   - !DefaultSourceFolder="scripts" resolves to "C:/Mod/tslpatchdata/scripts"
-        string defaultSourceFolder = compilelistSectionDict.TryGetValue("!DefaultSourceFolder", out string? dsf) ? dsf : ".";
+        // Can be null if key not found
+        string defaultSourceFolder = compilelistSectionDict.TryGetValue("!DefaultSourceFolder", out string dsf) ? dsf : ".";
         compilelistSectionDict.Remove("!DefaultSourceFolder");
 
         // Path resolution: mod_path / default_source_folder / "nwnnsscomp.exe"
         // mod_path is typically the tslpatchdata folder (parent of changes.ini).
         // If default_source_folder = ".", this resolves to mod_path itself (tslpatchdata folder).
-        string? nwnnsscompExepath = defaultSourceFolder == "."
+        // Can be null if file doesn't exist
+        string nwnnsscompExepath = defaultSourceFolder == "."
             ? Path.Combine(_modPath, "nwnnsscomp.exe")
             : Path.Combine(_modPath, defaultSourceFolder, "nwnnsscomp.exe");
         if (!File.Exists(nwnnsscompExepath))
@@ -730,7 +763,8 @@ public class ConfigReader
                 SourceFolder = defaultSourceFolder
             };
 
-            string? optionalFileSectionName = GetSectionName(file);
+            // Can be null if section not found
+            string optionalFileSectionName = GetSectionName(file);
             if (optionalFileSectionName != null)
             {
                 Dictionary<string, string> fileSectionDict = SectionToDictionary(_ini[optionalFileSectionName]);
@@ -759,7 +793,8 @@ public class ConfigReader
     /// </summary>
     private void LoadHackList()
     {
-        string? hacklistSection = GetSectionName("HACKList");
+        // Can be null if section not found
+        string hacklistSection = GetSectionName("HACKList");
         if (hacklistSection == null)
         {
             _log.AddNote("[HACKList] section missing from ini.");
@@ -768,14 +803,16 @@ public class ConfigReader
 
         _log.AddNote("Loading [HACKList] patches from ini...");
         Dictionary<string, string> hacklistSectionDict = SectionToDictionary(_ini[hacklistSection]);
-        string defaultDestination = hacklistSectionDict.TryGetValue("!DefaultDestination", out string? dd) ? dd : "Override";
+        // Can be null if key not found
+        string defaultDestination = hacklistSectionDict.TryGetValue("!DefaultDestination", out string dd) ? dd : "Override";
         hacklistSectionDict.Remove("!DefaultDestination");
         // !DefaultSourceFolder: Relative path from mod_path (which is typically the tslpatchdata folder) to source files.
         // Default value "." refers to mod_path itself (the tslpatchdata folder), not its parent.
         // For example: if mod_path = "C:/Mod/tslpatchdata", then:
         //   - !DefaultSourceFolder="." resolves to "C:/Mod/tslpatchdata"
         //   - !DefaultSourceFolder="scripts" resolves to "C:/Mod/tslpatchdata/scripts"
-        string defaultSourceFolder = hacklistSectionDict.TryGetValue("!DefaultSourceFolder", out string? dsf) ? dsf : ".";
+        // Can be null if key not found
+        string defaultSourceFolder = hacklistSectionDict.TryGetValue("!DefaultSourceFolder", out string dsf) ? dsf : ".";
         hacklistSectionDict.Remove("!DefaultSourceFolder");
 
         // Process each NCS file in HACKList
@@ -785,7 +822,8 @@ public class ConfigReader
             var modifications = new ModificationsNCS(filename, replace);
 
             // Get the file-specific section
-            string? fileSectionName = GetSectionName(filename);
+            // Can be null if section not found
+            string fileSectionName = GetSectionName(filename);
             if (fileSectionName == null)
             {
                 throw new KeyNotFoundException(string.Format(SectionNotFoundError, filename) + string.Format(ReferencesTracebackMsg, identifier, filename, hacklistSection));
@@ -859,13 +897,23 @@ public class ConfigReader
             {
                 // Direct integer values - map type specifier to enum
                 tokenIdOrValue = ParseIntValue(parsedValue);
-                tokenType = typeSpecifier.ToLower() switch
+                string lowerTypeSpec = typeSpecifier.ToLower();
+                if (lowerTypeSpec == "u8")
                 {
-                    "u8" => NCSTokenType.UINT8,
-                    "u16" => NCSTokenType.UINT16,
-                    "u32" => NCSTokenType.UINT32,
-                    _ => NCSTokenType.UINT16 // Default to 16-bit
-                };
+                    tokenType = NCSTokenType.UINT8;
+                }
+                else if (lowerTypeSpec == "u16")
+                {
+                    tokenType = NCSTokenType.UINT16;
+                }
+                else if (lowerTypeSpec == "u32")
+                {
+                    tokenType = NCSTokenType.UINT32;
+                }
+                else
+                {
+                    tokenType = NCSTokenType.UINT16; // Default to 16-bit
+                }
             }
 
             var modifyNcs = new ModifyNCS(tokenType, offset, tokenIdOrValue);
@@ -971,16 +1019,18 @@ public class ConfigReader
     private ModifyGFF AddFieldGFF(
         string identifier,
         Dictionary<string, string> iniData,
-        string? currentPath = null)
+        [CanBeNull] string currentPath = null)
     {
         // Parse required values
-        if (!iniData.TryGetValue("FieldType", out string? rawFieldType))
+        // Can be null if key not found
+        if (!iniData.TryGetValue("FieldType", out string rawFieldType))
         {
             throw new KeyNotFoundException($"FieldType missing in [{identifier}]");
         }
         iniData.Remove("FieldType");
         // Python: label: str = ini_data.pop("Label").strip() - raises KeyError if missing
-        if (!iniData.TryGetValue("Label", out string? labelRaw))
+        // Can be null if key not found
+        if (!iniData.TryGetValue("Label", out string labelRaw))
         {
             throw new KeyNotFoundException($"Label missing in [{identifier}]");
         }
@@ -991,7 +1041,8 @@ public class ConfigReader
         GFFFieldType fieldType = ResolveTslPatcherGFFFieldType(rawFieldType);
 
         // Handle current GFF path
-        string rawPath = iniData.TryGetValue("Path", out string? rp) ? rp.Trim() : "";
+        // Can be null if key not found
+        string rawPath = iniData.TryGetValue("Path", out string rp) ? rp.Trim() : "";
         iniData.Remove("Path");
         string path = rawPath;
         if (string.IsNullOrEmpty(Path.GetFileName(path)) && !string.IsNullOrEmpty(currentPath) && !string.IsNullOrEmpty(Path.GetFileName(currentPath))) // use current recursion path if section doesn't override with Path=
@@ -1038,7 +1089,8 @@ public class ConfigReader
             // Handle nested AddField's and recurse
             if (lowerKey.StartsWith("addfield"))
             {
-                string? nextSectionName = GetSectionName(iteratedValue);
+                // Can be null if section not found
+                string nextSectionName = GetSectionName(iteratedValue);
                 if (nextSectionName == null)
                 {
                     throw new KeyNotFoundException(string.Format(SectionNotFoundError, iteratedValue) + string.Format(ReferencesTracebackMsg, iteratedKey, iteratedValue, identifier));
@@ -1101,12 +1153,14 @@ public class ConfigReader
         GFFFieldType fieldType,
         string identifier)
     {
-        FieldValue? value = null;
+        FieldValue value = null;
 
-        if (iniSectionDict.TryGetValue("Value", out string? rawValue))
+        // Can be null if key not found
+        if (iniSectionDict.TryGetValue("Value", out string rawValue))
         {
             iniSectionDict.Remove("Value");
-            FieldValue? retValue = FieldValueFromType(rawValue, fieldType);
+            // Can be null if value cannot be parsed
+            FieldValue retValue = FieldValueFromType(rawValue, fieldType);
             if (retValue == null)
             {
                 throw new InvalidOperationException($"Could not parse fieldtype '{fieldType}' in GFFList section [{identifier}]");
@@ -1123,7 +1177,8 @@ public class ConfigReader
         }
         else if (fieldType == GFFFieldType.Struct)
         {
-            string rawStructId = iniSectionDict.TryGetValue("TypeId", out string? rsi) ? rsi.Trim() : "0"; // 0 is the default struct id.
+            // Can be null if key not found
+            string rawStructId = iniSectionDict.TryGetValue("TypeId", out string rsi) ? rsi.Trim() : "0"; // 0 is the default struct id.
             iniSectionDict.Remove("TypeId");
             if (!int.TryParse(rawStructId, out int structId))
             {
@@ -1168,8 +1223,10 @@ public class ConfigReader
         Dictionary<string, string> iniSectionDict)
     {
         // Handle both "StrRef" and "Value(strref)" formats
-        string? rawStringref = null;
-        if (iniSectionDict.TryGetValue("StrRef", out string? strRef))
+        // Can be null if StrRef not found
+        string rawStringref = null;
+        // Can be null if key not found
+        if (iniSectionDict.TryGetValue("StrRef", out string strRef))
         {
             rawStringref = strRef;
             iniSectionDict.Remove("StrRef");
@@ -1194,7 +1251,8 @@ public class ConfigReader
             throw new KeyNotFoundException("StrRef or Value(strref) missing in localized string section");
         }
 
-        FieldValue? stringref = FieldValueFromMemory(rawStringref);
+        // Can be null if value cannot be parsed from memory
+        FieldValue stringref = FieldValueFromMemory(rawStringref);
         if (stringref == null)
         {
             stringref = new FieldValueConstant(int.Parse(rawStringref));
@@ -1247,7 +1305,8 @@ public class ConfigReader
     ///     - Check if it starts with "2damemory" and extract token ID
     ///     - Return FieldValue memory object with token ID, or None if no match
     /// </summary>
-    private static FieldValue? FieldValueFromMemory(string rawValue)
+    [CanBeNull]
+    private static FieldValue FieldValueFromMemory(string rawValue)
     {
         string lowerValue = rawValue.ToLower();
 
@@ -1292,7 +1351,8 @@ public class ConfigReader
     private static FieldValue FieldValueFromUnknown(string rawValue)
     {
         // StrRef or 2DAMemory
-        FieldValue? fieldValueMemory = FieldValueFromMemory(rawValue);
+        // Can be null if value cannot be parsed from memory
+        FieldValue fieldValueMemory = FieldValueFromMemory(rawValue);
         if (fieldValueMemory != null)
         {
             return fieldValueMemory;
@@ -1372,17 +1432,20 @@ public class ConfigReader
     ///     - Otherwise, converts raw_value to appropriate type based on field_type
     ///     - Returns FieldValueConstant object wrapping extracted value.
     /// </summary>
-    private static FieldValue? FieldValueFromType(
+    [CanBeNull]
+    private static FieldValue FieldValueFromType(
         string rawValue,
         GFFFieldType fieldType)
     {
-        FieldValue? fieldValueMemory = FieldValueFromMemory(rawValue);
+        // Can be null if value cannot be parsed from memory
+        FieldValue fieldValueMemory = FieldValueFromMemory(rawValue);
         if (fieldValueMemory != null)
         {
             return fieldValueMemory;
         }
 
-        object? value = null;
+        // Can be null if value cannot be determined
+        object value = null;
 
         if (fieldType == GFFFieldType.ResRef)
         {
@@ -1392,17 +1455,20 @@ public class ConfigReader
         {
             value = NormalizeTslPatcherCRLF(rawValue);
         }
-        else if (fieldType is GFFFieldType.UInt8 or GFFFieldType.Int8 or GFFFieldType.UInt16 or GFFFieldType.Int16 or GFFFieldType.UInt32 or GFFFieldType.Int32 or GFFFieldType.UInt64 or GFFFieldType.Int64)
+        else if (fieldType == GFFFieldType.UInt8 || fieldType == GFFFieldType.Int8 || 
+                 fieldType == GFFFieldType.UInt16 || fieldType == GFFFieldType.Int16 || 
+                 fieldType == GFFFieldType.UInt32 || fieldType == GFFFieldType.Int32 || 
+                 fieldType == GFFFieldType.UInt64 || fieldType == GFFFieldType.Int64)
         {
-            if (fieldType is GFFFieldType.UInt8 or GFFFieldType.Int8)
+            if (fieldType == GFFFieldType.UInt8 || fieldType == GFFFieldType.Int8)
             {
                 value = byte.Parse(rawValue);
             }
-            else if (fieldType is GFFFieldType.UInt16 or GFFFieldType.Int16)
+            else if (fieldType == GFFFieldType.UInt16 || fieldType == GFFFieldType.Int16)
             {
                 value = ushort.Parse(rawValue);
             }
-            else if (fieldType is GFFFieldType.UInt32 or GFFFieldType.Int32)
+            else if (fieldType == GFFFieldType.UInt32 || fieldType == GFFFieldType.Int32)
             {
                 value = int.Parse(rawValue);
             }
@@ -1411,7 +1477,7 @@ public class ConfigReader
                 value = long.Parse(rawValue);
             }
         }
-        else if (fieldType is GFFFieldType.Single or GFFFieldType.Double)
+        else if (fieldType == GFFFieldType.Single || fieldType == GFFFieldType.Double)
         {
             value = double.Parse(NormalizeTslPatcherFloat(rawValue), System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture);
             if (fieldType == GFFFieldType.Single)
@@ -1490,19 +1556,24 @@ public class ConfigReader
     ///     - Constructs the appropriate modification object
     ///     - Returns the modification object or None.
     /// </summary>
-    private Modify2DA? Discern2DA(
+    [CanBeNull]
+    private Modify2DA Discern2DA(
         string key,
         string identifier,
         Dictionary<string, string> modifiers)
     {
-        string? exclusiveColumn;
-        Target? target;
-        string? rowLabel;
+        // Can be null if not set
+        string exclusiveColumn;
+        // Can be null if target not found
+        Target target;
+        // Can be null if row label not set
+        string rowLabel;
         Dictionary<string, RowValue> cells;
         Dictionary<int, RowValue> store2da;
         Dictionary<int, RowValue> storeTlk;
 
-        Modify2DA? modification = null;
+        // Can be null if modification cannot be created
+        Modify2DA modification = null;
         string lowercaseKey = key.ToLower();
 
         if (lowercaseKey.StartsWith("changerow"))
@@ -1517,7 +1588,8 @@ public class ConfigReader
         }
         else if (lowercaseKey.StartsWith("addrow"))
         {
-            exclusiveColumn = modifiers.TryGetValue("ExclusiveColumn", out string? ec) ? ec : null;
+            // Can be null if key not found
+            exclusiveColumn = modifiers.TryGetValue("ExclusiveColumn", out string ec) ? ec : null;
             modifiers.Remove("ExclusiveColumn");
             rowLabel = RowLabel2DA(identifier, modifiers);
             (cells, store2da, storeTlk) = Cells2DA(identifier, modifiers);
@@ -1530,7 +1602,8 @@ public class ConfigReader
             {
                 return null;
             }
-            exclusiveColumn = modifiers.TryGetValue("ExclusiveColumn", out string? ec2) ? ec2 : null;
+            // Can be null if key not found
+            exclusiveColumn = modifiers.TryGetValue("ExclusiveColumn", out string ec2) ? ec2 : null;
             modifiers.Remove("ExclusiveColumn");
             rowLabel = RowLabel2DA(identifier, modifiers);
             (cells, store2da, storeTlk) = Cells2DA(identifier, modifiers);
@@ -1571,13 +1644,15 @@ public class ConfigReader
         Dictionary<string, string> modifiers,
         string identifier)
     {
-        string? header = modifiers.TryGetValue("ColumnLabel", out string? h) ? h : null;
+        // Can be null if key not found
+        string header = modifiers.TryGetValue("ColumnLabel", out string h) ? h : null;
         modifiers.Remove("ColumnLabel");
         if (header == null)
         {
             throw new KeyNotFoundException($"Missing 'ColumnLabel' in [{identifier}]");
         }
-        string? defaultValue = modifiers.TryGetValue("DefaultValue", out string? dv) ? dv : null;
+        // Can be null if key not found
+        string defaultValue = modifiers.TryGetValue("DefaultValue", out string dv) ? dv : null;
         modifiers.Remove("DefaultValue");
         if (defaultValue == null)
         {
@@ -1615,13 +1690,15 @@ public class ConfigReader
     ///     - Calls get_target() to create Target object
     ///     - Returns None if no valid key found with warning
     /// </summary>
-    private Target? Target2DA(
+    [CanBeNull]
+    private Target Target2DA(
         string identifier,
         Dictionary<string, string> modifiers)
     {
         Target GetTarget(TargetType targetType, string key, bool isInt)
         {
-            string? rawValue = modifiers.TryGetValue(key, out string? rv) ? rv : null;
+            // Can be null if key not found
+            string rawValue = modifiers.TryGetValue(key, out string rv) ? rv : null;
             modifiers.Remove(key);
             if (rawValue == null)
             {
@@ -1700,7 +1777,8 @@ public class ConfigReader
             bool isStoreTlk = modifier.StartsWith("strref", StringComparison.OrdinalIgnoreCase) && modifier.Length > 6 && modifier.Substring(6).All(char.IsDigit);
             bool isRowLabel = lowerModifier == "rowlabel" || lowerModifier == "newrowlabel";
 
-            RowValue? rowValue = null;
+            // Can be null if row value cannot be determined
+            RowValue rowValue = null;
             if (lowerValue.StartsWith("2damemory"))
             {
                 int tokenId = int.Parse(value.Substring(9));
@@ -1773,16 +1851,19 @@ public class ConfigReader
     ///     - If not present, check if 'NewRowLabel' exists as a key
     ///     - Return the value of the key if present, else return None.
     /// </summary>
-    private static string? RowLabel2DA(
+    [CanBeNull]
+    private static string RowLabel2DA(
         string identifier,
         Dictionary<string, string> modifiers)
     {
-        if (modifiers.TryGetValue("RowLabel", out string? rl))
+        // Can be null if key not found
+        if (modifiers.TryGetValue("RowLabel", out string rl))
         {
             modifiers.Remove("RowLabel");
             return rl;
         }
-        if (modifiers.TryGetValue("NewRowLabel", out string? nrl))
+        // Can be null if key not found
+        if (modifiers.TryGetValue("NewRowLabel", out string nrl))
         {
             modifiers.Remove("NewRowLabel");
             return nrl;
@@ -1825,7 +1906,8 @@ public class ConfigReader
             bool isStore2da = valueLowercase.StartsWith("2damemory");
             bool isStoreTlk = valueLowercase.StartsWith("strref");
 
-            RowValue? rowValue = null;
+            // Can be null if row value cannot be determined
+            RowValue rowValue = null;
             if (isStore2da)
             {
                 int tokenId = int.Parse(value.Substring(9));
@@ -2001,10 +2083,11 @@ public class ConfigReader
     private static Dictionary<string, string> SectionToDictionary(KeyDataCollection section)
     {
         var dict = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-        foreach (KeyData? keyData in section)
+        foreach (KeyData keyData in section)
         {
             dict[keyData.KeyName] = keyData.Value;
         }
         return dict;
     }
+}
 }

@@ -7,7 +7,8 @@ using TSLPatcher.Core.Mods.SSF;
 using TSLPatcher.Core.Logger;
 using Xunit;
 
-namespace TSLPatcher.Tests.Mods;
+namespace TSLPatcher.Tests.Mods
+{
 
 /// <summary>
 /// Direct unit tests for SSF modification operations.
@@ -182,5 +183,6 @@ public class SSFModsUnitTests
             patchedSsf.Get(sound).Should().Be(value++);
         }
     }
+}
 }
 

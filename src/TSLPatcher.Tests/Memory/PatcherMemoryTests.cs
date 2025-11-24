@@ -4,7 +4,8 @@ using TSLPatcher.Core.Memory;
 using TSLPatcher.Core.Mods.GFF;
 using Xunit;
 
-namespace TSLPatcher.Tests.Memory;
+namespace TSLPatcher.Tests.Memory
+{
 
 /// <summary>
 /// Tests for PatcherMemory and LocalizedStringDelta
@@ -152,4 +153,5 @@ public class PatcherMemoryTests
     }
 
     #endregion
+}
 }

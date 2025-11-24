@@ -7,7 +7,8 @@ using TSLPatcher.Core.Memory;
 using TSLPatcher.Core.Mods.TLK;
 using Xunit;
 
-namespace TSLPatcher.Tests.Mods;
+namespace TSLPatcher.Tests.Mods
+{
 
 /// <summary>
 /// Tests for TLK modification functionality.
@@ -145,4 +146,5 @@ public class TlkModsTests
 
         memory.MemoryStr[0].Should().Be(2);
     }
+}
 }

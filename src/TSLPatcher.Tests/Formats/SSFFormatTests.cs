@@ -6,7 +6,8 @@ using TSLPatcher.Core.Resources;
 using Xunit;
 using static TSLPatcher.Core.Formats.SSF.SSFAuto;
 
-namespace TSLPatcher.Tests.Formats;
+namespace TSLPatcher.Tests.Formats
+{
 
 /// <summary>
 /// Tests for SSF binary I/O operations.
@@ -119,5 +120,6 @@ public class SSFFormatTests
         Action act2 = () => WriteSsf(ssf, ".", ResourceType.INVALID);
         act2.Should().Throw<ArgumentException>().WithMessage("*Unsupported format*");
     }
+}
 }
 

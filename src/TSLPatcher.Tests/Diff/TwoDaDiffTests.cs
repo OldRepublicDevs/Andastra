@@ -4,7 +4,8 @@ using TSLPatcher.Core.Diff;
 using TSLPatcher.Core.Formats.TwoDA;
 using Xunit;
 
-namespace TSLPatcher.Tests.Diff;
+namespace TSLPatcher.Tests.Diff
+{
 
 /// <summary>
 /// Tests for 2DA diff functionality
@@ -61,4 +62,5 @@ public class TwoDaDiffTests
         result.ChangedRows.Should().Contain(0);
         result.ChangedRows[0]["col2"].Should().Be("new_col_val");
     }
+}
 }

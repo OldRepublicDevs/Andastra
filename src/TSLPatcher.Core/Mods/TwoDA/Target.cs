@@ -1,124 +1,129 @@
 using System;
 using System.Linq;
+using JetBrains.Annotations;
 using TSLPatcher.Core.Formats.TwoDA;
 using TSLPatcher.Core.Memory;
 
-namespace TSLPatcher.Core.Mods.TwoDA;
-
-/// <summary>
-/// Target type for 2DA row operations.
-/// 1:1 port from Python TargetType in pykotor/tslpatcher/mods/twoda.py
-/// </summary>
-public enum TargetType
+namespace TSLPatcher.Core.Mods.TwoDA
 {
-    ROW_INDEX = 0,
-    ROW_LABEL = 1,
-    LABEL_COLUMN = 2
-}
 
-/// <summary>
-/// Represents a target row in a 2DA file.
-/// 1:1 port from Python Target in pykotor/tslpatcher/mods/twoda.py
-/// </summary>
-public class Target
-{
-    public TargetType TargetType { get; }
-    public object Value { get; } // Can be string, int, RowValue2DAMemory, or RowValueTLKMemory
-
-    public Target(TargetType targetType, object value)
+    /// <summary>
+    /// Target type for 2DA row operations.
+    /// 1:1 port from Python TargetType in pykotor/tslpatcher/mods/twoda.py
+    /// </summary>
+    public enum TargetType
     {
-        TargetType = targetType;
-        Value = value;
-
-        // Allow RowValueConstant for ROW_INDEX (it will be resolved to int in Search)
-        if (targetType == TargetType.ROW_INDEX && value is string && !(value is RowValue))
-        {
-            throw new ArgumentException("Target value must be int or RowValue if type is row index.");
-        }
-    }
-
-    public override string ToString()
-    {
-        return $"Target(target_type=TargetType.{TargetType}, value={Value})";
+        ROW_INDEX = 0,
+        ROW_LABEL = 1,
+        LABEL_COLUMN = 2
     }
 
     /// <summary>
-    /// Searches a TwoDA for a row matching the target.
-    /// 1:1 port from Python Target.search()
+    /// Represents a target row in a 2DA file.
+    /// 1:1 port from Python Target in pykotor/tslpatcher/mods/twoda.py
     /// </summary>
-    public TwoDARow? Search(Core.Formats.TwoDA.TwoDA twoda, PatcherMemory memory)
+    public class Target
     {
-        object value = Value;
+        public TargetType TargetType { get; }
+        public object Value { get; } // Can be string, int, RowValue2DAMemory, or RowValueTLKMemory
 
-        // Resolve memory references and RowValue types
-        if (Value is RowValueTLKMemory tlkMem)
+        public Target(TargetType targetType, object value)
         {
-            value = tlkMem.Value(memory, twoda, null);
+            TargetType = targetType;
+            Value = value;
+
+            // Allow RowValueConstant for ROW_INDEX (it will be resolved to int in Search)
+            if (targetType == TargetType.ROW_INDEX && value is string && !(value is RowValue))
+            {
+                throw new ArgumentException("Target value must be int or RowValue if type is row index.");
+            }
         }
-        else if (Value is RowValue2DAMemory twodaMem)
+
+        public override string ToString()
         {
-            value = twodaMem.Value(memory, twoda, null);
-        }
-        else if (Value is RowValue rowValue)
-        {
-            value = rowValue.Value(memory, twoda, null);
+            return $"Target(target_type=TargetType.{TargetType}, value={Value})";
         }
 
-        TwoDARow? sourceRow = null;
-
-        switch (TargetType)
+        /// <summary>
+        /// Searches a TwoDA for a row matching the target.
+        /// 1:1 port from Python Target.search()
+        /// </summary>
+        [CanBeNull]
+        public TwoDARow Search(Core.Formats.TwoDA.TwoDA twoda, PatcherMemory memory)
         {
-            case TargetType.ROW_INDEX:
-                sourceRow = twoda.GetRow(Convert.ToInt32(value));
-                break;
+            object value = Value;
 
-            case TargetType.ROW_LABEL:
-                sourceRow = twoda.FindRow(value.ToString() ?? "");
-                break;
+            // Resolve memory references and RowValue types
+            if (Value is RowValueTLKMemory tlkMem)
+            {
+                value = tlkMem.Value(memory, twoda, null);
+            }
+            else if (Value is RowValue2DAMemory twodaMem)
+            {
+                value = twodaMem.Value(memory, twoda, null);
+            }
+            else if (Value is RowValue rowValue)
+            {
+                value = rowValue.Value(memory, twoda, null);
+            }
 
-            case TargetType.LABEL_COLUMN:
-                System.Collections.Generic.List<string> headers = twoda.GetHeaders();
-                if (!headers.Contains("label"))
-                {
-                    throw new WarningError($"'label' could not be found in the twoda's headers: ({TargetType}, {value})");
-                }
+            // Can be null if not found
+            TwoDARow sourceRow = null;
 
-                System.Collections.Generic.List<string> columnValues = twoda.GetColumn("label");
-                string valueStr = value.ToString() ?? "";
-                if (!columnValues.Contains(valueStr))
-                {
-                    throw new WarningError($"The value '{value}' could not be found in the twoda's columns");
-                }
+            switch (TargetType)
+            {
+                case TargetType.ROW_INDEX:
+                    sourceRow = twoda.GetRow(Convert.ToInt32(value));
+                    break;
 
-                foreach (TwoDARow row in twoda)
-                {
-                    if (row.GetString("label") == value.ToString())
+                case TargetType.ROW_LABEL:
+                    sourceRow = twoda.FindRow(value.ToString() ?? "");
+                    break;
+
+                case TargetType.LABEL_COLUMN:
+                    System.Collections.Generic.List<string> headers = twoda.GetHeaders();
+                    if (!headers.Contains("label"))
                     {
-                        sourceRow = row;
-                        break;
+                        throw new WarningError($"'label' could not be found in the twoda's headers: ({TargetType}, {value})");
                     }
-                }
-                break;
+
+                    System.Collections.Generic.List<string> columnValues = twoda.GetColumn("label");
+                    string valueStr = value.ToString() ?? "";
+                    if (!columnValues.Contains(valueStr))
+                    {
+                        throw new WarningError($"The value '{value}' could not be found in the twoda's columns");
+                    }
+
+                    foreach (TwoDARow row in twoda)
+                    {
+                        if (row.GetString("label") == value.ToString())
+                        {
+                            sourceRow = row;
+                            break;
+                        }
+                    }
+                    break;
+            }
+
+            return sourceRow;
         }
-
-        return sourceRow;
     }
-}
 
-/// <summary>
-/// Warning exception for 2DA modifications.
-/// 1:1 port from Python WarningError
-/// </summary>
-public class WarningError : Exception
-{
-    public WarningError(string message) : base(message) { }
-}
+    /// <summary>
+    /// Warning exception for 2DA modifications.
+    /// 1:1 port from Python WarningError
+    /// </summary>
+    public class WarningError : Exception
+    {
+        public WarningError(string message) : base(message) { }
+    }
 
-/// <summary>
-/// Critical exception for 2DA modifications.
-/// 1:1 port from Python CriticalError
-/// </summary>
-public class CriticalError : Exception
-{
-    public CriticalError(string message) : base(message) { }
+    /// <summary>
+    /// Critical exception for 2DA modifications.
+    /// 1:1 port from Python CriticalError
+    /// </summary>
+    public class CriticalError : Exception
+    {
+        public CriticalError(string message) : base(message) { }
+    }
 }

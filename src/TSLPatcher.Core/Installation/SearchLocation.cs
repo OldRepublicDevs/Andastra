@@ -1,4 +1,5 @@
-namespace TSLPatcher.Core.Installation;
+namespace TSLPatcher.Core.Installation
+{
 
 /// <summary>
 /// Enumeration representing different locations for searching resources in a KOTOR installation.
@@ -74,5 +75,6 @@ public enum SearchLocation
     /// Resource files stored in the folders specified in the method parameters.
     /// </summary>
     CUSTOM_FOLDERS = 13
+}
 }
 

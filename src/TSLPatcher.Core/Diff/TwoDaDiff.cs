@@ -3,105 +3,107 @@ using System.Linq;
 using System.Text;
 using TSLPatcher.Core.Formats.TwoDA;
 
-namespace TSLPatcher.Core.Diff;
-
-public class TwoDaCompareResult
+namespace TSLPatcher.Core.Diff
 {
-    public List<string> AddedColumns { get; } = new();
-    public Dictionary<int, Dictionary<string, string>> ChangedRows { get; } = new();
-    public List<(string Label, Dictionary<string, string> Cells)> AddedRows { get; } = new();
-}
 
-public static class TwoDaDiff
-{
-    public static TwoDaCompareResult Compare(TwoDA original, TwoDA modified)
+    public class TwoDaCompareResult
     {
-        var result = new TwoDaCompareResult();
+        public List<string> AddedColumns { get; } = new List<string>();
+        public Dictionary<int, Dictionary<string, string>> ChangedRows { get; } = new Dictionary<int, Dictionary<string, string>>();
+        public List<(string Label, Dictionary<string, string> Cells)> AddedRows { get; } = new List<(string Label, Dictionary<string, string> Cells)>();
+    }
 
-        // Detect added columns
-        var origHeaders = new HashSet<string>(original.GetHeaders());
-        foreach (string header in modified.GetHeaders())
+    public static class TwoDaDiff
+    {
+        public static TwoDaCompareResult Compare(TwoDA original, TwoDA modified)
         {
-            if (!origHeaders.Contains(header))
+            var result = new TwoDaCompareResult();
+
+            // Detect added columns
+            var origHeaders = new HashSet<string>(original.GetHeaders());
+            foreach (string header in modified.GetHeaders())
             {
-                result.AddedColumns.Add(header);
-            }
-        }
-
-        // Detect modified/added rows
-        int origHeight = original.GetHeight();
-        int modHeight = modified.GetHeight();
-
-        for (int i = 0; i < modHeight; i++)
-        {
-            TwoDARow modRow = modified.GetRow(i);
-
-            if (i >= origHeight)
-            {
-                // Added row
-                result.AddedRows.Add((modRow.Label(), modRow.GetData()));
-            }
-            else
-            {
-                // Check for changes in existing rows
-                TwoDARow origRow = original.GetRow(i);
-                var changes = new Dictionary<string, string>();
-
-                foreach (string header in modified.GetHeaders())
+                if (!origHeaders.Contains(header))
                 {
-                    string modVal = modRow.GetString(header);
+                    result.AddedColumns.Add(header);
+                }
+            }
 
-                    if (origHeaders.Contains(header))
+            // Detect modified/added rows
+            int origHeight = original.GetHeight();
+            int modHeight = modified.GetHeight();
+
+            for (int i = 0; i < modHeight; i++)
+            {
+                TwoDARow modRow = modified.GetRow(i);
+
+                if (i >= origHeight)
+                {
+                    // Added row
+                    result.AddedRows.Add((modRow.Label(), modRow.GetData()));
+                }
+                else
+                {
+                    // Check for changes in existing rows
+                    TwoDARow origRow = original.GetRow(i);
+                    var changes = new Dictionary<string, string>();
+
+                    foreach (string header in modified.GetHeaders())
                     {
-                        string origVal = origRow.GetString(header);
-                        if (modVal != origVal)
+                        string modVal = modRow.GetString(header);
+
+                        if (origHeaders.Contains(header))
                         {
+                            string origVal = origRow.GetString(header);
+                            if (modVal != origVal)
+                            {
+                                changes[header] = modVal;
+                            }
+                        }
+                        else
+                        {
+                            // New column.
                             changes[header] = modVal;
                         }
                     }
-                    else
+
+                    if (changes.Any())
                     {
-                        // New column.
-                        changes[header] = modVal;
+                        result.ChangedRows[i] = changes;
                     }
                 }
-
-                if (changes.Any())
-                {
-                    result.ChangedRows[i] = changes;
-                }
             }
+
+            return result;
         }
 
-        return result;
-    }
-
-    public static string SerializeToIni(TwoDaCompareResult result, string filename)
-    {
-        var sb = new StringBuilder();
-
-        // Process added columns
-        foreach (string col in result.AddedColumns)
+        public static string SerializeToIni(TwoDaCompareResult result, string filename)
         {
-            // TSLPatcher syntax: AddColumn stuff
-            // Requires heuristics to determine default value?
-            // For now, just output a basic instruction
-            // [2DAList]
-            // Row0=filename
-            // [filename]
-            // AddColumn0=ColumnName
+            var sb = new StringBuilder();
 
-            // But usually we return the inner content for the file section.
+            // Process added columns
+            foreach (string col in result.AddedColumns)
+            {
+                // TSLPatcher syntax: AddColumn stuff
+                // Requires heuristics to determine default value?
+                // For now, just output a basic instruction
+                // [2DAList]
+                // Row0=filename
+                // [filename]
+                // AddColumn0=ColumnName
+
+                // But usually we return the inner content for the file section.
+            }
+
+            // This is getting into "Mod Generator" territory.
+            // For simple diffing, maybe just output a readable report?
+            // Or strictly TSLPatcher INI format?
+            // The user asked for "Diff/Comparison logic".
+
+            // I'll stick to providing the Compare result. Serialization logic can be added if specifically requested or needed for tests.
+
+            // Serialization logic pending
+            return sb.ToString();
         }
-
-        // This is getting into "Mod Generator" territory.
-        // For simple diffing, maybe just output a readable report?
-        // Or strictly TSLPatcher INI format?
-        // The user asked for "Diff/Comparison logic".
-
-        // I'll stick to providing the Compare result. Serialization logic can be added if specifically requested or needed for tests.
-
-        // Serialization logic pending
-        return sb.ToString();
     }
 }

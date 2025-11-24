@@ -8,7 +8,8 @@ using TSLPatcher.Core.Mods.TwoDA;
 using Xunit;
 using TwoDAFile = TSLPatcher.Core.Formats.TwoDA.TwoDA;
 
-namespace TSLPatcher.Tests.Mods;
+namespace TSLPatcher.Tests.Mods
+{
 
 /// <summary>
 /// Advanced unit tests for AddRow2DA with High() function and memory token storage.
@@ -284,5 +285,6 @@ public class TwoDAModsAddRowAdvancedTests
         twoda.GetCellString(0, "Col2").Should().Be("new");
         memory.Memory2DA[5].Should().Be("original_label");
     }
+}
 }
 
