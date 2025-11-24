@@ -1,5 +1,8 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
+using TSLPatcher.Core.Common;
+using TSLPatcher.Core.Common.Script;
 using TSLPatcher.Core.Resources;
 
 namespace TSLPatcher.Core.Formats.NCS;
@@ -103,4 +106,34 @@ public static class NCSAuto
         return new NCSBinaryWriter(ncs).Write();
     }
 
-   
+    /// <summary>
+    /// Compile NSS source code to NCS bytecode.
+    /// 1:1 port from Python compile_nss in pykotor/resource/formats/ncs/ncs_auto.py
+    /// </summary>
+    public static NCS CompileNss(
+        string source,
+        Game game,
+        List<INCSOptimizer>? optimizers = null,
+        List<string>? libraryLookup = null)
+    {
+        // TODO: Implement full NSS compiler (lexer, parser, compilation)
+        // For now, this is a placeholder that will need the full compiler implementation
+        throw new NotImplementedException("NSS compilation requires full lexer/parser implementation. This is a large undertaking and needs to be ported from Python.");
+    }
+
+    /// <summary>
+    /// Decompile NCS bytecode to NSS source code.
+    /// 1:1 port from Python decompile_ncs in pykotor/resource/formats/ncs/ncs_auto.py
+    /// </summary>
+    public static string DecompileNcs(
+        NCS ncs,
+        Game game,
+        List<ScriptFunction>? functions = null,
+        List<ScriptConstant>? constants = null)
+    {
+        // TODO: Implement full NCS decompiler
+        // For now, this is a placeholder that will need the full decompiler implementation
+        throw new NotImplementedException("NCS decompilation requires full decompiler implementation. This is a large undertaking and needs to be ported from Python.");
+    }
+}
+
