@@ -70,7 +70,7 @@ RowLabel=1
         PatcherConfig result = reader.Load(config);
 
         // Assert
-        var modifiers = result.Patches2DA[0].Modifiers;
+        List<Modify2DA> modifiers = result.Patches2DA[0].Modifiers;
         modifiers.Should().HaveCount(2);
 
         var mod0 = modifiers[0] as ChangeRow2DA;
@@ -111,7 +111,7 @@ LabelIndex=3
         PatcherConfig result = reader.Load(config);
 
         // Assert
-        var modifiers = result.Patches2DA[0].Modifiers;
+        List<Modify2DA> modifiers = result.Patches2DA[0].Modifiers;
         
         var mod_2da_0 = modifiers[0] as ChangeRow2DA;
         mod_2da_0.Should().NotBeNull();
@@ -239,7 +239,7 @@ AddRow1=add_row_1
         PatcherConfig result = reader.Load(config);
 
         // Assert
-        var modifiers = result.Patches2DA[0].Modifiers;
+        List<Modify2DA> modifiers = result.Patches2DA[0].Modifiers;
         
         var mod_0 = modifiers[0] as AddRow2DA;
         mod_0.Should().NotBeNull();
@@ -275,7 +275,7 @@ RowLabel=123
         PatcherConfig result = reader.Load(config);
 
         // Assert
-        var modifiers = result.Patches2DA[0].Modifiers;
+        List<Modify2DA> modifiers = result.Patches2DA[0].Modifiers;
         
         var mod_0 = modifiers[0] as AddRow2DA;
         mod_0.Should().NotBeNull();
@@ -315,7 +315,7 @@ ExclusiveColumn=label
         PatcherConfig result = reader.Load(config);
 
         // Assert
-        var modifiers = result.Patches2DA[0].Modifiers;
+        List<Modify2DA> modifiers = result.Patches2DA[0].Modifiers;
         
         var mod_0 = modifiers[0] as AddRow2DA;
         mod_0.Should().NotBeNull();
@@ -441,7 +441,7 @@ RowLabel=1
         PatcherConfig result = reader.Load(config);
 
         // Assert
-        var modifiers = result.Patches2DA[0].Modifiers;
+        List<Modify2DA> modifiers = result.Patches2DA[0].Modifiers;
         
         var mod_0 = modifiers[0] as CopyRow2DA;
         mod_0.Should().NotBeNull();
@@ -481,7 +481,7 @@ LabelIndex=3
         PatcherConfig result = reader.Load(config);
 
         // Assert
-        var modifiers = result.Patches2DA[0].Modifiers;
+        List<Modify2DA> modifiers = result.Patches2DA[0].Modifiers;
         
         var mod_0 = modifiers[0] as CopyRow2DA;
         mod_0.Should().NotBeNull();
@@ -526,7 +526,7 @@ RowIndex=0
         PatcherConfig result = reader.Load(config);
 
         // Assert
-        var modifiers = result.Patches2DA[0].Modifiers;
+        List<Modify2DA> modifiers = result.Patches2DA[0].Modifiers;
         
         var mod_0 = modifiers[0] as CopyRow2DA;
         mod_0.Should().NotBeNull();
@@ -568,7 +568,7 @@ RowIndex=0
         PatcherConfig result = reader.Load(config);
 
         // Assert
-        var modifiers = result.Patches2DA[0].Modifiers;
+        List<Modify2DA> modifiers = result.Patches2DA[0].Modifiers;
         
         var mod_0 = modifiers[0] as CopyRow2DA;
         mod_0.Should().NotBeNull();

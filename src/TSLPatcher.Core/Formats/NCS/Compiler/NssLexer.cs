@@ -34,7 +34,7 @@ public class NssLexer
     /// <summary>
     /// Tokenize the source code into a list of tokens.
     /// </summary>
-    public List<NssToken> Tokenize()
+    public static List<NssToken> Tokenize()
     {
         var tokens = new List<NssToken>();
 

@@ -52,7 +52,7 @@ public class ResourceType
             return this;
         }
 
-        var field = typeof(ResourceType).GetField(TargetMember, System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
+        System.Reflection.FieldInfo? field = typeof(ResourceType).GetField(TargetMember, System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
         if (field != null && field.FieldType == typeof(ResourceType))
         {
             return (ResourceType)field.GetValue(null)!;
@@ -172,9 +172,9 @@ public class ResourceType
     public static ResourceType FromExtension(string extension)
     {
         string ext = extension.TrimStart('.').ToLower();
-        
+
         // Search through all static fields to match Python's behavior
-        var fields = typeof(ResourceType).GetFields(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static)
+        ResourceType? fields = typeof(ResourceType).GetFields(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static)
             .Where(f => f.FieldType == typeof(ResourceType))
             .Select(f => (ResourceType)f.GetValue(null)!)
             .Where(rt => rt.Extension == ext)

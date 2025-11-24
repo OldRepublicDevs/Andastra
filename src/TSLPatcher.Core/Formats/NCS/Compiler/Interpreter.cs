@@ -173,7 +173,7 @@ public class Interpreter
                 // Return from function
                 if (_returns.Count > 0)
                 {
-                    var (returnInst, returnIndex) = _returns[_returns.Count - 1];
+                    (NCSInstruction returnInst, int returnIndex) = _returns[_returns.Count - 1];
                     _returns.RemoveAt(_returns.Count - 1);
                     _cursor = returnInst;
                     _cursorIndex = returnIndex;
@@ -232,7 +232,7 @@ public class Interpreter
 
         // Check for mock
         object? returnValue = null;
-        if (_mocks.TryGetValue(functionName, out var mock))
+        if (_mocks.TryGetValue(functionName, out Func<object?[], object?>? mock))
         {
             object?[] mockArgs = argValues.Select(a => a.Value).ToArray();
             returnValue = mock(mockArgs);

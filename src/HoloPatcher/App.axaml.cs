@@ -19,6 +19,7 @@ public partial class App : Application
         {
             desktop.MainWindow = new MainWindow
             {
+                Title = $"HoloPatcher {Core.VersionLabel}",
                 DataContext = new MainWindowViewModel(),
             };
         }

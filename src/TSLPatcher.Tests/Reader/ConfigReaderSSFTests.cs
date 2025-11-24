@@ -89,13 +89,13 @@ Battlecry 2=456
         PatcherConfig result = reader.Load(config);
 
         // Assert
-        var modifiers = result.PatchesSSF[0].Modifiers;
-        
-        var mod_0 = modifiers[0];
+        List<ModifySSF> modifiers = result.PatchesSSF[0].Modifiers;
+
+        ModifySSF mod_0 = modifiers[0];
         mod_0.Stringref.Should().BeOfType<NoTokenUsage>();
         ((NoTokenUsage)mod_0.Stringref).Stored.Should().Be("123");
 
-        var mod_1 = modifiers[1];
+        ModifySSF mod_1 = modifiers[1];
         mod_1.Stringref.Should().BeOfType<NoTokenUsage>();
         ((NoTokenUsage)mod_1.Stringref).Stored.Should().Be("456");
     }
@@ -121,13 +121,13 @@ Battlecry 2=StrRef6
         PatcherConfig result = reader.Load(config);
 
         // Assert
-        var modifiers = result.PatchesSSF[0].Modifiers;
-        
-        var mod_0 = modifiers[0];
+        List<ModifySSF> modifiers = result.PatchesSSF[0].Modifiers;
+
+        ModifySSF mod_0 = modifiers[0];
         mod_0.Stringref.Should().BeOfType<TokenUsageTLK>();
         ((TokenUsageTLK)mod_0.Stringref).TokenId.Should().Be(5);
 
-        var mod_1 = modifiers[1];
+        ModifySSF mod_1 = modifiers[1];
         mod_1.Stringref.Should().BeOfType<TokenUsageTLK>();
         ((TokenUsageTLK)mod_1.Stringref).TokenId.Should().Be(6);
     }
@@ -153,13 +153,13 @@ Battlecry 2=2DAMEMORY6
         PatcherConfig result = reader.Load(config);
 
         // Assert
-        var modifiers = result.PatchesSSF[0].Modifiers;
-        
-        var mod_0 = modifiers[0];
+        List<ModifySSF> modifiers = result.PatchesSSF[0].Modifiers;
+
+        ModifySSF mod_0 = modifiers[0];
         mod_0.Stringref.Should().BeOfType<TokenUsage2DA>();
         ((TokenUsage2DA)mod_0.Stringref).TokenId.Should().Be(5);
 
-        var mod_1 = modifiers[1];
+        ModifySSF mod_1 = modifiers[1];
         mod_1.Stringref.Should().BeOfType<TokenUsage2DA>();
         ((TokenUsage2DA)mod_1.Stringref).TokenId.Should().Be(6);
     }
@@ -211,90 +211,90 @@ Poisoned=28
         PatcherConfig result = reader.Load(config);
 
         // Assert
-        var modifiers = result.PatchesSSF[0].Modifiers;
-        
-        var mod_battlecry1 = modifiers[0];
+        List<ModifySSF> modifiers = result.PatchesSSF[0].Modifiers;
+
+        ModifySSF mod_battlecry1 = modifiers[0];
         mod_battlecry1.Sound.Should().Be(SSFSound.BATTLE_CRY_1);
-        
-        var mod_battlecry2 = modifiers[1];
+
+        ModifySSF mod_battlecry2 = modifiers[1];
         mod_battlecry2.Sound.Should().Be(SSFSound.BATTLE_CRY_2);
-        
-        var mod_battlecry3 = modifiers[2];
+
+        ModifySSF mod_battlecry3 = modifiers[2];
         mod_battlecry3.Sound.Should().Be(SSFSound.BATTLE_CRY_3);
-        
-        var mod_battlecry4 = modifiers[3];
+
+        ModifySSF mod_battlecry4 = modifiers[3];
         mod_battlecry4.Sound.Should().Be(SSFSound.BATTLE_CRY_4);
-        
-        var mod_battlecry5 = modifiers[4];
+
+        ModifySSF mod_battlecry5 = modifiers[4];
         mod_battlecry5.Sound.Should().Be(SSFSound.BATTLE_CRY_5);
-        
-        var mod_battlecry6 = modifiers[5];
+
+        ModifySSF mod_battlecry6 = modifiers[5];
         mod_battlecry6.Sound.Should().Be(SSFSound.BATTLE_CRY_6);
-        
-        var mod_selected1 = modifiers[6];
+
+        ModifySSF mod_selected1 = modifiers[6];
         mod_selected1.Sound.Should().Be(SSFSound.SELECT_1);
-        
-        var mod_selected2 = modifiers[7];
+
+        ModifySSF mod_selected2 = modifiers[7];
         mod_selected2.Sound.Should().Be(SSFSound.SELECT_2);
-        
-        var mod_selected3 = modifiers[8];
+
+        ModifySSF mod_selected3 = modifiers[8];
         mod_selected3.Sound.Should().Be(SSFSound.SELECT_3);
-        
-        var mod_attack1 = modifiers[9];
+
+        ModifySSF mod_attack1 = modifiers[9];
         mod_attack1.Sound.Should().Be(SSFSound.ATTACK_GRUNT_1);
-        
-        var mod_attack2 = modifiers[10];
+
+        ModifySSF mod_attack2 = modifiers[10];
         mod_attack2.Sound.Should().Be(SSFSound.ATTACK_GRUNT_2);
-        
-        var mod_attack3 = modifiers[11];
+
+        ModifySSF mod_attack3 = modifiers[11];
         mod_attack3.Sound.Should().Be(SSFSound.ATTACK_GRUNT_3);
-        
-        var mod_pain1 = modifiers[12];
+
+        ModifySSF mod_pain1 = modifiers[12];
         mod_pain1.Sound.Should().Be(SSFSound.PAIN_GRUNT_1);
-        
-        var mod_pain2 = modifiers[13];
+
+        ModifySSF mod_pain2 = modifiers[13];
         mod_pain2.Sound.Should().Be(SSFSound.PAIN_GRUNT_2);
-        
-        var mod_lowhealth = modifiers[14];
+
+        ModifySSF mod_lowhealth = modifiers[14];
         mod_lowhealth.Sound.Should().Be(SSFSound.LOW_HEALTH);
-        
-        var mod_death = modifiers[15];
+
+        ModifySSF mod_death = modifiers[15];
         mod_death.Sound.Should().Be(SSFSound.DEAD);
-        
-        var mod_criticalhit = modifiers[16];
+
+        ModifySSF mod_criticalhit = modifiers[16];
         mod_criticalhit.Sound.Should().Be(SSFSound.CRITICAL_HIT);
-        
-        var mod_targetimmune = modifiers[17];
+
+        ModifySSF mod_targetimmune = modifiers[17];
         mod_targetimmune.Sound.Should().Be(SSFSound.TARGET_IMMUNE);
-        
-        var mod_placemine = modifiers[18];
+
+        ModifySSF mod_placemine = modifiers[18];
         mod_placemine.Sound.Should().Be(SSFSound.LAY_MINE);
-        
-        var mod_disarmmine = modifiers[19];
+
+        ModifySSF mod_disarmmine = modifiers[19];
         mod_disarmmine.Sound.Should().Be(SSFSound.DISARM_MINE);
-        
-        var mod_stealthon = modifiers[20];
+
+        ModifySSF mod_stealthon = modifiers[20];
         mod_stealthon.Sound.Should().Be(SSFSound.BEGIN_STEALTH);
-        
-        var mod_search = modifiers[21];
+
+        ModifySSF mod_search = modifiers[21];
         mod_search.Sound.Should().Be(SSFSound.BEGIN_SEARCH);
-        
-        var mod_picklockstart = modifiers[22];
+
+        ModifySSF mod_picklockstart = modifiers[22];
         mod_picklockstart.Sound.Should().Be(SSFSound.BEGIN_UNLOCK);
-        
-        var mod_picklockfail = modifiers[23];
+
+        ModifySSF mod_picklockfail = modifiers[23];
         mod_picklockfail.Sound.Should().Be(SSFSound.UNLOCK_FAILED);
-        
-        var mod_picklockdone = modifiers[24];
+
+        ModifySSF mod_picklockdone = modifiers[24];
         mod_picklockdone.Sound.Should().Be(SSFSound.UNLOCK_SUCCESS);
-        
-        var mod_leaveparty = modifiers[25];
+
+        ModifySSF mod_leaveparty = modifiers[25];
         mod_leaveparty.Sound.Should().Be(SSFSound.SEPARATED_FROM_PARTY);
-        
-        var mod_rejoinparty = modifiers[26];
+
+        ModifySSF mod_rejoinparty = modifiers[26];
         mod_rejoinparty.Sound.Should().Be(SSFSound.REJOINED_PARTY);
-        
-        var mod_poisoned = modifiers[27];
+
+        ModifySSF mod_poisoned = modifiers[27];
         mod_poisoned.Sound.Should().Be(SSFSound.POISONED);
     }
 }

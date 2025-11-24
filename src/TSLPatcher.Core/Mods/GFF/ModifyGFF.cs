@@ -139,7 +139,7 @@ public abstract class ModifyGFF
     ///     - Acquires the container at each step from the parent container
     ///     - Returns the container at the end or None if not found along the path
     /// </summary>
-    protected object? NavigateContainers(GFFStruct rootContainer, string path)
+    protected static object? NavigateContainers(GFFStruct rootContainer, string path)
     {
         // Python: path = PureWindowsPath(path)
         // Python: if not path.name: return root_container

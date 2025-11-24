@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Input;
@@ -53,6 +54,9 @@ public partial class MainWindowViewModel : ViewModelBase
 
     private List<PatcherNamespace> _loadedNamespaces = new();
     private CancellationTokenSource? _cancellationTokenSource;
+    private ConfigReader? _currentConfigReader;
+    private LogLevel _logLevel = LogLevel.Warnings;
+    private bool _oneShot = false;
 
     public ObservableCollection<string> Namespaces { get; } = new();
     public ObservableCollection<string> GamePaths { get; } = new();
@@ -79,13 +83,55 @@ public partial class MainWindowViewModel : ViewModelBase
 
     private void OnLogEntry(object? sender, PatchLog log)
     {
+        WriteLogEntry(log);
+    }
+
+    private void WriteLogEntry(PatchLog log)
+    {
+        // Write to log file
+        try
+        {
+            string logFilePath = Core.GetLogFilePath(ModPath);
+            Directory.CreateDirectory(Path.GetDirectoryName(logFilePath) ?? "");
+            File.AppendAllText(logFilePath, log.FormattedMessage + Environment.NewLine, Encoding.UTF8);
+        }
+        catch (Exception ex)
+        {
+            // Log error but don't fail
+            Debug.WriteLine($"Failed to write log file: {ex.Message}");
+        }
+
+        // Filter by log level
+        LogType minLevel = GetLogTypeForLevel(_logLevel);
+        if ((int)log.LogType < (int)minLevel)
+        {
+            return;
+        }
+
+        // Add to UI
         AddLogEntry(log.FormattedMessage);
+    }
+
+    private LogType GetLogTypeForLevel(LogLevel level)
+    {
+        return level switch
+        {
+            LogLevel.Errors => LogType.Warning,
+            LogLevel.General => LogType.Warning,
+            LogLevel.Full => LogType.Verbose,
+            LogLevel.Warnings => LogType.Note,
+            LogLevel.Nothing => LogType.Warning,
+            _ => LogType.Warning
+        };
     }
 
     private void AddLogEntry(string message)
     {
-        _logTextBuilder.AppendLine(message);
-        LogText = _logTextBuilder.ToString();
+        Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+        {
+            _logTextBuilder.AppendLine(message);
+            LogText = _logTextBuilder.ToString();
+        });
     }
 
     [RelayCommand]
@@ -139,7 +185,7 @@ public partial class MainWindowViewModel : ViewModelBase
     [RelayCommand]
     private async Task Install()
     {
-        if (!ValidateGamePathAndNamespace())
+        if (!PreInstallValidate())
         {
             return;
         }
@@ -147,44 +193,108 @@ public partial class MainWindowViewModel : ViewModelBase
         IsTaskRunning = true;
         ProgressValue = 0;
         _cancellationTokenSource = new CancellationTokenSource();
+        ClearLogText();
 
         try
         {
+            PatcherNamespace? selectedNs = _loadedNamespaces.FirstOrDefault(ns => ns.Name == SelectedNamespace);
+            if (selectedNs == null)
+            {
+                throw new InvalidOperationException("Selected namespace not found.");
+            }
+
+            string tslPatchDataPath = Path.Combine(ModPath, "tslpatchdata");
+            string iniFilePath = Path.Combine(tslPatchDataPath, selectedNs.ChangesFilePath());
+
+            if (!File.Exists(iniFilePath))
+            {
+                throw new FileNotFoundException($"Changes INI file not found: {iniFilePath}");
+            }
+
+            var installer = new ModInstaller(ModPath, SelectedGamePath!, iniFilePath, _logger)
+            {
+                TslPatchDataPath = tslPatchDataPath
+            };
+
+            // Check for confirmation message
+            string? confirmMsg = Core.GetConfirmMessage(installer);
+            if (!string.IsNullOrEmpty(confirmMsg) && !_oneShot)
+            {
+                MsBox.Avalonia.Base.IMsBox<ButtonResult> confirmBox = MessageBoxManager.GetMessageBoxStandard(
+                    "This mod requires confirmation",
+                    confirmMsg,
+                    ButtonEnum.OkCancel,
+                    Icon.Question);
+                ButtonResult result = await confirmBox.ShowAsync();
+                if (result != ButtonResult.Ok)
+                {
+                    IsTaskRunning = false;
+                    return;
+                }
+            }
+
             AddLogEntry("Starting installation...");
+
+            // Calculate total patches for progress
+            int totalPatches = Core.CalculateTotalPatches(installer);
+            ProgressMaximum = totalPatches;
+
+            DateTime installStartTime = DateTime.UtcNow;
 
             await Task.Run(() =>
             {
-                PatcherNamespace? selectedNs = _loadedNamespaces.FirstOrDefault(ns => ns.Name == SelectedNamespace);
-                if (selectedNs == null)
-                {
-                    throw new InvalidOperationException("Selected namespace not found.");
-                }
-
-                string tslPatchDataPath = Path.Combine(ModPath, "tslpatchdata");
-                string iniFilePath = Path.Combine(tslPatchDataPath, selectedNs.ChangesFilePath());
-
-                if (!File.Exists(iniFilePath))
-                {
-                    throw new FileNotFoundException($"Changes INI file not found: {iniFilePath}");
-                }
-
-                var installer = new ModInstaller(ModPath, SelectedGamePath, iniFilePath, _logger)
-                {
-                    TslPatchDataPath = tslPatchDataPath
-                };
-
-                PatcherConfig config = installer.Config();
-                ProgressMaximum = config.InstallList.Count + config.Patches2DA.Count +
-                                 config.PatchesGFF.Count + config.PatchesNSS.Count +
-                                 config.PatchesSSF.Count;
-
                 installer.Install(
                     _cancellationTokenSource.Token,
-                    progress => ProgressValue = progress
-                );
+                    progress =>
+                    {
+                        Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                        {
+                            ProgressValue = progress;
+                        });
+                    });
             }, _cancellationTokenSource.Token);
 
-            AddLogEntry("Installation complete!");
+            TimeSpan installTime = DateTime.UtcNow - installStartTime;
+            int numErrors = _logger.Errors.Count();
+            int numWarnings = _logger.Warnings.Count();
+            int numPatches = installer.Config().PatchCount();
+
+            string timeStr = Core.FormatInstallTime(installTime);
+            _logger.AddNote(
+                $"The installation is complete with {numErrors} errors and {numWarnings} warnings.{Environment.NewLine}" +
+                $"Total install time: {timeStr}{Environment.NewLine}" +
+                $"Total patches: {numPatches}");
+
+            ProgressValue = ProgressMaximum;
+
+            // Show completion message
+            if (numErrors > 0)
+            {
+                MsBox.Avalonia.Base.IMsBox<ButtonResult> errorBox = MessageBoxManager.GetMessageBoxStandard(
+                    "Install completed with errors!",
+                    $"The install completed with {numErrors} errors and {numWarnings} warnings! The installation may not have been successful, check the logs for more details.{Environment.NewLine}{Environment.NewLine}Total install time: {timeStr}{Environment.NewLine}Total patches: {numPatches}",
+                    ButtonEnum.Ok,
+                    Icon.Error);
+                await errorBox.ShowAsync();
+            }
+            else if (numWarnings > 0)
+            {
+                MsBox.Avalonia.Base.IMsBox<ButtonResult> warningBox = MessageBoxManager.GetMessageBoxStandard(
+                    "Install completed with warnings",
+                    $"The install completed with {numWarnings} warnings! Review the logs for details. The script in the 'uninstall' folder of the mod directory will revert these changes.{Environment.NewLine}{Environment.NewLine}Total install time: {timeStr}{Environment.NewLine}Total patches: {numPatches}",
+                    ButtonEnum.Ok,
+                    Icon.Warning);
+                await warningBox.ShowAsync();
+            }
+            else
+            {
+                MsBox.Avalonia.Base.IMsBox<ButtonResult> infoBox = MessageBoxManager.GetMessageBoxStandard(
+                    "Install complete!",
+                    $"Check the logs for details on what has been done. Utilize the script in the 'uninstall' folder of the mod directory to revert these changes.{Environment.NewLine}{Environment.NewLine}Total install time: {timeStr}{Environment.NewLine}Total patches: {numPatches}",
+                    ButtonEnum.Ok,
+                    Icon.Success);
+                await infoBox.ShowAsync();
+            }
         }
         catch (OperationCanceledException)
         {
@@ -193,7 +303,12 @@ public partial class MainWindowViewModel : ViewModelBase
         catch (Exception ex)
         {
             AddLogEntry($"[ERROR] Installation failed: {ex.Message}");
-            AddLogEntry($"[ERROR] {ex.StackTrace}");
+            MsBox.Avalonia.Base.IMsBox<ButtonResult> errorBox = MessageBoxManager.GetMessageBoxStandard(
+                ex.GetType().Name,
+                $"An unexpected error occurred during the installation and the installation was forced to terminate.{Environment.NewLine}{Environment.NewLine}{ex.Message}",
+                ButtonEnum.Ok,
+                Icon.Error);
+            await errorBox.ShowAsync();
         }
         finally
         {
@@ -201,6 +316,15 @@ public partial class MainWindowViewModel : ViewModelBase
             _cancellationTokenSource?.Dispose();
             _cancellationTokenSource = null;
         }
+    }
+
+    private void ClearLogText()
+    {
+        Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+        {
+            _logTextBuilder.Clear();
+            LogText = string.Empty;
+        });
     }
 
     [RelayCommand]
@@ -211,10 +335,38 @@ public partial class MainWindowViewModel : ViewModelBase
     }
 
     [RelayCommand]
-    private void ValidateIni()
+    private async Task ValidateIni()
     {
-        AddLogEntry("Validating INI...");
-        // TODO: Implement validation
+        if (!PreInstallValidate())
+        {
+            return;
+        }
+
+        IsTaskRunning = true;
+        ClearLogText();
+
+        await Task.Run(() =>
+        {
+            try
+            {
+                PatcherNamespace? selectedNs = _loadedNamespaces.FirstOrDefault(ns => ns.Name == SelectedNamespace);
+                if (selectedNs == null)
+                {
+                    throw new InvalidOperationException("Selected namespace not found.");
+                }
+
+                Core.ValidateConfig(ModPath, _loadedNamespaces, SelectedNamespace!, _logger);
+            }
+            catch (Exception ex)
+            {
+                AddLogEntry($"[ERROR] Validation failed: {ex.Message}");
+            }
+            finally
+            {
+                IsTaskRunning = false;
+                _logger.AddNote("Config reader test is complete.");
+            }
+        });
     }
 
     [RelayCommand]
@@ -305,17 +457,142 @@ public partial class MainWindowViewModel : ViewModelBase
     }
 
     [RelayCommand]
-    private void FixPermissions()
+    private async Task FixPermissions()
     {
-        AddLogEntry("Fix permissions functionality not yet implemented.");
-        // TODO: Implement permission fixing
+        Window? window = GetMainWindow();
+        if (window == null)
+        {
+            return;
+        }
+
+        IReadOnlyList<IStorageFolder> folders = await window.StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
+        {
+            Title = "Select Directory to Fix Permissions",
+            AllowMultiple = false
+        });
+
+        if (folders.Count == 0)
+        {
+            return;
+        }
+
+        string directory = folders[0].Path.LocalPath;
+
+        MsBox.Avalonia.Base.IMsBox<ButtonResult> confirmBox = MessageBoxManager.GetMessageBoxStandard(
+            "Warning!",
+            "This is not a toy. Really continue?",
+            ButtonEnum.YesNo,
+            Icon.Warning);
+        ButtonResult result = await confirmBox.ShowAsync();
+        if (result != ButtonResult.Yes)
+        {
+            return;
+        }
+
+        IsTaskRunning = true;
+        ClearLogText();
+        AddLogEntry("Please wait, this may take awhile...");
+
+        await Task.Run(() =>
+        {
+            try
+            {
+                SystemHelpers.FixPermissions(directory, msg => AddLogEntry(msg));
+
+                int numFiles = 0;
+                int numFolders = 0;
+                if (Directory.Exists(directory))
+                {
+                    numFiles = Directory.GetFiles(directory, "*", SearchOption.AllDirectories).Length;
+                    numFolders = Directory.GetDirectories(directory, "*", SearchOption.AllDirectories).Length;
+                }
+
+                string extraMsg = $"{numFiles} files and {numFolders} folders finished processing.";
+                AddLogEntry(extraMsg);
+
+                Avalonia.Threading.Dispatcher.UIThread.Post(async () =>
+                {
+                    MsBox.Avalonia.Base.IMsBox<ButtonResult> successBox = MessageBoxManager.GetMessageBoxStandard(
+                        "Successfully acquired permission",
+                        $"The operation was successful. {extraMsg}",
+                        ButtonEnum.Ok,
+                        Icon.Success);
+                    await successBox.ShowAsync();
+                });
+            }
+            catch (Exception ex)
+            {
+                AddLogEntry($"[ERROR] Failed to fix permissions: {ex.Message}");
+                Avalonia.Threading.Dispatcher.UIThread.Post(async () =>
+                {
+                    MsBox.Avalonia.Base.IMsBox<ButtonResult> errorBox = MessageBoxManager.GetMessageBoxStandard(
+                        "Could not acquire permission!",
+                        $"Permissions denied! Check the logs for more details.{Environment.NewLine}{ex.Message}",
+                        ButtonEnum.Ok,
+                        Icon.Error);
+                    await errorBox.ShowAsync();
+                });
+            }
+            finally
+            {
+                IsTaskRunning = false;
+                _logger.AddNote("File/Folder permissions fixer task completed.");
+            }
+        });
     }
 
     [RelayCommand]
-    private void FixCaseSensitivity()
+    private async Task FixCaseSensitivity()
     {
-        AddLogEntry("Fix case sensitivity functionality not yet implemented.");
-        // TODO: Implement case sensitivity fixing
+        Window? window = GetMainWindow();
+        if (window == null)
+        {
+            return;
+        }
+
+        IReadOnlyList<IStorageFolder> folders = await window.StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
+        {
+            Title = "Select Directory to Fix Case Sensitivity",
+            AllowMultiple = false
+        });
+
+        if (folders.Count == 0)
+        {
+            return;
+        }
+
+        string directory = folders[0].Path.LocalPath;
+
+        IsTaskRunning = true;
+        ClearLogText();
+        AddLogEntry("Please wait, this may take awhile...");
+
+        await Task.Run(() =>
+        {
+            try
+            {
+                bool madeChange = false;
+                SystemHelpers.FixCaseSensitivity(directory, msg =>
+                {
+                    AddLogEntry(msg);
+                    madeChange = true;
+                });
+
+                if (!madeChange)
+                {
+                    AddLogEntry("Nothing to change - all files/folders already correct case.");
+                }
+                AddLogEntry("iOS case rename task completed.");
+            }
+            catch (Exception ex)
+            {
+                AddLogEntry($"[ERROR] Failed to fix case sensitivity: {ex.Message}");
+            }
+            finally
+            {
+                IsTaskRunning = false;
+            }
+        });
     }
 
     [RelayCommand]
@@ -336,96 +613,186 @@ public partial class MainWindowViewModel : ViewModelBase
     }
 
     [RelayCommand]
-    private void CheckUpdates()
+    private async Task CheckUpdates()
     {
-        AddLogEntry("Check for updates functionality not yet implemented.");
-        // TODO: Implement update checking
+        try
+        {
+            Dictionary<string, object>? updateInfo = await Config.GetRemoteHolopatcherUpdateInfoAsync();
+            if (updateInfo == null)
+            {
+                MsBox.Avalonia.Base.IMsBox<ButtonResult> errorBox = MessageBoxManager.GetMessageBoxStandard(
+                    "Error occurred fetching update information.",
+                    "An error occurred while fetching the latest toolset information. Would you like to check against the local database instead?",
+                    ButtonEnum.YesNo,
+                    Icon.Error);
+                ButtonResult result = await errorBox.ShowAsync();
+                if (result == ButtonResult.No)
+                {
+                    return;
+                }
+                updateInfo = new Dictionary<string, object> { ["holopatcherLatestVersion"] = Config.CurrentVersion };
+            }
+
+            string latestVersion = updateInfo.ContainsKey("holopatcherLatestVersion")
+                ? updateInfo["holopatcherLatestVersion"].ToString() ?? Config.CurrentVersion
+                : Config.CurrentVersion;
+
+            if (Config.RemoteVersionNewer(Config.CurrentVersion, latestVersion))
+            {
+                MsBox.Avalonia.Base.IMsBox<ButtonResult> updateBox = MessageBoxManager.GetMessageBoxStandard(
+                    "Update Available",
+                    "A newer version of HoloPatcher is available, would you like to download it now?",
+                    ButtonEnum.YesNo,
+                    Icon.Question);
+                ButtonResult updateResult = await updateBox.ShowAsync();
+                if (updateResult == ButtonResult.Yes)
+                {
+                    // TODO: Implement auto-update
+                    string downloadLink = updateInfo.ContainsKey("holopatcherDownloadLink")
+                        ? updateInfo["holopatcherDownloadLink"].ToString() ?? ""
+                        : "";
+                    if (!string.IsNullOrEmpty(downloadLink))
+                    {
+                        OpenUrl(downloadLink);
+                    }
+                }
+            }
+            else
+            {
+                MsBox.Avalonia.Base.IMsBox<ButtonResult> infoBox = MessageBoxManager.GetMessageBoxStandard(
+                    "No updates available.",
+                    $"You are already running the latest version of HoloPatcher ({Core.VersionLabel})",
+                    ButtonEnum.Ok,
+                    Icon.Info);
+                await infoBox.ShowAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            MsBox.Avalonia.Base.IMsBox<ButtonResult> errorBox = MessageBoxManager.GetMessageBoxStandard(
+                "Unable to fetch latest version",
+                $"An error occurred: {ex.Message}",
+                ButtonEnum.Ok,
+                Icon.Error);
+            await errorBox.ShowAsync();
+        }
     }
 
     [RelayCommand]
-    private void ShowNamespaceInfo()
+    private async Task ShowNamespaceInfo()
     {
         if (string.IsNullOrEmpty(SelectedNamespace))
         {
-            AddLogEntry("[INFO] No namespace selected.");
+            MsBox.Avalonia.Base.IMsBox<ButtonResult> infoBox = MessageBoxManager.GetMessageBoxStandard(
+                "No namespace selected",
+                "Please select a namespace first.",
+                ButtonEnum.Ok,
+                Icon.Info);
+            await infoBox.ShowAsync();
             return;
         }
-        // TODO: Show namespace description dialog
+
+        string description = Core.GetNamespaceDescription(_loadedNamespaces, SelectedNamespace);
+        MsBox.Avalonia.Base.IMsBox<ButtonResult> descBox = MessageBoxManager.GetMessageBoxStandard(
+            SelectedNamespace,
+            string.IsNullOrEmpty(description) ? "No description available." : description,
+            ButtonEnum.Ok,
+            Icon.Info);
+        await descBox.ShowAsync();
     }
 
     private async Task LoadModFromPath(string path)
     {
-        ModPath = path;
-        AddLogEntry($"Loading mod from: {path}");
-
-        await Task.Run(() =>
+        try
         {
-            try
+            Core.ModInfo modInfo = Core.LoadMod(path);
+            ModPath = modInfo.ModPath;
+            _loadedNamespaces = modInfo.Namespaces;
+            _currentConfigReader = modInfo.ConfigReader;
+
+            AddLogEntry($"Loaded {_loadedNamespaces.Count} namespace(s)");
+
+            // Update UI on main thread
+            Avalonia.Threading.Dispatcher.UIThread.Post(() =>
             {
-                // Check for tslpatchdata folder
-                string tslPatchDataPath = Path.Combine(path, "tslpatchdata");
-                if (!Directory.Exists(tslPatchDataPath))
+                Namespaces.Clear();
+                foreach (PatcherNamespace ns in _loadedNamespaces)
                 {
-                    // Try the path itself
-                    if (!File.Exists(Path.Combine(path, "changes.ini")))
-                    {
-                        AddLogEntry("[ERROR] Could not find tslpatchdata folder or changes.ini file.");
-                        return;
-                    }
-                    tslPatchDataPath = path;
+                    string displayName = !string.IsNullOrWhiteSpace(ns.Name) ? ns.Name : ns.ChangesFilePath();
+                    Namespaces.Add(displayName);
                 }
 
-                // Try to load namespaces.ini
-                string namespacesIniPath = Path.Combine(tslPatchDataPath, "namespaces.ini");
-                if (File.Exists(namespacesIniPath))
+                if (Namespaces.Count > 0)
                 {
-                    _loadedNamespaces = NamespaceReader.FromFilePath(namespacesIniPath);
-                    AddLogEntry($"Loaded {_loadedNamespaces.Count} namespace(s) from namespaces.ini");
+                    SelectedNamespace = Namespaces[0];
+                    OnNamespaceSelected();
                 }
-                else
-                {
-                    // Fall back to changes.ini
-                    string changesIniPath = Path.Combine(tslPatchDataPath, "changes.ini");
-                    if (File.Exists(changesIniPath))
-                    {
-                        _loadedNamespaces = new List<PatcherNamespace>
-                        {
-                            new PatcherNamespace("changes.ini", "info.rtf")
-                            {
-                                Name = "Default",
-                                Description = "Default installation"
-                            }
-                        };
-                        AddLogEntry("Using default changes.ini");
-                    }
-                    else
-                    {
-                        AddLogEntry("[ERROR] Could not find namespaces.ini or changes.ini");
-                        return;
-                    }
-                }
+            });
+        }
+        catch (Exception ex)
+        {
+            AddLogEntry($"[ERROR] Failed to load mod: {ex.Message}");
+            MsBox.Avalonia.Base.IMsBox<ButtonResult> errorBox = MessageBoxManager.GetMessageBoxStandard(
+                "Error",
+                $"Could not find a mod located at the given folder.{Environment.NewLine}{ex.Message}",
+                ButtonEnum.Ok,
+                Icon.Error);
+            await errorBox.ShowAsync();
+        }
+    }
 
-                // Update UI on main thread
+    private void OnNamespaceSelected()
+    {
+        if (string.IsNullOrEmpty(SelectedNamespace) || string.IsNullOrEmpty(ModPath))
+        {
+            return;
+        }
+
+        try
+        {
+            Core.NamespaceInfo namespaceInfo = Core.LoadNamespaceConfig(ModPath, _loadedNamespaces, SelectedNamespace, _currentConfigReader);
+            _logLevel = namespaceInfo.LogLevel;
+
+            // Update game paths based on namespace
+            if (namespaceInfo.GamePaths.Count > 0)
+            {
                 Avalonia.Threading.Dispatcher.UIThread.Post(() =>
                 {
-                    Namespaces.Clear();
-                    foreach (PatcherNamespace ns in _loadedNamespaces)
+                    GamePaths.Clear();
+                    foreach (string gamePath in namespaceInfo.GamePaths)
                     {
-                        string displayName = !string.IsNullOrWhiteSpace(ns.Name) ? ns.Name : ns.ChangesFilePath();
-                        Namespaces.Add(displayName);
+                        if (!GamePaths.Contains(gamePath))
+                        {
+                            GamePaths.Add(gamePath);
+                        }
                     }
-
-                    if (Namespaces.Count > 0)
+                    if (GamePaths.Count > 0 && string.IsNullOrEmpty(SelectedGamePath))
                     {
-                        SelectedNamespace = Namespaces[0];
+                        SelectedGamePath = GamePaths[0];
                     }
                 });
             }
-            catch (Exception ex)
+
+            // Load and display info.rtf/rte content
+            if (!string.IsNullOrEmpty(namespaceInfo.InfoContent))
             {
-                AddLogEntry($"[ERROR] Failed to load mod: {ex.Message}");
+                ClearLogText();
+                AddLogEntry(namespaceInfo.InfoContent);
             }
-        });
+        }
+        catch (Exception ex)
+        {
+            AddLogEntry($"[ERROR] Failed to load namespace config: {ex.Message}");
+        }
+    }
+
+    partial void OnSelectedNamespaceChanged(string? value)
+    {
+        OnPropertyChanged(nameof(CanInstall));
+        if (!string.IsNullOrEmpty(value))
+        {
+            OnNamespaceSelected();
+        }
     }
 
     private void DetectGamePaths()
@@ -471,24 +838,65 @@ public partial class MainWindowViewModel : ViewModelBase
         OnPropertyChanged(nameof(CanInstall));
     }
 
-    partial void OnSelectedNamespaceChanged(string? value)
-    {
-        OnPropertyChanged(nameof(CanInstall));
-    }
 
     partial void OnSelectedGamePathChanged(string? value)
     {
         OnPropertyChanged(nameof(CanInstall));
     }
 
-    private bool ValidateGamePathAndNamespace()
+    private bool PreInstallValidate()
     {
-        if (string.IsNullOrEmpty(SelectedGamePath) || string.IsNullOrEmpty(SelectedNamespace))
+        if (IsTaskRunning)
         {
-            AddLogEntry("[ERROR] Please select both a mod and game directory.");
+            MsBox.Avalonia.Base.IMsBox<ButtonResult> infoBox = MessageBoxManager.GetMessageBoxStandard(
+                "Task already running",
+                "Wait for the previous task to finish.",
+                ButtonEnum.Ok,
+                Icon.Info);
+            Avalonia.Threading.Dispatcher.UIThread.Post(async () => await infoBox.ShowAsync());
             return false;
         }
+
+        if (string.IsNullOrEmpty(ModPath) || !Directory.Exists(ModPath))
+        {
+            MsBox.Avalonia.Base.IMsBox<ButtonResult> infoBox = MessageBoxManager.GetMessageBoxStandard(
+                "No mod chosen",
+                "Select your mod directory first.",
+                ButtonEnum.Ok,
+                Icon.Info);
+            Avalonia.Threading.Dispatcher.UIThread.Post(async () => await infoBox.ShowAsync());
+            return false;
+        }
+
+        if (string.IsNullOrEmpty(SelectedGamePath))
+        {
+            MsBox.Avalonia.Base.IMsBox<ButtonResult> infoBox = MessageBoxManager.GetMessageBoxStandard(
+                "No KOTOR directory chosen",
+                "Select your KOTOR directory first.",
+                ButtonEnum.Ok,
+                Icon.Info);
+            Avalonia.Threading.Dispatcher.UIThread.Post(async () => await infoBox.ShowAsync());
+            return false;
+        }
+
+        var gamePath = new CaseAwarePath(SelectedGamePath);
+        if (!gamePath.IsDirectory())
+        {
+            MsBox.Avalonia.Base.IMsBox<ButtonResult> infoBox = MessageBoxManager.GetMessageBoxStandard(
+                "Invalid KOTOR directory chosen",
+                "Select a valid path to your KOTOR install.",
+                ButtonEnum.Ok,
+                Icon.Info);
+            Avalonia.Threading.Dispatcher.UIThread.Post(async () => await infoBox.ShowAsync());
+            return false;
+        }
+
         return true;
+    }
+
+    private bool ValidateGamePathAndNamespace()
+    {
+        return PreInstallValidate() && !string.IsNullOrEmpty(SelectedNamespace);
     }
 
     private bool ValidateModPathAndGamePath()

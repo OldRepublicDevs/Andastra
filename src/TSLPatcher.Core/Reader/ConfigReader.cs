@@ -810,7 +810,7 @@ public class ConfigReader
     ///     file_section_dict: Dictionary containing offset=value pairs from INI section
     ///     modifications: ModificationsNCS object to populate with ModifyNCS objects
     /// </summary>
-    private void ParseNCSHackEntries(
+    private static void ParseNCSHackEntries(
         Dictionary<string, string> fileSectionDict,
         ModificationsNCS modifications)
     {
@@ -1567,7 +1567,7 @@ public class ConfigReader
     ///     - Call column_inserts_2da() to get insert details
     ///     - Return AddColumn2DA object
     /// </summary>
-    private AddColumn2DA ReadAddColumn(
+    private static AddColumn2DA ReadAddColumn(
         Dictionary<string, string> modifiers,
         string identifier)
     {

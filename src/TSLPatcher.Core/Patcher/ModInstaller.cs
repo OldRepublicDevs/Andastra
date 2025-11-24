@@ -610,7 +610,7 @@ public class ModInstaller
     /// <summary>
     /// Loads a resource file using BinaryReader (matches Python load_resource_file).
     /// </summary>
-    private byte[] LoadResourceFile(string sourcePath)
+    private static byte[] LoadResourceFile(string sourcePath)
     {
         // Python: with BinaryReader.from_auto(source) as reader: return reader.read_all()
         using var reader = RawBinaryReader.FromFile(sourcePath);
@@ -817,7 +817,7 @@ public class ModInstaller
         if (File.Exists(filepathRim))
         {
             var rimCapsule = new Capsule(filepathRim, createIfNotExist: false);
-            foreach (var res in rimCapsule)
+            foreach (CapsuleResource res in rimCapsule)
             {
                 mod.SetData(res.ResName, res.ResType, res.Data);
             }
@@ -827,7 +827,7 @@ public class ModInstaller
         if (File.Exists(filepathRimS))
         {
             var rimSCapsule = new Capsule(filepathRimS, createIfNotExist: false);
-            foreach (var res in rimSCapsule)
+            foreach (CapsuleResource res in rimSCapsule)
             {
                 mod.SetData(res.ResName, res.ResType, res.Data);
             }
@@ -837,7 +837,7 @@ public class ModInstaller
         if ((Game == null || Game.Value == Common.Game.TSL) && File.Exists(filepathDlgErf))
         {
             var erfCapsule = new Capsule(filepathDlgErf, createIfNotExist: false);
-            foreach (var res in erfCapsule)
+            foreach (CapsuleResource res in erfCapsule)
             {
                 mod.SetData(res.ResName, res.ResType, res.Data);
             }
@@ -912,7 +912,7 @@ public class ModInstaller
     /// Creates uninstall scripts (PowerShell and Bash) in the uninstall folder.
     /// Matches Python: def create_uninstall_scripts(...)
     /// </summary>
-    private void CreateUninstallScripts(string backupDir, string uninstallFolder, string mainFolder)
+    private static void CreateUninstallScripts(string backupDir, string uninstallFolder, string mainFolder)
     {
         // PowerShell script - using StringBuilder to avoid verbatim string parsing issues
         string ps1Path = Path.Combine(uninstallFolder, "uninstall.ps1");

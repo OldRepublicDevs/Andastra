@@ -236,7 +236,10 @@ public class DynamicDataType
         if (Builtin == DataType.Struct)
         {
             if (Struct == null)
+            {
                 throw new CompileError("Struct type has no name");
+            }
+
             return root.StructMap[Struct].Size(root);
         }
         return Builtin.Size();
