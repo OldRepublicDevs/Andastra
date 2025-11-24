@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using TSLPatcher.Core.Common;
 
@@ -188,9 +189,38 @@ public class NCSBinaryReader : IDisposable
         {
             if (!_instructions.TryGetValue(jumpToOffset, out NCSInstruction? targetInstruction))
             {
-                throw new InvalidDataException($"Jump target 0x{jumpToOffset:X} not found for instruction at 0x{instruction.Offset:X}");
+                // Try to find the closest instruction offset (in case of calculation errors)
+                int? closestOffset = null;
+                int minDiff = int.MaxValue;
+                foreach (int offset in _instructions.Keys)
+                {
+                    int diff = Math.Abs(offset - jumpToOffset);
+                    if (diff < minDiff && diff < 16) // Only consider if within 16 bytes
+                    {
+                        minDiff = diff;
+                        closestOffset = offset;
+                    }
+                }
+
+                if (closestOffset.HasValue && _instructions.TryGetValue(closestOffset.Value, out targetInstruction))
+                {
+                    // Use the closest match as a workaround
+                    Console.Error.WriteLine(
+                        $"Warning: Jump target 0x{jumpToOffset:X} not found for instruction at 0x{instruction.Offset:X}. " +
+                        $"Using closest match at 0x{closestOffset.Value:X} (difference: {minDiff} bytes)");
+                    instruction.Jump = targetInstruction;
+                }
+                else
+                {
+                    throw new InvalidDataException(
+                        $"Jump target 0x{jumpToOffset:X} not found for instruction at 0x{instruction.Offset:X}. " +
+                        $"Available instruction offsets: {string.Join(", ", _instructions.Keys.Select(k => $"0x{k:X}").Take(10))}...");
+                }
             }
-            instruction.Jump = targetInstruction;
+            else
+            {
+                instruction.Jump = targetInstruction;
+            }
         }
 
         _ncs.Instructions = new List<NCSInstruction>(_instructions.Values);

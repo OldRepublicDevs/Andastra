@@ -18,28 +18,34 @@ public class NCSCompilerTests
     /// <summary>
     /// Python: test_enginecall
     /// </summary>
-    [Fact(Skip = "Requires NSS compilation functionality")]
+    [Fact]
     public void TestEnginecall()
     {
         // TODO: Implement when compile functionality is available
+        // This test requires full NSS compiler implementation
+        throw new NotImplementedException("Test requires full NSS compiler implementation");
     }
 
     /// <summary>
     /// Python: test_enginecall_return_value
     /// </summary>
-    [Fact(Skip = "Requires NSS compilation functionality")]
+    [Fact]
     public void TestEnginecallReturnValue()
     {
         // TODO: Implement when compile functionality is available
+        // This test requires full NSS compiler implementation
+        throw new NotImplementedException("Test requires full NSS compiler implementation");
     }
 
     /// <summary>
     /// Python: test_enginecall_with_params
     /// </summary>
-    [Fact(Skip = "Requires NSS compilation functionality")]
+    [Fact]
     public void TestEnginecallWithParams()
     {
         // TODO: Implement when compile functionality is available
+        // This test requires full NSS compiler implementation
+        throw new NotImplementedException("Test requires full NSS compiler implementation");
     }
 
     // Note: The Python test file has many more tests (operators, logical operators, 

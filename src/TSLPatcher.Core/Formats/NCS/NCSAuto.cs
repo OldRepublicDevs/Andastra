@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using TSLPatcher.Core.Common;
 using TSLPatcher.Core.Common.Script;
+using TSLPatcher.Core.Formats.NCS.Compiler;
 using TSLPatcher.Core.Resources;
 
 namespace TSLPatcher.Core.Formats.NCS;
@@ -116,9 +117,15 @@ public static class NCSAuto
         List<INCSOptimizer>? optimizers = null,
         List<string>? libraryLookup = null)
     {
-        // TODO: Implement full NSS compiler (lexer, parser, compilation)
-        // For now, this is a placeholder that will need the full compiler implementation
-        throw new NotImplementedException("NSS compilation requires full lexer/parser implementation. This is a large undertaking and needs to be ported from Python.");
+        var compiler = new Compiler.NssCompiler(game, libraryLookup);
+        NCS ncs = compiler.Compile(source);
+
+        if (optimizers != null && optimizers.Count > 0)
+        {
+            ncs.Optimize(optimizers);
+        }
+
+        return ncs;
     }
 
     /// <summary>
@@ -132,8 +139,19 @@ public static class NCSAuto
         List<ScriptConstant>? constants = null)
     {
         // TODO: Implement full NCS decompiler
+        // This requires:
+        // 1. Instruction-to-NSS conversion logic
+        // 2. Control flow reconstruction (if/else, loops, switch)
+        // 3. Function call resolution
+        // 4. Variable name reconstruction
+        // 5. Struct handling
+        // 6. All NWScript language features
+        
         // For now, this is a placeholder that will need the full decompiler implementation
-        throw new NotImplementedException("NCS decompilation requires full decompiler implementation. This is a large undertaking and needs to be ported from Python.");
+        throw new NotImplementedException(
+            "NCS decompilation requires full decompiler implementation. " +
+            "This is a large undertaking and needs to be ported from Python. " +
+            "The Python implementation in pykotor/resource/formats/ncs/decompiler.py needs to be ported 1:1.");
     }
 }
 

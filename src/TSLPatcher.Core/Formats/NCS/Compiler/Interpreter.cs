@@ -65,10 +65,208 @@ public class Interpreter
             NCSInstruction cursor = _cursor;
             int index = _cursorIndex;
 
-            // TODO: Implement full instruction execution
-            // This is a placeholder - needs full implementation matching Python interpreter
-            throw new NotImplementedException("Full interpreter implementation required. This needs to be ported from Python.");
+            // Take stack snapshot before executing instruction
+            StackSnapshots.Add(new StackSnapshot(cursor, _stack.State()));
+
+            // Execute instruction based on type
+            ExecuteInstruction(cursor);
+
+            // Move to next instruction (unless jump occurred)
+            if (_cursor == cursor) // No jump occurred
+            {
+                _cursorIndex++;
+                if (_cursorIndex >= _ncs.Instructions.Count)
+                {
+                    _cursor = null;
+                }
+                else
+                {
+                    _cursor = _ncs.Instructions[_cursorIndex];
+                }
+            }
         }
+    }
+
+    private void ExecuteInstruction(NCSInstruction instruction)
+    {
+        switch (instruction.InsType)
+        {
+            case NCSInstructionType.NOP:
+                // No operation - do nothing
+                break;
+
+            case NCSInstructionType.CONSTI:
+                // Push integer constant onto stack
+                if (instruction.Args.Count > 0 && instruction.Args[0] is int intValue)
+                {
+                    _stack.Add(DataType.Int, intValue);
+                }
+                break;
+
+            case NCSInstructionType.CONSTF:
+                // Push float constant onto stack
+                if (instruction.Args.Count > 0 && instruction.Args[0] is float floatValue)
+                {
+                    _stack.Add(DataType.Float, floatValue);
+                }
+                break;
+
+            case NCSInstructionType.CONSTS:
+                // Push string constant onto stack
+                if (instruction.Args.Count > 0 && instruction.Args[0] is string stringValue)
+                {
+                    _stack.Add(DataType.String, stringValue);
+                }
+                break;
+
+            case NCSInstructionType.ACTION:
+                // Call a function/action
+                ExecuteAction(instruction);
+                break;
+
+            case NCSInstructionType.MOVSP:
+                // Move stack pointer
+                if (instruction.Args.Count > 0 && instruction.Args[0] is int offset)
+                {
+                    _stack.Move(offset);
+                }
+                break;
+
+            case NCSInstructionType.JMP:
+                // Unconditional jump
+                if (instruction.Jump != null)
+                {
+                    _cursor = instruction.Jump;
+                    _cursorIndex = _ncs.GetInstructionIndex(instruction.Jump);
+                }
+                break;
+
+            case NCSInstructionType.JZ:
+                // Jump if zero
+                if (_stack.State().Count > 0)
+                {
+                    StackObject top = _stack.Peek(-4);
+                    bool isZero = IsZero(top);
+                    if (isZero && instruction.Jump != null)
+                    {
+                        _cursor = instruction.Jump;
+                        _cursorIndex = _ncs.GetInstructionIndex(instruction.Jump);
+                    }
+                }
+                break;
+
+            case NCSInstructionType.JNZ:
+                // Jump if not zero
+                if (_stack.State().Count > 0)
+                {
+                    StackObject top = _stack.Peek(-4);
+                    bool isZero = IsZero(top);
+                    if (!isZero && instruction.Jump != null)
+                    {
+                        _cursor = instruction.Jump;
+                        _cursorIndex = _ncs.GetInstructionIndex(instruction.Jump);
+                    }
+                }
+                break;
+
+            case NCSInstructionType.RETN:
+                // Return from function
+                if (_returns.Count > 0)
+                {
+                    var (returnInst, returnIndex) = _returns[_returns.Count - 1];
+                    _returns.RemoveAt(_returns.Count - 1);
+                    _cursor = returnInst;
+                    _cursorIndex = returnIndex;
+                }
+                else
+                {
+                    _cursor = null; // End of execution
+                }
+                break;
+
+            // TODO: Implement all other instruction types
+            // This is a partial implementation - needs to be expanded to handle all NCS instructions
+            default:
+                throw new NotImplementedException(
+                    $"Instruction type {instruction.InsType} is not yet implemented in the interpreter. " +
+                    "Full interpreter implementation needs to be ported from Python.");
+        }
+    }
+
+    private void ExecuteAction(NCSInstruction instruction)
+    {
+        // ACTION instruction: Args[0] = action ID, Args[1] = parameter count
+        if (instruction.Args.Count < 2)
+        {
+            throw new InvalidOperationException("ACTION instruction requires at least 2 arguments");
+        }
+
+        int actionId = Convert.ToInt32(instruction.Args[0]);
+        int paramCount = Convert.ToInt32(instruction.Args[1]);
+
+        // Pop parameters from stack (parameters are pushed in reverse order)
+        var argValues = new List<StackObject>();
+        for (int i = paramCount - 1; i >= 0; i--)
+        {
+            int offset = -(paramCount - i) * 4;
+            StackObject arg = _stack.Peek(offset);
+            argValues.Add(arg);
+        }
+
+        // Try to find function by matching parameter count and types
+        // Note: Action ID mapping to function names is complex and requires function table lookup
+        // For now, we'll use a simplified approach
+        ScriptFunction? function = null;
+        if (actionId >= 0 && actionId < _functions.Count)
+        {
+            // Try index-based lookup (action IDs often correspond to function table indices)
+            function = _functions[actionId];
+        }
+        else
+        {
+            // Try to find by parameter count match (heuristic)
+            function = _functions.FirstOrDefault(f => f.Params.Count == paramCount);
+        }
+
+        string functionName = function?.Name ?? $"Action_{actionId}";
+
+        // Check for mock
+        object? returnValue = null;
+        if (_mocks.TryGetValue(functionName, out var mock))
+        {
+            object?[] mockArgs = argValues.Select(a => a.Value).ToArray();
+            returnValue = mock(mockArgs);
+        }
+        else if (function != null)
+        {
+            // Function exists but no mock - for void functions, just record the call
+            // For functions with return values, we'd need to execute them (not implemented yet)
+            returnValue = null;
+        }
+
+        // Record action snapshot
+        ActionSnapshots.Add(new ActionSnapshot(functionName, argValues, returnValue));
+
+        // Remove parameters from stack
+        _stack.Move(-paramCount * 4);
+
+        // Push return value if any
+        if (returnValue != null && function != null && function.ReturnType != DataType.Void)
+        {
+            _stack.Add(function.ReturnType, returnValue);
+        }
+    }
+
+    private static bool IsZero(StackObject obj)
+    {
+        return obj.Value switch
+        {
+            int i => i == 0,
+            float f => Math.Abs(f) < float.Epsilon,
+            string s => string.IsNullOrEmpty(s),
+            null => true,
+            _ => false
+        };
     }
 
     /// <summary>
@@ -96,9 +294,12 @@ public class Interpreter
 
     private static List<ScriptFunction> GetFunctionsForGame(Game game)
     {
-        // TODO: Load actual function definitions for K1/TSL
-        // This needs to be implemented to load from scriptdefs
-        return new List<ScriptFunction>();
+        return game switch
+        {
+            Game.K1 => ScriptDefs.KOTOR_FUNCTIONS,
+            Game.K2 => ScriptDefs.TSL_FUNCTIONS,
+            _ => new List<ScriptFunction>()
+        };
     }
 }
 

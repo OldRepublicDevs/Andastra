@@ -25,7 +25,7 @@ public class NCSRoundtripTests
     /// Python: test_nss_roundtrip
     /// Tests that NSS -> NCS -> NSS -> NCS roundtrip is stable.
     /// </summary>
-    [Fact(Skip = "Requires compile_nss and decompile_ncs functionality")]
+    [Fact]
     public void TestNssRoundtrip()
     {
         // Python: if not self.roundtrip_cases:
@@ -52,6 +52,7 @@ public class NCSRoundtripTests
         // 1. compile_nss(source, game, library_lookup) -> NCS
         // 2. decompile_ncs(ncs, game) -> string
         // 3. Access to Vanilla_KOTOR_Script_Source submodule or test scripts
+        throw new NotImplementedException("Test requires full NSS compiler and NCS decompiler implementation");
     }
 }
 
