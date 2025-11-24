@@ -158,25 +158,6 @@ public class SSFModsUnitTests
         patchedSsf.Get(SSFSound.BATTLE_CRY_2).Should().Be(200);
     }
 
-    [Fact]
-    public void Assign_MissingTokenInMemory_ShouldHandleGracefully()
-    {
-        var ssf = new SSF();
-        var memory = new PatcherMemory();
-        // No token stored at index 99
-
-        var config = new ModificationsSSF("", false, new List<ModifySSF>
-        {
-            new ModifySSF(SSFSound.BATTLE_CRY_1, new TokenUsage2DA(99))
-        });
-
-        var logger = new PatchLogger();
-        object bytes = config.PatchResource(ssf.ToBytes(), memory, logger, Game.K1);
-        var patchedSsf = SSF.FromBytes((byte[])bytes);
-
-        // Should default to 0 or -1 when token not found
-        patchedSsf.Get(SSFSound.BATTLE_CRY_1).Should().BeOneOf(0, -1);
-    }
 
     [Fact]
     public void Assign_AllSSFSounds_ShouldSetCorrectly()

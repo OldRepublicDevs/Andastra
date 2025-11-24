@@ -3,8 +3,10 @@ using System.IO;
 using FluentAssertions;
 using TSLPatcher.Core.Common;
 using TSLPatcher.Core.Formats.GFF;
+using TSLPatcher.Core.Resources;
 using Xunit;
 using TSLPatcher.Tests.Common;
+using static TSLPatcher.Core.Formats.GFF.GFFAuto;
 
 namespace TSLPatcher.Tests.Formats;
 
@@ -64,9 +66,89 @@ public class GFFFormatTests
     [Fact]
     public void TestReadRaises()
     {
-        // Invalid file
-        Action act = () => new GFFBinaryReader(CorruptGffFile).Load();
-        act.Should().Throw<InvalidDataException>();
+        // test_read_raises from Python
+        // Test directory access
+        Action act1 = () => new GFFBinaryReader(".").Load();
+        act1.Should().Throw<Exception>(); // UnauthorizedAccessException or IOException
+
+        // Test file not found
+        Action act2 = () => new GFFBinaryReader("./thisfiledoesnotexist").Load();
+        act2.Should().Throw<FileNotFoundException>();
+
+        // Test corrupted file
+        Action act3 = () => new GFFBinaryReader(CorruptGffFile).Load();
+        act3.Should().Throw<InvalidDataException>();
+    }
+
+    [Fact]
+    public void TestWriteRaises()
+    {
+        // test_write_raises from Python
+        var gff = new GFF();
+
+        // Test writing to directory (should raise PermissionError on Windows, IsADirectoryError on Unix)
+        // Python: write_gff(GFF(), ".", ResourceType.GFF)
+        Action act1 = () => WriteGff(gff, ".", ResourceType.GFF);
+        if (System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Windows))
+        {
+            act1.Should().Throw<UnauthorizedAccessException>();
+        }
+        else
+        {
+            act1.Should().Throw<IOException>(); // IsADirectoryError equivalent
+        }
+
+        // Test invalid resource type (Python raises ValueError for ResourceType.INVALID)
+        // Python: write_gff(GFF(), ".", ResourceType.INVALID)
+        Action act2 = () => WriteGff(gff, ".", ResourceType.INVALID);
+        act2.Should().Throw<ArgumentException>().WithMessage("*Unsupported format*");
+    }
+
+    [Fact]
+    public void TestToRawDataSimpleReadSizeUnchanged()
+    {
+        // test_to_raw_data_simple_read_size_unchanged from Python
+        if (!File.Exists(TestGffFile))
+        {
+            return; // Skip if test file doesn't exist
+        }
+
+        byte[] originalData = File.ReadAllBytes(TestGffFile);
+        GFF gff = new GFFBinaryReader(originalData).Load();
+
+        byte[] rawData = new GFFBinaryWriter(gff).Write();
+
+        rawData.Length.Should().Be(originalData.Length, "Size of raw data has changed.");
+    }
+
+    [Fact]
+    public void TestWriteToFileValidPathSizeUnchanged()
+    {
+        // test_write_to_file_valid_path_size_unchanged from Python
+        string gitTestFile = TestFileHelper.GetPath("test.git");
+        if (!File.Exists(gitTestFile))
+        {
+            return; // Skip if test file doesn't exist
+        }
+
+        long originalSize = new FileInfo(gitTestFile).Length;
+        GFF gff = new GFFBinaryReader(gitTestFile).Load();
+
+        string tempFile = Path.Combine(Path.GetTempPath(), $"test_{Guid.NewGuid()}.git");
+        try
+        {
+            File.WriteAllBytes(tempFile, new GFFBinaryWriter(gff).Write());
+
+            File.Exists(tempFile).Should().BeTrue("GFF output file was not created.");
+            new FileInfo(tempFile).Length.Should().Be(originalSize, "File size has changed.");
+        }
+        finally
+        {
+            if (File.Exists(tempFile))
+            {
+                File.Delete(tempFile);
+            }
+        }
     }
 }
 

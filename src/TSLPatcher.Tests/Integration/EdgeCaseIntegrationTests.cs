@@ -26,7 +26,7 @@ Table0=test.2da
 AddRow0=first_row
 
 [first_row]
-label=0
+RowLabel=0
 Col1=value1
 Col2=value2
 ";
@@ -55,19 +55,19 @@ AddRow2=row3
 
 [row1]
 ExclusiveColumn=id
-label=first
+RowLabel=first
 id=100
 value=one
 
 [row2]
 ExclusiveColumn=id
-label=second
+RowLabel=second
 id=100
 value=two
 
 [row3]
 ExclusiveColumn=id
-label=third
+RowLabel=third
 id=100
 value=three
 ";
@@ -124,7 +124,7 @@ CopyRow0=copy_missing
 
 [copy_missing]
 RowIndex=999
-label=copied
+RowLabel=copied
 ";
         PatcherConfig config = SetupIniAndConfig(iniText);
         TwoDA twoda = CreateTest2DA(
@@ -176,7 +176,7 @@ Table0=test.2da
 AddRow0=row1
 
 [row1]
-label=new
+RowLabel=new
 Col1=high()
 ";
         PatcherConfig config = SetupIniAndConfig(iniText);
@@ -202,7 +202,7 @@ Table0=test.2da
 AddRow0=row1
 
 [row1]
-label=new
+RowLabel=new
 Col1=high()
 ";
         PatcherConfig config = SetupIniAndConfig(iniText);
@@ -283,7 +283,7 @@ Table0=test.2da
 AddRow0=row1
 
 [row1]
-label=new
+RowLabel=new
 value=2DAMEMORY99
 ";
         PatcherConfig config = SetupIniAndConfig(iniText);
@@ -397,19 +397,19 @@ Table1=test2.2da
 
 [test1.2da]
 AddRow0=row1
-2DAMEMORY0=RowIndex
 
 [row1]
-label=t1
+RowLabel=t1
 value=2DAMEMORY1
+2DAMEMORY0=RowIndex
 
 [test2.2da]
 AddRow0=row2
-2DAMEMORY1=RowIndex
 
 [row2]
-label=t2
+RowLabel=t2
 value=2DAMEMORY0
+2DAMEMORY1=RowIndex
 ";
         PatcherConfig config = SetupIniAndConfig(iniText);
         TwoDA twoda1 = CreateTest2DA(new[] { "value" }, Array.Empty<(string, string[])>());

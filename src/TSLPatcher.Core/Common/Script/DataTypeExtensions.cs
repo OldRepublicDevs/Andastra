@@ -4,29 +4,40 @@ namespace TSLPatcher.Core.Common.Script;
 
 /// <summary>
 /// Extension methods for DataType enum.
+/// 1:1 port from Python DataType methods in pykotor/common/script.py
 /// </summary>
 public static class DataTypeExtensions
 {
     /// <summary>
-    /// Calculates the size of the data type in bytes.
+    /// Get the size in bytes for a data type.
     /// </summary>
-    public static int GetSize(this DataType dataType)
+    public static int Size(this DataType dataType)
     {
-        switch (dataType)
+        if (dataType == DataType.Void)
         {
-            case DataType.Void:
-                return 0;
-            case DataType.Vector:
-                return 12; // 3 floats * 4 bytes/float
-            case DataType.Struct:
-                throw new InvalidOperationException("Structs have variable size and must be determined by context.");
-            default:
-                return 4; // Most other types are 4 bytes (int, float, object, string reference, etc.)
+            return 0;
         }
+        if (dataType == DataType.Vector)
+        {
+            return 12;
+        }
+        if (dataType == DataType.Struct)
+        {
+            throw new ArgumentException("Structs are variable size");
+        }
+        return 4;
     }
 
     /// <summary>
-    /// Gets the script string representation of the data type.
+    /// Get the size in bytes for a data type (alias for Size).
+    /// </summary>
+    public static int GetSize(this DataType dataType)
+    {
+        return Size(dataType);
+    }
+
+    /// <summary>
+    /// Convert DataType to its script string representation.
     /// </summary>
     public static string ToScriptString(this DataType dataType)
     {
@@ -49,4 +60,3 @@ public static class DataTypeExtensions
         };
     }
 }
-

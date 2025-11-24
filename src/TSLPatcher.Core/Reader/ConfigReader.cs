@@ -323,7 +323,9 @@ public class ConfigReader
             string basePath = Config.PatchesTLK.SourceFolder == "."
                 ? _modPath
                 : Path.Combine(_modPath, Config.PatchesTLK.SourceFolder);
-            modifier.TlkFilePath = Path.Combine(basePath, tlkFilename);
+            string tlkFilePath = Path.Combine(basePath, tlkFilename);
+            // Make path absolute to match Python behavior (Path objects are always absolute)
+            modifier.TlkFilePath = Path.GetFullPath(tlkFilePath);
             Config.PatchesTLK.Modifiers.Add(modifier);
         }
 
@@ -457,6 +459,13 @@ public class ConfigReader
 
             foreach ((string key, string modificationId) in fileSectionDict)
             {
+                // Skip modifiers like 2DAMEMORY0, StrRef0, etc. - these are processed by Cells2DA, not as section references
+                string lowerKey = key.ToLower();
+                if (lowerKey.StartsWith("2damemory") || lowerKey.StartsWith("strref"))
+                {
+                    continue;
+                }
+
                 string? nextSectionName = GetSectionName(modificationId);
                 if (nextSectionName == null)
                 {
@@ -465,8 +474,14 @@ public class ConfigReader
 
                 Dictionary<string, string> modificationIdsDict = SectionToDictionary(_ini[modificationId]);
                 Modify2DA? manipulation = Discern2DA(key, modificationId, modificationIdsDict);
-                if (manipulation == null) // TODO: Does this denote an error occurred? If so we should raise.
+                if (manipulation == null)
                 {
+                    // Discern2DA returns null when the modification section is invalid or missing required fields.
+                    // This is not necessarily an error - it could be a malformed entry that should be skipped.
+                    // Log a warning but continue processing other modifications.
+                    _log?.AddWarning(
+                        $"Skipping invalid 2DA modification '{modificationId}' in section '{key}'. " +
+                        "The modification section may be missing required fields or contain invalid data.");
                     continue;
                 }
                 modifications.Modifiers.Add(manipulation);
@@ -622,9 +637,20 @@ public class ConfigReader
                 {
                     if (value.ToLower() == "!fieldpath")
                     {
+                        // Python: When value is "!FieldPath", check if there's a [!FieldPath] section with Path=
+                        string? fieldPathSectionName = GetSectionName(value);
+                        string path = string.Empty;
+                        if (fieldPathSectionName != null)
+                        {
+                            Dictionary<string, string> fieldPathSection = SectionToDictionary(_ini[fieldPathSectionName]);
+                            if (fieldPathSection.TryGetValue("Path", out string? pathValue))
+                            {
+                                path = pathValue.Replace("\\", "/");
+                            }
+                        }
                         modifier = new Memory2DAModifierGFF(
                             file,
-                            string.Empty,
+                            path,
                             int.Parse(key.Substring(9)));
                     }
                     else if (value.ToLower().StartsWith("2damemory"))
@@ -953,6 +979,7 @@ public class ConfigReader
             throw new KeyNotFoundException($"FieldType missing in [{identifier}]");
         }
         iniData.Remove("FieldType");
+        // Python: label: str = ini_data.pop("Label").strip() - raises KeyError if missing
         if (!iniData.TryGetValue("Label", out string? labelRaw))
         {
             throw new KeyNotFoundException($"Label missing in [{identifier}]");
@@ -971,6 +998,12 @@ public class ConfigReader
         {
             path = currentPath;
         }
+        // Python: if field_type == GFFFieldType.Struct:
+        // Python:     path /= ">>##INDEXINLIST##<<"
+        // Note: Python appends this BEFORE checking if label is empty, so it's appended to ALL Struct paths
+        // However, when label is set, AddFieldGFF.apply will use the full path (including >>##INDEXINLIST##<<)
+        // which won't exist. This seems like a Python bug, but we match it exactly.
+        // The path resolution in AddFieldGFF.apply uses zip_longest to merge parent and nested paths.
         if (fieldType == GFFFieldType.Struct)
         {
             path = string.IsNullOrEmpty(path) ? ">>##INDEXINLIST##<<" : Path.Combine(path, ">>##INDEXINLIST##<<").Replace("\\", "/");
@@ -1134,11 +1167,33 @@ public class ConfigReader
     private static FieldValue FieldValueFromLocalizedString(
         Dictionary<string, string> iniSectionDict)
     {
-        if (!iniSectionDict.TryGetValue("StrRef", out string? rawStringref))
+        // Handle both "StrRef" and "Value(strref)" formats
+        string? rawStringref = null;
+        if (iniSectionDict.TryGetValue("StrRef", out string? strRef))
         {
-            throw new KeyNotFoundException("StrRef missing in localized string section");
+            rawStringref = strRef;
+            iniSectionDict.Remove("StrRef");
         }
-        iniSectionDict.Remove("StrRef");
+        else
+        {
+            // Look for "Value(strref)" format
+            foreach ((string key, string value) in iniSectionDict.ToList())
+            {
+                string lowerKey = key.ToLower();
+                if (lowerKey.StartsWith("value(strref"))
+                {
+                    rawStringref = value;
+                    iniSectionDict.Remove(key);
+                    break;
+                }
+            }
+        }
+
+        if (rawStringref == null)
+        {
+            throw new KeyNotFoundException("StrRef or Value(strref) missing in localized string section");
+        }
+
         FieldValue? stringref = FieldValueFromMemory(rawStringref);
         if (stringref == null)
         {
@@ -1146,14 +1201,26 @@ public class ConfigReader
         }
         var lStringDelta = new LocalizedStringDelta(stringref);
 
-        foreach ((string substring, string text) in iniSectionDict)
+        foreach ((string substring, string text) in iniSectionDict.ToList())
         {
-            if (!substring.ToLower().StartsWith("lang"))
+            string lowerSubstring = substring.ToLower();
+            // Handle both "lang#" and "Value(lang#)" formats
+            string langKey = substring;
+            if (lowerSubstring.StartsWith("value(lang") && lowerSubstring.EndsWith(")"))
+            {
+                // Extract "lang#" from "Value(lang#)"
+                int startIdx = lowerSubstring.IndexOf("(lang") + 5;
+                int endIdx = lowerSubstring.LastIndexOf(")");
+                langKey = "lang" + substring.Substring(startIdx, endIdx - startIdx);
+                iniSectionDict.Remove(substring);
+                iniSectionDict[langKey] = text;
+            }
+            else if (!lowerSubstring.StartsWith("lang"))
             {
                 continue;
             }
 
-            int substringId = int.Parse(substring.Substring(4));
+            int substringId = int.Parse(langKey.Substring(4));
             (Language language, Gender gender) = LocalizedString.SubstringPair(substringId);
             string formattedText = NormalizeTslPatcherCRLF(text);
             lStringDelta.SetData(language, gender, formattedText);
@@ -1237,11 +1304,11 @@ public class ConfigReader
             return new FieldValueConstant(intVal);
         }
 
-        // Float
+        // Float (Python's float is 64-bit double, so we use double here to match)
         string parsedFloatStr = NormalizeTslPatcherFloat(rawValue);
-        if (float.TryParse(parsedFloatStr, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out float floatVal)) // float
+        if (double.TryParse(parsedFloatStr, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out double doubleVal)) // Python's float is 64-bit
         {
-            return new FieldValueConstant(floatVal);
+            return new FieldValueConstant(doubleVal);
         }
 
         int numPipeSeps = rawValue.Count(c => c == '|');
@@ -1573,8 +1640,10 @@ public class ConfigReader
             }
             else
             {
-                string value = isInt ? int.Parse(rawValue).ToString() : rawValue;
-                return new Target(targetType, new RowValueConstant(value));
+                // Python: value = int(raw_value) if is_int else raw_value
+                // For ROW_INDEX, store int directly; for others, store string
+                object value = isInt ? int.Parse(rawValue) : (object)rawValue;
+                return new Target(targetType, value);
             }
         }
 
@@ -1917,6 +1986,7 @@ public class ConfigReader
             { "ExoString", GFFFieldType.String },
             { "ResRef", GFFFieldType.ResRef },
             { "ExoLocString", GFFFieldType.LocalizedString },
+            { "CExoLocString", GFFFieldType.LocalizedString }, // Alias for ExoLocString
             { "Position", GFFFieldType.Vector3 },
             { "Orientation", GFFFieldType.Vector4 },
             { "Struct", GFFFieldType.Struct },

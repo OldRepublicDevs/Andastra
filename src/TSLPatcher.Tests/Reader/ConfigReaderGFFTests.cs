@@ -286,7 +286,7 @@ File0=test.utc
 AddField0=NewField
 
 [NewField]
-FieldType=Vector
+FieldType=Position
 Label=Position
 Value=1.0|2.0|3.0
 ";
@@ -345,19 +345,26 @@ Path=ItemList\0
     [Fact]
     public void GFF_AddStruct_ShouldLoadToList()
     {
+        // Python test: test_gff_add_inside_list
         // Arrange
         string iniText = @"
 [GFFList]
-File0=test.utc
+File0=test.gff
 
-[test.utc]
-AddStruct0=NewStruct
+[test.gff]
+AddField0=add_list
 
-        [NewStruct]
-        FieldType=Struct
-        Label=
-        TypeId=0
-        Path=ItemList
+[add_list]
+FieldType=List
+Path=
+Label=SomeList
+AddField0=add_insidelist
+
+[add_insidelist]
+FieldType=Struct
+Label=
+TypeId=111
+2DAMEMORY5=ListIndex
 ";
         IniData ini = _parser.Parse(iniText);
         var config = new PatcherConfig();
@@ -367,15 +374,24 @@ AddStruct0=NewStruct
         PatcherConfig result = reader.Load(config);
 
         // Assert
-        var addStruct = result.PatchesGFF.First(p => p.SaveAs == "test.utc").Modifiers[0] as AddStructToListGFF;
-        addStruct.Should().NotBeNull();
-        // Python line 905: always appends >>##INDEXINLIST##<< for Struct fields
-        addStruct!.Path.Should().Be("ItemList/>>##INDEXINLIST##<<");
+        var mod_0 = result.PatchesGFF[0].Modifiers[0] as AddFieldGFF;
+        mod_0.Should().NotBeNull();
+        mod_0.Should().BeOfType<AddFieldGFF>();
+        mod_0!.Value.Should().BeOfType<FieldValueConstant>();
+        // Python: assert not mod_0.path.name - checks if path name is empty/falsy
+        // When Path is empty and FieldType is List (not Struct), path should be empty
+        // In Python, path.name is the last component - if path is empty, name is empty
+        mod_0.Path.Should().BeEmpty("Path should be empty when Path= is empty and FieldType is List");
+        mod_0.Label.Should().Be("SomeList");
 
-        var value = addStruct.Value as FieldValueConstant;
-        value.Should().NotBeNull();
-        var gffStruct = value!.Value(null, GFFFieldType.Struct) as GFFStruct;
+        var mod_1 = mod_0.Modifiers[0] as AddStructToListGFF;
+        mod_1.Should().NotBeNull();
+        mod_1.Should().BeOfType<AddStructToListGFF>();
+        mod_1!.Value.Should().BeOfType<FieldValueConstant>();
+        var gffStruct = mod_1.Value.Value(null, GFFFieldType.Struct) as GFFStruct;
         gffStruct.Should().NotBeNull();
+        gffStruct!.StructId.Should().Be(111);
+        mod_1.IndexToToken.Should().Be(5);
     }
 
     [Fact]
@@ -387,11 +403,13 @@ AddStruct0=NewStruct
 File0=test.utc
 
 [test.utc]
-AddField0=2DAMEMORY5
+AddField0=new_field
 
-[2DAMEMORY5]
-Path=SomeField
-2DAMEMORY5=appearance
+[new_field]
+FieldType=Int
+Label=MyField
+Value=0
+2DAMEMORY5=!FieldPath
 ";
         IniData ini = _parser.Parse(iniText);
         var config = new PatcherConfig();
@@ -401,10 +419,12 @@ Path=SomeField
         PatcherConfig result = reader.Load(config);
 
         // Assert
-        var memory2DA = result.PatchesGFF.First(p => p.SaveAs == "test.utc").Modifiers[0] as Memory2DAModifierGFF;
+        var addField = result.PatchesGFF.First(p => p.SaveAs == "test.utc").Modifiers[0] as AddFieldGFF;
+        addField.Should().NotBeNull();
+        var memory2DA = addField!.Modifiers[0] as Memory2DAModifierGFF;
         memory2DA.Should().NotBeNull();
         memory2DA!.DestTokenId.Should().Be(5);
-        memory2DA.Path.Should().Be("SomeField");
+        memory2DA.Path.Should().Be("MyField");
     }
 
     [Fact]

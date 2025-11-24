@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using TSLPatcher.Core.Common.Script;
 using TSLPatcher.Core.Formats.NCS;
+using TSLPatcher.Core.Compiler.NSS.AST.Expressions;
 
 namespace TSLPatcher.Core.Compiler.NSS.AST;
 
@@ -252,7 +253,10 @@ public class StructMember
 }
 
 /// <summary>
-/// Placeholder for FunctionDefinition - will be fully implemented in next batch.
+/// Represents a function definition with implementation.
+/// Contains the function signature (return type, parameters) and the code block
+/// that implements the function body.
+/// 1:1 port from pykotor.resource.formats.ncs.compiler.classes.FunctionDefinition
 /// </summary>
 public class FunctionDefinition : TopLevelObject
 {
@@ -271,12 +275,159 @@ public class FunctionDefinition : TopLevelObject
 
     public override void Compile(NCS ncs, CodeRoot root)
     {
-        throw new NotImplementedException("FunctionDefinition.Compile - to be implemented");
+        // 1:1 port from pykotor.resource.formats.ncs.compiler.classes.FunctionDefinition.compile
+        string name = Name.Label;
+
+        // Make sure all default parameters appear after the required parameters
+        bool previousIsDefault = false;
+        foreach (FunctionParameter param in Parameters)
+        {
+            bool isDefault = param.DefaultValue != null;
+            if (previousIsDefault && !isDefault)
+            {
+                throw new CompileError(
+                    "Function parameter without a default value can't follow one with a default value.");
+            }
+            previousIsDefault = isDefault;
+        }
+
+        // Make sure params are all constant values
+        foreach (FunctionParameter param in Parameters)
+        {
+            if (param.DefaultValue is IdentifierExpression identifierExpr)
+            {
+                // Check if it's a constant
+                ScriptConstant? constant = root.FindConstant(identifierExpr.Identifier.Label);
+                if (constant == null)
+                {
+                    throw new CompileError(
+                        $"Non-constant default value specified for function prototype parameter '{param.Name}'.");
+                }
+            }
+        }
+
+        // Check if function already exists
+        if (root.FunctionMap.TryGetValue(Name, out FunctionDefinition? existingFunc))
+        {
+            // If it's not a prototype (has a body), we can't redefine it
+            if (existingFunc.Body != null && existingFunc.Body.Statements.Count > 0)
+            {
+                throw new CompileError(
+                    $"Function '{name}' is already defined\n" +
+                    "  Cannot redefine a function that already has an implementation");
+            }
+
+            // If it's a prototype, compile the function body and insert it
+            if (existingFunc.Body == null || existingFunc.Body.Statements.Count == 0)
+            {
+                CompileFunctionWithPrototype(root, name, ncs, existingFunc);
+                return;
+            }
+        }
+
+        // New function - compile normally
+        NCSInstruction retn = new NCSInstruction(NCSInstructionType.RETN);
+
+        NCSInstruction functionStart = ncs.Add(NCSInstructionType.NOP, new List<object>());
+        Body.Compile(ncs, root);
+        
+        // Add RETN at the end
+        ncs.Instructions.Add(retn);
+
+        // Store function reference
+        root.FunctionMap[Name] = this;
+    }
+
+    private void CompileFunctionWithPrototype(CodeRoot root, string name, NCS ncs, FunctionDefinition prototype)
+    {
+        // Check if signatures match
+        if (!IsMatchingSignature(prototype))
+        {
+            List<string> details = new List<string>();
+            if (ReturnType != prototype.ReturnType)
+            {
+                details.Add(
+                    $"Return type mismatch: prototype has {prototype.ReturnType.Builtin}, " +
+                    $"definition has {ReturnType.Builtin}");
+            }
+            if (Parameters.Count != prototype.Parameters.Count)
+            {
+                details.Add(
+                    $"Parameter count mismatch: prototype has {prototype.Parameters.Count}, " +
+                    $"definition has {Parameters.Count}");
+            }
+            else
+            {
+                for (int i = 0; i < Parameters.Count; i++)
+                {
+                    FunctionParameter defParam = Parameters[i];
+                    FunctionParameter protoParam = prototype.Parameters[i];
+                    if (defParam.DataType != protoParam.DataType)
+                    {
+                        details.Add(
+                            $"Parameter {i + 1} type mismatch: prototype has {protoParam.DataType.Builtin}, " +
+                            $"definition has {defParam.DataType.Builtin}");
+                    }
+                }
+            }
+
+            string msg = $"Function '{name}' definition does not match its prototype\n" +
+                        "  " + string.Join("\n  ", details);
+            throw new CompileError(msg);
+        }
+
+        // Function has forward declaration, insert the compiled definition after the stub
+        NCS temp = new NCS();
+        NCSInstruction retn = new NCSInstruction(NCSInstructionType.RETN);
+        Body.Compile(temp, root);
+        temp.Instructions.Add(retn);
+
+        // Find the stub instruction (NOP) and insert the body after it
+        int stubIndex = -1;
+        for (int i = 0; i < ncs.Instructions.Count; i++)
+        {
+            if (ncs.Instructions[i].InsType == NCSInstructionType.NOP && i < ncs.Instructions.Count - 1)
+            {
+                stubIndex = i;
+                break;
+            }
+        }
+
+        if (stubIndex >= 0)
+        {
+            ncs.Instructions.InsertRange(stubIndex + 1, temp.Instructions);
+        }
+        else
+        {
+            // Fallback: just append
+            ncs.Instructions.AddRange(temp.Instructions);
+        }
+    }
+
+    private bool IsMatchingSignature(FunctionDefinition prototype)
+    {
+        if (ReturnType != prototype.ReturnType)
+        {
+            return false;
+        }
+        if (Parameters.Count != prototype.Parameters.Count)
+        {
+            return false;
+        }
+        for (int i = 0; i < Parameters.Count; i++)
+        {
+            if (Parameters[i].DataType != prototype.Parameters[i].DataType)
+            {
+                return false;
+            }
+        }
+        return true;
     }
 }
 
 /// <summary>
-/// Placeholder for function parameter.
+/// Represents a function parameter with optional default value.
+/// 1:1 port from pykotor.resource.formats.ncs.compiler.classes.FunctionDefinitionParam
 /// </summary>
 public class FunctionParameter
 {

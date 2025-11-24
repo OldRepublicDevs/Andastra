@@ -47,16 +47,20 @@ public class ConfigReader2DATests : IDisposable
     [Fact]
     public void TwoDA_ChangeRow_ShouldLoadIdentifier()
     {
+        // Python test: test_2da_changerow_identifier
         // Arrange
         string iniText = @"
 [2DAList]
-Table0=appearance.2da
+Table0=test.2da
 
-[appearance.2da]
-ChangeRow0=RowLabel0
+[test.2da]
+ChangeRow0=change_row_0
+ChangeRow1=change_row_1
 
-[RowLabel0]
-LabelIndex=5
+[change_row_0]
+RowIndex=1
+[change_row_1]
+RowLabel=1
 ";
         IniData ini = _parser.Parse(iniText);
         var config = new PatcherConfig();
@@ -66,28 +70,38 @@ LabelIndex=5
         PatcherConfig result = reader.Load(config);
 
         // Assert
-        result.Patches2DA.Should().Contain(p => p.SaveAs == "appearance.2da");
-        List<Modify2DA> modifiers = result.Patches2DA.First(p => p.SaveAs == "appearance.2da").Modifiers;
-        modifiers.Should().HaveCount(1);
+        var modifiers = result.Patches2DA[0].Modifiers;
+        modifiers.Should().HaveCount(2);
 
-        var changeRow = modifiers[0] as ChangeRow2DA;
-        changeRow.Should().NotBeNull();
-        changeRow!.Identifier.Should().Be("RowLabel0");
+        var mod0 = modifiers[0] as ChangeRow2DA;
+        mod0.Should().NotBeNull();
+        mod0!.Identifier.Should().Be("change_row_0");
+
+        var mod1 = modifiers[1] as ChangeRow2DA;
+        mod1.Should().NotBeNull();
+        mod1!.Identifier.Should().Be("change_row_1");
     }
 
     [Fact]
-    public void TwoDA_ChangeRow_ShouldLoadRowIndexTarget()
+    public void TwoDA_ChangeRow_ShouldLoadTargets()
     {
+        // Python test: test_2da_changerow_targets
         // Arrange
         string iniText = @"
 [2DAList]
-Table0=appearance.2da
+Table0=test.2da
 
-[appearance.2da]
-ChangeRow0=RowLabel0
+[test.2da]
+ChangeRow0=change_row_0
+ChangeRow1=change_row_1
+ChangeRow2=change_row_2
 
-[RowLabel0]
-RowIndex=5
+[change_row_0]
+RowIndex=1
+[change_row_1]
+RowLabel=2
+[change_row_2]
+LabelIndex=3
 ";
         IniData ini = _parser.Parse(iniText);
         var config = new PatcherConfig();
@@ -97,118 +111,29 @@ RowIndex=5
         PatcherConfig result = reader.Load(config);
 
         // Assert
-        var changeRow = result.Patches2DA.First(p => p.SaveAs == "appearance.2da").Modifiers[0] as ChangeRow2DA;
-        changeRow!.Target.TargetType.Should().Be(TargetType.ROW_INDEX);
+        var modifiers = result.Patches2DA[0].Modifiers;
+        
+        var mod_2da_0 = modifiers[0] as ChangeRow2DA;
+        mod_2da_0.Should().NotBeNull();
+        mod_2da_0!.Target.TargetType.Should().Be(TargetType.ROW_INDEX);
+        mod_2da_0.Target.Value.Should().Be(1);
 
-        var rowValue = changeRow.Target.Value as RowValueConstant;
-        rowValue.Should().NotBeNull();
-        rowValue!.Value(null, null, null).Should().Be("5");
-    }
+        var mod_2da_1 = modifiers[1] as ChangeRow2DA;
+        mod_2da_1.Should().NotBeNull();
+        mod_2da_1!.Target.TargetType.Should().Be(TargetType.ROW_LABEL);
+        mod_2da_1.Target.Value.Should().Be("2");
 
-    [Fact]
-    public void TwoDA_ChangeRow_ShouldLoadRowLabelTarget()
-    {
-        // Arrange
-        string iniText = @"
-[2DAList]
-Table0=appearance.2da
-
-[appearance.2da]
-ChangeRow0=RowLabel0
-
-[RowLabel0]
-RowLabel=P_BastilaBB
-";
-        IniData ini = _parser.Parse(iniText);
-        var config = new PatcherConfig();
-        var reader = new ConfigReader(ini, _tempDir, null, _modPath);
-
-        // Act
-        PatcherConfig result = reader.Load(config);
-
-        // Assert
-        var changeRow = result.Patches2DA.First(p => p.SaveAs == "appearance.2da").Modifiers[0] as ChangeRow2DA;
-        changeRow!.Target.TargetType.Should().Be(TargetType.ROW_LABEL);
-
-        var rowValue = changeRow.Target.Value as RowValueConstant;
-        rowValue.Should().NotBeNull();
-        rowValue!.Value(null, null, null).Should().Be("P_BastilaBB");
-    }
-
-    [Fact]
-    public void TwoDA_ChangeRow_ShouldLoadLabelIndexTarget()
-    {
-        // Arrange
-        string iniText = @"
-[2DAList]
-Table0=appearance.2da
-
-[appearance.2da]
-ChangeRow0=RowLabel0
-
-[RowLabel0]
-LabelIndex=10
-";
-        IniData ini = _parser.Parse(iniText);
-        var config = new PatcherConfig();
-        var reader = new ConfigReader(ini, _tempDir, null, _modPath);
-
-        // Act
-        PatcherConfig result = reader.Load(config);
-
-        // Assert
-        var changeRow = result.Patches2DA.First(p => p.SaveAs == "appearance.2da").Modifiers[0] as ChangeRow2DA;
-        changeRow!.Target.TargetType.Should().Be(TargetType.LABEL_COLUMN);
-
-        var rowValue = changeRow.Target.Value as RowValueConstant;
-        rowValue.Should().NotBeNull();
-        rowValue!.Value(null, null, null).Should().Be("10");
+        var mod_2da_2 = modifiers[2] as ChangeRow2DA;
+        mod_2da_2.Should().NotBeNull();
+        mod_2da_2!.Target.TargetType.Should().Be(TargetType.LABEL_COLUMN);
+        mod_2da_2.Target.Value.Should().Be("3");
     }
 
     [Fact]
     public void TwoDA_ChangeRow_ShouldLoadStore2DAMemory()
     {
+        // Python test: test_2da_changerow_store2da
         // Arrange
-        string iniText = @"
-[2DAList]
-Table0=appearance.2da
-
-[appearance.2da]
-ChangeRow0=RowLabel0
-
-[RowLabel0]
-RowIndex=5
-2DAMEMORY0=RowIndex
-2DAMEMORY1=RowLabel
-2DAMEMORY2=normalhead
-";
-        IniData ini = _parser.Parse(iniText);
-        var config = new PatcherConfig();
-        var reader = new ConfigReader(ini, _tempDir, null, _modPath);
-
-        // Act
-        PatcherConfig result = reader.Load(config);
-
-        // Assert
-        var changeRow = result.Patches2DA.First(p => p.SaveAs == "appearance.2da").Modifiers[0] as ChangeRow2DA;
-        changeRow!.Store2DA.Should().HaveCount(3);
-
-        var store0 = changeRow.Store2DA[0] as RowValueRowIndex;
-        store0.Should().NotBeNull();
-
-        var store1 = changeRow.Store2DA[1] as RowValueRowLabel;
-        store1.Should().NotBeNull();
-
-        var store2 = changeRow.Store2DA[2] as RowValueRowCell;
-        store2.Should().NotBeNull();
-        store2!.Column.Should().Be("normalhead");
-    }
-
-    [Fact]
-    public void TwoDA_ChangeRow_ShouldLoadStore2DAMemoryWithTokenId5()
-    {
-        // Arrange - Test with token ID 5 to verify it works for higher token IDs
-        // This matches the exact INI text from the failing integration test
         string iniText = @"
 [2DAList]
 Table0=test.2da
@@ -217,8 +142,10 @@ Table0=test.2da
 ChangeRow0=change_row_0
 
 [change_row_0]
-RowIndex=1
-2DAMEMORY5=RowLabel
+RowIndex=0
+2DAMEMORY0=RowIndex
+2DAMEMORY1=RowLabel
+2DAMEMORY2=label
 ";
         IniData ini = _parser.Parse(iniText);
         var config = new PatcherConfig();
@@ -228,29 +155,37 @@ RowIndex=1
         PatcherConfig result = reader.Load(config);
 
         // Assert
-        var changeRow = result.Patches2DA.First(p => p.SaveAs == "test.2da").Modifiers[0] as ChangeRow2DA;
-        changeRow.Should().NotBeNull();
-        changeRow!.Store2DA.Should().HaveCount(1, $"Store2DA should have 1 entry, but has keys: {string.Join(", ", changeRow.Store2DA.Keys)}");
-        changeRow.Store2DA.Should().ContainKey(5);
-        changeRow.Store2DA[5].Should().BeOfType<RowValueRowLabel>();
+        var mod_2da_0 = result.Patches2DA[0].Modifiers[0] as ChangeRow2DA;
+        mod_2da_0.Should().NotBeNull();
+
+        var store_2da_0a = mod_2da_0!.Store2DA[0] as RowValueRowIndex;
+        store_2da_0a.Should().NotBeNull();
+
+        var store_2da_0b = mod_2da_0.Store2DA[1] as RowValueRowLabel;
+        store_2da_0b.Should().NotBeNull();
+
+        var store_2da_0c = mod_2da_0.Store2DA[2] as RowValueRowCell;
+        store_2da_0c.Should().NotBeNull();
+        store_2da_0c!.Column.Should().Be("label");
     }
 
     [Fact]
-    public void TwoDA_ChangeRow_ShouldLoadCellAssignments()
+    public void TwoDA_ChangeRow_ShouldLoadCells()
     {
+        // Python test: test_2da_changerow_cells
         // Arrange
         string iniText = @"
 [2DAList]
-Table0=appearance.2da
+Table0=test.2da
 
-[appearance.2da]
-ChangeRow0=RowLabel0
+[test.2da]
+ChangeRow0=change_row_0
 
-[RowLabel0]
-RowIndex=5
-normalhead=123
-backuphead=StrRef5
-modelj=2DAMEMORY3
+[change_row_0]
+RowIndex=0
+label=Test123
+dialog=StrRef4
+appearance=2DAMEMORY5
 ";
         IniData ini = _parser.Parse(iniText);
         var config = new PatcherConfig();
@@ -260,23 +195,20 @@ modelj=2DAMEMORY3
         PatcherConfig result = reader.Load(config);
 
         // Assert
-        var changeRow = result.Patches2DA.First(p => p.SaveAs == "appearance.2da").Modifiers[0] as ChangeRow2DA;
-        changeRow!.Cells.Should().HaveCount(3);
+        var mod_2da_0 = result.Patches2DA[0].Modifiers[0] as ChangeRow2DA;
+        mod_2da_0.Should().NotBeNull();
 
-        // Constant value
-        var normalhead = changeRow.Cells["normalhead"] as RowValueConstant;
-        normalhead.Should().NotBeNull();
-        normalhead!.Value(null, null, null).Should().Be("123");
+        var cell_0_label = mod_2da_0!.Cells["label"] as RowValueConstant;
+        cell_0_label.Should().NotBeNull();
+        cell_0_label!.String.Should().Be("Test123");
 
-        // TLK memory reference
-        var backuphead = changeRow.Cells["backuphead"] as RowValueTLKMemory;
-        backuphead.Should().NotBeNull();
-        backuphead!.TokenId.Should().Be(5);
+        var cell_0_dialog = mod_2da_0.Cells["dialog"] as RowValueTLKMemory;
+        cell_0_dialog.Should().NotBeNull();
+        cell_0_dialog!.TokenId.Should().Be(4);
 
-        // 2DA memory reference
-        var modelj = changeRow.Cells["modelj"] as RowValue2DAMemory;
-        modelj.Should().NotBeNull();
-        modelj!.TokenId.Should().Be(3);
+        var cell_0_appearance = mod_2da_0.Cells["appearance"] as RowValue2DAMemory;
+        cell_0_appearance.Should().NotBeNull();
+        cell_0_appearance!.TokenId.Should().Be(5);
     }
 
     #endregion
@@ -286,16 +218,18 @@ modelj=2DAMEMORY3
     [Fact]
     public void TwoDA_AddRow_ShouldLoadIdentifier()
     {
+        // Python test: test_2da_addrow_identifier
         // Arrange
         string iniText = @"
 [2DAList]
-Table0=spells.2da
+Table0=test.2da
 
-[spells.2da]
-AddRow0=NewSpell
+[test.2da]
+AddRow0=add_row_0
+AddRow1=add_row_1
 
-[NewSpell]
-label=new_spell_123
+[add_row_0]
+[add_row_1]
 ";
         IniData ini = _parser.Parse(iniText);
         var config = new PatcherConfig();
@@ -305,25 +239,33 @@ label=new_spell_123
         PatcherConfig result = reader.Load(config);
 
         // Assert
-        var addRow = result.Patches2DA.First(p => p.SaveAs == "spells.2da").Modifiers[0] as AddRow2DA;
-        addRow.Should().NotBeNull();
-        addRow!.Identifier.Should().Be("NewSpell");
+        var modifiers = result.Patches2DA[0].Modifiers;
+        
+        var mod_0 = modifiers[0] as AddRow2DA;
+        mod_0.Should().NotBeNull();
+        mod_0!.Identifier.Should().Be("add_row_0");
+
+        var mod_1 = modifiers[1] as AddRow2DA;
+        mod_1.Should().NotBeNull();
+        mod_1!.Identifier.Should().Be("add_row_1");
     }
 
     [Fact]
     public void TwoDA_AddRow_ShouldLoadRowLabel()
     {
+        // Python test: test_2da_addrow_rowlabel
         // Arrange
         string iniText = @"
 [2DAList]
-Table0=spells.2da
+Table0=test.2da
 
-[spells.2da]
-AddRow0=NewSpell
+[test.2da]
+AddRow0=add_row_0
+AddRow1=add_row_1
 
-[NewSpell]
-label=my_custom_spell
-name=12345
+[add_row_0]
+RowLabel=123
+[add_row_1]
 ";
         IniData ini = _parser.Parse(iniText);
         var config = new PatcherConfig();
@@ -333,25 +275,37 @@ name=12345
         PatcherConfig result = reader.Load(config);
 
         // Assert
-        var addRow = result.Patches2DA.First(p => p.SaveAs == "spells.2da").Modifiers[0] as AddRow2DA;
-        addRow!.RowLabel.Should().Be("my_custom_spell");
+        var modifiers = result.Patches2DA[0].Modifiers;
+        
+        var mod_0 = modifiers[0] as AddRow2DA;
+        mod_0.Should().NotBeNull();
+        mod_0.Should().BeOfType<AddRow2DA>();
+        mod_0!.Identifier.Should().Be("add_row_0");
+        mod_0.RowLabel.Should().Be("123");
+
+        var mod_1 = modifiers[1] as AddRow2DA;
+        mod_1.Should().NotBeNull();
+        mod_1.Should().BeOfType<AddRow2DA>();
+        mod_1!.Identifier.Should().Be("add_row_1");
+        mod_1.RowLabel.Should().BeNull();
     }
 
     [Fact]
     public void TwoDA_AddRow_ShouldLoadExclusiveColumn()
     {
+        // Python test: test_2da_addrow_exclusivecolumn
         // Arrange
         string iniText = @"
 [2DAList]
-Table0=spells.2da
+Table0=test.2da
 
-[spells.2da]
-AddRow0=NewSpell
+[test.2da]
+AddRow0=add_row_0
+AddRow1=add_row_1
 
-[NewSpell]
+[add_row_0]
 ExclusiveColumn=label
-label=unique_spell
-name=12345
+[add_row_1]
 ";
         IniData ini = _parser.Parse(iniText);
         var config = new PatcherConfig();
@@ -361,26 +315,38 @@ name=12345
         PatcherConfig result = reader.Load(config);
 
         // Assert
-        var addRow = result.Patches2DA.First(p => p.SaveAs == "spells.2da").Modifiers[0] as AddRow2DA;
-        addRow!.ExclusiveColumn.Should().Be("label");
+        var modifiers = result.Patches2DA[0].Modifiers;
+        
+        var mod_0 = modifiers[0] as AddRow2DA;
+        mod_0.Should().NotBeNull();
+        mod_0.Should().BeOfType<AddRow2DA>();
+        mod_0!.Identifier.Should().Be("add_row_0");
+        mod_0.ExclusiveColumn.Should().Be("label");
+
+        var mod_1 = modifiers[1] as AddRow2DA;
+        mod_1.Should().NotBeNull();
+        mod_1.Should().BeOfType<AddRow2DA>();
+        mod_1!.Identifier.Should().Be("add_row_1");
+        mod_1.ExclusiveColumn.Should().BeNull();
     }
+
 
     [Fact]
     public void TwoDA_AddRow_ShouldLoadStore2DAMemory()
     {
+        // Python test: test_2da_addrow_store2da
         // Arrange
         string iniText = @"
 [2DAList]
-Table0=spells.2da
+Table0=test.2da
 
-[spells.2da]
-AddRow0=NewSpell
+[test.2da]
+AddRow0=add_row_0
 
-[NewSpell]
-label=new_spell
+[add_row_0]
 2DAMEMORY0=RowIndex
 2DAMEMORY1=RowLabel
-2DAMEMORY2=name
+2DAMEMORY2=label
 ";
         IniData ini = _parser.Parse(iniText);
         var config = new PatcherConfig();
@@ -390,18 +356,59 @@ label=new_spell
         PatcherConfig result = reader.Load(config);
 
         // Assert
-        var addRow = result.Patches2DA.First(p => p.SaveAs == "spells.2da").Modifiers[0] as AddRow2DA;
-        addRow!.Store2DA.Should().HaveCount(3);
+        var mod_0 = result.Patches2DA[0].Modifiers[0] as AddRow2DA;
+        mod_0.Should().NotBeNull();
 
-        var store0 = addRow.Store2DA[0] as RowValueRowIndex;
-        store0.Should().NotBeNull();
+        var store_0a = mod_0!.Store2DA[0] as RowValueRowIndex;
+        store_0a.Should().NotBeNull();
 
-        var store1 = addRow.Store2DA[1] as RowValueRowLabel;
-        store1.Should().NotBeNull();
+        var store_0b = mod_0.Store2DA[1] as RowValueRowLabel;
+        store_0b.Should().NotBeNull();
 
-        var store2 = addRow.Store2DA[2] as RowValueRowCell;
-        store2.Should().NotBeNull();
-        store2!.Column.Should().Be("name");
+        var store_0c = mod_0.Store2DA[2] as RowValueRowCell;
+        store_0c.Should().NotBeNull();
+        store_0c!.Column.Should().Be("label");
+    }
+
+    [Fact]
+    public void TwoDA_AddRow_ShouldLoadCells()
+    {
+        // Python test: test_2da_addrow_cells
+        // Arrange
+        string iniText = @"
+[2DAList]
+Table0=test.2da
+
+[test.2da]
+AddRow0=add_row_0
+
+[add_row_0]
+label=Test123
+dialog=StrRef4
+appearance=2DAMEMORY5
+";
+        IniData ini = _parser.Parse(iniText);
+        var config = new PatcherConfig();
+        var reader = new ConfigReader(ini, _tempDir, null, _modPath);
+
+        // Act
+        PatcherConfig result = reader.Load(config);
+
+        // Assert
+        var mod_0 = result.Patches2DA[0].Modifiers[0] as AddRow2DA;
+        mod_0.Should().NotBeNull();
+
+        var cell_0_label = mod_0!.Cells["label"] as RowValueConstant;
+        cell_0_label.Should().NotBeNull();
+        cell_0_label!.String.Should().Be("Test123");
+
+        var cell_0_dialog = mod_0.Cells["dialog"] as RowValueTLKMemory;
+        cell_0_dialog.Should().NotBeNull();
+        cell_0_dialog!.TokenId.Should().Be(4);
+
+        var cell_0_appearance = mod_0.Cells["appearance"] as RowValue2DAMemory;
+        cell_0_appearance.Should().NotBeNull();
+        cell_0_appearance!.TokenId.Should().Be(5);
     }
 
     #endregion
@@ -411,17 +418,20 @@ label=new_spell
     [Fact]
     public void TwoDA_CopyRow_ShouldLoadIdentifier()
     {
+        // Python test: test_2da_copyrow_identifier
         // Arrange
         string iniText = @"
 [2DAList]
-Table0=appearance.2da
+Table0=test.2da
 
-[appearance.2da]
-CopyRow0=CopyLabel
+[test.2da]
+CopyRow0=copy_row_0
+CopyRow1=copy_row_1
 
-[CopyLabel]
-RowIndex=5
-label=copied_row
+[copy_row_0]
+RowIndex=1
+[copy_row_1]
+RowLabel=1
 ";
         IniData ini = _parser.Parse(iniText);
         var config = new PatcherConfig();
@@ -431,25 +441,37 @@ label=copied_row
         PatcherConfig result = reader.Load(config);
 
         // Assert
-        var copyRow = result.Patches2DA.First(p => p.SaveAs == "appearance.2da").Modifiers[0] as CopyRow2DA;
-        copyRow.Should().NotBeNull();
-        copyRow!.Identifier.Should().Be("CopyLabel");
+        var modifiers = result.Patches2DA[0].Modifiers;
+        
+        var mod_0 = modifiers[0] as CopyRow2DA;
+        mod_0.Should().NotBeNull();
+        mod_0!.Identifier.Should().Be("copy_row_0");
+
+        var mod_1 = modifiers[1] as CopyRow2DA;
+        mod_1.Should().NotBeNull();
+        mod_1!.Identifier.Should().Be("copy_row_1");
     }
 
     [Fact]
-    public void TwoDA_CopyRow_ShouldLoadSourceTarget()
+    public void TwoDA_CopyRow_ShouldLoadTarget()
     {
+        // Python test: test_2da_copyrow_target
         // Arrange
         string iniText = @"
 [2DAList]
-Table0=appearance.2da
+Table0=test.2da
 
-[appearance.2da]
-CopyRow0=CopyLabel
+[test.2da]
+CopyRow0=copy_row_0
+CopyRow1=copy_row_1
+CopyRow2=copy_row_2
 
-[CopyLabel]
-RowIndex=5
-label=copied_row
+[copy_row_0]
+RowIndex=1
+[copy_row_1]
+RowLabel=2
+[copy_row_2]
+LabelIndex=3
 ";
         IniData ini = _parser.Parse(iniText);
         var config = new PatcherConfig();
@@ -459,29 +481,42 @@ label=copied_row
         PatcherConfig result = reader.Load(config);
 
         // Assert
-        var copyRow = result.Patches2DA.First(p => p.SaveAs == "appearance.2da").Modifiers[0] as CopyRow2DA;
-        copyRow!.Target.TargetType.Should().Be(TargetType.ROW_INDEX);
+        var modifiers = result.Patches2DA[0].Modifiers;
+        
+        var mod_0 = modifiers[0] as CopyRow2DA;
+        mod_0.Should().NotBeNull();
+        mod_0!.Target.TargetType.Should().Be(TargetType.ROW_INDEX);
+        mod_0.Target.Value.Should().Be(1);
 
-        var rowValue = copyRow.Target.Value as RowValueConstant;
-        rowValue.Should().NotBeNull();
-        rowValue!.String.Should().Be("5");
+        var mod_1 = modifiers[1] as CopyRow2DA;
+        mod_1.Should().NotBeNull();
+        mod_1!.Target.TargetType.Should().Be(TargetType.ROW_LABEL);
+        mod_1.Target.Value.Should().Be("2");
+
+        var mod_2 = modifiers[2] as CopyRow2DA;
+        mod_2.Should().NotBeNull();
+        mod_2!.Target.TargetType.Should().Be(TargetType.LABEL_COLUMN);
+        mod_2.Target.Value.Should().Be("3");
     }
 
     [Fact]
     public void TwoDA_CopyRow_ShouldLoadExclusiveColumn()
     {
+        // Python test: test_2da_copyrow_exclusivecolumn
         // Arrange
         string iniText = @"
 [2DAList]
-Table0=appearance.2da
+Table0=test.2da
 
-[appearance.2da]
-CopyRow0=CopyLabel
+[test.2da]
+CopyRow0=copy_row_0
+CopyRow1=copy_row_1
 
-[CopyLabel]
-RowIndex=5
+[copy_row_0]
+RowIndex=0
 ExclusiveColumn=label
-label=unique_copy
+[copy_row_1]
+RowIndex=0
 ";
         IniData ini = _parser.Parse(iniText);
         var config = new PatcherConfig();
@@ -491,25 +526,39 @@ label=unique_copy
         PatcherConfig result = reader.Load(config);
 
         // Assert
-        var copyRow = result.Patches2DA.First(p => p.SaveAs == "appearance.2da").Modifiers[0] as CopyRow2DA;
-        copyRow!.ExclusiveColumn.Should().Be("label");
+        var modifiers = result.Patches2DA[0].Modifiers;
+        
+        var mod_0 = modifiers[0] as CopyRow2DA;
+        mod_0.Should().NotBeNull();
+        mod_0.Should().BeOfType<CopyRow2DA>();
+        mod_0!.Identifier.Should().Be("copy_row_0");
+        mod_0.ExclusiveColumn.Should().Be("label");
+
+        var mod_1 = modifiers[1] as CopyRow2DA;
+        mod_1.Should().NotBeNull();
+        mod_1.Should().BeOfType<CopyRow2DA>();
+        mod_1!.Identifier.Should().Be("copy_row_1");
+        mod_1.ExclusiveColumn.Should().BeNull();
     }
 
     [Fact]
-    public void TwoDA_CopyRow_ShouldLoadCellOverrides()
+    public void TwoDA_CopyRow_ShouldLoadRowLabel()
     {
+        // Python test: test_2da_copyrow_rowlabel
         // Arrange
         string iniText = @"
 [2DAList]
-Table0=appearance.2da
+Table0=test.2da
 
-[appearance.2da]
-CopyRow0=CopyLabel
+[test.2da]
+CopyRow0=copy_row_0
+CopyRow1=copy_row_1
 
-[CopyLabel]
-RowIndex=5
-label=new_label
-normalhead=999
+[copy_row_0]
+RowIndex=0
+NewRowLabel=123
+[copy_row_1]
+RowIndex=0
 ";
         IniData ini = _parser.Parse(iniText);
         var config = new PatcherConfig();
@@ -519,16 +568,101 @@ normalhead=999
         PatcherConfig result = reader.Load(config);
 
         // Assert
-        var copyRow = result.Patches2DA.First(p => p.SaveAs == "appearance.2da").Modifiers[0] as CopyRow2DA;
-        copyRow!.Cells.Should().HaveCount(2);
+        var modifiers = result.Patches2DA[0].Modifiers;
+        
+        var mod_0 = modifiers[0] as CopyRow2DA;
+        mod_0.Should().NotBeNull();
+        mod_0.Should().BeOfType<CopyRow2DA>();
+        mod_0!.Identifier.Should().Be("copy_row_0");
+        mod_0.RowLabel.Should().Be("123");
 
-        var labelCell = copyRow.Cells["label"] as RowValueConstant;
-        labelCell.Should().NotBeNull();
-        labelCell!.String.Should().Be("new_label");
+        var mod_1 = modifiers[1] as CopyRow2DA;
+        mod_1.Should().NotBeNull();
+        mod_1.Should().BeOfType<CopyRow2DA>();
+        mod_1!.Identifier.Should().Be("copy_row_1");
+        mod_1.RowLabel.Should().BeNull();
+    }
 
-        var normalheadCell = copyRow.Cells["normalhead"] as RowValueConstant;
-        normalheadCell.Should().NotBeNull();
-        normalheadCell!.String.Should().Be("999");
+    [Fact]
+    public void TwoDA_CopyRow_ShouldLoadStore2DAMemory()
+    {
+        // Python test: test_2da_copyrow_store2da
+        // Arrange
+        string iniText = @"
+[2DAList]
+Table0=test.2da
+
+[test.2da]
+CopyRow0=copy_row_0
+
+[copy_row_0]
+RowLabel=0
+2DAMEMORY0=RowIndex
+2DAMEMORY1=RowLabel
+2DAMEMORY2=label
+";
+        IniData ini = _parser.Parse(iniText);
+        var config = new PatcherConfig();
+        var reader = new ConfigReader(ini, _tempDir, null, _modPath);
+
+        // Act
+        PatcherConfig result = reader.Load(config);
+
+        // Assert
+        var mod_0 = result.Patches2DA[0].Modifiers[0] as CopyRow2DA;
+        mod_0.Should().NotBeNull();
+
+        var store_0a = mod_0!.Store2DA[0] as RowValueRowIndex;
+        store_0a.Should().NotBeNull();
+
+        var store_0b = mod_0.Store2DA[1] as RowValueRowLabel;
+        store_0b.Should().NotBeNull();
+
+        var store_0c = mod_0.Store2DA[2] as RowValueRowCell;
+        store_0c.Should().NotBeNull();
+        store_0c!.Column.Should().Be("label");
+    }
+
+    [Fact]
+    public void TwoDA_CopyRow_ShouldLoadCells()
+    {
+        // Python test: test_2da_copyrow_cells
+        // Arrange
+        string iniText = @"
+[2DAList]
+Table0=test.2da
+
+[test.2da]
+CopyRow0=copy_row_0
+
+[copy_row_0]
+RowLabel=0
+label=Test123
+dialog=StrRef4
+appearance=2DAMEMORY5
+";
+        IniData ini = _parser.Parse(iniText);
+        var config = new PatcherConfig();
+        var reader = new ConfigReader(ini, _tempDir, null, _modPath);
+
+        // Act
+        PatcherConfig result = reader.Load(config);
+
+        // Assert
+        var mod_0 = result.Patches2DA[0].Modifiers[0] as CopyRow2DA;
+        mod_0.Should().NotBeNull();
+
+        var cell_0_label = mod_0!.Cells["label"] as RowValueConstant;
+        cell_0_label.Should().NotBeNull();
+        cell_0_label!.String.Should().Be("Test123");
+
+        var cell_0_dialog = mod_0.Cells["dialog"] as RowValueTLKMemory;
+        cell_0_dialog.Should().NotBeNull();
+        cell_0_dialog!.TokenId.Should().Be(4);
+
+        var cell_0_appearance = mod_0.Cells["appearance"] as RowValue2DAMemory;
+        cell_0_appearance.Should().NotBeNull();
+        cell_0_appearance!.TokenId.Should().Be(5);
     }
 
     #endregion

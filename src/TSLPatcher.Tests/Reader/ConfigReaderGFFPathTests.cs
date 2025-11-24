@@ -235,7 +235,9 @@ Value=99
         var addField = (AddFieldGFF)mod0;
 
         addField.Label.Should().Be("TopLevelField");
-        addField.Path.Split(new[] { '\\', '/' }, StringSplitOptions.RemoveEmptyEntries).Last().Should().Be(">>##INDEXINLIST##<<");
+        // When Path is empty and FieldType is Byte (not Struct), path should be empty
+        // Only Struct fields get ">>##INDEXINLIST##<<" appended when Path is empty
+        addField.Path.Should().BeEmpty("Path should be empty when Path= is empty and FieldType is not Struct");
     }
 
     [Fact]

@@ -34,7 +34,7 @@ Table0=test.2da
 AddRow0=add_row
 
 [add_row]
-label=new_entry
+RowLabel=new_entry
 strref_col=StrRef0
 2DAMEMORY5=RowIndex
 
@@ -98,13 +98,13 @@ RowIndex=0
 Col1=changed
 
 [add1]
-label=new_row
+RowLabel=new_row
 Col1=added
 Col2=100
 
 [copy1]
 RowIndex=0
-label=copied_row
+RowLabel=copied_row
 Col2=200
 
 [newcol]
@@ -238,27 +238,27 @@ CopyRow1=copy_duplicate
 
 [add_unique]
 ExclusiveColumn=id
-label=unique_add
+RowLabel=unique_add
 id=100
 value=new
 
 [add_duplicate]
 ExclusiveColumn=id
-label=duplicate_add
+RowLabel=duplicate_add
 id=1
 value=conflict
 
 [copy_unique]
 RowIndex=0
 ExclusiveColumn=id
-label=unique_copy
+RowLabel=unique_copy
 id=200
 value=copied
 
 [copy_duplicate]
 RowIndex=0
 ExclusiveColumn=id
-label=duplicate_copy
+RowLabel=duplicate_copy
 id=1
 value=also_conflict
 ";
@@ -301,7 +301,7 @@ AddRow0=add_with_high
 ChangeRow0=change_with_high
 
 [add_with_high]
-label=new
+RowLabel=new
 col1=high()
 col2=high()
 col3=100
@@ -357,7 +357,7 @@ AddRow0=row1
 2DAMEMORY0=RowIndex
 
 [row1]
-label=entry
+RowLabel=entry
 value=StrRef0
 
 [GFFList]

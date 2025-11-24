@@ -235,23 +235,21 @@ public class GFFIntegrationTests : IntegrationTestBase
     [Fact]
     public void ModifyField_LocalizedString_ShouldUpdateValue()
     {
-        // Arrange
+        // Python test: test_modify_field_locstring
+        // Python: gff.root.set_locstring("Field1", LocalizedString(0))
         var gff = new GFF();
-        var locString = new LocalizedString(100);
-        locString.SetData(Language.English, Gender.Male, "Old text");
-        gff.Root.SetLocString("Description", locString);
+        gff.Root.SetLocString("Field1", new LocalizedString(0));
 
-        var newLocString = new LocalizedString(200);
-        newLocString.SetData(Language.English, Gender.Male, "New text");
-        var modify = new ModifyFieldGFF("Description", new FieldValueConstant(newLocString));
+        // Python: FieldValueConstant(LocalizedStringDelta(FieldValueConstant(1)))
+        var delta = new LocalizedStringDelta(new FieldValueConstant(1));
+        var modify = new ModifyFieldGFF("Field1", new FieldValueConstant(delta));
 
         // Act
         modify.Apply(gff.Root, Memory, Logger, Game.K1);
 
-        // Assert
-        LocalizedString result = gff.Root.GetLocString("Description");
-        result.StringRef.Should().Be(200);
-        result.Get(Language.English, Gender.Male).Should().Be("New text");
+        // Assert - Python: assert gff.root.get_locstring("Field1").stringref == 1
+        LocalizedString result = gff.Root.GetLocString("Field1");
+        result.StringRef.Should().Be(1);
     }
 
     [Fact]
@@ -491,6 +489,7 @@ public class GFFIntegrationTests : IntegrationTestBase
     [Fact]
     public void Memory2DA_WithSourceToken_ShouldStoreFromToken()
     {
+        // Python: When dest_field exists, it assigns ptr_to_src to the field value, not to memory
         // Arrange
         var gff = new GFF();
         gff.Root.SetInt32("AppearanceType", 100);
@@ -502,8 +501,9 @@ public class GFFIntegrationTests : IntegrationTestBase
         // Act
         memory2DA.Apply(gff.Root, Memory, Logger);
 
-        // Assert
-        Memory.Memory2DA[5].Should().Be("999");
+        // Assert - Python assigns ptr_to_src to the field when dest_field exists
+        // Python: dest_field._value = FieldValueConstant(ptr_to_src).value(memory, dest_field.field_type())
+        gff.Root.GetInt32("AppearanceType").Should().Be(999);
     }
 
     [Fact]
@@ -599,4 +599,3 @@ TypeId=0
 
     #endregion
 }
-

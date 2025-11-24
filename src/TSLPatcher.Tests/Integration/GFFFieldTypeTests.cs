@@ -388,10 +388,16 @@ AddField0=add1
 
 [add1]
 FieldType=Struct
-Path=NewStruct
+Path=
 Label=NewStruct
 TypeId=0
-NewStruct\\Field1=123
+AddField0=add_field1
+
+[add_field1]
+FieldType=Int
+Path=
+Label=Field1
+Value=123
 ";
         PatcherConfig config = SetupIniAndConfig(iniText);
         var gff = new GFF();
@@ -415,7 +421,7 @@ AddField0=add1
 
 [add1]
 FieldType=Int
-Path=Struct1\\Field2
+Path=Struct1
 Label=Field2
 Value=456
 ";
@@ -445,7 +451,7 @@ AddField0=add1
 
 [add1]
 FieldType=Int
-Path=Field1
+Path=
 Label=Field1
 Value=2DAMEMORY5
 ";
@@ -473,7 +479,7 @@ AddField0=add1
 
 [add1]
 FieldType=Int
-Path=Field1
+Path=
 Label=Field1
 Value=StrRef6
 ";

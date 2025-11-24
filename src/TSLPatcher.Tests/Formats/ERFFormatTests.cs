@@ -1,12 +1,11 @@
 using System;
 using System.IO;
 using FluentAssertions;
-using TSLPatcher.Core.Common;
-using TSLPatcher.Core.Formats.Capsule;
 using TSLPatcher.Core.Formats.ERF;
 using TSLPatcher.Core.Resources;
 using Xunit;
 using TSLPatcher.Tests.Common;
+using static TSLPatcher.Core.Formats.ERF.ERFAuto;
 
 namespace TSLPatcher.Tests.Formats;
 
@@ -30,63 +29,81 @@ public class ERFFormatTests
             return;
         }
 
-        var capsule = new Capsule(BinaryTestFile);
-        ValidateIO(capsule);
+        // Python: erf = ERFBinaryReader(BINARY_TEST_FILE).load()
+        ERF erf = new ERFBinaryReader(BinaryTestFile).Load();
+        ValidateIO(erf);
 
-        // Write and re-read to validate round-trip
-        string tempFile = Path.Combine(Path.GetTempPath(), $"test_{Guid.NewGuid()}.erf");
-        try
-        {
-            var erf = new ERF(ERFType.ERF);
-            foreach (CapsuleResource resource in capsule)
-            {
-                erf.SetData(resource.ResName, resource.ResType, resource.Data);
-            }
+        // Python: data = bytearray()
+        // Python: write_erf(erf, data)
+        byte[] data = BytesErf(erf);
 
-            var writer = new ERFBinaryWriter(erf);
-            byte[] data = writer.Write();
-
-            // Read back from bytes
-            File.WriteAllBytes(tempFile, data);
-            var capsule2 = new Capsule(tempFile);
-            capsule2.Reload();
-            ValidateIO(capsule2);
-        }
-        finally
-        {
-            if (File.Exists(tempFile))
-            {
-                File.Delete(tempFile);
-            }
-        }
+        // Python: erf = ERFBinaryReader(data).load()
+        erf = new ERFBinaryReader(data).Load();
+        ValidateIO(erf);
     }
 
-    private static void ValidateIO(Capsule erf)
+    private static void ValidateIO(ERF erf)
     {
         // Python: validate_io
+        // Python: assert len(erf) == 3
         erf.Count.Should().Be(3);
-        erf.GetResource("1", ResourceType.TXT).Should().Equal(System.Text.Encoding.ASCII.GetBytes("abc"));
-        erf.GetResource("2", ResourceType.TXT).Should().Equal(System.Text.Encoding.ASCII.GetBytes("def"));
-        erf.GetResource("3", ResourceType.TXT).Should().Equal(System.Text.Encoding.ASCII.GetBytes("ghi"));
+        // Python: assert erf.get("1", ResourceType.TXT) == b"abc"
+        erf.Get("1", ResourceType.TXT).Should().Equal(System.Text.Encoding.ASCII.GetBytes("abc"));
+        // Python: assert erf.get("2", ResourceType.TXT) == b"def"
+        erf.Get("2", ResourceType.TXT).Should().Equal(System.Text.Encoding.ASCII.GetBytes("def"));
+        // Python: assert erf.get("3", ResourceType.TXT) == b"ghi"
+        erf.Get("3", ResourceType.TXT).Should().Equal(System.Text.Encoding.ASCII.GetBytes("ghi"));
     }
 
     [Fact]
     public void TestReadRaises()
     {
-        // Python: test_read_raises
-        Action act1 = () => new Capsule(".");
-        act1.Should().Throw<Exception>(); // PermissionError or IsADirectoryError
+        // test_read_raises from Python
+        // Python: read_erf(".") raises PermissionError on Windows, IsADirectoryError on Unix
+        Action act1 = () => ReadErf(".");
+        if (System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Windows))
+        {
+            act1.Should().Throw<UnauthorizedAccessException>();
+        }
+        else
+        {
+            act1.Should().Throw<IOException>(); // IsADirectoryError equivalent
+        }
 
-        Action act2 = () => new Capsule(DoesNotExistFile);
-        // FileNotFoundException may not be thrown immediately, but accessing will fail
-        // This test may need adjustment based on actual Capsule behavior
+        // Python: read_erf(DOES_NOT_EXIST_FILE) raises FileNotFoundError
+        Action act2 = () => ReadErf(DoesNotExistFile);
+        act2.Should().Throw<FileNotFoundException>();
 
-        // Corrupted file test
+        // Python: read_erf(CORRUPT_BINARY_TEST_FILE) raises ValueError
         if (File.Exists(CorruptBinaryTestFile))
         {
-            Action act3 = () => new Capsule(CorruptBinaryTestFile);
-            act3.Should().Throw<Exception>(); // Can be InvalidDataException, EndOfStreamException, etc.
+            Action act3 = () => ReadErf(CorruptBinaryTestFile);
+            act3.Should().Throw<InvalidDataException>(); // ValueError equivalent
         }
+    }
+
+    [Fact]
+    public void TestWriteRaises()
+    {
+        // test_write_raises from Python
+        var erf = new ERF(ERFType.ERF);
+
+        // Test writing to directory (should raise PermissionError on Windows, IsADirectoryError on Unix)
+        // Python: write_erf(ERF(ERFType.ERF), ".", ResourceType.ERF)
+        Action act1 = () => WriteErf(erf, ".", ResourceType.ERF);
+        if (System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Windows))
+        {
+            act1.Should().Throw<UnauthorizedAccessException>();
+        }
+        else
+        {
+            act1.Should().Throw<IOException>(); // IsADirectoryError equivalent
+        }
+
+        // Test invalid resource type (Python raises ValueError for ResourceType.INVALID)
+        // Python: write_erf(ERF(ERFType.ERF), ".", ResourceType.INVALID)
+        Action act2 = () => WriteErf(erf, ".", ResourceType.INVALID);
+        act2.Should().Throw<ArgumentException>().WithMessage("*Unsupported format*");
     }
 }
 

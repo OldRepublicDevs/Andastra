@@ -77,7 +77,7 @@ File0=test.gff
 AddField0=add_locstring
 
 [add_locstring]
-FieldType=CExoLocString
+FieldType=ExoLocString
 Label=Description
 Value(strref)=100
 Value(lang0)=English text
@@ -284,11 +284,13 @@ Value=88
 File0=test.gff
 
 [test.gff]
-AddStruct0=new_item
+AddField0=new_item
 
 [new_item]
-TypeId=0
+FieldType=Struct
+Label=
 Path=ItemList
+TypeId=0
 ";
         Core.Config.PatcherConfig config = SetupIniAndConfig(iniText);
 
@@ -378,11 +380,10 @@ ItemList\0\Tag=modified_tag
 File0=test.gff
 
 [test.gff]
-AddField0=2DAMEMORY5
+2DAMEMORY5=!FieldPath
 
-[2DAMEMORY5]
-Path=Nested\Field
-2DAMEMORY5=appearance
+[!FieldPath]
+Path=Nested\\Field
 ";
         Core.Config.PatcherConfig config = SetupIniAndConfig(iniText);
 
@@ -396,8 +397,8 @@ Path=Nested\Field
         ModificationsGFF modifications = config.PatchesGFF.First(p => p.SaveAs == "test.gff");
         modifications.Apply(gff, Memory, Logger, Game.K1);
 
-        // Assert
-        Memory.Memory2DA[5].Should().Be("123");
+        // Assert - Python: memory.memory_2da[self.dest_token_id] = self.path
+        Memory.Memory2DA[5].Should().Be("Nested\\Field");
     }
 
     [Fact]
@@ -481,4 +482,3 @@ Value=42
         gff.Root.GetUInt8("NewField").Should().Be(42);
     }
 }
-

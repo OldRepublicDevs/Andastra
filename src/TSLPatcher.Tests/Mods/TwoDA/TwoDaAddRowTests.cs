@@ -173,57 +173,128 @@ public class TwoDaAddRowTests
     }
 
     [Fact]
-    public void AddRow_Store2DAMemory_RowIndex()
+    public void AddRow_RowLabel_Existing()
     {
+        // Python test: test_add_rowlabel_existing
+        // Arrange
+        var twoda = new TwoDAFile(new List<string> { "Col1", "Col2" });
+        twoda.AddRow("0", new() { ["Col1"] = "123", ["Col2"] = "456" });
+
+        var logger = new PatchLogger();
+        var memory = new PatcherMemory();
+
+        var config = new Modifications2DA("");
+        config.Modifiers.Add(new AddRow2DA(
+            "",
+            "Col1",
+            null,
+            new()
+            {
+                ["Col1"] = new RowValueConstant("123"),
+                ["Col2"] = new RowValueConstant("ABC")
+            }
+        ));
+
+        // Act - Python uses patch_resource which does bytes round-trip
+        byte[] bytes = (byte[])config.PatchResource(twoda.ToBytes(), memory, logger, Game.K1);
+        var patchedTwoda = TwoDAFile.FromBytes((byte[])bytes);
+
+        // Assert
+        Assert.Equal(1, patchedTwoda.GetHeight());
+        Assert.Equal("0", patchedTwoda.GetLabel(0));
+    }
+
+    [Fact]
+    public void AddRow_Assign_High()
+    {
+        // Python test: test_add_assign_high
         // Arrange
         var twoda = new TwoDAFile(new List<string> { "Col1", "Col2", "Col3" });
-        twoda.AddRow("0", new() { ["Col1"] = "a", ["Col2"] = "b", ["Col3"] = "c" });
+        twoda.AddRow("0", new() { ["Col1"] = "1", ["Col2"] = "b", ["Col3"] = "c" });
+        twoda.AddRow("1", new() { ["Col1"] = "2", ["Col2"] = "e", ["Col3"] = "f" });
+
+        var logger = new PatchLogger();
+        var memory = new PatcherMemory();
+        var config = new Modifications2DA("");
+        config.Modifiers.Add(new AddRow2DA("", "", "2", new() { ["Col1"] = new RowValueHigh("Col1") }));
+
+        // Act
+        config.Apply(twoda, memory, logger, Game.K1);
+
+        // Assert
+        Assert.Equal(new[] { "1", "2", "3" }, twoda.GetColumn("Col1"));
+    }
+
+    [Fact]
+    public void AddRow_Assign_TLKMemory()
+    {
+        // Python test: test_add_assign_tlkmemory
+        // Arrange
+        var twoda = new TwoDAFile(new List<string> { "Col1" });
+
+        var logger = new PatchLogger();
+        var memory = new PatcherMemory();
+        memory.MemoryStr[0] = 5;
+        memory.MemoryStr[1] = 6;
+
+        var config = new Modifications2DA("");
+        config.Modifiers.Add(new AddRow2DA("", null, "0", new() { ["Col1"] = new RowValueTLKMemory(0) }));
+        config.Modifiers.Add(new AddRow2DA("", null, "1", new() { ["Col1"] = new RowValueTLKMemory(1) }));
+
+        // Act
+        config.Apply(twoda, memory, logger, Game.K1);
+
+        // Assert
+        Assert.Equal(new[] { "5", "6" }, twoda.GetColumn("Col1"));
+    }
+
+    [Fact]
+    public void AddRow_Assign_2DAMemory()
+    {
+        // Python test: test_add_assign_2damemory
+        // Arrange
+        var twoda = new TwoDAFile(new List<string> { "Col1" });
+
+        var logger = new PatchLogger();
+        var memory = new PatcherMemory();
+        memory.Memory2DA[0] = "5";
+        memory.Memory2DA[1] = "6";
+
+        var config = new Modifications2DA("");
+        config.Modifiers.Add(new AddRow2DA("", null, "0", new() { ["Col1"] = new RowValue2DAMemory(0) }));
+        config.Modifiers.Add(new AddRow2DA("", null, "1", new() { ["Col1"] = new RowValue2DAMemory(1) }));
+
+        // Act
+        config.Apply(twoda, memory, logger, Game.K1);
+
+        // Assert
+        Assert.Equal(new[] { "5", "6" }, twoda.GetColumn("Col1"));
+    }
+
+    [Fact]
+    public void AddRow_2DAMemory_RowIndex()
+    {
+        // Python test: test_add_2damemory_rowindex
+        // Arrange
+        var twoda = new TwoDAFile(new List<string> { "Col1" });
+        twoda.AddRow("0", new() { ["Col1"] = "X" });
 
         var logger = new PatchLogger();
         var memory = new PatcherMemory();
         var config = new Modifications2DA("");
         config.Modifiers.Add(new AddRow2DA(
             "",
-            null,
-            null,
-            new()
-            {
-                ["Col1"] = new RowValueConstant("d"),
-                ["Col2"] = new RowValueConstant("e"),
-                ["Col3"] = new RowValueConstant("f")
-            },
+            "Col1",
+            "1",
+            new() { ["Col1"] = new RowValueConstant("X") },
             new() { [5] = new RowValueRowIndex() }
         ));
-
-        // Act
-        config.Apply(twoda, memory, logger, Game.K1);
-
-        // Assert
-        Assert.Equal(2, twoda.GetHeight());
-        Assert.Equal("1", memory.Memory2DA[5]);
-    }
-
-    [Fact]
-    public void AddRow_Store2DAMemory_RowLabel()
-    {
-        // Arrange
-        var twoda = new TwoDAFile(new List<string> { "Col1", "Col2", "Col3" });
-        twoda.AddRow("0", new() { ["Col1"] = "a", ["Col2"] = "b", ["Col3"] = "c" });
-
-        var logger = new PatchLogger();
-        var memory = new PatcherMemory();
-        var config = new Modifications2DA("");
         config.Modifiers.Add(new AddRow2DA(
             "",
             null,
-            "newrow",
-            new()
-            {
-                ["Col1"] = new RowValueConstant("d"),
-                ["Col2"] = new RowValueConstant("e"),
-                ["Col3"] = new RowValueConstant("f")
-            },
-            new() { [5] = new RowValueRowLabel() }
+            "2",
+            new() { ["Col1"] = new RowValueConstant("Y") },
+            new() { [6] = new RowValueRowIndex() }
         ));
 
         // Act
@@ -231,72 +302,9 @@ public class TwoDaAddRowTests
 
         // Assert
         Assert.Equal(2, twoda.GetHeight());
-        Assert.Equal("newrow", memory.Memory2DA[5]);
-    }
-
-    [Fact]
-    public void AddRow_Store2DAMemory_Cell()
-    {
-        // Arrange
-        var twoda = new TwoDAFile(new List<string> { "Col1", "Col2", "Col3" });
-        twoda.AddRow("0", new() { ["Col1"] = "a", ["Col2"] = "b", ["Col3"] = "c" });
-
-        var logger = new PatchLogger();
-        var memory = new PatcherMemory();
-        var config = new Modifications2DA("");
-        config.Modifiers.Add(new AddRow2DA(
-            "",
-            null,
-            null,
-            new()
-            {
-                ["Col1"] = new RowValueConstant("d"),
-                ["Col2"] = new RowValueConstant("e"),
-                ["Col3"] = new RowValueConstant("f")
-            },
-            new() { [5] = new RowValueRowCell("Col2") }
-        ));
-
-        // Act
-        config.Apply(twoda, memory, logger, Game.K1);
-
-        // Assert
-        Assert.Equal(2, twoda.GetHeight());
-        Assert.Equal("e", memory.Memory2DA[5]);
-    }
-
-    [Fact]
-    public void AddRow_StoreTLKMemory()
-    {
-        // Arrange
-        var twoda = new TwoDAFile(new List<string> { "Col1", "Col2", "Col3" });
-        twoda.AddRow("0", new() { ["Col1"] = "a", ["Col2"] = "b", ["Col3"] = "c" });
-
-        var logger = new PatchLogger();
-        var memory = new PatcherMemory();
-        var config = new Modifications2DA("");
-        config.Modifiers.Add(new AddRow2DA(
-            "",
-            null,
-            null,
-            new()
-            {
-                ["Col1"] = new RowValueConstant("d"),
-                ["Col2"] = new RowValueConstant("e"),
-                ["Col3"] = new RowValueConstant("f")
-            },
-            new(),
-            new() { [5] = new RowValueRowCell("Col2") }
-        ));
-
-        // Act
-        config.Apply(twoda, memory, logger, Game.K1);
-
-        // Assert
-        Assert.Equal(2, twoda.GetHeight());
-        // TLK memory should store index as int, which gets parsed from string cell value
-        // In this case "e" can't be parsed as int, so it might fail or default
-        // The Python test should clarify this behavior
+        Assert.Equal(new[] { "X", "Y" }, twoda.GetColumn("Col1"));
+        Assert.Equal("0", memory.Memory2DA[5]);
+        Assert.Equal("1", memory.Memory2DA[6]);
     }
 }
 

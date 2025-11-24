@@ -154,6 +154,12 @@ public abstract class ModifyGFF
 
         foreach (string step in parts)
         {
+            // Python: Skip >>##INDEXINLIST##<< sentinel - it's not a real path component
+            if (step == ">>##INDEXINLIST##<<")
+            {
+                continue;
+            }
+            
             if (container is GFFStruct gffStruct)
             {
                 // Python: container = container.acquire(step, None, (GFFStruct, GFFList))
@@ -589,8 +595,12 @@ public class Memory2DAModifierGFF : ModifyGFF
             displaySrcName = $"!FieldPath({Path})";
             // Python: logger.add_verbose(f"Assign {display_dest_name}={display_src_name}")
             logger.AddVerbose($"Assign {displayDestName}={displaySrcName}");
+            
             // Python: memory.memory_2da[self.dest_token_id] = self.path
-            memory.Memory2DA[DestTokenId] = Path;
+            // Python stores PureWindowsPath object, which when converted to string uses backslashes on Windows
+            // Match Python's behavior by using backslashes for Windows paths
+            string windowsPath = (Path ?? "").Replace("/", "\\");
+            memory.Memory2DA[DestTokenId] = windowsPath;
             return;
         }
 
@@ -603,7 +613,9 @@ public class Memory2DAModifierGFF : ModifyGFF
         object? ptrToDest = memory.Memory2DA.TryGetValue(DestTokenId, out string? destPath) ? destPath : Path;
         
         // Python: if isinstance(ptr_to_dest, PureWindowsPath):
-        if (ptrToDest is string destPathStr && (destPathStr.Contains('/') || destPathStr.Contains('\\')))
+        // In Python, PureWindowsPath("AppearanceType") is still a path (path.name="AppearanceType", path.parent="")
+        // So we need to check if ptrToDest is a string (path) and try to navigate to it
+        if (ptrToDest is string destPathStr)
         {
             // Python: dest_field = self._navigate_to_field(root_container, ptr_to_dest)
             destFieldInfo = NavigateToField(rootStruct, destPathStr);

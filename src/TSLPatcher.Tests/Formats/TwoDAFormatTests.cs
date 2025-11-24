@@ -1,8 +1,12 @@
 using System;
+using System.IO;
 using FluentAssertions;
+using System.Collections.Generic;
 using TSLPatcher.Core.Formats.TwoDA;
+using TSLPatcher.Core.Resources;
 using Xunit;
 using TSLPatcher.Tests.Common;
+using static TSLPatcher.Core.Formats.TwoDA.TwoDAAuto;
 
 namespace TSLPatcher.Tests.Formats;
 
@@ -46,9 +50,54 @@ public class TwoDAFormatTests
     [Fact]
     public void TestReadRaises()
     {
-        // Invalid file
-        Action act = () => new TwoDABinaryReader(CorruptTwoDAFile).Load();
-        act.Should().Throw<System.IO.InvalidDataException>();
+        // test_read_raises from Python
+        // Test directory access
+        Action act1 = () => new TwoDABinaryReader(".").Load();
+        act1.Should().Throw<Exception>(); // UnauthorizedAccessException or IOException
+
+        // Test file not found
+        Action act2 = () => new TwoDABinaryReader("./thisfiledoesnotexist").Load();
+        act2.Should().Throw<FileNotFoundException>();
+
+        // Test corrupted file
+        Action act3 = () => new TwoDABinaryReader(CorruptTwoDAFile).Load();
+        act3.Should().Throw<System.IO.InvalidDataException>();
+    }
+
+    [Fact]
+    public void TestWriteRaises()
+    {
+        // test_write_raises from Python
+        var twoda = new TwoDA(new List<string> { "col1", "col2" });
+
+        // Test writing to directory (should raise PermissionError on Windows, IsADirectoryError on Unix)
+        // Python: write_2da(TwoDA(), ".", ResourceType.TwoDA)
+        Action act1 = () => WriteTwoDA(twoda, ".", ResourceType.TwoDA);
+        if (System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Windows))
+        {
+            act1.Should().Throw<UnauthorizedAccessException>();
+        }
+        else
+        {
+            act1.Should().Throw<IOException>(); // IsADirectoryError equivalent
+        }
+
+        // Test invalid resource type (Python raises ValueError for ResourceType.INVALID)
+        // Python: write_2da(TwoDA(), ".", ResourceType.INVALID)
+        Action act2 = () => WriteTwoDA(twoda, ".", ResourceType.INVALID);
+        act2.Should().Throw<ArgumentException>().WithMessage("*Unsupported format*");
+    }
+
+    [Fact]
+    public void TestRowMax()
+    {
+        // test_row_max from Python
+        var twoda = new TwoDA();
+        twoda.AddRow("0");
+        twoda.AddRow("1");
+        twoda.AddRow("2");
+
+        twoda.LabelMax().Should().Be(3);
     }
 }
 

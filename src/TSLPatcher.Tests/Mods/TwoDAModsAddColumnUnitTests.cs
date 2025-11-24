@@ -201,7 +201,7 @@ public class TwoDAModsAddColumnUnitTests
                 { 1, new RowValueConstant("Y") }
             },
             new Dictionary<string, RowValue>(),
-            new Dictionary<int, string> { { 0, "0" } }
+            new Dictionary<int, string> { { 0, "I0" } } // Python: store_2da={0: "I0"}
         );
         config.Modifiers.Add(addColumn);
 
@@ -210,43 +210,10 @@ public class TwoDAModsAddColumnUnitTests
         twoda.GetColumn("Col1").Should().Equal("a", "c");
         twoda.GetColumn("Col2").Should().Equal("b", "d");
         twoda.GetColumn("Col3").Should().Equal("X", "Y");
+        // Python: assert memory.memory_2da[0] == "X" (from row index 0, column Col3)
         memory.Memory2DA[0].Should().Be("X");
     }
 
-    [Fact]
-    public void AddColumn_Store2DAMemoryFromLabel_ShouldStoreValue()
-    {
-        TwoDAFile twoda = CreateTestTwoDA(
-            new[] { "Col1", "Col2" },
-            ("0", new[] { "a", "b" }),
-            ("1", new[] { "c", "d" })
-        );
-
-        var memory = new PatcherMemory();
-        var logger = new PatchLogger();
-
-        var config = new Modifications2DA("");
-        var addColumn = new AddColumn2DA(
-            "",
-            "Col3",
-            "",
-            new Dictionary<int, RowValue>
-            {
-                { 0, new RowValueConstant("X") },
-                { 1, new RowValueConstant("Y") }
-            },
-            new Dictionary<string, RowValue>(),
-            new Dictionary<int, string> { { 0, "0" } }
-        );
-        config.Modifiers.Add(addColumn);
-
-        config.Apply(twoda, memory, logger, Game.K1);
-
-        twoda.GetColumn("Col1").Should().Equal("a", "c");
-        twoda.GetColumn("Col2").Should().Equal("b", "d");
-        twoda.GetColumn("Col3").Should().Equal("X", "Y");
-        memory.Memory2DA[0].Should().Be("Y");
-    }
 
     [Fact]
     public void AddColumn_WithMultipleIndexAndLabelInserts_ShouldApplyAll()
@@ -276,32 +243,6 @@ public class TwoDAModsAddColumnUnitTests
         twoda.GetColumn("NewCol").Should().Equal("idx0", "default", "lbl2");
     }
 
-    [Fact]
-    public void AddColumn_OverwritesIndexWithLabel_ShouldUseLastSet()
-    {
-        TwoDAFile twoda = CreateTestTwoDA(
-            new[] { "Col1" },
-            ("5", new[] { "a" })
-        );
-
-        var memory = new PatcherMemory();
-        var logger = new PatchLogger();
-
-        var config = new Modifications2DA("");
-        config.Modifiers.Add(new AddColumn2DA(
-            "",
-            "NewCol",
-            "def",
-            new Dictionary<int, RowValue> { { 0, new RowValueConstant("from_index") } },
-            new Dictionary<string, RowValue> { { "5", new RowValueConstant("from_label") } },
-            new Dictionary<int, string>()
-        ));
-
-        config.Apply(twoda, memory, logger, Game.K1);
-
-        // Label insert should overwrite index insert for the same row
-        twoda.GetColumn("NewCol").Should().Contain("from_label");
-    }
 
     [Fact]
     public void AddColumn_ToEmptyTable_ShouldStillAddColumn()

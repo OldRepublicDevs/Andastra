@@ -51,7 +51,7 @@ Table0=test.2da
 AddRow0=NewRow
 
 [NewRow]
-label=new_row
+RowLabel=new_row
 col_constant=100
 col_tlk=StrRef5
 col_2da=2DAMEMORY3
@@ -76,7 +76,9 @@ col_rowcell=other_column
         addRow.Cells["col_high"].Should().BeOfType<RowValueHigh>();
         addRow.Cells["col_rowindex"].Should().BeOfType<RowValueRowIndex>();
         addRow.Cells["col_rowlabel"].Should().BeOfType<RowValueRowLabel>();
-        addRow.Cells["col_rowcell"].Should().BeOfType<RowValueRowCell>();
+        // Python: RowValueRowCell is only created for store operations (2DAMEMORY#=column or StrRef#=column)
+        // For regular cell assignments like col_rowcell=other_column, it's a RowValueConstant
+        addRow.Cells["col_rowcell"].Should().BeOfType<RowValueConstant>();
     }
 
     [Fact]
@@ -91,7 +93,7 @@ CopyRow0=CopyTest
 
 [CopyTest]
 RowIndex=0
-label=copied
+RowLabel=copied
 col_a=High()
 col_b=High()
 ";
@@ -136,14 +138,16 @@ RowLabel=label2
 col2=value2
 
 [Add1]
-label=new
+RowLabel=new
 col1=added
 
 [Copy1]
 RowIndex=1
-label=copied
+RowLabel=copied
 
 [NewCol]
+ColumnLabel=NewColumn
+DefaultValue=****
 ";
         IniData ini = _parser.Parse(iniText);
         var config = new PatcherConfig();
@@ -259,13 +263,13 @@ CopyRow0=Copy1
 
 [Add1]
 ExclusiveColumn=unique_id
-label=add_label
+RowLabel=add_label
 unique_id=100
 
 [Copy1]
 RowIndex=0
 ExclusiveColumn=unique_id
-label=copy_label
+RowLabel=copy_label
 unique_id=200
 ";
         IniData ini = _parser.Parse(iniText);
@@ -306,10 +310,8 @@ col1=value
         var change = result.Patches2DA.First(p => p.SaveAs == "test.2da").Modifiers[0] as ChangeRow2DA;
         change.Should().NotBeNull();
         change!.Target.TargetType.Should().Be(TargetType.LABEL_COLUMN);
-
-        var value = change.Target.Value as RowValueConstant;
-        value.Should().NotBeNull();
-        value!.String.Should().Be("5");
+        // Python: assert mod_2da_2.target.value == "3" - value is stored as string, not RowValueConstant
+        change.Target.Value.Should().Be("5");
     }
 
     [Fact]
@@ -323,7 +325,7 @@ Table0=test.2da
 AddRow0=NewRow
 
 [NewRow]
-label=test
+RowLabel=test
 col1=
 col2=****
 ";
@@ -342,7 +344,9 @@ col2=****
 
         var col2 = add.Cells["col2"] as RowValueConstant;
         col2.Should().NotBeNull();
-        col2!.String.Should().Be("****");
+        // Python: elif value == "****": row_value = RowValueConstant("")
+        // "****" is converted to empty string in Python
+        col2!.String.Should().Be("");
     }
 
     [Fact]
@@ -364,7 +368,7 @@ col1=value1
 AddRow0=Add2
 
 [Add2]
-label=test
+RowLabel=test
 col2=value2
 ";
         IniData ini = _parser.Parse(iniText);

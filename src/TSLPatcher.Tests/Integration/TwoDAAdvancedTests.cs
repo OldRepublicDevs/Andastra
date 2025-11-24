@@ -78,8 +78,12 @@ public class TwoDAAdvancedTests : IntegrationTestBase
 Table0=test.2da
 
 [test.2da]
-AddColumn0=NewCol(default)
-RowIndex1=special_value
+AddColumn0=NewCol
+
+[NewCol]
+ColumnLabel=NewCol
+DefaultValue=default
+I1=special_value
 ";
         Core.Config.PatcherConfig config = SetupIniAndConfig(iniText);
         Modifications2DA modifications = config.Patches2DA.First(p => p.SaveAs == "test.2da");
@@ -96,25 +100,29 @@ RowIndex1=special_value
     [Fact]
     public void AddColumn_RowLabel2DAMemory_ShouldUseTokenValue()
     {
+        // Python test: test_addcolumn_rowlabel_2damemory
         // Arrange
         TwoDA twoda = CreateTest2DA(
-            new[] { "Col1" },
+            new[] { "Col1", "Col2" },
             new[]
             {
-                ("row0", new[] { "a" }),
-                ("row1", new[] { "b" }),
-                ("row2", new[] { "c" })
+                ("0", new[] { "a", "b" }),
+                ("1", new[] { "c", "d" })
             });
 
-        Memory.Memory2DA[3] = "token_value";
+        Memory.Memory2DA[5] = "ABC";
 
         string iniText = @"
 [2DAList]
 Table0=test.2da
 
 [test.2da]
-AddColumn0=NewCol(default)
-RowLabel(row1)=2DAMEMORY3
+AddColumn0=NewCol
+
+[NewCol]
+ColumnLabel=NewCol
+DefaultValue=
+L1=2DAMEMORY5
 ";
         Core.Config.PatcherConfig config = SetupIniAndConfig(iniText);
         Modifications2DA modifications = config.Patches2DA.First(p => p.SaveAs == "test.2da");
@@ -122,8 +130,10 @@ RowLabel(row1)=2DAMEMORY3
         // Act
         modifications.Apply(twoda, Memory, Logger, Game.K1);
 
-        // Assert
-        twoda.GetCellString("row1", "NewCol").Should().Be("token_value");
+        // Assert - Python: assert twoda.get_column("Col3") == ["", "ABC"]
+        twoda.GetColumn("Col1").Should().Equal("a", "c");
+        twoda.GetColumn("Col2").Should().Equal("b", "d");
+        twoda.GetColumn("NewCol").Should().Equal("", "ABC");
     }
 
     [Fact]
@@ -134,8 +144,8 @@ RowLabel(row1)=2DAMEMORY3
             new[] { "Col1" },
             new[]
             {
-                ("row0", new[] { "a" }),
-                ("row1", new[] { "b" })
+                ("0", new[] { "a" }),
+                ("1", new[] { "b" })
             });
 
         Memory.MemoryStr[5] = 12345;
@@ -145,8 +155,12 @@ RowLabel(row1)=2DAMEMORY3
 Table0=test.2da
 
 [test.2da]
-AddColumn0=NewCol(default)
-RowLabel(row1)=StrRef5
+AddColumn0=NewCol
+
+[NewCol]
+ColumnLabel=NewCol
+DefaultValue=
+L1=StrRef5
 ";
         Core.Config.PatcherConfig config = SetupIniAndConfig(iniText);
         Modifications2DA modifications = config.Patches2DA.First(p => p.SaveAs == "test.2da");
@@ -155,18 +169,20 @@ RowLabel(row1)=StrRef5
         modifications.Apply(twoda, Memory, Logger, Game.K1);
 
         // Assert
-        twoda.GetCellString("row1", "NewCol").Should().Be("12345");
+        twoda.GetCellString("1", "NewCol").Should().Be("12345");
     }
 
     [Fact]
     public void AddColumn_2DAMemoryIndex_ShouldStoreColumnIndex()
     {
+        // Python test: test_addcolumn_2damemory_index
         // Arrange
         TwoDA twoda = CreateTest2DA(
             new[] { "Col1", "Col2" },
             new[]
             {
-                ("0", new[] { "a", "b" })
+                ("0", new[] { "a", "b" }),
+                ("1", new[] { "c", "d" })
             });
 
         string iniText = @"
@@ -175,7 +191,13 @@ Table0=test.2da
 
 [test.2da]
 AddColumn0=NewCol
-2DAMEMORY0=ColumnIndex
+
+[NewCol]
+ColumnLabel=NewCol
+DefaultValue=
+I0=X
+I1=Y
+2DAMEMORY0=I0
 ";
         Core.Config.PatcherConfig config = SetupIniAndConfig(iniText);
         Modifications2DA modifications = config.Patches2DA.First(p => p.SaveAs == "test.2da");
@@ -183,19 +205,24 @@ AddColumn0=NewCol
         // Act
         modifications.Apply(twoda, Memory, Logger, Game.K1);
 
-        // Assert
-        Memory.Memory2DA[0].Should().Be("2"); // Third column (0-indexed would be 2)
+        // Assert - Python: assert memory.memory_2da[0] == "X" (value from row 0, column NewCol)
+        Memory.Memory2DA[0].Should().Be("X");
+        twoda.GetColumn("Col1").Should().Equal("a", "c");
+        twoda.GetColumn("Col2").Should().Equal("b", "d");
+        twoda.GetColumn("NewCol").Should().Equal("X", "Y");
     }
 
     [Fact]
     public void AddColumn_2DAMemoryLine_ShouldStoreColumnLabel()
     {
+        // Python test: test_addcolumn_2damemory_line
         // Arrange
         TwoDA twoda = CreateTest2DA(
             new[] { "Col1", "Col2" },
             new[]
             {
-                ("0", new[] { "a", "b" })
+                ("0", new[] { "a", "b" }),
+                ("1", new[] { "c", "d" })
             });
 
         string iniText = @"
@@ -203,8 +230,14 @@ AddColumn0=NewCol
 Table0=test.2da
 
 [test.2da]
-AddColumn0=MyNewColumn
-2DAMEMORY1=ColumnLabel
+AddColumn0=add_column_0
+
+[add_column_0]
+ColumnLabel=Col3
+DefaultValue=
+I0=X
+I1=Y
+2DAMEMORY0=L1
 ";
         Core.Config.PatcherConfig config = SetupIniAndConfig(iniText);
         Modifications2DA modifications = config.Patches2DA.First(p => p.SaveAs == "test.2da");
@@ -212,8 +245,11 @@ AddColumn0=MyNewColumn
         // Act
         modifications.Apply(twoda, Memory, Logger, Game.K1);
 
-        // Assert
-        Memory.Memory2DA[1].Should().Be("MyNewColumn");
+        // Assert - Python: assert memory.memory_2da[0] == "Y"
+        Memory.Memory2DA[0].Should().Be("Y");
+        twoda.GetColumn("Col1").Should().Equal("a", "c");
+        twoda.GetColumn("Col2").Should().Equal("b", "d");
+        twoda.GetColumn("Col3").Should().Equal("X", "Y");
     }
 
     [Fact]
@@ -336,13 +372,13 @@ RowIndex=0
 name=Changed
 
 [add1]
-label=1
+RowLabel=1
 id=2
 name=Added
 
 [copy1]
 RowIndex=1
-label=2
+RowLabel=2
 id=3
 name=Copied
 ";

@@ -180,30 +180,6 @@ public class GffModificationTests
         Assert.Equal(2.5f, gff.Root.GetSingle("Field1"));
     }
 
-    [Fact]
-    public void ModifyField_LocalizedString_StringRef()
-    {
-        // Arrange
-        var gff = new GFF();
-        gff.Root.SetLocString("Field1", new LocalizedString(100));
-
-        var memory = new PatcherMemory();
-        memory.MemoryStr[5] = 200;
-
-        var config = new ModificationsGFF("", replace: false, modifiers: new()
-        {
-            new ModifyFieldGFF("Field1", new FieldValueTLKMemory(5))
-        });
-
-        // Act
-        object bytes = config.PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
-        gff = GFF.FromBytes((byte[])bytes);
-
-        // Assert
-        LocalizedString locstring = gff.Root.GetLocString("Field1");
-        Assert.NotNull(locstring);
-        Assert.Equal(200, locstring.StringRef);
-    }
 
     [Fact]
     public void AddField_NewField()

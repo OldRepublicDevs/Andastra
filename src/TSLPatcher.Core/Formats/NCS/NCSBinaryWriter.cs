@@ -19,8 +19,8 @@ public class NCSBinaryWriter
     private const int NCS_HEADER_SIZE = 13;
 
     private readonly NCS _ncs;
-    private readonly Dictionary<int, int> _offsets = new();
-    private readonly Dictionary<int, int> _sizes = new();
+    private readonly Dictionary<NCSInstruction, int> _offsets = new();
+    private readonly Dictionary<NCSInstruction, int> _sizes = new();
 
     public NCSBinaryWriter(NCS ncs)
     {
@@ -35,10 +35,9 @@ public class NCSBinaryWriter
         int offset = NCS_HEADER_SIZE;
         foreach (NCSInstruction instruction in _ncs.Instructions)
         {
-            int instId = instruction.GetHashCode();
             int instructionSize = DetermineSize(instruction);
-            _sizes[instId] = instructionSize;
-            _offsets[instId] = offset;
+            _sizes[instruction] = instructionSize;
+            _offsets[instruction] = offset;
             offset += instructionSize;
         }
 
@@ -72,7 +71,11 @@ public class NCSBinaryWriter
                 break;
 
             case NCSInstructionType.CONSTI:
-                WriteBigEndianUInt32(writer, Convert.ToUInt32(instruction.Args[0]));
+                // Integer constants stored as unsigned 32-bit, but written as signed int32
+                // See Python: to_signed_32bit conversion and write_int32
+                uint uintValue = Convert.ToUInt32(instruction.Args[0]);
+                int signedValue = uintValue >= 0x80000000 ? (int)(uintValue - 0x100000000) : (int)uintValue;
+                WriteBigEndianInt32(writer, signedValue);
                 break;
 
             case NCSInstructionType.CONSTF:
@@ -109,12 +112,14 @@ public class NCSBinaryWriter
                     {
                         throw new InvalidOperationException($"Jump instruction {instruction.InsType} has no jump target");
                     }
-                    int instId = instruction.GetHashCode();
-                    int jumpId = instruction.Jump.GetHashCode();
-                    int currentOffset = _offsets[instId];
-                    int jumpOffset = _offsets[jumpId];
-                    int relativeOffset = jumpOffset - (currentOffset + 6);
-                    WriteBigEndianInt32(writer, relativeOffset);
+                    int currentOffset = _offsets[instruction];
+                    int jumpOffset = _offsets[instruction.Jump];
+                    // Python: relative = self._offsets[jump_id] - self._offsets[instruction_id]
+                    int relativeOffset = jumpOffset - currentOffset;
+                    // Python: self._writer.write_int32(to_signed_32bit(relative), big=True)
+                    uint uintRelative = (uint)relativeOffset;
+                    int signedRelative = uintRelative >= 0x80000000 ? (int)(uintRelative - 0x100000000) : (int)uintRelative;
+                    WriteBigEndianInt32(writer, signedRelative);
                 }
                 break;
 
@@ -128,7 +133,10 @@ public class NCSBinaryWriter
             case NCSInstructionType.INCxSP:
             case NCSInstructionType.DECxBP:
             case NCSInstructionType.INCxBP:
-                WriteBigEndianUInt32(writer, Convert.ToUInt32(instruction.Args[0]));
+                // Python uses to_signed_32bit and write_int32
+                uint uintVal = Convert.ToUInt32(instruction.Args[0]);
+                int signedVal = uintVal >= 0x80000000 ? (int)(uintVal - 0x100000000) : (int)uintVal;
+                WriteBigEndianInt32(writer, signedVal);
                 break;
 
             case NCSInstructionType.STORE_STATE:

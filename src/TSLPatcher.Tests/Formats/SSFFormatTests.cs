@@ -2,7 +2,9 @@ using System;
 using System.IO;
 using FluentAssertions;
 using TSLPatcher.Core.Formats.SSF;
+using TSLPatcher.Core.Resources;
 using Xunit;
+using static TSLPatcher.Core.Formats.SSF.SSFAuto;
 
 namespace TSLPatcher.Tests.Formats;
 
@@ -88,6 +90,34 @@ public class SSFFormatTests
         ssf.Get(SSFSound.SEPARATED_FROM_PARTY).Should().Be(123050);
         ssf.Get(SSFSound.REJOINED_PARTY).Should().Be(123049);
         ssf.Get(SSFSound.POISONED).Should().Be(123048);
+    }
+
+    /// <summary>
+    /// Python: test_write_raises
+    /// Tests various error conditions when writing SSF files
+    /// </summary>
+    [Fact]
+    public void TestWriteRaises()
+    {
+        // test_write_raises from Python
+        var ssf = new SSF();
+
+        // Test writing to directory (should raise PermissionError on Windows, IsADirectoryError on Unix)
+        // Python: write_ssf(SSF(), ".", ResourceType.SSF)
+        Action act1 = () => WriteSsf(ssf, ".", ResourceType.SSF);
+        if (System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Windows))
+        {
+            act1.Should().Throw<UnauthorizedAccessException>();
+        }
+        else
+        {
+            act1.Should().Throw<IOException>(); // IsADirectoryError equivalent
+        }
+
+        // Test invalid resource type (Python raises ValueError for ResourceType.INVALID)
+        // Python: write_ssf(SSF(), ".", ResourceType.INVALID)
+        Action act2 = () => WriteSsf(ssf, ".", ResourceType.INVALID);
+        act2.Should().Throw<ArgumentException>().WithMessage("*Unsupported format*");
     }
 }
 

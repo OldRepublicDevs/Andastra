@@ -19,6 +19,8 @@ public class NoTokenUsage : TokenUsage
 {
     private readonly string _stored;
 
+    public string Stored => _stored;
+
     public NoTokenUsage(string stored)
     {
         _stored = stored;

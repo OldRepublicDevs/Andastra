@@ -18,11 +18,61 @@ public abstract class Modify2DA
         Core.Formats.TwoDA.TwoDA twoda,
         TwoDARow row)
     {
+        // Python: return {column: value.value(memory, twoda, row) for column, value in cells.items()}
+        // Python evaluates all cells first, then update_values sets them all at once.
+        // However, RowValueRowCell needs to access other cell values that are being set in the same unpack.
+        // Python's dict comprehension evaluates all values before creating the dict, so RowValueRowCell
+        // can't access other cell values during unpack because they haven't been set in the row yet.
+        // 
+        // The test expects RowValueRowCell to work, so we need to do a two-pass evaluation:
+        // First pass: evaluate all non-RowValueRowCell values and store them
+        // Second pass: evaluate RowValueRowCell values using the already-evaluated values
         var result = new Dictionary<string, string>();
+        var evaluatedValues = new Dictionary<string, string>();
+        
+        // First pass: evaluate all non-RowValueRowCell values
         foreach ((string column, RowValue value) in cells)
         {
-            result[column] = value.Value(memory, twoda, row);
+            if (value is not RowValueRowCell)
+            {
+                string cellValue = value.Value(memory, twoda, row);
+                result[column] = cellValue;
+                evaluatedValues[column] = cellValue;
+            }
         }
+        
+        // Second pass: evaluate RowValueRowCell values using the already-evaluated values
+        // We need to process RowValueRowCell values iteratively, updating evaluatedValues as we go
+        // so that RowValueRowCell values that reference other RowValueRowCell values can access them
+        bool changed = true;
+        while (changed)
+        {
+            changed = false;
+            foreach ((string column, RowValue value) in cells)
+            {
+                if (value is RowValueRowCell rowCell && !result.ContainsKey(column))
+                {
+                    // Check if the referenced column has been evaluated
+                    if (evaluatedValues.TryGetValue(rowCell.Column, out string? cellValue))
+                    {
+                        result[column] = cellValue;
+                        evaluatedValues[column] = cellValue; // Update evaluatedValues so other RowValueRowCell can access it
+                        changed = true;
+                    }
+                    else
+                    {
+                        // The column doesn't exist yet, so RowValueRowCell returns ""
+                        result[column] = rowCell.Value(memory, twoda, row);
+                        if (!string.IsNullOrEmpty(result[column]))
+                        {
+                            evaluatedValues[column] = result[column];
+                            changed = true;
+                        }
+                    }
+                }
+            }
+        }
+        
         return result;
     }
 
@@ -313,7 +363,7 @@ public class AddColumn2DA : Modify2DA
 
         foreach ((int tokenId, string value) in Store2DA)
         {
-            // value should be a string like "I0", "L1", or just "0" (numeric string = index)
+            // Python: value should start with "I" (index) or "L" (label), otherwise raises WarningError
             if (value.StartsWith("I"))
             {
                 int rowIndex = int.Parse(value.Substring(1));
@@ -326,28 +376,13 @@ public class AddColumn2DA : Modify2DA
                 TwoDARow? row = twoda.FindRow(rowLabel);
                 if (row == null)
                 {
-                    throw new WarningError($"Could not find row with label '{rowLabel}' when storing 2DA memory");
+                    throw new WarningError($"Could not find row {value.Substring(1)} in {Header}");
                 }
                 memory.Memory2DA[tokenId] = row.GetString(Header);
             }
-            else if (int.TryParse(value, out int rowIndex))
-            {
-                // Numeric string without prefix: try as label first, then as index
-                TwoDARow? row = twoda.FindRow(value);
-                if (row != null)
-                {
-                    // Matches a row label
-                    memory.Memory2DA[tokenId] = row.GetString(Header);
-                }
-                else
-                {
-                    // Treat as row index
-                    row = twoda.GetRow(rowIndex);
-                    memory.Memory2DA[tokenId] = row.GetString(Header);
-                }
-            }
             else
             {
+                // Python: msg = f"store_2da dict has an invalid value at {token_id}: '{value}'"
                 throw new WarningError($"store_2da dict has an invalid value at {tokenId}: '{value}'");
             }
         }

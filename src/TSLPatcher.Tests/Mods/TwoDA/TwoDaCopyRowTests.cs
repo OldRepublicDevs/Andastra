@@ -161,17 +161,44 @@ public class TwoDaCopyRowTests
 
         // Assert
         Assert.Equal(3, twoda.GetHeight());
+        Assert.Equal("1", twoda.GetLabel(1));
         Assert.Equal("r2", twoda.GetLabel(2));
         Assert.Equal(new[] { "a", "c", "e" }, twoda.GetColumn("Col1"));
         Assert.Equal(new[] { "b", "d", "f" }, twoda.GetColumn("Col2"));
     }
 
     [Fact]
-    public void CopyRow_Store2DAMemory_RowIndex()
+    public void CopyRow_SetNewRowLabel()
     {
+        // Python test: test_copy_set_newrowlabel
         // Arrange
-        var twoda = new TwoDAFile(new List<string> {  "Col1", "Col2" });
+        var twoda = new TwoDAFile(new List<string> { "Col1", "Col2", "Col3" });
         twoda.AddRow("0", new() { ["Col1"] = "a", ["Col2"] = "b" });
+        twoda.AddRow("1", new() { ["Col1"] = "c", ["Col2"] = "d" });
+
+        var logger = new PatchLogger();
+        var memory = new PatcherMemory();
+
+        var config = new Modifications2DA("");
+        config.Modifiers.Add(new CopyRow2DA("", new Target(TargetType.ROW_INDEX, 0), null, "r2", new()));
+
+        // Act
+        config.Apply(twoda, memory, logger, Game.K1);
+
+        // Assert
+        Assert.Equal("r2", twoda.GetLabel(2));
+        Assert.Equal(new[] { "a", "c", "a" }, twoda.GetColumn("Col1"));
+        Assert.Equal(new[] { "b", "d", "b" }, twoda.GetColumn("Col2"));
+    }
+
+    [Fact]
+    public void CopyRow_Assign_High()
+    {
+        // Python test: test_copy_assign_high
+        // Arrange
+        var twoda = new TwoDAFile(new List<string> { "Col1", "Col2", "Col3" });
+        twoda.AddRow("0", new() { ["Col1"] = "a", ["Col2"] = "1" });
+        twoda.AddRow("1", new() { ["Col1"] = "c", ["Col2"] = "2" });
 
         var logger = new PatchLogger();
         var memory = new PatcherMemory();
@@ -181,7 +208,97 @@ public class TwoDaCopyRowTests
             "",
             new Target(TargetType.ROW_INDEX, 0),
             null,
-            "r1",
+            null,
+            new() { ["Col2"] = new RowValueHigh("Col2") }
+        ));
+
+        // Act
+        config.Apply(twoda, memory, logger, Game.K1);
+
+        // Assert
+        Assert.Equal(3, twoda.GetHeight());
+        Assert.Equal(new[] { "a", "c", "a" }, twoda.GetColumn("Col1"));
+        Assert.Equal(new[] { "1", "2", "3" }, twoda.GetColumn("Col2"));
+    }
+
+    [Fact]
+    public void CopyRow_Assign_TLKMemory()
+    {
+        // Python test: test_copy_assign_tlkmemory
+        // Arrange
+        var twoda = new TwoDAFile(new List<string> { "Col1", "Col2", "Col3" });
+        twoda.AddRow("0", new() { ["Col1"] = "a", ["Col2"] = "1" });
+        twoda.AddRow("1", new() { ["Col1"] = "c", ["Col2"] = "2" });
+
+        var logger = new PatchLogger();
+        var memory = new PatcherMemory();
+        memory.MemoryStr[0] = 5;
+
+        var config = new Modifications2DA("");
+        config.Modifiers.Add(new CopyRow2DA(
+            "",
+            new Target(TargetType.ROW_INDEX, 0),
+            null,
+            null,
+            new() { ["Col2"] = new RowValueTLKMemory(0) }
+        ));
+
+        // Act
+        config.Apply(twoda, memory, logger, Game.K1);
+
+        // Assert
+        Assert.Equal(new[] { "a", "c", "a" }, twoda.GetColumn("Col1"));
+        Assert.Equal(new[] { "1", "2", "5" }, twoda.GetColumn("Col2"));
+    }
+
+    [Fact]
+    public void CopyRow_Assign_2DAMemory()
+    {
+        // Python test: test_copy_assign_2damemory
+        // Arrange
+        var twoda = new TwoDAFile(new List<string> { "Col1", "Col2" });
+        twoda.AddRow("0", new() { ["Col1"] = "a", ["Col2"] = "1" });
+        twoda.AddRow("1", new() { ["Col1"] = "c", ["Col2"] = "2" });
+
+        var logger = new PatchLogger();
+        var memory = new PatcherMemory();
+        memory.Memory2DA[0] = "5";
+
+        var config = new Modifications2DA("");
+        config.Modifiers.Add(new CopyRow2DA(
+            "",
+            new Target(TargetType.ROW_INDEX, 0),
+            null,
+            null,
+            new() { ["Col2"] = new RowValue2DAMemory(0) }
+        ));
+
+        // Act
+        config.Apply(twoda, memory, logger, Game.K1);
+
+        // Assert
+        Assert.Equal(new[] { "a", "c", "a" }, twoda.GetColumn("Col1"));
+        Assert.Equal(new[] { "1", "2", "5" }, twoda.GetColumn("Col2"));
+    }
+
+    [Fact]
+    public void CopyRow_2DAMemory_RowIndex()
+    {
+        // Python test: test_copy_2damemory_rowindex
+        // Arrange
+        var twoda = new TwoDAFile(new List<string> { "Col1", "Col2" });
+        twoda.AddRow("0", new() { ["Col1"] = "a", ["Col2"] = "b" });
+        twoda.AddRow("1", new() { ["Col1"] = "c", ["Col2"] = "d" });
+
+        var logger = new PatchLogger();
+        var memory = new PatcherMemory();
+
+        var config = new Modifications2DA("");
+        config.Modifiers.Add(new CopyRow2DA(
+            "",
+            new Target(TargetType.ROW_INDEX, 0),
+            null,
+            null,
             new(),
             new() { [5] = new RowValueRowIndex() }
         ));
@@ -190,64 +307,9 @@ public class TwoDaCopyRowTests
         config.Apply(twoda, memory, logger, Game.K1);
 
         // Assert
-        Assert.Equal(2, twoda.GetHeight());
-        Assert.Equal("1", memory.Memory2DA[5]);
-    }
-
-    [Fact]
-    public void CopyRow_Store2DAMemory_RowLabel()
-    {
-        // Arrange
-        var twoda = new TwoDAFile(new List<string> {  "Col1", "Col2" });
-        twoda.AddRow("0", new() { ["Col1"] = "a", ["Col2"] = "b" });
-
-        var logger = new PatchLogger();
-        var memory = new PatcherMemory();
-
-        var config = new Modifications2DA("");
-        config.Modifiers.Add(new CopyRow2DA(
-            "",
-            new Target(TargetType.ROW_INDEX, 0),
-            null,
-            "r1",
-            new(),
-            new() { [5] = new RowValueRowLabel() }
-        ));
-
-        // Act
-        config.Apply(twoda, memory, logger, Game.K1);
-
-        // Assert
-        Assert.Equal(2, twoda.GetHeight());
-        Assert.Equal("r1", memory.Memory2DA[5]);
-    }
-
-    [Fact]
-    public void CopyRow_Store2DAMemory_Cell()
-    {
-        // Arrange
-        var twoda = new TwoDAFile(new List<string> {  "Col1", "Col2" });
-        twoda.AddRow("0", new() { ["Col1"] = "a", ["Col2"] = "b" });
-
-        var logger = new PatchLogger();
-        var memory = new PatcherMemory();
-
-        var config = new Modifications2DA("");
-        config.Modifiers.Add(new CopyRow2DA(
-            "",
-            new Target(TargetType.ROW_INDEX, 0),
-            null,
-            null,
-            new() { ["Col2"] = new RowValueConstant("X") },
-            new() { [5] = new RowValueRowCell("Col2") }
-        ));
-
-        // Act
-        config.Apply(twoda, memory, logger, Game.K1);
-
-        // Assert
-        Assert.Equal(2, twoda.GetHeight());
-        Assert.Equal("X", memory.Memory2DA[5]);
+        Assert.Equal(new[] { "a", "c", "a" }, twoda.GetColumn("Col1"));
+        Assert.Equal(new[] { "b", "d", "b" }, twoda.GetColumn("Col2"));
+        Assert.Equal("2", memory.Memory2DA[5]);
     }
 }
 

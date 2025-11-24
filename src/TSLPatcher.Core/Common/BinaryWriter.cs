@@ -265,7 +265,7 @@ public class RawBinaryWriterFile : RawBinaryWriter
         }
         else if (prefixLength == 4)
         {
-            if (value.Length > 0xFFFFFFFF)
+            if (value.Length > int.MaxValue)
                 throw new ArgumentException("String length too large for prefix length of 4");
             WriteUInt32((uint)value.Length, bigEndian);
         }
@@ -544,7 +544,7 @@ public class RawBinaryWriterMemory : RawBinaryWriter
         }
         else if (prefixLength == 4)
         {
-            if (value.Length > 0xFFFFFFFF)
+            if (value.Length > int.MaxValue)
                 throw new ArgumentException("String length too large for prefix length of 4");
             WriteUInt32((uint)value.Length, bigEndian);
         }

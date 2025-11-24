@@ -3,7 +3,9 @@ using System.IO;
 using FluentAssertions;
 using TSLPatcher.Core.Common;
 using TSLPatcher.Core.Formats.TLK;
+using TSLPatcher.Core.Resources;
 using Xunit;
+using static TSLPatcher.Core.Formats.TLK.TLKAuto;
 
 namespace TSLPatcher.Tests.Formats;
 
@@ -109,5 +111,30 @@ public class TLKFormatTests
         Action act3 = () => new TLKBinaryReader(CorruptBinaryTestFile).Load();
         act3.Should().Throw<InvalidDataException>().WithMessage("Attempted to load an invalid TLK file.");
     }
+
+    [Fact]
+    public void TestWriteRaises()
+    {
+        // test_write_raises from Python
+        var tlk = new TLK(Language.English);
+
+        // Test writing to directory (should raise PermissionError on Windows, IsADirectoryError on Unix)
+        // Python: write_tlk(TLK(), ".", ResourceType.TLK)
+        Action act1 = () => WriteTlk(tlk, ".", ResourceType.TLK);
+        if (System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Windows))
+        {
+            act1.Should().Throw<UnauthorizedAccessException>();
+        }
+        else
+        {
+            act1.Should().Throw<IOException>(); // IsADirectoryError equivalent
+        }
+
+        // Test invalid resource type (Python raises ValueError for ResourceType.INVALID)
+        // Python: write_tlk(TLK(), ".", ResourceType.INVALID)
+        Action act2 = () => WriteTlk(tlk, ".", ResourceType.INVALID);
+        act2.Should().Throw<ArgumentException>().WithMessage("*Unsupported format*");
+    }
 }
+
 

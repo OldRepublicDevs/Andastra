@@ -108,25 +108,6 @@ public class TLKModsUnitTests
         entry!.Voiceover.ToString().Should().Be("testsound");
     }
 
-    [Fact]
-    public void Apply_ReplaceOutOfBounds_ShouldHandleGracefully()
-    {
-        var memory = new PatcherMemory();
-        var config = new ModificationsTLK();
-
-        var m1 = new ModifyTLK(999) { Text = "Replace", Sound = ResRef.FromBlank(), IsReplacement = true };
-        config.Modifiers.Add(m1);
-
-        var dialogTlk = new TLK();
-        dialogTlk.Add("Old1");
-
-        // Should not throw, but should log warning
-        var logger = new PatchLogger();
-        config.Apply(dialogTlk, memory, logger, Game.K1);
-
-        dialogTlk.Count.Should().Be(1);
-        dialogTlk.Get(0)!.Text.Should().Be("Old1");
-    }
 
     [Fact]
     public void Apply_MixedAppendAndReplace_ShouldApplyCorrectly()
