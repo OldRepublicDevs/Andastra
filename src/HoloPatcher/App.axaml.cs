@@ -33,6 +33,12 @@ namespace HoloPatcher
 
                 // Initialize and start update manager on UI thread
                 InitializeUpdateManager();
+
+                // Handle cleanup on shutdown
+                desktop.ShutdownRequested += (sender, e) =>
+                {
+                    _updateManager?.Dispose();
+                };
             }
 
             base.OnFrameworkInitializationCompleted();
@@ -59,11 +65,6 @@ namespace HoloPatcher
             }
         }
 
-        protected override void OnExit(global::Avalonia.Controls.ApplicationLifetimes.IControlledApplicationLifetime appLifetime)
-        {
-            _updateManager?.Dispose();
-            base.OnExit(appLifetime);
-        }
     }
 }
 

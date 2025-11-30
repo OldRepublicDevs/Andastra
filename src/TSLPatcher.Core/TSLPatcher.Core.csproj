@@ -110,7 +110,7 @@
     <PackageProjectUrl>https://github.com/th3w1zard1/HoloPatcher.NET</PackageProjectUrl>
     <RepositoryUrl>https://github.com/th3w1zard1/HoloPatcher.NET</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
-    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageLicenseExpression>BSL-1.1</PackageLicenseExpression>
     <GeneratePackageOnBuild Condition="'$(Configuration)' == 'Release'">true</GeneratePackageOnBuild>
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
@@ -119,9 +119,10 @@
   <!-- Package References - Use versions compatible with .NET Framework 4.8 -->
   <ItemGroup>
     <PackageReference Include="ini-parser-netstandard" Version="2.5.3" />
-    <PackageReference Include="JetBrains.Annotations" Version="2025.2.2" />
+    <PackageReference Include="JetBrains.Annotations" Version="2025.2.4" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.0" />
     <PackageReference Include="sly" Version="3.7.6" />
+    <PackageReference Include="System.Collections.Immutable" Version="10.0.0" />
     <PackageReference Include="System.Text.Encoding.CodePages" Version="10.0.0" />
     <!-- System.Text.Json: Use version compatible with net48 -->
     <PackageReference Include="System.Text.Json" Version="10.0.0" />

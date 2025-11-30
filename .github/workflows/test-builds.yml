@@ -58,7 +58,7 @@ jobs:
         uses: microsoft/setup-msbuild@v2
 
       - name: Restore dependencies
-        run: dotnet restore src/HoloPatcher/HoloPatcher.csproj
+        run: dotnet restore
 
       - name: Run tests
         run: dotnet test --no-restore --verbosity normal
