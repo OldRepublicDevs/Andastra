@@ -133,7 +133,8 @@
     <PackageReference Include="MessageBox.Avalonia" Version="3.3.0" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.0" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.0" />
-    <PackageReference Include="NetSparkle" Version="1.1.0" />
+    <!-- NetSparkle only supports .NET Framework, so only include for net48 -->
+    <PackageReference Condition="'$(TargetFramework)' == 'net48'" Include="NetSparkle" Version="1.1.0" />
   </ItemGroup>
 
   <ItemGroup>

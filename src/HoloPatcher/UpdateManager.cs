@@ -1,19 +1,24 @@
 using System;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
+#if NETFRAMEWORK
 using NetSparkleUpdater;
 using NetSparkleUpdater.Enums;
 using NetSparkleUpdater.SignatureVerifiers;
+#endif
 
 namespace HoloPatcher
 {
     /// <summary>
     /// Manages automatic updates using NetSparkle.
     /// Provides industry-standard auto-update functionality.
+    /// Note: NetSparkle only supports .NET Framework, so this is a no-op for .NET Core/.NET 5+.
     /// </summary>
     public class UpdateManager : IDisposable
     {
+#if NETFRAMEWORK
         private SparkleUpdater _sparkle;
+#endif
         private bool _disposed = false;
 
         /// <summary>
@@ -64,6 +69,7 @@ namespace HoloPatcher
         /// </summary>
         public void Initialize()
         {
+#if NETFRAMEWORK
             if (_sparkle != null)
             {
                 return; // Already initialized
@@ -98,6 +104,7 @@ namespace HoloPatcher
 
             // Subscribe to events if needed
             // Note: NetSparkle handles UI automatically, but we can listen for custom handling
+#endif
         }
 
         /// <summary>
@@ -106,6 +113,7 @@ namespace HoloPatcher
         /// </summary>
         public void Start()
         {
+#if NETFRAMEWORK
             if (_sparkle == null)
             {
                 Initialize();
@@ -117,6 +125,7 @@ namespace HoloPatcher
                 // First parameter: true = check immediately, false = wait for interval
                 _sparkle.StartLoop(true);
             }
+#endif
         }
 
         /// <summary>
@@ -124,12 +133,14 @@ namespace HoloPatcher
         /// </summary>
         public void CheckForUpdates()
         {
+#if NETFRAMEWORK
             if (_sparkle == null)
             {
                 Initialize();
             }
 
             _sparkle.CheckForUpdatesAtUserRequest();
+#endif
         }
 
         /// <summary>
@@ -137,7 +148,9 @@ namespace HoloPatcher
         /// </summary>
         public void Stop()
         {
+#if NETFRAMEWORK
             _sparkle?.Stop();
+#endif
         }
 
         public void Dispose()
@@ -145,7 +158,9 @@ namespace HoloPatcher
             if (!_disposed)
             {
                 Stop();
+#if NETFRAMEWORK
                 _sparkle?.Dispose();
+#endif
                 _disposed = true;
             }
         }
@@ -159,7 +174,12 @@ namespace HoloPatcher
         public bool UpdateAvailable { get; set; }
         public string LatestVersion { get; set; } = "";
         public string ReleaseNotes { get; set; } = "";
+#if NETFRAMEWORK
         public UpdateStatus Status { get; set; } = UpdateStatus.UpdateNotAvailable;
+#else
+        // For .NET Core/.NET 5+, use a simple enum
+        public int Status { get; set; } = 0; // 0 = UpdateNotAvailable
+#endif
     }
 }
 
