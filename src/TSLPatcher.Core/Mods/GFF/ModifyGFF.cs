@@ -209,7 +209,7 @@ namespace TSLPatcher.Core.Mods.GFF
         /// Helper method to split a path into parent path and label (filename).
         /// Handles both backslashes and forward slashes correctly on all platforms.
         /// </summary>
-        private static (string parentPath, string label) SplitPath(string path)
+        protected static (string parentPath, string label) SplitPath(string path)
         {
             if (string.IsNullOrEmpty(path))
             {
