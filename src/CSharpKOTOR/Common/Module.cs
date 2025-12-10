@@ -6,6 +6,7 @@ using CSharpKOTOR.Formats.Capsule;
 using CSharpKOTOR.Formats.GFF;
 using CSharpKOTOR.Installation;
 using CSharpKOTOR.Resources;
+using CSharpKOTOR.Tools;
 using JetBrains.Annotations;
 
 namespace CSharpKOTOR.Common
@@ -928,15 +929,14 @@ namespace CSharpKOTOR.Common
             }
 
             // Check if capsule file
-            string ext = Path.GetExtension(activePath).ToLowerInvariant();
-            if (ext == ".erf" || ext == ".mod" || ext == ".rim" || ext == ".sav" || ext == ".hak")
+            if (FileHelpers.IsCapsuleFile(activePath))
             {
                 var capsule = new Capsule(activePath);
                 return capsule.GetResource(_resname, _restype);
             }
 
             // Check if BIF file
-            if (ext == ".bif")
+            if (FileHelpers.IsBifFile(activePath))
             {
                 var resource = _installation.Resource(_resname, _restype, new[] { SearchLocation.CHITIN });
                 return resource?.Data;
