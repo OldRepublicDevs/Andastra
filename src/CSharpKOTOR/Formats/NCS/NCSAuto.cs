@@ -192,6 +192,17 @@ namespace CSharpKOTOR.Formats.NCS
             }
             ncs.Optimize(optimizers);
 
+            if (System.Environment.GetEnvironmentVariable("NCS_INTERPRETER_DEBUG") == "true")
+            {
+                System.Console.WriteLine("=== NCS after optimize ===");
+                for (int i = 0; i < ncs.Instructions.Count; i++)
+                {
+                    NCSInstruction inst = ncs.Instructions[i];
+                    int jumpIdx = inst.Jump != null ? ncs.GetInstructionIndex(inst.Jump) : -1;
+                    System.Console.WriteLine($"{i}: {inst.InsType} args=[{string.Join(",", inst.Args ?? new List<object>())}] jumpIdx={jumpIdx}");
+                }
+            }
+
             return ncs;
         }
 

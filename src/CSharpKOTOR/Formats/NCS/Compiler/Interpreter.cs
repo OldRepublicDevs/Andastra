@@ -168,6 +168,24 @@ namespace CSharpKOTOR.Formats.NCS.Compiler
                     int? targetIndex = GetInstructionIndex(jumpTarget);
                     if (targetIndex == null)
                     {
+                        if (DEBUG_INTERPRETER)
+                        {
+                            int hash = System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(jumpTarget);
+                            System.Console.WriteLine($"DEBUG missing jump target: ins={cursor.InsType} idx={index} jumpHash={hash}");
+                            for (int dbgIdx = 0; dbgIdx < _ncs.Instructions.Count; dbgIdx++)
+                            {
+                                var dbgInst = _ncs.Instructions[dbgIdx];
+                                int dbgHash = System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(dbgInst);
+                                if (ReferenceEquals(dbgInst, jumpTarget))
+                                {
+                                    System.Console.WriteLine($"DEBUG match at idx {dbgIdx} hash={dbgHash} (ReferenceEquals true)");
+                                }
+                                else if (dbgHash == hash)
+                                {
+                                    System.Console.WriteLine($"DEBUG same hash at idx {dbgIdx} hash={dbgHash} (ReferenceEquals false)");
+                                }
+                            }
+                        }
                         throw new InvalidOperationException($"Jump target for instruction {cursor.InsType} not found in instruction table");
                     }
                     // Prevent infinite loops: if jumping to the same instruction, break

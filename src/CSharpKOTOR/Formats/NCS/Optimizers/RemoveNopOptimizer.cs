@@ -28,7 +28,8 @@ namespace CSharpKOTOR.Formats.NCS.Optimizers
                 return;
             }
 
-            var removableIds = new HashSet<int>();
+            var removable = new HashSet<NCSInstruction>(new ReferenceInstructionComparer());
+            bool debug = System.Environment.GetEnvironmentVariable("NCS_INTERPRETER_DEBUG") == "true";
 
             foreach (NCSInstruction nop in nops)
             {
@@ -42,6 +43,10 @@ namespace CSharpKOTOR.Formats.NCS.Optimizers
                 // If other instructions jump here, keep this NOP (likely a function entry stub)
                 if (inboundLinks.Count > 0)
                 {
+                    if (debug)
+                    {
+                        System.Console.WriteLine($"RemoveNop: keeping NOP idx={nopIndex} inbound={inboundLinks.Count}");
+                    }
                     continue;
                 }
 
@@ -58,16 +63,33 @@ namespace CSharpKOTOR.Formats.NCS.Optimizers
                 }
 
                 // No inbound links (already handled), so safe to remove even if replacement is null
-                removableIds.Add(nop.GetHashCode());
+                removable.Add(nop);
+                if (debug)
+                {
+                    System.Console.WriteLine($"RemoveNop: removing NOP idx={nopIndex} replacementIdx={ncs.GetInstructionIndex(replacement)}");
+                }
             }
 
-            if (removableIds.Count == 0)
+            if (removable.Count == 0)
             {
                 return;
             }
 
-            ncs.Instructions = ncs.Instructions.Where(inst => !removableIds.Contains(inst.GetHashCode())).ToList();
-            InstructionsCleared += removableIds.Count;
+            ncs.Instructions = ncs.Instructions.Where(inst => !removable.Contains(inst)).ToList();
+            InstructionsCleared += removable.Count;
+        }
+    }
+
+    internal sealed class ReferenceInstructionComparer : IEqualityComparer<NCSInstruction>
+    {
+        public bool Equals(NCSInstruction x, NCSInstruction y)
+        {
+            return ReferenceEquals(x, y);
+        }
+
+        public int GetHashCode(NCSInstruction obj)
+        {
+            return obj == null ? 0 : System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(obj);
         }
     }
 }

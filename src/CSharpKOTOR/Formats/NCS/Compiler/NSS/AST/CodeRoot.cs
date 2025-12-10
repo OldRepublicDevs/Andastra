@@ -145,6 +145,13 @@ namespace CSharpKOTOR.Formats.NCS.Compiler
                 if (debug)
                 {
                     System.Console.WriteLine($"Entry JSR targets main at idx {ncs.GetInstructionIndex(mainStart)}");
+                    System.Console.WriteLine("=== Instructions after entry stub ===");
+                    for (int i = 0; i < ncs.Instructions.Count; i++)
+                    {
+                        NCSInstruction inst = ncs.Instructions[i];
+                        int jumpIdx = inst.Jump != null ? ncs.GetInstructionIndex(inst.Jump) : -1;
+                        System.Console.WriteLine($"{i}: {inst.InsType} args=[{string.Join(",", inst.Args ?? new List<object>())}] jumpIdx={jumpIdx}");
+                    }
                 }
             }
             else if (FunctionMap.ContainsKey("StartingConditional"))
@@ -634,6 +641,7 @@ namespace CSharpKOTOR.Formats.NCS.Compiler
 
         private void CompileFunctionWithPrototype(CodeRoot root, string name, NCS ncs)
         {
+            bool debug = System.Environment.GetEnvironmentVariable("NCS_INTERPRETER_DEBUG") == "true";
             object prototypeDef = root.FunctionMap[name].Definition;
             if (!IsMatchingSignature(prototypeDef))
             {
@@ -678,6 +686,10 @@ namespace CSharpKOTOR.Formats.NCS.Compiler
 
             NCSInstruction stubInstruction = root.FunctionMap[name].Instruction;
             int stubIndex = ncs.GetInstructionIndex(stubInstruction);
+            if (debug)
+            {
+                System.Console.WriteLine($"CompileFunctionWithPrototype for {name}: stubIndex={stubIndex} countBefore={ncs.Instructions.Count}");
+            }
             NCSInstruction newStart;
             if (stubIndex >= 0)
             {
@@ -692,20 +704,28 @@ namespace CSharpKOTOR.Formats.NCS.Compiler
             }
 
             // Redirect any existing jumps that pointed to the prototype stub to the new function start
+            int updated = 0;
             foreach (NCSInstruction inst in ncs.Instructions)
             {
                 if (ReferenceEquals(inst.Jump, root.FunctionMap[name].Instruction))
                 {
                     inst.Jump = newStart;
+                    updated++;
                 }
                 else if (inst.Jump != null && !ncs.Instructions.Contains(inst.Jump))
                 {
                     // Jump target no longer exists (prototype stub removed) – redirect to new function start.
                     inst.Jump = newStart;
+                    updated++;
                 }
             }
 
             root.FunctionMap[name] = new FunctionReference(newStart, this);
+
+            if (debug)
+            {
+                System.Console.WriteLine($"CompileFunctionWithPrototype for {name}: newStartIdx={ncs.GetInstructionIndex(newStart)} updatedJumps={updated} countAfter={ncs.Instructions.Count}");
+            }
         }
 
         private bool IsMatchingSignature(object prototype)
