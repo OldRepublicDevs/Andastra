@@ -109,9 +109,23 @@ When porting code from Python (vendor/PyKotor) to C#:
 
 ## Matching Implementations
 
-- All CSharpKOTOR code must be 1:1 matching the Python implementation in vendor/PyKotor.
-- All DeNCS/NCSDecomp code (anything decompiling ncs->nss) must be 1:1 matching the Java implementation in vendor/DeNCS (may be alternatively in vendor/NCSDecomp). The PyKotor decompiler is nonfunctional, do NOT reference it for this specific scenario.
+**CRITICAL: Source Lookup & Commenting**
 
-Ensure ANY AND ALL changes made to CSharpKOTOR properly specifies the relpath to the file in vendor that's being referenced to ensure 1:1 matches are maintained.
+Before making ANY edit to ANY file, you MUST locate the corresponding source code in the `vendor` directory to ensure 1:1 parity.
 
-example: `Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/extract/twoda.py:237` for line 237 in twoda.py in PyKotor. Use this pattern consistently.
+1. **Identify the Source of Truth**:
+   - **General Logic / Compiler**: Use `vendor/PyKotor` (e.g., `Libraries/PyKotor/...`).
+   - **Decompiler (NCS -> NSS)**: Use `vendor/DeNCS` or `vendor/NCSDecomp`. **IGNORE PyKotor** for decompilation logic.
+
+2. **Add Precise Reference Comments**:
+   Every ported method or logic block MUST have a comment with:
+   - **EXACT Relative Path**: Path to the source file (e.g., `Libraries/PyKotor/src/pykotor/extract/twoda.py`).
+   - **EXACT Line Numbers**: Specific line number or range.
+   - **Code Snippet**: Include 1-2 lines of the ORIGINAL source code to prove you checked it.
+
+   **Format**:
+   ```csharp
+   // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/module/module.py:45
+   // Original: self._name = name
+   this._name = name;
+   ```
