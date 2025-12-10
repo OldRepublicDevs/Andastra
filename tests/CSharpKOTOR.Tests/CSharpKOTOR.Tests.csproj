@@ -14,4 +14,3 @@
     <ProjectReference Include="..\..\src\CSharpKOTOR\CSharpKOTOR.csproj" />
   </ItemGroup>
 </Project>
-

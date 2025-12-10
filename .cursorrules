@@ -124,6 +124,7 @@ Before making ANY edit to ANY file, you MUST locate the corresponding source cod
    - **Code Snippet**: Include 1-2 lines of the ORIGINAL source code to prove you checked it.
 
    **Format**:
+
    ```csharp
    // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/module/module.py:45
    // Original: self._name = name
