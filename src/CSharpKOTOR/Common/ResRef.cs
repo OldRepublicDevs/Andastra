@@ -6,6 +6,8 @@ using JetBrains.Annotations;
 namespace CSharpKOTOR.Common
 {
 
+    // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/misc.py:23-248
+    // Original: class ResRef(str):
     /// <summary>
     /// A string reference to a game resource.
     /// ResRefs are the names of resources without the extension (the file stem).
