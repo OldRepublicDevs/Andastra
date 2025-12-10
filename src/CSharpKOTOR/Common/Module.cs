@@ -709,4 +709,268 @@ namespace CSharpKOTOR.Common
             // This is a complex method that requires many dependencies
         }
     }
+
+    // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:1709-2131
+    // Original: class ModuleResource(Generic[T]):
+    /// <summary>
+    /// Represents a single resource within a module with multiple possible locations.
+    /// ModuleResource manages a resource that may exist in multiple locations (override,
+    /// module archives, chitin). It tracks all locations and allows activation of a
+    /// specific location, with lazy loading of the actual resource object.
+    /// </summary>
+    public class ModuleResource<T>
+    {
+        private readonly string _resname;
+        private readonly Installation.Installation _installation;
+        private readonly ResourceType _restype;
+        private string _active;
+        private T _resourceObj;
+        private readonly List<string> _locations = new List<string>();
+        private readonly ResourceIdentifier _identifier;
+        private readonly string _moduleRoot;
+
+        public string ResName => _resname;
+        public ResourceType ResType => _restype;
+        public ResourceIdentifier Identifier => _identifier;
+        public string ModuleRoot => _moduleRoot;
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:1756-1770
+        // Original: def __init__(self, resname: str, restype: ResourceType, installation: Installation, module_root: str | None = None):
+        public ModuleResource(string resname, ResourceType restype, Installation.Installation installation, string moduleRoot = null)
+        {
+            if (resname == null)
+            {
+                throw new ArgumentNullException(nameof(resname));
+            }
+            if (restype == null)
+            {
+                throw new ArgumentNullException(nameof(restype));
+            }
+            if (installation == null)
+            {
+                throw new ArgumentNullException(nameof(installation));
+            }
+
+            _resname = resname;
+            _installation = installation;
+            _restype = restype;
+            _active = null;
+            _resourceObj = default(T);
+            _identifier = new ResourceIdentifier(resname, restype);
+            _moduleRoot = moduleRoot;
+        }
+
+        public override string ToString()
+        {
+            return $"{GetType().Name}(resname={_resname} restype={_restype} installation={_installation})";
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(this, obj))
+            {
+                return true;
+            }
+
+            if (obj is ResourceIdentifier identifier)
+            {
+                return _identifier == identifier;
+            }
+
+            if (obj is ModuleResource<T> other)
+            {
+                return _identifier == other._identifier;
+            }
+
+            return false;
+        }
+
+        public override int GetHashCode()
+        {
+            return _identifier.GetHashCode();
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:1787-1794
+        // Original: def resname(self) -> str:
+        public string GetResName()
+        {
+            return _resname;
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:1796-1803
+        // Original: def restype(self) -> ResourceType:
+        public ResourceType GetResType()
+        {
+            return _restype;
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:1805-1806
+        // Original: def filename(self) -> str:
+        public string Filename()
+        {
+            return _identifier.ToString();
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:1808-1809
+        // Original: def identifier(self) -> ResourceIdentifier:
+        public ResourceIdentifier GetIdentifier()
+        {
+            return _identifier;
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:1968-1977
+        // Original: def add_locations(self, filepaths: Iterable[Path]):
+        public void AddLocations(IEnumerable<string> filepaths)
+        {
+            if (filepaths == null)
+            {
+                return;
+            }
+
+            foreach (string filepath in filepaths)
+            {
+                if (!string.IsNullOrEmpty(filepath) && !_locations.Contains(filepath))
+                {
+                    _locations.Add(filepath);
+                }
+            }
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:1979-1980
+        // Original: def locations(self) -> list[Path]:
+        public List<string> Locations()
+        {
+            return new List<string>(_locations);
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:1982-2014
+        // Original: def activate(self, filepath: os.PathLike | str | None = None) -> Path | None:
+        public string Activate(string filepath = null)
+        {
+            _resourceObj = default(T);
+            if (filepath == null)
+            {
+                _active = _locations.Count > 0 ? _locations[0] : null;
+            }
+            else
+            {
+                if (!_locations.Contains(filepath))
+                {
+                    _locations.Add(filepath);
+                }
+                _active = filepath;
+            }
+
+            if (_active == null)
+            {
+                string moduleInfo = !string.IsNullOrEmpty(_moduleRoot) ? $" in module '{_moduleRoot}'" : "";
+                string installationPath = _installation.Path;
+                string locationsInfo = _locations.Count > 0
+                    ? $"Searched locations: {string.Join(", ", _locations)}."
+                    : "No locations were added to this resource.";
+                new Logger.RobustLogger().Warning(
+                    $"Cannot activate module resource '{_identifier}'{moduleInfo}: No locations found. " +
+                    $"Installation: {installationPath}. {locationsInfo}"
+                );
+            }
+
+            return _active;
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:2025-2039
+        // Original: def active(self) -> Path | None:
+        public string Active()
+        {
+            if (_active == null)
+            {
+                if (_locations.Count == 0)
+                {
+                    new Logger.RobustLogger().Warning($"No resource found for '{_identifier}'");
+                    return null;
+                }
+                Activate();
+            }
+            return _active;
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:2041-2042
+        // Original: def isActive(self) -> bool:
+        public bool IsActive()
+        {
+            return !string.IsNullOrEmpty(_active);
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:2016-2018
+        // Original: def unload(self):
+        public void Unload()
+        {
+            _resourceObj = default(T);
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:2020-2023
+        // Original: def reload(self):
+        public void Reload()
+        {
+            _resourceObj = default(T);
+            Resource(); // Trigger reload
+        }
+
+        // Placeholder methods - will be fully implemented as dependencies are ported
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:1840-1874
+        // Original: def data(self) -> bytes | None:
+        public byte[] Data()
+        {
+            // TODO: Implement full data() method once helper functions are ported
+            string activePath = Active();
+            if (activePath == null)
+            {
+                return null;
+            }
+
+            // Check if capsule file
+            string ext = Path.GetExtension(activePath).ToLowerInvariant();
+            if (ext == ".erf" || ext == ".mod" || ext == ".rim" || ext == ".sav" || ext == ".hak")
+            {
+                var capsule = new Capsule(activePath);
+                return capsule.GetResource(_resname, _restype);
+            }
+
+            // Check if BIF file
+            if (ext == ".bif")
+            {
+                var resource = _installation.Resource(_resname, _restype, new[] { SearchLocation.CHITIN });
+                return resource?.Data;
+            }
+
+            // Regular file
+            if (File.Exists(activePath))
+            {
+                return File.ReadAllBytes(activePath);
+            }
+
+            return null;
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:1876-1937
+        // Original: def resource(self) -> T | None:
+        public T Resource()
+        {
+            // TODO: Implement full resource() method once all format readers are ported
+            // This requires read_are, read_dlg, read_git, etc. functions
+            if (_resourceObj == null)
+            {
+                byte[] data = Data();
+                if (data == null)
+                {
+                    return default(T);
+                }
+
+                // Placeholder - will be replaced with actual format readers
+                // conversions: dict[ResourceType, Callable[[SOURCE_TYPES], Any]] = { ... }
+                _resourceObj = default(T);
+            }
+
+            return _resourceObj;
+        }
+    }
 }
