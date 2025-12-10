@@ -49,7 +49,7 @@ namespace GenerateScriptDefs
         {
             while (idx < tokens.Count)
             {
-                if (tokens[idx] is NssSeparator sep && 
+                if (tokens[idx] is NssSeparator sep &&
                     (sep.Separator == NssSeparators.Space || sep.Separator == NssSeparators.NewLine || sep.Separator == NssSeparators.Tab))
                 {
                     idx++;
@@ -84,7 +84,7 @@ namespace GenerateScriptDefs
             }
 
             // Pattern: TYPE [whitespace] IDENTIFIER [whitespace] = [whitespace] VALUE [whitespace] ;
-            if (!(tokens[idx] is NssKeyword typeToken && 
+            if (!(tokens[idx] is NssKeyword typeToken &&
                   (typeToken.Keyword == NssKeywords.Int || typeToken.Keyword == NssKeywords.Float || typeToken.Keyword == NssKeywords.String)))
             {
                 return null;
@@ -805,7 +805,7 @@ namespace GenerateScriptDefs
             string k1Nss = Path.Combine(repoRoot, "vendor", "DeNCS", "k1_nwscript.nss");
             string k2Nss = Path.Combine(repoRoot, "vendor", "DeNCS", "tsl_nwscript.nss");
             string outputFile = Path.Combine(repoRoot, "src", "CSharpKOTOR", "Common", "Script", "ScriptDefs.cs");
-            
+
             // Verify files exist
             if (!File.Exists(k1Nss))
             {
