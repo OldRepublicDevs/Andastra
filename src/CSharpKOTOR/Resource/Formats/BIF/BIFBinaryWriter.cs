@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Text;
 using CSharpKOTOR.Common;
+using CSharpKOTOR.Common.LZMA;
 using CSharpKOTOR.Resources;
 
 namespace CSharpKOTOR.Resource.Formats.BIF
@@ -76,8 +77,9 @@ namespace CSharpKOTOR.Resource.Formats.BIF
                 if (_bif.BifType == BIFType.BZF)
                 {
                     // For BZF, compress the data to get size using raw LZMA1 format
-                    // TODO: Implement LZMA compression
-                    throw new NotImplementedException("BZF (LZMA-compressed BIF) compression is not yet implemented. LZMA support needs to be added.");
+                    byte[] compressed = LzmaHelper.Compress(resource.Data);
+                    resource.PackedSize = compressed.Length;
+                    currentOffset += resource.PackedSize;
                 }
                 else
                 {
@@ -112,8 +114,8 @@ namespace CSharpKOTOR.Resource.Formats.BIF
                 if (_bif.BifType == BIFType.BZF)
                 {
                     // Write compressed data for BZF using raw LZMA1 format
-                    // TODO: Implement LZMA compression
-                    throw new NotImplementedException("BZF (LZMA-compressed BIF) compression is not yet implemented. LZMA support needs to be added.");
+                    byte[] compressed = LzmaHelper.Compress(resource.Data);
+                    writer.Write(compressed);
                 }
                 else
                 {

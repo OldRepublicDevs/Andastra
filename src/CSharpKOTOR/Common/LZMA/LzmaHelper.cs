@@ -31,7 +31,13 @@ namespace CSharpKOTOR.Common.LZMA
 
         public static byte[] Compress(byte[] data)
         {
-            throw new NotImplementedException("LZMA compression not implemented. Use uncompressed BIF or add encoder support.");
+            using (var inStream = new MemoryStream(data))
+            using (var outStream = new MemoryStream())
+            {
+                var encoder = new LzmaEncoderAdapter(DefaultLc, DefaultLp, DefaultPb, DefaultDictionary);
+                encoder.Encode(inStream, outStream);
+                return outStream.ToArray();
+            }
         }
 
         private static byte[] BuildProperties(int lc, int lp, int pb, int dictSize)
@@ -51,7 +57,7 @@ namespace CSharpKOTOR.Common.LZMA
         void SetProgress(long inSize, long outSize);
     }
 
-    // Range coder and base classes
+    // Range coder and base classes (decoder side)
     internal static class LzmaBase
     {
         public const uint TopValue = 1 << 24;
@@ -187,6 +193,435 @@ namespace CSharpKOTOR.Common.LZMA
         {
             Stream = null;
         }
+    }
+
+    // Adapter over LZMA SDK encoder for raw LZMA1 (no headers), matching decoder properties.
+    internal sealed class LzmaEncoderAdapter
+    {
+        private readonly Encoder _encoder;
+        private readonly int _lc;
+        private readonly int _lp;
+        private readonly int _pb;
+        private readonly int _dictSize;
+
+        public LzmaEncoderAdapter(int lc, int lp, int pb, int dictSize)
+        {
+            _lc = lc;
+            _lp = lp;
+            _pb = pb;
+            _dictSize = dictSize;
+            _encoder = new Encoder();
+        }
+
+        public void Encode(Stream input, Stream output)
+        {
+            _encoder.SetCoderProperties(_lc, _lp, _pb, _dictSize, 32);
+            _encoder.Code(input, output, input.Length, -1, null);
+        }
+    }
+
+    internal const int LiteralCoderSize = 0x300;
+
+    // Minimal LZMA encoder (raw, no headers) adapted from LZMA SDK.
+    internal sealed class Encoder
+    {
+        private const int PosStateBits = 2;
+        private const int NumLiteralPosStateBits = 0;
+        private const int NumLiteralContextBits = 3;
+        private const int NumFastBytes = 32;
+        private const uint DictionarySize = 1 << 23;
+        private const int NumMoveBits = 5;
+        private const int NumMoveReducingBits = 2;
+        private const int NumBitPriceShiftBits = 6;
+
+        private static readonly uint[] ProbPrices = new uint[BitModelTotal >> NumMoveReducingBits];
+        private const int BitModelTotal = 1 << 11;
+        private const int MatchMinLen = 2;
+        private const int NumStates = 12;
+        private const int NumPosSlotBits = 6;
+        private const int NumLenToPosStates = 4;
+        private const int NumAlignBits = 4;
+        private const uint AlignTableSize = 1 << NumAlignBits;
+        private const uint StartPosModelIndex = 4;
+        private const uint EndPosModelIndex = 14;
+        private const uint NumFullDistances = 1 << ((int)EndPosModelIndex >> 1);
+
+        private readonly RangeEncoder _rangeEncoder = new RangeEncoder();
+        private readonly BitEncoder[] _isMatch = new BitEncoder[NumStates << PosStateBits];
+        private readonly BitEncoder[] _isRep = new BitEncoder[NumStates];
+        private readonly BitEncoder[] _isRepG0 = new BitEncoder[NumStates];
+        private readonly BitEncoder[] _isRepG1 = new BitEncoder[NumStates];
+        private readonly BitEncoder[] _isRepG2 = new BitEncoder[NumStates];
+        private readonly BitEncoder[] _isRep0Long = new BitEncoder[NumStates << PosStateBits];
+        private readonly BitTreeEncoder[] _posSlotEncoder = new BitTreeEncoder[NumLenToPosStates];
+        private readonly BitEncoder[] _posEncoders = new BitEncoder[1 + (int)EndPosModelIndex - (int)StartPosModelIndex];
+        private readonly BitTreeEncoder _posAlignEncoder = new BitTreeEncoder(NumAlignBits);
+        private readonly LenPriceTableEncoder _lenEncoder = new LenPriceTableEncoder();
+        private readonly LenPriceTableEncoder _repLenEncoder = new LenPriceTableEncoder();
+        private readonly LiteralEncoder _literalEncoder = new LiteralEncoder();
+
+        static Encoder()
+        {
+            for (int i = 0; i < ProbPrices.Length; i++)
+            {
+                uint prob = (uint)(i << NumMoveReducingBits) + (1U << (NumMoveReducingBits - 1));
+                ProbPrices[i] = (uint)((1 << NumBitPriceShiftBits) - Log2(prob));
+            }
+        }
+
+        private static uint Log2(uint value)
+        {
+            uint result = 0;
+            while (value > 1)
+            {
+                value >>= 1;
+                result++;
+            }
+            return result;
+        }
+
+        public Encoder()
+        {
+            for (int i = 0; i < NumLenToPosStates; i++)
+            {
+                _posSlotEncoder[i] = new BitTreeEncoder(NumPosSlotBits);
+            }
+        }
+
+        public void SetCoderProperties(int lc, int lp, int pb, int dictSize, int numFastBytes)
+        {
+            _literalEncoder.Create(lp, lc);
+            _lenEncoder.Create(1U << pb);
+            _repLenEncoder.Create(1U << pb);
+        }
+
+        public void Code(Stream inStream, Stream outStream, long inSize, long outSize, ICoderProgress progress)
+        {
+            var state = new State();
+            state.Init();
+            _rangeEncoder.SetStream(outStream);
+            _rangeEncoder.Init();
+            uint nowPos = 0;
+            byte prevByte = 0;
+            uint posStateMask = (1U << PosStateBits) - 1;
+
+            // Initialize probabilities
+            for (int i = 0; i < _isMatch.Length; i++) _isMatch[i].Init();
+            for (int i = 0; i < _isRep.Length; i++) _isRep[i].Init();
+            for (int i = 0; i < _isRepG0.Length; i++) _isRepG0[i].Init();
+            for (int i = 0; i < _isRepG1.Length; i++) _isRepG1[i].Init();
+            for (int i = 0; i < _isRepG2.Length; i++) _isRepG2[i].Init();
+            for (int i = 0; i < _isRep0Long.Length; i++) _isRep0Long[i].Init();
+            for (int i = 0; i < _posEncoders.Length; i++) _posEncoders[i].Init();
+            for (int i = 0; i < NumLenToPosStates; i++) _posSlotEncoder[i].Init();
+            _posAlignEncoder.Init();
+            _lenEncoder.Init(1U << PosStateBits);
+            _repLenEncoder.Init(1U << PosStateBits);
+            _literalEncoder.Init();
+
+            // Naive literal-only encoding (no matches) for simplicity; still valid LZMA stream.
+            while (true)
+            {
+                int readByte = inStream.ReadByte();
+                if (readByte < 0)
+                {
+                    break;
+                }
+                byte b = (byte)readByte;
+                uint posState = nowPos & posStateMask;
+                _isMatch[(state.Index << PosStateBits) + posState].Encode(_rangeEncoder, 0);
+                _literalEncoder.Encode(_rangeEncoder, nowPos, prevByte, b);
+                prevByte = b;
+                state.UpdateChar();
+                nowPos++;
+            }
+
+            // Write end marker
+            uint posStateEnd = nowPos & posStateMask;
+            _isMatch[(state.Index << PosStateBits) + posStateEnd].Encode(_rangeEncoder, 1);
+            _isRep[state.Index].Encode(_rangeEncoder, 0);
+            state.UpdateMatch();
+            _lenEncoder.Encode(_rangeEncoder, posStateEnd, MatchMinLen);
+            _posSlotEncoder[GetLenToPosState(MatchMinLen)].Encode(_rangeEncoder, 0);
+            _posAlignEncoder.Encode(_rangeEncoder, 0);
+
+            _rangeEncoder.FlushData();
+            _rangeEncoder.FlushStream();
+        }
+
+        private static uint GetLenToPosState(uint len)
+        {
+            len -= MatchMinLen;
+            if (len < NumLenToPosStates)
+            {
+                return len;
+            }
+            return NumLenToPosStates - 1;
+        }
+    }
+
+    internal sealed class RangeEncoder
+    {
+        private Stream _stream;
+        internal ulong Low;
+        internal uint Range;
+        private byte _cache;
+        private uint _cacheSize;
+
+        internal const uint TopValue = 1 << 24;
+
+        public void SetStream(Stream stream)
+        {
+            _stream = stream;
+        }
+
+        public void Init()
+        {
+            Low = 0;
+            Range = uint.MaxValue;
+            _cache = 0;
+            _cacheSize = 1;
+        }
+
+        public void FlushData()
+        {
+            for (int i = 0; i < 5; i++)
+            {
+                ShiftLow();
+            }
+        }
+
+        public void FlushStream()
+        {
+            _stream.Flush();
+        }
+
+        public void EncodeDirectBits(uint v, int numTotalBits)
+        {
+            for (int i = numTotalBits - 1; i >= 0; i--)
+            {
+                Range >>= 1;
+                if (((v >> i) & 1) == 1)
+                {
+                    Low += Range;
+                }
+                if (Range < TopValue)
+                {
+                    Range <<= 8;
+                    ShiftLow();
+                }
+            }
+        }
+
+        public void Encode(BitEncoder model, uint symbol)
+        {
+            model.Encode(this, symbol);
+        }
+
+        public void ShiftLow()
+        {
+            if ((uint)Low < 0xFF000000 || (uint)(Low >> 32) == 1)
+            {
+                byte temp = (byte)(_cache + (Low >> 32));
+                _stream.WriteByte(temp);
+                temp = 0xFF;
+                for (; _cacheSize > 1; _cacheSize--)
+                {
+                    _stream.WriteByte(temp);
+                }
+                _cache = (byte)(((uint)Low) >> 24);
+            }
+            _cacheSize++;
+            Low = (Low & 0x00FFFFFF) << 8;
+        }
+    }
+
+    internal struct BitEncoder
+    {
+        private const int NumBitModelTotalBits = 11;
+        private const uint BitModelTotal = 1 << NumBitModelTotalBits;
+        private const int NumMoveBits = 5;
+        private uint _prob;
+
+        public void Init() { _prob = BitModelTotal >> 1; }
+
+        public void Encode(RangeEncoder encoder, uint symbol)
+        {
+            uint newBound = (encoder.Range >> NumBitModelTotalBits) * _prob;
+            if (symbol == 0)
+            {
+                encoder.Range = newBound;
+                _prob += (BitModelTotal - _prob) >> NumMoveBits;
+            }
+            else
+            {
+                encoder.Low += newBound;
+                encoder.Range -= newBound;
+                _prob -= _prob >> NumMoveBits;
+            }
+            if (encoder.Range < RangeEncoder.TopValue)
+            {
+                encoder.Range <<= 8;
+                encoder.ShiftLow();
+            }
+        }
+    }
+
+    internal struct BitTreeEncoder
+    {
+        private readonly BitEncoder[] _models;
+        private readonly int _numBitLevels;
+
+        public BitTreeEncoder(int numBitLevels)
+        {
+            _numBitLevels = numBitLevels;
+            _models = new BitEncoder[1 << numBitLevels];
+        }
+
+        public void Init()
+        {
+            for (uint i = 1; i < (1U << _numBitLevels); i++)
+            {
+                _models[i].Init();
+            }
+        }
+
+        public void Encode(RangeEncoder rangeEncoder, uint symbol)
+        {
+            uint m = 1;
+            for (int bitIndex = _numBitLevels; bitIndex > 0; bitIndex--)
+            {
+                uint bit = (symbol >> (bitIndex - 1)) & 1;
+                _models[m].Encode(rangeEncoder, bit);
+                m = (m << 1) + bit;
+            }
+        }
+    }
+
+    internal sealed class LenPriceTableEncoder
+    {
+        private const int MaxPosStates = 1 << 4; // support up to pb=4
+        private BitTreeEncoder _highCoder = new BitTreeEncoder(8);
+        private BitTreeEncoder[] _lowCoder = new BitTreeEncoder[MaxPosStates];
+        private BitTreeEncoder[] _midCoder = new BitTreeEncoder[MaxPosStates];
+        private BitEncoder _choice;
+        private BitEncoder _choice2;
+
+        public LenPriceTableEncoder()
+        {
+            for (int posState = 0; posState < MaxPosStates; posState++)
+            {
+                _lowCoder[posState] = new BitTreeEncoder(3);
+                _midCoder[posState] = new BitTreeEncoder(3);
+            }
+        }
+
+        public void Init(uint numPosStates)
+        {
+            _choice.Init();
+            _choice2.Init();
+            for (uint posState = 0; posState < numPosStates; posState++)
+            {
+                _lowCoder[posState].Init();
+                _midCoder[posState].Init();
+            }
+            _highCoder.Init();
+        }
+
+        public void Encode(RangeEncoder rangeEncoder, uint posState, uint symbol)
+        {
+            if (symbol < 8)
+            {
+                _choice.Encode(rangeEncoder, 0);
+                _lowCoder[posState].Encode(rangeEncoder, symbol);
+            }
+            else
+            {
+                symbol -= 8;
+                _choice.Encode(rangeEncoder, 1);
+                if (symbol < 8)
+                {
+                    _choice2.Encode(rangeEncoder, 0);
+                    _midCoder[posState].Encode(rangeEncoder, symbol);
+                }
+                else
+                {
+                    _choice2.Encode(rangeEncoder, 1);
+                    _highCoder.Encode(rangeEncoder, symbol - 8);
+                }
+            }
+        }
+    }
+
+    internal sealed class LiteralEncoder
+    {
+        private struct Encoder2
+        {
+            private readonly BitEncoder[] _encoders;
+
+            public Encoder2(bool dummy)
+            {
+                _encoders = new BitEncoder[LiteralCoderSize];
+            }
+
+            public void Init()
+            {
+                for (int i = 0; i < LiteralCoderSize; i++) _encoders[i].Init();
+            }
+
+            public void Encode(RangeEncoder rangeEncoder, byte symbol)
+            {
+                uint context = 1;
+                for (int i = 7; i >= 0; i--)
+                {
+                    uint bit = (uint)((symbol >> i) & 1);
+                    _encoders[context].Encode(rangeEncoder, bit);
+                    context = (context << 1) | bit;
+                }
+            }
+        }
+
+        private Encoder2[] _coders;
+        private int _numPrevBits;
+        private int _numPosBits;
+        private uint _posMask;
+
+        public void Create(int numPosBits, int numPrevBits)
+        {
+            if (_coders != null && _numPrevBits == numPrevBits && _numPosBits == numPosBits) return;
+            _numPosBits = numPosBits;
+            _posMask = (uint)((1 << numPosBits) - 1);
+            _numPrevBits = numPrevBits;
+            uint numStates = (uint)1 << (_numPrevBits + _numPosBits);
+            _coders = new Encoder2[numStates];
+            for (uint i = 0; i < numStates; i++)
+            {
+                _coders[i] = new Encoder2(true);
+            }
+        }
+
+        public void Init()
+        {
+            uint numStates = (uint)1 << (_numPrevBits + _numPosBits);
+            for (uint i = 0; i < numStates; i++)
+            {
+                _coders[i].Init();
+            }
+        }
+
+        public void Encode(RangeEncoder rangeEncoder, uint pos, byte prevByte, byte symbol)
+        {
+            uint state = ((pos & _posMask) << _numPrevBits) + (uint)(prevByte >> (8 - _numPrevBits));
+            _coders[state].Encode(rangeEncoder, symbol);
+        }
+    }
+
+    internal struct State
+    {
+        public int Index;
+        public void Init() { Index = 0; }
+        public void UpdateChar() { Index = Index < 4 ? 0 : Index < 10 ? Index - 3 : Index - 6; }
+        public void UpdateMatch() { Index = Index < 7 ? 7 : 10; }
     }
 
     internal struct LenDecoder
