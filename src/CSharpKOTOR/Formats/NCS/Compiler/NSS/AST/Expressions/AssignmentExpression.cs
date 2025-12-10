@@ -31,7 +31,7 @@ namespace CSharpKOTOR.Formats.NCS.Compiler
             // Matching PyKotor classes.py line 1591
             DynamicDataType variableType = Value.Compile(ncs, root, block);
             int tempStackAfter = block.TempStack;
-            
+
             // Only add to temp_stack if the expression didn't already add it
             // (FunctionCallExpression and EngineCallExpression already add their return values)
             // Matching PyKotor classes.py lines 1594-1598
@@ -40,20 +40,20 @@ namespace CSharpKOTOR.Formats.NCS.Compiler
                 // Expression didn't add to temp_stack, so we need to add it
                 block.TempStack += variableType.Size(root);
             }
-            
+
             // Get variable location - get_scoped uses temp_stack (including expression result) in its calculation
             // Matching PyKotor classes.py lines 1601-1604
             GetScopedResult scoped = FieldAccess.GetScoped(block, root);
             bool isGlobal = scoped.IsGlobal;
             DynamicDataType expressionType = scoped.Datatype;
             int stackIndex = scoped.Offset;
-            
+
             if (scoped.IsConst)
             {
                 string varName = string.Join(".", FieldAccess.Identifiers.Select(i => i.Label));
                 throw new CompileError($"Cannot assign to const variable '{varName}'");
             }
-            
+
             // Matching PyKotor classes.py line 1611
             NCSInstructionType instructionType = isGlobal ? NCSInstructionType.CPDOWNBP : NCSInstructionType.CPDOWNSP;
             // get_scoped() already accounts for temp_stack (which includes the expression result),

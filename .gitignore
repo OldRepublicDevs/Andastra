@@ -126,3 +126,5 @@ appcast-beta.xml
 src/KNCSDecomp
 src/KNCSDecomp.Tests
 src/CSharpKOTOR/Formats/NCS/KNCSDecomp/
+temp_avrichtextbox
+vendor/

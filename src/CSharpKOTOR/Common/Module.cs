@@ -872,7 +872,7 @@ namespace CSharpKOTOR.Common
 
                 foreach (CapsuleResource capsuleResource in capsule.GetResources())
                 {
-                    FileResource resource = new FileResource(capsuleResource.ResName, capsuleResource.ResType, 
+                    FileResource resource = new FileResource(capsuleResource.ResName, capsuleResource.ResType,
                         capsuleResource.Size, capsuleResource.Offset, capsule.Path.ToString());
                     new RobustLogger().Info(string.Format("Adding location '{0}' for resource '{1}' from erf/rim '{2}'",
                         capsule.Filename(), resource.Identifier, capsule.PieceInfo.ResIdent()));
