@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using CSharpKOTOR.Formats.ERF;
 using CSharpKOTOR.Formats.GFF;
 using CSharpKOTOR.Resources;
@@ -102,6 +103,55 @@ namespace CSharpKOTOR.Extract.SaveData
 
             byte[] bytes = ERFAuto.BytesErf(erf, ResourceType.SAV);
             File.WriteAllBytes(_path, bytes);
+        }
+
+        public IEnumerable<KeyValuePair<ResourceIdentifier, byte[]>> IterSerializedResources()
+        {
+            HashSet<ResourceIdentifier> yielded = new HashSet<ResourceIdentifier>();
+            foreach (var ident in ResourceOrder)
+            {
+                if (ResourceData.TryGetValue(ident, out var data))
+                {
+                    yielded.Add(ident);
+                    yield return new KeyValuePair<ResourceIdentifier, byte[]>(ident, data);
+                }
+            }
+
+            foreach (var kvp in ResourceData)
+            {
+                if (!yielded.Contains(kvp.Key))
+                {
+                    yield return kvp;
+                }
+            }
+        }
+
+        public void SetResource(ResourceIdentifier ident, byte[] data)
+        {
+            ResourceData[ident] = data;
+            if (!ResourceOrder.Contains(ident))
+            {
+                ResourceOrder.Add(ident);
+            }
+        }
+
+        public void RemoveResource(ResourceIdentifier ident)
+        {
+            ResourceData.Remove(ident);
+            ResourceOrder.Remove(ident);
+            CachedModules.Remove(ident);
+            CachedCharacters.Remove(ident);
+            CachedCharacterIndices.Where(kvp => kvp.Value.Equals(ident)).ToList().ForEach(k => CachedCharacterIndices.Remove(k.Key));
+            if (InventoryIdentifier != null && ident.Equals(InventoryIdentifier))
+            {
+                InventoryIdentifier = null;
+                InventoryGff = null;
+            }
+            if (ReputeIdentifier != null && ident.Equals(ReputeIdentifier))
+            {
+                ReputeIdentifier = null;
+                ReputeGff = null;
+            }
         }
 
         private static int? ExtractCompanionIndex(string resname)
