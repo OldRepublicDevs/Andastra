@@ -751,6 +751,61 @@ namespace CSharpKOTOR.Common
             return moduleResource;
         }
 
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:911-920
+        // Original: def layout(self) -> ModuleResource[LYT] | None:
+        /// <summary>
+        /// Returns the LYT layout resource with a matching ID if it exists.
+        /// </summary>
+        [CanBeNull]
+        public ModuleResource Layout()
+        {
+            return Resource(ModuleId()?.ToString(), ResourceType.LYT);
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:975-990
+        // Original: def git(self) -> ModuleResource[GIT] | None:
+        /// <summary>
+        /// Returns the git resource with matching id if found.
+        /// </summary>
+        [CanBeNull]
+        public ModuleResource Git()
+        {
+            return Resource(ModuleId()?.ToString(), ResourceType.GIT);
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:1058-1075
+        // Original: def creature(self, resname: str) -> ModuleResource[UTC] | None:
+        /// <summary>
+        /// Returns a UTC resource by name if it exists.
+        /// </summary>
+        [CanBeNull]
+        public ModuleResource Creature(string resname)
+        {
+            return Resource(resname, ResourceType.UTC);
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:1105-1122
+        // Original: def placeable(self, resname: str) -> ModuleResource[UTP] | None:
+        /// <summary>
+        /// Check if a placeable UTP resource with the given resname exists.
+        /// </summary>
+        [CanBeNull]
+        public ModuleResource Placeable(string resname)
+        {
+            return Resource(resname, ResourceType.UTP);
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:1152-1169
+        // Original: def door(self, resname: str) -> ModuleResource[UTD] | None:
+        /// <summary>
+        /// Returns a UTD resource matching the provided resname from this module.
+        /// </summary>
+        [CanBeNull]
+        public ModuleResource Door(string resname)
+        {
+            return Resource(resname, ResourceType.UTD);
+        }
+
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:1470-1488
         // Original: def models(self) -> list[ModuleResource[MDL]]:
         /// <summary>
