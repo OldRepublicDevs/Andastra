@@ -967,7 +967,11 @@ namespace CSharpKOTOR.Common
 
                 // Placeholder - will be replaced with actual format readers
                 // conversions: dict[ResourceType, Callable[[SOURCE_TYPES], Any]] = { ... }
-                _resourceObj = default(T);
+                // In Python: self._resource_obj = conversions.get(self._restype, lambda _: None)(data)
+                // When format readers are implemented, set _resourceObj to the converted resource object here
+                // For now, do not set _resourceObj = default(T) as it breaks caching for reference types
+                // (default(T) is null for reference types, making _resourceObj == null true on next call,
+                // causing Data() to be called repeatedly instead of using cached results)
             }
 
             return _resourceObj;
