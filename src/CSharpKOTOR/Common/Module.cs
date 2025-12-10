@@ -161,14 +161,24 @@ namespace CSharpKOTOR.Common
 
             string root = Module.NameToRoot(filename);
             string extension = filename.Substring(root.Length);
-            KModuleType modType = extension switch
+            KModuleType modType;
+            switch (extension)
             {
-                ".rim" => KModuleType.MAIN,
-                "_s.rim" => KModuleType.DATA,
-                "_dlg.erf" => KModuleType.K2_DLG,
-                ".mod" => KModuleType.MOD,
-                _ => throw new ArgumentException($"Unknown module extension: {extension}")
-            };
+                case ".rim":
+                    modType = KModuleType.MAIN;
+                    break;
+                case "_s.rim":
+                    modType = KModuleType.DATA;
+                    break;
+                case "_dlg.erf":
+                    modType = KModuleType.K2_DLG;
+                    break;
+                case ".mod":
+                    modType = KModuleType.MOD;
+                    break;
+                default:
+                    throw new ArgumentException($"Unknown module extension: {extension}");
+            }
 
             return new ModulePieceInfo(root, modType);
         }
@@ -239,14 +249,19 @@ namespace CSharpKOTOR.Common
             CaseAwarePath pathObj = new CaseAwarePath(path);
             ModulePieceInfo pieceInfo = ModulePieceInfo.FromFilename(pathObj.Name);
 
-            return pieceInfo.ModType switch
+            switch (pieceInfo.ModType)
             {
-                KModuleType.DATA => new ModuleDataPiece(path, createIfNotExist),
-                KModuleType.MAIN => new ModuleLinkPiece(path, createIfNotExist),
-                KModuleType.K2_DLG => new ModuleDLGPiece(path, createIfNotExist),
-                KModuleType.MOD => new ModuleFullOverridePiece(path, createIfNotExist),
-                _ => throw new ArgumentException($"Unknown module type: {pieceInfo.ModType}")
-            };
+                case KModuleType.DATA:
+                    return new ModuleDataPiece(path, createIfNotExist);
+                case KModuleType.MAIN:
+                    return new ModuleLinkPiece(path, createIfNotExist);
+                case KModuleType.K2_DLG:
+                    return new ModuleDLGPiece(path, createIfNotExist);
+                case KModuleType.MOD:
+                    return new ModuleFullOverridePiece(path, createIfNotExist);
+                default:
+                    throw new ArgumentException($"Unknown module type: {pieceInfo.ModType}");
+            }
         }
 
         public string Filename()
@@ -1034,7 +1049,7 @@ namespace CSharpKOTOR.Common
                 if (kv.Value.Count == 0)
                     continue;
 
-                List<string> locationPaths = kv.Value.Select(loc => loc.FilePath).ToString();
+                List<string> locationPaths = kv.Value.Select(loc => loc.FilePath).ToList();
                 string pathsStr = kv.Value.Count <= 3
                     ? string.Join(", ", locationPaths)
                     : string.Join(", ", locationPaths.Take(3)) + $", ... and {locationPaths.Count - 3} more";
@@ -1143,7 +1158,7 @@ namespace CSharpKOTOR.Common
 
         public override string ToString()
         {
-            return $"{GetType().Name}(resname={_resname} restype={_restype} installation={_installation})";
+            return $"{GetType().Name}(resname={ResName} restype={ResType} installation={_installation})";
         }
 
         public override bool Equals(object obj)
@@ -1155,12 +1170,12 @@ namespace CSharpKOTOR.Common
 
             if (obj is ResourceIdentifier identifier)
             {
-                return _identifier == identifier;
+                return Identifier == identifier;
             }
 
             if (obj is ModuleResource<T> other)
             {
-                return _identifier == other._identifier;
+                return Identifier == other.Identifier;
             }
 
             return false;
@@ -1168,21 +1183,21 @@ namespace CSharpKOTOR.Common
 
         public override int GetHashCode()
         {
-            return _identifier.GetHashCode();
+            return Identifier.GetHashCode();
         }
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:1787-1794
         // Original: def resname(self) -> str:
         public string GetResName()
         {
-            return _resname;
+            return ResName;
         }
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:1796-1803
         // Original: def restype(self) -> ResourceType:
         public ResourceType GetResType()
         {
-            return _restype;
+            return ResType;
         }
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:1805-1806
@@ -1196,7 +1211,7 @@ namespace CSharpKOTOR.Common
         // Original: def identifier(self) -> ResourceIdentifier:
         public override ResourceIdentifier GetIdentifier()
         {
-            return base.Identifier;
+            return Identifier;
         }
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:1968-1977
@@ -1244,13 +1259,13 @@ namespace CSharpKOTOR.Common
 
             if (_active == null)
             {
-                string moduleInfo = !string.IsNullOrEmpty(_moduleRoot) ? $" in module '{_moduleRoot}'" : "";
+                string moduleInfo = !string.IsNullOrEmpty(ModuleRoot) ? $" in module '{ModuleRoot}'" : "";
                 string installationPath = _installation.Path;
                 string locationsInfo = _locations.Count > 0
                     ? $"Searched locations: {string.Join(", ", _locations)}."
                     : "No locations were added to this resource.";
                 new Logger.RobustLogger().Warning(
-                    $"Cannot activate module resource '{_identifier}'{moduleInfo}: No locations found. " +
+                    $"Cannot activate module resource '{Identifier}'{moduleInfo}: No locations found. " +
                     $"Installation: {installationPath}. {locationsInfo}"
                 );
             }
@@ -1273,7 +1288,7 @@ namespace CSharpKOTOR.Common
             {
                 if (_locations.Count == 0)
                 {
-                    new Logger.RobustLogger().Warning($"No resource found for '{_identifier}'");
+                    new Logger.RobustLogger().Warning($"No resource found for '{Identifier}'");
                     return null;
                 }
                 Activate();
@@ -1281,12 +1296,6 @@ namespace CSharpKOTOR.Common
             return _active;
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:2041-2042
-        // Original: def isActive(self) -> bool:
-        public bool IsActive()
-        {
-            return !string.IsNullOrEmpty(_active);
-        }
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:2016-2018
         // Original: def unload(self):

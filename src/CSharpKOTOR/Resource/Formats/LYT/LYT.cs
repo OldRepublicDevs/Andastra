@@ -1,7 +1,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using CSharpKOTOR.Common;
-using CSharpKOTOR.Resource.Formats.GFF;
+using CSharpKOTOR.Formats.GFF;
+using CSharpKOTOR.Resources;
 using JetBrains.Annotations;
 
 namespace CSharpKOTOR.Resource.Formats.LYT
@@ -51,7 +52,7 @@ namespace CSharpKOTOR.Resource.Formats.LYT
         // Original: def __eq__(self, other: object) -> bool:
         public override bool Equals(object obj)
         {
-            if (obj is not LYT other)
+            if (!(obj is LYT other))
             {
                 return false;
             }
@@ -84,19 +85,19 @@ namespace CSharpKOTOR.Resource.Formats.LYT
             // Rooms
             foreach (LYTRoom room in Rooms)
             {
-                yield return new ResourceIdentifier(room.Model, ResourceType.LYT);
+                yield return new ResourceIdentifier(room.Model, ResourceType.MDL);
             }
 
             // Tracks
             foreach (LYTTrack track in Tracks)
             {
-                yield return new ResourceIdentifier(track.Model, ResourceType.LYT);
+                yield return new ResourceIdentifier(track.Model, ResourceType.MDL);
             }
 
             // Obstacles
             foreach (LYTObstacle obstacle in Obstacles)
             {
-                yield return new ResourceIdentifier(obstacle.Model, ResourceType.LYT);
+                yield return new ResourceIdentifier(obstacle.Model, ResourceType.MDL);
             }
         }
     }

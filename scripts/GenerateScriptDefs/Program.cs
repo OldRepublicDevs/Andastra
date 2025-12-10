@@ -725,19 +725,26 @@ namespace GenerateScriptDefs
 
             string paramsStr = paramsCs.Count > 0 ? "new List<ScriptParam> { " + string.Join(", ", paramsCs) + " }" : "new List<ScriptParam>()";
 
-            // Escape string for C#: The string contains literal \r\n (backslash-r-backslash-n) characters
-            // In a verbatim string (@""), we only need to escape quotes by doubling them
-            // The \r\n will be interpreted literally in a verbatim string
-            string description = func.Description.Replace("\"", "\"\"");
-            string raw = func.Raw.Replace("\"", "\"\"");
+            // Escape strings for regular C# string literals
+            string description = func.Description
+                .Replace("\\", "\\\\")
+                .Replace("\"", "\\\"")
+                .Replace("\r", "\\r")
+                .Replace("\n", "\\n")
+                .Replace("\t", "\\t");
+            string raw = func.Raw
+                .Replace("\\", "\\\\")
+                .Replace("\"", "\\\"")
+                .Replace("\r", "\\r")
+                .Replace("\n", "\\n")
+                .Replace("\t", "\\t");
 
-            // Use verbatim string literals for description and raw to handle \r\n properly
             return $"        new ScriptFunction(\n" +
                    $"            {returnTypeCs},\n" +
                    $"            \"{name}\",\n" +
                    $"            {paramsStr},\n" +
-                   $"            @\"{description}\",\n" +
-                   $"            @\"{raw}\",\n" +
+                   $"            \"{description}\",\n" +
+                   $"            \"{raw}\",\n" +
                    $"        ),";
         }
 

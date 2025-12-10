@@ -1,5 +1,6 @@
 using CSharpKOTOR.Common;
-using CSharpKOTOR.Resource.Formats.GFF;
+using CSharpKOTOR.Formats.GFF;
+using CSharpKOTOR.Resources;
 using JetBrains.Annotations;
 
 namespace CSharpKOTOR.Resource.Generics
@@ -35,10 +36,10 @@ namespace CSharpKOTOR.Resource.Generics
         // Original: def __init__(self):
         public UTC()
         {
-            ResRef = ResRef.FromInvalid();
+            ResRef = ResRef.FromBlank();
             Tag = string.Empty;
             Comment = string.Empty;
-            Conversation = ResRef.FromInvalid();
+            Conversation = ResRef.FromBlank();
         }
 
         // Additional basic properties that would be implemented in full version
@@ -64,34 +65,34 @@ namespace CSharpKOTOR.Resource.Generics
         public bool NotReorienting { get; set; }
 
         // Equipment slots (simplified)
-        public ResRef RightHand { get; set; } = ResRef.FromInvalid();
-        public ResRef LeftHand { get; set; } = ResRef.FromInvalid();
-        public ResRef Body { get; set; } = ResRef.FromInvalid();
-        public ResRef Head { get; set; } = ResRef.FromInvalid();
-        public ResRef Implant { get; set; } = ResRef.FromInvalid();
-        public ResRef Belt { get; set; } = ResRef.FromInvalid();
-        public ResRef Armor { get; set; } = ResRef.FromInvalid();
-        public ResRef Gloves { get; set; } = ResRef.FromInvalid();
-        public ResRef Boots { get; set; } = ResRef.FromInvalid();
+        public ResRef RightHand { get; set; } = ResRef.FromBlank();
+        public ResRef LeftHand { get; set; } = ResRef.FromBlank();
+        public ResRef Body { get; set; } = ResRef.FromBlank();
+        public ResRef Head { get; set; } = ResRef.FromBlank();
+        public ResRef Implant { get; set; } = ResRef.FromBlank();
+        public ResRef Belt { get; set; } = ResRef.FromBlank();
+        public ResRef Armor { get; set; } = ResRef.FromBlank();
+        public ResRef Gloves { get; set; } = ResRef.FromBlank();
+        public ResRef Boots { get; set; } = ResRef.FromBlank();
 
         // Script hooks (simplified)
-        public ResRef OnSpawn { get; set; } = ResRef.FromInvalid();
-        public ResRef OnDeath { get; set; } = ResRef.FromInvalid();
-        public ResRef OnHeartbeat { get; set; } = ResRef.FromInvalid();
-        public ResRef OnNotice { get; set; } = ResRef.FromInvalid();
-        public ResRef OnSpellAt { get; set; } = ResRef.FromInvalid();
-        public ResRef OnAttacked { get; set; } = ResRef.FromInvalid();
-        public ResRef OnDamaged { get; set; } = ResRef.FromInvalid();
-        public ResRef OnEndRound { get; set; } = ResRef.FromInvalid();
-        public ResRef OnEndCombatRound { get; set; } = ResRef.FromInvalid();
-        public ResRef OnDialogue { get; set; } = ResRef.FromInvalid();
-        public ResRef OnBlocked { get; set; } = ResRef.FromInvalid();
-        public ResRef OnDisturbed { get; set; } = ResRef.FromInvalid();
-        public ResRef OnCombatRoundEnd { get; set; } = ResRef.FromInvalid();
-        public ResRef OnSpawned { get; set; } = ResRef.FromInvalid();
-        public ResRef OnRested { get; set; } = ResRef.FromInvalid();
-        public ResRef OnCreatureDamaged { get; set; } = ResRef.FromInvalid();
-        public ResRef OnInventoryDisturbed { get; set; } = ResRef.FromInvalid();
-        public ResRef OnDeath2 { get; set; } = ResRef.FromInvalid();
+        public ResRef OnSpawn { get; set; } = ResRef.FromBlank();
+        public ResRef OnDeath { get; set; } = ResRef.FromBlank();
+        public ResRef OnHeartbeat { get; set; } = ResRef.FromBlank();
+        public ResRef OnNotice { get; set; } = ResRef.FromBlank();
+        public ResRef OnSpellAt { get; set; } = ResRef.FromBlank();
+        public ResRef OnAttacked { get; set; } = ResRef.FromBlank();
+        public ResRef OnDamaged { get; set; } = ResRef.FromBlank();
+        public ResRef OnEndRound { get; set; } = ResRef.FromBlank();
+        public ResRef OnEndCombatRound { get; set; } = ResRef.FromBlank();
+        public ResRef OnDialogue { get; set; } = ResRef.FromBlank();
+        public ResRef OnBlocked { get; set; } = ResRef.FromBlank();
+        public ResRef OnDisturbed { get; set; } = ResRef.FromBlank();
+        public ResRef OnCombatRoundEnd { get; set; } = ResRef.FromBlank();
+        public ResRef OnSpawned { get; set; } = ResRef.FromBlank();
+        public ResRef OnRested { get; set; } = ResRef.FromBlank();
+        public ResRef OnCreatureDamaged { get; set; } = ResRef.FromBlank();
+        public ResRef OnInventoryDisturbed { get; set; } = ResRef.FromBlank();
+        public ResRef OnDeath2 { get; set; } = ResRef.FromBlank();
     }
 }

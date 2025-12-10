@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using CSharpKOTOR.Common;
+using CSharpKOTOR.Formats.Capsule;
 using CSharpKOTOR.Resources;
 using JetBrains.Annotations;
 
@@ -405,7 +406,7 @@ namespace CSharpKOTOR.Installation
             var subdirs = new List<string>();
             foreach (string dir in Directory.GetDirectories(overridePath))
             {
-                subdirs.Add(Path.GetFileName(dir));
+                subdirs.Add(System.IO.Path.GetFileName(dir));
             }
 
             return subdirs;
@@ -425,7 +426,7 @@ namespace CSharpKOTOR.Installation
             }
 
             var results = new List<FileResource>();
-            string searchPath = string.IsNullOrEmpty(directory) ? overridePath : Path.Combine(overridePath, directory);
+            string searchPath = string.IsNullOrEmpty(directory) ? overridePath : System.IO.Path.Combine(overridePath, directory);
 
             if (!Directory.Exists(searchPath))
             {
@@ -467,7 +468,7 @@ namespace CSharpKOTOR.Installation
         public Dictionary<ResourceIdentifier, List<LocationResult>> Locations(
             List<ResourceIdentifier> queries,
             SearchLocation[] order = null,
-            List<Capsule.LazyCapsule> capsules = null,
+            List<LazyCapsule> capsules = null,
             List<string> folders = null,
             string moduleRoot = null)
         {
@@ -488,7 +489,7 @@ namespace CSharpKOTOR.Installation
                 };
             }
 
-            capsules = capsules ?? new List<Capsule.LazyCapsule>();
+            capsules = capsules ?? new List<LazyCapsule>();
             folders = folders ?? new List<string>();
 
             var locations = new Dictionary<ResourceIdentifier, List<LocationResult>>();
@@ -513,7 +514,7 @@ namespace CSharpKOTOR.Installation
             // Search custom capsules
             if (capsules.Count > 0)
             {
-                foreach (Capsule.LazyCapsule capsule in capsules)
+                foreach (LazyCapsule capsule in capsules)
                 {
                     foreach (ResourceIdentifier query in queries)
                     {

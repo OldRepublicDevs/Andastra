@@ -29,7 +29,7 @@ namespace CSharpKOTOR.Resources
             }
 
             // Check if it's an ERF-type file that might need salvage
-            if (Misc.IsAnyErfTypeFile(fileResource.FilePath))
+            if (CSharpKOTOR.Tools.FileHelpers.IsAnyErfTypeFile(fileResource.FilePath))
             {
                 // For now, return null - full salvage implementation would require
                 // extensive error recovery logic for each format type

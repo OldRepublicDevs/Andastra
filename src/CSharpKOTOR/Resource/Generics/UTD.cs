@@ -1,5 +1,6 @@
 using CSharpKOTOR.Common;
-using CSharpKOTOR.Resource.Formats.GFF;
+using CSharpKOTOR.Formats.GFF;
+using CSharpKOTOR.Resources;
 using JetBrains.Annotations;
 
 namespace CSharpKOTOR.Resource.Generics
@@ -35,7 +36,7 @@ namespace CSharpKOTOR.Resource.Generics
         // Original: def __init__(self):
         public UTD()
         {
-            ResRef = ResRef.FromInvalid();
+            ResRef = ResRef.FromBlank();
             Tag = string.Empty;
             Name = LocalizedString.FromInvalid();
             Description = LocalizedString.FromInvalid();
@@ -51,31 +52,27 @@ namespace CSharpKOTOR.Resource.Generics
         public bool Plot { get; set; }
         public bool NotBlastable { get; set; }
         public bool AnimLoop { get; set; }
-        public bool Hardness { get; set; }
         public bool Fort { get; set; }
         public bool Ref { get; set; }
-        public bool Will { get; set; }
         public int HP { get; set; }
         public int CurrentHP { get; set; }
-        public int Hardness { get; set; }
         public int Fortitude { get; set; }
         public int Reflex { get; set; }
-        public int Will { get; set; }
         public int DC { get; set; }
-        public ResRef KeyRequired { get; set; } = ResRef.FromInvalid();
-        public ResRef KeyName { get; set; } = ResRef.FromInvalid();
+        public ResRef KeyRequired { get; set; } = ResRef.FromBlank();
+        public ResRef KeyName { get; set; } = ResRef.FromBlank();
 
         // Script hooks (simplified)
-        public ResRef OnOpen { get; set; } = ResRef.FromInvalid();
-        public ResRef OnClosed { get; set; } = ResRef.FromInvalid();
-        public ResRef OnDamaged { get; set; } = ResRef.FromInvalid();
-        public ResRef OnDeath { get; set; } = ResRef.FromInvalid();
-        public ResRef OnHeartbeat { get; set; } = ResRef.FromInvalid();
-        public ResRef OnMeleeAttacked { get; set; } = ResRef.FromInvalid();
-        public ResRef OnSpellCastAt { get; set; } = ResRef.FromInvalid();
-        public ResRef OnUserDefined { get; set; } = ResRef.FromInvalid();
-        public ResRef OnLock { get; set; } = ResRef.FromInvalid();
-        public ResRef OnUnlock { get; set; } = ResRef.FromInvalid();
-        public ResRef OnFailToOpen { get; set; } = ResRef.FromInvalid();
+        public ResRef OnOpen { get; set; } = ResRef.FromBlank();
+        public ResRef OnClosed { get; set; } = ResRef.FromBlank();
+        public ResRef OnDamaged { get; set; } = ResRef.FromBlank();
+        public ResRef OnDeath { get; set; } = ResRef.FromBlank();
+        public ResRef OnHeartbeat { get; set; } = ResRef.FromBlank();
+        public ResRef OnMeleeAttacked { get; set; } = ResRef.FromBlank();
+        public ResRef OnSpellCastAt { get; set; } = ResRef.FromBlank();
+        public ResRef OnUserDefined { get; set; } = ResRef.FromBlank();
+        public ResRef OnLock { get; set; } = ResRef.FromBlank();
+        public ResRef OnUnlock { get; set; } = ResRef.FromBlank();
+        public ResRef OnFailToOpen { get; set; } = ResRef.FromBlank();
     }
 }

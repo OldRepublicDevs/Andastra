@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using CSharpKOTOR.Formats.TwoDA;
 using CSharpKOTOR.Installation;
+using CSharpKOTOR.Resource.Generics;
 using CSharpKOTOR.Resources;
 
 namespace CSharpKOTOR.Common

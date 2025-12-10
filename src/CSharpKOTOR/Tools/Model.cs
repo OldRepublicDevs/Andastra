@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using CSharpKOTOR.Common;
 using JetBrains.Annotations;
+using BinaryReader = CSharpKOTOR.Common.RawBinaryReader;
 
 namespace CSharpKOTOR.Tools
 {
@@ -31,14 +32,14 @@ namespace CSharpKOTOR.Tools
                 while (nodes.Count > 0)
                 {
                     uint nodeOffset = nodes.Dequeue();
-                    reader.Seek(nodeOffset);
+                    reader.Seek((int)nodeOffset);
                     uint nodeId = reader.ReadUInt32();
 
-                    reader.Seek(nodeOffset + 44);
+                    reader.Seek((int)nodeOffset + 44);
                     uint childOffsetsOffset = reader.ReadUInt32();
                     uint childOffsetsCount = reader.ReadUInt32();
 
-                    reader.Seek(childOffsetsOffset);
+                    reader.Seek((int)childOffsetsOffset);
                     for (uint i = 0; i < childOffsetsCount; i++)
                     {
                         nodes.Enqueue(reader.ReadUInt32());
@@ -47,7 +48,7 @@ namespace CSharpKOTOR.Tools
                     if ((nodeId & 32) != 0)
                     {
                         // Extract texture name
-                        reader.Seek(nodeOffset + 168);
+                        reader.Seek((int)nodeOffset + 168);
                         string name = reader.ReadString(32, encoding: "ascii", errors: "ignore").Trim().ToLower();
                         if (!string.IsNullOrEmpty(name) && name != "null" && !seenNames.Contains(name) && name != "dirt")
                         {
@@ -56,7 +57,7 @@ namespace CSharpKOTOR.Tools
                         }
 
                         // Extract lightmap name
-                        reader.Seek(nodeOffset + 200);
+                        reader.Seek((int)nodeOffset + 200);
                         name = reader.ReadString(32, encoding: "ascii", errors: "ignore").Trim().ToLower();
                         if (!string.IsNullOrEmpty(name) && name != "null" && !seenNames.Contains(name))
                         {
@@ -88,14 +89,14 @@ namespace CSharpKOTOR.Tools
                 while (nodes.Count > 0)
                 {
                     uint nodeOffset = nodes.Pop();
-                    reader.Seek(nodeOffset);
+                    reader.Seek((int)nodeOffset);
                     uint nodeId = reader.ReadUInt32();
 
-                    reader.Seek(nodeOffset + 44);
+                    reader.Seek((int)nodeOffset + 44);
                     uint childOffsetsOffset = reader.ReadUInt32();
                     uint childOffsetsCount = reader.ReadUInt32();
 
-                    reader.Seek(childOffsetsOffset);
+                    reader.Seek((int)childOffsetsOffset);
                     Stack<uint> childOffsets = new Stack<uint>();
                     for (uint i = 0; i < childOffsetsCount; i++)
                     {
@@ -108,7 +109,7 @@ namespace CSharpKOTOR.Tools
 
                     if ((nodeId & 32) != 0)
                     {
-                        reader.Seek(nodeOffset + 168);
+                        reader.Seek((int)nodeOffset + 168);
                         string texture = reader.ReadString(32, encoding: "ascii", errors: "ignore").Trim();
                         string lowerTexture = texture.ToLower();
                         if (!string.IsNullOrEmpty(texture)
@@ -144,14 +145,14 @@ namespace CSharpKOTOR.Tools
                 while (nodes.Count > 0)
                 {
                     uint nodeOffset = nodes.Pop();
-                    reader.Seek(nodeOffset);
+                    reader.Seek((int)nodeOffset);
                     uint nodeId = reader.ReadUInt32();
 
-                    reader.Seek(nodeOffset + 44);
+                    reader.Seek((int)nodeOffset + 44);
                     uint childOffsetsOffset = reader.ReadUInt32();
                     uint childOffsetsCount = reader.ReadUInt32();
 
-                    reader.Seek(childOffsetsOffset);
+                    reader.Seek((int)childOffsetsOffset);
                     Stack<uint> childOffsets = new Stack<uint>();
                     for (uint i = 0; i < childOffsetsCount; i++)
                     {
@@ -164,7 +165,7 @@ namespace CSharpKOTOR.Tools
 
                     if ((nodeId & 32) != 0)
                     {
-                        reader.Seek(nodeOffset + 200);
+                        reader.Seek((int)nodeOffset + 200);
                         string lightmap = reader.ReadString(32, encoding: "ascii", errors: "ignore").Trim().ToLower();
                         if (!string.IsNullOrEmpty(lightmap) && lightmap != "null" && !lightmapsCaseset.Contains(lightmap))
                         {

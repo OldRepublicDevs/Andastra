@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using CSharpKOTOR.Common;
+using CSharpKOTOR.Resources;
 using JetBrains.Annotations;
 
 namespace CSharpKOTOR.Resource.Formats.VIS
@@ -41,7 +42,7 @@ namespace CSharpKOTOR.Resource.Formats.VIS
         // Original: def __eq__(self, other):
         public override bool Equals(object obj)
         {
-            if (obj is not VIS other)
+            if (!(obj is VIS other))
             {
                 return false;
             }
