@@ -10,11 +10,28 @@ namespace CSharpKOTOR.Formats.MDL
     // Simplified detector and dispatcher for MDL/MDL_ASCII
     public static class MDLAuto
     {
+        private static RawBinaryReader CreateReader(object source, int offset, int? size = null)
+        {
+            if (source is string path)
+            {
+                return RawBinaryReader.FromFile(path, offset, size);
+            }
+            if (source is byte[] bytes)
+            {
+                return RawBinaryReader.FromBytes(bytes, offset, size);
+            }
+            if (source is Stream stream)
+            {
+                return RawBinaryReader.FromStream(stream, offset, size);
+            }
+            throw new ArgumentException("Unsupported source type for MDL");
+        }
+
         public static ResourceType DetectMdl(object source, int offset = 0)
         {
             try
             {
-                using (var reader = RawBinaryReader.FromAuto(source, offset, 4))
+                using (var reader = CreateReader(source, offset, 4))
                 {
                     var first4 = reader.ReadBytes(4);
                     // PyKotor heuristic: 0x00000000 -> binary MDL, otherwise ASCII

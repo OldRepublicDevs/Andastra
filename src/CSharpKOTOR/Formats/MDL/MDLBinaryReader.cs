@@ -15,9 +15,26 @@ namespace CSharpKOTOR.Formats.MDL
         private readonly int _mdxSize;
         private readonly bool _fastLoad;
 
+        private static RawBinaryReader CreateReader(object source, int offset, int? size = null)
+        {
+            if (source is string path)
+            {
+                return RawBinaryReader.FromFile(path, offset, size);
+            }
+            if (source is byte[] bytes)
+            {
+                return RawBinaryReader.FromBytes(bytes, offset, size);
+            }
+            if (source is Stream stream)
+            {
+                return RawBinaryReader.FromStream(stream, offset, size);
+            }
+            throw new ArgumentException("Unsupported source type for MDL");
+        }
+
         public MDLBinaryReader(object source, int offset = 0, int size = 0, object mdxSource = null, int mdxOffset = 0, int mdxSize = 0, bool fastLoad = false)
         {
-            _reader = RawBinaryReader.FromAuto(source, offset, size > 0 ? (int?)size : null);
+            _reader = CreateReader(source, offset, size > 0 ? (int?)size : null);
             _mdxSource = mdxSource;
             _mdxOffset = mdxOffset;
             _mdxSize = mdxSize;
