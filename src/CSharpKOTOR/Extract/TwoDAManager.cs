@@ -1,5 +1,8 @@
 using System.Collections.Generic;
+using System.Linq;
+using System.IO;
 using CSharpKOTOR.Formats.TwoDA;
+using CSharpKOTOR.Installation;
 using CSharpKOTOR.Resources;
 
 namespace CSharpKOTOR.Extract
@@ -22,7 +25,7 @@ namespace CSharpKOTOR.Extract
         }
     }
 
-    // Minimal TwoDA manager placeholder to match extract/twoda.py
+    // Minimal TwoDA manager to match extract/twoda.py lookup behavior.
     public class TwoDAManager
     {
         public static List<string> GetColumnNames(string dataType)
@@ -32,7 +35,54 @@ namespace CSharpKOTOR.Extract
             {
                 cols.AddRange(set);
             }
-            return cols;
+            return cols.Distinct().ToList();
+        }
+
+        public static LookupResult2DA LookupInInstallation(Installation.Installation installation, string query, string dataType)
+        {
+            if (string.IsNullOrEmpty(query))
+            {
+                return default;
+            }
+
+            var targets = TwoDARegistry.ColumnsFor(dataType);
+            foreach (var kvp in targets)
+            {
+                string fileKey = kvp.Key;
+                var columns = kvp.Value;
+                string filename = fileKey.Split('-')[0]; // normalize suffixed keys
+                string resname = Path.GetFileNameWithoutExtension(filename);
+
+                var res = installation.Resources.LookupResource(resname, ResourceType.TwoDA);
+                if (res == null || res.Data == null)
+                {
+                    continue;
+                }
+
+                var twoda = new TwoDABinaryReader(res.Data).Load();
+                for (int rowIndex = 0; rowIndex < twoda.GetHeight(); rowIndex++)
+                {
+                    var row = twoda.GetRow(rowIndex);
+                    foreach (string col in columns)
+                    {
+                        string cell;
+                        try
+                        {
+                            cell = row.GetString(col);
+                        }
+                        catch
+                        {
+                            continue;
+                        }
+                        if (cell == query)
+                        {
+                            return new LookupResult2DA(filename, rowIndex, col, cell ?? string.Empty, row);
+                        }
+                    }
+                }
+            }
+
+            return default;
         }
     }
 }
