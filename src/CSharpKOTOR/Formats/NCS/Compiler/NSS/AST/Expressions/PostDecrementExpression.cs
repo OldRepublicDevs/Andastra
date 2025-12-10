@@ -23,7 +23,7 @@ namespace CSharpKOTOR.Formats.NCS.Compiler
             // Matching PyKotor classes.py lines 2942-2965
             // First compile the field access to push value to stack
             DynamicDataType variableType = FieldAccess.Compile(ncs, root, block);
-            block.TempStack += 4; // Matching PyKotor line 2944
+            block.TempStack += variableType.Size(root); // Matching PyKotor line 2944
 
             if (variableType.Builtin != DataType.Int && variableType.Builtin != DataType.Float)
             {
@@ -54,7 +54,7 @@ namespace CSharpKOTOR.Formats.NCS.Compiler
             }
 
             // Matching PyKotor line 2964
-            block.TempStack -= 4;
+            block.TempStack -= variableType.Size(root);
 
             return variableType;
         }

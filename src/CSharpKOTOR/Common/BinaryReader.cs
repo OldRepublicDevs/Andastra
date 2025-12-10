@@ -489,7 +489,10 @@ namespace CSharpKOTOR.Common
 
             while (lastChar != terminator.ToString() && (length == -1 || bytesRead < length))
             {
-                sb.Append(lastChar);
+                if (!string.IsNullOrEmpty(lastChar))
+                {
+                    sb.Append(lastChar);
+                }
                 ExceedCheck(1);
                 byte[] charBytes = ReadBytes(1);
                 bytesRead++;
@@ -522,13 +525,7 @@ namespace CSharpKOTOR.Common
                 }
             }
 
-            string result = sb.ToString();
-            if (result.Length > 0)
-            {
-                result = result.Substring(1);
-            }
-
-            return result;
+            return sb.ToString();
         }
 
         /// <summary>

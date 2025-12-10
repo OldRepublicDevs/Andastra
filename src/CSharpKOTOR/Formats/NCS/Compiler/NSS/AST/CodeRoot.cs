@@ -311,9 +311,9 @@ namespace CSharpKOTOR.Formats.NCS.Compiler
             }
 
             // Matching PyKotor classes.py lines 514-532
-            // Push arguments in reverse order so that the first parameter is closest to the top of the stack.
+            // Push arguments in declaration order so the last parameter ends up deepest on the stack.
             int offset = 0;
-            for (int i = parameters.Count - 1; i >= 0; i--)
+            for (int i = 0; i < parameters.Count; i++)
             {
                 FunctionParameter param = parameters[i];
                 Expression arg = argsList[i];
@@ -579,7 +579,7 @@ namespace CSharpKOTOR.Formats.NCS.Compiler
             Parameters = parameters;
             Body = body;
 
-            for (int i = 0; i < parameters.Count; i++)
+            for (int i = parameters.Count - 1; i >= 0; i--)
             {
                 FunctionParameter param = parameters[i];
                 body.AddScoped(param.Name, param.DataType);

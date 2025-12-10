@@ -20,11 +20,9 @@ namespace CSharpKOTOR.Formats.NCS.Compiler
 
         public override DynamicDataType Compile(NCS ncs, CodeRoot root, CodeBlock block)
         {
-            // Matching PyKotor classes.py lines 2906-2935
+            // Matching PyKotor classes.py lines 2906-2935 exactly
             // First compile the field access to push value to stack
             DynamicDataType variableType = FieldAccess.Compile(ncs, root, block);
-            // FieldAccess.Compile pushes value to stack but doesn't update temp_stack
-            // We need to track it ourselves
             block.TempStack += variableType.Size(root);
 
             if (variableType.Builtin != DataType.Int && variableType.Builtin != DataType.Float)
@@ -35,6 +33,7 @@ namespace CSharpKOTOR.Formats.NCS.Compiler
                     $"  Variable: {varName}");
             }
 
+            // Get scoped info after compiling (matching PyKotor line 2917)
             GetScopedResult scoped = FieldAccess.GetScoped(block, root);
             bool isGlobal = scoped.IsGlobal;
             int stackIndex = scoped.Offset;
@@ -59,6 +58,7 @@ namespace CSharpKOTOR.Formats.NCS.Compiler
                 ncs.Add(NCSInstructionType.CPDOWNSP, new List<object> { stackIndex - variableType.Size(root), variableType.Size(root) });
             }
 
+            block.TempStack -= variableType.Size(root);
             return variableType;
         }
 
