@@ -469,6 +469,7 @@ namespace CSharpKOTOR.Common
         private ResRef _cachedModId;
         private string _cachedSortId;
         private readonly Dictionary<string, ModulePieceResource> _capsules = new Dictionary<string, ModulePieceResource>();
+        private HashSet<ResourceIdentifier> _gitSearch;
 
         public Dictionary<ResourceIdentifier, ModuleResource> Resources => _resources;
         public bool DotMod => _dotMod;
@@ -709,10 +710,10 @@ namespace CSharpKOTOR.Common
         /// Returns the resource with the given name and type from the module.
         /// </summary>
         [CanBeNull]
-        public object Resource(string resname, ResourceType restype)
+        public ModuleResource Resource(string resname, ResourceType restype)
         {
             var ident = new ResourceIdentifier(resname, restype);
-            _resources.TryGetValue(ident, out object resource);
+            _resources.TryGetValue(ident, out ModuleResource resource);
             return resource;
         }
 
@@ -722,11 +723,7 @@ namespace CSharpKOTOR.Common
         /// Creates or extends a ModuleResource keyed by the resname/restype with additional locations.
         /// This is how Module.resources dict gets filled.
         /// </summary>
-        /// <remarks>
-        /// NOTE: This is a simplified implementation. The full implementation requires proper generic type handling
-        /// for ModuleResource&lt;T&gt;. Currently returns object due to C# generic type limitations.
-        /// </remarks>
-        public object AddLocations(string resname, ResourceType restype, IEnumerable<string> locations)
+        public ModuleResource AddLocations(string resname, ResourceType restype, IEnumerable<string> locations)
         {
             if (locations == null)
             {
@@ -738,19 +735,19 @@ namespace CSharpKOTOR.Common
                 RobustLogger.Instance.Warning("No locations found for '{0}.{1}' which are intended to add to module '{2}'", resname, restype, _root);
             }
 
-            object moduleResource = Resource(resname, restype);
-            if (moduleResource == null)
+            ResourceIdentifier ident = new ResourceIdentifier(resname, restype);
+            if (!_resources.TryGetValue(ident, out ModuleResource moduleResource))
             {
-                // TODO: Create appropriate ModuleResource&lt;T&gt; instance based on restype
-                // This requires a factory method or type mapping to determine the correct generic type
-                var ident = new ResourceIdentifier(resname, restype);
-                // For now, we cannot create a generic ModuleResource without knowing T at compile time
-                // This will need to be addressed when implementing the full ReloadResources() method
-                return null;
+                // Create a new ModuleResource - for now, we'll use a generic approach
+                // In a full implementation, this would need to create ModuleResource<T> with the correct T type
+                // For now, we'll create a basic ModuleResource<object> as a placeholder
+                // TODO: Implement proper type-specific ModuleResource creation based on restype
+                var genericResource = new ModuleResource<object>(resname, restype, _installation, _root);
+                moduleResource = genericResource;
+                _resources[ident] = moduleResource;
             }
 
-            // TODO: Call AddLocations on the moduleResource using reflection or a non-generic interface
-            // For now, this is a placeholder
+            moduleResource.AddLocations(locationsList);
             return moduleResource;
         }
 
@@ -770,11 +767,255 @@ namespace CSharpKOTOR.Common
             return new List<object>();
         }
 
-        // Placeholder for ReloadResources - will be implemented in next iteration
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:584-799
+        // Original: def reload_resources(self):
         private void ReloadResources()
         {
-            // TODO: Implement reload_resources() method
-            // This is a complex method that requires many dependencies
+            string displayName = (_dotMod ? $"{_root}.mod" : $"{_root}.rim");
+            RobustLogger.Instance.Info("Loading module resources needed for '{0}'", displayName);
+
+            // Get main capsule for searching
+            ModulePieceResource mainCapsule = LookupMainCapsule();
+            List<ModulePieceResource> capsulesToSearch = new List<ModulePieceResource> { mainCapsule };
+
+            // Define search order for resources (OVERRIDE, CUSTOM_MODULES, CHITIN)
+            SearchLocation[] order = ModuleSearchOrder.Order;
+
+            // Get module ID for link resource queries
+            ResRef linkResname = ModuleId();
+            if (linkResname == null)
+            {
+                RobustLogger.Instance.Warning("Module ID is null for module '{0}', cannot load resources", _root);
+                return;
+            }
+
+            ResourceIdentifier lytQuery = new ResourceIdentifier(linkResname, ResourceType.LYT);
+            ResourceIdentifier gitQuery = new ResourceIdentifier(linkResname, ResourceType.GIT);
+            ResourceIdentifier visQuery = new ResourceIdentifier(linkResname, ResourceType.VIS);
+
+            // Start in our module resources - needs to happen first so we can determine what resources are part of our module
+            foreach (ModulePieceResource capsule in _capsules.Values)
+            {
+                if (capsule == null)
+                    continue;
+
+                foreach (FileResource resource in capsule.GetResources())
+                {
+                    RobustLogger.Instance.Info("Adding location '{0}' for resource '{1}' from erf/rim '{2}'",
+                        capsule.Filename(), resource.Identifier, capsule.Identifier());
+                    AddLocations(resource.ResName, resource.ResType, new[] { capsule.Filename() });
+                }
+            }
+
+            // Any resource referenced by the GIT/LYT/VIS not present in the module files
+            // To be looked up elsewhere in the installation
+            Dictionary<ResourceIdentifier, List<LocationResult>> mainSearchResults =
+                _installation.Locations(new[] { lytQuery, gitQuery, visQuery }, order, capsulesToSearch);
+
+            // Track all resources referenced by GIT/LYT/VIS
+            HashSet<ResourceIdentifier> gitSearch = new HashSet<ResourceIdentifier>();
+            HashSet<ResourceIdentifier> lytSearch = new HashSet<ResourceIdentifier>();
+            HashSet<ResourceIdentifier> visSearch = new HashSet<ResourceIdentifier>();
+
+            // Store references for use in other methods
+            _gitSearch = gitSearch;
+
+            // Process each query (GIT, LYT, VIS) in sequence
+            ProcessGitLytVisQuery(gitQuery, mainSearchResults, gitSearch, mainCapsule);
+            ProcessGitLytVisQuery(lytQuery, mainSearchResults, lytSearch, mainCapsule);
+            ProcessGitLytVisQuery(visQuery, mainSearchResults, visSearch, mainCapsule);
+
+            // From GIT/LYT references, find them in the installation
+            HashSet<ResourceIdentifier> allReferences = new HashSet<ResourceIdentifier>();
+            allReferences.UnionWith(gitSearch);
+            allReferences.UnionWith(lytSearch);
+            allReferences.UnionWith(visSearch);
+
+            Dictionary<ResourceIdentifier, List<LocationResult>> searchResults =
+                _installation.Locations(allReferences.ToList(), order, capsulesToSearch);
+
+            // Add locations for all found resources
+            foreach (KeyValuePair<ResourceIdentifier, List<LocationResult>> kv in searchResults)
+            {
+                List<string> searchResultFilepaths = kv.Value.Select(loc => loc.FilePath).ToList();
+                AddLocations(kv.Key.ResName, kv.Key.ResType, searchResultFilepaths);
+            }
+
+            // Process core resources and override directories
+            ProcessCoreResources(displayName);
+            ProcessOverrideResources(displayName);
+
+            // Process texture resources from models
+            ProcessModelTextures(displayName);
+
+            // Finally iterate through all resources we may have missed
+            ActivateRemainingResources();
+        }
+
+        private void ProcessGitLytVisQuery(ResourceIdentifier query, Dictionary<ResourceIdentifier, List<LocationResult>> mainSearchResults,
+            HashSet<ResourceIdentifier> searchSet, ModulePieceResource mainCapsule)
+        {
+            if (!mainSearchResults.TryGetValue(query, out List<LocationResult> locations))
+            {
+                if (query.ResType == ResourceType.VIS)
+                {
+                    // VIS is optional
+                    return;
+                }
+                throw new FileNotFoundException($"Required resource '{query}' not found for module", mainCapsule.Filename());
+            }
+
+            // Add locations and get the resource wrapper
+            ModuleResource resourceWrapper = AddLocations(query.ResName, query.ResType,
+                locations.Select(loc => loc.FilePath).ToList());
+
+            if (resourceWrapper == null)
+            {
+                return;
+            }
+
+            // Store original path to restore later
+            string originalPath = resourceWrapper.Locations().FirstOrDefault();
+
+            // Check each location for referenced resources
+            foreach (string location in resourceWrapper.Locations())
+            {
+                resourceWrapper.Activate(location);
+                object loadedResource = resourceWrapper.Resource();
+
+                // Only GIT/LYT have resource identifiers to collect
+                if (query.ResType != ResourceType.VIS)
+                {
+                    // TODO: Implement iter_resource_identifiers() on loaded resource
+                    // This requires the actual GIT/LYT classes to have this method
+                    // For now, we'll skip this part
+                }
+            }
+
+            if (originalPath != null)
+            {
+                resourceWrapper.Activate(originalPath);
+            }
+        }
+
+        private void ProcessCoreResources(string displayName)
+        {
+            foreach (FileResource resource in _installation.CoreResources())
+            {
+                if (_resources.ContainsKey(resource.Identifier) || _gitSearch.Contains(resource.Identifier))
+                {
+                    RobustLogger.Instance.Info("Found chitin/core location '{0}' for resource '{1}' for module '{2}'",
+                        resource.FilePath, resource.Identifier, displayName);
+                    AddLocations(resource.ResName, resource.ResType, new[] { resource.FilePath });
+                }
+            }
+        }
+
+        private void ProcessOverrideResources(string displayName)
+        {
+            foreach (string directory in _installation.OverrideList())
+            {
+                foreach (FileResource resource in _installation.OverrideResources(directory))
+                {
+                    if (!_resources.ContainsKey(resource.Identifier) && !_gitSearch.Contains(resource.Identifier))
+                    {
+                        continue;
+                    }
+                    RobustLogger.Instance.Info("Found override location '{0}' for module '{1}'", resource.FilePath, displayName);
+                    AddLocations(resource.ResName, resource.ResType, new[] { resource.FilePath });
+                }
+            }
+        }
+
+        private void ProcessModelTextures(string displayName)
+        {
+            HashSet<string> lookupTextureQueries = new HashSet<string>();
+            HashSet<string> lookupLightmapQueries = new HashSet<string>();
+
+            // TODO: Implement models() method and iterate through models
+            // For now, this is a placeholder
+            /*
+            foreach (var model in Models())
+            {
+                RobustLogger.Instance.Info("Finding textures/lightmaps for model '{0}'...", model.GetIdentifier());
+                try
+                {
+                    byte[] modelData = (byte[])model.Resource();
+                    if (modelData == null)
+                    {
+                        RobustLogger.Instance.Warning("Missing model '{0}', needed by module '{1}'", model.GetIdentifier(), displayName);
+                        continue;
+                    }
+
+                    lookupTextureQueries.UnionWith(ModelTools.IterateTextures(modelData));
+                    lookupLightmapQueries.UnionWith(ModelTools.IterateLightmaps(modelData));
+                }
+                catch (Exception ex)
+                {
+                    RobustLogger.Instance.Warning("Suppressed exception while getting model data '{0}': {1}", model.GetIdentifier(), ex.Message);
+                }
+            }
+            */
+
+            // Process texture queries
+            HashSet<string> texlmQueries = new HashSet<string>();
+            texlmQueries.UnionWith(lookupTextureQueries);
+            texlmQueries.UnionWith(lookupLightmapQueries);
+
+            List<ResourceIdentifier> textureQueries = new List<ResourceIdentifier>();
+            foreach (string texture in texlmQueries)
+            {
+                textureQueries.Add(new ResourceIdentifier(texture, ResourceType.TPC));
+                textureQueries.Add(new ResourceIdentifier(texture, ResourceType.TGA));
+            }
+
+            Dictionary<ResourceIdentifier, List<LocationResult>> textureSearch = _installation.Locations(
+                textureQueries,
+                new[] { SearchLocation.OVERRIDE, SearchLocation.CHITIN, SearchLocation.TEXTURES_TPA }
+            );
+
+            foreach (KeyValuePair<ResourceIdentifier, List<LocationResult>> kv in textureSearch)
+            {
+                if (kv.Value.Count == 0)
+                    continue;
+
+                List<string> locationPaths = kv.Value.Select(loc => loc.FilePath).ToString();
+                string pathsStr = kv.Value.Count <= 3
+                    ? string.Join(", ", locationPaths)
+                    : string.Join(", ", locationPaths.Take(3)) + $", ... and {locationPaths.Count - 3} more";
+
+                RobustLogger.Instance.Debug("Adding {0} texture location(s) for '{1}' to '{2}': {3}",
+                    kv.Value.Count, kv.Key, displayName, pathsStr);
+
+                AddLocations(kv.Key.ResName, kv.Key.ResType, kv.Value.Select(loc => loc.FilePath));
+            }
+        }
+
+        private void ActivateRemainingResources()
+        {
+            foreach (KeyValuePair<ResourceIdentifier, ModuleResource> kv in _resources)
+            {
+                if (kv.Value.IsActive())
+                    continue;
+
+                // Skip TPC resources if the TGA equivalent resource is already found and activated
+                if (kv.Key.ResType == ResourceType.TPC)
+                {
+                    ResourceIdentifier tgaIdent = new ResourceIdentifier(kv.Key.ResName, ResourceType.TGA);
+                    if (_resources.TryGetValue(tgaIdent, out ModuleResource tgaResource) && tgaResource.IsActive())
+                        continue;
+                }
+
+                // Skip TGA resources if the TPC equivalent resource is already found and activated
+                if (kv.Key.ResType == ResourceType.TGA)
+                {
+                    ResourceIdentifier tpcIdent = new ResourceIdentifier(kv.Key.ResName, ResourceType.TPC);
+                    if (_resources.TryGetValue(tpcIdent, out ModuleResource tpcResource) && tpcResource.IsActive())
+                        continue;
+                }
+
+                kv.Value.Activate();
+            }
         }
     }
 
@@ -799,6 +1040,7 @@ namespace CSharpKOTOR.Common
         public abstract void AddLocations(IEnumerable<string> filepaths);
         public abstract List<string> Locations();
         public abstract string Activate(string filepath = null);
+        public abstract bool IsActive();
         public abstract object Resource();
         public abstract string Filename();
         public abstract ResourceIdentifier GetIdentifier();
@@ -959,6 +1201,13 @@ namespace CSharpKOTOR.Common
             }
 
             return _active;
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:2041-2042
+        // Original: def isActive(self) -> bool:
+        public override bool IsActive()
+        {
+            return !string.IsNullOrEmpty(_active);
         }
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:2025-2039
