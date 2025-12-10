@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Text;
 using CSharpKOTOR.Common;
+using CSharpKOTOR.Common.LZMA;
 using CSharpKOTOR.Formats;
 using CSharpKOTOR.Resources;
 using JetBrains.Annotations;
@@ -165,9 +166,7 @@ namespace CSharpKOTOR.Resource.Formats.BIF
         // Original: def _decompress_bzf_payload(payload: bytes, expected_size: int) -> bytes:
         private byte[] DecompressBzfPayload(byte[] payload, int expectedSize)
         {
-            // TODO: Implement LZMA decompression
-            // For now, throw NotImplementedException until LZMA support is added
-            throw new NotImplementedException("BZF (LZMA-compressed BIF) decompression is not yet implemented. LZMA support needs to be added.");
+            return LzmaHelper.Decompress(payload, expectedSize);
         }
     }
 }
