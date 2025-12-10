@@ -1,14 +1,14 @@
 using System;
 using System.Linq;
+using CSharpKOTOR.Common;
+using CSharpKOTOR.Formats.GFF;
+using CSharpKOTOR.Logger;
+using CSharpKOTOR.Memory;
+using CSharpKOTOR.Mods.GFF;
 using FluentAssertions;
-using TSLPatcher.Core.Common;
-using TSLPatcher.Core.Formats.GFF;
-using TSLPatcher.Core.Logger;
-using TSLPatcher.Core.Memory;
-using TSLPatcher.Core.Mods.GFF;
 using Xunit;
 
-namespace TSLPatcher.Tests.Integration
+namespace CSharpKOTOR.Tests.Integration
 {
 
     /// <summary>
@@ -538,7 +538,7 @@ Path=List
 Label=
 TypeId=1
 ";
-            Core.Config.PatcherConfig config = SetupIniAndConfig(iniText);
+            CSharpKOTOR.Config.PatcherConfig config = SetupIniAndConfig(iniText);
             var gff = new GFF();
             var gffList = new GFFList();
             gff.Root.SetList("List", gffList);
@@ -582,7 +582,7 @@ Label=
 TypeId=0
 2DAMEMORY12=ListIndex
 ";
-            Core.Config.PatcherConfig config = SetupIniAndConfig(iniText);
+            CSharpKOTOR.Config.PatcherConfig config = SetupIniAndConfig(iniText);
             var gff = new GFF();
             gff.Root.SetList("List", new GFFList());
 

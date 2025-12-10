@@ -15,6 +15,7 @@
 *.user
 *.userosscache
 *.sln.docstates
+.env
 
 # Build results
 [Dd]ebug/
@@ -122,3 +123,6 @@ publish_release_*.log
 # Appcast files (generated)
 appcast.xml
 appcast-beta.xml
+src/KNCSDecomp
+src/KNCSDecomp.Tests
+src/CSharpKOTOR/Formats/NCS/KNCSDecomp/

@@ -2,15 +2,15 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using CSharpKOTOR.Config;
+using CSharpKOTOR.Mods.TwoDA;
+using CSharpKOTOR.Reader;
 using FluentAssertions;
 using IniParser.Model;
 using IniParser.Parser;
-using TSLPatcher.Core.Config;
-using TSLPatcher.Core.Mods.TwoDA;
-using TSLPatcher.Core.Reader;
 using Xunit;
 
-namespace TSLPatcher.Tests.Reader
+namespace CSharpKOTOR.Tests.Reader
 {
 
     /// <summary>

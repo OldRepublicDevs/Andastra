@@ -1,14 +1,14 @@
 using System.Collections.Generic;
+using CSharpKOTOR.Common;
+using CSharpKOTOR.Formats.TwoDA;
+using CSharpKOTOR.Logger;
+using CSharpKOTOR.Memory;
+using CSharpKOTOR.Mods.TwoDA;
 using FluentAssertions;
-using TSLPatcher.Core.Common;
-using TSLPatcher.Core.Formats.TwoDA;
-using TSLPatcher.Core.Logger;
-using TSLPatcher.Core.Memory;
-using TSLPatcher.Core.Mods.TwoDA;
 using Xunit;
-using TwoDAFile = TSLPatcher.Core.Formats.TwoDA.TwoDA;
+using TwoDAFile = CSharpKOTOR.Formats.TwoDA.TwoDA;
 
-namespace TSLPatcher.Tests.Mods
+namespace CSharpKOTOR.Tests.Mods
 {
 
     /// <summary>

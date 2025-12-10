@@ -3,9 +3,11 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using Avalonia;
+using CSharpKOTOR.Common;
+using CSharpKOTOR.Logger;
+using HoloPatcher.UI;
+using HoloPatcher.UI.ViewModels;
 using JetBrains.Annotations;
-using TSLPatcher.Core.Common;
-using TSLPatcher.Core.Logger;
 
 namespace HoloPatcher
 {
@@ -166,13 +168,23 @@ namespace HoloPatcher
 
             if (forceCli)
             {
-                // CLI mode explicitly requested
+                // CLI mode explicitly requested - no GUI
                 ExecuteCli(cmdlineArgs);
             }
             else
             {
-                // GUI mode
-                BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
+                // GUI mode by default - try GUI, fall back gracefully if unavailable
+                try
+                {
+                    BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
+                }
+                catch (Exception ex)
+                {
+                    // If GUI is unavailable, print error and exit gracefully
+                    Console.Error.WriteLine($"[Warning] Display driver not available, cannot run in GUI mode: {ex.Message}");
+                    Console.Error.WriteLine("[Info] Use --help to see CLI options");
+                    Environment.Exit(0);
+                }
             }
         }
 
@@ -391,7 +403,7 @@ namespace HoloPatcher
 
         // Avalonia configuration, don't remove; also used by visual designer.
         public static AppBuilder BuildAvaloniaApp()
-            => AppBuilder.Configure<App>()
+            => AppBuilder.Configure<HoloPatcher.UI.App>()
                 .UsePlatformDetect()
                 //.WithInterFont()
                 .LogToTrace();

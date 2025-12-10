@@ -1,13 +1,13 @@
 using System;
 using System.IO;
 
-namespace TSLPatcher.Tests.Common
+namespace CSharpKOTOR.Tests.Common
 {
 
-internal static class TestFileHelper
-{
-    public static string GetPath(string relativePath) =>
-        Path.Combine(AppContext.BaseDirectory, "test_files", relativePath);
-}
+    internal static class TestFileHelper
+    {
+        public static string GetPath(string relativePath) =>
+            Path.Combine(AppContext.BaseDirectory, "test_files", relativePath);
+    }
 }
 

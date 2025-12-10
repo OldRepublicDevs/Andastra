@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using CSharpKOTOR.Common;
+using CSharpKOTOR.Formats.NCS;
 using FluentAssertions;
-using TSLPatcher.Core.Common;
-using TSLPatcher.Core.Formats.NCS;
 using Xunit;
 
-namespace TSLPatcher.Tests.Formats
+namespace CSharpKOTOR.Tests.Formats
 {
     /// <summary>
     /// Granular tests for NCS roundtrip compilation/decompilation.
@@ -74,7 +74,7 @@ namespace TSLPatcher.Tests.Formats
                 return script.Trim() + "\n";
 
             // Remove minimum indentation from all lines
-            var dedented = lines.Select(line =>
+            IEnumerable<string> dedented = lines.Select(line =>
             {
                 if (string.IsNullOrWhiteSpace(line))
                     return line;
@@ -94,7 +94,7 @@ namespace TSLPatcher.Tests.Formats
             }
         }
 
-        [Fact(Skip = "Failing due to decompilation output mismatch - decompiled output is empty void main()")]
+        [Fact]
         public void TestRoundtripPrimitivesAndStructuralTypes()
         {
             string source = Dedent(@"
@@ -134,7 +134,7 @@ namespace TSLPatcher.Tests.Formats
             });
         }
 
-        [Fact(Skip = "Failing due to decompilation output mismatch - decompiled output is empty void main()")]
+        [Fact]
         public void TestRoundtripArithmeticOperations()
         {
             string source = Dedent(@"
@@ -174,7 +174,7 @@ namespace TSLPatcher.Tests.Formats
             });
         }
 
-        [Fact(Skip = "Failing due to decompilation output mismatch - decompiled output is empty void main()")]
+        [Fact]
         public void TestRoundtripBitwiseAndShiftOperations()
         {
             string source = Dedent(@"
@@ -210,7 +210,7 @@ namespace TSLPatcher.Tests.Formats
             });
         }
 
-        [Fact(Skip = "Failing due to decompilation output mismatch - decompiled output is empty void main()")]
+        [Fact]
         public void TestRoundtripLogicalAndRelationalOperations()
         {
             string source = Dedent(@"
@@ -249,7 +249,7 @@ namespace TSLPatcher.Tests.Formats
             });
         }
 
-        [Fact(Skip = "Failing due to decompilation output mismatch - decompiled output is empty void main()")]
+        [Fact]
         public void TestRoundtripCompoundAssignments()
         {
             string source = Dedent(@"
@@ -293,7 +293,7 @@ namespace TSLPatcher.Tests.Formats
             });
         }
 
-        [Fact(Skip = "Failing due to decompilation output mismatch - decompiled output is empty void main()")]
+        [Fact]
         public void TestRoundtripIncrementAndDecrement()
         {
             string source = Dedent(@"
@@ -324,7 +324,7 @@ namespace TSLPatcher.Tests.Formats
             });
         }
 
-        [Fact(Skip = "Failing due to decompilation output mismatch - decompiled output is empty void main()")]
+        [Fact]
         public void TestRoundtripIfElseNesting()
         {
             string source = Dedent(@"
@@ -379,7 +379,7 @@ namespace TSLPatcher.Tests.Formats
             });
         }
 
-        [Fact(Skip = "Failing due to decompilation output mismatch - decompiled output is empty void main()")]
+        [Fact]
         public void TestRoundtripWhileForDoLoops()
         {
             string source = Dedent(@"
@@ -421,7 +421,7 @@ namespace TSLPatcher.Tests.Formats
             });
         }
 
-        [Fact(Skip = "Failing due to decompilation output mismatch - decompiled output is empty void main()")]
+        [Fact]
         public void TestRoundtripSwitchCase()
         {
             string source = Dedent(@"
@@ -458,7 +458,7 @@ namespace TSLPatcher.Tests.Formats
             });
         }
 
-        [Fact(Skip = "Failing due to decompilation output mismatch - decompiled output is empty void main()")]
+        [Fact]
         public void TestRoundtripStructUsage()
         {
             string source = Dedent(@"
@@ -507,7 +507,7 @@ namespace TSLPatcher.Tests.Formats
             });
         }
 
-        [Fact(Skip = "Failing due to decompilation output mismatch - decompiled output is empty void main()")]
+        [Fact]
         public void TestRoundtripFunctionDefinitionsAndReturns()
         {
             string source = Dedent(@"
@@ -549,7 +549,7 @@ namespace TSLPatcher.Tests.Formats
             });
         }
 
-        [Fact(Skip = "Failing due to decompilation output mismatch - decompiled output is empty void main()")]
+        [Fact]
         public void TestRoundtripActionQueueAndDelays()
         {
             string source = Dedent(@"
@@ -580,7 +580,7 @@ namespace TSLPatcher.Tests.Formats
             });
         }
 
-        [Fact(Skip = "Failing due to decompilation output mismatch - decompiled output is empty void main()")]
+        [Fact]
         public void TestRoundtripIncludeResolution()
         {
             // Python uses tmp_path fixture, we'll use a temporary directory
@@ -626,7 +626,7 @@ namespace TSLPatcher.Tests.Formats
             }
         }
 
-        [Fact(Skip = "Failing due to decompilation output mismatch - decompiled output is empty void main()")]
+        [Fact]
         public void TestRoundtripTslSpecificFunctionality()
         {
             string source = Dedent(@"
@@ -669,13 +669,13 @@ namespace TSLPatcher.Tests.Formats
             return NCSAuto.BytesNcs(ncs);
         }
 
-        [Theory(Skip = "Failing due to decompilation output mismatch - decompiled output is empty void main()")]
+        [Theory]
         [InlineData(0)]
         [InlineData(1)]
         [InlineData(2)]
         public void TestBinaryRoundtripSamples(int fileIndex)
         {
-            var (relativePath, game) = SampleFiles[fileIndex];
+            (string relativePath, Game game) = SampleFiles[fileIndex];
             string ncsPath = Path.Combine("vendor", "PyKotor", relativePath);
 
             if (!File.Exists(ncsPath))

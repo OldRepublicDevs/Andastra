@@ -1,5 +1,5 @@
 #!/bin/bash
-# Build NuGet packages for TSLPatcher.Core and HoloPatcher
+# Build NuGet packages for CSharpKOTOR and HoloPatcher
 # Usage: ./build-nuget.sh [--publish] [--source <feed-url>] [--api-key <key>]
 
 set -e
@@ -36,10 +36,10 @@ done
 
 echo "Building NuGet packages..."
 
-# Build TSLPatcher.Core package
+# Build CSharpKOTOR package
 echo ""
-echo "Building TSLPatcher.Core..."
-dotnet pack src/TSLPatcher.Core/TSLPatcher.Core.csproj --configuration "$CONFIGURATION" --no-build
+echo "Building CSharpKOTOR..."
+dotnet pack src/CSharpKOTOR/CSharpKOTOR.csproj --configuration "$CONFIGURATION" --no-build
 
 # Build HoloPatcher package
 echo ""
@@ -47,11 +47,11 @@ echo "Building HoloPatcher..."
 dotnet pack src/HoloPatcher/HoloPatcher.csproj --configuration "$CONFIGURATION" --no-build
 
 # Find package files
-TSL_CORE_PACKAGE=$(find "src/TSLPatcher.Core/bin/$CONFIGURATION" -name "*.nupkg" | head -n 1)
+TSL_CORE_PACKAGE=$(find "src/CSharpKOTOR/bin/$CONFIGURATION" -name "*.nupkg" | head -n 1)
 HOLO_PATCHER_PACKAGE=$(find "src/HoloPatcher/bin/$CONFIGURATION" -name "*.nupkg" | head -n 1)
 
 if [ -z "$TSL_CORE_PACKAGE" ]; then
-    echo "TSLPatcher.Core package not found!"
+    echo "CSharpKOTOR package not found!"
     exit 1
 fi
 
@@ -61,7 +61,7 @@ if [ -z "$HOLO_PATCHER_PACKAGE" ]; then
 fi
 
 echo ""
-echo "TSLPatcher.Core package created: $TSL_CORE_PACKAGE"
+echo "CSharpKOTOR package created: $TSL_CORE_PACKAGE"
 echo "HoloPatcher package created: $HOLO_PATCHER_PACKAGE"
 
 # Publish if requested
@@ -74,8 +74,8 @@ if [ "$PUBLISH" = true ]; then
     echo ""
     echo "Publishing packages to $SOURCE..."
 
-    # Publish TSLPatcher.Core
-    echo "Publishing TSLPatcher.Core..."
+    # Publish CSharpKOTOR
+    echo "Publishing CSharpKOTOR..."
     dotnet nuget push "$TSL_CORE_PACKAGE" --api-key "$API_KEY" --source "$SOURCE" --skip-duplicate
 
     # Publish HoloPatcher
@@ -83,11 +83,11 @@ if [ "$PUBLISH" = true ]; then
     dotnet nuget push "$HOLO_PATCHER_PACKAGE" --api-key "$API_KEY" --source "$SOURCE" --skip-duplicate
 
     # Publish symbol packages if they exist
-    TSL_CORE_SYMBOLS=$(find "src/TSLPatcher.Core/bin/$CONFIGURATION" -name "*.snupkg" | head -n 1)
+    TSL_CORE_SYMBOLS=$(find "src/CSharpKOTOR/bin/$CONFIGURATION" -name "*.snupkg" | head -n 1)
     HOLO_PATCHER_SYMBOLS=$(find "src/HoloPatcher/bin/$CONFIGURATION" -name "*.snupkg" | head -n 1)
 
     if [ -n "$TSL_CORE_SYMBOLS" ]; then
-        echo "Publishing TSLPatcher.Core symbols..."
+        echo "Publishing CSharpKOTOR symbols..."
         dotnet nuget push "$TSL_CORE_SYMBOLS" --api-key "$API_KEY" --source "$SOURCE" --skip-duplicate
     fi
 

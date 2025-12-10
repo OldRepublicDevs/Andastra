@@ -1,387 +1,387 @@
 using System.Linq;
+using CSharpKOTOR.Common;
+using CSharpKOTOR.Config;
+using CSharpKOTOR.Formats.GFF;
+using CSharpKOTOR.Logger;
+using CSharpKOTOR.Memory;
 using FluentAssertions;
-using TSLPatcher.Core.Common;
-using TSLPatcher.Core.Config;
-using TSLPatcher.Core.Formats.GFF;
-using TSLPatcher.Core.Memory;
-using TSLPatcher.Core.Logger;
 using Xunit;
 
-namespace TSLPatcher.Tests.Integration
+namespace CSharpKOTOR.Tests.Integration
 {
 
-/// <summary>
-/// Integration tests for GFF field type modifications.
-/// </summary>
-public class GFFFieldTypeTests : IntegrationTestBase
-{
-    [Fact]
-    public void ModifyFieldUInt8_AppliesPatchCorrectly()
+    /// <summary>
+    /// Integration tests for GFF field type modifications.
+    /// </summary>
+    public class GFFFieldTypeTests : IntegrationTestBase
     {
-        string iniText = @"
+        [Fact]
+        public void ModifyFieldUInt8_AppliesPatchCorrectly()
+        {
+            string iniText = @"
 [GFFList]
 File0=test.gff
 
 [test.gff]
 Field1=2
 ";
-        PatcherConfig config = SetupIniAndConfig(iniText);
-        var gff = new GFF();
-        gff.Root.SetUInt8("Field1", 1);
+            PatcherConfig config = SetupIniAndConfig(iniText);
+            var gff = new GFF();
+            gff.Root.SetUInt8("Field1", 1);
 
-        var memory = new PatcherMemory();
-        object bytes = config.PatchesGFF.First(p => p.SaveAs == "test.gff").PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
-        var patchedGff = GFF.FromBytes((byte[])bytes);
+            var memory = new PatcherMemory();
+            object bytes = config.PatchesGFF.First(p => p.SaveAs == "test.gff").PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
+            var patchedGff = GFF.FromBytes((byte[])bytes);
 
-        patchedGff.Root.GetUInt8("Field1").Should().Be(2);
-    }
+            patchedGff.Root.GetUInt8("Field1").Should().Be(2);
+        }
 
-    [Fact]
-    public void ModifyFieldInt8_AppliesPatchCorrectly()
-    {
-        string iniText = @"
+        [Fact]
+        public void ModifyFieldInt8_AppliesPatchCorrectly()
+        {
+            string iniText = @"
 [GFFList]
 File0=test.gff
 
 [test.gff]
 Field1=2
 ";
-        PatcherConfig config = SetupIniAndConfig(iniText);
-        var gff = new GFF();
-        gff.Root.SetInt8("Field1", 1);
+            PatcherConfig config = SetupIniAndConfig(iniText);
+            var gff = new GFF();
+            gff.Root.SetInt8("Field1", 1);
 
-        var memory = new PatcherMemory();
-        object bytes = config.PatchesGFF.First(p => p.SaveAs == "test.gff").PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
-        var patchedGff = GFF.FromBytes((byte[])bytes);
+            var memory = new PatcherMemory();
+            object bytes = config.PatchesGFF.First(p => p.SaveAs == "test.gff").PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
+            var patchedGff = GFF.FromBytes((byte[])bytes);
 
-        patchedGff.Root.GetInt8("Field1").Should().Be(2);
-    }
+            patchedGff.Root.GetInt8("Field1").Should().Be(2);
+        }
 
-    [Fact]
-    public void ModifyFieldUInt16_AppliesPatchCorrectly()
-    {
-        string iniText = @"
+        [Fact]
+        public void ModifyFieldUInt16_AppliesPatchCorrectly()
+        {
+            string iniText = @"
 [GFFList]
 File0=test.gff
 
 [test.gff]
 Field1=2
 ";
-        PatcherConfig config = SetupIniAndConfig(iniText);
-        var gff = new GFF();
-        gff.Root.SetUInt16("Field1", 1);
+            PatcherConfig config = SetupIniAndConfig(iniText);
+            var gff = new GFF();
+            gff.Root.SetUInt16("Field1", 1);
 
-        var memory = new PatcherMemory();
-        object bytes = config.PatchesGFF.First(p => p.SaveAs == "test.gff").PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
-        var patchedGff = GFF.FromBytes((byte[])bytes);
+            var memory = new PatcherMemory();
+            object bytes = config.PatchesGFF.First(p => p.SaveAs == "test.gff").PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
+            var patchedGff = GFF.FromBytes((byte[])bytes);
 
-        patchedGff.Root.GetUInt16("Field1").Should().Be(2);
-    }
+            patchedGff.Root.GetUInt16("Field1").Should().Be(2);
+        }
 
-    [Fact]
-    public void ModifyFieldInt16_AppliesPatchCorrectly()
-    {
-        string iniText = @"
+        [Fact]
+        public void ModifyFieldInt16_AppliesPatchCorrectly()
+        {
+            string iniText = @"
 [GFFList]
 File0=test.gff
 
 [test.gff]
 Field1=2
 ";
-        PatcherConfig config = SetupIniAndConfig(iniText);
-        var gff = new GFF();
-        gff.Root.SetInt16("Field1", 1);
+            PatcherConfig config = SetupIniAndConfig(iniText);
+            var gff = new GFF();
+            gff.Root.SetInt16("Field1", 1);
 
-        var memory = new PatcherMemory();
-        object bytes = config.PatchesGFF.First(p => p.SaveAs == "test.gff").PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
-        var patchedGff = GFF.FromBytes((byte[])bytes);
+            var memory = new PatcherMemory();
+            object bytes = config.PatchesGFF.First(p => p.SaveAs == "test.gff").PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
+            var patchedGff = GFF.FromBytes((byte[])bytes);
 
-        patchedGff.Root.GetInt16("Field1").Should().Be(2);
-    }
+            patchedGff.Root.GetInt16("Field1").Should().Be(2);
+        }
 
-    [Fact]
-    public void ModifyFieldUInt32_AppliesPatchCorrectly()
-    {
-        string iniText = @"
+        [Fact]
+        public void ModifyFieldUInt32_AppliesPatchCorrectly()
+        {
+            string iniText = @"
 [GFFList]
 File0=test.gff
 
 [test.gff]
 Field1=2
 ";
-        PatcherConfig config = SetupIniAndConfig(iniText);
-        var gff = new GFF();
-        gff.Root.SetUInt32("Field1", 1);
+            PatcherConfig config = SetupIniAndConfig(iniText);
+            var gff = new GFF();
+            gff.Root.SetUInt32("Field1", 1);
 
-        var memory = new PatcherMemory();
-        object bytes = config.PatchesGFF.First(p => p.SaveAs == "test.gff").PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
-        var patchedGff = GFF.FromBytes((byte[])bytes);
+            var memory = new PatcherMemory();
+            object bytes = config.PatchesGFF.First(p => p.SaveAs == "test.gff").PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
+            var patchedGff = GFF.FromBytes((byte[])bytes);
 
-        patchedGff.Root.GetUInt32("Field1").Should().Be(2u);
-    }
+            patchedGff.Root.GetUInt32("Field1").Should().Be(2u);
+        }
 
-    [Fact]
-    public void ModifyFieldInt32_AppliesPatchCorrectly()
-    {
-        string iniText = @"
+        [Fact]
+        public void ModifyFieldInt32_AppliesPatchCorrectly()
+        {
+            string iniText = @"
 [GFFList]
 File0=test.gff
 
 [test.gff]
 Field1=2
 ";
-        PatcherConfig config = SetupIniAndConfig(iniText);
-        var gff = new GFF();
-        gff.Root.SetInt32("Field1", 1);
+            PatcherConfig config = SetupIniAndConfig(iniText);
+            var gff = new GFF();
+            gff.Root.SetInt32("Field1", 1);
 
-        var memory = new PatcherMemory();
-        object bytes = config.PatchesGFF.First(p => p.SaveAs == "test.gff").PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
-        var patchedGff = GFF.FromBytes((byte[])bytes);
+            var memory = new PatcherMemory();
+            object bytes = config.PatchesGFF.First(p => p.SaveAs == "test.gff").PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
+            var patchedGff = GFF.FromBytes((byte[])bytes);
 
-        patchedGff.Root.GetInt32("Field1").Should().Be(2);
-    }
+            patchedGff.Root.GetInt32("Field1").Should().Be(2);
+        }
 
-    [Fact]
-    public void ModifyFieldUInt64_AppliesPatchCorrectly()
-    {
-        string iniText = @"
+        [Fact]
+        public void ModifyFieldUInt64_AppliesPatchCorrectly()
+        {
+            string iniText = @"
 [GFFList]
 File0=test.gff
 
 [test.gff]
 Field1=2
 ";
-        PatcherConfig config = SetupIniAndConfig(iniText);
-        var gff = new GFF();
-        gff.Root.SetUInt64("Field1", 1);
+            PatcherConfig config = SetupIniAndConfig(iniText);
+            var gff = new GFF();
+            gff.Root.SetUInt64("Field1", 1);
 
-        var memory = new PatcherMemory();
-        object bytes = config.PatchesGFF.First(p => p.SaveAs == "test.gff").PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
-        var patchedGff = GFF.FromBytes((byte[])bytes);
+            var memory = new PatcherMemory();
+            object bytes = config.PatchesGFF.First(p => p.SaveAs == "test.gff").PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
+            var patchedGff = GFF.FromBytes((byte[])bytes);
 
-        patchedGff.Root.GetUInt64("Field1").Should().Be(2ul);
-    }
+            patchedGff.Root.GetUInt64("Field1").Should().Be(2ul);
+        }
 
-    [Fact]
-    public void ModifyFieldInt64_AppliesPatchCorrectly()
-    {
-        string iniText = @"
+        [Fact]
+        public void ModifyFieldInt64_AppliesPatchCorrectly()
+        {
+            string iniText = @"
 [GFFList]
 File0=test.gff
 
 [test.gff]
 Field1=2
 ";
-        PatcherConfig config = SetupIniAndConfig(iniText);
-        var gff = new GFF();
-        gff.Root.SetInt64("Field1", 1);
+            PatcherConfig config = SetupIniAndConfig(iniText);
+            var gff = new GFF();
+            gff.Root.SetInt64("Field1", 1);
 
-        var memory = new PatcherMemory();
-        object bytes = config.PatchesGFF.First(p => p.SaveAs == "test.gff").PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
-        var patchedGff = GFF.FromBytes((byte[])bytes);
+            var memory = new PatcherMemory();
+            object bytes = config.PatchesGFF.First(p => p.SaveAs == "test.gff").PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
+            var patchedGff = GFF.FromBytes((byte[])bytes);
 
-        patchedGff.Root.GetInt64("Field1").Should().Be(2L);
-    }
+            patchedGff.Root.GetInt64("Field1").Should().Be(2L);
+        }
 
-    [Fact]
-    public void ModifyFieldSingle_AppliesPatchCorrectly()
-    {
-        string iniText = @"
+        [Fact]
+        public void ModifyFieldSingle_AppliesPatchCorrectly()
+        {
+            string iniText = @"
 [GFFList]
 File0=test.gff
 
 [test.gff]
 Field1=2.345
 ";
-        PatcherConfig config = SetupIniAndConfig(iniText);
-        var gff = new GFF();
-        gff.Root.SetSingle("Field1", 1.234f);
+            PatcherConfig config = SetupIniAndConfig(iniText);
+            var gff = new GFF();
+            gff.Root.SetSingle("Field1", 1.234f);
 
-        var memory = new PatcherMemory();
-        object bytes = config.PatchesGFF.First(p => p.SaveAs == "test.gff").PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
-        var patchedGff = GFF.FromBytes((byte[])bytes);
+            var memory = new PatcherMemory();
+            object bytes = config.PatchesGFF.First(p => p.SaveAs == "test.gff").PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
+            var patchedGff = GFF.FromBytes((byte[])bytes);
 
-        patchedGff.Root.GetSingle("Field1").Should().BeApproximately(2.345f, 0.01f);
-    }
+            patchedGff.Root.GetSingle("Field1").Should().BeApproximately(2.345f, 0.01f);
+        }
 
-    [Fact]
-    public void ModifyFieldDouble_AppliesPatchCorrectly()
-    {
-        string iniText = @"
+        [Fact]
+        public void ModifyFieldDouble_AppliesPatchCorrectly()
+        {
+            string iniText = @"
 [GFFList]
 File0=test.gff
 
 [test.gff]
 Field1=2.345678
 ";
-        PatcherConfig config = SetupIniAndConfig(iniText);
-        var gff = new GFF();
-        gff.Root.SetDouble("Field1", 1.234567);
+            PatcherConfig config = SetupIniAndConfig(iniText);
+            var gff = new GFF();
+            gff.Root.SetDouble("Field1", 1.234567);
 
-        var memory = new PatcherMemory();
-        object bytes = config.PatchesGFF.First(p => p.SaveAs == "test.gff").PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
-        var patchedGff = GFF.FromBytes((byte[])bytes);
+            var memory = new PatcherMemory();
+            object bytes = config.PatchesGFF.First(p => p.SaveAs == "test.gff").PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
+            var patchedGff = GFF.FromBytes((byte[])bytes);
 
-        patchedGff.Root.GetDouble("Field1").Should().Be(2.345678);
-    }
+            patchedGff.Root.GetDouble("Field1").Should().Be(2.345678);
+        }
 
-    [Fact]
-    public void ModifyFieldString_AppliesPatchCorrectly()
-    {
-        string iniText = @"
+        [Fact]
+        public void ModifyFieldString_AppliesPatchCorrectly()
+        {
+            string iniText = @"
 [GFFList]
 File0=test.gff
 
 [test.gff]
 Field1=def
 ";
-        PatcherConfig config = SetupIniAndConfig(iniText);
-        var gff = new GFF();
-        gff.Root.SetString("Field1", "abc".ToString());
+            PatcherConfig config = SetupIniAndConfig(iniText);
+            var gff = new GFF();
+            gff.Root.SetString("Field1", "abc".ToString());
 
-        var memory = new PatcherMemory();
-        object bytes = config.PatchesGFF.First(p => p.SaveAs == "test.gff").PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
-        var patchedGff = GFF.FromBytes((byte[])bytes);
+            var memory = new PatcherMemory();
+            object bytes = config.PatchesGFF.First(p => p.SaveAs == "test.gff").PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
+            var patchedGff = GFF.FromBytes((byte[])bytes);
 
-        patchedGff.Root.GetValue("Field1").Should().Be("def");
-    }
+            patchedGff.Root.GetValue("Field1").Should().Be("def");
+        }
 
-    [Fact]
-    public void ModifyFieldLocString_AppliesPatchCorrectly()
-    {
-        string iniText = @"
+        [Fact]
+        public void ModifyFieldLocString_AppliesPatchCorrectly()
+        {
+            string iniText = @"
 [GFFList]
 File0=test.gff
 
 [test.gff]
 Field1(strref)=1
 ";
-        PatcherConfig config = SetupIniAndConfig(iniText);
-        var gff = new GFF();
-        gff.Root.SetLocString("Field1", new LocalizedString(0));
+            PatcherConfig config = SetupIniAndConfig(iniText);
+            var gff = new GFF();
+            gff.Root.SetLocString("Field1", new LocalizedString(0));
 
-        var memory = new PatcherMemory();
-        object bytes = config.PatchesGFF.First(p => p.SaveAs == "test.gff").PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
-        var patchedGff = GFF.FromBytes((byte[])bytes);
+            var memory = new PatcherMemory();
+            object bytes = config.PatchesGFF.First(p => p.SaveAs == "test.gff").PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
+            var patchedGff = GFF.FromBytes((byte[])bytes);
 
-        patchedGff.Root.GetLocString("Field1").StringRef.Should().Be(1);
-    }
+            patchedGff.Root.GetLocString("Field1").StringRef.Should().Be(1);
+        }
 
-    [Fact]
-    public void ModifyFieldVector3_AppliesPatchCorrectly()
-    {
-        string iniText = @"
+        [Fact]
+        public void ModifyFieldVector3_AppliesPatchCorrectly()
+        {
+            string iniText = @"
 [GFFList]
 File0=test.gff
 
 [test.gff]
 Field1=1|2|3
 ";
-        PatcherConfig config = SetupIniAndConfig(iniText);
-        var gff = new GFF();
-        gff.Root.SetVector3("Field1", new Vector3(0, 1, 2));
+            PatcherConfig config = SetupIniAndConfig(iniText);
+            var gff = new GFF();
+            gff.Root.SetVector3("Field1", new Vector3(0, 1, 2));
 
-        var memory = new PatcherMemory();
-        object bytes = config.PatchesGFF.First(p => p.SaveAs == "test.gff").PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
-        var patchedGff = GFF.FromBytes((byte[])bytes);
+            var memory = new PatcherMemory();
+            object bytes = config.PatchesGFF.First(p => p.SaveAs == "test.gff").PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
+            var patchedGff = GFF.FromBytes((byte[])bytes);
 
-        patchedGff.Root.GetVector3("Field1").Should().Be(new Vector3(1, 2, 3));
-    }
+            patchedGff.Root.GetVector3("Field1").Should().Be(new Vector3(1, 2, 3));
+        }
 
-    [Fact]
-    public void ModifyFieldVector4_AppliesPatchCorrectly()
-    {
-        string iniText = @"
+        [Fact]
+        public void ModifyFieldVector4_AppliesPatchCorrectly()
+        {
+            string iniText = @"
 [GFFList]
 File0=test.gff
 
 [test.gff]
 Field1=1|2|3|4
 ";
-        PatcherConfig config = SetupIniAndConfig(iniText);
-        var gff = new GFF();
-        gff.Root.SetVector4("Field1", new Vector4(0, 1, 2, 3));
+            PatcherConfig config = SetupIniAndConfig(iniText);
+            var gff = new GFF();
+            gff.Root.SetVector4("Field1", new Vector4(0, 1, 2, 3));
 
-        var memory = new PatcherMemory();
-        object bytes = config.PatchesGFF.First(p => p.SaveAs == "test.gff").PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
-        var patchedGff = GFF.FromBytes((byte[])bytes);
+            var memory = new PatcherMemory();
+            object bytes = config.PatchesGFF.First(p => p.SaveAs == "test.gff").PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
+            var patchedGff = GFF.FromBytes((byte[])bytes);
 
-        patchedGff.Root.GetVector4("Field1").Should().Be(new Vector4(1, 2, 3, 4));
-    }
+            patchedGff.Root.GetVector4("Field1").Should().Be(new Vector4(1, 2, 3, 4));
+        }
 
-    [Fact]
-    public void ModifyNested_AppliesPatchCorrectly()
-    {
-        string iniText = @"
+        [Fact]
+        public void ModifyNested_AppliesPatchCorrectly()
+        {
+            string iniText = @"
 [GFFList]
 File0=test.gff
 
 [test.gff]
 Struct1\\Field1=2
 ";
-        PatcherConfig config = SetupIniAndConfig(iniText);
-        var gff = new GFF();
-        var struct1 = new GFFStruct(0);
-        struct1.SetInt32("Field1", 1);
-        gff.Root.SetStruct("Struct1", struct1);
+            PatcherConfig config = SetupIniAndConfig(iniText);
+            var gff = new GFF();
+            var struct1 = new GFFStruct(0);
+            struct1.SetInt32("Field1", 1);
+            gff.Root.SetStruct("Struct1", struct1);
 
-        var memory = new PatcherMemory();
-        object bytes = config.PatchesGFF.First(p => p.SaveAs == "test.gff").PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
-        var patchedGff = GFF.FromBytes((byte[])bytes);
+            var memory = new PatcherMemory();
+            object bytes = config.PatchesGFF.First(p => p.SaveAs == "test.gff").PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
+            var patchedGff = GFF.FromBytes((byte[])bytes);
 
-        patchedGff.Root.GetStruct("Struct1").GetInt32("Field1").Should().Be(2);
-    }
+            patchedGff.Root.GetStruct("Struct1").GetInt32("Field1").Should().Be(2);
+        }
 
-    [Fact]
-    public void Modify2DAMemory_AppliesPatchCorrectly()
-    {
-        string iniText = @"
+        [Fact]
+        public void Modify2DAMemory_AppliesPatchCorrectly()
+        {
+            string iniText = @"
 [GFFList]
 File0=test.gff
 
 [test.gff]
 Field1=2DAMEMORY5
 ";
-        PatcherConfig config = SetupIniAndConfig(iniText);
-        var gff = new GFF();
-        gff.Root.SetInt32("Field1", 1);
+            PatcherConfig config = SetupIniAndConfig(iniText);
+            var gff = new GFF();
+            gff.Root.SetInt32("Field1", 1);
 
-        var memory = new PatcherMemory();
-        memory.Memory2DA[5] = "999";
+            var memory = new PatcherMemory();
+            memory.Memory2DA[5] = "999";
 
-        object bytes = config.PatchesGFF.First(p => p.SaveAs == "test.gff").PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
-        var patchedGff = GFF.FromBytes((byte[])bytes);
+            object bytes = config.PatchesGFF.First(p => p.SaveAs == "test.gff").PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
+            var patchedGff = GFF.FromBytes((byte[])bytes);
 
-        patchedGff.Root.GetInt32("Field1").Should().Be(999);
-    }
+            patchedGff.Root.GetInt32("Field1").Should().Be(999);
+        }
 
-    [Fact]
-    public void ModifyTLKMemory_AppliesPatchCorrectly()
-    {
-        string iniText = @"
+        [Fact]
+        public void ModifyTLKMemory_AppliesPatchCorrectly()
+        {
+            string iniText = @"
 [GFFList]
 File0=test.gff
 
 [test.gff]
 Field1=StrRef7
 ";
-        PatcherConfig config = SetupIniAndConfig(iniText);
-        var gff = new GFF();
-        gff.Root.SetInt32("Field1", 1);
+            PatcherConfig config = SetupIniAndConfig(iniText);
+            var gff = new GFF();
+            gff.Root.SetInt32("Field1", 1);
 
-        var memory = new PatcherMemory();
-        memory.MemoryStr[7] = 888;
+            var memory = new PatcherMemory();
+            memory.MemoryStr[7] = 888;
 
-        object bytes = config.PatchesGFF.First(p => p.SaveAs == "test.gff").PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
-        var patchedGff = GFF.FromBytes((byte[])bytes);
+            object bytes = config.PatchesGFF.First(p => p.SaveAs == "test.gff").PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
+            var patchedGff = GFF.FromBytes((byte[])bytes);
 
-        patchedGff.Root.GetInt32("Field1").Should().Be(888);
-    }
+            patchedGff.Root.GetInt32("Field1").Should().Be(888);
+        }
 
-    [Fact]
-    public void AddNewNested_AppliesPatchCorrectly()
-    {
-        string iniText = @"
+        [Fact]
+        public void AddNewNested_AppliesPatchCorrectly()
+        {
+            string iniText = @"
 [GFFList]
 File0=test.gff
 
@@ -401,20 +401,20 @@ Path=
 Label=Field1
 Value=123
 ";
-        PatcherConfig config = SetupIniAndConfig(iniText);
-        var gff = new GFF();
+            PatcherConfig config = SetupIniAndConfig(iniText);
+            var gff = new GFF();
 
-        var memory = new PatcherMemory();
-        object bytes = config.PatchesGFF.First(p => p.SaveAs == "test.gff").PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
-        var patchedGff = GFF.FromBytes((byte[])bytes);
+            var memory = new PatcherMemory();
+            object bytes = config.PatchesGFF.First(p => p.SaveAs == "test.gff").PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
+            var patchedGff = GFF.FromBytes((byte[])bytes);
 
-        patchedGff.Root.GetStruct("NewStruct").GetInt32("Field1").Should().Be(123);
-    }
+            patchedGff.Root.GetStruct("NewStruct").GetInt32("Field1").Should().Be(123);
+        }
 
-    [Fact]
-    public void AddNested_AppliesPatchCorrectly()
-    {
-        string iniText = @"
+        [Fact]
+        public void AddNested_AppliesPatchCorrectly()
+        {
+            string iniText = @"
 [GFFList]
 File0=test.gff
 
@@ -427,24 +427,24 @@ Path=Struct1
 Label=Field2
 Value=456
 ";
-        PatcherConfig config = SetupIniAndConfig(iniText);
-        var gff = new GFF();
-        var struct1 = new GFFStruct(0);
-        struct1.SetInt32("Field1", 123);
-        gff.Root.SetStruct("Struct1", struct1);
+            PatcherConfig config = SetupIniAndConfig(iniText);
+            var gff = new GFF();
+            var struct1 = new GFFStruct(0);
+            struct1.SetInt32("Field1", 123);
+            gff.Root.SetStruct("Struct1", struct1);
 
-        var memory = new PatcherMemory();
-        object bytes = config.PatchesGFF.First(p => p.SaveAs == "test.gff").PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
-        var patchedGff = GFF.FromBytes((byte[])bytes);
+            var memory = new PatcherMemory();
+            object bytes = config.PatchesGFF.First(p => p.SaveAs == "test.gff").PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
+            var patchedGff = GFF.FromBytes((byte[])bytes);
 
-        patchedGff.Root.GetStruct("Struct1").GetInt32("Field1").Should().Be(123);
-        patchedGff.Root.GetStruct("Struct1").GetInt32("Field2").Should().Be(456);
-    }
+            patchedGff.Root.GetStruct("Struct1").GetInt32("Field1").Should().Be(123);
+            patchedGff.Root.GetStruct("Struct1").GetInt32("Field2").Should().Be(456);
+        }
 
-    [Fact]
-    public void AddUse2DAMemory_AppliesPatchCorrectly()
-    {
-        string iniText = @"
+        [Fact]
+        public void AddUse2DAMemory_AppliesPatchCorrectly()
+        {
+            string iniText = @"
 [GFFList]
 File0=test.gff
 
@@ -457,22 +457,22 @@ Path=
 Label=Field1
 Value=2DAMEMORY5
 ";
-        PatcherConfig config = SetupIniAndConfig(iniText);
-        var gff = new GFF();
+            PatcherConfig config = SetupIniAndConfig(iniText);
+            var gff = new GFF();
 
-        var memory = new PatcherMemory();
-        memory.Memory2DA[5] = "777";
+            var memory = new PatcherMemory();
+            memory.Memory2DA[5] = "777";
 
-        object bytes = config.PatchesGFF.First(p => p.SaveAs == "test.gff").PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
-        var patchedGff = GFF.FromBytes((byte[])bytes);
+            object bytes = config.PatchesGFF.First(p => p.SaveAs == "test.gff").PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
+            var patchedGff = GFF.FromBytes((byte[])bytes);
 
-        patchedGff.Root.GetInt32("Field1").Should().Be(777);
-    }
+            patchedGff.Root.GetInt32("Field1").Should().Be(777);
+        }
 
-    [Fact]
-    public void AddUseTLKMemory_AppliesPatchCorrectly()
-    {
-        string iniText = @"
+        [Fact]
+        public void AddUseTLKMemory_AppliesPatchCorrectly()
+        {
+            string iniText = @"
 [GFFList]
 File0=test.gff
 
@@ -485,17 +485,18 @@ Path=
 Label=Field1
 Value=StrRef6
 ";
-        PatcherConfig config = SetupIniAndConfig(iniText);
-        var gff = new GFF();
+            PatcherConfig config = SetupIniAndConfig(iniText);
+            var gff = new GFF();
 
-        var memory = new PatcherMemory();
-        memory.MemoryStr[6] = 666;
+            var memory = new PatcherMemory();
+            memory.MemoryStr[6] = 666;
 
-        object bytes = config.PatchesGFF.First(p => p.SaveAs == "test.gff").PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
-        var patchedGff = GFF.FromBytes((byte[])bytes);
+            object bytes = config.PatchesGFF.First(p => p.SaveAs == "test.gff").PatchResource(gff.ToBytes(), memory, new PatchLogger(), Game.K1);
+            var patchedGff = GFF.FromBytes((byte[])bytes);
 
-        patchedGff.Root.GetInt32("Field1").Should().Be(666);
+            patchedGff.Root.GetInt32("Field1").Should().Be(666);
+        }
+
     }
-}
 }
 

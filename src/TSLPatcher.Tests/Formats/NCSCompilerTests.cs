@@ -3,15 +3,15 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using CSharpKOTOR.Common;
+using CSharpKOTOR.Formats.NCS;
+using CSharpKOTOR.Formats.NCS.Compiler;
+using CSharpKOTOR.Formats.NCS.Compiler.NSS;
 using FluentAssertions;
-using TSLPatcher.Core.Common;
-using TSLPatcher.Core.Formats.NCS;
-using TSLPatcher.Core.Formats.NCS.Compiler;
-using TSLPatcher.Core.Formats.NCS.Compiler.NSS;
 using Xunit;
-using CompileError = TSLPatcher.Core.Formats.NCS.Compiler.NSS.CompileError;
+using CompileError = CSharpKOTOR.Formats.NCS.Compiler.NSS.CompileError;
 
-namespace TSLPatcher.Tests.Formats
+namespace CSharpKOTOR.Tests.Formats
 {
     /// <summary>
     /// Tests for NCS compiler functionality.
@@ -24,7 +24,7 @@ namespace TSLPatcher.Tests.Formats
             Dictionary<string, byte[]> library = null,
             List<string> libraryLookup = null)
         {
-            if (library == null)
+            if (library is null)
             {
                 library = new Dictionary<string, byte[]>();
             }
@@ -103,7 +103,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.Run();
         }
 
-        [Fact(Skip = "Failing - missing error handling - no exception thrown")]
+        [Fact]
         public void TestEnginecallWithMissingParams()
         {
             string script = @"
@@ -189,7 +189,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.StackSnapshots[^4].Stack[^1].Value.Should().Be(15);
         }
 
-        [Fact(Skip = "Failing due to stack offset -8 is out of range error")]
+        [Fact]
         public void TestAddopFloatFloat()
         {
             NCS ncs = Compile(@"
@@ -205,7 +205,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.StackSnapshots[^4].Stack[^1].Value.Should().Be(15.0f);
         }
 
-        [Fact(Skip = "Failing due to stack offset -8 is out of range error")]
+        [Fact]
         public void TestAddopStringString()
         {
             NCS ncs = Compile(@"
@@ -237,7 +237,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.StackSnapshots[^4].Stack[^1].Value.Should().Be(5);
         }
 
-        [Fact(Skip = "Failing due to stack offset -8 is out of range error")]
+        [Fact]
         public void TestSubopFloatFloat()
         {
             NCS ncs = Compile(@"
@@ -253,7 +253,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.StackSnapshots[^4].Stack[^1].Value.Should().Be(5.0f);
         }
 
-        [Fact(Skip = "Failing due to stack offset -8 is out of range error")]
+        [Fact]
         public void TestMulopIntInt()
         {
             NCS ncs = Compile(@"
@@ -285,7 +285,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.StackSnapshots[^4].Stack[^1].Value.Should().Be(50.0f);
         }
 
-        [Fact(Skip = "Failing due to stack offset -8 is out of range error")]
+        [Fact]
         public void TestDivopIntInt()
         {
             NCS ncs = Compile(@"
@@ -301,7 +301,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.StackSnapshots[^4].Stack[^1].Value.Should().Be(2);
         }
 
-        [Fact(Skip = "Failing due to stack offset -8 is out of range error")]
+        [Fact]
         public void TestDivopFloatFloat()
         {
             NCS ncs = Compile(@"
@@ -333,7 +333,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.StackSnapshots[^4].Stack[^1].Value.Should().Be(1);
         }
 
-        [Fact(Skip = "Failing due to stack offset -8 is out of range error")]
+        [Fact]
         public void TestNegopInt()
         {
             NCS ncs = Compile(@"
@@ -466,7 +466,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.StackSnapshots[^4].Stack[^1].Value.Should().Be(1);
         }
 
-        [Fact(Skip = "Failing due to stack offset -8 is out of range error")]
+        [Fact]
         public void TestLogicalEquals()
         {
             NCS ncs = Compile(@"
@@ -484,7 +484,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.StackSnapshots[^4].Stack[^1].Value.Should().Be(0);
         }
 
-        [Fact(Skip = "Failing due to stack offset -8 is out of range error")]
+        [Fact]
         public void TestLogicalNotequalsOp()
         {
             NCS ncs = Compile(@"
@@ -506,7 +506,7 @@ namespace TSLPatcher.Tests.Formats
 
         #region Relational Operator
 
-        [Fact(Skip = "Failing due to stack offset -8 is out of range error")]
+        [Fact]
         public void TestCompareGreaterthanOp()
         {
             NCS ncs = Compile(@"
@@ -530,7 +530,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.ActionSnapshots[^1].ArgValues[0].Value.Should().Be(0);
         }
 
-        [Fact(Skip = "Failing due to stack offset -8 is out of range error")]
+        [Fact]
         public void TestCompareGreaterthanorequalOp()
         {
             NCS ncs = Compile(@"
@@ -554,7 +554,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.ActionSnapshots[^1].ArgValues[0].Value.Should().Be(0);
         }
 
-        [Fact(Skip = "Failing due to stack offset -8 is out of range error")]
+        [Fact]
         public void TestCompareLessthanOp()
         {
             NCS ncs = Compile(@"
@@ -606,7 +606,7 @@ namespace TSLPatcher.Tests.Formats
 
         #region Bitwise Operator
 
-        [Fact(Skip = "Failing due to stack offset -8 is out of range error")]
+        [Fact]
         public void TestBitwiseOrOp()
         {
             NCS ncs = Compile(@"
@@ -706,7 +706,7 @@ namespace TSLPatcher.Tests.Formats
 
         #region Assignment
 
-        [Fact(Skip = "Failing due to stack offset -8 is out of range error")]
+        [Fact]
         public void TestAssignment()
         {
             NCS ncs = Compile(@"
@@ -726,7 +726,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.ActionSnapshots[0].ArgValues[0].Value.Should().Be(4);
         }
 
-        [Fact(Skip = "Failing due to stack offset -8 is out of range error")]
+        [Fact]
         public void TestAssignmentComplex()
         {
             NCS ncs = Compile(@"
@@ -746,7 +746,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.ActionSnapshots[0].ArgValues[0].Value.Should().Be(10);
         }
 
-        [Fact(Skip = "Failing due to stack offset -8 is out of range error")]
+        [Fact]
         public void TestAssignmentStringConstant()
         {
             NCS ncs = Compile(@"
@@ -784,7 +784,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.ActionSnapshots[^1].ArgValues[0].Value.Should().Be("A");
         }
 
-        [Fact(Skip = "Failing due to stack offset -8 is out of range error")]
+        [Fact]
         public void TestAdditionAssignmentIntInt()
         {
             NCS ncs = Compile(@"
@@ -800,7 +800,7 @@ namespace TSLPatcher.Tests.Formats
             var interpreter = new Interpreter(ncs);
             interpreter.Run();
 
-            var snap = interpreter.ActionSnapshots[^1];
+            ActionSnapshot snap = interpreter.ActionSnapshots[^1];
             snap.FunctionName.Should().Be("PrintInteger");
             snap.ArgValues[0].Value.Should().Be(3);
         }
@@ -821,7 +821,7 @@ namespace TSLPatcher.Tests.Formats
             var interpreter = new Interpreter(ncs);
             interpreter.Run();
 
-            var snap = interpreter.ActionSnapshots[^1];
+            ActionSnapshot snap = interpreter.ActionSnapshots[^1];
             snap.FunctionName.Should().Be("PrintInteger");
             snap.ArgValues[0].Value.Should().Be(3);
         }
@@ -861,12 +861,12 @@ namespace TSLPatcher.Tests.Formats
             var interpreter = new Interpreter(ncs);
             interpreter.Run();
 
-            var snap = interpreter.ActionSnapshots[^1];
+            ActionSnapshot snap = interpreter.ActionSnapshots[^1];
             snap.FunctionName.Should().Be("PrintFloat");
             snap.ArgValues[0].Value.Should().Be(3.0f);
         }
 
-        [Fact(Skip = "Failing due to stack offset -8 is out of range error")]
+        [Fact]
         public void TestAdditionAssignmentStringString()
         {
             NCS ncs = Compile(@"
@@ -882,7 +882,7 @@ namespace TSLPatcher.Tests.Formats
             var interpreter = new Interpreter(ncs);
             interpreter.Run();
 
-            var snap = interpreter.ActionSnapshots[^1];
+            ActionSnapshot snap = interpreter.ActionSnapshots[^1];
             snap.FunctionName.Should().Be("PrintString");
             snap.ArgValues[0].Value.Should().Be("ab");
         }
@@ -903,7 +903,7 @@ namespace TSLPatcher.Tests.Formats
             var interpreter = new Interpreter(ncs);
             interpreter.Run();
 
-            var snap = interpreter.ActionSnapshots[^1];
+            ActionSnapshot snap = interpreter.ActionSnapshots[^1];
             snap.FunctionName.Should().Be("PrintInteger");
             snap.ArgValues.Select(a => a.Value).Should().Equal(new object[] { 6 });
         }
@@ -924,12 +924,12 @@ namespace TSLPatcher.Tests.Formats
             var interpreter = new Interpreter(ncs);
             interpreter.Run();
 
-            var snap = interpreter.ActionSnapshots[^1];
+            ActionSnapshot snap = interpreter.ActionSnapshots[^1];
             snap.FunctionName.Should().Be("PrintInteger");
             snap.ArgValues[0].Value.Should().Be(8.0f);
         }
 
-        [Fact(Skip = "Failing due to stack offset -8 is out of range error")]
+        [Fact]
         public void TestSubtractionAssignmentFloatFloat()
         {
             NCS ncs = Compile(@"
@@ -945,7 +945,7 @@ namespace TSLPatcher.Tests.Formats
             var interpreter = new Interpreter(ncs);
             interpreter.Run();
 
-            var snap = interpreter.ActionSnapshots[^1];
+            ActionSnapshot snap = interpreter.ActionSnapshots[^1];
             snap.FunctionName.Should().Be("PrintFloat");
             snap.ArgValues[0].Value.Should().Be(8.0f);
         }
@@ -969,7 +969,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.ActionSnapshots[^1].ArgValues[0].Value.Should().Be(8.0f);
         }
 
-        [Fact(Skip = "Failing due to stack offset -8 is out of range error")]
+        [Fact]
         public void TestMultiplicationAssignment()
         {
             NCS ncs = Compile(@"
@@ -985,12 +985,12 @@ namespace TSLPatcher.Tests.Formats
             var interpreter = new Interpreter(ncs);
             interpreter.Run();
 
-            var snap = interpreter.ActionSnapshots[^1];
+            ActionSnapshot snap = interpreter.ActionSnapshots[^1];
             snap.FunctionName.Should().Be("PrintInteger");
             snap.ArgValues.Select(a => a.Value).Should().Equal(new object[] { 40 });
         }
 
-        [Fact(Skip = "Failing due to stack offset -8 is out of range error")]
+        [Fact]
         public void TestDivisionAssignment()
         {
             NCS ncs = Compile(@"
@@ -1006,7 +1006,7 @@ namespace TSLPatcher.Tests.Formats
             var interpreter = new Interpreter(ncs);
             interpreter.Run();
 
-            var snap = interpreter.ActionSnapshots[^1];
+            ActionSnapshot snap = interpreter.ActionSnapshots[^1];
             snap.FunctionName.Should().Be("PrintInteger");
             snap.ArgValues.Select(a => a.Value).Should().Equal(new object[] { 3 });
         }
@@ -1015,7 +1015,7 @@ namespace TSLPatcher.Tests.Formats
 
         #region Switch Statements
 
-        [Fact(Skip = "Failing due to stack offset -8 is out of range error")]
+        [Fact]
         public void TestSwitchNoBreaks()
         {
             NCS ncs = Compile(@"
@@ -1065,7 +1065,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.ActionSnapshots.Count.Should().Be(0);
         }
 
-        [Fact(Skip = "Failing due to stack offset -8 is out of range error")]
+        [Fact]
         public void TestSwitchWithBreaks()
         {
             NCS ncs = Compile(@"
@@ -1096,7 +1096,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.ActionSnapshots[0].ArgValues[0].Value.Should().Be(3);
         }
 
-        [Fact(Skip = "Failing due to stack offset -8 is out of range error")]
+        [Fact]
         public void TestSwitchWithDefault()
         {
             NCS ncs = Compile(@"
@@ -1127,7 +1127,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.ActionSnapshots[0].ArgValues[0].Value.Should().Be(4);
         }
 
-        [Fact(Skip = "Failing due to stack offset -8 is out of range error")]
+        [Fact]
         public void TestSwitchScopedBlocks()
         {
             NCS ncs = Compile(@"
@@ -1269,7 +1269,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.ActionSnapshots[1].ArgValues[0].Value.Should().Be(2);
         }
 
-        [Fact(Skip = "Failing due to stack offset -8 is out of range error")]
+        [Fact]
         public void TestIfElseIf()
         {
             NCS ncs = Compile(@"
@@ -1298,7 +1298,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.ActionSnapshots[2].ArgValues[0].Value.Should().Be(7);
         }
 
-        [Fact(Skip = "Failing due to stack offset -8 is out of range error")]
+        [Fact]
         public void TestIfElseIfElse()
         {
             NCS ncs = Compile(@"
@@ -1348,7 +1348,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.ActionSnapshots[^1].ArgValues[0].Value.Should().Be(222);
         }
 
-        [Fact(Skip = "Failing due to stack offset -8 is out of range error")]
+        [Fact]
         public void TestSingleStatementElseIfElse()
         {
             NCS ncs = Compile(@"
@@ -1394,7 +1394,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.ActionSnapshots[2].ArgValues[0].Value.Should().Be(1);
         }
 
-        [Fact(Skip = "Failing due to stack offset -8 is out of range error")]
+        [Fact]
         public void TestWhileLoopWithBreak()
         {
             NCS ncs = Compile(@"
@@ -1500,7 +1500,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.ActionSnapshots[2].ArgValues[0].Value.Should().Be(1);
         }
 
-        [Fact(Skip = "Failing due to stack offset -8 is out of range error")]
+        [Fact]
         public void TestDoWhileLoopWithBreak()
         {
             NCS ncs = Compile(@"
@@ -1523,7 +1523,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.ActionSnapshots[0].ArgValues[0].Value.Should().Be(3);
         }
 
-        [Fact(Skip = "Failing due to stack offset -8 is out of range error")]
+        [Fact]
         public void TestDoWhileLoopWithContinue()
         {
             NCS ncs = Compile(@"
@@ -1549,7 +1549,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.ActionSnapshots[2].ArgValues[0].Value.Should().Be(1);
         }
 
-        [Fact(Skip = "Failing due to stack offset -8 is out of range error")]
+        [Fact]
         public void TestDoWhileLoopScope()
         {
             NCS ncs = Compile(@"
@@ -1580,7 +1580,7 @@ namespace TSLPatcher.Tests.Formats
 
         #region For Loop
 
-        [Fact(Skip = "Failing due to stack offset -8 is out of range error")]
+        [Fact]
         public void TestForLoop()
         {
             NCS ncs = Compile(@"
@@ -1603,7 +1603,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.ActionSnapshots[2].ArgValues[0].Value.Should().Be(3);
         }
 
-        [Fact(Skip = "Failing due to stack offset -8 is out of range error")]
+        [Fact]
         public void TestForLoopWithBreak()
         {
             NCS ncs = Compile(@"
@@ -1625,7 +1625,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.ActionSnapshots[0].ArgValues[0].Value.Should().Be(1);
         }
 
-        [Fact(Skip = "Failing due to stack offset -8 is out of range error")]
+        [Fact]
         public void TestForLoopWithContinue()
         {
             NCS ncs = Compile(@"
@@ -1650,7 +1650,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.ActionSnapshots[2].ArgValues[0].Value.Should().Be(3);
         }
 
-        [Fact(Skip = "Failing due to stack offset -8 is out of range error")]
+        [Fact]
         public void TestForLoopScope()
         {
             NCS ncs = Compile(@"
@@ -1719,7 +1719,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.ActionSnapshots[^1].ArgValues[0].Value.Should().Be(2);
         }
 
-        [Fact(Skip = "Failing due to stack offset -8 is out of range error")]
+        [Fact]
         public void TestLocalDeclarations()
         {
             NCS ncs = Compile(@"
@@ -1765,7 +1765,7 @@ namespace TSLPatcher.Tests.Formats
             ncs.Instructions.Any(inst => inst.InsType == NCSInstructionType.SAVEBP).Should().BeTrue();
         }
 
-        [Fact(Skip = "Failing due to stack offset -8 is out of range error")]
+        [Fact]
         public void TestGlobalInitializations()
         {
             NCS ncs = Compile(@"
@@ -1809,7 +1809,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.ActionSnapshots[^1].ArgValues[0].Value.Should().Be(-1);
         }
 
-        [Fact(Skip = "Failing due to stack offset -8 is out of range error")]
+        [Fact]
         public void TestComment()
         {
             NCS ncs = Compile(@"
@@ -1824,7 +1824,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.Run();
         }
 
-        [Fact(Skip = "Failing due to stack offset -8 is out of range error")]
+        [Fact]
         public void TestMultilineComment()
         {
             NCS ncs = Compile(@"
@@ -1913,7 +1913,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.ActionSnapshots[0].ArgValues[0].Value.Should().Be(1);
         }
 
-        [Fact(Skip = "Failing due to stack offset -8 is out of range error")]
+        [Fact]
         public void TestIntParenthesisDeclaration()
         {
             NCS ncs = Compile(@"
@@ -1930,7 +1930,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.ActionSnapshots[^1].ArgValues[0].Value.Should().Be(123);
         }
 
-        [Fact(Skip = "Failing due to stack offset -8 is out of range error")]
+        [Fact]
         public void TestIncludeBuiltin()
         {
             byte[] otherscript = Encoding.GetEncoding(1252).GetBytes(@"
@@ -1954,7 +1954,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.Run();
         }
 
-        [Fact(Skip = "Failing due to stack offset -8 is out of range error")]
+        [Fact]
         public void TestIncludeLookup()
         {
             // Note: This test requires a test file to exist
@@ -1980,7 +1980,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.Run();
         }
 
-        [Fact(Skip = "Failing due to stack offset -8 is out of range error")]
+        [Fact]
         public void TestNestedInclude()
         {
             byte[] firstScript = Encoding.GetEncoding(1252).GetBytes(@"
@@ -2018,7 +2018,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.ActionSnapshots[0].ArgValues[0].Value.Should().Be(13);
         }
 
-        [Fact(Skip = "Failing due to missing include error handling - no exception thrown")]
+        [Fact]
         public void TestMissingInclude()
         {
             string source = @"
@@ -2030,10 +2030,10 @@ namespace TSLPatcher.Tests.Formats
                 }
             ";
 
-            Assert.Throws<CompileError>(() => Compile(source));
+            Assert.Throws<CSharpKOTOR.Formats.NCS.Compiler.NSS.MissingIncludeError>(() => Compile(source));
         }
 
-        [Fact(Skip = "Failing due to stack offset -8 is out of range error")]
+        [Fact]
         public void TestGlobalIntAdditionAssignment()
         {
             NCS ncs = Compile(@"
@@ -2061,7 +2061,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.ActionSnapshots[^1].ArgValues[0].Value.Should().Be(8);
         }
 
-        [Fact(Skip = "Failing due to stack offset -8 is out of range error")]
+        [Fact]
         public void TestGlobalIntSubtractionAssignment()
         {
             NCS ncs = Compile(@"
@@ -2117,7 +2117,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.ActionSnapshots[^1].ArgValues[0].Value.Should().Be(100000);
         }
 
-        [Fact(Skip = "Failing due to stack offset -8 is out of range error")]
+        [Fact]
         public void TestGlobalIntDivisionAssignment()
         {
             NCS ncs = Compile(@"
@@ -2145,7 +2145,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.ActionSnapshots[^1].ArgValues[0].Value.Should().Be(100);
         }
 
-        [Fact(Skip = "Failing due to stack offset -8 is out of range error")]
+        [Fact]
         public void TestImportedGlobalVariable()
         {
             byte[] otherscript = Encoding.GetEncoding(1252).GetBytes(@"
@@ -2198,10 +2198,21 @@ namespace TSLPatcher.Tests.Formats
                 }
             ");
 
+            // Debug: dump bytecode
+            System.Console.WriteLine("=== C# Generated Bytecode ===");
+            for (int i = 0; i < ncs.Instructions.Count; i++)
+            {
+                NCSInstruction inst = ncs.Instructions[i];
+                string args = inst.Args != null && inst.Args.Count > 0 ? string.Join(", ", inst.Args) : "";
+                string jumpInfo = inst.Jump != null ? $" -> {ncs.Instructions.IndexOf(inst.Jump)}" : "";
+                System.Console.WriteLine($"{i,3}: {inst.InsType,-15} {args}{jumpInfo}");
+            }
+            System.Console.WriteLine("=== End Bytecode ===");
+
             var interpreter = new Interpreter(ncs);
             interpreter.Run();
 
-            interpreter.ActionSnapshots[^1].ArgValues[0].Value.Should().Be(0.0f);
+            interpreter.ActionSnapshots[ncs.Instructions.Count > 0 ? interpreter.ActionSnapshots.Count - 1 : 0].ArgValues[0].Value.Should().Be(0.0f);
         }
 
         [Fact]
@@ -2221,7 +2232,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.ActionSnapshots[^1].ArgValues[0].Value.Should().Be("");
         }
 
-        [Fact(Skip = "Failing due to stack offset -8 is out of range error")]
+        [Fact]
         public void TestVector()
         {
             NCS ncs = Compile(@"
@@ -2248,7 +2259,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.ActionSnapshots[^1].ArgValues[0].Value.Should().Be(6.0f);
         }
 
-        [Fact(Skip = "Failing due to stack offset -8 is out of range error")]
+        [Fact]
         public void TestVectorNotation()
         {
             NCS ncs = Compile(@"
@@ -2269,7 +2280,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.ActionSnapshots[^1].ArgValues[0].Value.Should().Be(3.0f);
         }
 
-        [Fact(Skip = "Failing due to stack offset -8 is out of range error")]
+        [Fact]
         public void TestVectorGetComponents()
         {
             NCS ncs = Compile(@"
@@ -2316,7 +2327,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.ActionSnapshots[^1].ArgValues[0].Value.Should().Be(6.0f);
         }
 
-        [Fact(Skip = "Failing due to stack offset -8 is out of range error")]
+        [Fact]
         public void TestStructGetMembers()
         {
             NCS ncs = Compile(@"
@@ -2344,7 +2355,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.ActionSnapshots[^1].ArgValues[0].Value.Should().Be(0.0f);
         }
 
-        [Fact(Skip = "Failing due to missing error handling - no exception thrown")]
+        [Fact]
         public void TestStructGetInvalidMember()
         {
             string source = @"
@@ -2365,7 +2376,7 @@ namespace TSLPatcher.Tests.Formats
             Assert.Throws<CompileError>(() => Compile(source));
         }
 
-        [Fact(Skip = "Failing due to stack offset -8 is out of range error")]
+        [Fact]
         public void TestStructSetMembers()
         {
             NCS ncs = Compile(@"
@@ -2418,7 +2429,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.ActionSnapshots[^1].ArgValues[0].Value.Should().Be(2);
         }
 
-        [Fact(Skip = "Failing due to stack offset -8 is out of range error")]
+        [Fact]
         public void TestPrefixIncrementBpInt()
         {
             NCS ncs = Compile(@"
@@ -2461,7 +2472,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.ActionSnapshots[^1].ArgValues[0].Value.Should().Be(1);
         }
 
-        [Fact(Skip = "Failing due to stack offset -8 is out of range error")]
+        [Fact]
         public void TestPostfixIncrementBpInt()
         {
             NCS ncs = Compile(@"
@@ -2483,7 +2494,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.ActionSnapshots[^1].ArgValues[0].Value.Should().Be(1);
         }
 
-        [Fact(Skip = "Failing due to stack offset -8 is out of range error")]
+        [Fact]
         public void TestPrefixDecrementSpInt()
         {
             NCS ncs = Compile(@"
@@ -2593,7 +2604,7 @@ namespace TSLPatcher.Tests.Formats
 
         #region Script Subroutines
 
-        [Fact(Skip = "Failing due to stack offset -8 is out of range error")]
+        [Fact]
         public void TestPrototypeNoArgs()
         {
             NCS ncs = Compile(@"
@@ -2617,7 +2628,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.ActionSnapshots[0].ArgValues[0].Value.Should().Be(56);
         }
 
-        [Fact(Skip = "Failing due to stack offset -8 is out of range error")]
+        [Fact]
         public void TestPrototypeWithArg()
         {
             NCS ncs = Compile(@"
@@ -2721,7 +2732,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.ActionSnapshots[0].ArgValues[0].Value.Should().Be(57);
         }
 
-        [Fact(Skip = "Failing due to stack offset -8 is out of range error")]
+        [Fact]
         public void TestPrototypeWithDefaultConstantArg()
         {
             NCS ncs = Compile(@"
@@ -2745,7 +2756,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.ActionSnapshots[0].ArgValues[0].Value.Should().Be(32);
         }
 
-        [Fact(Skip = "Failing - missing error handling - no exception thrown")]
+        [Fact]
         public void TestPrototypeMissingArg()
         {
             string source = @"
@@ -2765,7 +2776,7 @@ namespace TSLPatcher.Tests.Formats
             Assert.Throws<CompileError>(() => Compile(source));
         }
 
-        [Fact(Skip = "Failing - missing error handling - no exception thrown")]
+        [Fact]
         public void TestPrototypeMissingArgAndDefault()
         {
             string source = @"
@@ -2805,7 +2816,7 @@ namespace TSLPatcher.Tests.Formats
             Assert.Throws<CompileError>(() => Compile(source));
         }
 
-        [Fact(Skip = "Failing due to missing error handling - no exception thrown")]
+        [Fact]
         public void TestRedefineFunction()
         {
             string script = @"
@@ -2909,7 +2920,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.ActionSnapshots[0].ArgValues[0].Value.Should().Be(123);
         }
 
-        [Fact(Skip = "Failing due to stack offset -8 is out of range error")]
+        [Fact]
         public void TestCallVoidWithOneArg()
         {
             NCS ncs = Compile(@"
@@ -2955,7 +2966,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.ActionSnapshots[1].ArgValues[0].Value.Should().Be(2);
         }
 
-        [Fact(Skip = "Failing due to stack offset -8 is out of range error")]
+        [Fact]
         public void TestCallIntWithNoArgs()
         {
             NCS ncs = Compile(@"
@@ -3062,7 +3073,7 @@ namespace TSLPatcher.Tests.Formats
             interpreter.ActionSnapshots[^1].ArgValues.Select(a => a.Value).Should().Equal(new object[] { 8, 0 });
         }
 
-        [Fact(Skip = "Failing due to stack offset -8 is out of range error")]
+        [Fact]
         public void TestSwitchScopeB()
         {
             NCS ncs = Compile(@"

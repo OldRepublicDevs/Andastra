@@ -1,18 +1,18 @@
 using System;
 using System.IO;
+using CSharpKOTOR.Common;
+using CSharpKOTOR.Formats.Capsule;
+using CSharpKOTOR.Logger;
+using CSharpKOTOR.Memory;
+using CSharpKOTOR.Mods;
+using CSharpKOTOR.Patcher;
+using CSharpKOTOR.Resources;
 using Moq;
-using TSLPatcher.Core.Common;
-using TSLPatcher.Core.Formats.Capsule;
-using TSLPatcher.Core.Logger;
-using TSLPatcher.Core.Memory;
-using TSLPatcher.Core.Mods;
-using TSLPatcher.Core.Patcher;
-using TSLPatcher.Core.Resources;
 using Xunit;
 
 #nullable enable
 
-namespace TSLPatcher.Tests.Patcher
+namespace CSharpKOTOR.Tests.Patcher
 {
 
     /// <summary>

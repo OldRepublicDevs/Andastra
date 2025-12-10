@@ -1,13 +1,13 @@
 using System;
 using System.IO;
+using CSharpKOTOR.Common;
+using CSharpKOTOR.Formats.TLK;
+using CSharpKOTOR.Resources;
 using FluentAssertions;
-using TSLPatcher.Core.Common;
-using TSLPatcher.Core.Formats.TLK;
-using TSLPatcher.Core.Resources;
 using Xunit;
-using static TSLPatcher.Core.Formats.TLK.TLKAuto;
+using static CSharpKOTOR.Formats.TLK.TLKAuto;
 
-namespace TSLPatcher.Tests.Formats
+namespace CSharpKOTOR.Tests.Formats
 {
 
     /// <summary>
@@ -113,7 +113,7 @@ namespace TSLPatcher.Tests.Formats
             act3.Should().Throw<InvalidDataException>().WithMessage("Attempted to load an invalid TLK file.");
         }
 
-        [Fact(Skip = "Failing due to permission exception mismatch on Unix (expects IOException but gets UnauthorizedAccessException)")]
+        [Fact]
         public void TestWriteRaises()
         {
             // test_write_raises from Python

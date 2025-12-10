@@ -1,105 +1,106 @@
 using System;
-using System.IO;
-using FluentAssertions;
 using System.Collections.Generic;
-using TSLPatcher.Core.Formats.TwoDA;
-using TSLPatcher.Core.Resources;
+using System.IO;
+using CSharpKOTOR.Formats.TwoDA;
+using CSharpKOTOR.Resources;
+using CSharpKOTOR.Tests.Common;
+using FluentAssertions;
 using Xunit;
-using TSLPatcher.Tests.Common;
-using static TSLPatcher.Core.Formats.TwoDA.TwoDAAuto;
+using static CSharpKOTOR.Formats.TwoDA.TwoDAAuto;
 
-namespace TSLPatcher.Tests.Formats
+namespace CSharpKOTOR.Tests.Formats
 {
 
-/// <summary>
-/// Tests for 2DA binary I/O.
-/// 1:1 port of Python test_twoda.py from tests/resource/formats/test_twoda.py
-/// </summary>
-public class TwoDAFormatTests
-{
-    private static readonly string TestTwoDAFile = TestFileHelper.GetPath("test.2da");
-    private static readonly string CorruptTwoDAFile = TestFileHelper.GetPath("test_corrupted.2da");
-
-    [Fact]
-    public void TestBinaryIO()
+    /// <summary>
+    /// Tests for 2DA binary I/O.
+    /// 1:1 port of Python test_twoda.py from tests/resource/formats/test_twoda.py
+    /// </summary>
+    public class TwoDAFormatTests
     {
-        // Read 2DA file
-        TwoDA twoda = new TwoDABinaryReader(TestTwoDAFile).Load();
-        ValidateIO(twoda);
+        private static readonly string TestTwoDAFile = TestFileHelper.GetPath("test.2da");
+        private static readonly string CorruptTwoDAFile = TestFileHelper.GetPath("test_corrupted.2da");
 
-        // Write and re-read to validate round-trip
-        byte[] data = new TwoDABinaryWriter(twoda).Write();
-        twoda = new TwoDABinaryReader(data).Load();
-        ValidateIO(twoda);
-    }
+        [Fact]
+        public void TestBinaryIO()
+        {
+            // Read 2DA file
+            TwoDA twoda = new TwoDABinaryReader(TestTwoDAFile).Load();
+            ValidateIO(twoda);
 
-    private static void ValidateIO(TwoDA twoda)
-    {
-        twoda.GetCellString(0, "col1").Should().Be("abc");
-        twoda.GetCellString(0, "col2").Should().Be("def");
-        twoda.GetCellString(0, "col3").Should().Be("ghi");
+            // Write and re-read to validate round-trip
+            byte[] data = new TwoDABinaryWriter(twoda).Write();
+            twoda = new TwoDABinaryReader(data).Load();
+            ValidateIO(twoda);
+        }
 
-        twoda.GetCellString(1, "col1").Should().Be("def");
-        twoda.GetCellString(1, "col2").Should().Be("ghi");
-        twoda.GetCellString(1, "col3").Should().Be("123");
+        private static void ValidateIO(TwoDA twoda)
+        {
+            twoda.GetCellString(0, "col1").Should().Be("abc");
+            twoda.GetCellString(0, "col2").Should().Be("def");
+            twoda.GetCellString(0, "col3").Should().Be("ghi");
 
-        twoda.GetCellString(2, "col1").Should().Be("123");
-        twoda.GetCellString(2, "col2").Should().Be("");
-        twoda.GetCellString(2, "col3").Should().Be("abc");
-    }
+            twoda.GetCellString(1, "col1").Should().Be("def");
+            twoda.GetCellString(1, "col2").Should().Be("ghi");
+            twoda.GetCellString(1, "col3").Should().Be("123");
 
-    [Fact]
-    public void TestReadRaises()
-    {
-        // test_read_raises from Python
-        // Test directory access
-        Action act1 = () => new TwoDABinaryReader(".").Load();
-        act1.Should().Throw<Exception>(); // UnauthorizedAccessException or IOException
+            twoda.GetCellString(2, "col1").Should().Be("123");
+            twoda.GetCellString(2, "col2").Should().Be("");
+            twoda.GetCellString(2, "col3").Should().Be("abc");
+        }
 
-        // Test file not found
-        Action act2 = () => new TwoDABinaryReader("./thisfiledoesnotexist").Load();
-        act2.Should().Throw<FileNotFoundException>();
+        [Fact]
+        public void TestReadRaises()
+        {
+            // test_read_raises from Python
+            // Test directory access
+            Action act1 = () => new TwoDABinaryReader(".").Load();
+            act1.Should().Throw<Exception>(); // UnauthorizedAccessException or IOException
 
-        // Test corrupted file
-        Action act3 = () => new TwoDABinaryReader(CorruptTwoDAFile).Load();
-        act3.Should().Throw<System.IO.InvalidDataException>();
-    }
+            // Test file not found
+            Action act2 = () => new TwoDABinaryReader("./thisfiledoesnotexist").Load();
+            act2.Should().Throw<FileNotFoundException>();
 
-        [Fact(Skip = "Failing due to permission exception mismatch on Unix (expects IOException but gets UnauthorizedAccessException)")]
+            // Test corrupted file
+            Action act3 = () => new TwoDABinaryReader(CorruptTwoDAFile).Load();
+            act3.Should().Throw<System.IO.InvalidDataException>();
+        }
+
+        [Fact]
         public void TestWriteRaises()
-    {
-        // test_write_raises from Python
-        var twoda = new TwoDA(new List<string> { "col1", "col2" });
-
-        // Test writing to directory (should raise PermissionError on Windows, IsADirectoryError on Unix)
-        // Python: write_2da(TwoDA(), ".", ResourceType.TwoDA)
-        Action act1 = () => WriteTwoDA(twoda, ".", ResourceType.TwoDA);
-        if (System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Windows))
         {
-            act1.Should().Throw<UnauthorizedAccessException>();
+            // test_write_raises from Python
+            var twoda = new TwoDA(new List<string> { "col1", "col2" });
+
+            // Test writing to directory (should raise PermissionError on Windows, IsADirectoryError on Unix)
+            // Python: write_2da(TwoDA(), ".", ResourceType.TwoDA)
+            Action act1 = () => WriteTwoDA(twoda, ".", ResourceType.TwoDA);
+            if (System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Windows))
+            {
+                act1.Should().Throw<UnauthorizedAccessException>();
+            }
+            else
+            {
+                act1.Should().Throw<IOException>(); // IsADirectoryError equivalent
+            }
+
+            // Test invalid resource type (Python raises ValueError for ResourceType.INVALID)
+            // Python: write_2da(TwoDA(), ".", ResourceType.INVALID)
+            Action act2 = () => WriteTwoDA(twoda, ".", ResourceType.INVALID);
+            act2.Should().Throw<ArgumentException>().WithMessage("*Unsupported format*");
         }
-        else
+
+        [Fact]
+        public void TestRowMax()
         {
-            act1.Should().Throw<IOException>(); // IsADirectoryError equivalent
+            // test_row_max from Python
+            var twoda = new TwoDA();
+            twoda.AddRow("0");
+            twoda.AddRow("1");
+            twoda.AddRow("2");
+
+            twoda.LabelMax().Should().Be(3);
         }
 
-        // Test invalid resource type (Python raises ValueError for ResourceType.INVALID)
-        // Python: write_2da(TwoDA(), ".", ResourceType.INVALID)
-        Action act2 = () => WriteTwoDA(twoda, ".", ResourceType.INVALID);
-        act2.Should().Throw<ArgumentException>().WithMessage("*Unsupported format*");
     }
-
-    [Fact]
-    public void TestRowMax()
-    {
-        // test_row_max from Python
-        var twoda = new TwoDA();
-        twoda.AddRow("0");
-        twoda.AddRow("1");
-        twoda.AddRow("2");
-
-        twoda.LabelMax().Should().Be(3);
-    }
-}
 }
 

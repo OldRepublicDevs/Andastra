@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using CSharpKOTOR.Common;
 using FluentAssertions;
-using TSLPatcher.Core.Common;
 using Xunit;
 
-namespace TSLPatcher.Tests.Common
+namespace CSharpKOTOR.Tests.Common
 {
 
     /// <summary>
@@ -92,7 +92,7 @@ namespace TSLPatcher.Tests.Common
 
         #region Find Closest Match
 
-        [Fact(Skip = "Failing on Unix - Windows path handling differs on Unix systems")]
+        [Fact]
         public void FindClosestMatch_ShouldReturnBestCaseMatch()
         {
             // Python test: test_find_closest_match
@@ -137,7 +137,7 @@ namespace TSLPatcher.Tests.Common
             relativePath.ToString().Should().Be(@"to\something.test");
         }
 
-        [Fact(Skip = "Failing on Unix - Windows absolute path handling differs on Unix systems")]
+        [Fact]
         public void RelativeTo_ShouldWorkWithAbsolutePaths()
         {
             // Python test: test_relative_to_abspath
@@ -314,7 +314,7 @@ namespace TSLPatcher.Tests.Common
 
         #region Mixed Slash Handling - Edge Cases
 
-        [Theory(Skip = "Failing on Unix - Windows path normalization differs on Unix systems")]
+        [Theory]
         [InlineData("C:/", "C:")]
         [InlineData("C:\\", "C:")]
         [InlineData("C:", "C:")]
@@ -349,7 +349,7 @@ namespace TSLPatcher.Tests.Common
 
         #region TrueDivision Operator
 
-        [Fact(Skip = "Failing on Unix - path joining behavior differs on Unix systems")]
+        [Fact]
         public void TrueDivEquivalentToJoinPath()
         {
             // Python test: test_truediv_equivalent_to_joinpath

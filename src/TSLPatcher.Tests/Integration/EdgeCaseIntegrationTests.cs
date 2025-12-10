@@ -1,16 +1,16 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using CSharpKOTOR.Common;
+using CSharpKOTOR.Config;
+using CSharpKOTOR.Formats.GFF;
+using CSharpKOTOR.Formats.TwoDA;
+using CSharpKOTOR.Logger;
+using CSharpKOTOR.Memory;
 using FluentAssertions;
-using TSLPatcher.Core.Common;
-using TSLPatcher.Core.Config;
-using TSLPatcher.Core.Formats.GFF;
-using TSLPatcher.Core.Formats.TwoDA;
-using TSLPatcher.Core.Logger;
-using TSLPatcher.Core.Memory;
 using Xunit;
 
-namespace TSLPatcher.Tests.Integration
+namespace CSharpKOTOR.Tests.Integration
 {
 
     /// <summary>
@@ -334,7 +334,7 @@ DefaultValue=X
             twoda.GetColumn("NewCol").Should().AllBe("X");
         }
 
-        [Fact(Skip = "Failing - expected 'changed' but found 'original' - pre-existing issue")]
+        [Fact]
         public void TwoDA_LabelIndexTarget_WithNumericLabel_ShouldResolve()
         {
             string iniText = @"
@@ -390,7 +390,7 @@ Label=TestStruct
             struct1!.StructId.Should().Be(0);
         }
 
-        [Fact(Skip = "Failing - KeyNotFoundException: The given key '0' was not present in the dictionary - pre-existing issue")]
+        [Fact]
         public void MultipleModifications_WithCircularTokenDependencies_ShouldResolve()
         {
             string iniText = @"

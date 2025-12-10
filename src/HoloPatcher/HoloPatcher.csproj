@@ -11,21 +11,8 @@
     <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
-    <!-- NuGet Package Configuration -->
-    <IsPackable>true</IsPackable>
-    <PackageId>HoloPatcher</PackageId>
-    <Authors>th3w1zard1</Authors>
-    <Company>HoloPatcher.NET</Company>
-    <Product>HoloPatcher</Product>
-    <Description>Avalonia UI application for TSLPatcher/HoloPatcher mod installation. Provides a graphical interface for installing and managing KOTOR mods. Can be used as a library for programmatic access to patching functionality.</Description>
-    <PackageTags>kotor;tsl;patcher;mod;gui;avalonia;holopatcher</PackageTags>
-    <PackageProjectUrl>https://github.com/th3w1zard1/HoloPatcher.NET</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/th3w1zard1/HoloPatcher.NET</RepositoryUrl>
-    <RepositoryType>git</RepositoryType>
-    <PackageLicenseExpression>BSL-1.1</PackageLicenseExpression>
-    <GeneratePackageOnBuild Condition="'$(Configuration)' == 'Release'">true</GeneratePackageOnBuild>
-    <IncludeSymbols>true</IncludeSymbols>
-    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <!-- This is an EXECUTABLE, not a library - do NOT make it IsPackable -->
+    <IsPackable>false</IsPackable>
     <TargetFrameworks></TargetFrameworks>
     <!-- Helper to append without duplicate semicolons -->
     <TargetFrameworks Condition="'$(TargetFrameworks)' != ''">
@@ -33,21 +20,21 @@
     </TargetFrameworks>
     <!-- Add each TFM conditionally -->
     <TargetFrameworks Condition="$([MSBuild]::VersionGreaterThanOrEquals('$(NETCoreSdkVersion)', '10.0.0'))">
-      $(TargetFrameworks);net10.0
+      $(TargetFrameworks);net10
     </TargetFrameworks>
     <TargetFrameworks Condition="$([MSBuild]::VersionGreaterThanOrEquals('$(NETCoreSdkVersion)', '9.0.0'))">
-      $(TargetFrameworks);net9.0
+      $(TargetFrameworks);net9
     </TargetFrameworks>
     <TargetFrameworks Condition="$([MSBuild]::VersionGreaterThanOrEquals('$(NETCoreSdkVersion)', '8.0.0'))">
-      $(TargetFrameworks);net8.0
+      $(TargetFrameworks);net8
     </TargetFrameworks>
     <!-- === .NET 7 SDK: include net7.0 + net6.0 (legacy support) === -->
     <TargetFrameworks Condition="$([System.String]::new('$(NETCoreSdkVersion)').StartsWith('7.'))">
-      $(TargetFrameworks);net7.0;net6.0
+      $(TargetFrameworks);net7;net6
     </TargetFrameworks>
     <!-- === .NET 6 SDK: include (legacy support) === -->
     <TargetFrameworks Condition="$([System.String]::new('$(NETCoreSdkVersion)').StartsWith('6.'))">
-      $(TargetFrameworks);net6.0
+      $(TargetFrameworks);net6
     </TargetFrameworks>
     <TargetFrameworks Condition="'$(OS)' == 'Windows_NT' AND Exists('$(MSBuildProgramFiles32)\..\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.8')">
       $(TargetFrameworks);net48
@@ -56,7 +43,7 @@
       $(TargetFrameworks);net462
     </TargetFrameworks>
     <!-- Ensure we always have at least one framework to avoid empty TargetFrameworks -->
-    <TargetFrameworks Condition="'$(TargetFrameworks)' == ''">net8.0</TargetFrameworks>
+    <TargetFrameworks Condition="'$(TargetFrameworks)' == ''">net8</TargetFrameworks>
   </PropertyGroup>
 
   <!-- OutputType: WinExe for Windows (no console), Exe for Linux/macOS (GUI with optional console) -->
@@ -107,38 +94,19 @@
     <NoWin32Manifest>true</NoWin32Manifest>
   </PropertyGroup>
 
+  <!-- Minimal package references needed for the entry point only -->
   <ItemGroup>
-    <!-- Avalonia packages - use versions compatible with .NET 6+ and net48 -->
-    <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="11.3.9" />
-    <PackageReference Include="DialogHost.Avalonia" Version="0.10.2" />
-    <PackageReference Include="DocumentFormat.OpenXml" Version="3.3.0" />
-    <PackageReference Include="HtmlAgilityPack" Version="1.12.4" />
-    <PackageReference Include="MicroCom.Runtime" Version="0.11.2" />
-    <PackageReference Include="ReactiveUI" Version="22.3.1" />
-    <PackageReference Include="RtfDomParser" Version="7.0.0" />
-    <PackageReference Include="System.Drawing.Common" Version="10.0.0" />
-    <PackageReference Include="System.Reactive" Version="6.1.0" />
-    <ProjectCapability Include="Avalonia" />
-    <PackageReference Include="Avalonia.Controls.ItemsRepeater" Version="11.1.5" />
-    <PackageReference Include="Avalonia.Desktop" Version="11.3.9" />
-    <PackageReference Include="Avalonia.LinuxFramebuffer" Version="11.3.9" />
-    <PackageReference Include="Avalonia.ReactiveUI" Version="11.3.8" />
-    <TrimmerRootAssembly Include="Avalonia.Themes.Fluent" />
-    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.9" />
     <PackageReference Include="Avalonia" Version="11.3.9" />
-    <PackageReference Include="Simplecto.Avalonia.RichTextBox" Version="1.3.9" />
-    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
-    <PackageReference Include="Dotnet.Bundle" Version="*" />
+    <PackageReference Include="Avalonia.Desktop" Version="11.3.9" />
     <PackageReference Include="JetBrains.Annotations" Version="2025.2.4" />
-    <PackageReference Include="MessageBox.Avalonia" Version="3.3.0" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.0" />
     <!-- NetSparkle only supports .NET Framework, so only include for net48 -->
     <PackageReference Condition="'$(TargetFramework)' == 'net48'" Include="NetSparkle" Version="1.1.0" />
+    <PackageReference Include="Dotnet.Bundle" Version="*" />
   </ItemGroup>
 
+  <!-- Reference the UI library which contains all the Views, ViewModels, etc. -->
   <ItemGroup>
-    <ProjectReference Include="..\TSLPatcher.Core\TSLPatcher.Core.csproj" />
+    <ProjectReference Include="..\HoloPatcher.UI\HoloPatcher.UI.csproj" />
   </ItemGroup>
 
   <!-- Include RtfDomParserAv.dll (required for RTF loading) - obtained from AvRichTextBox repository -->

@@ -1,14 +1,14 @@
 using System;
 using System.Collections.Generic;
+using CSharpKOTOR.Common;
+using CSharpKOTOR.Formats.NCS;
+using CSharpKOTOR.Formats.NCS.Compiler;
+using CSharpKOTOR.Formats.NCS.Optimizers;
 using FluentAssertions;
 using JetBrains.Annotations;
-using TSLPatcher.Core.Common;
-using TSLPatcher.Core.Formats.NCS;
-using TSLPatcher.Core.Formats.NCS.Compiler;
-using TSLPatcher.Core.Formats.NCS.Optimizers;
 using Xunit;
 
-namespace TSLPatcher.Tests.Formats
+namespace CSharpKOTOR.Tests.Formats
 {
 
     /// <summary>
@@ -32,7 +32,7 @@ namespace TSLPatcher.Tests.Formats
             return NCSAuto.CompileNss(script, Game.K1, null, lookup);
         }
 
-        [Fact(Skip = "Failing due to stack offset -8 is out of range error")]
+        [Fact]
         public void TestNoOpOptimizer()
         {
             NCS ncs = Compile(@"
@@ -50,7 +50,7 @@ namespace TSLPatcher.Tests.Formats
             }
         ");
 
-            ncs.Optimize(new List<INCSOptimizer> { new RemoveNopOptimizer() });
+            ncs.Optimize(new List<NCSOptimizer> { new RemoveNopOptimizer() });
             ncs.Print();
 
             var interpreter = new Interpreter(ncs);

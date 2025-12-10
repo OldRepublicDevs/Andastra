@@ -1,5 +1,29 @@
 # Cursor Rules for HoloPatcher.NET
 
+## C# Language Version Requirements
+
+**CRITICAL: The maximum C# language version allowed is 7.3. NEVER upgrade to C# 8.0 or higher.**
+
+This is a hard requirement for .NET Framework 4.x compatibility. The following C# 8+ features are FORBIDDEN:
+
+- Nullable reference types (`string?`, `object?`, etc.)
+- Switch expressions
+- Using declarations (must use `using` blocks)
+- Default interface implementations
+- Async streams
+- Indices and ranges (`^1`, `..`)
+- Null-coalescing assignment (`??=`)
+- Pattern matching enhancements (property patterns, tuple patterns, positional patterns)
+- Static local functions
+
+When fixing code, convert C# 8+ syntax to C# 7.3 compatible alternatives, including but not limited to:
+
+- `string?` → `string` (use `[CanBeNull]` attribute if needed and add `using JetBrains.Annotations;` if not already present)
+- `value!` → `value` (remove null-forgiving operator)
+- Switch expressions → switch statements
+- `using var x = ...` → `using (var x = ...) { }`
+- `namespace SomeNamespace;` → `namespace SomeNamespace { ... }`
+
 ## 1:1 Porting Requirements
 
 When porting code from Python (vendor/PyKotor) to C#:
@@ -41,3 +65,12 @@ When porting code from Python (vendor/PyKotor) to C#:
 - All ported tests must pass
 - Failing tests indicate the C# code does not match Python
 - Fix by matching Python exactly, not by changing test expectations
+
+## Matching Implementations
+
+- All CSharpKOTOR code must be 1:1 matching the Python implementation in vendor/PyKotor.
+- All DeNCS/NCSDecomp code (anything decompiling ncs->nss) must be 1:1 matching the Java implementation in vendor/DeNCS (may be alternatively in vendor/NCSDecomp). The PyKotor decompiler is nonfunctional, do NOT reference it for this specific scenario.
+
+Ensure ANY AND ALL changes made to CSharpKOTOR properly specifies the relpath to the file in vendor that's being referenced to ensure 1:1 matches are maintained.
+
+example: `Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/extract/twoda.py:237` for line 237 in twoda.py in PyKotor. Use this pattern consistently.

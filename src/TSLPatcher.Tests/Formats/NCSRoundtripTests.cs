@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using CSharpKOTOR.Common;
+using CSharpKOTOR.Formats.NCS;
 using FluentAssertions;
-using TSLPatcher.Core.Common;
-using TSLPatcher.Core.Formats.NCS;
 using Xunit;
 
-namespace TSLPatcher.Tests.Formats
+namespace CSharpKOTOR.Tests.Formats
 {
     /// <summary>
     /// Tests for NCS roundtrip compilation/decompilation.
@@ -32,13 +32,13 @@ namespace TSLPatcher.Tests.Formats
         [Fact]
         public void TestNssRoundtrip()
         {
-            if (_roundtripCases == null || _roundtripCases.Count == 0)
+            if (_roundtripCases is null || _roundtripCases.Count == 0)
             {
                 // Skip if Vanilla_KOTOR_Script_Source submodule not available or no scripts collected
                 return;
             }
 
-            foreach (var (game, scriptPath, libraryLookup) in _roundtripCases)
+            foreach ((Game game, string scriptPath, List<string> libraryLookup) in _roundtripCases)
             {
                 if (!File.Exists(scriptPath))
                 {
@@ -184,7 +184,7 @@ namespace TSLPatcher.Tests.Formats
             }
 
             Console.WriteLine("Collecting sample scripts from Vanilla_KOTOR_Script_Source...");
-            foreach (var (game, config) in GameConfig())
+            foreach ((Game game, Dictionary<string, List<string>> config) in GameConfig())
             {
                 Console.WriteLine($"Collecting sample scripts for {game}...");
                 var roots = config["roots"].Where(path => Directory.Exists(path) || File.Exists(path)).ToList();
@@ -196,7 +196,7 @@ namespace TSLPatcher.Tests.Formats
                     Console.WriteLine($"No roots or lookup found for {game}, skipping...");
                     continue;
                 }
-                var sample = CollectSample(game, roots, lookup);
+                List<string> sample = CollectSample(game, roots, lookup);
                 roundtripCases.AddRange(
                     sample.Select(script => (game, script, lookup))
                 );

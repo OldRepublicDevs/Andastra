@@ -1,0 +1,9 @@
+.*
+!.history
+!.vscode
+!.env
+!.editorconfig
+!.gitignore
+!.cursorrules
+!.cursor
+!.cursorignore

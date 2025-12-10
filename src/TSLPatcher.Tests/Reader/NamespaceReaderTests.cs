@@ -2,13 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using CSharpKOTOR.Namespaces;
+using CSharpKOTOR.Reader;
 using FluentAssertions;
 using IniParser.Model;
-using TSLPatcher.Core.Namespaces;
-using TSLPatcher.Core.Reader;
 using Xunit;
 
-namespace TSLPatcher.Tests.Reader
+namespace CSharpKOTOR.Tests.Reader
 {
     /// <summary>
     /// Tests for NamespaceReader functionality.
@@ -95,13 +95,13 @@ Description=Ustanovite russkuyu versiyu K1CP
             // Act
             IniData ini = ConfigReader.ParseIniText(iniContent, caseInsensitive: true);
             var reader = new NamespaceReader(ini);
-            var namespaces = reader.Load();
+            List<PatcherNamespace> namespaces = reader.Load();
 
             // Assert
             namespaces.Should().NotBeNull();
             namespaces.Should().HaveCount(3);
 
-            var baseEnglish = namespaces.FirstOrDefault(n => n.NamespaceId == "Base_English");
+            PatcherNamespace baseEnglish = namespaces.FirstOrDefault(n => n.NamespaceId == "Base_English");
             baseEnglish.Should().NotBeNull();
             baseEnglish.IniFilename.Should().Be("changes.ini");
             baseEnglish.InfoFilename.Should().Be("info.rtf");
@@ -109,7 +109,7 @@ Description=Ustanovite russkuyu versiyu K1CP
             baseEnglish.Name.Should().Be("K1CP v1.10 (English)");
             baseEnglish.Description.Should().Be("Installs the English version of K1CP (default)");
 
-            var translationFrench = namespaces.FirstOrDefault(n => n.NamespaceId == "Translation_French");
+            PatcherNamespace translationFrench = namespaces.FirstOrDefault(n => n.NamespaceId == "Translation_French");
             translationFrench.Should().NotBeNull();
             translationFrench.IniFilename.Should().Be("../tslpatchdata/translation_french/changes.ini");
             translationFrench.InfoFilename.Should().Be("../tslpatchdata/translation_french/info.rtf");
@@ -117,7 +117,7 @@ Description=Ustanovite russkuyu versiyu K1CP
             translationFrench.Name.Should().Be("K1CP v1.10 (Traduction en Francais)");
             translationFrench.Description.Should().Be("Installe la version francaise de K1CP");
 
-            var translationRussian = namespaces.FirstOrDefault(n => n.NamespaceId == "Translation_Russian");
+            PatcherNamespace translationRussian = namespaces.FirstOrDefault(n => n.NamespaceId == "Translation_Russian");
             translationRussian.Should().NotBeNull();
             translationRussian.IniFilename.Should().Be("../tslpatchdata/translation_russian/changes.ini");
             translationRussian.InfoFilename.Should().Be("../tslpatchdata/translation_russian/info.rtf");
@@ -165,13 +165,13 @@ Description=Ustanovite russkuyu versiyu K1CP
             File.WriteAllText(_iniFilePath, iniContent);
 
             // Act
-            var namespaces = NamespaceReader.FromFilePath(_iniFilePath);
+            List<PatcherNamespace> namespaces = NamespaceReader.FromFilePath(_iniFilePath);
 
             // Assert
             namespaces.Should().NotBeNull();
             namespaces.Should().HaveCount(3);
 
-            var baseEnglish = namespaces.FirstOrDefault(n => n.NamespaceId == "Base_English");
+            PatcherNamespace baseEnglish = namespaces.FirstOrDefault(n => n.NamespaceId == "Base_English");
             baseEnglish.Should().NotBeNull();
             baseEnglish.IniFilename.Should().Be("changes.ini");
             baseEnglish.InfoFilename.Should().Be("info.rtf");
@@ -179,7 +179,7 @@ Description=Ustanovite russkuyu versiyu K1CP
             baseEnglish.Name.Should().Be("K1CP v1.10 (English)");
             baseEnglish.Description.Should().Be("Installs the English version of K1CP (default)");
 
-            var translationFrench = namespaces.FirstOrDefault(n => n.NamespaceId == "Translation_French");
+            PatcherNamespace translationFrench = namespaces.FirstOrDefault(n => n.NamespaceId == "Translation_French");
             translationFrench.Should().NotBeNull();
             translationFrench.IniFilename.Should().Be("../tslpatchdata/translation_french/changes.ini");
             translationFrench.InfoFilename.Should().Be("../tslpatchdata/translation_french/info.rtf");
@@ -187,7 +187,7 @@ Description=Ustanovite russkuyu versiyu K1CP
             translationFrench.Name.Should().Be("K1CP v1.10 (Traduction en Francais)");
             translationFrench.Description.Should().Be("Installe la version francaise de K1CP");
 
-            var translationRussian = namespaces.FirstOrDefault(n => n.NamespaceId == "Translation_Russian");
+            PatcherNamespace translationRussian = namespaces.FirstOrDefault(n => n.NamespaceId == "Translation_Russian");
             translationRussian.Should().NotBeNull();
             translationRussian.IniFilename.Should().Be("../tslpatchdata/translation_russian/changes.ini");
             translationRussian.InfoFilename.Should().Be("../tslpatchdata/translation_russian/info.rtf");
@@ -215,7 +215,7 @@ Description=Test Description
             // Act
             IniData ini = ConfigReader.ParseIniText(iniContent, caseInsensitive: true);
             var reader = new NamespaceReader(ini);
-            var namespaces = reader.Load();
+            List<PatcherNamespace> namespaces = reader.Load();
 
             // Assert
             namespaces.Should().HaveCount(1);
@@ -241,7 +241,7 @@ Description=Test Description
             // Act
             IniData ini = ConfigReader.ParseIniText(iniContent, caseInsensitive: true);
             var reader = new NamespaceReader(ini);
-            var namespaces = reader.Load();
+            List<PatcherNamespace> namespaces = reader.Load();
 
             // Assert
             namespaces.Should().HaveCount(1);
@@ -275,7 +275,7 @@ Description=Test Description
             // Act
             IniData ini = ConfigReader.ParseIniText(iniContent, caseInsensitive: true);
             var reader = new NamespaceReader(ini);
-            var namespaces = reader.Load();
+            List<PatcherNamespace> namespaces = reader.Load();
 
             // Assert
             namespaces.Should().HaveCount(1);
@@ -302,7 +302,7 @@ description=Test Description
             // Act
             IniData ini = ConfigReader.ParseIniText(iniContent, caseInsensitive: true);
             var reader = new NamespaceReader(ini);
-            var namespaces = reader.Load();
+            List<PatcherNamespace> namespaces = reader.Load();
 
             // Assert
             namespaces.Should().HaveCount(1);

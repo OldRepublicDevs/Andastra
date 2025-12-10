@@ -1,13 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using CSharpKOTOR.Common;
+using CSharpKOTOR.Formats.TwoDA;
+using CSharpKOTOR.Mods.TwoDA;
 using FluentAssertions;
-using TSLPatcher.Core.Common;
-using TSLPatcher.Core.Formats.TwoDA;
-using TSLPatcher.Core.Mods.TwoDA;
 using Xunit;
 
-namespace TSLPatcher.Tests.Integration
+namespace CSharpKOTOR.Tests.Integration
 {
 
     /// <summary>
@@ -88,7 +88,7 @@ ColumnLabel=NewCol
 DefaultValue=default
 I1=special_value
 ";
-            Core.Config.PatcherConfig config = SetupIniAndConfig(iniText);
+            CSharpKOTOR.Config.PatcherConfig config = SetupIniAndConfig(iniText);
             Modifications2DA modifications = config.Patches2DA.First(p => p.SaveAs == "test.2da");
 
             // Act
@@ -127,7 +127,7 @@ ColumnLabel=NewCol
 DefaultValue=
 L1=2DAMEMORY5
 ";
-            Core.Config.PatcherConfig config = SetupIniAndConfig(iniText);
+            CSharpKOTOR.Config.PatcherConfig config = SetupIniAndConfig(iniText);
             Modifications2DA modifications = config.Patches2DA.First(p => p.SaveAs == "test.2da");
 
             // Act
@@ -165,7 +165,7 @@ ColumnLabel=NewCol
 DefaultValue=
 L1=StrRef5
 ";
-            Core.Config.PatcherConfig config = SetupIniAndConfig(iniText);
+            CSharpKOTOR.Config.PatcherConfig config = SetupIniAndConfig(iniText);
             Modifications2DA modifications = config.Patches2DA.First(p => p.SaveAs == "test.2da");
 
             // Act
@@ -202,7 +202,7 @@ I0=X
 I1=Y
 2DAMEMORY0=I0
 ";
-            Core.Config.PatcherConfig config = SetupIniAndConfig(iniText);
+            CSharpKOTOR.Config.PatcherConfig config = SetupIniAndConfig(iniText);
             Modifications2DA modifications = config.Patches2DA.First(p => p.SaveAs == "test.2da");
 
             // Act
@@ -242,7 +242,7 @@ I0=X
 I1=Y
 2DAMEMORY0=L1
 ";
-            Core.Config.PatcherConfig config = SetupIniAndConfig(iniText);
+            CSharpKOTOR.Config.PatcherConfig config = SetupIniAndConfig(iniText);
             Modifications2DA modifications = config.Patches2DA.First(p => p.SaveAs == "test.2da");
 
             // Act
@@ -389,7 +389,7 @@ name=Copied
 ColumnLabel=NewCol
 DefaultValue=default
 ";
-            Core.Config.PatcherConfig config = SetupIniAndConfig(iniText);
+            CSharpKOTOR.Config.PatcherConfig config = SetupIniAndConfig(iniText);
             Modifications2DA modifications = config.Patches2DA.First(p => p.SaveAs == "test.2da");
 
             // Act

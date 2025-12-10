@@ -2,19 +2,19 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using CSharpKOTOR.Common;
+using CSharpKOTOR.Config;
+using CSharpKOTOR.Formats.TLK;
+using CSharpKOTOR.Formats.TwoDA;
+using CSharpKOTOR.Logger;
+using CSharpKOTOR.Memory;
+using CSharpKOTOR.Reader;
 using IniParser.Model;
 using IniParser.Parser;
-using TSLPatcher.Core.Common;
-using TSLPatcher.Core.Config;
-using TSLPatcher.Core.Formats.TLK;
-using TSLPatcher.Core.Formats.TwoDA;
-using TSLPatcher.Core.Logger;
-using TSLPatcher.Core.Memory;
-using TSLPatcher.Core.Reader;
 
 #nullable enable
 
-namespace TSLPatcher.Tests.Integration
+namespace CSharpKOTOR.Tests.Integration
 {
 
     /// <summary>
@@ -65,7 +65,7 @@ namespace TSLPatcher.Tests.Integration
         protected PatcherConfig SetupIniAndConfig(string iniText, string? modPath = null)
         {
             // Use unified INI parser (case-sensitive for changes.ini files)
-            IniData ini = TSLPatcher.Core.Reader.ConfigReader.ParseIniText(iniText, caseInsensitive: false);
+            IniData ini = CSharpKOTOR.Reader.ConfigReader.ParseIniText(iniText, caseInsensitive: false);
             var config = new PatcherConfig();
             string actualModPath = modPath ?? TempDir;
 

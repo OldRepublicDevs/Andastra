@@ -1,0 +1,74 @@
+using CSharpKOTOR.Formats.NCS;
+using JetBrains.Annotations;
+
+namespace CSharpKOTOR.Formats.NCS.Compiler
+{
+
+    /// <summary>
+    /// Represents an expression used as a statement (e.g., function call, assignment).
+    /// </summary>
+    public class ExpressionStatement : Statement
+    {
+        public Expression Expression { get; set; }
+
+        public ExpressionStatement(Expression expression)
+        {
+            Expression = expression
+                         ?? throw new System.ArgumentNullException(nameof(expression));
+        }
+
+        public override object Compile(
+            NCS ncs,
+            CodeRoot root,
+            CodeBlock block,
+            NCSInstruction returnInstruction,
+            [CanBeNull] NCSInstruction breakInstruction,
+            [CanBeNull] NCSInstruction continueInstruction)
+        {
+            int tempStackBefore = block.TempStack;
+            DynamicDataType resultType = Expression.Compile(ncs, root, block);
+            int tempStackAfter = block.TempStack;
+            // Expression compiled, remove its result from stack and temp_stack tracking
+            // Note: Some expressions (like Assignment) already remove their result from the stack,
+            // so we only need to remove it from temp_stack if it's still on the stack.
+            // We check temp_stack to see if the result is still tracked.
+            // For void expressions, we still need to check if temp_stack increased (e.g., from nested function calls)
+            if (resultType != DynamicDataType.VOID)
+            {
+                int expressionSize = resultType.Size(root);
+                // Check if expression added to temp_stack
+                if (tempStackAfter > tempStackBefore)
+                {
+                    // Expression added to temp_stack, so result is on the stack - remove it
+                    ncs.Add(NCSInstructionType.MOVSP, new System.Collections.Generic.List<object> { -expressionSize });
+                    block.TempStack -= expressionSize;
+                }
+                else if (tempStackAfter == tempStackBefore)
+                {
+                    // Expression didn't add to temp_stack, but result is still on the stack (e.g., StringExpression, IntExpression)
+                    // We need to remove it from the stack (but don't update temp_stack since it wasn't tracking it)
+                    ncs.Add(NCSInstructionType.MOVSP, new System.Collections.Generic.List<object> { -expressionSize });
+                }
+                else
+                {
+                    // temp_stack decreased, which means the expression already removed its result
+                    // Nothing to do
+                }
+            }
+            else
+            {
+                // Void expression - check if temp_stack increased (shouldn't happen, but clean up if it did)
+                if (tempStackAfter > tempStackBefore)
+                {
+                    // Something was left on the stack (e.g., from nested function call arguments)
+                    int cleanupSize = tempStackAfter - tempStackBefore;
+                    ncs.Add(NCSInstructionType.MOVSP, new System.Collections.Generic.List<object> { -cleanupSize });
+                    block.TempStack -= cleanupSize;
+                }
+            }
+
+            return DynamicDataType.VOID;
+        }
+    }
+}
+

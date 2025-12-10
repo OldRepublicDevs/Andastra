@@ -1,11 +1,11 @@
 using System;
 using System.IO;
+using CSharpKOTOR.Logger;
+using CSharpKOTOR.Reader;
 using FluentAssertions;
-using TSLPatcher.Core.Logger;
-using TSLPatcher.Core.Reader;
 using Xunit;
 
-namespace TSLPatcher.Tests.Reader
+namespace CSharpKOTOR.Tests.Reader
 {
     /// <summary>
     /// Tests for ConfigReader Int32 overflow handling in ParseIntValue.
