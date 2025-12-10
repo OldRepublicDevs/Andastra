@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using CSharpKOTOR.Common;
 using CSharpKOTOR.Formats.TLK;
 using CSharpKOTOR.Logger;
@@ -177,16 +178,22 @@ namespace CSharpKOTOR.Mods.TLK
                 return;
             }
 
-            var lookupTlk = new TalkTable(TlkFilePath);
-            // Python uses lookup_tlk.string(self.mod_index) and lookup_tlk.sound(self.mod_index) separately
+            if (!File.Exists(TlkFilePath))
+            {
+                throw new FileNotFoundException($"TLK file not found: {TlkFilePath}", TlkFilePath);
+            }
+
+            byte[] bytes = File.ReadAllBytes(TlkFilePath);
+            var reader = new TLKBinaryReader(bytes);
+            Formats.TLK.TLK lookupTlk = reader.Load();
             if (string.IsNullOrEmpty(Text))
             {
-                Text = lookupTlk.GetString(ModIndex);
+                Text = lookupTlk.String(ModIndex);
             }
 
             if (string.IsNullOrEmpty(Sound))
             {
-                Sound = lookupTlk.GetSound(ModIndex).ToString();
+                Sound = lookupTlk.Get(ModIndex)?.Voiceover.ToString();
             }
         }
     }

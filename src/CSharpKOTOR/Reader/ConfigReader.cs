@@ -423,10 +423,15 @@ namespace CSharpKOTOR.Reader
                 // Path resolution: mod_path / sourcefolder / tlk_filename
                 // mod_path is typically the tslpatchdata folder (parent of changes.ini).
                 // If sourcefolder = ".", this resolves to mod_path itself (tslpatchdata folder).
+                string basePathRoot = _tslPatchDataPath ?? _modPath;
                 string basePath = Config.PatchesTLK.SourceFolder == "."
-                    ? _modPath
-                    : Path.Combine(_modPath, Config.PatchesTLK.SourceFolder);
+                    ? basePathRoot
+                    : Path.Combine(basePathRoot, Config.PatchesTLK.SourceFolder);
                 string tlkFilePath = Path.Combine(basePath, tlkFilename);
+                if (!File.Exists(tlkFilePath) && _tslPatchDataPath != null)
+                {
+                    tlkFilePath = Path.Combine(_modPath, tlkFilename);
+                }
                 // Make path absolute to match Python behavior (Path objects are always absolute)
                 modifier.TlkFilePath = Path.GetFullPath(tlkFilePath);
                 Config.PatchesTLK.Modifiers.Add(modifier);
@@ -538,20 +543,19 @@ namespace CSharpKOTOR.Reader
 
             _log.AddNote("Loading [2DAList] patches from ini...");
 
-            Dictionary<string, string> twodaSectionDict = SectionToDictionary(_ini[twodaSectionName]);
-            // Can be null if key not found
-            string defaultDestination = twodaSectionDict.TryGetValue("!DefaultDestination", out string dd) ? dd : Modifications2DA.DefaultDestination;
-            twodaSectionDict.Remove("!DefaultDestination");
-            // !DefaultSourceFolder: Relative path from mod_path (which is typically the tslpatchdata folder) to source files.
-            // Default value "." refers to mod_path itself (the tslpatchdata folder), not its parent.
-            // For example: if mod_path = "C:/Mod/tslpatchdata", then:
-            //   - !DefaultSourceFolder="." resolves to "C:/Mod/tslpatchdata"
-            //   - !DefaultSourceFolder="2da" resolves to "C:/Mod/tslpatchdata/2da"
-            // Can be null if key not found
-            string defaultSourceFolder = twodaSectionDict.TryGetValue("!DefaultSourceFolder", out string dsf) ? dsf : ".";
-            twodaSectionDict.Remove("!DefaultSourceFolder");
-            foreach ((string identifier, string file) in twodaSectionDict)
+            KeyDataCollection twodaSectionData = _ini[twodaSectionName];
+            string defaultDestination = twodaSectionData["!DefaultDestination"] ?? Modifications2DA.DefaultDestination;
+            string defaultSourceFolder = twodaSectionData["!DefaultSourceFolder"] ?? ".";
+
+            foreach (KeyData tableEntry in twodaSectionData)
             {
+                string identifier = tableEntry.KeyName;
+                string file = tableEntry.Value;
+                if (identifier.StartsWith("!", StringComparison.Ordinal))
+                {
+                    continue;
+                }
+
                 // Can be null if section not found
                 string fileSection = GetSectionName(file);
                 if (fileSection is null)
@@ -560,13 +564,35 @@ namespace CSharpKOTOR.Reader
                 }
 
                 var modifications = new Modifications2DA(file);
-                Dictionary<string, string> fileSectionDict = SectionToDictionary(_ini[fileSection]);
+                KeyDataCollection fileSectionData = _ini[fileSection];
+                Dictionary<string, string> fileSectionDict = SectionToDictionary(fileSectionData);
                 modifications.PopTslPatcherVars(fileSectionDict, defaultDestination, defaultSourceFolder);
+
+                foreach (KeyData kv in fileSectionData)
+                {
+                    string keyLower = kv.KeyName.ToLower();
+                    if (keyLower.StartsWith("2damemory") && kv.KeyName.Length > 9 && kv.KeyName.Substring(9).All(char.IsDigit))
+                    {
+                        int tokenId = ParseIntValue(kv.KeyName.Substring(9));
+                        modifications.FileStore2DA[tokenId] = ParseStoreRowValue(kv.Value);
+                    }
+                    else if (keyLower.StartsWith("strref") && kv.KeyName.Length > 6 && kv.KeyName.Substring(6).All(char.IsDigit))
+                    {
+                        int tokenId = ParseIntValue(kv.KeyName.Substring(6));
+                        modifications.FileStoreTLK[tokenId] = ParseStoreRowValue(kv.Value);
+                    }
+                }
 
                 Config.Patches2DA.Add(modifications);
 
-                foreach ((string key, string modificationId) in fileSectionDict)
+                foreach (KeyData kv in fileSectionData)
                 {
+                    string key = kv.KeyName;
+                    string modificationId = kv.Value;
+                    if (key.StartsWith("!", StringComparison.Ordinal))
+                    {
+                        continue;
+                    }
                     // Skip modifiers like 2DAMEMORY0, StrRef0, etc. - these are processed by Cells2DA, not as section references
                     string lowerKey = key.ToLower();
                     if (lowerKey.StartsWith("2damemory") || lowerKey.StartsWith("strref"))
@@ -2002,6 +2028,34 @@ namespace CSharpKOTOR.Reader
             }
 
             return (cells, store2da, storeTlk);
+        }
+
+        private static RowValue ParseStoreRowValue(string value)
+        {
+            string lowerValue = value.ToLower();
+            if (lowerValue.StartsWith("2damemory"))
+            {
+                int tokenId = ParseIntValue(value.Substring(9));
+                return new RowValue2DAMemory(tokenId);
+            }
+            if (lowerValue.StartsWith("strref"))
+            {
+                int tokenId = ParseIntValue(value.Substring(6));
+                return new RowValueTLKMemory(tokenId);
+            }
+            if (lowerValue == "rowindex")
+            {
+                return new RowValueRowIndex();
+            }
+            if (lowerValue == "rowlabel")
+            {
+                return new RowValueRowLabel();
+            }
+            if (value == "****")
+            {
+                return new RowValueConstant("");
+            }
+            return new RowValueRowCell(value);
         }
 
         /// <summary>

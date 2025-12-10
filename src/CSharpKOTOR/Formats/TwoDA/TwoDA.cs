@@ -15,6 +15,7 @@ namespace CSharpKOTOR.Formats.TwoDA
         private readonly List<Dictionary<string, string>> _rows = new List<Dictionary<string, string>>();
         private readonly List<string> _headers = new List<string>();
         private readonly List<string> _labels = new List<string>();
+        private readonly Dictionary<string, string> _columnDefaults = new Dictionary<string, string>();
 
         public TwoDA([CanBeNull] List<string> headers = null)
         {
@@ -85,6 +86,10 @@ namespace CSharpKOTOR.Formats.TwoDA
             }
 
             _headers.Add(header);
+            if (!_columnDefaults.ContainsKey(header))
+            {
+                _columnDefaults[header] = "";
+            }
             foreach (Dictionary<string, string> row in _rows)
             {
                 row[header] = "";
@@ -160,7 +165,7 @@ namespace CSharpKOTOR.Formats.TwoDA
         {
             var newRow = new Dictionary<string, string>();
             _rows.Add(newRow);
-            _labels.Add(rowLabel ?? _rows.Count.ToString());
+            _labels.Add(rowLabel ?? LabelMax().ToString());
 
             if (cells != null)
             {
@@ -174,9 +179,10 @@ namespace CSharpKOTOR.Formats.TwoDA
 
             foreach (string header in _headers)
             {
+                string defaultValue = _columnDefaults.TryGetValue(header, out string def) ? def : "";
                 newRow[header] = cells?.ContainsKey(header) == true
                     ? cells[header]?.ToString() ?? ""
-                    : "";
+                    : defaultValue;
             }
 
             return _rows.Count - 1;
@@ -225,6 +231,16 @@ namespace CSharpKOTOR.Formats.TwoDA
             }
 
             return _rows.Count - 1;
+        }
+
+        public void SetColumnDefault(string header, string defaultValue)
+        {
+            _columnDefaults[header] = defaultValue ?? "";
+        }
+
+        public string GetColumnDefault(string header)
+        {
+            return _columnDefaults.TryGetValue(header, out string value) ? value : "";
         }
 
         public string GetCellString(int rowIndex, string header, [CanBeNull] string context = null)

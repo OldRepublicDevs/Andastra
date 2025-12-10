@@ -102,17 +102,23 @@ namespace CSharpKOTOR.Mods.TwoDA
         public abstract void Apply(Formats.TwoDA.TwoDA twoda, PatcherMemory memory);
     }
 
+    public interface IRowTracking2DA
+    {
+        TwoDARow LastRow { get; }
+    }
+
     /// <summary>
     /// Changes an existing row in a 2DA.
     /// 1:1 port from Python ChangeRow2DA
     /// </summary>
-    public class ChangeRow2DA : Modify2DA
+    public class ChangeRow2DA : Modify2DA, IRowTracking2DA
     {
         public string Identifier { get; }
         public Target Target { get; }
         public Dictionary<string, RowValue> Cells { get; }
         public Dictionary<int, RowValue> Store2DA { get; }
         public Dictionary<int, RowValue> StoreTLK { get; }
+        public TwoDARow LastRow { get; private set; }
 
         public ChangeRow2DA(
             string identifier,
@@ -139,6 +145,7 @@ namespace CSharpKOTOR.Mods.TwoDA
 
             Dictionary<string, string> cells = Unpack(Cells, memory, twoda, sourceRow);
             sourceRow.UpdateValues(cells);
+            LastRow = sourceRow;
 
             foreach ((int tokenId, RowValue value) in Store2DA)
             {
@@ -159,7 +166,7 @@ namespace CSharpKOTOR.Mods.TwoDA
     /// Adds a new row to a 2DA.
     /// 1:1 port from Python AddRow2DA
     /// </summary>
-    public class AddRow2DA : Modify2DA
+    public class AddRow2DA : Modify2DA, IRowTracking2DA
     {
         public string Identifier { get; }
         [CanBeNull]
@@ -169,6 +176,7 @@ namespace CSharpKOTOR.Mods.TwoDA
         public Dictionary<string, RowValue> Cells { get; }
         public Dictionary<int, RowValue> Store2DA { get; }
         public Dictionary<int, RowValue> StoreTLK { get; }
+        public TwoDARow LastRow { get; private set; }
 
         public AddRow2DA(
             string identifier,
@@ -221,6 +229,7 @@ namespace CSharpKOTOR.Mods.TwoDA
                 Dictionary<string, string> cells = Unpack(Cells, memory, twoda, targetRow);
                 targetRow.UpdateValues(cells);
             }
+            LastRow = targetRow;
 
             foreach ((int tokenId, RowValue value) in Store2DA)
             {
@@ -241,7 +250,7 @@ namespace CSharpKOTOR.Mods.TwoDA
     /// Copies an existing row in a 2DA.
     /// 1:1 port from Python CopyRow2DA
     /// </summary>
-    public class CopyRow2DA : Modify2DA
+    public class CopyRow2DA : Modify2DA, IRowTracking2DA
     {
         public string Identifier { get; }
         public Target Target { get; }
@@ -252,6 +261,7 @@ namespace CSharpKOTOR.Mods.TwoDA
         public Dictionary<string, RowValue> Cells { get; }
         public Dictionary<int, RowValue> Store2DA { get; }
         public Dictionary<int, RowValue> StoreTLK { get; }
+        public TwoDARow LastRow { get; private set; }
 
         public CopyRow2DA(
             string identifier,
@@ -320,6 +330,7 @@ namespace CSharpKOTOR.Mods.TwoDA
                 Dictionary<string, string> cells = Unpack(Cells, memory, twoda, targetRow);
                 targetRow.UpdateValues(cells);
             }
+            LastRow = targetRow;
 
             foreach ((int tokenId, RowValue value) in Store2DA)
             {
@@ -373,6 +384,7 @@ namespace CSharpKOTOR.Mods.TwoDA
             }
 
             twoda.AddColumn(Header);
+            twoda.SetColumnDefault(Header, Default);
 
             for (int i = 0; i < twoda.GetHeight(); i++)
             {

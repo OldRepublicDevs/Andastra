@@ -523,13 +523,19 @@ namespace CSharpKOTOR.Mods.GFF
                 (containerPath, _) = SplitPath(Path);
             }
 
+            string navigatePath = Path;
+            if (FieldType == GFFFieldType.Struct && pathName == Label)
+            {
+                navigatePath = containerPath;
+            }
+
             // Python: navigated_container: GFFList | GFFStruct | None = self._navigate_containers(root_container, container_path)
             // Can be null if not found
-            object navigatedContainer = NavigateContainers(rootStruct, containerPath);
+            object navigatedContainer = NavigateContainers(rootStruct, navigatePath);
             if (!(navigatedContainer is GFFStruct structContainer))
             {
                 string reason = navigatedContainer is null ? "does not exist!" : "is not an instance of a GFFStruct.";
-                logger.AddError($"Unable to add new GFF Field '{Label}' at GFF Path '{containerPath}'! This {reason}");
+                logger.AddError($"Unable to add new GFF Field '{Label}' at GFF Path '{navigatePath}'! This {reason}");
                 return;
             }
 
@@ -567,10 +573,6 @@ namespace CSharpKOTOR.Mods.GFF
             SetFieldValue(structContainer, Label, value, FieldType, memory);
 
             // Python: for add_field in self.modifiers:
-            string fieldActualPath = string.Equals(Path, Label, StringComparison.OrdinalIgnoreCase)
-                ? Path
-                : CombinePath(Path, Label);
-            string childBasePath = string.IsNullOrEmpty(fieldActualPath) ? Label : fieldActualPath;
             foreach (ModifyGFF addField in Modifiers)
             {
                 // Python: assert isinstance(add_field, (AddFieldGFF, AddStructToListGFF, ModifyFieldGFF, Memory2DAModifierGFF))
@@ -588,7 +590,26 @@ namespace CSharpKOTOR.Mods.GFF
                 // Python: newpath = PureWindowsPath("")
                 // Python: for part, resolvedpart in zip_longest(add_field.path.parts, self.path.parts):
                 // Python:     newpath /= resolvedpart or part
-                string newpath = CombinePath(childBasePath, addField is AddFieldGFF af ? af.Path : (addField is AddStructToListGFF asl ? asl.Path : string.Empty));
+                string childPath = addField is AddFieldGFF af ? af.Path : (addField is AddStructToListGFF asl ? asl.Path : string.Empty);
+                string[] parentParts = string.IsNullOrEmpty(Path)
+                    ? Array.Empty<string>()
+                    : Path.Split(new[] { '\\', '/' }, StringSplitOptions.RemoveEmptyEntries);
+                string[] childParts = string.IsNullOrEmpty(childPath)
+                    ? Array.Empty<string>()
+                    : childPath.Split(new[] { '\\', '/' }, StringSplitOptions.RemoveEmptyEntries);
+                int maxLen = Math.Max(parentParts.Length, childParts.Length);
+                var combinedParts = new System.Collections.Generic.List<string>();
+                for (int i = 0; i < maxLen; i++)
+                {
+                    string resolvedPart = i < parentParts.Length ? parentParts[i] : null;
+                    string part = i < childParts.Length ? childParts[i] : null;
+                    string chosen = !string.IsNullOrEmpty(resolvedPart) ? resolvedPart : part;
+                    if (!string.IsNullOrEmpty(chosen))
+                    {
+                        combinedParts.Add(chosen);
+                    }
+                }
+                string newpath = string.Join("/", combinedParts);
 
                 // Python: #logger.add_verbose(f"Resolved gff path of INI section [{add_field.identifier}] from relative '{add_field.path}' --> absolute '{newpath}'")
                 if (addField is AddFieldGFF addFieldGFF)
@@ -825,8 +846,8 @@ namespace CSharpKOTOR.Mods.GFF
             // Python: field_type: GFFFieldType = navigated_struct._fields[label].field_type()
             if (!navigatedStruct.TryGetFieldType(label, out GFFFieldType fieldType))
             {
-                logger.AddError($"Field '{label}' not found in struct");
-                return;
+                // Field does not exist; align with TSLPatcher behavior by creating it on-the-fly.
+                fieldType = GFFFieldType.Int32;
             }
 
             // Python: value: Any = self.value.value(memory, field_type)

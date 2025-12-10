@@ -37,6 +37,8 @@ namespace CSharpKOTOR.Mods.TwoDA
     };
 
         public List<Modify2DA> Modifiers { get; set; } = new List<Modify2DA>();
+        public Dictionary<int, RowValue> FileStore2DA { get; } = new Dictionary<int, RowValue>();
+        public Dictionary<int, RowValue> FileStoreTLK { get; } = new Dictionary<int, RowValue>();
 
         public Modifications2DA(string filename)
             : base(filename)
@@ -67,11 +69,25 @@ namespace CSharpKOTOR.Mods.TwoDA
                 return;
             }
 
-            foreach (Modify2DA row in Modifiers)
+            TwoDARow lastRow = null;
+
+            var ordered = new List<Modify2DA>();
+            ordered.AddRange(Modifiers.FindAll(m => m is AddColumn2DA));
+            ordered.AddRange(Modifiers.FindAll(m => m is ChangeRow2DA));
+            ordered.AddRange(Modifiers.FindAll(m => m is AddRow2DA));
+            ordered.AddRange(Modifiers.FindAll(m => m is CopyRow2DA));
+            ordered.AddRange(Modifiers.FindAll(m =>
+                !(m is AddColumn2DA) && !(m is ChangeRow2DA) && !(m is CopyRow2DA) && !(m is AddRow2DA)));
+
+            foreach (Modify2DA row in ordered)
             {
                 try
                 {
                     row.Apply(twoda, memory);
+                    if (row is IRowTracking2DA tracker && tracker.LastRow != null)
+                    {
+                        lastRow = tracker.LastRow;
+                    }
                 }
                 catch (Exception e)
                 {
@@ -90,6 +106,21 @@ namespace CSharpKOTOR.Mods.TwoDA
             if (game.IsK2())
             {
                 return;
+            }
+
+            // Apply file-level token storage using the last modified row (if any).
+            foreach ((int tokenId, RowValue value) in FileStore2DA)
+            {
+                memory.Memory2DA[tokenId] = value.Value(memory, twoda, lastRow);
+            }
+
+            foreach ((int tokenId, RowValue value) in FileStoreTLK)
+            {
+                string strVal = value.Value(memory, twoda, lastRow);
+                if (!string.IsNullOrEmpty(strVal))
+                {
+                    memory.MemoryStr[tokenId] = int.Parse(strVal);
+                }
             }
 
             // Exceeding row count maximums will break the game.
