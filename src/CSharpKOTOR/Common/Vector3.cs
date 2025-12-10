@@ -77,6 +77,17 @@ namespace CSharpKOTOR.Common
             return MathF.Sqrt(dx * dx + dy * dy + dz * dz);
         }
 
+        // Matching PyKotor implementation - cross product for ray-triangle intersection
+        // Original: def cross(a: Vector3, b: Vector3) -> Vector3
+        public static Vector3 Cross(Vector3 a, Vector3 b)
+        {
+            return new Vector3(
+                a.Y * b.Z - a.Z * b.Y,
+                a.Z * b.X - a.X * b.Z,
+                a.X * b.Y - a.Y * b.X
+            );
+        }
+
         public override string ToString() => $"{X} {Y} {Z}";
 
         public override int GetHashCode() => HashCode.Combine(X, Y, Z);
@@ -111,6 +122,51 @@ namespace CSharpKOTOR.Common
 
         public static bool operator !=(Vector3 left, Vector3 right)
             => !left.Equals(right);
+
+        // Matching PyKotor implementation - indexer for accessing components by index
+        // Original: def __getitem__(self, item: int) -> float
+        public float this[int index]
+        {
+            get
+            {
+                switch (index)
+                {
+                    case 0: return X;
+                    case 1: return Y;
+                    case 2: return Z;
+                    default: throw new IndexOutOfRangeException();
+                }
+            }
+            set
+            {
+                switch (index)
+                {
+                    case 0: X = value; break;
+                    case 1: Y = value; break;
+                    case 2: Z = value; break;
+                    default: throw new IndexOutOfRangeException();
+                }
+            }
+        }
+    }
+
+    // Matching PyKotor implementation - extension method for checking if vector is in list by identity
+    // Original: def within(self, container: list) -> bool
+    public static class Vector3Extensions
+    {
+        public static bool Within(this Vector3 vector, System.Collections.Generic.IList<Vector3> container)
+        {
+            // For structs, we check by value equality since identity doesn't apply
+            // This matches the Python behavior where Vector3 objects with same coordinates are considered equal
+            foreach (var item in container)
+            {
+                if (vector.Equals(item))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
     }
 }
 

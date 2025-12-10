@@ -18,7 +18,7 @@ namespace CSharpKOTOR.Resource.Generics
         public static readonly ResourceType BinaryType = ResourceType.UTW;
 
         // Basic UTW properties
-        public ResRef ResRef { get; set; } = ResRef.FromInvalid();
+        public ResRef ResRef { get; set; } = ResRef.FromBlank();
         public string Tag { get; set; } = string.Empty;
         public LocalizedString Name { get; set; } = LocalizedString.FromInvalid();
         public bool HasMapNote { get; set; }

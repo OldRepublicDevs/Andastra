@@ -28,7 +28,7 @@ namespace CSharpKOTOR.Resource.Generics
         public string Tag { get; set; } = string.Empty;
 
         // Entry area ResRef (starting area)
-        public ResRef EntryArea { get; set; } = ResRef.FromInvalid();
+        public ResRef EntryArea { get; set; } = ResRef.FromBlank();
 
         // Entry X position
         public float EntryX { get; set; }
@@ -45,19 +45,19 @@ namespace CSharpKOTOR.Resource.Generics
         public float EntryDirectionZ { get; set; }
 
         // Module script hooks
-        public ResRef OnClientEnter { get; set; } = ResRef.FromInvalid();
-        public ResRef OnClientLeave { get; set; } = ResRef.FromInvalid();
-        public ResRef OnHeartbeat { get; set; } = ResRef.FromInvalid();
-        public ResRef OnUserDefined { get; set; } = ResRef.FromInvalid();
-        public ResRef OnActivateItem { get; set; } = ResRef.FromInvalid();
-        public ResRef OnAcquireItem { get; set; } = ResRef.FromInvalid();
-        public ResRef OnUnacquireItem { get; set; } = ResRef.FromInvalid();
-        public ResRef OnPlayerDeath { get; set; } = ResRef.FromInvalid();
-        public ResRef OnPlayerDying { get; set; } = ResRef.FromInvalid();
-        public ResRef OnPlayerRespawn { get; set; } = ResRef.FromInvalid();
-        public ResRef OnPlayerRest { get; set; } = ResRef.FromInvalid();
-        public ResRef OnPlayerLevelUp { get; set; } = ResRef.FromInvalid();
-        public ResRef OnPlayerCancelCutscene { get; set; } = ResRef.FromInvalid();
+        public ResRef OnClientEnter { get; set; } = ResRef.FromBlank();
+        public ResRef OnClientLeave { get; set; } = ResRef.FromBlank();
+        public ResRef OnHeartbeat { get; set; } = ResRef.FromBlank();
+        public ResRef OnUserDefined { get; set; } = ResRef.FromBlank();
+        public ResRef OnActivateItem { get; set; } = ResRef.FromBlank();
+        public ResRef OnAcquireItem { get; set; } = ResRef.FromBlank();
+        public ResRef OnUnacquireItem { get; set; } = ResRef.FromBlank();
+        public ResRef OnPlayerDeath { get; set; } = ResRef.FromBlank();
+        public ResRef OnPlayerDying { get; set; } = ResRef.FromBlank();
+        public ResRef OnPlayerRespawn { get; set; } = ResRef.FromBlank();
+        public ResRef OnPlayerRest { get; set; } = ResRef.FromBlank();
+        public ResRef OnPlayerLevelUp { get; set; } = ResRef.FromBlank();
+        public ResRef OnPlayerCancelCutscene { get; set; } = ResRef.FromBlank();
 
         // Area list (areas in this module)
         public List<ResRef> AreaList { get; set; } = new List<ResRef>();

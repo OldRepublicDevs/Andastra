@@ -19,7 +19,7 @@ namespace CSharpKOTOR.Resource.Generics
         public static readonly ResourceType BinaryType = ResourceType.UTE;
 
         // Basic UTE properties
-        public ResRef ResRef { get; set; } = ResRef.FromInvalid();
+        public ResRef ResRef { get; set; } = ResRef.FromBlank();
         public string Tag { get; set; } = string.Empty;
         public string Comment { get; set; } = string.Empty;
         public bool Active { get; set; }
@@ -39,11 +39,11 @@ namespace CSharpKOTOR.Resource.Generics
         public int OnExhausted { get; set; }
         public int OnHeartbeat { get; set; }
         public int OnUserDefined { get; set; }
-        public ResRef OnEnteredScript { get; set; } = ResRef.FromInvalid();
-        public ResRef OnExitScript { get; set; } = ResRef.FromInvalid();
-        public ResRef OnExhaustedScript { get; set; } = ResRef.FromInvalid();
-        public ResRef OnHeartbeatScript { get; set; } = ResRef.FromInvalid();
-        public ResRef OnUserDefinedScript { get; set; } = ResRef.FromInvalid();
+        public ResRef OnEnteredScript { get; set; } = ResRef.FromBlank();
+        public ResRef OnExitScript { get; set; } = ResRef.FromBlank();
+        public ResRef OnExhaustedScript { get; set; } = ResRef.FromBlank();
+        public ResRef OnHeartbeatScript { get; set; } = ResRef.FromBlank();
+        public ResRef OnUserDefinedScript { get; set; } = ResRef.FromBlank();
 
         // Creature spawn list
         public List<UTECreature> Creatures { get; set; } = new List<UTECreature>();
@@ -59,7 +59,7 @@ namespace CSharpKOTOR.Resource.Generics
     [PublicAPI]
     public sealed class UTECreature
     {
-        public ResRef ResRef { get; set; } = ResRef.FromInvalid();
+        public ResRef ResRef { get; set; } = ResRef.FromBlank();
         public int Appearance { get; set; }
         public int SingleSpawn { get; set; }
         public int CR { get; set; }

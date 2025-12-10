@@ -19,7 +19,7 @@ namespace CSharpKOTOR.Resource.Generics
         public static readonly ResourceType BinaryType = ResourceType.UTM;
 
         // Basic UTM properties
-        public ResRef ResRef { get; set; } = ResRef.FromInvalid();
+        public ResRef ResRef { get; set; } = ResRef.FromBlank();
         public LocalizedString Name { get; set; } = LocalizedString.FromInvalid();
         public string Tag { get; set; } = string.Empty;
         public int MarkUp { get; set; }
@@ -27,8 +27,8 @@ namespace CSharpKOTOR.Resource.Generics
         public string Comment { get; set; } = string.Empty;
         public int OnOpen { get; set; }
         public int OnStore { get; set; }
-        public ResRef OnOpenScript { get; set; } = ResRef.FromInvalid();
-        public ResRef OnStoreScript { get; set; } = ResRef.FromInvalid();
+        public ResRef OnOpenScript { get; set; } = ResRef.FromBlank();
+        public ResRef OnStoreScript { get; set; } = ResRef.FromBlank();
 
         // Inventory items
         public List<UTMItem> Items { get; set; } = new List<UTMItem>();
@@ -44,7 +44,7 @@ namespace CSharpKOTOR.Resource.Generics
     [PublicAPI]
     public sealed class UTMItem
     {
-        public ResRef ResRef { get; set; } = ResRef.FromInvalid();
+        public ResRef ResRef { get; set; } = ResRef.FromBlank();
         public int Infinite { get; set; }
         public int Droppable { get; set; }
 

@@ -421,7 +421,14 @@ namespace CSharpKOTOR.Common
             Encoding enc;
             if (encoding == null)
             {
-                enc = Encoding.GetEncoding("windows-1252", EncoderFallback.ReplacementFallback, DecoderFallback.ReplacementFallback);
+                try
+                {
+                    enc = Encoding.GetEncoding("windows-1252", EncoderFallback.ReplacementFallback, DecoderFallback.ReplacementFallback);
+                }
+                catch (ArgumentException)
+                {
+                    enc = Encoding.GetEncoding(1252, EncoderFallback.ReplacementFallback, DecoderFallback.ReplacementFallback);
+                }
             }
             else
             {
@@ -435,7 +442,15 @@ namespace CSharpKOTOR.Common
                     decoderFallback = DecoderFallback.ReplacementFallback;
                 }
 
-                enc = Encoding.GetEncoding(encoding, EncoderFallback.ReplacementFallback, decoderFallback);
+                try
+                {
+                    enc = Encoding.GetEncoding(encoding, EncoderFallback.ReplacementFallback, decoderFallback);
+                }
+                catch (ArgumentException)
+                {
+                    // Fallback to windows-1252 if encoding not found
+                    enc = Encoding.GetEncoding(1252, EncoderFallback.ReplacementFallback, decoderFallback);
+                }
             }
 
             string text;

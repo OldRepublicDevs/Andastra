@@ -13,9 +13,9 @@ namespace CSharpKOTOR.Resources
     [PublicAPI]
     public class ArchiveResource
     {
-        public ResRef ResRef { get; }
-        public ResourceType ResType { get; }
-        public byte[] Data { get; }
+        public ResRef ResRef { get; protected set; }
+        public ResourceType ResType { get; protected set; }
+        public byte[] Data { get; protected set; }
 
         public ArchiveResource(ResRef resref, ResourceType restype, byte[] data)
         {

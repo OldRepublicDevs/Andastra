@@ -25,7 +25,7 @@ namespace CSharpKOTOR.Resource.Generics
         };
 
         // Basic UTI properties
-        public ResRef ResRef { get; set; } = ResRef.FromInvalid();
+        public ResRef ResRef { get; set; } = ResRef.FromBlank();
         public int BaseItem { get; set; }
         public LocalizedString Name { get; set; } = LocalizedString.FromInvalid();
         public LocalizedString Description { get; set; } = LocalizedString.FromInvalid();
@@ -46,10 +46,10 @@ namespace CSharpKOTOR.Resource.Generics
         public int PaletteId { get; set; }
         public string Comment { get; set; } = string.Empty;
         public string Tag { get; set; } = string.Empty;
-        public ResRef TemplateResRef { get; set; } = ResRef.FromInvalid();
-        public ResRef LocalizedName { get; set; } = ResRef.FromInvalid();
-        public ResRef DescriptionId { get; set; } = ResRef.FromInvalid();
-        public ResRef DescriptionUnidentifiedId { get; set; } = ResRef.FromInvalid();
+        public ResRef TemplateResRef { get; set; } = ResRef.FromBlank();
+        public ResRef LocalizedName { get; set; } = ResRef.FromBlank();
+        public ResRef DescriptionId { get; set; } = ResRef.FromBlank();
+        public ResRef DescriptionUnidentifiedId { get; set; } = ResRef.FromBlank();
 
         // Properties
         public List<UTIProperty> Properties { get; set; } = new List<UTIProperty>();
@@ -87,7 +87,7 @@ namespace CSharpKOTOR.Resource.Generics
     [PublicAPI]
     public sealed class UTIUpgrade
     {
-        public ResRef Upgrade { get; set; } = ResRef.FromInvalid();
+        public ResRef Upgrade { get; set; } = ResRef.FromBlank();
         public string Name { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
 

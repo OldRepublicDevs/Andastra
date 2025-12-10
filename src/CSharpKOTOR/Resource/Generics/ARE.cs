@@ -23,8 +23,8 @@ namespace CSharpKOTOR.Resource.Generics
         public LocalizedString Name { get; set; } = LocalizedString.FromInvalid();
         public int AlphaTest { get; set; }
         public int CameraStyle { get; set; }
-        public ResRef DefaultEnvMap { get; set; } = ResRef.FromInvalid();
-        public ResRef GrassTexture { get; set; } = ResRef.FromInvalid();
+        public ResRef DefaultEnvMap { get; set; } = ResRef.FromBlank();
+        public ResRef GrassTexture { get; set; } = ResRef.FromBlank();
         public float GrassDensity { get; set; }
         public float GrassSize { get; set; }
         public float GrassProbLL { get; set; }
@@ -34,17 +34,17 @@ namespace CSharpKOTOR.Resource.Generics
         public bool FogEnabled { get; set; }
         public float FogNear { get; set; }
         public float FogFar { get; set; }
-        public Color FogColor { get; set; } = Color.FromRgb(0, 0, 0);
+        public Color FogColor { get; set; } = new Color(0, 0, 0);
         public bool SunFogEnabled { get; set; }
         public float SunFogNear { get; set; }
         public float SunFogFar { get; set; }
-        public Color SunFogColor { get; set; } = Color.FromRgb(0, 0, 0);
+        public Color SunFogColor { get; set; } = new Color(0, 0, 0);
         public int WindPower { get; set; }
-        public ResRef ShadowOpacity { get; set; } = ResRef.FromInvalid();
-        public ResRef ChancesOfRain { get; set; } = ResRef.FromInvalid();
-        public ResRef ChancesOfSnow { get; set; } = ResRef.FromInvalid();
-        public ResRef ChancesOfLightning { get; set; } = ResRef.FromInvalid();
-        public ResRef ChancesOfFog { get; set; } = ResRef.FromInvalid();
+        public ResRef ShadowOpacity { get; set; } = ResRef.FromBlank();
+        public ResRef ChancesOfRain { get; set; } = ResRef.FromBlank();
+        public ResRef ChancesOfSnow { get; set; } = ResRef.FromBlank();
+        public ResRef ChancesOfLightning { get; set; } = ResRef.FromBlank();
+        public ResRef ChancesOfFog { get; set; } = ResRef.FromBlank();
         public int Weather { get; set; }
         public int SkyBox { get; set; }
         public int MoonAmbient { get; set; }
@@ -64,26 +64,26 @@ namespace CSharpKOTOR.Resource.Generics
         public int NightDir1 { get; set; }
         public int NightDir2 { get; set; }
         public int NightDir3 { get; set; }
-        public Color DawnColor1 { get; set; } = Color.FromRgb(0, 0, 0);
-        public Color DawnColor2 { get; set; } = Color.FromRgb(0, 0, 0);
-        public Color DawnColor3 { get; set; } = Color.FromRgb(0, 0, 0);
-        public Color DayColor1 { get; set; } = Color.FromRgb(0, 0, 0);
-        public Color DayColor2 { get; set; } = Color.FromRgb(0, 0, 0);
-        public Color DayColor3 { get; set; } = Color.FromRgb(0, 0, 0);
-        public Color DuskColor1 { get; set; } = Color.FromRgb(0, 0, 0);
-        public Color DuskColor2 { get; set; } = Color.FromRgb(0, 0, 0);
-        public Color DuskColor3 { get; set; } = Color.FromRgb(0, 0, 0);
-        public Color NightColor1 { get; set; } = Color.FromRgb(0, 0, 0);
-        public Color NightColor2 { get; set; } = Color.FromRgb(0, 0, 0);
-        public Color NightColor3 { get; set; } = Color.FromRgb(0, 0, 0);
-        public ResRef OnEnter { get; set; } = ResRef.FromInvalid();
-        public ResRef OnExit { get; set; } = ResRef.FromInvalid();
-        public ResRef OnHeartbeat { get; set; } = ResRef.FromInvalid();
-        public ResRef OnUserDefined { get; set; } = ResRef.FromInvalid();
-        public ResRef OnEnter2 { get; set; } = ResRef.FromInvalid();
-        public ResRef OnExit2 { get; set; } = ResRef.FromInvalid();
-        public ResRef OnHeartbeat2 { get; set; } = ResRef.FromInvalid();
-        public ResRef OnUserDefined2 { get; set; } = ResRef.FromInvalid();
+        public Color DawnColor1 { get; set; } = new Color(0, 0, 0);
+        public Color DawnColor2 { get; set; } = new Color(0, 0, 0);
+        public Color DawnColor3 { get; set; } = new Color(0, 0, 0);
+        public Color DayColor1 { get; set; } = new Color(0, 0, 0);
+        public Color DayColor2 { get; set; } = new Color(0, 0, 0);
+        public Color DayColor3 { get; set; } = new Color(0, 0, 0);
+        public Color DuskColor1 { get; set; } = new Color(0, 0, 0);
+        public Color DuskColor2 { get; set; } = new Color(0, 0, 0);
+        public Color DuskColor3 { get; set; } = new Color(0, 0, 0);
+        public Color NightColor1 { get; set; } = new Color(0, 0, 0);
+        public Color NightColor2 { get; set; } = new Color(0, 0, 0);
+        public Color NightColor3 { get; set; } = new Color(0, 0, 0);
+        public ResRef OnEnter { get; set; } = ResRef.FromBlank();
+        public ResRef OnExit { get; set; } = ResRef.FromBlank();
+        public ResRef OnHeartbeat { get; set; } = ResRef.FromBlank();
+        public ResRef OnUserDefined { get; set; } = ResRef.FromBlank();
+        public ResRef OnEnter2 { get; set; } = ResRef.FromBlank();
+        public ResRef OnExit2 { get; set; } = ResRef.FromBlank();
+        public ResRef OnHeartbeat2 { get; set; } = ResRef.FromBlank();
+        public ResRef OnUserDefined2 { get; set; } = ResRef.FromBlank();
         public List<string> AreaList { get; set; } = new List<string>();
         public List<ResRef> MapList { get; set; } = new List<ResRef>();
 

@@ -5,6 +5,7 @@ using System.Linq;
 using CSharpKOTOR.Formats.Capsule;
 using CSharpKOTOR.Formats.GFF;
 using CSharpKOTOR.Installation;
+using CSharpKOTOR.Logger;
 using CSharpKOTOR.Resources;
 using CSharpKOTOR.Tools;
 using JetBrains.Annotations;
@@ -289,7 +290,7 @@ namespace CSharpKOTOR.Common
             byte[] lookup = GetResource("module", ResourceType.IFO);
             if (lookup == null)
             {
-                string moduleIfoPath = Path.Combine(Path.GetDirectoryName(Path.GetResolvedPath()), "module.ifo");
+                string moduleIfoPath = Path.Combine(System.IO.Path.GetDirectoryName(this.Path.ToString()), "module.ifo");
                 throw new FileNotFoundException($"Module IFO not found", moduleIfoPath);
             }
 
@@ -511,7 +512,7 @@ namespace CSharpKOTOR.Common
             _cachedSortId = null;
 
             // Build all capsules relevant to this root in the provided installation
-            string modulesPath = Installation.GetModulesPath(_installation.Path);
+            string modulesPath = CSharpKOTOR.Installation.Installation.GetModulesPath(_installation.Path);
             if (_dotMod)
             {
                 string modFilepath = Path.Combine(modulesPath, _root + KModuleType.MOD.GetExtension());
@@ -747,7 +748,7 @@ namespace CSharpKOTOR.Common
             var locationsList = locations.ToList();
             if (locationsList.Count == 0 && !(resname == "dirt" && restype == ResourceType.TPC))
             {
-                RobustLogger.Instance.Warning("No locations found for '{0}.{1}' which are intended to add to module '{2}'", resname, restype, _root);
+                new RobustLogger().Warning(string.Format("No locations found for '{0}.{1}' which are intended to add to module '{2}'", resname, restype, _root));
             }
 
             ResourceIdentifier ident = new ResourceIdentifier(resname, restype);
@@ -842,7 +843,7 @@ namespace CSharpKOTOR.Common
         private void ReloadResources()
         {
             string displayName = (_dotMod ? $"{_root}.mod" : $"{_root}.rim");
-            RobustLogger.Instance.Info("Loading module resources needed for '{0}'", displayName);
+            new RobustLogger().Info(string.Format("Loading module resources needed for '{0}'", displayName));
 
             // Get main capsule for searching
             ModulePieceResource mainCapsule = LookupMainCapsule();
@@ -855,7 +856,7 @@ namespace CSharpKOTOR.Common
             ResRef linkResname = ModuleId();
             if (linkResname == null)
             {
-                RobustLogger.Instance.Warning("Module ID is null for module '{0}', cannot load resources", _root);
+                new RobustLogger().Warning(string.Format("Module ID is null for module '{0}', cannot load resources", _root));
                 return;
             }
 
@@ -869,18 +870,21 @@ namespace CSharpKOTOR.Common
                 if (capsule == null)
                     continue;
 
-                foreach (FileResource resource in capsule.GetResources())
+                foreach (CapsuleResource capsuleResource in capsule.GetResources())
                 {
-                    RobustLogger.Instance.Info("Adding location '{0}' for resource '{1}' from erf/rim '{2}'",
-                        capsule.Filename(), resource.Identifier, capsule.Identifier());
+                    FileResource resource = new FileResource(capsuleResource.ResName, capsuleResource.ResType, 
+                        capsuleResource.Size, capsuleResource.Offset, capsule.Path.ToString());
+                    new RobustLogger().Info(string.Format("Adding location '{0}' for resource '{1}' from erf/rim '{2}'",
+                        capsule.Filename(), resource.Identifier, capsule.PieceInfo.ResIdent()));
                     AddLocations(resource.ResName, resource.ResType, new[] { capsule.Filename() });
                 }
             }
 
             // Any resource referenced by the GIT/LYT/VIS not present in the module files
             // To be looked up elsewhere in the installation
+            List<LazyCapsule> lazyCapsules = capsulesToSearch.Select(c => new LazyCapsule(c.Path.ToString())).ToList();
             Dictionary<ResourceIdentifier, List<LocationResult>> mainSearchResults =
-                _installation.Locations(new[] { lytQuery, gitQuery, visQuery }, order, capsulesToSearch);
+                _installation.Locations(new List<ResourceIdentifier> { lytQuery, gitQuery, visQuery }, order, lazyCapsules);
 
             // Track all resources referenced by GIT/LYT/VIS
             HashSet<ResourceIdentifier> gitSearch = new HashSet<ResourceIdentifier>();
@@ -901,8 +905,9 @@ namespace CSharpKOTOR.Common
             allReferences.UnionWith(lytSearch);
             allReferences.UnionWith(visSearch);
 
+            List<LazyCapsule> lazyCapsules2 = capsulesToSearch.Select(c => new LazyCapsule(c.Path.ToString())).ToList();
             Dictionary<ResourceIdentifier, List<LocationResult>> searchResults =
-                _installation.Locations(allReferences.ToList(), order, capsulesToSearch);
+                _installation.Locations(allReferences.ToList(), order, lazyCapsules2);
 
             // Add locations for all found resources
             foreach (KeyValuePair<ResourceIdentifier, List<LocationResult>> kv in searchResults)
@@ -974,8 +979,8 @@ namespace CSharpKOTOR.Common
             {
                 if (_resources.ContainsKey(resource.Identifier) || _gitSearch.Contains(resource.Identifier))
                 {
-                    RobustLogger.Instance.Info("Found chitin/core location '{0}' for resource '{1}' for module '{2}'",
-                        resource.FilePath, resource.Identifier, displayName);
+                    new RobustLogger().Info(string.Format("Found chitin/core location '{0}' for resource '{1}' for module '{2}'",
+                        resource.FilePath, resource.Identifier, displayName));
                     AddLocations(resource.ResName, resource.ResType, new[] { resource.FilePath });
                 }
             }
@@ -991,7 +996,7 @@ namespace CSharpKOTOR.Common
                     {
                         continue;
                     }
-                    RobustLogger.Instance.Info("Found override location '{0}' for module '{1}'", resource.FilePath, displayName);
+                    new RobustLogger().Info(string.Format("Found override location '{0}' for module '{1}'", resource.FilePath, displayName));
                     AddLocations(resource.ResName, resource.ResType, new[] { resource.FilePath });
                 }
             }
@@ -1007,13 +1012,13 @@ namespace CSharpKOTOR.Common
             /*
             foreach (var model in Models())
             {
-                RobustLogger.Instance.Info("Finding textures/lightmaps for model '{0}'...", model.GetIdentifier());
+                new RobustLogger().Info(string.Format("Finding textures/lightmaps for model '{0}'...", model.GetIdentifier()));
                 try
                 {
                     byte[] modelData = (byte[])model.Resource();
                     if (modelData == null)
                     {
-                        RobustLogger.Instance.Warning("Missing model '{0}', needed by module '{1}'", model.GetIdentifier(), displayName);
+                        new RobustLogger().Warning(string.Format("Missing model '{0}', needed by module '{1}'", model.GetIdentifier(), displayName));
                         continue;
                     }
 
@@ -1022,7 +1027,7 @@ namespace CSharpKOTOR.Common
                 }
                 catch (Exception ex)
                 {
-                    RobustLogger.Instance.Warning("Suppressed exception while getting model data '{0}': {1}", model.GetIdentifier(), ex.Message);
+                    new RobustLogger().Warning(string.Format("Suppressed exception while getting model data '{0}': {1}", model.GetIdentifier(), ex.Message));
                 }
             }
             */
@@ -1054,8 +1059,8 @@ namespace CSharpKOTOR.Common
                     ? string.Join(", ", locationPaths)
                     : string.Join(", ", locationPaths.Take(3)) + $", ... and {locationPaths.Count - 3} more";
 
-                RobustLogger.Instance.Debug("Adding {0} texture location(s) for '{1}' to '{2}': {3}",
-                    kv.Value.Count, kv.Key, displayName, pathsStr);
+                new RobustLogger().Debug(string.Format("Adding {0} texture location(s) for '{1}' to '{2}': {3}",
+                    kv.Value.Count, kv.Key, displayName, pathsStr));
 
                 AddLocations(kv.Key.ResName, kv.Key.ResType, kv.Value.Select(loc => loc.FilePath));
             }
@@ -1330,13 +1335,13 @@ namespace CSharpKOTOR.Common
             if (FileHelpers.IsCapsuleFile(activePath))
             {
                 var capsule = new Capsule(activePath);
-                return capsule.GetResource(_resname, _restype);
+                return capsule.GetResource(ResName, ResType);
             }
 
             // Check if BIF file
             if (FileHelpers.IsBifFile(activePath))
             {
-                var resource = _installation.Resource(_resname, _restype, new[] { SearchLocation.CHITIN });
+                var resource = _installation.Resource(ResName, ResType, new[] { SearchLocation.CHITIN });
                 return resource?.Data;
             }
 

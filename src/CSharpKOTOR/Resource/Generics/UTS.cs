@@ -18,7 +18,7 @@ namespace CSharpKOTOR.Resource.Generics
         public static readonly ResourceType BinaryType = ResourceType.UTS;
 
         // Basic UTS properties
-        public ResRef ResRef { get; set; } = ResRef.FromInvalid();
+        public ResRef ResRef { get; set; } = ResRef.FromBlank();
         public string Tag { get; set; } = string.Empty;
         public bool Active { get; set; }
         public bool Continuous { get; set; }
@@ -38,7 +38,7 @@ namespace CSharpKOTOR.Resource.Generics
         public int Times { get; set; }
         public int Interval { get; set; }
         public int IntervalVariance { get; set; }
-        public ResRef Sound { get; set; } = ResRef.FromInvalid();
+        public ResRef Sound { get; set; } = ResRef.FromBlank();
         public string Comment { get; set; } = string.Empty;
 
         public UTS()
