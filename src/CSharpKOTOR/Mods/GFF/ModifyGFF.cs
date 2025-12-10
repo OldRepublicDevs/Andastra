@@ -277,6 +277,48 @@ namespace CSharpKOTOR.Mods.GFF
             }
             return null;
         }
+
+        protected static string GetIdentifierForLogging(ModifyGFF modifier)
+        {
+            if (modifier is AddStructToListGFF addStruct)
+            {
+                return addStruct.Identifier;
+            }
+            if (modifier is AddFieldGFF addField)
+            {
+                return addField.Identifier;
+            }
+            if (modifier is ModifyFieldGFF modifyField)
+            {
+                return modifyField.Identifier;
+            }
+            if (modifier is Memory2DAModifierGFF mem2DA)
+            {
+                return mem2DA.Identifier;
+            }
+            return modifier.GetType().Name;
+        }
+
+        protected static string GetPathForLogging(ModifyGFF modifier)
+        {
+            if (modifier is AddStructToListGFF addStruct)
+            {
+                return addStruct.Path;
+            }
+            if (modifier is AddFieldGFF addField)
+            {
+                return addField.Path;
+            }
+            if (modifier is ModifyFieldGFF modifyField)
+            {
+                return modifyField.Path;
+            }
+            if (modifier is Memory2DAModifierGFF mem2DA)
+            {
+                return mem2DA.Path;
+            }
+            return "";
+        }
     }
 
     /// <summary>
@@ -331,7 +373,7 @@ namespace CSharpKOTOR.Mods.GFF
             string workingPath = Path;
             if (pathName == ">>##INDEXINLIST##<<")
             {
-                // Python: #logger.add_verbose(f"Removing unique sentinel from AddStructToListGFF instance (ini section [{self.identifier}]). Path: '{self.path}'")
+                logger.AddVerbose($"Removing unique sentinel from AddStructToListGFF instance (ini section [{Identifier}]). Path: '{Path}'");
                 // Python: self.path = self.path.parent  # HACK(th3w1zard1): idk why conditional parenting is necessary but it works
                 (workingPath, _) = SplitPath(Path);
             }
@@ -448,7 +490,9 @@ namespace CSharpKOTOR.Mods.GFF
                     ? listIndex.ToString()
                     : $"{workingPath}/{listIndex}";
 
-                // Python: #logger.add_verbose(f"Resolved GFFList path of [{add_field.identifier}] from '{add_field.path}' --> '{newpath}'")
+                string addFieldIdentifier = GetIdentifierForLogging(addField);
+                string addFieldPath = GetPathForLogging(addField);
+                logger.AddVerbose($"Resolved GFFList path of [{addFieldIdentifier}] from '{addFieldPath}' --> '{newpath}'");
                 // Python: add_field.path = newpath
                 if (addField is AddFieldGFF addFieldGFF)
                 {
@@ -515,7 +559,7 @@ namespace CSharpKOTOR.Mods.GFF
                 return;
             }
 
-            // Python: #logger.add_verbose(f"Apply patch from INI section [{self.identifier}] FieldType: {self.field_type.name} GFF Path: '{self.path}'")
+            logger.AddVerbose($"Apply patch from INI section [{Identifier}] FieldType: {FieldType} GFF Path: '{Path}'");
             // Python: container_path = self.path.parent if self.path.name == ">>##INDEXINLIST##<<" else self.path
             // Default to the full path; only collapse to the parent when the sentinel is present
             // or when adding a struct whose path already ends with the struct label.
@@ -608,7 +652,8 @@ namespace CSharpKOTOR.Mods.GFF
                     newpath = CombinePath(basePathForChildren, childPath);
                 }
 
-                // Python: #logger.add_verbose(f"Resolved gff path of INI section [{add_field.identifier}] from relative '{add_field.path}' --> absolute '{newpath}'")
+                string childIdentifier = GetIdentifierForLogging(addField);
+                logger.AddVerbose($"Resolved gff path of INI section [{childIdentifier}] from relative '{childPath}' --> absolute '{newpath}'");
                 if (addField is AddFieldGFF addFieldGFF)
                 {
                     addFieldGFF.Path = newpath;
