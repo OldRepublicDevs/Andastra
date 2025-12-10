@@ -48,11 +48,42 @@ namespace CSharpKOTOR.Formats.NCS.Compiler
             _cursorIndex = 0;
             _functions = GetFunctionsForGame(game);
             // Python: self._instruction_indices: dict[int, int] = {id(instruction): idx for idx, instruction in enumerate(ncs.instructions)}
+            // Matching PyKotor interpreter.py line 60-62: use object identity (id) as key
             _instructionIndices = new Dictionary<NCSInstruction, int>(new ReferenceInstructionComparer());
             for (int idx = 0; idx < ncs.Instructions.Count; idx++)
             {
                 NCSInstruction inst = ncs.Instructions[idx];
                 _instructionIndices[inst] = idx;
+            }
+            
+            // Validate all jump targets are in the instruction list (matching PyKotor validation)
+            // This helps catch issues early during interpreter construction
+            for (int idx = 0; idx < ncs.Instructions.Count; idx++)
+            {
+                NCSInstruction inst = ncs.Instructions[idx];
+                if (inst.Jump != null)
+                {
+                    if (!_instructionIndices.ContainsKey(inst.Jump))
+                    {
+                        // This should never happen if all instructions are in the list
+                        // But check if it's actually in the list with a different reference
+                        bool foundInList = false;
+                        for (int checkIdx = 0; checkIdx < ncs.Instructions.Count; checkIdx++)
+                        {
+                            if (ReferenceEquals(ncs.Instructions[checkIdx], inst.Jump))
+                            {
+                                foundInList = true;
+                                break;
+                            }
+                        }
+                        if (!foundInList)
+                        {
+                            throw new InvalidOperationException(
+                                $"Instruction #{idx} ({inst.InsType}) jumps to instruction not in list. " +
+                                $"Jump target hash: {System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(inst.Jump)}");
+                        }
+                    }
+                }
             }
             _stack = new Stack();
             _returns = new List<(NCSInstruction, int)>();
