@@ -6,6 +6,7 @@ namespace CSharpKOTOR.Formats.NCS.Compiler
 
     /// <summary>
     /// Represents an expression used as a statement (e.g., function call, assignment).
+    /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/ncs/compiler/classes.py:2339-2382
     /// </summary>
     public class ExpressionStatement : Statement
     {
@@ -17,6 +18,7 @@ namespace CSharpKOTOR.Formats.NCS.Compiler
                          ?? throw new System.ArgumentNullException(nameof(expression));
         }
 
+        // Matching PyKotor classes.py lines 2344-2355
         public override object Compile(
             NCS ncs,
             CodeRoot root,

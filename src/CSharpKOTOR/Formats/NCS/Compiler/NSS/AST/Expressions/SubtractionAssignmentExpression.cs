@@ -21,45 +21,55 @@ namespace CSharpKOTOR.Formats.NCS.Compiler
             Value = value ?? throw new ArgumentNullException(nameof(value));
         }
 
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/ncs/compiler/classes.py:1714-1780
         public override DynamicDataType Compile(NCS ncs, CodeRoot root, CodeBlock block)
         {
             // Copy the variable to the top of the stack
-            (bool isGlobal, DynamicDataType variableType, int stackIndex) = FieldAccess.GetScoped(block, root);
+            // Matching PyKotor classes.py lines 1721-1727
+            GetScopedResult scoped = FieldAccess.GetScoped(block, root);
+            bool isGlobal = scoped.IsGlobal;
+            DynamicDataType variableType = scoped.Datatype;
+            int stackIndex = scoped.Offset;
+            if (scoped.IsConst)
+            {
+                string varName = string.Join(".", FieldAccess.Identifiers.Select(i => i.Label));
+                throw new CompileError($"Cannot assign to const variable '{varName}'");
+            }
             NCSInstructionType instructionType = isGlobal ? NCSInstructionType.CPTOPBP : NCSInstructionType.CPTOPSP;
             ncs.Add(instructionType, new List<object> { stackIndex, variableType.Size(root) });
             block.TempStack += variableType.Size(root);
 
             // Add the result of the expression to the stack
+            // Matching PyKotor classes.py lines 1733-1739
             int tempStackBeforeExpr = block.TempStack;
             DynamicDataType expressionType = Value.Compile(ncs, root, block);
-            int expressionResultSize = expressionType.Size(root);
-            int tempStackAfterExpr = block.TempStack;
-            int expressionStackDelta = tempStackAfterExpr - tempStackBeforeExpr;
-            if (expressionStackDelta == 0)
+            // Only add to temp_stack if the expression didn't already add it
+            // (FunctionCallExpression and EngineCallExpression already add their return values)
+            if (block.TempStack == tempStackBeforeExpr)
             {
-                block.TempStack += expressionResultSize;
-                expressionStackDelta = expressionResultSize;
+                block.TempStack += expressionType.Size(root);
             }
 
             // Determine what instruction to apply to the two values
+            // Matching PyKotor classes.py lines 1741-1761
             NCSInstructionType arithmeticInstruction;
-            if (variableType.Builtin == DataType.Int && expressionType.Builtin == DataType.Int)
+            if (variableType == DynamicDataType.INT && expressionType == DynamicDataType.INT)
             {
                 arithmeticInstruction = NCSInstructionType.SUBII;
             }
-            else if (variableType.Builtin == DataType.Int && expressionType.Builtin == DataType.Float)
+            else if (variableType == DynamicDataType.INT && expressionType == DynamicDataType.FLOAT)
             {
                 arithmeticInstruction = NCSInstructionType.SUBIF;
             }
-            else if (variableType.Builtin == DataType.Float && expressionType.Builtin == DataType.Float)
+            else if (variableType == DynamicDataType.FLOAT && expressionType == DynamicDataType.FLOAT)
             {
                 arithmeticInstruction = NCSInstructionType.SUBFF;
             }
-            else if (variableType.Builtin == DataType.Float && expressionType.Builtin == DataType.Int)
+            else if (variableType == DynamicDataType.FLOAT && expressionType == DynamicDataType.INT)
             {
                 arithmeticInstruction = NCSInstructionType.SUBFI;
             }
-            else if (variableType.Builtin == DataType.Vector && expressionType.Builtin == DataType.Vector)
+            else if (variableType == DynamicDataType.VECTOR && expressionType == DynamicDataType.VECTOR)
             {
                 arithmeticInstruction = NCSInstructionType.SUBVV;
             }
@@ -74,16 +84,27 @@ namespace CSharpKOTOR.Formats.NCS.Compiler
             }
 
             // Subtract the expression from our temp variable copy
+            // Matching PyKotor classes.py line 1764
             ncs.Add(arithmeticInstruction, new List<object>());
 
             // Copy the result to the original variable in the stack
+            // The arithmetic operation consumed both operands and left the result on stack
+            // After CPDOWNSP, the result is still on stack (for ExpressionStatement to clean up)
+            // Matching PyKotor classes.py lines 1766-1772
             NCSInstructionType insCpDown = isGlobal ? NCSInstructionType.CPDOWNBP : NCSInstructionType.CPDOWNSP;
+            // Result (variable_type size) is on stack; offset to original variable accounts for this
             int offsetCpDown = isGlobal ? stackIndex : stackIndex - variableType.Size(root);
             ncs.Add(insCpDown, new List<object> { offsetCpDown, variableType.Size(root) });
 
             // Arithmetic operation consumed variable copy and expression (2 values), left result (1 value)
-            block.TempStack = block.TempStack - variableType.Size(root) - expressionStackDelta + variableType.Size(root);
-
+            // Result is still on stack (copied to variable location but also remains on top for ExpressionStatement)
+            // temp_stack currently = variable_size + expression_size
+            // After operation: stack has 1 result of variable_type size
+            // Net change: both operands consumed, result pushed
+            // Matching PyKotor classes.py line 1779
+            block.TempStack = block.TempStack - variableType.Size(root) - expressionType.Size(root) + variableType.Size(root);
+            // Return variable_type (the result type) so ExpressionStatement knows what size to clean up
+            // Matching PyKotor classes.py line 1780
             return variableType;
         }
 

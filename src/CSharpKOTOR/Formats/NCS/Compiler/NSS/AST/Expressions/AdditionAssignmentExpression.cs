@@ -51,28 +51,29 @@ namespace CSharpKOTOR.Formats.NCS.Compiler
             }
 
             // Determine what instruction to apply to the two values
+            // Matching PyKotor classes.py lines 1670-1691
             NCSInstructionType arithmeticInstruction;
-            if (variableType.Builtin == DataType.Int && expressionType.Builtin == DataType.Int)
+            if (variableType == DynamicDataType.INT && expressionType == DynamicDataType.INT)
             {
                 arithmeticInstruction = NCSInstructionType.ADDII;
             }
-            else if (variableType.Builtin == DataType.Int && expressionType.Builtin == DataType.Float)
+            else if (variableType == DynamicDataType.INT && expressionType == DynamicDataType.FLOAT)
             {
                 arithmeticInstruction = NCSInstructionType.ADDIF;
             }
-            else if (variableType.Builtin == DataType.Float && expressionType.Builtin == DataType.Float)
+            else if (variableType == DynamicDataType.FLOAT && expressionType == DynamicDataType.FLOAT)
             {
                 arithmeticInstruction = NCSInstructionType.ADDFF;
             }
-            else if (variableType.Builtin == DataType.Float && expressionType.Builtin == DataType.Int)
+            else if (variableType == DynamicDataType.FLOAT && expressionType == DynamicDataType.INT)
             {
                 arithmeticInstruction = NCSInstructionType.ADDFI;
             }
-            else if (variableType.Builtin == DataType.String && expressionType.Builtin == DataType.String)
+            else if (variableType == DynamicDataType.STRING && expressionType == DynamicDataType.STRING)
             {
                 arithmeticInstruction = NCSInstructionType.ADDSS;
             }
-            else if (variableType.Builtin == DataType.Vector && expressionType.Builtin == DataType.Vector)
+            else if (variableType == DynamicDataType.VECTOR && expressionType == DynamicDataType.VECTOR)
             {
                 arithmeticInstruction = NCSInstructionType.ADDVV;
             }

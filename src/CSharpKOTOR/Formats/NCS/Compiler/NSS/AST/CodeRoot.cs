@@ -45,9 +45,10 @@ namespace CSharpKOTOR.Formats.NCS.Compiler
             StructMap = new Dictionary<string, Struct>();
         }
 
-        public void AddScoped(Identifier identifier, DynamicDataType datatype)
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/ncs/compiler/classes.py:537-538
+        public void AddScoped(Identifier identifier, DynamicDataType datatype, bool isConst = false)
         {
-            _globalScope.Insert(0, new ScopedValue(identifier, datatype));
+            _globalScope.Insert(0, new ScopedValue(identifier, datatype, isConst));
         }
 
         public GetScopedResult GetScoped(Identifier identifier, CodeRoot root)

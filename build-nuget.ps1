@@ -18,7 +18,7 @@ $ErrorActionPreference = "Stop"
 # Load .env file if it exists
 if (Test-Path ".env") {
     Get-Content ".env" | ForEach-Object {
-        if ($_ -match '^\s*([^#][^=]+)\s*=\s*(.+)\s*$') {
+        if ($_ -match '^\s*([^#=]+)\s*=\s*(.+)\s*$') {
             $key = $matches[1].Trim()
             $value = $matches[2].Trim()
             [Environment]::SetEnvironmentVariable($key, $value, "Process")
