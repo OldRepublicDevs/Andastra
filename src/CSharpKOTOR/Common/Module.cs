@@ -450,4 +450,263 @@ namespace CSharpKOTOR.Common
             return _linkPiece.AreaName();
         }
     }
+
+    // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:331-2131
+    // Original: class Module:
+    /// <summary>
+    /// Represents a KotOR game module with its resources and archives.
+    /// A Module aggregates resources from multiple archive files (.rim, _s.rim, _dlg.erf)
+    /// or a single override archive (.mod). It manages resource loading, activation,
+    /// and provides access to module-specific resources like areas, creatures, items, etc.
+    /// </summary>
+    public class Module
+    {
+        private readonly Dictionary<ResourceIdentifier, ModuleResource> _resources = new Dictionary<ResourceIdentifier, ModuleResource>();
+        private bool _dotMod;
+        private readonly Installation.Installation _installation;
+        private readonly string _root;
+        private ResRef _cachedModId;
+        private string _cachedSortId;
+        private readonly Dictionary<string, ModulePieceResource> _capsules = new Dictionary<string, ModulePieceResource>();
+
+        public Dictionary<ResourceIdentifier, ModuleResource> Resources => _resources;
+        public bool DotMod => _dotMod;
+        public Installation.Installation Installation => _installation;
+        public string Root => _root;
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:379-416
+        // Original: def __init__(self, filename_or_root: str, installation: Installation, *, use_dot_mod: bool = True):
+        public Module(string filenameOrRoot, Installation.Installation installation, bool useDotMod = true)
+        {
+            if (filenameOrRoot == null)
+            {
+                throw new ArgumentNullException(nameof(filenameOrRoot));
+            }
+            if (installation == null)
+            {
+                throw new ArgumentNullException(nameof(installation));
+            }
+
+            _installation = installation;
+            _dotMod = useDotMod;
+            _root = NameToRoot(filenameOrRoot.ToLowerInvariant());
+            _cachedModId = null;
+            _cachedSortId = null;
+
+            // Build all capsules relevant to this root in the provided installation
+            string modulesPath = Installation.GetModulesPath(_installation.Path);
+            if (_dotMod)
+            {
+                string modFilepath = Path.Combine(modulesPath, _root + KModuleType.MOD.GetExtension());
+                if (File.Exists(modFilepath))
+                {
+                    _capsules[KModuleType.MOD.ToString()] = new ModuleFullOverridePiece(modFilepath);
+                }
+                else
+                {
+                    _dotMod = false;
+                    string mainFilepath = Path.Combine(modulesPath, _root + KModuleType.MAIN.GetExtension());
+                    string dataFilepath = Path.Combine(modulesPath, _root + KModuleType.DATA.GetExtension());
+                    _capsules[KModuleType.MAIN.ToString()] = new ModuleLinkPiece(mainFilepath);
+                    _capsules[KModuleType.DATA.ToString()] = new ModuleDataPiece(dataFilepath);
+                    if (_installation.Game.IsK2())
+                    {
+                        string dlgFilepath = Path.Combine(modulesPath, _root + KModuleType.K2_DLG.GetExtension());
+                        _capsules[KModuleType.K2_DLG.ToString()] = new ModuleDLGPiece(dlgFilepath);
+                    }
+                }
+            }
+            else
+            {
+                string mainFilepath = Path.Combine(modulesPath, _root + KModuleType.MAIN.GetExtension());
+                string dataFilepath = Path.Combine(modulesPath, _root + KModuleType.DATA.GetExtension());
+                _capsules[KModuleType.MAIN.ToString()] = new ModuleLinkPiece(mainFilepath);
+                _capsules[KModuleType.DATA.ToString()] = new ModuleDataPiece(dataFilepath);
+                if (_installation.Game.IsK2())
+                {
+                    string dlgFilepath = Path.Combine(modulesPath, _root + KModuleType.K2_DLG.GetExtension());
+                    _capsules[KModuleType.K2_DLG.ToString()] = new ModuleDLGPiece(dlgFilepath);
+                }
+            }
+
+            ReloadResources();
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:516-548
+        // Original: @staticmethod @lru_cache(maxsize=5000) def name_to_root(name: str) -> str:
+        private static readonly Dictionary<string, string> _nameToRootCache = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+        public static string NameToRoot(string name)
+        {
+            if (name == null)
+            {
+                throw new ArgumentNullException(nameof(name));
+            }
+
+            if (_nameToRootCache.TryGetValue(name, out string cached))
+            {
+                return cached;
+            }
+
+            string[] splitPath = name.Split(new[] { '/', '\\' }, StringSplitOptions.RemoveEmptyEntries);
+            string parsedName = splitPath.Length > 0 ? splitPath[splitPath.Length - 1] : name;
+            int lastDot = parsedName.LastIndexOf('.');
+            string nameWithoutExt = lastDot >= 0 ? parsedName.Substring(0, lastDot) : parsedName;
+            string root = nameWithoutExt.Trim();
+            string casefoldRoot = root.ToLowerInvariant();
+            if (casefoldRoot.EndsWith("_s"))
+            {
+                root = root.Substring(0, root.Length - 2);
+            }
+            if (casefoldRoot.EndsWith("_dlg"))
+            {
+                root = root.Substring(0, root.Length - 4);
+            }
+
+            // Cache result (limit cache size to 5000 as in Python)
+            if (_nameToRootCache.Count < 5000)
+            {
+                _nameToRootCache[name] = root;
+            }
+
+            return root;
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:550-573
+        // Original: @staticmethod def filepath_to_root(filepath: os.PathLike | str) -> str:
+        public static string FilepathToRoot(string filepath)
+        {
+            if (filepath == null)
+            {
+                throw new ArgumentNullException(nameof(filepath));
+            }
+            return NameToRoot(filepath);
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:464-465
+        // Original: def root(self) -> str:
+        public string GetRoot()
+        {
+            return _root.Trim();
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:467-478
+        // Original: def lookup_main_capsule(self) -> ModuleFullOverridePiece | ModuleLinkPiece:
+        public ModulePieceResource LookupMainCapsule()
+        {
+            ModulePieceResource relevantCapsule = null;
+            if (_dotMod)
+            {
+                if (_capsules.TryGetValue(KModuleType.MOD.ToString(), out ModulePieceResource modCapsule))
+                {
+                    relevantCapsule = modCapsule;
+                }
+                else if (_capsules.TryGetValue(KModuleType.MAIN.ToString(), out ModulePieceResource mainCapsule))
+                {
+                    relevantCapsule = mainCapsule;
+                }
+            }
+            else
+            {
+                _capsules.TryGetValue(KModuleType.MAIN.ToString(), out relevantCapsule);
+            }
+
+            if (relevantCapsule == null)
+            {
+                throw new InvalidOperationException("No main capsule found for module");
+            }
+
+            return relevantCapsule;
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:480-491
+        // Original: def lookup_data_capsule(self) -> ModuleFullOverridePiece | ModuleDataPiece:
+        public ModulePieceResource LookupDataCapsule()
+        {
+            ModulePieceResource relevantCapsule = null;
+            if (_dotMod)
+            {
+                if (_capsules.TryGetValue(KModuleType.MOD.ToString(), out ModulePieceResource modCapsule))
+                {
+                    relevantCapsule = modCapsule;
+                }
+                else if (_capsules.TryGetValue(KModuleType.DATA.ToString(), out ModulePieceResource dataCapsule))
+                {
+                    relevantCapsule = dataCapsule;
+                }
+            }
+            else
+            {
+                _capsules.TryGetValue(KModuleType.DATA.ToString(), out relevantCapsule);
+            }
+
+            if (relevantCapsule == null)
+            {
+                throw new InvalidOperationException("No data capsule found for module");
+            }
+
+            return relevantCapsule;
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:493-504
+        // Original: def lookup_dlg_capsule(self) -> ModuleFullOverridePiece | ModuleDLGPiece:
+        public ModulePieceResource LookupDlgCapsule()
+        {
+            ModulePieceResource relevantCapsule = null;
+            if (_dotMod)
+            {
+                if (_capsules.TryGetValue(KModuleType.MOD.ToString(), out ModulePieceResource modCapsule))
+                {
+                    relevantCapsule = modCapsule;
+                }
+                else if (_capsules.TryGetValue(KModuleType.K2_DLG.ToString(), out ModulePieceResource dlgCapsule))
+                {
+                    relevantCapsule = dlgCapsule;
+                }
+            }
+            else
+            {
+                _capsules.TryGetValue(KModuleType.K2_DLG.ToString(), out relevantCapsule);
+            }
+
+            if (relevantCapsule == null)
+            {
+                throw new InvalidOperationException("No DLG capsule found for module");
+            }
+
+            return relevantCapsule;
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:506-514
+        // Original: def module_id(self) -> ResRef | None:
+        public ResRef ModuleId()
+        {
+            if (_cachedModId != null)
+            {
+                return _cachedModId;
+            }
+
+            ModulePieceResource dataCapsule = LookupMainCapsule();
+            ResRef foundId = null;
+            if (dataCapsule is ModuleLinkPiece linkPiece)
+            {
+                foundId = linkPiece.ModuleId();
+            }
+            else if (dataCapsule is ModuleFullOverridePiece overridePiece)
+            {
+                foundId = overridePiece.ModuleId();
+            }
+
+            Console.WriteLine($"Found module id '{foundId}' for module '{dataCapsule.Filename()}'");
+            _cachedModId = foundId;
+            return foundId;
+        }
+
+        // Placeholder for ReloadResources - will be implemented in next iteration
+        private void ReloadResources()
+        {
+            // TODO: Implement reload_resources() method
+            // This is a complex method that requires many dependencies
+        }
+    }
 }
