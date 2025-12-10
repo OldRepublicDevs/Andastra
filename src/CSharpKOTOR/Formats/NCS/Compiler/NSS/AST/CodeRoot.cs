@@ -109,7 +109,6 @@ namespace CSharpKOTOR.Formats.NCS.Compiler
                 }
                 ncs.Add(NCSInstructionType.SAVEBP, new List<object>());
             }
-            int entryIndex = ncs.Instructions.Count;
 
             foreach (TopLevelObject obj in others)
             {
@@ -118,20 +117,44 @@ namespace CSharpKOTOR.Formats.NCS.Compiler
 
             if (FunctionMap.ContainsKey("main"))
             {
-                ncs.Add(NCSInstructionType.RETN, new List<object>(), null, entryIndex);
-                ncs.Add(NCSInstructionType.JSR, new List<object>(), FunctionMap["main"].Instruction, entryIndex);
+                NCSInstruction mainStart = FirstNonNop(FunctionMap["main"].Instruction, ncs);
+                FunctionMap["main"] = new FunctionReference(mainStart, FunctionMap["main"].Definition);
+                NCSInstruction entryJsr = ncs.Add(NCSInstructionType.JSR, new List<object>(), mainStart, 0);
+                entryJsr.Jump = mainStart;
+                ncs.Add(NCSInstructionType.RETN, new List<object>(), null, 1);
             }
             else if (FunctionMap.ContainsKey("StartingConditional"))
             {
-                ncs.Add(NCSInstructionType.RETN, new List<object>(), null, entryIndex);
-                ncs.Add(NCSInstructionType.JSR, new List<object>(), FunctionMap["StartingConditional"].Instruction, entryIndex);
-                ncs.Add(NCSInstructionType.RSADDI, new List<object>(), null, entryIndex);
+                NCSInstruction scStart = FirstNonNop(FunctionMap["StartingConditional"].Instruction, ncs);
+                FunctionMap["StartingConditional"] = new FunctionReference(scStart, FunctionMap["StartingConditional"].Definition);
+                NCSInstruction entryJsr = ncs.Add(NCSInstructionType.JSR, new List<object>(), scStart, 0);
+                entryJsr.Jump = scStart;
+                ncs.Add(NCSInstructionType.RSADDI, new List<object>(), null, 1);
+                ncs.Add(NCSInstructionType.RETN, new List<object>(), null, 2);
             }
             else
             {
                 string msg = "This file has no entry point and cannot be compiled (Most likely an include file).";
                 throw new EntryPointError(msg);
             }
+        }
+
+        private static NCSInstruction FirstNonNop(NCSInstruction start, NCS ncs)
+        {
+            int idx = ncs.GetInstructionIndex(start);
+            if (idx < 0)
+            {
+                return start;
+            }
+            for (int i = idx; i < ncs.Instructions.Count; i++)
+            {
+                NCSInstruction inst = ncs.Instructions[i];
+                if (inst.InsType != NCSInstructionType.NOP)
+                {
+                    return inst;
+                }
+            }
+            return start;
         }
 
         public int ScopeSize()
@@ -217,7 +240,7 @@ namespace CSharpKOTOR.Formats.NCS.Compiler
             {
                 throw new NSS.CompileError($"Trying to return unsupported type '{returnType.Builtin}'");
             }
-            
+
             // Track return value space in temp_stack
             // Matching PyKotor classes.py line 490
             block.TempStack += returnTypeSize;
@@ -246,8 +269,9 @@ namespace CSharpKOTOR.Formats.NCS.Compiler
             }
 
             // Matching PyKotor classes.py lines 514-532
+            // Push arguments in reverse order so that the first parameter is closest to the top of the stack.
             int offset = 0;
-            for (int i = 0; i < parameters.Count; i++)
+            for (int i = parameters.Count - 1; i >= 0; i--)
             {
                 FunctionParameter param = parameters[i];
                 Expression arg = argsList[i];
@@ -256,8 +280,6 @@ namespace CSharpKOTOR.Formats.NCS.Compiler
                 int tempStackAfter = block.TempStack;
                 offset += argDatatype.Size(this);
                 // Only add to temp_stack if the argument's compile method didn't already add it
-                // (FunctionCallExpression and EngineCallExpression already add their return values)
-                // Matching PyKotor classes.py lines 520-523
                 if (tempStackAfter == tempStackBefore)
                 {
                     block.TempStack += argDatatype.Size(this);
@@ -271,7 +293,6 @@ namespace CSharpKOTOR.Formats.NCS.Compiler
                 }
             }
             // JSR consumes all arguments, so subtract their total size
-            // Matching PyKotor classes.py line 532
             block.TempStack -= offset;
             ncs.Add(NCSInstructionType.JSR, new List<object>(), startInstruction);
 
@@ -516,8 +537,9 @@ namespace CSharpKOTOR.Formats.NCS.Compiler
             Parameters = parameters;
             Body = body;
 
-            foreach (FunctionParameter param in parameters)
+            for (int i = parameters.Count - 1; i >= 0; i--)
             {
+                FunctionParameter param = parameters[i];
                 body.AddScoped(param.Name, param.DataType);
             }
         }
@@ -619,8 +641,36 @@ namespace CSharpKOTOR.Formats.NCS.Compiler
             Body.Compile(temp, root, null, retn, null, null);
             temp.Instructions.Add(retn);
 
-            int stubIndex = ncs.Instructions.IndexOf(root.FunctionMap[name].Instruction);
-            ncs.Instructions.InsertRange(stubIndex + 1, temp.Instructions);
+            NCSInstruction stubInstruction = root.FunctionMap[name].Instruction;
+            int stubIndex = ncs.Instructions.IndexOf(stubInstruction);
+            NCSInstruction newStart;
+            if (stubIndex >= 0)
+            {
+                ncs.Instructions.RemoveAt(stubIndex);
+                ncs.Instructions.InsertRange(stubIndex, temp.Instructions);
+                newStart = ncs.Instructions[stubIndex];
+            }
+            else
+            {
+                ncs.Instructions.AddRange(temp.Instructions);
+                newStart = temp.Instructions[0];
+            }
+
+            // Redirect any existing jumps that pointed to the prototype stub to the new function start
+            foreach (NCSInstruction inst in ncs.Instructions)
+            {
+                if (ReferenceEquals(inst.Jump, root.FunctionMap[name].Instruction))
+                {
+                    inst.Jump = newStart;
+                }
+                else if (inst.Jump != null && !ncs.Instructions.Contains(inst.Jump))
+                {
+                    // Jump target no longer exists (prototype stub removed) – redirect to new function start.
+                    inst.Jump = newStart;
+                }
+            }
+
+            root.FunctionMap[name] = new FunctionReference(newStart, this);
         }
 
         private bool IsMatchingSignature(object prototype)

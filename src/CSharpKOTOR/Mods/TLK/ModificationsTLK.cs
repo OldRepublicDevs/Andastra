@@ -12,10 +12,10 @@ namespace CSharpKOTOR.Mods.TLK
 
     /// <summary>
     /// TLK modification algorithms for TSLPatcher/HoloPatcher.
-    /// 
+    ///
     /// This module implements TLK modification logic for applying patches from changes.ini files.
     /// Handles string additions, modifications, and memory token resolution.
-    /// 
+    ///
     /// References:
     /// ----------
     ///     vendor/TSLPatcher/TSLPatcher.pl - Perl TLK modification logic (unfinished)
@@ -69,9 +69,9 @@ namespace CSharpKOTOR.Mods.TLK
 
         /// <summary>
         /// Populates the TSLPatcher variables from the file section dictionary.
-        /// 
+        ///
         /// Args:
-        /// ---- 
+        /// ----
         ///     file_section_dict: CaseInsensitiveDict[str] - The file section dictionary
         ///     default_destination: str | None - The default destination
         ///     default_sourcefolder: str - The default source folder
@@ -101,9 +101,9 @@ namespace CSharpKOTOR.Mods.TLK
 
         /// <summary>
         /// Applies the TLK patches to the TLK.
-        /// 
+        ///
         /// Args:
-        /// ---- 
+        /// ----
         ///     mutable_data: TLK - The TLK to apply the patches to
         ///     memory: PatcherMemory - The memory context
         ///     logger: PatchLogger - The logger

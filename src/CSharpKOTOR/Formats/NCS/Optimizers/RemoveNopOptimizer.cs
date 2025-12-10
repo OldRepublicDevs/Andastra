@@ -39,6 +39,12 @@ namespace CSharpKOTOR.Formats.NCS.Optimizers
                 }
 
                 List<NCSInstruction> inboundLinks = ncs.LinksTo(nop);
+                // If other instructions jump here, keep this NOP (likely a function entry stub)
+                if (inboundLinks.Count > 0)
+                {
+                    continue;
+                }
+
                 NCSInstruction replacement = null;
 
                 for (int i = nopIndex + 1; i < ncs.Instructions.Count; i++)
@@ -51,16 +57,7 @@ namespace CSharpKOTOR.Formats.NCS.Optimizers
                     }
                 }
 
-                if (inboundLinks.Count > 0 && replacement == null)
-                {
-                    continue;
-                }
-
-                foreach (NCSInstruction link in inboundLinks)
-                {
-                    link.Jump = replacement;
-                }
-
+                // No inbound links (already handled), so safe to remove even if replacement is null
                 removableIds.Add(nop.GetHashCode());
             }
 

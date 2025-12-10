@@ -46,7 +46,7 @@ namespace CSharpKOTOR.Mods.TwoDA
             // However, RowValueRowCell needs to access other cell values that are being set in the same unpack.
             // Python's dict comprehension evaluates all values before creating the dict, so RowValueRowCell
             // can't access other cell values during unpack because they haven't been set in the row yet.
-            // 
+            //
             // The test expects RowValueRowCell to work, so we need to do a two-pass evaluation:
             // First pass: evaluate all non-RowValueRowCell values and store them
             // Second pass: evaluate RowValueRowCell values using the already-evaluated values

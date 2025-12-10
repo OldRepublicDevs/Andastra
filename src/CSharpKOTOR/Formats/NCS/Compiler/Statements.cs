@@ -194,7 +194,7 @@ namespace CSharpKOTOR.Formats.NCS.Compiler
 
             NCSInstruction loopStart = ncs.Add(NCSInstructionType.NOP);
             var loopEnd = new NCSInstruction(NCSInstructionType.NOP);
-            
+
             // Save temp_stack before condition (condition pushes a value, JZ consumes it)
             // Matching PyKotor classes.py line 2612
             int initialTempStack = block.TempStack;
@@ -213,7 +213,7 @@ namespace CSharpKOTOR.Formats.NCS.Compiler
             // Restore temp_stack since JZ consumed the condition
             // Matching PyKotor classes.py line 2625
             block.TempStack = initialTempStack;
-            
+
             Block.Compile(ncs, root, block, returnInstruction, loopEnd, loopStart);
             ncs.Add(NCSInstructionType.JMP, jump: loopStart);
             ncs.Instructions.Add(loopEnd);
@@ -244,7 +244,7 @@ namespace CSharpKOTOR.Formats.NCS.Compiler
 
             Block.Compile(ncs, root, block, returnInstruction, loopEnd, conditionStart);
             ncs.Instructions.Add(conditionStart);
-            
+
             // Save temp_stack before condition (condition pushes a value, JZ consumes it)
             // Matching PyKotor classes.py line 2667
             int initialTempStack = block.TempStack;
@@ -262,7 +262,7 @@ namespace CSharpKOTOR.Formats.NCS.Compiler
             // Restore temp_stack since JZ consumed the condition
             // Matching PyKotor classes.py line 2679
             block.TempStack = initialTempStack;
-            
+
             ncs.Add(NCSInstructionType.JMP, jump: loopStart);
             ncs.Instructions.Add(loopEnd);
 
@@ -330,10 +330,10 @@ namespace CSharpKOTOR.Formats.NCS.Compiler
             // Restore temp_stack since JZ consumed the condition
             // Matching PyKotor classes.py line 2744
             block.TempStack = initialTempStack;
-            
+
             Block.Compile(ncs, root, block, returnInstruction, loopEnd, updateStart);
             ncs.Instructions.Add(updateStart);
-            
+
             // Matching PyKotor classes.py lines 2749-2757
             int tempStackBeforeIteration = block.TempStack;
             DynamicDataType iterType = Iteration.Compile(ncs, root, block);
