@@ -104,10 +104,10 @@ namespace CSharpKOTOR.Common
         MoldovanLatin = 96,
         Samoan = 97,
         Somali = 98,
-        Korean = 128,
-        ChineseTraditional = 129,
-        ChineseSimplified = 130,
-        Japanese = 131
+        Japanese = 128,
+        Korean = 129,
+        ChineseTraditional = 130,
+        ChineseSimplified = 131
     }
 
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/language.py:422-426
