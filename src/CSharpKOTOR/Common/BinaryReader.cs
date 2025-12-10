@@ -146,18 +146,6 @@ namespace CSharpKOTOR.Common
         }
 
         /// <summary>
-        /// Returns the total size of the underlying stream (ignoring offset/size constraints).
-        /// </summary>
-        public int TrueSize()
-        {
-            long current = _stream.Position;
-            _stream.Seek(0, SeekOrigin.End);
-            long size = _stream.Position;
-            _stream.Seek(current, SeekOrigin.Begin);
-            return (int)size;
-        }
-
-        /// <summary>
         /// Moves the stream pointer to the specified position (relative to offset).
         /// </summary>
         public void Seek(int position)
