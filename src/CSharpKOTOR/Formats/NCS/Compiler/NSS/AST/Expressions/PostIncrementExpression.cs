@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using CSharpKOTOR.Common.Script;
 using CSharpKOTOR.Formats.NCS;
 
@@ -17,25 +18,44 @@ namespace CSharpKOTOR.Formats.NCS.Compiler
             FieldAccess = fieldAccess ?? throw new System.ArgumentNullException(nameof(fieldAccess));
         }
 
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/ncs/compiler/classes.py:2872-2899
         public override DynamicDataType Compile(NCS ncs, CodeRoot root, CodeBlock block)
         {
-            (bool isGlobal, DynamicDataType variableType, int stackIndex) = FieldAccess.GetScoped(block, root);
+            // Matching PyKotor classes.py line 2877
+            DynamicDataType variableType = FieldAccess.Compile(ncs, root, block);
+            // Matching PyKotor classes.py line 2878
+            block.TempStack += 4;
 
-            if (variableType.Builtin != DataType.Int && variableType.Builtin != DataType.Float)
+            // Matching PyKotor classes.py lines 2880-2886
+            if (variableType != DynamicDataType.INT)
             {
+                string varName = string.Join(".", FieldAccess.Identifiers.Select(i => i.Label));
                 throw new CompileError(
-                    $"Increment operator requires int or float type, got {variableType.Builtin.ToScriptString()}");
+                    $"Increment operator (++) requires integer variable, got {variableType.Builtin.ToScriptString()}\n" +
+                    $"  Variable: {varName}");
             }
 
-            // Push current value onto stack first (before increment)
-            NCSInstructionType copyInst = isGlobal ? NCSInstructionType.CPTOPBP : NCSInstructionType.CPTOPSP;
-            ncs.Add(copyInst, new List<object> { stackIndex, variableType.Size(root) });
-            block.TempStack += variableType.Size(root);
+            // Matching PyKotor classes.py line 2888
+            GetScopedResult scoped = FieldAccess.GetScoped(block, root);
+            bool isGlobal = scoped.IsGlobal;
+            int stackIndex = scoped.Offset;
+            if (scoped.IsConst)
+            {
+                string varName = string.Join(".", FieldAccess.Identifiers.Select(i => i.Label));
+                throw new CompileError($"Cannot increment const variable '{varName}'");
+            }
+            // Matching PyKotor classes.py lines 2893-2896
+            if (isGlobal)
+            {
+                ncs.Add(NCSInstructionType.INCxBP, new List<object> { stackIndex });
+            }
+            else
+            {
+                ncs.Add(NCSInstructionType.INCxSP, new List<object> { stackIndex });
+            }
 
-            // Then increment the variable
-            NCSInstructionType instructionType = isGlobal ? NCSInstructionType.INCxBP : NCSInstructionType.INCxSP;
-            ncs.Add(instructionType, new List<object> { stackIndex });
-
+            // Matching PyKotor classes.py line 2898
+            block.TempStack -= 4;
             return variableType;
         }
 
