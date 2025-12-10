@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using CSharpKOTOR.Common;
-using CSharpKOTOR.Resource.Formats.GFF;
+using CSharpKOTOR.Resources;
 using JetBrains.Annotations;
 
 namespace CSharpKOTOR.Resource.Generics
