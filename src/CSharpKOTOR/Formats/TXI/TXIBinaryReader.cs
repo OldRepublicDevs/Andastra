@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Globalization;
 using CSharpKOTOR.Common;
 
 namespace CSharpKOTOR.Formats.TXI
@@ -88,9 +89,9 @@ namespace CSharpKOTOR.Formats.TXI
                                     if (parts.Length >= 3)
                                     {
                                         Tuple<float, float, int> coords = Tuple.Create(
-                                            float.Parse(parts[0].Trim()),
-                                            float.Parse(parts[1].Trim()),
-                                            int.Parse(parts[2].Trim())
+                                            float.Parse(parts[0].Trim(), CultureInfo.InvariantCulture),
+                                            float.Parse(parts[1].Trim(), CultureInfo.InvariantCulture),
+                                            int.Parse(parts[2].Trim(), CultureInfo.InvariantCulture)
                                         );
                                         if (_txi.Features.Upperleftcoords != null && curCoords < _txi.Features.Upperleftcoords.Count)
                                         {
@@ -125,9 +126,9 @@ namespace CSharpKOTOR.Formats.TXI
                                     if (parts.Length >= 3)
                                     {
                                         Tuple<float, float, int> coords = Tuple.Create(
-                                            float.Parse(parts[0].Trim()),
-                                            float.Parse(parts[1].Trim()),
-                                            int.Parse(parts[2].Trim())
+                                            float.Parse(parts[0].Trim(), CultureInfo.InvariantCulture),
+                                            float.Parse(parts[1].Trim(), CultureInfo.InvariantCulture),
+                                            int.Parse(parts[2].Trim(), CultureInfo.InvariantCulture)
                                         );
                                         if (_txi.Features.Lowerrightcoords != null && curCoords < _txi.Features.Lowerrightcoords.Count)
                                         {
@@ -187,19 +188,19 @@ namespace CSharpKOTOR.Formats.TXI
             switch (command)
             {
                 case TXICommand.Alphamean:
-                    features.Alphamean = float.Parse(args);
+                    features.Alphamean = float.Parse(args, CultureInfo.InvariantCulture);
                     empty = false;
                     break;
                 case TXICommand.Arturoheight:
-                    features.Arturoheight = int.Parse(args);
+                    features.Arturoheight = int.Parse(args, CultureInfo.InvariantCulture);
                     empty = false;
                     break;
                 case TXICommand.Arturowidth:
-                    features.Arturowidth = int.Parse(args);
+                    features.Arturowidth = int.Parse(args, CultureInfo.InvariantCulture);
                     empty = false;
                     break;
                 case TXICommand.Baselineheight:
-                    features.Baselineheight = float.Parse(args);
+                    features.Baselineheight = float.Parse(args, CultureInfo.InvariantCulture);
                     empty = false;
                     break;
                 case TXICommand.Blending:
@@ -207,7 +208,7 @@ namespace CSharpKOTOR.Formats.TXI
                     empty = false;
                     break;
                 case TXICommand.Bumpmapscaling:
-                    features.Bumpmapscaling = float.Parse(args);
+                    features.Bumpmapscaling = float.Parse(args, CultureInfo.InvariantCulture);
                     empty = false;
                     break;
                 case TXICommand.Bumpmaptexture:
@@ -219,37 +220,37 @@ namespace CSharpKOTOR.Formats.TXI
                     empty = false;
                     break;
                 case TXICommand.Candownsample:
-                    features.Candownsample = int.Parse(args) != 0;
+                    features.Candownsample = int.Parse(args, CultureInfo.InvariantCulture) != 0;
                     empty = false;
                     break;
                 case TXICommand.Caretindent:
-                    features.Caretindent = float.Parse(args);
+                    features.Caretindent = float.Parse(args, CultureInfo.InvariantCulture);
                     empty = false;
                     break;
                 case TXICommand.Channelscale:
                     features.Channelscale = args.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries)
-                        .Select(float.Parse).ToList();
+                        .Select(v => float.Parse(v, CultureInfo.InvariantCulture)).ToList();
                     empty = false;
                     break;
                 case TXICommand.Channeltranslate:
                     features.Channeltranslate = args.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries)
-                        .Select(float.Parse).ToList();
+                        .Select(v => float.Parse(v, CultureInfo.InvariantCulture)).ToList();
                     empty = false;
                     break;
                 case TXICommand.Clamp:
-                    features.Clamp = int.Parse(args) != 0;
+                    features.Clamp = int.Parse(args, CultureInfo.InvariantCulture) != 0;
                     empty = false;
                     break;
                 case TXICommand.Codepage:
-                    features.Codepage = int.Parse(args);
+                    features.Codepage = int.Parse(args, CultureInfo.InvariantCulture);
                     empty = false;
                     break;
                 case TXICommand.Cols:
-                    features.Cols = int.Parse(args);
+                    features.Cols = int.Parse(args, CultureInfo.InvariantCulture);
                     empty = false;
                     break;
                 case TXICommand.Compresstexture:
-                    features.Compresstexture = int.Parse(args) != 0;
+                    features.Compresstexture = int.Parse(args, CultureInfo.InvariantCulture) != 0;
                     empty = false;
                     break;
                 case TXICommand.Controllerscript:
@@ -257,47 +258,47 @@ namespace CSharpKOTOR.Formats.TXI
                     empty = false;
                     break;
                 case TXICommand.Cube:
-                    features.Cube = string.IsNullOrEmpty(args) ? true : (int.Parse(args) != 0);
+                    features.Cube = string.IsNullOrEmpty(args) ? true : (int.Parse(args, CultureInfo.InvariantCulture) != 0);
                     empty = false;
                     break;
                 case TXICommand.Decal:
-                    features.Decal = int.Parse(args) != 0;
+                    features.Decal = int.Parse(args, CultureInfo.InvariantCulture) != 0;
                     empty = false;
                     break;
                 case TXICommand.Defaultbpp:
-                    features.Defaultbpp = int.Parse(args);
+                    features.Defaultbpp = int.Parse(args, CultureInfo.InvariantCulture);
                     empty = false;
                     break;
                 case TXICommand.Defaultheight:
-                    features.Defaultheight = int.Parse(args);
+                    features.Defaultheight = int.Parse(args, CultureInfo.InvariantCulture);
                     empty = false;
                     break;
                 case TXICommand.Defaultwidth:
-                    features.Defaultwidth = int.Parse(args);
+                    features.Defaultwidth = int.Parse(args, CultureInfo.InvariantCulture);
                     empty = false;
                     break;
                 case TXICommand.Distort:
-                    features.Distort = int.Parse(args) != 0;
+                    features.Distort = int.Parse(args, CultureInfo.InvariantCulture) != 0;
                     empty = false;
                     break;
                 case TXICommand.Distortangle:
-                    features.Distortangle = float.Parse(args);
+                    features.Distortangle = float.Parse(args, CultureInfo.InvariantCulture);
                     empty = false;
                     break;
                 case TXICommand.Distortionamplitude:
-                    features.Distortionamplitude = float.Parse(args);
+                    features.Distortionamplitude = float.Parse(args, CultureInfo.InvariantCulture);
                     empty = false;
                     break;
                 case TXICommand.Downsamplefactor:
-                    features.Downsamplefactor = float.Parse(args);
+                    features.Downsamplefactor = float.Parse(args, CultureInfo.InvariantCulture);
                     empty = false;
                     break;
                 case TXICommand.Downsamplemax:
-                    features.Downsamplemax = int.Parse(args);
+                    features.Downsamplemax = int.Parse(args, CultureInfo.InvariantCulture);
                     empty = false;
                     break;
                 case TXICommand.Downsamplemin:
-                    features.Downsamplemin = int.Parse(args);
+                    features.Downsamplemin = int.Parse(args, CultureInfo.InvariantCulture);
                     empty = false;
                     break;
                 case TXICommand.Envmaptexture:
@@ -306,89 +307,94 @@ namespace CSharpKOTOR.Formats.TXI
                     break;
                 case TXICommand.Filerange:
                     features.Filerange = args.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries)
-                        .Select(int.Parse).ToList();
+                        .Select(v => int.Parse(v, CultureInfo.InvariantCulture)).ToList();
                     empty = false;
                     break;
                 case TXICommand.Filter:
-                    features.Filter = int.Parse(args) != 0;
+                    features.Filter = int.Parse(args, CultureInfo.InvariantCulture) != 0;
                     empty = false;
                     break;
                 case TXICommand.Fontheight:
-                    features.Fontheight = float.Parse(args);
+                    features.Fontheight = float.Parse(args, CultureInfo.InvariantCulture);
                     empty = false;
                     break;
                 case TXICommand.Fontwidth:
-                    features.Fontwidth = float.Parse(args);
+                    features.Fontwidth = float.Parse(args, CultureInfo.InvariantCulture);
                     empty = false;
                     break;
                 case TXICommand.Fps:
-                    features.Fps = float.Parse(args);
+                    features.Fps = float.Parse(args, CultureInfo.InvariantCulture);
                     empty = false;
                     break;
                 case TXICommand.Isbumpmap:
-                    features.Isbumpmap = int.Parse(args) != 0;
+                    features.Isbumpmap = int.Parse(args, CultureInfo.InvariantCulture) != 0;
                     empty = false;
                     break;
                 case TXICommand.Isdiffusebumpmap:
-                    features.Isdiffusebumpmap = int.Parse(args) != 0;
+                    features.Isdiffusebumpmap = int.Parse(args, CultureInfo.InvariantCulture) != 0;
                     empty = false;
                     break;
                 case TXICommand.Islightmap:
-                    features.Islightmap = int.Parse(args) != 0;
+                    features.Islightmap = int.Parse(args, CultureInfo.InvariantCulture) != 0;
                     empty = false;
                     break;
                 case TXICommand.Isspecularbumpmap:
-                    features.Isspecularbumpmap = int.Parse(args) != 0;
+                    features.Isspecularbumpmap = int.Parse(args, CultureInfo.InvariantCulture) != 0;
                     empty = false;
                     break;
                 case TXICommand.Lowerrightcoords:
-                    features.Lowerrightcoords = new List<Tuple<float, float, int>>(new Tuple<float, float, int>[int.Parse(args)]);
+                    int lrCount = int.Parse(args, CultureInfo.InvariantCulture);
+                    features.Lowerrightcoords = new List<Tuple<float, float, int>>(lrCount);
+                    for (int i = 0; i < lrCount; i++)
+                    {
+                        features.Lowerrightcoords.Add(Tuple.Create(0f, 0f, 0));
+                    }
                     mode = TXIReaderMode.LowerRightCoords;
                     curCoords = 0;
                     empty = false;
                     break;
                 case TXICommand.MaxSizeHQ:
-                    features.MaxSizeHQ = int.Parse(args);
+                    features.MaxSizeHQ = int.Parse(args, CultureInfo.InvariantCulture);
                     empty = false;
                     break;
                 case TXICommand.MaxSizeLQ:
-                    features.MaxSizeLQ = int.Parse(args);
+                    features.MaxSizeLQ = int.Parse(args, CultureInfo.InvariantCulture);
                     empty = false;
                     break;
                 case TXICommand.MinSizeHQ:
-                    features.MinSizeHQ = int.Parse(args);
+                    features.MinSizeHQ = int.Parse(args, CultureInfo.InvariantCulture);
                     empty = false;
                     break;
                 case TXICommand.MinSizeLQ:
-                    features.MinSizeLQ = int.Parse(args);
+                    features.MinSizeLQ = int.Parse(args, CultureInfo.InvariantCulture);
                     empty = false;
                     break;
                 case TXICommand.Mipmap:
-                    features.Mipmap = int.Parse(args) != 0;
+                    features.Mipmap = int.Parse(args, CultureInfo.InvariantCulture) != 0;
                     empty = false;
                     break;
                 case TXICommand.Numchars:
-                    features.Numchars = int.Parse(args);
+                    features.Numchars = int.Parse(args, CultureInfo.InvariantCulture);
                     empty = false;
                     break;
                 case TXICommand.Numcharspersheet:
-                    features.Numcharspersheet = int.Parse(args);
+                    features.Numcharspersheet = int.Parse(args, CultureInfo.InvariantCulture);
                     empty = false;
                     break;
                 case TXICommand.Numx:
-                    features.Numx = int.Parse(args);
+                    features.Numx = int.Parse(args, CultureInfo.InvariantCulture);
                     empty = false;
                     break;
                 case TXICommand.Numy:
-                    features.Numy = int.Parse(args);
+                    features.Numy = int.Parse(args, CultureInfo.InvariantCulture);
                     empty = false;
                     break;
                 case TXICommand.Ondemand:
-                    features.Ondemand = int.Parse(args) != 0;
+                    features.Ondemand = int.Parse(args, CultureInfo.InvariantCulture) != 0;
                     empty = false;
                     break;
                 case TXICommand.Priority:
-                    features.Priority = int.Parse(args);
+                    features.Priority = int.Parse(args, CultureInfo.InvariantCulture);
                     empty = false;
                     break;
                 case TXICommand.Proceduretype:
@@ -396,53 +402,58 @@ namespace CSharpKOTOR.Formats.TXI
                     empty = false;
                     break;
                 case TXICommand.Rows:
-                    features.Rows = int.Parse(args);
+                    features.Rows = int.Parse(args, CultureInfo.InvariantCulture);
                     empty = false;
                     break;
                 case TXICommand.SpacingB:
-                    features.SpacingB = float.Parse(args);
+                    features.SpacingB = float.Parse(args, CultureInfo.InvariantCulture);
                     empty = false;
                     break;
                 case TXICommand.SpacingR:
-                    features.SpacingR = float.Parse(args);
+                    features.SpacingR = float.Parse(args, CultureInfo.InvariantCulture);
                     empty = false;
                     break;
                 case TXICommand.Speed:
-                    features.Speed = float.Parse(args);
+                    features.Speed = float.Parse(args, CultureInfo.InvariantCulture);
                     empty = false;
                     break;
                 case TXICommand.Temporary:
-                    features.Temporary = int.Parse(args) != 0;
+                    features.Temporary = int.Parse(args, CultureInfo.InvariantCulture) != 0;
                     empty = false;
                     break;
                 case TXICommand.Texturewidth:
-                    features.Texturewidth = float.Parse(args);
+                    features.Texturewidth = float.Parse(args, CultureInfo.InvariantCulture);
                     empty = false;
                     break;
                 case TXICommand.Unique:
-                    features.Unique = int.Parse(args) != 0;
+                    features.Unique = int.Parse(args, CultureInfo.InvariantCulture) != 0;
                     empty = false;
                     break;
                 case TXICommand.Upperleftcoords:
-                    features.Upperleftcoords = new List<Tuple<float, float, int>>(new Tuple<float, float, int>[int.Parse(args)]);
+                    int ulCount = int.Parse(args, CultureInfo.InvariantCulture);
+                    features.Upperleftcoords = new List<Tuple<float, float, int>>(ulCount);
+                    for (int i = 0; i < ulCount; i++)
+                    {
+                        features.Upperleftcoords.Add(Tuple.Create(0f, 0f, 0));
+                    }
                     mode = TXIReaderMode.UpperLeftCoords;
                     curCoords = 0;
                     empty = false;
                     break;
                 case TXICommand.Wateralpha:
-                    features.Wateralpha = float.Parse(args);
+                    features.Wateralpha = float.Parse(args, CultureInfo.InvariantCulture);
                     empty = false;
                     break;
                 case TXICommand.Waterheight:
-                    features.Waterheight = float.Parse(args);
+                    features.Waterheight = float.Parse(args, CultureInfo.InvariantCulture);
                     empty = false;
                     break;
                 case TXICommand.Waterwidth:
-                    features.Waterwidth = float.Parse(args);
+                    features.Waterwidth = float.Parse(args, CultureInfo.InvariantCulture);
                     empty = false;
                     break;
                 case TXICommand.Xbox_downsample:
-                    features.Xbox_downsample = int.Parse(args) != 0;
+                    features.Xbox_downsample = int.Parse(args, CultureInfo.InvariantCulture) != 0;
                     empty = false;
                     break;
             }

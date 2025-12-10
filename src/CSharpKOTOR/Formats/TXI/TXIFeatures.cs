@@ -15,7 +15,7 @@ namespace CSharpKOTOR.Formats.TXI
         }
 
         // Main texture properties
-        public int? Blending { get; set; }
+        public bool? Blending { get; set; }
         public bool? Mipmap { get; set; }
         public bool? Filter { get; set; }
         public bool? Decal { get; set; }

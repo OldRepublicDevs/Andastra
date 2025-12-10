@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Globalization;
 using CSharpKOTOR.Common;
 
 namespace CSharpKOTOR.Formats.TXI
@@ -77,7 +78,7 @@ namespace CSharpKOTOR.Formats.TXI
                     }
                     else if (value is int || value is float || value is double)
                     {
-                        lines.Add($"{command.Value.GetValue()} {value}");
+                        lines.Add(string.Format(CultureInfo.InvariantCulture, "{0} {1}", command.Value.GetValue(), value));
                     }
                     else if (value is List<Tuple<float, float, int>> coordList)
                     {
@@ -86,17 +87,17 @@ namespace CSharpKOTOR.Formats.TXI
                             lines.Add($"{command.Value.GetValue()} {coordList.Count}");
                             foreach (var coord in coordList)
                             {
-                                lines.Add($"{coord.Item1} {coord.Item2} {coord.Item3}");
+                                lines.Add(string.Format(CultureInfo.InvariantCulture, "{0} {1} {2}", coord.Item1, coord.Item2, coord.Item3));
                             }
                         }
                     }
                     else if (value is List<float> floatList)
                     {
-                        lines.Add($"{command.Value.GetValue()} {string.Join(" ", floatList)}");
+                        lines.Add($"{command.Value.GetValue()} {string.Join(" ", floatList.Select(v => v.ToString(CultureInfo.InvariantCulture)))}");
                     }
                     else if (value is List<int> intList)
                     {
-                        lines.Add($"{command.Value.GetValue()} {string.Join(" ", intList)}");
+                        lines.Add($"{command.Value.GetValue()} {string.Join(" ", intList.Select(v => v.ToString(CultureInfo.InvariantCulture)))}");
                     }
                     else if (value is string strValue)
                     {
