@@ -126,6 +126,11 @@ namespace CSharpKOTOR.Formats.BWM
             }
         }
 
+        public byte[] Data()
+        {
+            return _writer.Data();
+        }
+
         private byte[] BuildVertexData(List<Vector3> vertices)
         {
             using (var ms = new MemoryStream())
