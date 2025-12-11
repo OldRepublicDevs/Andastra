@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using CSharpKOTOR.Common.Script;
 using CSharpKOTOR.Formats.NCS;
+using CSharpKOTOR.Formats.NCS.Compiler.NSS;
 
 namespace CSharpKOTOR.Formats.NCS.Compiler
 {
@@ -40,7 +41,7 @@ namespace CSharpKOTOR.Formats.NCS.Compiler
             if (scoped.IsConst)
             {
                 string varName = string.Join(".", FieldAccess.Identifiers.Select(i => i.Label));
-                throw new CompileError($"Cannot decrement const variable '{varName}'");
+                throw new NSS.CompileError($"Cannot decrement const variable '{varName}'");
             }
 
             // Decrement the value on the stack (the value that was just pushed by FieldAccess.Compile)

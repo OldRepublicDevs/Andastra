@@ -198,9 +198,10 @@ namespace CSharpKOTOR.Formats.NCS.Compiler
             string source = GetScript(root);
             CodeRoot t = nssParser.Parse(source);
 
-            // Merge include objects (excluding further IncludeScript nodes) so they are compiled.
-            var includeObjects = t.Objects.Where(o => !(o is IncludeScript)).ToList();
-            root.Objects = includeObjects.Concat(root.Objects).ToList();
+            // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/ncs/compiler/classes.py:857
+            // Original: root.objects = t.objects + root.objects
+            // Merge include objects (including nested IncludeScript nodes) so they are compiled.
+            root.Objects = t.Objects.Concat(root.Objects).ToList();
             // Constants are already shared via root.constants, so no need to merge
         }
 

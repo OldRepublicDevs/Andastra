@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using CSharpKOTOR.Common.Script;
 using CSharpKOTOR.Formats.NCS;
+using CSharpKOTOR.Formats.NCS.Compiler.NSS;
 
 namespace CSharpKOTOR.Formats.NCS.Compiler
 {
@@ -33,7 +34,7 @@ namespace CSharpKOTOR.Formats.NCS.Compiler
             if (scoped.IsConst)
             {
                 string varName = string.Join(".", FieldAccess.Identifiers.Select(i => i.Label));
-                throw new CompileError($"Cannot assign to const variable '{varName}'");
+                throw new NSS.CompileError($"Cannot assign to const variable '{varName}'");
             }
             NCSInstructionType instructionType = isGlobal ? NCSInstructionType.CPTOPBP : NCSInstructionType.CPTOPSP;
             ncs.Add(instructionType, new List<object> { stackIndex, variableType.Size(root) });

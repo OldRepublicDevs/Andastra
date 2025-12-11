@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using CSharpKOTOR.Common.Script;
 using CSharpKOTOR.Formats.NCS;
+using CSharpKOTOR.Formats.NCS.Compiler.NSS;
 
 namespace CSharpKOTOR.Formats.NCS.Compiler
 {
@@ -19,7 +20,15 @@ namespace CSharpKOTOR.Formats.NCS.Compiler
 
         public override DynamicDataType Compile(NCS ncs, CodeRoot root, CodeBlock block)
         {
-            (bool isGlobal, DynamicDataType variableType, int stackIndex) = FieldAccess.GetScoped(block, root);
+            GetScopedResult scoped = FieldAccess.GetScoped(block, root);
+            bool isGlobal = scoped.IsGlobal;
+            DynamicDataType variableType = scoped.Datatype;
+            int stackIndex = scoped.Offset;
+            if (scoped.IsConst)
+            {
+                string varName = string.Join(".", FieldAccess.Identifiers.Select(i => i.Label));
+                throw new NSS.CompileError($"Cannot assign to const variable '{varName}'");
+            }
             NCSInstructionType instructionType = isGlobal ? NCSInstructionType.CPTOPBP : NCSInstructionType.CPTOPSP;
             ncs.Add(instructionType, new List<object> { stackIndex, variableType.Size(root) });
             block.TempStack += variableType.Size(root);
@@ -38,7 +47,7 @@ namespace CSharpKOTOR.Formats.NCS.Compiler
             if (variableType.Builtin != DataType.Int || expressionType.Builtin != DataType.Int)
             {
                 string varName = string.Join(".", FieldAccess.Identifiers.Select(i => i.Label));
-                throw new CompileError(
+                throw new NSS.CompileError(
                     $"Type mismatch in &= operation on '{varName}'\n" +
                     $"  Variable type: {variableType.Builtin.ToScriptString()}\n" +
                     $"  Expression type: {expressionType.Builtin.ToScriptString()}\n" +

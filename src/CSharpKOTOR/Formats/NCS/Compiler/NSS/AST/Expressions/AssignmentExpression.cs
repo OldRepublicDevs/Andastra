@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using CSharpKOTOR.Common.Script;
 using CSharpKOTOR.Formats.NCS;
+using CSharpKOTOR.Formats.NCS.Compiler.NSS;
 
 namespace CSharpKOTOR.Formats.NCS.Compiler
 {
@@ -51,7 +52,7 @@ namespace CSharpKOTOR.Formats.NCS.Compiler
             if (scoped.IsConst)
             {
                 string varName = string.Join(".", FieldAccess.Identifiers.Select(i => i.Label));
-                throw new CompileError($"Cannot assign to const variable '{varName}'");
+                throw new NSS.CompileError($"Cannot assign to const variable '{varName}'");
             }
 
             // Matching PyKotor classes.py line 1611
@@ -63,7 +64,7 @@ namespace CSharpKOTOR.Formats.NCS.Compiler
             if (variableType != expressionType)
             {
                 string varName = string.Join(".", FieldAccess.Identifiers.Select(i => i.Label));
-                throw new CompileError(
+                throw new NSS.CompileError(
                     $"Type mismatch in assignment to '{varName}'\n" +
                     $"  Variable type: {expressionType.Builtin.ToScriptString()}\n" +
                     $"  Expression type: {variableType.Builtin.ToScriptString()}");
