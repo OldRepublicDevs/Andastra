@@ -23,9 +23,14 @@ namespace CSharpKOTOR.Common.Script
         // Original: KOTOR_CONSTANTS = [
         public static readonly List<ScriptConstant> KOTOR_CONSTANTS = new List<ScriptConstant>()
             {
-            new ScriptConstant(DataType.Int, "NUM_INVENTORY_SLOTS", 18),
+            // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/scriptdefs.py:14-15
+            // Original: ScriptConstant(DataType.INT, "TRUE", 1), ScriptConstant(DataType.INT, "FALSE", 0),
+            // Built-in constants (not in NSS files but used in scripts)
             new ScriptConstant(DataType.Int, "TRUE", 1),
             new ScriptConstant(DataType.Int, "FALSE", 0),
+            new ScriptConstant(DataType.Int, "NUM_INVENTORY_SLOTS", 18),
+            new ScriptConstant(DataType.Int, "1", 1),
+            new ScriptConstant(DataType.Int, "0", 0),
             new ScriptConstant(DataType.Float, "DIRECTION_EAST", 0f),
             new ScriptConstant(DataType.Float, "DIRECTION_NORTH", 90f),
             new ScriptConstant(DataType.Float, "DIRECTION_WEST", 180f),
@@ -35,7 +40,7 @@ namespace CSharpKOTOR.Common.Script
             new ScriptConstant(DataType.Int, "ATTITUDE_AGGRESSIVE", 1),
             new ScriptConstant(DataType.Int, "ATTITUDE_DEFENSIVE", 2),
             new ScriptConstant(DataType.Int, "ATTITUDE_SPECIAL", 3),
-            new ScriptConstant(DataType.Int, "TALKVOLUME_TALK", 0),
+            new ScriptConstant(DataType.Int, "0", 0),
             new ScriptConstant(DataType.Int, "TALKVOLUME_WHISPER", 1),
             new ScriptConstant(DataType.Int, "TALKVOLUME_SHOUT", 2),
             new ScriptConstant(DataType.Int, "TALKVOLUME_SILENT_TALK", 3),
@@ -70,7 +75,7 @@ namespace CSharpKOTOR.Common.Script
             new ScriptConstant(DataType.Int, "SHAPE_CUBE", 2),
             new ScriptConstant(DataType.Int, "SHAPE_SPELLCONE", 3),
             new ScriptConstant(DataType.Int, "SHAPE_SPHERE", 4),
-            new ScriptConstant(DataType.Int, "OBJECT_TYPE_CREATURE", 1),
+            new ScriptConstant(DataType.Int, "1", 1),
             new ScriptConstant(DataType.Int, "OBJECT_TYPE_ITEM", 2),
             new ScriptConstant(DataType.Int, "OBJECT_TYPE_TRIGGER", 4),
             new ScriptConstant(DataType.Int, "OBJECT_TYPE_DOOR", 8),
@@ -80,8 +85,8 @@ namespace CSharpKOTOR.Common.Script
             new ScriptConstant(DataType.Int, "OBJECT_TYPE_STORE", 128),
             new ScriptConstant(DataType.Int, "OBJECT_TYPE_ENCOUNTER", 256),
             new ScriptConstant(DataType.Int, "OBJECT_TYPE_SOUND", 512),
-            new ScriptConstant(DataType.Int, "OBJECT_TYPE_ALL", 32767),
-            new ScriptConstant(DataType.Int, "OBJECT_TYPE_INVALID", 32767),
+            new ScriptConstant(DataType.Int, "32767", 32767),
+            new ScriptConstant(DataType.Int, "32767", 32767),
             new ScriptConstant(DataType.Int, "GENDER_MALE", 0),
             new ScriptConstant(DataType.Int, "GENDER_FEMALE", 1),
             new ScriptConstant(DataType.Int, "GENDER_BOTH", 2),
@@ -90,7 +95,7 @@ namespace CSharpKOTOR.Common.Script
             new ScriptConstant(DataType.Int, "DAMAGE_TYPE_BLUDGEONING", 1),
             new ScriptConstant(DataType.Int, "DAMAGE_TYPE_PIERCING", 2),
             new ScriptConstant(DataType.Int, "DAMAGE_TYPE_SLASHING", 4),
-            new ScriptConstant(DataType.Int, "DAMAGE_TYPE_UNIVERSAL", 8),
+            new ScriptConstant(DataType.Int, "8", 8),
             new ScriptConstant(DataType.Int, "DAMAGE_TYPE_ACID", 16),
             new ScriptConstant(DataType.Int, "DAMAGE_TYPE_COLD", 32),
             new ScriptConstant(DataType.Int, "DAMAGE_TYPE_LIGHT_SIDE", 64),
@@ -100,7 +105,7 @@ namespace CSharpKOTOR.Common.Script
             new ScriptConstant(DataType.Int, "DAMAGE_TYPE_SONIC", 1024),
             new ScriptConstant(DataType.Int, "DAMAGE_TYPE_ION", 2048),
             new ScriptConstant(DataType.Int, "DAMAGE_TYPE_BLASTER", 4096),
-            new ScriptConstant(DataType.Int, "AC_VS_DAMAGE_TYPE_ALL", 8199),
+            new ScriptConstant(DataType.Int, "8199", 8199),
             new ScriptConstant(DataType.Int, "DAMAGE_BONUS_1", 1),
             new ScriptConstant(DataType.Int, "DAMAGE_BONUS_2", 2),
             new ScriptConstant(DataType.Int, "DAMAGE_BONUS_3", 3),
@@ -111,17 +116,17 @@ namespace CSharpKOTOR.Common.Script
             new ScriptConstant(DataType.Int, "DAMAGE_BONUS_1d8", 8),
             new ScriptConstant(DataType.Int, "DAMAGE_BONUS_1d10", 9),
             new ScriptConstant(DataType.Int, "DAMAGE_BONUS_2d6", 10),
-            new ScriptConstant(DataType.Int, "DAMAGE_POWER_NORMAL", 0),
+            new ScriptConstant(DataType.Int, "0", 0),
             new ScriptConstant(DataType.Int, "DAMAGE_POWER_PLUS_ONE", 1),
             new ScriptConstant(DataType.Int, "DAMAGE_POWER_PLUS_TWO", 2),
             new ScriptConstant(DataType.Int, "DAMAGE_POWER_PLUS_THREE", 3),
             new ScriptConstant(DataType.Int, "DAMAGE_POWER_PLUS_FOUR", 4),
             new ScriptConstant(DataType.Int, "DAMAGE_POWER_PLUS_FIVE", 5),
             new ScriptConstant(DataType.Int, "DAMAGE_POWER_ENERGY", 6),
-            new ScriptConstant(DataType.Int, "ATTACK_BONUS_MISC", 0),
+            new ScriptConstant(DataType.Int, "0", 0),
             new ScriptConstant(DataType.Int, "ATTACK_BONUS_ONHAND", 1),
             new ScriptConstant(DataType.Int, "ATTACK_BONUS_OFFHAND", 2),
-            new ScriptConstant(DataType.Int, "AC_DODGE_BONUS", 0),
+            new ScriptConstant(DataType.Int, "0", 0),
             new ScriptConstant(DataType.Int, "AC_NATURAL_BONUS", 1),
             new ScriptConstant(DataType.Int, "AC_ARMOUR_ENCHANTMENT_BONUS", 2),
             new ScriptConstant(DataType.Int, "AC_SHIELD_ENCHANTMENT_BONUS", 3),
@@ -144,7 +149,7 @@ namespace CSharpKOTOR.Common.Script
             new ScriptConstant(DataType.Int, "RACIAL_TYPE_HUMAN", 6),
             new ScriptConstant(DataType.Int, "RACIAL_TYPE_ALL", 7),
             new ScriptConstant(DataType.Int, "RACIAL_TYPE_INVALID", 8),
-            new ScriptConstant(DataType.Int, "ALIGNMENT_ALL", 0),
+            new ScriptConstant(DataType.Int, "0", 0),
             new ScriptConstant(DataType.Int, "ALIGNMENT_NEUTRAL", 1),
             new ScriptConstant(DataType.Int, "ALIGNMENT_LIGHT_SIDE", 2),
             new ScriptConstant(DataType.Int, "ALIGNMENT_DARK_SIDE", 3),
@@ -152,8 +157,8 @@ namespace CSharpKOTOR.Common.Script
             new ScriptConstant(DataType.Int, "SAVING_THROW_FORT", 1),
             new ScriptConstant(DataType.Int, "SAVING_THROW_REFLEX", 2),
             new ScriptConstant(DataType.Int, "SAVING_THROW_WILL", 3),
-            new ScriptConstant(DataType.Int, "SAVING_THROW_TYPE_ALL", 0),
-            new ScriptConstant(DataType.Int, "SAVING_THROW_TYPE_NONE", 0),
+            new ScriptConstant(DataType.Int, "0", 0),
+            new ScriptConstant(DataType.Int, "0", 0),
             new ScriptConstant(DataType.Int, "SAVING_THROW_TYPE_ACID", 1),
             new ScriptConstant(DataType.Int, "SAVING_THROW_TYPE_SNEAK_ATTACK", 2),
             new ScriptConstant(DataType.Int, "SAVING_THROW_TYPE_COLD", 3),
@@ -666,7 +671,7 @@ namespace CSharpKOTOR.Common.Script
             new ScriptConstant(DataType.Int, "AOE_PER_EVARDS_BLACK_TENTACLES", 34),
             new ScriptConstant(DataType.Int, "AOE_MOB_INVISIBILITY_PURGE", 35),
             new ScriptConstant(DataType.Int, "AOE_MOB_DRAGON_FEAR", 36),
-            new ScriptConstant(DataType.Int, "FORCE_POWER_ALL_FORCE_POWERS", -1),
+            new ScriptConstant(DataType.Int, "0", -1),
             new ScriptConstant(DataType.Int, "FORCE_POWER_MASTER_ALTER", 0),
             new ScriptConstant(DataType.Int, "FORCE_POWER_MASTER_CONTROL", 1),
             new ScriptConstant(DataType.Int, "FORCE_POWER_MASTER_SENSE", 2),
@@ -766,7 +771,7 @@ namespace CSharpKOTOR.Common.Script
             new ScriptConstant(DataType.Int, "CLASS_TYPE_EXPERTDROID", 7),
             new ScriptConstant(DataType.Int, "CLASS_TYPE_MINION", 8),
             new ScriptConstant(DataType.Int, "CLASS_TYPE_INVALID", 255),
-            new ScriptConstant(DataType.Int, "PERSISTENT_ZONE_ACTIVE", 0),
+            new ScriptConstant(DataType.Int, "0", 0),
             new ScriptConstant(DataType.Int, "PERSISTENT_ZONE_FOLLOW", 1),
             new ScriptConstant(DataType.Int, "INVALID_STANDARD_FACTION", -1),
             new ScriptConstant(DataType.Int, "STANDARD_FACTION_HOSTILE_1", 1),
@@ -1059,7 +1064,7 @@ namespace CSharpKOTOR.Common.Script
             new ScriptConstant(DataType.Int, "CAMERA_MODE_CHASE_CAMERA", 0),
             new ScriptConstant(DataType.Int, "CAMERA_MODE_TOP_DOWN", 1),
             new ScriptConstant(DataType.Int, "CAMERA_MODE_STIFF_CHASE_CAMERA", 2),
-            new ScriptConstant(DataType.Int, "PROJECTILE_PATH_TYPE_DEFAULT", 0),
+            new ScriptConstant(DataType.Int, "0", 0),
             new ScriptConstant(DataType.Int, "PROJECTILE_PATH_TYPE_HOMING", 1),
             new ScriptConstant(DataType.Int, "PROJECTILE_PATH_TYPE_BALLISTIC", 2),
             new ScriptConstant(DataType.Int, "PROJECTILE_PATH_TYPE_HIGH_BALLISTIC", 3),
@@ -1112,7 +1117,7 @@ namespace CSharpKOTOR.Common.Script
             new ScriptConstant(DataType.Int, "TRAP_BASE_TYPE_POISON_GAS_DEADLY", 11),
             new ScriptConstant(DataType.Int, "SWMINIGAME_TRACKFOLLOWER_SOUND_ENGINE", 0),
             new ScriptConstant(DataType.Int, "SWMINIGAME_TRACKFOLLOWER_SOUND_DEATH", 1),
-            new ScriptConstant(DataType.Int, "CONVERSATION_TYPE_CINEMATIC", 0),
+            new ScriptConstant(DataType.Int, "0", 0),
             new ScriptConstant(DataType.Int, "CONVERSATION_TYPE_COMPUTER", 1),
             new ScriptConstant(DataType.Int, "PLANET_ENDAR_SPIRE", 0),
             new ScriptConstant(DataType.Int, "PLANET_TARIS", 1),
@@ -1520,9 +1525,14 @@ namespace CSharpKOTOR.Common.Script
         // Original: TSL_CONSTANTS = [
         public static readonly List<ScriptConstant> TSL_CONSTANTS = new List<ScriptConstant>()
         {
-            new ScriptConstant(DataType.Int, "NUM_INVENTORY_SLOTS", 20),
+            // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/scriptdefs.py:1507-1508
+            // Original: ScriptConstant(DataType.INT, "TRUE", 1), ScriptConstant(DataType.INT, "FALSE", 0),
+            // Built-in constants (not in NSS files but used in scripts)
             new ScriptConstant(DataType.Int, "TRUE", 1),
             new ScriptConstant(DataType.Int, "FALSE", 0),
+            new ScriptConstant(DataType.Int, "NUM_INVENTORY_SLOTS", 20),
+            new ScriptConstant(DataType.Int, "1", 1),
+            new ScriptConstant(DataType.Int, "0", 0),
             new ScriptConstant(DataType.Float, "DIRECTION_EAST", 0f),
             new ScriptConstant(DataType.Float, "DIRECTION_NORTH", 90f),
             new ScriptConstant(DataType.Float, "DIRECTION_WEST", 180f),
@@ -1532,7 +1542,7 @@ namespace CSharpKOTOR.Common.Script
             new ScriptConstant(DataType.Int, "ATTITUDE_AGGRESSIVE", 1),
             new ScriptConstant(DataType.Int, "ATTITUDE_DEFENSIVE", 2),
             new ScriptConstant(DataType.Int, "ATTITUDE_SPECIAL", 3),
-            new ScriptConstant(DataType.Int, "TALKVOLUME_TALK", 0),
+            new ScriptConstant(DataType.Int, "0", 0),
             new ScriptConstant(DataType.Int, "TALKVOLUME_WHISPER", 1),
             new ScriptConstant(DataType.Int, "TALKVOLUME_SHOUT", 2),
             new ScriptConstant(DataType.Int, "TALKVOLUME_SILENT_TALK", 3),
@@ -1569,7 +1579,7 @@ namespace CSharpKOTOR.Common.Script
             new ScriptConstant(DataType.Int, "SHAPE_CUBE", 2),
             new ScriptConstant(DataType.Int, "SHAPE_SPELLCONE", 3),
             new ScriptConstant(DataType.Int, "SHAPE_SPHERE", 4),
-            new ScriptConstant(DataType.Int, "OBJECT_TYPE_CREATURE", 1),
+            new ScriptConstant(DataType.Int, "1", 1),
             new ScriptConstant(DataType.Int, "OBJECT_TYPE_ITEM", 2),
             new ScriptConstant(DataType.Int, "OBJECT_TYPE_TRIGGER", 4),
             new ScriptConstant(DataType.Int, "OBJECT_TYPE_DOOR", 8),
@@ -1579,8 +1589,8 @@ namespace CSharpKOTOR.Common.Script
             new ScriptConstant(DataType.Int, "OBJECT_TYPE_STORE", 128),
             new ScriptConstant(DataType.Int, "OBJECT_TYPE_ENCOUNTER", 256),
             new ScriptConstant(DataType.Int, "OBJECT_TYPE_SOUND", 512),
-            new ScriptConstant(DataType.Int, "OBJECT_TYPE_ALL", 32767),
-            new ScriptConstant(DataType.Int, "OBJECT_TYPE_INVALID", 32767),
+            new ScriptConstant(DataType.Int, "32767", 32767),
+            new ScriptConstant(DataType.Int, "32767", 32767),
             new ScriptConstant(DataType.Int, "GENDER_MALE", 0),
             new ScriptConstant(DataType.Int, "GENDER_FEMALE", 1),
             new ScriptConstant(DataType.Int, "GENDER_BOTH", 2),
@@ -1589,7 +1599,7 @@ namespace CSharpKOTOR.Common.Script
             new ScriptConstant(DataType.Int, "DAMAGE_TYPE_BLUDGEONING", 1),
             new ScriptConstant(DataType.Int, "DAMAGE_TYPE_PIERCING", 2),
             new ScriptConstant(DataType.Int, "DAMAGE_TYPE_SLASHING", 4),
-            new ScriptConstant(DataType.Int, "DAMAGE_TYPE_UNIVERSAL", 8),
+            new ScriptConstant(DataType.Int, "8", 8),
             new ScriptConstant(DataType.Int, "DAMAGE_TYPE_ACID", 16),
             new ScriptConstant(DataType.Int, "DAMAGE_TYPE_COLD", 32),
             new ScriptConstant(DataType.Int, "DAMAGE_TYPE_LIGHT_SIDE", 64),
@@ -1599,7 +1609,7 @@ namespace CSharpKOTOR.Common.Script
             new ScriptConstant(DataType.Int, "DAMAGE_TYPE_SONIC", 1024),
             new ScriptConstant(DataType.Int, "DAMAGE_TYPE_ION", 2048),
             new ScriptConstant(DataType.Int, "DAMAGE_TYPE_BLASTER", 4096),
-            new ScriptConstant(DataType.Int, "AC_VS_DAMAGE_TYPE_ALL", 8199),
+            new ScriptConstant(DataType.Int, "8199", 8199),
             new ScriptConstant(DataType.Int, "DAMAGE_BONUS_1", 1),
             new ScriptConstant(DataType.Int, "DAMAGE_BONUS_2", 2),
             new ScriptConstant(DataType.Int, "DAMAGE_BONUS_3", 3),
@@ -1610,17 +1620,17 @@ namespace CSharpKOTOR.Common.Script
             new ScriptConstant(DataType.Int, "DAMAGE_BONUS_1d8", 8),
             new ScriptConstant(DataType.Int, "DAMAGE_BONUS_1d10", 9),
             new ScriptConstant(DataType.Int, "DAMAGE_BONUS_2d6", 10),
-            new ScriptConstant(DataType.Int, "DAMAGE_POWER_NORMAL", 0),
+            new ScriptConstant(DataType.Int, "0", 0),
             new ScriptConstant(DataType.Int, "DAMAGE_POWER_PLUS_ONE", 1),
             new ScriptConstant(DataType.Int, "DAMAGE_POWER_PLUS_TWO", 2),
             new ScriptConstant(DataType.Int, "DAMAGE_POWER_PLUS_THREE", 3),
             new ScriptConstant(DataType.Int, "DAMAGE_POWER_PLUS_FOUR", 4),
             new ScriptConstant(DataType.Int, "DAMAGE_POWER_PLUS_FIVE", 5),
             new ScriptConstant(DataType.Int, "DAMAGE_POWER_ENERGY", 6),
-            new ScriptConstant(DataType.Int, "ATTACK_BONUS_MISC", 0),
+            new ScriptConstant(DataType.Int, "0", 0),
             new ScriptConstant(DataType.Int, "ATTACK_BONUS_ONHAND", 1),
             new ScriptConstant(DataType.Int, "ATTACK_BONUS_OFFHAND", 2),
-            new ScriptConstant(DataType.Int, "AC_DODGE_BONUS", 0),
+            new ScriptConstant(DataType.Int, "0", 0),
             new ScriptConstant(DataType.Int, "AC_NATURAL_BONUS", 1),
             new ScriptConstant(DataType.Int, "AC_ARMOUR_ENCHANTMENT_BONUS", 2),
             new ScriptConstant(DataType.Int, "AC_SHIELD_ENCHANTMENT_BONUS", 3),
@@ -1643,7 +1653,7 @@ namespace CSharpKOTOR.Common.Script
             new ScriptConstant(DataType.Int, "RACIAL_TYPE_HUMAN", 6),
             new ScriptConstant(DataType.Int, "RACIAL_TYPE_ALL", 7),
             new ScriptConstant(DataType.Int, "RACIAL_TYPE_INVALID", 8),
-            new ScriptConstant(DataType.Int, "ALIGNMENT_ALL", 0),
+            new ScriptConstant(DataType.Int, "0", 0),
             new ScriptConstant(DataType.Int, "ALIGNMENT_NEUTRAL", 1),
             new ScriptConstant(DataType.Int, "ALIGNMENT_LIGHT_SIDE", 2),
             new ScriptConstant(DataType.Int, "ALIGNMENT_DARK_SIDE", 3),
@@ -1651,8 +1661,8 @@ namespace CSharpKOTOR.Common.Script
             new ScriptConstant(DataType.Int, "SAVING_THROW_FORT", 1),
             new ScriptConstant(DataType.Int, "SAVING_THROW_REFLEX", 2),
             new ScriptConstant(DataType.Int, "SAVING_THROW_WILL", 3),
-            new ScriptConstant(DataType.Int, "SAVING_THROW_TYPE_ALL", 0),
-            new ScriptConstant(DataType.Int, "SAVING_THROW_TYPE_NONE", 0),
+            new ScriptConstant(DataType.Int, "0", 0),
+            new ScriptConstant(DataType.Int, "0", 0),
             new ScriptConstant(DataType.Int, "SAVING_THROW_TYPE_ACID", 1),
             new ScriptConstant(DataType.Int, "SAVING_THROW_TYPE_SNEAK_ATTACK", 2),
             new ScriptConstant(DataType.Int, "SAVING_THROW_TYPE_COLD", 3),
@@ -2180,7 +2190,7 @@ namespace CSharpKOTOR.Common.Script
             new ScriptConstant(DataType.Int, "AOE_PER_EVARDS_BLACK_TENTACLES", 34),
             new ScriptConstant(DataType.Int, "AOE_MOB_INVISIBILITY_PURGE", 35),
             new ScriptConstant(DataType.Int, "AOE_MOB_DRAGON_FEAR", 36),
-            new ScriptConstant(DataType.Int, "FORCE_POWER_ALL_FORCE_POWERS", -1),
+            new ScriptConstant(DataType.Int, "0", -1),
             new ScriptConstant(DataType.Int, "FORCE_POWER_MASTER_ALTER", 0),
             new ScriptConstant(DataType.Int, "FORCE_POWER_MASTER_CONTROL", 1),
             new ScriptConstant(DataType.Int, "FORCE_POWER_MASTER_SENSE", 2),
@@ -2363,7 +2373,7 @@ namespace CSharpKOTOR.Common.Script
             new ScriptConstant(DataType.Int, "CLASS_TYPE_SITHLORD", 15),
             new ScriptConstant(DataType.Int, "CLASS_TYPE_SITHASSASSIN", 16),
             new ScriptConstant(DataType.Int, "CLASS_TYPE_INVALID", 255),
-            new ScriptConstant(DataType.Int, "PERSISTENT_ZONE_ACTIVE", 0),
+            new ScriptConstant(DataType.Int, "0", 0),
             new ScriptConstant(DataType.Int, "PERSISTENT_ZONE_FOLLOW", 1),
             new ScriptConstant(DataType.Int, "INVALID_STANDARD_FACTION", -1),
             new ScriptConstant(DataType.Int, "STANDARD_FACTION_HOSTILE_1", 1),
@@ -2752,7 +2762,7 @@ namespace CSharpKOTOR.Common.Script
             new ScriptConstant(DataType.Int, "CAMERA_MODE_CHASE_CAMERA", 0),
             new ScriptConstant(DataType.Int, "CAMERA_MODE_TOP_DOWN", 1),
             new ScriptConstant(DataType.Int, "CAMERA_MODE_STIFF_CHASE_CAMERA", 2),
-            new ScriptConstant(DataType.Int, "PROJECTILE_PATH_TYPE_DEFAULT", 0),
+            new ScriptConstant(DataType.Int, "0", 0),
             new ScriptConstant(DataType.Int, "PROJECTILE_PATH_TYPE_HOMING", 1),
             new ScriptConstant(DataType.Int, "PROJECTILE_PATH_TYPE_BALLISTIC", 2),
             new ScriptConstant(DataType.Int, "PROJECTILE_PATH_TYPE_HIGH_BALLISTIC", 3),
@@ -2819,7 +2829,7 @@ namespace CSharpKOTOR.Common.Script
             new ScriptConstant(DataType.Int, "TRAP_BASE_TYPE_SONIC_CHARGE_DEVASTATING", 26),
             new ScriptConstant(DataType.Int, "SWMINIGAME_TRACKFOLLOWER_SOUND_ENGINE", 0),
             new ScriptConstant(DataType.Int, "SWMINIGAME_TRACKFOLLOWER_SOUND_DEATH", 1),
-            new ScriptConstant(DataType.Int, "CONVERSATION_TYPE_CINEMATIC", 0),
+            new ScriptConstant(DataType.Int, "0", 0),
             new ScriptConstant(DataType.Int, "CONVERSATION_TYPE_COMPUTER", 1),
             new ScriptConstant(DataType.Int, "PLANET_DANTOOINE", 0),
             new ScriptConstant(DataType.Int, "PLANET_DXUN", 1),
@@ -3389,15 +3399,15 @@ namespace CSharpKOTOR.Common.Script
                 DataType.Void,
                 "SetAreaUnescapable",
                 new List<ScriptParam> { new ScriptParam(DataType.Int, "bUnescapable", null) },
-                "// 14: Sets whether the current area is escapable or not\r\n// TRUE means you can not escape the area\r\n// FALSE means you can escape the area\r\nvoid SetAreaUnescapable(int bUnescapable);",
-                "// 14: Sets whether the current area is escapable or not\r\n// TRUE means you can not escape the area\r\n// FALSE means you can escape the area\r\nvoid SetAreaUnescapable(int bUnescapable);"
+                "// 14: Sets whether the current area is escapable or not\r\n// 1 means you can not escape the area\r\n// 0 means you can escape the area\r\nvoid SetAreaUnescapable(int bUnescapable);",
+                "// 14: Sets whether the current area is escapable or not\r\n// 1 means you can not escape the area\r\n// 0 means you can escape the area\r\nvoid SetAreaUnescapable(int bUnescapable);"
             ),
             new ScriptFunction(
                 DataType.Int,
                 "GetAreaUnescapable",
                 new List<ScriptParam>(),
-                "// 15: Returns whether the current area is escapable or not\r\n// TRUE means you can not escape the area\r\n// FALSE means you can escape the area\r\nint GetAreaUnescapable();",
-                "// 15: Returns whether the current area is escapable or not\r\n// TRUE means you can not escape the area\r\n// FALSE means you can escape the area\r\nint GetAreaUnescapable();"
+                "// 15: Returns whether the current area is escapable or not\r\n// 1 means you can not escape the area\r\n// 0 means you can escape the area\r\nint GetAreaUnescapable();",
+                "// 15: Returns whether the current area is escapable or not\r\n// 1 means you can not escape the area\r\n// 0 means you can escape the area\r\nint GetAreaUnescapable();"
             ),
             new ScriptFunction(
                 DataType.Int,
@@ -3437,23 +3447,23 @@ namespace CSharpKOTOR.Common.Script
             new ScriptFunction(
                 DataType.Void,
                 "ActionMoveToLocation",
-                new List<ScriptParam> { new ScriptParam(DataType.Location, "lDestination", null), new ScriptParam(DataType.Int, "bRun", FALSE) },
-                "// 21: The action subject will move to lDestination.\r\n// - lDestination: The object will move to this location.  If the location is\r\n//   invalid or a path cannot be found to it, the command does nothing.\r\n// - bRun: If this is TRUE, the action subject will run rather than walk\r\n// * No return value, but if an error occurs the log file will contain\r\n//   \"MoveToPoint failed.\"\r\nvoid ActionMoveToLocation(location lDestination, int bRun=FALSE);",
-                "// 21: The action subject will move to lDestination.\r\n// - lDestination: The object will move to this location.  If the location is\r\n//   invalid or a path cannot be found to it, the command does nothing.\r\n// - bRun: If this is TRUE, the action subject will run rather than walk\r\n// * No return value, but if an error occurs the log file will contain\r\n//   \"MoveToPoint failed.\"\r\nvoid ActionMoveToLocation(location lDestination, int bRun=FALSE);"
+                new List<ScriptParam> { new ScriptParam(DataType.Location, "lDestination", null), new ScriptParam(DataType.Int, "bRun", 0) },
+                "// 21: The action subject will move to lDestination.\r\n// - lDestination: The object will move to this location.  If the location is\r\n//   invalid or a path cannot be found to it, the command does nothing.\r\n// - bRun: If this is 1, the action subject will run rather than walk\r\n// * No return value, but if an error occurs the log file will contain\r\n//   \"MoveToPoint failed.\"\r\nvoid ActionMoveToLocation(location lDestination, int bRun=0);",
+                "// 21: The action subject will move to lDestination.\r\n// - lDestination: The object will move to this location.  If the location is\r\n//   invalid or a path cannot be found to it, the command does nothing.\r\n// - bRun: If this is 1, the action subject will run rather than walk\r\n// * No return value, but if an error occurs the log file will contain\r\n//   \"MoveToPoint failed.\"\r\nvoid ActionMoveToLocation(location lDestination, int bRun=0);"
             ),
             new ScriptFunction(
                 DataType.Void,
                 "ActionMoveToObject",
-                new List<ScriptParam> { new ScriptParam(DataType.Object, "oMoveTo", null), new ScriptParam(DataType.Int, "bRun", FALSE), new ScriptParam(DataType.Float, "fRange", 1f) },
-                "// 22: Cause the action subject to move to a certain distance from oMoveTo.\r\n// If there is no path to oMoveTo, this command will do nothing.\r\n// - oMoveTo: This is the object we wish the action subject to move to\r\n// - bRun: If this is TRUE, the action subject will run rather than walk\r\n// - fRange: This is the desired distance between the action subject and oMoveTo\r\n// * No return value, but if an error occurs the log file will contain\r\n//   \"ActionMoveToObject failed.\"\r\nvoid ActionMoveToObject(object oMoveTo, int bRun=FALSE, float fRange=1.0f);",
-                "// 22: Cause the action subject to move to a certain distance from oMoveTo.\r\n// If there is no path to oMoveTo, this command will do nothing.\r\n// - oMoveTo: This is the object we wish the action subject to move to\r\n// - bRun: If this is TRUE, the action subject will run rather than walk\r\n// - fRange: This is the desired distance between the action subject and oMoveTo\r\n// * No return value, but if an error occurs the log file will contain\r\n//   \"ActionMoveToObject failed.\"\r\nvoid ActionMoveToObject(object oMoveTo, int bRun=FALSE, float fRange=1.0f);"
+                new List<ScriptParam> { new ScriptParam(DataType.Object, "oMoveTo", null), new ScriptParam(DataType.Int, "bRun", 0), new ScriptParam(DataType.Float, "fRange", 1f) },
+                "// 22: Cause the action subject to move to a certain distance from oMoveTo.\r\n// If there is no path to oMoveTo, this command will do nothing.\r\n// - oMoveTo: This is the object we wish the action subject to move to\r\n// - bRun: If this is 1, the action subject will run rather than walk\r\n// - fRange: This is the desired distance between the action subject and oMoveTo\r\n// * No return value, but if an error occurs the log file will contain\r\n//   \"ActionMoveToObject failed.\"\r\nvoid ActionMoveToObject(object oMoveTo, int bRun=0, float fRange=1.0f);",
+                "// 22: Cause the action subject to move to a certain distance from oMoveTo.\r\n// If there is no path to oMoveTo, this command will do nothing.\r\n// - oMoveTo: This is the object we wish the action subject to move to\r\n// - bRun: If this is 1, the action subject will run rather than walk\r\n// - fRange: This is the desired distance between the action subject and oMoveTo\r\n// * No return value, but if an error occurs the log file will contain\r\n//   \"ActionMoveToObject failed.\"\r\nvoid ActionMoveToObject(object oMoveTo, int bRun=0, float fRange=1.0f);"
             ),
             new ScriptFunction(
                 DataType.Void,
                 "ActionMoveAwayFromObject",
-                new List<ScriptParam> { new ScriptParam(DataType.Object, "oFleeFrom", null), new ScriptParam(DataType.Int, "bRun", FALSE), new ScriptParam(DataType.Float, "fMoveAwayRange", 40f) },
-                "// 23: Cause the action subject to move to a certain distance away from oFleeFrom.\r\n// - oFleeFrom: This is the object we wish the action subject to move away from.\r\n//   If oFleeFrom is not in the same area as the action subject, nothing will\r\n//   happen.\r\n// - bRun: If this is TRUE, the action subject will run rather than walk\r\n// - fMoveAwayRange: This is the distance we wish the action subject to put\r\n//   between themselves and oFleeFrom\r\n// * No return value, but if an error occurs the log file will contain\r\n//   \"ActionMoveAwayFromObject failed.\"\r\nvoid ActionMoveAwayFromObject(object oFleeFrom, int bRun=FALSE, float fMoveAwayRange=40.0f);",
-                "// 23: Cause the action subject to move to a certain distance away from oFleeFrom.\r\n// - oFleeFrom: This is the object we wish the action subject to move away from.\r\n//   If oFleeFrom is not in the same area as the action subject, nothing will\r\n//   happen.\r\n// - bRun: If this is TRUE, the action subject will run rather than walk\r\n// - fMoveAwayRange: This is the distance we wish the action subject to put\r\n//   between themselves and oFleeFrom\r\n// * No return value, but if an error occurs the log file will contain\r\n//   \"ActionMoveAwayFromObject failed.\"\r\nvoid ActionMoveAwayFromObject(object oFleeFrom, int bRun=FALSE, float fMoveAwayRange=40.0f);"
+                new List<ScriptParam> { new ScriptParam(DataType.Object, "oFleeFrom", null), new ScriptParam(DataType.Int, "bRun", 0), new ScriptParam(DataType.Float, "fMoveAwayRange", 40f) },
+                "// 23: Cause the action subject to move to a certain distance away from oFleeFrom.\r\n// - oFleeFrom: This is the object we wish the action subject to move away from.\r\n//   If oFleeFrom is not in the same area as the action subject, nothing will\r\n//   happen.\r\n// - bRun: If this is 1, the action subject will run rather than walk\r\n// - fMoveAwayRange: This is the distance we wish the action subject to put\r\n//   between themselves and oFleeFrom\r\n// * No return value, but if an error occurs the log file will contain\r\n//   \"ActionMoveAwayFromObject failed.\"\r\nvoid ActionMoveAwayFromObject(object oFleeFrom, int bRun=0, float fMoveAwayRange=40.0f);",
+                "// 23: Cause the action subject to move to a certain distance away from oFleeFrom.\r\n// - oFleeFrom: This is the object we wish the action subject to move away from.\r\n//   If oFleeFrom is not in the same area as the action subject, nothing will\r\n//   happen.\r\n// - bRun: If this is 1, the action subject will run rather than walk\r\n// - fMoveAwayRange: This is the distance we wish the action subject to put\r\n//   between themselves and oFleeFrom\r\n// * No return value, but if an error occurs the log file will contain\r\n//   \"ActionMoveAwayFromObject failed.\"\r\nvoid ActionMoveAwayFromObject(object oFleeFrom, int bRun=0, float fMoveAwayRange=40.0f);"
             ),
             new ScriptFunction(
                 DataType.Object,
@@ -3514,16 +3524,16 @@ namespace CSharpKOTOR.Common.Script
             new ScriptFunction(
                 DataType.Void,
                 "ActionEquipItem",
-                new List<ScriptParam> { new ScriptParam(DataType.Object, "oItem", null), new ScriptParam(DataType.Int, "nInventorySlot", null), new ScriptParam(DataType.Int, "bInstant", FALSE) },
-                "// 32: Equip oItem into nInventorySlot.\r\n// - nInventorySlot: INVENTORY_SLOT_*\r\n// * No return value, but if an error occurs the log file will contain\r\n//   \"ActionEquipItem failed.\"\r\nvoid ActionEquipItem(object oItem, int nInventorySlot, int bInstant=FALSE);",
-                "// 32: Equip oItem into nInventorySlot.\r\n// - nInventorySlot: INVENTORY_SLOT_*\r\n// * No return value, but if an error occurs the log file will contain\r\n//   \"ActionEquipItem failed.\"\r\nvoid ActionEquipItem(object oItem, int nInventorySlot, int bInstant=FALSE);"
+                new List<ScriptParam> { new ScriptParam(DataType.Object, "oItem", null), new ScriptParam(DataType.Int, "nInventorySlot", null), new ScriptParam(DataType.Int, "bInstant", 0) },
+                "// 32: Equip oItem into nInventorySlot.\r\n// - nInventorySlot: INVENTORY_SLOT_*\r\n// * No return value, but if an error occurs the log file will contain\r\n//   \"ActionEquipItem failed.\"\r\nvoid ActionEquipItem(object oItem, int nInventorySlot, int bInstant=0);",
+                "// 32: Equip oItem into nInventorySlot.\r\n// - nInventorySlot: INVENTORY_SLOT_*\r\n// * No return value, but if an error occurs the log file will contain\r\n//   \"ActionEquipItem failed.\"\r\nvoid ActionEquipItem(object oItem, int nInventorySlot, int bInstant=0);"
             ),
             new ScriptFunction(
                 DataType.Void,
                 "ActionUnequipItem",
-                new List<ScriptParam> { new ScriptParam(DataType.Object, "oItem", null), new ScriptParam(DataType.Int, "bInstant", FALSE) },
-                "// 33: Unequip oItem from whatever slot it is currently in.\r\nvoid ActionUnequipItem( object oItem, int bInstant = FALSE );",
-                "// 33: Unequip oItem from whatever slot it is currently in.\r\nvoid ActionUnequipItem( object oItem, int bInstant = FALSE );"
+                new List<ScriptParam> { new ScriptParam(DataType.Object, "oItem", null), new ScriptParam(DataType.Int, "bInstant", 0) },
+                "// 33: Unequip oItem from whatever slot it is currently in.\r\nvoid ActionUnequipItem( object oItem, int bInstant = 0 );",
+                "// 33: Unequip oItem from whatever slot it is currently in.\r\nvoid ActionUnequipItem( object oItem, int bInstant = 0 );"
             ),
             new ScriptFunction(
                 DataType.Void,
@@ -3549,23 +3559,23 @@ namespace CSharpKOTOR.Common.Script
             new ScriptFunction(
                 DataType.Void,
                 "ActionAttack",
-                new List<ScriptParam> { new ScriptParam(DataType.Object, "oAttackee", null), new ScriptParam(DataType.Int, "bPassive", FALSE) },
-                "// 37: Attack oAttackee.\r\n// - bPassive: If this is TRUE, attack is in passive mode.\r\nvoid ActionAttack(object oAttackee, int bPassive=FALSE);",
-                "// 37: Attack oAttackee.\r\n// - bPassive: If this is TRUE, attack is in passive mode.\r\nvoid ActionAttack(object oAttackee, int bPassive=FALSE);"
+                new List<ScriptParam> { new ScriptParam(DataType.Object, "oAttackee", null), new ScriptParam(DataType.Int, "bPassive", 0) },
+                "// 37: Attack oAttackee.\r\n// - bPassive: If this is 1, attack is in passive mode.\r\nvoid ActionAttack(object oAttackee, int bPassive=0);",
+                "// 37: Attack oAttackee.\r\n// - bPassive: If this is 1, attack is in passive mode.\r\nvoid ActionAttack(object oAttackee, int bPassive=0);"
             ),
             new ScriptFunction(
                 DataType.Object,
                 "GetNearestCreature",
                 new List<ScriptParam> { new ScriptParam(DataType.Int, "nFirstCriteriaType", null), new ScriptParam(DataType.Int, "nFirstCriteriaValue", null), new ScriptParam(DataType.Object, "oTarget", OBJECT_SELF), new ScriptParam(DataType.Int, "nNth", 1), new ScriptParam(DataType.Int, "nSecondCriteriaType", -1), new ScriptParam(DataType.Int, "nSecondCriteriaValue", -1), new ScriptParam(DataType.Int, "nThirdCriteriaType", -1), new ScriptParam(DataType.Int, "nThirdCriteriaValue", -1) },
-                "// 38: Get the creature nearest to oTarget, subject to all the criteria specified.\r\n// - nFirstCriteriaType: CREATURE_TYPE_*\r\n// - nFirstCriteriaValue:\r\n//   -> CLASS_TYPE_* if nFirstCriteriaType was CREATURE_TYPE_CLASS\r\n//   -> SPELL_* if nFirstCriteriaType was CREATURE_TYPE_DOES_NOT_HAVE_SPELL_EFFECT\r\n//      or CREATURE_TYPE_HAS_SPELL_EFFECT\r\n//   -> TRUE or FALSE if nFirstCriteriaType was CREATURE_TYPE_IS_ALIVE\r\n//   -> PERCEPTION_* if nFirstCriteriaType was CREATURE_TYPE_PERCEPTION\r\n//   -> PLAYER_CHAR_IS_PC or PLAYER_CHAR_NOT_PC if nFirstCriteriaType was\r\n//      CREATURE_TYPE_PLAYER_CHAR\r\n//   -> RACIAL_TYPE_* if nFirstCriteriaType was CREATURE_TYPE_RACIAL_TYPE\r\n//   -> REPUTATION_TYPE_* if nFirstCriteriaType was CREATURE_TYPE_REPUTATION\r\n//   For example, to get the nearest PC, use:\r\n//   (CREATURE_TYPE_PLAYER_CHAR, PLAYER_CHAR_IS_PC)\r\n// - oTarget: We're trying to find the creature of the specified type that is\r\n//   nearest to oTarget\r\n// - nNth: We don't have to find the first nearest: we can find the Nth nearest...\r\n// - nSecondCriteriaType: This is used in the same way as nFirstCriteriaType to\r\n//   further specify the type of creature that we are looking for.\r\n// - nSecondCriteriaValue: This is used in the same way as nFirstCriteriaValue\r\n//   to further specify the type of creature that we are looking for.\r\n// - nThirdCriteriaType: This is used in the same way as nFirstCriteriaType to\r\n//   further specify the type of creature that we are looking for.\r\n// - nThirdCriteriaValue: This is used in the same way as nFirstCriteriaValue to\r\n//   further specify the type of creature that we are looking for.\r\n// * Return value on error: OBJECT_INVALID\r\nobject GetNearestCreature(int nFirstCriteriaType, int nFirstCriteriaValue, object oTarget=OBJECT_SELF, int nNth=1, int nSecondCriteriaType=-1, int nSecondCriteriaValue=-1, int nThirdCriteriaType=-1,  int nThirdCriteriaValue=-1 );",
-                "// 38: Get the creature nearest to oTarget, subject to all the criteria specified.\r\n// - nFirstCriteriaType: CREATURE_TYPE_*\r\n// - nFirstCriteriaValue:\r\n//   -> CLASS_TYPE_* if nFirstCriteriaType was CREATURE_TYPE_CLASS\r\n//   -> SPELL_* if nFirstCriteriaType was CREATURE_TYPE_DOES_NOT_HAVE_SPELL_EFFECT\r\n//      or CREATURE_TYPE_HAS_SPELL_EFFECT\r\n//   -> TRUE or FALSE if nFirstCriteriaType was CREATURE_TYPE_IS_ALIVE\r\n//   -> PERCEPTION_* if nFirstCriteriaType was CREATURE_TYPE_PERCEPTION\r\n//   -> PLAYER_CHAR_IS_PC or PLAYER_CHAR_NOT_PC if nFirstCriteriaType was\r\n//      CREATURE_TYPE_PLAYER_CHAR\r\n//   -> RACIAL_TYPE_* if nFirstCriteriaType was CREATURE_TYPE_RACIAL_TYPE\r\n//   -> REPUTATION_TYPE_* if nFirstCriteriaType was CREATURE_TYPE_REPUTATION\r\n//   For example, to get the nearest PC, use:\r\n//   (CREATURE_TYPE_PLAYER_CHAR, PLAYER_CHAR_IS_PC)\r\n// - oTarget: We're trying to find the creature of the specified type that is\r\n//   nearest to oTarget\r\n// - nNth: We don't have to find the first nearest: we can find the Nth nearest...\r\n// - nSecondCriteriaType: This is used in the same way as nFirstCriteriaType to\r\n//   further specify the type of creature that we are looking for.\r\n// - nSecondCriteriaValue: This is used in the same way as nFirstCriteriaValue\r\n//   to further specify the type of creature that we are looking for.\r\n// - nThirdCriteriaType: This is used in the same way as nFirstCriteriaType to\r\n//   further specify the type of creature that we are looking for.\r\n// - nThirdCriteriaValue: This is used in the same way as nFirstCriteriaValue to\r\n//   further specify the type of creature that we are looking for.\r\n// * Return value on error: OBJECT_INVALID\r\nobject GetNearestCreature(int nFirstCriteriaType, int nFirstCriteriaValue, object oTarget=OBJECT_SELF, int nNth=1, int nSecondCriteriaType=-1, int nSecondCriteriaValue=-1, int nThirdCriteriaType=-1,  int nThirdCriteriaValue=-1 );"
+                "// 38: Get the creature nearest to oTarget, subject to all the criteria specified.\r\n// - nFirstCriteriaType: CREATURE_TYPE_*\r\n// - nFirstCriteriaValue:\r\n//   -> CLASS_TYPE_* if nFirstCriteriaType was CREATURE_TYPE_CLASS\r\n//   -> SPELL_* if nFirstCriteriaType was CREATURE_TYPE_DOES_NOT_HAVE_SPELL_EFFECT\r\n//      or CREATURE_TYPE_HAS_SPELL_EFFECT\r\n//   -> 1 or 0 if nFirstCriteriaType was CREATURE_TYPE_IS_ALIVE\r\n//   -> PERCEPTION_* if nFirstCriteriaType was CREATURE_TYPE_PERCEPTION\r\n//   -> PLAYER_CHAR_IS_PC or PLAYER_CHAR_NOT_PC if nFirstCriteriaType was\r\n//      CREATURE_TYPE_PLAYER_CHAR\r\n//   -> RACIAL_TYPE_* if nFirstCriteriaType was CREATURE_TYPE_RACIAL_TYPE\r\n//   -> REPUTATION_TYPE_* if nFirstCriteriaType was CREATURE_TYPE_REPUTATION\r\n//   For example, to get the nearest PC, use:\r\n//   (CREATURE_TYPE_PLAYER_CHAR, PLAYER_CHAR_IS_PC)\r\n// - oTarget: We're trying to find the creature of the specified type that is\r\n//   nearest to oTarget\r\n// - nNth: We don't have to find the first nearest: we can find the Nth nearest...\r\n// - nSecondCriteriaType: This is used in the same way as nFirstCriteriaType to\r\n//   further specify the type of creature that we are looking for.\r\n// - nSecondCriteriaValue: This is used in the same way as nFirstCriteriaValue\r\n//   to further specify the type of creature that we are looking for.\r\n// - nThirdCriteriaType: This is used in the same way as nFirstCriteriaType to\r\n//   further specify the type of creature that we are looking for.\r\n// - nThirdCriteriaValue: This is used in the same way as nFirstCriteriaValue to\r\n//   further specify the type of creature that we are looking for.\r\n// * Return value on error: OBJECT_INVALID\r\nobject GetNearestCreature(int nFirstCriteriaType, int nFirstCriteriaValue, object oTarget=OBJECT_SELF, int nNth=1, int nSecondCriteriaType=-1, int nSecondCriteriaValue=-1, int nThirdCriteriaType=-1,  int nThirdCriteriaValue=-1 );",
+                "// 38: Get the creature nearest to oTarget, subject to all the criteria specified.\r\n// - nFirstCriteriaType: CREATURE_TYPE_*\r\n// - nFirstCriteriaValue:\r\n//   -> CLASS_TYPE_* if nFirstCriteriaType was CREATURE_TYPE_CLASS\r\n//   -> SPELL_* if nFirstCriteriaType was CREATURE_TYPE_DOES_NOT_HAVE_SPELL_EFFECT\r\n//      or CREATURE_TYPE_HAS_SPELL_EFFECT\r\n//   -> 1 or 0 if nFirstCriteriaType was CREATURE_TYPE_IS_ALIVE\r\n//   -> PERCEPTION_* if nFirstCriteriaType was CREATURE_TYPE_PERCEPTION\r\n//   -> PLAYER_CHAR_IS_PC or PLAYER_CHAR_NOT_PC if nFirstCriteriaType was\r\n//      CREATURE_TYPE_PLAYER_CHAR\r\n//   -> RACIAL_TYPE_* if nFirstCriteriaType was CREATURE_TYPE_RACIAL_TYPE\r\n//   -> REPUTATION_TYPE_* if nFirstCriteriaType was CREATURE_TYPE_REPUTATION\r\n//   For example, to get the nearest PC, use:\r\n//   (CREATURE_TYPE_PLAYER_CHAR, PLAYER_CHAR_IS_PC)\r\n// - oTarget: We're trying to find the creature of the specified type that is\r\n//   nearest to oTarget\r\n// - nNth: We don't have to find the first nearest: we can find the Nth nearest...\r\n// - nSecondCriteriaType: This is used in the same way as nFirstCriteriaType to\r\n//   further specify the type of creature that we are looking for.\r\n// - nSecondCriteriaValue: This is used in the same way as nFirstCriteriaValue\r\n//   to further specify the type of creature that we are looking for.\r\n// - nThirdCriteriaType: This is used in the same way as nFirstCriteriaType to\r\n//   further specify the type of creature that we are looking for.\r\n// - nThirdCriteriaValue: This is used in the same way as nFirstCriteriaValue to\r\n//   further specify the type of creature that we are looking for.\r\n// * Return value on error: OBJECT_INVALID\r\nobject GetNearestCreature(int nFirstCriteriaType, int nFirstCriteriaValue, object oTarget=OBJECT_SELF, int nNth=1, int nSecondCriteriaType=-1, int nSecondCriteriaValue=-1, int nThirdCriteriaType=-1,  int nThirdCriteriaValue=-1 );"
             ),
             new ScriptFunction(
                 DataType.Void,
                 "ActionSpeakString",
-                new List<ScriptParam> { new ScriptParam(DataType.String, "sStringToSpeak", null), new ScriptParam(DataType.Int, "nTalkVolume", TALKVOLUME_TALK) },
-                "// 39: Add a speak action to the action subject.\r\n// - sStringToSpeak: String to be spoken\r\n// - nTalkVolume: TALKVOLUME_*\r\nvoid ActionSpeakString(string sStringToSpeak, int nTalkVolume=TALKVOLUME_TALK);",
-                "// 39: Add a speak action to the action subject.\r\n// - sStringToSpeak: String to be spoken\r\n// - nTalkVolume: TALKVOLUME_*\r\nvoid ActionSpeakString(string sStringToSpeak, int nTalkVolume=TALKVOLUME_TALK);"
+                new List<ScriptParam> { new ScriptParam(DataType.String, "sStringToSpeak", null), new ScriptParam(DataType.Int, "nTalkVolume", 0) },
+                "// 39: Add a speak action to the action subject.\r\n// - sStringToSpeak: String to be spoken\r\n// - nTalkVolume: TALKVOLUME_*\r\nvoid ActionSpeakString(string sStringToSpeak, int nTalkVolume=0);",
+                "// 39: Add a speak action to the action subject.\r\n// - sStringToSpeak: String to be spoken\r\n// - nTalkVolume: TALKVOLUME_*\r\nvoid ActionSpeakString(string sStringToSpeak, int nTalkVolume=0);"
             ),
             new ScriptFunction(
                 DataType.Void,
@@ -3585,8 +3595,8 @@ namespace CSharpKOTOR.Common.Script
                 DataType.Int,
                 "GetIsObjectValid",
                 new List<ScriptParam> { new ScriptParam(DataType.Object, "oObject", null) },
-                "// 42: * Returns TRUE if oObject is a valid object.\r\nint GetIsObjectValid(object oObject);",
-                "// 42: * Returns TRUE if oObject is a valid object.\r\nint GetIsObjectValid(object oObject);"
+                "// 42: * Returns 1 if oObject is a valid object.\r\nint GetIsObjectValid(object oObject);",
+                "// 42: * Returns 1 if oObject is a valid object.\r\nint GetIsObjectValid(object oObject);"
             ),
             new ScriptFunction(
                 DataType.Void,
@@ -3626,9 +3636,9 @@ namespace CSharpKOTOR.Common.Script
             new ScriptFunction(
                 DataType.Void,
                 "ActionCastSpellAtObject",
-                new List<ScriptParam> { new ScriptParam(DataType.Int, "nSpell", null), new ScriptParam(DataType.Object, "oTarget", null), new ScriptParam(DataType.Int, "nMetaMagic", 0), new ScriptParam(DataType.Int, "bCheat", FALSE), new ScriptParam(DataType.Int, "nDomainLevel", 0), new ScriptParam(DataType.Int, "nProjectilePathType", PROJECTILE_PATH_TYPE_DEFAULT), new ScriptParam(DataType.Int, "bInstantSpell", FALSE) },
-                "// 48: This action casts a spell at oTarget.\r\n// - nSpell: SPELL_*\r\n// - oTarget: Target for the spell\r\n// - nMetamagic: METAMAGIC_*\r\n// - bCheat: If this is TRUE, then the executor of the action doesn't have to be\r\n//   able to cast the spell.\r\n// - nDomainLevel: TBD - SS\r\n// - nProjectilePathType: PROJECTILE_PATH_TYPE_*\r\n// - bInstantSpell: If this is TRUE, the spell is cast immediately. This allows\r\n//   the end-user to simulate a high-level magic-user having lots of advance\r\n//   warning of impending trouble\r\nvoid ActionCastSpellAtObject(int nSpell, object oTarget, int nMetaMagic=0 , int bCheat=FALSE, int nDomainLevel=0, int nProjectilePathType=PROJECTILE_PATH_TYPE_DEFAULT, int bInstantSpell=FALSE);",
-                "// 48: This action casts a spell at oTarget.\r\n// - nSpell: SPELL_*\r\n// - oTarget: Target for the spell\r\n// - nMetamagic: METAMAGIC_*\r\n// - bCheat: If this is TRUE, then the executor of the action doesn't have to be\r\n//   able to cast the spell.\r\n// - nDomainLevel: TBD - SS\r\n// - nProjectilePathType: PROJECTILE_PATH_TYPE_*\r\n// - bInstantSpell: If this is TRUE, the spell is cast immediately. This allows\r\n//   the end-user to simulate a high-level magic-user having lots of advance\r\n//   warning of impending trouble\r\nvoid ActionCastSpellAtObject(int nSpell, object oTarget, int nMetaMagic=0 , int bCheat=FALSE, int nDomainLevel=0, int nProjectilePathType=PROJECTILE_PATH_TYPE_DEFAULT, int bInstantSpell=FALSE);"
+                new List<ScriptParam> { new ScriptParam(DataType.Int, "nSpell", null), new ScriptParam(DataType.Object, "oTarget", null), new ScriptParam(DataType.Int, "nMetaMagic", 0), new ScriptParam(DataType.Int, "bCheat", 0), new ScriptParam(DataType.Int, "nDomainLevel", 0), new ScriptParam(DataType.Int, "nProjectilePathType", 0), new ScriptParam(DataType.Int, "bInstantSpell", 0) },
+                "// 48: This action casts a spell at oTarget.\r\n// - nSpell: SPELL_*\r\n// - oTarget: Target for the spell\r\n// - nMetamagic: METAMAGIC_*\r\n// - bCheat: If this is 1, then the executor of the action doesn't have to be\r\n//   able to cast the spell.\r\n// - nDomainLevel: TBD - SS\r\n// - nProjectilePathType: PROJECTILE_PATH_TYPE_*\r\n// - bInstantSpell: If this is 1, the spell is cast immediately. This allows\r\n//   the end-user to simulate a high-level magic-user having lots of advance\r\n//   warning of impending trouble\r\nvoid ActionCastSpellAtObject(int nSpell, object oTarget, int nMetaMagic=0 , int bCheat=0, int nDomainLevel=0, int nProjectilePathType=0, int bInstantSpell=0);",
+                "// 48: This action casts a spell at oTarget.\r\n// - nSpell: SPELL_*\r\n// - oTarget: Target for the spell\r\n// - nMetamagic: METAMAGIC_*\r\n// - bCheat: If this is 1, then the executor of the action doesn't have to be\r\n//   able to cast the spell.\r\n// - nDomainLevel: TBD - SS\r\n// - nProjectilePathType: PROJECTILE_PATH_TYPE_*\r\n// - bInstantSpell: If this is 1, the spell is cast immediately. This allows\r\n//   the end-user to simulate a high-level magic-user having lots of advance\r\n//   warning of impending trouble\r\nvoid ActionCastSpellAtObject(int nSpell, object oTarget, int nMetaMagic=0 , int bCheat=0, int nDomainLevel=0, int nProjectilePathType=0, int bInstantSpell=0);"
             ),
             new ScriptFunction(
                 DataType.Int,
@@ -3690,8 +3700,8 @@ namespace CSharpKOTOR.Common.Script
                 DataType.Void,
                 "PauseGame",
                 new List<ScriptParam> { new ScriptParam(DataType.Int, "bPause", null) },
-                "// 57:\r\n// Pauses the game if bPause is TRUE.  Unpauses if bPause is FALSE.\r\nvoid PauseGame( int bPause );",
-                "// 57:\r\n// Pauses the game if bPause is TRUE.  Unpauses if bPause is FALSE.\r\nvoid PauseGame( int bPause );"
+                "// 57:\r\n// Pauses the game if bPause is 1.  Unpauses if bPause is 0.\r\nvoid PauseGame( int bPause );",
+                "// 57:\r\n// Pauses the game if bPause is 1.  Unpauses if bPause is 0.\r\nvoid PauseGame( int bPause );"
             ),
             new ScriptFunction(
                 DataType.Void,
@@ -3843,9 +3853,9 @@ namespace CSharpKOTOR.Common.Script
             new ScriptFunction(
                 DataType.Effect,
                 "EffectDamage",
-                new List<ScriptParam> { new ScriptParam(DataType.Int, "nDamageAmount", null), new ScriptParam(DataType.Int, "nDamageType", DAMAGE_TYPE_UNIVERSAL), new ScriptParam(DataType.Int, "nDamagePower", DAMAGE_POWER_NORMAL) },
-                "// 79: Create a Damage effect\r\n// - nDamageAmount: amount of damage to be dealt. This should be applied as an\r\n//   instantaneous effect.\r\n// - nDamageType: DAMAGE_TYPE_*\r\n// - nDamagePower: DAMAGE_POWER_*\r\neffect EffectDamage(int nDamageAmount, int nDamageType=DAMAGE_TYPE_UNIVERSAL, int nDamagePower=DAMAGE_POWER_NORMAL);",
-                "// 79: Create a Damage effect\r\n// - nDamageAmount: amount of damage to be dealt. This should be applied as an\r\n//   instantaneous effect.\r\n// - nDamageType: DAMAGE_TYPE_*\r\n// - nDamagePower: DAMAGE_POWER_*\r\neffect EffectDamage(int nDamageAmount, int nDamageType=DAMAGE_TYPE_UNIVERSAL, int nDamagePower=DAMAGE_POWER_NORMAL);"
+                new List<ScriptParam> { new ScriptParam(DataType.Int, "nDamageAmount", null), new ScriptParam(DataType.Int, "nDamageType", 8), new ScriptParam(DataType.Int, "nDamagePower", 0) },
+                "// 79: Create a Damage effect\r\n// - nDamageAmount: amount of damage to be dealt. This should be applied as an\r\n//   instantaneous effect.\r\n// - nDamageType: DAMAGE_TYPE_*\r\n// - nDamagePower: DAMAGE_POWER_*\r\neffect EffectDamage(int nDamageAmount, int nDamageType=8, int nDamagePower=0);",
+                "// 79: Create a Damage effect\r\n// - nDamageAmount: amount of damage to be dealt. This should be applied as an\r\n//   instantaneous effect.\r\n// - nDamageType: DAMAGE_TYPE_*\r\n// - nDamagePower: DAMAGE_POWER_*\r\neffect EffectDamage(int nDamageAmount, int nDamageType=8, int nDamagePower=0);"
             ),
             new ScriptFunction(
                 DataType.Effect,
@@ -3907,8 +3917,8 @@ namespace CSharpKOTOR.Common.Script
                 DataType.Int,
                 "GetIsEffectValid",
                 new List<ScriptParam> { new ScriptParam(DataType.Effect, "eEffect", null) },
-                "// 88: * Returns TRUE if eEffect is a valid effect.\r\nint GetIsEffectValid(effect eEffect);",
-                "// 88: * Returns TRUE if eEffect is a valid effect.\r\nint GetIsEffectValid(effect eEffect);"
+                "// 88: * Returns 1 if eEffect is a valid effect.\r\nint GetIsEffectValid(effect eEffect);",
+                "// 88: * Returns 1 if eEffect is a valid effect.\r\nint GetIsEffectValid(effect eEffect);"
             ),
             new ScriptFunction(
                 DataType.Int,
@@ -3941,16 +3951,16 @@ namespace CSharpKOTOR.Common.Script
             new ScriptFunction(
                 DataType.Object,
                 "GetFirstObjectInArea",
-                new List<ScriptParam> { new ScriptParam(DataType.Object, "oArea", OBJECT_INVALID), new ScriptParam(DataType.Int, "nObjectFilter", OBJECT_TYPE_CREATURE) },
-                "// 93: Get the first object in oArea.\r\n// If no valid area is specified, it will use the caller's area.\r\n// - oArea\r\n// - nObjectFilter: OBJECT_TYPE_*\r\n// * Return value on error: OBJECT_INVALID\r\nobject GetFirstObjectInArea(object oArea=OBJECT_INVALID, int nObjectFilter=OBJECT_TYPE_CREATURE);",
-                "// 93: Get the first object in oArea.\r\n// If no valid area is specified, it will use the caller's area.\r\n// - oArea\r\n// - nObjectFilter: OBJECT_TYPE_*\r\n// * Return value on error: OBJECT_INVALID\r\nobject GetFirstObjectInArea(object oArea=OBJECT_INVALID, int nObjectFilter=OBJECT_TYPE_CREATURE);"
+                new List<ScriptParam> { new ScriptParam(DataType.Object, "oArea", OBJECT_INVALID), new ScriptParam(DataType.Int, "nObjectFilter", 1) },
+                "// 93: Get the first object in oArea.\r\n// If no valid area is specified, it will use the caller's area.\r\n// - oArea\r\n// - nObjectFilter: OBJECT_TYPE_*\r\n// * Return value on error: OBJECT_INVALID\r\nobject GetFirstObjectInArea(object oArea=OBJECT_INVALID, int nObjectFilter=1);",
+                "// 93: Get the first object in oArea.\r\n// If no valid area is specified, it will use the caller's area.\r\n// - oArea\r\n// - nObjectFilter: OBJECT_TYPE_*\r\n// * Return value on error: OBJECT_INVALID\r\nobject GetFirstObjectInArea(object oArea=OBJECT_INVALID, int nObjectFilter=1);"
             ),
             new ScriptFunction(
                 DataType.Object,
                 "GetNextObjectInArea",
-                new List<ScriptParam> { new ScriptParam(DataType.Object, "oArea", OBJECT_INVALID), new ScriptParam(DataType.Int, "nObjectFilter", OBJECT_TYPE_CREATURE) },
-                "// 94: Get the next object in oArea.\r\n// If no valid area is specified, it will use the caller's area.\r\n// - oArea\r\n// - nObjectFilter: OBJECT_TYPE_*\r\n// * Return value on error: OBJECT_INVALID\r\nobject GetNextObjectInArea(object oArea=OBJECT_INVALID, int nObjectFilter=OBJECT_TYPE_CREATURE);",
-                "// 94: Get the next object in oArea.\r\n// If no valid area is specified, it will use the caller's area.\r\n// - oArea\r\n// - nObjectFilter: OBJECT_TYPE_*\r\n// * Return value on error: OBJECT_INVALID\r\nobject GetNextObjectInArea(object oArea=OBJECT_INVALID, int nObjectFilter=OBJECT_TYPE_CREATURE);"
+                new List<ScriptParam> { new ScriptParam(DataType.Object, "oArea", OBJECT_INVALID), new ScriptParam(DataType.Int, "nObjectFilter", 1) },
+                "// 94: Get the next object in oArea.\r\n// If no valid area is specified, it will use the caller's area.\r\n// - oArea\r\n// - nObjectFilter: OBJECT_TYPE_*\r\n// * Return value on error: OBJECT_INVALID\r\nobject GetNextObjectInArea(object oArea=OBJECT_INVALID, int nObjectFilter=1);",
+                "// 94: Get the next object in oArea.\r\n// If no valid area is specified, it will use the caller's area.\r\n// - oArea\r\n// - nObjectFilter: OBJECT_TYPE_*\r\n// * Return value on error: OBJECT_INVALID\r\nobject GetNextObjectInArea(object oArea=OBJECT_INVALID, int nObjectFilter=1);"
             ),
             new ScriptFunction(
                 DataType.Int,
@@ -4046,23 +4056,23 @@ namespace CSharpKOTOR.Common.Script
             new ScriptFunction(
                 DataType.Int,
                 "FortitudeSave",
-                new List<ScriptParam> { new ScriptParam(DataType.Object, "oCreature", null), new ScriptParam(DataType.Int, "nDC", null), new ScriptParam(DataType.Int, "nSaveType", SAVING_THROW_TYPE_NONE), new ScriptParam(DataType.Object, "oSaveVersus", OBJECT_SELF) },
-                "// 108: Do a Fortitude Save check for the given DC\r\n// - oCreature\r\n// - nDC: Difficulty check\r\n// - nSaveType: SAVING_THROW_TYPE_*\r\n// - oSaveVersus\r\n// Returns: 0 if the saving throw roll failed\r\n// Returns: 1 if the saving throw roll succeeded\r\n// Returns: 2 if the target was immune to the save type specified\r\nint FortitudeSave(object oCreature, int nDC, int nSaveType=SAVING_THROW_TYPE_NONE, object oSaveVersus=OBJECT_SELF);",
-                "// 108: Do a Fortitude Save check for the given DC\r\n// - oCreature\r\n// - nDC: Difficulty check\r\n// - nSaveType: SAVING_THROW_TYPE_*\r\n// - oSaveVersus\r\n// Returns: 0 if the saving throw roll failed\r\n// Returns: 1 if the saving throw roll succeeded\r\n// Returns: 2 if the target was immune to the save type specified\r\nint FortitudeSave(object oCreature, int nDC, int nSaveType=SAVING_THROW_TYPE_NONE, object oSaveVersus=OBJECT_SELF);"
+                new List<ScriptParam> { new ScriptParam(DataType.Object, "oCreature", null), new ScriptParam(DataType.Int, "nDC", null), new ScriptParam(DataType.Int, "nSaveType", 0), new ScriptParam(DataType.Object, "oSaveVersus", OBJECT_SELF) },
+                "// 108: Do a Fortitude Save check for the given DC\r\n// - oCreature\r\n// - nDC: Difficulty check\r\n// - nSaveType: SAVING_THROW_TYPE_*\r\n// - oSaveVersus\r\n// Returns: 0 if the saving throw roll failed\r\n// Returns: 1 if the saving throw roll succeeded\r\n// Returns: 2 if the target was immune to the save type specified\r\nint FortitudeSave(object oCreature, int nDC, int nSaveType=0, object oSaveVersus=OBJECT_SELF);",
+                "// 108: Do a Fortitude Save check for the given DC\r\n// - oCreature\r\n// - nDC: Difficulty check\r\n// - nSaveType: SAVING_THROW_TYPE_*\r\n// - oSaveVersus\r\n// Returns: 0 if the saving throw roll failed\r\n// Returns: 1 if the saving throw roll succeeded\r\n// Returns: 2 if the target was immune to the save type specified\r\nint FortitudeSave(object oCreature, int nDC, int nSaveType=0, object oSaveVersus=OBJECT_SELF);"
             ),
             new ScriptFunction(
                 DataType.Int,
                 "ReflexSave",
-                new List<ScriptParam> { new ScriptParam(DataType.Object, "oCreature", null), new ScriptParam(DataType.Int, "nDC", null), new ScriptParam(DataType.Int, "nSaveType", SAVING_THROW_TYPE_NONE), new ScriptParam(DataType.Object, "oSaveVersus", OBJECT_SELF) },
-                "// 109: Does a Reflex Save check for the given DC\r\n// - oCreature\r\n// - nDC: Difficulty check\r\n// - nSaveType: SAVING_THROW_TYPE_*\r\n// - oSaveVersus\r\n// Returns: 0 if the saving throw roll failed\r\n// Returns: 1 if the saving throw roll succeeded\r\n// Returns: 2 if the target was immune to the save type specified\r\nint ReflexSave(object oCreature, int nDC, int nSaveType=SAVING_THROW_TYPE_NONE, object oSaveVersus=OBJECT_SELF);",
-                "// 109: Does a Reflex Save check for the given DC\r\n// - oCreature\r\n// - nDC: Difficulty check\r\n// - nSaveType: SAVING_THROW_TYPE_*\r\n// - oSaveVersus\r\n// Returns: 0 if the saving throw roll failed\r\n// Returns: 1 if the saving throw roll succeeded\r\n// Returns: 2 if the target was immune to the save type specified\r\nint ReflexSave(object oCreature, int nDC, int nSaveType=SAVING_THROW_TYPE_NONE, object oSaveVersus=OBJECT_SELF);"
+                new List<ScriptParam> { new ScriptParam(DataType.Object, "oCreature", null), new ScriptParam(DataType.Int, "nDC", null), new ScriptParam(DataType.Int, "nSaveType", 0), new ScriptParam(DataType.Object, "oSaveVersus", OBJECT_SELF) },
+                "// 109: Does a Reflex Save check for the given DC\r\n// - oCreature\r\n// - nDC: Difficulty check\r\n// - nSaveType: SAVING_THROW_TYPE_*\r\n// - oSaveVersus\r\n// Returns: 0 if the saving throw roll failed\r\n// Returns: 1 if the saving throw roll succeeded\r\n// Returns: 2 if the target was immune to the save type specified\r\nint ReflexSave(object oCreature, int nDC, int nSaveType=0, object oSaveVersus=OBJECT_SELF);",
+                "// 109: Does a Reflex Save check for the given DC\r\n// - oCreature\r\n// - nDC: Difficulty check\r\n// - nSaveType: SAVING_THROW_TYPE_*\r\n// - oSaveVersus\r\n// Returns: 0 if the saving throw roll failed\r\n// Returns: 1 if the saving throw roll succeeded\r\n// Returns: 2 if the target was immune to the save type specified\r\nint ReflexSave(object oCreature, int nDC, int nSaveType=0, object oSaveVersus=OBJECT_SELF);"
             ),
             new ScriptFunction(
                 DataType.Int,
                 "WillSave",
-                new List<ScriptParam> { new ScriptParam(DataType.Object, "oCreature", null), new ScriptParam(DataType.Int, "nDC", null), new ScriptParam(DataType.Int, "nSaveType", SAVING_THROW_TYPE_NONE), new ScriptParam(DataType.Object, "oSaveVersus", OBJECT_SELF) },
-                "// 110: Does a Will Save check for the given DC\r\n// - oCreature\r\n// - nDC: Difficulty check\r\n// - nSaveType: SAVING_THROW_TYPE_*\r\n// - oSaveVersus\r\n// Returns: 0 if the saving throw roll failed\r\n// Returns: 1 if the saving throw roll succeeded\r\n// Returns: 2 if the target was immune to the save type specified\r\nint WillSave(object oCreature, int nDC, int nSaveType=SAVING_THROW_TYPE_NONE, object oSaveVersus=OBJECT_SELF);",
-                "// 110: Does a Will Save check for the given DC\r\n// - oCreature\r\n// - nDC: Difficulty check\r\n// - nSaveType: SAVING_THROW_TYPE_*\r\n// - oSaveVersus\r\n// Returns: 0 if the saving throw roll failed\r\n// Returns: 1 if the saving throw roll succeeded\r\n// Returns: 2 if the target was immune to the save type specified\r\nint WillSave(object oCreature, int nDC, int nSaveType=SAVING_THROW_TYPE_NONE, object oSaveVersus=OBJECT_SELF);"
+                new List<ScriptParam> { new ScriptParam(DataType.Object, "oCreature", null), new ScriptParam(DataType.Int, "nDC", null), new ScriptParam(DataType.Int, "nSaveType", 0), new ScriptParam(DataType.Object, "oSaveVersus", OBJECT_SELF) },
+                "// 110: Does a Will Save check for the given DC\r\n// - oCreature\r\n// - nDC: Difficulty check\r\n// - nSaveType: SAVING_THROW_TYPE_*\r\n// - oSaveVersus\r\n// Returns: 0 if the saving throw roll failed\r\n// Returns: 1 if the saving throw roll succeeded\r\n// Returns: 2 if the target was immune to the save type specified\r\nint WillSave(object oCreature, int nDC, int nSaveType=0, object oSaveVersus=OBJECT_SELF);",
+                "// 110: Does a Will Save check for the given DC\r\n// - oCreature\r\n// - nDC: Difficulty check\r\n// - nSaveType: SAVING_THROW_TYPE_*\r\n// - oSaveVersus\r\n// Returns: 0 if the saving throw roll failed\r\n// Returns: 1 if the saving throw roll succeeded\r\n// Returns: 2 if the target was immune to the save type specified\r\nint WillSave(object oCreature, int nDC, int nSaveType=0, object oSaveVersus=OBJECT_SELF);"
             ),
             new ScriptFunction(
                 DataType.Int,
@@ -4095,9 +4105,9 @@ namespace CSharpKOTOR.Common.Script
             new ScriptFunction(
                 DataType.Effect,
                 "EffectACIncrease",
-                new List<ScriptParam> { new ScriptParam(DataType.Int, "nValue", null), new ScriptParam(DataType.Int, "nModifyType", AC_DODGE_BONUS), new ScriptParam(DataType.Int, "nDamageType", AC_VS_DAMAGE_TYPE_ALL) },
-                "// 115: Create an AC Increase effect\r\n// - nValue: size of AC increase\r\n// - nModifyType: AC_*_BONUS\r\n// - nDamageType: DAMAGE_TYPE_*\r\n//   * Default value for nDamageType should only ever be used in this function prototype.\r\neffect EffectACIncrease(int nValue, int nModifyType=AC_DODGE_BONUS, int nDamageType=AC_VS_DAMAGE_TYPE_ALL);",
-                "// 115: Create an AC Increase effect\r\n// - nValue: size of AC increase\r\n// - nModifyType: AC_*_BONUS\r\n// - nDamageType: DAMAGE_TYPE_*\r\n//   * Default value for nDamageType should only ever be used in this function prototype.\r\neffect EffectACIncrease(int nValue, int nModifyType=AC_DODGE_BONUS, int nDamageType=AC_VS_DAMAGE_TYPE_ALL);"
+                new List<ScriptParam> { new ScriptParam(DataType.Int, "nValue", null), new ScriptParam(DataType.Int, "nModifyType", 0), new ScriptParam(DataType.Int, "nDamageType", 8199) },
+                "// 115: Create an AC Increase effect\r\n// - nValue: size of AC increase\r\n// - nModifyType: AC_*_BONUS\r\n// - nDamageType: DAMAGE_TYPE_*\r\n//   * Default value for nDamageType should only ever be used in this function prototype.\r\neffect EffectACIncrease(int nValue, int nModifyType=0, int nDamageType=8199);",
+                "// 115: Create an AC Increase effect\r\n// - nValue: size of AC increase\r\n// - nModifyType: AC_*_BONUS\r\n// - nDamageType: DAMAGE_TYPE_*\r\n//   * Default value for nDamageType should only ever be used in this function prototype.\r\neffect EffectACIncrease(int nValue, int nModifyType=0, int nDamageType=8199);"
             ),
             new ScriptFunction(
                 DataType.Int,
@@ -4109,16 +4119,16 @@ namespace CSharpKOTOR.Common.Script
             new ScriptFunction(
                 DataType.Effect,
                 "EffectSavingThrowIncrease",
-                new List<ScriptParam> { new ScriptParam(DataType.Int, "nSave", null), new ScriptParam(DataType.Int, "nValue", null), new ScriptParam(DataType.Int, "nSaveType", SAVING_THROW_TYPE_ALL) },
-                "// 117: Create an AC Decrease effect\r\n// - nSave: SAVING_THROW_* (not SAVING_THROW_TYPE_*)\r\n// - nValue: size of AC decrease\r\n// - nSaveType: SAVING_THROW_TYPE_*\r\neffect EffectSavingThrowIncrease(int nSave, int nValue, int nSaveType=SAVING_THROW_TYPE_ALL);",
-                "// 117: Create an AC Decrease effect\r\n// - nSave: SAVING_THROW_* (not SAVING_THROW_TYPE_*)\r\n// - nValue: size of AC decrease\r\n// - nSaveType: SAVING_THROW_TYPE_*\r\neffect EffectSavingThrowIncrease(int nSave, int nValue, int nSaveType=SAVING_THROW_TYPE_ALL);"
+                new List<ScriptParam> { new ScriptParam(DataType.Int, "nSave", null), new ScriptParam(DataType.Int, "nValue", null), new ScriptParam(DataType.Int, "nSaveType", 0) },
+                "// 117: Create an AC Decrease effect\r\n// - nSave: SAVING_THROW_* (not SAVING_THROW_TYPE_*)\r\n// - nValue: size of AC decrease\r\n// - nSaveType: SAVING_THROW_TYPE_*\r\neffect EffectSavingThrowIncrease(int nSave, int nValue, int nSaveType=0);",
+                "// 117: Create an AC Decrease effect\r\n// - nSave: SAVING_THROW_* (not SAVING_THROW_TYPE_*)\r\n// - nValue: size of AC decrease\r\n// - nSaveType: SAVING_THROW_TYPE_*\r\neffect EffectSavingThrowIncrease(int nSave, int nValue, int nSaveType=0);"
             ),
             new ScriptFunction(
                 DataType.Effect,
                 "EffectAttackIncrease",
-                new List<ScriptParam> { new ScriptParam(DataType.Int, "nBonus", null), new ScriptParam(DataType.Int, "nModifierType", ATTACK_BONUS_MISC) },
-                "// 118: Create an Attack Increase effect\r\n// - nBonus: size of attack bonus\r\n// - nModifierType: ATTACK_BONUS_*\r\neffect EffectAttackIncrease(int nBonus, int nModifierType=ATTACK_BONUS_MISC);",
-                "// 118: Create an Attack Increase effect\r\n// - nBonus: size of attack bonus\r\n// - nModifierType: ATTACK_BONUS_*\r\neffect EffectAttackIncrease(int nBonus, int nModifierType=ATTACK_BONUS_MISC);"
+                new List<ScriptParam> { new ScriptParam(DataType.Int, "nBonus", null), new ScriptParam(DataType.Int, "nModifierType", 0) },
+                "// 118: Create an Attack Increase effect\r\n// - nBonus: size of attack bonus\r\n// - nModifierType: ATTACK_BONUS_*\r\neffect EffectAttackIncrease(int nBonus, int nModifierType=0);",
+                "// 118: Create an Attack Increase effect\r\n// - nBonus: size of attack bonus\r\n// - nModifierType: ATTACK_BONUS_*\r\neffect EffectAttackIncrease(int nBonus, int nModifierType=0);"
             ),
             new ScriptFunction(
                 DataType.Effect,
@@ -4130,9 +4140,9 @@ namespace CSharpKOTOR.Common.Script
             new ScriptFunction(
                 DataType.Effect,
                 "EffectDamageIncrease",
-                new List<ScriptParam> { new ScriptParam(DataType.Int, "nBonus", null), new ScriptParam(DataType.Int, "nDamageType", DAMAGE_TYPE_UNIVERSAL) },
-                "// 120: Create a Damage Increase effect\r\n// - nBonus: DAMAGE_BONUS_*\r\n// - nDamageType: DAMAGE_TYPE_*\r\neffect EffectDamageIncrease(int nBonus, int nDamageType=DAMAGE_TYPE_UNIVERSAL);",
-                "// 120: Create a Damage Increase effect\r\n// - nBonus: DAMAGE_BONUS_*\r\n// - nDamageType: DAMAGE_TYPE_*\r\neffect EffectDamageIncrease(int nBonus, int nDamageType=DAMAGE_TYPE_UNIVERSAL);"
+                new List<ScriptParam> { new ScriptParam(DataType.Int, "nBonus", null), new ScriptParam(DataType.Int, "nDamageType", 8) },
+                "// 120: Create a Damage Increase effect\r\n// - nBonus: DAMAGE_BONUS_*\r\n// - nDamageType: DAMAGE_TYPE_*\r\neffect EffectDamageIncrease(int nBonus, int nDamageType=8);",
+                "// 120: Create a Damage Increase effect\r\n// - nBonus: DAMAGE_BONUS_*\r\n// - nDamageType: DAMAGE_TYPE_*\r\neffect EffectDamageIncrease(int nBonus, int nDamageType=8);"
             ),
             new ScriptFunction(
                 DataType.Float,
@@ -4186,16 +4196,16 @@ namespace CSharpKOTOR.Common.Script
             new ScriptFunction(
                 DataType.Object,
                 "GetFirstObjectInShape",
-                new List<ScriptParam> { new ScriptParam(DataType.Int, "nShape", null), new ScriptParam(DataType.Float, "fSize", null), new ScriptParam(DataType.Location, "lTarget", null), new ScriptParam(DataType.Int, "bLineOfSight", FALSE), new ScriptParam(DataType.Int, "nObjectFilter", OBJECT_TYPE_CREATURE), new ScriptParam(DataType.Vector, "vOrigin", new Vector3(0f, 0f, 0f)) },
-                "// 128: Get the first object in nShape\r\n// - nShape: SHAPE_*\r\n// - fSize:\r\n//   -> If nShape == SHAPE_SPHERE, this is the radius of the sphere\r\n//   -> If nShape == SHAPE_SPELLCYLINDER, this is the radius of the cylinder\r\n//   -> If nShape == SHAPE_CONE, this is the widest radius of the cone\r\n//   -> If nShape == SHAPE_CUBE, this is half the length of one of the sides of\r\n//      the cube\r\n// - lTarget: This is the centre of the effect, usually GetSpellTargetPosition(),\r\n//   or the end of a cylinder or cone.\r\n// - bLineOfSight: This controls whether to do a line-of-sight check on the\r\n//   object returned.\r\n//   (This can be used to ensure that spell effects do not go through walls.)\r\n// - nObjectFilter: This allows you to filter out undesired object types, using\r\n//   bitwise \"or\".\r\n//   For example, to return only creatures and doors, the value for this\r\n//   parameter would be OBJECT_TYPE_CREATURE | OBJECT_TYPE_DOOR\r\n// - vOrigin: This is only used for cylinders and cones, and specifies the\r\n//   origin of the effect(normally the spell-caster's position).\r\n// Return value on error: OBJECT_INVALID\r\nobject GetFirstObjectInShape(int nShape, float fSize, location lTarget, int bLineOfSight=FALSE, int nObjectFilter=OBJECT_TYPE_CREATURE, vector vOrigin=[0.0,0.0,0.0]);",
-                "// 128: Get the first object in nShape\r\n// - nShape: SHAPE_*\r\n// - fSize:\r\n//   -> If nShape == SHAPE_SPHERE, this is the radius of the sphere\r\n//   -> If nShape == SHAPE_SPELLCYLINDER, this is the radius of the cylinder\r\n//   -> If nShape == SHAPE_CONE, this is the widest radius of the cone\r\n//   -> If nShape == SHAPE_CUBE, this is half the length of one of the sides of\r\n//      the cube\r\n// - lTarget: This is the centre of the effect, usually GetSpellTargetPosition(),\r\n//   or the end of a cylinder or cone.\r\n// - bLineOfSight: This controls whether to do a line-of-sight check on the\r\n//   object returned.\r\n//   (This can be used to ensure that spell effects do not go through walls.)\r\n// - nObjectFilter: This allows you to filter out undesired object types, using\r\n//   bitwise \"or\".\r\n//   For example, to return only creatures and doors, the value for this\r\n//   parameter would be OBJECT_TYPE_CREATURE | OBJECT_TYPE_DOOR\r\n// - vOrigin: This is only used for cylinders and cones, and specifies the\r\n//   origin of the effect(normally the spell-caster's position).\r\n// Return value on error: OBJECT_INVALID\r\nobject GetFirstObjectInShape(int nShape, float fSize, location lTarget, int bLineOfSight=FALSE, int nObjectFilter=OBJECT_TYPE_CREATURE, vector vOrigin=[0.0,0.0,0.0]);"
+                new List<ScriptParam> { new ScriptParam(DataType.Int, "nShape", null), new ScriptParam(DataType.Float, "fSize", null), new ScriptParam(DataType.Location, "lTarget", null), new ScriptParam(DataType.Int, "bLineOfSight", 0), new ScriptParam(DataType.Int, "nObjectFilter", 1), new ScriptParam(DataType.Vector, "vOrigin", new Vector3(0f, 0f, 0f)) },
+                "// 128: Get the first object in nShape\r\n// - nShape: SHAPE_*\r\n// - fSize:\r\n//   -> If nShape == SHAPE_SPHERE, this is the radius of the sphere\r\n//   -> If nShape == SHAPE_SPELLCYLINDER, this is the radius of the cylinder\r\n//   -> If nShape == SHAPE_CONE, this is the widest radius of the cone\r\n//   -> If nShape == SHAPE_CUBE, this is half the length of one of the sides of\r\n//      the cube\r\n// - lTarget: This is the centre of the effect, usually GetSpellTargetPosition(),\r\n//   or the end of a cylinder or cone.\r\n// - bLineOfSight: This controls whether to do a line-of-sight check on the\r\n//   object returned.\r\n//   (This can be used to ensure that spell effects do not go through walls.)\r\n// - nObjectFilter: This allows you to filter out undesired object types, using\r\n//   bitwise \"or\".\r\n//   For example, to return only creatures and doors, the value for this\r\n//   parameter would be 1 | OBJECT_TYPE_DOOR\r\n// - vOrigin: This is only used for cylinders and cones, and specifies the\r\n//   origin of the effect(normally the spell-caster's position).\r\n// Return value on error: OBJECT_INVALID\r\nobject GetFirstObjectInShape(int nShape, float fSize, location lTarget, int bLineOfSight=0, int nObjectFilter=1, vector vOrigin=[0.0,0.0,0.0]);",
+                "// 128: Get the first object in nShape\r\n// - nShape: SHAPE_*\r\n// - fSize:\r\n//   -> If nShape == SHAPE_SPHERE, this is the radius of the sphere\r\n//   -> If nShape == SHAPE_SPELLCYLINDER, this is the radius of the cylinder\r\n//   -> If nShape == SHAPE_CONE, this is the widest radius of the cone\r\n//   -> If nShape == SHAPE_CUBE, this is half the length of one of the sides of\r\n//      the cube\r\n// - lTarget: This is the centre of the effect, usually GetSpellTargetPosition(),\r\n//   or the end of a cylinder or cone.\r\n// - bLineOfSight: This controls whether to do a line-of-sight check on the\r\n//   object returned.\r\n//   (This can be used to ensure that spell effects do not go through walls.)\r\n// - nObjectFilter: This allows you to filter out undesired object types, using\r\n//   bitwise \"or\".\r\n//   For example, to return only creatures and doors, the value for this\r\n//   parameter would be 1 | OBJECT_TYPE_DOOR\r\n// - vOrigin: This is only used for cylinders and cones, and specifies the\r\n//   origin of the effect(normally the spell-caster's position).\r\n// Return value on error: OBJECT_INVALID\r\nobject GetFirstObjectInShape(int nShape, float fSize, location lTarget, int bLineOfSight=0, int nObjectFilter=1, vector vOrigin=[0.0,0.0,0.0]);"
             ),
             new ScriptFunction(
                 DataType.Object,
                 "GetNextObjectInShape",
-                new List<ScriptParam> { new ScriptParam(DataType.Int, "nShape", null), new ScriptParam(DataType.Float, "fSize", null), new ScriptParam(DataType.Location, "lTarget", null), new ScriptParam(DataType.Int, "bLineOfSight", FALSE), new ScriptParam(DataType.Int, "nObjectFilter", OBJECT_TYPE_CREATURE), new ScriptParam(DataType.Vector, "vOrigin", new Vector3(0f, 0f, 0f)) },
-                "// 129: Get the next object in nShape\r\n// - nShape: SHAPE_*\r\n// - fSize:\r\n//   -> If nShape == SHAPE_SPHERE, this is the radius of the sphere\r\n//   -> If nShape == SHAPE_SPELLCYLINDER, this is the radius of the cylinder\r\n//   -> If nShape == SHAPE_CONE, this is the widest radius of the cone\r\n//   -> If nShape == SHAPE_CUBE, this is half the length of one of the sides of\r\n//      the cube\r\n// - lTarget: This is the centre of the effect, usually GetSpellTargetPosition(),\r\n//   or the end of a cylinder or cone.\r\n// - bLineOfSight: This controls whether to do a line-of-sight check on the\r\n//   object returned. (This can be used to ensure that spell effects do not go\r\n//   through walls.)\r\n// - nObjectFilter: This allows you to filter out undesired object types, using\r\n//   bitwise \"or\". For example, to return only creatures and doors, the value for\r\n//   this parameter would be OBJECT_TYPE_CREATURE | OBJECT_TYPE_DOOR\r\n// - vOrigin: This is only used for cylinders and cones, and specifies the origin\r\n//   of the effect (normally the spell-caster's position).\r\n// Return value on error: OBJECT_INVALID\r\nobject GetNextObjectInShape(int nShape, float fSize, location lTarget, int bLineOfSight=FALSE, int nObjectFilter=OBJECT_TYPE_CREATURE, vector vOrigin=[0.0,0.0,0.0]);",
-                "// 129: Get the next object in nShape\r\n// - nShape: SHAPE_*\r\n// - fSize:\r\n//   -> If nShape == SHAPE_SPHERE, this is the radius of the sphere\r\n//   -> If nShape == SHAPE_SPELLCYLINDER, this is the radius of the cylinder\r\n//   -> If nShape == SHAPE_CONE, this is the widest radius of the cone\r\n//   -> If nShape == SHAPE_CUBE, this is half the length of one of the sides of\r\n//      the cube\r\n// - lTarget: This is the centre of the effect, usually GetSpellTargetPosition(),\r\n//   or the end of a cylinder or cone.\r\n// - bLineOfSight: This controls whether to do a line-of-sight check on the\r\n//   object returned. (This can be used to ensure that spell effects do not go\r\n//   through walls.)\r\n// - nObjectFilter: This allows you to filter out undesired object types, using\r\n//   bitwise \"or\". For example, to return only creatures and doors, the value for\r\n//   this parameter would be OBJECT_TYPE_CREATURE | OBJECT_TYPE_DOOR\r\n// - vOrigin: This is only used for cylinders and cones, and specifies the origin\r\n//   of the effect (normally the spell-caster's position).\r\n// Return value on error: OBJECT_INVALID\r\nobject GetNextObjectInShape(int nShape, float fSize, location lTarget, int bLineOfSight=FALSE, int nObjectFilter=OBJECT_TYPE_CREATURE, vector vOrigin=[0.0,0.0,0.0]);"
+                new List<ScriptParam> { new ScriptParam(DataType.Int, "nShape", null), new ScriptParam(DataType.Float, "fSize", null), new ScriptParam(DataType.Location, "lTarget", null), new ScriptParam(DataType.Int, "bLineOfSight", 0), new ScriptParam(DataType.Int, "nObjectFilter", 1), new ScriptParam(DataType.Vector, "vOrigin", new Vector3(0f, 0f, 0f)) },
+                "// 129: Get the next object in nShape\r\n// - nShape: SHAPE_*\r\n// - fSize:\r\n//   -> If nShape == SHAPE_SPHERE, this is the radius of the sphere\r\n//   -> If nShape == SHAPE_SPELLCYLINDER, this is the radius of the cylinder\r\n//   -> If nShape == SHAPE_CONE, this is the widest radius of the cone\r\n//   -> If nShape == SHAPE_CUBE, this is half the length of one of the sides of\r\n//      the cube\r\n// - lTarget: This is the centre of the effect, usually GetSpellTargetPosition(),\r\n//   or the end of a cylinder or cone.\r\n// - bLineOfSight: This controls whether to do a line-of-sight check on the\r\n//   object returned. (This can be used to ensure that spell effects do not go\r\n//   through walls.)\r\n// - nObjectFilter: This allows you to filter out undesired object types, using\r\n//   bitwise \"or\". For example, to return only creatures and doors, the value for\r\n//   this parameter would be 1 | OBJECT_TYPE_DOOR\r\n// - vOrigin: This is only used for cylinders and cones, and specifies the origin\r\n//   of the effect (normally the spell-caster's position).\r\n// Return value on error: OBJECT_INVALID\r\nobject GetNextObjectInShape(int nShape, float fSize, location lTarget, int bLineOfSight=0, int nObjectFilter=1, vector vOrigin=[0.0,0.0,0.0]);",
+                "// 129: Get the next object in nShape\r\n// - nShape: SHAPE_*\r\n// - fSize:\r\n//   -> If nShape == SHAPE_SPHERE, this is the radius of the sphere\r\n//   -> If nShape == SHAPE_SPELLCYLINDER, this is the radius of the cylinder\r\n//   -> If nShape == SHAPE_CONE, this is the widest radius of the cone\r\n//   -> If nShape == SHAPE_CUBE, this is half the length of one of the sides of\r\n//      the cube\r\n// - lTarget: This is the centre of the effect, usually GetSpellTargetPosition(),\r\n//   or the end of a cylinder or cone.\r\n// - bLineOfSight: This controls whether to do a line-of-sight check on the\r\n//   object returned. (This can be used to ensure that spell effects do not go\r\n//   through walls.)\r\n// - nObjectFilter: This allows you to filter out undesired object types, using\r\n//   bitwise \"or\". For example, to return only creatures and doors, the value for\r\n//   this parameter would be 1 | OBJECT_TYPE_DOOR\r\n// - vOrigin: This is only used for cylinders and cones, and specifies the origin\r\n//   of the effect (normally the spell-caster's position).\r\n// Return value on error: OBJECT_INVALID\r\nobject GetNextObjectInShape(int nShape, float fSize, location lTarget, int bLineOfSight=0, int nObjectFilter=1, vector vOrigin=[0.0,0.0,0.0]);"
             ),
             new ScriptFunction(
                 DataType.Effect,
@@ -4221,9 +4231,9 @@ namespace CSharpKOTOR.Common.Script
             new ScriptFunction(
                 DataType.Effect,
                 "EffectDeath",
-                new List<ScriptParam> { new ScriptParam(DataType.Int, "nSpectacularDeath", FALSE), new ScriptParam(DataType.Int, "nDisplayFeedback", TRUE) },
-                "// 133: Create a Death effect\r\n// - nSpectacularDeath: if this is TRUE, the creature to which this effect is\r\n//   applied will die in an extraordinary fashion\r\n// - nDisplayFeedback\r\neffect EffectDeath(int nSpectacularDeath=FALSE, int nDisplayFeedback=TRUE);",
-                "// 133: Create a Death effect\r\n// - nSpectacularDeath: if this is TRUE, the creature to which this effect is\r\n//   applied will die in an extraordinary fashion\r\n// - nDisplayFeedback\r\neffect EffectDeath(int nSpectacularDeath=FALSE, int nDisplayFeedback=TRUE);"
+                new List<ScriptParam> { new ScriptParam(DataType.Int, "nSpectacularDeath", 0), new ScriptParam(DataType.Int, "nDisplayFeedback", 1) },
+                "// 133: Create a Death effect\r\n// - nSpectacularDeath: if this is 1, the creature to which this effect is\r\n//   applied will die in an extraordinary fashion\r\n// - nDisplayFeedback\r\neffect EffectDeath(int nSpectacularDeath=0, int nDisplayFeedback=1);",
+                "// 133: Create a Death effect\r\n// - nSpectacularDeath: if this is 1, the creature to which this effect is\r\n//   applied will die in an extraordinary fashion\r\n// - nDisplayFeedback\r\neffect EffectDeath(int nSpectacularDeath=0, int nDisplayFeedback=1);"
             ),
             new ScriptFunction(
                 DataType.Effect,
@@ -4271,15 +4281,15 @@ namespace CSharpKOTOR.Common.Script
                 DataType.Int,
                 "GetIsDead",
                 new List<ScriptParam> { new ScriptParam(DataType.Object, "oCreature", null) },
-                "// 140: * Returns TRUE if oCreature is a dead NPC, dead PC or a dying PC.\r\nint GetIsDead(object oCreature);",
-                "// 140: * Returns TRUE if oCreature is a dead NPC, dead PC or a dying PC.\r\nint GetIsDead(object oCreature);"
+                "// 140: * Returns 1 if oCreature is a dead NPC, dead PC or a dying PC.\r\nint GetIsDead(object oCreature);",
+                "// 140: * Returns 1 if oCreature is a dead NPC, dead PC or a dying PC.\r\nint GetIsDead(object oCreature);"
             ),
             new ScriptFunction(
                 DataType.Void,
                 "PrintVector",
                 new List<ScriptParam> { new ScriptParam(DataType.Vector, "vVector", null), new ScriptParam(DataType.Int, "bPrepend", null) },
-                "// 141: Output vVector to the logfile.\r\n// - vVector\r\n// - bPrepend: if this is TRUE, the message will be prefixed with \"PRINTVECTOR:\"\r\nvoid PrintVector(vector vVector, int bPrepend);",
-                "// 141: Output vVector to the logfile.\r\n// - vVector\r\n// - bPrepend: if this is TRUE, the message will be prefixed with \"PRINTVECTOR:\"\r\nvoid PrintVector(vector vVector, int bPrepend);"
+                "// 141: Output vVector to the logfile.\r\n// - vVector\r\n// - bPrepend: if this is 1, the message will be prefixed with \"PRINTVECTOR:\"\r\nvoid PrintVector(vector vVector, int bPrepend);",
+                "// 141: Output vVector to the logfile.\r\n// - vVector\r\n// - bPrepend: if this is 1, the message will be prefixed with \"PRINTVECTOR:\"\r\nvoid PrintVector(vector vVector, int bPrepend);"
             ),
             new ScriptFunction(
                 DataType.Vector,
@@ -4312,16 +4322,16 @@ namespace CSharpKOTOR.Common.Script
             new ScriptFunction(
                 DataType.Int,
                 "TouchAttackMelee",
-                new List<ScriptParam> { new ScriptParam(DataType.Object, "oTarget", null), new ScriptParam(DataType.Int, "bDisplayFeedback", TRUE) },
-                "// 146: The caller will perform a Melee Touch Attack on oTarget\r\n// This is not an action, and it assumes the caller is already within range of\r\n// oTarget\r\n// * Returns 0 on a miss, 1 on a hit and 2 on a critical hit\r\nint TouchAttackMelee(object oTarget, int bDisplayFeedback=TRUE);",
-                "// 146: The caller will perform a Melee Touch Attack on oTarget\r\n// This is not an action, and it assumes the caller is already within range of\r\n// oTarget\r\n// * Returns 0 on a miss, 1 on a hit and 2 on a critical hit\r\nint TouchAttackMelee(object oTarget, int bDisplayFeedback=TRUE);"
+                new List<ScriptParam> { new ScriptParam(DataType.Object, "oTarget", null), new ScriptParam(DataType.Int, "bDisplayFeedback", 1) },
+                "// 146: The caller will perform a Melee Touch Attack on oTarget\r\n// This is not an action, and it assumes the caller is already within range of\r\n// oTarget\r\n// * Returns 0 on a miss, 1 on a hit and 2 on a critical hit\r\nint TouchAttackMelee(object oTarget, int bDisplayFeedback=1);",
+                "// 146: The caller will perform a Melee Touch Attack on oTarget\r\n// This is not an action, and it assumes the caller is already within range of\r\n// oTarget\r\n// * Returns 0 on a miss, 1 on a hit and 2 on a critical hit\r\nint TouchAttackMelee(object oTarget, int bDisplayFeedback=1);"
             ),
             new ScriptFunction(
                 DataType.Int,
                 "TouchAttackRanged",
-                new List<ScriptParam> { new ScriptParam(DataType.Object, "oTarget", null), new ScriptParam(DataType.Int, "bDisplayFeedback", TRUE) },
-                "// 147: The caller will perform a Ranged Touch Attack on oTarget\r\n// * Returns 0 on a miss, 1 on a hit and 2 on a critical hit\r\nint TouchAttackRanged(object oTarget, int bDisplayFeedback=TRUE);",
-                "// 147: The caller will perform a Ranged Touch Attack on oTarget\r\n// * Returns 0 on a miss, 1 on a hit and 2 on a critical hit\r\nint TouchAttackRanged(object oTarget, int bDisplayFeedback=TRUE);"
+                new List<ScriptParam> { new ScriptParam(DataType.Object, "oTarget", null), new ScriptParam(DataType.Int, "bDisplayFeedback", 1) },
+                "// 147: The caller will perform a Ranged Touch Attack on oTarget\r\n// * Returns 0 on a miss, 1 on a hit and 2 on a critical hit\r\nint TouchAttackRanged(object oTarget, int bDisplayFeedback=1);",
+                "// 147: The caller will perform a Ranged Touch Attack on oTarget\r\n// * Returns 0 on a miss, 1 on a hit and 2 on a critical hit\r\nint TouchAttackRanged(object oTarget, int bDisplayFeedback=1);"
             ),
             new ScriptFunction(
                 DataType.Effect,
@@ -4333,9 +4343,9 @@ namespace CSharpKOTOR.Common.Script
             new ScriptFunction(
                 DataType.Effect,
                 "EffectSpellImmunity",
-                new List<ScriptParam> { new ScriptParam(DataType.Int, "nImmunityToSpell", FORCE_POWER_ALL_FORCE_POWERS) },
-                "// 149: Create a Spell Immunity effect.\r\n// There is a known bug with this function. There *must* be a parameter specified\r\n// when this is called (even if the desired parameter is SPELL_ALL_SPELLS),\r\n// otherwise an effect of type EFFECT_TYPE_INVALIDEFFECT will be returned.\r\n// - nImmunityToSpell: SPELL_*\r\n// * Returns an effect of type EFFECT_TYPE_INVALIDEFFECT if nImmunityToSpell is\r\n//   invalid.\r\neffect EffectSpellImmunity(int nImmunityToSpell=FORCE_POWER_ALL_FORCE_POWERS);",
-                "// 149: Create a Spell Immunity effect.\r\n// There is a known bug with this function. There *must* be a parameter specified\r\n// when this is called (even if the desired parameter is SPELL_ALL_SPELLS),\r\n// otherwise an effect of type EFFECT_TYPE_INVALIDEFFECT will be returned.\r\n// - nImmunityToSpell: SPELL_*\r\n// * Returns an effect of type EFFECT_TYPE_INVALIDEFFECT if nImmunityToSpell is\r\n//   invalid.\r\neffect EffectSpellImmunity(int nImmunityToSpell=FORCE_POWER_ALL_FORCE_POWERS);"
+                new List<ScriptParam> { new ScriptParam(DataType.Int, "nImmunityToSpell", 0) },
+                "// 149: Create a Spell Immunity effect.\r\n// There is a known bug with this function. There *must* be a parameter specified\r\n// when this is called (even if the desired parameter is SPELL_ALL_SPELLS),\r\n// otherwise an effect of type EFFECT_TYPE_INVALIDEFFECT will be returned.\r\n// - nImmunityToSpell: SPELL_*\r\n// * Returns an effect of type EFFECT_TYPE_INVALIDEFFECT if nImmunityToSpell is\r\n//   invalid.\r\neffect EffectSpellImmunity(int nImmunityToSpell=0);",
+                "// 149: Create a Spell Immunity effect.\r\n// There is a known bug with this function. There *must* be a parameter specified\r\n// when this is called (even if the desired parameter is SPELL_ALL_SPELLS),\r\n// otherwise an effect of type EFFECT_TYPE_INVALIDEFFECT will be returned.\r\n// - nImmunityToSpell: SPELL_*\r\n// * Returns an effect of type EFFECT_TYPE_INVALIDEFFECT if nImmunityToSpell is\r\n//   invalid.\r\neffect EffectSpellImmunity(int nImmunityToSpell=0);"
             ),
             new ScriptFunction(
                 DataType.Void,
@@ -4474,8 +4484,8 @@ namespace CSharpKOTOR.Common.Script
                 DataType.Int,
                 "ResistForce",
                 new List<ScriptParam> { new ScriptParam(DataType.Object, "oSource", null), new ScriptParam(DataType.Object, "oTarget", null) },
-                "// 169: Do a Force Resistance check between oSource and oTarget, returning TRUE if\r\n// the force was resisted.\r\n// * Return value if oSource or oTarget is an invalid object: FALSE\r\nint ResistForce(object oSource, object oTarget);",
-                "// 169: Do a Force Resistance check between oSource and oTarget, returning TRUE if\r\n// the force was resisted.\r\n// * Return value if oSource or oTarget is an invalid object: FALSE\r\nint ResistForce(object oSource, object oTarget);"
+                "// 169: Do a Force Resistance check between oSource and oTarget, returning 1 if\r\n// the force was resisted.\r\n// * Return value if oSource or oTarget is an invalid object: 0\r\nint ResistForce(object oSource, object oTarget);",
+                "// 169: Do a Force Resistance check between oSource and oTarget, returning 1 if\r\n// the force was resisted.\r\n// * Return value if oSource or oTarget is an invalid object: 0\r\nint ResistForce(object oSource, object oTarget);"
             ),
             new ScriptFunction(
                 DataType.Int,
@@ -4495,8 +4505,8 @@ namespace CSharpKOTOR.Common.Script
                 DataType.Int,
                 "GetFactionEqual",
                 new List<ScriptParam> { new ScriptParam(DataType.Object, "oFirstObject", null), new ScriptParam(DataType.Object, "oSecondObject", OBJECT_SELF) },
-                "// 172: * Returns TRUE if the Faction Ids of the two objects are the same\r\nint GetFactionEqual(object oFirstObject, object oSecondObject=OBJECT_SELF);",
-                "// 172: * Returns TRUE if the Faction Ids of the two objects are the same\r\nint GetFactionEqual(object oFirstObject, object oSecondObject=OBJECT_SELF);"
+                "// 172: * Returns 1 if the Faction Ids of the two objects are the same\r\nint GetFactionEqual(object oFirstObject, object oSecondObject=OBJECT_SELF);",
+                "// 172: * Returns 1 if the Faction Ids of the two objects are the same\r\nint GetFactionEqual(object oFirstObject, object oSecondObject=OBJECT_SELF);"
             ),
             new ScriptFunction(
                 DataType.Void,
@@ -4509,8 +4519,8 @@ namespace CSharpKOTOR.Common.Script
                 DataType.Int,
                 "GetIsListening",
                 new List<ScriptParam> { new ScriptParam(DataType.Object, "oObject", null) },
-                "// 174: * Returns TRUE if oObject is listening for something\r\nint GetIsListening(object oObject);",
-                "// 174: * Returns TRUE if oObject is listening for something\r\nint GetIsListening(object oObject);"
+                "// 174: * Returns 1 if oObject is listening for something\r\nint GetIsListening(object oObject);",
+                "// 174: * Returns 1 if oObject is listening for something\r\nint GetIsListening(object oObject);"
             ),
             new ScriptFunction(
                 DataType.Void,
@@ -4530,8 +4540,8 @@ namespace CSharpKOTOR.Common.Script
                 DataType.Int,
                 "TestStringAgainstPattern",
                 new List<ScriptParam> { new ScriptParam(DataType.String, "sPattern", null), new ScriptParam(DataType.String, "sStringToTest", null) },
-                "// 177: * Returns TRUE if sStringToTest matches sPattern.\r\nint TestStringAgainstPattern(string sPattern, string sStringToTest);",
-                "// 177: * Returns TRUE if sStringToTest matches sPattern.\r\nint TestStringAgainstPattern(string sPattern, string sStringToTest);"
+                "// 177: * Returns 1 if sStringToTest matches sPattern.\r\nint TestStringAgainstPattern(string sPattern, string sStringToTest);",
+                "// 177: * Returns 1 if sStringToTest matches sPattern.\r\nint TestStringAgainstPattern(string sPattern, string sStringToTest);"
             ),
             new ScriptFunction(
                 DataType.String,
@@ -4550,37 +4560,37 @@ namespace CSharpKOTOR.Common.Script
             new ScriptFunction(
                 DataType.Effect,
                 "EffectVisualEffect",
-                new List<ScriptParam> { new ScriptParam(DataType.Int, "nVisualEffectId", null), new ScriptParam(DataType.Int, "nMissEffect", FALSE) },
-                "// 180: * Create a Visual Effect that can be applied to an object.\r\n// - nVisualEffectId\r\n// - nMissEffect: if this is TRUE, a random vector near or past the target will\r\n//   be generated, on which to play the effect\r\neffect EffectVisualEffect(int nVisualEffectId, int nMissEffect=FALSE);",
-                "// 180: * Create a Visual Effect that can be applied to an object.\r\n// - nVisualEffectId\r\n// - nMissEffect: if this is TRUE, a random vector near or past the target will\r\n//   be generated, on which to play the effect\r\neffect EffectVisualEffect(int nVisualEffectId, int nMissEffect=FALSE);"
+                new List<ScriptParam> { new ScriptParam(DataType.Int, "nVisualEffectId", null), new ScriptParam(DataType.Int, "nMissEffect", 0) },
+                "// 180: * Create a Visual Effect that can be applied to an object.\r\n// - nVisualEffectId\r\n// - nMissEffect: if this is 1, a random vector near or past the target will\r\n//   be generated, on which to play the effect\r\neffect EffectVisualEffect(int nVisualEffectId, int nMissEffect=0);",
+                "// 180: * Create a Visual Effect that can be applied to an object.\r\n// - nVisualEffectId\r\n// - nMissEffect: if this is 1, a random vector near or past the target will\r\n//   be generated, on which to play the effect\r\neffect EffectVisualEffect(int nVisualEffectId, int nMissEffect=0);"
             ),
             new ScriptFunction(
                 DataType.Object,
                 "GetFactionWeakestMember",
-                new List<ScriptParam> { new ScriptParam(DataType.Object, "oFactionMember", OBJECT_SELF), new ScriptParam(DataType.Int, "bMustBeVisible", TRUE) },
-                "// 181: Get the weakest member of oFactionMember's faction.\r\n// * Returns OBJECT_INVALID if oFactionMember's faction is invalid.\r\nobject GetFactionWeakestMember(object oFactionMember=OBJECT_SELF, int bMustBeVisible=TRUE);",
-                "// 181: Get the weakest member of oFactionMember's faction.\r\n// * Returns OBJECT_INVALID if oFactionMember's faction is invalid.\r\nobject GetFactionWeakestMember(object oFactionMember=OBJECT_SELF, int bMustBeVisible=TRUE);"
+                new List<ScriptParam> { new ScriptParam(DataType.Object, "oFactionMember", OBJECT_SELF), new ScriptParam(DataType.Int, "bMustBeVisible", 1) },
+                "// 181: Get the weakest member of oFactionMember's faction.\r\n// * Returns OBJECT_INVALID if oFactionMember's faction is invalid.\r\nobject GetFactionWeakestMember(object oFactionMember=OBJECT_SELF, int bMustBeVisible=1);",
+                "// 181: Get the weakest member of oFactionMember's faction.\r\n// * Returns OBJECT_INVALID if oFactionMember's faction is invalid.\r\nobject GetFactionWeakestMember(object oFactionMember=OBJECT_SELF, int bMustBeVisible=1);"
             ),
             new ScriptFunction(
                 DataType.Object,
                 "GetFactionStrongestMember",
-                new List<ScriptParam> { new ScriptParam(DataType.Object, "oFactionMember", OBJECT_SELF), new ScriptParam(DataType.Int, "bMustBeVisible", TRUE) },
-                "// 182: Get the strongest member of oFactionMember's faction.\r\n// * Returns OBJECT_INVALID if oFactionMember's faction is invalid.\r\nobject GetFactionStrongestMember(object oFactionMember=OBJECT_SELF, int bMustBeVisible=TRUE);",
-                "// 182: Get the strongest member of oFactionMember's faction.\r\n// * Returns OBJECT_INVALID if oFactionMember's faction is invalid.\r\nobject GetFactionStrongestMember(object oFactionMember=OBJECT_SELF, int bMustBeVisible=TRUE);"
+                new List<ScriptParam> { new ScriptParam(DataType.Object, "oFactionMember", OBJECT_SELF), new ScriptParam(DataType.Int, "bMustBeVisible", 1) },
+                "// 182: Get the strongest member of oFactionMember's faction.\r\n// * Returns OBJECT_INVALID if oFactionMember's faction is invalid.\r\nobject GetFactionStrongestMember(object oFactionMember=OBJECT_SELF, int bMustBeVisible=1);",
+                "// 182: Get the strongest member of oFactionMember's faction.\r\n// * Returns OBJECT_INVALID if oFactionMember's faction is invalid.\r\nobject GetFactionStrongestMember(object oFactionMember=OBJECT_SELF, int bMustBeVisible=1);"
             ),
             new ScriptFunction(
                 DataType.Object,
                 "GetFactionMostDamagedMember",
-                new List<ScriptParam> { new ScriptParam(DataType.Object, "oFactionMember", OBJECT_SELF), new ScriptParam(DataType.Int, "bMustBeVisible", TRUE) },
-                "// 183: Get the member of oFactionMember's faction that has taken the most hit points\r\n// of damage.\r\n// * Returns OBJECT_INVALID if oFactionMember's faction is invalid.\r\nobject GetFactionMostDamagedMember(object oFactionMember=OBJECT_SELF, int bMustBeVisible=TRUE);",
-                "// 183: Get the member of oFactionMember's faction that has taken the most hit points\r\n// of damage.\r\n// * Returns OBJECT_INVALID if oFactionMember's faction is invalid.\r\nobject GetFactionMostDamagedMember(object oFactionMember=OBJECT_SELF, int bMustBeVisible=TRUE);"
+                new List<ScriptParam> { new ScriptParam(DataType.Object, "oFactionMember", OBJECT_SELF), new ScriptParam(DataType.Int, "bMustBeVisible", 1) },
+                "// 183: Get the member of oFactionMember's faction that has taken the most hit points\r\n// of damage.\r\n// * Returns OBJECT_INVALID if oFactionMember's faction is invalid.\r\nobject GetFactionMostDamagedMember(object oFactionMember=OBJECT_SELF, int bMustBeVisible=1);",
+                "// 183: Get the member of oFactionMember's faction that has taken the most hit points\r\n// of damage.\r\n// * Returns OBJECT_INVALID if oFactionMember's faction is invalid.\r\nobject GetFactionMostDamagedMember(object oFactionMember=OBJECT_SELF, int bMustBeVisible=1);"
             ),
             new ScriptFunction(
                 DataType.Object,
                 "GetFactionLeastDamagedMember",
-                new List<ScriptParam> { new ScriptParam(DataType.Object, "oFactionMember", OBJECT_SELF), new ScriptParam(DataType.Int, "bMustBeVisible", TRUE) },
-                "// 184: Get the member of oFactionMember's faction that has taken the fewest hit\r\n// points of damage.\r\n// * Returns OBJECT_INVALID if oFactionMember's faction is invalid.\r\nobject GetFactionLeastDamagedMember(object oFactionMember=OBJECT_SELF, int bMustBeVisible=TRUE);",
-                "// 184: Get the member of oFactionMember's faction that has taken the fewest hit\r\n// points of damage.\r\n// * Returns OBJECT_INVALID if oFactionMember's faction is invalid.\r\nobject GetFactionLeastDamagedMember(object oFactionMember=OBJECT_SELF, int bMustBeVisible=TRUE);"
+                new List<ScriptParam> { new ScriptParam(DataType.Object, "oFactionMember", OBJECT_SELF), new ScriptParam(DataType.Int, "bMustBeVisible", 1) },
+                "// 184: Get the member of oFactionMember's faction that has taken the fewest hit\r\n// points of damage.\r\n// * Returns OBJECT_INVALID if oFactionMember's faction is invalid.\r\nobject GetFactionLeastDamagedMember(object oFactionMember=OBJECT_SELF, int bMustBeVisible=1);",
+                "// 184: Get the member of oFactionMember's faction that has taken the fewest hit\r\n// points of damage.\r\n// * Returns OBJECT_INVALID if oFactionMember's faction is invalid.\r\nobject GetFactionLeastDamagedMember(object oFactionMember=OBJECT_SELF, int bMustBeVisible=1);"
             ),
             new ScriptFunction(
                 DataType.Int,
@@ -4634,16 +4644,16 @@ namespace CSharpKOTOR.Common.Script
             new ScriptFunction(
                 DataType.Object,
                 "GetFactionWorstAC",
-                new List<ScriptParam> { new ScriptParam(DataType.Object, "oFactionMember", OBJECT_SELF), new ScriptParam(DataType.Int, "bMustBeVisible", TRUE) },
-                "// 192: Get the object faction member with the lowest armour class.\r\n// * Returns OBJECT_INVALID if oFactionMember's faction is invalid.\r\nobject GetFactionWorstAC(object oFactionMember=OBJECT_SELF, int bMustBeVisible=TRUE);",
-                "// 192: Get the object faction member with the lowest armour class.\r\n// * Returns OBJECT_INVALID if oFactionMember's faction is invalid.\r\nobject GetFactionWorstAC(object oFactionMember=OBJECT_SELF, int bMustBeVisible=TRUE);"
+                new List<ScriptParam> { new ScriptParam(DataType.Object, "oFactionMember", OBJECT_SELF), new ScriptParam(DataType.Int, "bMustBeVisible", 1) },
+                "// 192: Get the object faction member with the lowest armour class.\r\n// * Returns OBJECT_INVALID if oFactionMember's faction is invalid.\r\nobject GetFactionWorstAC(object oFactionMember=OBJECT_SELF, int bMustBeVisible=1);",
+                "// 192: Get the object faction member with the lowest armour class.\r\n// * Returns OBJECT_INVALID if oFactionMember's faction is invalid.\r\nobject GetFactionWorstAC(object oFactionMember=OBJECT_SELF, int bMustBeVisible=1);"
             ),
             new ScriptFunction(
                 DataType.Object,
                 "GetFactionBestAC",
-                new List<ScriptParam> { new ScriptParam(DataType.Object, "oFactionMember", OBJECT_SELF), new ScriptParam(DataType.Int, "bMustBeVisible", TRUE) },
-                "// 193: Get the object faction member with the highest armour class.\r\n// * Returns OBJECT_INVALID if oFactionMember's faction is invalid.\r\nobject GetFactionBestAC(object oFactionMember=OBJECT_SELF, int bMustBeVisible=TRUE);",
-                "// 193: Get the object faction member with the highest armour class.\r\n// * Returns OBJECT_INVALID if oFactionMember's faction is invalid.\r\nobject GetFactionBestAC(object oFactionMember=OBJECT_SELF, int bMustBeVisible=TRUE);"
+                new List<ScriptParam> { new ScriptParam(DataType.Object, "oFactionMember", OBJECT_SELF), new ScriptParam(DataType.Int, "bMustBeVisible", 1) },
+                "// 193: Get the object faction member with the highest armour class.\r\n// * Returns OBJECT_INVALID if oFactionMember's faction is invalid.\r\nobject GetFactionBestAC(object oFactionMember=OBJECT_SELF, int bMustBeVisible=1);",
+                "// 193: Get the object faction member with the highest armour class.\r\n// * Returns OBJECT_INVALID if oFactionMember's faction is invalid.\r\nobject GetFactionBestAC(object oFactionMember=OBJECT_SELF, int bMustBeVisible=1);"
             ),
             new ScriptFunction(
                 DataType.String,
@@ -4662,9 +4672,9 @@ namespace CSharpKOTOR.Common.Script
             new ScriptFunction(
                 DataType.Void,
                 "ActionJumpToObject",
-                new List<ScriptParam> { new ScriptParam(DataType.Object, "oToJumpTo", null), new ScriptParam(DataType.Int, "bWalkStraightLineToPoint", TRUE) },
-                "// 196: Jump to an object ID, or as near to it as possible.\r\nvoid ActionJumpToObject(object oToJumpTo, int bWalkStraightLineToPoint=TRUE);",
-                "// 196: Jump to an object ID, or as near to it as possible.\r\nvoid ActionJumpToObject(object oToJumpTo, int bWalkStraightLineToPoint=TRUE);"
+                new List<ScriptParam> { new ScriptParam(DataType.Object, "oToJumpTo", null), new ScriptParam(DataType.Int, "bWalkStraightLineToPoint", 1) },
+                "// 196: Jump to an object ID, or as near to it as possible.\r\nvoid ActionJumpToObject(object oToJumpTo, int bWalkStraightLineToPoint=1);",
+                "// 196: Jump to an object ID, or as near to it as possible.\r\nvoid ActionJumpToObject(object oToJumpTo, int bWalkStraightLineToPoint=1);"
             ),
             new ScriptFunction(
                 DataType.Object,
@@ -4718,9 +4728,9 @@ namespace CSharpKOTOR.Common.Script
             new ScriptFunction(
                 DataType.Void,
                 "ActionStartConversation",
-                new List<ScriptParam> { new ScriptParam(DataType.Object, "oObjectToConverse", null), new ScriptParam(DataType.String, "sDialogResRef", "\"\""), new ScriptParam(DataType.Int, "bPrivateConversation", FALSE), new ScriptParam(DataType.Int, "nConversationType", CONVERSATION_TYPE_CINEMATIC), new ScriptParam(DataType.Int, "bIgnoreStartRange", FALSE), new ScriptParam(DataType.String, "sNameObjectToIgnore1", "\"\""), new ScriptParam(DataType.String, "sNameObjectToIgnore2", "\"\""), new ScriptParam(DataType.String, "sNameObjectToIgnore3", "\"\""), new ScriptParam(DataType.String, "sNameObjectToIgnore4", "\"\""), new ScriptParam(DataType.String, "sNameObjectToIgnore5", "\"\""), new ScriptParam(DataType.String, "sNameObjectToIgnore6", "\"\""), new ScriptParam(DataType.Int, "bUseLeader", FALSE) },
-                "// AMF: APRIL 28, 2003 - I HAVE CHANGED THIS FUNCTION AS PER DAN'S REQUEST\r\n// 204: Starts a conversation with oObjectToConverseWith - this will cause their\r\n// OnDialog event to fire.\r\n// - oObjectToConverseWith\r\n// - sDialogResRef: If this is blank, the creature's own dialogue file will be used\r\n// - bPrivateConversation: If this is blank, the default is FALSE.\r\n// - nConversationType - If this is blank the default will be Cinematic, ie. a normal conversation type\r\n//                                  other choices inclue: CONVERSATION_TYPE_COMPUTER\r\n//   UPDATE:  nConversationType actually has no meaning anymore.  This has been replaced by a flag in the dialog editor.  However\r\n//                for backwards compatability it has been left here.  So when using this command place CONVERSATION_TYPE_CINEMATIC in here. - DJF\r\n// - bIgnoreStartRange - If this is blank the default will be FALSE, ie. Start conversation ranges are in effect\r\n//                                                                      Setting this to TRUE will cause creatures to start a conversation without requiring to close\r\n//                                                                      the distance between the two object in dialog.\r\n// - sNameObjectToIgnore1-6 - Normally objects in the animation list of the dialog editor have to be available for animations on that node to work\r\n//                                        these 6 strings are to indicate 6 objects that dont need to be available for things to proceed.  The string should be EXACTLY\r\n//                                        the same as the string that it represents in the dialog editor.\r\nvoid ActionStartConversation(object oObjectToConverse, string sDialogResRef = \"\", int bPrivateConversation = FALSE, int nConversationType = CONVERSATION_TYPE_CINEMATIC, int bIgnoreStartRange = FALSE, string sNameObjectToIgnore1 = \"\", string sNameObjectToIgnore2 = \"\", string sNameObjectToIgnore3 = \"\", string sNameObjectToIgnore4 = \"\", string sNameObjectToIgnore5 = \"\", string sNameObjectToIgnore6 = \"\", int bUseLeader = FALSE);",
-                "// AMF: APRIL 28, 2003 - I HAVE CHANGED THIS FUNCTION AS PER DAN'S REQUEST\r\n// 204: Starts a conversation with oObjectToConverseWith - this will cause their\r\n// OnDialog event to fire.\r\n// - oObjectToConverseWith\r\n// - sDialogResRef: If this is blank, the creature's own dialogue file will be used\r\n// - bPrivateConversation: If this is blank, the default is FALSE.\r\n// - nConversationType - If this is blank the default will be Cinematic, ie. a normal conversation type\r\n//                                  other choices inclue: CONVERSATION_TYPE_COMPUTER\r\n//   UPDATE:  nConversationType actually has no meaning anymore.  This has been replaced by a flag in the dialog editor.  However\r\n//                for backwards compatability it has been left here.  So when using this command place CONVERSATION_TYPE_CINEMATIC in here. - DJF\r\n// - bIgnoreStartRange - If this is blank the default will be FALSE, ie. Start conversation ranges are in effect\r\n//                                                                      Setting this to TRUE will cause creatures to start a conversation without requiring to close\r\n//                                                                      the distance between the two object in dialog.\r\n// - sNameObjectToIgnore1-6 - Normally objects in the animation list of the dialog editor have to be available for animations on that node to work\r\n//                                        these 6 strings are to indicate 6 objects that dont need to be available for things to proceed.  The string should be EXACTLY\r\n//                                        the same as the string that it represents in the dialog editor.\r\nvoid ActionStartConversation(object oObjectToConverse, string sDialogResRef = \"\", int bPrivateConversation = FALSE, int nConversationType = CONVERSATION_TYPE_CINEMATIC, int bIgnoreStartRange = FALSE, string sNameObjectToIgnore1 = \"\", string sNameObjectToIgnore2 = \"\", string sNameObjectToIgnore3 = \"\", string sNameObjectToIgnore4 = \"\", string sNameObjectToIgnore5 = \"\", string sNameObjectToIgnore6 = \"\", int bUseLeader = FALSE);"
+                new List<ScriptParam> { new ScriptParam(DataType.Object, "oObjectToConverse", null), new ScriptParam(DataType.String, "sDialogResRef", "\"\""), new ScriptParam(DataType.Int, "bPrivateConversation", 0), new ScriptParam(DataType.Int, "nConversationType", 0), new ScriptParam(DataType.Int, "bIgnoreStartRange", 0), new ScriptParam(DataType.String, "sNameObjectToIgnore1", "\"\""), new ScriptParam(DataType.String, "sNameObjectToIgnore2", "\"\""), new ScriptParam(DataType.String, "sNameObjectToIgnore3", "\"\""), new ScriptParam(DataType.String, "sNameObjectToIgnore4", "\"\""), new ScriptParam(DataType.String, "sNameObjectToIgnore5", "\"\""), new ScriptParam(DataType.String, "sNameObjectToIgnore6", "\"\""), new ScriptParam(DataType.Int, "bUseLeader", 0) },
+                "// AMF: APRIL 28, 2003 - I HAVE CHANGED THIS FUNCTION AS PER DAN'S REQUEST\r\n// 204: Starts a conversation with oObjectToConverseWith - this will cause their\r\n// OnDialog event to fire.\r\n// - oObjectToConverseWith\r\n// - sDialogResRef: If this is blank, the creature's own dialogue file will be used\r\n// - bPrivateConversation: If this is blank, the default is 0.\r\n// - nConversationType - If this is blank the default will be Cinematic, ie. a normal conversation type\r\n//                                  other choices inclue: CONVERSATION_TYPE_COMPUTER\r\n//   UPDATE:  nConversationType actually has no meaning anymore.  This has been replaced by a flag in the dialog editor.  However\r\n//                for backwards compatability it has been left here.  So when using this command place 0 in here. - DJF\r\n// - bIgnoreStartRange - If this is blank the default will be 0, ie. Start conversation ranges are in effect\r\n//                                                                      Setting this to 1 will cause creatures to start a conversation without requiring to close\r\n//                                                                      the distance between the two object in dialog.\r\n// - sNameObjectToIgnore1-6 - Normally objects in the animation list of the dialog editor have to be available for animations on that node to work\r\n//                                        these 6 strings are to indicate 6 objects that dont need to be available for things to proceed.  The string should be EXACTLY\r\n//                                        the same as the string that it represents in the dialog editor.\r\nvoid ActionStartConversation(object oObjectToConverse, string sDialogResRef = \"\", int bPrivateConversation = 0, int nConversationType = 0, int bIgnoreStartRange = 0, string sNameObjectToIgnore1 = \"\", string sNameObjectToIgnore2 = \"\", string sNameObjectToIgnore3 = \"\", string sNameObjectToIgnore4 = \"\", string sNameObjectToIgnore5 = \"\", string sNameObjectToIgnore6 = \"\", int bUseLeader = 0);",
+                "// AMF: APRIL 28, 2003 - I HAVE CHANGED THIS FUNCTION AS PER DAN'S REQUEST\r\n// 204: Starts a conversation with oObjectToConverseWith - this will cause their\r\n// OnDialog event to fire.\r\n// - oObjectToConverseWith\r\n// - sDialogResRef: If this is blank, the creature's own dialogue file will be used\r\n// - bPrivateConversation: If this is blank, the default is 0.\r\n// - nConversationType - If this is blank the default will be Cinematic, ie. a normal conversation type\r\n//                                  other choices inclue: CONVERSATION_TYPE_COMPUTER\r\n//   UPDATE:  nConversationType actually has no meaning anymore.  This has been replaced by a flag in the dialog editor.  However\r\n//                for backwards compatability it has been left here.  So when using this command place 0 in here. - DJF\r\n// - bIgnoreStartRange - If this is blank the default will be 0, ie. Start conversation ranges are in effect\r\n//                                                                      Setting this to 1 will cause creatures to start a conversation without requiring to close\r\n//                                                                      the distance between the two object in dialog.\r\n// - sNameObjectToIgnore1-6 - Normally objects in the animation list of the dialog editor have to be available for animations on that node to work\r\n//                                        these 6 strings are to indicate 6 objects that dont need to be available for things to proceed.  The string should be EXACTLY\r\n//                                        the same as the string that it represents in the dialog editor.\r\nvoid ActionStartConversation(object oObjectToConverse, string sDialogResRef = \"\", int bPrivateConversation = 0, int nConversationType = 0, int bIgnoreStartRange = 0, string sNameObjectToIgnore1 = \"\", string sNameObjectToIgnore2 = \"\", string sNameObjectToIgnore3 = \"\", string sNameObjectToIgnore4 = \"\", string sNameObjectToIgnore5 = \"\", string sNameObjectToIgnore6 = \"\", int bUseLeader = 0);"
             ),
             new ScriptFunction(
                 DataType.Void,
@@ -4739,9 +4749,9 @@ namespace CSharpKOTOR.Common.Script
             new ScriptFunction(
                 DataType.Effect,
                 "EffectBeam",
-                new List<ScriptParam> { new ScriptParam(DataType.Int, "nBeamVisualEffect", null), new ScriptParam(DataType.Object, "oEffector", null), new ScriptParam(DataType.Int, "nBodyPart", null), new ScriptParam(DataType.Int, "bMissEffect", FALSE) },
-                "// 207: Create a Beam effect.\r\n// - nBeamVisualEffect: VFX_BEAM_*\r\n// - oEffector: the beam is emitted from this creature\r\n// - nBodyPart: BODY_NODE_*\r\n// - bMissEffect: If this is TRUE, the beam will fire to a random vector near or\r\n//   past the target\r\n// * Returns an effect of type EFFECT_TYPE_INVALIDEFFECT if nBeamVisualEffect is\r\n//   not valid.\r\neffect EffectBeam(int nBeamVisualEffect, object oEffector, int nBodyPart, int bMissEffect=FALSE);",
-                "// 207: Create a Beam effect.\r\n// - nBeamVisualEffect: VFX_BEAM_*\r\n// - oEffector: the beam is emitted from this creature\r\n// - nBodyPart: BODY_NODE_*\r\n// - bMissEffect: If this is TRUE, the beam will fire to a random vector near or\r\n//   past the target\r\n// * Returns an effect of type EFFECT_TYPE_INVALIDEFFECT if nBeamVisualEffect is\r\n//   not valid.\r\neffect EffectBeam(int nBeamVisualEffect, object oEffector, int nBodyPart, int bMissEffect=FALSE);"
+                new List<ScriptParam> { new ScriptParam(DataType.Int, "nBeamVisualEffect", null), new ScriptParam(DataType.Object, "oEffector", null), new ScriptParam(DataType.Int, "nBodyPart", null), new ScriptParam(DataType.Int, "bMissEffect", 0) },
+                "// 207: Create a Beam effect.\r\n// - nBeamVisualEffect: VFX_BEAM_*\r\n// - oEffector: the beam is emitted from this creature\r\n// - nBodyPart: BODY_NODE_*\r\n// - bMissEffect: If this is 1, the beam will fire to a random vector near or\r\n//   past the target\r\n// * Returns an effect of type EFFECT_TYPE_INVALIDEFFECT if nBeamVisualEffect is\r\n//   not valid.\r\neffect EffectBeam(int nBeamVisualEffect, object oEffector, int nBodyPart, int bMissEffect=0);",
+                "// 207: Create a Beam effect.\r\n// - nBeamVisualEffect: VFX_BEAM_*\r\n// - oEffector: the beam is emitted from this creature\r\n// - nBodyPart: BODY_NODE_*\r\n// - bMissEffect: If this is 1, the beam will fire to a random vector near or\r\n//   past the target\r\n// * Returns an effect of type EFFECT_TYPE_INVALIDEFFECT if nBeamVisualEffect is\r\n//   not valid.\r\neffect EffectBeam(int nBeamVisualEffect, object oEffector, int nBodyPart, int bMissEffect=0);"
             ),
             new ScriptFunction(
                 DataType.Int,
@@ -4810,8 +4820,8 @@ namespace CSharpKOTOR.Common.Script
                 DataType.Int,
                 "GetIsPC",
                 new List<ScriptParam> { new ScriptParam(DataType.Object, "oCreature", null) },
-                "// 217: * Returns TRUE if oCreature is a Player Controlled character.\r\nint GetIsPC(object oCreature);",
-                "// 217: * Returns TRUE if oCreature is a Player Controlled character.\r\nint GetIsPC(object oCreature);"
+                "// 217: * Returns 1 if oCreature is a Player Controlled character.\r\nint GetIsPC(object oCreature);",
+                "// 217: * Returns 1 if oCreature is a Player Controlled character.\r\nint GetIsPC(object oCreature);"
             ),
             new ScriptFunction(
                 DataType.Float,
@@ -4837,9 +4847,9 @@ namespace CSharpKOTOR.Common.Script
             new ScriptFunction(
                 DataType.Void,
                 "SpeakString",
-                new List<ScriptParam> { new ScriptParam(DataType.String, "sStringToSpeak", null), new ScriptParam(DataType.Int, "nTalkVolume", TALKVOLUME_TALK) },
-                "// 221: The caller will immediately speak sStringToSpeak (this is different from\r\n// ActionSpeakString)\r\n// - sStringToSpeak\r\n// - nTalkVolume: TALKVOLUME_*\r\nvoid SpeakString(string sStringToSpeak, int nTalkVolume=TALKVOLUME_TALK);",
-                "// 221: The caller will immediately speak sStringToSpeak (this is different from\r\n// ActionSpeakString)\r\n// - sStringToSpeak\r\n// - nTalkVolume: TALKVOLUME_*\r\nvoid SpeakString(string sStringToSpeak, int nTalkVolume=TALKVOLUME_TALK);"
+                new List<ScriptParam> { new ScriptParam(DataType.String, "sStringToSpeak", null), new ScriptParam(DataType.Int, "nTalkVolume", 0) },
+                "// 221: The caller will immediately speak sStringToSpeak (this is different from\r\n// ActionSpeakString)\r\n// - sStringToSpeak\r\n// - nTalkVolume: TALKVOLUME_*\r\nvoid SpeakString(string sStringToSpeak, int nTalkVolume=0);",
+                "// 221: The caller will immediately speak sStringToSpeak (this is different from\r\n// ActionSpeakString)\r\n// - sStringToSpeak\r\n// - nTalkVolume: TALKVOLUME_*\r\nvoid SpeakString(string sStringToSpeak, int nTalkVolume=0);"
             ),
             new ScriptFunction(
                 DataType.Location,
@@ -4873,15 +4883,15 @@ namespace CSharpKOTOR.Common.Script
                 DataType.Object,
                 "GetNearestCreatureToLocation",
                 new List<ScriptParam> { new ScriptParam(DataType.Int, "nFirstCriteriaType", null), new ScriptParam(DataType.Int, "nFirstCriteriaValue", null), new ScriptParam(DataType.Location, "lLocation", null), new ScriptParam(DataType.Int, "nNth", 1), new ScriptParam(DataType.Int, "nSecondCriteriaType", -1), new ScriptParam(DataType.Int, "nSecondCriteriaValue", -1), new ScriptParam(DataType.Int, "nThirdCriteriaType", -1), new ScriptParam(DataType.Int, "nThirdCriteriaValue", -1) },
-                "// 226: Get the creature nearest to lLocation, subject to all the criteria specified.\r\n// - nFirstCriteriaType: CREATURE_TYPE_*\r\n// - nFirstCriteriaValue:\r\n//   -> CLASS_TYPE_* if nFirstCriteriaType was CREATURE_TYPE_CLASS\r\n//   -> SPELL_* if nFirstCriteriaType was CREATURE_TYPE_DOES_NOT_HAVE_SPELL_EFFECT\r\n//      or CREATURE_TYPE_HAS_SPELL_EFFECT\r\n//   -> TRUE or FALSE if nFirstCriteriaType was CREATURE_TYPE_IS_ALIVE\r\n//   -> PERCEPTION_* if nFirstCriteriaType was CREATURE_TYPE_PERCEPTION\r\n//   -> PLAYER_CHAR_IS_PC or PLAYER_CHAR_NOT_PC if nFirstCriteriaType was\r\n//      CREATURE_TYPE_PLAYER_CHAR\r\n//   -> RACIAL_TYPE_* if nFirstCriteriaType was CREATURE_TYPE_RACIAL_TYPE\r\n//   -> REPUTATION_TYPE_* if nFirstCriteriaType was CREATURE_TYPE_REPUTATION\r\n//   For example, to get the nearest PC, use\r\n//   (CREATURE_TYPE_PLAYER_CHAR, PLAYER_CHAR_IS_PC)\r\n// - lLocation: We're trying to find the creature of the specified type that is\r\n//   nearest to lLocation\r\n// - nNth: We don't have to find the first nearest: we can find the Nth nearest....\r\n// - nSecondCriteriaType: This is used in the same way as nFirstCriteriaType to\r\n//   further specify the type of creature that we are looking for.\r\n// - nSecondCriteriaValue: This is used in the same way as nFirstCriteriaValue\r\n//   to further specify the type of creature that we are looking for.\r\n// - nThirdCriteriaType: This is used in the same way as nFirstCriteriaType to\r\n//   further specify the type of creature that we are looking for.\r\n// - nThirdCriteriaValue: This is used in the same way as nFirstCriteriaValue to\r\n//   further specify the type of creature that we are looking for.\r\n// * Return value on error: OBJECT_INVALID\r\nobject GetNearestCreatureToLocation(int nFirstCriteriaType, int nFirstCriteriaValue,  location lLocation, int nNth=1, int nSecondCriteriaType=-1, int nSecondCriteriaValue=-1, int nThirdCriteriaType=-1,  int nThirdCriteriaValue=-1 );",
-                "// 226: Get the creature nearest to lLocation, subject to all the criteria specified.\r\n// - nFirstCriteriaType: CREATURE_TYPE_*\r\n// - nFirstCriteriaValue:\r\n//   -> CLASS_TYPE_* if nFirstCriteriaType was CREATURE_TYPE_CLASS\r\n//   -> SPELL_* if nFirstCriteriaType was CREATURE_TYPE_DOES_NOT_HAVE_SPELL_EFFECT\r\n//      or CREATURE_TYPE_HAS_SPELL_EFFECT\r\n//   -> TRUE or FALSE if nFirstCriteriaType was CREATURE_TYPE_IS_ALIVE\r\n//   -> PERCEPTION_* if nFirstCriteriaType was CREATURE_TYPE_PERCEPTION\r\n//   -> PLAYER_CHAR_IS_PC or PLAYER_CHAR_NOT_PC if nFirstCriteriaType was\r\n//      CREATURE_TYPE_PLAYER_CHAR\r\n//   -> RACIAL_TYPE_* if nFirstCriteriaType was CREATURE_TYPE_RACIAL_TYPE\r\n//   -> REPUTATION_TYPE_* if nFirstCriteriaType was CREATURE_TYPE_REPUTATION\r\n//   For example, to get the nearest PC, use\r\n//   (CREATURE_TYPE_PLAYER_CHAR, PLAYER_CHAR_IS_PC)\r\n// - lLocation: We're trying to find the creature of the specified type that is\r\n//   nearest to lLocation\r\n// - nNth: We don't have to find the first nearest: we can find the Nth nearest....\r\n// - nSecondCriteriaType: This is used in the same way as nFirstCriteriaType to\r\n//   further specify the type of creature that we are looking for.\r\n// - nSecondCriteriaValue: This is used in the same way as nFirstCriteriaValue\r\n//   to further specify the type of creature that we are looking for.\r\n// - nThirdCriteriaType: This is used in the same way as nFirstCriteriaType to\r\n//   further specify the type of creature that we are looking for.\r\n// - nThirdCriteriaValue: This is used in the same way as nFirstCriteriaValue to\r\n//   further specify the type of creature that we are looking for.\r\n// * Return value on error: OBJECT_INVALID\r\nobject GetNearestCreatureToLocation(int nFirstCriteriaType, int nFirstCriteriaValue,  location lLocation, int nNth=1, int nSecondCriteriaType=-1, int nSecondCriteriaValue=-1, int nThirdCriteriaType=-1,  int nThirdCriteriaValue=-1 );"
+                "// 226: Get the creature nearest to lLocation, subject to all the criteria specified.\r\n// - nFirstCriteriaType: CREATURE_TYPE_*\r\n// - nFirstCriteriaValue:\r\n//   -> CLASS_TYPE_* if nFirstCriteriaType was CREATURE_TYPE_CLASS\r\n//   -> SPELL_* if nFirstCriteriaType was CREATURE_TYPE_DOES_NOT_HAVE_SPELL_EFFECT\r\n//      or CREATURE_TYPE_HAS_SPELL_EFFECT\r\n//   -> 1 or 0 if nFirstCriteriaType was CREATURE_TYPE_IS_ALIVE\r\n//   -> PERCEPTION_* if nFirstCriteriaType was CREATURE_TYPE_PERCEPTION\r\n//   -> PLAYER_CHAR_IS_PC or PLAYER_CHAR_NOT_PC if nFirstCriteriaType was\r\n//      CREATURE_TYPE_PLAYER_CHAR\r\n//   -> RACIAL_TYPE_* if nFirstCriteriaType was CREATURE_TYPE_RACIAL_TYPE\r\n//   -> REPUTATION_TYPE_* if nFirstCriteriaType was CREATURE_TYPE_REPUTATION\r\n//   For example, to get the nearest PC, use\r\n//   (CREATURE_TYPE_PLAYER_CHAR, PLAYER_CHAR_IS_PC)\r\n// - lLocation: We're trying to find the creature of the specified type that is\r\n//   nearest to lLocation\r\n// - nNth: We don't have to find the first nearest: we can find the Nth nearest....\r\n// - nSecondCriteriaType: This is used in the same way as nFirstCriteriaType to\r\n//   further specify the type of creature that we are looking for.\r\n// - nSecondCriteriaValue: This is used in the same way as nFirstCriteriaValue\r\n//   to further specify the type of creature that we are looking for.\r\n// - nThirdCriteriaType: This is used in the same way as nFirstCriteriaType to\r\n//   further specify the type of creature that we are looking for.\r\n// - nThirdCriteriaValue: This is used in the same way as nFirstCriteriaValue to\r\n//   further specify the type of creature that we are looking for.\r\n// * Return value on error: OBJECT_INVALID\r\nobject GetNearestCreatureToLocation(int nFirstCriteriaType, int nFirstCriteriaValue,  location lLocation, int nNth=1, int nSecondCriteriaType=-1, int nSecondCriteriaValue=-1, int nThirdCriteriaType=-1,  int nThirdCriteriaValue=-1 );",
+                "// 226: Get the creature nearest to lLocation, subject to all the criteria specified.\r\n// - nFirstCriteriaType: CREATURE_TYPE_*\r\n// - nFirstCriteriaValue:\r\n//   -> CLASS_TYPE_* if nFirstCriteriaType was CREATURE_TYPE_CLASS\r\n//   -> SPELL_* if nFirstCriteriaType was CREATURE_TYPE_DOES_NOT_HAVE_SPELL_EFFECT\r\n//      or CREATURE_TYPE_HAS_SPELL_EFFECT\r\n//   -> 1 or 0 if nFirstCriteriaType was CREATURE_TYPE_IS_ALIVE\r\n//   -> PERCEPTION_* if nFirstCriteriaType was CREATURE_TYPE_PERCEPTION\r\n//   -> PLAYER_CHAR_IS_PC or PLAYER_CHAR_NOT_PC if nFirstCriteriaType was\r\n//      CREATURE_TYPE_PLAYER_CHAR\r\n//   -> RACIAL_TYPE_* if nFirstCriteriaType was CREATURE_TYPE_RACIAL_TYPE\r\n//   -> REPUTATION_TYPE_* if nFirstCriteriaType was CREATURE_TYPE_REPUTATION\r\n//   For example, to get the nearest PC, use\r\n//   (CREATURE_TYPE_PLAYER_CHAR, PLAYER_CHAR_IS_PC)\r\n// - lLocation: We're trying to find the creature of the specified type that is\r\n//   nearest to lLocation\r\n// - nNth: We don't have to find the first nearest: we can find the Nth nearest....\r\n// - nSecondCriteriaType: This is used in the same way as nFirstCriteriaType to\r\n//   further specify the type of creature that we are looking for.\r\n// - nSecondCriteriaValue: This is used in the same way as nFirstCriteriaValue\r\n//   to further specify the type of creature that we are looking for.\r\n// - nThirdCriteriaType: This is used in the same way as nFirstCriteriaType to\r\n//   further specify the type of creature that we are looking for.\r\n// - nThirdCriteriaValue: This is used in the same way as nFirstCriteriaValue to\r\n//   further specify the type of creature that we are looking for.\r\n// * Return value on error: OBJECT_INVALID\r\nobject GetNearestCreatureToLocation(int nFirstCriteriaType, int nFirstCriteriaValue,  location lLocation, int nNth=1, int nSecondCriteriaType=-1, int nSecondCriteriaValue=-1, int nThirdCriteriaType=-1,  int nThirdCriteriaValue=-1 );"
             ),
             new ScriptFunction(
                 DataType.Object,
                 "GetNearestObject",
-                new List<ScriptParam> { new ScriptParam(DataType.Int, "nObjectType", OBJECT_TYPE_ALL), new ScriptParam(DataType.Object, "oTarget", OBJECT_SELF), new ScriptParam(DataType.Int, "nNth", 1) },
-                "// 227: Get the Nth object nearest to oTarget that is of the specified type.\r\n// - nObjectType: OBJECT_TYPE_*\r\n// - oTarget\r\n// - nNth\r\n// * Return value on error: OBJECT_INVALID\r\nobject GetNearestObject(int nObjectType=OBJECT_TYPE_ALL, object oTarget=OBJECT_SELF, int nNth=1);",
-                "// 227: Get the Nth object nearest to oTarget that is of the specified type.\r\n// - nObjectType: OBJECT_TYPE_*\r\n// - oTarget\r\n// - nNth\r\n// * Return value on error: OBJECT_INVALID\r\nobject GetNearestObject(int nObjectType=OBJECT_TYPE_ALL, object oTarget=OBJECT_SELF, int nNth=1);"
+                new List<ScriptParam> { new ScriptParam(DataType.Int, "nObjectType", 32767), new ScriptParam(DataType.Object, "oTarget", OBJECT_SELF), new ScriptParam(DataType.Int, "nNth", 1) },
+                "// 227: Get the Nth object nearest to oTarget that is of the specified type.\r\n// - nObjectType: OBJECT_TYPE_*\r\n// - oTarget\r\n// - nNth\r\n// * Return value on error: OBJECT_INVALID\r\nobject GetNearestObject(int nObjectType=32767, object oTarget=OBJECT_SELF, int nNth=1);",
+                "// 227: Get the Nth object nearest to oTarget that is of the specified type.\r\n// - nObjectType: OBJECT_TYPE_*\r\n// - oTarget\r\n// - nNth\r\n// * Return value on error: OBJECT_INVALID\r\nobject GetNearestObject(int nObjectType=32767, object oTarget=OBJECT_SELF, int nNth=1);"
             ),
             new ScriptFunction(
                 DataType.Object,
@@ -4928,30 +4938,30 @@ namespace CSharpKOTOR.Common.Script
             new ScriptFunction(
                 DataType.Void,
                 "ActionCastSpellAtLocation",
-                new List<ScriptParam> { new ScriptParam(DataType.Int, "nSpell", null), new ScriptParam(DataType.Location, "lTargetLocation", null), new ScriptParam(DataType.Int, "nMetaMagic", 0), new ScriptParam(DataType.Int, "bCheat", FALSE), new ScriptParam(DataType.Int, "nProjectilePathType", PROJECTILE_PATH_TYPE_DEFAULT), new ScriptParam(DataType.Int, "bInstantSpell", FALSE) },
-                "// 234: Cast spell nSpell at lTargetLocation.\r\n// - nSpell: SPELL_*\r\n// - lTargetLocation\r\n// - nMetaMagic: METAMAGIC_*\r\n// - bCheat: If this is TRUE, then the executor of the action doesn't have to be\r\n//   able to cast the spell.\r\n// - nProjectilePathType: PROJECTILE_PATH_TYPE_*\r\n// - bInstantSpell: If this is TRUE, the spell is cast immediately; this allows\r\n//   the end-user to simulate\r\n//   a high-level magic user having lots of advance warning of impending trouble.\r\nvoid   ActionCastSpellAtLocation(int nSpell, location lTargetLocation, int nMetaMagic=0, int bCheat=FALSE, int nProjectilePathType=PROJECTILE_PATH_TYPE_DEFAULT, int bInstantSpell=FALSE);",
-                "// 234: Cast spell nSpell at lTargetLocation.\r\n// - nSpell: SPELL_*\r\n// - lTargetLocation\r\n// - nMetaMagic: METAMAGIC_*\r\n// - bCheat: If this is TRUE, then the executor of the action doesn't have to be\r\n//   able to cast the spell.\r\n// - nProjectilePathType: PROJECTILE_PATH_TYPE_*\r\n// - bInstantSpell: If this is TRUE, the spell is cast immediately; this allows\r\n//   the end-user to simulate\r\n//   a high-level magic user having lots of advance warning of impending trouble.\r\nvoid   ActionCastSpellAtLocation(int nSpell, location lTargetLocation, int nMetaMagic=0, int bCheat=FALSE, int nProjectilePathType=PROJECTILE_PATH_TYPE_DEFAULT, int bInstantSpell=FALSE);"
+                new List<ScriptParam> { new ScriptParam(DataType.Int, "nSpell", null), new ScriptParam(DataType.Location, "lTargetLocation", null), new ScriptParam(DataType.Int, "nMetaMagic", 0), new ScriptParam(DataType.Int, "bCheat", 0), new ScriptParam(DataType.Int, "nProjectilePathType", 0), new ScriptParam(DataType.Int, "bInstantSpell", 0) },
+                "// 234: Cast spell nSpell at lTargetLocation.\r\n// - nSpell: SPELL_*\r\n// - lTargetLocation\r\n// - nMetaMagic: METAMAGIC_*\r\n// - bCheat: If this is 1, then the executor of the action doesn't have to be\r\n//   able to cast the spell.\r\n// - nProjectilePathType: PROJECTILE_PATH_TYPE_*\r\n// - bInstantSpell: If this is 1, the spell is cast immediately; this allows\r\n//   the end-user to simulate\r\n//   a high-level magic user having lots of advance warning of impending trouble.\r\nvoid   ActionCastSpellAtLocation(int nSpell, location lTargetLocation, int nMetaMagic=0, int bCheat=0, int nProjectilePathType=0, int bInstantSpell=0);",
+                "// 234: Cast spell nSpell at lTargetLocation.\r\n// - nSpell: SPELL_*\r\n// - lTargetLocation\r\n// - nMetaMagic: METAMAGIC_*\r\n// - bCheat: If this is 1, then the executor of the action doesn't have to be\r\n//   able to cast the spell.\r\n// - nProjectilePathType: PROJECTILE_PATH_TYPE_*\r\n// - bInstantSpell: If this is 1, the spell is cast immediately; this allows\r\n//   the end-user to simulate\r\n//   a high-level magic user having lots of advance warning of impending trouble.\r\nvoid   ActionCastSpellAtLocation(int nSpell, location lTargetLocation, int nMetaMagic=0, int bCheat=0, int nProjectilePathType=0, int bInstantSpell=0);"
             ),
             new ScriptFunction(
                 DataType.Int,
                 "GetIsEnemy",
                 new List<ScriptParam> { new ScriptParam(DataType.Object, "oTarget", null), new ScriptParam(DataType.Object, "oSource", OBJECT_SELF) },
-                "// 235: * Returns TRUE if oSource considers oTarget as an enemy.\r\nint GetIsEnemy(object oTarget, object oSource=OBJECT_SELF);",
-                "// 235: * Returns TRUE if oSource considers oTarget as an enemy.\r\nint GetIsEnemy(object oTarget, object oSource=OBJECT_SELF);"
+                "// 235: * Returns 1 if oSource considers oTarget as an enemy.\r\nint GetIsEnemy(object oTarget, object oSource=OBJECT_SELF);",
+                "// 235: * Returns 1 if oSource considers oTarget as an enemy.\r\nint GetIsEnemy(object oTarget, object oSource=OBJECT_SELF);"
             ),
             new ScriptFunction(
                 DataType.Int,
                 "GetIsFriend",
                 new List<ScriptParam> { new ScriptParam(DataType.Object, "oTarget", null), new ScriptParam(DataType.Object, "oSource", OBJECT_SELF) },
-                "// 236: * Returns TRUE if oSource considers oTarget as a friend.\r\nint GetIsFriend(object oTarget, object oSource=OBJECT_SELF);",
-                "// 236: * Returns TRUE if oSource considers oTarget as a friend.\r\nint GetIsFriend(object oTarget, object oSource=OBJECT_SELF);"
+                "// 236: * Returns 1 if oSource considers oTarget as a friend.\r\nint GetIsFriend(object oTarget, object oSource=OBJECT_SELF);",
+                "// 236: * Returns 1 if oSource considers oTarget as a friend.\r\nint GetIsFriend(object oTarget, object oSource=OBJECT_SELF);"
             ),
             new ScriptFunction(
                 DataType.Int,
                 "GetIsNeutral",
                 new List<ScriptParam> { new ScriptParam(DataType.Object, "oTarget", null), new ScriptParam(DataType.Object, "oSource", OBJECT_SELF) },
-                "// 237: * Returns TRUE if oSource considers oTarget as neutral.\r\nint GetIsNeutral(object oTarget, object oSource=OBJECT_SELF);",
-                "// 237: * Returns TRUE if oSource considers oTarget as neutral.\r\nint GetIsNeutral(object oTarget, object oSource=OBJECT_SELF);"
+                "// 237: * Returns 1 if oSource considers oTarget as neutral.\r\nint GetIsNeutral(object oTarget, object oSource=OBJECT_SELF);",
+                "// 237: * Returns 1 if oSource considers oTarget as neutral.\r\nint GetIsNeutral(object oTarget, object oSource=OBJECT_SELF);"
             ),
             new ScriptFunction(
                 DataType.Object,
@@ -4970,16 +4980,16 @@ namespace CSharpKOTOR.Common.Script
             new ScriptFunction(
                 DataType.Void,
                 "ActionSpeakStringByStrRef",
-                new List<ScriptParam> { new ScriptParam(DataType.Int, "nStrRef", null), new ScriptParam(DataType.Int, "nTalkVolume", TALKVOLUME_TALK) },
-                "// 240: Causes the creature to speak a translated string.\r\n// - nStrRef: Reference of the string in the talk table\r\n// - nTalkVolume: TALKVOLUME_*\r\nvoid ActionSpeakStringByStrRef(int nStrRef, int nTalkVolume=TALKVOLUME_TALK);",
-                "// 240: Causes the creature to speak a translated string.\r\n// - nStrRef: Reference of the string in the talk table\r\n// - nTalkVolume: TALKVOLUME_*\r\nvoid ActionSpeakStringByStrRef(int nStrRef, int nTalkVolume=TALKVOLUME_TALK);"
+                new List<ScriptParam> { new ScriptParam(DataType.Int, "nStrRef", null), new ScriptParam(DataType.Int, "nTalkVolume", 0) },
+                "// 240: Causes the creature to speak a translated string.\r\n// - nStrRef: Reference of the string in the talk table\r\n// - nTalkVolume: TALKVOLUME_*\r\nvoid ActionSpeakStringByStrRef(int nStrRef, int nTalkVolume=0);",
+                "// 240: Causes the creature to speak a translated string.\r\n// - nStrRef: Reference of the string in the talk table\r\n// - nTalkVolume: TALKVOLUME_*\r\nvoid ActionSpeakStringByStrRef(int nStrRef, int nTalkVolume=0);"
             ),
             new ScriptFunction(
                 DataType.Void,
                 "DestroyObject",
-                new List<ScriptParam> { new ScriptParam(DataType.Object, "oDestroy", null), new ScriptParam(DataType.Float, "fDelay", 0f), new ScriptParam(DataType.Int, "bNoFade", FALSE), new ScriptParam(DataType.Float, "fDelayUntilFade", 0f) },
-                "// 241: Destroy oObject (irrevocably).\r\n// This will not work on modules and areas.\r\n// The bNoFade and fDelayUntilFade are for creatures and placeables only\r\nvoid DestroyObject(object oDestroy, float fDelay=0.0f, int bNoFade = FALSE, float fDelayUntilFade = 0.0f);",
-                "// 241: Destroy oObject (irrevocably).\r\n// This will not work on modules and areas.\r\n// The bNoFade and fDelayUntilFade are for creatures and placeables only\r\nvoid DestroyObject(object oDestroy, float fDelay=0.0f, int bNoFade = FALSE, float fDelayUntilFade = 0.0f);"
+                new List<ScriptParam> { new ScriptParam(DataType.Object, "oDestroy", null), new ScriptParam(DataType.Float, "fDelay", 0f), new ScriptParam(DataType.Int, "bNoFade", 0), new ScriptParam(DataType.Float, "fDelayUntilFade", 0f) },
+                "// 241: Destroy oObject (irrevocably).\r\n// This will not work on modules and areas.\r\n// The bNoFade and fDelayUntilFade are for creatures and placeables only\r\nvoid DestroyObject(object oDestroy, float fDelay=0.0f, int bNoFade = 0, float fDelayUntilFade = 0.0f);",
+                "// 241: Destroy oObject (irrevocably).\r\n// This will not work on modules and areas.\r\n// The bNoFade and fDelayUntilFade are for creatures and placeables only\r\nvoid DestroyObject(object oDestroy, float fDelay=0.0f, int bNoFade = 0, float fDelayUntilFade = 0.0f);"
             ),
             new ScriptFunction(
                 DataType.Object,
@@ -4991,16 +5001,16 @@ namespace CSharpKOTOR.Common.Script
             new ScriptFunction(
                 DataType.Object,
                 "CreateObject",
-                new List<ScriptParam> { new ScriptParam(DataType.Int, "nObjectType", null), new ScriptParam(DataType.String, "sTemplate", null), new ScriptParam(DataType.Location, "lLocation", null), new ScriptParam(DataType.Int, "bUseAppearAnimation", FALSE) },
-                "// 243: Create an object of the specified type at lLocation.\r\n// - nObjectType: OBJECT_TYPE_ITEM, OBJECT_TYPE_CREATURE, OBJECT_TYPE_PLACEABLE,\r\n//   OBJECT_TYPE_STORE\r\n// - sTemplate\r\n// - lLocation\r\n// - bUseAppearAnimation\r\n// Waypoints can now also be created using the CreateObject function.\r\n// nObjectType is: OBJECT_TYPE_WAYPOINT\r\n// sTemplate will be the tag of the waypoint\r\n// lLocation is where the waypoint will be placed\r\n// bUseAppearAnimation is ignored\r\nobject CreateObject(int nObjectType, string sTemplate, location lLocation, int bUseAppearAnimation=FALSE);",
-                "// 243: Create an object of the specified type at lLocation.\r\n// - nObjectType: OBJECT_TYPE_ITEM, OBJECT_TYPE_CREATURE, OBJECT_TYPE_PLACEABLE,\r\n//   OBJECT_TYPE_STORE\r\n// - sTemplate\r\n// - lLocation\r\n// - bUseAppearAnimation\r\n// Waypoints can now also be created using the CreateObject function.\r\n// nObjectType is: OBJECT_TYPE_WAYPOINT\r\n// sTemplate will be the tag of the waypoint\r\n// lLocation is where the waypoint will be placed\r\n// bUseAppearAnimation is ignored\r\nobject CreateObject(int nObjectType, string sTemplate, location lLocation, int bUseAppearAnimation=FALSE);"
+                new List<ScriptParam> { new ScriptParam(DataType.Int, "nObjectType", null), new ScriptParam(DataType.String, "sTemplate", null), new ScriptParam(DataType.Location, "lLocation", null), new ScriptParam(DataType.Int, "bUseAppearAnimation", 0) },
+                "// 243: Create an object of the specified type at lLocation.\r\n// - nObjectType: OBJECT_TYPE_ITEM, 1, OBJECT_TYPE_PLACEABLE,\r\n//   OBJECT_TYPE_STORE\r\n// - sTemplate\r\n// - lLocation\r\n// - bUseAppearAnimation\r\n// Waypoints can now also be created using the CreateObject function.\r\n// nObjectType is: OBJECT_TYPE_WAYPOINT\r\n// sTemplate will be the tag of the waypoint\r\n// lLocation is where the waypoint will be placed\r\n// bUseAppearAnimation is ignored\r\nobject CreateObject(int nObjectType, string sTemplate, location lLocation, int bUseAppearAnimation=0);",
+                "// 243: Create an object of the specified type at lLocation.\r\n// - nObjectType: OBJECT_TYPE_ITEM, 1, OBJECT_TYPE_PLACEABLE,\r\n//   OBJECT_TYPE_STORE\r\n// - sTemplate\r\n// - lLocation\r\n// - bUseAppearAnimation\r\n// Waypoints can now also be created using the CreateObject function.\r\n// nObjectType is: OBJECT_TYPE_WAYPOINT\r\n// sTemplate will be the tag of the waypoint\r\n// lLocation is where the waypoint will be placed\r\n// bUseAppearAnimation is ignored\r\nobject CreateObject(int nObjectType, string sTemplate, location lLocation, int bUseAppearAnimation=0);"
             ),
             new ScriptFunction(
                 DataType.Event,
                 "EventSpellCastAt",
-                new List<ScriptParam> { new ScriptParam(DataType.Object, "oCaster", null), new ScriptParam(DataType.Int, "nSpell", null), new ScriptParam(DataType.Int, "bHarmful", TRUE) },
-                "// 244: Create an event which triggers the \"SpellCastAt\" script\r\nevent EventSpellCastAt(object oCaster, int nSpell, int bHarmful=TRUE);",
-                "// 244: Create an event which triggers the \"SpellCastAt\" script\r\nevent EventSpellCastAt(object oCaster, int nSpell, int bHarmful=TRUE);"
+                new List<ScriptParam> { new ScriptParam(DataType.Object, "oCaster", null), new ScriptParam(DataType.Int, "nSpell", null), new ScriptParam(DataType.Int, "bHarmful", 1) },
+                "// 244: Create an event which triggers the \"SpellCastAt\" script\r\nevent EventSpellCastAt(object oCaster, int nSpell, int bHarmful=1);",
+                "// 244: Create an event which triggers the \"SpellCastAt\" script\r\nevent EventSpellCastAt(object oCaster, int nSpell, int bHarmful=1);"
             ),
             new ScriptFunction(
                 DataType.Object,
@@ -5124,14 +5134,14 @@ namespace CSharpKOTOR.Common.Script
             new ScriptFunction(
                 DataType.Object,
                 "GetFirstInPersistentObject",
-                new List<ScriptParam> { new ScriptParam(DataType.Object, "oPersistentObject", OBJECT_SELF), new ScriptParam(DataType.Int, "nResidentObjectType", OBJECT_TYPE_CREATURE), new ScriptParam(DataType.Int, "nPersistentZone", PERSISTENT_ZONE_ACTIVE) },
+                new List<ScriptParam> { new ScriptParam(DataType.Object, "oPersistentObject", OBJECT_SELF), new ScriptParam(DataType.Int, "nResidentObjectType", 1), new ScriptParam(DataType.Int, "nPersistentZone", 0) },
                 "// These are for GetFirstInPersistentObject() and GetNextInPersistentObject()",
                 "// These are for GetFirstInPersistentObject() and GetNextInPersistentObject()"
             ),
             new ScriptFunction(
                 DataType.Object,
                 "GetNextInPersistentObject",
-                new List<ScriptParam> { new ScriptParam(DataType.Object, "oPersistentObject", OBJECT_SELF), new ScriptParam(DataType.Int, "nResidentObjectType", OBJECT_TYPE_CREATURE), new ScriptParam(DataType.Int, "nPersistentZone", PERSISTENT_ZONE_ACTIVE) },
+                new List<ScriptParam> { new ScriptParam(DataType.Object, "oPersistentObject", OBJECT_SELF), new ScriptParam(DataType.Int, "nResidentObjectType", 1), new ScriptParam(DataType.Int, "nPersistentZone", 0) },
                 "// These are for GetFirstInPersistentObject() and GetNextInPersistentObject()",
                 "// These are for GetFirstInPersistentObject() and GetNextInPersistentObject()"
             ),
@@ -5146,15 +5156,15 @@ namespace CSharpKOTOR.Common.Script
                 DataType.Int,
                 "ShowLevelUpGUI",
                 new List<ScriptParam>(),
-                "// 265: Brings up the level up GUI for the player.  The GUI will only show up\r\n//      if the player has gained enough experience points to level up.\r\n// * Returns TRUE if the GUI was successfully brought up; FALSE if not.\r\nint ShowLevelUpGUI();",
-                "// 265: Brings up the level up GUI for the player.  The GUI will only show up\r\n//      if the player has gained enough experience points to level up.\r\n// * Returns TRUE if the GUI was successfully brought up; FALSE if not.\r\nint ShowLevelUpGUI();"
+                "// 265: Brings up the level up GUI for the player.  The GUI will only show up\r\n//      if the player has gained enough experience points to level up.\r\n// * Returns 1 if the GUI was successfully brought up; 0 if not.\r\nint ShowLevelUpGUI();",
+                "// 265: Brings up the level up GUI for the player.  The GUI will only show up\r\n//      if the player has gained enough experience points to level up.\r\n// * Returns 1 if the GUI was successfully brought up; 0 if not.\r\nint ShowLevelUpGUI();"
             ),
             new ScriptFunction(
                 DataType.Void,
                 "SetItemNonEquippable",
                 new List<ScriptParam> { new ScriptParam(DataType.Object, "oItem", null), new ScriptParam(DataType.Int, "bNonEquippable", null) },
-                "// 266: Flag the specified item as being non-equippable or not.  Set bNonEquippable\r\n//      to TRUE to prevent this item from being equipped, and FALSE to allow\r\n//      the normal equipping checks to determine if the item can be equipped.\r\n// NOTE: This will do nothing if the object passed in is not an item.  Items that\r\n//       are already equipped when this is called will not automatically be\r\n//       unequipped.  These items will just be prevented from being re-equipped\r\n//       should they be unequipped.\r\nvoid SetItemNonEquippable( object oItem, int bNonEquippable );",
-                "// 266: Flag the specified item as being non-equippable or not.  Set bNonEquippable\r\n//      to TRUE to prevent this item from being equipped, and FALSE to allow\r\n//      the normal equipping checks to determine if the item can be equipped.\r\n// NOTE: This will do nothing if the object passed in is not an item.  Items that\r\n//       are already equipped when this is called will not automatically be\r\n//       unequipped.  These items will just be prevented from being re-equipped\r\n//       should they be unequipped.\r\nvoid SetItemNonEquippable( object oItem, int bNonEquippable );"
+                "// 266: Flag the specified item as being non-equippable or not.  Set bNonEquippable\r\n//      to 1 to prevent this item from being equipped, and 0 to allow\r\n//      the normal equipping checks to determine if the item can be equipped.\r\n// NOTE: This will do nothing if the object passed in is not an item.  Items that\r\n//       are already equipped when this is called will not automatically be\r\n//       unequipped.  These items will just be prevented from being re-equipped\r\n//       should they be unequipped.\r\nvoid SetItemNonEquippable( object oItem, int bNonEquippable );",
+                "// 266: Flag the specified item as being non-equippable or not.  Set bNonEquippable\r\n//      to 1 to prevent this item from being equipped, and 0 to allow\r\n//      the normal equipping checks to determine if the item can be equipped.\r\n// NOTE: This will do nothing if the object passed in is not an item.  Items that\r\n//       are already equipped when this is called will not automatically be\r\n//       unequipped.  These items will just be prevented from being re-equipped\r\n//       should they be unequipped.\r\nvoid SetItemNonEquippable( object oItem, int bNonEquippable );"
             ),
             new ScriptFunction(
                 DataType.Int,
@@ -5209,8 +5219,8 @@ namespace CSharpKOTOR.Common.Script
                 DataType.Int,
                 "GetIsImmune",
                 new List<ScriptParam> { new ScriptParam(DataType.Object, "oCreature", null), new ScriptParam(DataType.Int, "nImmunityType", null), new ScriptParam(DataType.Object, "oVersus", OBJECT_INVALID) },
-                "// 274: - oCreature\r\n// - nImmunityType: IMMUNITY_TYPE_*\r\n// - oVersus: if this is specified, then we also check for the race and\r\n//   alignment of oVersus\r\n// * Returns TRUE if oCreature has immunity of type nImmunity versus oVersus.\r\nint GetIsImmune(object oCreature, int nImmunityType, object oVersus=OBJECT_INVALID);",
-                "// 274: - oCreature\r\n// - nImmunityType: IMMUNITY_TYPE_*\r\n// - oVersus: if this is specified, then we also check for the race and\r\n//   alignment of oVersus\r\n// * Returns TRUE if oCreature has immunity of type nImmunity versus oVersus.\r\nint GetIsImmune(object oCreature, int nImmunityType, object oVersus=OBJECT_INVALID);"
+                "// 274: - oCreature\r\n// - nImmunityType: IMMUNITY_TYPE_*\r\n// - oVersus: if this is specified, then we also check for the race and\r\n//   alignment of oVersus\r\n// * Returns 1 if oCreature has immunity of type nImmunity versus oVersus.\r\nint GetIsImmune(object oCreature, int nImmunityType, object oVersus=OBJECT_INVALID);",
+                "// 274: - oCreature\r\n// - nImmunityType: IMMUNITY_TYPE_*\r\n// - oVersus: if this is specified, then we also check for the race and\r\n//   alignment of oVersus\r\n// * Returns 1 if oCreature has immunity of type nImmunity versus oVersus.\r\nint GetIsImmune(object oCreature, int nImmunityType, object oVersus=OBJECT_INVALID);"
             ),
             new ScriptFunction(
                 DataType.Effect,
@@ -5230,8 +5240,8 @@ namespace CSharpKOTOR.Common.Script
                 DataType.Void,
                 "SetEncounterActive",
                 new List<ScriptParam> { new ScriptParam(DataType.Int, "nNewValue", null), new ScriptParam(DataType.Object, "oEncounter", OBJECT_SELF) },
-                "// 277: Set oEncounter's active state to nNewValue.\r\n// - nNewValue: TRUE/FALSE\r\n// - oEncounter\r\nvoid SetEncounterActive(int nNewValue, object oEncounter=OBJECT_SELF);",
-                "// 277: Set oEncounter's active state to nNewValue.\r\n// - nNewValue: TRUE/FALSE\r\n// - oEncounter\r\nvoid SetEncounterActive(int nNewValue, object oEncounter=OBJECT_SELF);"
+                "// 277: Set oEncounter's active state to nNewValue.\r\n// - nNewValue: 1/0\r\n// - oEncounter\r\nvoid SetEncounterActive(int nNewValue, object oEncounter=OBJECT_SELF);",
+                "// 277: Set oEncounter's active state to nNewValue.\r\n// - nNewValue: 1/0\r\n// - oEncounter\r\nvoid SetEncounterActive(int nNewValue, object oEncounter=OBJECT_SELF);"
             ),
             new ScriptFunction(
                 DataType.Int,
@@ -5383,9 +5393,9 @@ namespace CSharpKOTOR.Common.Script
             new ScriptFunction(
                 DataType.Int,
                 "GetReflexAdjustedDamage",
-                new List<ScriptParam> { new ScriptParam(DataType.Int, "nDamage", null), new ScriptParam(DataType.Object, "oTarget", null), new ScriptParam(DataType.Int, "nDC", null), new ScriptParam(DataType.Int, "nSaveType", SAVING_THROW_TYPE_NONE), new ScriptParam(DataType.Object, "oSaveVersus", OBJECT_SELF) },
-                "// 299: Use this in spell scripts to get nDamage adjusted by oTarget's reflex and\r\n// evasion saves.\r\n// - nDamage\r\n// - oTarget\r\n// - nDC: Difficulty check\r\n// - nSaveType: SAVING_THROW_TYPE_*\r\n// - oSaveVersus\r\nint GetReflexAdjustedDamage(int nDamage, object oTarget, int nDC, int nSaveType=SAVING_THROW_TYPE_NONE, object oSaveVersus=OBJECT_SELF);",
-                "// 299: Use this in spell scripts to get nDamage adjusted by oTarget's reflex and\r\n// evasion saves.\r\n// - nDamage\r\n// - oTarget\r\n// - nDC: Difficulty check\r\n// - nSaveType: SAVING_THROW_TYPE_*\r\n// - oSaveVersus\r\nint GetReflexAdjustedDamage(int nDamage, object oTarget, int nDC, int nSaveType=SAVING_THROW_TYPE_NONE, object oSaveVersus=OBJECT_SELF);"
+                new List<ScriptParam> { new ScriptParam(DataType.Int, "nDamage", null), new ScriptParam(DataType.Object, "oTarget", null), new ScriptParam(DataType.Int, "nDC", null), new ScriptParam(DataType.Int, "nSaveType", 0), new ScriptParam(DataType.Object, "oSaveVersus", OBJECT_SELF) },
+                "// 299: Use this in spell scripts to get nDamage adjusted by oTarget's reflex and\r\n// evasion saves.\r\n// - nDamage\r\n// - oTarget\r\n// - nDC: Difficulty check\r\n// - nSaveType: SAVING_THROW_TYPE_*\r\n// - oSaveVersus\r\nint GetReflexAdjustedDamage(int nDamage, object oTarget, int nDC, int nSaveType=0, object oSaveVersus=OBJECT_SELF);",
+                "// 299: Use this in spell scripts to get nDamage adjusted by oTarget's reflex and\r\n// evasion saves.\r\n// - nDamage\r\n// - oTarget\r\n// - nDC: Difficulty check\r\n// - nSaveType: SAVING_THROW_TYPE_*\r\n// - oSaveVersus\r\nint GetReflexAdjustedDamage(int nDamage, object oTarget, int nDC, int nSaveType=0, object oSaveVersus=OBJECT_SELF);"
             ),
             new ScriptFunction(
                 DataType.Void,
@@ -5475,8 +5485,8 @@ namespace CSharpKOTOR.Common.Script
                 DataType.Int,
                 "GetIsPlayableRacialType",
                 new List<ScriptParam> { new ScriptParam(DataType.Object, "oCreature", null) },
-                "// 312: * Returns TRUE if oCreature is of a playable racial type.\r\nint GetIsPlayableRacialType(object oCreature);",
-                "// 312: * Returns TRUE if oCreature is of a playable racial type.\r\nint GetIsPlayableRacialType(object oCreature);"
+                "// 312: * Returns 1 if oCreature is of a playable racial type.\r\nint GetIsPlayableRacialType(object oCreature);",
+                "// 312: * Returns 1 if oCreature is of a playable racial type.\r\nint GetIsPlayableRacialType(object oCreature);"
             ),
             new ScriptFunction(
                 DataType.Void,
@@ -5531,8 +5541,8 @@ namespace CSharpKOTOR.Common.Script
                 DataType.Int,
                 "GetIsInCombat",
                 new List<ScriptParam> { new ScriptParam(DataType.Object, "oCreature", OBJECT_SELF) },
-                "// 320: * Returns TRUE if oCreature is in combat.\r\nint GetIsInCombat(object oCreature=OBJECT_SELF);",
-                "// 320: * Returns TRUE if oCreature is in combat.\r\nint GetIsInCombat(object oCreature=OBJECT_SELF);"
+                "// 320: * Returns 1 if oCreature is in combat.\r\nint GetIsInCombat(object oCreature=OBJECT_SELF);",
+                "// 320: * Returns 1 if oCreature is in combat.\r\nint GetIsInCombat(object oCreature=OBJECT_SELF);"
             ),
             new ScriptFunction(
                 DataType.Int,
@@ -5551,9 +5561,9 @@ namespace CSharpKOTOR.Common.Script
             new ScriptFunction(
                 DataType.Void,
                 "SetIsDestroyable",
-                new List<ScriptParam> { new ScriptParam(DataType.Int, "bDestroyable", null), new ScriptParam(DataType.Int, "bRaiseable", TRUE), new ScriptParam(DataType.Int, "bSelectableWhenDead", FALSE) },
-                "// 323: Set the destroyable status of the caller.\r\n// - bDestroyable: If this is FALSE, the caller does not fade out on death, but\r\n//   sticks around as a corpse.\r\n// - bRaiseable: If this is TRUE, the caller can be raised via resurrection.\r\n// - bSelectableWhenDead: If this is TRUE, the caller is selectable after death.\r\nvoid SetIsDestroyable(int bDestroyable, int bRaiseable=TRUE, int bSelectableWhenDead=FALSE);",
-                "// 323: Set the destroyable status of the caller.\r\n// - bDestroyable: If this is FALSE, the caller does not fade out on death, but\r\n//   sticks around as a corpse.\r\n// - bRaiseable: If this is TRUE, the caller can be raised via resurrection.\r\n// - bSelectableWhenDead: If this is TRUE, the caller is selectable after death.\r\nvoid SetIsDestroyable(int bDestroyable, int bRaiseable=TRUE, int bSelectableWhenDead=FALSE);"
+                new List<ScriptParam> { new ScriptParam(DataType.Int, "bDestroyable", null), new ScriptParam(DataType.Int, "bRaiseable", 1), new ScriptParam(DataType.Int, "bSelectableWhenDead", 0) },
+                "// 323: Set the destroyable status of the caller.\r\n// - bDestroyable: If this is 0, the caller does not fade out on death, but\r\n//   sticks around as a corpse.\r\n// - bRaiseable: If this is 1, the caller can be raised via resurrection.\r\n// - bSelectableWhenDead: If this is 1, the caller is selectable after death.\r\nvoid SetIsDestroyable(int bDestroyable, int bRaiseable=1, int bSelectableWhenDead=0);",
+                "// 323: Set the destroyable status of the caller.\r\n// - bDestroyable: If this is 0, the caller does not fade out on death, but\r\n//   sticks around as a corpse.\r\n// - bRaiseable: If this is 1, the caller can be raised via resurrection.\r\n// - bSelectableWhenDead: If this is 1, the caller is selectable after death.\r\nvoid SetIsDestroyable(int bDestroyable, int bRaiseable=1, int bSelectableWhenDead=0);"
             ),
             new ScriptFunction(
                 DataType.Void,
@@ -5650,8 +5660,8 @@ namespace CSharpKOTOR.Common.Script
                 DataType.Int,
                 "GetIsDoorActionPossible",
                 new List<ScriptParam> { new ScriptParam(DataType.Object, "oTargetDoor", null), new ScriptParam(DataType.Int, "nDoorAction", null) },
-                "// 337: - oTargetDoor\r\n// - nDoorAction: DOOR_ACTION_*\r\n// * Returns TRUE if nDoorAction can be performed on oTargetDoor.\r\nint GetIsDoorActionPossible(object oTargetDoor, int nDoorAction);",
-                "// 337: - oTargetDoor\r\n// - nDoorAction: DOOR_ACTION_*\r\n// * Returns TRUE if nDoorAction can be performed on oTargetDoor.\r\nint GetIsDoorActionPossible(object oTargetDoor, int nDoorAction);"
+                "// 337: - oTargetDoor\r\n// - nDoorAction: DOOR_ACTION_*\r\n// * Returns 1 if nDoorAction can be performed on oTargetDoor.\r\nint GetIsDoorActionPossible(object oTargetDoor, int nDoorAction);",
+                "// 337: - oTargetDoor\r\n// - nDoorAction: DOOR_ACTION_*\r\n// * Returns 1 if nDoorAction can be performed on oTargetDoor.\r\nint GetIsDoorActionPossible(object oTargetDoor, int nDoorAction);"
             ),
             new ScriptFunction(
                 DataType.Void,
@@ -5775,9 +5785,9 @@ namespace CSharpKOTOR.Common.Script
             new ScriptFunction(
                 DataType.Effect,
                 "VersusAlignmentEffect",
-                new List<ScriptParam> { new ScriptParam(DataType.Effect, "eEffect", null), new ScriptParam(DataType.Int, "nLawChaos", ALIGNMENT_ALL), new ScriptParam(DataType.Int, "nGoodEvil", ALIGNMENT_ALL) },
-                "// 355: Set eEffect to be versus a specific alignment.\r\n// - eEffect\r\n// - nLawChaos: ALIGNMENT_LAWFUL/ALIGNMENT_CHAOTIC/ALIGNMENT_ALL\r\n// - nGoodEvil: ALIGNMENT_GOOD/ALIGNMENT_EVIL/ALIGNMENT_ALL\r\neffect VersusAlignmentEffect(effect eEffect, int nLawChaos=ALIGNMENT_ALL, int nGoodEvil=ALIGNMENT_ALL);",
-                "// 355: Set eEffect to be versus a specific alignment.\r\n// - eEffect\r\n// - nLawChaos: ALIGNMENT_LAWFUL/ALIGNMENT_CHAOTIC/ALIGNMENT_ALL\r\n// - nGoodEvil: ALIGNMENT_GOOD/ALIGNMENT_EVIL/ALIGNMENT_ALL\r\neffect VersusAlignmentEffect(effect eEffect, int nLawChaos=ALIGNMENT_ALL, int nGoodEvil=ALIGNMENT_ALL);"
+                new List<ScriptParam> { new ScriptParam(DataType.Effect, "eEffect", null), new ScriptParam(DataType.Int, "nLawChaos", 0), new ScriptParam(DataType.Int, "nGoodEvil", 0) },
+                "// 355: Set eEffect to be versus a specific alignment.\r\n// - eEffect\r\n// - nLawChaos: ALIGNMENT_LAWFUL/ALIGNMENT_CHAOTIC/0\r\n// - nGoodEvil: ALIGNMENT_GOOD/ALIGNMENT_EVIL/0\r\neffect VersusAlignmentEffect(effect eEffect, int nLawChaos=0, int nGoodEvil=0);",
+                "// 355: Set eEffect to be versus a specific alignment.\r\n// - eEffect\r\n// - nLawChaos: ALIGNMENT_LAWFUL/ALIGNMENT_CHAOTIC/0\r\n// - nGoodEvil: ALIGNMENT_GOOD/ALIGNMENT_EVIL/0\r\neffect VersusAlignmentEffect(effect eEffect, int nLawChaos=0, int nGoodEvil=0);"
             ),
             new ScriptFunction(
                 DataType.Effect,
@@ -5804,15 +5814,15 @@ namespace CSharpKOTOR.Common.Script
                 DataType.Int,
                 "GetIsTalentValid",
                 new List<ScriptParam> { new ScriptParam(DataType.Talent, "tTalent", null) },
-                "// 359: * Returns TRUE if tTalent is valid.\r\nint GetIsTalentValid(talent tTalent);",
-                "// 359: * Returns TRUE if tTalent is valid.\r\nint GetIsTalentValid(talent tTalent);"
+                "// 359: * Returns 1 if tTalent is valid.\r\nint GetIsTalentValid(talent tTalent);",
+                "// 359: * Returns 1 if tTalent is valid.\r\nint GetIsTalentValid(talent tTalent);"
             ),
             new ScriptFunction(
                 DataType.Void,
                 "ActionMoveAwayFromLocation",
-                new List<ScriptParam> { new ScriptParam(DataType.Location, "lMoveAwayFrom", null), new ScriptParam(DataType.Int, "bRun", FALSE), new ScriptParam(DataType.Float, "fMoveAwayRange", 40f) },
-                "// 360: Causes the action subject to move away from lMoveAwayFrom.\r\nvoid ActionMoveAwayFromLocation(location lMoveAwayFrom, int bRun=FALSE, float fMoveAwayRange=40.0f);",
-                "// 360: Causes the action subject to move away from lMoveAwayFrom.\r\nvoid ActionMoveAwayFromLocation(location lMoveAwayFrom, int bRun=FALSE, float fMoveAwayRange=40.0f);"
+                new List<ScriptParam> { new ScriptParam(DataType.Location, "lMoveAwayFrom", null), new ScriptParam(DataType.Int, "bRun", 0), new ScriptParam(DataType.Float, "fMoveAwayRange", 40f) },
+                "// 360: Causes the action subject to move away from lMoveAwayFrom.\r\nvoid ActionMoveAwayFromLocation(location lMoveAwayFrom, int bRun=0, float fMoveAwayRange=40.0f);",
+                "// 360: Causes the action subject to move away from lMoveAwayFrom.\r\nvoid ActionMoveAwayFromLocation(location lMoveAwayFrom, int bRun=0, float fMoveAwayRange=40.0f);"
             ),
             new ScriptFunction(
                 DataType.Object,
@@ -5838,9 +5848,9 @@ namespace CSharpKOTOR.Common.Script
             new ScriptFunction(
                 DataType.Void,
                 "PlayPazaak",
-                new List<ScriptParam> { new ScriptParam(DataType.Int, "nOpponentPazaakDeck", null), new ScriptParam(DataType.String, "sEndScript", null), new ScriptParam(DataType.Int, "nMaxWager", null), new ScriptParam(DataType.Int, "bShowTutorial", FALSE), new ScriptParam(DataType.Object, "oOpponent", OBJECT_INVALID) },
-                "// 364: Starts a game of pazaak.\r\n// - nOpponentPazaakDeck: Index into PazaakDecks.2da; specifies which deck the opponent will use.\r\n// - sEndScript: Script to be run when game finishes.\r\n// - nMaxWager: Max player wager.  If <= 0, the player's credits won't be modified by the result of the game and the wager screen will not show up.\r\n// - bShowTutorial: Plays in tutorial mode (nMaxWager should be 0).\r\nvoid PlayPazaak(int nOpponentPazaakDeck, string sEndScript, int nMaxWager, int bShowTutorial=FALSE, object oOpponent=OBJECT_INVALID);",
-                "// 364: Starts a game of pazaak.\r\n// - nOpponentPazaakDeck: Index into PazaakDecks.2da; specifies which deck the opponent will use.\r\n// - sEndScript: Script to be run when game finishes.\r\n// - nMaxWager: Max player wager.  If <= 0, the player's credits won't be modified by the result of the game and the wager screen will not show up.\r\n// - bShowTutorial: Plays in tutorial mode (nMaxWager should be 0).\r\nvoid PlayPazaak(int nOpponentPazaakDeck, string sEndScript, int nMaxWager, int bShowTutorial=FALSE, object oOpponent=OBJECT_INVALID);"
+                new List<ScriptParam> { new ScriptParam(DataType.Int, "nOpponentPazaakDeck", null), new ScriptParam(DataType.String, "sEndScript", null), new ScriptParam(DataType.Int, "nMaxWager", null), new ScriptParam(DataType.Int, "bShowTutorial", 0), new ScriptParam(DataType.Object, "oOpponent", OBJECT_INVALID) },
+                "// 364: Starts a game of pazaak.\r\n// - nOpponentPazaakDeck: Index into PazaakDecks.2da; specifies which deck the opponent will use.\r\n// - sEndScript: Script to be run when game finishes.\r\n// - nMaxWager: Max player wager.  If <= 0, the player's credits won't be modified by the result of the game and the wager screen will not show up.\r\n// - bShowTutorial: Plays in tutorial mode (nMaxWager should be 0).\r\nvoid PlayPazaak(int nOpponentPazaakDeck, string sEndScript, int nMaxWager, int bShowTutorial=0, object oOpponent=OBJECT_INVALID);",
+                "// 364: Starts a game of pazaak.\r\n// - nOpponentPazaakDeck: Index into PazaakDecks.2da; specifies which deck the opponent will use.\r\n// - sEndScript: Script to be run when game finishes.\r\n// - nMaxWager: Max player wager.  If <= 0, the player's credits won't be modified by the result of the game and the wager screen will not show up.\r\n// - bShowTutorial: Plays in tutorial mode (nMaxWager should be 0).\r\nvoid PlayPazaak(int nOpponentPazaakDeck, string sEndScript, int nMaxWager, int bShowTutorial=0, object oOpponent=OBJECT_INVALID);"
             ),
             new ScriptFunction(
                 DataType.Int,
@@ -5859,9 +5869,9 @@ namespace CSharpKOTOR.Common.Script
             new ScriptFunction(
                 DataType.Void,
                 "AddJournalQuestEntry",
-                new List<ScriptParam> { new ScriptParam(DataType.String, "szPlotID", null), new ScriptParam(DataType.Int, "nState", null), new ScriptParam(DataType.Int, "bAllowOverrideHigher", FALSE) },
-                "// 367: Add a journal quest entry to the player.\r\n// - szPlotID: the plot identifier used in the toolset's Journal Editor\r\n// - nState: the state of the plot as seen in the toolset's Journal Editor\r\n// - bAllowOverrideHigher: If this is TRUE, you can set the state to a lower\r\n//   number than the one it is currently on\r\nvoid AddJournalQuestEntry(string szPlotID, int nState, int bAllowOverrideHigher=FALSE);",
-                "// 367: Add a journal quest entry to the player.\r\n// - szPlotID: the plot identifier used in the toolset's Journal Editor\r\n// - nState: the state of the plot as seen in the toolset's Journal Editor\r\n// - bAllowOverrideHigher: If this is TRUE, you can set the state to a lower\r\n//   number than the one it is currently on\r\nvoid AddJournalQuestEntry(string szPlotID, int nState, int bAllowOverrideHigher=FALSE);"
+                new List<ScriptParam> { new ScriptParam(DataType.String, "szPlotID", null), new ScriptParam(DataType.Int, "nState", null), new ScriptParam(DataType.Int, "bAllowOverrideHigher", 0) },
+                "// 367: Add a journal quest entry to the player.\r\n// - szPlotID: the plot identifier used in the toolset's Journal Editor\r\n// - nState: the state of the plot as seen in the toolset's Journal Editor\r\n// - bAllowOverrideHigher: If this is 1, you can set the state to a lower\r\n//   number than the one it is currently on\r\nvoid AddJournalQuestEntry(string szPlotID, int nState, int bAllowOverrideHigher=0);",
+                "// 367: Add a journal quest entry to the player.\r\n// - szPlotID: the plot identifier used in the toolset's Journal Editor\r\n// - nState: the state of the plot as seen in the toolset's Journal Editor\r\n// - bAllowOverrideHigher: If this is 1, you can set the state to a lower\r\n//   number than the one it is currently on\r\nvoid AddJournalQuestEntry(string szPlotID, int nState, int bAllowOverrideHigher=0);"
             ),
             new ScriptFunction(
                 DataType.Void,
@@ -5950,30 +5960,30 @@ namespace CSharpKOTOR.Common.Script
             new ScriptFunction(
                 DataType.Object,
                 "GetFirstFactionMember",
-                new List<ScriptParam> { new ScriptParam(DataType.Object, "oMemberOfFaction", null), new ScriptParam(DataType.Int, "bPCOnly", TRUE) },
-                "// 380: Get the first member of oMemberOfFaction's faction (start to cycle through\r\n// oMemberOfFaction's faction).\r\n// * Returns OBJECT_INVALID if oMemberOfFaction's faction is invalid.\r\nobject GetFirstFactionMember(object oMemberOfFaction, int bPCOnly=TRUE);",
-                "// 380: Get the first member of oMemberOfFaction's faction (start to cycle through\r\n// oMemberOfFaction's faction).\r\n// * Returns OBJECT_INVALID if oMemberOfFaction's faction is invalid.\r\nobject GetFirstFactionMember(object oMemberOfFaction, int bPCOnly=TRUE);"
+                new List<ScriptParam> { new ScriptParam(DataType.Object, "oMemberOfFaction", null), new ScriptParam(DataType.Int, "bPCOnly", 1) },
+                "// 380: Get the first member of oMemberOfFaction's faction (start to cycle through\r\n// oMemberOfFaction's faction).\r\n// * Returns OBJECT_INVALID if oMemberOfFaction's faction is invalid.\r\nobject GetFirstFactionMember(object oMemberOfFaction, int bPCOnly=1);",
+                "// 380: Get the first member of oMemberOfFaction's faction (start to cycle through\r\n// oMemberOfFaction's faction).\r\n// * Returns OBJECT_INVALID if oMemberOfFaction's faction is invalid.\r\nobject GetFirstFactionMember(object oMemberOfFaction, int bPCOnly=1);"
             ),
             new ScriptFunction(
                 DataType.Object,
                 "GetNextFactionMember",
-                new List<ScriptParam> { new ScriptParam(DataType.Object, "oMemberOfFaction", null), new ScriptParam(DataType.Int, "bPCOnly", TRUE) },
-                "// 381: Get the next member of oMemberOfFaction's faction (continue to cycle through\r\n// oMemberOfFaction's faction).\r\n// * Returns OBJECT_INVALID if oMemberOfFaction's faction is invalid.\r\nobject GetNextFactionMember(object oMemberOfFaction, int bPCOnly=TRUE);",
-                "// 381: Get the next member of oMemberOfFaction's faction (continue to cycle through\r\n// oMemberOfFaction's faction).\r\n// * Returns OBJECT_INVALID if oMemberOfFaction's faction is invalid.\r\nobject GetNextFactionMember(object oMemberOfFaction, int bPCOnly=TRUE);"
+                new List<ScriptParam> { new ScriptParam(DataType.Object, "oMemberOfFaction", null), new ScriptParam(DataType.Int, "bPCOnly", 1) },
+                "// 381: Get the next member of oMemberOfFaction's faction (continue to cycle through\r\n// oMemberOfFaction's faction).\r\n// * Returns OBJECT_INVALID if oMemberOfFaction's faction is invalid.\r\nobject GetNextFactionMember(object oMemberOfFaction, int bPCOnly=1);",
+                "// 381: Get the next member of oMemberOfFaction's faction (continue to cycle through\r\n// oMemberOfFaction's faction).\r\n// * Returns OBJECT_INVALID if oMemberOfFaction's faction is invalid.\r\nobject GetNextFactionMember(object oMemberOfFaction, int bPCOnly=1);"
             ),
             new ScriptFunction(
                 DataType.Void,
                 "ActionForceMoveToLocation",
-                new List<ScriptParam> { new ScriptParam(DataType.Location, "lDestination", null), new ScriptParam(DataType.Int, "bRun", FALSE), new ScriptParam(DataType.Float, "fTimeout", 30f) },
-                "// 382: Force the action subject to move to lDestination.\r\nvoid ActionForceMoveToLocation(location lDestination, int bRun=FALSE, float fTimeout=30.0f);",
-                "// 382: Force the action subject to move to lDestination.\r\nvoid ActionForceMoveToLocation(location lDestination, int bRun=FALSE, float fTimeout=30.0f);"
+                new List<ScriptParam> { new ScriptParam(DataType.Location, "lDestination", null), new ScriptParam(DataType.Int, "bRun", 0), new ScriptParam(DataType.Float, "fTimeout", 30f) },
+                "// 382: Force the action subject to move to lDestination.\r\nvoid ActionForceMoveToLocation(location lDestination, int bRun=0, float fTimeout=30.0f);",
+                "// 382: Force the action subject to move to lDestination.\r\nvoid ActionForceMoveToLocation(location lDestination, int bRun=0, float fTimeout=30.0f);"
             ),
             new ScriptFunction(
                 DataType.Void,
                 "ActionForceMoveToObject",
-                new List<ScriptParam> { new ScriptParam(DataType.Object, "oMoveTo", null), new ScriptParam(DataType.Int, "bRun", FALSE), new ScriptParam(DataType.Float, "fRange", 1f), new ScriptParam(DataType.Float, "fTimeout", 30f) },
-                "// 383: Force the action subject to move to oMoveTo.\r\nvoid ActionForceMoveToObject(object oMoveTo, int bRun=FALSE, float fRange=1.0f, float fTimeout=30.0f);",
-                "// 383: Force the action subject to move to oMoveTo.\r\nvoid ActionForceMoveToObject(object oMoveTo, int bRun=FALSE, float fRange=1.0f, float fTimeout=30.0f);"
+                new List<ScriptParam> { new ScriptParam(DataType.Object, "oMoveTo", null), new ScriptParam(DataType.Int, "bRun", 0), new ScriptParam(DataType.Float, "fRange", 1f), new ScriptParam(DataType.Float, "fTimeout", 30f) },
+                "// 383: Force the action subject to move to oMoveTo.\r\nvoid ActionForceMoveToObject(object oMoveTo, int bRun=0, float fRange=1.0f, float fTimeout=30.0f);",
+                "// 383: Force the action subject to move to oMoveTo.\r\nvoid ActionForceMoveToObject(object oMoveTo, int bRun=0, float fRange=1.0f, float fTimeout=30.0f);"
             ),
             new ScriptFunction(
                 DataType.Int,
@@ -6077,15 +6087,15 @@ namespace CSharpKOTOR.Common.Script
                 DataType.Int,
                 "GetItemHasItemProperty",
                 new List<ScriptParam> { new ScriptParam(DataType.Object, "oItem", null), new ScriptParam(DataType.Int, "nProperty", null) },
-                "// 398: Determines whether oItem has nProperty.\r\n// - oItem\r\n// - nProperty: ITEM_PROPERTY_*\r\n// * Returns FALSE if oItem is not a valid item, or if oItem does not have\r\n//   nProperty.\r\nint GetItemHasItemProperty(object oItem, int nProperty);",
-                "// 398: Determines whether oItem has nProperty.\r\n// - oItem\r\n// - nProperty: ITEM_PROPERTY_*\r\n// * Returns FALSE if oItem is not a valid item, or if oItem does not have\r\n//   nProperty.\r\nint GetItemHasItemProperty(object oItem, int nProperty);"
+                "// 398: Determines whether oItem has nProperty.\r\n// - oItem\r\n// - nProperty: ITEM_PROPERTY_*\r\n// * Returns 0 if oItem is not a valid item, or if oItem does not have\r\n//   nProperty.\r\nint GetItemHasItemProperty(object oItem, int nProperty);",
+                "// 398: Determines whether oItem has nProperty.\r\n// - oItem\r\n// - nProperty: ITEM_PROPERTY_*\r\n// * Returns 0 if oItem is not a valid item, or if oItem does not have\r\n//   nProperty.\r\nint GetItemHasItemProperty(object oItem, int nProperty);"
             ),
             new ScriptFunction(
                 DataType.Void,
                 "ActionEquipMostDamagingMelee",
-                new List<ScriptParam> { new ScriptParam(DataType.Object, "oVersus", OBJECT_INVALID), new ScriptParam(DataType.Int, "bOffHand", FALSE) },
-                "// 399: The creature will equip the melee weapon in its possession that can do the\r\n// most damage. If no valid melee weapon is found, it will equip the most\r\n// damaging range weapon. This function should only ever be called in the\r\n// EndOfCombatRound scripts, because otherwise it would have to stop the combat\r\n// round to run simulation.\r\n// - oVersus: You can try to get the most damaging weapon against oVersus\r\n// - bOffHand\r\nvoid ActionEquipMostDamagingMelee(object oVersus=OBJECT_INVALID, int bOffHand=FALSE);",
-                "// 399: The creature will equip the melee weapon in its possession that can do the\r\n// most damage. If no valid melee weapon is found, it will equip the most\r\n// damaging range weapon. This function should only ever be called in the\r\n// EndOfCombatRound scripts, because otherwise it would have to stop the combat\r\n// round to run simulation.\r\n// - oVersus: You can try to get the most damaging weapon against oVersus\r\n// - bOffHand\r\nvoid ActionEquipMostDamagingMelee(object oVersus=OBJECT_INVALID, int bOffHand=FALSE);"
+                new List<ScriptParam> { new ScriptParam(DataType.Object, "oVersus", OBJECT_INVALID), new ScriptParam(DataType.Int, "bOffHand", 0) },
+                "// 399: The creature will equip the melee weapon in its possession that can do the\r\n// most damage. If no valid melee weapon is found, it will equip the most\r\n// damaging range weapon. This function should only ever be called in the\r\n// EndOfCombatRound scripts, because otherwise it would have to stop the combat\r\n// round to run simulation.\r\n// - oVersus: You can try to get the most damaging weapon against oVersus\r\n// - bOffHand\r\nvoid ActionEquipMostDamagingMelee(object oVersus=OBJECT_INVALID, int bOffHand=0);",
+                "// 399: The creature will equip the melee weapon in its possession that can do the\r\n// most damage. If no valid melee weapon is found, it will equip the most\r\n// damaging range weapon. This function should only ever be called in the\r\n// EndOfCombatRound scripts, because otherwise it would have to stop the combat\r\n// round to run simulation.\r\n// - oVersus: You can try to get the most damaging weapon against oVersus\r\n// - bOffHand\r\nvoid ActionEquipMostDamagingMelee(object oVersus=OBJECT_INVALID, int bOffHand=0);"
             ),
             new ScriptFunction(
                 DataType.Void,
@@ -6126,36 +6136,36 @@ namespace CSharpKOTOR.Common.Script
                 DataType.Int,
                 "GetIsDay",
                 new List<ScriptParam>(),
-                "// 405: * Returns TRUE if it is currently day.\r\nint GetIsDay();",
-                "// 405: * Returns TRUE if it is currently day.\r\nint GetIsDay();"
+                "// 405: * Returns 1 if it is currently day.\r\nint GetIsDay();",
+                "// 405: * Returns 1 if it is currently day.\r\nint GetIsDay();"
             ),
             new ScriptFunction(
                 DataType.Int,
                 "GetIsNight",
                 new List<ScriptParam>(),
-                "// 406: * Returns TRUE if it is currently night.\r\nint GetIsNight();",
-                "// 406: * Returns TRUE if it is currently night.\r\nint GetIsNight();"
+                "// 406: * Returns 1 if it is currently night.\r\nint GetIsNight();",
+                "// 406: * Returns 1 if it is currently night.\r\nint GetIsNight();"
             ),
             new ScriptFunction(
                 DataType.Int,
                 "GetIsDawn",
                 new List<ScriptParam>(),
-                "// 407: * Returns TRUE if it is currently dawn.\r\nint GetIsDawn();",
-                "// 407: * Returns TRUE if it is currently dawn.\r\nint GetIsDawn();"
+                "// 407: * Returns 1 if it is currently dawn.\r\nint GetIsDawn();",
+                "// 407: * Returns 1 if it is currently dawn.\r\nint GetIsDawn();"
             ),
             new ScriptFunction(
                 DataType.Int,
                 "GetIsDusk",
                 new List<ScriptParam>(),
-                "// 408: * Returns TRUE if it is currently dusk.\r\nint GetIsDusk();",
-                "// 408: * Returns TRUE if it is currently dusk.\r\nint GetIsDusk();"
+                "// 408: * Returns 1 if it is currently dusk.\r\nint GetIsDusk();",
+                "// 408: * Returns 1 if it is currently dusk.\r\nint GetIsDusk();"
             ),
             new ScriptFunction(
                 DataType.Int,
                 "GetIsEncounterCreature",
                 new List<ScriptParam> { new ScriptParam(DataType.Object, "oCreature", OBJECT_SELF) },
-                "// 409: * Returns TRUE if oCreature was spawned from an encounter.\r\nint GetIsEncounterCreature(object oCreature=OBJECT_SELF);",
-                "// 409: * Returns TRUE if oCreature was spawned from an encounter.\r\nint GetIsEncounterCreature(object oCreature=OBJECT_SELF);"
+                "// 409: * Returns 1 if oCreature was spawned from an encounter.\r\nint GetIsEncounterCreature(object oCreature=OBJECT_SELF);",
+                "// 409: * Returns 1 if oCreature was spawned from an encounter.\r\nint GetIsEncounterCreature(object oCreature=OBJECT_SELF);"
             ),
             new ScriptFunction(
                 DataType.Object,
@@ -6209,9 +6219,9 @@ namespace CSharpKOTOR.Common.Script
             new ScriptFunction(
                 DataType.Void,
                 "SpeakOneLinerConversation",
-                new List<ScriptParam> { new ScriptParam(DataType.String, "sDialogResRef", "\"\""), new ScriptParam(DataType.Object, "oTokenTarget", OBJECT_TYPE_INVALID) },
-                "// 417: Immediately speak a conversation one-liner.\r\n// - sDialogResRef\r\n// - oTokenTarget: This must be specified if there are creature-specific tokens\r\n//   in the string.\r\nvoid SpeakOneLinerConversation(string sDialogResRef=\"\", object oTokenTarget=OBJECT_TYPE_INVALID);",
-                "// 417: Immediately speak a conversation one-liner.\r\n// - sDialogResRef\r\n// - oTokenTarget: This must be specified if there are creature-specific tokens\r\n//   in the string.\r\nvoid SpeakOneLinerConversation(string sDialogResRef=\"\", object oTokenTarget=OBJECT_TYPE_INVALID);"
+                new List<ScriptParam> { new ScriptParam(DataType.String, "sDialogResRef", "\"\""), new ScriptParam(DataType.Object, "oTokenTarget", 32767) },
+                "// 417: Immediately speak a conversation one-liner.\r\n// - sDialogResRef\r\n// - oTokenTarget: This must be specified if there are creature-specific tokens\r\n//   in the string.\r\nvoid SpeakOneLinerConversation(string sDialogResRef=\"\", object oTokenTarget=32767);",
+                "// 417: Immediately speak a conversation one-liner.\r\n// - sDialogResRef\r\n// - oTokenTarget: This must be specified if there are creature-specific tokens\r\n//   in the string.\r\nvoid SpeakOneLinerConversation(string sDialogResRef=\"\", object oTokenTarget=32767);"
             ),
             new ScriptFunction(
                 DataType.Int,
@@ -6237,23 +6247,23 @@ namespace CSharpKOTOR.Common.Script
             new ScriptFunction(
                 DataType.Void,
                 "SetLightsaberPowered",
-                new List<ScriptParam> { new ScriptParam(DataType.Object, "oCreature", null), new ScriptParam(DataType.Int, "bOverride", null), new ScriptParam(DataType.Int, "bPowered", TRUE), new ScriptParam(DataType.Int, "bShowTransition", FALSE) },
-                "// 421: SetLightsaberPowered\r\n// Allows a script to set the state of the lightsaber.  This will override any\r\n// game determined lightsaber powerstates.\r\nvoid SetLightsaberPowered( object oCreature, int bOverride, int bPowered = TRUE, int bShowTransition = FALSE);",
-                "// 421: SetLightsaberPowered\r\n// Allows a script to set the state of the lightsaber.  This will override any\r\n// game determined lightsaber powerstates.\r\nvoid SetLightsaberPowered( object oCreature, int bOverride, int bPowered = TRUE, int bShowTransition = FALSE);"
+                new List<ScriptParam> { new ScriptParam(DataType.Object, "oCreature", null), new ScriptParam(DataType.Int, "bOverride", null), new ScriptParam(DataType.Int, "bPowered", 1), new ScriptParam(DataType.Int, "bShowTransition", 0) },
+                "// 421: SetLightsaberPowered\r\n// Allows a script to set the state of the lightsaber.  This will override any\r\n// game determined lightsaber powerstates.\r\nvoid SetLightsaberPowered( object oCreature, int bOverride, int bPowered = 1, int bShowTransition = 0);",
+                "// 421: SetLightsaberPowered\r\n// Allows a script to set the state of the lightsaber.  This will override any\r\n// game determined lightsaber powerstates.\r\nvoid SetLightsaberPowered( object oCreature, int bOverride, int bPowered = 1, int bShowTransition = 0);"
             ),
             new ScriptFunction(
                 DataType.Int,
                 "GetIsWeaponEffective",
-                new List<ScriptParam> { new ScriptParam(DataType.Object, "oVersus", OBJECT_INVALID), new ScriptParam(DataType.Int, "bOffHand", FALSE) },
-                "// 422: * Returns TRUE if the weapon equipped is capable of damaging oVersus.\r\nint GetIsWeaponEffective(object oVersus=OBJECT_INVALID, int bOffHand=FALSE);",
-                "// 422: * Returns TRUE if the weapon equipped is capable of damaging oVersus.\r\nint GetIsWeaponEffective(object oVersus=OBJECT_INVALID, int bOffHand=FALSE);"
+                new List<ScriptParam> { new ScriptParam(DataType.Object, "oVersus", OBJECT_INVALID), new ScriptParam(DataType.Int, "bOffHand", 0) },
+                "// 422: * Returns 1 if the weapon equipped is capable of damaging oVersus.\r\nint GetIsWeaponEffective(object oVersus=OBJECT_INVALID, int bOffHand=0);",
+                "// 422: * Returns 1 if the weapon equipped is capable of damaging oVersus.\r\nint GetIsWeaponEffective(object oVersus=OBJECT_INVALID, int bOffHand=0);"
             ),
             new ScriptFunction(
                 DataType.Int,
                 "GetLastSpellHarmful",
                 new List<ScriptParam>(),
-                "// 423: Use this in a SpellCast script to determine whether the spell was considered\r\n// harmful.\r\n// * Returns TRUE if the last spell cast was harmful.\r\nint GetLastSpellHarmful();",
-                "// 423: Use this in a SpellCast script to determine whether the spell was considered\r\n// harmful.\r\n// * Returns TRUE if the last spell cast was harmful.\r\nint GetLastSpellHarmful();"
+                "// 423: Use this in a SpellCast script to determine whether the spell was considered\r\n// harmful.\r\n// * Returns 1 if the last spell cast was harmful.\r\nint GetLastSpellHarmful();",
+                "// 423: Use this in a SpellCast script to determine whether the spell was considered\r\n// harmful.\r\n// * Returns 1 if the last spell cast was harmful.\r\nint GetLastSpellHarmful();"
             ),
             new ScriptFunction(
                 DataType.Event,
@@ -6392,15 +6402,15 @@ namespace CSharpKOTOR.Common.Script
                 DataType.Int,
                 "GetIsOpen",
                 new List<ScriptParam> { new ScriptParam(DataType.Object, "oObject", null) },
-                "// 443: * Returns TRUE if oObject (which is a placeable or a door) is currently open.\r\nint GetIsOpen(object oObject);",
-                "// 443: * Returns TRUE if oObject (which is a placeable or a door) is currently open.\r\nint GetIsOpen(object oObject);"
+                "// 443: * Returns 1 if oObject (which is a placeable or a door) is currently open.\r\nint GetIsOpen(object oObject);",
+                "// 443: * Returns 1 if oObject (which is a placeable or a door) is currently open.\r\nint GetIsOpen(object oObject);"
             ),
             new ScriptFunction(
                 DataType.Void,
                 "TakeGoldFromCreature",
-                new List<ScriptParam> { new ScriptParam(DataType.Int, "nAmount", null), new ScriptParam(DataType.Object, "oCreatureToTakeFrom", null), new ScriptParam(DataType.Int, "bDestroy", FALSE) },
-                "// 444: Take nAmount of gold from oCreatureToTakeFrom.\r\n// - nAmount\r\n// - oCreatureToTakeFrom: If this is not a valid creature, nothing will happen.\r\n// - bDestroy: If this is TRUE, the caller will not get the gold.  Instead, the\r\n//   gold will be destroyed and will vanish from the game.\r\nvoid TakeGoldFromCreature(int nAmount, object oCreatureToTakeFrom, int bDestroy=FALSE);",
-                "// 444: Take nAmount of gold from oCreatureToTakeFrom.\r\n// - nAmount\r\n// - oCreatureToTakeFrom: If this is not a valid creature, nothing will happen.\r\n// - bDestroy: If this is TRUE, the caller will not get the gold.  Instead, the\r\n//   gold will be destroyed and will vanish from the game.\r\nvoid TakeGoldFromCreature(int nAmount, object oCreatureToTakeFrom, int bDestroy=FALSE);"
+                new List<ScriptParam> { new ScriptParam(DataType.Int, "nAmount", null), new ScriptParam(DataType.Object, "oCreatureToTakeFrom", null), new ScriptParam(DataType.Int, "bDestroy", 0) },
+                "// 444: Take nAmount of gold from oCreatureToTakeFrom.\r\n// - nAmount\r\n// - oCreatureToTakeFrom: If this is not a valid creature, nothing will happen.\r\n// - bDestroy: If this is 1, the caller will not get the gold.  Instead, the\r\n//   gold will be destroyed and will vanish from the game.\r\nvoid TakeGoldFromCreature(int nAmount, object oCreatureToTakeFrom, int bDestroy=0);",
+                "// 444: Take nAmount of gold from oCreatureToTakeFrom.\r\n// - nAmount\r\n// - oCreatureToTakeFrom: If this is not a valid creature, nothing will happen.\r\n// - bDestroy: If this is 1, the caller will not get the gold.  Instead, the\r\n//   gold will be destroyed and will vanish from the game.\r\nvoid TakeGoldFromCreature(int nAmount, object oCreatureToTakeFrom, int bDestroy=0);"
             ),
             new ScriptFunction(
                 DataType.Int,
@@ -6419,16 +6429,16 @@ namespace CSharpKOTOR.Common.Script
             new ScriptFunction(
                 DataType.Effect,
                 "EffectAttackDecrease",
-                new List<ScriptParam> { new ScriptParam(DataType.Int, "nPenalty", null), new ScriptParam(DataType.Int, "nModifierType", ATTACK_BONUS_MISC) },
-                "// 447: Create an Attack Decrease effect.\r\n// - nPenalty\r\n// - nModifierType: ATTACK_BONUS_*\r\neffect EffectAttackDecrease(int nPenalty, int nModifierType=ATTACK_BONUS_MISC);",
-                "// 447: Create an Attack Decrease effect.\r\n// - nPenalty\r\n// - nModifierType: ATTACK_BONUS_*\r\neffect EffectAttackDecrease(int nPenalty, int nModifierType=ATTACK_BONUS_MISC);"
+                new List<ScriptParam> { new ScriptParam(DataType.Int, "nPenalty", null), new ScriptParam(DataType.Int, "nModifierType", 0) },
+                "// 447: Create an Attack Decrease effect.\r\n// - nPenalty\r\n// - nModifierType: ATTACK_BONUS_*\r\neffect EffectAttackDecrease(int nPenalty, int nModifierType=0);",
+                "// 447: Create an Attack Decrease effect.\r\n// - nPenalty\r\n// - nModifierType: ATTACK_BONUS_*\r\neffect EffectAttackDecrease(int nPenalty, int nModifierType=0);"
             ),
             new ScriptFunction(
                 DataType.Effect,
                 "EffectDamageDecrease",
-                new List<ScriptParam> { new ScriptParam(DataType.Int, "nPenalty", null), new ScriptParam(DataType.Int, "nDamageType", DAMAGE_TYPE_UNIVERSAL) },
-                "// 448: Create a Damage Decrease effect.\r\n// - nPenalty\r\n// - nDamageType: DAMAGE_TYPE_*\r\neffect EffectDamageDecrease(int nPenalty, int nDamageType=DAMAGE_TYPE_UNIVERSAL);",
-                "// 448: Create a Damage Decrease effect.\r\n// - nPenalty\r\n// - nDamageType: DAMAGE_TYPE_*\r\neffect EffectDamageDecrease(int nPenalty, int nDamageType=DAMAGE_TYPE_UNIVERSAL);"
+                new List<ScriptParam> { new ScriptParam(DataType.Int, "nPenalty", null), new ScriptParam(DataType.Int, "nDamageType", 8) },
+                "// 448: Create a Damage Decrease effect.\r\n// - nPenalty\r\n// - nDamageType: DAMAGE_TYPE_*\r\neffect EffectDamageDecrease(int nPenalty, int nDamageType=8);",
+                "// 448: Create a Damage Decrease effect.\r\n// - nPenalty\r\n// - nDamageType: DAMAGE_TYPE_*\r\neffect EffectDamageDecrease(int nPenalty, int nDamageType=8);"
             ),
             new ScriptFunction(
                 DataType.Effect,
@@ -6440,9 +6450,9 @@ namespace CSharpKOTOR.Common.Script
             new ScriptFunction(
                 DataType.Effect,
                 "EffectACDecrease",
-                new List<ScriptParam> { new ScriptParam(DataType.Int, "nValue", null), new ScriptParam(DataType.Int, "nModifyType", AC_DODGE_BONUS), new ScriptParam(DataType.Int, "nDamageType", AC_VS_DAMAGE_TYPE_ALL) },
-                "// 450: Create an AC Decrease effect.\r\n// - nValue\r\n// - nModifyType: AC_*\r\n// - nDamageType: DAMAGE_TYPE_*\r\n//   * Default value for nDamageType should only ever be used in this function prototype.\r\neffect EffectACDecrease(int nValue, int nModifyType=AC_DODGE_BONUS, int nDamageType=AC_VS_DAMAGE_TYPE_ALL);",
-                "// 450: Create an AC Decrease effect.\r\n// - nValue\r\n// - nModifyType: AC_*\r\n// - nDamageType: DAMAGE_TYPE_*\r\n//   * Default value for nDamageType should only ever be used in this function prototype.\r\neffect EffectACDecrease(int nValue, int nModifyType=AC_DODGE_BONUS, int nDamageType=AC_VS_DAMAGE_TYPE_ALL);"
+                new List<ScriptParam> { new ScriptParam(DataType.Int, "nValue", null), new ScriptParam(DataType.Int, "nModifyType", 0), new ScriptParam(DataType.Int, "nDamageType", 8199) },
+                "// 450: Create an AC Decrease effect.\r\n// - nValue\r\n// - nModifyType: AC_*\r\n// - nDamageType: DAMAGE_TYPE_*\r\n//   * Default value for nDamageType should only ever be used in this function prototype.\r\neffect EffectACDecrease(int nValue, int nModifyType=0, int nDamageType=8199);",
+                "// 450: Create an AC Decrease effect.\r\n// - nValue\r\n// - nModifyType: AC_*\r\n// - nDamageType: DAMAGE_TYPE_*\r\n//   * Default value for nDamageType should only ever be used in this function prototype.\r\neffect EffectACDecrease(int nValue, int nModifyType=0, int nDamageType=8199);"
             ),
             new ScriptFunction(
                 DataType.Effect,
@@ -6454,9 +6464,9 @@ namespace CSharpKOTOR.Common.Script
             new ScriptFunction(
                 DataType.Effect,
                 "EffectSavingThrowDecrease",
-                new List<ScriptParam> { new ScriptParam(DataType.Int, "nSave", null), new ScriptParam(DataType.Int, "nValue", null), new ScriptParam(DataType.Int, "nSaveType", SAVING_THROW_TYPE_ALL) },
-                "// 452: Create a Saving Throw Decrease effect.\r\n// - nSave\r\n// - nValue\r\n// - nSaveType: SAVING_THROW_TYPE_*\r\neffect EffectSavingThrowDecrease(int nSave, int nValue, int nSaveType=SAVING_THROW_TYPE_ALL);",
-                "// 452: Create a Saving Throw Decrease effect.\r\n// - nSave\r\n// - nValue\r\n// - nSaveType: SAVING_THROW_TYPE_*\r\neffect EffectSavingThrowDecrease(int nSave, int nValue, int nSaveType=SAVING_THROW_TYPE_ALL);"
+                new List<ScriptParam> { new ScriptParam(DataType.Int, "nSave", null), new ScriptParam(DataType.Int, "nValue", null), new ScriptParam(DataType.Int, "nSaveType", 0) },
+                "// 452: Create a Saving Throw Decrease effect.\r\n// - nSave\r\n// - nValue\r\n// - nSaveType: SAVING_THROW_TYPE_*\r\neffect EffectSavingThrowDecrease(int nSave, int nValue, int nSaveType=0);",
+                "// 452: Create a Saving Throw Decrease effect.\r\n// - nSave\r\n// - nValue\r\n// - nSaveType: SAVING_THROW_TYPE_*\r\neffect EffectSavingThrowDecrease(int nSave, int nValue, int nSaveType=0);"
             ),
             new ScriptFunction(
                 DataType.Effect,
@@ -6525,8 +6535,8 @@ namespace CSharpKOTOR.Common.Script
                 DataType.Int,
                 "GetSoloMode",
                 new List<ScriptParam>(),
-                "// 462:\r\n// Returns: TRUE if the player is in 'solo mode' (ie. the party is not supposed to follow the player).\r\n//          FALSE otherwise.\r\nint GetSoloMode();",
-                "// 462:\r\n// Returns: TRUE if the player is in 'solo mode' (ie. the party is not supposed to follow the player).\r\n//          FALSE otherwise.\r\nint GetSoloMode();"
+                "// 462:\r\n// Returns: 1 if the player is in 'solo mode' (ie. the party is not supposed to follow the player).\r\n//          0 otherwise.\r\nint GetSoloMode();",
+                "// 462:\r\n// Returns: 1 if the player is in 'solo mode' (ie. the party is not supposed to follow the player).\r\n//          0 otherwise.\r\nint GetSoloMode();"
             ),
             new ScriptFunction(
                 DataType.Effect,
@@ -6706,9 +6716,9 @@ namespace CSharpKOTOR.Common.Script
             new ScriptFunction(
                 DataType.Object,
                 "GetNearestTrapToObject",
-                new List<ScriptParam> { new ScriptParam(DataType.Object, "oTarget", OBJECT_SELF), new ScriptParam(DataType.Int, "nTrapDetected", TRUE) },
-                "// 488: Get the trap nearest to oTarget.\r\n// Note : \"trap objects\" are actually any trigger, placeable or door that is\r\n// trapped in oTarget's area.\r\n// - oTarget\r\n// - nTrapDetected: if this is TRUE, the trap returned has to have been detected\r\n//   by oTarget.\r\nobject GetNearestTrapToObject(object oTarget=OBJECT_SELF, int nTrapDetected=TRUE);",
-                "// 488: Get the trap nearest to oTarget.\r\n// Note : \"trap objects\" are actually any trigger, placeable or door that is\r\n// trapped in oTarget's area.\r\n// - oTarget\r\n// - nTrapDetected: if this is TRUE, the trap returned has to have been detected\r\n//   by oTarget.\r\nobject GetNearestTrapToObject(object oTarget=OBJECT_SELF, int nTrapDetected=TRUE);"
+                new List<ScriptParam> { new ScriptParam(DataType.Object, "oTarget", OBJECT_SELF), new ScriptParam(DataType.Int, "nTrapDetected", 1) },
+                "// 488: Get the trap nearest to oTarget.\r\n// Note : \"trap objects\" are actually any trigger, placeable or door that is\r\n// trapped in oTarget's area.\r\n// - oTarget\r\n// - nTrapDetected: if this is 1, the trap returned has to have been detected\r\n//   by oTarget.\r\nobject GetNearestTrapToObject(object oTarget=OBJECT_SELF, int nTrapDetected=1);",
+                "// 488: Get the trap nearest to oTarget.\r\n// Note : \"trap objects\" are actually any trigger, placeable or door that is\r\n// trapped in oTarget's area.\r\n// - oTarget\r\n// - nTrapDetected: if this is 1, the trap returned has to have been detected\r\n//   by oTarget.\r\nobject GetNearestTrapToObject(object oTarget=OBJECT_SELF, int nTrapDetected=1);"
             ),
             new ScriptFunction(
                 DataType.Object,
@@ -6797,16 +6807,16 @@ namespace CSharpKOTOR.Common.Script
             new ScriptFunction(
                 DataType.Void,
                 "ActionCastFakeSpellAtObject",
-                new List<ScriptParam> { new ScriptParam(DataType.Int, "nSpell", null), new ScriptParam(DataType.Object, "oTarget", null), new ScriptParam(DataType.Int, "nProjectilePathType", PROJECTILE_PATH_TYPE_DEFAULT) },
-                "// 501: The action subject will fake casting a spell at oTarget; the conjure and cast\r\n// animations and visuals will occur, nothing else.\r\n// - nSpell\r\n// - oTarget\r\n// - nProjectilePathType: PROJECTILE_PATH_TYPE_*\r\nvoid ActionCastFakeSpellAtObject(int nSpell, object oTarget, int nProjectilePathType=PROJECTILE_PATH_TYPE_DEFAULT);",
-                "// 501: The action subject will fake casting a spell at oTarget; the conjure and cast\r\n// animations and visuals will occur, nothing else.\r\n// - nSpell\r\n// - oTarget\r\n// - nProjectilePathType: PROJECTILE_PATH_TYPE_*\r\nvoid ActionCastFakeSpellAtObject(int nSpell, object oTarget, int nProjectilePathType=PROJECTILE_PATH_TYPE_DEFAULT);"
+                new List<ScriptParam> { new ScriptParam(DataType.Int, "nSpell", null), new ScriptParam(DataType.Object, "oTarget", null), new ScriptParam(DataType.Int, "nProjectilePathType", 0) },
+                "// 501: The action subject will fake casting a spell at oTarget; the conjure and cast\r\n// animations and visuals will occur, nothing else.\r\n// - nSpell\r\n// - oTarget\r\n// - nProjectilePathType: PROJECTILE_PATH_TYPE_*\r\nvoid ActionCastFakeSpellAtObject(int nSpell, object oTarget, int nProjectilePathType=0);",
+                "// 501: The action subject will fake casting a spell at oTarget; the conjure and cast\r\n// animations and visuals will occur, nothing else.\r\n// - nSpell\r\n// - oTarget\r\n// - nProjectilePathType: PROJECTILE_PATH_TYPE_*\r\nvoid ActionCastFakeSpellAtObject(int nSpell, object oTarget, int nProjectilePathType=0);"
             ),
             new ScriptFunction(
                 DataType.Void,
                 "ActionCastFakeSpellAtLocation",
-                new List<ScriptParam> { new ScriptParam(DataType.Int, "nSpell", null), new ScriptParam(DataType.Location, "lTarget", null), new ScriptParam(DataType.Int, "nProjectilePathType", PROJECTILE_PATH_TYPE_DEFAULT) },
-                "// 502: The action subject will fake casting a spell at lLocation; the conjure and\r\n// cast animations and visuals will occur, nothing else.\r\n// - nSpell\r\n// - lTarget\r\n// - nProjectilePathType: PROJECTILE_PATH_TYPE_*\r\nvoid ActionCastFakeSpellAtLocation(int nSpell, location lTarget, int nProjectilePathType=PROJECTILE_PATH_TYPE_DEFAULT);",
-                "// 502: The action subject will fake casting a spell at lLocation; the conjure and\r\n// cast animations and visuals will occur, nothing else.\r\n// - nSpell\r\n// - lTarget\r\n// - nProjectilePathType: PROJECTILE_PATH_TYPE_*\r\nvoid ActionCastFakeSpellAtLocation(int nSpell, location lTarget, int nProjectilePathType=PROJECTILE_PATH_TYPE_DEFAULT);"
+                new List<ScriptParam> { new ScriptParam(DataType.Int, "nSpell", null), new ScriptParam(DataType.Location, "lTarget", null), new ScriptParam(DataType.Int, "nProjectilePathType", 0) },
+                "// 502: The action subject will fake casting a spell at lLocation; the conjure and\r\n// cast animations and visuals will occur, nothing else.\r\n// - nSpell\r\n// - lTarget\r\n// - nProjectilePathType: PROJECTILE_PATH_TYPE_*\r\nvoid ActionCastFakeSpellAtLocation(int nSpell, location lTarget, int nProjectilePathType=0);",
+                "// 502: The action subject will fake casting a spell at lLocation; the conjure and\r\n// cast animations and visuals will occur, nothing else.\r\n// - nSpell\r\n// - lTarget\r\n// - nProjectilePathType: PROJECTILE_PATH_TYPE_*\r\nvoid ActionCastFakeSpellAtLocation(int nSpell, location lTarget, int nProjectilePathType=0);"
             ),
             new ScriptFunction(
                 DataType.Void,
@@ -6826,15 +6836,15 @@ namespace CSharpKOTOR.Common.Script
                 DataType.Void,
                 "SetLockOrientationInDialog",
                 new List<ScriptParam> { new ScriptParam(DataType.Object, "oObject", null), new ScriptParam(DataType.Int, "nValue", null) },
-                "// 505: SetLockOrientationInDialog\r\n// Allows the locking and unlocking of orientation changes for an object in dialog\r\n// - oObject - Object\r\n// - nValue - TRUE or FALSE\r\nvoid SetLockOrientationInDialog(object oObject, int nValue);",
-                "// 505: SetLockOrientationInDialog\r\n// Allows the locking and unlocking of orientation changes for an object in dialog\r\n// - oObject - Object\r\n// - nValue - TRUE or FALSE\r\nvoid SetLockOrientationInDialog(object oObject, int nValue);"
+                "// 505: SetLockOrientationInDialog\r\n// Allows the locking and unlocking of orientation changes for an object in dialog\r\n// - oObject - Object\r\n// - nValue - 1 or 0\r\nvoid SetLockOrientationInDialog(object oObject, int nValue);",
+                "// 505: SetLockOrientationInDialog\r\n// Allows the locking and unlocking of orientation changes for an object in dialog\r\n// - oObject - Object\r\n// - nValue - 1 or 0\r\nvoid SetLockOrientationInDialog(object oObject, int nValue);"
             ),
             new ScriptFunction(
                 DataType.Void,
                 "SetLockHeadFollowInDialog",
                 new List<ScriptParam> { new ScriptParam(DataType.Object, "oObject", null), new ScriptParam(DataType.Int, "nValue", null) },
-                "// 506: SetLockHeadFollowInDialog\r\n// Allows the locking and undlocking of head following for an object in dialog\r\n// - oObject - Object\r\n// - nValue - TRUE or FALSE\r\nvoid SetLockHeadFollowInDialog(object oObject, int nValue);",
-                "// 506: SetLockHeadFollowInDialog\r\n// Allows the locking and undlocking of head following for an object in dialog\r\n// - oObject - Object\r\n// - nValue - TRUE or FALSE\r\nvoid SetLockHeadFollowInDialog(object oObject, int nValue);"
+                "// 506: SetLockHeadFollowInDialog\r\n// Allows the locking and undlocking of head following for an object in dialog\r\n// - oObject - Object\r\n// - nValue - 1 or 0\r\nvoid SetLockHeadFollowInDialog(object oObject, int nValue);",
+                "// 506: SetLockHeadFollowInDialog\r\n// Allows the locking and undlocking of head following for an object in dialog\r\n// - oObject - Object\r\n// - nValue - 1 or 0\r\nvoid SetLockHeadFollowInDialog(object oObject, int nValue);"
             ),
             new ScriptFunction(
                 DataType.Void,
@@ -6868,8 +6878,8 @@ namespace CSharpKOTOR.Common.Script
                 DataType.Int,
                 "GetWeaponRanged",
                 new List<ScriptParam> { new ScriptParam(DataType.Object, "oItem", null) },
-                "// 511: * Returns TRUE if oItem is a ranged weapon.\r\nint GetWeaponRanged(object oItem);",
-                "// 511: * Returns TRUE if oItem is a ranged weapon.\r\nint GetWeaponRanged(object oItem);"
+                "// 511: * Returns 1 if oItem is a ranged weapon.\r\nint GetWeaponRanged(object oItem);",
+                "// 511: * Returns 1 if oItem is a ranged weapon.\r\nint GetWeaponRanged(object oItem);"
             ),
             new ScriptFunction(
                 DataType.Void,
@@ -6917,15 +6927,15 @@ namespace CSharpKOTOR.Common.Script
                 DataType.Void,
                 "StartCreditSequence",
                 new List<ScriptParam> { new ScriptParam(DataType.Int, "bTransparentBackground", null) },
-                "// 518: StartCreditSequence\r\n// Starts the credits sequence.  If bTransparentBackground is TRUE, the credits will be displayed\r\n// with a transparent background, allowing whatever is currently onscreen to show through.  If it\r\n// is set to FALSE, the credits will be displayed on a black background.\r\nvoid StartCreditSequence( int bTransparentBackground );",
-                "// 518: StartCreditSequence\r\n// Starts the credits sequence.  If bTransparentBackground is TRUE, the credits will be displayed\r\n// with a transparent background, allowing whatever is currently onscreen to show through.  If it\r\n// is set to FALSE, the credits will be displayed on a black background.\r\nvoid StartCreditSequence( int bTransparentBackground );"
+                "// 518: StartCreditSequence\r\n// Starts the credits sequence.  If bTransparentBackground is 1, the credits will be displayed\r\n// with a transparent background, allowing whatever is currently onscreen to show through.  If it\r\n// is set to 0, the credits will be displayed on a black background.\r\nvoid StartCreditSequence( int bTransparentBackground );",
+                "// 518: StartCreditSequence\r\n// Starts the credits sequence.  If bTransparentBackground is 1, the credits will be displayed\r\n// with a transparent background, allowing whatever is currently onscreen to show through.  If it\r\n// is set to 0, the credits will be displayed on a black background.\r\nvoid StartCreditSequence( int bTransparentBackground );"
             ),
             new ScriptFunction(
                 DataType.Int,
                 "IsCreditSequenceInProgress",
                 new List<ScriptParam>(),
-                "// 519: IsCreditSequenceInProgress\r\n// Returns TRUE if the credits sequence is currently in progress, FALSE otherwise.\r\nint IsCreditSequenceInProgress();",
-                "// 519: IsCreditSequenceInProgress\r\n// Returns TRUE if the credits sequence is currently in progress, FALSE otherwise.\r\nint IsCreditSequenceInProgress();"
+                "// 519: IsCreditSequenceInProgress\r\n// Returns 1 if the credits sequence is currently in progress, 0 otherwise.\r\nint IsCreditSequenceInProgress();",
+                "// 519: IsCreditSequenceInProgress\r\n// Returns 1 if the credits sequence is currently in progress, 0 otherwise.\r\nint IsCreditSequenceInProgress();"
             ),
             new ScriptFunction(
                 DataType.Void,
@@ -6965,44 +6975,44 @@ namespace CSharpKOTOR.Common.Script
             new ScriptFunction(
                 DataType.Void,
                 "FloatingTextStrRefOnCreature",
-                new List<ScriptParam> { new ScriptParam(DataType.Int, "nStrRefToDisplay", null), new ScriptParam(DataType.Object, "oCreatureToFloatAbove", null), new ScriptParam(DataType.Int, "bBroadcastToFaction", TRUE) },
-                "// 525: Display floaty text above the specified creature.\r\n// The text will also appear in the chat buffer of each player that receives the\r\n// floaty text.\r\n// - nStrRefToDisplay: String ref (therefore text is translated)\r\n// - oCreatureToFloatAbove\r\n// - bBroadcastToFaction: If this is TRUE then only creatures in the same faction\r\n//   as oCreatureToFloatAbove\r\n//   will see the floaty text, and only if they are within range (30 metres).\r\nvoid FloatingTextStrRefOnCreature(int nStrRefToDisplay, object oCreatureToFloatAbove, int bBroadcastToFaction=TRUE);",
-                "// 525: Display floaty text above the specified creature.\r\n// The text will also appear in the chat buffer of each player that receives the\r\n// floaty text.\r\n// - nStrRefToDisplay: String ref (therefore text is translated)\r\n// - oCreatureToFloatAbove\r\n// - bBroadcastToFaction: If this is TRUE then only creatures in the same faction\r\n//   as oCreatureToFloatAbove\r\n//   will see the floaty text, and only if they are within range (30 metres).\r\nvoid FloatingTextStrRefOnCreature(int nStrRefToDisplay, object oCreatureToFloatAbove, int bBroadcastToFaction=TRUE);"
+                new List<ScriptParam> { new ScriptParam(DataType.Int, "nStrRefToDisplay", null), new ScriptParam(DataType.Object, "oCreatureToFloatAbove", null), new ScriptParam(DataType.Int, "bBroadcastToFaction", 1) },
+                "// 525: Display floaty text above the specified creature.\r\n// The text will also appear in the chat buffer of each player that receives the\r\n// floaty text.\r\n// - nStrRefToDisplay: String ref (therefore text is translated)\r\n// - oCreatureToFloatAbove\r\n// - bBroadcastToFaction: If this is 1 then only creatures in the same faction\r\n//   as oCreatureToFloatAbove\r\n//   will see the floaty text, and only if they are within range (30 metres).\r\nvoid FloatingTextStrRefOnCreature(int nStrRefToDisplay, object oCreatureToFloatAbove, int bBroadcastToFaction=1);",
+                "// 525: Display floaty text above the specified creature.\r\n// The text will also appear in the chat buffer of each player that receives the\r\n// floaty text.\r\n// - nStrRefToDisplay: String ref (therefore text is translated)\r\n// - oCreatureToFloatAbove\r\n// - bBroadcastToFaction: If this is 1 then only creatures in the same faction\r\n//   as oCreatureToFloatAbove\r\n//   will see the floaty text, and only if they are within range (30 metres).\r\nvoid FloatingTextStrRefOnCreature(int nStrRefToDisplay, object oCreatureToFloatAbove, int bBroadcastToFaction=1);"
             ),
             new ScriptFunction(
                 DataType.Void,
                 "FloatingTextStringOnCreature",
-                new List<ScriptParam> { new ScriptParam(DataType.String, "sStringToDisplay", null), new ScriptParam(DataType.Object, "oCreatureToFloatAbove", null), new ScriptParam(DataType.Int, "bBroadcastToFaction", TRUE) },
-                "// 526: Display floaty text above the specified creature.\r\n// The text will also appear in the chat buffer of each player that receives the\r\n// floaty text.\r\n// - sStringToDisplay: String\r\n// - oCreatureToFloatAbove\r\n// - bBroadcastToFaction: If this is TRUE then only creatures in the same faction\r\n//   as oCreatureToFloatAbove\r\n//   will see the floaty text, and only if they are within range (30 metres).\r\nvoid FloatingTextStringOnCreature(string sStringToDisplay, object oCreatureToFloatAbove, int bBroadcastToFaction=TRUE);",
-                "// 526: Display floaty text above the specified creature.\r\n// The text will also appear in the chat buffer of each player that receives the\r\n// floaty text.\r\n// - sStringToDisplay: String\r\n// - oCreatureToFloatAbove\r\n// - bBroadcastToFaction: If this is TRUE then only creatures in the same faction\r\n//   as oCreatureToFloatAbove\r\n//   will see the floaty text, and only if they are within range (30 metres).\r\nvoid FloatingTextStringOnCreature(string sStringToDisplay, object oCreatureToFloatAbove, int bBroadcastToFaction=TRUE);"
+                new List<ScriptParam> { new ScriptParam(DataType.String, "sStringToDisplay", null), new ScriptParam(DataType.Object, "oCreatureToFloatAbove", null), new ScriptParam(DataType.Int, "bBroadcastToFaction", 1) },
+                "// 526: Display floaty text above the specified creature.\r\n// The text will also appear in the chat buffer of each player that receives the\r\n// floaty text.\r\n// - sStringToDisplay: String\r\n// - oCreatureToFloatAbove\r\n// - bBroadcastToFaction: If this is 1 then only creatures in the same faction\r\n//   as oCreatureToFloatAbove\r\n//   will see the floaty text, and only if they are within range (30 metres).\r\nvoid FloatingTextStringOnCreature(string sStringToDisplay, object oCreatureToFloatAbove, int bBroadcastToFaction=1);",
+                "// 526: Display floaty text above the specified creature.\r\n// The text will also appear in the chat buffer of each player that receives the\r\n// floaty text.\r\n// - sStringToDisplay: String\r\n// - oCreatureToFloatAbove\r\n// - bBroadcastToFaction: If this is 1 then only creatures in the same faction\r\n//   as oCreatureToFloatAbove\r\n//   will see the floaty text, and only if they are within range (30 metres).\r\nvoid FloatingTextStringOnCreature(string sStringToDisplay, object oCreatureToFloatAbove, int bBroadcastToFaction=1);"
             ),
             new ScriptFunction(
                 DataType.Int,
                 "GetTrapDisarmable",
                 new List<ScriptParam> { new ScriptParam(DataType.Object, "oTrapObject", null) },
-                "// 527: - oTrapObject: a placeable, door or trigger\r\n// * Returns TRUE if oTrapObject is disarmable.\r\nint GetTrapDisarmable(object oTrapObject);",
-                "// 527: - oTrapObject: a placeable, door or trigger\r\n// * Returns TRUE if oTrapObject is disarmable.\r\nint GetTrapDisarmable(object oTrapObject);"
+                "// 527: - oTrapObject: a placeable, door or trigger\r\n// * Returns 1 if oTrapObject is disarmable.\r\nint GetTrapDisarmable(object oTrapObject);",
+                "// 527: - oTrapObject: a placeable, door or trigger\r\n// * Returns 1 if oTrapObject is disarmable.\r\nint GetTrapDisarmable(object oTrapObject);"
             ),
             new ScriptFunction(
                 DataType.Int,
                 "GetTrapDetectable",
                 new List<ScriptParam> { new ScriptParam(DataType.Object, "oTrapObject", null) },
-                "// 528: - oTrapObject: a placeable, door or trigger\r\n// * Returns TRUE if oTrapObject is detectable.\r\nint GetTrapDetectable(object oTrapObject);",
-                "// 528: - oTrapObject: a placeable, door or trigger\r\n// * Returns TRUE if oTrapObject is detectable.\r\nint GetTrapDetectable(object oTrapObject);"
+                "// 528: - oTrapObject: a placeable, door or trigger\r\n// * Returns 1 if oTrapObject is detectable.\r\nint GetTrapDetectable(object oTrapObject);",
+                "// 528: - oTrapObject: a placeable, door or trigger\r\n// * Returns 1 if oTrapObject is detectable.\r\nint GetTrapDetectable(object oTrapObject);"
             ),
             new ScriptFunction(
                 DataType.Int,
                 "GetTrapDetectedBy",
                 new List<ScriptParam> { new ScriptParam(DataType.Object, "oTrapObject", null), new ScriptParam(DataType.Object, "oCreature", null) },
-                "// 529: - oTrapObject: a placeable, door or trigger\r\n// - oCreature\r\n// * Returns TRUE if oCreature has detected oTrapObject\r\nint GetTrapDetectedBy(object oTrapObject, object oCreature);",
-                "// 529: - oTrapObject: a placeable, door or trigger\r\n// - oCreature\r\n// * Returns TRUE if oCreature has detected oTrapObject\r\nint GetTrapDetectedBy(object oTrapObject, object oCreature);"
+                "// 529: - oTrapObject: a placeable, door or trigger\r\n// - oCreature\r\n// * Returns 1 if oCreature has detected oTrapObject\r\nint GetTrapDetectedBy(object oTrapObject, object oCreature);",
+                "// 529: - oTrapObject: a placeable, door or trigger\r\n// - oCreature\r\n// * Returns 1 if oCreature has detected oTrapObject\r\nint GetTrapDetectedBy(object oTrapObject, object oCreature);"
             ),
             new ScriptFunction(
                 DataType.Int,
                 "GetTrapFlagged",
                 new List<ScriptParam> { new ScriptParam(DataType.Object, "oTrapObject", null) },
-                "// 530: - oTrapObject: a placeable, door or trigger\r\n// * Returns TRUE if oTrapObject has been flagged as visible to all creatures.\r\nint GetTrapFlagged(object oTrapObject);",
-                "// 530: - oTrapObject: a placeable, door or trigger\r\n// * Returns TRUE if oTrapObject has been flagged as visible to all creatures.\r\nint GetTrapFlagged(object oTrapObject);"
+                "// 530: - oTrapObject: a placeable, door or trigger\r\n// * Returns 1 if oTrapObject has been flagged as visible to all creatures.\r\nint GetTrapFlagged(object oTrapObject);",
+                "// 530: - oTrapObject: a placeable, door or trigger\r\n// * Returns 1 if oTrapObject has been flagged as visible to all creatures.\r\nint GetTrapFlagged(object oTrapObject);"
             ),
             new ScriptFunction(
                 DataType.Int,
@@ -7015,8 +7025,8 @@ namespace CSharpKOTOR.Common.Script
                 DataType.Int,
                 "GetTrapOneShot",
                 new List<ScriptParam> { new ScriptParam(DataType.Object, "oTrapObject", null) },
-                "// 532: - oTrapObject: a placeable, door or trigger\r\n// * Returns TRUE if oTrapObject is one-shot (i.e. it does not reset itself\r\n//   after firing.\r\nint GetTrapOneShot(object oTrapObject);",
-                "// 532: - oTrapObject: a placeable, door or trigger\r\n// * Returns TRUE if oTrapObject is one-shot (i.e. it does not reset itself\r\n//   after firing.\r\nint GetTrapOneShot(object oTrapObject);"
+                "// 532: - oTrapObject: a placeable, door or trigger\r\n// * Returns 1 if oTrapObject is one-shot (i.e. it does not reset itself\r\n//   after firing.\r\nint GetTrapOneShot(object oTrapObject);",
+                "// 532: - oTrapObject: a placeable, door or trigger\r\n// * Returns 1 if oTrapObject is one-shot (i.e. it does not reset itself\r\n//   after firing.\r\nint GetTrapOneShot(object oTrapObject);"
             ),
             new ScriptFunction(
                 DataType.Object,
@@ -7050,8 +7060,8 @@ namespace CSharpKOTOR.Common.Script
                 DataType.Int,
                 "GetLockKeyRequired",
                 new List<ScriptParam> { new ScriptParam(DataType.Object, "oObject", null) },
-                "// 537: * Returns TRUE if a specific key is required to open the lock on oObject.\r\nint GetLockKeyRequired(object oObject);",
-                "// 537: * Returns TRUE if a specific key is required to open the lock on oObject.\r\nint GetLockKeyRequired(object oObject);"
+                "// 537: * Returns 1 if a specific key is required to open the lock on oObject.\r\nint GetLockKeyRequired(object oObject);",
+                "// 537: * Returns 1 if a specific key is required to open the lock on oObject.\r\nint GetLockKeyRequired(object oObject);"
             ),
             new ScriptFunction(
                 DataType.Int,
@@ -7064,8 +7074,8 @@ namespace CSharpKOTOR.Common.Script
                 DataType.Int,
                 "GetLockLockable",
                 new List<ScriptParam> { new ScriptParam(DataType.Object, "oObject", null) },
-                "// 539: * Returns TRUE if the lock on oObject is lockable.\r\nint GetLockLockable(object oObject);",
-                "// 539: * Returns TRUE if the lock on oObject is lockable.\r\nint GetLockLockable(object oObject);"
+                "// 539: * Returns 1 if the lock on oObject is lockable.\r\nint GetLockLockable(object oObject);",
+                "// 539: * Returns 1 if the lock on oObject is lockable.\r\nint GetLockLockable(object oObject);"
             ),
             new ScriptFunction(
                 DataType.Int,
@@ -7092,29 +7102,29 @@ namespace CSharpKOTOR.Common.Script
                 DataType.Int,
                 "GetHasFeatEffect",
                 new List<ScriptParam> { new ScriptParam(DataType.Int, "nFeat", null), new ScriptParam(DataType.Object, "oObject", OBJECT_SELF) },
-                "// 543: - nFeat: FEAT_*\r\n// - oObject\r\n// * Returns TRUE if oObject has effects on it originating from nFeat.\r\nint GetHasFeatEffect(int nFeat, object oObject=OBJECT_SELF);",
-                "// 543: - nFeat: FEAT_*\r\n// - oObject\r\n// * Returns TRUE if oObject has effects on it originating from nFeat.\r\nint GetHasFeatEffect(int nFeat, object oObject=OBJECT_SELF);"
+                "// 543: - nFeat: FEAT_*\r\n// - oObject\r\n// * Returns 1 if oObject has effects on it originating from nFeat.\r\nint GetHasFeatEffect(int nFeat, object oObject=OBJECT_SELF);",
+                "// 543: - nFeat: FEAT_*\r\n// - oObject\r\n// * Returns 1 if oObject has effects on it originating from nFeat.\r\nint GetHasFeatEffect(int nFeat, object oObject=OBJECT_SELF);"
             ),
             new ScriptFunction(
                 DataType.Void,
                 "SetPlaceableIllumination",
-                new List<ScriptParam> { new ScriptParam(DataType.Object, "oPlaceable", OBJECT_SELF), new ScriptParam(DataType.Int, "bIlluminate", TRUE) },
-                "// 544: Set the status of the illumination for oPlaceable.\r\n// - oPlaceable\r\n// - bIlluminate: if this is TRUE, oPlaceable's illumination will be turned on.\r\n//   If this is FALSE, oPlaceable's illumination will be turned off.\r\n// Note: You must call RecomputeStaticLighting() after calling this function in\r\n// order for the changes to occur visually for the players.\r\n// SetPlaceableIllumination() buffers the illumination changes, which are then",
-                "// 544: Set the status of the illumination for oPlaceable.\r\n// - oPlaceable\r\n// - bIlluminate: if this is TRUE, oPlaceable's illumination will be turned on.\r\n//   If this is FALSE, oPlaceable's illumination will be turned off.\r\n// Note: You must call RecomputeStaticLighting() after calling this function in\r\n// order for the changes to occur visually for the players.\r\n// SetPlaceableIllumination() buffers the illumination changes, which are then"
+                new List<ScriptParam> { new ScriptParam(DataType.Object, "oPlaceable", OBJECT_SELF), new ScriptParam(DataType.Int, "bIlluminate", 1) },
+                "// 544: Set the status of the illumination for oPlaceable.\r\n// - oPlaceable\r\n// - bIlluminate: if this is 1, oPlaceable's illumination will be turned on.\r\n//   If this is 0, oPlaceable's illumination will be turned off.\r\n// Note: You must call RecomputeStaticLighting() after calling this function in\r\n// order for the changes to occur visually for the players.\r\n// SetPlaceableIllumination() buffers the illumination changes, which are then",
+                "// 544: Set the status of the illumination for oPlaceable.\r\n// - oPlaceable\r\n// - bIlluminate: if this is 1, oPlaceable's illumination will be turned on.\r\n//   If this is 0, oPlaceable's illumination will be turned off.\r\n// Note: You must call RecomputeStaticLighting() after calling this function in\r\n// order for the changes to occur visually for the players.\r\n// SetPlaceableIllumination() buffers the illumination changes, which are then"
             ),
             new ScriptFunction(
                 DataType.Int,
                 "GetPlaceableIllumination",
                 new List<ScriptParam> { new ScriptParam(DataType.Object, "oPlaceable", OBJECT_SELF) },
-                "// 545: * Returns TRUE if the illumination for oPlaceable is on\r\nint GetPlaceableIllumination(object oPlaceable=OBJECT_SELF);",
-                "// 545: * Returns TRUE if the illumination for oPlaceable is on\r\nint GetPlaceableIllumination(object oPlaceable=OBJECT_SELF);"
+                "// 545: * Returns 1 if the illumination for oPlaceable is on\r\nint GetPlaceableIllumination(object oPlaceable=OBJECT_SELF);",
+                "// 545: * Returns 1 if the illumination for oPlaceable is on\r\nint GetPlaceableIllumination(object oPlaceable=OBJECT_SELF);"
             ),
             new ScriptFunction(
                 DataType.Int,
                 "GetIsPlaceableObjectActionPossible",
                 new List<ScriptParam> { new ScriptParam(DataType.Object, "oPlaceable", null), new ScriptParam(DataType.Int, "nPlaceableAction", null) },
-                "// 546: - oPlaceable\r\n// - nPlaceableAction: PLACEABLE_ACTION_*\r\n// * Returns TRUE if nPlacebleAction is valid for oPlaceable.\r\nint GetIsPlaceableObjectActionPossible(object oPlaceable, int nPlaceableAction);",
-                "// 546: - oPlaceable\r\n// - nPlaceableAction: PLACEABLE_ACTION_*\r\n// * Returns TRUE if nPlacebleAction is valid for oPlaceable.\r\nint GetIsPlaceableObjectActionPossible(object oPlaceable, int nPlaceableAction);"
+                "// 546: - oPlaceable\r\n// - nPlaceableAction: PLACEABLE_ACTION_*\r\n// * Returns 1 if nPlacebleAction is valid for oPlaceable.\r\nint GetIsPlaceableObjectActionPossible(object oPlaceable, int nPlaceableAction);",
+                "// 546: - oPlaceable\r\n// - nPlaceableAction: PLACEABLE_ACTION_*\r\n// * Returns 1 if nPlacebleAction is valid for oPlaceable.\r\nint GetIsPlaceableObjectActionPossible(object oPlaceable, int nPlaceableAction);"
             ),
             new ScriptFunction(
                 DataType.Void,
@@ -7148,8 +7158,8 @@ namespace CSharpKOTOR.Common.Script
                 DataType.Int,
                 "GetIsTrapped",
                 new List<ScriptParam> { new ScriptParam(DataType.Object, "oObject", null) },
-                "// 551: Note: Only placeables, doors and triggers can be trapped.\r\n// * Returns TRUE if oObject is trapped.\r\nint GetIsTrapped(object oObject);",
-                "// 551: Note: Only placeables, doors and triggers can be trapped.\r\n// * Returns TRUE if oObject is trapped.\r\nint GetIsTrapped(object oObject);"
+                "// 551: Note: Only placeables, doors and triggers can be trapped.\r\n// * Returns 1 if oObject is trapped.\r\nint GetIsTrapped(object oObject);",
+                "// 551: Note: Only placeables, doors and triggers can be trapped.\r\n// * Returns 1 if oObject is trapped.\r\nint GetIsTrapped(object oObject);"
             ),
             new ScriptFunction(
                 DataType.Effect,
@@ -7168,9 +7178,9 @@ namespace CSharpKOTOR.Common.Script
             new ScriptFunction(
                 DataType.Void,
                 "PopUpDeathGUIPanel",
-                new List<ScriptParam> { new ScriptParam(DataType.Object, "oPC", null), new ScriptParam(DataType.Int, "bRespawnButtonEnabled", TRUE), new ScriptParam(DataType.Int, "bWaitForHelpButtonEnabled", TRUE), new ScriptParam(DataType.Int, "nHelpStringReference", 0), new ScriptParam(DataType.String, "sHelpString", "\"\"") },
-                "// 554: Spawn in the Death GUI.\r\n// The default (as defined by BioWare) can be spawned in by PopUpGUIPanel, but\r\n// if you want to turn off the \"Respawn\" or \"Wait for Help\" buttons, this is the\r\n// function to use.\r\n// - oPC\r\n// - bRespawnButtonEnabled: if this is TRUE, the \"Respawn\" button will be enabled\r\n//   on the Death GUI.\r\n// - bWaitForHelpButtonEnabled: if this is TRUE, the \"Wait For Help\" button will\r\n//   be enabled on the Death GUI.\r\n// - nHelpStringReference\r\n// - sHelpString\r\nvoid PopUpDeathGUIPanel(object oPC, int bRespawnButtonEnabled=TRUE, int bWaitForHelpButtonEnabled=TRUE, int nHelpStringReference=0, string sHelpString=\"\");",
-                "// 554: Spawn in the Death GUI.\r\n// The default (as defined by BioWare) can be spawned in by PopUpGUIPanel, but\r\n// if you want to turn off the \"Respawn\" or \"Wait for Help\" buttons, this is the\r\n// function to use.\r\n// - oPC\r\n// - bRespawnButtonEnabled: if this is TRUE, the \"Respawn\" button will be enabled\r\n//   on the Death GUI.\r\n// - bWaitForHelpButtonEnabled: if this is TRUE, the \"Wait For Help\" button will\r\n//   be enabled on the Death GUI.\r\n// - nHelpStringReference\r\n// - sHelpString\r\nvoid PopUpDeathGUIPanel(object oPC, int bRespawnButtonEnabled=TRUE, int bWaitForHelpButtonEnabled=TRUE, int nHelpStringReference=0, string sHelpString=\"\");"
+                new List<ScriptParam> { new ScriptParam(DataType.Object, "oPC", null), new ScriptParam(DataType.Int, "bRespawnButtonEnabled", 1), new ScriptParam(DataType.Int, "bWaitForHelpButtonEnabled", 1), new ScriptParam(DataType.Int, "nHelpStringReference", 0), new ScriptParam(DataType.String, "sHelpString", "\"\"") },
+                "// 554: Spawn in the Death GUI.\r\n// The default (as defined by BioWare) can be spawned in by PopUpGUIPanel, but\r\n// if you want to turn off the \"Respawn\" or \"Wait for Help\" buttons, this is the\r\n// function to use.\r\n// - oPC\r\n// - bRespawnButtonEnabled: if this is 1, the \"Respawn\" button will be enabled\r\n//   on the Death GUI.\r\n// - bWaitForHelpButtonEnabled: if this is 1, the \"Wait For Help\" button will\r\n//   be enabled on the Death GUI.\r\n// - nHelpStringReference\r\n// - sHelpString\r\nvoid PopUpDeathGUIPanel(object oPC, int bRespawnButtonEnabled=1, int bWaitForHelpButtonEnabled=1, int nHelpStringReference=0, string sHelpString=\"\");",
+                "// 554: Spawn in the Death GUI.\r\n// The default (as defined by BioWare) can be spawned in by PopUpGUIPanel, but\r\n// if you want to turn off the \"Respawn\" or \"Wait for Help\" buttons, this is the\r\n// function to use.\r\n// - oPC\r\n// - bRespawnButtonEnabled: if this is 1, the \"Respawn\" button will be enabled\r\n//   on the Death GUI.\r\n// - bWaitForHelpButtonEnabled: if this is 1, the \"Wait For Help\" button will\r\n//   be enabled on the Death GUI.\r\n// - nHelpStringReference\r\n// - sHelpString\r\nvoid PopUpDeathGUIPanel(object oPC, int bRespawnButtonEnabled=1, int bWaitForHelpButtonEnabled=1, int nHelpStringReference=0, string sHelpString=\"\");"
             ),
             new ScriptFunction(
                 DataType.Void,
@@ -7232,15 +7242,15 @@ namespace CSharpKOTOR.Common.Script
                 DataType.Void,
                 "SWMG_SetSpeedBlurEffect",
                 new List<ScriptParam> { new ScriptParam(DataType.Int, "bEnabled", null), new ScriptParam(DataType.Float, "fRatio", 0.75f) },
-                "// 563: Turns on or off the speed blur effect in rendered scenes.\r\n// bEnabled: Set TRUE to turn it on, FALSE to turn it off.\r\n// fRatio: Sets the frame accumulation ratio.\r\nvoid SWMG_SetSpeedBlurEffect( int bEnabled, float fRatio=0.75f );",
-                "// 563: Turns on or off the speed blur effect in rendered scenes.\r\n// bEnabled: Set TRUE to turn it on, FALSE to turn it off.\r\n// fRatio: Sets the frame accumulation ratio.\r\nvoid SWMG_SetSpeedBlurEffect( int bEnabled, float fRatio=0.75f );"
+                "// 563: Turns on or off the speed blur effect in rendered scenes.\r\n// bEnabled: Set 1 to turn it on, 0 to turn it off.\r\n// fRatio: Sets the frame accumulation ratio.\r\nvoid SWMG_SetSpeedBlurEffect( int bEnabled, float fRatio=0.75f );",
+                "// 563: Turns on or off the speed blur effect in rendered scenes.\r\n// bEnabled: Set 1 to turn it on, 0 to turn it off.\r\n// fRatio: Sets the frame accumulation ratio.\r\nvoid SWMG_SetSpeedBlurEffect( int bEnabled, float fRatio=0.75f );"
             ),
             new ScriptFunction(
                 DataType.Void,
                 "EndGame",
-                new List<ScriptParam> { new ScriptParam(DataType.Int, "nShowEndGameGui", TRUE) },
-                "// 564: Immediately ends the currently running game and returns to the start screen.\r\n// nShowEndGameGui: Set TRUE to display the death gui.\r\nvoid EndGame( int nShowEndGameGui=TRUE );",
-                "// 564: Immediately ends the currently running game and returns to the start screen.\r\n// nShowEndGameGui: Set TRUE to display the death gui.\r\nvoid EndGame( int nShowEndGameGui=TRUE );"
+                new List<ScriptParam> { new ScriptParam(DataType.Int, "nShowEndGameGui", 1) },
+                "// 564: Immediately ends the currently running game and returns to the start screen.\r\n// nShowEndGameGui: Set 1 to display the death gui.\r\nvoid EndGame( int nShowEndGameGui=1 );",
+                "// 564: Immediately ends the currently running game and returns to the start screen.\r\n// nShowEndGameGui: Set 1 to display the death gui.\r\nvoid EndGame( int nShowEndGameGui=1 );"
             ),
             new ScriptFunction(
                 DataType.Int,
@@ -7281,8 +7291,8 @@ namespace CSharpKOTOR.Common.Script
                 DataType.Int,
                 "GetHasInventory",
                 new List<ScriptParam> { new ScriptParam(DataType.Object, "oObject", null) },
-                "// 570: Determine whether oObject has an inventory.\r\n// * Returns TRUE for creatures and stores, and checks to see if an item or placeable object is a container.\r\n// * Returns FALSE for all other object types.\r\nint GetHasInventory(object oObject);",
-                "// 570: Determine whether oObject has an inventory.\r\n// * Returns TRUE for creatures and stores, and checks to see if an item or placeable object is a container.\r\n// * Returns FALSE for all other object types.\r\nint GetHasInventory(object oObject);"
+                "// 570: Determine whether oObject has an inventory.\r\n// * Returns 1 for creatures and stores, and checks to see if an item or placeable object is a container.\r\n// * Returns 0 for all other object types.\r\nint GetHasInventory(object oObject);",
+                "// 570: Determine whether oObject has an inventory.\r\n// * Returns 1 for creatures and stores, and checks to see if an item or placeable object is a container.\r\n// * Returns 0 for all other object types.\r\nint GetHasInventory(object oObject);"
             ),
             new ScriptFunction(
                 DataType.Float,
@@ -7337,15 +7347,15 @@ namespace CSharpKOTOR.Common.Script
                 DataType.Int,
                 "GetGlobalBoolean",
                 new List<ScriptParam> { new ScriptParam(DataType.String, "sIdentifier", null) },
-                "// 578: GetGlobalBoolean\r\n// This function returns the value of a global boolean (TRUE or FALSE) scripting variable.\r\nint GetGlobalBoolean( string sIdentifier );",
-                "// 578: GetGlobalBoolean\r\n// This function returns the value of a global boolean (TRUE or FALSE) scripting variable.\r\nint GetGlobalBoolean( string sIdentifier );"
+                "// 578: GetGlobalBoolean\r\n// This function returns the value of a global boolean (1 or 0) scripting variable.\r\nint GetGlobalBoolean( string sIdentifier );",
+                "// 578: GetGlobalBoolean\r\n// This function returns the value of a global boolean (1 or 0) scripting variable.\r\nint GetGlobalBoolean( string sIdentifier );"
             ),
             new ScriptFunction(
                 DataType.Void,
                 "SetGlobalBoolean",
                 new List<ScriptParam> { new ScriptParam(DataType.String, "sIdentifier", null), new ScriptParam(DataType.Int, "nValue", null) },
-                "// 579: SetGlobalBoolean\r\n// This function sets the value of a global boolean (TRUE or FALSE) scripting variable.\r\nvoid SetGlobalBoolean( string sIdentifier, int nValue );",
-                "// 579: SetGlobalBoolean\r\n// This function sets the value of a global boolean (TRUE or FALSE) scripting variable.\r\nvoid SetGlobalBoolean( string sIdentifier, int nValue );"
+                "// 579: SetGlobalBoolean\r\n// This function sets the value of a global boolean (1 or 0) scripting variable.\r\nvoid SetGlobalBoolean( string sIdentifier, int nValue );",
+                "// 579: SetGlobalBoolean\r\n// This function sets the value of a global boolean (1 or 0) scripting variable.\r\nvoid SetGlobalBoolean( string sIdentifier, int nValue );"
             ),
             new ScriptFunction(
                 DataType.Int,
@@ -8036,9 +8046,9 @@ namespace CSharpKOTOR.Common.Script
             new ScriptFunction(
                 DataType.Void,
                 "SetJournalQuestEntryPicture",
-                new List<ScriptParam> { new ScriptParam(DataType.String, "szPlotID", null), new ScriptParam(DataType.Object, "oObject", null), new ScriptParam(DataType.Int, "nPictureIndex", null), new ScriptParam(DataType.Int, "bAllPartyMemebers", TRUE), new ScriptParam(DataType.Int, "bAllPlayers", FALSE) },
-                "// 678: SetJournalQuestEntryPicture\r\n// Sets the picture for the quest entry on this object (creature)\r\nvoid SetJournalQuestEntryPicture(string szPlotID, object oObject, int nPictureIndex, int bAllPartyMemebers=TRUE, int bAllPlayers=FALSE);",
-                "// 678: SetJournalQuestEntryPicture\r\n// Sets the picture for the quest entry on this object (creature)\r\nvoid SetJournalQuestEntryPicture(string szPlotID, object oObject, int nPictureIndex, int bAllPartyMemebers=TRUE, int bAllPlayers=FALSE);"
+                new List<ScriptParam> { new ScriptParam(DataType.String, "szPlotID", null), new ScriptParam(DataType.Object, "oObject", null), new ScriptParam(DataType.Int, "nPictureIndex", null), new ScriptParam(DataType.Int, "bAllPartyMemebers", 1), new ScriptParam(DataType.Int, "bAllPlayers", 0) },
+                "// 678: SetJournalQuestEntryPicture\r\n// Sets the picture for the quest entry on this object (creature)\r\nvoid SetJournalQuestEntryPicture(string szPlotID, object oObject, int nPictureIndex, int bAllPartyMemebers=1, int bAllPlayers=0);",
+                "// 678: SetJournalQuestEntryPicture\r\n// Sets the picture for the quest entry on this object (creature)\r\nvoid SetJournalQuestEntryPicture(string szPlotID, object oObject, int nPictureIndex, int bAllPartyMemebers=1, int bAllPlayers=0);"
             ),
             new ScriptFunction(
                 DataType.Int,
@@ -8548,8 +8558,8 @@ namespace CSharpKOTOR.Common.Script
                 DataType.Int,
                 "GetIsPoisoned",
                 new List<ScriptParam> { new ScriptParam(DataType.Object, "oObject", null) },
-                "// 751: GetIsPoisoned\r\n// Returns TRUE if the object specified is poisoned.\r\nint GetIsPoisoned( object oObject );",
-                "// 751: GetIsPoisoned\r\n// Returns TRUE if the object specified is poisoned.\r\nint GetIsPoisoned( object oObject );"
+                "// 751: GetIsPoisoned\r\n// Returns 1 if the object specified is poisoned.\r\nint GetIsPoisoned( object oObject );",
+                "// 751: GetIsPoisoned\r\n// Returns 1 if the object specified is poisoned.\r\nint GetIsPoisoned( object oObject );"
             ),
             new ScriptFunction(
                 DataType.Object,
@@ -8652,9 +8662,9 @@ namespace CSharpKOTOR.Common.Script
             new ScriptFunction(
                 DataType.Object,
                 "CreateItemOnFloor",
-                new List<ScriptParam> { new ScriptParam(DataType.String, "sTemplate", null), new ScriptParam(DataType.Location, "lLocation", null), new ScriptParam(DataType.Int, "bUseAppearAnimation", FALSE) },
-                "// 766. CreateItemOnFloor\r\n// Should only be used for items that have been created on the ground, and will\r\n// be destroyed without ever being picked up or equipped.  Returns true if successful\r\nobject CreateItemOnFloor(string sTemplate, location lLocation, int bUseAppearAnimation=FALSE);",
-                "// 766. CreateItemOnFloor\r\n// Should only be used for items that have been created on the ground, and will\r\n// be destroyed without ever being picked up or equipped.  Returns true if successful\r\nobject CreateItemOnFloor(string sTemplate, location lLocation, int bUseAppearAnimation=FALSE);"
+                new List<ScriptParam> { new ScriptParam(DataType.String, "sTemplate", null), new ScriptParam(DataType.Location, "lLocation", null), new ScriptParam(DataType.Int, "bUseAppearAnimation", 0) },
+                "// 766. CreateItemOnFloor\r\n// Should only be used for items that have been created on the ground, and will\r\n// be destroyed without ever being picked up or equipped.  Returns true if successful\r\nobject CreateItemOnFloor(string sTemplate, location lLocation, int bUseAppearAnimation=0);",
+                "// 766. CreateItemOnFloor\r\n// Should only be used for items that have been created on the ground, and will\r\n// be destroyed without ever being picked up or equipped.  Returns true if successful\r\nobject CreateItemOnFloor(string sTemplate, location lLocation, int bUseAppearAnimation=0);"
             ),
             new ScriptFunction(
                 DataType.Void,
@@ -8674,15 +8684,15 @@ namespace CSharpKOTOR.Common.Script
                 DataType.Void,
                 "QueueMovie",
                 new List<ScriptParam> { new ScriptParam(DataType.String, "sMovie", null), new ScriptParam(DataType.Int, "bSkippable", null) },
-                "// 769. QueueMovie\r\n// Queues up a movie to be played using PlayMovieQueue.\r\n// If bSkippable is TRUE, the player can cancel the movie by hitting escape.\r\n// If bSkippable is FALSE, the player cannot cancel the movie and must wait\r\n// for it to finish playing.\r\nvoid QueueMovie( string sMovie, int bSkippable );",
-                "// 769. QueueMovie\r\n// Queues up a movie to be played using PlayMovieQueue.\r\n// If bSkippable is TRUE, the player can cancel the movie by hitting escape.\r\n// If bSkippable is FALSE, the player cannot cancel the movie and must wait\r\n// for it to finish playing.\r\nvoid QueueMovie( string sMovie, int bSkippable );"
+                "// 769. QueueMovie\r\n// Queues up a movie to be played using PlayMovieQueue.\r\n// If bSkippable is 1, the player can cancel the movie by hitting escape.\r\n// If bSkippable is 0, the player cannot cancel the movie and must wait\r\n// for it to finish playing.\r\nvoid QueueMovie( string sMovie, int bSkippable );",
+                "// 769. QueueMovie\r\n// Queues up a movie to be played using PlayMovieQueue.\r\n// If bSkippable is 1, the player can cancel the movie by hitting escape.\r\n// If bSkippable is 0, the player cannot cancel the movie and must wait\r\n// for it to finish playing.\r\nvoid QueueMovie( string sMovie, int bSkippable );"
             ),
             new ScriptFunction(
                 DataType.Void,
                 "PlayMovieQueue",
                 new List<ScriptParam> { new ScriptParam(DataType.Int, "bAllowSeparateSkips", null) },
-                "// 770. PlayMovieQueue\r\n// Plays the movies that have been added to the queue by QueueMovie\r\n// If bAllowSeparateSkips is TRUE, hitting escape to cancel a movie only\r\n// cancels out of the currently playing movie rather than the entire queue\r\n// of movies (assuming the currently playing movie is flagged as skippable).\r\n// If bAllowSeparateSkips is FALSE, the entire movie queue will be cancelled\r\n// if the player hits escape (assuming the currently playing movie is flagged\r\n// as skippable).\r\nvoid PlayMovieQueue( int bAllowSeparateSkips );",
-                "// 770. PlayMovieQueue\r\n// Plays the movies that have been added to the queue by QueueMovie\r\n// If bAllowSeparateSkips is TRUE, hitting escape to cancel a movie only\r\n// cancels out of the currently playing movie rather than the entire queue\r\n// of movies (assuming the currently playing movie is flagged as skippable).\r\n// If bAllowSeparateSkips is FALSE, the entire movie queue will be cancelled\r\n// if the player hits escape (assuming the currently playing movie is flagged\r\n// as skippable).\r\nvoid PlayMovieQueue( int bAllowSeparateSkips );"
+                "// 770. PlayMovieQueue\r\n// Plays the movies that have been added to the queue by QueueMovie\r\n// If bAllowSeparateSkips is 1, hitting escape to cancel a movie only\r\n// cancels out of the currently playing movie rather than the entire queue\r\n// of movies (assuming the currently playing movie is flagged as skippable).\r\n// If bAllowSeparateSkips is 0, the entire movie queue will be cancelled\r\n// if the player hits escape (assuming the currently playing movie is flagged\r\n// as skippable).\r\nvoid PlayMovieQueue( int bAllowSeparateSkips );",
+                "// 770. PlayMovieQueue\r\n// Plays the movies that have been added to the queue by QueueMovie\r\n// If bAllowSeparateSkips is 1, hitting escape to cancel a movie only\r\n// cancels out of the currently playing movie rather than the entire queue\r\n// of movies (assuming the currently playing movie is flagged as skippable).\r\n// If bAllowSeparateSkips is 0, the entire movie queue will be cancelled\r\n// if the player hits escape (assuming the currently playing movie is flagged\r\n// as skippable).\r\nvoid PlayMovieQueue( int bAllowSeparateSkips );"
             ),
             new ScriptFunction(
                 DataType.Void,
@@ -8803,15 +8813,15 @@ namespace CSharpKOTOR.Common.Script
                 DataType.Void,
                 "SetAreaUnescapable",
                 new List<ScriptParam> { new ScriptParam(DataType.Int, "bUnescapable", null) },
-                "// 14: Sets whether the current area is escapable or not\r\n// TRUE means you can not escape the area\r\n// FALSE means you can escape the area\r\nvoid SetAreaUnescapable(int bUnescapable);",
-                "// 14: Sets whether the current area is escapable or not\r\n// TRUE means you can not escape the area\r\n// FALSE means you can escape the area\r\nvoid SetAreaUnescapable(int bUnescapable);"
+                "// 14: Sets whether the current area is escapable or not\r\n// 1 means you can not escape the area\r\n// 0 means you can escape the area\r\nvoid SetAreaUnescapable(int bUnescapable);",
+                "// 14: Sets whether the current area is escapable or not\r\n// 1 means you can not escape the area\r\n// 0 means you can escape the area\r\nvoid SetAreaUnescapable(int bUnescapable);"
             ),
             new ScriptFunction(
                 DataType.Int,
                 "GetAreaUnescapable",
                 new List<ScriptParam>(),
-                "// 15: Returns whether the current area is escapable or not\r\n// TRUE means you can not escape the area\r\n// FALSE means you can escape the area\r\nint GetAreaUnescapable();",
-                "// 15: Returns whether the current area is escapable or not\r\n// TRUE means you can not escape the area\r\n// FALSE means you can escape the area\r\nint GetAreaUnescapable();"
+                "// 15: Returns whether the current area is escapable or not\r\n// 1 means you can not escape the area\r\n// 0 means you can escape the area\r\nint GetAreaUnescapable();",
+                "// 15: Returns whether the current area is escapable or not\r\n// 1 means you can not escape the area\r\n// 0 means you can escape the area\r\nint GetAreaUnescapable();"
             ),
             new ScriptFunction(
                 DataType.Int,
@@ -8851,23 +8861,23 @@ namespace CSharpKOTOR.Common.Script
             new ScriptFunction(
                 DataType.Void,
                 "ActionMoveToLocation",
-                new List<ScriptParam> { new ScriptParam(DataType.Location, "lDestination", null), new ScriptParam(DataType.Int, "bRun", FALSE) },
-                "// 21: The action subject will move to lDestination.\r\n// - lDestination: The object will move to this location.  If the location is\r\n//   invalid or a path cannot be found to it, the command does nothing.\r\n// - bRun: If this is TRUE, the action subject will run rather than walk\r\n// * No return value, but if an error occurs the log file will contain\r\n//   \"MoveToPoint failed.\"\r\nvoid ActionMoveToLocation(location lDestination, int bRun=FALSE);",
-                "// 21: The action subject will move to lDestination.\r\n// - lDestination: The object will move to this location.  If the location is\r\n//   invalid or a path cannot be found to it, the command does nothing.\r\n// - bRun: If this is TRUE, the action subject will run rather than walk\r\n// * No return value, but if an error occurs the log file will contain\r\n//   \"MoveToPoint failed.\"\r\nvoid ActionMoveToLocation(location lDestination, int bRun=FALSE);"
+                new List<ScriptParam> { new ScriptParam(DataType.Location, "lDestination", null), new ScriptParam(DataType.Int, "bRun", 0) },
+                "// 21: The action subject will move to lDestination.\r\n// - lDestination: The object will move to this location.  If the location is\r\n//   invalid or a path cannot be found to it, the command does nothing.\r\n// - bRun: If this is 1, the action subject will run rather than walk\r\n// * No return value, but if an error occurs the log file will contain\r\n//   \"MoveToPoint failed.\"\r\nvoid ActionMoveToLocation(location lDestination, int bRun=0);",
+                "// 21: The action subject will move to lDestination.\r\n// - lDestination: The object will move to this location.  If the location is\r\n//   invalid or a path cannot be found to it, the command does nothing.\r\n// - bRun: If this is 1, the action subject will run rather than walk\r\n// * No return value, but if an error occurs the log file will contain\r\n//   \"MoveToPoint failed.\"\r\nvoid ActionMoveToLocation(location lDestination, int bRun=0);"
             ),
             new ScriptFunction(
                 DataType.Void,
                 "ActionMoveToObject",
-                new List<ScriptParam> { new ScriptParam(DataType.Object, "oMoveTo", null), new ScriptParam(DataType.Int, "bRun", FALSE), new ScriptParam(DataType.Float, "fRange", 1f) },
-                "// 22: Cause the action subject to move to a certain distance from oMoveTo.\r\n// If there is no path to oMoveTo, this command will do nothing.\r\n// - oMoveTo: This is the object we wish the action subject to move to\r\n// - bRun: If this is TRUE, the action subject will run rather than walk\r\n// - fRange: This is the desired distance between the action subject and oMoveTo\r\n// * No return value, but if an error occurs the log file will contain\r\n//   \"ActionMoveToObject failed.\"\r\nvoid ActionMoveToObject(object oMoveTo, int bRun=FALSE, float fRange=1.0f);",
-                "// 22: Cause the action subject to move to a certain distance from oMoveTo.\r\n// If there is no path to oMoveTo, this command will do nothing.\r\n// - oMoveTo: This is the object we wish the action subject to move to\r\n// - bRun: If this is TRUE, the action subject will run rather than walk\r\n// - fRange: This is the desired distance between the action subject and oMoveTo\r\n// * No return value, but if an error occurs the log file will contain\r\n//   \"ActionMoveToObject failed.\"\r\nvoid ActionMoveToObject(object oMoveTo, int bRun=FALSE, float fRange=1.0f);"
+                new List<ScriptParam> { new ScriptParam(DataType.Object, "oMoveTo", null), new ScriptParam(DataType.Int, "bRun", 0), new ScriptParam(DataType.Float, "fRange", 1f) },
+                "// 22: Cause the action subject to move to a certain distance from oMoveTo.\r\n// If there is no path to oMoveTo, this command will do nothing.\r\n// - oMoveTo: This is the object we wish the action subject to move to\r\n// - bRun: If this is 1, the action subject will run rather than walk\r\n// - fRange: This is the desired distance between the action subject and oMoveTo\r\n// * No return value, but if an error occurs the log file will contain\r\n//   \"ActionMoveToObject failed.\"\r\nvoid ActionMoveToObject(object oMoveTo, int bRun=0, float fRange=1.0f);",
+                "// 22: Cause the action subject to move to a certain distance from oMoveTo.\r\n// If there is no path to oMoveTo, this command will do nothing.\r\n// - oMoveTo: This is the object we wish the action subject to move to\r\n// - bRun: If this is 1, the action subject will run rather than walk\r\n// - fRange: This is the desired distance between the action subject and oMoveTo\r\n// * No return value, but if an error occurs the log file will contain\r\n//   \"ActionMoveToObject failed.\"\r\nvoid ActionMoveToObject(object oMoveTo, int bRun=0, float fRange=1.0f);"
             ),
             new ScriptFunction(
                 DataType.Void,
                 "ActionMoveAwayFromObject",
-                new List<ScriptParam> { new ScriptParam(DataType.Object, "oFleeFrom", null), new ScriptParam(DataType.Int, "bRun", FALSE), new ScriptParam(DataType.Float, "fMoveAwayRange", 40f) },
-                "// 23: Cause the action subject to move to a certain distance away from oFleeFrom.\r\n// - oFleeFrom: This is the object we wish the action subject to move away from.\r\n//   If oFleeFrom is not in the same area as the action subject, nothing will\r\n//   happen.\r\n// - bRun: If this is TRUE, the action subject will run rather than walk\r\n// - fMoveAwayRange: This is the distance we wish the action subject to put\r\n//   between themselves and oFleeFrom\r\n// * No return value, but if an error occurs the log file will contain\r\n//   \"ActionMoveAwayFromObject failed.\"\r\nvoid ActionMoveAwayFromObject(object oFleeFrom, int bRun=FALSE, float fMoveAwayRange=40.0f);",
-                "// 23: Cause the action subject to move to a certain distance away from oFleeFrom.\r\n// - oFleeFrom: This is the object we wish the action subject to move away from.\r\n//   If oFleeFrom is not in the same area as the action subject, nothing will\r\n//   happen.\r\n// - bRun: If this is TRUE, the action subject will run rather than walk\r\n// - fMoveAwayRange: This is the distance we wish the action subject to put\r\n//   between themselves and oFleeFrom\r\n// * No return value, but if an error occurs the log file will contain\r\n//   \"ActionMoveAwayFromObject failed.\"\r\nvoid ActionMoveAwayFromObject(object oFleeFrom, int bRun=FALSE, float fMoveAwayRange=40.0f);"
+                new List<ScriptParam> { new ScriptParam(DataType.Object, "oFleeFrom", null), new ScriptParam(DataType.Int, "bRun", 0), new ScriptParam(DataType.Float, "fMoveAwayRange", 40f) },
+                "// 23: Cause the action subject to move to a certain distance away from oFleeFrom.\r\n// - oFleeFrom: This is the object we wish the action subject to move away from.\r\n//   If oFleeFrom is not in the same area as the action subject, nothing will\r\n//   happen.\r\n// - bRun: If this is 1, the action subject will run rather than walk\r\n// - fMoveAwayRange: This is the distance we wish the action subject to put\r\n//   between themselves and oFleeFrom\r\n// * No return value, but if an error occurs the log file will contain\r\n//   \"ActionMoveAwayFromObject failed.\"\r\nvoid ActionMoveAwayFromObject(object oFleeFrom, int bRun=0, float fMoveAwayRange=40.0f);",
+                "// 23: Cause the action subject to move to a certain distance away from oFleeFrom.\r\n// - oFleeFrom: This is the object we wish the action subject to move away from.\r\n//   If oFleeFrom is not in the same area as the action subject, nothing will\r\n//   happen.\r\n// - bRun: If this is 1, the action subject will run rather than walk\r\n// - fMoveAwayRange: This is the distance we wish the action subject to put\r\n//   between themselves and oFleeFrom\r\n// * No return value, but if an error occurs the log file will contain\r\n//   \"ActionMoveAwayFromObject failed.\"\r\nvoid ActionMoveAwayFromObject(object oFleeFrom, int bRun=0, float fMoveAwayRange=40.0f);"
             ),
             new ScriptFunction(
                 DataType.Object,
@@ -8928,16 +8938,16 @@ namespace CSharpKOTOR.Common.Script
             new ScriptFunction(
                 DataType.Void,
                 "ActionEquipItem",
-                new List<ScriptParam> { new ScriptParam(DataType.Object, "oItem", null), new ScriptParam(DataType.Int, "nInventorySlot", null), new ScriptParam(DataType.Int, "bInstant", FALSE) },
-                "// 32: Equip oItem into nInventorySlot.\r\n// - nInventorySlot: INVENTORY_SLOT_*\r\n// * No return value, but if an error occurs the log file will contain\r\n//   \"ActionEquipItem failed.\"\r\nvoid ActionEquipItem(object oItem, int nInventorySlot, int bInstant=FALSE);",
-                "// 32: Equip oItem into nInventorySlot.\r\n// - nInventorySlot: INVENTORY_SLOT_*\r\n// * No return value, but if an error occurs the log file will contain\r\n//   \"ActionEquipItem failed.\"\r\nvoid ActionEquipItem(object oItem, int nInventorySlot, int bInstant=FALSE);"
+                new List<ScriptParam> { new ScriptParam(DataType.Object, "oItem", null), new ScriptParam(DataType.Int, "nInventorySlot", null), new ScriptParam(DataType.Int, "bInstant", 0) },
+                "// 32: Equip oItem into nInventorySlot.\r\n// - nInventorySlot: INVENTORY_SLOT_*\r\n// * No return value, but if an error occurs the log file will contain\r\n//   \"ActionEquipItem failed.\"\r\nvoid ActionEquipItem(object oItem, int nInventorySlot, int bInstant=0);",
+                "// 32: Equip oItem into nInventorySlot.\r\n// - nInventorySlot: INVENTORY_SLOT_*\r\n// * No return value, but if an error occurs the log file will contain\r\n//   \"ActionEquipItem failed.\"\r\nvoid ActionEquipItem(object oItem, int nInventorySlot, int bInstant=0);"
             ),
             new ScriptFunction(
                 DataType.Void,
                 "ActionUnequipItem",
-                new List<ScriptParam> { new ScriptParam(DataType.Object, "oItem", null), new ScriptParam(DataType.Int, "bInstant", FALSE) },
-                "// 33: Unequip oItem from whatever slot it is currently in.\r\nvoid ActionUnequipItem( object oItem, int bInstant = FALSE );",
-                "// 33: Unequip oItem from whatever slot it is currently in.\r\nvoid ActionUnequipItem( object oItem, int bInstant = FALSE );"
+                new List<ScriptParam> { new ScriptParam(DataType.Object, "oItem", null), new ScriptParam(DataType.Int, "bInstant", 0) },
+                "// 33: Unequip oItem from whatever slot it is currently in.\r\nvoid ActionUnequipItem( object oItem, int bInstant = 0 );",
+                "// 33: Unequip oItem from whatever slot it is currently in.\r\nvoid ActionUnequipItem( object oItem, int bInstant = 0 );"
             ),
             new ScriptFunction(
                 DataType.Void,
@@ -8963,23 +8973,23 @@ namespace CSharpKOTOR.Common.Script
             new ScriptFunction(
                 DataType.Void,
                 "ActionAttack",
-                new List<ScriptParam> { new ScriptParam(DataType.Object, "oAttackee", null), new ScriptParam(DataType.Int, "bPassive", FALSE) },
-                "// 37: Attack oAttackee.\r\n// - bPassive: If this is TRUE, attack is in passive mode.\r\nvoid ActionAttack(object oAttackee, int bPassive=FALSE);",
-                "// 37: Attack oAttackee.\r\n// - bPassive: If this is TRUE, attack is in passive mode.\r\nvoid ActionAttack(object oAttackee, int bPassive=FALSE);"
+                new List<ScriptParam> { new ScriptParam(DataType.Object, "oAttackee", null), new ScriptParam(DataType.Int, "bPassive", 0) },
+                "// 37: Attack oAttackee.\r\n// - bPassive: If this is 1, attack is in passive mode.\r\nvoid ActionAttack(object oAttackee, int bPassive=0);",
+                "// 37: Attack oAttackee.\r\n// - bPassive: If this is 1, attack is in passive mode.\r\nvoid ActionAttack(object oAttackee, int bPassive=0);"
             ),
             new ScriptFunction(
                 DataType.Object,
                 "GetNearestCreature",
                 new List<ScriptParam> { new ScriptParam(DataType.Int, "nFirstCriteriaType", null), new ScriptParam(DataType.Int, "nFirstCriteriaValue", null), new ScriptParam(DataType.Object, "oTarget", OBJECT_SELF), new ScriptParam(DataType.Int, "nNth", 1), new ScriptParam(DataType.Int, "nSecondCriteriaType", -1), new ScriptParam(DataType.Int, "nSecondCriteriaValue", -1), new ScriptParam(DataType.Int, "nThirdCriteriaType", -1), new ScriptParam(DataType.Int, "nThirdCriteriaValue", -1) },
-                "// 38: Get the creature nearest to oTarget, subject to all the criteria specified.\r\n// - nFirstCriteriaType: CREATURE_TYPE_*\r\n// - nFirstCriteriaValue:\r\n//   -> CLASS_TYPE_* if nFirstCriteriaType was CREATURE_TYPE_CLASS\r\n//   -> SPELL_* if nFirstCriteriaType was CREATURE_TYPE_DOES_NOT_HAVE_SPELL_EFFECT\r\n//      or CREATURE_TYPE_HAS_SPELL_EFFECT\r\n//   -> TRUE or FALSE if nFirstCriteriaType was CREATURE_TYPE_IS_ALIVE\r\n//   -> PERCEPTION_* if nFirstCriteriaType was CREATURE_TYPE_PERCEPTION\r\n//   -> PLAYER_CHAR_IS_PC or PLAYER_CHAR_NOT_PC if nFirstCriteriaType was\r\n//      CREATURE_TYPE_PLAYER_CHAR\r\n//   -> RACIAL_TYPE_* if nFirstCriteriaType was CREATURE_TYPE_RACIAL_TYPE\r\n//   -> REPUTATION_TYPE_* if nFirstCriteriaType was CREATURE_TYPE_REPUTATION\r\n//   For example, to get the nearest PC, use:\r\n//   (CREATURE_TYPE_PLAYER_CHAR, PLAYER_CHAR_IS_PC)\r\n// - oTarget: We're trying to find the creature of the specified type that is\r\n//   nearest to oTarget\r\n// - nNth: We don't have to find the first nearest: we can find the Nth nearest...\r\n// - nSecondCriteriaType: This is used in the same way as nFirstCriteriaType to\r\n//   further specify the type of creature that we are looking for.\r\n// - nSecondCriteriaValue: This is used in the same way as nFirstCriteriaValue\r\n//   to further specify the type of creature that we are looking for.\r\n// - nThirdCriteriaType: This is used in the same way as nFirstCriteriaType to\r\n//   further specify the type of creature that we are looking for.\r\n// - nThirdCriteriaValue: This is used in the same way as nFirstCriteriaValue to\r\n//   further specify the type of creature that we are looking for.\r\n// * Return value on error: OBJECT_INVALID\r\nobject GetNearestCreature(int nFirstCriteriaType, int nFirstCriteriaValue, object oTarget=OBJECT_SELF, int nNth=1, int nSecondCriteriaType=-1, int nSecondCriteriaValue=-1, int nThirdCriteriaType=-1,  int nThirdCriteriaValue=-1 );",
-                "// 38: Get the creature nearest to oTarget, subject to all the criteria specified.\r\n// - nFirstCriteriaType: CREATURE_TYPE_*\r\n// - nFirstCriteriaValue:\r\n//   -> CLASS_TYPE_* if nFirstCriteriaType was CREATURE_TYPE_CLASS\r\n//   -> SPELL_* if nFirstCriteriaType was CREATURE_TYPE_DOES_NOT_HAVE_SPELL_EFFECT\r\n//      or CREATURE_TYPE_HAS_SPELL_EFFECT\r\n//   -> TRUE or FALSE if nFirstCriteriaType was CREATURE_TYPE_IS_ALIVE\r\n//   -> PERCEPTION_* if nFirstCriteriaType was CREATURE_TYPE_PERCEPTION\r\n//   -> PLAYER_CHAR_IS_PC or PLAYER_CHAR_NOT_PC if nFirstCriteriaType was\r\n//      CREATURE_TYPE_PLAYER_CHAR\r\n//   -> RACIAL_TYPE_* if nFirstCriteriaType was CREATURE_TYPE_RACIAL_TYPE\r\n//   -> REPUTATION_TYPE_* if nFirstCriteriaType was CREATURE_TYPE_REPUTATION\r\n//   For example, to get the nearest PC, use:\r\n//   (CREATURE_TYPE_PLAYER_CHAR, PLAYER_CHAR_IS_PC)\r\n// - oTarget: We're trying to find the creature of the specified type that is\r\n//   nearest to oTarget\r\n// - nNth: We don't have to find the first nearest: we can find the Nth nearest...\r\n// - nSecondCriteriaType: This is used in the same way as nFirstCriteriaType to\r\n//   further specify the type of creature that we are looking for.\r\n// - nSecondCriteriaValue: This is used in the same way as nFirstCriteriaValue\r\n//   to further specify the type of creature that we are looking for.\r\n// - nThirdCriteriaType: This is used in the same way as nFirstCriteriaType to\r\n//   further specify the type of creature that we are looking for.\r\n// - nThirdCriteriaValue: This is used in the same way as nFirstCriteriaValue to\r\n//   further specify the type of creature that we are looking for.\r\n// * Return value on error: OBJECT_INVALID\r\nobject GetNearestCreature(int nFirstCriteriaType, int nFirstCriteriaValue, object oTarget=OBJECT_SELF, int nNth=1, int nSecondCriteriaType=-1, int nSecondCriteriaValue=-1, int nThirdCriteriaType=-1,  int nThirdCriteriaValue=-1 );"
+                "// 38: Get the creature nearest to oTarget, subject to all the criteria specified.\r\n// - nFirstCriteriaType: CREATURE_TYPE_*\r\n// - nFirstCriteriaValue:\r\n//   -> CLASS_TYPE_* if nFirstCriteriaType was CREATURE_TYPE_CLASS\r\n//   -> SPELL_* if nFirstCriteriaType was CREATURE_TYPE_DOES_NOT_HAVE_SPELL_EFFECT\r\n//      or CREATURE_TYPE_HAS_SPELL_EFFECT\r\n//   -> 1 or 0 if nFirstCriteriaType was CREATURE_TYPE_IS_ALIVE\r\n//   -> PERCEPTION_* if nFirstCriteriaType was CREATURE_TYPE_PERCEPTION\r\n//   -> PLAYER_CHAR_IS_PC or PLAYER_CHAR_NOT_PC if nFirstCriteriaType was\r\n//      CREATURE_TYPE_PLAYER_CHAR\r\n//   -> RACIAL_TYPE_* if nFirstCriteriaType was CREATURE_TYPE_RACIAL_TYPE\r\n//   -> REPUTATION_TYPE_* if nFirstCriteriaType was CREATURE_TYPE_REPUTATION\r\n//   For example, to get the nearest PC, use:\r\n//   (CREATURE_TYPE_PLAYER_CHAR, PLAYER_CHAR_IS_PC)\r\n// - oTarget: We're trying to find the creature of the specified type that is\r\n//   nearest to oTarget\r\n// - nNth: We don't have to find the first nearest: we can find the Nth nearest...\r\n// - nSecondCriteriaType: This is used in the same way as nFirstCriteriaType to\r\n//   further specify the type of creature that we are looking for.\r\n// - nSecondCriteriaValue: This is used in the same way as nFirstCriteriaValue\r\n//   to further specify the type of creature that we are looking for.\r\n// - nThirdCriteriaType: This is used in the same way as nFirstCriteriaType to\r\n//   further specify the type of creature that we are looking for.\r\n// - nThirdCriteriaValue: This is used in the same way as nFirstCriteriaValue to\r\n//   further specify the type of creature that we are looking for.\r\n// * Return value on error: OBJECT_INVALID\r\nobject GetNearestCreature(int nFirstCriteriaType, int nFirstCriteriaValue, object oTarget=OBJECT_SELF, int nNth=1, int nSecondCriteriaType=-1, int nSecondCriteriaValue=-1, int nThirdCriteriaType=-1,  int nThirdCriteriaValue=-1 );",
+                "// 38: Get the creature nearest to oTarget, subject to all the criteria specified.\r\n// - nFirstCriteriaType: CREATURE_TYPE_*\r\n// - nFirstCriteriaValue:\r\n//   -> CLASS_TYPE_* if nFirstCriteriaType was CREATURE_TYPE_CLASS\r\n//   -> SPELL_* if nFirstCriteriaType was CREATURE_TYPE_DOES_NOT_HAVE_SPELL_EFFECT\r\n//      or CREATURE_TYPE_HAS_SPELL_EFFECT\r\n//   -> 1 or 0 if nFirstCriteriaType was CREATURE_TYPE_IS_ALIVE\r\n//   -> PERCEPTION_* if nFirstCriteriaType was CREATURE_TYPE_PERCEPTION\r\n//   -> PLAYER_CHAR_IS_PC or PLAYER_CHAR_NOT_PC if nFirstCriteriaType was\r\n//      CREATURE_TYPE_PLAYER_CHAR\r\n//   -> RACIAL_TYPE_* if nFirstCriteriaType was CREATURE_TYPE_RACIAL_TYPE\r\n//   -> REPUTATION_TYPE_* if nFirstCriteriaType was CREATURE_TYPE_REPUTATION\r\n//   For example, to get the nearest PC, use:\r\n//   (CREATURE_TYPE_PLAYER_CHAR, PLAYER_CHAR_IS_PC)\r\n// - oTarget: We're trying to find the creature of the specified type that is\r\n//   nearest to oTarget\r\n// - nNth: We don't have to find the first nearest: we can find the Nth nearest...\r\n// - nSecondCriteriaType: This is used in the same way as nFirstCriteriaType to\r\n//   further specify the type of creature that we are looking for.\r\n// - nSecondCriteriaValue: This is used in the same way as nFirstCriteriaValue\r\n//   to further specify the type of creature that we are looking for.\r\n// - nThirdCriteriaType: This is used in the same way as nFirstCriteriaType to\r\n//   further specify the type of creature that we are looking for.\r\n// - nThirdCriteriaValue: This is used in the same way as nFirstCriteriaValue to\r\n//   further specify the type of creature that we are looking for.\r\n// * Return value on error: OBJECT_INVALID\r\nobject GetNearestCreature(int nFirstCriteriaType, int nFirstCriteriaValue, object oTarget=OBJECT_SELF, int nNth=1, int nSecondCriteriaType=-1, int nSecondCriteriaValue=-1, int nThirdCriteriaType=-1,  int nThirdCriteriaValue=-1 );"
             ),
             new ScriptFunction(
                 DataType.Void,
                 "ActionSpeakString",
-                new List<ScriptParam> { new ScriptParam(DataType.String, "sStringToSpeak", null), new ScriptParam(DataType.Int, "nTalkVolume", TALKVOLUME_TALK) },
-                "// 39: Add a speak action to the action subject.\r\n// - sStringToSpeak: String to be spoken\r\n// - nTalkVolume: TALKVOLUME_*\r\nvoid ActionSpeakString(string sStringToSpeak, int nTalkVolume=TALKVOLUME_TALK);",
-                "// 39: Add a speak action to the action subject.\r\n// - sStringToSpeak: String to be spoken\r\n// - nTalkVolume: TALKVOLUME_*\r\nvoid ActionSpeakString(string sStringToSpeak, int nTalkVolume=TALKVOLUME_TALK);"
+                new List<ScriptParam> { new ScriptParam(DataType.String, "sStringToSpeak", null), new ScriptParam(DataType.Int, "nTalkVolume", 0) },
+                "// 39: Add a speak action to the action subject.\r\n// - sStringToSpeak: String to be spoken\r\n// - nTalkVolume: TALKVOLUME_*\r\nvoid ActionSpeakString(string sStringToSpeak, int nTalkVolume=0);",
+                "// 39: Add a speak action to the action subject.\r\n// - sStringToSpeak: String to be spoken\r\n// - nTalkVolume: TALKVOLUME_*\r\nvoid ActionSpeakString(string sStringToSpeak, int nTalkVolume=0);"
             ),
             new ScriptFunction(
                 DataType.Void,
@@ -8999,8 +9009,8 @@ namespace CSharpKOTOR.Common.Script
                 DataType.Int,
                 "GetIsObjectValid",
                 new List<ScriptParam> { new ScriptParam(DataType.Object, "oObject", null) },
-                "// 42: * Returns TRUE if oObject is a valid object.\r\nint GetIsObjectValid(object oObject);",
-                "// 42: * Returns TRUE if oObject is a valid object.\r\nint GetIsObjectValid(object oObject);"
+                "// 42: * Returns 1 if oObject is a valid object.\r\nint GetIsObjectValid(object oObject);",
+                "// 42: * Returns 1 if oObject is a valid object.\r\nint GetIsObjectValid(object oObject);"
             ),
             new ScriptFunction(
                 DataType.Void,
@@ -9040,9 +9050,9 @@ namespace CSharpKOTOR.Common.Script
             new ScriptFunction(
                 DataType.Void,
                 "ActionCastSpellAtObject",
-                new List<ScriptParam> { new ScriptParam(DataType.Int, "nSpell", null), new ScriptParam(DataType.Object, "oTarget", null), new ScriptParam(DataType.Int, "nMetaMagic", 0), new ScriptParam(DataType.Int, "bCheat", FALSE), new ScriptParam(DataType.Int, "nDomainLevel", 0), new ScriptParam(DataType.Int, "nProjectilePathType", PROJECTILE_PATH_TYPE_DEFAULT), new ScriptParam(DataType.Int, "bInstantSpell", FALSE) },
-                "// 48: This action casts a spell at oTarget.\r\n// - nSpell: SPELL_*\r\n// - oTarget: Target for the spell\r\n// - nMetamagic: METAMAGIC_*\r\n// - bCheat: If this is TRUE, then the executor of the action doesn't have to be\r\n//   able to cast the spell.\r\n// - nDomainLevel: TBD - SS\r\n// - nProjectilePathType: PROJECTILE_PATH_TYPE_*\r\n// - bInstantSpell: If this is TRUE, the spell is cast immediately. This allows\r\n//   the end-user to simulate a high-level magic-user having lots of advance\r\n//   warning of impending trouble\r\nvoid ActionCastSpellAtObject(int nSpell, object oTarget, int nMetaMagic=0 , int bCheat=FALSE, int nDomainLevel=0, int nProjectilePathType=PROJECTILE_PATH_TYPE_DEFAULT, int bInstantSpell=FALSE);",
-                "// 48: This action casts a spell at oTarget.\r\n// - nSpell: SPELL_*\r\n// - oTarget: Target for the spell\r\n// - nMetamagic: METAMAGIC_*\r\n// - bCheat: If this is TRUE, then the executor of the action doesn't have to be\r\n//   able to cast the spell.\r\n// - nDomainLevel: TBD - SS\r\n// - nProjectilePathType: PROJECTILE_PATH_TYPE_*\r\n// - bInstantSpell: If this is TRUE, the spell is cast immediately. This allows\r\n//   the end-user to simulate a high-level magic-user having lots of advance\r\n//   warning of impending trouble\r\nvoid ActionCastSpellAtObject(int nSpell, object oTarget, int nMetaMagic=0 , int bCheat=FALSE, int nDomainLevel=0, int nProjectilePathType=PROJECTILE_PATH_TYPE_DEFAULT, int bInstantSpell=FALSE);"
+                new List<ScriptParam> { new ScriptParam(DataType.Int, "nSpell", null), new ScriptParam(DataType.Object, "oTarget", null), new ScriptParam(DataType.Int, "nMetaMagic", 0), new ScriptParam(DataType.Int, "bCheat", 0), new ScriptParam(DataType.Int, "nDomainLevel", 0), new ScriptParam(DataType.Int, "nProjectilePathType", 0), new ScriptParam(DataType.Int, "bInstantSpell", 0) },
+                "// 48: This action casts a spell at oTarget.\r\n// - nSpell: SPELL_*\r\n// - oTarget: Target for the spell\r\n// - nMetamagic: METAMAGIC_*\r\n// - bCheat: If this is 1, then the executor of the action doesn't have to be\r\n//   able to cast the spell.\r\n// - nDomainLevel: TBD - SS\r\n// - nProjectilePathType: PROJECTILE_PATH_TYPE_*\r\n// - bInstantSpell: If this is 1, the spell is cast immediately. This allows\r\n//   the end-user to simulate a high-level magic-user having lots of advance\r\n//   warning of impending trouble\r\nvoid ActionCastSpellAtObject(int nSpell, object oTarget, int nMetaMagic=0 , int bCheat=0, int nDomainLevel=0, int nProjectilePathType=0, int bInstantSpell=0);",
+                "// 48: This action casts a spell at oTarget.\r\n// - nSpell: SPELL_*\r\n// - oTarget: Target for the spell\r\n// - nMetamagic: METAMAGIC_*\r\n// - bCheat: If this is 1, then the executor of the action doesn't have to be\r\n//   able to cast the spell.\r\n// - nDomainLevel: TBD - SS\r\n// - nProjectilePathType: PROJECTILE_PATH_TYPE_*\r\n// - bInstantSpell: If this is 1, the spell is cast immediately. This allows\r\n//   the end-user to simulate a high-level magic-user having lots of advance\r\n//   warning of impending trouble\r\nvoid ActionCastSpellAtObject(int nSpell, object oTarget, int nMetaMagic=0 , int bCheat=0, int nDomainLevel=0, int nProjectilePathType=0, int bInstantSpell=0);"
             ),
             new ScriptFunction(
                 DataType.Int,
@@ -9104,8 +9114,8 @@ namespace CSharpKOTOR.Common.Script
                 DataType.Void,
                 "PauseGame",
                 new List<ScriptParam> { new ScriptParam(DataType.Int, "bPause", null) },
-                "// 57:\r\n// Pauses the game if bPause is TRUE.  Unpauses if bPause is FALSE.\r\nvoid PauseGame( int bPause );",
-                "// 57:\r\n// Pauses the game if bPause is TRUE.  Unpauses if bPause is FALSE.\r\nvoid PauseGame( int bPause );"
+                "// 57:\r\n// Pauses the game if bPause is 1.  Unpauses if bPause is 0.\r\nvoid PauseGame( int bPause );",
+                "// 57:\r\n// Pauses the game if bPause is 1.  Unpauses if bPause is 0.\r\nvoid PauseGame( int bPause );"
             ),
             new ScriptFunction(
                 DataType.Void,
@@ -9257,9 +9267,9 @@ namespace CSharpKOTOR.Common.Script
             new ScriptFunction(
                 DataType.Effect,
                 "EffectDamage",
-                new List<ScriptParam> { new ScriptParam(DataType.Int, "nDamageAmount", null), new ScriptParam(DataType.Int, "nDamageType", DAMAGE_TYPE_UNIVERSAL), new ScriptParam(DataType.Int, "nDamagePower", DAMAGE_POWER_NORMAL) },
-                "// 79: Create a Damage effect\r\n// - nDamageAmount: amount of damage to be dealt. This should be applied as an\r\n//   instantaneous effect.\r\n// - nDamageType: DAMAGE_TYPE_*\r\n// - nDamagePower: DAMAGE_POWER_*\r\neffect EffectDamage(int nDamageAmount, int nDamageType=DAMAGE_TYPE_UNIVERSAL, int nDamagePower=DAMAGE_POWER_NORMAL);",
-                "// 79: Create a Damage effect\r\n// - nDamageAmount: amount of damage to be dealt. This should be applied as an\r\n//   instantaneous effect.\r\n// - nDamageType: DAMAGE_TYPE_*\r\n// - nDamagePower: DAMAGE_POWER_*\r\neffect EffectDamage(int nDamageAmount, int nDamageType=DAMAGE_TYPE_UNIVERSAL, int nDamagePower=DAMAGE_POWER_NORMAL);"
+                new List<ScriptParam> { new ScriptParam(DataType.Int, "nDamageAmount", null), new ScriptParam(DataType.Int, "nDamageType", 8), new ScriptParam(DataType.Int, "nDamagePower", 0) },
+                "// 79: Create a Damage effect\r\n// - nDamageAmount: amount of damage to be dealt. This should be applied as an\r\n//   instantaneous effect.\r\n// - nDamageType: DAMAGE_TYPE_*\r\n// - nDamagePower: DAMAGE_POWER_*\r\neffect EffectDamage(int nDamageAmount, int nDamageType=8, int nDamagePower=0);",
+                "// 79: Create a Damage effect\r\n// - nDamageAmount: amount of damage to be dealt. This should be applied as an\r\n//   instantaneous effect.\r\n// - nDamageType: DAMAGE_TYPE_*\r\n// - nDamagePower: DAMAGE_POWER_*\r\neffect EffectDamage(int nDamageAmount, int nDamageType=8, int nDamagePower=0);"
             ),
             new ScriptFunction(
                 DataType.Effect,
@@ -9321,8 +9331,8 @@ namespace CSharpKOTOR.Common.Script
                 DataType.Int,
                 "GetIsEffectValid",
                 new List<ScriptParam> { new ScriptParam(DataType.Effect, "eEffect", null) },
-                "// 88: * Returns TRUE if eEffect is a valid effect.\r\nint GetIsEffectValid(effect eEffect);",
-                "// 88: * Returns TRUE if eEffect is a valid effect.\r\nint GetIsEffectValid(effect eEffect);"
+                "// 88: * Returns 1 if eEffect is a valid effect.\r\nint GetIsEffectValid(effect eEffect);",
+                "// 88: * Returns 1 if eEffect is a valid effect.\r\nint GetIsEffectValid(effect eEffect);"
             ),
             new ScriptFunction(
                 DataType.Int,
@@ -9355,16 +9365,16 @@ namespace CSharpKOTOR.Common.Script
             new ScriptFunction(
                 DataType.Object,
                 "GetFirstObjectInArea",
-                new List<ScriptParam> { new ScriptParam(DataType.Object, "oArea", OBJECT_INVALID), new ScriptParam(DataType.Int, "nObjectFilter", OBJECT_TYPE_CREATURE) },
-                "// 93: Get the first object in oArea.\r\n// If no valid area is specified, it will use the caller's area.\r\n// - oArea\r\n// - nObjectFilter: OBJECT_TYPE_*\r\n// * Return value on error: OBJECT_INVALID\r\nobject GetFirstObjectInArea(object oArea=OBJECT_INVALID, int nObjectFilter=OBJECT_TYPE_CREATURE);",
-                "// 93: Get the first object in oArea.\r\n// If no valid area is specified, it will use the caller's area.\r\n// - oArea\r\n// - nObjectFilter: OBJECT_TYPE_*\r\n// * Return value on error: OBJECT_INVALID\r\nobject GetFirstObjectInArea(object oArea=OBJECT_INVALID, int nObjectFilter=OBJECT_TYPE_CREATURE);"
+                new List<ScriptParam> { new ScriptParam(DataType.Object, "oArea", OBJECT_INVALID), new ScriptParam(DataType.Int, "nObjectFilter", 1) },
+                "// 93: Get the first object in oArea.\r\n// If no valid area is specified, it will use the caller's area.\r\n// - oArea\r\n// - nObjectFilter: OBJECT_TYPE_*\r\n// * Return value on error: OBJECT_INVALID\r\nobject GetFirstObjectInArea(object oArea=OBJECT_INVALID, int nObjectFilter=1);",
+                "// 93: Get the first object in oArea.\r\n// If no valid area is specified, it will use the caller's area.\r\n// - oArea\r\n// - nObjectFilter: OBJECT_TYPE_*\r\n// * Return value on error: OBJECT_INVALID\r\nobject GetFirstObjectInArea(object oArea=OBJECT_INVALID, int nObjectFilter=1);"
             ),
             new ScriptFunction(
                 DataType.Object,
                 "GetNextObjectInArea",
-                new List<ScriptParam> { new ScriptParam(DataType.Object, "oArea", OBJECT_INVALID), new ScriptParam(DataType.Int, "nObjectFilter", OBJECT_TYPE_CREATURE) },
-                "// 94: Get the next object in oArea.\r\n// If no valid area is specified, it will use the caller's area.\r\n// - oArea\r\n// - nObjectFilter: OBJECT_TYPE_*\r\n// * Return value on error: OBJECT_INVALID\r\nobject GetNextObjectInArea(object oArea=OBJECT_INVALID, int nObjectFilter=OBJECT_TYPE_CREATURE);",
-                "// 94: Get the next object in oArea.\r\n// If no valid area is specified, it will use the caller's area.\r\n// - oArea\r\n// - nObjectFilter: OBJECT_TYPE_*\r\n// * Return value on error: OBJECT_INVALID\r\nobject GetNextObjectInArea(object oArea=OBJECT_INVALID, int nObjectFilter=OBJECT_TYPE_CREATURE);"
+                new List<ScriptParam> { new ScriptParam(DataType.Object, "oArea", OBJECT_INVALID), new ScriptParam(DataType.Int, "nObjectFilter", 1) },
+                "// 94: Get the next object in oArea.\r\n// If no valid area is specified, it will use the caller's area.\r\n// - oArea\r\n// - nObjectFilter: OBJECT_TYPE_*\r\n// * Return value on error: OBJECT_INVALID\r\nobject GetNextObjectInArea(object oArea=OBJECT_INVALID, int nObjectFilter=1);",
+                "// 94: Get the next object in oArea.\r\n// If no valid area is specified, it will use the caller's area.\r\n// - oArea\r\n// - nObjectFilter: OBJECT_TYPE_*\r\n// * Return value on error: OBJECT_INVALID\r\nobject GetNextObjectInArea(object oArea=OBJECT_INVALID, int nObjectFilter=1);"
             ),
             new ScriptFunction(
                 DataType.Int,
@@ -9460,23 +9470,23 @@ namespace CSharpKOTOR.Common.Script
             new ScriptFunction(
                 DataType.Int,
                 "FortitudeSave",
-                new List<ScriptParam> { new ScriptParam(DataType.Object, "oCreature", null), new ScriptParam(DataType.Int, "nDC", null), new ScriptParam(DataType.Int, "nSaveType", SAVING_THROW_TYPE_NONE), new ScriptParam(DataType.Object, "oSaveVersus", OBJECT_SELF) },
-                "// 108: Do a Fortitude Save check for the given DC\r\n// - oCreature\r\n// - nDC: Difficulty check\r\n// - nSaveType: SAVING_THROW_TYPE_*\r\n// - oSaveVersus\r\n// Returns: 0 if the saving throw roll failed\r\n// Returns: 1 if the saving throw roll succeeded\r\n// Returns: 2 if the target was immune to the save type specified\r\nint FortitudeSave(object oCreature, int nDC, int nSaveType=SAVING_THROW_TYPE_NONE, object oSaveVersus=OBJECT_SELF);",
-                "// 108: Do a Fortitude Save check for the given DC\r\n// - oCreature\r\n// - nDC: Difficulty check\r\n// - nSaveType: SAVING_THROW_TYPE_*\r\n// - oSaveVersus\r\n// Returns: 0 if the saving throw roll failed\r\n// Returns: 1 if the saving throw roll succeeded\r\n// Returns: 2 if the target was immune to the save type specified\r\nint FortitudeSave(object oCreature, int nDC, int nSaveType=SAVING_THROW_TYPE_NONE, object oSaveVersus=OBJECT_SELF);"
+                new List<ScriptParam> { new ScriptParam(DataType.Object, "oCreature", null), new ScriptParam(DataType.Int, "nDC", null), new ScriptParam(DataType.Int, "nSaveType", 0), new ScriptParam(DataType.Object, "oSaveVersus", OBJECT_SELF) },
+                "// 108: Do a Fortitude Save check for the given DC\r\n// - oCreature\r\n// - nDC: Difficulty check\r\n// - nSaveType: SAVING_THROW_TYPE_*\r\n// - oSaveVersus\r\n// Returns: 0 if the saving throw roll failed\r\n// Returns: 1 if the saving throw roll succeeded\r\n// Returns: 2 if the target was immune to the save type specified\r\nint FortitudeSave(object oCreature, int nDC, int nSaveType=0, object oSaveVersus=OBJECT_SELF);",
+                "// 108: Do a Fortitude Save check for the given DC\r\n// - oCreature\r\n// - nDC: Difficulty check\r\n// - nSaveType: SAVING_THROW_TYPE_*\r\n// - oSaveVersus\r\n// Returns: 0 if the saving throw roll failed\r\n// Returns: 1 if the saving throw roll succeeded\r\n// Returns: 2 if the target was immune to the save type specified\r\nint FortitudeSave(object oCreature, int nDC, int nSaveType=0, object oSaveVersus=OBJECT_SELF);"
             ),
             new ScriptFunction(
                 DataType.Int,
                 "ReflexSave",
-                new List<ScriptParam> { new ScriptParam(DataType.Object, "oCreature", null), new ScriptParam(DataType.Int, "nDC", null), new ScriptParam(DataType.Int, "nSaveType", SAVING_THROW_TYPE_NONE), new ScriptParam(DataType.Object, "oSaveVersus", OBJECT_SELF) },
-                "// 109: Does a Reflex Save check for the given DC\r\n// - oCreature\r\n// - nDC: Difficulty check\r\n// - nSaveType: SAVING_THROW_TYPE_*\r\n// - oSaveVersus\r\n// Returns: 0 if the saving throw roll failed\r\n// Returns: 1 if the saving throw roll succeeded\r\n// Returns: 2 if the target was immune to the save type specified\r\nint ReflexSave(object oCreature, int nDC, int nSaveType=SAVING_THROW_TYPE_NONE, object oSaveVersus=OBJECT_SELF);",
-                "// 109: Does a Reflex Save check for the given DC\r\n// - oCreature\r\n// - nDC: Difficulty check\r\n// - nSaveType: SAVING_THROW_TYPE_*\r\n// - oSaveVersus\r\n// Returns: 0 if the saving throw roll failed\r\n// Returns: 1 if the saving throw roll succeeded\r\n// Returns: 2 if the target was immune to the save type specified\r\nint ReflexSave(object oCreature, int nDC, int nSaveType=SAVING_THROW_TYPE_NONE, object oSaveVersus=OBJECT_SELF);"
+                new List<ScriptParam> { new ScriptParam(DataType.Object, "oCreature", null), new ScriptParam(DataType.Int, "nDC", null), new ScriptParam(DataType.Int, "nSaveType", 0), new ScriptParam(DataType.Object, "oSaveVersus", OBJECT_SELF) },
+                "// 109: Does a Reflex Save check for the given DC\r\n// - oCreature\r\n// - nDC: Difficulty check\r\n// - nSaveType: SAVING_THROW_TYPE_*\r\n// - oSaveVersus\r\n// Returns: 0 if the saving throw roll failed\r\n// Returns: 1 if the saving throw roll succeeded\r\n// Returns: 2 if the target was immune to the save type specified\r\nint ReflexSave(object oCreature, int nDC, int nSaveType=0, object oSaveVersus=OBJECT_SELF);",
+                "// 109: Does a Reflex Save check for the given DC\r\n// - oCreature\r\n// - nDC: Difficulty check\r\n// - nSaveType: SAVING_THROW_TYPE_*\r\n// - oSaveVersus\r\n// Returns: 0 if the saving throw roll failed\r\n// Returns: 1 if the saving throw roll succeeded\r\n// Returns: 2 if the target was immune to the save type specified\r\nint ReflexSave(object oCreature, int nDC, int nSaveType=0, object oSaveVersus=OBJECT_SELF);"
             ),
             new ScriptFunction(
                 DataType.Int,
                 "WillSave",
-                new List<ScriptParam> { new ScriptParam(DataType.Object, "oCreature", null), new ScriptParam(DataType.Int, "nDC", null), new ScriptParam(DataType.Int, "nSaveType", SAVING_THROW_TYPE_NONE), new ScriptParam(DataType.Object, "oSaveVersus", OBJECT_SELF) },
-                "// 110: Does a Will Save check for the given DC\r\n// - oCreature\r\n// - nDC: Difficulty check\r\n// - nSaveType: SAVING_THROW_TYPE_*\r\n// - oSaveVersus\r\n// Returns: 0 if the saving throw roll failed\r\n// Returns: 1 if the saving throw roll succeeded\r\n// Returns: 2 if the target was immune to the save type specified\r\nint WillSave(object oCreature, int nDC, int nSaveType=SAVING_THROW_TYPE_NONE, object oSaveVersus=OBJECT_SELF);",
-                "// 110: Does a Will Save check for the given DC\r\n// - oCreature\r\n// - nDC: Difficulty check\r\n// - nSaveType: SAVING_THROW_TYPE_*\r\n// - oSaveVersus\r\n// Returns: 0 if the saving throw roll failed\r\n// Returns: 1 if the saving throw roll succeeded\r\n// Returns: 2 if the target was immune to the save type specified\r\nint WillSave(object oCreature, int nDC, int nSaveType=SAVING_THROW_TYPE_NONE, object oSaveVersus=OBJECT_SELF);"
+                new List<ScriptParam> { new ScriptParam(DataType.Object, "oCreature", null), new ScriptParam(DataType.Int, "nDC", null), new ScriptParam(DataType.Int, "nSaveType", 0), new ScriptParam(DataType.Object, "oSaveVersus", OBJECT_SELF) },
+                "// 110: Does a Will Save check for the given DC\r\n// - oCreature\r\n// - nDC: Difficulty check\r\n// - nSaveType: SAVING_THROW_TYPE_*\r\n// - oSaveVersus\r\n// Returns: 0 if the saving throw roll failed\r\n// Returns: 1 if the saving throw roll succeeded\r\n// Returns: 2 if the target was immune to the save type specified\r\nint WillSave(object oCreature, int nDC, int nSaveType=0, object oSaveVersus=OBJECT_SELF);",
+                "// 110: Does a Will Save check for the given DC\r\n// - oCreature\r\n// - nDC: Difficulty check\r\n// - nSaveType: SAVING_THROW_TYPE_*\r\n// - oSaveVersus\r\n// Returns: 0 if the saving throw roll failed\r\n// Returns: 1 if the saving throw roll succeeded\r\n// Returns: 2 if the target was immune to the save type specified\r\nint WillSave(object oCreature, int nDC, int nSaveType=0, object oSaveVersus=OBJECT_SELF);"
             ),
             new ScriptFunction(
                 DataType.Int,
@@ -9509,9 +9519,9 @@ namespace CSharpKOTOR.Common.Script
             new ScriptFunction(
                 DataType.Effect,
                 "EffectACIncrease",
-                new List<ScriptParam> { new ScriptParam(DataType.Int, "nValue", null), new ScriptParam(DataType.Int, "nModifyType", AC_DODGE_BONUS), new ScriptParam(DataType.Int, "nDamageType", AC_VS_DAMAGE_TYPE_ALL) },
-                "// 115: Create an AC Increase effect\r\n// - nValue: size of AC increase\r\n// - nModifyType: AC_*_BONUS\r\n// - nDamageType: DAMAGE_TYPE_*\r\n//   * Default value for nDamageType should only ever be used in this function prototype.\r\neffect EffectACIncrease(int nValue, int nModifyType=AC_DODGE_BONUS, int nDamageType=AC_VS_DAMAGE_TYPE_ALL);",
-                "// 115: Create an AC Increase effect\r\n// - nValue: size of AC increase\r\n// - nModifyType: AC_*_BONUS\r\n// - nDamageType: DAMAGE_TYPE_*\r\n//   * Default value for nDamageType should only ever be used in this function prototype.\r\neffect EffectACIncrease(int nValue, int nModifyType=AC_DODGE_BONUS, int nDamageType=AC_VS_DAMAGE_TYPE_ALL);"
+                new List<ScriptParam> { new ScriptParam(DataType.Int, "nValue", null), new ScriptParam(DataType.Int, "nModifyType", 0), new ScriptParam(DataType.Int, "nDamageType", 8199) },
+                "// 115: Create an AC Increase effect\r\n// - nValue: size of AC increase\r\n// - nModifyType: AC_*_BONUS\r\n// - nDamageType: DAMAGE_TYPE_*\r\n//   * Default value for nDamageType should only ever be used in this function prototype.\r\neffect EffectACIncrease(int nValue, int nModifyType=0, int nDamageType=8199);",
+                "// 115: Create an AC Increase effect\r\n// - nValue: size of AC increase\r\n// - nModifyType: AC_*_BONUS\r\n// - nDamageType: DAMAGE_TYPE_*\r\n//   * Default value for nDamageType should only ever be used in this function prototype.\r\neffect EffectACIncrease(int nValue, int nModifyType=0, int nDamageType=8199);"
             ),
             new ScriptFunction(
                 DataType.Int,
@@ -9523,16 +9533,16 @@ namespace CSharpKOTOR.Common.Script
             new ScriptFunction(
                 DataType.Effect,
                 "EffectSavingThrowIncrease",
-                new List<ScriptParam> { new ScriptParam(DataType.Int, "nSave", null), new ScriptParam(DataType.Int, "nValue", null), new ScriptParam(DataType.Int, "nSaveType", SAVING_THROW_TYPE_ALL) },
-                "// 117: Create an AC Decrease effect\r\n// - nSave: SAVING_THROW_* (not SAVING_THROW_TYPE_*)\r\n// - nValue: size of AC decrease\r\n// - nSaveType: SAVING_THROW_TYPE_*\r\neffect EffectSavingThrowIncrease(int nSave, int nValue, int nSaveType=SAVING_THROW_TYPE_ALL);",
-                "// 117: Create an AC Decrease effect\r\n// - nSave: SAVING_THROW_* (not SAVING_THROW_TYPE_*)\r\n// - nValue: size of AC decrease\r\n// - nSaveType: SAVING_THROW_TYPE_*\r\neffect EffectSavingThrowIncrease(int nSave, int nValue, int nSaveType=SAVING_THROW_TYPE_ALL);"
+                new List<ScriptParam> { new ScriptParam(DataType.Int, "nSave", null), new ScriptParam(DataType.Int, "nValue", null), new ScriptParam(DataType.Int, "nSaveType", 0) },
+                "// 117: Create an AC Decrease effect\r\n// - nSave: SAVING_THROW_* (not SAVING_THROW_TYPE_*)\r\n// - nValue: size of AC decrease\r\n// - nSaveType: SAVING_THROW_TYPE_*\r\neffect EffectSavingThrowIncrease(int nSave, int nValue, int nSaveType=0);",
+                "// 117: Create an AC Decrease effect\r\n// - nSave: SAVING_THROW_* (not SAVING_THROW_TYPE_*)\r\n// - nValue: size of AC decrease\r\n// - nSaveType: SAVING_THROW_TYPE_*\r\neffect EffectSavingThrowIncrease(int nSave, int nValue, int nSaveType=0);"
             ),
             new ScriptFunction(
                 DataType.Effect,
                 "EffectAttackIncrease",
-                new List<ScriptParam> { new ScriptParam(DataType.Int, "nBonus", null), new ScriptParam(DataType.Int, "nModifierType", ATTACK_BONUS_MISC) },
-                "// 118: Create an Attack Increase effect\r\n// - nBonus: size of attack bonus\r\n// - nModifierType: ATTACK_BONUS_*\r\neffect EffectAttackIncrease(int nBonus, int nModifierType=ATTACK_BONUS_MISC);",
-                "// 118: Create an Attack Increase effect\r\n// - nBonus: size of attack bonus\r\n// - nModifierType: ATTACK_BONUS_*\r\neffect EffectAttackIncrease(int nBonus, int nModifierType=ATTACK_BONUS_MISC);"
+                new List<ScriptParam> { new ScriptParam(DataType.Int, "nBonus", null), new ScriptParam(DataType.Int, "nModifierType", 0) },
+                "// 118: Create an Attack Increase effect\r\n// - nBonus: size of attack bonus\r\n// - nModifierType: ATTACK_BONUS_*\r\neffect EffectAttackIncrease(int nBonus, int nModifierType=0);",
+                "// 118: Create an Attack Increase effect\r\n// - nBonus: size of attack bonus\r\n// - nModifierType: ATTACK_BONUS_*\r\neffect EffectAttackIncrease(int nBonus, int nModifierType=0);"
             ),
             new ScriptFunction(
                 DataType.Effect,
@@ -9544,9 +9554,9 @@ namespace CSharpKOTOR.Common.Script
             new ScriptFunction(
                 DataType.Effect,
                 "EffectDamageIncrease",
-                new List<ScriptParam> { new ScriptParam(DataType.Int, "nBonus", null), new ScriptParam(DataType.Int, "nDamageType", DAMAGE_TYPE_UNIVERSAL) },
-                "// 120: Create a Damage Increase effect\r\n// - nBonus: DAMAGE_BONUS_*\r\n// - nDamageType: DAMAGE_TYPE_*\r\neffect EffectDamageIncrease(int nBonus, int nDamageType=DAMAGE_TYPE_UNIVERSAL);",
-                "// 120: Create a Damage Increase effect\r\n// - nBonus: DAMAGE_BONUS_*\r\n// - nDamageType: DAMAGE_TYPE_*\r\neffect EffectDamageIncrease(int nBonus, int nDamageType=DAMAGE_TYPE_UNIVERSAL);"
+                new List<ScriptParam> { new ScriptParam(DataType.Int, "nBonus", null), new ScriptParam(DataType.Int, "nDamageType", 8) },
+                "// 120: Create a Damage Increase effect\r\n// - nBonus: DAMAGE_BONUS_*\r\n// - nDamageType: DAMAGE_TYPE_*\r\neffect EffectDamageIncrease(int nBonus, int nDamageType=8);",
+                "// 120: Create a Damage Increase effect\r\n// - nBonus: DAMAGE_BONUS_*\r\n// - nDamageType: DAMAGE_TYPE_*\r\neffect EffectDamageIncrease(int nBonus, int nDamageType=8);"
             ),
             new ScriptFunction(
                 DataType.Float,
@@ -9600,16 +9610,16 @@ namespace CSharpKOTOR.Common.Script
             new ScriptFunction(
                 DataType.Object,
                 "GetFirstObjectInShape",
-                new List<ScriptParam> { new ScriptParam(DataType.Int, "nShape", null), new ScriptParam(DataType.Float, "fSize", null), new ScriptParam(DataType.Location, "lTarget", null), new ScriptParam(DataType.Int, "bLineOfSight", FALSE), new ScriptParam(DataType.Int, "nObjectFilter", OBJECT_TYPE_CREATURE), new ScriptParam(DataType.Vector, "vOrigin", new Vector3(0f, 0f, 0f)) },
-                "// 128: Get the first object in nShape\r\n// - nShape: SHAPE_*\r\n// - fSize:\r\n//   -> If nShape == SHAPE_SPHERE, this is the radius of the sphere\r\n//   -> If nShape == SHAPE_SPELLCYLINDER, this is the radius of the cylinder\r\n//   -> If nShape == SHAPE_CONE, this is the widest radius of the cone\r\n//   -> If nShape == SHAPE_CUBE, this is half the length of one of the sides of\r\n//      the cube\r\n// - lTarget: This is the centre of the effect, usually GetSpellTargetPosition(),\r\n//   or the end of a cylinder or cone.\r\n// - bLineOfSight: This controls whether to do a line-of-sight check on the\r\n//   object returned.\r\n//   (This can be used to ensure that spell effects do not go through walls.)\r\n// - nObjectFilter: This allows you to filter out undesired object types, using\r\n//   bitwise \"or\".\r\n//   For example, to return only creatures and doors, the value for this\r\n//   parameter would be OBJECT_TYPE_CREATURE | OBJECT_TYPE_DOOR\r\n// - vOrigin: This is only used for cylinders and cones, and specifies the\r\n//   origin of the effect(normally the spell-caster's position).\r\n// Return value on error: OBJECT_INVALID\r\nobject GetFirstObjectInShape(int nShape, float fSize, location lTarget, int bLineOfSight=FALSE, int nObjectFilter=OBJECT_TYPE_CREATURE, vector vOrigin=[0.0,0.0,0.0]);",
-                "// 128: Get the first object in nShape\r\n// - nShape: SHAPE_*\r\n// - fSize:\r\n//   -> If nShape == SHAPE_SPHERE, this is the radius of the sphere\r\n//   -> If nShape == SHAPE_SPELLCYLINDER, this is the radius of the cylinder\r\n//   -> If nShape == SHAPE_CONE, this is the widest radius of the cone\r\n//   -> If nShape == SHAPE_CUBE, this is half the length of one of the sides of\r\n//      the cube\r\n// - lTarget: This is the centre of the effect, usually GetSpellTargetPosition(),\r\n//   or the end of a cylinder or cone.\r\n// - bLineOfSight: This controls whether to do a line-of-sight check on the\r\n//   object returned.\r\n//   (This can be used to ensure that spell effects do not go through walls.)\r\n// - nObjectFilter: This allows you to filter out undesired object types, using\r\n//   bitwise \"or\".\r\n//   For example, to return only creatures and doors, the value for this\r\n//   parameter would be OBJECT_TYPE_CREATURE | OBJECT_TYPE_DOOR\r\n// - vOrigin: This is only used for cylinders and cones, and specifies the\r\n//   origin of the effect(normally the spell-caster's position).\r\n// Return value on error: OBJECT_INVALID\r\nobject GetFirstObjectInShape(int nShape, float fSize, location lTarget, int bLineOfSight=FALSE, int nObjectFilter=OBJECT_TYPE_CREATURE, vector vOrigin=[0.0,0.0,0.0]);"
+                new List<ScriptParam> { new ScriptParam(DataType.Int, "nShape", null), new ScriptParam(DataType.Float, "fSize", null), new ScriptParam(DataType.Location, "lTarget", null), new ScriptParam(DataType.Int, "bLineOfSight", 0), new ScriptParam(DataType.Int, "nObjectFilter", 1), new ScriptParam(DataType.Vector, "vOrigin", new Vector3(0f, 0f, 0f)) },
+                "// 128: Get the first object in nShape\r\n// - nShape: SHAPE_*\r\n// - fSize:\r\n//   -> If nShape == SHAPE_SPHERE, this is the radius of the sphere\r\n//   -> If nShape == SHAPE_SPELLCYLINDER, this is the radius of the cylinder\r\n//   -> If nShape == SHAPE_CONE, this is the widest radius of the cone\r\n//   -> If nShape == SHAPE_CUBE, this is half the length of one of the sides of\r\n//      the cube\r\n// - lTarget: This is the centre of the effect, usually GetSpellTargetPosition(),\r\n//   or the end of a cylinder or cone.\r\n// - bLineOfSight: This controls whether to do a line-of-sight check on the\r\n//   object returned.\r\n//   (This can be used to ensure that spell effects do not go through walls.)\r\n// - nObjectFilter: This allows you to filter out undesired object types, using\r\n//   bitwise \"or\".\r\n//   For example, to return only creatures and doors, the value for this\r\n//   parameter would be 1 | OBJECT_TYPE_DOOR\r\n// - vOrigin: This is only used for cylinders and cones, and specifies the\r\n//   origin of the effect(normally the spell-caster's position).\r\n// Return value on error: OBJECT_INVALID\r\nobject GetFirstObjectInShape(int nShape, float fSize, location lTarget, int bLineOfSight=0, int nObjectFilter=1, vector vOrigin=[0.0,0.0,0.0]);",
+                "// 128: Get the first object in nShape\r\n// - nShape: SHAPE_*\r\n// - fSize:\r\n//   -> If nShape == SHAPE_SPHERE, this is the radius of the sphere\r\n//   -> If nShape == SHAPE_SPELLCYLINDER, this is the radius of the cylinder\r\n//   -> If nShape == SHAPE_CONE, this is the widest radius of the cone\r\n//   -> If nShape == SHAPE_CUBE, this is half the length of one of the sides of\r\n//      the cube\r\n// - lTarget: This is the centre of the effect, usually GetSpellTargetPosition(),\r\n//   or the end of a cylinder or cone.\r\n// - bLineOfSight: This controls whether to do a line-of-sight check on the\r\n//   object returned.\r\n//   (This can be used to ensure that spell effects do not go through walls.)\r\n// - nObjectFilter: This allows you to filter out undesired object types, using\r\n//   bitwise \"or\".\r\n//   For example, to return only creatures and doors, the value for this\r\n//   parameter would be 1 | OBJECT_TYPE_DOOR\r\n// - vOrigin: This is only used for cylinders and cones, and specifies the\r\n//   origin of the effect(normally the spell-caster's position).\r\n// Return value on error: OBJECT_INVALID\r\nobject GetFirstObjectInShape(int nShape, float fSize, location lTarget, int bLineOfSight=0, int nObjectFilter=1, vector vOrigin=[0.0,0.0,0.0]);"
             ),
             new ScriptFunction(
                 DataType.Object,
                 "GetNextObjectInShape",
-                new List<ScriptParam> { new ScriptParam(DataType.Int, "nShape", null), new ScriptParam(DataType.Float, "fSize", null), new ScriptParam(DataType.Location, "lTarget", null), new ScriptParam(DataType.Int, "bLineOfSight", FALSE), new ScriptParam(DataType.Int, "nObjectFilter", OBJECT_TYPE_CREATURE), new ScriptParam(DataType.Vector, "vOrigin", new Vector3(0f, 0f, 0f)) },
-                "// 129: Get the next object in nShape\r\n// - nShape: SHAPE_*\r\n// - fSize:\r\n//   -> If nShape == SHAPE_SPHERE, this is the radius of the sphere\r\n//   -> If nShape == SHAPE_SPELLCYLINDER, this is the radius of the cylinder\r\n//   -> If nShape == SHAPE_CONE, this is the widest radius of the cone\r\n//   -> If nShape == SHAPE_CUBE, this is half the length of one of the sides of\r\n//      the cube\r\n// - lTarget: This is the centre of the effect, usually GetSpellTargetPosition(),\r\n//   or the end of a cylinder or cone.\r\n// - bLineOfSight: This controls whether to do a line-of-sight check on the\r\n//   object returned. (This can be used to ensure that spell effects do not go\r\n//   through walls.)\r\n// - nObjectFilter: This allows you to filter out undesired object types, using\r\n//   bitwise \"or\". For example, to return only creatures and doors, the value for\r\n//   this parameter would be OBJECT_TYPE_CREATURE | OBJECT_TYPE_DOOR\r\n// - vOrigin: This is only used for cylinders and cones, and specifies the origin\r\n//   of the effect (normally the spell-caster's position).\r\n// Return value on error: OBJECT_INVALID\r\nobject GetNextObjectInShape(int nShape, float fSize, location lTarget, int bLineOfSight=FALSE, int nObjectFilter=OBJECT_TYPE_CREATURE, vector vOrigin=[0.0,0.0,0.0]);",
-                "// 129: Get the next object in nShape\r\n// - nShape: SHAPE_*\r\n// - fSize:\r\n//   -> If nShape == SHAPE_SPHERE, this is the radius of the sphere\r\n//   -> If nShape == SHAPE_SPELLCYLINDER, this is the radius of the cylinder\r\n//   -> If nShape == SHAPE_CONE, this is the widest radius of the cone\r\n//   -> If nShape == SHAPE_CUBE, this is half the length of one of the sides of\r\n//      the cube\r\n// - lTarget: This is the centre of the effect, usually GetSpellTargetPosition(),\r\n//   or the end of a cylinder or cone.\r\n// - bLineOfSight: This controls whether to do a line-of-sight check on the\r\n//   object returned. (This can be used to ensure that spell effects do not go\r\n//   through walls.)\r\n// - nObjectFilter: This allows you to filter out undesired object types, using\r\n//   bitwise \"or\". For example, to return only creatures and doors, the value for\r\n//   this parameter would be OBJECT_TYPE_CREATURE | OBJECT_TYPE_DOOR\r\n// - vOrigin: This is only used for cylinders and cones, and specifies the origin\r\n//   of the effect (normally the spell-caster's position).\r\n// Return value on error: OBJECT_INVALID\r\nobject GetNextObjectInShape(int nShape, float fSize, location lTarget, int bLineOfSight=FALSE, int nObjectFilter=OBJECT_TYPE_CREATURE, vector vOrigin=[0.0,0.0,0.0]);"
+                new List<ScriptParam> { new ScriptParam(DataType.Int, "nShape", null), new ScriptParam(DataType.Float, "fSize", null), new ScriptParam(DataType.Location, "lTarget", null), new ScriptParam(DataType.Int, "bLineOfSight", 0), new ScriptParam(DataType.Int, "nObjectFilter", 1), new ScriptParam(DataType.Vector, "vOrigin", new Vector3(0f, 0f, 0f)) },
+                "// 129: Get the next object in nShape\r\n// - nShape: SHAPE_*\r\n// - fSize:\r\n//   -> If nShape == SHAPE_SPHERE, this is the radius of the sphere\r\n//   -> If nShape == SHAPE_SPELLCYLINDER, this is the radius of the cylinder\r\n//   -> If nShape == SHAPE_CONE, this is the widest radius of the cone\r\n//   -> If nShape == SHAPE_CUBE, this is half the length of one of the sides of\r\n//      the cube\r\n// - lTarget: This is the centre of the effect, usually GetSpellTargetPosition(),\r\n//   or the end of a cylinder or cone.\r\n// - bLineOfSight: This controls whether to do a line-of-sight check on the\r\n//   object returned. (This can be used to ensure that spell effects do not go\r\n//   through walls.)\r\n// - nObjectFilter: This allows you to filter out undesired object types, using\r\n//   bitwise \"or\". For example, to return only creatures and doors, the value for\r\n//   this parameter would be 1 | OBJECT_TYPE_DOOR\r\n// - vOrigin: This is only used for cylinders and cones, and specifies the origin\r\n//   of the effect (normally the spell-caster's position).\r\n// Return value on error: OBJECT_INVALID\r\nobject GetNextObjectInShape(int nShape, float fSize, location lTarget, int bLineOfSight=0, int nObjectFilter=1, vector vOrigin=[0.0,0.0,0.0]);",
+                "// 129: Get the next object in nShape\r\n// - nShape: SHAPE_*\r\n// - fSize:\r\n//   -> If nShape == SHAPE_SPHERE, this is the radius of the sphere\r\n//   -> If nShape == SHAPE_SPELLCYLINDER, this is the radius of the cylinder\r\n//   -> If nShape == SHAPE_CONE, this is the widest radius of the cone\r\n//   -> If nShape == SHAPE_CUBE, this is half the length of one of the sides of\r\n//      the cube\r\n// - lTarget: This is the centre of the effect, usually GetSpellTargetPosition(),\r\n//   or the end of a cylinder or cone.\r\n// - bLineOfSight: This controls whether to do a line-of-sight check on the\r\n//   object returned. (This can be used to ensure that spell effects do not go\r\n//   through walls.)\r\n// - nObjectFilter: This allows you to filter out undesired object types, using\r\n//   bitwise \"or\". For example, to return only creatures and doors, the value for\r\n//   this parameter would be 1 | OBJECT_TYPE_DOOR\r\n// - vOrigin: This is only used for cylinders and cones, and specifies the origin\r\n//   of the effect (normally the spell-caster's position).\r\n// Return value on error: OBJECT_INVALID\r\nobject GetNextObjectInShape(int nShape, float fSize, location lTarget, int bLineOfSight=0, int nObjectFilter=1, vector vOrigin=[0.0,0.0,0.0]);"
             ),
             new ScriptFunction(
                 DataType.Effect,
@@ -9635,9 +9645,9 @@ namespace CSharpKOTOR.Common.Script
             new ScriptFunction(
                 DataType.Effect,
                 "EffectDeath",
-                new List<ScriptParam> { new ScriptParam(DataType.Int, "nSpectacularDeath", FALSE), new ScriptParam(DataType.Int, "nDisplayFeedback", TRUE), new ScriptParam(DataType.Int, "nNoFadeAway", FALSE) },
-                "// 133: Create a Death effect\r\n// - nSpectacularDeath: if this is TRUE, the creature to which this effect is\r\n//   applied will die in an extraordinary fashion\r\n// - nDisplayFeedback\r\n// - nNoFadeAway: Passing TRUE for this parameter will keep the bodies from fading after the creature\r\n//                dies. Note that NO XP will be awarded if the creature is killed with this parameter.\r\neffect EffectDeath(int nSpectacularDeath=FALSE, int nDisplayFeedback=TRUE, int nNoFadeAway=FALSE);",
-                "// 133: Create a Death effect\r\n// - nSpectacularDeath: if this is TRUE, the creature to which this effect is\r\n//   applied will die in an extraordinary fashion\r\n// - nDisplayFeedback\r\n// - nNoFadeAway: Passing TRUE for this parameter will keep the bodies from fading after the creature\r\n//                dies. Note that NO XP will be awarded if the creature is killed with this parameter.\r\neffect EffectDeath(int nSpectacularDeath=FALSE, int nDisplayFeedback=TRUE, int nNoFadeAway=FALSE);"
+                new List<ScriptParam> { new ScriptParam(DataType.Int, "nSpectacularDeath", 0), new ScriptParam(DataType.Int, "nDisplayFeedback", 1), new ScriptParam(DataType.Int, "nNoFadeAway", 0) },
+                "// 133: Create a Death effect\r\n// - nSpectacularDeath: if this is 1, the creature to which this effect is\r\n//   applied will die in an extraordinary fashion\r\n// - nDisplayFeedback\r\n// - nNoFadeAway: Passing 1 for this parameter will keep the bodies from fading after the creature\r\n//                dies. Note that NO XP will be awarded if the creature is killed with this parameter.\r\neffect EffectDeath(int nSpectacularDeath=0, int nDisplayFeedback=1, int nNoFadeAway=0);",
+                "// 133: Create a Death effect\r\n// - nSpectacularDeath: if this is 1, the creature to which this effect is\r\n//   applied will die in an extraordinary fashion\r\n// - nDisplayFeedback\r\n// - nNoFadeAway: Passing 1 for this parameter will keep the bodies from fading after the creature\r\n//                dies. Note that NO XP will be awarded if the creature is killed with this parameter.\r\neffect EffectDeath(int nSpectacularDeath=0, int nDisplayFeedback=1, int nNoFadeAway=0);"
             ),
             new ScriptFunction(
                 DataType.Effect,
@@ -9685,15 +9695,15 @@ namespace CSharpKOTOR.Common.Script
                 DataType.Int,
                 "GetIsDead",
                 new List<ScriptParam> { new ScriptParam(DataType.Object, "oCreature", null) },
-                "// 140: * Returns TRUE if oCreature is a dead NPC, dead PC or a dying PC.\r\nint GetIsDead(object oCreature);",
-                "// 140: * Returns TRUE if oCreature is a dead NPC, dead PC or a dying PC.\r\nint GetIsDead(object oCreature);"
+                "// 140: * Returns 1 if oCreature is a dead NPC, dead PC or a dying PC.\r\nint GetIsDead(object oCreature);",
+                "// 140: * Returns 1 if oCreature is a dead NPC, dead PC or a dying PC.\r\nint GetIsDead(object oCreature);"
             ),
             new ScriptFunction(
                 DataType.Void,
                 "PrintVector",
                 new List<ScriptParam> { new ScriptParam(DataType.Vector, "vVector", null), new ScriptParam(DataType.Int, "bPrepend", null) },
-                "// 141: Output vVector to the logfile.\r\n// - vVector\r\n// - bPrepend: if this is TRUE, the message will be prefixed with \"PRINTVECTOR:\"\r\nvoid PrintVector(vector vVector, int bPrepend);",
-                "// 141: Output vVector to the logfile.\r\n// - vVector\r\n// - bPrepend: if this is TRUE, the message will be prefixed with \"PRINTVECTOR:\"\r\nvoid PrintVector(vector vVector, int bPrepend);"
+                "// 141: Output vVector to the logfile.\r\n// - vVector\r\n// - bPrepend: if this is 1, the message will be prefixed with \"PRINTVECTOR:\"\r\nvoid PrintVector(vector vVector, int bPrepend);",
+                "// 141: Output vVector to the logfile.\r\n// - vVector\r\n// - bPrepend: if this is 1, the message will be prefixed with \"PRINTVECTOR:\"\r\nvoid PrintVector(vector vVector, int bPrepend);"
             ),
             new ScriptFunction(
                 DataType.Vector,
@@ -9726,16 +9736,16 @@ namespace CSharpKOTOR.Common.Script
             new ScriptFunction(
                 DataType.Int,
                 "TouchAttackMelee",
-                new List<ScriptParam> { new ScriptParam(DataType.Object, "oTarget", null), new ScriptParam(DataType.Int, "bDisplayFeedback", TRUE) },
-                "// 146: The caller will perform a Melee Touch Attack on oTarget\r\n// This is not an action, and it assumes the caller is already within range of\r\n// oTarget\r\n// * Returns 0 on a miss, 1 on a hit and 2 on a critical hit\r\nint TouchAttackMelee(object oTarget, int bDisplayFeedback=TRUE);",
-                "// 146: The caller will perform a Melee Touch Attack on oTarget\r\n// This is not an action, and it assumes the caller is already within range of\r\n// oTarget\r\n// * Returns 0 on a miss, 1 on a hit and 2 on a critical hit\r\nint TouchAttackMelee(object oTarget, int bDisplayFeedback=TRUE);"
+                new List<ScriptParam> { new ScriptParam(DataType.Object, "oTarget", null), new ScriptParam(DataType.Int, "bDisplayFeedback", 1) },
+                "// 146: The caller will perform a Melee Touch Attack on oTarget\r\n// This is not an action, and it assumes the caller is already within range of\r\n// oTarget\r\n// * Returns 0 on a miss, 1 on a hit and 2 on a critical hit\r\nint TouchAttackMelee(object oTarget, int bDisplayFeedback=1);",
+                "// 146: The caller will perform a Melee Touch Attack on oTarget\r\n// This is not an action, and it assumes the caller is already within range of\r\n// oTarget\r\n// * Returns 0 on a miss, 1 on a hit and 2 on a critical hit\r\nint TouchAttackMelee(object oTarget, int bDisplayFeedback=1);"
             ),
             new ScriptFunction(
                 DataType.Int,
                 "TouchAttackRanged",
-                new List<ScriptParam> { new ScriptParam(DataType.Object, "oTarget", null), new ScriptParam(DataType.Int, "bDisplayFeedback", TRUE) },
-                "// 147: The caller will perform a Ranged Touch Attack on oTarget\r\n// * Returns 0 on a miss, 1 on a hit and 2 on a critical hit\r\nint TouchAttackRanged(object oTarget, int bDisplayFeedback=TRUE);",
-                "// 147: The caller will perform a Ranged Touch Attack on oTarget\r\n// * Returns 0 on a miss, 1 on a hit and 2 on a critical hit\r\nint TouchAttackRanged(object oTarget, int bDisplayFeedback=TRUE);"
+                new List<ScriptParam> { new ScriptParam(DataType.Object, "oTarget", null), new ScriptParam(DataType.Int, "bDisplayFeedback", 1) },
+                "// 147: The caller will perform a Ranged Touch Attack on oTarget\r\n// * Returns 0 on a miss, 1 on a hit and 2 on a critical hit\r\nint TouchAttackRanged(object oTarget, int bDisplayFeedback=1);",
+                "// 147: The caller will perform a Ranged Touch Attack on oTarget\r\n// * Returns 0 on a miss, 1 on a hit and 2 on a critical hit\r\nint TouchAttackRanged(object oTarget, int bDisplayFeedback=1);"
             ),
             new ScriptFunction(
                 DataType.Effect,
@@ -9747,9 +9757,9 @@ namespace CSharpKOTOR.Common.Script
             new ScriptFunction(
                 DataType.Effect,
                 "EffectSpellImmunity",
-                new List<ScriptParam> { new ScriptParam(DataType.Int, "nImmunityToSpell", FORCE_POWER_ALL_FORCE_POWERS) },
-                "// 149: Create a Spell Immunity effect.\r\n// There is a known bug with this function. There *must* be a parameter specified\r\n// when this is called (even if the desired parameter is SPELL_ALL_SPELLS),\r\n// otherwise an effect of type EFFECT_TYPE_INVALIDEFFECT will be returned.\r\n// - nImmunityToSpell: SPELL_*\r\n// * Returns an effect of type EFFECT_TYPE_INVALIDEFFECT if nImmunityToSpell is\r\n//   invalid.\r\neffect EffectSpellImmunity(int nImmunityToSpell=FORCE_POWER_ALL_FORCE_POWERS);",
-                "// 149: Create a Spell Immunity effect.\r\n// There is a known bug with this function. There *must* be a parameter specified\r\n// when this is called (even if the desired parameter is SPELL_ALL_SPELLS),\r\n// otherwise an effect of type EFFECT_TYPE_INVALIDEFFECT will be returned.\r\n// - nImmunityToSpell: SPELL_*\r\n// * Returns an effect of type EFFECT_TYPE_INVALIDEFFECT if nImmunityToSpell is\r\n//   invalid.\r\neffect EffectSpellImmunity(int nImmunityToSpell=FORCE_POWER_ALL_FORCE_POWERS);"
+                new List<ScriptParam> { new ScriptParam(DataType.Int, "nImmunityToSpell", 0) },
+                "// 149: Create a Spell Immunity effect.\r\n// There is a known bug with this function. There *must* be a parameter specified\r\n// when this is called (even if the desired parameter is SPELL_ALL_SPELLS),\r\n// otherwise an effect of type EFFECT_TYPE_INVALIDEFFECT will be returned.\r\n// - nImmunityToSpell: SPELL_*\r\n// * Returns an effect of type EFFECT_TYPE_INVALIDEFFECT if nImmunityToSpell is\r\n//   invalid.\r\neffect EffectSpellImmunity(int nImmunityToSpell=0);",
+                "// 149: Create a Spell Immunity effect.\r\n// There is a known bug with this function. There *must* be a parameter specified\r\n// when this is called (even if the desired parameter is SPELL_ALL_SPELLS),\r\n// otherwise an effect of type EFFECT_TYPE_INVALIDEFFECT will be returned.\r\n// - nImmunityToSpell: SPELL_*\r\n// * Returns an effect of type EFFECT_TYPE_INVALIDEFFECT if nImmunityToSpell is\r\n//   invalid.\r\neffect EffectSpellImmunity(int nImmunityToSpell=0);"
             ),
             new ScriptFunction(
                 DataType.Void,
@@ -9888,8 +9898,8 @@ namespace CSharpKOTOR.Common.Script
                 DataType.Int,
                 "ResistForce",
                 new List<ScriptParam> { new ScriptParam(DataType.Object, "oSource", null), new ScriptParam(DataType.Object, "oTarget", null) },
-                "// 169: Do a Force Resistance check between oSource and oTarget, returning TRUE if\r\n// the force was resisted.\r\n// * Return value if oSource or oTarget is an invalid object: FALSE\r\nint ResistForce(object oSource, object oTarget);",
-                "// 169: Do a Force Resistance check between oSource and oTarget, returning TRUE if\r\n// the force was resisted.\r\n// * Return value if oSource or oTarget is an invalid object: FALSE\r\nint ResistForce(object oSource, object oTarget);"
+                "// 169: Do a Force Resistance check between oSource and oTarget, returning 1 if\r\n// the force was resisted.\r\n// * Return value if oSource or oTarget is an invalid object: 0\r\nint ResistForce(object oSource, object oTarget);",
+                "// 169: Do a Force Resistance check between oSource and oTarget, returning 1 if\r\n// the force was resisted.\r\n// * Return value if oSource or oTarget is an invalid object: 0\r\nint ResistForce(object oSource, object oTarget);"
             ),
             new ScriptFunction(
                 DataType.Int,
@@ -9909,8 +9919,8 @@ namespace CSharpKOTOR.Common.Script
                 DataType.Int,
                 "GetFactionEqual",
                 new List<ScriptParam> { new ScriptParam(DataType.Object, "oFirstObject", null), new ScriptParam(DataType.Object, "oSecondObject", OBJECT_SELF) },
-                "// 172: * Returns TRUE if the Faction Ids of the two objects are the same\r\nint GetFactionEqual(object oFirstObject, object oSecondObject=OBJECT_SELF);",
-                "// 172: * Returns TRUE if the Faction Ids of the two objects are the same\r\nint GetFactionEqual(object oFirstObject, object oSecondObject=OBJECT_SELF);"
+                "// 172: * Returns 1 if the Faction Ids of the two objects are the same\r\nint GetFactionEqual(object oFirstObject, object oSecondObject=OBJECT_SELF);",
+                "// 172: * Returns 1 if the Faction Ids of the two objects are the same\r\nint GetFactionEqual(object oFirstObject, object oSecondObject=OBJECT_SELF);"
             ),
             new ScriptFunction(
                 DataType.Void,
@@ -9923,8 +9933,8 @@ namespace CSharpKOTOR.Common.Script
                 DataType.Int,
                 "GetIsListening",
                 new List<ScriptParam> { new ScriptParam(DataType.Object, "oObject", null) },
-                "// 174: * Returns TRUE if oObject is listening for something\r\nint GetIsListening(object oObject);",
-                "// 174: * Returns TRUE if oObject is listening for something\r\nint GetIsListening(object oObject);"
+                "// 174: * Returns 1 if oObject is listening for something\r\nint GetIsListening(object oObject);",
+                "// 174: * Returns 1 if oObject is listening for something\r\nint GetIsListening(object oObject);"
             ),
             new ScriptFunction(
                 DataType.Void,
@@ -9944,8 +9954,8 @@ namespace CSharpKOTOR.Common.Script
                 DataType.Int,
                 "TestStringAgainstPattern",
                 new List<ScriptParam> { new ScriptParam(DataType.String, "sPattern", null), new ScriptParam(DataType.String, "sStringToTest", null) },
-                "// 177: * Returns TRUE if sStringToTest matches sPattern.\r\nint TestStringAgainstPattern(string sPattern, string sStringToTest);",
-                "// 177: * Returns TRUE if sStringToTest matches sPattern.\r\nint TestStringAgainstPattern(string sPattern, string sStringToTest);"
+                "// 177: * Returns 1 if sStringToTest matches sPattern.\r\nint TestStringAgainstPattern(string sPattern, string sStringToTest);",
+                "// 177: * Returns 1 if sStringToTest matches sPattern.\r\nint TestStringAgainstPattern(string sPattern, string sStringToTest);"
             ),
             new ScriptFunction(
                 DataType.String,
@@ -9964,37 +9974,37 @@ namespace CSharpKOTOR.Common.Script
             new ScriptFunction(
                 DataType.Effect,
                 "EffectVisualEffect",
-                new List<ScriptParam> { new ScriptParam(DataType.Int, "nVisualEffectId", null), new ScriptParam(DataType.Int, "nMissEffect", FALSE) },
-                "// 180: * Create a Visual Effect that can be applied to an object.\r\n// - nVisualEffectId\r\n// - nMissEffect: if this is TRUE, a random vector near or past the target will\r\n//   be generated, on which to play the effect\r\neffect EffectVisualEffect(int nVisualEffectId, int nMissEffect=FALSE);",
-                "// 180: * Create a Visual Effect that can be applied to an object.\r\n// - nVisualEffectId\r\n// - nMissEffect: if this is TRUE, a random vector near or past the target will\r\n//   be generated, on which to play the effect\r\neffect EffectVisualEffect(int nVisualEffectId, int nMissEffect=FALSE);"
+                new List<ScriptParam> { new ScriptParam(DataType.Int, "nVisualEffectId", null), new ScriptParam(DataType.Int, "nMissEffect", 0) },
+                "// 180: * Create a Visual Effect that can be applied to an object.\r\n// - nVisualEffectId\r\n// - nMissEffect: if this is 1, a random vector near or past the target will\r\n//   be generated, on which to play the effect\r\neffect EffectVisualEffect(int nVisualEffectId, int nMissEffect=0);",
+                "// 180: * Create a Visual Effect that can be applied to an object.\r\n// - nVisualEffectId\r\n// - nMissEffect: if this is 1, a random vector near or past the target will\r\n//   be generated, on which to play the effect\r\neffect EffectVisualEffect(int nVisualEffectId, int nMissEffect=0);"
             ),
             new ScriptFunction(
                 DataType.Object,
                 "GetFactionWeakestMember",
-                new List<ScriptParam> { new ScriptParam(DataType.Object, "oFactionMember", OBJECT_SELF), new ScriptParam(DataType.Int, "bMustBeVisible", TRUE) },
-                "// 181: Get the weakest member of oFactionMember's faction.\r\n// * Returns OBJECT_INVALID if oFactionMember's faction is invalid.\r\nobject GetFactionWeakestMember(object oFactionMember=OBJECT_SELF, int bMustBeVisible=TRUE);",
-                "// 181: Get the weakest member of oFactionMember's faction.\r\n// * Returns OBJECT_INVALID if oFactionMember's faction is invalid.\r\nobject GetFactionWeakestMember(object oFactionMember=OBJECT_SELF, int bMustBeVisible=TRUE);"
+                new List<ScriptParam> { new ScriptParam(DataType.Object, "oFactionMember", OBJECT_SELF), new ScriptParam(DataType.Int, "bMustBeVisible", 1) },
+                "// 181: Get the weakest member of oFactionMember's faction.\r\n// * Returns OBJECT_INVALID if oFactionMember's faction is invalid.\r\nobject GetFactionWeakestMember(object oFactionMember=OBJECT_SELF, int bMustBeVisible=1);",
+                "// 181: Get the weakest member of oFactionMember's faction.\r\n// * Returns OBJECT_INVALID if oFactionMember's faction is invalid.\r\nobject GetFactionWeakestMember(object oFactionMember=OBJECT_SELF, int bMustBeVisible=1);"
             ),
             new ScriptFunction(
                 DataType.Object,
                 "GetFactionStrongestMember",
-                new List<ScriptParam> { new ScriptParam(DataType.Object, "oFactionMember", OBJECT_SELF), new ScriptParam(DataType.Int, "bMustBeVisible", TRUE) },
-                "// 182: Get the strongest member of oFactionMember's faction.\r\n// * Returns OBJECT_INVALID if oFactionMember's faction is invalid.\r\nobject GetFactionStrongestMember(object oFactionMember=OBJECT_SELF, int bMustBeVisible=TRUE);",
-                "// 182: Get the strongest member of oFactionMember's faction.\r\n// * Returns OBJECT_INVALID if oFactionMember's faction is invalid.\r\nobject GetFactionStrongestMember(object oFactionMember=OBJECT_SELF, int bMustBeVisible=TRUE);"
+                new List<ScriptParam> { new ScriptParam(DataType.Object, "oFactionMember", OBJECT_SELF), new ScriptParam(DataType.Int, "bMustBeVisible", 1) },
+                "// 182: Get the strongest member of oFactionMember's faction.\r\n// * Returns OBJECT_INVALID if oFactionMember's faction is invalid.\r\nobject GetFactionStrongestMember(object oFactionMember=OBJECT_SELF, int bMustBeVisible=1);",
+                "// 182: Get the strongest member of oFactionMember's faction.\r\n// * Returns OBJECT_INVALID if oFactionMember's faction is invalid.\r\nobject GetFactionStrongestMember(object oFactionMember=OBJECT_SELF, int bMustBeVisible=1);"
             ),
             new ScriptFunction(
                 DataType.Object,
                 "GetFactionMostDamagedMember",
-                new List<ScriptParam> { new ScriptParam(DataType.Object, "oFactionMember", OBJECT_SELF), new ScriptParam(DataType.Int, "bMustBeVisible", TRUE) },
-                "// 183: Get the member of oFactionMember's faction that has taken the most hit points\r\n// of damage.\r\n// * Returns OBJECT_INVALID if oFactionMember's faction is invalid.\r\nobject GetFactionMostDamagedMember(object oFactionMember=OBJECT_SELF, int bMustBeVisible=TRUE);",
-                "// 183: Get the member of oFactionMember's faction that has taken the most hit points\r\n// of damage.\r\n// * Returns OBJECT_INVALID if oFactionMember's faction is invalid.\r\nobject GetFactionMostDamagedMember(object oFactionMember=OBJECT_SELF, int bMustBeVisible=TRUE);"
+                new List<ScriptParam> { new ScriptParam(DataType.Object, "oFactionMember", OBJECT_SELF), new ScriptParam(DataType.Int, "bMustBeVisible", 1) },
+                "// 183: Get the member of oFactionMember's faction that has taken the most hit points\r\n// of damage.\r\n// * Returns OBJECT_INVALID if oFactionMember's faction is invalid.\r\nobject GetFactionMostDamagedMember(object oFactionMember=OBJECT_SELF, int bMustBeVisible=1);",
+                "// 183: Get the member of oFactionMember's faction that has taken the most hit points\r\n// of damage.\r\n// * Returns OBJECT_INVALID if oFactionMember's faction is invalid.\r\nobject GetFactionMostDamagedMember(object oFactionMember=OBJECT_SELF, int bMustBeVisible=1);"
             ),
             new ScriptFunction(
                 DataType.Object,
                 "GetFactionLeastDamagedMember",
-                new List<ScriptParam> { new ScriptParam(DataType.Object, "oFactionMember", OBJECT_SELF), new ScriptParam(DataType.Int, "bMustBeVisible", TRUE) },
-                "// 184: Get the member of oFactionMember's faction that has taken the fewest hit\r\n// points of damage.\r\n// * Returns OBJECT_INVALID if oFactionMember's faction is invalid.\r\nobject GetFactionLeastDamagedMember(object oFactionMember=OBJECT_SELF, int bMustBeVisible=TRUE);",
-                "// 184: Get the member of oFactionMember's faction that has taken the fewest hit\r\n// points of damage.\r\n// * Returns OBJECT_INVALID if oFactionMember's faction is invalid.\r\nobject GetFactionLeastDamagedMember(object oFactionMember=OBJECT_SELF, int bMustBeVisible=TRUE);"
+                new List<ScriptParam> { new ScriptParam(DataType.Object, "oFactionMember", OBJECT_SELF), new ScriptParam(DataType.Int, "bMustBeVisible", 1) },
+                "// 184: Get the member of oFactionMember's faction that has taken the fewest hit\r\n// points of damage.\r\n// * Returns OBJECT_INVALID if oFactionMember's faction is invalid.\r\nobject GetFactionLeastDamagedMember(object oFactionMember=OBJECT_SELF, int bMustBeVisible=1);",
+                "// 184: Get the member of oFactionMember's faction that has taken the fewest hit\r\n// points of damage.\r\n// * Returns OBJECT_INVALID if oFactionMember's faction is invalid.\r\nobject GetFactionLeastDamagedMember(object oFactionMember=OBJECT_SELF, int bMustBeVisible=1);"
             ),
             new ScriptFunction(
                 DataType.Int,
@@ -10048,16 +10058,16 @@ namespace CSharpKOTOR.Common.Script
             new ScriptFunction(
                 DataType.Object,
                 "GetFactionWorstAC",
-                new List<ScriptParam> { new ScriptParam(DataType.Object, "oFactionMember", OBJECT_SELF), new ScriptParam(DataType.Int, "bMustBeVisible", TRUE) },
-                "// 192: Get the object faction member with the lowest armour class.\r\n// * Returns OBJECT_INVALID if oFactionMember's faction is invalid.\r\nobject GetFactionWorstAC(object oFactionMember=OBJECT_SELF, int bMustBeVisible=TRUE);",
-                "// 192: Get the object faction member with the lowest armour class.\r\n// * Returns OBJECT_INVALID if oFactionMember's faction is invalid.\r\nobject GetFactionWorstAC(object oFactionMember=OBJECT_SELF, int bMustBeVisible=TRUE);"
+                new List<ScriptParam> { new ScriptParam(DataType.Object, "oFactionMember", OBJECT_SELF), new ScriptParam(DataType.Int, "bMustBeVisible", 1) },
+                "// 192: Get the object faction member with the lowest armour class.\r\n// * Returns OBJECT_INVALID if oFactionMember's faction is invalid.\r\nobject GetFactionWorstAC(object oFactionMember=OBJECT_SELF, int bMustBeVisible=1);",
+                "// 192: Get the object faction member with the lowest armour class.\r\n// * Returns OBJECT_INVALID if oFactionMember's faction is invalid.\r\nobject GetFactionWorstAC(object oFactionMember=OBJECT_SELF, int bMustBeVisible=1);"
             ),
             new ScriptFunction(
                 DataType.Object,
                 "GetFactionBestAC",
-                new List<ScriptParam> { new ScriptParam(DataType.Object, "oFactionMember", OBJECT_SELF), new ScriptParam(DataType.Int, "bMustBeVisible", TRUE) },
-                "// 193: Get the object faction member with the highest armour class.\r\n// * Returns OBJECT_INVALID if oFactionMember's faction is invalid.\r\nobject GetFactionBestAC(object oFactionMember=OBJECT_SELF, int bMustBeVisible=TRUE);",
-                "// 193: Get the object faction member with the highest armour class.\r\n// * Returns OBJECT_INVALID if oFactionMember's faction is invalid.\r\nobject GetFactionBestAC(object oFactionMember=OBJECT_SELF, int bMustBeVisible=TRUE);"
+                new List<ScriptParam> { new ScriptParam(DataType.Object, "oFactionMember", OBJECT_SELF), new ScriptParam(DataType.Int, "bMustBeVisible", 1) },
+                "// 193: Get the object faction member with the highest armour class.\r\n// * Returns OBJECT_INVALID if oFactionMember's faction is invalid.\r\nobject GetFactionBestAC(object oFactionMember=OBJECT_SELF, int bMustBeVisible=1);",
+                "// 193: Get the object faction member with the highest armour class.\r\n// * Returns OBJECT_INVALID if oFactionMember's faction is invalid.\r\nobject GetFactionBestAC(object oFactionMember=OBJECT_SELF, int bMustBeVisible=1);"
             ),
             new ScriptFunction(
                 DataType.String,
@@ -10076,9 +10086,9 @@ namespace CSharpKOTOR.Common.Script
             new ScriptFunction(
                 DataType.Void,
                 "ActionJumpToObject",
-                new List<ScriptParam> { new ScriptParam(DataType.Object, "oToJumpTo", null), new ScriptParam(DataType.Int, "bWalkStraightLineToPoint", TRUE) },
-                "// 196: Jump to an object ID, or as near to it as possible.\r\nvoid ActionJumpToObject(object oToJumpTo, int bWalkStraightLineToPoint=TRUE);",
-                "// 196: Jump to an object ID, or as near to it as possible.\r\nvoid ActionJumpToObject(object oToJumpTo, int bWalkStraightLineToPoint=TRUE);"
+                new List<ScriptParam> { new ScriptParam(DataType.Object, "oToJumpTo", null), new ScriptParam(DataType.Int, "bWalkStraightLineToPoint", 1) },
+                "// 196: Jump to an object ID, or as near to it as possible.\r\nvoid ActionJumpToObject(object oToJumpTo, int bWalkStraightLineToPoint=1);",
+                "// 196: Jump to an object ID, or as near to it as possible.\r\nvoid ActionJumpToObject(object oToJumpTo, int bWalkStraightLineToPoint=1);"
             ),
             new ScriptFunction(
                 DataType.Object,
@@ -10111,9 +10121,9 @@ namespace CSharpKOTOR.Common.Script
             new ScriptFunction(
                 DataType.Void,
                 "AdjustAlignment",
-                new List<ScriptParam> { new ScriptParam(DataType.Object, "oSubject", null), new ScriptParam(DataType.Int, "nAlignment", null), new ScriptParam(DataType.Int, "nShift", null), new ScriptParam(DataType.Int, "bDontModifyNPCs", FALSE) },
-                "// 201: Adjust the alignment of oSubject.\r\n// - oSubject\r\n// - nAlignment:\r\n//   -> ALIGNMENT_LIGHT_SIDE/ALIGNMENT_DARK_SIDE: oSubject's\r\n//      alignment will be shifted in the direction specified\r\n//   -> ALIGNMENT_NEUTRAL: nShift is applied to oSubject's dark side/light side\r\n//      alignment value in the direction which is towards neutrality.\r\n//     e.g. If oSubject has an alignment value of 80 (i.e. light side)\r\n//          then if nShift is 15, the alignment value will become (80-15)=65\r\n//     Furthermore, the shift will at most take the alignment value to 50 and\r\n//     not beyond.\r\n//     e.g. If oSubject has an alignment value of 40 then if nShift is 15,\r\n//          the aligment value will become 50\r\n// - nShift: this is the desired shift in alignment\r\n// * No return value\r\n// - bDontModifyNPCs - Defaults to 'FALSE', if you pass in 'TRUE' then you can adjust\r\n//   the playercharacter's alignment without impacting the rest of the NPCs\r\nvoid AdjustAlignment(object oSubject, int nAlignment, int nShift, int bDontModifyNPCs = FALSE);",
-                "// 201: Adjust the alignment of oSubject.\r\n// - oSubject\r\n// - nAlignment:\r\n//   -> ALIGNMENT_LIGHT_SIDE/ALIGNMENT_DARK_SIDE: oSubject's\r\n//      alignment will be shifted in the direction specified\r\n//   -> ALIGNMENT_NEUTRAL: nShift is applied to oSubject's dark side/light side\r\n//      alignment value in the direction which is towards neutrality.\r\n//     e.g. If oSubject has an alignment value of 80 (i.e. light side)\r\n//          then if nShift is 15, the alignment value will become (80-15)=65\r\n//     Furthermore, the shift will at most take the alignment value to 50 and\r\n//     not beyond.\r\n//     e.g. If oSubject has an alignment value of 40 then if nShift is 15,\r\n//          the aligment value will become 50\r\n// - nShift: this is the desired shift in alignment\r\n// * No return value\r\n// - bDontModifyNPCs - Defaults to 'FALSE', if you pass in 'TRUE' then you can adjust\r\n//   the playercharacter's alignment without impacting the rest of the NPCs\r\nvoid AdjustAlignment(object oSubject, int nAlignment, int nShift, int bDontModifyNPCs = FALSE);"
+                new List<ScriptParam> { new ScriptParam(DataType.Object, "oSubject", null), new ScriptParam(DataType.Int, "nAlignment", null), new ScriptParam(DataType.Int, "nShift", null), new ScriptParam(DataType.Int, "bDontModifyNPCs", 0) },
+                "// 201: Adjust the alignment of oSubject.\r\n// - oSubject\r\n// - nAlignment:\r\n//   -> ALIGNMENT_LIGHT_SIDE/ALIGNMENT_DARK_SIDE: oSubject's\r\n//      alignment will be shifted in the direction specified\r\n//   -> ALIGNMENT_NEUTRAL: nShift is applied to oSubject's dark side/light side\r\n//      alignment value in the direction which is towards neutrality.\r\n//     e.g. If oSubject has an alignment value of 80 (i.e. light side)\r\n//          then if nShift is 15, the alignment value will become (80-15)=65\r\n//     Furthermore, the shift will at most take the alignment value to 50 and\r\n//     not beyond.\r\n//     e.g. If oSubject has an alignment value of 40 then if nShift is 15,\r\n//          the aligment value will become 50\r\n// - nShift: this is the desired shift in alignment\r\n// * No return value\r\n// - bDontModifyNPCs - Defaults to '0', if you pass in '1' then you can adjust\r\n//   the playercharacter's alignment without impacting the rest of the NPCs\r\nvoid AdjustAlignment(object oSubject, int nAlignment, int nShift, int bDontModifyNPCs = 0);",
+                "// 201: Adjust the alignment of oSubject.\r\n// - oSubject\r\n// - nAlignment:\r\n//   -> ALIGNMENT_LIGHT_SIDE/ALIGNMENT_DARK_SIDE: oSubject's\r\n//      alignment will be shifted in the direction specified\r\n//   -> ALIGNMENT_NEUTRAL: nShift is applied to oSubject's dark side/light side\r\n//      alignment value in the direction which is towards neutrality.\r\n//     e.g. If oSubject has an alignment value of 80 (i.e. light side)\r\n//          then if nShift is 15, the alignment value will become (80-15)=65\r\n//     Furthermore, the shift will at most take the alignment value to 50 and\r\n//     not beyond.\r\n//     e.g. If oSubject has an alignment value of 40 then if nShift is 15,\r\n//          the aligment value will become 50\r\n// - nShift: this is the desired shift in alignment\r\n// * No return value\r\n// - bDontModifyNPCs - Defaults to '0', if you pass in '1' then you can adjust\r\n//   the playercharacter's alignment without impacting the rest of the NPCs\r\nvoid AdjustAlignment(object oSubject, int nAlignment, int nShift, int bDontModifyNPCs = 0);"
             ),
             new ScriptFunction(
                 DataType.Void,
@@ -10132,9 +10142,9 @@ namespace CSharpKOTOR.Common.Script
             new ScriptFunction(
                 DataType.Void,
                 "ActionStartConversation",
-                new List<ScriptParam> { new ScriptParam(DataType.Object, "oObjectToConverse", null), new ScriptParam(DataType.String, "sDialogResRef", "\"\""), new ScriptParam(DataType.Int, "bPrivateConversation", FALSE), new ScriptParam(DataType.Int, "nConversationType", CONVERSATION_TYPE_CINEMATIC), new ScriptParam(DataType.Int, "bIgnoreStartRange", FALSE), new ScriptParam(DataType.String, "sNameObjectToIgnore1", "\"\""), new ScriptParam(DataType.String, "sNameObjectToIgnore2", "\"\""), new ScriptParam(DataType.String, "sNameObjectToIgnore3", "\"\""), new ScriptParam(DataType.String, "sNameObjectToIgnore4", "\"\""), new ScriptParam(DataType.String, "sNameObjectToIgnore5", "\"\""), new ScriptParam(DataType.String, "sNameObjectToIgnore6", "\"\""), new ScriptParam(DataType.Int, "bUseLeader", FALSE), new ScriptParam(DataType.Int, "nBarkX", -1), new ScriptParam(DataType.Int, "nBarkY", -1), new ScriptParam(DataType.Int, "bDontClearAllActions", 0) },
-                "// AMF: APRIL 28, 2003 - I HAVE CHANGED THIS FUNCTION AS PER DAN'S REQUEST\r\n// 204: Starts a conversation with oObjectToConverseWith - this will cause their\r\n// OnDialog event to fire.\r\n// - oObjectToConverseWith\r\n// - sDialogResRef: If this is blank, the creature's own dialogue file will be used\r\n// - bPrivateConversation: If this is blank, the default is FALSE.\r\n// - nConversationType - If this is blank the default will be Cinematic, ie. a normal conversation type\r\n//                                  other choices inclue: CONVERSATION_TYPE_COMPUTER\r\n//   UPDATE:  nConversationType actually has no meaning anymore.  This has been replaced by a flag in the dialog editor.  However\r\n//                for backwards compatability it has been left here.  So when using this command place CONVERSATION_TYPE_CINEMATIC in here. - DJF\r\n// - bIgnoreStartRange - If this is blank the default will be FALSE, ie. Start conversation ranges are in effect\r\n//                                                                      Setting this to TRUE will cause creatures to start a conversation without requiring to close\r\n//                                                                      the distance between the two object in dialog.\r\n// - sNameObjectToIgnore1-6 - Normally objects in the animation list of the dialog editor have to be available for animations on that node to work\r\n//                                        these 6 strings are to indicate 6 objects that don�t need to be available for things to proceed.  The string should be EXACTLY\r\n//                                        the same as the string that it represents in the dialog editor.\r\n// - nBarkX and nBarkY - These override the left, top corner position for the bark string if the conversation starting is a bark string.\r\n//                       They only happen on a conversation by conversation basis and don't stay in effect in subsequent conversations.\r\nvoid ActionStartConversation(object oObjectToConverse, string sDialogResRef = \"\", int bPrivateConversation = FALSE, int nConversationType = CONVERSATION_TYPE_CINEMATIC, int bIgnoreStartRange = FALSE, string sNameObjectToIgnore1 = \"\", string sNameObjectToIgnore2 = \"\", string sNameObjectToIgnore3 = \"\", string sNameObjectToIgnore4 = \"\", string sNameObjectToIgnore5 = \"\", string sNameObjectToIgnore6 = \"\", int bUseLeader = FALSE, int nBarkX = -1, int nBarkY = -1, int bDontClearAllActions = 0);",
-                "// AMF: APRIL 28, 2003 - I HAVE CHANGED THIS FUNCTION AS PER DAN'S REQUEST\r\n// 204: Starts a conversation with oObjectToConverseWith - this will cause their\r\n// OnDialog event to fire.\r\n// - oObjectToConverseWith\r\n// - sDialogResRef: If this is blank, the creature's own dialogue file will be used\r\n// - bPrivateConversation: If this is blank, the default is FALSE.\r\n// - nConversationType - If this is blank the default will be Cinematic, ie. a normal conversation type\r\n//                                  other choices inclue: CONVERSATION_TYPE_COMPUTER\r\n//   UPDATE:  nConversationType actually has no meaning anymore.  This has been replaced by a flag in the dialog editor.  However\r\n//                for backwards compatability it has been left here.  So when using this command place CONVERSATION_TYPE_CINEMATIC in here. - DJF\r\n// - bIgnoreStartRange - If this is blank the default will be FALSE, ie. Start conversation ranges are in effect\r\n//                                                                      Setting this to TRUE will cause creatures to start a conversation without requiring to close\r\n//                                                                      the distance between the two object in dialog.\r\n// - sNameObjectToIgnore1-6 - Normally objects in the animation list of the dialog editor have to be available for animations on that node to work\r\n//                                        these 6 strings are to indicate 6 objects that don�t need to be available for things to proceed.  The string should be EXACTLY\r\n//                                        the same as the string that it represents in the dialog editor.\r\n// - nBarkX and nBarkY - These override the left, top corner position for the bark string if the conversation starting is a bark string.\r\n//                       They only happen on a conversation by conversation basis and don't stay in effect in subsequent conversations.\r\nvoid ActionStartConversation(object oObjectToConverse, string sDialogResRef = \"\", int bPrivateConversation = FALSE, int nConversationType = CONVERSATION_TYPE_CINEMATIC, int bIgnoreStartRange = FALSE, string sNameObjectToIgnore1 = \"\", string sNameObjectToIgnore2 = \"\", string sNameObjectToIgnore3 = \"\", string sNameObjectToIgnore4 = \"\", string sNameObjectToIgnore5 = \"\", string sNameObjectToIgnore6 = \"\", int bUseLeader = FALSE, int nBarkX = -1, int nBarkY = -1, int bDontClearAllActions = 0);"
+                new List<ScriptParam> { new ScriptParam(DataType.Object, "oObjectToConverse", null), new ScriptParam(DataType.String, "sDialogResRef", "\"\""), new ScriptParam(DataType.Int, "bPrivateConversation", 0), new ScriptParam(DataType.Int, "nConversationType", 0), new ScriptParam(DataType.Int, "bIgnoreStartRange", 0), new ScriptParam(DataType.String, "sNameObjectToIgnore1", "\"\""), new ScriptParam(DataType.String, "sNameObjectToIgnore2", "\"\""), new ScriptParam(DataType.String, "sNameObjectToIgnore3", "\"\""), new ScriptParam(DataType.String, "sNameObjectToIgnore4", "\"\""), new ScriptParam(DataType.String, "sNameObjectToIgnore5", "\"\""), new ScriptParam(DataType.String, "sNameObjectToIgnore6", "\"\""), new ScriptParam(DataType.Int, "bUseLeader", 0), new ScriptParam(DataType.Int, "nBarkX", -1), new ScriptParam(DataType.Int, "nBarkY", -1), new ScriptParam(DataType.Int, "bDontClearAllActions", 0) },
+                "// AMF: APRIL 28, 2003 - I HAVE CHANGED THIS FUNCTION AS PER DAN'S REQUEST\r\n// 204: Starts a conversation with oObjectToConverseWith - this will cause their\r\n// OnDialog event to fire.\r\n// - oObjectToConverseWith\r\n// - sDialogResRef: If this is blank, the creature's own dialogue file will be used\r\n// - bPrivateConversation: If this is blank, the default is 0.\r\n// - nConversationType - If this is blank the default will be Cinematic, ie. a normal conversation type\r\n//                                  other choices inclue: CONVERSATION_TYPE_COMPUTER\r\n//   UPDATE:  nConversationType actually has no meaning anymore.  This has been replaced by a flag in the dialog editor.  However\r\n//                for backwards compatability it has been left here.  So when using this command place 0 in here. - DJF\r\n// - bIgnoreStartRange - If this is blank the default will be 0, ie. Start conversation ranges are in effect\r\n//                                                                      Setting this to 1 will cause creatures to start a conversation without requiring to close\r\n//                                                                      the distance between the two object in dialog.\r\n// - sNameObjectToIgnore1-6 - Normally objects in the animation list of the dialog editor have to be available for animations on that node to work\r\n//                                        these 6 strings are to indicate 6 objects that don�t need to be available for things to proceed.  The string should be EXACTLY\r\n//                                        the same as the string that it represents in the dialog editor.\r\n// - nBarkX and nBarkY - These override the left, top corner position for the bark string if the conversation starting is a bark string.\r\n//                       They only happen on a conversation by conversation basis and don't stay in effect in subsequent conversations.\r\nvoid ActionStartConversation(object oObjectToConverse, string sDialogResRef = \"\", int bPrivateConversation = 0, int nConversationType = 0, int bIgnoreStartRange = 0, string sNameObjectToIgnore1 = \"\", string sNameObjectToIgnore2 = \"\", string sNameObjectToIgnore3 = \"\", string sNameObjectToIgnore4 = \"\", string sNameObjectToIgnore5 = \"\", string sNameObjectToIgnore6 = \"\", int bUseLeader = 0, int nBarkX = -1, int nBarkY = -1, int bDontClearAllActions = 0);",
+                "// AMF: APRIL 28, 2003 - I HAVE CHANGED THIS FUNCTION AS PER DAN'S REQUEST\r\n// 204: Starts a conversation with oObjectToConverseWith - this will cause their\r\n// OnDialog event to fire.\r\n// - oObjectToConverseWith\r\n// - sDialogResRef: If this is blank, the creature's own dialogue file will be used\r\n// - bPrivateConversation: If this is blank, the default is 0.\r\n// - nConversationType - If this is blank the default will be Cinematic, ie. a normal conversation type\r\n//                                  other choices inclue: CONVERSATION_TYPE_COMPUTER\r\n//   UPDATE:  nConversationType actually has no meaning anymore.  This has been replaced by a flag in the dialog editor.  However\r\n//                for backwards compatability it has been left here.  So when using this command place 0 in here. - DJF\r\n// - bIgnoreStartRange - If this is blank the default will be 0, ie. Start conversation ranges are in effect\r\n//                                                                      Setting this to 1 will cause creatures to start a conversation without requiring to close\r\n//                                                                      the distance between the two object in dialog.\r\n// - sNameObjectToIgnore1-6 - Normally objects in the animation list of the dialog editor have to be available for animations on that node to work\r\n//                                        these 6 strings are to indicate 6 objects that don�t need to be available for things to proceed.  The string should be EXACTLY\r\n//                                        the same as the string that it represents in the dialog editor.\r\n// - nBarkX and nBarkY - These override the left, top corner position for the bark string if the conversation starting is a bark string.\r\n//                       They only happen on a conversation by conversation basis and don't stay in effect in subsequent conversations.\r\nvoid ActionStartConversation(object oObjectToConverse, string sDialogResRef = \"\", int bPrivateConversation = 0, int nConversationType = 0, int bIgnoreStartRange = 0, string sNameObjectToIgnore1 = \"\", string sNameObjectToIgnore2 = \"\", string sNameObjectToIgnore3 = \"\", string sNameObjectToIgnore4 = \"\", string sNameObjectToIgnore5 = \"\", string sNameObjectToIgnore6 = \"\", int bUseLeader = 0, int nBarkX = -1, int nBarkY = -1, int bDontClearAllActions = 0);"
             ),
             new ScriptFunction(
                 DataType.Void,
@@ -10153,9 +10163,9 @@ namespace CSharpKOTOR.Common.Script
             new ScriptFunction(
                 DataType.Effect,
                 "EffectBeam",
-                new List<ScriptParam> { new ScriptParam(DataType.Int, "nBeamVisualEffect", null), new ScriptParam(DataType.Object, "oEffector", null), new ScriptParam(DataType.Int, "nBodyPart", null), new ScriptParam(DataType.Int, "bMissEffect", FALSE) },
-                "// 207: Create a Beam effect.\r\n// - nBeamVisualEffect: VFX_BEAM_*\r\n// - oEffector: the beam is emitted from this creature\r\n// - nBodyPart: BODY_NODE_*\r\n// - bMissEffect: If this is TRUE, the beam will fire to a random vector near or\r\n//   past the target\r\n// * Returns an effect of type EFFECT_TYPE_INVALIDEFFECT if nBeamVisualEffect is\r\n//   not valid.\r\neffect EffectBeam(int nBeamVisualEffect, object oEffector, int nBodyPart, int bMissEffect=FALSE);",
-                "// 207: Create a Beam effect.\r\n// - nBeamVisualEffect: VFX_BEAM_*\r\n// - oEffector: the beam is emitted from this creature\r\n// - nBodyPart: BODY_NODE_*\r\n// - bMissEffect: If this is TRUE, the beam will fire to a random vector near or\r\n//   past the target\r\n// * Returns an effect of type EFFECT_TYPE_INVALIDEFFECT if nBeamVisualEffect is\r\n//   not valid.\r\neffect EffectBeam(int nBeamVisualEffect, object oEffector, int nBodyPart, int bMissEffect=FALSE);"
+                new List<ScriptParam> { new ScriptParam(DataType.Int, "nBeamVisualEffect", null), new ScriptParam(DataType.Object, "oEffector", null), new ScriptParam(DataType.Int, "nBodyPart", null), new ScriptParam(DataType.Int, "bMissEffect", 0) },
+                "// 207: Create a Beam effect.\r\n// - nBeamVisualEffect: VFX_BEAM_*\r\n// - oEffector: the beam is emitted from this creature\r\n// - nBodyPart: BODY_NODE_*\r\n// - bMissEffect: If this is 1, the beam will fire to a random vector near or\r\n//   past the target\r\n// * Returns an effect of type EFFECT_TYPE_INVALIDEFFECT if nBeamVisualEffect is\r\n//   not valid.\r\neffect EffectBeam(int nBeamVisualEffect, object oEffector, int nBodyPart, int bMissEffect=0);",
+                "// 207: Create a Beam effect.\r\n// - nBeamVisualEffect: VFX_BEAM_*\r\n// - oEffector: the beam is emitted from this creature\r\n// - nBodyPart: BODY_NODE_*\r\n// - bMissEffect: If this is 1, the beam will fire to a random vector near or\r\n//   past the target\r\n// * Returns an effect of type EFFECT_TYPE_INVALIDEFFECT if nBeamVisualEffect is\r\n//   not valid.\r\neffect EffectBeam(int nBeamVisualEffect, object oEffector, int nBodyPart, int bMissEffect=0);"
             ),
             new ScriptFunction(
                 DataType.Int,
@@ -10224,8 +10234,8 @@ namespace CSharpKOTOR.Common.Script
                 DataType.Int,
                 "GetIsPC",
                 new List<ScriptParam> { new ScriptParam(DataType.Object, "oCreature", null) },
-                "// 217: * Returns TRUE if oCreature is a Player Controlled character.\r\nint GetIsPC(object oCreature);",
-                "// 217: * Returns TRUE if oCreature is a Player Controlled character.\r\nint GetIsPC(object oCreature);"
+                "// 217: * Returns 1 if oCreature is a Player Controlled character.\r\nint GetIsPC(object oCreature);",
+                "// 217: * Returns 1 if oCreature is a Player Controlled character.\r\nint GetIsPC(object oCreature);"
             ),
             new ScriptFunction(
                 DataType.Float,
@@ -10251,9 +10261,9 @@ namespace CSharpKOTOR.Common.Script
             new ScriptFunction(
                 DataType.Void,
                 "SpeakString",
-                new List<ScriptParam> { new ScriptParam(DataType.String, "sStringToSpeak", null), new ScriptParam(DataType.Int, "nTalkVolume", TALKVOLUME_TALK) },
-                "// 221: The caller will immediately speak sStringToSpeak (this is different from\r\n// ActionSpeakString)\r\n// - sStringToSpeak\r\n// - nTalkVolume: TALKVOLUME_*\r\nvoid SpeakString(string sStringToSpeak, int nTalkVolume=TALKVOLUME_TALK);",
-                "// 221: The caller will immediately speak sStringToSpeak (this is different from\r\n// ActionSpeakString)\r\n// - sStringToSpeak\r\n// - nTalkVolume: TALKVOLUME_*\r\nvoid SpeakString(string sStringToSpeak, int nTalkVolume=TALKVOLUME_TALK);"
+                new List<ScriptParam> { new ScriptParam(DataType.String, "sStringToSpeak", null), new ScriptParam(DataType.Int, "nTalkVolume", 0) },
+                "// 221: The caller will immediately speak sStringToSpeak (this is different from\r\n// ActionSpeakString)\r\n// - sStringToSpeak\r\n// - nTalkVolume: TALKVOLUME_*\r\nvoid SpeakString(string sStringToSpeak, int nTalkVolume=0);",
+                "// 221: The caller will immediately speak sStringToSpeak (this is different from\r\n// ActionSpeakString)\r\n// - sStringToSpeak\r\n// - nTalkVolume: TALKVOLUME_*\r\nvoid SpeakString(string sStringToSpeak, int nTalkVolume=0);"
             ),
             new ScriptFunction(
                 DataType.Location,
@@ -10287,15 +10297,15 @@ namespace CSharpKOTOR.Common.Script
                 DataType.Object,
                 "GetNearestCreatureToLocation",
                 new List<ScriptParam> { new ScriptParam(DataType.Int, "nFirstCriteriaType", null), new ScriptParam(DataType.Int, "nFirstCriteriaValue", null), new ScriptParam(DataType.Location, "lLocation", null), new ScriptParam(DataType.Int, "nNth", 1), new ScriptParam(DataType.Int, "nSecondCriteriaType", -1), new ScriptParam(DataType.Int, "nSecondCriteriaValue", -1), new ScriptParam(DataType.Int, "nThirdCriteriaType", -1), new ScriptParam(DataType.Int, "nThirdCriteriaValue", -1) },
-                "// 226: Get the creature nearest to lLocation, subject to all the criteria specified.\r\n// - nFirstCriteriaType: CREATURE_TYPE_*\r\n// - nFirstCriteriaValue:\r\n//   -> CLASS_TYPE_* if nFirstCriteriaType was CREATURE_TYPE_CLASS\r\n//   -> SPELL_* if nFirstCriteriaType was CREATURE_TYPE_DOES_NOT_HAVE_SPELL_EFFECT\r\n//      or CREATURE_TYPE_HAS_SPELL_EFFECT\r\n//   -> TRUE or FALSE if nFirstCriteriaType was CREATURE_TYPE_IS_ALIVE\r\n//   -> PERCEPTION_* if nFirstCriteriaType was CREATURE_TYPE_PERCEPTION\r\n//   -> PLAYER_CHAR_IS_PC or PLAYER_CHAR_NOT_PC if nFirstCriteriaType was\r\n//      CREATURE_TYPE_PLAYER_CHAR\r\n//   -> RACIAL_TYPE_* if nFirstCriteriaType was CREATURE_TYPE_RACIAL_TYPE\r\n//   -> REPUTATION_TYPE_* if nFirstCriteriaType was CREATURE_TYPE_REPUTATION\r\n//   For example, to get the nearest PC, use\r\n//   (CREATURE_TYPE_PLAYER_CHAR, PLAYER_CHAR_IS_PC)\r\n// - lLocation: We're trying to find the creature of the specified type that is\r\n//   nearest to lLocation\r\n// - nNth: We don't have to find the first nearest: we can find the Nth nearest....\r\n// - nSecondCriteriaType: This is used in the same way as nFirstCriteriaType to\r\n//   further specify the type of creature that we are looking for.\r\n// - nSecondCriteriaValue: This is used in the same way as nFirstCriteriaValue\r\n//   to further specify the type of creature that we are looking for.\r\n// - nThirdCriteriaType: This is used in the same way as nFirstCriteriaType to\r\n//   further specify the type of creature that we are looking for.\r\n// - nThirdCriteriaValue: This is used in the same way as nFirstCriteriaValue to\r\n//   further specify the type of creature that we are looking for.\r\n// * Return value on error: OBJECT_INVALID\r\nobject GetNearestCreatureToLocation(int nFirstCriteriaType, int nFirstCriteriaValue,  location lLocation, int nNth=1, int nSecondCriteriaType=-1, int nSecondCriteriaValue=-1, int nThirdCriteriaType=-1,  int nThirdCriteriaValue=-1 );",
-                "// 226: Get the creature nearest to lLocation, subject to all the criteria specified.\r\n// - nFirstCriteriaType: CREATURE_TYPE_*\r\n// - nFirstCriteriaValue:\r\n//   -> CLASS_TYPE_* if nFirstCriteriaType was CREATURE_TYPE_CLASS\r\n//   -> SPELL_* if nFirstCriteriaType was CREATURE_TYPE_DOES_NOT_HAVE_SPELL_EFFECT\r\n//      or CREATURE_TYPE_HAS_SPELL_EFFECT\r\n//   -> TRUE or FALSE if nFirstCriteriaType was CREATURE_TYPE_IS_ALIVE\r\n//   -> PERCEPTION_* if nFirstCriteriaType was CREATURE_TYPE_PERCEPTION\r\n//   -> PLAYER_CHAR_IS_PC or PLAYER_CHAR_NOT_PC if nFirstCriteriaType was\r\n//      CREATURE_TYPE_PLAYER_CHAR\r\n//   -> RACIAL_TYPE_* if nFirstCriteriaType was CREATURE_TYPE_RACIAL_TYPE\r\n//   -> REPUTATION_TYPE_* if nFirstCriteriaType was CREATURE_TYPE_REPUTATION\r\n//   For example, to get the nearest PC, use\r\n//   (CREATURE_TYPE_PLAYER_CHAR, PLAYER_CHAR_IS_PC)\r\n// - lLocation: We're trying to find the creature of the specified type that is\r\n//   nearest to lLocation\r\n// - nNth: We don't have to find the first nearest: we can find the Nth nearest....\r\n// - nSecondCriteriaType: This is used in the same way as nFirstCriteriaType to\r\n//   further specify the type of creature that we are looking for.\r\n// - nSecondCriteriaValue: This is used in the same way as nFirstCriteriaValue\r\n//   to further specify the type of creature that we are looking for.\r\n// - nThirdCriteriaType: This is used in the same way as nFirstCriteriaType to\r\n//   further specify the type of creature that we are looking for.\r\n// - nThirdCriteriaValue: This is used in the same way as nFirstCriteriaValue to\r\n//   further specify the type of creature that we are looking for.\r\n// * Return value on error: OBJECT_INVALID\r\nobject GetNearestCreatureToLocation(int nFirstCriteriaType, int nFirstCriteriaValue,  location lLocation, int nNth=1, int nSecondCriteriaType=-1, int nSecondCriteriaValue=-1, int nThirdCriteriaType=-1,  int nThirdCriteriaValue=-1 );"
+                "// 226: Get the creature nearest to lLocation, subject to all the criteria specified.\r\n// - nFirstCriteriaType: CREATURE_TYPE_*\r\n// - nFirstCriteriaValue:\r\n//   -> CLASS_TYPE_* if nFirstCriteriaType was CREATURE_TYPE_CLASS\r\n//   -> SPELL_* if nFirstCriteriaType was CREATURE_TYPE_DOES_NOT_HAVE_SPELL_EFFECT\r\n//      or CREATURE_TYPE_HAS_SPELL_EFFECT\r\n//   -> 1 or 0 if nFirstCriteriaType was CREATURE_TYPE_IS_ALIVE\r\n//   -> PERCEPTION_* if nFirstCriteriaType was CREATURE_TYPE_PERCEPTION\r\n//   -> PLAYER_CHAR_IS_PC or PLAYER_CHAR_NOT_PC if nFirstCriteriaType was\r\n//      CREATURE_TYPE_PLAYER_CHAR\r\n//   -> RACIAL_TYPE_* if nFirstCriteriaType was CREATURE_TYPE_RACIAL_TYPE\r\n//   -> REPUTATION_TYPE_* if nFirstCriteriaType was CREATURE_TYPE_REPUTATION\r\n//   For example, to get the nearest PC, use\r\n//   (CREATURE_TYPE_PLAYER_CHAR, PLAYER_CHAR_IS_PC)\r\n// - lLocation: We're trying to find the creature of the specified type that is\r\n//   nearest to lLocation\r\n// - nNth: We don't have to find the first nearest: we can find the Nth nearest....\r\n// - nSecondCriteriaType: This is used in the same way as nFirstCriteriaType to\r\n//   further specify the type of creature that we are looking for.\r\n// - nSecondCriteriaValue: This is used in the same way as nFirstCriteriaValue\r\n//   to further specify the type of creature that we are looking for.\r\n// - nThirdCriteriaType: This is used in the same way as nFirstCriteriaType to\r\n//   further specify the type of creature that we are looking for.\r\n// - nThirdCriteriaValue: This is used in the same way as nFirstCriteriaValue to\r\n//   further specify the type of creature that we are looking for.\r\n// * Return value on error: OBJECT_INVALID\r\nobject GetNearestCreatureToLocation(int nFirstCriteriaType, int nFirstCriteriaValue,  location lLocation, int nNth=1, int nSecondCriteriaType=-1, int nSecondCriteriaValue=-1, int nThirdCriteriaType=-1,  int nThirdCriteriaValue=-1 );",
+                "// 226: Get the creature nearest to lLocation, subject to all the criteria specified.\r\n// - nFirstCriteriaType: CREATURE_TYPE_*\r\n// - nFirstCriteriaValue:\r\n//   -> CLASS_TYPE_* if nFirstCriteriaType was CREATURE_TYPE_CLASS\r\n//   -> SPELL_* if nFirstCriteriaType was CREATURE_TYPE_DOES_NOT_HAVE_SPELL_EFFECT\r\n//      or CREATURE_TYPE_HAS_SPELL_EFFECT\r\n//   -> 1 or 0 if nFirstCriteriaType was CREATURE_TYPE_IS_ALIVE\r\n//   -> PERCEPTION_* if nFirstCriteriaType was CREATURE_TYPE_PERCEPTION\r\n//   -> PLAYER_CHAR_IS_PC or PLAYER_CHAR_NOT_PC if nFirstCriteriaType was\r\n//      CREATURE_TYPE_PLAYER_CHAR\r\n//   -> RACIAL_TYPE_* if nFirstCriteriaType was CREATURE_TYPE_RACIAL_TYPE\r\n//   -> REPUTATION_TYPE_* if nFirstCriteriaType was CREATURE_TYPE_REPUTATION\r\n//   For example, to get the nearest PC, use\r\n//   (CREATURE_TYPE_PLAYER_CHAR, PLAYER_CHAR_IS_PC)\r\n// - lLocation: We're trying to find the creature of the specified type that is\r\n//   nearest to lLocation\r\n// - nNth: We don't have to find the first nearest: we can find the Nth nearest....\r\n// - nSecondCriteriaType: This is used in the same way as nFirstCriteriaType to\r\n//   further specify the type of creature that we are looking for.\r\n// - nSecondCriteriaValue: This is used in the same way as nFirstCriteriaValue\r\n//   to further specify the type of creature that we are looking for.\r\n// - nThirdCriteriaType: This is used in the same way as nFirstCriteriaType to\r\n//   further specify the type of creature that we are looking for.\r\n// - nThirdCriteriaValue: This is used in the same way as nFirstCriteriaValue to\r\n//   further specify the type of creature that we are looking for.\r\n// * Return value on error: OBJECT_INVALID\r\nobject GetNearestCreatureToLocation(int nFirstCriteriaType, int nFirstCriteriaValue,  location lLocation, int nNth=1, int nSecondCriteriaType=-1, int nSecondCriteriaValue=-1, int nThirdCriteriaType=-1,  int nThirdCriteriaValue=-1 );"
             ),
             new ScriptFunction(
                 DataType.Object,
                 "GetNearestObject",
-                new List<ScriptParam> { new ScriptParam(DataType.Int, "nObjectType", OBJECT_TYPE_ALL), new ScriptParam(DataType.Object, "oTarget", OBJECT_SELF), new ScriptParam(DataType.Int, "nNth", 1) },
-                "// 227: Get the Nth object nearest to oTarget that is of the specified type.\r\n// - nObjectType: OBJECT_TYPE_*\r\n// - oTarget\r\n// - nNth\r\n// * Return value on error: OBJECT_INVALID\r\nobject GetNearestObject(int nObjectType=OBJECT_TYPE_ALL, object oTarget=OBJECT_SELF, int nNth=1);",
-                "// 227: Get the Nth object nearest to oTarget that is of the specified type.\r\n// - nObjectType: OBJECT_TYPE_*\r\n// - oTarget\r\n// - nNth\r\n// * Return value on error: OBJECT_INVALID\r\nobject GetNearestObject(int nObjectType=OBJECT_TYPE_ALL, object oTarget=OBJECT_SELF, int nNth=1);"
+                new List<ScriptParam> { new ScriptParam(DataType.Int, "nObjectType", 32767), new ScriptParam(DataType.Object, "oTarget", OBJECT_SELF), new ScriptParam(DataType.Int, "nNth", 1) },
+                "// 227: Get the Nth object nearest to oTarget that is of the specified type.\r\n// - nObjectType: OBJECT_TYPE_*\r\n// - oTarget\r\n// - nNth\r\n// * Return value on error: OBJECT_INVALID\r\nobject GetNearestObject(int nObjectType=32767, object oTarget=OBJECT_SELF, int nNth=1);",
+                "// 227: Get the Nth object nearest to oTarget that is of the specified type.\r\n// - nObjectType: OBJECT_TYPE_*\r\n// - oTarget\r\n// - nNth\r\n// * Return value on error: OBJECT_INVALID\r\nobject GetNearestObject(int nObjectType=32767, object oTarget=OBJECT_SELF, int nNth=1);"
             ),
             new ScriptFunction(
                 DataType.Object,
@@ -10342,30 +10352,30 @@ namespace CSharpKOTOR.Common.Script
             new ScriptFunction(
                 DataType.Void,
                 "ActionCastSpellAtLocation",
-                new List<ScriptParam> { new ScriptParam(DataType.Int, "nSpell", null), new ScriptParam(DataType.Location, "lTargetLocation", null), new ScriptParam(DataType.Int, "nMetaMagic", 0), new ScriptParam(DataType.Int, "bCheat", FALSE), new ScriptParam(DataType.Int, "nProjectilePathType", PROJECTILE_PATH_TYPE_DEFAULT), new ScriptParam(DataType.Int, "bInstantSpell", FALSE) },
-                "// 234: Cast spell nSpell at lTargetLocation.\r\n// - nSpell: SPELL_*\r\n// - lTargetLocation\r\n// - nMetaMagic: METAMAGIC_*\r\n// - bCheat: If this is TRUE, then the executor of the action doesn't have to be\r\n//   able to cast the spell.\r\n// - nProjectilePathType: PROJECTILE_PATH_TYPE_*\r\n// - bInstantSpell: If this is TRUE, the spell is cast immediately; this allows\r\n//   the end-user to simulate\r\n//   a high-level magic user having lots of advance warning of impending trouble.\r\nvoid   ActionCastSpellAtLocation(int nSpell, location lTargetLocation, int nMetaMagic=0, int bCheat=FALSE, int nProjectilePathType=PROJECTILE_PATH_TYPE_DEFAULT, int bInstantSpell=FALSE);",
-                "// 234: Cast spell nSpell at lTargetLocation.\r\n// - nSpell: SPELL_*\r\n// - lTargetLocation\r\n// - nMetaMagic: METAMAGIC_*\r\n// - bCheat: If this is TRUE, then the executor of the action doesn't have to be\r\n//   able to cast the spell.\r\n// - nProjectilePathType: PROJECTILE_PATH_TYPE_*\r\n// - bInstantSpell: If this is TRUE, the spell is cast immediately; this allows\r\n//   the end-user to simulate\r\n//   a high-level magic user having lots of advance warning of impending trouble.\r\nvoid   ActionCastSpellAtLocation(int nSpell, location lTargetLocation, int nMetaMagic=0, int bCheat=FALSE, int nProjectilePathType=PROJECTILE_PATH_TYPE_DEFAULT, int bInstantSpell=FALSE);"
+                new List<ScriptParam> { new ScriptParam(DataType.Int, "nSpell", null), new ScriptParam(DataType.Location, "lTargetLocation", null), new ScriptParam(DataType.Int, "nMetaMagic", 0), new ScriptParam(DataType.Int, "bCheat", 0), new ScriptParam(DataType.Int, "nProjectilePathType", 0), new ScriptParam(DataType.Int, "bInstantSpell", 0) },
+                "// 234: Cast spell nSpell at lTargetLocation.\r\n// - nSpell: SPELL_*\r\n// - lTargetLocation\r\n// - nMetaMagic: METAMAGIC_*\r\n// - bCheat: If this is 1, then the executor of the action doesn't have to be\r\n//   able to cast the spell.\r\n// - nProjectilePathType: PROJECTILE_PATH_TYPE_*\r\n// - bInstantSpell: If this is 1, the spell is cast immediately; this allows\r\n//   the end-user to simulate\r\n//   a high-level magic user having lots of advance warning of impending trouble.\r\nvoid   ActionCastSpellAtLocation(int nSpell, location lTargetLocation, int nMetaMagic=0, int bCheat=0, int nProjectilePathType=0, int bInstantSpell=0);",
+                "// 234: Cast spell nSpell at lTargetLocation.\r\n// - nSpell: SPELL_*\r\n// - lTargetLocation\r\n// - nMetaMagic: METAMAGIC_*\r\n// - bCheat: If this is 1, then the executor of the action doesn't have to be\r\n//   able to cast the spell.\r\n// - nProjectilePathType: PROJECTILE_PATH_TYPE_*\r\n// - bInstantSpell: If this is 1, the spell is cast immediately; this allows\r\n//   the end-user to simulate\r\n//   a high-level magic user having lots of advance warning of impending trouble.\r\nvoid   ActionCastSpellAtLocation(int nSpell, location lTargetLocation, int nMetaMagic=0, int bCheat=0, int nProjectilePathType=0, int bInstantSpell=0);"
             ),
             new ScriptFunction(
                 DataType.Int,
                 "GetIsEnemy",
                 new List<ScriptParam> { new ScriptParam(DataType.Object, "oTarget", null), new ScriptParam(DataType.Object, "oSource", OBJECT_SELF) },
-                "// 235: * Returns TRUE if oSource considers oTarget as an enemy.\r\nint GetIsEnemy(object oTarget, object oSource=OBJECT_SELF);",
-                "// 235: * Returns TRUE if oSource considers oTarget as an enemy.\r\nint GetIsEnemy(object oTarget, object oSource=OBJECT_SELF);"
+                "// 235: * Returns 1 if oSource considers oTarget as an enemy.\r\nint GetIsEnemy(object oTarget, object oSource=OBJECT_SELF);",
+                "// 235: * Returns 1 if oSource considers oTarget as an enemy.\r\nint GetIsEnemy(object oTarget, object oSource=OBJECT_SELF);"
             ),
             new ScriptFunction(
                 DataType.Int,
                 "GetIsFriend",
                 new List<ScriptParam> { new ScriptParam(DataType.Object, "oTarget", null), new ScriptParam(DataType.Object, "oSource", OBJECT_SELF) },
-                "// 236: * Returns TRUE if oSource considers oTarget as a friend.\r\nint GetIsFriend(object oTarget, object oSource=OBJECT_SELF);",
-                "// 236: * Returns TRUE if oSource considers oTarget as a friend.\r\nint GetIsFriend(object oTarget, object oSource=OBJECT_SELF);"
+                "// 236: * Returns 1 if oSource considers oTarget as a friend.\r\nint GetIsFriend(object oTarget, object oSource=OBJECT_SELF);",
+                "// 236: * Returns 1 if oSource considers oTarget as a friend.\r\nint GetIsFriend(object oTarget, object oSource=OBJECT_SELF);"
             ),
             new ScriptFunction(
                 DataType.Int,
                 "GetIsNeutral",
                 new List<ScriptParam> { new ScriptParam(DataType.Object, "oTarget", null), new ScriptParam(DataType.Object, "oSource", OBJECT_SELF) },
-                "// 237: * Returns TRUE if oSource considers oTarget as neutral.\r\nint GetIsNeutral(object oTarget, object oSource=OBJECT_SELF);",
-                "// 237: * Returns TRUE if oSource considers oTarget as neutral.\r\nint GetIsNeutral(object oTarget, object oSource=OBJECT_SELF);"
+                "// 237: * Returns 1 if oSource considers oTarget as neutral.\r\nint GetIsNeutral(object oTarget, object oSource=OBJECT_SELF);",
+                "// 237: * Returns 1 if oSource considers oTarget as neutral.\r\nint GetIsNeutral(object oTarget, object oSource=OBJECT_SELF);"
             ),
             new ScriptFunction(
                 DataType.Object,
@@ -10384,16 +10394,16 @@ namespace CSharpKOTOR.Common.Script
             new ScriptFunction(
                 DataType.Void,
                 "ActionSpeakStringByStrRef",
-                new List<ScriptParam> { new ScriptParam(DataType.Int, "nStrRef", null), new ScriptParam(DataType.Int, "nTalkVolume", TALKVOLUME_TALK) },
-                "// 240: Causes the creature to speak a translated string.\r\n// - nStrRef: Reference of the string in the talk table\r\n// - nTalkVolume: TALKVOLUME_*\r\nvoid ActionSpeakStringByStrRef(int nStrRef, int nTalkVolume=TALKVOLUME_TALK);",
-                "// 240: Causes the creature to speak a translated string.\r\n// - nStrRef: Reference of the string in the talk table\r\n// - nTalkVolume: TALKVOLUME_*\r\nvoid ActionSpeakStringByStrRef(int nStrRef, int nTalkVolume=TALKVOLUME_TALK);"
+                new List<ScriptParam> { new ScriptParam(DataType.Int, "nStrRef", null), new ScriptParam(DataType.Int, "nTalkVolume", 0) },
+                "// 240: Causes the creature to speak a translated string.\r\n// - nStrRef: Reference of the string in the talk table\r\n// - nTalkVolume: TALKVOLUME_*\r\nvoid ActionSpeakStringByStrRef(int nStrRef, int nTalkVolume=0);",
+                "// 240: Causes the creature to speak a translated string.\r\n// - nStrRef: Reference of the string in the talk table\r\n// - nTalkVolume: TALKVOLUME_*\r\nvoid ActionSpeakStringByStrRef(int nStrRef, int nTalkVolume=0);"
             ),
             new ScriptFunction(
                 DataType.Void,
                 "DestroyObject",
-                new List<ScriptParam> { new ScriptParam(DataType.Object, "oDestroy", null), new ScriptParam(DataType.Float, "fDelay", 0f), new ScriptParam(DataType.Int, "bNoFade", FALSE), new ScriptParam(DataType.Float, "fDelayUntilFade", 0f), new ScriptParam(DataType.Int, "nHideFeedback", 0) },
-                "// 241: Destroy oObject (irrevocably).\r\n// This will not work on modules and areas.\r\n// The bNoFade and fDelayUntilFade are for creatures and placeables only\r\nvoid DestroyObject(object oDestroy, float fDelay=0.0f, int bNoFade = FALSE, float fDelayUntilFade = 0.0f, int nHideFeedback = 0);",
-                "// 241: Destroy oObject (irrevocably).\r\n// This will not work on modules and areas.\r\n// The bNoFade and fDelayUntilFade are for creatures and placeables only\r\nvoid DestroyObject(object oDestroy, float fDelay=0.0f, int bNoFade = FALSE, float fDelayUntilFade = 0.0f, int nHideFeedback = 0);"
+                new List<ScriptParam> { new ScriptParam(DataType.Object, "oDestroy", null), new ScriptParam(DataType.Float, "fDelay", 0f), new ScriptParam(DataType.Int, "bNoFade", 0), new ScriptParam(DataType.Float, "fDelayUntilFade", 0f), new ScriptParam(DataType.Int, "nHideFeedback", 0) },
+                "// 241: Destroy oObject (irrevocably).\r\n// This will not work on modules and areas.\r\n// The bNoFade and fDelayUntilFade are for creatures and placeables only\r\nvoid DestroyObject(object oDestroy, float fDelay=0.0f, int bNoFade = 0, float fDelayUntilFade = 0.0f, int nHideFeedback = 0);",
+                "// 241: Destroy oObject (irrevocably).\r\n// This will not work on modules and areas.\r\n// The bNoFade and fDelayUntilFade are for creatures and placeables only\r\nvoid DestroyObject(object oDestroy, float fDelay=0.0f, int bNoFade = 0, float fDelayUntilFade = 0.0f, int nHideFeedback = 0);"
             ),
             new ScriptFunction(
                 DataType.Object,
@@ -10405,16 +10415,16 @@ namespace CSharpKOTOR.Common.Script
             new ScriptFunction(
                 DataType.Object,
                 "CreateObject",
-                new List<ScriptParam> { new ScriptParam(DataType.Int, "nObjectType", null), new ScriptParam(DataType.String, "sTemplate", null), new ScriptParam(DataType.Location, "lLocation", null), new ScriptParam(DataType.Int, "bUseAppearAnimation", FALSE) },
-                "// 243: Create an object of the specified type at lLocation.\r\n// - nObjectType: OBJECT_TYPE_ITEM, OBJECT_TYPE_CREATURE, OBJECT_TYPE_PLACEABLE,\r\n//   OBJECT_TYPE_STORE\r\n// - sTemplate\r\n// - lLocation\r\n// - bUseAppearAnimation\r\n// Waypoints can now also be created using the CreateObject function.\r\n// nObjectType is: OBJECT_TYPE_WAYPOINT\r\n// sTemplate will be the tag of the waypoint\r\n// lLocation is where the waypoint will be placed\r\n// bUseAppearAnimation is ignored\r\nobject CreateObject(int nObjectType, string sTemplate, location lLocation, int bUseAppearAnimation=FALSE);",
-                "// 243: Create an object of the specified type at lLocation.\r\n// - nObjectType: OBJECT_TYPE_ITEM, OBJECT_TYPE_CREATURE, OBJECT_TYPE_PLACEABLE,\r\n//   OBJECT_TYPE_STORE\r\n// - sTemplate\r\n// - lLocation\r\n// - bUseAppearAnimation\r\n// Waypoints can now also be created using the CreateObject function.\r\n// nObjectType is: OBJECT_TYPE_WAYPOINT\r\n// sTemplate will be the tag of the waypoint\r\n// lLocation is where the waypoint will be placed\r\n// bUseAppearAnimation is ignored\r\nobject CreateObject(int nObjectType, string sTemplate, location lLocation, int bUseAppearAnimation=FALSE);"
+                new List<ScriptParam> { new ScriptParam(DataType.Int, "nObjectType", null), new ScriptParam(DataType.String, "sTemplate", null), new ScriptParam(DataType.Location, "lLocation", null), new ScriptParam(DataType.Int, "bUseAppearAnimation", 0) },
+                "// 243: Create an object of the specified type at lLocation.\r\n// - nObjectType: OBJECT_TYPE_ITEM, 1, OBJECT_TYPE_PLACEABLE,\r\n//   OBJECT_TYPE_STORE\r\n// - sTemplate\r\n// - lLocation\r\n// - bUseAppearAnimation\r\n// Waypoints can now also be created using the CreateObject function.\r\n// nObjectType is: OBJECT_TYPE_WAYPOINT\r\n// sTemplate will be the tag of the waypoint\r\n// lLocation is where the waypoint will be placed\r\n// bUseAppearAnimation is ignored\r\nobject CreateObject(int nObjectType, string sTemplate, location lLocation, int bUseAppearAnimation=0);",
+                "// 243: Create an object of the specified type at lLocation.\r\n// - nObjectType: OBJECT_TYPE_ITEM, 1, OBJECT_TYPE_PLACEABLE,\r\n//   OBJECT_TYPE_STORE\r\n// - sTemplate\r\n// - lLocation\r\n// - bUseAppearAnimation\r\n// Waypoints can now also be created using the CreateObject function.\r\n// nObjectType is: OBJECT_TYPE_WAYPOINT\r\n// sTemplate will be the tag of the waypoint\r\n// lLocation is where the waypoint will be placed\r\n// bUseAppearAnimation is ignored\r\nobject CreateObject(int nObjectType, string sTemplate, location lLocation, int bUseAppearAnimation=0);"
             ),
             new ScriptFunction(
                 DataType.Event,
                 "EventSpellCastAt",
-                new List<ScriptParam> { new ScriptParam(DataType.Object, "oCaster", null), new ScriptParam(DataType.Int, "nSpell", null), new ScriptParam(DataType.Int, "bHarmful", TRUE) },
-                "// 244: Create an event which triggers the \"SpellCastAt\" script\r\nevent EventSpellCastAt(object oCaster, int nSpell, int bHarmful=TRUE);",
-                "// 244: Create an event which triggers the \"SpellCastAt\" script\r\nevent EventSpellCastAt(object oCaster, int nSpell, int bHarmful=TRUE);"
+                new List<ScriptParam> { new ScriptParam(DataType.Object, "oCaster", null), new ScriptParam(DataType.Int, "nSpell", null), new ScriptParam(DataType.Int, "bHarmful", 1) },
+                "// 244: Create an event which triggers the \"SpellCastAt\" script\r\nevent EventSpellCastAt(object oCaster, int nSpell, int bHarmful=1);",
+                "// 244: Create an event which triggers the \"SpellCastAt\" script\r\nevent EventSpellCastAt(object oCaster, int nSpell, int bHarmful=1);"
             ),
             new ScriptFunction(
                 DataType.Object,
@@ -10538,14 +10548,14 @@ namespace CSharpKOTOR.Common.Script
             new ScriptFunction(
                 DataType.Object,
                 "GetFirstInPersistentObject",
-                new List<ScriptParam> { new ScriptParam(DataType.Object, "oPersistentObject", OBJECT_SELF), new ScriptParam(DataType.Int, "nResidentObjectType", OBJECT_TYPE_CREATURE), new ScriptParam(DataType.Int, "nPersistentZone", PERSISTENT_ZONE_ACTIVE) },
+                new List<ScriptParam> { new ScriptParam(DataType.Object, "oPersistentObject", OBJECT_SELF), new ScriptParam(DataType.Int, "nResidentObjectType", 1), new ScriptParam(DataType.Int, "nPersistentZone", 0) },
                 "// These are for GetFirstInPersistentObject() and GetNextInPersistentObject()",
                 "// These are for GetFirstInPersistentObject() and GetNextInPersistentObject()"
             ),
             new ScriptFunction(
                 DataType.Object,
                 "GetNextInPersistentObject",
-                new List<ScriptParam> { new ScriptParam(DataType.Object, "oPersistentObject", OBJECT_SELF), new ScriptParam(DataType.Int, "nResidentObjectType", OBJECT_TYPE_CREATURE), new ScriptParam(DataType.Int, "nPersistentZone", PERSISTENT_ZONE_ACTIVE) },
+                new List<ScriptParam> { new ScriptParam(DataType.Object, "oPersistentObject", OBJECT_SELF), new ScriptParam(DataType.Int, "nResidentObjectType", 1), new ScriptParam(DataType.Int, "nPersistentZone", 0) },
                 "// These are for GetFirstInPersistentObject() and GetNextInPersistentObject()",
                 "// These are for GetFirstInPersistentObject() and GetNextInPersistentObject()"
             ),
@@ -10560,15 +10570,15 @@ namespace CSharpKOTOR.Common.Script
                 DataType.Int,
                 "ShowLevelUpGUI",
                 new List<ScriptParam>(),
-                "// 265: Brings up the level up GUI for the player.  The GUI will only show up\r\n//      if the player has gained enough experience points to level up.\r\n// * Returns TRUE if the GUI was successfully brought up; FALSE if not.\r\nint ShowLevelUpGUI();",
-                "// 265: Brings up the level up GUI for the player.  The GUI will only show up\r\n//      if the player has gained enough experience points to level up.\r\n// * Returns TRUE if the GUI was successfully brought up; FALSE if not.\r\nint ShowLevelUpGUI();"
+                "// 265: Brings up the level up GUI for the player.  The GUI will only show up\r\n//      if the player has gained enough experience points to level up.\r\n// * Returns 1 if the GUI was successfully brought up; 0 if not.\r\nint ShowLevelUpGUI();",
+                "// 265: Brings up the level up GUI for the player.  The GUI will only show up\r\n//      if the player has gained enough experience points to level up.\r\n// * Returns 1 if the GUI was successfully brought up; 0 if not.\r\nint ShowLevelUpGUI();"
             ),
             new ScriptFunction(
                 DataType.Void,
                 "SetItemNonEquippable",
                 new List<ScriptParam> { new ScriptParam(DataType.Object, "oItem", null), new ScriptParam(DataType.Int, "bNonEquippable", null) },
-                "// 266: Flag the specified item as being non-equippable or not.  Set bNonEquippable\r\n//      to TRUE to prevent this item from being equipped, and FALSE to allow\r\n//      the normal equipping checks to determine if the item can be equipped.\r\n// NOTE: This will do nothing if the object passed in is not an item.  Items that\r\n//       are already equipped when this is called will not automatically be\r\n//       unequipped.  These items will just be prevented from being re-equipped\r\n//       should they be unequipped.\r\nvoid SetItemNonEquippable( object oItem, int bNonEquippable );",
-                "// 266: Flag the specified item as being non-equippable or not.  Set bNonEquippable\r\n//      to TRUE to prevent this item from being equipped, and FALSE to allow\r\n//      the normal equipping checks to determine if the item can be equipped.\r\n// NOTE: This will do nothing if the object passed in is not an item.  Items that\r\n//       are already equipped when this is called will not automatically be\r\n//       unequipped.  These items will just be prevented from being re-equipped\r\n//       should they be unequipped.\r\nvoid SetItemNonEquippable( object oItem, int bNonEquippable );"
+                "// 266: Flag the specified item as being non-equippable or not.  Set bNonEquippable\r\n//      to 1 to prevent this item from being equipped, and 0 to allow\r\n//      the normal equipping checks to determine if the item can be equipped.\r\n// NOTE: This will do nothing if the object passed in is not an item.  Items that\r\n//       are already equipped when this is called will not automatically be\r\n//       unequipped.  These items will just be prevented from being re-equipped\r\n//       should they be unequipped.\r\nvoid SetItemNonEquippable( object oItem, int bNonEquippable );",
+                "// 266: Flag the specified item as being non-equippable or not.  Set bNonEquippable\r\n//      to 1 to prevent this item from being equipped, and 0 to allow\r\n//      the normal equipping checks to determine if the item can be equipped.\r\n// NOTE: This will do nothing if the object passed in is not an item.  Items that\r\n//       are already equipped when this is called will not automatically be\r\n//       unequipped.  These items will just be prevented from being re-equipped\r\n//       should they be unequipped.\r\nvoid SetItemNonEquippable( object oItem, int bNonEquippable );"
             ),
             new ScriptFunction(
                 DataType.Int,
@@ -10623,8 +10633,8 @@ namespace CSharpKOTOR.Common.Script
                 DataType.Int,
                 "GetIsImmune",
                 new List<ScriptParam> { new ScriptParam(DataType.Object, "oCreature", null), new ScriptParam(DataType.Int, "nImmunityType", null), new ScriptParam(DataType.Object, "oVersus", OBJECT_INVALID) },
-                "// 274: - oCreature\r\n// - nImmunityType: IMMUNITY_TYPE_*\r\n// - oVersus: if this is specified, then we also check for the race and\r\n//   alignment of oVersus\r\n// * Returns TRUE if oCreature has immunity of type nImmunity versus oVersus.\r\nint GetIsImmune(object oCreature, int nImmunityType, object oVersus=OBJECT_INVALID);",
-                "// 274: - oCreature\r\n// - nImmunityType: IMMUNITY_TYPE_*\r\n// - oVersus: if this is specified, then we also check for the race and\r\n//   alignment of oVersus\r\n// * Returns TRUE if oCreature has immunity of type nImmunity versus oVersus.\r\nint GetIsImmune(object oCreature, int nImmunityType, object oVersus=OBJECT_INVALID);"
+                "// 274: - oCreature\r\n// - nImmunityType: IMMUNITY_TYPE_*\r\n// - oVersus: if this is specified, then we also check for the race and\r\n//   alignment of oVersus\r\n// * Returns 1 if oCreature has immunity of type nImmunity versus oVersus.\r\nint GetIsImmune(object oCreature, int nImmunityType, object oVersus=OBJECT_INVALID);",
+                "// 274: - oCreature\r\n// - nImmunityType: IMMUNITY_TYPE_*\r\n// - oVersus: if this is specified, then we also check for the race and\r\n//   alignment of oVersus\r\n// * Returns 1 if oCreature has immunity of type nImmunity versus oVersus.\r\nint GetIsImmune(object oCreature, int nImmunityType, object oVersus=OBJECT_INVALID);"
             ),
             new ScriptFunction(
                 DataType.Effect,
@@ -10644,8 +10654,8 @@ namespace CSharpKOTOR.Common.Script
                 DataType.Void,
                 "SetEncounterActive",
                 new List<ScriptParam> { new ScriptParam(DataType.Int, "nNewValue", null), new ScriptParam(DataType.Object, "oEncounter", OBJECT_SELF) },
-                "// 277: Set oEncounter's active state to nNewValue.\r\n// - nNewValue: TRUE/FALSE\r\n// - oEncounter\r\nvoid SetEncounterActive(int nNewValue, object oEncounter=OBJECT_SELF);",
-                "// 277: Set oEncounter's active state to nNewValue.\r\n// - nNewValue: TRUE/FALSE\r\n// - oEncounter\r\nvoid SetEncounterActive(int nNewValue, object oEncounter=OBJECT_SELF);"
+                "// 277: Set oEncounter's active state to nNewValue.\r\n// - nNewValue: 1/0\r\n// - oEncounter\r\nvoid SetEncounterActive(int nNewValue, object oEncounter=OBJECT_SELF);",
+                "// 277: Set oEncounter's active state to nNewValue.\r\n// - nNewValue: 1/0\r\n// - oEncounter\r\nvoid SetEncounterActive(int nNewValue, object oEncounter=OBJECT_SELF);"
             ),
             new ScriptFunction(
                 DataType.Int,
@@ -10700,8 +10710,8 @@ namespace CSharpKOTOR.Common.Script
                 DataType.Int,
                 "GetHasFeat",
                 new List<ScriptParam> { new ScriptParam(DataType.Int, "nFeat", null), new ScriptParam(DataType.Object, "oCreature", OBJECT_SELF) },
-                "// 285: Determine whether oCreature has nFeat, and nFeat is useable.\r\n// PLEASE NOTE!!! - This function will return FALSE if the target\r\n// is not currently able to use the feat due to daily limits or\r\n// other restrictions. Use GetFeatAcquired() if you just want to\r\n// know if they've got it or not.\r\n// - nFeat: FEAT_*\r\n// - oCreature\r\nint GetHasFeat(int nFeat, object oCreature=OBJECT_SELF);",
-                "// 285: Determine whether oCreature has nFeat, and nFeat is useable.\r\n// PLEASE NOTE!!! - This function will return FALSE if the target\r\n// is not currently able to use the feat due to daily limits or\r\n// other restrictions. Use GetFeatAcquired() if you just want to\r\n// know if they've got it or not.\r\n// - nFeat: FEAT_*\r\n// - oCreature\r\nint GetHasFeat(int nFeat, object oCreature=OBJECT_SELF);"
+                "// 285: Determine whether oCreature has nFeat, and nFeat is useable.\r\n// PLEASE NOTE!!! - This function will return 0 if the target\r\n// is not currently able to use the feat due to daily limits or\r\n// other restrictions. Use GetFeatAcquired() if you just want to\r\n// know if they've got it or not.\r\n// - nFeat: FEAT_*\r\n// - oCreature\r\nint GetHasFeat(int nFeat, object oCreature=OBJECT_SELF);",
+                "// 285: Determine whether oCreature has nFeat, and nFeat is useable.\r\n// PLEASE NOTE!!! - This function will return 0 if the target\r\n// is not currently able to use the feat due to daily limits or\r\n// other restrictions. Use GetFeatAcquired() if you just want to\r\n// know if they've got it or not.\r\n// - nFeat: FEAT_*\r\n// - oCreature\r\nint GetHasFeat(int nFeat, object oCreature=OBJECT_SELF);"
             ),
             new ScriptFunction(
                 DataType.Int,
@@ -10797,9 +10807,9 @@ namespace CSharpKOTOR.Common.Script
             new ScriptFunction(
                 DataType.Int,
                 "GetReflexAdjustedDamage",
-                new List<ScriptParam> { new ScriptParam(DataType.Int, "nDamage", null), new ScriptParam(DataType.Object, "oTarget", null), new ScriptParam(DataType.Int, "nDC", null), new ScriptParam(DataType.Int, "nSaveType", SAVING_THROW_TYPE_NONE), new ScriptParam(DataType.Object, "oSaveVersus", OBJECT_SELF) },
-                "// 299: Use this in spell scripts to get nDamage adjusted by oTarget's reflex and\r\n// evasion saves.\r\n// - nDamage\r\n// - oTarget\r\n// - nDC: Difficulty check\r\n// - nSaveType: SAVING_THROW_TYPE_*\r\n// - oSaveVersus\r\nint GetReflexAdjustedDamage(int nDamage, object oTarget, int nDC, int nSaveType=SAVING_THROW_TYPE_NONE, object oSaveVersus=OBJECT_SELF);",
-                "// 299: Use this in spell scripts to get nDamage adjusted by oTarget's reflex and\r\n// evasion saves.\r\n// - nDamage\r\n// - oTarget\r\n// - nDC: Difficulty check\r\n// - nSaveType: SAVING_THROW_TYPE_*\r\n// - oSaveVersus\r\nint GetReflexAdjustedDamage(int nDamage, object oTarget, int nDC, int nSaveType=SAVING_THROW_TYPE_NONE, object oSaveVersus=OBJECT_SELF);"
+                new List<ScriptParam> { new ScriptParam(DataType.Int, "nDamage", null), new ScriptParam(DataType.Object, "oTarget", null), new ScriptParam(DataType.Int, "nDC", null), new ScriptParam(DataType.Int, "nSaveType", 0), new ScriptParam(DataType.Object, "oSaveVersus", OBJECT_SELF) },
+                "// 299: Use this in spell scripts to get nDamage adjusted by oTarget's reflex and\r\n// evasion saves.\r\n// - nDamage\r\n// - oTarget\r\n// - nDC: Difficulty check\r\n// - nSaveType: SAVING_THROW_TYPE_*\r\n// - oSaveVersus\r\nint GetReflexAdjustedDamage(int nDamage, object oTarget, int nDC, int nSaveType=0, object oSaveVersus=OBJECT_SELF);",
+                "// 299: Use this in spell scripts to get nDamage adjusted by oTarget's reflex and\r\n// evasion saves.\r\n// - nDamage\r\n// - oTarget\r\n// - nDC: Difficulty check\r\n// - nSaveType: SAVING_THROW_TYPE_*\r\n// - oSaveVersus\r\nint GetReflexAdjustedDamage(int nDamage, object oTarget, int nDC, int nSaveType=0, object oSaveVersus=OBJECT_SELF);"
             ),
             new ScriptFunction(
                 DataType.Void,
@@ -10889,8 +10899,8 @@ namespace CSharpKOTOR.Common.Script
                 DataType.Int,
                 "GetIsPlayableRacialType",
                 new List<ScriptParam> { new ScriptParam(DataType.Object, "oCreature", null) },
-                "// 312: * Returns TRUE if oCreature is of a playable racial type.\r\nint GetIsPlayableRacialType(object oCreature);",
-                "// 312: * Returns TRUE if oCreature is of a playable racial type.\r\nint GetIsPlayableRacialType(object oCreature);"
+                "// 312: * Returns 1 if oCreature is of a playable racial type.\r\nint GetIsPlayableRacialType(object oCreature);",
+                "// 312: * Returns 1 if oCreature is of a playable racial type.\r\nint GetIsPlayableRacialType(object oCreature);"
             ),
             new ScriptFunction(
                 DataType.Void,
@@ -10944,9 +10954,9 @@ namespace CSharpKOTOR.Common.Script
             new ScriptFunction(
                 DataType.Int,
                 "GetIsInCombat",
-                new List<ScriptParam> { new ScriptParam(DataType.Object, "oCreature", OBJECT_SELF), new ScriptParam(DataType.Int, "bOnlyCountReal", FALSE) },
-                "// 320: * Returns TRUE if oCreature is in combat.\r\n//RWT-OEI 09/30/04 - If you pass TRUE in as the second parameter then\r\n//this function will only return true if the character is in REAL combat.\r\n//If you don't know what that means, don't pass in TRUE.\r\nint GetIsInCombat(object oCreature=OBJECT_SELF, int bOnlyCountReal = FALSE);",
-                "// 320: * Returns TRUE if oCreature is in combat.\r\n//RWT-OEI 09/30/04 - If you pass TRUE in as the second parameter then\r\n//this function will only return true if the character is in REAL combat.\r\n//If you don't know what that means, don't pass in TRUE.\r\nint GetIsInCombat(object oCreature=OBJECT_SELF, int bOnlyCountReal = FALSE);"
+                new List<ScriptParam> { new ScriptParam(DataType.Object, "oCreature", OBJECT_SELF), new ScriptParam(DataType.Int, "bOnlyCountReal", 0) },
+                "// 320: * Returns 1 if oCreature is in combat.\r\n//RWT-OEI 09/30/04 - If you pass 1 in as the second parameter then\r\n//this function will only return true if the character is in REAL combat.\r\n//If you don't know what that means, don't pass in 1.\r\nint GetIsInCombat(object oCreature=OBJECT_SELF, int bOnlyCountReal = 0);",
+                "// 320: * Returns 1 if oCreature is in combat.\r\n//RWT-OEI 09/30/04 - If you pass 1 in as the second parameter then\r\n//this function will only return true if the character is in REAL combat.\r\n//If you don't know what that means, don't pass in 1.\r\nint GetIsInCombat(object oCreature=OBJECT_SELF, int bOnlyCountReal = 0);"
             ),
             new ScriptFunction(
                 DataType.Int,
@@ -10965,9 +10975,9 @@ namespace CSharpKOTOR.Common.Script
             new ScriptFunction(
                 DataType.Void,
                 "SetIsDestroyable",
-                new List<ScriptParam> { new ScriptParam(DataType.Int, "bDestroyable", null), new ScriptParam(DataType.Int, "bRaiseable", TRUE), new ScriptParam(DataType.Int, "bSelectableWhenDead", FALSE) },
-                "// 323: Set the destroyable status of the caller.\r\n// - bDestroyable: If this is FALSE, the caller does not fade out on death, but\r\n//   sticks around as a corpse.\r\n// - bRaiseable: If this is TRUE, the caller can be raised via resurrection.\r\n// - bSelectableWhenDead: If this is TRUE, the caller is selectable after death.\r\nvoid SetIsDestroyable(int bDestroyable, int bRaiseable=TRUE, int bSelectableWhenDead=FALSE);",
-                "// 323: Set the destroyable status of the caller.\r\n// - bDestroyable: If this is FALSE, the caller does not fade out on death, but\r\n//   sticks around as a corpse.\r\n// - bRaiseable: If this is TRUE, the caller can be raised via resurrection.\r\n// - bSelectableWhenDead: If this is TRUE, the caller is selectable after death.\r\nvoid SetIsDestroyable(int bDestroyable, int bRaiseable=TRUE, int bSelectableWhenDead=FALSE);"
+                new List<ScriptParam> { new ScriptParam(DataType.Int, "bDestroyable", null), new ScriptParam(DataType.Int, "bRaiseable", 1), new ScriptParam(DataType.Int, "bSelectableWhenDead", 0) },
+                "// 323: Set the destroyable status of the caller.\r\n// - bDestroyable: If this is 0, the caller does not fade out on death, but\r\n//   sticks around as a corpse.\r\n// - bRaiseable: If this is 1, the caller can be raised via resurrection.\r\n// - bSelectableWhenDead: If this is 1, the caller is selectable after death.\r\nvoid SetIsDestroyable(int bDestroyable, int bRaiseable=1, int bSelectableWhenDead=0);",
+                "// 323: Set the destroyable status of the caller.\r\n// - bDestroyable: If this is 0, the caller does not fade out on death, but\r\n//   sticks around as a corpse.\r\n// - bRaiseable: If this is 1, the caller can be raised via resurrection.\r\n// - bSelectableWhenDead: If this is 1, the caller is selectable after death.\r\nvoid SetIsDestroyable(int bDestroyable, int bRaiseable=1, int bSelectableWhenDead=0);"
             ),
             new ScriptFunction(
                 DataType.Void,
@@ -11064,8 +11074,8 @@ namespace CSharpKOTOR.Common.Script
                 DataType.Int,
                 "GetIsDoorActionPossible",
                 new List<ScriptParam> { new ScriptParam(DataType.Object, "oTargetDoor", null), new ScriptParam(DataType.Int, "nDoorAction", null) },
-                "// 337: - oTargetDoor\r\n// - nDoorAction: DOOR_ACTION_*\r\n// * Returns TRUE if nDoorAction can be performed on oTargetDoor.\r\nint GetIsDoorActionPossible(object oTargetDoor, int nDoorAction);",
-                "// 337: - oTargetDoor\r\n// - nDoorAction: DOOR_ACTION_*\r\n// * Returns TRUE if nDoorAction can be performed on oTargetDoor.\r\nint GetIsDoorActionPossible(object oTargetDoor, int nDoorAction);"
+                "// 337: - oTargetDoor\r\n// - nDoorAction: DOOR_ACTION_*\r\n// * Returns 1 if nDoorAction can be performed on oTargetDoor.\r\nint GetIsDoorActionPossible(object oTargetDoor, int nDoorAction);",
+                "// 337: - oTargetDoor\r\n// - nDoorAction: DOOR_ACTION_*\r\n// * Returns 1 if nDoorAction can be performed on oTargetDoor.\r\nint GetIsDoorActionPossible(object oTargetDoor, int nDoorAction);"
             ),
             new ScriptFunction(
                 DataType.Void,
@@ -11182,16 +11192,16 @@ namespace CSharpKOTOR.Common.Script
             new ScriptFunction(
                 DataType.Void,
                 "ShowUpgradeScreen",
-                new List<ScriptParam> { new ScriptParam(DataType.Object, "oItem", OBJECT_INVALID), new ScriptParam(DataType.Object, "oCharacter", OBJECT_INVALID), new ScriptParam(DataType.Int, "nDisableItemCreation", FALSE), new ScriptParam(DataType.Int, "nDisableUpgrade", FALSE), new ScriptParam(DataType.String, "sOverride2DA", "\"\"") },
-                "// 354: Displays the upgrade screen where the player can modify weapons and armor\r\n// If oItem is NOT invalid, then the player will be forced to upgrade oItem and only oItem.\r\n// If oCharacter is NOT invalid, then that character's various skills will be used... *NOT IMPLEMENTED*\r\n// If nDisableItemCreation = TRUE, then the player will not be able to access the item creation screen\r\n// If nDisableUpgrade = TRUE, then the player will be forced straight to item creation and not be able\r\n//      to access Item Upgrading.\r\nvoid ShowUpgradeScreen(object oItem = OBJECT_INVALID, object oCharacter = OBJECT_INVALID, int nDisableItemCreation = FALSE, int nDisableUpgrade = FALSE, string sOverride2DA = \"\");",
-                "// 354: Displays the upgrade screen where the player can modify weapons and armor\r\n// If oItem is NOT invalid, then the player will be forced to upgrade oItem and only oItem.\r\n// If oCharacter is NOT invalid, then that character's various skills will be used... *NOT IMPLEMENTED*\r\n// If nDisableItemCreation = TRUE, then the player will not be able to access the item creation screen\r\n// If nDisableUpgrade = TRUE, then the player will be forced straight to item creation and not be able\r\n//      to access Item Upgrading.\r\nvoid ShowUpgradeScreen(object oItem = OBJECT_INVALID, object oCharacter = OBJECT_INVALID, int nDisableItemCreation = FALSE, int nDisableUpgrade = FALSE, string sOverride2DA = \"\");"
+                new List<ScriptParam> { new ScriptParam(DataType.Object, "oItem", OBJECT_INVALID), new ScriptParam(DataType.Object, "oCharacter", OBJECT_INVALID), new ScriptParam(DataType.Int, "nDisableItemCreation", 0), new ScriptParam(DataType.Int, "nDisableUpgrade", 0), new ScriptParam(DataType.String, "sOverride2DA", "\"\"") },
+                "// 354: Displays the upgrade screen where the player can modify weapons and armor\r\n// If oItem is NOT invalid, then the player will be forced to upgrade oItem and only oItem.\r\n// If oCharacter is NOT invalid, then that character's various skills will be used... *NOT IMPLEMENTED*\r\n// If nDisableItemCreation = 1, then the player will not be able to access the item creation screen\r\n// If nDisableUpgrade = 1, then the player will be forced straight to item creation and not be able\r\n//      to access Item Upgrading.\r\nvoid ShowUpgradeScreen(object oItem = OBJECT_INVALID, object oCharacter = OBJECT_INVALID, int nDisableItemCreation = 0, int nDisableUpgrade = 0, string sOverride2DA = \"\");",
+                "// 354: Displays the upgrade screen where the player can modify weapons and armor\r\n// If oItem is NOT invalid, then the player will be forced to upgrade oItem and only oItem.\r\n// If oCharacter is NOT invalid, then that character's various skills will be used... *NOT IMPLEMENTED*\r\n// If nDisableItemCreation = 1, then the player will not be able to access the item creation screen\r\n// If nDisableUpgrade = 1, then the player will be forced straight to item creation and not be able\r\n//      to access Item Upgrading.\r\nvoid ShowUpgradeScreen(object oItem = OBJECT_INVALID, object oCharacter = OBJECT_INVALID, int nDisableItemCreation = 0, int nDisableUpgrade = 0, string sOverride2DA = \"\");"
             ),
             new ScriptFunction(
                 DataType.Effect,
                 "VersusAlignmentEffect",
-                new List<ScriptParam> { new ScriptParam(DataType.Effect, "eEffect", null), new ScriptParam(DataType.Int, "nLawChaos", ALIGNMENT_ALL), new ScriptParam(DataType.Int, "nGoodEvil", ALIGNMENT_ALL) },
-                "// 355: Set eEffect to be versus a specific alignment.\r\n// - eEffect\r\n// - nLawChaos: ALIGNMENT_LAWFUL/ALIGNMENT_CHAOTIC/ALIGNMENT_ALL\r\n// - nGoodEvil: ALIGNMENT_GOOD/ALIGNMENT_EVIL/ALIGNMENT_ALL\r\neffect VersusAlignmentEffect(effect eEffect, int nLawChaos=ALIGNMENT_ALL, int nGoodEvil=ALIGNMENT_ALL);",
-                "// 355: Set eEffect to be versus a specific alignment.\r\n// - eEffect\r\n// - nLawChaos: ALIGNMENT_LAWFUL/ALIGNMENT_CHAOTIC/ALIGNMENT_ALL\r\n// - nGoodEvil: ALIGNMENT_GOOD/ALIGNMENT_EVIL/ALIGNMENT_ALL\r\neffect VersusAlignmentEffect(effect eEffect, int nLawChaos=ALIGNMENT_ALL, int nGoodEvil=ALIGNMENT_ALL);"
+                new List<ScriptParam> { new ScriptParam(DataType.Effect, "eEffect", null), new ScriptParam(DataType.Int, "nLawChaos", 0), new ScriptParam(DataType.Int, "nGoodEvil", 0) },
+                "// 355: Set eEffect to be versus a specific alignment.\r\n// - eEffect\r\n// - nLawChaos: ALIGNMENT_LAWFUL/ALIGNMENT_CHAOTIC/0\r\n// - nGoodEvil: ALIGNMENT_GOOD/ALIGNMENT_EVIL/0\r\neffect VersusAlignmentEffect(effect eEffect, int nLawChaos=0, int nGoodEvil=0);",
+                "// 355: Set eEffect to be versus a specific alignment.\r\n// - eEffect\r\n// - nLawChaos: ALIGNMENT_LAWFUL/ALIGNMENT_CHAOTIC/0\r\n// - nGoodEvil: ALIGNMENT_GOOD/ALIGNMENT_EVIL/0\r\neffect VersusAlignmentEffect(effect eEffect, int nLawChaos=0, int nGoodEvil=0);"
             ),
             new ScriptFunction(
                 DataType.Effect,
@@ -11218,15 +11228,15 @@ namespace CSharpKOTOR.Common.Script
                 DataType.Int,
                 "GetIsTalentValid",
                 new List<ScriptParam> { new ScriptParam(DataType.Talent, "tTalent", null) },
-                "// 359: * Returns TRUE if tTalent is valid.\r\nint GetIsTalentValid(talent tTalent);",
-                "// 359: * Returns TRUE if tTalent is valid.\r\nint GetIsTalentValid(talent tTalent);"
+                "// 359: * Returns 1 if tTalent is valid.\r\nint GetIsTalentValid(talent tTalent);",
+                "// 359: * Returns 1 if tTalent is valid.\r\nint GetIsTalentValid(talent tTalent);"
             ),
             new ScriptFunction(
                 DataType.Void,
                 "ActionMoveAwayFromLocation",
-                new List<ScriptParam> { new ScriptParam(DataType.Location, "lMoveAwayFrom", null), new ScriptParam(DataType.Int, "bRun", FALSE), new ScriptParam(DataType.Float, "fMoveAwayRange", 40f) },
-                "// 360: Causes the action subject to move away from lMoveAwayFrom.\r\nvoid ActionMoveAwayFromLocation(location lMoveAwayFrom, int bRun=FALSE, float fMoveAwayRange=40.0f);",
-                "// 360: Causes the action subject to move away from lMoveAwayFrom.\r\nvoid ActionMoveAwayFromLocation(location lMoveAwayFrom, int bRun=FALSE, float fMoveAwayRange=40.0f);"
+                new List<ScriptParam> { new ScriptParam(DataType.Location, "lMoveAwayFrom", null), new ScriptParam(DataType.Int, "bRun", 0), new ScriptParam(DataType.Float, "fMoveAwayRange", 40f) },
+                "// 360: Causes the action subject to move away from lMoveAwayFrom.\r\nvoid ActionMoveAwayFromLocation(location lMoveAwayFrom, int bRun=0, float fMoveAwayRange=40.0f);",
+                "// 360: Causes the action subject to move away from lMoveAwayFrom.\r\nvoid ActionMoveAwayFromLocation(location lMoveAwayFrom, int bRun=0, float fMoveAwayRange=40.0f);"
             ),
             new ScriptFunction(
                 DataType.Object,
@@ -11252,9 +11262,9 @@ namespace CSharpKOTOR.Common.Script
             new ScriptFunction(
                 DataType.Void,
                 "PlayPazaak",
-                new List<ScriptParam> { new ScriptParam(DataType.Int, "nOpponentPazaakDeck", null), new ScriptParam(DataType.String, "sEndScript", null), new ScriptParam(DataType.Int, "nMaxWager", null), new ScriptParam(DataType.Int, "bShowTutorial", FALSE), new ScriptParam(DataType.Object, "oOpponent", OBJECT_INVALID) },
-                "// 364: Starts a game of pazaak.\r\n// - nOpponentPazaakDeck: Index into PazaakDecks.2da; specifies which deck the opponent will use.\r\n// - sEndScript: Script to be run when game finishes.\r\n// - nMaxWager: Max player wager.  If <= 0, the player's credits won't be modified by the result of the game and the wager screen will not show up.\r\n// - bShowTutorial: Plays in tutorial mode (nMaxWager should be 0).\r\nvoid PlayPazaak(int nOpponentPazaakDeck, string sEndScript, int nMaxWager, int bShowTutorial=FALSE, object oOpponent=OBJECT_INVALID);",
-                "// 364: Starts a game of pazaak.\r\n// - nOpponentPazaakDeck: Index into PazaakDecks.2da; specifies which deck the opponent will use.\r\n// - sEndScript: Script to be run when game finishes.\r\n// - nMaxWager: Max player wager.  If <= 0, the player's credits won't be modified by the result of the game and the wager screen will not show up.\r\n// - bShowTutorial: Plays in tutorial mode (nMaxWager should be 0).\r\nvoid PlayPazaak(int nOpponentPazaakDeck, string sEndScript, int nMaxWager, int bShowTutorial=FALSE, object oOpponent=OBJECT_INVALID);"
+                new List<ScriptParam> { new ScriptParam(DataType.Int, "nOpponentPazaakDeck", null), new ScriptParam(DataType.String, "sEndScript", null), new ScriptParam(DataType.Int, "nMaxWager", null), new ScriptParam(DataType.Int, "bShowTutorial", 0), new ScriptParam(DataType.Object, "oOpponent", OBJECT_INVALID) },
+                "// 364: Starts a game of pazaak.\r\n// - nOpponentPazaakDeck: Index into PazaakDecks.2da; specifies which deck the opponent will use.\r\n// - sEndScript: Script to be run when game finishes.\r\n// - nMaxWager: Max player wager.  If <= 0, the player's credits won't be modified by the result of the game and the wager screen will not show up.\r\n// - bShowTutorial: Plays in tutorial mode (nMaxWager should be 0).\r\nvoid PlayPazaak(int nOpponentPazaakDeck, string sEndScript, int nMaxWager, int bShowTutorial=0, object oOpponent=OBJECT_INVALID);",
+                "// 364: Starts a game of pazaak.\r\n// - nOpponentPazaakDeck: Index into PazaakDecks.2da; specifies which deck the opponent will use.\r\n// - sEndScript: Script to be run when game finishes.\r\n// - nMaxWager: Max player wager.  If <= 0, the player's credits won't be modified by the result of the game and the wager screen will not show up.\r\n// - bShowTutorial: Plays in tutorial mode (nMaxWager should be 0).\r\nvoid PlayPazaak(int nOpponentPazaakDeck, string sEndScript, int nMaxWager, int bShowTutorial=0, object oOpponent=OBJECT_INVALID);"
             ),
             new ScriptFunction(
                 DataType.Int,
@@ -11273,9 +11283,9 @@ namespace CSharpKOTOR.Common.Script
             new ScriptFunction(
                 DataType.Void,
                 "AddJournalQuestEntry",
-                new List<ScriptParam> { new ScriptParam(DataType.String, "szPlotID", null), new ScriptParam(DataType.Int, "nState", null), new ScriptParam(DataType.Int, "bAllowOverrideHigher", FALSE) },
-                "// 367: Add a journal quest entry to the player.\r\n// - szPlotID: the plot identifier used in the toolset's Journal Editor\r\n// - nState: the state of the plot as seen in the toolset's Journal Editor\r\n// - bAllowOverrideHigher: If this is TRUE, you can set the state to a lower\r\n//   number than the one it is currently on\r\nvoid AddJournalQuestEntry(string szPlotID, int nState, int bAllowOverrideHigher=FALSE);",
-                "// 367: Add a journal quest entry to the player.\r\n// - szPlotID: the plot identifier used in the toolset's Journal Editor\r\n// - nState: the state of the plot as seen in the toolset's Journal Editor\r\n// - bAllowOverrideHigher: If this is TRUE, you can set the state to a lower\r\n//   number than the one it is currently on\r\nvoid AddJournalQuestEntry(string szPlotID, int nState, int bAllowOverrideHigher=FALSE);"
+                new List<ScriptParam> { new ScriptParam(DataType.String, "szPlotID", null), new ScriptParam(DataType.Int, "nState", null), new ScriptParam(DataType.Int, "bAllowOverrideHigher", 0) },
+                "// 367: Add a journal quest entry to the player.\r\n// - szPlotID: the plot identifier used in the toolset's Journal Editor\r\n// - nState: the state of the plot as seen in the toolset's Journal Editor\r\n// - bAllowOverrideHigher: If this is 1, you can set the state to a lower\r\n//   number than the one it is currently on\r\nvoid AddJournalQuestEntry(string szPlotID, int nState, int bAllowOverrideHigher=0);",
+                "// 367: Add a journal quest entry to the player.\r\n// - szPlotID: the plot identifier used in the toolset's Journal Editor\r\n// - nState: the state of the plot as seen in the toolset's Journal Editor\r\n// - bAllowOverrideHigher: If this is 1, you can set the state to a lower\r\n//   number than the one it is currently on\r\nvoid AddJournalQuestEntry(string szPlotID, int nState, int bAllowOverrideHigher=0);"
             ),
             new ScriptFunction(
                 DataType.Void,
@@ -11344,8 +11354,8 @@ namespace CSharpKOTOR.Common.Script
                 DataType.Int,
                 "GetHasSpell",
                 new List<ScriptParam> { new ScriptParam(DataType.Int, "nSpell", null), new ScriptParam(DataType.Object, "oCreature", OBJECT_SELF) },
-                "// 377: Determine whether oCreature has nSpell memorised.\r\n// PLEASE NOTE!!! - This function will return FALSE if the target\r\n// is not currently able to use the spell due to lack of sufficient\r\n// Force Points. Use GetSpellAcquired() if you just want to\r\n// know if they've got it or not.\r\n// - nSpell: SPELL_*\r\n// - oCreature\r\nint GetHasSpell(int nSpell, object oCreature=OBJECT_SELF);",
-                "// 377: Determine whether oCreature has nSpell memorised.\r\n// PLEASE NOTE!!! - This function will return FALSE if the target\r\n// is not currently able to use the spell due to lack of sufficient\r\n// Force Points. Use GetSpellAcquired() if you just want to\r\n// know if they've got it or not.\r\n// - nSpell: SPELL_*\r\n// - oCreature\r\nint GetHasSpell(int nSpell, object oCreature=OBJECT_SELF);"
+                "// 377: Determine whether oCreature has nSpell memorised.\r\n// PLEASE NOTE!!! - This function will return 0 if the target\r\n// is not currently able to use the spell due to lack of sufficient\r\n// Force Points. Use GetSpellAcquired() if you just want to\r\n// know if they've got it or not.\r\n// - nSpell: SPELL_*\r\n// - oCreature\r\nint GetHasSpell(int nSpell, object oCreature=OBJECT_SELF);",
+                "// 377: Determine whether oCreature has nSpell memorised.\r\n// PLEASE NOTE!!! - This function will return 0 if the target\r\n// is not currently able to use the spell due to lack of sufficient\r\n// Force Points. Use GetSpellAcquired() if you just want to\r\n// know if they've got it or not.\r\n// - nSpell: SPELL_*\r\n// - oCreature\r\nint GetHasSpell(int nSpell, object oCreature=OBJECT_SELF);"
             ),
             new ScriptFunction(
                 DataType.Void,
@@ -11364,30 +11374,30 @@ namespace CSharpKOTOR.Common.Script
             new ScriptFunction(
                 DataType.Object,
                 "GetFirstFactionMember",
-                new List<ScriptParam> { new ScriptParam(DataType.Object, "oMemberOfFaction", null), new ScriptParam(DataType.Int, "bPCOnly", TRUE) },
-                "// 380: Get the first member of oMemberOfFaction's faction (start to cycle through\r\n// oMemberOfFaction's faction).\r\n// * Returns OBJECT_INVALID if oMemberOfFaction's faction is invalid.\r\nobject GetFirstFactionMember(object oMemberOfFaction, int bPCOnly=TRUE);",
-                "// 380: Get the first member of oMemberOfFaction's faction (start to cycle through\r\n// oMemberOfFaction's faction).\r\n// * Returns OBJECT_INVALID if oMemberOfFaction's faction is invalid.\r\nobject GetFirstFactionMember(object oMemberOfFaction, int bPCOnly=TRUE);"
+                new List<ScriptParam> { new ScriptParam(DataType.Object, "oMemberOfFaction", null), new ScriptParam(DataType.Int, "bPCOnly", 1) },
+                "// 380: Get the first member of oMemberOfFaction's faction (start to cycle through\r\n// oMemberOfFaction's faction).\r\n// * Returns OBJECT_INVALID if oMemberOfFaction's faction is invalid.\r\nobject GetFirstFactionMember(object oMemberOfFaction, int bPCOnly=1);",
+                "// 380: Get the first member of oMemberOfFaction's faction (start to cycle through\r\n// oMemberOfFaction's faction).\r\n// * Returns OBJECT_INVALID if oMemberOfFaction's faction is invalid.\r\nobject GetFirstFactionMember(object oMemberOfFaction, int bPCOnly=1);"
             ),
             new ScriptFunction(
                 DataType.Object,
                 "GetNextFactionMember",
-                new List<ScriptParam> { new ScriptParam(DataType.Object, "oMemberOfFaction", null), new ScriptParam(DataType.Int, "bPCOnly", TRUE) },
-                "// 381: Get the next member of oMemberOfFaction's faction (continue to cycle through\r\n// oMemberOfFaction's faction).\r\n// * Returns OBJECT_INVALID if oMemberOfFaction's faction is invalid.\r\nobject GetNextFactionMember(object oMemberOfFaction, int bPCOnly=TRUE);",
-                "// 381: Get the next member of oMemberOfFaction's faction (continue to cycle through\r\n// oMemberOfFaction's faction).\r\n// * Returns OBJECT_INVALID if oMemberOfFaction's faction is invalid.\r\nobject GetNextFactionMember(object oMemberOfFaction, int bPCOnly=TRUE);"
+                new List<ScriptParam> { new ScriptParam(DataType.Object, "oMemberOfFaction", null), new ScriptParam(DataType.Int, "bPCOnly", 1) },
+                "// 381: Get the next member of oMemberOfFaction's faction (continue to cycle through\r\n// oMemberOfFaction's faction).\r\n// * Returns OBJECT_INVALID if oMemberOfFaction's faction is invalid.\r\nobject GetNextFactionMember(object oMemberOfFaction, int bPCOnly=1);",
+                "// 381: Get the next member of oMemberOfFaction's faction (continue to cycle through\r\n// oMemberOfFaction's faction).\r\n// * Returns OBJECT_INVALID if oMemberOfFaction's faction is invalid.\r\nobject GetNextFactionMember(object oMemberOfFaction, int bPCOnly=1);"
             ),
             new ScriptFunction(
                 DataType.Void,
                 "ActionForceMoveToLocation",
-                new List<ScriptParam> { new ScriptParam(DataType.Location, "lDestination", null), new ScriptParam(DataType.Int, "bRun", FALSE), new ScriptParam(DataType.Float, "fTimeout", 30f) },
-                "// 382: Force the action subject to move to lDestination.\r\nvoid ActionForceMoveToLocation(location lDestination, int bRun=FALSE, float fTimeout=30.0f);",
-                "// 382: Force the action subject to move to lDestination.\r\nvoid ActionForceMoveToLocation(location lDestination, int bRun=FALSE, float fTimeout=30.0f);"
+                new List<ScriptParam> { new ScriptParam(DataType.Location, "lDestination", null), new ScriptParam(DataType.Int, "bRun", 0), new ScriptParam(DataType.Float, "fTimeout", 30f) },
+                "// 382: Force the action subject to move to lDestination.\r\nvoid ActionForceMoveToLocation(location lDestination, int bRun=0, float fTimeout=30.0f);",
+                "// 382: Force the action subject to move to lDestination.\r\nvoid ActionForceMoveToLocation(location lDestination, int bRun=0, float fTimeout=30.0f);"
             ),
             new ScriptFunction(
                 DataType.Void,
                 "ActionForceMoveToObject",
-                new List<ScriptParam> { new ScriptParam(DataType.Object, "oMoveTo", null), new ScriptParam(DataType.Int, "bRun", FALSE), new ScriptParam(DataType.Float, "fRange", 1f), new ScriptParam(DataType.Float, "fTimeout", 30f) },
-                "// 383: Force the action subject to move to oMoveTo.\r\nvoid ActionForceMoveToObject(object oMoveTo, int bRun=FALSE, float fRange=1.0f, float fTimeout=30.0f);",
-                "// 383: Force the action subject to move to oMoveTo.\r\nvoid ActionForceMoveToObject(object oMoveTo, int bRun=FALSE, float fRange=1.0f, float fTimeout=30.0f);"
+                new List<ScriptParam> { new ScriptParam(DataType.Object, "oMoveTo", null), new ScriptParam(DataType.Int, "bRun", 0), new ScriptParam(DataType.Float, "fRange", 1f), new ScriptParam(DataType.Float, "fTimeout", 30f) },
+                "// 383: Force the action subject to move to oMoveTo.\r\nvoid ActionForceMoveToObject(object oMoveTo, int bRun=0, float fRange=1.0f, float fTimeout=30.0f);",
+                "// 383: Force the action subject to move to oMoveTo.\r\nvoid ActionForceMoveToObject(object oMoveTo, int bRun=0, float fRange=1.0f, float fTimeout=30.0f);"
             ),
             new ScriptFunction(
                 DataType.Int,
@@ -11491,15 +11501,15 @@ namespace CSharpKOTOR.Common.Script
                 DataType.Int,
                 "GetItemHasItemProperty",
                 new List<ScriptParam> { new ScriptParam(DataType.Object, "oItem", null), new ScriptParam(DataType.Int, "nProperty", null) },
-                "// 398: Determines whether oItem has nProperty.\r\n// - oItem\r\n// - nProperty: ITEM_PROPERTY_*\r\n// * Returns FALSE if oItem is not a valid item, or if oItem does not have\r\n//   nProperty.\r\nint GetItemHasItemProperty(object oItem, int nProperty);",
-                "// 398: Determines whether oItem has nProperty.\r\n// - oItem\r\n// - nProperty: ITEM_PROPERTY_*\r\n// * Returns FALSE if oItem is not a valid item, or if oItem does not have\r\n//   nProperty.\r\nint GetItemHasItemProperty(object oItem, int nProperty);"
+                "// 398: Determines whether oItem has nProperty.\r\n// - oItem\r\n// - nProperty: ITEM_PROPERTY_*\r\n// * Returns 0 if oItem is not a valid item, or if oItem does not have\r\n//   nProperty.\r\nint GetItemHasItemProperty(object oItem, int nProperty);",
+                "// 398: Determines whether oItem has nProperty.\r\n// - oItem\r\n// - nProperty: ITEM_PROPERTY_*\r\n// * Returns 0 if oItem is not a valid item, or if oItem does not have\r\n//   nProperty.\r\nint GetItemHasItemProperty(object oItem, int nProperty);"
             ),
             new ScriptFunction(
                 DataType.Void,
                 "ActionEquipMostDamagingMelee",
-                new List<ScriptParam> { new ScriptParam(DataType.Object, "oVersus", OBJECT_INVALID), new ScriptParam(DataType.Int, "bOffHand", FALSE) },
-                "// 399: The creature will equip the melee weapon in its possession that can do the\r\n// most damage. If no valid melee weapon is found, it will equip the most\r\n// damaging range weapon. This function should only ever be called in the\r\n// EndOfCombatRound scripts, because otherwise it would have to stop the combat\r\n// round to run simulation.\r\n// - oVersus: You can try to get the most damaging weapon against oVersus\r\n// - bOffHand\r\nvoid ActionEquipMostDamagingMelee(object oVersus=OBJECT_INVALID, int bOffHand=FALSE);",
-                "// 399: The creature will equip the melee weapon in its possession that can do the\r\n// most damage. If no valid melee weapon is found, it will equip the most\r\n// damaging range weapon. This function should only ever be called in the\r\n// EndOfCombatRound scripts, because otherwise it would have to stop the combat\r\n// round to run simulation.\r\n// - oVersus: You can try to get the most damaging weapon against oVersus\r\n// - bOffHand\r\nvoid ActionEquipMostDamagingMelee(object oVersus=OBJECT_INVALID, int bOffHand=FALSE);"
+                new List<ScriptParam> { new ScriptParam(DataType.Object, "oVersus", OBJECT_INVALID), new ScriptParam(DataType.Int, "bOffHand", 0) },
+                "// 399: The creature will equip the melee weapon in its possession that can do the\r\n// most damage. If no valid melee weapon is found, it will equip the most\r\n// damaging range weapon. This function should only ever be called in the\r\n// EndOfCombatRound scripts, because otherwise it would have to stop the combat\r\n// round to run simulation.\r\n// - oVersus: You can try to get the most damaging weapon against oVersus\r\n// - bOffHand\r\nvoid ActionEquipMostDamagingMelee(object oVersus=OBJECT_INVALID, int bOffHand=0);",
+                "// 399: The creature will equip the melee weapon in its possession that can do the\r\n// most damage. If no valid melee weapon is found, it will equip the most\r\n// damaging range weapon. This function should only ever be called in the\r\n// EndOfCombatRound scripts, because otherwise it would have to stop the combat\r\n// round to run simulation.\r\n// - oVersus: You can try to get the most damaging weapon against oVersus\r\n// - bOffHand\r\nvoid ActionEquipMostDamagingMelee(object oVersus=OBJECT_INVALID, int bOffHand=0);"
             ),
             new ScriptFunction(
                 DataType.Void,
@@ -11540,36 +11550,36 @@ namespace CSharpKOTOR.Common.Script
                 DataType.Int,
                 "GetIsDay",
                 new List<ScriptParam>(),
-                "// 405: * Returns TRUE if it is currently day.\r\nint GetIsDay();",
-                "// 405: * Returns TRUE if it is currently day.\r\nint GetIsDay();"
+                "// 405: * Returns 1 if it is currently day.\r\nint GetIsDay();",
+                "// 405: * Returns 1 if it is currently day.\r\nint GetIsDay();"
             ),
             new ScriptFunction(
                 DataType.Int,
                 "GetIsNight",
                 new List<ScriptParam>(),
-                "// 406: * Returns TRUE if it is currently night.\r\nint GetIsNight();",
-                "// 406: * Returns TRUE if it is currently night.\r\nint GetIsNight();"
+                "// 406: * Returns 1 if it is currently night.\r\nint GetIsNight();",
+                "// 406: * Returns 1 if it is currently night.\r\nint GetIsNight();"
             ),
             new ScriptFunction(
                 DataType.Int,
                 "GetIsDawn",
                 new List<ScriptParam>(),
-                "// 407: * Returns TRUE if it is currently dawn.\r\nint GetIsDawn();",
-                "// 407: * Returns TRUE if it is currently dawn.\r\nint GetIsDawn();"
+                "// 407: * Returns 1 if it is currently dawn.\r\nint GetIsDawn();",
+                "// 407: * Returns 1 if it is currently dawn.\r\nint GetIsDawn();"
             ),
             new ScriptFunction(
                 DataType.Int,
                 "GetIsDusk",
                 new List<ScriptParam>(),
-                "// 408: * Returns TRUE if it is currently dusk.\r\nint GetIsDusk();",
-                "// 408: * Returns TRUE if it is currently dusk.\r\nint GetIsDusk();"
+                "// 408: * Returns 1 if it is currently dusk.\r\nint GetIsDusk();",
+                "// 408: * Returns 1 if it is currently dusk.\r\nint GetIsDusk();"
             ),
             new ScriptFunction(
                 DataType.Int,
                 "GetIsEncounterCreature",
                 new List<ScriptParam> { new ScriptParam(DataType.Object, "oCreature", OBJECT_SELF) },
-                "// 409: * Returns TRUE if oCreature was spawned from an encounter.\r\nint GetIsEncounterCreature(object oCreature=OBJECT_SELF);",
-                "// 409: * Returns TRUE if oCreature was spawned from an encounter.\r\nint GetIsEncounterCreature(object oCreature=OBJECT_SELF);"
+                "// 409: * Returns 1 if oCreature was spawned from an encounter.\r\nint GetIsEncounterCreature(object oCreature=OBJECT_SELF);",
+                "// 409: * Returns 1 if oCreature was spawned from an encounter.\r\nint GetIsEncounterCreature(object oCreature=OBJECT_SELF);"
             ),
             new ScriptFunction(
                 DataType.Object,
@@ -11623,9 +11633,9 @@ namespace CSharpKOTOR.Common.Script
             new ScriptFunction(
                 DataType.Void,
                 "SpeakOneLinerConversation",
-                new List<ScriptParam> { new ScriptParam(DataType.String, "sDialogResRef", "\"\""), new ScriptParam(DataType.Object, "oTokenTarget", OBJECT_TYPE_INVALID) },
-                "// 417: Immediately speak a conversation one-liner.\r\n// - sDialogResRef\r\n// - oTokenTarget: This must be specified if there are creature-specific tokens\r\n//   in the string.\r\nvoid SpeakOneLinerConversation(string sDialogResRef=\"\", object oTokenTarget=OBJECT_TYPE_INVALID);",
-                "// 417: Immediately speak a conversation one-liner.\r\n// - sDialogResRef\r\n// - oTokenTarget: This must be specified if there are creature-specific tokens\r\n//   in the string.\r\nvoid SpeakOneLinerConversation(string sDialogResRef=\"\", object oTokenTarget=OBJECT_TYPE_INVALID);"
+                new List<ScriptParam> { new ScriptParam(DataType.String, "sDialogResRef", "\"\""), new ScriptParam(DataType.Object, "oTokenTarget", 32767) },
+                "// 417: Immediately speak a conversation one-liner.\r\n// - sDialogResRef\r\n// - oTokenTarget: This must be specified if there are creature-specific tokens\r\n//   in the string.\r\nvoid SpeakOneLinerConversation(string sDialogResRef=\"\", object oTokenTarget=32767);",
+                "// 417: Immediately speak a conversation one-liner.\r\n// - sDialogResRef\r\n// - oTokenTarget: This must be specified if there are creature-specific tokens\r\n//   in the string.\r\nvoid SpeakOneLinerConversation(string sDialogResRef=\"\", object oTokenTarget=32767);"
             ),
             new ScriptFunction(
                 DataType.Int,
@@ -11651,23 +11661,23 @@ namespace CSharpKOTOR.Common.Script
             new ScriptFunction(
                 DataType.Void,
                 "SetLightsaberPowered",
-                new List<ScriptParam> { new ScriptParam(DataType.Object, "oCreature", null), new ScriptParam(DataType.Int, "bOverride", null), new ScriptParam(DataType.Int, "bPowered", TRUE), new ScriptParam(DataType.Int, "bShowTransition", FALSE) },
-                "// 421: SetLightsaberPowered\r\n// Allows a script to set the state of the lightsaber.  This will override any\r\n// game determined lightsaber powerstates.\r\nvoid SetLightsaberPowered( object oCreature, int bOverride, int bPowered = TRUE, int bShowTransition = FALSE);",
-                "// 421: SetLightsaberPowered\r\n// Allows a script to set the state of the lightsaber.  This will override any\r\n// game determined lightsaber powerstates.\r\nvoid SetLightsaberPowered( object oCreature, int bOverride, int bPowered = TRUE, int bShowTransition = FALSE);"
+                new List<ScriptParam> { new ScriptParam(DataType.Object, "oCreature", null), new ScriptParam(DataType.Int, "bOverride", null), new ScriptParam(DataType.Int, "bPowered", 1), new ScriptParam(DataType.Int, "bShowTransition", 0) },
+                "// 421: SetLightsaberPowered\r\n// Allows a script to set the state of the lightsaber.  This will override any\r\n// game determined lightsaber powerstates.\r\nvoid SetLightsaberPowered( object oCreature, int bOverride, int bPowered = 1, int bShowTransition = 0);",
+                "// 421: SetLightsaberPowered\r\n// Allows a script to set the state of the lightsaber.  This will override any\r\n// game determined lightsaber powerstates.\r\nvoid SetLightsaberPowered( object oCreature, int bOverride, int bPowered = 1, int bShowTransition = 0);"
             ),
             new ScriptFunction(
                 DataType.Int,
                 "GetIsWeaponEffective",
-                new List<ScriptParam> { new ScriptParam(DataType.Object, "oVersus", OBJECT_INVALID), new ScriptParam(DataType.Int, "bOffHand", FALSE) },
-                "// 422: * Returns TRUE if the weapon equipped is capable of damaging oVersus.\r\nint GetIsWeaponEffective(object oVersus=OBJECT_INVALID, int bOffHand=FALSE);",
-                "// 422: * Returns TRUE if the weapon equipped is capable of damaging oVersus.\r\nint GetIsWeaponEffective(object oVersus=OBJECT_INVALID, int bOffHand=FALSE);"
+                new List<ScriptParam> { new ScriptParam(DataType.Object, "oVersus", OBJECT_INVALID), new ScriptParam(DataType.Int, "bOffHand", 0) },
+                "// 422: * Returns 1 if the weapon equipped is capable of damaging oVersus.\r\nint GetIsWeaponEffective(object oVersus=OBJECT_INVALID, int bOffHand=0);",
+                "// 422: * Returns 1 if the weapon equipped is capable of damaging oVersus.\r\nint GetIsWeaponEffective(object oVersus=OBJECT_INVALID, int bOffHand=0);"
             ),
             new ScriptFunction(
                 DataType.Int,
                 "GetLastSpellHarmful",
                 new List<ScriptParam>(),
-                "// 423: Use this in a SpellCast script to determine whether the spell was considered\r\n// harmful.\r\n// * Returns TRUE if the last spell cast was harmful.\r\nint GetLastSpellHarmful();",
-                "// 423: Use this in a SpellCast script to determine whether the spell was considered\r\n// harmful.\r\n// * Returns TRUE if the last spell cast was harmful.\r\nint GetLastSpellHarmful();"
+                "// 423: Use this in a SpellCast script to determine whether the spell was considered\r\n// harmful.\r\n// * Returns 1 if the last spell cast was harmful.\r\nint GetLastSpellHarmful();",
+                "// 423: Use this in a SpellCast script to determine whether the spell was considered\r\n// harmful.\r\n// * Returns 1 if the last spell cast was harmful.\r\nint GetLastSpellHarmful();"
             ),
             new ScriptFunction(
                 DataType.Event,
@@ -11700,16 +11710,16 @@ namespace CSharpKOTOR.Common.Script
             new ScriptFunction(
                 DataType.Void,
                 "MusicBackgroundChangeDay",
-                new List<ScriptParam> { new ScriptParam(DataType.Object, "oArea", null), new ScriptParam(DataType.Int, "nTrack", null), new ScriptParam(DataType.Int, "nStreamingMusic", FALSE) },
-                "// 428: Change the background day track for oArea to nTrack.\r\n// - oArea\r\n// - nTrack\r\nvoid MusicBackgroundChangeDay(object oArea, int nTrack, int nStreamingMusic = FALSE);",
-                "// 428: Change the background day track for oArea to nTrack.\r\n// - oArea\r\n// - nTrack\r\nvoid MusicBackgroundChangeDay(object oArea, int nTrack, int nStreamingMusic = FALSE);"
+                new List<ScriptParam> { new ScriptParam(DataType.Object, "oArea", null), new ScriptParam(DataType.Int, "nTrack", null), new ScriptParam(DataType.Int, "nStreamingMusic", 0) },
+                "// 428: Change the background day track for oArea to nTrack.\r\n// - oArea\r\n// - nTrack\r\nvoid MusicBackgroundChangeDay(object oArea, int nTrack, int nStreamingMusic = 0);",
+                "// 428: Change the background day track for oArea to nTrack.\r\n// - oArea\r\n// - nTrack\r\nvoid MusicBackgroundChangeDay(object oArea, int nTrack, int nStreamingMusic = 0);"
             ),
             new ScriptFunction(
                 DataType.Void,
                 "MusicBackgroundChangeNight",
-                new List<ScriptParam> { new ScriptParam(DataType.Object, "oArea", null), new ScriptParam(DataType.Int, "nTrack", null), new ScriptParam(DataType.Int, "nStreamingMusic", FALSE) },
-                "// 429: Change the background night track for oArea to nTrack.\r\n// - oArea\r\n// - nTrack\r\nvoid MusicBackgroundChangeNight(object oArea, int nTrack, int nStreamingMusic = FALSE);",
-                "// 429: Change the background night track for oArea to nTrack.\r\n// - oArea\r\n// - nTrack\r\nvoid MusicBackgroundChangeNight(object oArea, int nTrack, int nStreamingMusic = FALSE);"
+                new List<ScriptParam> { new ScriptParam(DataType.Object, "oArea", null), new ScriptParam(DataType.Int, "nTrack", null), new ScriptParam(DataType.Int, "nStreamingMusic", 0) },
+                "// 429: Change the background night track for oArea to nTrack.\r\n// - oArea\r\n// - nTrack\r\nvoid MusicBackgroundChangeNight(object oArea, int nTrack, int nStreamingMusic = 0);",
+                "// 429: Change the background night track for oArea to nTrack.\r\n// - oArea\r\n// - nTrack\r\nvoid MusicBackgroundChangeNight(object oArea, int nTrack, int nStreamingMusic = 0);"
             ),
             new ScriptFunction(
                 DataType.Void,
@@ -11806,15 +11816,15 @@ namespace CSharpKOTOR.Common.Script
                 DataType.Int,
                 "GetIsOpen",
                 new List<ScriptParam> { new ScriptParam(DataType.Object, "oObject", null) },
-                "// 443: * Returns TRUE if oObject (which is a placeable or a door) is currently open.\r\nint GetIsOpen(object oObject);",
-                "// 443: * Returns TRUE if oObject (which is a placeable or a door) is currently open.\r\nint GetIsOpen(object oObject);"
+                "// 443: * Returns 1 if oObject (which is a placeable or a door) is currently open.\r\nint GetIsOpen(object oObject);",
+                "// 443: * Returns 1 if oObject (which is a placeable or a door) is currently open.\r\nint GetIsOpen(object oObject);"
             ),
             new ScriptFunction(
                 DataType.Void,
                 "TakeGoldFromCreature",
-                new List<ScriptParam> { new ScriptParam(DataType.Int, "nAmount", null), new ScriptParam(DataType.Object, "oCreatureToTakeFrom", null), new ScriptParam(DataType.Int, "bDestroy", FALSE) },
-                "// 444: Take nAmount of gold from oCreatureToTakeFrom.\r\n// - nAmount\r\n// - oCreatureToTakeFrom: If this is not a valid creature, nothing will happen.\r\n// - bDestroy: If this is TRUE, the caller will not get the gold.  Instead, the\r\n//   gold will be destroyed and will vanish from the game.\r\nvoid TakeGoldFromCreature(int nAmount, object oCreatureToTakeFrom, int bDestroy=FALSE);",
-                "// 444: Take nAmount of gold from oCreatureToTakeFrom.\r\n// - nAmount\r\n// - oCreatureToTakeFrom: If this is not a valid creature, nothing will happen.\r\n// - bDestroy: If this is TRUE, the caller will not get the gold.  Instead, the\r\n//   gold will be destroyed and will vanish from the game.\r\nvoid TakeGoldFromCreature(int nAmount, object oCreatureToTakeFrom, int bDestroy=FALSE);"
+                new List<ScriptParam> { new ScriptParam(DataType.Int, "nAmount", null), new ScriptParam(DataType.Object, "oCreatureToTakeFrom", null), new ScriptParam(DataType.Int, "bDestroy", 0) },
+                "// 444: Take nAmount of gold from oCreatureToTakeFrom.\r\n// - nAmount\r\n// - oCreatureToTakeFrom: If this is not a valid creature, nothing will happen.\r\n// - bDestroy: If this is 1, the caller will not get the gold.  Instead, the\r\n//   gold will be destroyed and will vanish from the game.\r\nvoid TakeGoldFromCreature(int nAmount, object oCreatureToTakeFrom, int bDestroy=0);",
+                "// 444: Take nAmount of gold from oCreatureToTakeFrom.\r\n// - nAmount\r\n// - oCreatureToTakeFrom: If this is not a valid creature, nothing will happen.\r\n// - bDestroy: If this is 1, the caller will not get the gold.  Instead, the\r\n//   gold will be destroyed and will vanish from the game.\r\nvoid TakeGoldFromCreature(int nAmount, object oCreatureToTakeFrom, int bDestroy=0);"
             ),
             new ScriptFunction(
                 DataType.Int,
@@ -11833,16 +11843,16 @@ namespace CSharpKOTOR.Common.Script
             new ScriptFunction(
                 DataType.Effect,
                 "EffectAttackDecrease",
-                new List<ScriptParam> { new ScriptParam(DataType.Int, "nPenalty", null), new ScriptParam(DataType.Int, "nModifierType", ATTACK_BONUS_MISC) },
-                "// 447: Create an Attack Decrease effect.\r\n// - nPenalty\r\n// - nModifierType: ATTACK_BONUS_*\r\neffect EffectAttackDecrease(int nPenalty, int nModifierType=ATTACK_BONUS_MISC);",
-                "// 447: Create an Attack Decrease effect.\r\n// - nPenalty\r\n// - nModifierType: ATTACK_BONUS_*\r\neffect EffectAttackDecrease(int nPenalty, int nModifierType=ATTACK_BONUS_MISC);"
+                new List<ScriptParam> { new ScriptParam(DataType.Int, "nPenalty", null), new ScriptParam(DataType.Int, "nModifierType", 0) },
+                "// 447: Create an Attack Decrease effect.\r\n// - nPenalty\r\n// - nModifierType: ATTACK_BONUS_*\r\neffect EffectAttackDecrease(int nPenalty, int nModifierType=0);",
+                "// 447: Create an Attack Decrease effect.\r\n// - nPenalty\r\n// - nModifierType: ATTACK_BONUS_*\r\neffect EffectAttackDecrease(int nPenalty, int nModifierType=0);"
             ),
             new ScriptFunction(
                 DataType.Effect,
                 "EffectDamageDecrease",
-                new List<ScriptParam> { new ScriptParam(DataType.Int, "nPenalty", null), new ScriptParam(DataType.Int, "nDamageType", DAMAGE_TYPE_UNIVERSAL) },
-                "// 448: Create a Damage Decrease effect.\r\n// - nPenalty\r\n// - nDamageType: DAMAGE_TYPE_*\r\neffect EffectDamageDecrease(int nPenalty, int nDamageType=DAMAGE_TYPE_UNIVERSAL);",
-                "// 448: Create a Damage Decrease effect.\r\n// - nPenalty\r\n// - nDamageType: DAMAGE_TYPE_*\r\neffect EffectDamageDecrease(int nPenalty, int nDamageType=DAMAGE_TYPE_UNIVERSAL);"
+                new List<ScriptParam> { new ScriptParam(DataType.Int, "nPenalty", null), new ScriptParam(DataType.Int, "nDamageType", 8) },
+                "// 448: Create a Damage Decrease effect.\r\n// - nPenalty\r\n// - nDamageType: DAMAGE_TYPE_*\r\neffect EffectDamageDecrease(int nPenalty, int nDamageType=8);",
+                "// 448: Create a Damage Decrease effect.\r\n// - nPenalty\r\n// - nDamageType: DAMAGE_TYPE_*\r\neffect EffectDamageDecrease(int nPenalty, int nDamageType=8);"
             ),
             new ScriptFunction(
                 DataType.Effect,
@@ -11854,9 +11864,9 @@ namespace CSharpKOTOR.Common.Script
             new ScriptFunction(
                 DataType.Effect,
                 "EffectACDecrease",
-                new List<ScriptParam> { new ScriptParam(DataType.Int, "nValue", null), new ScriptParam(DataType.Int, "nModifyType", AC_DODGE_BONUS), new ScriptParam(DataType.Int, "nDamageType", AC_VS_DAMAGE_TYPE_ALL) },
-                "// 450: Create an AC Decrease effect.\r\n// - nValue\r\n// - nModifyType: AC_*\r\n// - nDamageType: DAMAGE_TYPE_*\r\n//   * Default value for nDamageType should only ever be used in this function prototype.\r\neffect EffectACDecrease(int nValue, int nModifyType=AC_DODGE_BONUS, int nDamageType=AC_VS_DAMAGE_TYPE_ALL);",
-                "// 450: Create an AC Decrease effect.\r\n// - nValue\r\n// - nModifyType: AC_*\r\n// - nDamageType: DAMAGE_TYPE_*\r\n//   * Default value for nDamageType should only ever be used in this function prototype.\r\neffect EffectACDecrease(int nValue, int nModifyType=AC_DODGE_BONUS, int nDamageType=AC_VS_DAMAGE_TYPE_ALL);"
+                new List<ScriptParam> { new ScriptParam(DataType.Int, "nValue", null), new ScriptParam(DataType.Int, "nModifyType", 0), new ScriptParam(DataType.Int, "nDamageType", 8199) },
+                "// 450: Create an AC Decrease effect.\r\n// - nValue\r\n// - nModifyType: AC_*\r\n// - nDamageType: DAMAGE_TYPE_*\r\n//   * Default value for nDamageType should only ever be used in this function prototype.\r\neffect EffectACDecrease(int nValue, int nModifyType=0, int nDamageType=8199);",
+                "// 450: Create an AC Decrease effect.\r\n// - nValue\r\n// - nModifyType: AC_*\r\n// - nDamageType: DAMAGE_TYPE_*\r\n//   * Default value for nDamageType should only ever be used in this function prototype.\r\neffect EffectACDecrease(int nValue, int nModifyType=0, int nDamageType=8199);"
             ),
             new ScriptFunction(
                 DataType.Effect,
@@ -11868,9 +11878,9 @@ namespace CSharpKOTOR.Common.Script
             new ScriptFunction(
                 DataType.Effect,
                 "EffectSavingThrowDecrease",
-                new List<ScriptParam> { new ScriptParam(DataType.Int, "nSave", null), new ScriptParam(DataType.Int, "nValue", null), new ScriptParam(DataType.Int, "nSaveType", SAVING_THROW_TYPE_ALL) },
-                "// 452: Create a Saving Throw Decrease effect.\r\n// - nSave\r\n// - nValue\r\n// - nSaveType: SAVING_THROW_TYPE_*\r\neffect EffectSavingThrowDecrease(int nSave, int nValue, int nSaveType=SAVING_THROW_TYPE_ALL);",
-                "// 452: Create a Saving Throw Decrease effect.\r\n// - nSave\r\n// - nValue\r\n// - nSaveType: SAVING_THROW_TYPE_*\r\neffect EffectSavingThrowDecrease(int nSave, int nValue, int nSaveType=SAVING_THROW_TYPE_ALL);"
+                new List<ScriptParam> { new ScriptParam(DataType.Int, "nSave", null), new ScriptParam(DataType.Int, "nValue", null), new ScriptParam(DataType.Int, "nSaveType", 0) },
+                "// 452: Create a Saving Throw Decrease effect.\r\n// - nSave\r\n// - nValue\r\n// - nSaveType: SAVING_THROW_TYPE_*\r\neffect EffectSavingThrowDecrease(int nSave, int nValue, int nSaveType=0);",
+                "// 452: Create a Saving Throw Decrease effect.\r\n// - nSave\r\n// - nValue\r\n// - nSaveType: SAVING_THROW_TYPE_*\r\neffect EffectSavingThrowDecrease(int nSave, int nValue, int nSaveType=0);"
             ),
             new ScriptFunction(
                 DataType.Effect,
@@ -11939,8 +11949,8 @@ namespace CSharpKOTOR.Common.Script
                 DataType.Int,
                 "GetSoloMode",
                 new List<ScriptParam>(),
-                "// 462:\r\n// Returns: TRUE if the player is in 'solo mode' (ie. the party is not supposed to follow the player).\r\n//          FALSE otherwise.\r\nint GetSoloMode();",
-                "// 462:\r\n// Returns: TRUE if the player is in 'solo mode' (ie. the party is not supposed to follow the player).\r\n//          FALSE otherwise.\r\nint GetSoloMode();"
+                "// 462:\r\n// Returns: 1 if the player is in 'solo mode' (ie. the party is not supposed to follow the player).\r\n//          0 otherwise.\r\nint GetSoloMode();",
+                "// 462:\r\n// Returns: 1 if the player is in 'solo mode' (ie. the party is not supposed to follow the player).\r\n//          0 otherwise.\r\nint GetSoloMode();"
             ),
             new ScriptFunction(
                 DataType.Effect,
@@ -12120,9 +12130,9 @@ namespace CSharpKOTOR.Common.Script
             new ScriptFunction(
                 DataType.Object,
                 "GetNearestTrapToObject",
-                new List<ScriptParam> { new ScriptParam(DataType.Object, "oTarget", OBJECT_SELF), new ScriptParam(DataType.Int, "nTrapDetected", TRUE) },
-                "// 488: Get the trap nearest to oTarget.\r\n// Note : \"trap objects\" are actually any trigger, placeable or door that is\r\n// trapped in oTarget's area.\r\n// - oTarget\r\n// - nTrapDetected: if this is TRUE, the trap returned has to have been detected\r\n//   by oTarget.\r\nobject GetNearestTrapToObject(object oTarget=OBJECT_SELF, int nTrapDetected=TRUE);",
-                "// 488: Get the trap nearest to oTarget.\r\n// Note : \"trap objects\" are actually any trigger, placeable or door that is\r\n// trapped in oTarget's area.\r\n// - oTarget\r\n// - nTrapDetected: if this is TRUE, the trap returned has to have been detected\r\n//   by oTarget.\r\nobject GetNearestTrapToObject(object oTarget=OBJECT_SELF, int nTrapDetected=TRUE);"
+                new List<ScriptParam> { new ScriptParam(DataType.Object, "oTarget", OBJECT_SELF), new ScriptParam(DataType.Int, "nTrapDetected", 1) },
+                "// 488: Get the trap nearest to oTarget.\r\n// Note : \"trap objects\" are actually any trigger, placeable or door that is\r\n// trapped in oTarget's area.\r\n// - oTarget\r\n// - nTrapDetected: if this is 1, the trap returned has to have been detected\r\n//   by oTarget.\r\nobject GetNearestTrapToObject(object oTarget=OBJECT_SELF, int nTrapDetected=1);",
+                "// 488: Get the trap nearest to oTarget.\r\n// Note : \"trap objects\" are actually any trigger, placeable or door that is\r\n// trapped in oTarget's area.\r\n// - oTarget\r\n// - nTrapDetected: if this is 1, the trap returned has to have been detected\r\n//   by oTarget.\r\nobject GetNearestTrapToObject(object oTarget=OBJECT_SELF, int nTrapDetected=1);"
             ),
             new ScriptFunction(
                 DataType.Object,
@@ -12211,16 +12221,16 @@ namespace CSharpKOTOR.Common.Script
             new ScriptFunction(
                 DataType.Void,
                 "ActionCastFakeSpellAtObject",
-                new List<ScriptParam> { new ScriptParam(DataType.Int, "nSpell", null), new ScriptParam(DataType.Object, "oTarget", null), new ScriptParam(DataType.Int, "nProjectilePathType", PROJECTILE_PATH_TYPE_DEFAULT) },
-                "// 501: The action subject will fake casting a spell at oTarget; the conjure and cast\r\n// animations and visuals will occur, nothing else.\r\n// - nSpell\r\n// - oTarget\r\n// - nProjectilePathType: PROJECTILE_PATH_TYPE_*\r\nvoid ActionCastFakeSpellAtObject(int nSpell, object oTarget, int nProjectilePathType=PROJECTILE_PATH_TYPE_DEFAULT);",
-                "// 501: The action subject will fake casting a spell at oTarget; the conjure and cast\r\n// animations and visuals will occur, nothing else.\r\n// - nSpell\r\n// - oTarget\r\n// - nProjectilePathType: PROJECTILE_PATH_TYPE_*\r\nvoid ActionCastFakeSpellAtObject(int nSpell, object oTarget, int nProjectilePathType=PROJECTILE_PATH_TYPE_DEFAULT);"
+                new List<ScriptParam> { new ScriptParam(DataType.Int, "nSpell", null), new ScriptParam(DataType.Object, "oTarget", null), new ScriptParam(DataType.Int, "nProjectilePathType", 0) },
+                "// 501: The action subject will fake casting a spell at oTarget; the conjure and cast\r\n// animations and visuals will occur, nothing else.\r\n// - nSpell\r\n// - oTarget\r\n// - nProjectilePathType: PROJECTILE_PATH_TYPE_*\r\nvoid ActionCastFakeSpellAtObject(int nSpell, object oTarget, int nProjectilePathType=0);",
+                "// 501: The action subject will fake casting a spell at oTarget; the conjure and cast\r\n// animations and visuals will occur, nothing else.\r\n// - nSpell\r\n// - oTarget\r\n// - nProjectilePathType: PROJECTILE_PATH_TYPE_*\r\nvoid ActionCastFakeSpellAtObject(int nSpell, object oTarget, int nProjectilePathType=0);"
             ),
             new ScriptFunction(
                 DataType.Void,
                 "ActionCastFakeSpellAtLocation",
-                new List<ScriptParam> { new ScriptParam(DataType.Int, "nSpell", null), new ScriptParam(DataType.Location, "lTarget", null), new ScriptParam(DataType.Int, "nProjectilePathType", PROJECTILE_PATH_TYPE_DEFAULT) },
-                "// 502: The action subject will fake casting a spell at lLocation; the conjure and\r\n// cast animations and visuals will occur, nothing else.\r\n// - nSpell\r\n// - lTarget\r\n// - nProjectilePathType: PROJECTILE_PATH_TYPE_*\r\nvoid ActionCastFakeSpellAtLocation(int nSpell, location lTarget, int nProjectilePathType=PROJECTILE_PATH_TYPE_DEFAULT);",
-                "// 502: The action subject will fake casting a spell at lLocation; the conjure and\r\n// cast animations and visuals will occur, nothing else.\r\n// - nSpell\r\n// - lTarget\r\n// - nProjectilePathType: PROJECTILE_PATH_TYPE_*\r\nvoid ActionCastFakeSpellAtLocation(int nSpell, location lTarget, int nProjectilePathType=PROJECTILE_PATH_TYPE_DEFAULT);"
+                new List<ScriptParam> { new ScriptParam(DataType.Int, "nSpell", null), new ScriptParam(DataType.Location, "lTarget", null), new ScriptParam(DataType.Int, "nProjectilePathType", 0) },
+                "// 502: The action subject will fake casting a spell at lLocation; the conjure and\r\n// cast animations and visuals will occur, nothing else.\r\n// - nSpell\r\n// - lTarget\r\n// - nProjectilePathType: PROJECTILE_PATH_TYPE_*\r\nvoid ActionCastFakeSpellAtLocation(int nSpell, location lTarget, int nProjectilePathType=0);",
+                "// 502: The action subject will fake casting a spell at lLocation; the conjure and\r\n// cast animations and visuals will occur, nothing else.\r\n// - nSpell\r\n// - lTarget\r\n// - nProjectilePathType: PROJECTILE_PATH_TYPE_*\r\nvoid ActionCastFakeSpellAtLocation(int nSpell, location lTarget, int nProjectilePathType=0);"
             ),
             new ScriptFunction(
                 DataType.Void,
@@ -12240,15 +12250,15 @@ namespace CSharpKOTOR.Common.Script
                 DataType.Void,
                 "SetLockOrientationInDialog",
                 new List<ScriptParam> { new ScriptParam(DataType.Object, "oObject", null), new ScriptParam(DataType.Int, "nValue", null) },
-                "// 505: SetLockOrientationInDialog\r\n// Allows the locking and unlocking of orientation changes for an object in dialog\r\n// - oObject - Object\r\n// - nValue - TRUE or FALSE\r\nvoid SetLockOrientationInDialog(object oObject, int nValue);",
-                "// 505: SetLockOrientationInDialog\r\n// Allows the locking and unlocking of orientation changes for an object in dialog\r\n// - oObject - Object\r\n// - nValue - TRUE or FALSE\r\nvoid SetLockOrientationInDialog(object oObject, int nValue);"
+                "// 505: SetLockOrientationInDialog\r\n// Allows the locking and unlocking of orientation changes for an object in dialog\r\n// - oObject - Object\r\n// - nValue - 1 or 0\r\nvoid SetLockOrientationInDialog(object oObject, int nValue);",
+                "// 505: SetLockOrientationInDialog\r\n// Allows the locking and unlocking of orientation changes for an object in dialog\r\n// - oObject - Object\r\n// - nValue - 1 or 0\r\nvoid SetLockOrientationInDialog(object oObject, int nValue);"
             ),
             new ScriptFunction(
                 DataType.Void,
                 "SetLockHeadFollowInDialog",
                 new List<ScriptParam> { new ScriptParam(DataType.Object, "oObject", null), new ScriptParam(DataType.Int, "nValue", null) },
-                "// 506: SetLockHeadFollowInDialog\r\n// Allows the locking and undlocking of head following for an object in dialog\r\n// - oObject - Object\r\n// - nValue - TRUE or FALSE\r\nvoid SetLockHeadFollowInDialog(object oObject, int nValue);",
-                "// 506: SetLockHeadFollowInDialog\r\n// Allows the locking and undlocking of head following for an object in dialog\r\n// - oObject - Object\r\n// - nValue - TRUE or FALSE\r\nvoid SetLockHeadFollowInDialog(object oObject, int nValue);"
+                "// 506: SetLockHeadFollowInDialog\r\n// Allows the locking and undlocking of head following for an object in dialog\r\n// - oObject - Object\r\n// - nValue - 1 or 0\r\nvoid SetLockHeadFollowInDialog(object oObject, int nValue);",
+                "// 506: SetLockHeadFollowInDialog\r\n// Allows the locking and undlocking of head following for an object in dialog\r\n// - oObject - Object\r\n// - nValue - 1 or 0\r\nvoid SetLockHeadFollowInDialog(object oObject, int nValue);"
             ),
             new ScriptFunction(
                 DataType.Void,
@@ -12282,8 +12292,8 @@ namespace CSharpKOTOR.Common.Script
                 DataType.Int,
                 "GetWeaponRanged",
                 new List<ScriptParam> { new ScriptParam(DataType.Object, "oItem", null) },
-                "// 511: * Returns TRUE if oItem is a ranged weapon.\r\nint GetWeaponRanged(object oItem);",
-                "// 511: * Returns TRUE if oItem is a ranged weapon.\r\nint GetWeaponRanged(object oItem);"
+                "// 511: * Returns 1 if oItem is a ranged weapon.\r\nint GetWeaponRanged(object oItem);",
+                "// 511: * Returns 1 if oItem is a ranged weapon.\r\nint GetWeaponRanged(object oItem);"
             ),
             new ScriptFunction(
                 DataType.Void,
@@ -12331,15 +12341,15 @@ namespace CSharpKOTOR.Common.Script
                 DataType.Void,
                 "StartCreditSequence",
                 new List<ScriptParam> { new ScriptParam(DataType.Int, "bTransparentBackground", null) },
-                "// 518: StartCreditSequence\r\n// Starts the credits sequence.  If bTransparentBackground is TRUE, the credits will be displayed\r\n// with a transparent background, allowing whatever is currently onscreen to show through.  If it\r\n// is set to FALSE, the credits will be displayed on a black background.\r\nvoid StartCreditSequence( int bTransparentBackground );",
-                "// 518: StartCreditSequence\r\n// Starts the credits sequence.  If bTransparentBackground is TRUE, the credits will be displayed\r\n// with a transparent background, allowing whatever is currently onscreen to show through.  If it\r\n// is set to FALSE, the credits will be displayed on a black background.\r\nvoid StartCreditSequence( int bTransparentBackground );"
+                "// 518: StartCreditSequence\r\n// Starts the credits sequence.  If bTransparentBackground is 1, the credits will be displayed\r\n// with a transparent background, allowing whatever is currently onscreen to show through.  If it\r\n// is set to 0, the credits will be displayed on a black background.\r\nvoid StartCreditSequence( int bTransparentBackground );",
+                "// 518: StartCreditSequence\r\n// Starts the credits sequence.  If bTransparentBackground is 1, the credits will be displayed\r\n// with a transparent background, allowing whatever is currently onscreen to show through.  If it\r\n// is set to 0, the credits will be displayed on a black background.\r\nvoid StartCreditSequence( int bTransparentBackground );"
             ),
             new ScriptFunction(
                 DataType.Int,
                 "IsCreditSequenceInProgress",
                 new List<ScriptParam>(),
-                "// 519: IsCreditSequenceInProgress\r\n// Returns TRUE if the credits sequence is currently in progress, FALSE otherwise.\r\nint IsCreditSequenceInProgress();",
-                "// 519: IsCreditSequenceInProgress\r\n// Returns TRUE if the credits sequence is currently in progress, FALSE otherwise.\r\nint IsCreditSequenceInProgress();"
+                "// 519: IsCreditSequenceInProgress\r\n// Returns 1 if the credits sequence is currently in progress, 0 otherwise.\r\nint IsCreditSequenceInProgress();",
+                "// 519: IsCreditSequenceInProgress\r\n// Returns 1 if the credits sequence is currently in progress, 0 otherwise.\r\nint IsCreditSequenceInProgress();"
             ),
             new ScriptFunction(
                 DataType.Void,
@@ -12379,44 +12389,44 @@ namespace CSharpKOTOR.Common.Script
             new ScriptFunction(
                 DataType.Void,
                 "FloatingTextStrRefOnCreature",
-                new List<ScriptParam> { new ScriptParam(DataType.Int, "nStrRefToDisplay", null), new ScriptParam(DataType.Object, "oCreatureToFloatAbove", null), new ScriptParam(DataType.Int, "bBroadcastToFaction", TRUE) },
-                "// 525: Display floaty text above the specified creature.\r\n// The text will also appear in the chat buffer of each player that receives the\r\n// floaty text.\r\n// - nStrRefToDisplay: String ref (therefore text is translated)\r\n// - oCreatureToFloatAbove\r\n// - bBroadcastToFaction: If this is TRUE then only creatures in the same faction\r\n//   as oCreatureToFloatAbove\r\n//   will see the floaty text, and only if they are within range (30 metres).\r\nvoid FloatingTextStrRefOnCreature(int nStrRefToDisplay, object oCreatureToFloatAbove, int bBroadcastToFaction=TRUE);",
-                "// 525: Display floaty text above the specified creature.\r\n// The text will also appear in the chat buffer of each player that receives the\r\n// floaty text.\r\n// - nStrRefToDisplay: String ref (therefore text is translated)\r\n// - oCreatureToFloatAbove\r\n// - bBroadcastToFaction: If this is TRUE then only creatures in the same faction\r\n//   as oCreatureToFloatAbove\r\n//   will see the floaty text, and only if they are within range (30 metres).\r\nvoid FloatingTextStrRefOnCreature(int nStrRefToDisplay, object oCreatureToFloatAbove, int bBroadcastToFaction=TRUE);"
+                new List<ScriptParam> { new ScriptParam(DataType.Int, "nStrRefToDisplay", null), new ScriptParam(DataType.Object, "oCreatureToFloatAbove", null), new ScriptParam(DataType.Int, "bBroadcastToFaction", 1) },
+                "// 525: Display floaty text above the specified creature.\r\n// The text will also appear in the chat buffer of each player that receives the\r\n// floaty text.\r\n// - nStrRefToDisplay: String ref (therefore text is translated)\r\n// - oCreatureToFloatAbove\r\n// - bBroadcastToFaction: If this is 1 then only creatures in the same faction\r\n//   as oCreatureToFloatAbove\r\n//   will see the floaty text, and only if they are within range (30 metres).\r\nvoid FloatingTextStrRefOnCreature(int nStrRefToDisplay, object oCreatureToFloatAbove, int bBroadcastToFaction=1);",
+                "// 525: Display floaty text above the specified creature.\r\n// The text will also appear in the chat buffer of each player that receives the\r\n// floaty text.\r\n// - nStrRefToDisplay: String ref (therefore text is translated)\r\n// - oCreatureToFloatAbove\r\n// - bBroadcastToFaction: If this is 1 then only creatures in the same faction\r\n//   as oCreatureToFloatAbove\r\n//   will see the floaty text, and only if they are within range (30 metres).\r\nvoid FloatingTextStrRefOnCreature(int nStrRefToDisplay, object oCreatureToFloatAbove, int bBroadcastToFaction=1);"
             ),
             new ScriptFunction(
                 DataType.Void,
                 "FloatingTextStringOnCreature",
-                new List<ScriptParam> { new ScriptParam(DataType.String, "sStringToDisplay", null), new ScriptParam(DataType.Object, "oCreatureToFloatAbove", null), new ScriptParam(DataType.Int, "bBroadcastToFaction", TRUE) },
-                "// 526: Display floaty text above the specified creature.\r\n// The text will also appear in the chat buffer of each player that receives the\r\n// floaty text.\r\n// - sStringToDisplay: String\r\n// - oCreatureToFloatAbove\r\n// - bBroadcastToFaction: If this is TRUE then only creatures in the same faction\r\n//   as oCreatureToFloatAbove\r\n//   will see the floaty text, and only if they are within range (30 metres).\r\nvoid FloatingTextStringOnCreature(string sStringToDisplay, object oCreatureToFloatAbove, int bBroadcastToFaction=TRUE);",
-                "// 526: Display floaty text above the specified creature.\r\n// The text will also appear in the chat buffer of each player that receives the\r\n// floaty text.\r\n// - sStringToDisplay: String\r\n// - oCreatureToFloatAbove\r\n// - bBroadcastToFaction: If this is TRUE then only creatures in the same faction\r\n//   as oCreatureToFloatAbove\r\n//   will see the floaty text, and only if they are within range (30 metres).\r\nvoid FloatingTextStringOnCreature(string sStringToDisplay, object oCreatureToFloatAbove, int bBroadcastToFaction=TRUE);"
+                new List<ScriptParam> { new ScriptParam(DataType.String, "sStringToDisplay", null), new ScriptParam(DataType.Object, "oCreatureToFloatAbove", null), new ScriptParam(DataType.Int, "bBroadcastToFaction", 1) },
+                "// 526: Display floaty text above the specified creature.\r\n// The text will also appear in the chat buffer of each player that receives the\r\n// floaty text.\r\n// - sStringToDisplay: String\r\n// - oCreatureToFloatAbove\r\n// - bBroadcastToFaction: If this is 1 then only creatures in the same faction\r\n//   as oCreatureToFloatAbove\r\n//   will see the floaty text, and only if they are within range (30 metres).\r\nvoid FloatingTextStringOnCreature(string sStringToDisplay, object oCreatureToFloatAbove, int bBroadcastToFaction=1);",
+                "// 526: Display floaty text above the specified creature.\r\n// The text will also appear in the chat buffer of each player that receives the\r\n// floaty text.\r\n// - sStringToDisplay: String\r\n// - oCreatureToFloatAbove\r\n// - bBroadcastToFaction: If this is 1 then only creatures in the same faction\r\n//   as oCreatureToFloatAbove\r\n//   will see the floaty text, and only if they are within range (30 metres).\r\nvoid FloatingTextStringOnCreature(string sStringToDisplay, object oCreatureToFloatAbove, int bBroadcastToFaction=1);"
             ),
             new ScriptFunction(
                 DataType.Int,
                 "GetTrapDisarmable",
                 new List<ScriptParam> { new ScriptParam(DataType.Object, "oTrapObject", null) },
-                "// 527: - oTrapObject: a placeable, door or trigger\r\n// * Returns TRUE if oTrapObject is disarmable.\r\nint GetTrapDisarmable(object oTrapObject);",
-                "// 527: - oTrapObject: a placeable, door or trigger\r\n// * Returns TRUE if oTrapObject is disarmable.\r\nint GetTrapDisarmable(object oTrapObject);"
+                "// 527: - oTrapObject: a placeable, door or trigger\r\n// * Returns 1 if oTrapObject is disarmable.\r\nint GetTrapDisarmable(object oTrapObject);",
+                "// 527: - oTrapObject: a placeable, door or trigger\r\n// * Returns 1 if oTrapObject is disarmable.\r\nint GetTrapDisarmable(object oTrapObject);"
             ),
             new ScriptFunction(
                 DataType.Int,
                 "GetTrapDetectable",
                 new List<ScriptParam> { new ScriptParam(DataType.Object, "oTrapObject", null) },
-                "// 528: - oTrapObject: a placeable, door or trigger\r\n// * Returns TRUE if oTrapObject is detectable.\r\nint GetTrapDetectable(object oTrapObject);",
-                "// 528: - oTrapObject: a placeable, door or trigger\r\n// * Returns TRUE if oTrapObject is detectable.\r\nint GetTrapDetectable(object oTrapObject);"
+                "// 528: - oTrapObject: a placeable, door or trigger\r\n// * Returns 1 if oTrapObject is detectable.\r\nint GetTrapDetectable(object oTrapObject);",
+                "// 528: - oTrapObject: a placeable, door or trigger\r\n// * Returns 1 if oTrapObject is detectable.\r\nint GetTrapDetectable(object oTrapObject);"
             ),
             new ScriptFunction(
                 DataType.Int,
                 "GetTrapDetectedBy",
                 new List<ScriptParam> { new ScriptParam(DataType.Object, "oTrapObject", null), new ScriptParam(DataType.Object, "oCreature", null) },
-                "// 529: - oTrapObject: a placeable, door or trigger\r\n// - oCreature\r\n// * Returns TRUE if oCreature has detected oTrapObject\r\nint GetTrapDetectedBy(object oTrapObject, object oCreature);",
-                "// 529: - oTrapObject: a placeable, door or trigger\r\n// - oCreature\r\n// * Returns TRUE if oCreature has detected oTrapObject\r\nint GetTrapDetectedBy(object oTrapObject, object oCreature);"
+                "// 529: - oTrapObject: a placeable, door or trigger\r\n// - oCreature\r\n// * Returns 1 if oCreature has detected oTrapObject\r\nint GetTrapDetectedBy(object oTrapObject, object oCreature);",
+                "// 529: - oTrapObject: a placeable, door or trigger\r\n// - oCreature\r\n// * Returns 1 if oCreature has detected oTrapObject\r\nint GetTrapDetectedBy(object oTrapObject, object oCreature);"
             ),
             new ScriptFunction(
                 DataType.Int,
                 "GetTrapFlagged",
                 new List<ScriptParam> { new ScriptParam(DataType.Object, "oTrapObject", null) },
-                "// 530: - oTrapObject: a placeable, door or trigger\r\n// * Returns TRUE if oTrapObject has been flagged as visible to all creatures.\r\nint GetTrapFlagged(object oTrapObject);",
-                "// 530: - oTrapObject: a placeable, door or trigger\r\n// * Returns TRUE if oTrapObject has been flagged as visible to all creatures.\r\nint GetTrapFlagged(object oTrapObject);"
+                "// 530: - oTrapObject: a placeable, door or trigger\r\n// * Returns 1 if oTrapObject has been flagged as visible to all creatures.\r\nint GetTrapFlagged(object oTrapObject);",
+                "// 530: - oTrapObject: a placeable, door or trigger\r\n// * Returns 1 if oTrapObject has been flagged as visible to all creatures.\r\nint GetTrapFlagged(object oTrapObject);"
             ),
             new ScriptFunction(
                 DataType.Int,
@@ -12429,8 +12439,8 @@ namespace CSharpKOTOR.Common.Script
                 DataType.Int,
                 "GetTrapOneShot",
                 new List<ScriptParam> { new ScriptParam(DataType.Object, "oTrapObject", null) },
-                "// 532: - oTrapObject: a placeable, door or trigger\r\n// * Returns TRUE if oTrapObject is one-shot (i.e. it does not reset itself\r\n//   after firing.\r\nint GetTrapOneShot(object oTrapObject);",
-                "// 532: - oTrapObject: a placeable, door or trigger\r\n// * Returns TRUE if oTrapObject is one-shot (i.e. it does not reset itself\r\n//   after firing.\r\nint GetTrapOneShot(object oTrapObject);"
+                "// 532: - oTrapObject: a placeable, door or trigger\r\n// * Returns 1 if oTrapObject is one-shot (i.e. it does not reset itself\r\n//   after firing.\r\nint GetTrapOneShot(object oTrapObject);",
+                "// 532: - oTrapObject: a placeable, door or trigger\r\n// * Returns 1 if oTrapObject is one-shot (i.e. it does not reset itself\r\n//   after firing.\r\nint GetTrapOneShot(object oTrapObject);"
             ),
             new ScriptFunction(
                 DataType.Object,
@@ -12464,8 +12474,8 @@ namespace CSharpKOTOR.Common.Script
                 DataType.Int,
                 "GetLockKeyRequired",
                 new List<ScriptParam> { new ScriptParam(DataType.Object, "oObject", null) },
-                "// 537: * Returns TRUE if a specific key is required to open the lock on oObject.\r\nint GetLockKeyRequired(object oObject);",
-                "// 537: * Returns TRUE if a specific key is required to open the lock on oObject.\r\nint GetLockKeyRequired(object oObject);"
+                "// 537: * Returns 1 if a specific key is required to open the lock on oObject.\r\nint GetLockKeyRequired(object oObject);",
+                "// 537: * Returns 1 if a specific key is required to open the lock on oObject.\r\nint GetLockKeyRequired(object oObject);"
             ),
             new ScriptFunction(
                 DataType.Int,
@@ -12478,8 +12488,8 @@ namespace CSharpKOTOR.Common.Script
                 DataType.Int,
                 "GetLockLockable",
                 new List<ScriptParam> { new ScriptParam(DataType.Object, "oObject", null) },
-                "// 539: * Returns TRUE if the lock on oObject is lockable.\r\nint GetLockLockable(object oObject);",
-                "// 539: * Returns TRUE if the lock on oObject is lockable.\r\nint GetLockLockable(object oObject);"
+                "// 539: * Returns 1 if the lock on oObject is lockable.\r\nint GetLockLockable(object oObject);",
+                "// 539: * Returns 1 if the lock on oObject is lockable.\r\nint GetLockLockable(object oObject);"
             ),
             new ScriptFunction(
                 DataType.Int,
@@ -12506,29 +12516,29 @@ namespace CSharpKOTOR.Common.Script
                 DataType.Int,
                 "GetHasFeatEffect",
                 new List<ScriptParam> { new ScriptParam(DataType.Int, "nFeat", null), new ScriptParam(DataType.Object, "oObject", OBJECT_SELF) },
-                "// 543: - nFeat: FEAT_*\r\n// - oObject\r\n// * Returns TRUE if oObject has effects on it originating from nFeat.\r\nint GetHasFeatEffect(int nFeat, object oObject=OBJECT_SELF);",
-                "// 543: - nFeat: FEAT_*\r\n// - oObject\r\n// * Returns TRUE if oObject has effects on it originating from nFeat.\r\nint GetHasFeatEffect(int nFeat, object oObject=OBJECT_SELF);"
+                "// 543: - nFeat: FEAT_*\r\n// - oObject\r\n// * Returns 1 if oObject has effects on it originating from nFeat.\r\nint GetHasFeatEffect(int nFeat, object oObject=OBJECT_SELF);",
+                "// 543: - nFeat: FEAT_*\r\n// - oObject\r\n// * Returns 1 if oObject has effects on it originating from nFeat.\r\nint GetHasFeatEffect(int nFeat, object oObject=OBJECT_SELF);"
             ),
             new ScriptFunction(
                 DataType.Void,
                 "SetPlaceableIllumination",
-                new List<ScriptParam> { new ScriptParam(DataType.Object, "oPlaceable", OBJECT_SELF), new ScriptParam(DataType.Int, "bIlluminate", TRUE) },
-                "// 544: Set the status of the illumination for oPlaceable.\r\n// - oPlaceable\r\n// - bIlluminate: if this is TRUE, oPlaceable's illumination will be turned on.\r\n//   If this is FALSE, oPlaceable's illumination will be turned off.\r\n// Note: You must call RecomputeStaticLighting() after calling this function in\r\n// order for the changes to occur visually for the players.\r\n// SetPlaceableIllumination() buffers the illumination changes, which are then",
-                "// 544: Set the status of the illumination for oPlaceable.\r\n// - oPlaceable\r\n// - bIlluminate: if this is TRUE, oPlaceable's illumination will be turned on.\r\n//   If this is FALSE, oPlaceable's illumination will be turned off.\r\n// Note: You must call RecomputeStaticLighting() after calling this function in\r\n// order for the changes to occur visually for the players.\r\n// SetPlaceableIllumination() buffers the illumination changes, which are then"
+                new List<ScriptParam> { new ScriptParam(DataType.Object, "oPlaceable", OBJECT_SELF), new ScriptParam(DataType.Int, "bIlluminate", 1) },
+                "// 544: Set the status of the illumination for oPlaceable.\r\n// - oPlaceable\r\n// - bIlluminate: if this is 1, oPlaceable's illumination will be turned on.\r\n//   If this is 0, oPlaceable's illumination will be turned off.\r\n// Note: You must call RecomputeStaticLighting() after calling this function in\r\n// order for the changes to occur visually for the players.\r\n// SetPlaceableIllumination() buffers the illumination changes, which are then",
+                "// 544: Set the status of the illumination for oPlaceable.\r\n// - oPlaceable\r\n// - bIlluminate: if this is 1, oPlaceable's illumination will be turned on.\r\n//   If this is 0, oPlaceable's illumination will be turned off.\r\n// Note: You must call RecomputeStaticLighting() after calling this function in\r\n// order for the changes to occur visually for the players.\r\n// SetPlaceableIllumination() buffers the illumination changes, which are then"
             ),
             new ScriptFunction(
                 DataType.Int,
                 "GetPlaceableIllumination",
                 new List<ScriptParam> { new ScriptParam(DataType.Object, "oPlaceable", OBJECT_SELF) },
-                "// 545: * Returns TRUE if the illumination for oPlaceable is on\r\nint GetPlaceableIllumination(object oPlaceable=OBJECT_SELF);",
-                "// 545: * Returns TRUE if the illumination for oPlaceable is on\r\nint GetPlaceableIllumination(object oPlaceable=OBJECT_SELF);"
+                "// 545: * Returns 1 if the illumination for oPlaceable is on\r\nint GetPlaceableIllumination(object oPlaceable=OBJECT_SELF);",
+                "// 545: * Returns 1 if the illumination for oPlaceable is on\r\nint GetPlaceableIllumination(object oPlaceable=OBJECT_SELF);"
             ),
             new ScriptFunction(
                 DataType.Int,
                 "GetIsPlaceableObjectActionPossible",
                 new List<ScriptParam> { new ScriptParam(DataType.Object, "oPlaceable", null), new ScriptParam(DataType.Int, "nPlaceableAction", null) },
-                "// 546: - oPlaceable\r\n// - nPlaceableAction: PLACEABLE_ACTION_*\r\n// * Returns TRUE if nPlacebleAction is valid for oPlaceable.\r\nint GetIsPlaceableObjectActionPossible(object oPlaceable, int nPlaceableAction);",
-                "// 546: - oPlaceable\r\n// - nPlaceableAction: PLACEABLE_ACTION_*\r\n// * Returns TRUE if nPlacebleAction is valid for oPlaceable.\r\nint GetIsPlaceableObjectActionPossible(object oPlaceable, int nPlaceableAction);"
+                "// 546: - oPlaceable\r\n// - nPlaceableAction: PLACEABLE_ACTION_*\r\n// * Returns 1 if nPlacebleAction is valid for oPlaceable.\r\nint GetIsPlaceableObjectActionPossible(object oPlaceable, int nPlaceableAction);",
+                "// 546: - oPlaceable\r\n// - nPlaceableAction: PLACEABLE_ACTION_*\r\n// * Returns 1 if nPlacebleAction is valid for oPlaceable.\r\nint GetIsPlaceableObjectActionPossible(object oPlaceable, int nPlaceableAction);"
             ),
             new ScriptFunction(
                 DataType.Void,
@@ -12562,8 +12572,8 @@ namespace CSharpKOTOR.Common.Script
                 DataType.Int,
                 "GetIsTrapped",
                 new List<ScriptParam> { new ScriptParam(DataType.Object, "oObject", null) },
-                "// 551: Note: Only placeables, doors and triggers can be trapped.\r\n// * Returns TRUE if oObject is trapped.\r\nint GetIsTrapped(object oObject);",
-                "// 551: Note: Only placeables, doors and triggers can be trapped.\r\n// * Returns TRUE if oObject is trapped.\r\nint GetIsTrapped(object oObject);"
+                "// 551: Note: Only placeables, doors and triggers can be trapped.\r\n// * Returns 1 if oObject is trapped.\r\nint GetIsTrapped(object oObject);",
+                "// 551: Note: Only placeables, doors and triggers can be trapped.\r\n// * Returns 1 if oObject is trapped.\r\nint GetIsTrapped(object oObject);"
             ),
             new ScriptFunction(
                 DataType.Effect,
@@ -12582,9 +12592,9 @@ namespace CSharpKOTOR.Common.Script
             new ScriptFunction(
                 DataType.Void,
                 "PopUpDeathGUIPanel",
-                new List<ScriptParam> { new ScriptParam(DataType.Object, "oPC", null), new ScriptParam(DataType.Int, "bRespawnButtonEnabled", TRUE), new ScriptParam(DataType.Int, "bWaitForHelpButtonEnabled", TRUE), new ScriptParam(DataType.Int, "nHelpStringReference", 0), new ScriptParam(DataType.String, "sHelpString", "\"\"") },
-                "// 554: Spawn in the Death GUI.\r\n// The default (as defined by BioWare) can be spawned in by PopUpGUIPanel, but\r\n// if you want to turn off the \"Respawn\" or \"Wait for Help\" buttons, this is the\r\n// function to use.\r\n// - oPC\r\n// - bRespawnButtonEnabled: if this is TRUE, the \"Respawn\" button will be enabled\r\n//   on the Death GUI.\r\n// - bWaitForHelpButtonEnabled: if this is TRUE, the \"Wait For Help\" button will\r\n//   be enabled on the Death GUI.\r\n// - nHelpStringReference\r\n// - sHelpString\r\nvoid PopUpDeathGUIPanel(object oPC, int bRespawnButtonEnabled=TRUE, int bWaitForHelpButtonEnabled=TRUE, int nHelpStringReference=0, string sHelpString=\"\");",
-                "// 554: Spawn in the Death GUI.\r\n// The default (as defined by BioWare) can be spawned in by PopUpGUIPanel, but\r\n// if you want to turn off the \"Respawn\" or \"Wait for Help\" buttons, this is the\r\n// function to use.\r\n// - oPC\r\n// - bRespawnButtonEnabled: if this is TRUE, the \"Respawn\" button will be enabled\r\n//   on the Death GUI.\r\n// - bWaitForHelpButtonEnabled: if this is TRUE, the \"Wait For Help\" button will\r\n//   be enabled on the Death GUI.\r\n// - nHelpStringReference\r\n// - sHelpString\r\nvoid PopUpDeathGUIPanel(object oPC, int bRespawnButtonEnabled=TRUE, int bWaitForHelpButtonEnabled=TRUE, int nHelpStringReference=0, string sHelpString=\"\");"
+                new List<ScriptParam> { new ScriptParam(DataType.Object, "oPC", null), new ScriptParam(DataType.Int, "bRespawnButtonEnabled", 1), new ScriptParam(DataType.Int, "bWaitForHelpButtonEnabled", 1), new ScriptParam(DataType.Int, "nHelpStringReference", 0), new ScriptParam(DataType.String, "sHelpString", "\"\"") },
+                "// 554: Spawn in the Death GUI.\r\n// The default (as defined by BioWare) can be spawned in by PopUpGUIPanel, but\r\n// if you want to turn off the \"Respawn\" or \"Wait for Help\" buttons, this is the\r\n// function to use.\r\n// - oPC\r\n// - bRespawnButtonEnabled: if this is 1, the \"Respawn\" button will be enabled\r\n//   on the Death GUI.\r\n// - bWaitForHelpButtonEnabled: if this is 1, the \"Wait For Help\" button will\r\n//   be enabled on the Death GUI.\r\n// - nHelpStringReference\r\n// - sHelpString\r\nvoid PopUpDeathGUIPanel(object oPC, int bRespawnButtonEnabled=1, int bWaitForHelpButtonEnabled=1, int nHelpStringReference=0, string sHelpString=\"\");",
+                "// 554: Spawn in the Death GUI.\r\n// The default (as defined by BioWare) can be spawned in by PopUpGUIPanel, but\r\n// if you want to turn off the \"Respawn\" or \"Wait for Help\" buttons, this is the\r\n// function to use.\r\n// - oPC\r\n// - bRespawnButtonEnabled: if this is 1, the \"Respawn\" button will be enabled\r\n//   on the Death GUI.\r\n// - bWaitForHelpButtonEnabled: if this is 1, the \"Wait For Help\" button will\r\n//   be enabled on the Death GUI.\r\n// - nHelpStringReference\r\n// - sHelpString\r\nvoid PopUpDeathGUIPanel(object oPC, int bRespawnButtonEnabled=1, int bWaitForHelpButtonEnabled=1, int nHelpStringReference=0, string sHelpString=\"\");"
             ),
             new ScriptFunction(
                 DataType.Void,
@@ -12646,15 +12656,15 @@ namespace CSharpKOTOR.Common.Script
                 DataType.Void,
                 "SWMG_SetSpeedBlurEffect",
                 new List<ScriptParam> { new ScriptParam(DataType.Int, "bEnabled", null), new ScriptParam(DataType.Float, "fRatio", 0.75f) },
-                "// 563: Turns on or off the speed blur effect in rendered scenes.\r\n// bEnabled: Set TRUE to turn it on, FALSE to turn it off.\r\n// fRatio: Sets the frame accumulation ratio.\r\nvoid SWMG_SetSpeedBlurEffect( int bEnabled, float fRatio=0.75f );",
-                "// 563: Turns on or off the speed blur effect in rendered scenes.\r\n// bEnabled: Set TRUE to turn it on, FALSE to turn it off.\r\n// fRatio: Sets the frame accumulation ratio.\r\nvoid SWMG_SetSpeedBlurEffect( int bEnabled, float fRatio=0.75f );"
+                "// 563: Turns on or off the speed blur effect in rendered scenes.\r\n// bEnabled: Set 1 to turn it on, 0 to turn it off.\r\n// fRatio: Sets the frame accumulation ratio.\r\nvoid SWMG_SetSpeedBlurEffect( int bEnabled, float fRatio=0.75f );",
+                "// 563: Turns on or off the speed blur effect in rendered scenes.\r\n// bEnabled: Set 1 to turn it on, 0 to turn it off.\r\n// fRatio: Sets the frame accumulation ratio.\r\nvoid SWMG_SetSpeedBlurEffect( int bEnabled, float fRatio=0.75f );"
             ),
             new ScriptFunction(
                 DataType.Void,
                 "EndGame",
-                new List<ScriptParam> { new ScriptParam(DataType.Int, "nShowEndGameGui", TRUE) },
-                "// 564: Immediately ends the currently running game and returns to the start screen.\r\n// nShowEndGameGui: Set TRUE to display the death gui.\r\nvoid EndGame( int nShowEndGameGui=TRUE );",
-                "// 564: Immediately ends the currently running game and returns to the start screen.\r\n// nShowEndGameGui: Set TRUE to display the death gui.\r\nvoid EndGame( int nShowEndGameGui=TRUE );"
+                new List<ScriptParam> { new ScriptParam(DataType.Int, "nShowEndGameGui", 1) },
+                "// 564: Immediately ends the currently running game and returns to the start screen.\r\n// nShowEndGameGui: Set 1 to display the death gui.\r\nvoid EndGame( int nShowEndGameGui=1 );",
+                "// 564: Immediately ends the currently running game and returns to the start screen.\r\n// nShowEndGameGui: Set 1 to display the death gui.\r\nvoid EndGame( int nShowEndGameGui=1 );"
             ),
             new ScriptFunction(
                 DataType.Int,
@@ -12695,8 +12705,8 @@ namespace CSharpKOTOR.Common.Script
                 DataType.Int,
                 "GetHasInventory",
                 new List<ScriptParam> { new ScriptParam(DataType.Object, "oObject", null) },
-                "// 570: Determine whether oObject has an inventory.\r\n// * Returns TRUE for creatures and stores, and checks to see if an item or placeable object is a container.\r\n// * Returns FALSE for all other object types.\r\nint GetHasInventory(object oObject);",
-                "// 570: Determine whether oObject has an inventory.\r\n// * Returns TRUE for creatures and stores, and checks to see if an item or placeable object is a container.\r\n// * Returns FALSE for all other object types.\r\nint GetHasInventory(object oObject);"
+                "// 570: Determine whether oObject has an inventory.\r\n// * Returns 1 for creatures and stores, and checks to see if an item or placeable object is a container.\r\n// * Returns 0 for all other object types.\r\nint GetHasInventory(object oObject);",
+                "// 570: Determine whether oObject has an inventory.\r\n// * Returns 1 for creatures and stores, and checks to see if an item or placeable object is a container.\r\n// * Returns 0 for all other object types.\r\nint GetHasInventory(object oObject);"
             ),
             new ScriptFunction(
                 DataType.Float,
@@ -12751,15 +12761,15 @@ namespace CSharpKOTOR.Common.Script
                 DataType.Int,
                 "GetGlobalBoolean",
                 new List<ScriptParam> { new ScriptParam(DataType.String, "sIdentifier", null) },
-                "// 578: GetGlobalBoolean\r\n// This function returns the value of a global boolean (TRUE or FALSE) scripting variable.\r\nint GetGlobalBoolean( string sIdentifier );",
-                "// 578: GetGlobalBoolean\r\n// This function returns the value of a global boolean (TRUE or FALSE) scripting variable.\r\nint GetGlobalBoolean( string sIdentifier );"
+                "// 578: GetGlobalBoolean\r\n// This function returns the value of a global boolean (1 or 0) scripting variable.\r\nint GetGlobalBoolean( string sIdentifier );",
+                "// 578: GetGlobalBoolean\r\n// This function returns the value of a global boolean (1 or 0) scripting variable.\r\nint GetGlobalBoolean( string sIdentifier );"
             ),
             new ScriptFunction(
                 DataType.Void,
                 "SetGlobalBoolean",
                 new List<ScriptParam> { new ScriptParam(DataType.String, "sIdentifier", null), new ScriptParam(DataType.Int, "nValue", null) },
-                "// 579: SetGlobalBoolean\r\n// This function sets the value of a global boolean (TRUE or FALSE) scripting variable.\r\nvoid SetGlobalBoolean( string sIdentifier, int nValue );",
-                "// 579: SetGlobalBoolean\r\n// This function sets the value of a global boolean (TRUE or FALSE) scripting variable.\r\nvoid SetGlobalBoolean( string sIdentifier, int nValue );"
+                "// 579: SetGlobalBoolean\r\n// This function sets the value of a global boolean (1 or 0) scripting variable.\r\nvoid SetGlobalBoolean( string sIdentifier, int nValue );",
+                "// 579: SetGlobalBoolean\r\n// This function sets the value of a global boolean (1 or 0) scripting variable.\r\nvoid SetGlobalBoolean( string sIdentifier, int nValue );"
             ),
             new ScriptFunction(
                 DataType.Int,
@@ -13450,9 +13460,9 @@ namespace CSharpKOTOR.Common.Script
             new ScriptFunction(
                 DataType.Void,
                 "SetJournalQuestEntryPicture",
-                new List<ScriptParam> { new ScriptParam(DataType.String, "szPlotID", null), new ScriptParam(DataType.Object, "oObject", null), new ScriptParam(DataType.Int, "nPictureIndex", null), new ScriptParam(DataType.Int, "bAllPartyMemebers", TRUE), new ScriptParam(DataType.Int, "bAllPlayers", FALSE) },
-                "// 678: SetJournalQuestEntryPicture\r\n// Sets the picture for the quest entry on this object (creature)\r\nvoid SetJournalQuestEntryPicture(string szPlotID, object oObject, int nPictureIndex, int bAllPartyMemebers=TRUE, int bAllPlayers=FALSE);",
-                "// 678: SetJournalQuestEntryPicture\r\n// Sets the picture for the quest entry on this object (creature)\r\nvoid SetJournalQuestEntryPicture(string szPlotID, object oObject, int nPictureIndex, int bAllPartyMemebers=TRUE, int bAllPlayers=FALSE);"
+                new List<ScriptParam> { new ScriptParam(DataType.String, "szPlotID", null), new ScriptParam(DataType.Object, "oObject", null), new ScriptParam(DataType.Int, "nPictureIndex", null), new ScriptParam(DataType.Int, "bAllPartyMemebers", 1), new ScriptParam(DataType.Int, "bAllPlayers", 0) },
+                "// 678: SetJournalQuestEntryPicture\r\n// Sets the picture for the quest entry on this object (creature)\r\nvoid SetJournalQuestEntryPicture(string szPlotID, object oObject, int nPictureIndex, int bAllPartyMemebers=1, int bAllPlayers=0);",
+                "// 678: SetJournalQuestEntryPicture\r\n// Sets the picture for the quest entry on this object (creature)\r\nvoid SetJournalQuestEntryPicture(string szPlotID, object oObject, int nPictureIndex, int bAllPartyMemebers=1, int bAllPlayers=0);"
             ),
             new ScriptFunction(
                 DataType.Int,
@@ -13688,9 +13698,9 @@ namespace CSharpKOTOR.Common.Script
             new ScriptFunction(
                 DataType.Void,
                 "ShowPartySelectionGUI",
-                new List<ScriptParam> { new ScriptParam(DataType.String, "sExitScript", "\"\""), new ScriptParam(DataType.Int, "nForceNPC1", -1), new ScriptParam(DataType.Int, "nForceNPC2", -1), new ScriptParam(DataType.Int, "nAllowCancel", FALSE) },
-                "//\r\n// 712: ShowPartySelectionGUI\r\n// Brings up the party selection GUI for the player to\r\n// select the members of the party from\r\n// if exit script is specified, will be executed when\r\n// the GUI is exited\r\n// RWT-OEI 08/23/04 - New parameter = nAllowCancel. Passing in TRUE\r\n//  to this parameter makes it possible for the player to cancel out\r\n//  of the party selection GUI, so be careful that you are okay with\r\n//  them cancelling out of it before you pass TRUE.\r\n//  Also, in the sExitScript that gets called after the Party Select\r\n//  GUI exits, you can use GetRunScriptVar to find out if they\r\n//  cancelled. If it returns TRUE, they didn't cancel. If it returns\r\n//  FALSE, they cancelled.  See me if there's questions.\r\nvoid ShowPartySelectionGUI(string sExitScript = \"\", int nForceNPC1 = -1, int nForceNPC2 = -1, int nAllowCancel = FALSE);",
-                "//\r\n// 712: ShowPartySelectionGUI\r\n// Brings up the party selection GUI for the player to\r\n// select the members of the party from\r\n// if exit script is specified, will be executed when\r\n// the GUI is exited\r\n// RWT-OEI 08/23/04 - New parameter = nAllowCancel. Passing in TRUE\r\n//  to this parameter makes it possible for the player to cancel out\r\n//  of the party selection GUI, so be careful that you are okay with\r\n//  them cancelling out of it before you pass TRUE.\r\n//  Also, in the sExitScript that gets called after the Party Select\r\n//  GUI exits, you can use GetRunScriptVar to find out if they\r\n//  cancelled. If it returns TRUE, they didn't cancel. If it returns\r\n//  FALSE, they cancelled.  See me if there's questions.\r\nvoid ShowPartySelectionGUI(string sExitScript = \"\", int nForceNPC1 = -1, int nForceNPC2 = -1, int nAllowCancel = FALSE);"
+                new List<ScriptParam> { new ScriptParam(DataType.String, "sExitScript", "\"\""), new ScriptParam(DataType.Int, "nForceNPC1", -1), new ScriptParam(DataType.Int, "nForceNPC2", -1), new ScriptParam(DataType.Int, "nAllowCancel", 0) },
+                "//\r\n// 712: ShowPartySelectionGUI\r\n// Brings up the party selection GUI for the player to\r\n// select the members of the party from\r\n// if exit script is specified, will be executed when\r\n// the GUI is exited\r\n// RWT-OEI 08/23/04 - New parameter = nAllowCancel. Passing in 1\r\n//  to this parameter makes it possible for the player to cancel out\r\n//  of the party selection GUI, so be careful that you are okay with\r\n//  them cancelling out of it before you pass 1.\r\n//  Also, in the sExitScript that gets called after the Party Select\r\n//  GUI exits, you can use GetRunScriptVar to find out if they\r\n//  cancelled. If it returns 1, they didn't cancel. If it returns\r\n//  0, they cancelled.  See me if there's questions.\r\nvoid ShowPartySelectionGUI(string sExitScript = \"\", int nForceNPC1 = -1, int nForceNPC2 = -1, int nAllowCancel = 0);",
+                "//\r\n// 712: ShowPartySelectionGUI\r\n// Brings up the party selection GUI for the player to\r\n// select the members of the party from\r\n// if exit script is specified, will be executed when\r\n// the GUI is exited\r\n// RWT-OEI 08/23/04 - New parameter = nAllowCancel. Passing in 1\r\n//  to this parameter makes it possible for the player to cancel out\r\n//  of the party selection GUI, so be careful that you are okay with\r\n//  them cancelling out of it before you pass 1.\r\n//  Also, in the sExitScript that gets called after the Party Select\r\n//  GUI exits, you can use GetRunScriptVar to find out if they\r\n//  cancelled. If it returns 1, they didn't cancel. If it returns\r\n//  0, they cancelled.  See me if there's questions.\r\nvoid ShowPartySelectionGUI(string sExitScript = \"\", int nForceNPC1 = -1, int nForceNPC2 = -1, int nAllowCancel = 0);"
             ),
             new ScriptFunction(
                 DataType.Int,
@@ -13835,9 +13845,9 @@ namespace CSharpKOTOR.Common.Script
             new ScriptFunction(
                 DataType.Void,
                 "PlayMovie",
-                new List<ScriptParam> { new ScriptParam(DataType.String, "sMovie", null), new ScriptParam(DataType.Int, "nStreamingMusic", FALSE) },
-                "// 733. PlayMovie\r\n// Playes a Movie.\r\nvoid PlayMovie( string sMovie, int nStreamingMusic = FALSE );",
-                "// 733. PlayMovie\r\n// Playes a Movie.\r\nvoid PlayMovie( string sMovie, int nStreamingMusic = FALSE );"
+                new List<ScriptParam> { new ScriptParam(DataType.String, "sMovie", null), new ScriptParam(DataType.Int, "nStreamingMusic", 0) },
+                "// 733. PlayMovie\r\n// Playes a Movie.\r\nvoid PlayMovie( string sMovie, int nStreamingMusic = 0 );",
+                "// 733. PlayMovie\r\n// Playes a Movie.\r\nvoid PlayMovie( string sMovie, int nStreamingMusic = 0 );"
             ),
             new ScriptFunction(
                 DataType.Void,
@@ -13962,8 +13972,8 @@ namespace CSharpKOTOR.Common.Script
                 DataType.Int,
                 "GetIsPoisoned",
                 new List<ScriptParam> { new ScriptParam(DataType.Object, "oObject", null) },
-                "// 751: GetIsPoisoned\r\n// Returns TRUE if the object specified is poisoned.\r\nint GetIsPoisoned( object oObject );",
-                "// 751: GetIsPoisoned\r\n// Returns TRUE if the object specified is poisoned.\r\nint GetIsPoisoned( object oObject );"
+                "// 751: GetIsPoisoned\r\n// Returns 1 if the object specified is poisoned.\r\nint GetIsPoisoned( object oObject );",
+                "// 751: GetIsPoisoned\r\n// Returns 1 if the object specified is poisoned.\r\nint GetIsPoisoned( object oObject );"
             ),
             new ScriptFunction(
                 DataType.Object,
@@ -14066,9 +14076,9 @@ namespace CSharpKOTOR.Common.Script
             new ScriptFunction(
                 DataType.Object,
                 "CreateItemOnFloor",
-                new List<ScriptParam> { new ScriptParam(DataType.String, "sTemplate", null), new ScriptParam(DataType.Location, "lLocation", null), new ScriptParam(DataType.Int, "bUseAppearAnimation", FALSE) },
-                "// 766. CreateItemOnFloor\r\n// Should only be used for items that have been created on the ground, and will\r\n// be destroyed without ever being picked up or equipped.  Returns true if successful\r\nobject CreateItemOnFloor(string sTemplate, location lLocation, int bUseAppearAnimation=FALSE);",
-                "// 766. CreateItemOnFloor\r\n// Should only be used for items that have been created on the ground, and will\r\n// be destroyed without ever being picked up or equipped.  Returns true if successful\r\nobject CreateItemOnFloor(string sTemplate, location lLocation, int bUseAppearAnimation=FALSE);"
+                new List<ScriptParam> { new ScriptParam(DataType.String, "sTemplate", null), new ScriptParam(DataType.Location, "lLocation", null), new ScriptParam(DataType.Int, "bUseAppearAnimation", 0) },
+                "// 766. CreateItemOnFloor\r\n// Should only be used for items that have been created on the ground, and will\r\n// be destroyed without ever being picked up or equipped.  Returns true if successful\r\nobject CreateItemOnFloor(string sTemplate, location lLocation, int bUseAppearAnimation=0);",
+                "// 766. CreateItemOnFloor\r\n// Should only be used for items that have been created on the ground, and will\r\n// be destroyed without ever being picked up or equipped.  Returns true if successful\r\nobject CreateItemOnFloor(string sTemplate, location lLocation, int bUseAppearAnimation=0);"
             ),
             new ScriptFunction(
                 DataType.Void,
@@ -14186,15 +14196,15 @@ namespace CSharpKOTOR.Common.Script
                 DataType.Int,
                 "GetFeatAcquired",
                 new List<ScriptParam> { new ScriptParam(DataType.Int, "nFeat", null), new ScriptParam(DataType.Object, "oCreature", OBJECT_SELF) },
-                "// 285: Determine whether oCreature has nFeat, and nFeat is useable.\r\n// PLEASE NOTE!!! - This function will return FALSE if the target\r\n// is not currently able to use the feat due to daily limits or\r\n// other restrictions. Use GetFeatAcquired() if you just want to",
-                "// 285: Determine whether oCreature has nFeat, and nFeat is useable.\r\n// PLEASE NOTE!!! - This function will return FALSE if the target\r\n// is not currently able to use the feat due to daily limits or\r\n// other restrictions. Use GetFeatAcquired() if you just want to"
+                "// 285: Determine whether oCreature has nFeat, and nFeat is useable.\r\n// PLEASE NOTE!!! - This function will return 0 if the target\r\n// is not currently able to use the feat due to daily limits or\r\n// other restrictions. Use GetFeatAcquired() if you just want to",
+                "// 285: Determine whether oCreature has nFeat, and nFeat is useable.\r\n// PLEASE NOTE!!! - This function will return 0 if the target\r\n// is not currently able to use the feat due to daily limits or\r\n// other restrictions. Use GetFeatAcquired() if you just want to"
             ),
             new ScriptFunction(
                 DataType.Int,
                 "GetSpellAcquired",
                 new List<ScriptParam> { new ScriptParam(DataType.Int, "nSpell", null), new ScriptParam(DataType.Object, "oCreature", OBJECT_SELF) },
-                "// 377: Determine whether oCreature has nSpell memorised.\r\n// PLEASE NOTE!!! - This function will return FALSE if the target\r\n// is not currently able to use the spell due to lack of sufficient\r\n// Force Points. Use GetSpellAcquired() if you just want to",
-                "// 377: Determine whether oCreature has nSpell memorised.\r\n// PLEASE NOTE!!! - This function will return FALSE if the target\r\n// is not currently able to use the spell due to lack of sufficient\r\n// Force Points. Use GetSpellAcquired() if you just want to"
+                "// 377: Determine whether oCreature has nSpell memorised.\r\n// PLEASE NOTE!!! - This function will return 0 if the target\r\n// is not currently able to use the spell due to lack of sufficient\r\n// Force Points. Use GetSpellAcquired() if you just want to",
+                "// 377: Determine whether oCreature has nSpell memorised.\r\n// PLEASE NOTE!!! - This function will return 0 if the target\r\n// is not currently able to use the spell due to lack of sufficient\r\n// Force Points. Use GetSpellAcquired() if you just want to"
             ),
             new ScriptFunction(
                 DataType.Void,
@@ -14262,9 +14272,9 @@ namespace CSharpKOTOR.Common.Script
             new ScriptFunction(
                 DataType.Void,
                 "SetOrientOnClick",
-                new List<ScriptParam> { new ScriptParam(DataType.Object, "oCreature", OBJECT_SELF), new ScriptParam(DataType.Int, "nState", TRUE) },
-                "// RWT-OEI 01/29/04\r\n// 794: Disables or Enables the Orient On Click behavior in creatures. If\r\n//      disabled, they will not orient to face the player when clicked on\r\n//      for dialogue. The default behavior is TRUE.\r\nvoid SetOrientOnClick( object oCreature = OBJECT_SELF, int nState = TRUE );",
-                "// RWT-OEI 01/29/04\r\n// 794: Disables or Enables the Orient On Click behavior in creatures. If\r\n//      disabled, they will not orient to face the player when clicked on\r\n//      for dialogue. The default behavior is TRUE.\r\nvoid SetOrientOnClick( object oCreature = OBJECT_SELF, int nState = TRUE );"
+                new List<ScriptParam> { new ScriptParam(DataType.Object, "oCreature", OBJECT_SELF), new ScriptParam(DataType.Int, "nState", 1) },
+                "// RWT-OEI 01/29/04\r\n// 794: Disables or Enables the Orient On Click behavior in creatures. If\r\n//      disabled, they will not orient to face the player when clicked on\r\n//      for dialogue. The default behavior is 1.\r\nvoid SetOrientOnClick( object oCreature = OBJECT_SELF, int nState = 1 );",
+                "// RWT-OEI 01/29/04\r\n// 794: Disables or Enables the Orient On Click behavior in creatures. If\r\n//      disabled, they will not orient to face the player when clicked on\r\n//      for dialogue. The default behavior is 1.\r\nvoid SetOrientOnClick( object oCreature = OBJECT_SELF, int nState = 1 );"
             ),
             new ScriptFunction(
                 DataType.Int,
@@ -14346,16 +14356,16 @@ namespace CSharpKOTOR.Common.Script
             new ScriptFunction(
                 DataType.Void,
                 "QueueMovie",
-                new List<ScriptParam> { new ScriptParam(DataType.String, "sMovie", null), new ScriptParam(DataType.Int, "nSkippable", TRUE) },
-                "// 806 QueueMovie\r\nvoid QueueMovie(string sMovie, int nSkippable = TRUE);",
-                "// 806 QueueMovie\r\nvoid QueueMovie(string sMovie, int nSkippable = TRUE);"
+                new List<ScriptParam> { new ScriptParam(DataType.String, "sMovie", null), new ScriptParam(DataType.Int, "nSkippable", 1) },
+                "// 806 QueueMovie\r\nvoid QueueMovie(string sMovie, int nSkippable = 1);",
+                "// 806 QueueMovie\r\nvoid QueueMovie(string sMovie, int nSkippable = 1);"
             ),
             new ScriptFunction(
                 DataType.Void,
                 "PlayMovieQueue",
-                new List<ScriptParam> { new ScriptParam(DataType.Int, "nAllowSkips", TRUE) },
-                "// 807\r\nvoid PlayMovieQueue(int nAllowSkips = TRUE);",
-                "// 807\r\nvoid PlayMovieQueue(int nAllowSkips = TRUE);"
+                new List<ScriptParam> { new ScriptParam(DataType.Int, "nAllowSkips", 1) },
+                "// 807\r\nvoid PlayMovieQueue(int nAllowSkips = 1);",
+                "// 807\r\nvoid PlayMovieQueue(int nAllowSkips = 1);"
             ),
             new ScriptFunction(
                 DataType.Void,
@@ -14438,15 +14448,15 @@ namespace CSharpKOTOR.Common.Script
                 DataType.Void,
                 "SetKeepStealthInDialog",
                 new List<ScriptParam> { new ScriptParam(DataType.Int, "nStealthState", null) },
-                "// 819\r\n// RWT-OEI 04/05/04\r\n// Setting this to TRUE makes it so that the Stealth status is\r\n// left on characters even when entering cutscenes. By default,\r\n// stealth is removed from anyone taking part in a cutscene.\r\n// ALWAYS set this back to FALSE on every End Dialog node in\r\n// the cutscene you wanted to stay stealthed in. This isn't a\r\n// flag that should be left on indefinitely. In fact, it isn't\r\n// saved, so needs to be set/unset on a case by case basis.\r\nvoid SetKeepStealthInDialog( int nStealthState );",
-                "// 819\r\n// RWT-OEI 04/05/04\r\n// Setting this to TRUE makes it so that the Stealth status is\r\n// left on characters even when entering cutscenes. By default,\r\n// stealth is removed from anyone taking part in a cutscene.\r\n// ALWAYS set this back to FALSE on every End Dialog node in\r\n// the cutscene you wanted to stay stealthed in. This isn't a\r\n// flag that should be left on indefinitely. In fact, it isn't\r\n// saved, so needs to be set/unset on a case by case basis.\r\nvoid SetKeepStealthInDialog( int nStealthState );"
+                "// 819\r\n// RWT-OEI 04/05/04\r\n// Setting this to 1 makes it so that the Stealth status is\r\n// left on characters even when entering cutscenes. By default,\r\n// stealth is removed from anyone taking part in a cutscene.\r\n// ALWAYS set this back to 0 on every End Dialog node in\r\n// the cutscene you wanted to stay stealthed in. This isn't a\r\n// flag that should be left on indefinitely. In fact, it isn't\r\n// saved, so needs to be set/unset on a case by case basis.\r\nvoid SetKeepStealthInDialog( int nStealthState );",
+                "// 819\r\n// RWT-OEI 04/05/04\r\n// Setting this to 1 makes it so that the Stealth status is\r\n// left on characters even when entering cutscenes. By default,\r\n// stealth is removed from anyone taking part in a cutscene.\r\n// ALWAYS set this back to 0 on every End Dialog node in\r\n// the cutscene you wanted to stay stealthed in. This isn't a\r\n// flag that should be left on indefinitely. In fact, it isn't\r\n// saved, so needs to be set/unset on a case by case basis.\r\nvoid SetKeepStealthInDialog( int nStealthState );"
             ),
             new ScriptFunction(
                 DataType.Int,
                 "HasLineOfSight",
                 new List<ScriptParam> { new ScriptParam(DataType.Vector, "vSource", null), new ScriptParam(DataType.Vector, "vTarget", null), new ScriptParam(DataType.Object, "oSource", OBJECT_INVALID), new ScriptParam(DataType.Object, "oTarget", OBJECT_INVALID) },
-                "// 820\r\n// RWT-OEI 04/06/04\r\n// This returns TRUE or FALSE if there is a clear line of sight from\r\n// the source vector to the target vector. This is used in the AI to\r\n// help the creatures using ranged weapons find better places to shoot\r\n// when the player moves out of sight.\r\nint HasLineOfSight( vector vSource, vector vTarget, object oSource = OBJECT_INVALID, object oTarget = OBJECT_INVALID );",
-                "// 820\r\n// RWT-OEI 04/06/04\r\n// This returns TRUE or FALSE if there is a clear line of sight from\r\n// the source vector to the target vector. This is used in the AI to\r\n// help the creatures using ranged weapons find better places to shoot\r\n// when the player moves out of sight.\r\nint HasLineOfSight( vector vSource, vector vTarget, object oSource = OBJECT_INVALID, object oTarget = OBJECT_INVALID );"
+                "// 820\r\n// RWT-OEI 04/06/04\r\n// This returns 1 or 0 if there is a clear line of sight from\r\n// the source vector to the target vector. This is used in the AI to\r\n// help the creatures using ranged weapons find better places to shoot\r\n// when the player moves out of sight.\r\nint HasLineOfSight( vector vSource, vector vTarget, object oSource = OBJECT_INVALID, object oTarget = OBJECT_INVALID );",
+                "// 820\r\n// RWT-OEI 04/06/04\r\n// This returns 1 or 0 if there is a clear line of sight from\r\n// the source vector to the target vector. This is used in the AI to\r\n// help the creatures using ranged weapons find better places to shoot\r\n// when the player moves out of sight.\r\nint HasLineOfSight( vector vSource, vector vTarget, object oSource = OBJECT_INVALID, object oTarget = OBJECT_INVALID );"
             ),
             new ScriptFunction(
                 DataType.Int,
@@ -14613,8 +14623,8 @@ namespace CSharpKOTOR.Common.Script
                 DataType.Int,
                 "GetIsPartyLeader",
                 new List<ScriptParam> { new ScriptParam(DataType.Object, "oCharacter", OBJECT_SELF) },
-                "// 844\r\n// RWT-OEI 07/21/04\r\n// Returns TRUE if the object ID passed is the character\r\n// that the player is actively controlling at that point.\r\n// Note that this function is *NOT* able to return correct\r\n// information during Area Loading since the player is not\r\n// actively controlling anyone at that point.\r\nint GetIsPartyLeader(object oCharacter = OBJECT_SELF);",
-                "// 844\r\n// RWT-OEI 07/21/04\r\n// Returns TRUE if the object ID passed is the character\r\n// that the player is actively controlling at that point.\r\n// Note that this function is *NOT* able to return correct\r\n// information during Area Loading since the player is not\r\n// actively controlling anyone at that point.\r\nint GetIsPartyLeader(object oCharacter = OBJECT_SELF);"
+                "// 844\r\n// RWT-OEI 07/21/04\r\n// Returns 1 if the object ID passed is the character\r\n// that the player is actively controlling at that point.\r\n// Note that this function is *NOT* able to return correct\r\n// information during Area Loading since the player is not\r\n// actively controlling anyone at that point.\r\nint GetIsPartyLeader(object oCharacter = OBJECT_SELF);",
+                "// 844\r\n// RWT-OEI 07/21/04\r\n// Returns 1 if the object ID passed is the character\r\n// that the player is actively controlling at that point.\r\n// Note that this function is *NOT* able to return correct\r\n// information during Area Loading since the player is not\r\n// actively controlling anyone at that point.\r\nint GetIsPartyLeader(object oCharacter = OBJECT_SELF);"
             ),
             new ScriptFunction(
                 DataType.Object,
@@ -14627,8 +14637,8 @@ namespace CSharpKOTOR.Common.Script
                 DataType.Int,
                 "RemoveNPCFromPartyToBase",
                 new List<ScriptParam> { new ScriptParam(DataType.Int, "nNPC", null) },
-                "// 846\r\n// JAB-OEI 07/22/04\r\n// Will remove the CNPC from the 3 person party, and remove\r\n// him/her from the area, effectively sending the CNPC back\r\n// to the base. The CNPC data is still stored in the\r\n// party table, and calling this function will not destroy\r\n// the CNPC in any way.\r\n// Returns TRUE for success.\r\nint RemoveNPCFromPartyToBase(int nNPC);",
-                "// 846\r\n// JAB-OEI 07/22/04\r\n// Will remove the CNPC from the 3 person party, and remove\r\n// him/her from the area, effectively sending the CNPC back\r\n// to the base. The CNPC data is still stored in the\r\n// party table, and calling this function will not destroy\r\n// the CNPC in any way.\r\n// Returns TRUE for success.\r\nint RemoveNPCFromPartyToBase(int nNPC);"
+                "// 846\r\n// JAB-OEI 07/22/04\r\n// Will remove the CNPC from the 3 person party, and remove\r\n// him/her from the area, effectively sending the CNPC back\r\n// to the base. The CNPC data is still stored in the\r\n// party table, and calling this function will not destroy\r\n// the CNPC in any way.\r\n// Returns 1 for success.\r\nint RemoveNPCFromPartyToBase(int nNPC);",
+                "// 846\r\n// JAB-OEI 07/22/04\r\n// Will remove the CNPC from the 3 person party, and remove\r\n// him/her from the area, effectively sending the CNPC back\r\n// to the base. The CNPC data is still stored in the\r\n// party table, and calling this function will not destroy\r\n// the CNPC in any way.\r\n// Returns 1 for success.\r\nint RemoveNPCFromPartyToBase(int nNPC);"
             ),
             new ScriptFunction(
                 DataType.Void,
@@ -14662,8 +14672,8 @@ namespace CSharpKOTOR.Common.Script
                 DataType.Int,
                 "GetIsXBox",
                 new List<ScriptParam>(),
-                "// 851\r\n// GetIsXBox\r\n// Returns TRUE if this script is being executed on the X-Box. Returns FALSE\r\n// if this is the PC build.\r\nint GetIsXBox();",
-                "// 851\r\n// GetIsXBox\r\n// Returns TRUE if this script is being executed on the X-Box. Returns FALSE\r\n// if this is the PC build.\r\nint GetIsXBox();"
+                "// 851\r\n// GetIsXBox\r\n// Returns 1 if this script is being executed on the X-Box. Returns 0\r\n// if this is the PC build.\r\nint GetIsXBox();",
+                "// 851\r\n// GetIsXBox\r\n// Returns 1 if this script is being executed on the X-Box. Returns 0\r\n// if this is the PC build.\r\nint GetIsXBox();"
             ),
             new ScriptFunction(
                 DataType.Effect,
@@ -14696,9 +14706,9 @@ namespace CSharpKOTOR.Common.Script
             new ScriptFunction(
                 DataType.Void,
                 "DisableMap",
-                new List<ScriptParam> { new ScriptParam(DataType.Int, "nFlag", FALSE) },
-                "// 856\r\n// RWT-OEI 08/31/04\r\n// Passing TRUE into this function turns off the player's maps.\r\n// Passing FALSE into this function re-enables them. This change\r\n// is permanent once called, so it is important that there *is*\r\n// a matching call to DisableMap(FALSE) somewhere or else the",
-                "// 856\r\n// RWT-OEI 08/31/04\r\n// Passing TRUE into this function turns off the player's maps.\r\n// Passing FALSE into this function re-enables them. This change\r\n// is permanent once called, so it is important that there *is*\r\n// a matching call to DisableMap(FALSE) somewhere or else the"
+                new List<ScriptParam> { new ScriptParam(DataType.Int, "nFlag", 0) },
+                "// 856\r\n// RWT-OEI 08/31/04\r\n// Passing 1 into this function turns off the player's maps.\r\n// Passing 0 into this function re-enables them. This change\r\n// is permanent once called, so it is important that there *is*\r\n// a matching call to DisableMap(0) somewhere or else the",
+                "// 856\r\n// RWT-OEI 08/31/04\r\n// Passing 1 into this function turns off the player's maps.\r\n// Passing 0 into this function re-enables them. This change\r\n// is permanent once called, so it is important that there *is*\r\n// a matching call to DisableMap(0) somewhere or else the"
             ),
             new ScriptFunction(
                 DataType.Void,
@@ -14710,9 +14720,9 @@ namespace CSharpKOTOR.Common.Script
             new ScriptFunction(
                 DataType.Void,
                 "DisableHealthRegen",
-                new List<ScriptParam> { new ScriptParam(DataType.Int, "nFlag", FALSE) },
-                "// 858\r\n// RWT-OEI 09/06/04\r\n// This function turns off the innate health regeneration that all party\r\n// members have. The health regen will *stay* off until it is turned back\r\n// on by passing FALSE to this function.\r\nvoid DisableHealthRegen(int nFlag = FALSE);",
-                "// 858\r\n// RWT-OEI 09/06/04\r\n// This function turns off the innate health regeneration that all party\r\n// members have. The health regen will *stay* off until it is turned back\r\n// on by passing FALSE to this function.\r\nvoid DisableHealthRegen(int nFlag = FALSE);"
+                new List<ScriptParam> { new ScriptParam(DataType.Int, "nFlag", 0) },
+                "// 858\r\n// RWT-OEI 09/06/04\r\n// This function turns off the innate health regeneration that all party\r\n// members have. The health regen will *stay* off until it is turned back\r\n// on by passing 0 to this function.\r\nvoid DisableHealthRegen(int nFlag = 0);",
+                "// 858\r\n// RWT-OEI 09/06/04\r\n// This function turns off the innate health regeneration that all party\r\n// members have. The health regen will *stay* off until it is turned back\r\n// on by passing 0 to this function.\r\nvoid DisableHealthRegen(int nFlag = 0);"
             ),
             new ScriptFunction(
                 DataType.Void,
@@ -14724,9 +14734,9 @@ namespace CSharpKOTOR.Common.Script
             new ScriptFunction(
                 DataType.Void,
                 "SetDisableTransit",
-                new List<ScriptParam> { new ScriptParam(DataType.Int, "nFlag", FALSE) },
-                "// 860\r\n// RWT-OEI 09/09/04\r\n// This will disable or enable area transit\r\nvoid SetDisableTransit(int nFlag = FALSE);",
-                "// 860\r\n// RWT-OEI 09/09/04\r\n// This will disable or enable area transit\r\nvoid SetDisableTransit(int nFlag = FALSE);"
+                new List<ScriptParam> { new ScriptParam(DataType.Int, "nFlag", 0) },
+                "// 860\r\n// RWT-OEI 09/09/04\r\n// This will disable or enable area transit\r\nvoid SetDisableTransit(int nFlag = 0);",
+                "// 860\r\n// RWT-OEI 09/09/04\r\n// This will disable or enable area transit\r\nvoid SetDisableTransit(int nFlag = 0);"
             ),
             new ScriptFunction(
                 DataType.Void,
@@ -14809,8 +14819,8 @@ namespace CSharpKOTOR.Common.Script
                 DataType.Int,
                 "GetCombatActionsPending",
                 new List<ScriptParam> { new ScriptParam(DataType.Object, "oCreature", null) },
-                "// 872\r\n// RWT-OEI 10/19/04\r\n// This function returns TRUE if the creature has actions in its\r\n// Combat Action queue.\r\nint GetCombatActionsPending(object oCreature);",
-                "// 872\r\n// RWT-OEI 10/19/04\r\n// This function returns TRUE if the creature has actions in its\r\n// Combat Action queue.\r\nint GetCombatActionsPending(object oCreature);"
+                "// 872\r\n// RWT-OEI 10/19/04\r\n// This function returns 1 if the creature has actions in its\r\n// Combat Action queue.\r\nint GetCombatActionsPending(object oCreature);",
+                "// 872\r\n// RWT-OEI 10/19/04\r\n// This function returns 1 if the creature has actions in its\r\n// Combat Action queue.\r\nint GetCombatActionsPending(object oCreature);"
             ),
             new ScriptFunction(
                 DataType.Void,
@@ -14830,8 +14840,8 @@ namespace CSharpKOTOR.Common.Script
                 DataType.Int,
                 "GetIsPlayerMadeCharacter",
                 new List<ScriptParam> { new ScriptParam(DataType.Object, "oidCharacter", null) },
-                "// 875\r\n// RWT-OEI 10/29/04\r\n// Returns TRUE if the object passed in is the character that the player\r\n// made at the start of the game\r\nint GetIsPlayerMadeCharacter(object oidCharacter);",
-                "// 875\r\n// RWT-OEI 10/29/04\r\n// Returns TRUE if the object passed in is the character that the player\r\n// made at the start of the game\r\nint GetIsPlayerMadeCharacter(object oidCharacter);"
+                "// 875\r\n// RWT-OEI 10/29/04\r\n// Returns 1 if the object passed in is the character that the player\r\n// made at the start of the game\r\nint GetIsPlayerMadeCharacter(object oidCharacter);",
+                "// 875\r\n// RWT-OEI 10/29/04\r\n// Returns 1 if the object passed in is the character that the player\r\n// made at the start of the game\r\nint GetIsPlayerMadeCharacter(object oidCharacter);"
             ),
             new ScriptFunction(
                 DataType.Void,
@@ -14844,5 +14854,8 @@ namespace CSharpKOTOR.Common.Script
         };
     }
 }
+
+
+
 
 
