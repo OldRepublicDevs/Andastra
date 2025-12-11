@@ -175,6 +175,13 @@ namespace CSharpKOTOR.Formats.NCS
             }
 
             var compiler = new NssCompiler(game, libraryLookup, debug);
+            // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/ncs/ncs_auto.py:184
+            // Original: library=KOTOR_LIBRARY if game.is_k1() else TSL_LIBRARY
+            // If library is not provided, use default game library
+            if (library == null)
+            {
+                library = game.IsK1() ? Common.Script.ScriptLib.KOTOR_LIBRARY : Common.Script.ScriptLib.TSL_LIBRARY;
+            }
             NCS ncs = compiler.Compile(source, library);
             ncs.OriginalSource = source;
 

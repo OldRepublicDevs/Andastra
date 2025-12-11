@@ -60,7 +60,9 @@ namespace CSharpKOTOR.Formats.NCS.Compiler
 
             List<ScriptFunction> functions = _game.IsK1() ? ScriptDefs.KOTOR_FUNCTIONS : ScriptDefs.TSL_FUNCTIONS;
             List<ScriptConstant> constants = _game.IsK1() ? ScriptDefs.KOTOR_CONSTANTS : ScriptDefs.TSL_CONSTANTS;
-            var lib = library ?? new Dictionary<string, byte[]>();
+            // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/ncs/ncs_auto.py:184
+            // Original: library=KOTOR_LIBRARY if game.is_k1() else TSL_LIBRARY
+            var lib = library ?? (_game.IsK1() ? ScriptLib.KOTOR_LIBRARY : ScriptLib.TSL_LIBRARY);
 
             var parser = new NssParser(functions, constants, lib, _libraryLookup);
             CodeRoot root = parser.Parse(source);
