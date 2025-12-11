@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using CSharpKOTOR.Common;
 using CSharpKOTOR.Formats.GFF;
 using CSharpKOTOR.Resources;
@@ -32,6 +33,18 @@ namespace CSharpKOTOR.Resource.Generics
         // Original: conversation: "Conversation" field
         public ResRef Conversation { get; set; }
 
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/utc.py:348
+        // Original: self.first_name: LocalizedString = LocalizedString.from_invalid()
+        public LocalizedString FirstName { get; set; }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/utc.py:383
+        // Original: self.alignment: int = 0
+        public int Alignment { get; set; }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/utc.py:434
+        // Original: self.equipment: dict[EquipmentSlot, InventoryItem] = {}
+        public Dictionary<EquipmentSlot, InventoryItem> Equipment { get; set; }
+
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/utc.py:18
         // Original: def __init__(self):
         public UTC()
@@ -40,6 +53,9 @@ namespace CSharpKOTOR.Resource.Generics
             Tag = string.Empty;
             Comment = string.Empty;
             Conversation = ResRef.FromBlank();
+            FirstName = LocalizedString.FromInvalid();
+            Alignment = 0;
+            Equipment = new Dictionary<EquipmentSlot, InventoryItem>();
         }
 
         // Additional basic properties that would be implemented in full version
