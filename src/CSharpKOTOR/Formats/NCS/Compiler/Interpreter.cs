@@ -362,33 +362,41 @@ namespace CSharpKOTOR.Formats.NCS.Compiler
                 case NCSInstructionType.ADDFF:
                 case NCSInstructionType.ADDFI:
                 case NCSInstructionType.ADDSS:
+                    _stack.AdditionOp(instruction.InsType);
+                    break;
                 case NCSInstructionType.ADDVV:
-                    _stack.AdditionOp();
+                    _stack.AdditionOp(NCSInstructionType.ADDVV);
                     break;
 
                 case NCSInstructionType.SUBII:
                 case NCSInstructionType.SUBIF:
                 case NCSInstructionType.SUBFF:
                 case NCSInstructionType.SUBFI:
+                    _stack.SubtractionOp(instruction.InsType);
+                    break;
                 case NCSInstructionType.SUBVV:
-                    _stack.SubtractionOp();
+                    _stack.SubtractionOp(NCSInstructionType.SUBVV);
                     break;
 
                 case NCSInstructionType.MULII:
                 case NCSInstructionType.MULIF:
                 case NCSInstructionType.MULFF:
                 case NCSInstructionType.MULFI:
+                    _stack.MultiplicationOp(instruction.InsType);
+                    break;
                 case NCSInstructionType.MULVF:
                 case NCSInstructionType.MULFV:
-                    _stack.MultiplicationOp();
+                    _stack.MultiplicationOp(instruction.InsType);
                     break;
 
                 case NCSInstructionType.DIVII:
                 case NCSInstructionType.DIVIF:
                 case NCSInstructionType.DIVFF:
                 case NCSInstructionType.DIVFI:
+                    _stack.DivisionOp(instruction.InsType);
+                    break;
                 case NCSInstructionType.DIVVF:
-                    _stack.DivisionOp();
+                    _stack.DivisionOp(NCSInstructionType.DIVVF);
                     break;
 
                 case NCSInstructionType.MODII:

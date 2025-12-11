@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using CSharpKOTOR.Common;
 using CSharpKOTOR.Common.Script;
+using CSharpKOTOR.Formats.NCS;
 using JetBrains.Annotations;
 
 namespace CSharpKOTOR.Formats.NCS.Compiler
@@ -426,8 +427,35 @@ namespace CSharpKOTOR.Formats.NCS.Compiler
         /// <summary>
         /// Perform addition operation on top two stack values.
         /// </summary>
-        public void AdditionOp()
+        public void AdditionOp(NCSInstructionType instructionType = NCSInstructionType.ADDII)
         {
+            // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/ncs/compiler/interpreter.py:1427
+            // Original: def addition_op(self, instruction_type: NCSInstructionType | None = None):
+            // Handle vector addition (ADDVV)
+            if (instructionType == NCSInstructionType.ADDVV)
+            {
+                // Matching PyKotor interpreter.py lines 1430-1445
+                // Original: Pop vectors (each is 3 floats: z, y, x from top to bottom)
+                if (_stack.Count < 6)
+                {
+                    throw new IndexOutOfRangeException("Stack underflow in vector addition operation");
+                }
+                // Pop vectors (each is 3 floats: z, y, x from top to bottom)
+                float z2 = Convert.ToSingle(_stack[_stack.Count - 1].Value);
+                float y2 = Convert.ToSingle(_stack[_stack.Count - 2].Value);
+                float x2 = Convert.ToSingle(_stack[_stack.Count - 3].Value);
+                float z1 = Convert.ToSingle(_stack[_stack.Count - 4].Value);
+                float y1 = Convert.ToSingle(_stack[_stack.Count - 5].Value);
+                float x1 = Convert.ToSingle(_stack[_stack.Count - 6].Value);
+                _stack.RemoveRange(_stack.Count - 6, 6);
+                // Add component-wise and push result (x, y, z order)
+                // Original: self.add(DataType.FLOAT, x1 + x2)
+                Add(DataType.Float, x1 + x2);
+                Add(DataType.Float, y1 + y2);
+                Add(DataType.Float, z1 + z2);
+                return;
+            }
+
             if (_stack.Count < 2)
             {
                 throw new IndexOutOfRangeException("Stack underflow in addition operation");
@@ -474,8 +502,33 @@ namespace CSharpKOTOR.Formats.NCS.Compiler
         /// <summary>
         /// Perform subtraction operation on top two stack values.
         /// </summary>
-        public void SubtractionOp()
+        public void SubtractionOp(NCSInstructionType instructionType = NCSInstructionType.SUBII)
         {
+            // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/ncs/compiler/interpreter.py:1482
+            // Original: def subtraction_op(self, instruction_type: NCSInstructionType | None = None):
+            // Handle vector subtraction (SUBVV)
+            if (instructionType == NCSInstructionType.SUBVV)
+            {
+                // Matching PyKotor interpreter.py lines 1485-1500
+                if (_stack.Count < 6)
+                {
+                    throw new IndexOutOfRangeException("Stack underflow in vector subtraction operation");
+                }
+                // Pop vectors (each is 3 floats: z, y, x from top to bottom)
+                float z2 = Convert.ToSingle(_stack[_stack.Count - 1].Value);
+                float y2 = Convert.ToSingle(_stack[_stack.Count - 2].Value);
+                float x2 = Convert.ToSingle(_stack[_stack.Count - 3].Value);
+                float z1 = Convert.ToSingle(_stack[_stack.Count - 4].Value);
+                float y1 = Convert.ToSingle(_stack[_stack.Count - 5].Value);
+                float x1 = Convert.ToSingle(_stack[_stack.Count - 6].Value);
+                _stack.RemoveRange(_stack.Count - 6, 6);
+                // Subtract component-wise (v1 - v2) and push result (x, y, z order)
+                Add(DataType.Float, x1 - x2);
+                Add(DataType.Float, y1 - y2);
+                Add(DataType.Float, z1 - z2);
+                return;
+            }
+
             if (_stack.Count < 2)
             {
                 throw new IndexOutOfRangeException("Stack underflow in subtraction operation");
@@ -512,8 +565,52 @@ namespace CSharpKOTOR.Formats.NCS.Compiler
         /// <summary>
         /// Perform multiplication operation on top two stack values.
         /// </summary>
-        public void MultiplicationOp()
+        public void MultiplicationOp(NCSInstructionType instructionType = NCSInstructionType.MULII)
         {
+            // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/ncs/compiler/interpreter.py:1519
+            // Original: def multiplication_op(self, instruction_type: NCSInstructionType | None = None):
+            // Handle vector multiplication
+            if (instructionType == NCSInstructionType.MULVF)
+            {
+                // Matching PyKotor interpreter.py lines 1522-1536
+                // MULVF: vector * float (vector is lhs, float is rhs, so float is on top)
+                if (_stack.Count < 4)
+                {
+                    throw new IndexOutOfRangeException("Stack underflow in vector multiplication operation");
+                }
+                // Stack: [x, y, z, scalar] with scalar on top
+                float scalar = Convert.ToSingle(_stack[_stack.Count - 1].Value);
+                float z = Convert.ToSingle(_stack[_stack.Count - 2].Value);
+                float y = Convert.ToSingle(_stack[_stack.Count - 3].Value);
+                float x = Convert.ToSingle(_stack[_stack.Count - 4].Value);
+                _stack.RemoveRange(_stack.Count - 4, 4);
+                // Multiply component-wise and push result (x, y, z order)
+                Add(DataType.Float, x * scalar);
+                Add(DataType.Float, y * scalar);
+                Add(DataType.Float, z * scalar);
+                return;
+            }
+            else if (instructionType == NCSInstructionType.MULFV)
+            {
+                // Matching PyKotor interpreter.py lines 1537-1551
+                // MULFV: float * vector (float is lhs, vector is rhs, so vector is on top)
+                if (_stack.Count < 4)
+                {
+                    throw new IndexOutOfRangeException("Stack underflow in vector multiplication operation");
+                }
+                // Stack: [scalar, x, y, z] with z on top
+                float z = Convert.ToSingle(_stack[_stack.Count - 1].Value);
+                float y = Convert.ToSingle(_stack[_stack.Count - 2].Value);
+                float x = Convert.ToSingle(_stack[_stack.Count - 3].Value);
+                float scalar = Convert.ToSingle(_stack[_stack.Count - 4].Value);
+                _stack.RemoveRange(_stack.Count - 4, 4);
+                // Multiply component-wise and push result (x, y, z order)
+                Add(DataType.Float, x * scalar);
+                Add(DataType.Float, y * scalar);
+                Add(DataType.Float, z * scalar);
+                return;
+            }
+
             if (_stack.Count < 2)
             {
                 throw new IndexOutOfRangeException("Stack underflow in multiplication operation");
@@ -550,8 +647,36 @@ namespace CSharpKOTOR.Formats.NCS.Compiler
         /// <summary>
         /// Perform division operation on top two stack values.
         /// </summary>
-        public void DivisionOp()
+        public void DivisionOp(NCSInstructionType instructionType = NCSInstructionType.DIVII)
         {
+            // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/ncs/compiler/interpreter.py:1570
+            // Original: def division_op(self, instruction_type: NCSInstructionType | None = None):
+            // Handle vector division (DIVVF: vector / float)
+            if (instructionType == NCSInstructionType.DIVVF)
+            {
+                // Matching PyKotor interpreter.py lines 1573-1590
+                // DIVVF: vector / float (vector is lhs, float is rhs, so float is on top)
+                if (_stack.Count < 4)
+                {
+                    throw new IndexOutOfRangeException("Stack underflow in vector division operation");
+                }
+                // Stack: [x, y, z, scalar] with scalar on top
+                float scalar = Convert.ToSingle(_stack[_stack.Count - 1].Value);
+                if (Math.Abs(scalar) < float.Epsilon)
+                {
+                    throw new DivideByZeroException("Division by zero in vector division operation");
+                }
+                float z = Convert.ToSingle(_stack[_stack.Count - 2].Value);
+                float y = Convert.ToSingle(_stack[_stack.Count - 3].Value);
+                float x = Convert.ToSingle(_stack[_stack.Count - 4].Value);
+                _stack.RemoveRange(_stack.Count - 4, 4);
+                // Divide component-wise and push result (x, y, z order)
+                Add(DataType.Float, x / scalar);
+                Add(DataType.Float, y / scalar);
+                Add(DataType.Float, z / scalar);
+                return;
+            }
+
             if (_stack.Count < 2)
             {
                 throw new IndexOutOfRangeException("Stack underflow in division operation");
