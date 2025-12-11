@@ -3811,7 +3811,10 @@ namespace CSharpKOTOR.Tests.Formats
             // Original: interpreter = Interpreter(ncs); interpreter.set_mock(""Vector"", Vector3)
             // Original: interpreter.set_mock(""VectorMagnitude"", lambda vec: vec.magnitude())
             var interpreter = new Interpreter(ncs);
-            interpreter.SetMock("Vector", (args) => new Vector3((float)(double)args[0], (float)(double)args[1], (float)(double)args[2]));
+            interpreter.SetMock("Vector", (args) => new Vector3(
+                args[0] is float f0 ? f0 : Convert.ToSingle(args[0]),
+                args[1] is float f1 ? f1 : Convert.ToSingle(args[1]),
+                args[2] is float f2 ? f2 : Convert.ToSingle(args[2])));
             interpreter.SetMock("VectorMagnitude", (args) => ((Vector3)args[0]).Magnitude());
             interpreter.Run();
 
@@ -3881,7 +3884,10 @@ namespace CSharpKOTOR.Tests.Formats
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:2731
             // Original: interpreter = Interpreter(ncs); interpreter.set_mock(""Vector"", Vector3)
             var interpreter = new Interpreter(ncs);
-            interpreter.SetMock("Vector", (args) => new Vector3((float)(double)args[0], (float)(double)args[1], (float)(double)args[2]));
+            interpreter.SetMock("Vector", (args) => new Vector3(
+                args[0] is float f0 ? f0 : Convert.ToSingle(args[0]),
+                args[1] is float f1 ? f1 : Convert.ToSingle(args[1]),
+                args[2] is float f2 ? f2 : Convert.ToSingle(args[2])));
             interpreter.Run();
 
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:2735
@@ -3922,7 +3928,10 @@ namespace CSharpKOTOR.Tests.Formats
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:2756
             // Original: interpreter = Interpreter(ncs); interpreter.set_mock(""Vector"", Vector3)
             var interpreter = new Interpreter(ncs);
-            interpreter.SetMock("Vector", (args) => new Vector3((float)(double)args[0], (float)(double)args[1], (float)(double)args[2]));
+            interpreter.SetMock("Vector", (args) => new Vector3(
+                args[0] is float f0 ? f0 : Convert.ToSingle(args[0]),
+                args[1] is float f1 ? f1 : Convert.ToSingle(args[1]),
+                args[2] is float f2 ? f2 : Convert.ToSingle(args[2])));
             interpreter.Run();
 
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:2760
@@ -3932,9 +3941,9 @@ namespace CSharpKOTOR.Tests.Formats
             var thirdLastSnapshot = interpreter.ActionSnapshots[interpreter.ActionSnapshots.Count - 3];
             var secondLastSnapshot = interpreter.ActionSnapshots[interpreter.ActionSnapshots.Count - 2];
             var lastSnapshot = interpreter.ActionSnapshots[interpreter.ActionSnapshots.Count - 1];
-            thirdLastSnapshot.ArgValues[0].Value.Should().Be(2.0);
-            secondLastSnapshot.ArgValues[0].Value.Should().Be(4.0);
-            lastSnapshot.ArgValues[0].Value.Should().Be(6.0);
+            thirdLastSnapshot.ArgValues[0].Value.Should().Be(2.0f);
+            secondLastSnapshot.ArgValues[0].Value.Should().Be(4.0f);
+            lastSnapshot.ArgValues[0].Value.Should().Be(6.0f);
         }
 
         /// <summary>
@@ -5450,7 +5459,10 @@ namespace CSharpKOTOR.Tests.Formats
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:3747
             // Original: interpreter = Interpreter(ncs); interpreter.set_mock(""Vector"", Vector3)
             var interpreter = new Interpreter(ncs);
-            interpreter.SetMock("Vector", (args) => new Vector3((float)(double)args[0], (float)(double)args[1], (float)(double)args[2]));
+            interpreter.SetMock("Vector", (args) => new Vector3(
+                args[0] is float f0 ? f0 : Convert.ToSingle(args[0]),
+                args[1] is float f1 ? f1 : Convert.ToSingle(args[1]),
+                args[2] is float f2 ? f2 : Convert.ToSingle(args[2])));
             interpreter.Run();
 
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:3751
@@ -5490,7 +5502,10 @@ namespace CSharpKOTOR.Tests.Formats
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:3771
             // Original: interpreter = Interpreter(ncs); interpreter.set_mock(""Vector"", Vector3)
             var interpreter = new Interpreter(ncs);
-            interpreter.SetMock("Vector", (args) => new Vector3((float)(double)args[0], (float)(double)args[1], (float)(double)args[2]));
+            interpreter.SetMock("Vector", (args) => new Vector3(
+                args[0] is float f0 ? f0 : Convert.ToSingle(args[0]),
+                args[1] is float f1 ? f1 : Convert.ToSingle(args[1]),
+                args[2] is float f2 ? f2 : Convert.ToSingle(args[2])));
             interpreter.Run();
 
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:3775
@@ -5529,7 +5544,10 @@ namespace CSharpKOTOR.Tests.Formats
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:3794
             // Original: interpreter = Interpreter(ncs); interpreter.set_mock(""Vector"", Vector3)
             var interpreter = new Interpreter(ncs);
-            interpreter.SetMock("Vector", (args) => new Vector3((float)(double)args[0], (float)(double)args[1], (float)(double)args[2]));
+            interpreter.SetMock("Vector", (args) => new Vector3(
+                args[0] is float f0 ? f0 : Convert.ToSingle(args[0]),
+                args[1] is float f1 ? f1 : Convert.ToSingle(args[1]),
+                args[2] is float f2 ? f2 : Convert.ToSingle(args[2])));
             interpreter.Run();
 
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:3798
@@ -5568,7 +5586,10 @@ namespace CSharpKOTOR.Tests.Formats
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:3817
             // Original: interpreter = Interpreter(ncs); interpreter.set_mock(""Vector"", Vector3)
             var interpreter = new Interpreter(ncs);
-            interpreter.SetMock("Vector", (args) => new Vector3((float)(double)args[0], (float)(double)args[1], (float)(double)args[2]));
+            interpreter.SetMock("Vector", (args) => new Vector3(
+                args[0] is float f0 ? f0 : Convert.ToSingle(args[0]),
+                args[1] is float f1 ? f1 : Convert.ToSingle(args[1]),
+                args[2] is float f2 ? f2 : Convert.ToSingle(args[2])));
             interpreter.Run();
 
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:3821
@@ -5607,7 +5628,10 @@ namespace CSharpKOTOR.Tests.Formats
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:3840
             // Original: interpreter = Interpreter(ncs); interpreter.set_mock(""Vector"", Vector3)
             var interpreter = new Interpreter(ncs);
-            interpreter.SetMock("Vector", (args) => new Vector3((float)(double)args[0], (float)(double)args[1], (float)(double)args[2]));
+            interpreter.SetMock("Vector", (args) => new Vector3(
+                args[0] is float f0 ? f0 : Convert.ToSingle(args[0]),
+                args[1] is float f1 ? f1 : Convert.ToSingle(args[1]),
+                args[2] is float f2 ? f2 : Convert.ToSingle(args[2])));
             interpreter.Run();
 
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:3844
@@ -5646,7 +5670,10 @@ namespace CSharpKOTOR.Tests.Formats
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:3863
             // Original: interpreter = Interpreter(ncs); interpreter.set_mock(""Vector"", Vector3)
             var interpreter = new Interpreter(ncs);
-            interpreter.SetMock("Vector", (args) => new Vector3((float)(double)args[0], (float)(double)args[1], (float)(double)args[2]));
+            interpreter.SetMock("Vector", (args) => new Vector3(
+                args[0] is float f0 ? f0 : Convert.ToSingle(args[0]),
+                args[1] is float f1 ? f1 : Convert.ToSingle(args[1]),
+                args[2] is float f2 ? f2 : Convert.ToSingle(args[2])));
             interpreter.Run();
 
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:3867
@@ -5685,7 +5712,10 @@ namespace CSharpKOTOR.Tests.Formats
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:3886
             // Original: interpreter = Interpreter(ncs); interpreter.set_mock(""Vector"", Vector3)
             var interpreter = new Interpreter(ncs);
-            interpreter.SetMock("Vector", (args) => new Vector3((float)(double)args[0], (float)(double)args[1], (float)(double)args[2]));
+            interpreter.SetMock("Vector", (args) => new Vector3(
+                args[0] is float f0 ? f0 : Convert.ToSingle(args[0]),
+                args[1] is float f1 ? f1 : Convert.ToSingle(args[1]),
+                args[2] is float f2 ? f2 : Convert.ToSingle(args[2])));
             interpreter.Run();
 
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:3890
@@ -5724,7 +5754,10 @@ namespace CSharpKOTOR.Tests.Formats
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:3910
             // Original: interpreter = Interpreter(ncs); interpreter.set_mock(""Vector"", Vector3)
             var interpreter = new Interpreter(ncs);
-            interpreter.SetMock("Vector", (args) => new Vector3((float)(double)args[0], (float)(double)args[1], (float)(double)args[2]));
+            interpreter.SetMock("Vector", (args) => new Vector3(
+                args[0] is float f0 ? f0 : Convert.ToSingle(args[0]),
+                args[1] is float f1 ? f1 : Convert.ToSingle(args[1]),
+                args[2] is float f2 ? f2 : Convert.ToSingle(args[2])));
             interpreter.Run();
 
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:3913
