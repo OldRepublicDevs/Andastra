@@ -41,6 +41,33 @@ Please do not create .md documentation unless it delivers public-facing informat
 - Should be idempotent and flexible enough to be used for a plethora of scenarios, not just whatever the task you're working on involves.
 - Do not delete helper .py/.ps1/.sh scripts when you are finished with them; keep them in scripts folder
 
+## File Organization
+
+**CRITICAL: Repository Root Cleanup**
+
+AI agents MUST maintain proper file organization in the repository root:
+
+1. **Documentation Files**:
+   - ALL `.md` documentation files (except `README.md`) MUST be placed in `./docs`
+   - `README.md` is the ONLY markdown file allowed in the repository root
+   - When creating new documentation, always place it in `./docs`
+   - If you find documentation files in the root (other than `README.md`), move them to `./docs`
+
+2. **Script Files**:
+   - ALL script files (`.ps1`, `.sh`, `.py`, `.bat`, `.cmd`, etc.) MUST be placed in `./scripts`
+   - When creating new scripts, always place them in `./scripts`
+   - If you find script files in the root, move them to `./scripts`
+
+3. **Root Directory**:
+   - The root directory should only contain:
+     - `README.md` (the only allowed markdown file in root)
+     - Solution files (`.sln`)
+     - Project configuration files (`.csproj`, `.props`, etc.)
+     - Build artifacts and temporary files (as appropriate)
+     - Essential configuration files (`.gitignore`, `.cursorrules`, etc.)
+
+**When creating or moving files, always verify they are in the correct location according to these rules.**
+
 ## C# Language Version Requirements
 
 **CRITICAL: The maximum C# language version allowed is 7.3. NEVER upgrade to C# 8.0 or higher.**
