@@ -4,7 +4,6 @@ using CSharpKOTOR.Common;
 using CSharpKOTOR.Common.Script;
 using CSharpKOTOR.Formats.NCS;
 using CSharpKOTOR.Formats.NCS.Compiler;
-using CSharpKOTOR.Formats.NCS.Compiler.Interpreter;
 using CSharpKOTOR.Formats.NCS.Compiler.NSS;
 using FluentAssertions;
 using Xunit;
@@ -131,7 +130,9 @@ namespace CSharpKOTOR.Tests.Formats
             // Original: assert interpreter.action_snapshots[0].function_name == "GetObjectByTag"
             interpreter.ActionSnapshots[0].FunctionName.Should().Be("GetObjectByTag");
             // Original: assert interpreter.action_snapshots[0].arg_values == [""something"", 15]
-            interpreter.ActionSnapshots[0].ArgValues.Should().Equal(new object[] { "something", 15 });
+            interpreter.ActionSnapshots[0].ArgValues.Count.Should().Be(2);
+            interpreter.ActionSnapshots[0].ArgValues[0].Value.Should().Be("something");
+            interpreter.ActionSnapshots[0].ArgValues[1].Value.Should().Be(15);
         }
 
         /// <summary>
@@ -178,7 +179,7 @@ namespace CSharpKOTOR.Tests.Formats
 
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:227
             // Original: self.assertRaises(CompileError, self.compile, script)
-            Assert.Throws<CompileError>(() => Compile(script));
+            Assert.Throws<CSharpKOTOR.Formats.NCS.Compiler.NSS.CompileError>(() => Compile(script));
         }
 
         /// <summary>
@@ -201,7 +202,7 @@ namespace CSharpKOTOR.Tests.Formats
 
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:239
             // Original: self.assertRaises(CompileError, self.compile, script)
-            Assert.Throws<CompileError>(() => Compile(script));
+            Assert.Throws<CSharpKOTOR.Formats.NCS.Compiler.NSS.CompileError>(() => Compile(script));
         }
 
         /// <summary>
@@ -2112,7 +2113,7 @@ namespace CSharpKOTOR.Tests.Formats
             }
         ";
 
-            Assert.Throws<CompileError>(() => Compile(script));
+            Assert.Throws<CSharpKOTOR.Formats.NCS.Compiler.NSS.CompileError>(() => Compile(script));
         }
 
         /// <summary>
@@ -2135,7 +2136,7 @@ namespace CSharpKOTOR.Tests.Formats
             }
         ";
 
-            Assert.Throws<CompileError>(() => Compile(script));
+            Assert.Throws<CSharpKOTOR.Formats.NCS.Compiler.NSS.CompileError>(() => Compile(script));
         }
 
         /// <summary>
@@ -2158,7 +2159,7 @@ namespace CSharpKOTOR.Tests.Formats
             }
         ";
 
-            Assert.Throws<CompileError>(() => Compile(script));
+            Assert.Throws<CSharpKOTOR.Formats.NCS.Compiler.NSS.CompileError>(() => Compile(script));
         }
 
         /// <summary>
@@ -2181,7 +2182,7 @@ namespace CSharpKOTOR.Tests.Formats
             }
         ";
 
-            Assert.Throws<CompileError>(() => Compile(script));
+            Assert.Throws<CSharpKOTOR.Formats.NCS.Compiler.NSS.CompileError>(() => Compile(script));
         }
 
         /// <summary>
@@ -2392,7 +2393,7 @@ namespace CSharpKOTOR.Tests.Formats
             }
         ";
 
-            Assert.Throws<CompileError>(() => Compile(script));
+            Assert.Throws<CSharpKOTOR.Formats.NCS.Compiler.NSS.CompileError>(() => Compile(script));
         }
 
         /// <summary>
@@ -3554,7 +3555,7 @@ namespace CSharpKOTOR.Tests.Formats
             bool hasSaveBp = false;
             foreach (var inst in ncs.Instructions)
             {
-                if (inst.InstructionType == NCSInstructionType.SAVEBP)
+                if (inst.InsType == NCSInstructionType.SAVEBP)
                 {
                     hasSaveBp = true;
                     break;
@@ -3607,7 +3608,7 @@ namespace CSharpKOTOR.Tests.Formats
             bool hasSaveBp = false;
             foreach (var inst in ncs.Instructions)
             {
-                if (inst.InstructionType == NCSInstructionType.SAVEBP)
+                if (inst.InsType == NCSInstructionType.SAVEBP)
                 {
                     hasSaveBp = true;
                     break;
@@ -4006,7 +4007,7 @@ namespace CSharpKOTOR.Tests.Formats
             }
         ";
 
-            Assert.Throws<CompileError>(() => Compile(source));
+            Assert.Throws<CSharpKOTOR.Formats.NCS.Compiler.NSS.CompileError>(() => Compile(source));
         }
 
         /// <summary>
@@ -4607,7 +4608,7 @@ namespace CSharpKOTOR.Tests.Formats
             }
         ";
 
-            Assert.Throws<CompileError>(() => Compile(source));
+            Assert.Throws<CSharpKOTOR.Formats.NCS.Compiler.NSS.CompileError>(() => Compile(source));
         }
 
         /// <summary>
@@ -4635,7 +4636,7 @@ namespace CSharpKOTOR.Tests.Formats
             }
         ";
 
-            Assert.Throws<CompileError>(() => Compile(source));
+            Assert.Throws<CSharpKOTOR.Formats.NCS.Compiler.NSS.CompileError>(() => Compile(source));
         }
 
         /// <summary>
@@ -4663,7 +4664,7 @@ namespace CSharpKOTOR.Tests.Formats
             }
         ";
 
-            Assert.Throws<CompileError>(() => Compile(source));
+            Assert.Throws<CSharpKOTOR.Formats.NCS.Compiler.NSS.CompileError>(() => Compile(source));
         }
 
         /// <summary>
@@ -4689,7 +4690,7 @@ namespace CSharpKOTOR.Tests.Formats
             }
         ";
 
-            Assert.Throws<CompileError>(() => Compile(script));
+            Assert.Throws<CSharpKOTOR.Formats.NCS.Compiler.NSS.CompileError>(() => Compile(script));
         }
 
         /// <summary>
@@ -4708,7 +4709,7 @@ namespace CSharpKOTOR.Tests.Formats
             void test();
         ";
 
-            Assert.Throws<CompileError>(() => Compile(script));
+            Assert.Throws<CSharpKOTOR.Formats.NCS.Compiler.NSS.CompileError>(() => Compile(script));
         }
 
         /// <summary>
@@ -4731,7 +4732,7 @@ namespace CSharpKOTOR.Tests.Formats
             void test();
         ";
 
-            Assert.Throws<CompileError>(() => Compile(script));
+            Assert.Throws<CSharpKOTOR.Formats.NCS.Compiler.NSS.CompileError>(() => Compile(script));
         }
 
         /// <summary>
@@ -4754,7 +4755,7 @@ namespace CSharpKOTOR.Tests.Formats
             }
         ";
 
-            Assert.Throws<CompileError>(() => Compile(script));
+            Assert.Throws<CSharpKOTOR.Formats.NCS.Compiler.NSS.CompileError>(() => Compile(script));
         }
 
         /// <summary>
@@ -4777,7 +4778,7 @@ namespace CSharpKOTOR.Tests.Formats
             }
         ";
 
-            Assert.Throws<CompileError>(() => Compile(script));
+            Assert.Throws<CSharpKOTOR.Formats.NCS.Compiler.NSS.CompileError>(() => Compile(script));
         }
 
         /// <summary>
@@ -4798,7 +4799,7 @@ namespace CSharpKOTOR.Tests.Formats
             }
         ";
 
-            Assert.Throws<CompileError>(() => Compile(script));
+            Assert.Throws<CSharpKOTOR.Formats.NCS.Compiler.NSS.CompileError>(() => Compile(script));
         }
 
         /// <summary>
@@ -5001,7 +5002,7 @@ namespace CSharpKOTOR.Tests.Formats
             }
         ";
 
-            Assert.Throws<CompileError>(() => Compile(source));
+            Assert.Throws<CSharpKOTOR.Formats.NCS.Compiler.NSS.CompileError>(() => Compile(source));
         }
 
         #endregion
@@ -5243,6 +5244,7 @@ namespace CSharpKOTOR.Tests.Formats
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tests/resource/formats/test_ncs.py:3613
             // Original: source = """#include ""otherscript"" void main() { TestFunc(); }"""
             // Original: self.assertRaises(CompileError, self.compile, source)
+            // Note: Python's assertRaises catches subclasses, C# throws MissingIncludeError which inherits from CompileError
             string source = @"
             #include ""otherscript""
 
@@ -5252,7 +5254,8 @@ namespace CSharpKOTOR.Tests.Formats
             }
         ";
 
-            Assert.Throws<CompileError>(() => Compile(source));
+            // Python's assertRaises catches subclasses, so MissingIncludeError (which inherits from CompileError) should be caught
+            Assert.ThrowsAny<CSharpKOTOR.Formats.NCS.Compiler.NSS.CompileError>(() => Compile(source));
         }
 
         /// <summary>
