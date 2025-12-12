@@ -29,52 +29,47 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptnode
             this.val = val;
         }
 
-        public virtual List<object> GetUnknowns()
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/ASwitchCase.java:32-42
+        // Original: public List<AUnkLoopControl> getUnknowns() { ... }
+        public virtual List<AUnkLoopControl> GetUnknowns()
         {
-            List<object> unks = new List<object>();
+            List<AUnkLoopControl> unks = new List<AUnkLoopControl>();
+
             foreach (ScriptNode node in this.children)
             {
                 if (node is AUnkLoopControl)
                 {
-                    unks.Add(node);
+                    unks.Add((AUnkLoopControl)node);
                 }
             }
 
             return unks;
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/ASwitchCase.java:44-48
+        // Original: public void replaceUnknown(AUnkLoopControl unk, ScriptNode newnode) { newnode.parent(this); this.children.set(this.children.indexOf(unk), newnode); unk.parent(null); }
         public virtual void ReplaceUnknown(AUnkLoopControl unk, ScriptNode newnode)
         {
             newnode.Parent(this);
-            int index = -1;
-            for (int i = 0; i < this.children.Count; i++)
-            {
-                if (this.children[i] == unk)
-                {
-                    index = i;
-                    break;
-                }
-            }
-            if (index >= 0)
-            {
-                this.children[index] = newnode;
-            }
+            this.children[this.children.IndexOf(unk)] = newnode;
             unk.Parent(null);
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/ASwitchCase.java:50-64
+        // Original: @Override public String toString() { ... }
         public override string ToString()
         {
             StringBuilder buff = new StringBuilder();
             if (this.val == null)
             {
-                buff.Append(this.tabs.ToString() + "default:" + this.newline);
+                buff.Append(this.tabs + "default:" + this.newline);
             }
             else
             {
-                buff.Append(this.tabs.ToString() + "case " + this.val.ToString() + ":" + this.newline);
+                buff.Append(this.tabs + "case " + this.val.ToString() + ":" + this.newline);
             }
 
-            for (int i = 0; i < this.children.Count; ++i)
+            for (int i = 0; i < this.children.Count; i++)
             {
                 buff.Append(this.children[i].ToString());
             }
