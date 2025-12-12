@@ -65,6 +65,19 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
                 }
             }
 
+            // Matching DeNCS implementation: detect SAVEBP to split globals from main
+            // Globals subroutine ends at SAVEBP, main starts after SAVEBP
+            int savebpIndex = -1;
+            for (int i = 0; i < instructions.Count; i++)
+            {
+                if (instructions[i].InsType == NCSInstructionType.SAVEBP)
+                {
+                    savebpIndex = i;
+                    break;
+                }
+            }
+
+            int mainStart = 0;
             int mainEnd = instructions.Count;
             if (subroutineStarts.Count > 0)
             {
@@ -80,7 +93,18 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
                 mainEnd = min;
             }
 
-            ASubroutine mainSub = ConvertInstructionRangeToSubroutine(ncs, instructions, 0, mainEnd, 0);
+            // If SAVEBP is found, create globals subroutine (0 to SAVEBP+1) and main starts after SAVEBP
+            if (savebpIndex >= 0)
+            {
+                ASubroutine globalsSub = ConvertInstructionRangeToSubroutine(ncs, instructions, 0, savebpIndex + 1, 0);
+                if (globalsSub != null)
+                {
+                    program.GetSubroutine().AddLast(globalsSub);
+                }
+                mainStart = savebpIndex + 1;
+            }
+
+            ASubroutine mainSub = ConvertInstructionRangeToSubroutine(ncs, instructions, mainStart, mainEnd, mainStart);
             if (mainSub != null)
             {
                 program.GetSubroutine().AddLast(mainSub);
