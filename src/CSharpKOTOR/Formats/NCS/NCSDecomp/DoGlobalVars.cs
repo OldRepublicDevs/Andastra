@@ -48,12 +48,15 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             this.freezeStack = true;
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/DoGlobalVars.java:49-58
+        // Original: public void outAMoveSpCommand(AMoveSpCommand node) { if (!this.freezeStack) { this.state.transformMoveSp(node); int remove = NodeUtils.stackOffsetToPos(node.getOffset()); for (int i = 0; i < remove; i++) { this.stack.remove(); } } }
         public override void OutAMoveSpCommand(AMoveSpCommand node)
         {
             if (!this.freezeStack)
             {
                 this.state.TransformMoveSp(node);
-                for (int remove = NodeUtils.StackOffsetToPos(node.GetOffset()), i = 0; i < remove; ++i)
+                int remove = NodeUtils.StackOffsetToPos(node.GetOffset());
+                for (int i = 0; i < remove; i++)
                 {
                     this.stack.Remove();
                 }
