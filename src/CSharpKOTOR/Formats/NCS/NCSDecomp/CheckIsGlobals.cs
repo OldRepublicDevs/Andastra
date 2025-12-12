@@ -91,6 +91,16 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             }
         }
 
+        // Handle AST.ASubroutine as well (from NcsToAstConverter)
+        // Override to ensure command block is traversed (matching DeNCS pattern)
+        public override void CaseASubroutine(AST.ASubroutine node)
+        {
+            // Traverse into AST.ASubroutine to reach command block
+            if (node.GetCommandBlock() != null)
+            {
+                node.GetCommandBlock().Apply(this);
+            }
+        }
 
         public virtual bool GetIsGlobals()
         {
