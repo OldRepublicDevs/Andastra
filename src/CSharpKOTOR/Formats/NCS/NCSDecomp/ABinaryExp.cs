@@ -1,4 +1,4 @@
-// 
+//
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -21,19 +21,34 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptnode
             this.op = op;
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/ABinaryExp.java:21-24
+        // Original: protected void left(AExpression left) { this.left = left; left.parent(this); }
         protected virtual void Left(AExpression left)
         {
-            (this.left = left).Parent(this);
+            this.left = left;
+            left.Parent(this);
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/ABinaryExp.java:26-29
+        // Original: protected void right(AExpression right) { this.right = right; right.parent(this); }
         protected virtual void Right(AExpression right)
         {
-            (this.right = right).Parent(this);
+            this.right = right;
+            right.Parent(this);
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/ABinaryExp.java:39-41
+        // Original: public String op() { return this.op; }
+        public virtual string Op()
+        {
+            return this.op;
+        }
+
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/ABinaryExp.java:43-46
+        // Original: @Override public String toString() { return ExpressionFormatter.format(this); }
         public override string ToString()
         {
-            return "(" + this.left.ToString() + " " + this.op + " " + this.right.ToString() + ")";
+            return ExpressionFormatter.Format(this);
         }
 
         public virtual StackEntry Stackentry()
@@ -65,7 +80,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptnode
 
             if (this.stackentry != null)
             {
-                this.stackentry.Dispose();
+                this.stackentry.Close();
             }
 
             this.stackentry = null;

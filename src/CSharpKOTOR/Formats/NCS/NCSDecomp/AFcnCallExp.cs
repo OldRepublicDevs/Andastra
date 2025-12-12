@@ -1,4 +1,4 @@
-// 
+//
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -28,14 +28,16 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptnode
             this.@params.Add(param);
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/AFcnCallExp.java:31-44
+        // Original: @Override public String toString() { StringBuffer buff = new StringBuffer(); buff.append("sub").append(Byte.toString(this.id)).append("("); ... }
         public override string ToString()
         {
             StringBuilder buff = new StringBuilder();
-            buff.Append("sub" + this.id + "(");
+            buff.Append("sub").Append(this.id.ToString()).Append("(");
             string prefix = "";
             for (int i = 0; i < this.@params.Count; ++i)
             {
-                buff.Append(prefix.ToString() + this.@params[i].ToString());
+                buff.Append(prefix + this.@params[i].ToString());
                 prefix = ", ";
             }
 
@@ -70,7 +72,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptnode
 
             if (this.stackentry != null)
             {
-                this.stackentry.Dispose();
+                this.stackentry.Close();
             }
 
             this.stackentry = null;
