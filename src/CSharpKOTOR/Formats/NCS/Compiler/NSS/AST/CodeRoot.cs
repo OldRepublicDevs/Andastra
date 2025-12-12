@@ -579,9 +579,11 @@ namespace CSharpKOTOR.Formats.NCS.Compiler
             Parameters = parameters;
             Body = body;
 
-            for (int i = parameters.Count - 1; i >= 0; i--)
+            // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/ncs/compiler/classes.py:731-732
+            // Original: for param in parameters: block.add_scoped(param.identifier, param.data_type)
+            // Parameters are added in forward order; add_scoped uses insert(0, ...) which reverses them
+            foreach (FunctionParameter param in parameters)
             {
-                FunctionParameter param = parameters[i];
                 body.AddScoped(param.Name, param.DataType);
             }
         }
