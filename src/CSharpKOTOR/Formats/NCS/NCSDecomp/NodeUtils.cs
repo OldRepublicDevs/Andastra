@@ -370,6 +370,73 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             return 1;
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/NodeUtils.java:326-333
+        // Original: public static Long getIntConstValue(AConstCommand node)
+        public static long GetIntConstValue(AConstCommand node)
+        {
+            PConstant pconst = node.GetConstant();
+            Type type = GetType(node);
+            if (type.ByteValue() != 3)
+            {
+                throw new Exception("Expected int const type (3), got " + type);
+            }
+            return long.Parse(((AIntConstant)pconst).GetIntegerConstant().GetText());
+        }
+
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/NodeUtils.java:335-352
+        // Original: public static Float getFloatConstValue(AConstCommand node)
+        public static float GetFloatConstValue(AConstCommand node)
+        {
+            PConstant pconst = node.GetConstant();
+            Type type = GetType(node);
+            if (type.ByteValue() != 4)
+            {
+                throw new Exception("Expected float const type (4), got " + type);
+            }
+            // Handle case where parser created AIntConstant instead of AFloatConstant
+            // This can happen when the float value is a whole number or due to parser quirks
+            if (typeof(AIntConstant).IsInstanceOfType(pconst))
+            {
+                // Parse as integer first, then convert to float
+                long intValue = long.Parse(((AIntConstant)pconst).GetIntegerConstant().GetText());
+                return (float)intValue;
+            }
+            else if (typeof(AFloatConstant).IsInstanceOfType(pconst))
+            {
+                return float.Parse(((AFloatConstant)pconst).GetFloatConstant().GetText());
+            }
+            else
+            {
+                throw new Exception("Expected AFloatConstant or AIntConstant, got " + pconst.GetType().Name);
+            }
+        }
+
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/NodeUtils.java:354-360
+        // Original: public static String getStringConstValue(AConstCommand node)
+        public static string GetStringConstValue(AConstCommand node)
+        {
+            PConstant pconst = node.GetConstant();
+            Type type = GetType(node);
+            if (type.ByteValue() != 5)
+            {
+                throw new Exception("Expected string const type (5), got " + type);
+            }
+            return ((AStringConstant)pconst).GetStringLiteral().GetText();
+        }
+
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/NodeUtils.java:363-370
+        // Original: public static Integer getObjectConstValue(AConstCommand node)
+        public static int GetObjectConstValue(AConstCommand node)
+        {
+            PConstant pconst = node.GetConstant();
+            Type type = GetType(node);
+            if (type.ByteValue() != 6)
+            {
+                throw new Exception("Expected object const type (6), got " + type);
+            }
+            return Integer.ParseInt(((AIntConstant)pconst).GetIntegerConstant().GetText());
+        }
+
         public static object GetConstValue(AConstCommand node)
         {
             PConstant pconst = node.GetConstant();
@@ -378,22 +445,22 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             {
                 case 3:
                     {
-                        return long.Parse(((AIntConstant)pconst).GetIntegerConstant().GetText());
+                        return GetIntConstValue(node);
                     }
 
                 case 4:
                     {
-                        return float.Parse(((AFloatConstant)pconst).GetFloatConstant().GetText());
+                        return GetFloatConstValue(node);
                     }
 
                 case 5:
                     {
-                        return ((AStringConstant)pconst).GetStringLiteral().GetText();
+                        return GetStringConstValue(node);
                     }
 
                 case 6:
                     {
-                        return Integer.ParseInt(((AIntConstant)pconst).GetIntegerConstant().GetText());
+                        return GetObjectConstValue(node);
                     }
 
                 default:

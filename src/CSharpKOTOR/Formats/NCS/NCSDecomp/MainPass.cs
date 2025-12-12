@@ -186,11 +186,31 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             }
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/MainPass.java:189-201
+        // Original: public void outAConstCommand(AConstCommand node)
         public override void OutAConstCommand(AConstCommand node)
         {
             if (!this.skipdeadcode)
             {
-                Const aconst = Const.NewConst(NodeUtils.GetType(node), NodeUtils.GetConstValue(node));
+                Type type = NodeUtils.GetType(node);
+                Const aconst;
+                switch (type.ByteValue())
+                {
+                    case 3:
+                        aconst = Const.NewConst(type, NodeUtils.GetIntConstValue(node));
+                        break;
+                    case 4:
+                        aconst = Const.NewConst(type, NodeUtils.GetFloatConstValue(node));
+                        break;
+                    case 5:
+                        aconst = Const.NewConst(type, NodeUtils.GetStringConstValue(node));
+                        break;
+                    case 6:
+                        aconst = Const.NewConst(type, NodeUtils.GetObjectConstValue(node));
+                        break;
+                    default:
+                        throw new Exception("Invalid const type " + type);
+                }
                 this.stack.Push(aconst);
                 this.state.TransformConst(node);
             }

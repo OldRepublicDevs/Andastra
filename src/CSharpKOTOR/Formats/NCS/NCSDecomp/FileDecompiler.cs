@@ -44,9 +44,30 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
         private Settings settings;
         private NWScriptLocator.GameType gameType;
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:90-94
+        // Original: public FileDecompiler() throws DecompilerException
         public FileDecompiler()
             : this(null, null)
         {
+        }
+
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:101-111
+        // Original: public FileDecompiler(File nwscriptFile) throws DecompilerException
+        public FileDecompiler(File nwscriptFile)
+        {
+            this.filedata = new Dictionary<object, object>();
+            if (nwscriptFile == null || !nwscriptFile.IsFile())
+            {
+                throw new DecompilerException("Error: nwscript file does not exist: " + (nwscriptFile != null ? nwscriptFile.GetAbsolutePath() : "null"));
+            }
+            try
+            {
+                this.actions = new ActionsData(new BufferedReader(new FileReader(nwscriptFile)));
+            }
+            catch (IOException ex)
+            {
+                throw new DecompilerException("Error reading nwscript file: " + ex.Message);
+            }
         }
 
         public FileDecompiler(Settings settings, NWScriptLocator.GameType? gameType)
@@ -2487,15 +2508,12 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                 try
                 {
                     sub = subdata.GetGlobalsSub();
-                    JavaSystem.@out.Println($"DEBUG FileDecompiler: GetGlobalsSub() returned {(sub != null ? "non-null" : "null")}");
                     if (sub != null)
                     {
                         try
                         {
-                            JavaSystem.@out.Println("DEBUG FileDecompiler: creating DoGlobalVars and applying to globals subroutine");
                             doglobs = new DoGlobalVars(nodedata, subdata);
                             sub.Apply(doglobs);
-                            JavaSystem.@out.Println($"DEBUG FileDecompiler: sub.Apply(doglobs) completed, root children count: {doglobs.GetScriptRoot().GetChildren().Count}");
                             cleanpass = new CleanupPass(doglobs.GetScriptRoot(), nodedata, subdata, doglobs.GetState());
                             cleanpass.Apply();
                             subdata.SetGlobalStack(doglobs.GetStack());
