@@ -37,123 +37,137 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
             this.state = null;
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptutils/CleanupPass.java:62-73
+        // Original: private void checkSubCodeBlock()
         private void CheckSubCodeBlock()
         {
+            ACodeBlock block = null;
+            List<object> children = null;
             try
             {
-                if (this.root.GetChildren().Count == 1 && typeof(ACodeBlock).IsInstanceOfType(this.root.GetLastChild()))
+                if (this.root.Size() == 1 && typeof(ACodeBlock).IsInstanceOfType(this.root.GetLastChild()))
                 {
-                    ACodeBlock block = (ACodeBlock)this.root.RemoveLastChild();
-                    List<object> children = block.RemoveChildren();
+                    block = (ACodeBlock)this.root.RemoveLastChild();
+                    children = block.RemoveChildren();
                     this.root.AddChildren(children);
                 }
             }
             finally
             {
-                // Variables are disposed in finally block
+                block = null;
+                children = null;
             }
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptutils/CleanupPass.java:75-164
+        // Original: private void apply(ScriptRootNode rootnode)
         private void Apply(ScriptRootNode rootnode)
         {
+            LinkedList children = null;
+            ListIterator it = null;
+            Scriptnode.ScriptNode node1 = null;
+            Variable var = null;
+            VarStruct structx = null;
+            AVarDecl structdecx = null;
+            Scriptnode.ScriptNode node2 = null;
+            AModifyExp modexp = null;
+            AExpressionStatement expstm = null;
+            ASwitchCase acase = null;
             try
             {
-                LinkedList childrenListLocal = rootnode.GetChildren();
-                ListIterator itLocal = childrenListLocal.ListIterator();
-                while (itLocal.HasNext())
+                children = rootnode.GetChildren();
+                it = children.ListIterator();
+
+                while (it.HasNext())
                 {
-                    Scriptnode.ScriptNode node1Local = (Scriptnode.ScriptNode)itLocal.Next();
-                    // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptutils/CleanupPass.java:82-98
-                    // Original: Check for AVarDecl with exp() == null first, then merge with following assignment
-                    if (typeof(AVarDecl).IsInstanceOfType(node1Local))
+                    node1 = (Scriptnode.ScriptNode)it.Next();
+                    if (typeof(AVarDecl).IsInstanceOfType(node1))
                     {
-                        AVarDecl decl = (AVarDecl)node1Local;
-                        if (decl.Exp() == null && itLocal.HasNext())
+                        AVarDecl decl = (AVarDecl)node1;
+                        if (decl.Exp() == null && it.HasNext())
                         {
-                            Scriptnode.ScriptNode maybeAssign = (Scriptnode.ScriptNode)itLocal.Next();
-                            if (typeof(AExpressionStatement).IsInstanceOfType(maybeAssign)
-                                && typeof(AModifyExp).IsInstanceOfType(((AExpressionStatement)maybeAssign).Exp()))
+                            node2 = (Scriptnode.ScriptNode)it.Next();
+                            if (typeof(AExpressionStatement).IsInstanceOfType(node2)
+                                && typeof(AModifyExp).IsInstanceOfType(((AExpressionStatement)node2).Exp()))
                             {
-                                AModifyExp modexp = (AModifyExp)((AExpressionStatement)maybeAssign).Exp();
-                                if (modexp.VarRef() != null && modexp.VarRef().Var() == decl.Var())
+                                modexp = (AModifyExp)((AExpressionStatement)node2).Exp();
+                                if (modexp.VarRef().Var() == decl.Var())
                                 {
                                     decl.InitializeExp(modexp.Expression());
-                                    itLocal.Remove(); // drop the now-merged assignment statement
+                                    it.Remove(); // drop the now-merged assignment statement
                                 }
                                 else
                                 {
-                                    itLocal.Previous();
+                                    it.Previous();
                                 }
                             }
                             else
                             {
-                                itLocal.Previous();
+                                it.Previous();
                             }
                         }
                     }
-                    // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptutils/CleanupPass.java:100-131
-                    // Original: Then check for struct declarations to merge
-                    if (typeof(AVarDecl).IsInstanceOfType(node1Local))
+                    if (typeof(AVarDecl).IsInstanceOfType(node1))
                     {
-                        Variable var = ((AVarDecl)node1Local).Var();
+                        var = ((AVarDecl)node1).Var();
                         if (var != null && var.IsStruct())
                         {
-                            VarStruct @struct = ((AVarDecl)node1Local).Var().Varstruct();
-                            AVarDecl structdec = new AVarDecl(@struct);
-                            if (itLocal.HasNext())
+                            structx = ((AVarDecl)node1).Var().Varstruct();
+                            structdecx = new AVarDecl(structx);
+                            if (it.HasNext())
                             {
-                                node1Local = (Scriptnode.ScriptNode)itLocal.Next();
+                                node1 = (Scriptnode.ScriptNode)it.Next();
                             }
                             else
                             {
-                                node1Local = null;
+                                node1 = null;
                             }
 
-                            while (typeof(AVarDecl).IsInstanceOfType(node1Local) && @struct.Equals(((AVarDecl)node1Local).Var().Varstruct()))
+                            while (typeof(AVarDecl).IsInstanceOfType(node1) && structx.Equals(((AVarDecl)node1).Var().Varstruct()))
                             {
-                                itLocal.Remove();
-                                node1Local.Parent(null);
-                                if (itLocal.HasNext())
+                                it.Remove();
+                                node1.Parent(null);
+                                if (it.HasNext())
                                 {
-                                    node1Local = (Scriptnode.ScriptNode)itLocal.Next();
+                                    node1 = (Scriptnode.ScriptNode)it.Next();
                                 }
                                 else
                                 {
-                                    node1Local = null;
+                                    node1 = null;
                                 }
                             }
 
-                            itLocal.Previous();
-                            if (node1Local != null)
+                            it.Previous();
+                            if (node1 != null)
                             {
-                                itLocal.Previous();
+                                it.Previous();
                             }
 
-                            node1Local = (Scriptnode.ScriptNode)itLocal.Next();
-                            structdec.Parent(node1Local.Parent());
-                            itLocal.Set(structdec);
-                            node1Local = structdec;
+                            node1 = (Scriptnode.ScriptNode)it.Next();
+                            structdecx.Parent(node1.Parent());
+                            it.Set(structdecx);
+                            node1 = structdecx;
                         }
                     }
 
-                    if (this.IsDanglingExpression(node1Local))
+                    if (this.IsDanglingExpression(node1))
                     {
-                        AExpressionStatement expstm = new AExpressionStatement((AExpression)node1Local);
+                        expstm = new AExpressionStatement((AExpression)node1);
                         expstm.Parent(rootnode);
-                        itLocal.Set(expstm);
+                        it.Set(expstm);
                     }
 
-                    itLocal.Previous();
-                    itLocal.Next();
-                    if (typeof(ScriptRootNode).IsInstanceOfType(node1Local))
+                    it.Previous();
+                    it.Next();
+                    if (typeof(ScriptRootNode).IsInstanceOfType(node1))
                     {
-                        this.Apply((ScriptRootNode)node1Local);
+                        this.Apply((ScriptRootNode)node1);
                     }
 
-                    ASwitchCase acase = null;
-                    if (typeof(ASwitch).IsInstanceOfType(node1Local))
+                    acase = null;
+                    if (typeof(ASwitch).IsInstanceOfType(node1))
                     {
-                        while ((acase = ((ASwitch)node1Local).GetNextCase(acase)) != null)
+                        while ((acase = ((ASwitch)node1).GetNextCase(acase)) != null)
                         {
                             this.Apply(acase);
                         }
@@ -162,7 +176,16 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
             }
             finally
             {
-                // Variables are disposed in finally block
+                children = null;
+                it = null;
+                node1 = null;
+                var = null;
+                structx = null;
+                structdecx = null;
+                node2 = null;
+                modexp = null;
+                expstm = null;
+                acase = null;
             }
         }
 
