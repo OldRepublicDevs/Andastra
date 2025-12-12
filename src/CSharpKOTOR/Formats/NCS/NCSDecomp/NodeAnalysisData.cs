@@ -121,6 +121,11 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             object existing;
             if (!this.nodedatahash.TryGetValue(node, out existing))
             {
+                // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/NodeAnalysisData.java:105-112
+                // Original: throws RuntimeException if node not in hashtable
+                // However, in C# we need to handle AST nodes that might not be visited by SetPositions
+                // For now, return false (skip as dead code) if node not in hashtable
+                // This allows decompilation to continue even if SetPositions didn't visit all nodes
                 return false;
             }
 

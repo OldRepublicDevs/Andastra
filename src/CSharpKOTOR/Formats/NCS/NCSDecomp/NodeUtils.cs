@@ -45,6 +45,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
 
         public static int GetCommandPos(Node node)
         {
+            // Check root namespace types first
             if (typeof(AConditionalJumpCommand).IsInstanceOfType(node))
             {
                 return Integer.ParseInt(((AConditionalJumpCommand)node).GetPos().GetText());
@@ -138,6 +139,97 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             if (typeof(AStoreStateCommand).IsInstanceOfType(node))
             {
                 return Integer.ParseInt(((AStoreStateCommand)node).GetPos().GetText());
+            }
+
+            // Check AST namespace types (from NcsToAstConverter)
+            if (typeof(AST.AConditionalJumpCommand).IsInstanceOfType(node))
+            {
+                return Integer.ParseInt(((AST.AConditionalJumpCommand)node).GetPos().GetText());
+            }
+
+            if (typeof(AST.AJumpCommand).IsInstanceOfType(node))
+            {
+                return Integer.ParseInt(((AST.AJumpCommand)node).GetPos().GetText());
+            }
+
+            if (typeof(AST.AJumpToSubroutine).IsInstanceOfType(node))
+            {
+                return Integer.ParseInt(((AST.AJumpToSubroutine)node).GetPos().GetText());
+            }
+
+            if (typeof(AST.AReturn).IsInstanceOfType(node))
+            {
+                return Integer.ParseInt(((AST.AReturn)node).GetPos().GetText());
+            }
+
+            if (typeof(AST.ACopyDownSpCommand).IsInstanceOfType(node))
+            {
+                return Integer.ParseInt(((AST.ACopyDownSpCommand)node).GetPos().GetText());
+            }
+
+            if (typeof(AST.ACopyTopSpCommand).IsInstanceOfType(node))
+            {
+                return Integer.ParseInt(((AST.ACopyTopSpCommand)node).GetPos().GetText());
+            }
+
+            if (typeof(AST.ACopyDownBpCommand).IsInstanceOfType(node))
+            {
+                return Integer.ParseInt(((AST.ACopyDownBpCommand)node).GetPos().GetText());
+            }
+
+            if (typeof(AST.ACopyTopBpCommand).IsInstanceOfType(node))
+            {
+                return Integer.ParseInt(((AST.ACopyTopBpCommand)node).GetPos().GetText());
+            }
+
+            if (typeof(AST.AMoveSpCommand).IsInstanceOfType(node))
+            {
+                return Integer.ParseInt(((AST.AMoveSpCommand)node).GetPos().GetText());
+            }
+
+            if (typeof(AST.ARsaddCommand).IsInstanceOfType(node))
+            {
+                return Integer.ParseInt(((AST.ARsaddCommand)node).GetPos().GetText());
+            }
+
+            if (typeof(AST.AConstCommand).IsInstanceOfType(node))
+            {
+                return Integer.ParseInt(((AST.AConstCommand)node).GetPos().GetText());
+            }
+
+            if (typeof(AST.AActionCommand).IsInstanceOfType(node))
+            {
+                return Integer.ParseInt(((AST.AActionCommand)node).GetPos().GetText());
+            }
+
+            if (typeof(AST.ALogiiCommand).IsInstanceOfType(node))
+            {
+                return Integer.ParseInt(((AST.ALogiiCommand)node).GetPos().GetText());
+            }
+
+            if (typeof(AST.ABinaryCommand).IsInstanceOfType(node))
+            {
+                return Integer.ParseInt(((AST.ABinaryCommand)node).GetPos().GetText());
+            }
+
+            if (typeof(AST.AUnaryCommand).IsInstanceOfType(node))
+            {
+                return Integer.ParseInt(((AST.AUnaryCommand)node).GetPos().GetText());
+            }
+
+            if (typeof(AST.ADestructCommand).IsInstanceOfType(node))
+            {
+                return Integer.ParseInt(((AST.ADestructCommand)node).GetPos().GetText());
+            }
+
+            if (typeof(AST.ABpCommand).IsInstanceOfType(node))
+            {
+                return Integer.ParseInt(((AST.ABpCommand)node).GetPos().GetText());
+            }
+
+            if (typeof(AST.AStoreStateCommand).IsInstanceOfType(node))
+            {
+                return Integer.ParseInt(((AST.AStoreStateCommand)node).GetPos().GetText());
             }
 
             return -1;
