@@ -852,8 +852,21 @@ namespace CSharpKOTOR.Tests.Formats
             }
         }
 
+        // Static instance of external compiler for reuse
+        private static ExternalNCSCompiler _externalCompiler;
+
+        private static ExternalNCSCompiler GetExternalCompiler()
+        {
+            if (_externalCompiler == null)
+            {
+                _externalCompiler = new ExternalNCSCompiler(NwnCompiler);
+            }
+            return _externalCompiler;
+        }
+
         /// <summary>
         /// Compiles NSS to NCS using the external compiler (nwnnsscomp_kscript.exe).
+        /// Uses ExternalNCSCompiler wrapper to handle different compiler variants.
         /// </summary>
         private static void RunExternalCompiler(string originalNssPath, string compiledOut, string gameFlag, string workDir)
         {
@@ -890,6 +903,7 @@ namespace CSharpKOTOR.Tests.Formats
                 throw new ArgumentException($"Invalid game flag: {gameFlag} (expected 'k1' or 'k2')");
             }
 
+            // Ensure nwscript.nss is in the compiler's directory
             string compilerDir = Path.GetDirectoryName(NwnCompiler);
             string compilerNwscript = Path.Combine(compilerDir, "nwscript.nss");
             if (!File.Exists(compilerNwscript) || !AreFilesSame(nwscriptSource, compilerNwscript))
@@ -906,54 +920,31 @@ namespace CSharpKOTOR.Tests.Formats
 
                 Directory.CreateDirectory(Path.GetDirectoryName(compiledOut));
 
-                // Use the correct command line format for nwnnsscomp_kscript.exe
-                // Format: -c {source} -o {output}
-                List<string> args = new List<string>
-                {
-                    "-c",
-                    $"\"{tempSourceFile}\"",
-                    "-o",
-                    $"\"{compiledOut}\""
-                };
+                Game game = gameFlag.Equals("k2") ? Game.K2 : Game.K1;
+                ExternalNCSCompiler compiler = GetExternalCompiler();
 
-                Console.Write($" (external: {Path.GetFileName(NwnCompiler)})");
+                Console.Write($" (external: {Path.GetFileName(NwnCompiler)}, variant: {compiler.GetInfo()})");
 
-                ProcessStartInfo psi = new ProcessStartInfo
-                {
-                    FileName = NwnCompiler,
-                    Arguments = string.Join(" ", args),
-                    WorkingDirectory = tempDir,
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true,
-                    UseShellExecute = false,
-                    CreateNoWindow = true
-                };
+                // Use ExternalNCSCompiler which handles all compiler variants and their command-line differences
+                (string stdout, string stderr) = compiler.CompileScriptWithOutput(
+                    tempSourceFile,
+                    compiledOut,
+                    game,
+                    (int)ProcTimeout.TotalSeconds);
 
-                using (Process proc = Process.Start(psi))
-                {
-                    string output = proc.StandardOutput.ReadToEnd() + proc.StandardError.ReadToEnd();
-
-                    if (!proc.WaitForExit((int)ProcTimeout.TotalMilliseconds))
-                    {
-                        proc.Kill();
-                        Console.WriteLine(" ✗ TIMEOUT");
-                        throw new TimeoutException($"nwnnsscomp timed out for {DisplayPath(originalNssPath)}");
-                    }
-
-                    int exitCode = proc.ExitCode;
-                    bool fileExists = File.Exists(compiledOut);
-
-                    if (exitCode != 0 || !fileExists)
-                    {
-                        Console.WriteLine(" ✗ FAILED");
-                        string errorMsg = $"nwnnsscomp failed (exit={exitCode}, fileExists={fileExists}) for {DisplayPath(originalNssPath)}";
-                        if (!string.IsNullOrEmpty(output))
-                        {
-                            errorMsg += $"\nCompiler output:\n{output}";
-                        }
-                        throw new InvalidOperationException(errorMsg);
-                    }
-                }
+                // ExternalNCSCompiler.CompileScriptWithOutput already validates the output file exists
+                // and throws if compilation fails, so we don't need additional checks here
+            }
+            catch (ExternalNCSCompiler.EntryPointException)
+            {
+                // This is an include file - rethrow as-is
+                throw;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(" ✗ FAILED");
+                throw new InvalidOperationException(
+                    $"External compiler failed for {DisplayPath(originalNssPath)}: {e.Message}", e);
             }
             finally
             {
