@@ -195,17 +195,18 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             }
         }
 
-        // Matching NCSDecomp implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:171-204
-        // Original: private static void loadPreferSwitchesFromConfig()
+        // Matching NCSDecomp implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:205-233
+        // Original: private static void loadPreferSwitchesFromConfig() { File configDir = new File(System.getProperty("user.dir"), "config"); File configFile = new File(configDir, "ncsdecomp.conf"); ... }
         private static void LoadPreferSwitchesFromConfig()
         {
             try
             {
                 string userDir = JavaSystem.GetProperty("user.dir");
-                File configFile = new File(Path.Combine(userDir, "ncsdecomp.conf"));
+                string configDir = Path.Combine(userDir, "config");
+                File configFile = new File(Path.Combine(configDir, "ncsdecomp.conf"));
                 if (!configFile.Exists())
                 {
-                    configFile = new File(Path.Combine(userDir, "dencs.conf"));
+                    configFile = new File(Path.Combine(configDir, "dencs.conf"));
                 }
 
                 if (configFile.Exists() && configFile.IsFile())

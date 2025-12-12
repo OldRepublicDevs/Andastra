@@ -20,15 +20,19 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
         private static readonly string LegacyConfigFileName = "dencs.conf";
 
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/Settings.java:377-412
-        // Original: public void load() { ... }
+        // Original: public void load() { File configDir = new File(System.getProperty("user.dir"), "config"); File configFile = new File(configDir, CONFIG_FILE); ... }
         public new void Load()
         {
-            string configToLoad = ConfigFileName;
+            string userDir = JavaSystem.GetProperty("user.dir");
+            string configDir = Path.Combine(userDir, "config");
+            string configFile = Path.Combine(configDir, ConfigFileName);
+            string configToLoad = configFile;
             if (!System.IO.File.Exists(configToLoad))
             {
-                if (System.IO.File.Exists(LegacyConfigFileName))
+                string legacy = Path.Combine(configDir, LegacyConfigFileName);
+                if (System.IO.File.Exists(legacy))
                 {
-                    configToLoad = LegacyConfigFileName;
+                    configToLoad = legacy;
                 }
             }
 
@@ -45,7 +49,11 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                 {
                     try
                     {
-                        System.IO.File.Create(ConfigFileName).Close();
+                        if (!Directory.Exists(configDir))
+                        {
+                            Directory.CreateDirectory(configDir);
+                        }
+                        System.IO.File.Create(configFile).Close();
                     }
                     catch (Exception)
                     {
@@ -60,7 +68,11 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                 ex.PrintStackTrace();
                 try
                 {
-                    System.IO.File.Create(ConfigFileName).Close();
+                    if (!Directory.Exists(configDir))
+                    {
+                        Directory.CreateDirectory(configDir);
+                    }
+                    System.IO.File.Create(configFile).Close();
                 }
                 catch (Exception)
                 {
@@ -79,13 +91,22 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             FileDecompiler.nwnnsscompPath = string.IsNullOrEmpty(nwnnsscompPath) ? null : nwnnsscompPath;
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/Settings.java:419-429
+        // Original: public void save() { File configDir = new File(System.getProperty("user.dir"), "config"); File configFile = new File(configDir, CONFIG_FILE); ... }
         public new void Save()
         {
             try
             {
-                using (var fos = new FileOutputStream(ConfigFileName))
+                string userDir = JavaSystem.GetProperty("user.dir");
+                string configDir = Path.Combine(userDir, "config");
+                string configFile = Path.Combine(configDir, ConfigFileName);
+                if (!Directory.Exists(configDir))
                 {
-                    Store(fos, null);
+                    Directory.CreateDirectory(configDir);
+                }
+                using (var fos = new FileOutputStream(configFile))
+                {
+                    Store(fos, "NCSDecomp Configuration");
                 }
             }
             catch (Exception ex)
