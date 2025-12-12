@@ -724,7 +724,9 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
         {
             this.CheckStart(node);
             List<object> @params = this.RemoveActionParams(node);
-            AActionExp act = new AActionExp(NodeUtils.GetActionName(node, this.actions), NodeUtils.GetActionId(node), @params);
+            // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptutils/SubScriptState.java:889
+            // Original: AActionExp act = new AActionExp(actionName, NodeUtils.getActionId(node), params, this.actions);
+            AActionExp act = new AActionExp(NodeUtils.GetActionName(node, this.actions), NodeUtils.GetActionId(node), @params, this.actions);
             UtilsType type = NodeUtils.GetReturnType(node, this.actions);
             if (!type.Equals((byte)0))
             {
