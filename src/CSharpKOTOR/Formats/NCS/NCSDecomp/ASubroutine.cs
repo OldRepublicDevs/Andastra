@@ -41,7 +41,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
         // Original: @Override public void apply(Switch sw) { ((Analysis)sw).caseASubroutine(this); }
         public override void Apply(Switch sw)
         {
-            ((Analysis)sw).CaseASubroutine(this);
+            ((IAnalysis)sw).CaseASubroutine(this);
         }
 
         public PCommandBlock GetCommandBlock()

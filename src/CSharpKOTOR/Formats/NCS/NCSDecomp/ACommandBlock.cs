@@ -53,7 +53,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
         // Original: @Override public void apply(Switch sw) { ((Analysis)sw).caseACommandBlock(this); }
         public override void Apply(Switch sw)
         {
-            ((Analysis)sw).CaseACommandBlock(this);
+            ((IAnalysis)sw).CaseACommandBlock(this);
         }
 
         public TypedLinkedList GetCmd()
