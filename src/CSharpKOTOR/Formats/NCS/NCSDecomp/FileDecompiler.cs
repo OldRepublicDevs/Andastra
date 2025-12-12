@@ -2995,13 +2995,13 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                 this.subs = null;
                 if (this.globals != null)
                 {
-                    this.globals.Dispose();
+                    this.globals.Close();
                     this.globals = null;
                 }
 
                 if (this.subdata != null)
                 {
-                    this.subdata.Dispose();
+                    this.subdata.Close();
                     this.subdata = null;
                 }
 
