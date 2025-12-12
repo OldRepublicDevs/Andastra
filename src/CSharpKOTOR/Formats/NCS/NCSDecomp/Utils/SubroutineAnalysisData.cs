@@ -6,6 +6,7 @@ using CSharpKOTOR.Formats.NCS.NCSDecomp.AST;
 using CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils;
 using CSharpKOTOR.Formats.NCS.NCSDecomp.Stack;
 using IEnumerator = CSharpKOTOR.Formats.NCS.NCSDecomp.IEnumerator<object>;
+using IAnalysis = CSharpKOTOR.Formats.NCS.NCSDecomp.Analysis.IAnalysis;
 
 namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
 {
@@ -520,8 +521,28 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
         private bool IsGlobalsSub(ASubroutine node)
         {
             CheckIsGlobals cig = new CheckIsGlobals();
+            
+            // DEBUG: Check node and command block
+            JavaSystem.@out.Println($"DEBUG IsGlobalsSub: node type is {node.GetType().FullName}");
+            var cmdBlock = node.GetCommandBlock();
+            if (cmdBlock != null)
+            {
+                JavaSystem.@out.Println($"DEBUG IsGlobalsSub: command block type is {cmdBlock.GetType().FullName}");
+            }
+            else
+            {
+                JavaSystem.@out.Println("DEBUG IsGlobalsSub: command block is null");
+            }
+            
+            JavaSystem.@out.Println($"DEBUG IsGlobalsSub: cig type is {cig.GetType().FullName}");
+            JavaSystem.@out.Println($"DEBUG IsGlobalsSub: cig is IAnalysis: {cig is IAnalysis}");
+            JavaSystem.@out.Println($"DEBUG IsGlobalsSub: cig is PrunedReversedDepthFirstAdapter: {cig is Analysis.PrunedReversedDepthFirstAdapter}");
+            JavaSystem.@out.Println("DEBUG IsGlobalsSub: calling node.Apply(cig)");
             node.Apply(cig);
-            return cig.GetIsGlobals();
+            JavaSystem.@out.Println("DEBUG IsGlobalsSub: node.Apply(cig) completed");
+            bool result = cig.GetIsGlobals();
+            JavaSystem.@out.Println($"DEBUG IsGlobalsSub: result = {result}");
+            return result;
         }
 
         public virtual void Dispose()
