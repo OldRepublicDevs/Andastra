@@ -35,6 +35,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             return "";
         }
         public static JavaPrintStream @out = new JavaPrintStream();
+        public static JavaPrintStream @err = new JavaPrintStream();
     }
 
     public class JavaPrintStream
@@ -92,6 +93,27 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
         public void Delete() { _fileInfo.Delete(); }
         public bool Exists() { return _fileInfo.Exists; }
         public File GetAbsoluteFile() { return new File(_fileInfo.FullName); }
+        public bool Mkdirs()
+        {
+            try
+            {
+                // Create the directory and all parent directories (matching Java File.mkdirs() behavior)
+                if (_fileInfo.Directory != null && !_fileInfo.Directory.Exists)
+                {
+                    System.IO.Directory.CreateDirectory(_fileInfo.Directory.FullName);
+                }
+                // Also create the file/directory itself if it's a directory path
+                if (!_fileInfo.Exists && _fileInfo.Directory != null)
+                {
+                    System.IO.Directory.CreateDirectory(_fileInfo.Directory.FullName);
+                }
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
         public File(System.IO.DirectoryInfo dirInfo)
         {
             if (dirInfo == null)

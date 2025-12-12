@@ -86,11 +86,11 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
                         AVarDecl decl = (AVarDecl)node1;
                         if (decl.Exp() == null && it.HasNext())
                         {
-                            node2 = (Scriptnode.ScriptNode)it.Next();
-                            if (typeof(AExpressionStatement).IsInstanceOfType(node2)
-                                && typeof(AModifyExp).IsInstanceOfType(((AExpressionStatement)node2).Exp()))
+                            Scriptnode.ScriptNode maybeAssign = (Scriptnode.ScriptNode)it.Next();
+                            if (typeof(AExpressionStatement).IsInstanceOfType(maybeAssign)
+                                && typeof(AModifyExp).IsInstanceOfType(((AExpressionStatement)maybeAssign).Exp()))
                             {
-                                modexp = (AModifyExp)((AExpressionStatement)node2).Exp();
+                                modexp = (AModifyExp)((AExpressionStatement)maybeAssign).Exp();
                                 if (modexp.VarRef().Var() == decl.Var())
                                 {
                                     decl.InitializeExp(modexp.Expression());

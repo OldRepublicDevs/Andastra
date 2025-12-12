@@ -42,8 +42,10 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             List<NCSInstruction> instructions = ncs != null ? ncs.Instructions : null;
             if (instructions == null || instructions.Count == 0)
             {
+                JavaSystem.@out.Println("DEBUG NcsToAstConverter: No instructions in NCS");
                 return new Start(program, new EOF());
             }
+            JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Converting {instructions.Count} instructions to AST");
 
             HashSet<int> subroutineStarts = new HashSet<int>();
             for (int i = 0; i < instructions.Count; i++)
@@ -74,8 +76,13 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
                 if (instructions[i].InsType == NCSInstructionType.SAVEBP)
                 {
                     savebpIndex = i;
+                    JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Found SAVEBP at instruction index {i}");
                     break;
                 }
+            }
+            if (savebpIndex == -1)
+            {
+                JavaSystem.@out.Println("DEBUG NcsToAstConverter: No SAVEBP instruction found - no globals subroutine will be created");
             }
 
             int mainStart = 0;
@@ -164,14 +171,26 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             ACommandBlock cmdBlock = new ACommandBlock();
 
             int limit = Math.Min(endIdx, instructions.Count);
+            int convertedCount = 0;
+            int nullCount = 0;
             for (int i = startIdx; i < limit; i++)
             {
                 PCmd cmd = ConvertInstructionToCmd(ncs, instructions[i], i, instructions);
                 if (cmd != null)
                 {
                     cmdBlock.GetCmd().Add(cmd);
+                    convertedCount++;
+                }
+                else
+                {
+                    nullCount++;
+                    if (nullCount <= 5) // Log first 5 null conversions
+                    {
+                        JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Instruction at index {i} ({instructions[i].InsType}) returned null");
+                    }
                 }
             }
+            JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Converted {convertedCount} commands, {nullCount} returned null (range {startIdx}-{limit})");
 
             sub.SetCommandBlock(cmdBlock);
 
