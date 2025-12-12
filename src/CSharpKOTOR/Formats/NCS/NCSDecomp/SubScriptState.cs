@@ -522,13 +522,21 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
                     aswitchx.AddCase(acasex);
                 }
             }
-            else if (typeof(AIf).IsInstanceOfType(this.current) && this.IsModifyConditional())
+            // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptutils/SubScriptState.java:621-635
+            // Original: else if (AIf.class.isInstance(this.current) && this.isModifyConditional() && this.state != 4)
+            else if (typeof(AIf).IsInstanceOfType(this.current) && this.IsModifyConditional() && this.state != 4)
             {
-                ((AIf)this.current).End(this.nodedata.GetPos(this.nodedata.GetDestination(node)) - 6);
+                // Don't modify AIf's end when processing switch cases (state == 4)
+                int newEnd = this.nodedata.GetPos(this.nodedata.GetDestination(node)) - 6;
+                ((AIf)this.current).End(newEnd);
                 if (this.current.HasChildren())
                 {
                     this.current.RemoveLastChild();
                 }
+            }
+            else if (typeof(AIf).IsInstanceOfType(this.current) && this.IsModifyConditional() && this.state == 4)
+            {
+                // Don't modify AIf end when state==4, processing switch case
             }
             else if (typeof(AWhileLoop).IsInstanceOfType(this.current) && this.IsModifyConditional())
             {
