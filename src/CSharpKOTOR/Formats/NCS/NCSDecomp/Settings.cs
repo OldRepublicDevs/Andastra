@@ -14,7 +14,10 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
     /// </summary>
     public class Settings : Properties
     {
-        private static readonly string ConfigFileName = "NCSDecomp.conf";
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/Settings.java:48
+        // Original: private static final String CONFIG_FILE = "ncsdecomp.conf";
+        private static readonly string ConfigFileName = "ncsdecomp.conf";
+        private static readonly string LegacyConfigFileName = "dencs.conf";
 
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/Settings.java:377-412
         // Original: public void load() { ... }
@@ -23,10 +26,9 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             string configToLoad = ConfigFileName;
             if (!System.IO.File.Exists(configToLoad))
             {
-                string legacyConfigFile = "dencs.conf";
-                if (System.IO.File.Exists(legacyConfigFile))
+                if (System.IO.File.Exists(LegacyConfigFileName))
                 {
-                    configToLoad = legacyConfigFile;
+                    configToLoad = LegacyConfigFileName;
                 }
             }
 
