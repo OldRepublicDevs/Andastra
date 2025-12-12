@@ -1003,7 +1003,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                         catch (IOException e)
                         {
                             // Log but don't fail - compiler might find nwscript.nss elsewhere
-                            JavaSystem.@err.Println("[NCSDecomp] Warning: Could not copy nwscript.nss to compiler directory: " + e.Message);
+                            JavaSystem.@out.Println("[NCSDecomp] Warning: Could not copy nwscript.nss to compiler directory: " + e.Message);
                         }
                     }
                 }
@@ -1581,18 +1581,18 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                 // Decode bytecode - wrap in try-catch to handle corrupted files
                 try
                 {
-                    JavaSystem.@err.Println("DEBUG decompileNcs: starting decode for " + file.Name);
+                    JavaSystem.@out.Println("DEBUG decompileNcs: starting decode for " + file.Name);
                     using (var fileStream = new FileStream(file.FullName, FileMode.Open, FileAccess.Read))
                     using (var bufferedStream = new BufferedStream(fileStream))
                     using (var binaryReader = new BinaryReader(bufferedStream))
                     {
                         commands = new Decoder(binaryReader, this.actions).Decode();
                     }
-                    JavaSystem.@err.Println("DEBUG decompileNcs: decode successful, commands length=" + (commands != null ? commands.Length : 0));
+                    JavaSystem.@out.Println("DEBUG decompileNcs: decode successful, commands length=" + (commands != null ? commands.Length : 0));
                 }
                 catch (Exception decodeEx)
                 {
-                    JavaSystem.@err.Println("DEBUG decompileNcs: decode FAILED - " + decodeEx.Message);
+                    JavaSystem.@out.Println("DEBUG decompileNcs: decode FAILED - " + decodeEx.Message);
                     JavaSystem.@out.Println("Error during bytecode decoding: " + decodeEx.Message);
                     // Create comprehensive fallback stub for decoding errors
                     long fileSize = file.Exists() ? file.Length : -1;
@@ -1623,17 +1623,17 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                 // Parse commands - wrap in try-catch to handle parse errors, but try to recover
                 try
                 {
-                    JavaSystem.@err.Println("DEBUG decompileNcs: starting parse, commands length=" + (commands != null ? commands.Length : 0));
+                    JavaSystem.@out.Println("DEBUG decompileNcs: starting parse, commands length=" + (commands != null ? commands.Length : 0));
                     using (var stringReader = new StringReader(commands))
                     using (var pushbackReader = new PushbackReader(stringReader, 1024))
                     {
                         ast = new Parser(new Lexer(pushbackReader)).Parse();
                     }
-                    JavaSystem.@err.Println("DEBUG decompileNcs: parse successful");
+                    JavaSystem.@out.Println("DEBUG decompileNcs: parse successful");
                 }
                 catch (Exception parseEx)
                 {
-                    JavaSystem.@err.Println("DEBUG decompileNcs: parse FAILED - " + parseEx.Message);
+                    JavaSystem.@out.Println("DEBUG decompileNcs: parse FAILED - " + parseEx.Message);
                     JavaSystem.@out.Println("Error during parsing: " + parseEx.Message);
                     JavaSystem.@out.Println("Attempting to recover by trying partial parsing strategies...");
 
@@ -1770,22 +1770,22 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                 try
                 {
                     subdata.SplitOffSubroutines(ast);
-                    JavaSystem.@err.Println("DEBUG splitOffSubroutines: success, numSubs=" + subdata.NumSubs());
+                    JavaSystem.@out.Println("DEBUG splitOffSubroutines: success, numSubs=" + subdata.NumSubs());
                 }
                 catch (Exception e)
                 {
-                    JavaSystem.@err.Println("DEBUG splitOffSubroutines: ERROR - " + e.Message);
-                    e.PrintStackTrace(JavaSystem.@err);
+                    JavaSystem.@out.Println("DEBUG splitOffSubroutines: ERROR - " + e.Message);
+                    e.PrintStackTrace(JavaSystem.@out);
                     JavaSystem.@out.Println("Error splitting subroutines, attempting to continue: " + e.Message);
                     // Try to get main sub at least
                     try
                     {
                         mainsub = subdata.GetMainSub();
-                        JavaSystem.@err.Println("DEBUG splitOffSubroutines: recovered mainsub=" + (mainsub != null ? "found" : "null"));
+                        JavaSystem.@out.Println("DEBUG splitOffSubroutines: recovered mainsub=" + (mainsub != null ? "found" : "null"));
                     }
                     catch (Exception e2)
                     {
-                        JavaSystem.@err.Println("DEBUG splitOffSubroutines: could not recover mainsub - " + e2.Message);
+                        JavaSystem.@out.Println("DEBUG splitOffSubroutines: could not recover mainsub - " + e2.Message);
                         JavaSystem.@out.Println("Could not recover main subroutine: " + e2.Message);
                     }
                 }
@@ -2015,12 +2015,12 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                 dotypes = null;
                 nodedata.ClearProtoData();
 
-                JavaSystem.@err.Println("DEBUG decompileNcs: iterating subroutines, numSubs=" + subdata.NumSubs());
+                JavaSystem.@out.Println("DEBUG decompileNcs: iterating subroutines, numSubs=" + subdata.NumSubs());
                 int subCount = 0;
                 foreach (ASubroutine iterSub in this.SubIterable(subdata))
                 {
                     subCount++;
-                    JavaSystem.@err.Println("DEBUG decompileNcs: processing subroutine " + subCount + " at pos=" + nodedata.GetPos(iterSub));
+                    JavaSystem.@out.Println("DEBUG decompileNcs: processing subroutine " + subCount + " at pos=" + nodedata.GetPos(iterSub));
                     try
                     {
                         mainpass = new MainPass(subdata.GetState(iterSub), nodedata, subdata, this.actions);
@@ -2028,13 +2028,13 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                         cleanpass = new CleanupPass(mainpass.GetScriptRoot(), nodedata, subdata, mainpass.GetState());
                         cleanpass.Apply();
                         data.AddSub(mainpass.GetState());
-                        JavaSystem.@err.Println("DEBUG decompileNcs: successfully added subroutine " + subCount);
+                        JavaSystem.@out.Println("DEBUG decompileNcs: successfully added subroutine " + subCount);
                         mainpass.Done();
                         cleanpass.Done();
                     }
                     catch (Exception e)
                     {
-                        JavaSystem.@err.Println("DEBUG decompileNcs: ERROR processing subroutine " + subCount + " - " + e.Message);
+                        JavaSystem.@out.Println("DEBUG decompileNcs: ERROR processing subroutine " + subCount + " - " + e.Message);
                         JavaSystem.@out.Println("Error while processing subroutine: " + e);
                         e.PrintStackTrace(JavaSystem.@out);
                         // Try to add partial subroutine state even if processing failed
@@ -2061,14 +2061,14 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                 }
 
                 // Generate code for main subroutine - recover if this fails
-                JavaSystem.@err.Println("DEBUG decompileNcs: mainsub=" + (mainsub != null ? "found at pos=" + nodedata.GetPos(mainsub) : "null"));
+                JavaSystem.@out.Println("DEBUG decompileNcs: mainsub=" + (mainsub != null ? "found at pos=" + nodedata.GetPos(mainsub) : "null"));
                 if (mainsub != null)
                 {
                     try
                     {
-                        JavaSystem.@err.Println("DEBUG decompileNcs: creating MainPass for mainsub");
+                        JavaSystem.@out.Println("DEBUG decompileNcs: creating MainPass for mainsub");
                         mainpass = new MainPass(subdata.GetState(mainsub), nodedata, subdata, this.actions);
-                        JavaSystem.@err.Println("DEBUG decompileNcs: applying mainpass to mainsub");
+                        JavaSystem.@out.Println("DEBUG decompileNcs: applying mainpass to mainsub");
                         mainsub.Apply(mainpass);
 
                         try
@@ -2690,13 +2690,13 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                     cleanpass = new CleanupPass(mainpass.GetScriptRoot(), nodedata, subdata, mainpass.GetState());
                     cleanpass.Apply();
                     data.AddSub(mainpass.GetState());
-                        JavaSystem.@err.Println("DEBUG decompileNcs: successfully added subroutine " + subCount);
+                        JavaSystem.@out.Println("DEBUG decompileNcs: successfully added subroutine " + subCount);
                     mainpass.Done();
                     cleanpass.Done();
                     }
                     catch (Exception e)
                     {
-                        JavaSystem.@err.Println("DEBUG decompileNcs: ERROR processing subroutine " + subCount + " - " + e.Message);
+                        JavaSystem.@out.Println("DEBUG decompileNcs: ERROR processing subroutine " + subCount + " - " + e.Message);
                         JavaSystem.@out.Println("Error while processing subroutine: " + e);
                         e.PrintStackTrace(JavaSystem.@out);
                         // Try to add partial subroutine state even if processing failed
