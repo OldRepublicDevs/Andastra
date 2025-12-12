@@ -104,19 +104,16 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
             }
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptutils/SubScriptState.java:166-182
+        // Original: public void close()
         public virtual void Close()
-        {
-            Dispose();
-        }
-
-        public virtual void Dispose()
         {
             if (this.vardecs != null)
             {
                 foreach (object key in this.vardecs.Keys)
                 {
                     Variable var = (Variable)key;
-                    var.Dispose();
+                    var.Close();
                 }
 
                 this.vardecs = null;
@@ -126,7 +123,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
             this.varnames = null;
             if (this.root != null)
             {
-                this.root.Dispose();
+                this.root.Close();
             }
 
             this.current = null;
@@ -136,7 +133,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
             this.actions = null;
             if (this.stack != null)
             {
-                this.stack.Dispose();
+                this.stack.Close();
                 this.stack = null;
             }
         }

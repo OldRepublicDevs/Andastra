@@ -53,14 +53,16 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptnode
             this.stackentry = stackentry;
         }
 
-        public override void Dispose()
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/AFcnCallExp.java
+        // Original: @Override public void close()
+        public override void Close()
         {
-            base.Dispose();
+            base.Close();
             if (this.@params != null)
             {
                 foreach (ScriptNode param in this.@params)
                 {
-                    param.Dispose();
+                    param.Close();
                 }
 
                 this.@params = null;

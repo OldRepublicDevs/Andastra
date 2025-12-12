@@ -160,7 +160,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptnode
 
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/ScriptRootNode.java:123-133
         // Original: @Override public void close()
-        public new void Close()
+        public override void Close()
         {
             base.Close();
             foreach (object child in this.children)

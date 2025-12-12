@@ -39,18 +39,18 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptnode
             this.stackentry = stackentry;
         }
 
-        public override void Dispose()
+        public override void Close()
         {
-            base.Dispose();
+            base.Close();
             if (this.exp != null)
             {
-                ((ScriptNode)this.exp).Dispose();
+                ((ScriptNode)this.exp).Close();
             }
 
             this.exp = null;
             if (this.stackentry != null)
             {
-                this.stackentry.Dispose();
+                this.stackentry.Close();
             }
 
             this.stackentry = null;

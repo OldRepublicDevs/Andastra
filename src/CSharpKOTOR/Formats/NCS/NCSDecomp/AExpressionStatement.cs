@@ -32,12 +32,14 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptnode
             this.exp.Parent(this);
         }
 
-        public override void Dispose()
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/AExpressionStatement.java
+        // Original: @Override public void close()
+        public override void Close()
         {
-            base.Dispose();
+            base.Close();
             if (this.exp != null)
             {
-                ((ScriptNode)this.exp).Dispose();
+                ((ScriptNode)this.exp).Close();
             }
 
             this.exp = null;

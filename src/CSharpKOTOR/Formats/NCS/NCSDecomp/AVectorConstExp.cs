@@ -49,24 +49,26 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptnode
         {
         }
 
-        public override void Dispose()
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/AVectorConstExp.java
+        // Original: @Override public void close()
+        public override void Close()
         {
-            base.Dispose();
+            base.Close();
             if (this.exp1 != null)
             {
-                ((ScriptNode)this.exp1).Dispose();
+                ((ScriptNode)this.exp1).Close();
             }
 
             this.exp1 = null;
             if (this.exp2 != null)
             {
-                ((ScriptNode)this.exp2).Dispose();
+                ((ScriptNode)this.exp2).Close();
             }
 
             this.exp2 = null;
             if (this.exp3 != null)
             {
-                ((ScriptNode)this.exp3).Dispose();
+                ((ScriptNode)this.exp3).Close();
             }
 
             this.exp3 = null;

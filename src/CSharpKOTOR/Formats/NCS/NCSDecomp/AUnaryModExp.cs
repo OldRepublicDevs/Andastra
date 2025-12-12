@@ -89,18 +89,18 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptnode
 
         // Generic target for edge cases
         // Constructor for edge cases where target is not a variable reference
-        public override void Dispose()
+        public override void Close()
         {
-            base.Dispose();
-            if (this.varref != null && this.varref is IDisposable disposableVarRef)
+            base.Close();
+            if (this.varref != null)
             {
-                disposableVarRef.Dispose();
+                this.varref.Close();
             }
 
             this.varref = null;
-            if (this.stackentry != null && this.stackentry is IDisposable disposableStackEntry)
+            if (this.stackentry != null)
             {
-                disposableStackEntry.Dispose();
+                this.stackentry.Close();
             }
 
             this.stackentry = null;

@@ -46,18 +46,20 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptnode
             this.stackentry = stackentry;
         }
 
-        public override void Dispose()
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/ABinaryExp.java
+        // Original: @Override public void close()
+        public override void Close()
         {
-            base.Dispose();
+            base.Close();
             if (this.left != null)
             {
-                ((ScriptNode)this.left).Dispose();
+                ((ScriptNode)this.left).Close();
                 this.left = null;
             }
 
             if (this.right != null)
             {
-                ((ScriptNode)this.right).Dispose();
+                ((ScriptNode)this.right).Close();
                 this.right = null;
             }
 

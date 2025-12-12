@@ -87,6 +87,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
             return GetTabs() + (_var != null ? _var.ToDeclString() : "") + " = " + ExpressionFormatter.FormatValue(_exp) + ";" + GetNewline();
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/AVarDecl.java
+        // Original: @Override public void close()
         public override void Close()
         {
             base.Close();
@@ -94,7 +96,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
             {
                 if (_exp is Scriptnode.ScriptNode expNode)
                 {
-                    expNode.Dispose();
+                    expNode.Close();
                 }
                 _exp = null;
             }

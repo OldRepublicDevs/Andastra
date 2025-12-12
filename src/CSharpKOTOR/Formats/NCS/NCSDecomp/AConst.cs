@@ -31,9 +31,11 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptnode
             this.theconst = (Const)stackentry;
         }
 
-        public override void Dispose()
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/AConst.java
+        // Original: @Override public void close()
+        public override void Close()
         {
-            base.Dispose();
+            base.Close();
             this.theconst = null;
         }
     }

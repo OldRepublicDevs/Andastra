@@ -76,18 +76,18 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptnode
             return this.tabs.ToString() + this.var.ToDeclString() + " = " + this.exp.ToString() + ";" + this.newline;
         }
 
-        public override void Dispose()
+        public override void Close()
         {
-            base.Dispose();
+            base.Close();
             if (this.exp != null)
             {
-                ((ScriptNode)this.exp).Dispose();
+                ((ScriptNode)this.exp).Close();
             }
 
             this.exp = null;
             if (this.var != null)
             {
-                this.var.Dispose();
+                this.var.Close();
             }
 
             this.var = null;

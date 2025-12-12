@@ -40,12 +40,12 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptnode
             return this.tabs.ToString() + "return " + this.returnexp.ToString() + ";" + this.newline;
         }
 
-        public override void Dispose()
+        public override void Close()
         {
-            base.Dispose();
+            base.Close();
             if (this.returnexp != null)
             {
-                ((ScriptNode)this.returnexp).Dispose();
+                ((ScriptNode)this.returnexp).Close();
             }
 
             this.returnexp = null;

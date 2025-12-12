@@ -30,12 +30,14 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptnode
             return this.condition;
         }
 
-        public override void Dispose()
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/AControlLoop.java
+        // Original: @Override public void close()
+        public override void Close()
         {
-            base.Dispose();
+            base.Close();
             if (this.condition != null)
             {
-                ((ScriptNode)this.condition).Dispose();
+                ((ScriptNode)this.condition).Close();
                 this.condition = null;
             }
         }

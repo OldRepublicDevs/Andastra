@@ -153,14 +153,14 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptnode
         {
         }
 
-        // Generic target expression for edge cases
-        // Constructor for edge cases where target is not a variable reference
-        public override void Dispose()
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/AModifyExp.java
+        // Original: @Override public void close()
+        public override void Close()
         {
-            base.Dispose();
+            base.Close();
             if (this.exp != null)
             {
-                ((ScriptNode)this.exp).Dispose();
+                ((ScriptNode)this.exp).Close();
             }
 
             this.exp = null;
