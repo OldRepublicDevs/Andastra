@@ -55,10 +55,6 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             {
                 ia.CaseACommandBlock(this);
             }
-            else
-            {
-                sw.DefaultIn(this);
-            }
         }
 
         public TypedLinkedList GetCmd()
