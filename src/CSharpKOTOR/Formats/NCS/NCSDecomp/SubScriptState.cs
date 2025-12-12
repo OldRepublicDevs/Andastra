@@ -723,7 +723,9 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
         public virtual void TransformAction(AActionCommand node)
         {
             this.CheckStart(node);
-            List<object> @params = this.RemoveActionParams(node);
+            // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptutils/SubScriptState.java:881
+            // Original: List<AExpression> params = this.removeActionParams(node);
+            List<AExpression> @params = this.RemoveActionParams(node);
             // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptutils/SubScriptState.java:889
             // Original: AActionExp act = new AActionExp(actionName, NodeUtils.getActionId(node), params, this.actions);
             AActionExp act = new AActionExp(NodeUtils.GetActionName(node, this.actions), NodeUtils.GetActionId(node), @params, this.actions);
@@ -1687,9 +1689,11 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
             return 1;
         }
 
-        private List<object> RemoveActionParams(AActionCommand node)
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptutils/SubScriptState.java:1921
+        // Original: private List<AExpression> removeActionParams(AActionCommand node) { ArrayList<AExpression> params = new ArrayList<>(); ... }
+        private List<AExpression> RemoveActionParams(AActionCommand node)
         {
-            List<object> @params = new List<object>();
+            List<AExpression> @params = new List<AExpression>();
             List<object> paramtypes = NodeUtils.GetActionParamTypes(node, this.actions);
             for (int paramcount = NodeUtils.GetActionParamCount(node), i = 0; i < paramcount; ++i)
             {
