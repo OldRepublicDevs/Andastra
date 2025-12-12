@@ -367,6 +367,16 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             //Variable paramvar = null;
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SubroutineState.java
+        // Original: public void ensureParamPlaceholders()
+        public virtual void EnsureParamPlaceholders()
+        {
+            while (this.@params.Count < this.paramsize)
+            {
+                this.@params.Add(new Type(unchecked((byte)(-1))));
+            }
+        }
+
         public virtual byte GetId()
         {
             return this.id;

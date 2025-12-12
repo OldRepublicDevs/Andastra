@@ -10,6 +10,7 @@ using System.Threading;
 using CSharpKOTOR.Common;
 using CSharpKOTOR.Formats.NCS;
 using CSharpKOTOR.Formats.NCS.NCSDecomp;
+using CSharpKOTOR.Formats.NCS.NCSDecomp.Analysis;
 using CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils;
 using CSharpKOTOR.Formats.NCS.NCSDecomp.Utils;
 using File = System.IO.FileInfo;
@@ -715,88 +716,127 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                     cleanpass.Done();
                 }
 
+                // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:1407-1413
+                // Prototype engine - recover if this fails
+                try
+                {
+                    PrototypeEngine proto = new PrototypeEngine(nodedata, subdata, this.actions, false);
+                    proto.Run();
+                }
+                catch (Exception e)
+                {
+                    JavaSystem.@out.Println("Error in prototype engine, continuing with partial prototypes: " + e.Message);
+                }
+
+                // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:1415-1495
+                // Type analysis - recover if main sub typing fails
+                if (mainsub != null)
+                {
+                    try
+                    {
+                        dotypes = new DoTypes(subdata.GetState(mainsub), nodedata, subdata, this.actions, false);
+                        mainsub.Apply(dotypes);
+
+                        try
+                        {
+                            dotypes.AssertStack();
+                        }
+                catch (Exception)
+                {
+                    JavaSystem.@out.Println("Could not assert stack, continuing anyway.");
+                }
+
+                        dotypes.Done();
+                    }
+                    catch (Exception e)
+                    {
+                        JavaSystem.@out.Println("Error typing main subroutine, continuing with partial types: " + e.Message);
+                        dotypes = null;
+                    }
+                }
+
+                // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:1434-1495
+                // Type all subroutines - continue even if some fail
                 bool alldone = false;
                 bool onedone = true;
-                // If there are no subroutines, we're already done with prototyping
-                if (subdata.NumSubs() == 0)
+                int donecount = 0;
+
+                try
                 {
-                    alldone = true;
+                    alldone = subdata.CountSubsDone() == subdata.NumSubs();
+                    onedone = true;
+                    donecount = subdata.CountSubsDone();
                 }
-                else
+                catch (Exception e)
                 {
-                    for (int pass = 1; !alldone && (onedone || pass < 5); ++pass)
+                    JavaSystem.@out.Println("Error checking subroutine completion status: " + e.Message);
+                }
+
+                for (int loopcount = 0; !alldone && onedone && loopcount < 1000; ++loopcount)
+                {
+                    onedone = false;
+                    try
                     {
                         subs = subdata.GetSubroutines();
-                        alldone = true;
-                        onedone = false;
+                    }
+                    catch (Exception e)
+                    {
+                        JavaSystem.@out.Println("Error getting subroutines iterator: " + e.Message);
+                        break;
+                    }
+
+                    if (subs != null)
+                    {
                         while (subs.HasNext())
                         {
-                            sub = (ASubroutine)subs.Next();
-                            int subPos = nodedata.GetPos(sub);
-                            if (!subdata.IsPrototyped(subPos, true))
+                            try
                             {
-                                SubroutineState subState = subdata.GetState(sub);
-                                if (subState == null)
-                                {
-                                    JavaSystem.@out.Println($"ERROR: Subroutine at position {subPos} has no state!");
-                                    alldone = false;
-                                    continue;
-                                }
-                                sub.Apply(new SubroutinePathFinder(subState, nodedata, subdata, pass));
-                                if (subdata.IsBeingPrototyped(subPos))
-                                {
-                                    dotypes = new DoTypes(subState, nodedata, subdata, this.actions, true);
-                                    sub.Apply(dotypes);
-                                    dotypes.Done();
-                                    onedone = true;
-                                }
-                                else
-                                {
-                                    JavaSystem.@out.Println($"WARNING: Subroutine at position {subPos} could not be prototyped in pass {pass}");
-                                    alldone = false;
-                                }
+                                sub = (ASubroutine)subs.Next();
+                                if (sub == null) continue;
+
+                                dotypes = new DoTypes(subdata.GetState(sub), nodedata, subdata, this.actions, false);
+                                sub.Apply(dotypes);
+                                dotypes.Done();
+                            }
+                            catch (Exception e)
+                            {
+                                JavaSystem.@out.Println("Error typing subroutine, skipping: " + e.Message);
+                                // Continue with next subroutine
                             }
                         }
                     }
 
-                    if (!alldone)
+                    if (mainsub != null)
                     {
-                        JavaSystem.@out.Println("Unable to do initial prototype of all subroutines after 5 passes.");
-                        JavaSystem.@out.Println($"  Total subroutines: {subdata.NumSubs()}");
-                        JavaSystem.@out.Println($"  Prototyped: {subdata.CountSubsDone()}");
-                        // Don't call PrintStates() here as it can cause infinite output spam in loops
-                        return null;
-                    }
-                }
-
-                dotypes = new DoTypes(subdata.GetState(mainsub), nodedata, subdata, this.actions, false);
-                mainsub.Apply(dotypes);
-                dotypes.AssertStack();
-                dotypes.Done();
-                alldone = (subdata.CountSubsDone() == subdata.NumSubs());
-                onedone = true;
-                for (int donecount = subdata.CountSubsDone(), loopcount = 0; !alldone && onedone && loopcount < 1000; alldone = (subdata.CountSubsDone() == subdata.NumSubs()), onedone = (onedone || subdata.CountSubsDone() > donecount), donecount = subdata.CountSubsDone(), ++loopcount)
-                {
-                    onedone = false;
-                    subs = subdata.GetSubroutines();
-                    while (subs.HasNext())
-                    {
-                        sub = (ASubroutine)subs.Next();
-                        dotypes = new DoTypes(subdata.GetState(sub), nodedata, subdata, this.actions, false);
-                        sub.Apply(dotypes);
-                        dotypes.Done();
+                        try
+                        {
+                            dotypes = new DoTypes(subdata.GetState(mainsub), nodedata, subdata, this.actions, false);
+                            mainsub.Apply(dotypes);
+                            dotypes.Done();
+                        }
+                        catch (Exception e)
+                        {
+                            JavaSystem.@out.Println("Error re-typing main subroutine: " + e.Message);
+                        }
                     }
 
-                    dotypes = new DoTypes(subdata.GetState(mainsub), nodedata, subdata, this.actions, false);
-                    mainsub.Apply(dotypes);
-                    dotypes.Done();
+                    try
+                    {
+                        alldone = subdata.CountSubsDone() == subdata.NumSubs();
+                        int newDoneCount = subdata.CountSubsDone();
+                        onedone = newDoneCount > donecount;
+                        donecount = newDoneCount;
+                    }
+                    catch (Exception e)
+                    {
+                        JavaSystem.@out.Println("Error checking completion status: " + e.Message);
+                        break;
+                    }
                 }
 
                 if (!alldone)
                 {
-                    JavaSystem.@out.Println("Unable to do final prototype of all subroutines after 1000 iterations.");
-                    // Don't call PrintStates() here as it can cause infinite output spam
-                    return null;
+                    JavaSystem.@out.Println("Unable to do final prototype of all subroutines. Continuing with partial results.");
                 }
 
                 dotypes = null;
