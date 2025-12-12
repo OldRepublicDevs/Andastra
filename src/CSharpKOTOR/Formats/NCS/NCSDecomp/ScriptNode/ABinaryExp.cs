@@ -82,7 +82,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
             {
                 if (_left is Scriptnode.ScriptNode leftNode)
                 {
-                    leftNode.Dispose();
+                    leftNode.Close();
                 }
                 else if (_left is StackEntry leftEntry)
                 {
@@ -94,7 +94,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
             {
                 if (_right is Scriptnode.ScriptNode rightNode)
                 {
-                    rightNode.Dispose();
+                    rightNode.Close();
                 }
                 else if (_right is StackEntry rightEntry)
                 {

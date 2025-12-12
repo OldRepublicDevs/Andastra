@@ -9,7 +9,6 @@ using CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptnode;
 using CSharpKOTOR.Formats.NCS.NCSDecomp.Stack;
 using CSharpKOTOR.Formats.NCS.NCSDecomp.Utils;
 using AVarRef = CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode.AVarRef;
-using AConst = CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode.AConst;
 using JavaSystem = CSharpKOTOR.Formats.NCS.NCSDecomp.JavaSystem;
 using UtilsType = CSharpKOTOR.Formats.NCS.NCSDecomp.Utils.Type;
 using AST = CSharpKOTOR.Formats.NCS.NCSDecomp.AST;
@@ -105,16 +104,19 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
             }
         }
 
-        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptutils/SubScriptState.java:166-182
-        // Original: public void close()
         public virtual void Close()
+        {
+            Dispose();
+        }
+
+        public virtual void Dispose()
         {
             if (this.vardecs != null)
             {
                 foreach (object key in this.vardecs.Keys)
                 {
                     Variable var = (Variable)key;
-                    var.Close();
+                    var.Dispose();
                 }
 
                 this.vardecs = null;
@@ -124,7 +126,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
             this.varnames = null;
             if (this.root != null)
             {
-                this.root.Close();
+                this.root.Dispose();
             }
 
             this.current = null;
@@ -134,7 +136,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
             this.actions = null;
             if (this.stack != null)
             {
-                this.stack.Close();
+                this.stack.Dispose();
                 this.stack = null;
             }
         }
@@ -470,7 +472,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
                                 {
                                     aprevcase.SetEnd(this.nodedata.GetPos(NodeUtils.GetPreviousCommand(this.nodedata.GetDestination(node), this.nodedata)));
                                 }
-                                ScriptNode.ASwitchCase acasex = new ScriptNode.ASwitchCase(this.nodedata.GetPos(this.nodedata.GetDestination(node)), (AConst)cond.Right());
+                                ScriptNode.ASwitchCase acasex = new ScriptNode.ASwitchCase(this.nodedata.GetPos(this.nodedata.GetDestination(node)), (ScriptNode.AConst)(object)(Scriptnode.AConst)cond.Right());
                                 existingSwitch.AddCase(acasex);
                                 this.state = 4;
                                 this.CheckEnd(node);
@@ -482,12 +484,12 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
                     if (canCreateSwitch)
                     {
                                 ScriptNode.ASwitch aswitch = null;
-                        ScriptNode.ASwitchCase acase = new ScriptNode.ASwitchCase(this.nodedata.GetPos(this.nodedata.GetDestination(node)), (AConst)cond.Right());
+                        ScriptNode.ASwitchCase acase = new ScriptNode.ASwitchCase(this.nodedata.GetPos(this.nodedata.GetDestination(node)), (ScriptNode.AConst)(object)(Scriptnode.AConst)cond.Right());
                         if (this.current.HasChildren())
                         {
                             Scriptnode.ScriptNode last = this.current.GetLastChild();
-                            if (typeof(AVarRef).IsInstanceOfType(last) && typeof(AVarRef).IsInstanceOfType(cond.Left())
-                                && ((AVarRef)last).Var().Equals(((AVarRef)cond.Left()).Var()))
+                            if (typeof(ScriptNode.AVarRef).IsInstanceOfType(last) && typeof(ScriptNode.AVarRef).IsInstanceOfType(cond.Left())
+                                && ((ScriptNode.AVarRef)(object)last).Var().Equals(((ScriptNode.AVarRef)cond.Left()).Var()))
                             {
                                 Scriptnode.AExpression exp = this.RemoveLastExp(false);
                                 if (exp is AVarRef varref)
@@ -503,7 +505,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
 
                         if (aswitch == null)
                         {
-                            aswitch = new Scriptnode.ASwitch(this.nodedata.GetPos(node), cond.Left());
+                            aswitch = new ScriptNode.ASwitch(this.nodedata.GetPos(node), cond.Left());
                         }
 
                         this.current.AddChild(aswitch);
@@ -524,7 +526,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
                     ScriptNode.ASwitch aswitchx = (ScriptNode.ASwitch)this.current.GetLastChild();
                     ScriptNode.ASwitchCase aprevcase = aswitchx.GetLastCase();
                     aprevcase.SetEnd(this.nodedata.GetPos(NodeUtils.GetPreviousCommand(this.nodedata.GetDestination(node), this.nodedata)));
-                    ScriptNode.ASwitchCase acasex = new ScriptNode.ASwitchCase(this.nodedata.GetPos(this.nodedata.GetDestination(node)), (AConst)condx.Right());
+                    ScriptNode.ASwitchCase acasex = new ScriptNode.ASwitchCase(this.nodedata.GetPos(this.nodedata.GetDestination(node)), (ScriptNode.AConst)(object)(Scriptnode.AConst)condx.Right());
                     aswitchx.AddCase(acasex);
                 }
             }
@@ -1212,17 +1214,17 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
             ScriptNode.ASwitchCase acase = null;
             while ((acase = aswitch.GetNextCase(acase)) != null)
             {
-                List<object> unknowns = acase.GetUnknowns();
+                List<ScriptNode.AUnkLoopControl> unknowns = acase.GetUnknowns();
                 for (int i = 0; i < unknowns.Count; ++i)
                 {
-                    ScriptNode.AUnkLoopControl unk = (ScriptNode.AUnkLoopControl)unknowns[i];
+                    ScriptNode.AUnkLoopControl unk = unknowns[i];
                     if (unk.GetDestination() > aswitch.GetEnd())
                     {
-                        acase.ReplaceUnknown(unk, new ScriptNode.AContinueStatement());
+                        acase.ReplaceUnknown(unk, (Scriptnode.ScriptNode)(object)new ScriptNode.AContinueStatement());
                     }
                     else
                     {
-                        acase.ReplaceUnknown(unk, new ScriptNode.ABreakStatement());
+                        acase.ReplaceUnknown(unk, (Scriptnode.ScriptNode)(object)new ScriptNode.ABreakStatement());
                     }
                 }
             }
@@ -1675,7 +1677,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
                 return ((AVarRef)exp).Var().Size();
             }
 
-            if (typeof(AConst).IsInstanceOfType(exp))
+            if (typeof(Scriptnode.AConst).IsInstanceOfType(exp))
             {
                 return 1;
             }

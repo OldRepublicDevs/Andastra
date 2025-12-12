@@ -32,7 +32,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
 
         public override string ToString()
         {
-            return GetTabs() + (_exp != null ? _exp.ToString() : "") + ";" + GetNewline();
+            return this.tabs + (_exp != null ? _exp.ToString() : "") + ";" + this.newline;
         }
 
         public override void Close()
@@ -42,7 +42,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
             {
                 if (_exp is Scriptnode.ScriptNode expNode)
                 {
-                    expNode.Dispose();
+                    expNode.Close();
                 }
                 else if (_exp is StackEntry expEntry)
                 {

@@ -80,7 +80,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
 
         public override string ToString()
         {
-            return GetHeader() + " {" + GetNewline() + GetBody() + "}" + GetNewline();
+            return GetHeader() + " {" + this.newline + GetBody() + "}" + this.newline;
         }
 
         public string GetBody()

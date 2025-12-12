@@ -39,7 +39,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
             {
                 if (_condition is Scriptnode.ScriptNode condNode)
                 {
-                    condNode.Dispose();
+                    condNode.Close();
                 }
                 else if (_condition is StackEntry condEntry)
                 {

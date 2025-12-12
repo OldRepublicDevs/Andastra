@@ -94,7 +94,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
 
         public virtual void Close()
         {
-            base.Dispose();
+            base.Close();
             if (_params != null)
             {
                 foreach (var param in _params)
@@ -103,7 +103,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
                     {
                         if (param is Scriptnode.ScriptNode paramNode)
                         {
-                            paramNode.Dispose();
+                            paramNode.Close();
                         }
                         else if (param is StackEntry paramEntry)
                         {
