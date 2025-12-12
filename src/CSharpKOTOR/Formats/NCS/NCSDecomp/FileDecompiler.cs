@@ -2531,7 +2531,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                 ast = null;
                 if (nodedata != null)
                 {
-                    nodedata.Dispose();
+                    nodedata.Close();
                 }
 
                 nodedata = null;
@@ -2938,7 +2938,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                 ast = null;
                 if (nodedata != null)
                 {
-                    nodedata.Dispose();
+                    nodedata.Close();
                 }
 
                 nodedata = null;
