@@ -413,7 +413,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                 try
                 {
                     JavaSystem.@out.Println("[NCSDecomp] Attempting to capture original bytecode from NCS file...");
-                    File olddecompiled = this.ExternalDecompile(file, isK2Selected);
+                    File olddecompiled = this.ExternalDecompile(file, isK2Selected, null);
                     if (olddecompiled != null && olddecompiled.Exists())
                     {
                         string originalByteCode = this.ReadFile(olddecompiled);
@@ -493,6 +493,62 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             }
 
             return this.CompileNss(nssFile, data);
+        }
+
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:388-430
+        // Original: public boolean captureBytecodeForNssFile(File nssFile, File compiledNcs, boolean isK2)
+        public virtual bool CaptureBytecodeForNssFile(File nssFile, File compiledNcs, bool isK2)
+        {
+            try
+            {
+                if (compiledNcs == null || !compiledNcs.Exists())
+                {
+                    return false;
+                }
+
+                // Decompile the compiled NCS to bytecode (pcode)
+                File pcodeFile = this.ExternalDecompile(compiledNcs, isK2, null);
+                if (pcodeFile == null || !pcodeFile.Exists())
+                {
+                    return false;
+                }
+
+                // Read the bytecode
+                string bytecode = this.ReadFile(pcodeFile);
+                if (bytecode == null || bytecode.Trim().Length == 0)
+                {
+                    return false;
+                }
+
+                // Create or get FileScriptData entry for the NSS file
+                Utils.FileScriptData nssData = null;
+                if (this.filedata.ContainsKey(nssFile))
+                {
+                    nssData = (Utils.FileScriptData)this.filedata[nssFile];
+                }
+                if (nssData == null)
+                {
+                    nssData = new Utils.FileScriptData();
+                    this.filedata[nssFile] = nssData;
+                }
+
+                // Store compiled bytecode as "new bytecode" (since NSS files don't have "original" bytecode)
+                nssData.SetNewByteCode(bytecode);
+                return true;
+            }
+            catch (Exception e)
+            {
+                JavaSystem.@err.Println("DEBUG captureBytecodeForNssFile: Error capturing bytecode: " + e.Message);
+                e.PrintStackTrace(JavaSystem.@err);
+                return false;
+            }
+        }
+
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:432-443
+        // Original: public File compileNssToNcs(File nssFile, File outputDir)
+        public virtual File CompileNssToNcs(File nssFile, File outputDir)
+        {
+            return this.ExternalCompile(nssFile, isK2Selected, outputDir);
         }
 
         public virtual Dictionary<object, object> UpdateSubName(File file, string oldname, string newname)
@@ -886,8 +942,9 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
         }
 
         // Matching NCSDecomp implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:878-921
-        // Original: private File externalDecompile(File in, boolean k2)
-        private File ExternalDecompile(File inFile, bool k2)
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:888-963
+        // Original: private File externalDecompile(File in, boolean k2, File outputDir)
+        private File ExternalDecompile(File inFile, bool k2, File outputDir)
         {
             try
             {
@@ -898,8 +955,31 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                     return null;
                 }
 
-                string outname = this.GetShortName(inFile) + ".pcode";
-                File result = new File(outname).GetAbsoluteFile();
+                // Determine output directory: use provided outputDir, or temp if null
+                File actualOutputDir;
+                if (outputDir != null)
+                {
+                    actualOutputDir = outputDir;
+                }
+                else
+                {
+                    // Default to temp directory to avoid creating files without user consent
+                    string tmpDir = JavaSystem.GetProperty("java.io.tmpdir");
+                    actualOutputDir = new File(Path.Combine(tmpDir, "ncsdecomp_roundtrip"));
+                    if (!actualOutputDir.Exists())
+                    {
+                        actualOutputDir.Mkdirs();
+                    }
+                }
+
+                // Create output pcode file in the specified output directory
+                string baseName = inFile.Name;
+                int lastDot = baseName.LastIndexOf('.');
+                if (lastDot > 0)
+                {
+                    baseName = baseName.Substring(0, lastDot);
+                }
+                File result = new File(Path.Combine(actualOutputDir.FullName, baseName + ".pcode"));
                 if (result.Exists())
                 {
                     result.Delete();
@@ -928,10 +1008,21 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
 
                 return result;
             }
-            catch (Exception e)
+            catch (IOException e)
             {
-                JavaSystem.@out.Println("[NCSDecomp] EXCEPTION during external decompile:");
-                JavaSystem.@out.Println("[NCSDecomp]   Exception Type: " + e.GetType().Name);
+                // Check if this is an elevation error
+                string errorMsg = e.Message;
+                if (errorMsg != null && (errorMsg.Contains("error=740") || errorMsg.Contains("requires administrator")))
+                {
+                    JavaSystem.@out.Println("[NCSDecomp] EXCEPTION during external decompile:");
+                    JavaSystem.@out.Println("[NCSDecomp]   Elevation required - compiler needs administrator privileges.");
+                    JavaSystem.@out.Println("[NCSDecomp]   Decompiled code is still available, but bytecode capture failed.");
+                }
+                else
+                {
+                    JavaSystem.@out.Println("[NCSDecomp] EXCEPTION during external decompile:");
+                    JavaSystem.@out.Println("[NCSDecomp]   Exception Type: " + e.GetType().Name);
+                }
                 JavaSystem.@out.Println("[NCSDecomp]   Exception Message: " + e.Message);
                 if (e.InnerException != null)
                 {
@@ -969,8 +1060,9 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
         }
 
         // Matching NCSDecomp implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:948-1010
-        // Original: private File externalCompile(File file, boolean k2)
-        private File ExternalCompile(File file, bool k2)
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:1008-1105
+        // Original: public File externalCompile(File file, boolean k2, File outputDir)
+        private File ExternalCompile(File file, bool k2, File outputDir)
         {
             try
             {
@@ -981,8 +1073,31 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                     return null;
                 }
 
-                string outname = this.GetShortName(file) + ".ncs";
-                File result = new File(outname).GetAbsoluteFile();
+                // Determine output directory: use provided outputDir, or temp if null
+                File actualOutputDir;
+                if (outputDir != null)
+                {
+                    actualOutputDir = outputDir;
+                }
+                else
+                {
+                    // Default to temp directory to avoid creating files without user consent
+                    string tmpDir = JavaSystem.GetProperty("java.io.tmpdir");
+                    actualOutputDir = new File(Path.Combine(tmpDir, "ncsdecomp_roundtrip"));
+                    if (!actualOutputDir.Exists())
+                    {
+                        actualOutputDir.Mkdirs();
+                    }
+                }
+
+                // Create output NCS file in the specified output directory
+                string baseName = file.Name;
+                int lastDot = baseName.LastIndexOf('.');
+                if (lastDot > 0)
+                {
+                    baseName = baseName.Substring(0, lastDot);
+                }
+                File result = new File(Path.Combine(actualOutputDir.FullName, baseName + ".ncs"));
 
                 // Ensure nwscript.nss is in the compiler's directory (like test does)
                 // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:960-975
@@ -2520,12 +2635,24 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                 try
                 {
                     sub = subdata.GetGlobalsSub();
+                    JavaSystem.@out.Println($"DEBUG FileDecompiler.DecompileNcs: GetGlobalsSub() returned {sub?.GetType().Name ?? "null"}");
                     if (sub != null)
                     {
                         try
                         {
                             doglobs = new DoGlobalVars(nodedata, subdata);
-                            sub.Apply(doglobs);
+                            JavaSystem.@out.Println($"DEBUG FileDecompiler.DecompileNcs: calling sub.Apply(doglobs), sub type={sub.GetType().Name}, doglobs type={doglobs.GetType().Name}");
+                            try
+                            {
+                                sub.Apply(doglobs);
+                                JavaSystem.@out.Println($"DEBUG FileDecompiler.DecompileNcs: after sub.Apply(doglobs)");
+                            }
+                            catch (Exception applyEx)
+                            {
+                                JavaSystem.@out.Println($"DEBUG FileDecompiler.DecompileNcs: EXCEPTION in sub.Apply: {applyEx.GetType().Name}: {applyEx.Message}");
+                                JavaSystem.@out.Println($"DEBUG FileDecompiler.DecompileNcs: Stack trace: {applyEx.StackTrace}");
+                                throw;
+                            }
                             cleanpass = new CleanupPass(doglobs.GetScriptRoot(), nodedata, subdata, doglobs.GetState());
                             cleanpass.Apply();
                             subdata.SetGlobalStack(doglobs.GetStack());
