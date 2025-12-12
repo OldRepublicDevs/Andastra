@@ -38,59 +38,47 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
         }
 
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptutils/CleanupPass.java:62-73
-        // Original: private void checkSubCodeBlock()
+        // Original: private void checkSubCodeBlock() { try { if (this.root.size() == 1 && ACodeBlock.class.isInstance(this.root.getLastChild())) { ACodeBlock block = (ACodeBlock)this.root.removeLastChild(); List<ScriptNode> children = block.removeChildren(); this.root.addChildren(children); } } finally { ACodeBlock block = null; List<ScriptNode> children = null; } }
         private void CheckSubCodeBlock()
         {
-            ACodeBlock block = null;
-            List<object> children = null;
             try
             {
                 if (this.root.Size() == 1 && typeof(ACodeBlock).IsInstanceOfType(this.root.GetLastChild()))
                 {
-                    block = (ACodeBlock)this.root.RemoveLastChild();
-                    children = block.RemoveChildren();
+                    ACodeBlock block = (ACodeBlock)this.root.RemoveLastChild();
+                    List<ScriptNode> children = block.RemoveChildren();
                     this.root.AddChildren(children);
                 }
             }
             finally
             {
-                block = null;
-                children = null;
+                ACodeBlock block = null;
+                List<ScriptNode> children = null;
             }
         }
 
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptutils/CleanupPass.java:75-164
-        // Original: private void apply(ScriptRootNode rootnode)
+        // Original: private void apply(ScriptRootNode rootnode) { try { LinkedList children = rootnode.getChildren(); ListIterator it = children.listIterator(); ... } finally { ... } }
         private void Apply(ScriptRootNode rootnode)
         {
-            LinkedList children = null;
-            ListIterator it = null;
-            Scriptnode.ScriptNode node1 = null;
-            Variable var = null;
-            VarStruct structx = null;
-            AVarDecl structdecx = null;
-            Scriptnode.ScriptNode node2 = null;
-            AModifyExp modexp = null;
-            AExpressionStatement expstm = null;
-            ASwitchCase acase = null;
             try
             {
-                children = rootnode.GetChildren();
-                it = children.ListIterator();
+                List<ScriptNode> children = rootnode.GetChildren();
+                ListIterator it = children.ListIterator();
 
                 while (it.HasNext())
                 {
-                    node1 = (Scriptnode.ScriptNode)it.Next();
+                    ScriptNode node1 = (ScriptNode)it.Next();
                     if (typeof(AVarDecl).IsInstanceOfType(node1))
                     {
                         AVarDecl decl = (AVarDecl)node1;
                         if (decl.Exp() == null && it.HasNext())
                         {
-                            Scriptnode.ScriptNode maybeAssign = (Scriptnode.ScriptNode)it.Next();
+                            ScriptNode maybeAssign = (ScriptNode)it.Next();
                             if (typeof(AExpressionStatement).IsInstanceOfType(maybeAssign)
                                 && typeof(AModifyExp).IsInstanceOfType(((AExpressionStatement)maybeAssign).Exp()))
                             {
-                                modexp = (AModifyExp)((AExpressionStatement)maybeAssign).Exp();
+                                AModifyExp modexp = (AModifyExp)((AExpressionStatement)maybeAssign).Exp();
                                 if (modexp.VarRef().Var() == decl.Var())
                                 {
                                     decl.InitializeExp(modexp.Expression());
@@ -109,14 +97,14 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
                     }
                     if (typeof(AVarDecl).IsInstanceOfType(node1))
                     {
-                        var = ((AVarDecl)node1).Var();
+                        Variable var = ((AVarDecl)node1).Var();
                         if (var != null && var.IsStruct())
                         {
-                            structx = ((AVarDecl)node1).Var().Varstruct();
-                            structdecx = new AVarDecl(structx);
+                            VarStruct structx = ((AVarDecl)node1).Var().Varstruct();
+                            AVarDecl structdecx = new AVarDecl(structx);
                             if (it.HasNext())
                             {
-                                node1 = (Scriptnode.ScriptNode)it.Next();
+                                node1 = (ScriptNode)it.Next();
                             }
                             else
                             {
@@ -129,7 +117,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
                                 node1.Parent(null);
                                 if (it.HasNext())
                                 {
-                                    node1 = (Scriptnode.ScriptNode)it.Next();
+                                    node1 = (ScriptNode)it.Next();
                                 }
                                 else
                                 {
@@ -143,7 +131,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
                                 it.Previous();
                             }
 
-                            node1 = (Scriptnode.ScriptNode)it.Next();
+                            node1 = (ScriptNode)it.Next();
                             structdecx.Parent(node1.Parent());
                             it.Set(structdecx);
                             node1 = structdecx;
@@ -152,7 +140,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
 
                     if (this.IsDanglingExpression(node1))
                     {
-                        expstm = new AExpressionStatement((AExpression)node1);
+                        AExpressionStatement expstm = new AExpressionStatement((AExpression)node1);
                         expstm.Parent(rootnode);
                         it.Set(expstm);
                     }
@@ -164,7 +152,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
                         this.Apply((ScriptRootNode)node1);
                     }
 
-                    acase = null;
+                    ASwitchCase acase = null;
                     if (typeof(ASwitch).IsInstanceOfType(node1))
                     {
                         while ((acase = ((ASwitch)node1).GetNextCase(acase)) != null)
@@ -176,16 +164,16 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
             }
             finally
             {
-                children = null;
-                it = null;
-                node1 = null;
-                var = null;
-                structx = null;
-                structdecx = null;
-                node2 = null;
-                modexp = null;
-                expstm = null;
-                acase = null;
+                List<ScriptNode> children = null;
+                ListIterator it = null;
+                ScriptNode node1x = null;
+                Variable var = null;
+                VarStruct structx = null;
+                AVarDecl structdecx = null;
+                ScriptNode node2 = null;
+                AModifyExp modexp = null;
+                AExpressionStatement expstm = null;
+                ASwitchCase acase = null;
             }
         }
 
