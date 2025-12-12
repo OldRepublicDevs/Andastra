@@ -126,7 +126,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
             this.varnames = null;
             if (this.root != null)
             {
-                this.root.Dispose();
+                this.root.Close();
             }
 
             this.current = null;
