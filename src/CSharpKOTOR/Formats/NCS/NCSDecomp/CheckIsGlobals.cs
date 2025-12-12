@@ -29,6 +29,13 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             this.InABpCommand(node);
         }
 
+        // Handle AST.ABpCommand as well (from NcsToAstConverter)
+        public override void CaseABpCommand(AST.ABpCommand node)
+        {
+            // Matching DeNCS implementation: set isGlobals directly
+            this.isGlobals = true;
+        }
+
         public override void CaseABpCmd(ABpCmd node)
         {
             // Matching DeNCS implementation: traverse into ABpCmd to reach ABpCommand

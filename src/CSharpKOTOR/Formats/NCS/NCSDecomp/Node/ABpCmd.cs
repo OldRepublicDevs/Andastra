@@ -20,11 +20,16 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.AST
 
         public override void Apply(Analysis.AnalysisAdapter sw)
         {
-            // Call CaseABpCmd directly to ensure visitor pattern works correctly
-            // AnalysisAdapter has both namespaces imported, so we need to be explicit
-            // Since CaseABpCmd expects root namespace ABpCmd, we need to route through DefaultIn
-            // and let PrunedReversedDepthFirstAdapter.CaseABpCmd handle it
-            sw.DefaultIn(this);
+            // Call CaseABpCmd directly if sw is PrunedReversedDepthFirstAdapter
+            // This ensures the visitor pattern routes correctly to CaseABpCmd
+            if (sw is Analysis.PrunedReversedDepthFirstAdapter prdfa)
+            {
+                prdfa.CaseABpCmd(this);
+            }
+            else
+            {
+                sw.DefaultIn(this);
+            }
         }
 
         public PBpCommand GetBpCommand()

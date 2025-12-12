@@ -851,6 +851,15 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Analysis
             this.OutABpCommand(node);
         }
 
+        // Handle AST.ABpCommand as well (from NcsToAstConverter)
+        public virtual void CaseABpCommand(AST.ABpCommand node)
+        {
+            // Treat AST.ABpCommand the same as root namespace ABpCommand
+            // Just call DefaultIn/DefaultOut since we can't cast to root namespace ABpCommand
+            this.DefaultIn(node);
+            this.DefaultOut(node);
+        }
+
         public virtual void InAStoreStateCommand(AStoreStateCommand node)
         {
             this.DefaultIn(node);
