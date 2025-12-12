@@ -452,54 +452,126 @@ namespace CSharpKOTOR.Tests.Formats
             string outDir = Path.Combine(scratchRoot, Path.GetDirectoryName(rel) ?? "");
             Directory.CreateDirectory(outDir);
 
+            // Read original source for validation
+            string originalSource = File.ReadAllText(nssPath, Encoding.UTF8);
+            int originalSourceLength = originalSource.Length;
+            bool originalHasMain = originalSource.Contains("void main") || originalSource.Contains("void main(");
+
             // Step 1: Compile original NSS -> NCS (first NCS) using INBUILT compiler
             string compiledFirst = Path.Combine(outDir, Path.GetFileNameWithoutExtension(rel) + ".ncs");
-            Console.Write($"  Compiling {displayRelPath} to .ncs with inbuilt compiler");
+            Console.Write($"  [1/5] Compiling {displayRelPath} to .ncs with inbuilt compiler");
             long compileOriginalStart = Stopwatch.GetTimestamp();
             try
             {
                 RunInbuiltCompiler(nssPath, compiledFirst, gameFlag);
+
+                // Assert: NCS file exists and is non-empty
+                File.Exists(compiledFirst).Should().BeTrue($"Compiled NCS file should exist at {DisplayPath(compiledFirst)}");
+                long ncsSize = new FileInfo(compiledFirst).Length;
+                ncsSize.Should().BeGreaterThan(0, $"Compiled NCS file should not be empty (size: {ncsSize} bytes)");
+
+                // Assert: NCS can be loaded and parsed
+                NCS ncs;
+                try
+                {
+                    ncs = NCSAuto.ReadNcs(compiledFirst);
+                }
+                catch (Exception ex)
+                {
+                    throw new InvalidOperationException($"Compiled NCS file exists but cannot be loaded/parsed: {ex.Message}", ex);
+                }
+
+                // Assert: NCS has instructions
+                ncs.Instructions.Should().NotBeNull("NCS should have instructions list");
+                ncs.Instructions.Count.Should().BeGreaterThan(0,
+                    $"NCS should have at least one instruction (found {ncs.Instructions.Count} instructions). " +
+                    $"This suggests the compiler produced an empty bytecode file.");
+
+                // Assert: NCS has reasonable size (not suspiciously small for non-empty source)
+                if (originalSourceLength > 100 && originalHasMain)
+                {
+                    ncsSize.Should().BeGreaterThan(50,
+                        $"NCS file is suspiciously small ({ncsSize} bytes) for source file of {originalSourceLength} characters. " +
+                        $"This suggests the compiler may have produced minimal/empty bytecode.");
+                }
+
                 long compileTime = Stopwatch.GetTimestamp() - compileOriginalStart;
                 MergeOperationTime("compile-original", compileTime);
                 MergeOperationTime("compile", compileTime);
-                Console.WriteLine($" ✓ ({GetElapsedMilliseconds(compileTime):F3} ms)");
+                Console.WriteLine($" ✓ ({GetElapsedMilliseconds(compileTime):F3} ms, {ncsSize} bytes, {ncs.Instructions.Count} instructions)");
             }
             catch (Exception e)
             {
                 long compileTime = Stopwatch.GetTimestamp() - compileOriginalStart;
                 MergeOperationTime("compile-original", compileTime);
                 MergeOperationTime("compile", compileTime);
-                Console.WriteLine(" ⚠ SKIPPED (original source file has compilation errors)");
-                throw new SourceCompilationException($"Original source file failed to compile: {e.Message}", e);
+                Console.WriteLine($" ✗ FAILED");
+                throw new SourceCompilationException(
+                    $"Original source file failed to compile with inbuilt compiler.\n" +
+                    $"Source: {DisplayPath(nssPath)}\n" +
+                    $"Source size: {originalSourceLength} characters\n" +
+                    $"Error: {e.Message}", e);
             }
 
             // Step 2: Decompile NCS -> NSS
             string decompiled = Path.Combine(outDir, Path.GetFileNameWithoutExtension(rel) + ".dec.nss");
-            Console.Write($"  Decompiling {Path.GetFileName(compiledFirst)} back to .nss");
+            Console.Write($"  [2/5] Decompiling {Path.GetFileName(compiledFirst)} back to .nss");
             long decompileStart = Stopwatch.GetTimestamp();
+            string decompiledContent = null;
             try
             {
                 RunDecompile(compiledFirst, decompiled, gameFlag);
+
+                // Assert: Decompiled file exists and is non-empty
+                File.Exists(decompiled).Should().BeTrue($"Decompiled NSS file should exist at {DisplayPath(decompiled)}");
+                decompiledContent = File.ReadAllText(decompiled, Encoding.UTF8);
+                decompiledContent.Length.Should().BeGreaterThan(0,
+                    $"Decompiled NSS file should not be empty (size: {decompiledContent.Length} characters)");
+
+                // Assert: Decompiled content contains expected structure
+                bool decompiledHasMain = decompiledContent.Contains("void main") || decompiledContent.Contains("void main(");
+                if (originalHasMain)
+                {
+                    decompiledHasMain.Should().BeTrue(
+                        $"Original source has main() function but decompiled output does not.\n" +
+                        $"Decompiled content preview (first 200 chars):\n{decompiledContent.Substring(0, Math.Min(200, decompiledContent.Length))}");
+                }
+
+                // Assert: Decompiled content is not suspiciously minimal
+                if (originalSourceLength > 100 && originalHasMain)
+                {
+                    decompiledContent.Length.Should().BeGreaterThan(20,
+                        $"Decompiled output is suspiciously small ({decompiledContent.Length} chars) for source of {originalSourceLength} chars. " +
+                        $"This suggests the decompiler produced minimal/empty output.\n" +
+                        $"Decompiled content:\n{decompiledContent}");
+                }
+
                 long decompileTime = Stopwatch.GetTimestamp() - decompileStart;
                 MergeOperationTime("decompile", decompileTime);
-                Console.WriteLine($" ✓ ({GetElapsedMilliseconds(decompileTime):F3} ms)");
+                Console.WriteLine($" ✓ ({GetElapsedMilliseconds(decompileTime):F3} ms, {decompiledContent.Length} chars)");
             }
-            catch (Exception)
+            catch (Exception e)
             {
                 long decompileTime = Stopwatch.GetTimestamp() - decompileStart;
                 MergeOperationTime("decompile", decompileTime);
-                throw;
+                Console.WriteLine($" ✗ FAILED");
+                throw new InvalidOperationException(
+                    $"Decompilation failed.\n" +
+                    $"NCS file: {DisplayPath(compiledFirst)}\n" +
+                    $"NCS size: {new FileInfo(compiledFirst).Length} bytes\n" +
+                    $"Error: {e.Message}", e);
             }
 
-            // Step 3: Compare original NSS vs decompiled NSS (text comparison) - WARNING ONLY
-            Console.Write("  Comparing original vs decompiled (text)");
+            // Step 3: Compare original NSS vs decompiled NSS (text comparison)
+            Console.Write($"  [3/5] Comparing original vs decompiled (text)");
             long compareTextStart = Stopwatch.GetTimestamp();
             string textMismatchMessage = null;
+            bool textMatches = false;
             try
             {
                 bool isK2 = gameFlag.Equals("k2");
                 string originalExpanded = ExpandIncludes(nssPath, gameFlag);
-                string roundtripRaw = File.ReadAllText(decompiled, Encoding.UTF8);
+                string roundtripRaw = decompiledContent ?? File.ReadAllText(decompiled, Encoding.UTF8);
 
                 string originalExpandedFiltered = FilterFunctionsNotInDecompiled(originalExpanded, roundtripRaw);
 
@@ -509,20 +581,28 @@ namespace CSharpKOTOR.Tests.Formats
                 MergeOperationTime("compare-text", compareTime);
                 MergeOperationTime("compare", compareTime);
 
-                if (!original.Equals(roundtrip))
+                textMatches = original.Equals(roundtrip);
+                if (!textMatches)
                 {
-                    Console.WriteLine(" ⚠ MISMATCH (warning - bytecode check is primary)");
                     string diff = FormatUnifiedDiff(original, roundtrip);
-                    textMismatchMessage = $"Round-trip text mismatch for {DisplayPath(nssPath)}";
+                    textMismatchMessage = $"Text mismatch detected for {DisplayPath(nssPath)}";
                     if (diff != null)
                     {
                         textMismatchMessage += Environment.NewLine + diff;
                     }
+
+                    // Show key differences
+                    int originalLines = original.Split('\n').Length;
+                    int roundtripLines = roundtrip.Split('\n').Length;
+                    textMismatchMessage += $"\nOriginal: {originalLines} lines, {original.Length} chars";
+                    textMismatchMessage += $"\nDecompiled: {roundtripLines} lines, {roundtrip.Length} chars";
+
+                    Console.WriteLine($" ⚠ MISMATCH ({originalLines} vs {roundtripLines} lines)");
                     Console.Error.WriteLine($"WARNING: {textMismatchMessage}");
                 }
                 else
                 {
-                    Console.WriteLine(" ✓ MATCH");
+                    Console.WriteLine($" ✓ MATCH ({original.Split('\n').Length} lines)");
                 }
             }
             catch (Exception e)
@@ -530,40 +610,83 @@ namespace CSharpKOTOR.Tests.Formats
                 long compareTime = Stopwatch.GetTimestamp() - compareTextStart;
                 MergeOperationTime("compare-text", compareTime);
                 MergeOperationTime("compare", compareTime);
-                Console.Error.WriteLine($"WARNING: Text comparison error: {e.Message}");
+                Console.WriteLine($" ✗ ERROR");
                 textMismatchMessage = $"Text comparison error: {e.Message}";
+                Console.Error.WriteLine($"ERROR: {textMismatchMessage}");
             }
 
             // Step 4: Recompile decompiled NSS -> NCS (second NCS) using EXTERNAL compiler
             string recompiled = Path.Combine(outDir, Path.GetFileNameWithoutExtension(rel) + ".rt.ncs");
+
+            // Strip bytecode comment blocks from decompiled output before recompilation
+            // (The decompiler adds these for lossless roundtripping, but external compiler can't handle them)
+            string decompiledContentForRecompile = decompiledContent ?? File.ReadAllText(decompiled, Encoding.UTF8);
+            decompiledContentForRecompile = StripBytecodeComments(decompiledContentForRecompile);
+
             string compileInput = decompiled;
             string tempCompileInput = null;
             string decompiledName = Path.GetFileName(decompiled);
             if (decompiledName.IndexOf('.') != decompiledName.LastIndexOf('.'))
             {
                 compileInput = Path.Combine(outDir, Path.GetFileNameWithoutExtension(rel) + "_dec.nss");
-                File.Copy(decompiled, compileInput, true);
+                File.WriteAllText(compileInput, decompiledContentForRecompile, Encoding.UTF8);
                 tempCompileInput = compileInput;
+            }
+            else
+            {
+                // Write cleaned content back to decompiled file for recompilation
+                File.WriteAllText(compileInput, decompiledContentForRecompile, Encoding.UTF8);
             }
 
             bool recompilationSucceeded = false;
-            Console.Write("  Recompiling decompiled .nss to .ncs with external compiler");
+            string recompilationError = null;
+            Console.Write($"  [4/5] Recompiling decompiled .nss to .ncs with external compiler");
             long compileRoundtripStart = Stopwatch.GetTimestamp();
             try
             {
                 RunExternalCompiler(compileInput, recompiled, gameFlag, scratchRoot);
+
+                // Assert: Recompiled NCS exists and is non-empty
+                File.Exists(recompiled).Should().BeTrue($"Recompiled NCS file should exist at {DisplayPath(recompiled)}");
+                long recompiledSize = new FileInfo(recompiled).Length;
+                recompiledSize.Should().BeGreaterThan(0, $"Recompiled NCS file should not be empty (size: {recompiledSize} bytes)");
+
+                // Assert: Recompiled NCS can be loaded
+                NCS recompiledNcs;
+                try
+                {
+                    recompiledNcs = NCSAuto.ReadNcs(recompiled);
+                }
+                catch (Exception ex)
+                {
+                    throw new InvalidOperationException($"Recompiled NCS file exists but cannot be loaded/parsed: {ex.Message}", ex);
+                }
+
+                // Assert: Recompiled NCS has instructions
+                recompiledNcs.Instructions.Should().NotBeNull("Recompiled NCS should have instructions list");
+                recompiledNcs.Instructions.Count.Should().BeGreaterThan(0,
+                    $"Recompiled NCS should have at least one instruction (found {recompiledNcs.Instructions.Count} instructions)");
+
                 long compileTime = Stopwatch.GetTimestamp() - compileRoundtripStart;
                 MergeOperationTime("compile-roundtrip", compileTime);
                 MergeOperationTime("compile", compileTime);
-                Console.WriteLine($" ✓ ({GetElapsedMilliseconds(compileTime):F3} ms)");
+                Console.WriteLine($" ✓ ({GetElapsedMilliseconds(compileTime):F3} ms, {recompiledSize} bytes, {recompiledNcs.Instructions.Count} instructions)");
                 recompilationSucceeded = true;
             }
-            catch
+            catch (Exception e)
             {
                 long compileTime = Stopwatch.GetTimestamp() - compileRoundtripStart;
                 MergeOperationTime("compile-roundtrip", compileTime);
                 MergeOperationTime("compile", compileTime);
-                Console.WriteLine(" ⚠ FAILED (acceptable - decompiled code may not recompile)");
+                recompilationError = e.Message;
+                Console.WriteLine($" ✗ FAILED");
+                Console.Error.WriteLine($"Recompilation failed: {e.Message}");
+                Console.Error.WriteLine($"Decompiled NSS file: {DisplayPath(compileInput)}");
+                if (File.Exists(compileInput))
+                {
+                    string decompiledPreview = File.ReadAllText(compileInput, Encoding.UTF8);
+                    Console.Error.WriteLine($"Decompiled NSS preview (first 500 chars):\n{decompiledPreview.Substring(0, Math.Min(500, decompiledPreview.Length))}");
+                }
             }
             finally
             {
@@ -583,33 +706,86 @@ namespace CSharpKOTOR.Tests.Formats
             // Step 5: If recompilation succeeded, compare bytecode
             if (recompilationSucceeded)
             {
-                Console.Write("  Comparing bytecode (original vs recompiled)");
+                Console.Write($"  [5/5] Comparing bytecode (original vs recompiled)");
                 long compareBytecodeStart = Stopwatch.GetTimestamp();
                 try
                 {
+                    // Assert: Both NCS files exist
+                    File.Exists(compiledFirst).Should().BeTrue($"Original NCS should exist: {DisplayPath(compiledFirst)}");
+                    File.Exists(recompiled).Should().BeTrue($"Recompiled NCS should exist: {DisplayPath(recompiled)}");
+
+                    // Assert: Both NCS files can be loaded
+                    NCS originalNcs = NCSAuto.ReadNcs(compiledFirst);
+                    NCS recompiledNcs = NCSAuto.ReadNcs(recompiled);
+
+                    // Assert: Both have instructions
+                    originalNcs.Instructions.Should().NotBeNull("Original NCS should have instructions");
+                    recompiledNcs.Instructions.Should().NotBeNull("Recompiled NCS should have instructions");
+                    originalNcs.Instructions.Count.Should().BeGreaterThan(0, "Original NCS should have at least one instruction");
+                    recompiledNcs.Instructions.Count.Should().BeGreaterThan(0, "Recompiled NCS should have at least one instruction");
+
+                    // Perform bytecode comparison
                     AssertBytecodeEqual(compiledFirst, recompiled, gameFlag, displayRelPath);
+
                     long compareTime = Stopwatch.GetTimestamp() - compareBytecodeStart;
                     MergeOperationTime("compare-bytecode", compareTime);
                     MergeOperationTime("compare", compareTime);
-                    Console.WriteLine(" ✓ MATCH");
+                    Console.WriteLine($" ✓ MATCH ({originalNcs.Instructions.Count} instructions)");
                 }
                 catch (Exception e)
                 {
                     long compareTime = Stopwatch.GetTimestamp() - compareBytecodeStart;
                     MergeOperationTime("compare-bytecode", compareTime);
                     MergeOperationTime("compare", compareTime);
+                    Console.WriteLine($" ✗ MISMATCH");
+
+                    StringBuilder errorMsg = new StringBuilder();
+                    errorMsg.AppendLine("═══════════════════════════════════════════════════════════════");
+                    errorMsg.AppendLine("BYTECODE MISMATCH (PRIMARY FAILURE)");
+                    errorMsg.AppendLine("═══════════════════════════════════════════════════════════════");
+                    errorMsg.AppendLine($"Source: {DisplayPath(nssPath)}");
+                    errorMsg.AppendLine($"Original NCS: {DisplayPath(compiledFirst)}");
+                    errorMsg.AppendLine($"Recompiled NCS: {DisplayPath(recompiled)}");
+                    errorMsg.AppendLine($"Error: {e.Message}");
+
                     if (textMismatchMessage != null)
                     {
-                        throw new InvalidOperationException($"Bytecode mismatch (PRIMARY FAILURE):\n{e.Message}\n\nAlso had text mismatch (secondary):\n{textMismatchMessage}");
+                        errorMsg.AppendLine();
+                        errorMsg.AppendLine("Also had text mismatch (secondary):");
+                        errorMsg.AppendLine(textMismatchMessage);
                     }
-                    throw;
+
+                    if (recompilationError != null)
+                    {
+                        errorMsg.AppendLine();
+                        errorMsg.AppendLine("Recompilation error (for context):");
+                        errorMsg.AppendLine(recompilationError);
+                    }
+
+                    errorMsg.AppendLine("═══════════════════════════════════════════════════════════════");
+
+                    throw new InvalidOperationException(errorMsg.ToString(), e);
                 }
             }
             else
             {
+                // Recompilation failed - this is a critical issue if text also mismatched
                 if (textMismatchMessage != null)
                 {
-                    Console.Error.WriteLine("NOTE: Cannot verify bytecode (recompilation failed), but text mismatch was detected.");
+                    Console.WriteLine($"  [5/5] Skipped (recompilation failed)");
+                    throw new InvalidOperationException(
+                        $"CRITICAL: Both text mismatch AND recompilation failure detected.\n" +
+                        $"This indicates a serious decompiler issue - the decompiled code is neither textually correct nor compilable.\n\n" +
+                        $"Source: {DisplayPath(nssPath)}\n" +
+                        $"Text mismatch:\n{textMismatchMessage}\n\n" +
+                        $"Recompilation error: {recompilationError ?? "Unknown error"}\n\n" +
+                        $"Decompiled NSS: {DisplayPath(decompiled)}");
+                }
+                else
+                {
+                    Console.WriteLine($"  [5/5] Skipped (recompilation failed, but text matched)");
+                    Console.Error.WriteLine($"WARNING: Recompilation failed but text matched. This may indicate decompiler produces valid text but invalid syntax.");
+                    Console.Error.WriteLine($"Recompilation error: {recompilationError ?? "Unknown error"}");
                 }
             }
 
@@ -730,14 +906,15 @@ namespace CSharpKOTOR.Tests.Formats
 
                 Directory.CreateDirectory(Path.GetDirectoryName(compiledOut));
 
-                bool isK2 = gameFlag.Equals("k2");
-                List<string> args = new List<string> { "-c", "-v1.0" };
-                if (isK2)
+                // Use the correct command line format for nwnnsscomp_kscript.exe
+                // Format: -c {source} -o {output}
+                List<string> args = new List<string>
                 {
-                    args.Add("-ko2");
-                }
-                args.Add($"\"{tempSourceFile}\"");
-                args.Add($"\"{compiledOut}\"");
+                    "-c",
+                    $"\"{tempSourceFile}\"",
+                    "-o",
+                    $"\"{compiledOut}\""
+                };
 
                 Console.Write($" (external: {Path.GetFileName(NwnCompiler)})");
 
@@ -2136,6 +2313,22 @@ namespace CSharpKOTOR.Tests.Formats
                 }
                 Directory.Delete(dir, true);
             }
+        }
+
+        /// <summary>
+        /// Strips bytecode comment blocks from decompiled output.
+        /// These are added by the decompiler for lossless roundtripping but can't be compiled.
+        /// </summary>
+        private static string StripBytecodeComments(string content)
+        {
+            // Remove /*__NCS_BYTECODE__ ... __END_NCS_BYTECODE__*/ blocks
+            Regex bytecodeCommentPattern = new Regex(@"/\*__NCS_BYTECODE__.*?__END_NCS_BYTECODE__\*/", RegexOptions.Singleline);
+            string cleaned = bytecodeCommentPattern.Replace(content, "");
+
+            // Clean up any extra blank lines left behind
+            cleaned = Regex.Replace(cleaned, @"\n\s*\n\s*\n", "\n\n");
+
+            return cleaned.Trim();
         }
 
         private void PrintPerformanceSummary()
