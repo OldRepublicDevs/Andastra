@@ -467,6 +467,18 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Analysis
             this.OutABpCmd(node);
         }
 
+        // Handle AST.ABpCmd as well (from NcsToAstConverter)
+        public virtual void CaseABpCmd(AST.ABpCmd node)
+        {
+            // Treat AST.ABpCmd the same as root namespace ABpCmd
+            // Just process the BP command directly without calling In/Out methods
+            // since they expect root namespace ABpCmd
+            if (node.GetBpCommand() != null)
+            {
+                node.GetBpCommand().Apply(this);
+            }
+        }
+
         public virtual void InAActionCmd(AActionCmd node)
         {
             this.DefaultIn(node);

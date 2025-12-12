@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using CSharpKOTOR.Formats.NCS.NCSDecomp;
 using CSharpKOTOR.Formats.NCS.NCSDecomp.Analysis;
+using AST = CSharpKOTOR.Formats.NCS.NCSDecomp.AST;
 
 namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
 {
@@ -39,6 +40,16 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             if (!this.isGlobals)
             {
                 this.OutABpCmd(node);
+            }
+        }
+
+        // Handle AST.ABpCmd as well (from NcsToAstConverter)
+        public override void CaseABpCmd(AST.ABpCmd node)
+        {
+            // Traverse into AST.ABpCmd to reach ABpCommand
+            if (node.GetBpCommand() != null)
+            {
+                node.GetBpCommand().Apply(this);
             }
         }
 
