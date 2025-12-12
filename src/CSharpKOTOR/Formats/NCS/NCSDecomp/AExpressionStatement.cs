@@ -21,9 +21,11 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptnode
             return this.exp;
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/AExpressionStatement.java:20-23
+        // Original: @Override public String toString() { return this.tabs + this.exp.toString() + ";" + this.newline; }
         public override string ToString()
         {
-            return this.tabs.ToString() + this.exp.ToString() + ";" + this.newline;
+            return this.tabs + this.exp.ToString() + ";" + this.newline;
         }
 
         public override void Parent(ScriptNode parent)

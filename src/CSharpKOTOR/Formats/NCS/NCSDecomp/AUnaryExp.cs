@@ -19,14 +19,33 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptnode
             this.op = op;
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/AUnaryExp.java:20-23
+        // Original: protected void exp(AExpression exp) { this.exp = exp; exp.parent(this); }
         protected virtual void Exp(AExpression exp)
         {
-            (this.exp = exp).Parent(this);
+            this.exp = exp;
+            exp.Parent(this);
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/AUnaryExp.java:25-27
+        // Original: public AExpression exp() { return this.exp; }
+        public virtual AExpression Exp()
+        {
+            return this.exp;
+        }
+
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/AUnaryExp.java:29-31
+        // Original: public String op() { return this.op; }
+        public virtual string Op()
+        {
+            return this.op;
+        }
+
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/AUnaryExp.java:33-36
+        // Original: @Override public String toString() { return ExpressionFormatter.format(this); }
         public override string ToString()
         {
-            return "(" + this.op + this.exp.ToString() + ")";
+            return ExpressionFormatter.Format(this);
         }
 
         public virtual StackEntry Stackentry()
