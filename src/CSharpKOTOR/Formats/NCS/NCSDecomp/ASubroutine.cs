@@ -32,7 +32,13 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
         }
         public override void Apply(Switch sw)
         {
-            ((IAnalysis)sw).CaseASubroutine(this);
+            JavaSystem.@out.Println($"DEBUG ASubroutine.Apply: sw type = {sw.GetType().FullName}, sw is IAnalysis = {sw is IAnalysis}");
+            if (sw is IAnalysis ia)
+            {
+                JavaSystem.@out.Println($"DEBUG ASubroutine.Apply: calling ia.CaseASubroutine(this)");
+                ia.CaseASubroutine(this);
+                JavaSystem.@out.Println($"DEBUG ASubroutine.Apply: ia.CaseASubroutine(this) completed");
+            }
         }
 
         public int GetId()

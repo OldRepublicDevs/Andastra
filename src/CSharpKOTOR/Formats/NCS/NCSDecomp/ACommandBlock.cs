@@ -51,7 +51,18 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
         }
         public override void Apply(Switch sw)
         {
-            ((IAnalysis)sw).CaseACommandBlock(this);
+            JavaSystem.@out.Println($"DEBUG ACommandBlock.Apply: called, sw type = {sw.GetType().FullName}, sw is IAnalysis = {sw is IAnalysis}");
+            if (sw is IAnalysis ia)
+            {
+                JavaSystem.@out.Println($"DEBUG ACommandBlock.Apply: calling ia.CaseACommandBlock(this)");
+                ia.CaseACommandBlock(this);
+                JavaSystem.@out.Println($"DEBUG ACommandBlock.Apply: ia.CaseACommandBlock(this) completed");
+            }
+            else
+            {
+                JavaSystem.@out.Println($"DEBUG ACommandBlock.Apply: sw is not IAnalysis, calling DefaultIn");
+                sw.DefaultIn(this);
+            }
         }
 
         public TypedLinkedList GetCmd()

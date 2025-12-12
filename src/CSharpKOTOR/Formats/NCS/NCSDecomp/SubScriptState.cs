@@ -848,18 +848,38 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
         public virtual void TransformRSAdd(AST.ARsaddCommand node)
         {
             // Matching DeNCS implementation: treat AST.ARsaddCommand the same as root namespace ARsaddCommand
-            this.CheckStart(node);
-            Variable var = (Variable)this.stack[1];
-            // Matching DeNCS implementation: check if variable is already declared to prevent duplicates
-            AVarDecl existingVardec = (AVarDecl)this.vardecs[var];
-            if (existingVardec == null)
+            try
             {
-                AVarDecl vardec = new AVarDecl(var);
-                this.UpdateVarCount(var);
-                this.current.AddChild(vardec);
-                this.vardecs.Put(var, vardec);
+                this.CheckStart(node);
+                if (this.stack.Size() < 1)
+                {
+                    JavaSystem.@out.Println($"DEBUG TransformRSAdd(AST): stack size is {this.stack.Size()}, expected >= 1");
+                    throw new Exception($"Stack size is {this.stack.Size()}, expected >= 1");
+                }
+                Variable var = (Variable)this.stack[1];
+                // Matching DeNCS implementation: check if variable is already declared to prevent duplicates
+                AVarDecl existingVardec = (AVarDecl)this.vardecs[var];
+                if (existingVardec == null)
+                {
+                    AVarDecl vardec = new AVarDecl(var);
+                    this.UpdateVarCount(var);
+                    JavaSystem.@out.Println($"DEBUG TransformRSAdd(AST): adding vardec {vardec.Var().ToString()}, current children count before: {this.current.GetChildren().Count}");
+                    this.current.AddChild(vardec);
+                    JavaSystem.@out.Println($"DEBUG TransformRSAdd(AST): current children count after: {this.current.GetChildren().Count}");
+                    this.vardecs.Put(var, vardec);
+                }
+                else
+                {
+                    JavaSystem.@out.Println($"DEBUG TransformRSAdd(AST): variable {var.ToString()} already declared, skipping");
+                }
+                this.CheckEnd(node);
             }
-            this.CheckEnd(node);
+            catch (Exception e)
+            {
+                JavaSystem.@out.Println($"DEBUG TransformRSAdd(AST): exception: {e.Message}");
+                JavaSystem.@out.Println($"DEBUG TransformRSAdd(AST): stack trace: {e.StackTrace}");
+                throw;
+            }
         }
 
         public virtual void TransformConst(AConstCommand node)

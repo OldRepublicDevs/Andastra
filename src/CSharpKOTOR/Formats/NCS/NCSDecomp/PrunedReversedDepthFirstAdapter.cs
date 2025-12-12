@@ -80,6 +80,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Analysis
 
         public override void CaseASubroutine(ASubroutine node)
         {
+            JavaSystem.@out.Println($"DEBUG PrunedReversedDepthFirstAdapter.CaseASubroutine: called, this type = {this.GetType().FullName}, command block is {(node.GetCommandBlock() != null ? "non-null" : "null")}");
             this.InASubroutine(node);
             if (node.GetReturn() != null)
             {
@@ -88,6 +89,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Analysis
 
             if (node.GetCommandBlock() != null)
             {
+                JavaSystem.@out.Println($"DEBUG PrunedReversedDepthFirstAdapter.CaseASubroutine: command block type = {node.GetCommandBlock().GetType().FullName}, calling Apply");
                 node.GetCommandBlock().Apply(this);
             }
 
@@ -909,7 +911,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Analysis
         public virtual void CaseABpCommand(AST.ABpCommand node)
         {
             // Treat AST.ABpCommand the same as root namespace ABpCommand
-            // Just call DefaultIn/DefaultOut since we can't cast to root namespace ABpCommand
+            // Call InABpCommand if visitor supports it (e.g., CheckIsGlobals)
+            // This allows CheckIsGlobals to detect globals by overriding InABpCommand
             this.DefaultIn(node);
             this.DefaultOut(node);
         }

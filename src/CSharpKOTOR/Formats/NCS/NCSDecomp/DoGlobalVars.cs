@@ -81,20 +81,29 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             // Treat AST.ARsaddCommand the same as root namespace ARsaddCommand
             if (!this.freezeStack)
             {
-                // Extract type from AST.ARsaddCommand's GetType() which returns TIntegerConstant
-                // Parse the type value from the TIntegerConstant's text
-                int typeVal = 0;
-                if (node.GetType() != null && node.GetType().GetText() != null)
+                try
                 {
-                    if (int.TryParse(node.GetType().GetText(), out int parsedType))
+                    // Extract type from AST.ARsaddCommand's GetType() which returns TIntegerConstant
+                    // Parse the type value from the TIntegerConstant's text
+                    int typeVal = 0;
+                    if (node.GetType() != null && node.GetType().GetText() != null)
                     {
-                        typeVal = parsedType;
+                        if (int.TryParse(node.GetType().GetText(), out int parsedType))
+                        {
+                            typeVal = parsedType;
+                        }
                     }
+                    Variable var = new Variable(new UtilsType((byte)typeVal));
+                    this.stack.Push(var);
+                    this.state.TransformRSAdd(node);
+                    var = null;
                 }
-                Variable var = new Variable(new UtilsType((byte)typeVal));
-                this.stack.Push(var);
-                this.state.TransformRSAdd(node);
-                var = null;
+                catch (Exception e)
+                {
+                    JavaSystem.@out.Println($"DEBUG DoGlobalVars.OutARsaddCommand(AST): exception: {e.Message}");
+                    JavaSystem.@out.Println($"DEBUG DoGlobalVars.OutARsaddCommand(AST): stack trace: {e.StackTrace}");
+                    throw;
+                }
             }
         }
 
