@@ -67,8 +67,6 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptnode
 
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/ScriptRootNode.java:58-60
         // Original: public ScriptNode removeLastChild() { return this.children.removeLast(); }
-        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/ScriptRootNode.java:58-60
-        // Original: public ScriptNode removeLastChild() { return this.children.removeLast(); }
         public virtual ScriptNode RemoveLastChild()
         {
             if (this.children.Count == 0)
@@ -77,7 +75,6 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptnode
             }
             ScriptNode lastNode = this.children[this.children.Count - 1];
             this.children.RemoveAt(this.children.Count - 1);
-            lastNode.Parent(null);
             return lastNode;
         }
 
