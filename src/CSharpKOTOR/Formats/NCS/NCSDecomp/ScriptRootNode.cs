@@ -12,7 +12,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptnode
     {
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/ScriptRootNode.java:18
         // Original: protected LinkedList<ScriptNode> children = new LinkedList<>();
-        protected LinkedList children = new LinkedList();
+        protected LinkedList<ScriptNode> children = new LinkedList<ScriptNode>();
         protected int start;
         protected int end;
         protected ScriptRootNode(int start, int end)
@@ -27,18 +27,23 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptnode
             child.Parent(this);
         }
 
-        public virtual void AddChildren(List<object> children)
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/ScriptRootNode.java:32-38
+        // Original: public void addChildren(List<? extends ScriptNode> children) { Iterator<? extends ScriptNode> it = children.iterator(); while (it.hasNext()) { this.addChild(it.next()); } }
+        public virtual void AddChildren(List<ScriptNode> children)
         {
-            foreach (object child in children)
+            IEnumerator<ScriptNode> it = children.GetEnumerator();
+            while (it.MoveNext())
             {
-                this.AddChild((ScriptNode)child);
+                this.AddChild(it.Current);
             }
         }
 
-        public virtual List<object> RemoveChildren(int first, int last)
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/ScriptRootNode.java:40-48
+        // Original: public ArrayList<ScriptNode> removeChildren(int first, int last) { ... }
+        public virtual List<ScriptNode> RemoveChildren(int first, int last)
         {
-            List<object> removed = new List<object>(last - first + 1);
-            for (int i = 0; i <= last - first; ++i)
+            List<ScriptNode> removed = new List<ScriptNode>(last - first + 1);
+            for (int i = 0; i <= last - first; i++)
             {
                 removed.Add(this.RemoveChild(first));
             }
@@ -46,12 +51,16 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptnode
             return removed;
         }
 
-        public virtual List<object> RemoveChildren(int first)
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/ScriptRootNode.java:50-52
+        // Original: public ArrayList<ScriptNode> removeChildren(int first) { return this.removeChildren(first, this.children.size() - 1); }
+        public virtual List<ScriptNode> RemoveChildren(int first)
         {
             return this.RemoveChildren(first, this.children.Count - 1);
         }
 
-        public virtual List<object> RemoveChildren()
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/ScriptRootNode.java:54-56
+        // Original: public ArrayList<ScriptNode> removeChildren() { return this.removeChildren(0, this.children.size() - 1); }
+        public virtual List<ScriptNode> RemoveChildren()
         {
             return this.RemoveChildren(0, this.children.Count - 1);
         }
@@ -61,14 +70,14 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptnode
         public virtual ScriptNode RemoveLastChild()
         {
             // Java's LinkedList.removeLast() throws NoSuchElementException if empty
-            // C# List doesn't have removeLast, so we manually remove the last element
+            // C# LinkedList doesn't have removeLast, so we manually remove the last element
             if (this.children.Count == 0)
             {
                 throw new InvalidOperationException("Cannot remove last child from empty list");
             }
-            var lastNode = this.children[this.children.Count - 1];
+            ScriptNode lastNode = this.children[this.children.Count - 1];
             this.children.RemoveAt(this.children.Count - 1);
-            return (ScriptNode)lastNode;
+            return lastNode;
         }
 
         public virtual void RemoveChild(ScriptNode child)
@@ -80,29 +89,34 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptnode
             }
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/ScriptRootNode.java:67-71
+        // Original: public ScriptNode removeChild(int index) { ScriptNode child = this.children.remove(index); child.parent(null); return child; }
         public virtual ScriptNode RemoveChild(int index)
         {
-            ScriptNode child = (ScriptNode)this.children[index];
+            ScriptNode child = this.children[index];
             this.children.RemoveAt(index);
             child.Parent(null);
             return child;
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/ScriptRootNode.java:73-75
+        // Original: public ScriptNode getLastChild() { return this.children.getLast(); }
         public virtual ScriptNode GetLastChild()
         {
+            // Java's LinkedList.getLast() throws NoSuchElementException if empty
+            // C# LinkedList doesn't have getLast, so we manually get the last element
             if (this.children.Count == 0)
-                return null;
-            return (ScriptNode)this.children[this.children.Count - 1];
+            {
+                throw new InvalidOperationException("Cannot get last child from empty list");
+            }
+            return this.children[this.children.Count - 1];
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/ScriptRootNode.java:77-79
+        // Original: public ScriptNode getPreviousChild(int pos) { return this.children.size() < pos ? null : this.children.get(this.children.size() - pos); }
         public virtual ScriptNode GetPreviousChild(int pos)
         {
-            if (this.children.Count < pos)
-            {
-                return null;
-            }
-
-            return (ScriptNode)this.children[this.children.Count - pos];
+            return this.children.Count < pos ? null : this.children[this.children.Count - pos];
         }
 
         public virtual bool HasChildren()
@@ -120,21 +134,22 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptnode
             return this.start;
         }
 
-        public virtual LinkedList GetChildren()
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/ScriptRootNode.java:93-95
+        // Original: public LinkedList<ScriptNode> getChildren() { return this.children; }
+        public virtual LinkedList<ScriptNode> GetChildren()
         {
             return this.children;
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/ScriptRootNode.java:97-99
+        // Original: public int getChildLocation(ScriptNode child) { return this.children.indexOf(child); }
         public virtual int GetChildLocation(ScriptNode child)
         {
-            for (int i = 0; i < this.children.Count; i++)
-            {
-                if (this.children[i] == child)
-                    return i;
-            }
-            return -1;
+            return this.children.IndexOf(child);
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/ScriptRootNode.java:101-106
+        // Original: public void replaceChild(ScriptNode oldchild, ScriptNode newchild) { int index = this.getChildLocation(oldchild); this.children.set(index, newchild); newchild.parent(this); oldchild.parent(null); }
         public virtual void ReplaceChild(ScriptNode oldchild, ScriptNode newchild)
         {
             int index = this.GetChildLocation(oldchild);
@@ -160,16 +175,14 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptnode
         }
 
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/ScriptRootNode.java:123-133
-        // Original: @Override public void close()
+        // Original: @Override public void close() { super.close(); Iterator<ScriptNode> it = this.children.iterator(); while (it.hasNext()) { it.next().close(); } this.children = null; }
         public virtual void Close()
         {
             base.Close();
-            foreach (object child in this.children)
+            IEnumerator<ScriptNode> it = this.children.GetEnumerator();
+            while (it.MoveNext())
             {
-                if (child is ScriptNode scriptNode)
-                {
-                    scriptNode.Close();
-                }
+                it.Current.Close();
             }
 
             this.children = null;
