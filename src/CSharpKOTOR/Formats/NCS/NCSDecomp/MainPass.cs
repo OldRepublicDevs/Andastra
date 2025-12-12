@@ -110,6 +110,31 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             }
         }
 
+        // Handle AST.ARsaddCommand as well (from NcsToAstConverter)
+        public virtual void OutARsaddCommand(AST.ARsaddCommand node)
+        {
+            if (!this.skipdeadcode)
+            {
+                // Extract type from AST.ARsaddCommand's GetType() which returns TIntegerConstant
+                int typeVal = 0;
+                if (node.GetType() != null && node.GetType().GetText() != null)
+                {
+                    if (int.TryParse(node.GetType().GetText(), out int parsedType))
+                    {
+                        typeVal = parsedType;
+                    }
+                }
+                Variable var = new Variable(new UtilsType((byte)typeVal));
+                this.stack.Push(var);
+                var = null;
+                this.state.TransformRSAdd(node);
+            }
+            else
+            {
+                this.state.TransformDeadCode(node);
+            }
+        }
+
         public override void OutACopyDownSpCommand(ACopyDownSpCommand node)
         {
             if (!this.skipdeadcode)

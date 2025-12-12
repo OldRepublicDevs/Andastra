@@ -1,4 +1,4 @@
-// 
+//
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -8,6 +8,7 @@ using CSharpKOTOR.Formats.NCS.NCSDecomp;
 using CSharpKOTOR.Formats.NCS.NCSDecomp.Stack;
 using CSharpKOTOR.Formats.NCS.NCSDecomp.Utils;
 using UtilsType = CSharpKOTOR.Formats.NCS.NCSDecomp.Utils.Type;
+using JavaSystem = CSharpKOTOR.Formats.NCS.NCSDecomp.JavaSystem;
 
 namespace CSharpKOTOR.Formats.NCS.NCSDecomp
 {
@@ -101,6 +102,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
         {
             return this.stack;
         }
+
     }
 }
 

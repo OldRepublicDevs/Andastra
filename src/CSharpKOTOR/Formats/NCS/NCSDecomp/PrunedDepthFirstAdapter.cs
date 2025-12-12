@@ -785,10 +785,14 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Analysis
         {
             // Treat AST.ARsaddCommand the same as root namespace ARsaddCommand
             this.DefaultIn(node);
-            // Call OutARsaddCommand if visitor supports it (e.g., DoGlobalVars)
+            // Call OutARsaddCommand if visitor supports it (e.g., DoGlobalVars, MainPass)
             if (this is DoGlobalVars dgv)
             {
                 dgv.OutARsaddCommand(node);
+            }
+            else if (this is MainPass mp)
+            {
+                mp.OutARsaddCommand(node);
             }
             else
             {

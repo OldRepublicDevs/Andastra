@@ -520,17 +520,10 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
 
         private bool IsGlobalsSub(ASubroutine node)
         {
+            // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SubroutineAnalysisData.java:310-314
+            // Original: CheckIsGlobals cig = new CheckIsGlobals(); node.apply(cig); return cig.getIsGlobals();
             CheckIsGlobals cig = new CheckIsGlobals();
-            
-            // Directly traverse command block instead of relying on visitor pattern
-            // This matches the Java implementation which only overrides caseACommandBlock
-            var cmdBlock = node.GetCommandBlock();
-            if (cmdBlock != null && cmdBlock is ACommandBlock aCmdBlock)
-            {
-                // Call CaseACommandBlock directly on the visitor
-                cig.CaseACommandBlock(aCmdBlock);
-            }
-            
+            node.Apply(cig);
             return cig.GetIsGlobals();
         }
 

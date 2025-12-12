@@ -832,23 +832,33 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
         {
             this.CheckStart(node);
             Variable var = (Variable)this.stack[1];
-            AVarDecl vardec = new AVarDecl(var);
-            this.UpdateVarCount(var);
-            this.current.AddChild(vardec);
-            this.vardecs.Put(var, vardec);
+            // Matching DeNCS implementation: check if variable is already declared to prevent duplicates
+            AVarDecl existingVardec = (AVarDecl)this.vardecs[var];
+            if (existingVardec == null)
+            {
+                AVarDecl vardec = new AVarDecl(var);
+                this.UpdateVarCount(var);
+                this.current.AddChild(vardec);
+                this.vardecs.Put(var, vardec);
+            }
             this.CheckEnd(node);
         }
 
         // Handle AST.ARsaddCommand as well (from NcsToAstConverter)
         public virtual void TransformRSAdd(AST.ARsaddCommand node)
         {
-            // Treat AST.ARsaddCommand the same as root namespace ARsaddCommand
+            // Matching DeNCS implementation: treat AST.ARsaddCommand the same as root namespace ARsaddCommand
             this.CheckStart(node);
             Variable var = (Variable)this.stack[1];
-            AVarDecl vardec = new AVarDecl(var);
-            this.UpdateVarCount(var);
-            this.current.AddChild(vardec);
-            this.vardecs.Put(var, vardec);
+            // Matching DeNCS implementation: check if variable is already declared to prevent duplicates
+            AVarDecl existingVardec = (AVarDecl)this.vardecs[var];
+            if (existingVardec == null)
+            {
+                AVarDecl vardec = new AVarDecl(var);
+                this.UpdateVarCount(var);
+                this.current.AddChild(vardec);
+                this.vardecs.Put(var, vardec);
+            }
             this.CheckEnd(node);
         }
 
