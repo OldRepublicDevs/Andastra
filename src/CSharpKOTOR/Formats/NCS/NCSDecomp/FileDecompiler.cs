@@ -336,26 +336,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                 JavaSystem.@out.Println("\n---> starting decompilation: " + file.Name + " <---");
                 try
                 {
-                    NCS ncs = null;
-                    try
-                    {
-                        using (var reader = new NCSBinaryReader(file.GetAbsolutePath()))
-                        {
-                            ncs = reader.Load();
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        JavaSystem.@out.Println("Failed to read NCS file: " + ex.Message);
-                        return FAILURE;
-                    }
-
-                    if (ncs == null)
-                    {
-                        return FAILURE;
-                    }
-
-                    data = this.DecompileNcsObject(ncs);
+                    data = this.DecompileNcs(file);
                     // decompileNcs now always returns a FileScriptData (never null)
                     // but it may contain minimal/fallback code if decompilation failed
                     this.filedata[file] = data;
@@ -1529,10 +1510,904 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             }
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:1193-1847
+        // Original: private FileDecompiler.FileScriptData decompileNcs(File file)
+        private Utils.FileScriptData DecompileNcs(File file)
+        {
+            Utils.FileScriptData data = null;
+            string commands = null;
+            SetDestinations setdest = null;
+            DoTypes dotypes = null;
+            Node ast = null;
+            NodeAnalysisData nodedata = null;
+            SubroutineAnalysisData subdata = null;
+            IEnumerator<object> subs = null;
+            ASubroutine sub = null;
+            ASubroutine mainsub = null;
+            FlattenSub flatten = null;
+            DoGlobalVars doglobs = null;
+            CleanupPass cleanpass = null;
+            MainPass mainpass = null;
+            DestroyParseTree destroytree = null;
+            if (this.actions == null)
+            {
+                JavaSystem.@out.Println("null action! Creating fallback stub.");
+                // Return comprehensive stub instead of null
+                Utils.FileScriptData stub = new Utils.FileScriptData();
+                string expectedFile = isK2Selected ? "tsl_nwscript.nss" : "k1_nwscript.nss";
+                string stubCode = this.GenerateComprehensiveFallbackStub(file, "Actions data loading", null,
+                    "The actions data table (nwscript.nss) is required to decompile NCS files.\n" +
+                    "Expected file: " + expectedFile + "\n" +
+                    "Please ensure the appropriate nwscript.nss file is available in tools/ directory, working directory, or configured path.");
+                stub.SetCode(stubCode);
+                return stub;
+            }
+
+            try
+            {
+                data = new Utils.FileScriptData();
+
+                // Decode bytecode - wrap in try-catch to handle corrupted files
+                try
+                {
+                    JavaSystem.@err.Println("DEBUG decompileNcs: starting decode for " + file.Name);
+                    using (var fileStream = new FileStream(file.FullName, FileMode.Open, FileAccess.Read))
+                    using (var bufferedStream = new BufferedStream(fileStream))
+                    using (var binaryReader = new BinaryReader(bufferedStream))
+                    {
+                        commands = new Decoder(binaryReader, this.actions).Decode();
+                    }
+                    JavaSystem.@err.Println("DEBUG decompileNcs: decode successful, commands length=" + (commands != null ? commands.Length : 0));
+                }
+                catch (Exception decodeEx)
+                {
+                    JavaSystem.@err.Println("DEBUG decompileNcs: decode FAILED - " + decodeEx.Message);
+                    JavaSystem.@out.Println("Error during bytecode decoding: " + decodeEx.Message);
+                    // Create comprehensive fallback stub for decoding errors
+                    long fileSize = file.Exists() ? file.Length : -1;
+                    string fileInfo = "File size: " + fileSize + " bytes";
+                    if (fileSize > 0)
+                    {
+                        try
+                        {
+                            using (var fis = new FileStream(file.FullName, FileMode.Open, FileAccess.Read))
+                            {
+                                byte[] header = new byte[Math.Min(16, (int)fileSize)];
+                                int read = fis.Read(header, 0, header.Length);
+                                if (read > 0)
+                                {
+                                    fileInfo += "\nFile header (hex): " + this.BytesToHex(header, read);
+                                }
+                            }
+                        }
+                        catch (Exception)
+                        {
+                        }
+                    }
+                    string stub = this.GenerateComprehensiveFallbackStub(file, "Bytecode decoding", decodeEx, fileInfo);
+                    data.SetCode(stub);
+                    return data;
+                }
+
+                // Parse commands - wrap in try-catch to handle parse errors, but try to recover
+                try
+                {
+                    JavaSystem.@err.Println("DEBUG decompileNcs: starting parse, commands length=" + (commands != null ? commands.Length : 0));
+                    using (var stringReader = new StringReader(commands))
+                    using (var pushbackReader = new PushbackReader(stringReader, 1024))
+                    {
+                        ast = new Parser(new Lexer(pushbackReader)).Parse();
+                    }
+                    JavaSystem.@err.Println("DEBUG decompileNcs: parse successful");
+                }
+                catch (Exception parseEx)
+                {
+                    JavaSystem.@err.Println("DEBUG decompileNcs: parse FAILED - " + parseEx.Message);
+                    JavaSystem.@out.Println("Error during parsing: " + parseEx.Message);
+                    JavaSystem.@out.Println("Attempting to recover by trying partial parsing strategies...");
+
+                    // Try to recover: attempt to parse in chunks or with relaxed rules
+                    ast = null;
+                    try
+                    {
+                        // Strategy 1: Try parsing with a larger buffer
+                        JavaSystem.@out.Println("Trying parse with larger buffer...");
+                        using (var stringReader = new StringReader(commands))
+                        using (var pushbackReader = new PushbackReader(stringReader, 2048))
+                        {
+                            ast = new Parser(new Lexer(pushbackReader)).Parse();
+                        }
+                        JavaSystem.@out.Println("Successfully recovered parse with larger buffer.");
+                    }
+                    catch (Exception e1)
+                    {
+                        JavaSystem.@out.Println("Larger buffer parse also failed: " + e1.Message);
+                        // Strategy 2: Try to extract what we can and create minimal structure
+                        // If we have decoded commands, we can at least create a basic structure
+                        if (commands != null && commands.Length > 0)
+                        {
+                            JavaSystem.@out.Println("Attempting to create minimal structure from decoded commands...");
+                            try
+                            {
+                                // Try to find subroutine boundaries in the commands string
+                                // This is a heuristic recovery - look for common patterns
+                                string[] lines = commands.Split('\n');
+                                int subCount = 0;
+                                foreach (string line in lines)
+                                {
+                                    string trimmed = line.Trim();
+                                    if (trimmed.StartsWith("sub") || trimmed.StartsWith("function"))
+                                    {
+                                        subCount++;
+                                    }
+                                }
+
+                                // If we found some structure, try to continue with minimal setup
+                                if (subCount > 0)
+                                {
+                                    JavaSystem.@out.Println("Detected " + subCount + " potential subroutines in decoded commands, but full parse failed.");
+                                    // We'll fall through to create a stub, but with better information
+                                }
+                            }
+                            catch (Exception e2)
+                            {
+                                JavaSystem.@out.Println("Recovery attempt failed: " + e2.Message);
+                            }
+                        }
+                    }
+
+                    // If we still don't have an AST, create comprehensive stub but preserve commands for potential manual recovery
+                    if (ast == null)
+                    {
+                        string commandsPreview = "none";
+                        if (commands != null && commands.Length > 0)
+                        {
+                            int previewLength = Math.Min(1000, commands.Length);
+                            commandsPreview = commands.Substring(0, previewLength);
+                            if (commands.Length > previewLength)
+                            {
+                                commandsPreview += "\n... (truncated, total length: " + commands.Length + " characters)";
+                            }
+                        }
+                        string additionalInfo = "Bytecode was successfully decoded but parsing failed.\n" +
+                                               "Decoded commands length: " + (commands != null ? commands.Length : 0) + " characters\n" +
+                                               "Decoded commands preview:\n" + commandsPreview + "\n\n" +
+                                               "RECOVERY NOTE: The decoded commands are available but could not be parsed into an AST.\n" +
+                                               "This may indicate malformed bytecode or an unsupported format variant.";
+                        string stub = this.GenerateComprehensiveFallbackStub(file, "Parsing decoded bytecode", parseEx, additionalInfo);
+                        data.SetCode(stub);
+                        return data;
+                    }
+                    // If we recovered an AST, continue with decompilation
+                    JavaSystem.@out.Println("Continuing decompilation with recovered parse tree.");
+                }
+
+                // Analysis passes - wrap in try-catch to allow partial recovery
+                nodedata = new NodeAnalysisData();
+                subdata = new SubroutineAnalysisData(nodedata);
+
+                try
+                {
+                    ast.Apply(new SetPositions(nodedata));
+                }
+                catch (Exception e)
+                {
+                    JavaSystem.@out.Println("Error in SetPositions, continuing with partial positions: " + e.Message);
+                }
+
+                try
+                {
+                    setdest = new SetDestinations(ast, nodedata, subdata);
+                    ast.Apply(setdest);
+                }
+                catch (Exception e)
+                {
+                    JavaSystem.@out.Println("Error in SetDestinations, continuing without destination resolution: " + e.Message);
+                    setdest = null;
+                }
+
+                try
+                {
+                    if (setdest != null)
+                    {
+                        ast.Apply(new SetDeadCode(nodedata, subdata, setdest.GetOrigins()));
+                    }
+                    else
+                    {
+                        // Try without origins if setdest failed
+                        ast.Apply(new SetDeadCode(nodedata, subdata, null));
+                    }
+                }
+                catch (Exception e)
+                {
+                    JavaSystem.@out.Println("Error in SetDeadCode, continuing without dead code analysis: " + e.Message);
+                }
+
+                if (setdest != null)
+                {
+                    try
+                    {
+                        setdest.Done();
+                    }
+                    catch (Exception e)
+                    {
+                        JavaSystem.@out.Println("Error finalizing SetDestinations: " + e.Message);
+                    }
+                    setdest = null;
+                }
+
+                try
+                {
+                    subdata.SplitOffSubroutines(ast);
+                    JavaSystem.@err.Println("DEBUG splitOffSubroutines: success, numSubs=" + subdata.NumSubs());
+                }
+                catch (Exception e)
+                {
+                    JavaSystem.@err.Println("DEBUG splitOffSubroutines: ERROR - " + e.Message);
+                    e.PrintStackTrace(JavaSystem.@err);
+                    JavaSystem.@out.Println("Error splitting subroutines, attempting to continue: " + e.Message);
+                    // Try to get main sub at least
+                    try
+                    {
+                        mainsub = subdata.GetMainSub();
+                        JavaSystem.@err.Println("DEBUG splitOffSubroutines: recovered mainsub=" + (mainsub != null ? "found" : "null"));
+                    }
+                    catch (Exception e2)
+                    {
+                        JavaSystem.@err.Println("DEBUG splitOffSubroutines: could not recover mainsub - " + e2.Message);
+                        JavaSystem.@out.Println("Could not recover main subroutine: " + e2.Message);
+                    }
+                }
+                ast = null;
+                // Flattening - try to recover if main sub is missing
+                try
+                {
+                    mainsub = subdata.GetMainSub();
+                }
+                catch (Exception e)
+                {
+                    JavaSystem.@out.Println("Error getting main subroutine: " + e.Message);
+                    mainsub = null;
+                }
+
+                if (mainsub != null)
+                {
+                    try
+                    {
+                        flatten = new FlattenSub(mainsub, nodedata);
+                        mainsub.Apply(flatten);
+                    }
+                    catch (Exception e)
+                    {
+                        JavaSystem.@out.Println("Error flattening main subroutine: " + e.Message);
+                        flatten = null;
+                    }
+
+                    if (flatten != null)
+                    {
+                        try
+                        {
+                            foreach (ASubroutine iterSub in this.SubIterable(subdata))
+                            {
+                                try
+                                {
+                                    flatten.SetSub(iterSub);
+                                    iterSub.Apply(flatten);
+                                }
+                                catch (Exception e)
+                                {
+                                    JavaSystem.@out.Println("Error flattening subroutine, skipping: " + e.Message);
+                                    // Continue with other subroutines
+                                }
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            JavaSystem.@out.Println("Error iterating subroutines during flattening: " + e.Message);
+                        }
+
+                        try
+                        {
+                            flatten.Done();
+                        }
+                        catch (Exception e)
+                        {
+                            JavaSystem.@out.Println("Error finalizing flatten: " + e.Message);
+                        }
+                        flatten = null;
+                    }
+                }
+                else
+                {
+                    JavaSystem.@out.Println("Warning: No main subroutine available, continuing with partial decompilation.");
+                }
+                // Process globals - recover if this fails
+                try
+                {
+                    sub = subdata.GetGlobalsSub();
+                    if (sub != null)
+                    {
+                        try
+                        {
+                            doglobs = new DoGlobalVars(nodedata, subdata);
+                            sub.Apply(doglobs);
+                            cleanpass = new CleanupPass(doglobs.GetScriptRoot(), nodedata, subdata, doglobs.GetState());
+                            cleanpass.Apply();
+                            subdata.SetGlobalStack(doglobs.GetStack());
+                            subdata.GlobalState(doglobs.GetState());
+                            cleanpass.Done();
+                        }
+                        catch (Exception e)
+                        {
+                            JavaSystem.@out.Println("Error processing globals, continuing without globals: " + e.Message);
+                            if (doglobs != null)
+                            {
+                                try
+                                {
+                                    doglobs.Done();
+                                }
+                                catch (Exception e2)
+                                {
+                                }
+                            }
+                            doglobs = null;
+                        }
+                    }
+                }
+                catch (Exception e)
+                {
+                    JavaSystem.@out.Println("Error getting globals subroutine: " + e.Message);
+                }
+
+                // Prototype engine - recover if this fails
+                try
+                {
+                    PrototypeEngine proto = new PrototypeEngine(nodedata, subdata, this.actions, FileDecompiler.strictSignatures);
+                    proto.Run();
+                }
+                catch (Exception e)
+                {
+                    JavaSystem.@out.Println("Error in prototype engine, continuing with partial prototypes: " + e.Message);
+                }
+
+                // Type analysis - recover if main sub typing fails
+                if (mainsub != null)
+                {
+                    try
+                    {
+                        dotypes = new DoTypes(subdata.GetState(mainsub), nodedata, subdata, this.actions, false);
+                        mainsub.Apply(dotypes);
+
+                        try
+                        {
+                            dotypes.AssertStack();
+                        }
+                        catch (Exception)
+                        {
+                            JavaSystem.@out.Println("Could not assert stack, continuing anyway.");
+                        }
+
+                        dotypes.Done();
+                    }
+                    catch (Exception e)
+                    {
+                        JavaSystem.@out.Println("Error typing main subroutine, continuing with partial types: " + e.Message);
+                        dotypes = null;
+                    }
+                }
+
+                // Type all subroutines - continue even if some fail
+                bool alldone = false;
+                bool onedone = true;
+                int donecount = 0;
+
+                try
+                {
+                    alldone = subdata.CountSubsDone() == subdata.NumSubs();
+                    onedone = true;
+                    donecount = subdata.CountSubsDone();
+                }
+                catch (Exception e)
+                {
+                    JavaSystem.@out.Println("Error checking subroutine completion status: " + e.Message);
+                }
+
+                for (int loopcount = 0; !alldone && onedone && loopcount < 1000; ++loopcount)
+                {
+                    onedone = false;
+                    try
+                    {
+                        subs = subdata.GetSubroutines();
+                    }
+                    catch (Exception e)
+                    {
+                        JavaSystem.@out.Println("Error getting subroutines iterator: " + e.Message);
+                        break;
+                    }
+
+                    if (subs != null)
+                    {
+                        while (subs.HasNext())
+                        {
+                            try
+                            {
+                                sub = (ASubroutine)subs.Next();
+                                if (sub == null) continue;
+
+                                dotypes = new DoTypes(subdata.GetState(sub), nodedata, subdata, this.actions, false);
+                                sub.Apply(dotypes);
+                                dotypes.Done();
+                            }
+                            catch (Exception e)
+                            {
+                                JavaSystem.@out.Println("Error typing subroutine, skipping: " + e.Message);
+                                // Continue with next subroutine
+                            }
+                        }
+                    }
+
+                    if (mainsub != null)
+                    {
+                        try
+                        {
+                            dotypes = new DoTypes(subdata.GetState(mainsub), nodedata, subdata, this.actions, false);
+                            mainsub.Apply(dotypes);
+                            dotypes.Done();
+                        }
+                        catch (Exception e)
+                        {
+                            JavaSystem.@out.Println("Error re-typing main subroutine: " + e.Message);
+                        }
+                    }
+
+                    try
+                    {
+                        alldone = subdata.CountSubsDone() == subdata.NumSubs();
+                        int newDoneCount = subdata.CountSubsDone();
+                        onedone = newDoneCount > donecount;
+                        donecount = newDoneCount;
+                    }
+                    catch (Exception e)
+                    {
+                        JavaSystem.@out.Println("Error checking completion status: " + e.Message);
+                        break;
+                    }
+                }
+
+                if (!alldone)
+                {
+                    JavaSystem.@out.Println("Unable to do final prototype of all subroutines. Continuing with partial results.");
+                }
+
+                this.EnforceStrictSignatures(subdata, nodedata);
+
+                dotypes = null;
+                nodedata.ClearProtoData();
+
+                JavaSystem.@err.Println("DEBUG decompileNcs: iterating subroutines, numSubs=" + subdata.NumSubs());
+                int subCount = 0;
+                foreach (ASubroutine iterSub in this.SubIterable(subdata))
+                {
+                    subCount++;
+                    JavaSystem.@err.Println("DEBUG decompileNcs: processing subroutine " + subCount + " at pos=" + nodedata.GetPos(iterSub));
+                    try
+                    {
+                        mainpass = new MainPass(subdata.GetState(iterSub), nodedata, subdata, this.actions);
+                        iterSub.Apply(mainpass);
+                        cleanpass = new CleanupPass(mainpass.GetScriptRoot(), nodedata, subdata, mainpass.GetState());
+                        cleanpass.Apply();
+                        data.AddSub(mainpass.GetState());
+                        JavaSystem.@err.Println("DEBUG decompileNcs: successfully added subroutine " + subCount);
+                        mainpass.Done();
+                        cleanpass.Done();
+                    }
+                    catch (Exception e)
+                    {
+                        JavaSystem.@err.Println("DEBUG decompileNcs: ERROR processing subroutine " + subCount + " - " + e.Message);
+                        JavaSystem.@out.Println("Error while processing subroutine: " + e);
+                        e.PrintStackTrace(JavaSystem.@out);
+                        // Try to add partial subroutine state even if processing failed
+                        try
+                        {
+                            SubroutineState state = subdata.GetState(iterSub);
+                            if (state != null)
+                            {
+                                MainPass recoveryPass = new MainPass(state, nodedata, subdata, this.actions);
+                                // Try to get state even if apply failed
+                                SubScriptState recoveryState = recoveryPass.GetState();
+                                if (recoveryState != null)
+                                {
+                                    data.AddSub(recoveryState);
+                                    JavaSystem.@out.Println("Added partial subroutine state after error recovery.");
+                                }
+                            }
+                        }
+                        catch (Exception e2)
+                        {
+                            JavaSystem.@out.Println("Could not recover partial subroutine state: " + e2.Message);
+                        }
+                    }
+                }
+
+                // Generate code for main subroutine - recover if this fails
+                JavaSystem.@err.Println("DEBUG decompileNcs: mainsub=" + (mainsub != null ? "found at pos=" + nodedata.GetPos(mainsub) : "null"));
+                if (mainsub != null)
+                {
+                    try
+                    {
+                        JavaSystem.@err.Println("DEBUG decompileNcs: creating MainPass for mainsub");
+                        mainpass = new MainPass(subdata.GetState(mainsub), nodedata, subdata, this.actions);
+                        JavaSystem.@err.Println("DEBUG decompileNcs: applying mainpass to mainsub");
+                        mainsub.Apply(mainpass);
+
+                        try
+                        {
+                            mainpass.AssertStack();
+                        }
+                        catch (Exception e)
+                        {
+                            JavaSystem.@out.Println("Could not assert stack, continuing anyway.");
+                        }
+
+                        cleanpass = new CleanupPass(mainpass.GetScriptRoot(), nodedata, subdata, mainpass.GetState());
+                        cleanpass.Apply();
+                        mainpass.GetState().IsMain(true);
+                        data.AddSub(mainpass.GetState());
+                        mainpass.Done();
+                        cleanpass.Done();
+                    }
+                    catch (Exception e)
+                    {
+                        JavaSystem.@out.Println("Error generating code for main subroutine: " + e.Message);
+                        // Try to create a minimal main function stub using MainPass
+                        try
+                        {
+                            mainpass = new MainPass(subdata.GetState(mainsub), nodedata, subdata, this.actions);
+                            // Even if apply fails, try to get the state
+                            try
+                            {
+                                mainsub.Apply(mainpass);
+                            }
+                            catch (Exception e2)
+                            {
+                                JavaSystem.@out.Println("Could not apply mainpass, but attempting to use partial state: " + e2.Message);
+                            }
+                            SubScriptState minimalMain = mainpass.GetState();
+                            if (minimalMain != null)
+                            {
+                                minimalMain.IsMain(true);
+                                data.AddSub(minimalMain);
+                                JavaSystem.@out.Println("Created minimal main subroutine stub.");
+                            }
+                            mainpass.Done();
+                        }
+                        catch (Exception e2)
+                        {
+                            JavaSystem.@out.Println("Could not create minimal main stub: " + e2.Message);
+                        }
+                    }
+                }
+                else
+                {
+                    JavaSystem.@out.Println("Warning: No main subroutine available for code generation.");
+                }
+                // Store analysis data and globals - recover if this fails
+                try
+                {
+                    data.SetSubdata(subdata);
+                }
+                catch (Exception e)
+                {
+                    JavaSystem.@out.Println("Error storing subroutine analysis data: " + e.Message);
+                }
+
+                if (doglobs != null)
+                {
+                    try
+                    {
+                        cleanpass = new CleanupPass(doglobs.GetScriptRoot(), nodedata, subdata, doglobs.GetState());
+                        cleanpass.Apply();
+                        data.SetGlobals(doglobs.GetState());
+                        doglobs.Done();
+                        cleanpass.Done();
+                    }
+                    catch (Exception e)
+                    {
+                        JavaSystem.@out.Println("Error finalizing globals: " + e.Message);
+                        try
+                        {
+                            if (doglobs.GetState() != null)
+                            {
+                                data.SetGlobals(doglobs.GetState());
+                            }
+                            doglobs.Done();
+                        }
+                        catch (Exception e2)
+                        {
+                            JavaSystem.@out.Println("Could not recover globals state: " + e2.Message);
+                        }
+                    }
+                }
+
+                // Cleanup parse tree - this is safe to skip if it fails
+                try
+                {
+                    destroytree = new DestroyParseTree();
+
+                    foreach (ASubroutine iterSub in this.SubIterable(subdata))
+                    {
+                        try
+                        {
+                            iterSub.Apply(destroytree);
+                        }
+                        catch (Exception e)
+                        {
+                            JavaSystem.@out.Println("Error destroying parse tree for subroutine: " + e.Message);
+                        }
+                    }
+
+                    if (mainsub != null)
+                    {
+                        try
+                        {
+                            mainsub.Apply(destroytree);
+                        }
+                        catch (Exception e)
+                        {
+                            JavaSystem.@out.Println("Error destroying main parse tree: " + e.Message);
+                        }
+                    }
+                }
+                catch (Exception e)
+                {
+                    JavaSystem.@out.Println("Error during parse tree cleanup: " + e.Message);
+                    // Continue anyway - cleanup is not critical
+                }
+
+                return data;
+            }
+            catch (Exception e)
+            {
+                // Try to salvage partial results before giving up
+                JavaSystem.@out.Println("Error during decompilation: " + e.Message);
+                e.PrintStackTrace(JavaSystem.@out);
+
+                // Always return a FileScriptData, even if it's just a minimal stub
+                if (data == null)
+                {
+                    data = new Utils.FileScriptData();
+                }
+
+                // Aggressive recovery: try to salvage whatever state we have
+                JavaSystem.@out.Println("Attempting aggressive state recovery...");
+
+                // Try to add any subroutines that were partially processed
+                if (subdata != null && mainsub != null)
+                {
+                    try
+                    {
+                        // Try to get main sub state even if it's incomplete
+                        SubroutineState mainState = subdata.GetState(mainsub);
+                        if (mainState != null)
+                        {
+                            try
+                            {
+                                // Try to create a minimal main pass
+                                mainpass = new MainPass(mainState, nodedata, subdata, this.actions);
+                                try
+                                {
+                                    mainsub.Apply(mainpass);
+                                }
+                                catch (Exception e3)
+                                {
+                                    JavaSystem.@out.Println("Could not apply mainpass to main sub, but continuing: " + e3.Message);
+                                }
+                                SubScriptState scriptState = mainpass.GetState();
+                                if (scriptState != null)
+                                {
+                                    scriptState.IsMain(true);
+                                    data.AddSub(scriptState);
+                                    mainpass.Done();
+                                    JavaSystem.@out.Println("Recovered main subroutine state.");
+                                }
+                            }
+                            catch (Exception e2)
+                            {
+                                JavaSystem.@out.Println("Could not create main pass: " + e2.Message);
+                            }
+                        }
+                    }
+                    catch (Exception e2)
+                    {
+                        JavaSystem.@out.Println("Error recovering main subroutine: " + e2.Message);
+                    }
+
+                    // Try to recover other subroutines
+                    try
+                    {
+                        foreach (ASubroutine iterSub in this.SubIterable(subdata))
+                        {
+                            if (iterSub == mainsub) continue; // Already handled
+                            try
+                            {
+                                SubroutineState state = subdata.GetState(iterSub);
+                                if (state != null)
+                                {
+                                    try
+                                    {
+                                        mainpass = new MainPass(state, nodedata, subdata, this.actions);
+                                        try
+                                        {
+                                            iterSub.Apply(mainpass);
+                                        }
+                                        catch (Exception e3)
+                                        {
+                                            JavaSystem.@out.Println("Could not apply mainpass to subroutine, but continuing: " + e3.Message);
+                                        }
+                                        SubScriptState scriptState = mainpass.GetState();
+                                        if (scriptState != null)
+                                        {
+                                            data.AddSub(scriptState);
+                                            mainpass.Done();
+                                        }
+                                    }
+                                    catch (Exception e2)
+                                    {
+                                        JavaSystem.@out.Println("Could not create mainpass for subroutine: " + e2.Message);
+                                    }
+                                }
+                            }
+                            catch (Exception e2)
+                            {
+                                JavaSystem.@out.Println("Error recovering subroutine: " + e2.Message);
+                            }
+                        }
+                    }
+                    catch (Exception e2)
+                    {
+                        JavaSystem.@out.Println("Error iterating subroutines during recovery: " + e2.Message);
+                    }
+
+                    // Try to store subdata
+                    try
+                    {
+                        data.SetSubdata(subdata);
+                    }
+                    catch (Exception e2)
+                    {
+                        JavaSystem.@out.Println("Error storing subdata: " + e2.Message);
+                    }
+                }
+
+                // Try to recover globals if available
+                if (doglobs != null)
+                {
+                    try
+                    {
+                        SubScriptState globState = doglobs.GetState();
+                        if (globState != null)
+                        {
+                            data.SetGlobals(globState);
+                            JavaSystem.@out.Println("Recovered globals state.");
+                        }
+                    }
+                    catch (Exception e2)
+                    {
+                        JavaSystem.@out.Println("Error recovering globals: " + e2.Message);
+                    }
+                }
+
+                try
+                {
+                    // Try to generate code from whatever we have
+                    data.GenerateCode();
+                    string partialCode = data.GetCode();
+                    if (partialCode != null && partialCode.Trim().Length > 0)
+                    {
+                        JavaSystem.@out.Println("Successfully recovered partial decompilation with " +
+                                                (data.GetVars() != null ? data.GetVars().Count : 0) + " subroutines.");
+                        // Add recovery note to the code
+                        string recoveryNote = "// ========================================\n" +
+                                            "// PARTIAL DECOMPILATION - RECOVERED STATE\n" +
+                                            "// ========================================\n" +
+                                            "// This decompilation encountered errors but recovered partial results.\n" +
+                                            "// Some subroutines or code sections may be incomplete or missing.\n" +
+                                            "// Original error: " + e.GetType().Name + ": " +
+                                            (e.Message != null ? e.Message : "(no message)") + "\n" +
+                                            "// ========================================\n\n";
+                        data.SetCode(recoveryNote + partialCode);
+                        return data;
+                    }
+                }
+                catch (Exception genEx)
+                {
+                    JavaSystem.@out.Println("Could not generate partial code: " + genEx.Message);
+                }
+
+                // Last resort: create comprehensive stub with any available partial information
+                string partialInfo = "Partial decompilation state:\n";
+                try
+                {
+                    if (data != null)
+                    {
+                        Dictionary<string, List<object>> vars = data.GetVars();
+                        if (vars != null && vars.Count > 0)
+                        {
+                            partialInfo += "  Subroutines with variable data: " + vars.Count + "\n";
+                        }
+                    }
+                    if (subdata != null)
+                    {
+                        try
+                        {
+                            partialInfo += "  Total subroutines detected: " + subdata.NumSubs() + "\n";
+                            partialInfo += "  Subroutines fully typed: " + subdata.CountSubsDone() + "\n";
+                        }
+                        catch (Exception)
+                        {
+                        }
+                    }
+                    if (commands != null)
+                    {
+                        partialInfo += "  Commands decoded: " + commands.Length + " characters\n";
+                    }
+                    if (ast != null)
+                    {
+                        partialInfo += "  Parse tree created: yes\n";
+                    }
+                    if (nodedata != null)
+                    {
+                        partialInfo += "  Node analysis data available: yes\n";
+                    }
+                    if (mainsub != null)
+                    {
+                        partialInfo += "  Main subroutine identified: yes\n";
+                    }
+                }
+                catch (Exception)
+                {
+                    partialInfo += "  (Unable to gather partial state information)\n";
+                }
+                string errorStub = this.GenerateComprehensiveFallbackStub(file, "General decompilation pipeline", e, partialInfo);
+                data.SetCode(errorStub);
+                JavaSystem.@out.Println("Created fallback stub code due to decompilation errors.");
+                return data;
+            }
+            finally
+            {
+                data = null;
+                commands = null;
+                setdest = null;
+                dotypes = null;
+                ast = null;
+                if (nodedata != null)
+                {
+                    nodedata.Dispose();
+                }
+
+                nodedata = null;
+                if (subdata != null)
+                {
+                    subdata.ParseDone();
+                }
+
+                subdata = null;
+                subs = null;
+                sub = null;
+                mainsub = null;
+                flatten = null;
+                doglobs = null;
+                cleanpass = null;
+                mainpass = null;
+                destroytree = null;
+                GC.Collect();
+            }
+        }
+
         /// <summary>
         /// Decompiles an NCS object in memory (not from file).
         /// This is the core decompilation logic extracted from DecompileNcs(File).
-        /// Matching NCSDecomp implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:588-916
+        /// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:588-916
         /// </summary>
         public virtual Utils.FileScriptData DecompileNcsObject(NCS ncs)
         {
