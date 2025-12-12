@@ -55,39 +55,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Stack
             return new ObjectConst(objectValue);
         }
 
-        // Convenience method for object-based calls (used internally)
-        public static Const NewConst(UtilsType type, object value)
-        {
-            switch (type.ByteValue())
-            {
-                case 3:
-                    {
-                        return new IntConst(value);
-                    }
-
-                case 4:
-                    {
-                        return new FloatConst(value);
-                    }
-
-                case 5:
-                    {
-                        return new StringConst(value);
-                    }
-
-                case 6:
-                    {
-                        return new ObjectConst(value);
-                    }
-
-                default:
-                    {
-                        throw new Exception("Invalid const type " + type);
-                    }
-
-            }
-        }
-
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/stack/Const.java:43-48
+        // Original: @Override public void removedFromStack(LocalStack<?> stack)
         public override void RemovedFromStack(LocalStack stack)
         {
         }

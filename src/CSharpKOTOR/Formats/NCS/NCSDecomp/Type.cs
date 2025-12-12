@@ -60,7 +60,9 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             return new Type(str);
         }
 
-        public virtual void Dispose()
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/Type.java:57-58
+        // Original: public void close()
+        public virtual void Close()
         {
         }
 
@@ -84,16 +86,15 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             return this.ToString();
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/Type.java:77-79
+        // Original: public int size()
         public virtual int Size()
         {
             return this.size;
         }
 
-        public virtual int Count
-        {
-            get { return 1; }
-        }
-
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/Type.java:81-83
+        // Original: public boolean isTyped()
         public virtual bool IsTyped()
         {
             return this.type != -1;
