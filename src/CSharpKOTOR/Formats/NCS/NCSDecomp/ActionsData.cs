@@ -9,6 +9,8 @@ using CSharpKOTOR.Formats.NCS.NCSDecomp.Utils;
 using UtilsType = CSharpKOTOR.Formats.NCS.NCSDecomp.Utils.Type;
 namespace CSharpKOTOR.Formats.NCS.NCSDecomp
 {
+    // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/ActionsData.java:22-38
+    // Original: public class ActionsData { private final List<Action> actions; private final BufferedReader actionsreader; public ActionsData(BufferedReader actionsreader) throws IOException { this.actionsreader = actionsreader; this.actions = new ArrayList<>(877); this.readActions(); } }
     public class ActionsData
     {
         private List<object> actions;
@@ -16,6 +18,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
         public ActionsData(StreamReader actionsreader)
         {
             this.actionsreader = actionsreader;
+            this.actions = new List<object>(877);
             this.ReadActions();
         }
 
@@ -32,10 +35,11 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             }
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/ActionsData.java:58-74
+        // Original: private void readActions() throws IOException { Pattern p = Pattern.compile("^\\s*(\\w+)\\s+(\\w+)\\s*\\((.*)\\).*"); String str; while ((str = this.actionsreader.readLine()) != null && !str.startsWith("// 0")) { } while ((str = this.actionsreader.readLine()) != null) { if (!str.startsWith("//") && str.length() != 0) { Matcher m = p.matcher(str); if (m.matches()) { this.actions.add(new ActionsData.Action(m.group(1), m.group(2), m.group(3))); } } } System.out.println("read actions.  There were " + Integer.toString(this.actions.size())); }
         private void ReadActions()
         {
             Pattern p = Pattern.Compile("^\\s*(\\w+)\\s+(\\w+)\\s*\\((.*)\\).*");
-            this.actions = new List<object>(877);
             while (true)
             {
                 string str;
