@@ -337,10 +337,20 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                 int removeCount = NodeUtils.StackOffsetToPos(node.GetOffset());
                 if (this.initialproto)
                 {
+                    // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/DoTypes.java:216-225
+                    // Original: int params = this.stack.removePrototyping(remove); if (params > 8) { params = 8; } // sanity cap
                     int @params = this.stack.RemovePrototyping(removeCount);
+                    if (@params > 8)
+                    {
+                        @params = 8; // sanity cap to avoid runaway counts from locals
+                    }
                     if (@params > 0)
                     {
-                        this.state.SetParamCount(@params);
+                        int current = this.state.GetParamCount();
+                        if (current == 0 || @params < current)
+                        {
+                            this.state.SetParamCount(@params);
+                        }
                     }
                 }
                 else

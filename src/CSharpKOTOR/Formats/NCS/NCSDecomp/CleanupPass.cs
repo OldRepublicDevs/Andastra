@@ -63,6 +63,36 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
                 while (itLocal.HasNext())
                 {
                     Scriptnode.ScriptNode node1Local = (Scriptnode.ScriptNode)itLocal.Next();
+                    // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptutils/CleanupPass.java:82-98
+                    // Original: Check for AVarDecl with exp() == null first, then merge with following assignment
+                    if (typeof(AVarDecl).IsInstanceOfType(node1Local))
+                    {
+                        AVarDecl decl = (AVarDecl)node1Local;
+                        if (decl.GetExp() == null && itLocal.HasNext())
+                        {
+                            Scriptnode.ScriptNode maybeAssign = (Scriptnode.ScriptNode)itLocal.Next();
+                            if (typeof(AExpressionStatement).IsInstanceOfType(maybeAssign)
+                                && typeof(AModifyExp).IsInstanceOfType(((AExpressionStatement)maybeAssign).Exp()))
+                            {
+                                AModifyExp modexp = (AModifyExp)((AExpressionStatement)maybeAssign).Exp();
+                                if (modexp.VarRef() != null && modexp.VarRef().Var() == decl.GetVarVar())
+                                {
+                                    decl.InitializeExp(modexp.Expression());
+                                    itLocal.Remove(); // drop the now-merged assignment statement
+                                }
+                                else
+                                {
+                                    itLocal.Previous();
+                                }
+                            }
+                            else
+                            {
+                                itLocal.Previous();
+                            }
+                        }
+                    }
+                    // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptutils/CleanupPass.java:100-131
+                    // Original: Then check for struct declarations to merge
                     if (typeof(AVarDecl).IsInstanceOfType(node1Local))
                     {
                         Variable var = ((AVarDecl)node1Local).Var();
@@ -104,27 +134,6 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
                             itLocal.Set(structdec);
                             node1Local = structdec;
                         }
-                    }
-
-                    if (typeof(AVarDecl).IsInstanceOfType(node1Local) && itLocal.HasNext())
-                    {
-                        Scriptnode.ScriptNode node2Local = (Scriptnode.ScriptNode)itLocal.Next();
-                        itLocal.Previous();
-                        if (typeof(AExpressionStatement).IsInstanceOfType(node2Local) && typeof(AModifyExp).IsInstanceOfType(((AExpressionStatement)node2Local).Exp()))
-                        {
-                            AModifyExp modexp = (AModifyExp)((AExpressionStatement)node2Local).Exp();
-
-                            // Check if varRef is not null before accessing it
-                            if (modexp.VarRef() != null && ((AVarDecl)node1Local).Var() == modexp.VarRef().Var())
-                            {
-                                itLocal.Remove();
-                                node2Local.Parent(null);
-                                ((AVarDecl)node1Local).InitializeExp(modexp.Expression());
-                            }
-                        }
-
-                        itLocal.Previous();
-                        itLocal.Next();
                     }
 
                     if (this.IsDanglingExpression(node1Local))
