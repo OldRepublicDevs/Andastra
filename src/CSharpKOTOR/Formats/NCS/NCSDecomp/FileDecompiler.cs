@@ -44,12 +44,12 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
         private Settings settings;
         private NWScriptLocator.GameType gameType;
 
-        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:90-94
-        // Original: public FileDecompiler() throws DecompilerException
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:101-105
+        // Original: public FileDecompiler() { this.filedata = new Hashtable<>(1); this.actions = null; loadPreferSwitchesFromConfig(); }
         public FileDecompiler()
         {
             this.filedata = new Dictionary<object, object>();
-            this.actions = LoadActionsDataInternal(isK2Selected);
+            this.actions = null; // Load lazily when needed to prevent startup failures
             LoadPreferSwitchesFromConfig();
         }
 
@@ -160,6 +160,25 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                 {
                     dir = new File(userDir);
                     actionfile = isK2Selected ? new File(Path.Combine(dir.FullName, "tsl_nwscript.nss")) : new File(Path.Combine(dir.FullName, "k1_nwscript.nss"));
+                }
+                // If still not found, try JAR/EXE directory's tools folder
+                if (!actionfile.IsFile())
+                {
+                    File ncsDecompDir = GetNCSDecompDirectoryStatic();
+                    if (ncsDecompDir != null)
+                    {
+                        File jarToolsDir = new File(Path.Combine(ncsDecompDir.FullName, "tools"));
+                        actionfile = isK2Selected ? new File(Path.Combine(jarToolsDir.FullName, "tsl_nwscript.nss")) : new File(Path.Combine(jarToolsDir.FullName, "k1_nwscript.nss"));
+                    }
+                }
+                // If still not found, try JAR/EXE directory itself
+                if (!actionfile.IsFile())
+                {
+                    File ncsDecompDir = GetNCSDecompDirectoryStatic();
+                    if (ncsDecompDir != null)
+                    {
+                        actionfile = isK2Selected ? new File(Path.Combine(ncsDecompDir.FullName, "tsl_nwscript.nss")) : new File(Path.Combine(ncsDecompDir.FullName, "k1_nwscript.nss"));
+                    }
                 }
                 if (actionfile.IsFile())
                 {
@@ -902,6 +921,13 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
         // Matching NCSDecomp implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:728-762
         // Original: private File getNCSDecompDirectory()
         private File GetNCSDecompDirectory()
+        {
+            return GetNCSDecompDirectoryStatic();
+        }
+
+        // Matching NCSDecomp implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/CompilerUtil.java:325-352
+        // Original: public static File getNCSDecompDirectory()
+        private static File GetNCSDecompDirectoryStatic()
         {
             try
             {
