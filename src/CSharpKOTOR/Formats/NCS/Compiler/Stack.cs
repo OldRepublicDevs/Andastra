@@ -37,6 +37,16 @@ namespace CSharpKOTOR.Formats.NCS.Compiler
         /// </summary>
         public void Add(DataType dataType, [CanBeNull] object value)
         {
+            // Ensure proper type boxing: if DataType is Float but value is double, convert to float
+            // This prevents issues when unboxing later (can't unbox double to float directly)
+            if (dataType == DataType.Float && value is double d)
+            {
+                value = (float)d;
+            }
+            else if (dataType == DataType.Int && value is double di)
+            {
+                value = (int)di;
+            }
             _stack.Add(new StackObject(dataType, value));
         }
 

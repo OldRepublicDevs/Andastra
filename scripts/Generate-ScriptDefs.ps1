@@ -45,6 +45,9 @@ $TypeMap = @{
     'object_id' = 'DataType.Object'  # Non-standard type alias
 }
 
+# Initialize the constants lookup table BEFORE parsing (so functions can reference it)
+$script:allConstants = @{}
+
 function Get-DataType {
     param([string]$TypeName)
 
@@ -180,20 +183,19 @@ function Parse-NssFunction {
             }
 
             foreach ($paramPart in $paramParts) {
-                try {
-                    # Pattern: type name [= default]
-                    # Handle defaults that might contain brackets (vectors) or other complex expressions
-                    if ($paramPart -match '^\s*(\w+)\s+(\w+)(?:\s*=\s*(.+))?\s*$') {
-                        $paramType = $Matches[1]
-                        $paramName = $Matches[2]
-                        $paramDefault = if ($Matches[3]) { $Matches[3].Trim() } else { $null }
+                # Pattern: type name [= default]
+                # Handle defaults that might contain brackets (vectors) or other complex expressions
+                if ($paramPart -match '^\s*(\w+)\s+(\w+)(?:\s*=\s*(.+))?\s*$') {
+                    $paramType = $Matches[1]
+                    $paramName = $Matches[2]
+                    $paramDefault = if ($Matches[3]) { $Matches[3].Trim() } else { $null }
 
-                        $paramDataType = Get-DataType -TypeName $paramType
-                        if (-not $paramDataType) {
-                            # Unknown parameter type, skip this param (function will be incomplete)
-                            Write-Warning "Unknown parameter type '$paramType' in function parameter '$paramPart'"
-                            continue
-                        }
+                    $paramDataType = Get-DataType -TypeName $paramType
+                    if (-not $paramDataType) {
+                        # Unknown parameter type, skip this param (function will be incomplete)
+                        Write-Warning "Unknown parameter type '$paramType' in function parameter '$paramPart'"
+                        continue
+                    }
 
                     # Format default value
                     $formattedDefault = if ($paramDefault) {
@@ -238,12 +240,13 @@ function Parse-NssFunction {
                             elseif ($paramDefault -eq 'OBJECT_INVALID') {
                                 'OBJECT_INVALID'
                             }
-                            elseif ($allConstants.ContainsKey($paramDefault)) {
+                            elseif ($script:allConstants.ContainsKey($paramDefault)) {
                                 # Resolve to numeric value from constants table
-                                $allConstants[$paramDefault]
+                                $script:allConstants[$paramDefault]
                             }
                             else {
                                 # Unknown constant - use as-is (might cause compile error)
+                                Write-Warning "Unknown constant '$paramDefault' used as default value in function '$functionName'"
                                 $paramDefault
                             }
                         }
@@ -252,20 +255,15 @@ function Parse-NssFunction {
                         'null'
                     }
 
-                        $params += @{
-                            Type    = $paramDataType
-                            Name    = $paramName
-                            Default = $formattedDefault
-                        }
-                    }
-                    else {
-                        # Parameter doesn't match pattern - might be malformed, but continue
-                        Write-Warning "Parameter doesn't match expected pattern: '$paramPart'"
+                    $params += @{
+                        Type    = $paramDataType
+                        Name    = $paramName
+                        Default = $formattedDefault
                     }
                 }
-                catch {
-                    # Error parsing parameter - skip it but continue with function
-                    Write-Warning "Error parsing parameter '$paramPart': $($_.Exception.Message)"
+                else {
+                    # Parameter doesn't match pattern - might be malformed, but continue
+                    Write-Warning "Parameter doesn't match expected pattern: '$paramPart'"
                 }
             }
         }
@@ -287,14 +285,13 @@ function Parse-NssFunction {
     return $null
 }
 
-function Parse-NssFile {
+function Parse-NssConstants {
     param([string]$FilePath)
 
-    Write-Host "Parsing $FilePath..." -ForegroundColor Yellow
+    Write-Host "  Parsing constants from $FilePath..." -ForegroundColor Yellow
 
     $lines = Get-Content $FilePath
     $constants = @()
-    $functions = @()
 
     for ($i = 0; $i -lt $lines.Count; $i++) {
         $line = $lines[$i]
@@ -308,6 +305,31 @@ function Parse-NssFile {
         $constant = Parse-NssConstant -Line $line
         if ($constant) {
             $constants += $constant
+        }
+    }
+
+    Write-Host "    Found $($constants.Count) constants" -ForegroundColor Green
+    return $constants
+}
+
+function Parse-NssFunctions {
+    param([string]$FilePath)
+
+    Write-Host "  Parsing functions from $FilePath..." -ForegroundColor Yellow
+
+    $lines = Get-Content $FilePath
+    $functions = @()
+
+    for ($i = 0; $i -lt $lines.Count; $i++) {
+        $line = $lines[$i]
+
+        # Skip preprocessor directives
+        if ($line -match '^\s*#') {
+            continue
+        }
+
+        # Skip constant definitions (already parsed)
+        if ($line -match '^\s*(int|float|string)\s+[A-Z_][A-Z0-9_]*\s*=') {
             continue
         }
 
@@ -327,12 +349,8 @@ function Parse-NssFile {
         }
     }
 
-    Write-Host "  Found $($constants.Count) constants and $($functions.Count) functions" -ForegroundColor Green
-
-    return @{
-        Constants = $constants
-        Functions = $functions
-    }
+    Write-Host "    Found $($functions.Count) functions" -ForegroundColor Green
+    return $functions
 }
 
 function Generate-ConstantCode {
@@ -372,23 +390,40 @@ function Generate-FunctionCode {
 "@
 }
 
-# Parse both NSS files
-$k1Data = Parse-NssFile -FilePath $K1NssPath
-$k2Data = Parse-NssFile -FilePath $K2NssPath
+# STEP 1: Parse constants from BOTH files first
+Write-Host "`nStep 1: Parsing constants..." -ForegroundColor Cyan
+$k1Constants = Parse-NssConstants -FilePath $K1NssPath
+$k2Constants = Parse-NssConstants -FilePath $K2NssPath
 
-# Build a lookup table of all constants for resolving default values
-$allConstants = @{}
-foreach ($const in $k1Data.Constants) {
-    $allConstants[$const.Name] = $const.Value
+# STEP 2: Build the constants lookup table (before parsing functions)
+Write-Host "`nStep 2: Building constants lookup table..." -ForegroundColor Cyan
+foreach ($const in $k1Constants) {
+    $script:allConstants[$const.Name] = $const.Value
 }
-foreach ($const in $k2Data.Constants) {
-    if (-not $allConstants.ContainsKey($const.Name)) {
-        $allConstants[$const.Name] = $const.Value
+foreach ($const in $k2Constants) {
+    if (-not $script:allConstants.ContainsKey($const.Name)) {
+        $script:allConstants[$const.Name] = $const.Value
     }
+}
+Write-Host "  Built lookup table with $($script:allConstants.Count) unique constants" -ForegroundColor Green
+
+# STEP 3: Parse functions (now that constants are available for default value resolution)
+Write-Host "`nStep 3: Parsing functions..." -ForegroundColor Cyan
+$k1Functions = Parse-NssFunctions -FilePath $K1NssPath
+$k2Functions = Parse-NssFunctions -FilePath $K2NssPath
+
+# Build the data structure expected by the rest of the script
+$k1Data = @{
+    Constants = $k1Constants
+    Functions = $k1Functions
+}
+$k2Data = @{
+    Constants = $k2Constants
+    Functions = $k2Functions
 }
 
 # Generate C# code
-Write-Host "`nGenerating C# code..." -ForegroundColor Cyan
+Write-Host "`nStep 4: Generating C# code..." -ForegroundColor Cyan
 
 # Build constant lists
 $k1ConstantsCode = ""
@@ -472,4 +507,3 @@ Write-Host "  Total K1 Constants: $($k1Data.Constants.Count)"
 Write-Host "  Total K1 Functions: $($k1Data.Functions.Count)"
 Write-Host "  Total K2 Constants: $($k2Data.Constants.Count)"
 Write-Host "  Total K2 Functions: $($k2Data.Functions.Count)"
-

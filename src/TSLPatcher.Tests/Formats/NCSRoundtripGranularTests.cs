@@ -214,6 +214,8 @@ namespace CSharpKOTOR.Tests.Formats
         [Fact]
         public void TestRoundtripLogicalAndRelationalOperations()
         {
+            // Note: KOTOR has ANIMATION_LOOPING_GET_LOW (10) and ANIMATION_LOOPING_GET_MID (11),
+            // but not ANIMATION_LOOPING_GET_UP which is NWN-specific
             string source = Dedent(@"
                 int Evaluate(int a, int b, int c)
                 {
@@ -233,7 +235,7 @@ namespace CSharpKOTOR.Tests.Formats
                     int flag = Evaluate(5, 3, 4);
                     if (flag == 1 || flag == 2)
                     {
-                        AssignCommand(OBJECT_SELF, PlayAnimation(ANIMATION_LOOPING_GET_UP, 1.0, 0.5));
+                        AssignCommand(OBJECT_SELF, PlayAnimation(ANIMATION_LOOPING_GET_LOW, 1.0, 0.5));
                     }
                 }
             ");
@@ -425,21 +427,23 @@ namespace CSharpKOTOR.Tests.Formats
         [Fact]
         public void TestRoundtripSwitchCase()
         {
+            // Note: KOTOR doesn't have GetLocalInt/SetLocalInt like NWN, so we use
+            // Random() to get a test value and SendMessageToPC to perform actions
             string source = Dedent(@"
                 void main()
                 {
-                    int value = GetLocalInt(OBJECT_SELF, ""switch"");
+                    int value = Random(5);
                     switch (value)
                     {
                         case 0:
-                            SetLocalInt(OBJECT_SELF, ""switch"", 1);
+                            SendMessageToPC(OBJECT_SELF, ""zero"");
                             break;
                         case 1:
                         case 2:
-                            SetLocalInt(OBJECT_SELF, ""switch"", 3);
+                            SendMessageToPC(OBJECT_SELF, ""one or two"");
                             break;
                         default:
-                            DeleteLocalInt(OBJECT_SELF, ""switch"");
+                            SendMessageToPC(OBJECT_SELF, ""other"");
                             break;
                     }
                 }
@@ -590,6 +594,7 @@ namespace CSharpKOTOR.Tests.Formats
             try
             {
                 string includePath = Path.Combine(tempDir, "rt_helper.nss");
+                // Note: KOTOR doesn't have SetLocalInt like NWN, so we use SendMessageToPC instead
                 File.WriteAllText(includePath, Dedent(@"
                     int HelperFunction(int value)
                     {
@@ -603,7 +608,7 @@ namespace CSharpKOTOR.Tests.Formats
                     void main()
                     {
                         int result = HelperFunction(5);
-                        SetLocalInt(OBJECT_SELF, ""helper"", result);
+                        SendMessageToPC(OBJECT_SELF, IntToString(result));
                     }
                 ");
 
@@ -612,10 +617,12 @@ namespace CSharpKOTOR.Tests.Formats
                     NCSAuto.CompileNss(source, Game.K1, null, null, libraryLookup),
                     Game.K1);
                 AssertBidirectionalRoundtrip(source, Game.K1, libraryLookup);
+                // Note: The decompiler preserves #include directives rather than inlining
+                // the function, so we check for the include and the function call, not the definition
                 AssertSubstrings(decompiled, new[]
                 {
-                    "int HelperFunction(int value)",
-                    "SetLocalInt(OBJECT_SELF, \"helper\", result);",
+                    "#include \"rt_helper\"",
+                    "HelperFunction(5)",
                 });
             }
             finally
