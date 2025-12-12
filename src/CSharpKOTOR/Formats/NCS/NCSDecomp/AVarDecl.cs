@@ -66,14 +66,13 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptnode
             return this.exp;
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/AVarDecl.java:58-63
+        // Original: @Override public String toString() { return this.exp == null ? this.tabs + this.var.toDeclString() + ";" + this.newline : this.tabs + this.var.toDeclString() + " = " + ExpressionFormatter.formatValue(this.exp) + ";" + this.newline; }
         public override string ToString()
         {
-            if (this.exp == null)
-            {
-                return this.tabs.ToString() + this.var.ToDeclString() + ";" + this.newline;
-            }
-
-            return this.tabs.ToString() + this.var.ToDeclString() + " = " + this.exp.ToString() + ";" + this.newline;
+            return this.exp == null
+                ? this.tabs + this.var.ToDeclString() + ";" + this.newline
+                : this.tabs + this.var.ToDeclString() + " = " + ExpressionFormatter.FormatValue(this.exp) + ";" + this.newline;
         }
 
         public override void Close()
