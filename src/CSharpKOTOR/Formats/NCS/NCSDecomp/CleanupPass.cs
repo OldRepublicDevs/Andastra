@@ -68,14 +68,14 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
                     if (typeof(AVarDecl).IsInstanceOfType(node1Local))
                     {
                         AVarDecl decl = (AVarDecl)node1Local;
-                        if (decl.GetExp() == null && itLocal.HasNext())
+                        if (decl.Exp() == null && itLocal.HasNext())
                         {
                             Scriptnode.ScriptNode maybeAssign = (Scriptnode.ScriptNode)itLocal.Next();
                             if (typeof(AExpressionStatement).IsInstanceOfType(maybeAssign)
                                 && typeof(AModifyExp).IsInstanceOfType(((AExpressionStatement)maybeAssign).Exp()))
                             {
                                 AModifyExp modexp = (AModifyExp)((AExpressionStatement)maybeAssign).Exp();
-                                if (modexp.VarRef() != null && modexp.VarRef().Var() == decl.GetVarVar())
+                                if (modexp.VarRef() != null && modexp.VarRef().Var() == decl.Var())
                                 {
                                     decl.InitializeExp(modexp.Expression());
                                     itLocal.Remove(); // drop the now-merged assignment statement

@@ -78,7 +78,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
             base.Close();
             if (this.var != null && this.var is IDisposable disposableVar)
             {
-                disposableVar.Dispose();
+                disposableVar.Close();
             }
             this.var = null;
         }

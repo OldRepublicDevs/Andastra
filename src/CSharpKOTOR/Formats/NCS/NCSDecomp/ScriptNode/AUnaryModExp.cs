@@ -96,7 +96,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
             _varRef = null;
             if (_stackEntry != null && _stackEntry is IDisposable disposableStackEntry)
             {
-                disposableStackEntry.Dispose();
+                disposableStackEntry.Close();
             }
             _stackEntry = null;
         }

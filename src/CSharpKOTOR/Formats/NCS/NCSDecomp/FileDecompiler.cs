@@ -1602,7 +1602,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                     {
                         try
                         {
-                            using (var fis = new FileStream(file.FullName, FileMode.Open, FileAccess.Read))
+                            using (var fis = new FileStream(file.FullName, FileMode.Open, FileAccess.Read, FileShare.Read))
                             {
                                 byte[] header = new byte[Math.Min(16, (int)fileSize)];
                                 int read = fis.Read(header, 0, header.Length);

@@ -32,9 +32,17 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Stack
             return newStack;
         }
 
-        public virtual void Dispose()
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/stack/LocalStack.java:28-30
+        // Original: public void close()
+        public virtual void Close()
         {
             this.stack = null;
+        }
+
+        // Keep Dispose() for backward compatibility with IDisposable pattern
+        public virtual void Dispose()
+        {
+            this.Close();
         }
     }
 }

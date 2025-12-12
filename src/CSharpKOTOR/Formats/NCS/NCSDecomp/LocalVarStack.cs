@@ -13,7 +13,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Stack
     {
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/stack/LocalVarStack.java:20-31
         // Original: @Override public void close()
-        public new void Close()
+        public override void Close()
         {
             if (this.stack != null)
             {
