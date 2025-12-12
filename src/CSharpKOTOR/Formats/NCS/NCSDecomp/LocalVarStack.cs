@@ -112,8 +112,15 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Stack
                 }
             }
 
-            System.Console.WriteLine(this.ToString());
-            throw new Exception("offset " + offset + " was greater than stack size " + pos);
+            while (pos < offset)
+            {
+                Variable placeholder = this.NewPlaceholderVariable();
+                this.stack.AddLast(placeholder);
+                placeholder.AddedToStack(this);
+                pos += placeholder.Size();
+            }
+
+            return (StackEntry)this.stack.GetLast();
         }
 
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/stack/LocalVarStack.java:100-103
@@ -218,6 +225,16 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Stack
             }
 
             return newStack;
+        }
+
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/stack/LocalVarStack.java:217-222
+        // Original: private Variable newPlaceholderVariable()
+        private Variable NewPlaceholderVariable()
+        {
+            Variable placeholder = new Variable(new UtilsType((byte)255));
+            placeholder.Name("__unknown_param_" + (++this.placeholderCounter));
+            placeholder.IsParam(true);
+            return placeholder;
         }
     }
 }
