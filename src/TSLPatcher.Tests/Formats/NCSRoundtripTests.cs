@@ -440,7 +440,26 @@ namespace CSharpKOTOR.Tests.Formats
         /// <summary>
         /// Performs a complete round-trip test: NSS->NCS->NSS->NCS
         /// Primary goal: bytecode must match 1:1
-        /// Uses inbuilt compiler for first compilation, external compiler for recompilation
+        ///
+        /// ⚠️ CRITICAL REQUIREMENT - DO NOT MODIFY ⚠️
+        /// ============================================
+        /// The FIRST compilation (Step 1) MUST use the INBUILT compiler (RunInbuiltCompiler).
+        /// The SECOND compilation (Step 4) MUST use the EXTERNAL compiler (RunExternalCompiler).
+        ///
+        /// This is a HARD REQUIREMENT and MUST NEVER be changed:
+        /// - The first compilation tests that our inbuilt C# compiler produces valid NCS bytecode
+        /// - The second compilation tests that the decompiled NSS can be compiled by the external compiler
+        /// - The bytecode comparison tests that decompilation produces source that compiles to identical bytecode
+        ///
+        /// Changing the first compilation to use the external compiler would:
+        /// - Defeat the purpose of testing our inbuilt compiler
+        /// - Make the test meaningless (comparing external compiler output to external compiler output)
+        /// - Hide bugs in our inbuilt compiler
+        ///
+        /// If you are tempted to change this "for consistency" or "to make tests pass easier":
+        /// - DO NOT DO IT. This is intentional and required.
+        /// - If tests fail, fix the decompiler or compiler, don't change the test.
+        /// - The whole point is to ensure our inbuilt compiler and decompiler work correctly.
         /// </summary>
         private static void RoundTripSingle(string nssPath, string gameFlag, string scratchRoot)
         {
@@ -458,6 +477,9 @@ namespace CSharpKOTOR.Tests.Formats
             bool originalHasMain = originalSource.Contains("void main") || originalSource.Contains("void main(");
 
             // Step 1: Compile original NSS -> NCS (first NCS) using INBUILT compiler
+            // ⚠️ CRITICAL: This MUST use RunInbuiltCompiler, NOT RunExternalCompiler.
+            // This is a hard requirement - see method documentation above.
+            // DO NOT change this to use the external compiler, even if it seems "simpler" or "more consistent".
             string compiledFirst = Path.Combine(outDir, Path.GetFileNameWithoutExtension(rel) + ".ncs");
             Console.Write($"  [1/5] Compiling {displayRelPath} to .ncs with inbuilt compiler");
             long compileOriginalStart = Stopwatch.GetTimestamp();
@@ -616,6 +638,9 @@ namespace CSharpKOTOR.Tests.Formats
             }
 
             // Step 4: Recompile decompiled NSS -> NCS (second NCS) using EXTERNAL compiler
+            // ⚠️ CRITICAL: This MUST use RunExternalCompiler, NOT RunInbuiltCompiler.
+            // This is a hard requirement - see method documentation above.
+            // The external compiler is the reference implementation that validates our decompiler output.
             string recompiled = Path.Combine(outDir, Path.GetFileNameWithoutExtension(rel) + ".rt.ncs");
 
             string decompiledContentForRecompile = decompiledContent ?? File.ReadAllText(decompiled, Encoding.UTF8);
@@ -641,6 +666,7 @@ namespace CSharpKOTOR.Tests.Formats
             long compileRoundtripStart = Stopwatch.GetTimestamp();
             try
             {
+                // ⚠️ CRITICAL: MUST use RunExternalCompiler here. DO NOT change to RunInbuiltCompiler.
                 RunExternalCompiler(compileInput, recompiled, gameFlag, scratchRoot);
 
                 // Assert: Recompiled NCS exists and is non-empty
