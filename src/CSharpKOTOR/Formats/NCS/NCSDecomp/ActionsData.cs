@@ -73,34 +73,78 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             }
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/ActionsData.java:76-81
+        // Original: public Type getReturnType(int index)
         public virtual UtilsType GetReturnType(int index)
         {
+            if (index < 0 || index >= this.actions.Count)
+            {
+                throw new Exception("Invalid action index: " + index + " (actions list size: " + this.actions.Count + ")");
+            }
             return ((Action)this.actions[index]).ReturnType();
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/ActionsData.java:83-88
+        // Original: public String getName(int index)
         public virtual string GetName(int index)
         {
+            if (index < 0 || index >= this.actions.Count)
+            {
+                throw new Exception("Invalid action index: " + index + " (actions list size: " + this.actions.Count + ")");
+            }
             return ((Action)this.actions[index]).Name();
         }
 
         public virtual List<object> GetParamTypes(int index)
         {
+            if (index < 0 || index >= this.actions.Count)
+            {
+                throw new Exception("Invalid action index: " + index + " (actions list size: " + this.actions.Count + ")");
+            }
             return ((Action)this.actions[index]).Params();
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/ActionsData.java:97-102
+        // Original: public List<String> getDefaultValues(int index)
+        public virtual List<string> GetDefaultValues(int index)
+        {
+            if (index < 0 || index >= this.actions.Count)
+            {
+                throw new Exception("Invalid action index: " + index + " (actions list size: " + this.actions.Count + ")");
+            }
+            return ((Action)this.actions[index]).DefaultValues();
+        }
+
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/ActionsData.java:104-109
+        // Original: public int getRequiredParamCount(int index)
+        public virtual int GetRequiredParamCount(int index)
+        {
+            if (index < 0 || index >= this.actions.Count)
+            {
+                throw new Exception("Invalid action index: " + index + " (actions list size: " + this.actions.Count + ")");
+            }
+            return ((Action)this.actions[index]).RequiredParamCount();
+        }
+
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/ActionsData.java:114-188
+        // Original: public static class Action
         public class Action
         {
             private string name;
             private UtilsType returntype;
             private int paramsize;
             private List<object> paramList;
+            private List<string> defaultValues;
+            // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/ActionsData.java:128-146
+            // Original: public Action(String type, String name, String params)
             public Action(string type, string name, string @params)
             {
                 this.name = name;
                 this.returntype = UtilsType.ParseType(type);
                 this.paramList = new List<object>();
+                this.defaultValues = new List<string>();
                 this.paramsize = 0;
-                Pattern p = Pattern.Compile("\\s*(\\w+)\\s+\\w+(\\s*=\\s*\\S+)?\\s*");
+                Pattern p = Pattern.Compile("\\s*(\\w+)\\s+\\w+(\\s*=\\s*(\\S+))?\\s*");
                 String[] tokens = @params.Split(",");
                 for (int i = 0; i < tokens.Length; ++i)
                 {
@@ -108,6 +152,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                     if (m.Matches())
                     {
                         this.paramList.Add(new UtilsType(m.Group(1)));
+                        string defaultValue = m.Group(3);
+                        this.defaultValues.Add(defaultValue != null ? defaultValue.Trim() : null);
                         this.paramsize += UtilsType.TypeSize(m.Group(1));
                     }
                 }
@@ -136,6 +182,28 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             public virtual string Name()
             {
                 return this.name;
+            }
+
+            // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/ActionsData.java:173-176
+            // Original: public List<String> defaultValues()
+            public virtual List<string> DefaultValues()
+            {
+                return this.defaultValues;
+            }
+
+            // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/ActionsData.java:178-187
+            // Original: public int requiredParamCount()
+            public virtual int RequiredParamCount()
+            {
+                int count = 0;
+                for (int i = 0; i < this.defaultValues.Count; i++)
+                {
+                    if (this.defaultValues[i] == null)
+                    {
+                        count = i + 1;
+                    }
+                }
+                return count;
             }
         }
     }
