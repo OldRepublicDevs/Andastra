@@ -16,7 +16,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
 {
     public class MainPass : PrunedDepthFirstAdapter
     {
-        protected LocalVarStack stack;
+        /** Live variable stack reflecting current execution point. */
+        protected LocalVarStack stack = new LocalVarStack();
         protected NodeAnalysisData nodedata;
         protected SubroutineAnalysisData subdata;
         protected bool skipdeadcode;
@@ -25,9 +26,10 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
         protected bool globals;
         protected LocalVarStack backupstack;
         protected Utils.Type type;
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/MainPass.java:66-76
+        // Original: public MainPass(SubroutineState state, NodeAnalysisData nodedata, SubroutineAnalysisData subdata, ActionsData actions)
         public MainPass(SubroutineState state, NodeAnalysisData nodedata, SubroutineAnalysisData subdata, ActionsData actions)
         {
-            this.stack = new LocalVarStack();
             this.nodedata = nodedata;
             this.subdata = subdata;
             this.actions = actions;
@@ -41,9 +43,10 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             this.type = state.Type();
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/MainPass.java:78-86
+        // Original: protected MainPass(NodeAnalysisData nodedata, SubroutineAnalysisData subdata)
         protected MainPass(NodeAnalysisData nodedata, SubroutineAnalysisData subdata)
         {
-            this.stack = new LocalVarStack();
             this.nodedata = nodedata;
             this.subdata = subdata;
             this.skipdeadcode = false;

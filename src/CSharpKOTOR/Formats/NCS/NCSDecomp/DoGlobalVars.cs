@@ -22,13 +22,6 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
         }
 
         // Override DefaultIn to ensure skipdeadcode is set correctly for globals
-        // Matching DeNCS implementation: DoGlobalVars inherits MainPass.DefaultIn behavior
-        // which sets skipdeadcode based on ProcessCode, but OutARsaddCommand checks freezeStack instead
-        public override void DefaultIn(Node node)
-        {
-            // Call base to set skipdeadcode (though we check freezeStack in OutARsaddCommand)
-            base.DefaultIn(node);
-        }
 
         public override string GetCode()
         {
@@ -93,7 +86,6 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
         {
             // Treat AST.ARsaddCommand the same as root namespace ARsaddCommand
             // Use freezeStack check instead of skipdeadcode (matching DoGlobalVars pattern)
-            JavaSystem.@out.Println($"DEBUG DoGlobalVars.OutARsaddCommand(AST): freezeStack={this.freezeStack}, skipdeadcode={this.skipdeadcode}");
             if (!this.freezeStack)
             {
                 // Extract type from AST.ARsaddCommand's GetType() which returns TIntegerConstant
@@ -108,14 +100,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                 }
                 Variable var = new Variable(new UtilsType((byte)typeVal));
                 this.stack.Push(var);
-                JavaSystem.@out.Println($"DEBUG DoGlobalVars.OutARsaddCommand(AST): calling TransformRSAdd, stack size={this.stack.Size()}");
                 this.state.TransformRSAdd(node);
-                JavaSystem.@out.Println($"DEBUG DoGlobalVars.OutARsaddCommand(AST): after TransformRSAdd, root children count={this.state.GetRoot().GetChildren().Count}");
                 var = null;
-            }
-            else
-            {
-                JavaSystem.@out.Println($"DEBUG DoGlobalVars.OutARsaddCommand(AST): skipping because freezeStack=true");
             }
         }
 
