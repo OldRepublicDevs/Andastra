@@ -83,6 +83,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
             this.stack = stack;
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptutils/SubScriptState.java:146-164
+        // Original: public void parseDone()
         public virtual void ParseDone()
         {
             this.nodedata = null;
@@ -99,24 +101,20 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
                 {
                     Variable var = (Variable)key;
                     var.DoneParse();
-                    this.vardecs[var] = 1;
                 }
             }
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptutils/SubScriptState.java:166-195
+        // Original: public void close()
         public virtual void Close()
-        {
-            Dispose();
-        }
-
-        public virtual void Dispose()
         {
             if (this.vardecs != null)
             {
                 foreach (object key in this.vardecs.Keys)
                 {
                     Variable var = (Variable)key;
-                    var.Dispose();
+                    var.Close();
                 }
 
                 this.vardecs = null;
@@ -136,7 +134,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
             this.actions = null;
             if (this.stack != null)
             {
-                this.stack.Dispose();
+                this.stack.Close();
                 this.stack = null;
             }
         }
@@ -166,17 +164,15 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
             return this.root.Name();
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptutils/SubScriptState.java:218-220
+        // Original: public void setName(String name)
         public virtual void SetName(string name)
         {
             this.root.Name(name);
         }
 
-        public string Name
-        {
-            get { return GetName(); }
-            set { SetName(value); }
-        }
-
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptutils/SubScriptState.java:222-270
+        // Original: public Vector<Variable> getVariables()
         public virtual Vector GetVariables()
         {
             Vector vars = new Vector(this.vardecs.Keys);
