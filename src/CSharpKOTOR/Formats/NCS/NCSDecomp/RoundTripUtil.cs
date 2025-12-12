@@ -62,11 +62,11 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                     decompiler.DecompileToFile(ncsFile, tempNssFile, Encoding.UTF8, true);
 
                     // Read the decompiled code
-                    if (tempNssFile.Exists && tempNssFile.Length > 0)
+                    if (tempNssFile.Exists() && tempNssFile.Length() > 0)
                     {
                         try
                         {
-                            return System.IO.File.ReadAllText(tempNssFile.FullName, Encoding.UTF8);
+                            return System.IO.File.ReadAllText(tempNssFile.FullName(), Encoding.UTF8);
                         }
                         catch (IOException e)
                         {
