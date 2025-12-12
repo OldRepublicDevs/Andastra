@@ -37,8 +37,16 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.AST
 
         public override void Apply(Analysis.AnalysisAdapter sw)
         {
-            // AST.ASubroutine is different from NCSDecomp.ASubroutine, so use DefaultIn
-            sw.DefaultIn(this);
+            // Call CaseASubroutine directly if sw is PrunedReversedDepthFirstAdapter
+            // This ensures the visitor pattern routes correctly to CaseASubroutine
+            if (sw is Analysis.PrunedReversedDepthFirstAdapter prdfa)
+            {
+                prdfa.CaseASubroutine(this);
+            }
+            else
+            {
+                sw.DefaultIn(this);
+            }
         }
 
         public PCommandBlock GetCommandBlock()

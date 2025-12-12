@@ -94,6 +94,24 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Analysis
             this.OutASubroutine(node);
         }
 
+        // Handle AST.ASubroutine as well (from NcsToAstConverter)
+        public virtual void CaseASubroutine(AST.ASubroutine node)
+        {
+            // Treat AST.ASubroutine the same as root namespace ASubroutine
+            this.DefaultIn(node);
+            if (node.GetReturn() != null)
+            {
+                node.GetReturn().Apply(this);
+            }
+
+            if (node.GetCommandBlock() != null)
+            {
+                node.GetCommandBlock().Apply(this);
+            }
+
+            this.DefaultOut(node);
+        }
+
         public virtual void InACommandBlock(ACommandBlock node)
         {
             this.DefaultIn(node);
@@ -114,6 +132,20 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Analysis
             }
 
             this.OutACommandBlock(node);
+        }
+
+        // Handle AST.ACommandBlock as well (from NcsToAstConverter)
+        public virtual void CaseACommandBlock(AST.ACommandBlock node)
+        {
+            // Treat AST.ACommandBlock the same as root namespace ACommandBlock
+            this.DefaultIn(node);
+            Object[] temp = node.GetCmd().ToArray();
+            for (int i = temp.Length - 1; i >= 0; --i)
+            {
+                ((PCmd)temp[i]).Apply(this);
+            }
+
+            this.DefaultOut(node);
         }
 
         public virtual void InAAddVarCmd(AAddVarCmd node)

@@ -76,6 +76,21 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             this.OutACommandBlock(node);
         }
 
+        // Handle AST.ACommandBlock as well (from NcsToAstConverter)
+        public override void CaseACommandBlock(AST.ACommandBlock node)
+        {
+            // Traverse into AST.ACommandBlock to find ABpCommand
+            Object[] temp = node.GetCmd().ToArray();
+            for (int i = temp.Length - 1; i >= 0; --i)
+            {
+                ((PCmd)temp[i]).Apply(this);
+                if (this.isGlobals)
+                {
+                    return;
+                }
+            }
+        }
+
         public virtual bool GetIsGlobals()
         {
             return this.isGlobals;
