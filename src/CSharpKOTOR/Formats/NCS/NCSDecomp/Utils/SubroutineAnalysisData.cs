@@ -550,14 +550,6 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
 
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SubroutineAnalysisData.java:551-558
         // Original: public void close()
-        public virtual void Close()
-        {
-            // Clean up resources
-            this.subroutines?.Clear();
-            this.globalstructs?.Clear();
-            this.substates?.Clear();
-        }
-
         // Keep Dispose() for backward compatibility with IDisposable pattern
         public virtual void Dispose()
         {
