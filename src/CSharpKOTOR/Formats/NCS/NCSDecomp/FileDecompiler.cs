@@ -1626,8 +1626,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                 {
                     JavaSystem.@out.Println("DEBUG decompileNcs: starting parse, commands length=" + (commands != null ? commands.Length : 0));
                     using (var stringReader = new StringReader(commands))
-                    using (var pushbackReader = new PushbackReader(stringReader, 1024))
                     {
+                        var pushbackReader = new PushbackReader(stringReader, 1024);
                         ast = new Parser.Parser(new Lexer.Lexer(pushbackReader)).Parse();
                     }
                     JavaSystem.@out.Println("DEBUG decompileNcs: parse successful");
@@ -1645,8 +1645,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                         // Strategy 1: Try parsing with a larger buffer
                         JavaSystem.@out.Println("Trying parse with larger buffer...");
                         using (var stringReader = new StringReader(commands))
-                        using (var pushbackReader = new PushbackReader(stringReader, 2048))
                         {
+                            var pushbackReader = new PushbackReader(stringReader, 2048);
                             ast = new Parser.Parser(new Lexer.Lexer(pushbackReader)).Parse();
                         }
                         JavaSystem.@out.Println("Successfully recovered parse with larger buffer.");

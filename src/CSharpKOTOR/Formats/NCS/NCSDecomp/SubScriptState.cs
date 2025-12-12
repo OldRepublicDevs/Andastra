@@ -335,7 +335,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
         {
             if (vars.Count == 1 && this.current.HasChildren() && typeof(Scriptnode.ASwitch).IsInstanceOfType(this.current.GetLastChild()))
             {
-                AExpression exp = ((Scriptnode.ASwitch)this.current.GetLastChild()).SwitchExp();
+                AExpression exp = ((Scriptnode.ASwitch)this.current.GetLastChild()).GetSwitchExp();
                 return typeof(ScriptNode.AVarRef).IsInstanceOfType(exp) && ((ScriptNode.AVarRef)exp).Var().Equals(vars[0]);
             }
 
@@ -462,8 +462,9 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
                         {
                             existingSwitch = (Scriptnode.ASwitch)last;
                             // Verify the switch expression matches
-                            if (typeof(AVarRef).IsInstanceOfType(cond.Left()) && typeof(AVarRef).IsInstanceOfType(existingSwitch.GetSwitchExp())
-                                && ((AVarRef)cond.Left()).Var().Equals(((AVarRef)existingSwitch.GetSwitchExp()).Var()))
+                            AExpression switchExp = existingSwitch.GetSwitchExp();
+                            if (typeof(AVarRef).IsInstanceOfType(cond.Left()) && typeof(AVarRef).IsInstanceOfType(switchExp)
+                                && ((AVarRef)cond.Left()).Var().Equals(((AVarRef)switchExp).Var()))
                             {
                                 // Can continue existing switch
                                 ASwitchCase aprevcase = existingSwitch.GetLastCase();
