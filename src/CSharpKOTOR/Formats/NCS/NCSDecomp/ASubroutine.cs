@@ -5,6 +5,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using CSharpKOTOR.Formats.NCS.NCSDecomp.Analysis;
+using JavaSystem = CSharpKOTOR.Formats.NCS.NCSDecomp.JavaSystem;
 
 namespace CSharpKOTOR.Formats.NCS.NCSDecomp
 {

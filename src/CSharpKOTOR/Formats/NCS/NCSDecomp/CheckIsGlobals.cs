@@ -64,15 +64,11 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
         {
             this.InACommandBlock(node);
             Object[] temp = node.GetCmd().ToArray();
-            JavaSystem.@out.Println($"DEBUG CaseACommandBlock: processing {temp.Length} commands");
             for (int i = temp.Length - 1; i >= 0; --i)
             {
-                var cmd = ((PCmd)temp[i]);
-                JavaSystem.@out.Println($"  Command {i}: {cmd.GetType().FullName}");
-                cmd.Apply(this);
+                ((PCmd)temp[i]).Apply(this);
                 if (this.isGlobals)
                 {
-                    JavaSystem.@out.Println($"  Found globals marker at command {i}!");
                     return;
                 }
             }
@@ -99,16 +95,9 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
         public override void CaseASubroutine(ASubroutine node)
         {
             // Don't call InASubroutine/OutASubroutine - just traverse command block
-            JavaSystem.@out.Println("DEBUG CaseASubroutine: entered");
             if (node.GetCommandBlock() != null)
             {
-                JavaSystem.@out.Println($"DEBUG CaseASubroutine: calling GetCommandBlock().Apply(this), type is {node.GetCommandBlock().GetType().FullName}");
                 node.GetCommandBlock().Apply(this);
-                JavaSystem.@out.Println("DEBUG CaseASubroutine: GetCommandBlock().Apply(this) completed");
-            }
-            else
-            {
-                JavaSystem.@out.Println("DEBUG CaseASubroutine: command block is null");
             }
         }
 

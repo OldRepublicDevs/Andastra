@@ -522,27 +522,16 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
         {
             CheckIsGlobals cig = new CheckIsGlobals();
             
-            // DEBUG: Check node and command block
-            JavaSystem.@out.Println($"DEBUG IsGlobalsSub: node type is {node.GetType().FullName}");
+            // Directly traverse command block instead of relying on visitor pattern
+            // This matches the Java implementation which only overrides caseACommandBlock
             var cmdBlock = node.GetCommandBlock();
-            if (cmdBlock != null)
+            if (cmdBlock != null && cmdBlock is ACommandBlock aCmdBlock)
             {
-                JavaSystem.@out.Println($"DEBUG IsGlobalsSub: command block type is {cmdBlock.GetType().FullName}");
-            }
-            else
-            {
-                JavaSystem.@out.Println("DEBUG IsGlobalsSub: command block is null");
+                // Call CaseACommandBlock directly on the visitor
+                cig.CaseACommandBlock(aCmdBlock);
             }
             
-            JavaSystem.@out.Println($"DEBUG IsGlobalsSub: cig type is {cig.GetType().FullName}");
-            JavaSystem.@out.Println($"DEBUG IsGlobalsSub: cig is IAnalysis: {cig is IAnalysis}");
-            JavaSystem.@out.Println($"DEBUG IsGlobalsSub: cig is PrunedReversedDepthFirstAdapter: {cig is Analysis.PrunedReversedDepthFirstAdapter}");
-            JavaSystem.@out.Println("DEBUG IsGlobalsSub: calling node.Apply(cig)");
-            node.Apply(cig);
-            JavaSystem.@out.Println("DEBUG IsGlobalsSub: node.Apply(cig) completed");
-            bool result = cig.GetIsGlobals();
-            JavaSystem.@out.Println($"DEBUG IsGlobalsSub: result = {result}");
-            return result;
+            return cig.GetIsGlobals();
         }
 
         public virtual void Dispose()
