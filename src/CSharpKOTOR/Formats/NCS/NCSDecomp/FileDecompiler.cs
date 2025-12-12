@@ -891,46 +891,46 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                 cleanpass.Done();
                 data.SetSubdata(subdata);
                 // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:1600-1618
-                // Check both doglobs and subdata.GlobalState() to ensure globals are set
-                SubScriptState globalState = subdata.GlobalState();
-                if (doglobs != null || globalState != null)
+                if (doglobs != null)
                 {
                     try
                     {
-                        SubScriptState stateToUse = doglobs != null ? doglobs.GetState() : globalState;
-                        if (stateToUse != null)
-                        {
-                            if (doglobs != null)
-                            {
-                                cleanpass = new CleanupPass(doglobs.GetScriptRoot(), nodedata, subdata, stateToUse);
-                                cleanpass.Apply();
-                                cleanpass.Done();
-                            }
-                            data.SetGlobals(stateToUse);
-                            if (doglobs != null)
-                            {
-                                doglobs.Done();
-                            }
-                        }
+                        cleanpass = new CleanupPass(doglobs.GetScriptRoot(), nodedata, subdata, doglobs.GetState());
+                        cleanpass.Apply();
+                        data.SetGlobals(doglobs.GetState());
+                        doglobs.Done();
+                        cleanpass.Done();
                     }
                     catch (Exception e)
                     {
                         JavaSystem.@out.Println("Error finalizing globals: " + e.Message);
                         try
                         {
-                            SubScriptState fallbackState = globalState ?? (doglobs != null ? doglobs.GetState() : null);
-                            if (fallbackState != null)
+                            if (doglobs.GetState() != null)
                             {
-                                data.SetGlobals(fallbackState);
+                                data.SetGlobals(doglobs.GetState());
                             }
-                            if (doglobs != null)
-                            {
-                                doglobs.Done();
-                            }
+                            doglobs.Done();
                         }
                         catch (Exception e2)
                         {
                             JavaSystem.@out.Println("Could not recover globals state: " + e2.Message);
+                        }
+                    }
+                }
+                else
+                {
+                    // Fallback: if doglobs is null but globals were processed, try to get state from subdata
+                    SubScriptState globalState = subdata.GlobalState();
+                    if (globalState != null)
+                    {
+                        try
+                        {
+                            data.SetGlobals(globalState);
+                        }
+                        catch (Exception e)
+                        {
+                            JavaSystem.@out.Println("Error setting globals from subdata: " + e.Message);
                         }
                     }
                 }
