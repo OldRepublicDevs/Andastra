@@ -5,6 +5,7 @@
 // See LICENSE.txt file in the project root for full license information.
 
 using System;
+using CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptnode;
 
 namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
 {
