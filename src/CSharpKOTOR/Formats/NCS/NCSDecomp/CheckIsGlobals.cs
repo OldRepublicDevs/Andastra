@@ -1,4 +1,4 @@
-// 
+//
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -20,6 +20,26 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
         public override void InABpCommand(ABpCommand node)
         {
             this.isGlobals = true;
+        }
+
+        public override void CaseABpCommand(ABpCommand node)
+        {
+            // Matching DeNCS implementation: explicitly call InABpCommand
+            this.InABpCommand(node);
+        }
+
+        public override void CaseABpCmd(ABpCmd node)
+        {
+            // Matching DeNCS implementation: traverse into ABpCmd to reach ABpCommand
+            this.InABpCmd(node);
+            if (node.GetBpCommand() != null)
+            {
+                node.GetBpCommand().Apply(this);
+            }
+            if (!this.isGlobals)
+            {
+                this.OutABpCmd(node);
+            }
         }
 
         public override void CaseACommandBlock(ACommandBlock node)
