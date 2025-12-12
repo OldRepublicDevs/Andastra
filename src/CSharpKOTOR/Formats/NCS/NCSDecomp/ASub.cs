@@ -68,7 +68,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptnode
             {
                 ScriptNodeNS.AVarRef param = (ScriptNodeNS.AVarRef)this.@params[i];
                 UtilsType ptype = param.Type();
-                buff.Append(link.ToString() + ptype + " " + param.ToString());
+                buff.Append(link + ptype + " " + param.ToString());
                 link = ", ";
             }
 

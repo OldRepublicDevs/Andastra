@@ -49,12 +49,11 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             }
             return new ACommandBlock(list);
         }
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/node/ACommandBlock.java:42-45
+        // Original: @Override public void apply(Switch sw) { ((Analysis)sw).caseACommandBlock(this); }
         public override void Apply(Switch sw)
         {
-            if (sw is IAnalysis ia)
-            {
-                ia.CaseACommandBlock(this);
-            }
+            ((Analysis)sw).CaseACommandBlock(this);
         }
 
         public TypedLinkedList GetCmd()
@@ -81,14 +80,18 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             return sb.ToString();
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/node/ACommandBlock.java:61-66
+        // Original: @Override void removeChild(Node child) { if (!this._cmd_.remove(child)) { ; } }
         public override void RemoveChild(Node child)
         {
-            if (this._cmd_.Remove(child))
+            if (!this._cmd_.Remove(child))
             {
-                return;
+                ;
             }
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/node/ACommandBlock.java:68-85
+        // Original: @Override void replaceChild(Node oldChild, Node newChild) { ... }
         public override void ReplaceChild(Node oldChild, Node newChild)
         {
             ListIterator i = this._cmd_.ListIterator(0);
@@ -105,6 +108,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
 
                     i.Remove();
                     oldChild.Parent(null);
+                    return;
                 }
             }
         }
