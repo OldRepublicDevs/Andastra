@@ -11,6 +11,7 @@ using CSharpKOTOR.Formats.NCS.NCSDecomp.Utils;
 using AVarRef = CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode.AVarRef;
 using JavaSystem = CSharpKOTOR.Formats.NCS.NCSDecomp.JavaSystem;
 using UtilsType = CSharpKOTOR.Formats.NCS.NCSDecomp.Utils.Type;
+using AST = CSharpKOTOR.Formats.NCS.NCSDecomp.AST;
 
 namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
 {
@@ -829,6 +830,19 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
 
         public virtual void TransformRSAdd(ARsaddCommand node)
         {
+            this.CheckStart(node);
+            Variable var = (Variable)this.stack[1];
+            AVarDecl vardec = new AVarDecl(var);
+            this.UpdateVarCount(var);
+            this.current.AddChild(vardec);
+            this.vardecs.Put(var, vardec);
+            this.CheckEnd(node);
+        }
+
+        // Handle AST.ARsaddCommand as well (from NcsToAstConverter)
+        public virtual void TransformRSAdd(AST.ARsaddCommand node)
+        {
+            // Treat AST.ARsaddCommand the same as root namespace ARsaddCommand
             this.CheckStart(node);
             Variable var = (Variable)this.stack[1];
             AVarDecl vardec = new AVarDecl(var);

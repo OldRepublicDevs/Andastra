@@ -179,6 +179,20 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Analysis
             this.OutAAddVarCmd(node);
         }
 
+        // Handle AST.ARsaddCmd as well (from NcsToAstConverter)
+        // ARsaddCmd is similar to AAddVarCmd - it contains an ARsaddCommand
+        public virtual void CaseARsaddCmd(AST.ARsaddCmd node)
+        {
+            // Treat AST.ARsaddCmd similar to AAddVarCmd - visit the RsaddCommand child
+            this.DefaultIn(node);
+            if (node.GetRsaddCommand() != null)
+            {
+                node.GetRsaddCommand().Apply(this);
+            }
+
+            this.DefaultOut(node);
+        }
+
         public virtual void InAActionJumpCmd(AActionJumpCmd node)
         {
             this.DefaultIn(node);
@@ -766,6 +780,22 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Analysis
             this.OutARsaddCommand(node);
         }
 
+        // Handle AST.ARsaddCommand as well (from NcsToAstConverter)
+        public virtual void CaseARsaddCommand(AST.ARsaddCommand node)
+        {
+            // Treat AST.ARsaddCommand the same as root namespace ARsaddCommand
+            this.DefaultIn(node);
+            // Call OutARsaddCommand if visitor supports it (e.g., DoGlobalVars)
+            if (this is DoGlobalVars dgv)
+            {
+                dgv.OutARsaddCommand(node);
+            }
+            else
+            {
+                this.DefaultOut(node);
+            }
+        }
+
         public virtual void InAConstCommand(AConstCommand node)
         {
             this.DefaultIn(node);
@@ -899,7 +929,15 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Analysis
         {
             // Treat AST.ABpCommand the same as root namespace ABpCommand
             this.DefaultIn(node);
-            this.DefaultOut(node);
+            // Call OutABpCommand if visitor supports it (e.g., DoGlobalVars)
+            if (this is DoGlobalVars dgv)
+            {
+                dgv.OutABpCommand(node);
+            }
+            else
+            {
+                this.DefaultOut(node);
+            }
         }
 
         public virtual void InAStoreStateCommand(AStoreStateCommand node)
