@@ -495,17 +495,16 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                         }
                     }
 
+                    // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/DoTypes.java:276-282
+                    // Original: if (substate.type().equals((byte)-15) && !substate.type().isTyped()) { for (int i = 0; i < substate.type().size(); i++) { Type type = this.stack.get(substate.type().size() - i, this.state); if (!type.equals((byte)-1)) { ((StructType)substate.type()).updateType(i, type); } } }
                     if (substate.Type().Equals(unchecked((byte)(-15))) && !substate.Type().IsTyped())
                     {
                         for (int i = 0; i < substate.Type().Count; ++i)
                         {
-                            if (this.stack.Size() >= substate.Type().Count - i)
+                            UtilsType type = this.stack.Get(substate.Type().Count - i, this.state);
+                            if (!type.Equals(unchecked((byte)(-1))))
                             {
-                                UtilsType type = this.stack.Get(substate.Type().Count - i, this.state);
-                                if (!type.Equals(unchecked((byte)(-1))))
-                                {
-                                    ((StructType)substate.Type()).UpdateType(i, type);
-                                }
+                                ((StructType)substate.Type()).UpdateType(i, type);
                             }
                         }
                     }

@@ -102,7 +102,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             return this.alltyped;
         }
 
-        public override int Count
+        public int Count
         {
             get { return this.types.Count; }
         }

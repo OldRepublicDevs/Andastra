@@ -27,11 +27,13 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Stack
         public abstract void AddedToStack(LocalStack p0);
         public abstract override string ToString();
         public abstract StackEntry GetElement(int p0);
-        public virtual void Dispose()
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/stack/StackEntry.java:35-38
+        // Original: public void close() { ... this.type.close(); ... }
+        public virtual void Close()
         {
             if (this.type != null)
             {
-                this.type.Dispose();
+                this.type.Close();
             }
 
             this.type = null;

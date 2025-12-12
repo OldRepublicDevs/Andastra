@@ -164,6 +164,11 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
             return this.root.Name();
         }
 
+        public string Name
+        {
+            get { return this.GetName(); }
+        }
+
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptutils/SubScriptState.java:218-220
         // Original: public void setName(String name)
         public virtual void SetName(string name)
@@ -726,7 +731,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
             UtilsType type = NodeUtils.GetReturnType(node, this.actions);
             if (!type.Equals((byte)0))
             {
-                Variable var = (Variable)this.stack[1];
+                Variable var = (Variable)this.stack.Get(1);
                 if (type.Equals(unchecked((byte)(-16))))
                 {
                     var = var.Varstruct();
@@ -883,7 +888,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
         public virtual void TransformRSAdd(ARsaddCommand node)
         {
             this.CheckStart(node);
-            Variable var = (Variable)this.stack[1];
+            Variable var = (Variable)this.stack.Get(1);
             // Matching NCSDecomp implementation: check if variable is already declared to prevent duplicates
             AVarDecl existingVardec = (AVarDecl)this.vardecs[var];
             if (existingVardec == null)
@@ -903,7 +908,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
         {
             // Matching DeNCS implementation: treat AST.ARsaddCommand the same as root namespace ARsaddCommand
             this.CheckStart(node);
-            Variable var = (Variable)this.stack[1];
+            Variable var = (Variable)this.stack.Get(1);
             // Matching DeNCS implementation: check if variable is already declared to prevent duplicates
             AVarDecl existingVardec = (AVarDecl)this.vardecs[var];
             if (existingVardec == null)
@@ -987,7 +992,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
                 exp = new AConditionalExp(left, right, NodeUtils.GetOp(node));
             }
 
-            exp.Stackentry(this.stack[1]);
+            exp.Stackentry(this.stack.Get(1));
             this.current.AddChild((Scriptnode.ScriptNode)exp);
             this.CheckEnd(node);
         }
@@ -997,7 +1002,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
             this.CheckStart(node);
             AExpression exp = this.RemoveLastExp(false);
             AUnaryExp unexp = new AUnaryExp(exp, NodeUtils.GetOp(node));
-            unexp.Stackentry(this.stack[1]);
+            unexp.Stackentry(this.stack.Get(1));
             this.current.AddChild(unexp);
             this.CheckEnd(node);
         }
@@ -1020,7 +1025,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
             }
 
             AUnaryModExp unexp = new AUnaryModExp(target, NodeUtils.GetOp(node), prefix);
-            unexp.Stackentry(this.stack[1]);
+            unexp.Stackentry(this.stack.Get(1));
             this.current.AddChild(unexp);
             this.CheckEnd(node);
         }
@@ -1198,7 +1203,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
         {
             if (typeof(ASwitchCase).IsInstanceOfType(this.current))
             {
-                StackEntry entry = this.stack[1];
+                StackEntry entry = this.stack.Get(1);
                 if (typeof(Variable).IsInstanceOfType(entry) && ((ScriptNode.ASwitch)this.current.Parent()).GetSwitchExp().Stackentry().Equals(entry))
                 {
                     ((ScriptNode.ASwitch)this.current.Parent()).SetEnd(this.nodedata.GetPos(node));
