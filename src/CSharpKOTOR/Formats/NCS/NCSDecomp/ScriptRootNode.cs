@@ -10,12 +10,13 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptnode
 {
     public abstract class ScriptRootNode : ScriptNode
     {
-        protected LinkedList children;
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/ScriptRootNode.java:18
+        // Original: protected LinkedList<ScriptNode> children = new LinkedList<>();
+        protected LinkedList children = new LinkedList();
         protected int start;
         protected int end;
         protected ScriptRootNode(int start, int end)
         {
-            this.children = new LinkedList();
             this.start = start;
             this.end = end;
         }
