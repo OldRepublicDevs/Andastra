@@ -832,7 +832,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
         {
             this.CheckStart(node);
             Variable var = (Variable)this.stack[1];
-            // Matching DeNCS implementation: check if variable is already declared to prevent duplicates
+            // Matching NCSDecomp implementation: check if variable is already declared to prevent duplicates
             AVarDecl existingVardec = (AVarDecl)this.vardecs[var];
             if (existingVardec == null)
             {
@@ -847,7 +847,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
         // Handle AST.ARsaddCommand as well (from NcsToAstConverter)
         public virtual void TransformRSAdd(AST.ARsaddCommand node)
         {
-            // Matching DeNCS implementation: treat AST.ARsaddCommand the same as root namespace ARsaddCommand
+            // Matching NCSDecomp implementation: treat AST.ARsaddCommand the same as root namespace ARsaddCommand
             try
             {
                 this.CheckStart(node);
@@ -857,7 +857,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
                     throw new Exception($"Stack size is {this.stack.Size()}, expected >= 1");
                 }
                 Variable var = (Variable)this.stack[1];
-                // Matching DeNCS implementation: check if variable is already declared to prevent duplicates
+                // Matching NCSDecomp implementation: check if variable is already declared to prevent duplicates
                 AVarDecl existingVardec = (AVarDecl)this.vardecs[var];
                 if (existingVardec == null)
                 {

@@ -483,7 +483,6 @@ namespace CSharpKOTOR.Common
         private readonly Installation.Installation _installation;
         private readonly string _root;
         private ResRef _cachedModId;
-        private string _cachedSortId;
         private readonly Dictionary<string, ModulePieceResource> _capsules = new Dictionary<string, ModulePieceResource>();
         private HashSet<ResourceIdentifier> _gitSearch;
 
@@ -509,7 +508,6 @@ namespace CSharpKOTOR.Common
             _dotMod = useDotMod;
             _root = NameToRoot(filenameOrRoot.ToLowerInvariant());
             _cachedModId = null;
-            _cachedSortId = null;
 
             // Build all capsules relevant to this root in the provided installation
             string modulesPath = CSharpKOTOR.Installation.Installation.GetModulesPath(_installation.Path);

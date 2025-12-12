@@ -22,7 +22,7 @@ using Throwable = System.Exception;
 
 namespace CSharpKOTOR.Formats.NCS.NCSDecomp
 {
-    // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:56-79
+    // Matching NCSDecomp implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:56-79
     public class FileDecompiler
     {
         public static readonly int FAILURE = 0;
@@ -30,7 +30,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
         public static readonly int PARTIAL_COMPILE = 2;
         public static readonly int PARTIAL_COMPARE = 3;
         public static readonly string GLOBAL_SUB_NAME = "GLOBALS";
-        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:72-79
+        // Matching NCSDecomp implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:72-79
         // Original: public static boolean isK2Selected = false;
         public static bool isK2Selected = false;
         // Original: public static boolean preferSwitches = false;
@@ -81,7 +81,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             // Actions will be loaded lazily on first use
         }
 
-        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:1031-1035
+        // Matching NCSDecomp implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:1031-1035
         // Original: private void ensureActionsLoaded() throws DecompilerException
         private void EnsureActionsLoaded()
         {
@@ -91,7 +91,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             }
         }
 
-        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:124-169
+        // Matching NCSDecomp implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:124-169
         // Original: private static ActionsData loadActionsDataInternal(boolean isK2Selected) throws DecompilerException
         private static ActionsData LoadActionsDataInternal(bool isK2Selected)
         {
@@ -146,7 +146,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             }
         }
 
-        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:171-204
+        // Matching NCSDecomp implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:171-204
         // Original: private static void loadPreferSwitchesFromConfig()
         private static void LoadPreferSwitchesFromConfig()
         {
@@ -304,7 +304,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             return data.GetNewByteCode();
         }
 
-        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:253-352
+        // Matching NCSDecomp implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:253-352
         // Original: public int decompile(File file)
         public virtual int Decompile(File file)
         {
@@ -560,7 +560,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             GC.Collect();
         }
 
-        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:447-455
+        // Matching NCSDecomp implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:447-455
         // Original: public String decompileToString(File file) throws DecompilerException
         public virtual string DecompileToString(File file)
         {
@@ -574,7 +574,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             return data.GetCode();
         }
 
-        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:460-474
+        // Matching NCSDecomp implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:460-474
         // Original: public void decompileToFile(File input, File output, Charset charset, boolean overwrite) throws DecompilerException, IOException
         public virtual void DecompileToFile(File input, File output, System.Text.Encoding charset, bool overwrite)
         {
@@ -731,7 +731,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             return buffer.ToString();
         }
 
-        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:727-855
+        // Matching NCSDecomp implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:727-855
         // Original: private File getCompilerFile()
         private File GetCompilerFile()
         {
@@ -832,7 +832,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             return new File(Path.Combine(userDir, "nwnnsscomp.exe"));
         }
 
-        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:728-762
+        // Matching NCSDecomp implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:728-762
         // Original: private File getNCSDecompDirectory()
         private File GetNCSDecompDirectory()
         {
@@ -857,7 +857,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             return new File(JavaSystem.GetProperty("user.dir"));
         }
 
-        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:861-864
+        // Matching NCSDecomp implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:861-864
         // Original: private boolean checkCompilerExists()
         private bool CheckCompilerExists()
         {
@@ -865,7 +865,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             return compiler.Exists();
         }
 
-        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:869-872
+        // Matching NCSDecomp implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:869-872
         // Original: private String getShortName(File in)
         private string GetShortName(File inFile)
         {
@@ -874,7 +874,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             return i == -1 ? path : path.Substring(0, i);
         }
 
-        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:878-921
+        // Matching NCSDecomp implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:878-921
         // Original: private File externalDecompile(File in, boolean k2)
         private File ExternalDecompile(File inFile, bool k2)
         {
@@ -934,7 +934,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             }
         }
 
-        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:926-943
+        // Matching NCSDecomp implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:926-943
         // Original: private File writeCode(String code)
         private File WriteCode(string code)
         {
@@ -960,7 +960,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             }
         }
 
-        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:948-1010
+        // Matching NCSDecomp implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:948-1010
         // Original: private File externalCompile(File file, boolean k2)
         private File ExternalCompile(File file, bool k2)
         {
@@ -1036,7 +1036,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             }
         }
 
-        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:1012-1029
+        // Matching NCSDecomp implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:1012-1029
         // Original: private List<File> buildIncludeDirs(boolean k2)
         private List<File> BuildIncludeDirs(bool k2)
         {
@@ -1061,7 +1061,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             return dirs;
         }
 
-        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:1044-1053
+        // Matching NCSDecomp implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:1044-1053
         // Original: private String bytesToHex(byte[] bytes, int length)
         private string BytesToHex(byte[] bytes, int length)
         {
@@ -1077,7 +1077,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             return hex.ToString();
         }
 
-        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:1065-1180
+        // Matching NCSDecomp implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:1065-1180
         // Original: private String generateComprehensiveFallbackStub(File file, String errorStage, Exception exception, String additionalInfo)
         private string GenerateComprehensiveFallbackStub(File file, string errorStage, Exception exception, string additionalInfo)
         {
@@ -1222,7 +1222,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             return stub.ToString();
         }
 
-        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:667-696
+        // Matching NCSDecomp implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:667-696
         // Original: private String comparePcodeFiles(File originalPcode, File newPcode)
         private string ComparePcodeFiles(File originalPcode, File newPcode)
         {
@@ -1267,7 +1267,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             }
         }
 
-        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:701-721
+        // Matching NCSDecomp implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:701-721
         // Original: private boolean compareBinaryFiles(File original, File generated)
         private bool CompareBinaryFiles(File original, File generated)
         {
@@ -1486,7 +1486,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             return Game.K1;
         }
 
-        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:1852-1865
+        // Matching NCSDecomp implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:1852-1865
         // Original: private Iterable<ASubroutine> subIterable(SubroutineAnalysisData subdata)
         private IEnumerable<ASubroutine> SubIterable(SubroutineAnalysisData subdata)
         {
@@ -1506,7 +1506,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             return list;
         }
 
-        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:1867-1882
+        // Matching NCSDecomp implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:1867-1882
         // Original: private void enforceStrictSignatures(SubroutineAnalysisData subdata, NodeAnalysisData nodedata)
         private void EnforceStrictSignatures(SubroutineAnalysisData subdata, NodeAnalysisData nodedata)
         {
@@ -1532,7 +1532,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
         /// <summary>
         /// Decompiles an NCS object in memory (not from file).
         /// This is the core decompilation logic extracted from DecompileNcs(File).
-        /// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:588-916
+        /// Matching NCSDecomp implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:588-916
         /// </summary>
         public virtual Utils.FileScriptData DecompileNcsObject(NCS ncs)
         {
@@ -1607,7 +1607,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                 flatten.Done();
                 flatten = null;
                 doglobs = null;
-                // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:1392-1414
+                // Matching NCSDecomp implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:1392-1414
                 try
                 {
                     sub = subdata.GetGlobalsSub();
@@ -1649,7 +1649,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                     JavaSystem.@out.Println("Error getting globals subroutine: " + e.Message);
                 }
 
-                // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:1407-1413
+                // Matching NCSDecomp implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:1407-1413
                 // Prototype engine - recover if this fails
                 try
                 {
@@ -1661,7 +1661,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                     JavaSystem.@out.Println("Error in prototype engine, continuing with partial prototypes: " + e.Message);
                 }
 
-                // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:1415-1495
+                // Matching NCSDecomp implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:1415-1495
                 // Type analysis - recover if main sub typing fails
                 if (mainsub != null)
                 {
@@ -1688,7 +1688,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                     }
                 }
 
-                // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:1434-1495
+                // Matching NCSDecomp implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:1434-1495
                 // Type all subroutines - continue even if some fail
                 bool alldone = false;
                 bool onedone = true;
@@ -1831,7 +1831,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                 mainpass.Done();
                 cleanpass.Done();
                 data.SetSubdata(subdata);
-                // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:1600-1618
+                // Matching NCSDecomp implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:1600-1618
                 if (doglobs != null)
                 {
                     try
@@ -2119,7 +2119,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             }
         }
 
-        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:2335-2440
+        // Matching NCSDecomp implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:2335-2440
         // Original: private class WindowsExec
         private class WindowsExec
         {
@@ -2127,7 +2127,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             {
             }
 
-            // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:2342-2356
+            // Matching NCSDecomp implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:2342-2356
             // Original: public void callExec(String args)
             public virtual void CallExec(string args)
             {
@@ -2159,7 +2159,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                 }
             }
 
-            // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:2364-2407
+            // Matching NCSDecomp implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:2364-2407
             // Original: public void callExec(String[] args)
             public virtual void CallExec(string[] args)
             {

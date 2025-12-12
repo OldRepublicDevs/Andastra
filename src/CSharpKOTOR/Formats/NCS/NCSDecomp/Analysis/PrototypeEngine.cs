@@ -1,4 +1,4 @@
-// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/analysis/PrototypeEngine.java:1-156
+// Matching NCSDecomp implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/analysis/PrototypeEngine.java:1-156
 // Copyright 2021-2025 NCSDecomp
 // Licensed under the Business Source License 1.1 (BSL 1.1).
 // See LICENSE.txt file in the project root for full license information.
@@ -10,7 +10,7 @@ using CSharpKOTOR.Formats.NCS.NCSDecomp.Utils;
 
 namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Analysis
 {
-    // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/analysis/PrototypeEngine.java:26-156
+    // Matching NCSDecomp implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/analysis/PrototypeEngine.java:26-156
     // Original: public class PrototypeEngine
     public class PrototypeEngine
     {
@@ -20,7 +20,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Analysis
         private readonly ActionsData actions;
         private readonly bool strict;
 
-        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/analysis/PrototypeEngine.java:33-38
+        // Matching NCSDecomp implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/analysis/PrototypeEngine.java:33-38
         // Original: public PrototypeEngine(NodeAnalysisData nodedata, SubroutineAnalysisData subdata, ActionsData actions, boolean strict)
         public PrototypeEngine(NodeAnalysisData nodedata, SubroutineAnalysisData subdata, ActionsData actions, bool strict)
         {
@@ -30,7 +30,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Analysis
             this.strict = strict;
         }
 
-        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/analysis/PrototypeEngine.java:40-61
+        // Matching NCSDecomp implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/analysis/PrototypeEngine.java:40-61
         // Original: public void run()
         public void Run()
         {
@@ -71,7 +71,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Analysis
             this.EnsureAllPrototyped(subByPos.Values, callsiteParams);
         }
 
-        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/analysis/PrototypeEngine.java:63-71
+        // Matching NCSDecomp implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/analysis/PrototypeEngine.java:63-71
         // Original: private Map<Integer, ASubroutine> indexSubroutines()
         private Dictionary<int, ASubroutine> IndexSubroutines()
         {
@@ -85,7 +85,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Analysis
             return map;
         }
 
-        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/analysis/PrototypeEngine.java:73-102
+        // Matching NCSDecomp implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/analysis/PrototypeEngine.java:73-102
         // Original: private void prototypeComponent(Set<Integer> component, Map<Integer, ASubroutine> subByPos)
         private void PrototypeComponent(HashSet<int> component, Dictionary<int, ASubroutine> subByPos)
         {
@@ -125,7 +125,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Analysis
             }
         }
 
-        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/analysis/PrototypeEngine.java:104-139
+        // Matching NCSDecomp implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/analysis/PrototypeEngine.java:104-139
         // Original: private void ensureAllPrototyped(...)
         private void EnsureAllPrototyped(IEnumerable<ASubroutine> subs, Dictionary<int, int> callsiteParams)
         {
@@ -174,7 +174,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Analysis
             }
         }
 
-        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/analysis/PrototypeEngine.java:141-155
+        // Matching NCSDecomp implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/analysis/PrototypeEngine.java:141-155
         // Original: private int estimateParamsFromMovesp(ASubroutine sub)
         private int EstimateParamsFromMovesp(ASubroutine sub)
         {
@@ -183,7 +183,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Analysis
             return estimator.MaxParams;
         }
 
-        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/analysis/PrototypeEngine.java:141-155
+        // Matching NCSDecomp implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/analysis/PrototypeEngine.java:141-155
         // Helper class for estimating params from movesp
         private class MovespParamEstimator : PrunedDepthFirstAdapter
         {

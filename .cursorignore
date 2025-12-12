@@ -7,3 +7,8 @@
 !.cursorrules
 !.cursor
 !.cursorignore
+vendor/DeNCS/.git
+vendor/HoloLSP/.git
+vendor/Kotor.NET/.git
+vendor/PyKotor/.git
+build_errors.txt

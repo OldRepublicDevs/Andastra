@@ -67,17 +67,35 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             this.destinationcommands = null;
         }
 
+        public override void CaseASubroutine(ASubroutine node)
+        {
+            this.InASubroutine(node);
+            node.GetCommandBlock()?.Apply(this);
+            node.GetReturn()?.Apply(this);
+            this.OutASubroutine(node);
+        }
+
         public override void InASubroutine(ASubroutine node)
         {
+            JavaSystem.@out.Println($"SubroutinePathFinder: InASubroutine called, starting prototyping");
             this.state.StartPrototyping();
+            JavaSystem.@out.Println($"SubroutinePathFinder: After StartPrototyping, IsBeingPrototyped={this.state.IsBeingPrototyped()}");
+        }
+
+        public override void OutASubroutine(ASubroutine node)
+        {
+            // Path finder completed successfully - DoTypes will call StopPrototyping(true)
         }
 
         public override void CaseACommandBlock(ACommandBlock node)
         {
             this.InACommandBlock(node);
             TypedLinkedList commands = node.GetCmd();
+            JavaSystem.@out.Println($"SubroutinePathFinder: CaseACommandBlock called, command count={commands.Count}");
             this.SetupDestinationCommands(commands, node);
-            for (int i = 0; i < commands.Count; ++i)
+            int i = 0;
+
+            while (i < commands.Count)
             {
                 if (this.forcejump)
                 {
@@ -90,6 +108,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
                     int nextPos = this.state.SwitchDecision();
                     if (nextPos == -1 || (this.limitretries && this.retry > this.maxretry))
                     {
+                        JavaSystem.@out.Println($"SubroutinePathFinder: Path failed, stopping prototyping (nextPos={nextPos}, retry={this.retry}, maxretry={this.maxretry})");
                         this.state.StopPrototyping(false);
                         return;
                     }
@@ -101,10 +120,15 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
 
                 if (i < commands.Count)
                 {
-                    ((Node)commands[i]).Apply(this);
+                    Node cmdNode = (Node)commands[i];
+                    int cmdPos = this.nodedata.GetPos(cmdNode);
+                    JavaSystem.@out.Println($"SubroutinePathFinder: Processing command at index {i}, position {cmdPos}, type={cmdNode.GetType().Name}");
+                    cmdNode.Apply(this);
+                    i++;
                 }
             }
 
+            JavaSystem.@out.Println($"SubroutinePathFinder: Completed processing command block, IsBeingPrototyped={this.state.IsBeingPrototyped()}");
             commands = null;
             this.OutACommandBlock(node);
         }

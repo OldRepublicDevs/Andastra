@@ -4,6 +4,7 @@ using System.Globalization;
 using CSharpKOTOR.Formats.NCS;
 using CSharpKOTOR.Formats.NCS.NCSDecomp;
 using CSharpKOTOR.Formats.NCS.NCSDecomp.Analysis;
+using AST = CSharpKOTOR.Formats.NCS.NCSDecomp.AST;
 
 namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
 {
@@ -53,7 +54,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
                     try
                     {
                         int jumpIdx = ncs.GetInstructionIndex(inst.Jump);
-                        // Matching DeNCS implementation: exclude position 0 (main) from subroutine starts
+                        // Matching NCSDecomp implementation: exclude position 0 (main) from subroutine starts
                         if (jumpIdx > 0)
                         {
                             subroutineStarts.Add(jumpIdx);
@@ -65,7 +66,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
                 }
             }
 
-            // Matching DeNCS implementation: detect SAVEBP to split globals from main
+            // Matching NCSDecomp implementation: detect SAVEBP to split globals from main
             // Globals subroutine ends at SAVEBP, main starts after SAVEBP
             int savebpIndex = -1;
             for (int i = 0; i < instructions.Count; i++)
@@ -688,25 +689,25 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
         {
             int typeVal = GetQualifier(inst.InsType);
 
-            ABpCmd cmd = new ABpCmd();
-            ABpCommand command = new ABpCommand();
+            AST.ABpCmd cmd = new AST.ABpCmd();
+            AST.ABpCommand command = new AST.ABpCommand();
 
             if (inst.InsType == NCSInstructionType.SAVEBP)
             {
-                ASavebpBpOp bpOp = new ASavebpBpOp();
-                bpOp.SetSavebp(new TSavebp(pos, 0));
+                AST.ASavebpBpOp bpOp = new AST.ASavebpBpOp();
+                bpOp.SetSavebp(new AST.TSavebp(pos, 0));
                 command.SetBpOp(bpOp);
             }
             else
             {
-                ARestorebpBpOp bpOp = new ARestorebpBpOp();
-                bpOp.SetRestorebp(new TRestorebp(pos, 0));
+                AST.ARestorebpBpOp bpOp = new AST.ARestorebpBpOp();
+                bpOp.SetRestorebp(new AST.TRestorebp(pos, 0));
                 command.SetBpOp(bpOp);
             }
 
-            command.SetPos(new TIntegerConstant(Convert.ToString(pos, CultureInfo.InvariantCulture), pos, 0));
-            command.SetType(new TIntegerConstant(Convert.ToString(typeVal, CultureInfo.InvariantCulture), pos, 0));
-            command.SetSemi(new TSemi(pos, 0));
+            command.SetPos(new AST.TIntegerConstant(Convert.ToString(pos, CultureInfo.InvariantCulture), pos, 0));
+            command.SetType(new AST.TIntegerConstant(Convert.ToString(typeVal, CultureInfo.InvariantCulture), pos, 0));
+            command.SetSemi(new AST.TSemi(pos, 0));
             cmd.SetBpCommand(command);
 
             return cmd;

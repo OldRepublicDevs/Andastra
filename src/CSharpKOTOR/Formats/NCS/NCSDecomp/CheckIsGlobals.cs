@@ -25,14 +25,14 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
 
         public override void CaseABpCommand(ABpCommand node)
         {
-            // Matching DeNCS implementation: explicitly call InABpCommand
+            // Matching NCSDecomp implementation: explicitly call InABpCommand
             this.InABpCommand(node);
         }
 
         // Handle AST.ABpCommand as well (from NcsToAstConverter)
         public override void CaseABpCommand(AST.ABpCommand node)
         {
-            // Matching DeNCS implementation: set isGlobals directly
+            // Matching NCSDecomp implementation: set isGlobals directly
             // This is called when AST.ABpCommand.Apply() routes to CaseABpCommand
             JavaSystem.@out.Println("DEBUG CheckIsGlobals.CaseABpCommand(AST): found ABpCommand, setting isGlobals = true");
             this.isGlobals = true;
@@ -40,7 +40,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
 
         public override void CaseABpCmd(ABpCmd node)
         {
-            // Matching DeNCS implementation: traverse into ABpCmd to reach ABpCommand
+            // Matching NCSDecomp implementation: traverse into ABpCmd to reach ABpCommand
             this.InABpCmd(node);
             if (node.GetBpCommand() != null)
             {
@@ -114,7 +114,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
         }
 
         // Handle AST.ASubroutine as well (from NcsToAstConverter)
-        // Override to ensure command block is traversed (matching DeNCS pattern)
+        // Override to ensure command block is traversed (Matching NCSDecomp pattern)
         public override void CaseASubroutine(AST.ASubroutine node)
         {
             // Traverse into AST.ASubroutine to reach command block

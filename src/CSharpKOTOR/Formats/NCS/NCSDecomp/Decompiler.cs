@@ -1,4 +1,4 @@
-// 
+//
 // Decompiler settings and utilities - UI is in NCSDecomp project (Avalonia)
 //
 using System;
@@ -7,7 +7,7 @@ using System.IO;
 
 namespace CSharpKOTOR.Formats.NCS.NCSDecomp
 {
-    // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/Decompiler.java:96-175
+    // Matching NCSDecomp implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/Decompiler.java:96-175
     // Original: public class Decompiler extends JFrame ...
     /// <summary>
     /// Static settings and utilities for the NCS decompiler.
@@ -19,7 +19,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
         public static readonly double screenWidth;
         public static readonly double screenHeight;
 
-        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/Decompiler.java:150-175
+        // Matching NCSDecomp implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/Decompiler.java:150-175
         // Original: static { ... }
         static Decompiler()
         {

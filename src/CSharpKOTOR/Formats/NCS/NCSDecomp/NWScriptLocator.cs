@@ -58,7 +58,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                         return k1File;
                     }
                 }
-                
+
                 // Check include/ (TSL)
                 string k2Nwscript = Path.Combine(repoRoot, "include", "k2_nwscript.nss");
                 if (gameType == GameType.TSL)
@@ -69,7 +69,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                         return k2File;
                     }
                 }
-                
+
                 // Also check tools/ directory
                 string toolsK1 = Path.Combine(repoRoot, "tools", "k1_nwscript.nss");
                 string toolsK2 = Path.Combine(repoRoot, "tools", "tsl_nwscript.nss");

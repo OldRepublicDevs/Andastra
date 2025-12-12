@@ -510,7 +510,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
                         pos = this.nodedata.GetPos(firstCmd);
                     }
                 }
-                // Matching DeNCS implementation: position 0 is the main, so subroutines must have pos > 0
+                // Matching NCSDecomp implementation: position 0 is the main, so subroutines must have pos > 0
                 // If still no position or position is 0, skip this subroutine (shouldn't happen in normal cases)
                 if (pos <= 0)
                 {
@@ -527,7 +527,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
 
         private bool IsGlobalsSub(ASubroutine node)
         {
-            // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SubroutineAnalysisData.java:310-314
+            // Matching NCSDecomp implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SubroutineAnalysisData.java:310-314
             // Original: CheckIsGlobals cig = new CheckIsGlobals(); node.apply(cig); return cig.getIsGlobals();
             JavaSystem.@out.Println($"DEBUG IsGlobalsSub: checking subroutine, node type = {node.GetType().FullName}, command block is {(node.GetCommandBlock() != null ? "non-null" : "null")}");
             CheckIsGlobals cig = new CheckIsGlobals();

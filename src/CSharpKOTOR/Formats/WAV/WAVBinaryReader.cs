@@ -10,7 +10,6 @@ namespace CSharpKOTOR.Formats.WAV
     public class WAVBinaryReader : IDisposable
     {
         private readonly RawBinaryReader _reader;
-        private WAV _wav;
 
         public WAVBinaryReader(byte[] data, int offset = 0, int size = 0)
         {

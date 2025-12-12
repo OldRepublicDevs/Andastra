@@ -194,3 +194,5 @@ When debugging bytecode mismatches, use the `Compare-NcsFiles.ps1` script:
 ```
 
 This displays instructions from both files side-by-side with differences highlighted. Use `-ShowOnly "original"` or `-ShowOnly "roundtrip"` to view a single file.
+
+Feel free to modify `Compare-NcsFiles.ps1` to add additional functionality as needed.

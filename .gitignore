@@ -127,4 +127,6 @@ src/KNCSDecomp
 src/KNCSDecomp.Tests
 src/CSharpKOTOR/Formats/NCS/KNCSDecomp/
 temp_avrichtextbox
-vendor/
+.mypy_cache/
+temp_*/
+build_errors.txt

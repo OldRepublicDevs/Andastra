@@ -1,4 +1,4 @@
-// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/analysis/CallSiteAnalyzer.java:1-243
+// Matching NCSDecomp implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/analysis/CallSiteAnalyzer.java:1-243
 // Copyright 2021-2025 NCSDecomp
 // Licensed under the Business Source License 1.1 (BSL 1.1).
 // See LICENSE.txt file in the project root for full license information.
@@ -10,7 +10,7 @@ using CSharpKOTOR.Formats.NCS.NCSDecomp.Utils;
 
 namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Analysis
 {
-    // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/analysis/CallSiteAnalyzer.java:36-243
+    // Matching NCSDecomp implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/analysis/CallSiteAnalyzer.java:36-243
     // Original: public class CallSiteAnalyzer extends PrunedDepthFirstAdapter
     public class CallSiteAnalyzer : PrunedDepthFirstAdapter
     {
@@ -23,7 +23,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Analysis
         private int growth;
         private SubroutineState state;
 
-        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/analysis/CallSiteAnalyzer.java:46-50
+        // Matching NCSDecomp implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/analysis/CallSiteAnalyzer.java:46-50
         // Original: public CallSiteAnalyzer(NodeAnalysisData nodedata, SubroutineAnalysisData subdata, ActionsData actions)
         public CallSiteAnalyzer(NodeAnalysisData nodedata, SubroutineAnalysisData subdata, ActionsData actions)
         {
@@ -32,7 +32,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Analysis
             this.actions = actions;
         }
 
-        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/analysis/CallSiteAnalyzer.java:52-65
+        // Matching NCSDecomp implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/analysis/CallSiteAnalyzer.java:52-65
         // Original: public Map<Integer, Integer> analyze()
         public Dictionary<int, int> Analyze()
         {
@@ -46,7 +46,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Analysis
             return this.inferredParams;
         }
 
-        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/analysis/CallSiteAnalyzer.java:67-73
+        // Matching NCSDecomp implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/analysis/CallSiteAnalyzer.java:67-73
         // Original: private void analyzeSubroutine(ASubroutine sub)
         private void AnalyzeSubroutine(ASubroutine sub)
         {
@@ -57,7 +57,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Analysis
             sub.Apply(this);
         }
 
-        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/analysis/CallSiteAnalyzer.java:75-86
+        // Matching NCSDecomp implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/analysis/CallSiteAnalyzer.java:75-86
         // Original: private int initialHeight()
         private int InitialHeight()
         {
@@ -75,7 +75,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Analysis
             return initial;
         }
 
-        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/analysis/CallSiteAnalyzer.java:88-93
+        // Matching NCSDecomp implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/analysis/CallSiteAnalyzer.java:88-93
         // Original: @Override public void defaultIn(Node node)
         public override void DefaultIn(Node node)
         {
@@ -85,7 +85,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Analysis
             }
         }
 
-        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/analysis/CallSiteAnalyzer.java:95-100
+        // Matching NCSDecomp implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/analysis/CallSiteAnalyzer.java:95-100
         // Original: @Override public void outARsaddCommand(ARsaddCommand node)
         public override void OutARsaddCommand(ARsaddCommand node)
         {
@@ -95,7 +95,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Analysis
             }
         }
 
-        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/analysis/CallSiteAnalyzer.java:102-107
+        // Matching NCSDecomp implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/analysis/CallSiteAnalyzer.java:102-107
         // Original: @Override public void outAConstCommand(AConstCommand node)
         public override void OutAConstCommand(AConstCommand node)
         {
@@ -105,7 +105,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Analysis
             }
         }
 
-        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/analysis/CallSiteAnalyzer.java:109-114
+        // Matching NCSDecomp implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/analysis/CallSiteAnalyzer.java:109-114
         // Original: @Override public void outACopyTopSpCommand(ACopyTopSpCommand node)
         public override void OutACopyTopSpCommand(ACopyTopSpCommand node)
         {
@@ -115,7 +115,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Analysis
             }
         }
 
-        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/analysis/CallSiteAnalyzer.java:116-121
+        // Matching NCSDecomp implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/analysis/CallSiteAnalyzer.java:116-121
         // Original: @Override public void outACopyTopBpCommand(ACopyTopBpCommand node)
         public override void OutACopyTopBpCommand(ACopyTopBpCommand node)
         {
@@ -125,7 +125,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Analysis
             }
         }
 
-        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/analysis/CallSiteAnalyzer.java:123-137
+        // Matching NCSDecomp implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/analysis/CallSiteAnalyzer.java:123-137
         // Original: @Override public void outAActionCommand(AActionCommand node)
         public override void OutAActionCommand(AActionCommand node)
         {
@@ -147,7 +147,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Analysis
             }
         }
 
-        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/analysis/CallSiteAnalyzer.java:139-145
+        // Matching NCSDecomp implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/analysis/CallSiteAnalyzer.java:139-145
         // Original: @Override public void outALogiiCommand(ALogiiCommand node)
         public override void OutALogiiCommand(ALogiiCommand node)
         {
@@ -158,7 +158,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Analysis
             }
         }
 
-        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/analysis/CallSiteAnalyzer.java:147-175
+        // Matching NCSDecomp implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/analysis/CallSiteAnalyzer.java:147-175
         // Original: @Override public void outABinaryCommand(ABinaryCommand node)
         public override void OutABinaryCommand(ABinaryCommand node)
         {
@@ -199,7 +199,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Analysis
             }
         }
 
-        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/analysis/CallSiteAnalyzer.java:177-182
+        // Matching NCSDecomp implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/analysis/CallSiteAnalyzer.java:177-182
         // Original: @Override public void outAConditionalJumpCommand(AConditionalJumpCommand node)
         public override void OutAConditionalJumpCommand(AConditionalJumpCommand node)
         {
@@ -209,7 +209,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Analysis
             }
         }
 
-        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/analysis/CallSiteAnalyzer.java:184-189
+        // Matching NCSDecomp implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/analysis/CallSiteAnalyzer.java:184-189
         // Original: @Override public void outAJumpCommand(AJumpCommand node)
         public override void OutAJumpCommand(AJumpCommand node)
         {
@@ -219,7 +219,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Analysis
             }
         }
 
-        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/analysis/CallSiteAnalyzer.java:191-204
+        // Matching NCSDecomp implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/analysis/CallSiteAnalyzer.java:191-204
         // Original: @Override public void outAJumpToSubroutine(AJumpToSubroutine node)
         public override void OutAJumpToSubroutine(AJumpToSubroutine node)
         {
@@ -245,7 +245,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Analysis
             }
         }
 
-        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/analysis/CallSiteAnalyzer.java:206-212
+        // Matching NCSDecomp implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/analysis/CallSiteAnalyzer.java:206-212
         // Original: @Override public void outAMoveSpCommand(AMoveSpCommand node)
         public override void OutAMoveSpCommand(AMoveSpCommand node)
         {
@@ -256,7 +256,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Analysis
             }
         }
 
-        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/analysis/CallSiteAnalyzer.java:214-220
+        // Matching NCSDecomp implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/analysis/CallSiteAnalyzer.java:214-220
         // Original: @Override public void outADestructCommand(ADestructCommand node)
         public override void OutADestructCommand(ADestructCommand node)
         {
@@ -267,7 +267,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Analysis
             }
         }
 
-        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/analysis/CallSiteAnalyzer.java:222-229
+        // Matching NCSDecomp implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/analysis/CallSiteAnalyzer.java:222-229
         // Original: private void push(int count)
         private void Push(int count)
         {
@@ -280,7 +280,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Analysis
             this.growth += count;
         }
 
-        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/analysis/CallSiteAnalyzer.java:231-238
+        // Matching NCSDecomp implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/analysis/CallSiteAnalyzer.java:231-238
         // Original: private void pop(int count)
         private void Pop(int count)
         {
@@ -293,7 +293,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Analysis
             this.growth = Math.Max(0, this.growth - count);
         }
 
-        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/analysis/CallSiteAnalyzer.java:240-242
+        // Matching NCSDecomp implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/analysis/CallSiteAnalyzer.java:240-242
         // Original: private void resetGrowth()
         private void ResetGrowth()
         {

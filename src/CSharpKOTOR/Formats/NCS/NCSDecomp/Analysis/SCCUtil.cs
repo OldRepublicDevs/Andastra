@@ -1,4 +1,4 @@
-// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/analysis/SCCUtil.java:1-117
+// Matching NCSDecomp implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/analysis/SCCUtil.java:1-117
 // Copyright 2021-2025 NCSDecomp
 // Licensed under the Business Source License 1.1 (BSL 1.1).
 // See LICENSE.txt file in the project root for full license information.
@@ -9,7 +9,7 @@ using System.Linq;
 
 namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Analysis
 {
-    // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/analysis/SCCUtil.java:19-117
+    // Matching NCSDecomp implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/analysis/SCCUtil.java:19-117
     // Original: public final class SCCUtil
     public sealed class SCCUtil
     {
@@ -17,7 +17,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Analysis
         {
         }
 
-        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/analysis/SCCUtil.java:23-27
+        // Matching NCSDecomp implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/analysis/SCCUtil.java:23-27
         // Original: public static List<Set<Integer>> compute(Map<Integer, Set<Integer>> graph)
         public static List<HashSet<int>> Compute(Dictionary<int, HashSet<int>> graph)
         {
@@ -26,7 +26,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Analysis
             return TopologicalOrder(graph, sccs, tarjan.ComponentIndex);
         }
 
-        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/analysis/SCCUtil.java:29-62
+        // Matching NCSDecomp implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/analysis/SCCUtil.java:29-62
         // Original: private static List<Set<Integer>> topologicalOrder(...)
         private static List<HashSet<int>> TopologicalOrder(Dictionary<int, HashSet<int>> graph, List<HashSet<int>> sccs, Dictionary<int, int> compIndex)
         {
@@ -82,7 +82,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Analysis
             return ordered;
         }
 
-        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/analysis/SCCUtil.java:64-115
+        // Matching NCSDecomp implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/analysis/SCCUtil.java:64-115
         // Original: private static class Tarjan
         private class Tarjan
         {
@@ -105,7 +105,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Analysis
                 this.graph = graph;
             }
 
-            // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/analysis/SCCUtil.java:78-85
+            // Matching NCSDecomp implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/analysis/SCCUtil.java:78-85
             // Original: List<Set<Integer>> run()
             public List<HashSet<int>> Run()
             {
@@ -119,7 +119,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Analysis
                 return this.components;
             }
 
-            // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/analysis/SCCUtil.java:87-114
+            // Matching NCSDecomp implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/analysis/SCCUtil.java:87-114
             // Original: private void strongConnect(int v)
             private void StrongConnect(int v)
             {
