@@ -154,12 +154,12 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
             return _defaultCase;
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/ASwitch.java:91-106
+        // Original: @Override public String toString() { ... buff.append(this.tabs + "switch(" + this.switchexp + ") {" + this.newline); ... }
         public override string ToString()
         {
             var buff = new StringBuilder();
-            string tabs = GetTabsString();
-            string newline = GetNewlineString();
-            buff.Append(tabs + "switch (" + (_switchExp != null ? _switchExp.ToString() : "") + ") {" + newline);
+            buff.Append(this.tabs + "switch (" + (_switchExp != null ? _switchExp.ToString() : "") + ") {" + this.newline);
             foreach (var case_ in _cases)
             {
                 buff.Append(case_.ToString());
@@ -168,28 +168,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
             {
                 buff.Append(_defaultCase.ToString());
             }
-            buff.Append(tabs + "}" + newline);
+            buff.Append(this.tabs + "}" + this.newline);
             return buff.ToString();
-        }
-
-        private string GetTabsString()
-        {
-            Scriptnode.ScriptNode parent = Parent();
-            if (parent != null)
-            {
-                return (parent.tabs ?? "") + "\t" + "\t";
-            }
-            return "";
-        }
-
-        private string GetNewlineString()
-        {
-            Scriptnode.ScriptNode parent = Parent();
-            if (parent != null)
-            {
-                return parent.newline ?? System.Environment.NewLine;
-            }
-            return System.Environment.NewLine;
         }
 
         public void Close()
@@ -211,7 +191,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
             {
                 if (_switchExp is Scriptnode.ScriptNode switchExpNode)
                 {
-                    switchExpNode.Dispose();
+                    switchExpNode.Close();
                 }
                 else if (_switchExp is StackEntry switchExpEntry)
                 {

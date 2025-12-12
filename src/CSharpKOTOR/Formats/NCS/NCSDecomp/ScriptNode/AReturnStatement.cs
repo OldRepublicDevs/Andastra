@@ -48,9 +48,9 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
         {
             if (_returnExp == null)
             {
-                return GetTabs() + "return;" + GetNewline();
+                return this.tabs + "return;" + this.newline;
             }
-            return GetTabs() + "return " + ExpressionFormatter.FormatValue(_returnExp) + ";" + GetNewline();
+            return this.tabs + "return " + ExpressionFormatter.FormatValue(_returnExp) + ";" + this.newline;
         }
 
         public override void Close()

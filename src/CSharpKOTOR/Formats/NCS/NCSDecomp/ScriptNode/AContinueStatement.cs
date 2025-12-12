@@ -8,7 +8,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
 
         public override string ToString()
         {
-            return GetTabs() + "continue;" + GetNewline();
+            return this.tabs + "continue;" + this.newline;
         }
     }
 }

@@ -16,12 +16,12 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
         public override string ToString()
         {
             var buff = new StringBuilder();
-            buff.Append(GetTabs() + "else {" + GetNewline());
+            buff.Append(this.tabs + "else {" + this.newline);
             foreach (var child in GetChildren())
             {
                 buff.Append(child.ToString());
             }
-            buff.Append(GetTabs() + "}" + GetNewline());
+            buff.Append(this.tabs + "}" + this.newline);
             return buff.ToString();
         }
     }

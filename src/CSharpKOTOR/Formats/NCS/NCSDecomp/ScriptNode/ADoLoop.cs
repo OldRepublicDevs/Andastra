@@ -16,13 +16,13 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
         {
             var buff = new StringBuilder();
             var condition = GetCondition();
-            buff.Append(GetTabs());
-            buff.Append("do {" + GetNewline());
+            buff.Append(this.tabs);
+            buff.Append("do {" + this.newline);
             foreach (var child in GetChildren())
             {
                 buff.Append(child.ToString());
             }
-            buff.Append(GetTabs() + "} while (" + (condition != null ? condition.ToString() : "") + ");" + GetNewline());
+            buff.Append(this.tabs + "} while (" + (condition != null ? condition.ToString() : "") + ");" + this.newline);
             return buff.ToString();
         }
     }

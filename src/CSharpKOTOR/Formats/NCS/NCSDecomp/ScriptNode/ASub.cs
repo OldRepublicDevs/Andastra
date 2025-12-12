@@ -192,10 +192,6 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
                 }
             }
             _params = null;
-            if (_type != null)
-            {
-                _type.Dispose();
-            }
             _type = null;
         }
     }

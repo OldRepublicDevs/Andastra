@@ -21,12 +21,12 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
         {
             var buff = new StringBuilder();
             var condition = GetCondition();
-            buff.Append(GetTabs() + "if (" + (condition != null ? condition.ToString() : "") + ") {" + GetNewline());
+            buff.Append(this.tabs + "if (" + (condition != null ? condition.ToString() : "") + ") {" + this.newline);
             foreach (var child in GetChildren())
             {
                 buff.Append(child.ToString());
             }
-            buff.Append(GetTabs() + "}" + GetNewline());
+            buff.Append(this.tabs + "}" + this.newline);
             return buff.ToString();
         }
     }

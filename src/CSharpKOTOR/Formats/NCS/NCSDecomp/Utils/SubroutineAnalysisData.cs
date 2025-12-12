@@ -87,7 +87,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             }
             if (this.globalstate != null)
             {
-                this.globalstate.Close();
+                this.globalstate.Dispose();
                 this.globalstate = null;
             }
         }
@@ -548,12 +548,12 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             return cig.GetIsGlobals();
         }
 
-        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SubroutineAnalysisData.java:551-558
-        // Original: public void close()
-        // Keep Dispose() for backward compatibility with IDisposable pattern
         public virtual void Dispose()
         {
-            this.Close();
+            // Clean up resources
+            this.subroutines?.Clear();
+            this.globalstructs?.Clear();
+            this.substates?.Clear();
         }
     }
 }
