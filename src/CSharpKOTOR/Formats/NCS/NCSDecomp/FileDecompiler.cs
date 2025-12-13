@@ -2808,6 +2808,21 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                 dotypes = null;
                 nodedata.ClearProtoData();
                 int subCount = 0;
+                int totalSubs = 0;
+                try
+                {
+                    IEnumerator<object> subEnum = subdata.GetSubroutines();
+                    while (subEnum.HasNext())
+                    {
+                        totalSubs++;
+                        subEnum.Next();
+                    }
+                    JavaSystem.@out.Println("DEBUG decompileNcs: Total subroutines in subdata: " + totalSubs);
+                }
+                catch (Exception e)
+                {
+                    JavaSystem.@out.Println("DEBUG decompileNcs: Error counting subroutines: " + e.Message);
+                }
                 foreach (ASubroutine iterSub in this.SubIterable(subdata))
                 {
                     subCount++;
@@ -2887,23 +2902,6 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                         catch (Exception e2)
                         {
                             JavaSystem.@out.Println("Could not recover globals state: " + e2.Message);
-                        }
-                    }
-                }
-                else
-                {
-                    // Fallback: if doglobs is null but globals were processed, try to get state from subdata
-                    SubScriptState globalState = subdata.GlobalState();
-                    JavaSystem.@out.Println($"DEBUG FileDecompiler: doglobs is null, fallback globalState is {(globalState != null ? "non-null" : "null")}");
-                    if (globalState != null)
-                    {
-                        try
-                        {
-                            data.SetGlobals(globalState);
-                        }
-                        catch (Exception e)
-                        {
-                            JavaSystem.@out.Println("Error setting globals from subdata: " + e.Message);
                         }
                     }
                 }
