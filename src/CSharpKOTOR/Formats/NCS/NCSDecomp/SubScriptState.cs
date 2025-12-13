@@ -241,6 +241,12 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
         private void CheckStart(Node node)
         {
             this.AssertState(node);
+            // If current is null (e.g., after CheckEnd moved away from root), reset to root
+            // This can happen for globals when CheckEnd is called on the root
+            if (this.current == null)
+            {
+                this.current = this.root;
+            }
             if (this.current.HasChildren())
             {
                 ScriptNode.ScriptNode lastNode = this.current.GetLastChild();
@@ -304,13 +310,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
                 // Original: ScriptRootNode newCurrent = (ScriptRootNode) this.current.parent(); this.current = newCurrent;
                 // For globals, if current is the root (ASub), parent() returns null, so current becomes null and loop exits
                 // This is expected behavior - the root has no parent, so we can't move up
+                // CheckStart will reset current to root if it becomes null
                 ScriptRootNode newCurrent = (ScriptRootNode)this.current.Parent();
-                if (newCurrent == null && this.current == this.root)
-                {
-                    // We're at the root and it has no parent - this is normal for globals
-                    // Don't set state to DONE here, just exit the loop
-                    return;
-                }
                 this.current = newCurrent;
             }
 
