@@ -1,4 +1,5 @@
-//
+// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/node/TypedLinkedList.java:15-153
+// Original: public class TypedLinkedList<T> extends LinkedList<T>
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -8,7 +9,12 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
 {
     public class TypedLinkedList : LinkedList
     {
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/node/TypedLinkedList.java:17
+        // Original: private final Cast<T> cast;
         ICast cast;
+
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/node/TypedLinkedList.java:19-21
+        // Original: public TypedLinkedList() { this.cast = NoCast.instance(); }
         public TypedLinkedList()
         {
             this.cast = NoCast.instance;

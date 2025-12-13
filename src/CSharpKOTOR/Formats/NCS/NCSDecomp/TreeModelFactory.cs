@@ -1,4 +1,6 @@
-//
+// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/TreeModelFactory.java:17-44
+// Original: public class TreeModelFactory extends JTree
+// Note: C# implementation uses static methods instead of extending JTree, matching Avalonia UI patterns
 // TreeModelFactory for NCS Decompiler - creates tree data structures for UI binding
 //
 using System;
