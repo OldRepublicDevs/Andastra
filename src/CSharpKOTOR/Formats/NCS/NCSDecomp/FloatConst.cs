@@ -16,10 +16,10 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Stack
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/stack/FloatConst.java:14-20
         // Original: private Float value; public FloatConst(Float value) { this.type = new Type((byte)4); this.value = value; this.size = 1; }
         private float value;
-        public FloatConst(object value)
+        public FloatConst(float value)
         {
             this.type = new UtilsType((byte)4);
-            this.value = (float)value;
+            this.value = value;
             this.size = 1;
         }
 

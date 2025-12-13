@@ -15,10 +15,10 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Stack
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/stack/ObjectConst.java:14-20
         // Original: private Integer value; public ObjectConst(Integer value) { this.type = new Type((byte)6); this.value = value; this.size = 1; }
         private int value;
-        public ObjectConst(object value)
+        public ObjectConst(int value)
         {
             this.type = new UtilsType((byte)6);
-            this.value = (int)value;
+            this.value = value;
             this.size = 1;
         }
 
