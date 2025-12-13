@@ -1,17 +1,10 @@
-// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/CheckIsGlobals.java
+// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/CheckIsGlobals.java:16-42
 // Original: public class CheckIsGlobals extends PrunedReversedDepthFirstAdapter
-using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
-using System.Text;
-using CSharpKOTOR.Formats.NCS.NCSDecomp;
 using CSharpKOTOR.Formats.NCS.NCSDecomp.Analysis;
+using CSharpKOTOR.Formats.NCS.NCSDecomp.AST;
 
 namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
 {
-    // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/CheckIsGlobals.java:16-42
-    // Original: public class CheckIsGlobals extends PrunedReversedDepthFirstAdapter
     public class CheckIsGlobals : PrunedReversedDepthFirstAdapter
     {
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/CheckIsGlobals.java:17
