@@ -28,21 +28,27 @@ namespace KotorDiff.NET.App
             }
 
             // Set up the logging system
-            SetupLogging(config);
+            var logger = SetupLogging(config);
 
             // Log configuration
-            LogConfiguration(config);
+            LogConfiguration(config, logger);
 
             // Run with optional profiler
-            // TODO: Implement profiler support
+            System.Diagnostics.Stopwatch profiler = null;
             if (config.UseProfiler)
             {
-                Console.WriteLine("[Warning] Profiler not yet implemented");
+                profiler = System.Diagnostics.Stopwatch.StartNew();
             }
 
             try
             {
                 var comparison = ExecuteDiff(config);
+
+                if (profiler != null)
+                {
+                    profiler.Stop();
+                    DiffLogger.GetLogger()?.Info($"Profiler output: Elapsed time {profiler.Elapsed.TotalSeconds} seconds");
+                }
 
                 // Format and return final output
                 if (comparison.HasValue)
@@ -52,36 +58,80 @@ namespace KotorDiff.NET.App
 
                 return 0;
             }
+            catch (OperationCanceledException)
+            {
+                DiffLogger.GetLogger()?.Info("KeyboardInterrupt - KotorDiff was cancelled by user.");
+                if (profiler != null)
+                {
+                    profiler.Stop();
+                }
+                return 1;
+            }
             catch (Exception e)
             {
-                Console.WriteLine($"Error - KotorDiff was cancelled: {e.Message}");
-                Console.WriteLine(e.StackTrace);
+                DiffLogger.GetLogger()?.Critical($"[CRASH] Unhandled exception caught: {e.Message}");
+                DiffLogger.GetLogger()?.Critical(e.ToString());
+                if (profiler != null)
+                {
+                    profiler.Stop();
+                }
                 return 1;
             }
         }
 
         // Matching PyKotor implementation at vendor/PyKotor/Tools/KotorDiff/src/kotordiff/app.py:219-242
         // Original: def _setup_logging(config: KotorDiffConfig) -> None: ...
-        private static void SetupLogging(KotorDiffConfig config)
+        private static DiffLogger SetupLogging(KotorDiffConfig config)
         {
-            // TODO: Implement logging system setup
+            LogLevel level = LogLevel.INFO;
+            if (Enum.TryParse(config.LogLevel, true, out LogLevel parsedLevel))
+            {
+                level = parsedLevel;
+            }
+
+            OutputMode mode = OutputMode.FULL;
+            if (Enum.TryParse(config.OutputMode, true, out OutputMode parsedMode))
+            {
+                mode = parsedMode;
+            }
+
+            TextWriter outputFile = null;
+            if (config.OutputLogPath != null)
+            {
+                try
+                {
+                    outputFile = new StreamWriter(config.OutputLogPath.FullName, append: true, Encoding.UTF8);
+                }
+                catch (Exception e)
+                {
+                    Console.Error.WriteLine($"[ERROR] Could not open log file '{config.OutputLogPath}': {e.Message}");
+                }
+            }
+
+            return DiffLogger.SetupLogger(level, mode, useColors: config.UseColors, outputFile: outputFile);
         }
 
         // Matching PyKotor implementation at vendor/PyKotor/Tools/KotorDiff/src/kotordiff/app.py:245-256
         // Original: def _log_configuration(config: KotorDiffConfig) -> None: ...
-        private static void LogConfiguration(KotorDiffConfig config)
+        private static void LogConfiguration(KotorDiffConfig config, DiffLogger logger)
         {
-            Console.WriteLine();
-            Console.WriteLine("Configuration:");
-            Console.WriteLine($"  Mode: {config.Paths.Count}-way comparison");
+            logger.Info("");
+            logger.Info("Configuration:");
+            logger.Info($"  Mode: {config.Paths.Count}-way comparison");
 
             for (int i = 0; i < config.Paths.Count; i++)
             {
-                Console.WriteLine($"  Path {i + 1}: '{config.Paths[i]}'");
+                logger.Info($"  Path {i + 1}: '{config.Paths[i]}'");
             }
 
-            Console.WriteLine($"Using --compare-hashes={config.CompareHashes}");
-            Console.WriteLine($"Using --use-profiler={config.UseProfiler}");
+            logger.Info($"Using --compare-hashes={config.CompareHashes}");
+            logger.Info($"Using --use-profiler={config.UseProfiler}");
+            if (config.TslPatchDataPath != null)
+            {
+                logger.Info($"Using --tslpatchdata={config.TslPatchDataPath}");
+            }
+            logger.Info($"Using --ini={config.IniFilename}");
+            logger.Info($"Using --incremental-writer={config.UseIncrementalWriter}");
         }
 
         // Matching PyKotor implementation at vendor/PyKotor/Tools/KotorDiff/src/kotordiff/app.py:417-527
@@ -97,13 +147,14 @@ namespace KotorDiff.NET.App
 
             // Create incremental writer if requested
             // TODO: Implement IncrementalTSLPatchDataWriter
+            // For now, just use non-incremental mode
             if (config.TslPatchDataPath != null && config.UseIncrementalWriter)
             {
-                Console.WriteLine("[Warning] Incremental writer not yet implemented");
+                DiffLogger.GetLogger()?.Warning("[Warning] Incremental writer not yet implemented, using non-incremental mode");
             }
 
             // Run the diff
-            Action<string> logFunc = Console.WriteLine;
+            Action<string> logFunc = (msg) => DiffLogger.GetLogger()?.Info(msg);
             bool? comparison = DiffEngine.RunDifferFromArgsImpl(
                 allPaths,
                 filters: config.Filters,
@@ -124,9 +175,9 @@ namespace KotorDiff.NET.App
                 }
                 catch (Exception genError)
                 {
-                    Console.WriteLine($"[Error] Failed to generate TSLPatcher data: {genError.GetType().Name}: {genError.Message}");
-                    Console.WriteLine("Full traceback:");
-                    Console.WriteLine(genError.StackTrace);
+                    DiffLogger.GetLogger()?.Error($"[Error] Failed to generate TSLPatcher data: {genError.GetType().Name}: {genError.Message}");
+                    DiffLogger.GetLogger()?.Debug("Full traceback:");
+                    DiffLogger.GetLogger()?.Debug(genError.StackTrace);
                     return null;
                 }
             }
@@ -142,7 +193,7 @@ namespace KotorDiff.NET.App
             ModificationsByType modifications,
             DirectoryInfo baseDataPath = null)
         {
-            Console.WriteLine($"\nGenerating TSLPatcher data at: {tslpatchdataPath}");
+            DiffLogger.GetLogger()?.Info($"\nGenerating TSLPatcher data at: {tslpatchdataPath}");
 
             // Create the generator
             var generator = new TSLPatchDataGenerator(tslpatchdataPath);
@@ -152,10 +203,10 @@ namespace KotorDiff.NET.App
 
             if (generatedFiles.Count > 0)
             {
-                Console.WriteLine($"Generated {generatedFiles.Count} resource file(s):");
+                DiffLogger.GetLogger()?.Info($"Generated {generatedFiles.Count} resource file(s):");
                 foreach (var filename in generatedFiles.Keys)
                 {
-                    Console.WriteLine($"  - {filename}");
+                    DiffLogger.GetLogger()?.Info($"  - {filename}");
                 }
             }
 
@@ -164,24 +215,24 @@ namespace KotorDiff.NET.App
 
             // Generate changes.ini
             var iniPath = new FileInfo(Path.Combine(tslpatchdataPath.FullName, iniFilename));
-            Console.WriteLine($"\nGenerating {iniFilename} at: {iniPath}");
+            DiffLogger.GetLogger()?.Info($"\nGenerating {iniFilename} at: {iniPath}");
 
             // Serialize INI file
             var serializer = new CSharpKOTOR.Mods.TSLPatcherINISerializer();
             string iniContent = serializer.Serialize(modifications, includeHeader: true, includeSettings: false, verbose: false);
             File.WriteAllText(iniPath.FullName, iniContent, Encoding.UTF8);
-            Console.WriteLine($"Generated {iniFilename} with {iniContent.Split('\n').Length} lines");
+            DiffLogger.GetLogger()?.Info($"Generated {iniFilename} with {iniContent.Split('\n').Length} lines");
 
             // Summary
-            Console.WriteLine("\nTSLPatcher data generation complete:");
-            Console.WriteLine($"  Location: {tslpatchdataPath}");
-            Console.WriteLine($"  INI file: {iniFilename}");
-            Console.WriteLine($"  TLK modifications: {modifications.Tlk?.Count ?? 0}");
-            Console.WriteLine($"  2DA modifications: {modifications.Twoda?.Count ?? 0}");
-            Console.WriteLine($"  GFF modifications: {modifications.Gff?.Count ?? 0}");
-            Console.WriteLine($"  SSF modifications: {modifications.Ssf?.Count ?? 0}");
-            Console.WriteLine($"  NCS modifications: {modifications.Ncs?.Count ?? 0}");
-            Console.WriteLine($"  Install folders: {modifications.Install?.Count ?? 0}");
+            DiffLogger.GetLogger()?.Info("\nTSLPatcher data generation complete:");
+            DiffLogger.GetLogger()?.Info($"  Location: {tslpatchdataPath}");
+            DiffLogger.GetLogger()?.Info($"  INI file: {iniFilename}");
+            DiffLogger.GetLogger()?.Info($"  TLK modifications: {modifications.Tlk?.Count ?? 0}");
+            DiffLogger.GetLogger()?.Info($"  2DA modifications: {modifications.Twoda?.Count ?? 0}");
+            DiffLogger.GetLogger()?.Info($"  GFF modifications: {modifications.Gff?.Count ?? 0}");
+            DiffLogger.GetLogger()?.Info($"  SSF modifications: {modifications.Ssf?.Count ?? 0}");
+            DiffLogger.GetLogger()?.Info($"  NCS modifications: {modifications.Ncs?.Count ?? 0}");
+            DiffLogger.GetLogger()?.Info($"  Install folders: {modifications.Install?.Count ?? 0}");
         }
 
         // Matching PyKotor implementation at vendor/PyKotor/Tools/KotorDiff/src/kotordiff/app.py:271-289
@@ -190,7 +241,7 @@ namespace KotorDiff.NET.App
         {
             if (config.Paths.Count >= 2)
             {
-                Console.WriteLine(
+                DiffLogger.GetLogger()?.Info(
                     $"Comparison of {config.Paths.Count} paths: " +
                     (comparison ? " MATCHES " : " DOES NOT MATCH "));
             }
