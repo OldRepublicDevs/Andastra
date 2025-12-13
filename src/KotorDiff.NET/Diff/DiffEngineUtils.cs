@@ -111,6 +111,104 @@ namespace KotorDiff.NET.Diff
             string ext = Path.GetExtension(path).ToLowerInvariant();
             return ext.StartsWith(".") ? ext.Substring(1) : ext;
         }
+
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/engine.py:1070-1100
+        // Original: def compare_text_content(...): ...
+        public static bool CompareTextContent(byte[] data1, byte[] data2, string where)
+        {
+
+            string text1;
+            string text2;
+
+            try
+            {
+                text1 = Encoding.UTF8.GetString(data1);
+                text2 = Encoding.UTF8.GetString(data2);
+            }
+            catch (Exception)
+            {
+                try
+                {
+                    text1 = Encoding.GetEncoding(1252).GetString(data1);
+                    text2 = Encoding.GetEncoding(1252).GetString(data2);
+                }
+                catch (Exception)
+                {
+                    // Last resort - treat as binary
+                    return data1.SequenceEqual(data2);
+                }
+            }
+
+            if (text1 == text2)
+            {
+                return true;
+            }
+
+            // Simple line-by-line diff for now
+            var lines1 = text1.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
+            var lines2 = text2.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
+
+            bool hasDiff = false;
+            int maxLines = Math.Max(lines1.Length, lines2.Length);
+
+            for (int i = 0; i < maxLines; i++)
+            {
+                string line1 = i < lines1.Length ? lines1[i] : "";
+                string line2 = i < lines2.Length ? lines2[i] : "";
+
+                if (line1 != line2)
+                {
+                    hasDiff = true;
+                    break; // Found difference, no need to continue
+                }
+            }
+
+            return !hasDiff;
+        }
+
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/engine.py:1102-1108
+        // Original: def generate_hash(data: bytes) -> str: ...
+        public static string CalculateSha256(byte[] data)
+        {
+            using (var sha256 = System.Security.Cryptography.SHA256.Create())
+            {
+                byte[] hashBytes = sha256.ComputeHash(data);
+                return BitConverter.ToString(hashBytes).Replace("-", "").ToLowerInvariant();
+            }
+        }
+
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/engine.py:1050-1068
+        // Original: def _determine_destination_for_source(...): ...
+        public static string DetermineDestinationForSource(string sourceFilePath)
+        {
+            if (string.IsNullOrEmpty(sourceFilePath))
+            {
+                return "Override";
+            }
+
+            string lowerPath = sourceFilePath.ToLowerInvariant();
+            if (lowerPath.Contains("override"))
+            {
+                return "Override";
+            }
+            if (lowerPath.Contains("modules"))
+            {
+                // Extract module name if it's a resource inside a module
+                // e.g., "modules/tar_m01aa.mod/some_file.utc" -> "modules/tar_m01aa.mod"
+                // This needs to be more robust. For now, return "modules"
+                return "modules";
+            }
+            if (lowerPath.Contains("lips"))
+            {
+                return "Lips";
+            }
+            if (lowerPath.Contains("streamwaves") || lowerPath.Contains("streamvoice"))
+            {
+                return "StreamWaves";
+            }
+            // Default to Override for loose files in the game root or unknown locations
+            return "Override";
+        }
     }
 }
 

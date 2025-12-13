@@ -276,49 +276,45 @@ namespace KotorDiff.NET.Diff
                 }
                 else
                 {
-                    // Resource exists in multiple paths - compare them
-                    // TODO: Implement full n-way comparison logic
-                    // For now, just check if all are identical
+                    // Resource exists in multiple paths - compare them using DiffData
                     var resources = pathData.Values.ToList();
                     bool allIdentical = true;
 
-                    for (int i = 0; i < resources.Count - 1; i++)
+                    // Use first resource as base, compare all others against it
+                    var baseResource = resources[0];
+                    int basePathIndex = pathData.First(entry => entry.Value == baseResource).Key;
+
+                    for (int i = 1; i < resources.Count; i++)
                     {
-                        for (int j = i + 1; j < resources.Count; j++)
+                        var compareResource = resources[i];
+                        int comparePathIndex = pathData.First(entry => entry.Value == compareResource).Key;
+
+                        // Create DiffContext for comparison
+                        string file1Rel = $"path{basePathIndex}/{baseResource.Identifier}";
+                        string file2Rel = $"path{comparePathIndex}/{compareResource.Identifier}";
+                        var ctx = new DiffContext(file1Rel, file2Rel, baseResource.Ext);
+
+                        // Perform format-aware comparison
+                        bool? diffResult = DiffData(
+                            baseResource.Data,
+                            compareResource.Data,
+                            ctx,
+                            compareHashes: compareHashes,
+                            modificationsByType: modificationsByType,
+                            logFunc: logFunc);
+
+                        if (diffResult == false)
                         {
-                            var res1 = resources[i];
-                            var res2 = resources[j];
-
-                            // Simple byte comparison for now
-                            if (res1.Data.Length != res2.Data.Length)
-                            {
-                                allIdentical = false;
-                                break;
-                            }
-
-                            bool bytesEqual = true;
-                            for (int k = 0; k < res1.Data.Length; k++)
-                            {
-                                if (res1.Data[k] != res2.Data[k])
-                                {
-                                    bytesEqual = false;
-                                    break;
-                                }
-                            }
-
-                            if (!bytesEqual)
-                            {
-                                allIdentical = false;
-                                logFunc?.Invoke($"\n[DIFFERENT] {resourceId}");
-                                logFunc?.Invoke($"  Differences found between paths");
-                                diffCount++;
-                                break;
-                            }
+                            allIdentical = false;
+                            logFunc?.Invoke($"\n[DIFFERENT] {resourceId}");
+                            logFunc?.Invoke($"  Differences found between path {basePathIndex} and path {comparePathIndex}");
+                            diffCount++;
                         }
-
-                        if (!allIdentical)
+                        else if (diffResult == null)
                         {
-                            break;
+                            // Error occurred, mark as different
+                            allIdentical = false;
+                            isSameResult = null;
                         }
                     }
 
@@ -382,6 +378,270 @@ namespace KotorDiff.NET.Diff
             }
 
             return false;
+        }
+
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/engine.py:1236-1701
+        // Original: def diff_data(...): ...
+        public static bool? DiffData(
+            byte[] data1,
+            byte[] data2,
+            DiffContext context,
+            bool compareHashes = true,
+            ModificationsByType modificationsByType = null,
+            Action<string> logFunc = null)
+        {
+            if (logFunc == null)
+            {
+                logFunc = Console.WriteLine;
+            }
+
+            string where = context.Where;
+
+            // Fast path: identical byte arrays
+            if (data1.SequenceEqual(data2))
+            {
+                return true;
+            }
+
+            // Handle GFF types first (special handling)
+            var gffTypes = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+            {
+                "utc", "uti", "utp", "ute", "utm", "utd", "utw", "dlg", "are", "git", "ifo", "gui", "jrl", "fac", "gff"
+            };
+
+            if (gffTypes.Contains(context.Ext))
+            {
+                return DiffGffData(data1, data2, context, modificationsByType, logFunc);
+            }
+
+            // Handle 2DA files
+            if (context.Ext.Equals("2da", StringComparison.OrdinalIgnoreCase))
+            {
+                return DiffTwoDaData(data1, data2, context, modificationsByType, logFunc, compareHashes);
+            }
+
+            // Handle TLK files
+            if (context.Ext.Equals("tlk", StringComparison.OrdinalIgnoreCase))
+            {
+                return DiffTlkData(data1, data2, context, modificationsByType, logFunc);
+            }
+
+            // Handle SSF files
+            if (context.Ext.Equals("ssf", StringComparison.OrdinalIgnoreCase))
+            {
+                return DiffSsfData(data1, data2, context, modificationsByType, logFunc, compareHashes);
+            }
+
+            // Handle text files
+            var binaryFormats = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+            {
+                "ncs", "mdl", "mdx", "wok", "pwk", "dwk", "tga", "tpc", "txi", "wav", "bik",
+                "erf", "rim", "mod", "sav"
+            };
+
+            if (!binaryFormats.Contains(context.Ext) && DiffEngineUtils.IsTextContent(data1) && DiffEngineUtils.IsTextContent(data2))
+            {
+                logFunc($"Comparing text content for '{where}'");
+                return DiffEngineUtils.CompareTextContent(data1, data2, where) ? (bool?)true : false;
+            }
+
+            // Fallback to hash comparison for binary content
+            if (compareHashes)
+            {
+                string hash1 = DiffEngineUtils.CalculateSha256(data1);
+                string hash2 = DiffEngineUtils.CalculateSha256(data2);
+                if (hash1 != hash2)
+                {
+                    logFunc($"'{where}': SHA256 is different");
+                    return false;
+                }
+                return true;
+            }
+
+            // If not comparing hashes and not text, assume different
+            return false;
+        }
+
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/engine.py:1294-1411
+        // Original: GFF handling in diff_data
+        private static bool? DiffGffData(
+            byte[] data1,
+            byte[] data2,
+            DiffContext context,
+            ModificationsByType modificationsByType,
+            Action<string> logFunc)
+        {
+            try
+            {
+                // TODO: Load GFF files and compare
+                // For now, use analyzer
+                var analyzer = DiffAnalyzerFactory.GetAnalyzer("gff");
+                if (analyzer != null)
+                {
+                    var result = analyzer.Analyze(data1, data2, context.Where);
+                    if (result != null && modificationsByType != null)
+                    {
+                        // Add modifications
+                        if (result is CSharpKOTOR.Mods.GFF.ModificationsGFF modGff)
+                        {
+                            string resourceName = Path.GetFileName(context.Where);
+                            modGff.Destination = DiffEngineUtils.DetermineDestinationForSource(context.File2Rel);
+                            modGff.SourceFile = resourceName;
+                            modGff.SaveAs = resourceName;
+                            modificationsByType.Gff.Add(modGff);
+                            logFunc($"\n[PATCH] {context.Where}");
+                            logFunc("  |-- !ReplaceFile: 0 (patch existing file, don't replace)");
+                            logFunc($"  |-- Modifications: {modGff.Modifiers.Count} field/struct changes");
+                        }
+                        return false; // Differences found
+                    }
+                }
+
+                // Fallback: simple byte comparison
+                return data1.SequenceEqual(data2) ? (bool?)true : false;
+            }
+            catch (Exception e)
+            {
+                logFunc($"[Error] Failed to compare GFF '{context.Where}': {e.GetType().Name}: {e.Message}");
+                return null;
+            }
+        }
+
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/engine.py:1511-1546
+        // Original: 2DA handling in diff_data
+        private static bool? DiffTwoDaData(
+            byte[] data1,
+            byte[] data2,
+            DiffContext context,
+            ModificationsByType modificationsByType,
+            Action<string> logFunc,
+            bool compareHashes)
+        {
+            try
+            {
+                var analyzer = DiffAnalyzerFactory.GetAnalyzer("2da");
+                if (analyzer != null)
+                {
+                    var result = analyzer.Analyze(data1, data2, context.Where);
+                    if (result != null && modificationsByType != null)
+                    {
+                        if (result is CSharpKOTOR.Mods.TwoDA.Modifications2DA mod2da)
+                        {
+                            string resourceName = Path.GetFileName(context.Where);
+                            mod2da.Destination = DiffEngineUtils.DetermineDestinationForSource(context.File2Rel);
+                            mod2da.SourceFile = resourceName;
+                            modificationsByType.Twoda.Add(mod2da);
+                            logFunc($"\n[PATCH] {context.Where}");
+                            logFunc("  |-- !ReplaceFile: 0 (patch existing 2DA)");
+                            logFunc($"  |-- Modifications: {mod2da.Modifiers.Count} row/column changes");
+                        }
+                        return false; // Differences found
+                    }
+                }
+
+                // Fallback: hash comparison
+                if (compareHashes)
+                {
+                    string hash1 = DiffEngineUtils.CalculateSha256(data1);
+                    string hash2 = DiffEngineUtils.CalculateSha256(data2);
+                    return hash1 == hash2 ? (bool?)true : false;
+                }
+                return false;
+            }
+            catch (Exception e)
+            {
+                logFunc($"[Error] Failed to compare 2DA '{context.Where}': {e.GetType().Name}: {e.Message}");
+                return null;
+            }
+        }
+
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/engine.py:1547-1587
+        // Original: TLK handling in diff_data
+        private static bool? DiffTlkData(
+            byte[] data1,
+            byte[] data2,
+            DiffContext context,
+            ModificationsByType modificationsByType,
+            Action<string> logFunc)
+        {
+            try
+            {
+                var analyzer = DiffAnalyzerFactory.GetAnalyzer("tlk");
+                if (analyzer != null)
+                {
+                    var result = analyzer.Analyze(data1, data2, context.Where);
+                    if (result != null && modificationsByType != null)
+                    {
+                        // TLK analyzer returns tuple: (ModificationsTLK, strref_mappings)
+                        if (result is ValueTuple<CSharpKOTOR.Mods.TLK.ModificationsTLK, Dictionary<int, int>> tuple)
+                        {
+                            var modTlk = tuple.Item1;
+                            modificationsByType.Tlk.Add(modTlk);
+                            logFunc($"\n[PATCH] {context.Where}");
+                            logFunc("  |-- Mode: Append entries (TSLPatcher design)");
+                            logFunc($"  |-- Modifications: {modTlk.Modifiers.Count} TLK entries");
+                            logFunc("  +-- tslpatchdata: append.tlk and/or replace.tlk will be generated");
+                        }
+                        return false; // Differences found
+                    }
+                }
+
+                // Fallback: simple byte comparison
+                return data1.SequenceEqual(data2) ? (bool?)true : false;
+            }
+            catch (Exception e)
+            {
+                logFunc($"[Error] Failed to compare TLK '{context.Where}': {e.GetType().Name}: {e.Message}");
+                return null;
+            }
+        }
+
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/engine.py:1588-1621
+        // Original: SSF handling in diff_data
+        private static bool? DiffSsfData(
+            byte[] data1,
+            byte[] data2,
+            DiffContext context,
+            ModificationsByType modificationsByType,
+            Action<string> logFunc,
+            bool compareHashes)
+        {
+            try
+            {
+                var analyzer = DiffAnalyzerFactory.GetAnalyzer("ssf");
+                if (analyzer != null)
+                {
+                    var result = analyzer.Analyze(data1, data2, context.Where);
+                    if (result != null && modificationsByType != null)
+                    {
+                        if (result is CSharpKOTOR.Mods.SSF.ModificationsSSF modSsf)
+                        {
+                            string resourceName = Path.GetFileName(context.Where);
+                            modSsf.Destination = DiffEngineUtils.DetermineDestinationForSource(context.File2Rel);
+                            modSsf.SourceFile = resourceName;
+                            modificationsByType.Ssf.Add(modSsf);
+                            logFunc($"\n[PATCH] {context.Where}");
+                            logFunc("  |-- !ReplaceFile: 0 (patch existing SSF)");
+                            logFunc($"  |-- Modifications: {modSsf.Modifiers.Count} sound slot changes");
+                        }
+                        return false; // Differences found
+                    }
+                }
+
+                // Fallback: hash comparison
+                if (compareHashes)
+                {
+                    string hash1 = DiffEngineUtils.CalculateSha256(data1);
+                    string hash2 = DiffEngineUtils.CalculateSha256(data2);
+                    return hash1 == hash2 ? (bool?)true : false;
+                }
+                return false;
+            }
+            catch (Exception e)
+            {
+                logFunc($"[Error] Failed to compare SSF '{context.Where}': {e.GetType().Name}: {e.Message}");
+                return null;
+            }
         }
     }
 }
