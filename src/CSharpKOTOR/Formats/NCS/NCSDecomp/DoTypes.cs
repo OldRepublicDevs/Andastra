@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using CSharpKOTOR.Formats.NCS.NCSDecomp;
 using CSharpKOTOR.Formats.NCS.NCSDecomp.Analysis;
+using CSharpKOTOR.Formats.NCS.NCSDecomp.AST;
 using CSharpKOTOR.Formats.NCS.NCSDecomp.Stack;
 using CSharpKOTOR.Formats.NCS.NCSDecomp.Utils;
 using JavaSystem = CSharpKOTOR.Formats.NCS.NCSDecomp.JavaSystem;
@@ -502,9 +503,10 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                     if (substate.Type().Equals(unchecked((byte)(-15))) && !substate.Type().IsTyped())
                     {
                         StructType structType = (StructType)substate.Type();
-                        for (int i = 0; i < structType.Count; ++i)
+                        var typesList = structType.Types();
+                        for (int i = 0; i < typesList.Count; ++i)
                         {
-                            UtilsType type = this.stack.Get(structType.Count - i, this.state);
+                            UtilsType type = this.stack.Get(typesList.Count - i, this.state);
                             if (!type.Equals(unchecked((byte)(-1))))
                             {
                                 structType.UpdateType(i, type);

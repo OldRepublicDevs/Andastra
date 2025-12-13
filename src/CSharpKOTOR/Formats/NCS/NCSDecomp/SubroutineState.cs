@@ -9,6 +9,7 @@ using CSharpKOTOR.Formats.NCS.NCSDecomp;
 using CSharpKOTOR.Formats.NCS.NCSDecomp.AST;
 using CSharpKOTOR.Formats.NCS.NCSDecomp.Stack;
 using JavaSystem = CSharpKOTOR.Formats.NCS.NCSDecomp.JavaSystem;
+using UtilsType = CSharpKOTOR.Formats.NCS.NCSDecomp.Utils.Type;
 
 namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
 {
@@ -274,7 +275,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
         // Original: public ArrayList<Type> params() { return this.params; }
         public virtual List<object> Params()
         {
-            return this.@params;
+            return new List<object>(this.@params.Cast<object>());
         }
 
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SubroutineState.java:207-210
@@ -407,7 +408,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
         {
             while (this.@params.Count < this.paramsize)
             {
-                this.@params.Add(new Type(Type.VT_INTEGER));
+                this.@params.Add(new UtilsType(UtilsType.VT_INTEGER));
             }
             while (this.@params.Count > this.paramsize)
             {

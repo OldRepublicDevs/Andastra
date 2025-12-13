@@ -193,7 +193,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
         // Original: @Override public String toDeclString() { return this.isVector() ? Type.toString((byte)-16) : this.toString() + " " + this.typename; }
         public override string ToDeclString()
         {
-            return this.IsVector() ? Type.ToString(unchecked((byte)(-16))) : this.ToString() + " " + this.typename;
+            return this.IsVector() ? Type.ToString(new Type(unchecked((byte)(-16)))) : this.ToString() + " " + this.typename;
         }
 
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/StructType.java:141-147

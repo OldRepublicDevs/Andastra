@@ -751,7 +751,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             {
                 JavaSystem.@out.Println("class " + node.Parent()?.GetType()?.ToString() ?? "null");
                 ACommandBlock ablock = (ACommandBlock)((ASubroutine)node.Parent()).GetCommandBlock();
-                return GetCommandChild((Node)ablock.GetCmd().GetLast());
+                var cmdList = ablock.GetCmd();
+                return GetCommandChild((Node)cmdList[cmdList.Count - 1]);
             }
 
             Node up;
@@ -786,15 +787,16 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             }
 
             int searchPos = nodedata.GetPos(node);
-            IEnumerator<object> it = ((ACommandBlock)up).GetCmd().Iterator();
-            while (it.HasNext())
+            var cmdList = ((ACommandBlock)up).GetCmd();
+            foreach (PCmd cmd in cmdList)
             {
-                Node next = (Node)it.Next();
+                Node next = (Node)cmd;
                 if (nodedata.GetPos(next) == searchPos)
                 {
-                    if (it.HasNext())
+                    int nextIndex = cmdList.IndexOf(cmd) + 1;
+                    if (nextIndex < cmdList.Count)
                     {
-                        return GetCommandChild((Node)it.Next());
+                        return GetCommandChild((Node)cmdList[nextIndex]);
                     }
 
                     return null;

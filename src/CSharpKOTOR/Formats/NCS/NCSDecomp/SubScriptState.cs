@@ -50,7 +50,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
             this.stack = stack;
             this.varcounts = new HashMap();
             this.varprefix = "";
-            UtilsType type = protostate.GetType();
+            UtilsType type = protostate.Type();
             byte id = protostate.GetId();
             this.root = new ScriptNode.ASub(type, id, this.GetParams(protostate.GetParamCount()), protostate.GetStart(), protostate.GetEnd());
             this.current = this.root;
@@ -312,7 +312,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
         public virtual void TransformPlaceholderVariableRemoved(Variable var)
         {
             ScriptNode.AVarDecl vardec = (ScriptNode.AVarDecl)this.vardecs[var];
-            if (vardec != null && vardec.SetIsFcnReturn())
+            if (vardec != null && vardec.IsFcnReturn())
             {
                 object exp = vardec.GetExp();
                 ScriptRootNode parent = (ScriptRootNode)vardec.Parent();
@@ -673,7 +673,16 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
         public virtual void TransformJSR(AJumpToSubroutine node)
         {
             this.CheckStart(node);
-            AFcnCallExp jsr = new AFcnCallExp(this.GetFcnId(node), this.RemoveFcnParams(node));
+            var paramObjects = this.RemoveFcnParams(node);
+            List<AExpression> @params = new List<AExpression>();
+            foreach (var paramObj in paramObjects)
+            {
+                if (paramObj is AExpression param)
+                {
+                    @params.Add(param);
+                }
+            }
+            AFcnCallExp jsr = new AFcnCallExp(this.GetFcnId(node), @params);
             if (!this.GetFcnType(node).Equals((byte)0))
             {
                 ScriptNode.ScriptNode lastChild = this.current.GetLastChild();
@@ -1067,7 +1076,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
                 return true;
             }
 
-            if (typeof(ASwitchCase).IsInstanceOfType(this.current) && ((ASwitch)this.current.Parent()).End() == nodePos)
+            if (typeof(ASwitchCase).IsInstanceOfType(this.current) && ((ASwitch)this.current.Parent()).GetEnd() == nodePos)
             {
                 return true;
             }
@@ -1200,7 +1209,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
                 StackEntry entry = this.stack.Get(1);
                 if (typeof(Variable).IsInstanceOfType(entry) && ((ScriptNode.ASwitch)this.current.Parent()).GetSwitchExp().Stackentry().Equals(entry))
                 {
-                    ((ScriptNode.ASwitch)this.current.Parent()).End(this.nodedata.GetPos(node));
+                    ((ScriptNode.ASwitch)this.current.Parent()).SetEnd(this.nodedata.GetPos(node));
                     this.UpdateSwitchUnknowns((ScriptNode.ASwitch)this.current.Parent());
                 }
             }
@@ -1299,7 +1308,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
                         return this.RemoveLastExp(false);
                     }
 
-                    if (typeof(ScriptNode.AVarDecl).IsInstanceOfType(last) && ((AVarRef)(object)anode).Var().Equals(((ScriptNode.AVarDecl)last).Var()) && ((ScriptNode.AVarDecl)last).GetExp() != null)
+                    if (typeof(ScriptNode.AVarDecl).IsInstanceOfType(last) && ((AVarRef)(object)anode).Var().Equals(((ScriptNode.AVarDecl)last).GetVarVar()) && ((ScriptNode.AVarDecl)last).GetExp() != null)
                     {
                         return this.RemoveLastExp(false);
                     }
@@ -1311,7 +1320,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
             if (typeof(ScriptNode.AVarDecl).IsInstanceOfType(anode))
             {
                 ScriptNode.AVarDecl vardec = (ScriptNode.AVarDecl)anode;
-                if (vardec.SetIsFcnReturn() && vardec.GetExp() != null)
+                if (vardec.IsFcnReturn() && vardec.GetExp() != null)
                 {
                     ScriptNode.AExpression exp = vardec.GetExp();
                     vardec.RemoveExp();
@@ -1325,7 +1334,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
 
                 if (!forceOneOnly)
                 {
-                    AVarRef varref = new AVarRef(vardec.Var());
+                    AVarRef varref = new AVarRef(vardec.GetVarVar());
                     return varref;
                 }
 
@@ -1352,7 +1361,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
                 return (ScriptNode.AExpression)anode;
             }
 
-            if (typeof(ScriptNode.AVarDecl).IsInstanceOfType(anode) && ((ScriptNode.AVarDecl)anode).SetIsFcnReturn())
+            if (typeof(ScriptNode.AVarDecl).IsInstanceOfType(anode) && ((ScriptNode.AVarDecl)anode).IsFcnReturn())
             {
                 return ((ScriptNode.AVarDecl)anode).GetExp();
             }
@@ -1369,7 +1378,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
                 return null;
             }
 
-            if (typeof(ScriptNode.AVarDecl).IsInstanceOfType(node) && ((ScriptNode.AVarDecl)node).SetIsFcnReturn())
+            if (typeof(ScriptNode.AVarDecl).IsInstanceOfType(node) && ((ScriptNode.AVarDecl)node).IsFcnReturn())
             {
                 return ((ScriptNode.AVarDecl)node).GetExp();
             }
@@ -1403,7 +1412,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
         private void UpdateVarCount(Variable var)
         {
             int count = 1;
-            UtilsType key = var.GetType();
+            UtilsType key = var.Type();
             object curcountObj = this.varcounts[key];
             if (curcountObj != null)
             {
@@ -1722,7 +1731,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
 
         private UtilsType GetFcnType(AJumpToSubroutine node)
         {
-            return this.subdata.GetState(this.nodedata.GetDestination(node)).GetType();
+            return this.subdata.GetState(this.nodedata.GetDestination(node)).Type();
         }
 
         private int GetNextCommand(AJumpCommand node)
