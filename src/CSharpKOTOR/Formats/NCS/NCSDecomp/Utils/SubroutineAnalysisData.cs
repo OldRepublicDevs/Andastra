@@ -490,7 +490,12 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             }
 
             bool conditional = NodeUtils.IsConditionalProgram(rootStart);
-            TypedLinkedList subroutines = ((AProgram)rootStart.GetPProgram()).GetSubroutine();
+            var subList = ((AProgram)rootStart.GetPProgram()).GetSubroutine();
+            TypedLinkedList subroutines = new TypedLinkedList();
+            foreach (var sub in subList)
+            {
+                subroutines.Add(sub);
+            }
             ASubroutine node = (ASubroutine)subroutines.RemoveFirst();
             if (subroutines.Count > 0 && this.IsGlobalsSub(node))
             {

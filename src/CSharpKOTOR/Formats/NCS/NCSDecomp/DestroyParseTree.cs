@@ -55,7 +55,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             node.SetConditional(null);
             node.SetJumpToSubroutine(null);
             node.SetReturn(null);
-            node.SetSubroutine(new Vector(1));
+            node.SetSubroutine(new List<PSubroutine>());
         }
 
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/DestroyParseTree.java:98-109
@@ -86,7 +86,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
                 ((PCmd)temp[i]).Apply(this);
             }
 
-            node.SetCmd(new Vector(1));
+            node.SetCmd(new List<PCmd>());
         }
 
         public override void CaseAAddVarCmd(AAddVarCmd node)

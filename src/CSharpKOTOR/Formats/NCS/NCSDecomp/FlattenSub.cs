@@ -50,7 +50,12 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
         // Original: @Override public void caseACommandBlock(ACommandBlock node) { ... }
         public override void CaseACommandBlock(ACommandBlock node)
         {
-            this.commands = node.GetCmd();
+            var cmdList = node.GetCmd();
+            this.commands = new TypedLinkedList();
+            foreach (var cmd in cmdList)
+            {
+                this.commands.Add(cmd);
+            }
             this.i = 0;
             while (this.i < this.commands.Count)
             {
@@ -83,7 +88,12 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             int j = this.i;
             this.commands[j++] = sscmd;
             this.commands.Add(j++, jmpcmd);
-            TypedLinkedList subcmds = cmdblock.GetCmd();
+            var cmdList2 = cmdblock.GetCmd();
+            TypedLinkedList subcmds = new TypedLinkedList();
+            foreach (var cmd in cmdList2)
+            {
+                subcmds.Add(cmd);
+            }
             while (subcmds.Count > 0)
             {
                 this.commands.Add(j++, subcmds.Remove(0));

@@ -96,7 +96,12 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
         public override void CaseACommandBlock(ACommandBlock node)
         {
             this.InACommandBlock(node);
-            TypedLinkedList commands = node.GetCmd();
+            var cmdList = node.GetCmd();
+            TypedLinkedList commands = new TypedLinkedList();
+            foreach (var cmd in cmdList)
+            {
+                commands.Add(cmd);
+            }
             this.SetupDestinationCommands(commands, node);
             int i = 0;
 

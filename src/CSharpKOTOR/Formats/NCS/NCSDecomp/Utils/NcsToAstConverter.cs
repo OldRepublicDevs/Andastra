@@ -108,7 +108,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
                 ASubroutine globalsSub = ConvertInstructionRangeToSubroutine(ncs, instructions, 0, savebpIndex + 1, 0);
                 if (globalsSub != null)
                 {
-                    program.GetSubroutine().AddLast(globalsSub);
+                    program.GetSubroutine().Add(globalsSub);
                 }
                 mainStart = savebpIndex + 1;
             }
@@ -116,7 +116,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             ASubroutine mainSub = ConvertInstructionRangeToSubroutine(ncs, instructions, mainStart, mainEnd, mainStart);
             if (mainSub != null)
             {
-                program.GetSubroutine().AddLast(mainSub);
+                program.GetSubroutine().Add(mainSub);
             }
 
             List<int> sortedStarts = new List<int>(subroutineStarts);
@@ -148,7 +148,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
                     program.GetSubroutine().Count);
                 if (sub != null)
                 {
-                    program.GetSubroutine().AddLast(sub);
+                    program.GetSubroutine().Add(sub);
                 }
             }
 
