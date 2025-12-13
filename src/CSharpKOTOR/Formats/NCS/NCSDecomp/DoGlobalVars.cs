@@ -97,6 +97,19 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             var = null;
         }
 
+        // Override CaseARsaddCmd to ensure RSADD commands from NcsToAstConverter are visited
+        // CaseARsaddCmd calls node.GetRsaddCommand().Apply(this), which routes to OutARsaddCommand
+        // This ensures RSADD commands are processed even when wrapped in ARsaddCmd
+        public override void CaseARsaddCmd(AST.ARsaddCmd node)
+        {
+            this.DefaultIn(node);
+            if (node.GetRsaddCommand() != null)
+            {
+                node.GetRsaddCommand().Apply(this);
+            }
+            this.DefaultOut(node);
+        }
+
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/DoGlobalVars.java:77-79
         // Original: public LocalVarStack getStack() { return this.stack; }
         public virtual LocalVarStack GetStack()
