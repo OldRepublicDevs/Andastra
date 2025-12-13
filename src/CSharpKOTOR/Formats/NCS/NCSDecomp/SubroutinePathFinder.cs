@@ -28,7 +28,9 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             this.state = state;
             this.pathfailed = false;
             this.forcejump = false;
-            this.limitretries = (pass < 3);
+            // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SubroutinePathFinder.java:54
+            // Original: this.limitretries = pass < 3;
+            this.limitretries = pass < 3;
             switch (pass)
             {
                 case 0:
@@ -75,11 +77,11 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             this.OutASubroutine(node);
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SubroutinePathFinder.java:79-82
+        // Original: @Override public void inASubroutine(ASubroutine node) { this.state.startPrototyping(); }
         public override void InASubroutine(ASubroutine node)
         {
-            JavaSystem.@out.Println($"SubroutinePathFinder: InASubroutine called, starting prototyping");
             this.state.StartPrototyping();
-            JavaSystem.@out.Println($"SubroutinePathFinder: After StartPrototyping, IsBeingPrototyped={this.state.IsBeingPrototyped()}");
         }
 
         public override void OutASubroutine(ASubroutine node)
@@ -87,11 +89,12 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             // Path finder completed successfully - DoTypes will call StopPrototyping(true)
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SubroutinePathFinder.java:84-116
+        // Original: @Override public void caseACommandBlock(ACommandBlock node) { ... }
         public override void CaseACommandBlock(ACommandBlock node)
         {
             this.InACommandBlock(node);
             TypedLinkedList commands = node.GetCmd();
-            JavaSystem.@out.Println($"SubroutinePathFinder: CaseACommandBlock called, command count={commands.Count}");
             this.SetupDestinationCommands(commands, node);
             int i = 0;
 
@@ -106,29 +109,27 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
                 else if (this.pathfailed)
                 {
                     int nextPos = this.state.SwitchDecision();
-                    if (nextPos == -1 || (this.limitretries && this.retry > this.maxretry))
+                    // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SubroutinePathFinder.java:98
+                    // Original: if (nextPos == -1 || this.limitretries && this.retry > this.maxretry) { ... }
+                    // Note: Operator precedence: || has lower precedence than &&, so this is: nextPos == -1 || (this.limitretries && this.retry > this.maxretry)
+                    if (nextPos == -1 || this.limitretries && this.retry > this.maxretry)
                     {
-                        JavaSystem.@out.Println($"SubroutinePathFinder: Path failed, stopping prototyping (nextPos={nextPos}, retry={this.retry}, maxretry={this.maxretry})");
                         this.state.StopPrototyping(false);
                         return;
                     }
 
                     i = (int)this.destinationcommands[nextPos];
                     this.pathfailed = false;
-                    ++this.retry;
+                    this.retry++;
                 }
 
                 if (i < commands.Count)
                 {
-                    Node cmdNode = (Node)commands[i];
-                    int cmdPos = this.nodedata.GetPos(cmdNode);
-                    JavaSystem.@out.Println($"SubroutinePathFinder: Processing command at index {i}, position {cmdPos}, type={cmdNode.GetType().Name}");
-                    cmdNode.Apply(this);
+                    commands[i].Apply(this);
                     i++;
                 }
             }
 
-            JavaSystem.@out.Println($"SubroutinePathFinder: Completed processing command block, IsBeingPrototyped={this.state.IsBeingPrototyped()}");
             commands = null;
             this.OutACommandBlock(node);
         }
@@ -304,11 +305,14 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             }
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SubroutinePathFinder.java:272-288
+        // Original: private int getCommandIndexByPos(int pos, LinkedList<PCmd> commands) { Node node = (Node)commands.get(0); int i; for (i = 1; i < commands.size() && this.nodedata.getPos(node) < pos; i++) { ... } if (this.nodedata.getPos(node) > pos) { throw new RuntimeException(...); } else { return i; } }
         private int GetCommandIndexByPos(int pos, TypedLinkedList commands)
         {
-            Node node;
+            Node node = (Node)commands[0];
+
             int i;
-            for (node = (Node)commands[0], i = 1; i < commands.Count && this.nodedata.GetPos(node) < pos; ++i)
+            for (i = 1; i < commands.Count && this.nodedata.GetPos(node) < pos; i++)
             {
                 node = (Node)commands[i];
                 if (this.nodedata.GetPos(node) == pos)
@@ -321,8 +325,10 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             {
                 throw new Exception("Unable to locate a command with position " + pos);
             }
-
-            return i;
+            else
+            {
+                return i;
+            }
         }
     }
 }
