@@ -217,7 +217,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                         while ((line = reader.ReadLine()) != null)
                         {
                             line = line.Trim();
-                            if (line.StartsWith("preferSwitches") || line.StartsWith("Prefer Switches"))
+                            // Accept both legacy and canonical "Prefer Switches" spelling
+                            if (line.StartsWith("Prefer Switches") || line.StartsWith("preferSwitches"))
                             {
                                 int equalsIdx = line.IndexOf('=');
                                 if (equalsIdx >= 0)
