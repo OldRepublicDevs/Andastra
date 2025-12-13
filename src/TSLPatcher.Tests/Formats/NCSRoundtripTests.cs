@@ -580,11 +580,13 @@ namespace CSharpKOTOR.Tests.Formats
 
                 long decompileTime = Stopwatch.GetTimestamp() - decompileStart;
                 MergeOperationTime("decompile", decompileTime);
+                Console.WriteLine($" ✓ ({GetElapsedMilliseconds(decompileTime):F3} ms, {decompiledContent.Length} chars)");
             }
             catch (Exception e)
             {
                 long decompileTime = Stopwatch.GetTimestamp() - decompileStart;
                 MergeOperationTime("decompile", decompileTime);
+                Console.WriteLine($" ✗ FAILED");
                 throw new InvalidOperationException(
                     $"Decompilation failed.\n" +
                     $"NCS file: {DisplayPath(compiledFirst)}\n" +
@@ -713,6 +715,7 @@ namespace CSharpKOTOR.Tests.Formats
                 long compileTime = Stopwatch.GetTimestamp() - compileRoundtripStart;
                 MergeOperationTime("compile-roundtrip", compileTime);
                 MergeOperationTime("compile", compileTime);
+                Console.WriteLine($" ✓ ({GetElapsedMilliseconds(compileTime):F3} ms, {recompiledSize} bytes, {recompiledNcs.Instructions.Count} instructions)");
                 recompilationSucceeded = true;
             }
             catch (Exception e)
@@ -965,6 +968,8 @@ namespace CSharpKOTOR.Tests.Formats
                 Game game = gameFlag.Equals("k2") ? Game.K2 : Game.K1;
                 ExternalNCSCompiler compiler = GetExternalCompiler();
 
+                Console.Write($" (external: {Path.GetFileName(NwnCompiler)}, variant: {compiler.GetInfo()})");
+
                 // Use ExternalNCSCompiler which handles all compiler variants and their command-line differences
                 (string stdout, string stderr) = compiler.CompileScriptWithOutput(
                     tempSourceFile,
@@ -1060,6 +1065,8 @@ namespace CSharpKOTOR.Tests.Formats
                 }
                 args.Add($"\"{tempSourceFile}\"");
                 args.Add($"\"{compiledOut}\"");
+
+                Console.Write($" (compiler: {Path.GetFileName(NwnCompiler)})");
 
                 ProcessStartInfo psi = new ProcessStartInfo
                 {
@@ -1256,18 +1263,94 @@ namespace CSharpKOTOR.Tests.Formats
 
         private static void RunDecompile(string ncsPath, string nssOut, string gameFlag)
         {
+            Console.Write($" (game={gameFlag}, output={Path.GetFileName(nssOut)})");
+
             try
             {
                 Directory.CreateDirectory(Path.GetDirectoryName(nssOut));
 
                 Game game = gameFlag.Equals("k2") ? Game.K2 : Game.K1;
+                string nwscriptPath = gameFlag.Equals("k2") ? K2Nwscript : K1Nwscript;
                 NCS ncs = NCSAuto.ReadNcs(ncsPath);
-                string decompiled = NCSAuto.DecompileNcs(ncs, game);
-                File.WriteAllText(nssOut, decompiled, Encoding.UTF8);
-
-                if (!File.Exists(nssOut))
+                
+                // Capture all console output during decompilation for exhaustive debugging
+                var originalOut = Console.Out;
+                var originalErr = Console.Error;
+                var outputCapture = new StringWriter();
+                var errorCapture = new StringWriter();
+                
+                try
                 {
-                    throw new InvalidOperationException($"Decompile did not produce output: {DisplayPath(nssOut)}");
+                    // Temporarily redirect output to capture verbose logging
+                    Console.SetOut(outputCapture);
+                    Console.SetError(errorCapture);
+                    
+                    string decompiled = NCSAuto.DecompileNcs(ncs, game, null, null, nwscriptPath);
+                    
+                    // Restore original output streams
+                    Console.SetOut(originalOut);
+                    Console.SetError(originalErr);
+                    
+                    // If decompilation failed or produced null/empty, output all captured logs
+                    if (string.IsNullOrEmpty(decompiled))
+                    {
+                        string capturedOutput = outputCapture.ToString();
+                        string capturedError = errorCapture.ToString();
+                        if (!string.IsNullOrEmpty(capturedOutput) || !string.IsNullOrEmpty(capturedError))
+                        {
+                            Console.Error.WriteLine("═══════════════════════════════════════════════════════════");
+                            Console.Error.WriteLine($"DECOMPILATION VERBOSE OUTPUT FOR: {DisplayPath(ncsPath)}");
+                            Console.Error.WriteLine("═══════════════════════════════════════════════════════════");
+                            if (!string.IsNullOrEmpty(capturedOutput))
+                            {
+                                Console.Error.WriteLine("STDOUT CAPTURE:");
+                                Console.Error.WriteLine(capturedOutput);
+                            }
+                            if (!string.IsNullOrEmpty(capturedError))
+                            {
+                                Console.Error.WriteLine("STDERR CAPTURE:");
+                                Console.Error.WriteLine(capturedError);
+                            }
+                            Console.Error.WriteLine("═══════════════════════════════════════════════════════════");
+                        }
+                        throw new InvalidOperationException($"Decompilation returned null or empty for {DisplayPath(ncsPath)}");
+                    }
+                    
+                    File.WriteAllText(nssOut, decompiled, Encoding.UTF8);
+
+                    if (!File.Exists(nssOut))
+                    {
+                        throw new InvalidOperationException($"Decompile did not produce output: {DisplayPath(nssOut)}");
+                    }
+                }
+                catch (Exception decompileEx)
+                {
+                    // Restore original output streams before rethrowing
+                    Console.SetOut(originalOut);
+                    Console.SetError(originalErr);
+                    
+                    // Output captured logs for debugging
+                    string capturedOutput = outputCapture.ToString();
+                    string capturedError = errorCapture.ToString();
+                    if (!string.IsNullOrEmpty(capturedOutput) || !string.IsNullOrEmpty(capturedError))
+                    {
+                        Console.Error.WriteLine("═══════════════════════════════════════════════════════════");
+                        Console.Error.WriteLine($"DECOMPILATION VERBOSE OUTPUT FOR: {DisplayPath(ncsPath)}");
+                        Console.Error.WriteLine("═══════════════════════════════════════════════════════════");
+                        if (!string.IsNullOrEmpty(capturedOutput))
+                        {
+                            Console.Error.WriteLine("STDOUT CAPTURE:");
+                            Console.Error.WriteLine(capturedOutput);
+                        }
+                        if (!string.IsNullOrEmpty(capturedError))
+                        {
+                            Console.Error.WriteLine("STDERR CAPTURE:");
+                            Console.Error.WriteLine(capturedError);
+                        }
+                        Console.Error.WriteLine("═══════════════════════════════════════════════════════════");
+                    }
+                    
+                    throw new InvalidOperationException($"Decompile failed for {DisplayPath(ncsPath)}: {decompileEx.Message}", decompileEx);
                 }
             }
             catch (Exception ex)

@@ -2544,6 +2544,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
         /// </summary>
         public virtual Utils.FileScriptData DecompileNcsObject(NCS ncs)
         {
+            JavaSystem.@out.Println("TRACE DecompileNcsObject: START");
             Utils.FileScriptData data = null;
             SetDestinations setdest = null;
             DoTypes dotypes = null;
@@ -2561,18 +2562,37 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
 
             if (ncs == null)
             {
+                JavaSystem.@out.Println("TRACE DecompileNcsObject: ncs is null, returning null");
                 return null;
             }
+
+            JavaSystem.@out.Println("TRACE DecompileNcsObject: ncs.Instructions count=" + (ncs.Instructions != null ? ncs.Instructions.Count : 0));
 
             // Lazy-load actions if not already loaded
             if (this.actions == null)
             {
-                this.LoadActions();
-                if (this.actions == null)
+                JavaSystem.@out.Println("TRACE DecompileNcsObject: actions is null, calling LoadActions()");
+                try
                 {
-                    JavaSystem.@out.Println("Failed to load actions file!");
+                    this.LoadActions();
+                    if (this.actions == null)
+                    {
+                        JavaSystem.@out.Println("TRACE DecompileNcsObject: LoadActions() returned null, returning null");
+                        JavaSystem.@out.Println("Failed to load actions file!");
+                        return null;
+                    }
+                    JavaSystem.@out.Println("TRACE DecompileNcsObject: LoadActions() succeeded");
+                }
+                catch (Exception loadEx)
+                {
+                    JavaSystem.@out.Println("TRACE DecompileNcsObject: LoadActions() threw exception: " + loadEx.GetType().Name + ": " + loadEx.Message);
+                    loadEx.PrintStackTrace(JavaSystem.@out);
                     return null;
                 }
+            }
+            else
+            {
+                JavaSystem.@out.Println("TRACE DecompileNcsObject: actions already loaded");
             }
 
             try
@@ -2581,11 +2601,14 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
 
                 if (ncs.Instructions == null || ncs.Instructions.Count == 0)
                 {
+                    JavaSystem.@out.Println("TRACE DecompileNcsObject: NCS contains no instructions; skipping decompilation.");
                     JavaSystem.@out.Println("NCS contains no instructions; skipping decompilation.");
                     return null;
                 }
 
+                JavaSystem.@out.Println("TRACE DecompileNcsObject: Converting NCS to AST, instruction count=" + ncs.Instructions.Count);
                 ast = NcsToAstConverter.ConvertNcsToAst(ncs);
+                JavaSystem.@out.Println("TRACE DecompileNcsObject: AST conversion complete, ast=" + (ast != null ? ast.GetType().Name : "null"));
                 nodedata = new NodeAnalysisData();
                 subdata = new SubroutineAnalysisData(nodedata);
                 ast.Apply(new SetPositions(nodedata));
@@ -2609,13 +2632,16 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                     // Try to continue - maybe we can still get a main subroutine
                 }
                 ast = null;
+                JavaSystem.@out.Println("TRACE DecompileNcsObject: Getting main subroutine, total subs=" + subdata.NumSubs());
                 mainsub = subdata.GetMainSub();
                 if (mainsub == null)
                 {
+                    JavaSystem.@out.Println("TRACE DecompileNcsObject: No main subroutine found, returning null");
                     JavaSystem.@out.Println("No main subroutine found in NCS - cannot decompile.");
                     JavaSystem.@out.Println("Subroutines count: " + subdata.NumSubs());
                     return null;
                 }
+                JavaSystem.@out.Println("TRACE DecompileNcsObject: Main subroutine found, type=" + mainsub.GetType().Name);
                 flatten = new FlattenSub(mainsub, nodedata);
                 mainsub.Apply(flatten);
                 subs = subdata.GetSubroutines();
@@ -2918,12 +2944,18 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             }
             catch (Exception e)
             {
+                JavaSystem.@out.Println("TRACE DecompileNcsObject: EXCEPTION caught, returning null");
                 JavaSystem.@out.Println("Exception during decompilation: " + e.GetType().Name + ": " + e.Message);
                 if (e.StackTrace != null)
                 {
                     JavaSystem.@out.Println("Stack trace: " + e.StackTrace);
                 }
                 e.PrintStackTrace(JavaSystem.@out);
+                if (e.InnerException != null)
+                {
+                    JavaSystem.@out.Println("Inner exception: " + e.InnerException.GetType().Name + ": " + e.InnerException.Message);
+                    e.InnerException.PrintStackTrace(JavaSystem.@out);
+                }
                 return null;
             }
             finally
