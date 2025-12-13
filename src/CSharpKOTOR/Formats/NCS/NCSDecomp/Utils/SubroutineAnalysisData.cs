@@ -533,6 +533,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             // Always add the first (or second if globals was first) subroutine as main
             this.AddMain(node, conditional);
             byte id = 1;
+            int skippedCount = 0;
             while (subroutines.Count > 0)
             {
                 node = (ASubroutine)subroutines.RemoveFirst();
@@ -544,18 +545,28 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
                     if (firstCmd != null)
                     {
                         pos = this.nodedata.TryGetPos(firstCmd);
+                        // If we got a position from the first command, set it on the subroutine node too
+                        if (pos > 0)
+                        {
+                            this.nodedata.SetPos(node, pos);
+                        }
                     }
                 }
-                // Matching NCSDecomp implementation: position 0 is the main, so subroutines must have pos > 0
-                // If still no position or position is 0, skip this subroutine (shouldn't happen in normal cases)
+                // If still no position, we need to skip it (shouldn't happen in normal cases)
                 if (pos <= 0)
                 {
+                    skippedCount++;
+                    JavaSystem.@out.Println("WARNING: Skipping subroutine with no position or position <= 0 (pos=" + pos + ")");
                     continue;
                 }
                 ASubroutine node2 = node;
                 byte id2 = id;
                 id = (byte)(id2 + 1);
                 this.AddSubroutine(pos, node2, id2);
+            }
+            if (skippedCount > 0)
+            {
+                JavaSystem.@out.Println("WARNING: Skipped " + skippedCount + " subroutines due to missing or invalid positions");
             }
             subroutines = null;
             node = null;

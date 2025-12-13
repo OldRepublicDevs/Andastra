@@ -2,6 +2,7 @@
 // Original: public class SetPositions extends PrunedReversedDepthFirstAdapter
 using CSharpKOTOR.Formats.NCS.NCSDecomp;
 using CSharpKOTOR.Formats.NCS.NCSDecomp.Analysis;
+using CSharpKOTOR.Formats.NCS.NCSDecomp.AST;
 
 namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
 {
@@ -44,6 +45,31 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
         // Original: this.nodedata.setPos(node, this.currentPos);
         public override void DefaultOut(Node node)
         {
+            // For ASubroutine nodes, try to get position from first command if currentPos is 0
+            // Since we're using reversed depth-first traversal, children are visited first,
+            // so positions should already be set on command nodes
+            if (typeof(ASubroutine).IsInstanceOfType(node) && this.currentPos == 0)
+            {
+                Node firstCmd = NodeUtils.GetCommandChild(node);
+                if (firstCmd != null)
+                {
+                    // Try to get position that was already set on the first command
+                    int existingPos = this.nodedata.TryGetPos(firstCmd);
+                    if (existingPos > 0)
+                    {
+                        this.currentPos = existingPos;
+                    }
+                    else
+                    {
+                        // Fallback: try GetCommandPos if position wasn't set yet
+                        int cmdPos = NodeUtils.GetCommandPos(firstCmd);
+                        if (cmdPos > 0)
+                        {
+                            this.currentPos = cmdPos;
+                        }
+                    }
+                }
+            }
             this.nodedata.SetPos(node, this.currentPos);
         }
     }
