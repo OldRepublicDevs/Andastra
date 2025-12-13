@@ -726,8 +726,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
                             targetNode.AddChild(areturn);
                         }
                         else if (this.nodedata.GetPos(dest) >= this.nodedata.GetPos(node))
-                {
-                    ScriptRootNode loop = this.GetBreakable();
+                        {
+                            ScriptRootNode loop = this.GetBreakable();
                     if (typeof(ASwitchCase).IsInstanceOfType(loop))
                     {
                         loop = this.GetEnclosingLoop(loop);
@@ -757,8 +757,12 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
                         }
                     }
                 }
-                    }
                 }
+                else
+                {
+                    JavaSystem.@err.Println("DEBUG transformJump: at if end, skipping return/break/continue handling (will be handled by checkEnd)");
+                }
+            }
 
             this.CheckEnd(node);
         }
