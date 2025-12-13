@@ -577,37 +577,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SubroutineAnalysisData.java:310-314
             // Original: CheckIsGlobals cig = new CheckIsGlobals(); node.apply(cig); return cig.getIsGlobals();
             CheckIsGlobals cig = new CheckIsGlobals();
-            // Directly traverse command block to find ABpCommand, matching CheckIsGlobals pattern
-            var cmdBlock = node.GetCommandBlock();
-            if (cmdBlock != null)
-            {
-                // Check if command block is AST.ACommandBlock or root namespace ACommandBlock
-                string cmdBlockTypeName = cmdBlock.GetType().FullName;
-                if (cmdBlockTypeName.Contains(".AST.ACommandBlock"))
-                {
-                    var method = typeof(CheckIsGlobals).GetMethod("CaseACommandBlock", new[] { typeof(AST.ACommandBlock) });
-                    if (method != null)
-                    {
-                        method.Invoke(cig, new[] { cmdBlock });
-                    }
-                }
-                else if (cmdBlockTypeName.Contains(".ACommandBlock") && !cmdBlockTypeName.Contains(".AST."))
-                {
-                    var method = typeof(CheckIsGlobals).GetMethod("CaseACommandBlock", new[] { typeof(ACommandBlock) });
-                    if (method != null)
-                    {
-                        method.Invoke(cig, new[] { cmdBlock });
-                    }
-                }
-                else
-                {
-                    cmdBlock.Apply(cig);
-                }
-            }
-            else
-            {
-                node.Apply(cig);
-            }
+            node.Apply(cig);
             return cig.GetIsGlobals();
         }
 
