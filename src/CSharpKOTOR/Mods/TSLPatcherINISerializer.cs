@@ -5,10 +5,12 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using CSharpKOTOR.Formats.GFF;
 using CSharpKOTOR.Mods.GFF;
 using CSharpKOTOR.Mods.SSF;
 using CSharpKOTOR.Mods.TLK;
 using CSharpKOTOR.Mods.TwoDA;
+using TargetType = CSharpKOTOR.Mods.TwoDA.TargetType;
 
 namespace CSharpKOTOR.Mods
 {
@@ -80,7 +82,7 @@ namespace CSharpKOTOR.Mods
             // [TLKList], [InstallList], [2DAList], [GFFList], [CompileList], [SSFList]
             lines.AddRange(SerializeTlkList(modificationsByType.Tlk, verbose));
             lines.AddRange(SerializeInstallList(modificationsByType.Install, verbose));
-            lines.AddRange(Serialize2DaList(modificationsByType.Twoda, verbose));
+            lines.AddRange(Serialize2DAList(modificationsByType.Twoda, verbose));
             lines.AddRange(SerializeGffList(modificationsByType.Gff, verbose));
             lines.AddRange(SerializeSsfList(modificationsByType.Ssf, verbose));
             // TODO: Add HACKList (NCS) serialization
@@ -133,12 +135,62 @@ namespace CSharpKOTOR.Mods
             }
 
             var lines = new List<string>();
+            var modTlk = modifications[0]; // Should only be one TLK modification
+
             lines.Add("[TLKList]");
 
-            // TODO: Implement full TLK serialization
-            // For now, just add placeholder
+            // Determine file types needed
+            bool hasReplacements = modTlk.Modifiers.Any(m => m.IsReplacement);
+            bool hasAppends = modTlk.Modifiers.Any(m => !m.IsReplacement);
+
+            // Modern TSLPatcher syntax for appends: Use StrRef token mappings ONLY
+            // For replacements: Still use ReplaceFile# syntax
+            if (hasReplacements)
+            {
+                lines.Add("ReplaceFile0=replace.tlk");
+            }
+
+            // StrRef token mappings for appends: StrRef{original_strref}={token_id}
+            if (hasAppends)
+            {
+                var appendModifiers = modTlk.Modifiers.Where(m => !m.IsReplacement).ToList();
+                foreach (var tlkModifier in appendModifiers)
+                {
+                    // Truncate text for comment (max 60 chars)
+                    string textPreview = (tlkModifier.Text ?? "").Substring(0, Math.Min(60, (tlkModifier.Text ?? "").Length));
+                    textPreview = textPreview.Replace("\n", "\\n").Replace("\r", "\\r");
+
+                    // Build comment with text and sound (if present)
+                    var commentParts = new List<string>();
+                    if (!string.IsNullOrEmpty(textPreview))
+                    {
+                        commentParts.Add($"\"{textPreview}\"");
+                    }
+                    if (!string.IsNullOrEmpty(tlkModifier.Sound))
+                    {
+                        commentParts.Add($"sound={tlkModifier.Sound}");
+                    }
+
+                    string comment = commentParts.Count > 0 ? string.Join(" | ", commentParts) : "(empty entry)";
+
+                    // Add the line with comment
+                    lines.Add($"StrRef{tlkModifier.ModIndex}={FormatIniValue(tlkModifier.TokenId.ToString())}  ; {comment}");
+                }
+            }
 
             lines.Add("");
+
+            // Generate replace.tlk section (only for replacements)
+            if (hasReplacements)
+            {
+                lines.Add("[replace.tlk]");
+                foreach (var tlkModifier in modTlk.Modifiers.Where(m => m.IsReplacement))
+                {
+                    lines.Add($"{tlkModifier.TokenId}={tlkModifier.ModIndex}");
+                }
+                lines.Add("");
+            }
+
             return lines;
         }
 
@@ -180,7 +232,7 @@ namespace CSharpKOTOR.Mods
 
         // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/writer.py:299-363
         // Original: def _serialize_2da_list(...): ...
-        private List<string> Serialize2DaList(List<Modifications2DA> modifications, bool verbose)
+        private List<string> Serialize2DAList(List<Modifications2DA> modifications, bool verbose)
         {
             if (modifications == null || modifications.Count == 0)
             {
@@ -200,7 +252,7 @@ namespace CSharpKOTOR.Mods
             // Generate each 2DA file's sections
             foreach (var mod2da in modifications)
             {
-                lines.AddRange(Serialize2DaFile(mod2da));
+                lines.AddRange(Serialize2DAFile(mod2da));
             }
 
             return lines;
@@ -208,16 +260,233 @@ namespace CSharpKOTOR.Mods
 
         // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/writer.py:330-363
         // Original: def _serialize_2da_file(...): ...
-        private List<string> Serialize2DaFile(Modifications2DA mod2da)
+        private List<string> Serialize2DAFile(Modifications2DA mod2da)
         {
             var lines = new List<string>();
             lines.Add($"[{mod2da.SourceFile}]");
 
-            // TODO: Implement full 2DA modifier serialization
-            // This should serialize ChangeRow2DA, AddRow2DA, AddColumn2DA modifiers
-
+            // List all modifiers
+            int modifierIdx = 0;
+            foreach (var modifier in mod2da.Modifiers)
+            {
+                if (modifier is ChangeRow2DA changeRow)
+                {
+                    string sectionName = !string.IsNullOrEmpty(changeRow.Identifier) 
+                        ? changeRow.Identifier 
+                        : $"{mod2da.SourceFile}_changerow_{modifierIdx}";
+                    lines.Add($"ChangeRow{modifierIdx}={sectionName}");
+                    modifierIdx++;
+                }
+                else if (modifier is AddRow2DA addRow)
+                {
+                    string sectionName = !string.IsNullOrEmpty(addRow.Identifier) 
+                        ? addRow.Identifier 
+                        : $"{mod2da.SourceFile}_addrow_{modifierIdx}";
+                    lines.Add($"AddRow{modifierIdx}={sectionName}");
+                    modifierIdx++;
+                }
+                else if (modifier is AddColumn2DA addColumn)
+                {
+                    string sectionName = !string.IsNullOrEmpty(addColumn.Identifier) 
+                        ? addColumn.Identifier 
+                        : $"{mod2da.SourceFile}_addcol_{modifierIdx}";
+                    lines.Add($"AddColumn{modifierIdx}={sectionName}");
+                    modifierIdx++;
+                }
+            }
             lines.Add("");
+
+            // Generate detailed sections for each modifier
+            foreach (var modifier in mod2da.Modifiers)
+            {
+                if (modifier is ChangeRow2DA || modifier is AddRow2DA || modifier is AddColumn2DA)
+                {
+                    lines.AddRange(Serialize2DaModifier(modifier));
+                }
+            }
+
             return lines;
+        }
+
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/writer.py:365-463
+        // Original: def _serialize_2da_modifier(...): ...
+        private List<string> Serialize2DaModifier(object modifier)
+        {
+            var lines = new List<string>();
+            string sectionName = "";
+
+            if (modifier is ChangeRow2DA changeRow)
+            {
+                sectionName = changeRow.Identifier;
+                lines.Add($"[{sectionName}]");
+
+                // Target specification
+                if (changeRow.Target.TargetType == TargetType.ROW_INDEX)
+                {
+                    lines.Add($"RowIndex={FormatIniValue(changeRow.Target.Value.ToString())}");
+                }
+                else if (changeRow.Target.TargetType == TargetType.ROW_LABEL)
+                {
+                    lines.Add($"RowLabel={FormatIniValue(changeRow.Target.Value.ToString())}");
+                }
+                else if (changeRow.Target.TargetType == TargetType.LABEL_COLUMN)
+                {
+                    lines.Add($"LabelIndex={FormatIniValue(changeRow.Target.Value.ToString())}");
+                }
+
+                // Cell modifications
+                foreach (var kvp in changeRow.Cells)
+                {
+                    string cellVal = SerializeRowValue(kvp.Value);
+                    lines.Add($"{kvp.Key}={FormatIniValue(cellVal)}");
+                }
+
+                // Store 2DA memory assignments
+                foreach (var kvp in changeRow.Store2DA)
+                {
+                    string storeValue = SerializeStoreRowValue(kvp.Value);
+                    lines.Add($"2DAMEMORY{kvp.Key}={FormatIniValue(storeValue)}");
+                }
+
+                // Store TLK memory assignments
+                foreach (var kvp in changeRow.StoreTLK)
+                {
+                    string storeValue = SerializeStoreRowValue(kvp.Value);
+                    lines.Add($"StrRef{kvp.Key}={FormatIniValue(storeValue)}");
+                }
+
+                lines.Add("");
+            }
+            else if (modifier is AddRow2DA addRow)
+            {
+                sectionName = addRow.Identifier;
+                lines.Add($"[{sectionName}]");
+
+                // Exclusive column
+                if (!string.IsNullOrEmpty(addRow.ExclusiveColumn))
+                {
+                    lines.Add($"ExclusiveColumn={FormatIniValue(addRow.ExclusiveColumn)}");
+                }
+
+                // Row label
+                if (!string.IsNullOrEmpty(addRow.RowLabel))
+                {
+                    lines.Add($"RowLabel={FormatIniValue(addRow.RowLabel)}");
+                }
+
+                // Cell values
+                foreach (var kvp in addRow.Cells)
+                {
+                    string cellVal = SerializeRowValue(kvp.Value);
+                    lines.Add($"{kvp.Key}={FormatIniValue(cellVal)}");
+                }
+
+                // Store 2DA memory assignments
+                foreach (var kvp in addRow.Store2DA)
+                {
+                    string storeValue = SerializeStoreRowValue(kvp.Value);
+                    lines.Add($"2DAMEMORY{kvp.Key}={FormatIniValue(storeValue)}");
+                }
+
+                // Store TLK memory assignments
+                foreach (var kvp in addRow.StoreTLK)
+                {
+                    string storeValue = SerializeStoreRowValue(kvp.Value);
+                    lines.Add($"StrRef{kvp.Key}={FormatIniValue(storeValue)}");
+                }
+
+                lines.Add("");
+            }
+            else if (modifier is AddColumn2DA addColumn)
+            {
+                sectionName = addColumn.Identifier;
+                lines.Add($"[{sectionName}]");
+                lines.Add($"ColumnLabel={FormatIniValue(addColumn.Header)}");
+                string defaultVal = !string.IsNullOrEmpty(addColumn.Default) ? addColumn.Default : "****";
+                lines.Add($"DefaultValue={FormatIniValue(defaultVal)}");
+
+                // Index-based inserts (I0=value, I1=value, etc.)
+                foreach (var kvp in addColumn.IndexInsert)
+                {
+                    string idxVal = SerializeRowValue(kvp.Value);
+                    lines.Add($"I{kvp.Key}={FormatIniValue(idxVal)}");
+                }
+
+                // Label-based inserts (Llabel=value)
+                foreach (var kvp in addColumn.LabelInsert)
+                {
+                    string labelVal = SerializeRowValue(kvp.Value);
+                    lines.Add($"L{kvp.Key}={FormatIniValue(labelVal)}");
+                }
+
+                // Store 2DA memory assignments
+                foreach (var kvp in addColumn.Store2DA)
+                {
+                    lines.Add($"2DAMEMORY{kvp.Key}={FormatIniValue(kvp.Value.ToString())}");
+                }
+
+                lines.Add("");
+            }
+
+            return lines;
+        }
+
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/writer.py:485-499
+        // Original: def _serialize_row_value(...): ...
+        private string SerializeRowValue(object rowValue)
+        {
+            if (rowValue is RowValue2DAMemory rv2da)
+            {
+                return $"2DAMEMORY{rv2da.TokenId}";
+            }
+            if (rowValue is RowValueTLKMemory rvtlk)
+            {
+                return $"StrRef{rvtlk.TokenId}";
+            }
+            if (rowValue is RowValueConstant rvc)
+            {
+                return rvc.String;
+            }
+            if (rowValue is RowValueHigh rvh)
+            {
+                return !string.IsNullOrEmpty(rvh.Column) ? $"High({rvh.Column})" : "High()";
+            }
+            throw new InvalidOperationException($"Cannot serialize runtime-only RowValue type: {rowValue.GetType().Name}");
+        }
+
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/writer.py:501-518
+        // Original: def _serialize_store_row_value(...): ...
+        private string SerializeStoreRowValue(object rowValue)
+        {
+            if (rowValue is RowValueRowIndex)
+            {
+                return "RowIndex";
+            }
+            if (rowValue is RowValueRowLabel rvrl)
+            {
+                return "RowLabel";
+            }
+            if (rowValue is RowValueRowCell rvrc)
+            {
+                return rvrc.Column;
+            }
+            if (rowValue is RowValue2DAMemory rv2da)
+            {
+                return $"2DAMEMORY{rv2da.TokenId}";
+            }
+            if (rowValue is RowValueTLKMemory rvtlk)
+            {
+                return $"StrRef{rvtlk.TokenId}";
+            }
+            if (rowValue is RowValueHigh rvh)
+            {
+                return !string.IsNullOrEmpty(rvh.Column) ? $"High({rvh.Column})" : "High()";
+            }
+            if (rowValue is RowValueConstant rvc)
+            {
+                return rvc.String;
+            }
+            throw new InvalidOperationException($"Unsupported RowValue type for memory storage serialization: {rowValue.GetType().Name}");
         }
 
         // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/writer.py:520-652
@@ -266,11 +535,225 @@ namespace CSharpKOTOR.Mods
                 lines.Add($"!Filename={FormatIniValue(modGff.SaveAs)}");
             }
 
-            // TODO: Implement full GFF modifier serialization
-            // This should serialize ModifyFieldGFF, AddFieldGFF, AddStructToListGFF, Memory2DAModifierGFF
+            // Collect AddField indices first
+            var addfieldModifiers = new List<ModifyGFF>();
+
+            // Process modifiers in order
+            foreach (var gffModifier in modGff.Modifiers)
+            {
+                if (gffModifier is ModifyFieldGFF modifyField)
+                {
+                    // Direct field modification: Path=Value (use backslashes per TSLPatcher)
+                    string pathStr = modifyField.Path.Replace("/", "\\");
+                    string valueStr = SerializeFieldValue(modifyField.Value);
+                    lines.Add($"{pathStr}={FormatIniValue(valueStr)}");
+                }
+                else if (gffModifier is AddFieldGFF || gffModifier is AddStructToListGFF)
+                {
+                    addfieldModifiers.Add(gffModifier);
+                }
+            }
+
+            // Add AddField# references
+            for (int idx = 0; idx < addfieldModifiers.Count; idx++)
+            {
+                var gffModifier = addfieldModifiers[idx];
+                string sectionName = "";
+                if (gffModifier is AddFieldGFF addField)
+                {
+                    sectionName = !string.IsNullOrEmpty(addField.Identifier) ? addField.Identifier : $"addfield_{idx}";
+                }
+                else if (gffModifier is AddStructToListGFF addStruct)
+                {
+                    sectionName = !string.IsNullOrEmpty(addStruct.Identifier) ? addStruct.Identifier : $"addfield_{idx}";
+                }
+                else
+                {
+                    sectionName = $"addfield_{idx}";
+                }
+                // Section name references must match section headers exactly (no quotes)
+                lines.Add($"AddField{idx}={sectionName}");
+            }
 
             lines.Add("");
+
+            // Generate AddField subsections after the main file section
+            for (int idx = 0; idx < addfieldModifiers.Count; idx++)
+            {
+                var gffModifier = addfieldModifiers[idx];
+                string sectionName = "";
+                if (gffModifier is AddFieldGFF addField)
+                {
+                    sectionName = !string.IsNullOrEmpty(addField.Identifier) ? addField.Identifier : $"addfield_{idx}";
+                }
+                else if (gffModifier is AddStructToListGFF addStruct)
+                {
+                    sectionName = !string.IsNullOrEmpty(addStruct.Identifier) ? addStruct.Identifier : $"addfield_{idx}";
+                }
+                else
+                {
+                    sectionName = $"addfield_{idx}";
+                }
+                lines.AddRange(SerializeAddfieldSection(gffModifier, sectionName));
+            }
+
             return lines;
+        }
+
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/writer.py:654-741
+        // Original: def _serialize_addfield_section(...): ...
+        private List<string> SerializeAddfieldSection(ModifyGFF gffModifier, string sectionName)
+        {
+            var lines = new List<string>();
+            lines.Add($"[{sectionName}]");
+
+            bool isAddStructToList = gffModifier is AddStructToListGFF;
+
+            // FieldType
+            string fieldTypeName = isAddStructToList ? "Struct" : GetGffFieldTypeName((gffModifier as AddFieldGFF)?.FieldType ?? GFFFieldType.UInt32);
+            lines.Add($"FieldType={FormatIniValue(fieldTypeName)}");
+
+            // Label
+            string label = isAddStructToList ? "" : ((AddFieldGFF)gffModifier).Label ?? "";
+            lines.Add($"Label={FormatIniValue(label)}");
+
+            // Path (use backslashes)
+            string pathStr = "";
+            if (gffModifier is AddFieldGFF addFieldPath)
+            {
+                pathStr = addFieldPath.Path?.Replace("/", "\\") ?? "";
+            }
+            else if (gffModifier is AddStructToListGFF addStructPath)
+            {
+                pathStr = addStructPath.Path?.Replace("/", "\\") ?? "";
+            }
+            if (!string.IsNullOrEmpty(pathStr))
+            {
+                lines.Add($"Path={FormatIniValue(pathStr)}");
+            }
+
+            // Value/TypeId based on field type
+            if (gffModifier is AddFieldGFF addField)
+            {
+                if (addField.FieldType == GFFFieldType.Struct)
+                {
+                    // For Struct, we need TypeId instead of Value
+                    if (addField.Value is FieldValueConstant fvc && fvc.Stored is GFFStruct gffStruct)
+                    {
+                        lines.Add($"TypeId={FormatIniValue(gffStruct.StructId.ToString())}");
+                    }
+                }
+                else if (addField.FieldType == GFFFieldType.List)
+                {
+                    // Lists don't need a Value
+                }
+                else
+                {
+                    // Regular value
+                    string valueStr = SerializeFieldValue(addField.Value);
+                    lines.Add($"Value={FormatIniValue(valueStr)}");
+                }
+            }
+            else if (gffModifier is AddStructToListGFF addStructToList)
+            {
+                // AddStructToListGFF always has TypeId
+                if (addStructToList.Value is FieldValueConstant fvc && fvc.Stored is GFFStruct gffStruct)
+                {
+                    lines.Add($"TypeId={FormatIniValue(gffStruct.StructId.ToString())}");
+                }
+            }
+
+            lines.Add("");
+
+            // Recursively generate nested AddField/AddStructToListGFF sections
+            List<ModifyGFF> nestedModifiers = null;
+            if (gffModifier is AddFieldGFF addFieldNested)
+            {
+                nestedModifiers = addFieldNested.Modifiers;
+            }
+            else if (gffModifier is AddStructToListGFF addStructNested)
+            {
+                nestedModifiers = addStructNested.Modifiers;
+            }
+
+            if (nestedModifiers != null && nestedModifiers.Count > 0)
+            {
+                int nestedIdx = 0;
+                foreach (var nestedMod in nestedModifiers)
+                {
+                    if (nestedMod is AddFieldGFF || nestedMod is AddStructToListGFF)
+                    {
+                        string nestedSection = "";
+                        if (nestedMod is AddFieldGFF nestedAddField)
+                        {
+                            nestedSection = !string.IsNullOrEmpty(nestedAddField.Identifier) 
+                                ? nestedAddField.Identifier 
+                                : $"{sectionName}_nested_{nestedIdx}";
+                        }
+                        else if (nestedMod is AddStructToListGFF nestedAddStruct)
+                        {
+                            nestedSection = !string.IsNullOrEmpty(nestedAddStruct.Identifier) 
+                                ? nestedAddStruct.Identifier 
+                                : $"{sectionName}_nested_{nestedIdx}";
+                        }
+                        else
+                        {
+                            nestedSection = $"{sectionName}_nested_{nestedIdx}";
+                        }
+                        lines.AddRange(SerializeAddfieldSection(nestedMod, nestedSection));
+                        nestedIdx++;
+                    }
+                }
+            }
+
+            return lines;
+        }
+
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/writer.py:785-820
+        // Original: def _serialize_field_value(...): ...
+        private string SerializeFieldValue(object fieldValue)
+        {
+            if (fieldValue is FieldValue2DAMemory fv2da)
+            {
+                return $"2DAMEMORY{fv2da.TokenId}";
+            }
+            if (fieldValue is FieldValueTLKMemory fvtlk)
+            {
+                return $"StrRef{fvtlk.TokenId}";
+            }
+            if (fieldValue is FieldValueConstant fvc)
+            {
+                return fvc.Stored?.ToString() ?? "";
+            }
+            return fieldValue?.ToString() ?? "";
+        }
+
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/writer.py:822-840
+        // Original: def _get_gff_field_type_name(...): ...
+        private string GetGffFieldTypeName(GFFFieldType fieldType)
+        {
+            // Map GFFFieldType enum to TSLPatcher string names
+            switch (fieldType)
+            {
+                case GFFFieldType.UInt8: return "Byte";
+                case GFFFieldType.Int8: return "Char";
+                case GFFFieldType.UInt16: return "Word";
+                case GFFFieldType.Int16: return "Short";
+                case GFFFieldType.UInt32: return "DWord";
+                case GFFFieldType.Int32: return "Int";
+                case GFFFieldType.UInt64: return "DWord64";
+                case GFFFieldType.Int64: return "Int64";
+                case GFFFieldType.Single: return "Float";
+                case GFFFieldType.Double: return "Double";
+                case GFFFieldType.String: return "CExoString";
+                case GFFFieldType.ResRef: return "ResRef";
+                case GFFFieldType.LocalizedString: return "CExoLocString";
+                case GFFFieldType.Vector3: return "Vector";
+                case GFFFieldType.Vector4: return "Orientation";
+                case GFFFieldType.List: return "List";
+                case GFFFieldType.Struct: return "Struct";
+                default: return "DWord";
+            }
         }
 
         // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/writer.py:920-1000
@@ -309,11 +792,51 @@ namespace CSharpKOTOR.Mods
             var lines = new List<string>();
             lines.Add($"[{modSsf.SourceFile}]");
 
-            // TODO: Implement full SSF modifier serialization
-            // This should serialize ModifySSF modifiers with sound names
+            lines.Add($"!ReplaceFile={(modSsf.ReplaceFile ? "1" : "0")}");
+            if (modSsf.Destination != "Override")
+            {
+                lines.Add($"!Destination={FormatIniValue(modSsf.Destination)}");
+            }
+            if (modSsf.SaveAs != modSsf.SourceFile)
+            {
+                lines.Add($"!Filename={FormatIniValue(modSsf.SaveAs)}");
+            }
+
+            // Serialize ModifySSF modifiers
+            foreach (var modifier in modSsf.Modifiers)
+            {
+                if (modifier is CSharpKOTOR.Mods.SSF.ModifySSF modifySsf)
+                {
+                    // Serialize sound name and StrRef token
+                    string soundName = modifySsf.Sound.ToString();
+                    string strrefValue = SerializeTokenUsage(modifySsf.Stringref);
+                    lines.Add($"{soundName}={FormatIniValue(strrefValue)}");
+                }
+            }
 
             lines.Add("");
             return lines;
+        }
+
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/writer.py:465-483
+        // Original: def _serialize_token_usage(...): ...
+        private string SerializeTokenUsage(object tokenUsage)
+        {
+            // CRITICAL: This writes the TOKEN REFERENCE (e.g., 'StrRef5'), NOT the resolved value.
+            if (tokenUsage is CSharpKOTOR.Memory.TokenUsageTLK tlkUsage)
+            {
+                return $"StrRef{tlkUsage.TokenId}";
+            }
+            if (tokenUsage is CSharpKOTOR.Memory.TokenUsage2DA twodaUsage)
+            {
+                return $"2DAMEMORY{twodaUsage.TokenId}";
+            }
+            if (tokenUsage is CSharpKOTOR.Memory.NoTokenUsage noToken)
+            {
+                return noToken.Stored;
+            }
+            // Fallback - shouldn't happen
+            return tokenUsage?.ToString() ?? "";
         }
     }
 }
