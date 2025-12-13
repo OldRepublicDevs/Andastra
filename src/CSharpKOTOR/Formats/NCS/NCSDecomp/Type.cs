@@ -67,28 +67,42 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             this.size = TypeSize(this.type) / 4;
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/Type.java:53-55
+        // Original: public static Type parseType(String str) { return new Type(str); }
         public static Type ParseType(string str)
         {
             return new Type(str);
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/Type.java:57-59
+        // Original: public void close() { }
+        public virtual void Close()
+        {
+        }
 
-
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/Type.java:60-62
+        // Original: public byte byteValue() { return this.type; }
         public virtual sbyte ByteValue()
         {
             return this.type;
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/Type.java:64-67
+        // Original: @Override public String toString() { return toString(this.type); }
         public override string ToString()
         {
             return ToString(this.type);
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/Type.java:69-71
+        // Original: public static String toString(Type atype) { return toString(atype.type); }
         public static string ToString(Type atype)
         {
             return ToString(atype.type);
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/Type.java:73-75
+        // Original: public String toDeclString() { return this.toString(); }
         public virtual string ToDeclString()
         {
             return this.ToString();
