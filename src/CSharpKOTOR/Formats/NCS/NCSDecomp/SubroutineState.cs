@@ -373,6 +373,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             }
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SubroutineState.java:280-298
+        // Original: public void initStack(LocalVarStack stack) { ... }
         public virtual void InitStack(LocalVarStack stack)
         {
             if (!this.type.Equals((byte)0))
@@ -389,39 +391,46 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
 
                 retvar.IsReturn(true);
                 stack.Push(retvar);
-                retvar = null;
             }
 
-            for (int i = 0; i < this.paramsize; ++i)
+            for (int i = 0; i < this.paramsize; i++)
             {
-                Variable paramVar = new Variable(this.@params[i]);
-                paramVar.IsParam(true);
-                stack.Push(paramVar);
+                Variable paramvar = new Variable(this.@params[i]);
+                paramvar.IsParam(true);
+                stack.Push(paramvar);
             }
-
-            //Variable paramvar = null;
         }
 
-        // Matching NCSDecomp implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SubroutineState.java
-        // Original: public void ensureParamPlaceholders()
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SubroutineState.java:241-249
+        // Original: public void ensureParamPlaceholders() { while (this.params.size() < this.paramsize) { this.params.add(new Type(Type.VT_INTEGER)); } while (this.params.size() > this.paramsize) { this.params.remove(this.params.size() - 1); } }
         public virtual void EnsureParamPlaceholders()
         {
             while (this.@params.Count < this.paramsize)
             {
-                this.@params.Add(new Type(unchecked((byte)(-1))));
+                this.@params.Add(new Type(Type.VT_INTEGER));
+            }
+            while (this.@params.Count > this.paramsize)
+            {
+                this.@params.RemoveAt(this.@params.Count - 1);
             }
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SubroutineState.java:300-302
+        // Original: public byte getId() { return this.id; }
         public virtual byte GetId()
         {
             return this.id;
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SubroutineState.java:304-306
+        // Original: public int getStart() { return this.nodedata.getPos(this.root); }
         public virtual int GetStart()
         {
             return this.nodedata.GetPos(this.root);
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SubroutineState.java:308-310
+        // Original: public int getEnd() { return NodeUtils.getSubEnd((ASubroutine)this.root); }
         public virtual int GetEnd()
         {
             return NodeUtils.GetSubEnd((ASubroutine)this.root);
