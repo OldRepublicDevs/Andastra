@@ -1,4 +1,5 @@
-//
+// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptutils/SubScriptState.java:86-1759
+// Original: public class SubScriptState
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -17,6 +18,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
 {
     public class SubScriptState
     {
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptutils/SubScriptState.java:87-105
+        // Original: private static final byte STATE_DONE = -1; private static final byte STATE_NORMAL = 0; private static final byte STATE_INMOD = 1; private static final byte STATE_INACTIONARG = 2; private static final byte STATE_WHILECOND = 3; private static final byte STATE_SWITCHCASES = 4; private static final byte STATE_INPREFIXSTACK = 5; private ASub root; private ScriptRootNode current; private byte state; private NodeAnalysisData nodedata; private SubroutineAnalysisData subdata; private ActionsData actions; private LocalVarStack stack; private String varprefix; private Hashtable<Variable, AVarDecl> vardecs; private Hashtable<Type, Integer> varcounts; private Hashtable<String, Integer> varnames; private boolean preferSwitches;
         private const sbyte STATE_DONE = -1;
         private const sbyte STATE_NORMAL = 0;
         private const sbyte STATE_INMOD = 1;
