@@ -2,6 +2,7 @@
 // Original: public class SetDeadCode extends PrunedDepthFirstAdapter
 using System.Collections.Generic;
 using CSharpKOTOR.Formats.NCS.NCSDecomp.Analysis;
+using CSharpKOTOR.Formats.NCS.NCSDecomp.AST;
 
 namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
 {
@@ -46,6 +47,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             this.deadorigins = null;
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SetDeadCode.java:54-69
+        // Original: @Override public void defaultIn(Node node) { ... }
         public override void DefaultIn(Node node)
         {
             if (this.actionarg > 0 && this.origins.ContainsKey(node))
@@ -68,6 +71,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             }
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SetDeadCode.java:71-76
+        // Original: @Override public void defaultOut(Node node) { ... }
         public override void DefaultOut(Node node)
         {
             if (NodeUtils.IsCommandNode(node))
@@ -76,6 +81,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             }
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SetDeadCode.java:78-98
+        // Original: @Override public void outAConditionalJumpCommand(AConditionalJumpCommand node) { ... }
         public override void OutAConditionalJumpCommand(AConditionalJumpCommand node)
         {
             if (this.deadstate == 1)
@@ -127,6 +134,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             }
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SetDeadCode.java:115-128
+        // Original: @Override public void outAJumpCommand(AJumpCommand node) { ... }
         public override void OutAJumpCommand(AJumpCommand node)
         {
             if (this.deadstate == 1)
@@ -146,12 +155,16 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             this.DefaultOut(node);
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SetDeadCode.java:130-134
+        // Original: @Override public void outAStoreStateCommand(AStoreStateCommand node) { this.actionarg++; this.defaultOut(node); }
         public override void OutAStoreStateCommand(AStoreStateCommand node)
         {
             ++this.actionarg;
             this.DefaultOut(node);
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SetDeadCode.java:136-139
+        // Original: public boolean isJumpToReturn(AJumpCommand node) { Node dest = this.nodedata.getDestination(node); return AReturn.class.isInstance(dest); }
         public virtual bool IsJumpToReturn(AJumpCommand node)
         {
             Node dest = this.nodedata.GetDestination(node);
