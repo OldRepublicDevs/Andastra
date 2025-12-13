@@ -1,4 +1,5 @@
-//
+// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptutils/NameGenerator.java:15-889
+// Original: public class NameGenerator
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -11,6 +12,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
 {
     public class NameGenerator
     {
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptutils/NameGenerator.java:16-25
+        // Original: private static String actionParamTag(AExpression in) { ... }
         private static string ActionParamTag(object @in)
         {
             if (@in is AConst)
@@ -25,6 +28,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
             return null;
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptutils/NameGenerator.java:27-29
+        // Original: private static int actionParamToInt(AExpression in) { return AConst.class.isInstance(in) ? Integer.parseInt(((AConst)in).toString()) : -1; }
         private static int ActionParamToInt(object @in)
         {
             if (@in is AConst)
@@ -35,6 +40,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
             return -1;
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptutils/NameGenerator.java:31-48
+        // Original: public static String getNameFromAction(AActionExp actionexp) { ... }
         public static string GetNameFromAction(AActionExp actionexp)
         {
             string action = actionexp.Action();

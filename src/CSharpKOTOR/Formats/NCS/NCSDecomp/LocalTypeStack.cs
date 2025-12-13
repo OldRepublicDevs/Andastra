@@ -1,4 +1,5 @@
-// 
+// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/stack/LocalTypeStack.java:16-154
+// Original: public class LocalTypeStack extends LocalStack<Type>
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -10,6 +11,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Stack
 {
     public class LocalTypeStack : LocalStack
     {
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/stack/LocalTypeStack.java:17-19
+        // Original: public void push(Type type) { this.stack.addFirst(type); }
         public virtual void Push(UtilsType type)
         {
             this.stack.AddFirst(type);
