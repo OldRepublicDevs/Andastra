@@ -68,6 +68,10 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
 
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/DoGlobalVars.java:67-75
         // Original: @Override public void outARsaddCommand(ARsaddCommand node) { if (!this.freezeStack) { Variable var = new Variable(NodeUtils.getType(node)); this.stack.push(var); this.state.transformRSAdd(node); var = null; } }
+        // Note: The vendor comment says "while still emitting globals code" but the code only processes when !freezeStack.
+        // This means RSADD commands must come before BP command in the AST traversal order.
+        // If RSADD commands come after BP, they won't be processed. However, the comment suggests we should still emit code.
+        // For now, match the vendor code exactly - only process when !freezeStack.
         public override void OutARsaddCommand(ARsaddCommand node)
         {
             if (!this.freezeStack)
@@ -77,6 +81,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                 this.state.TransformRSAdd(node);
                 var = null;
             }
+            // Note: If freezeStack is true, RSADD commands are skipped. This matches vendor behavior.
+            // In typical globals subroutines, RSADD commands come before BP, so they should be processed.
         }
 
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/DoGlobalVars.java:77-79
