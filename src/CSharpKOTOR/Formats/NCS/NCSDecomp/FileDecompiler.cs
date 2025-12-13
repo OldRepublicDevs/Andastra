@@ -435,24 +435,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                 try
                 {
                     JavaSystem.@out.Println("[NCSDecomp] Attempting to capture original bytecode from NCS file...");
-                    File olddecompiled = this.ExternalDecompile(file, isK2Selected, null);
-                    if (olddecompiled != null && olddecompiled.Exists())
-                    {
-                        string originalByteCode = this.ReadFile(olddecompiled);
-                        if (originalByteCode != null && originalByteCode.Trim().Length > 0)
-                        {
-                            data.SetOriginalByteCode(originalByteCode);
-                            JavaSystem.@out.Println("[NCSDecomp] Successfully captured original bytecode (" + originalByteCode.Length + " characters)");
-                        }
-                        else
-                        {
-                            JavaSystem.@out.Println("[NCSDecomp] Warning: Original bytecode file is empty");
-                        }
-                    }
-                    else
-                    {
-                        JavaSystem.@out.Println("[NCSDecomp] Warning: Failed to decompile original NCS file to bytecode");
-                    }
+                    this.CaptureBytecodeFromNcs(file, file, isK2Selected, true);
+                    JavaSystem.@out.Println("[NCSDecomp] Attempted to capture original bytecode");
                 }
                 catch (Exception e)
                 {
@@ -517,9 +501,16 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             return this.CompileNss(nssFile, data);
         }
 
-        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:388-430
-        // Original: public boolean captureBytecodeForNssFile(File nssFile, File compiledNcs, boolean isK2)
-        public virtual bool CaptureBytecodeForNssFile(File nssFile, File compiledNcs, bool isK2)
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:415-417
+        // Original: public boolean captureBytecodeForNssFile(File nssFile, File compiledNcs, boolean isK2, boolean asOriginal) { return this.captureBytecodeFromNcs(nssFile, compiledNcs, isK2, asOriginal); }
+        public virtual bool CaptureBytecodeForNssFile(File nssFile, File compiledNcs, bool isK2, bool asOriginal)
+        {
+            return this.CaptureBytecodeFromNcs(nssFile, compiledNcs, isK2, asOriginal);
+        }
+
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:429-466
+        // Original: public boolean captureBytecodeFromNcs(File sourceFile, File compiledNcs, boolean isK2, boolean asOriginal) { ... }
+        public virtual bool CaptureBytecodeFromNcs(File sourceFile, File compiledNcs, bool isK2, bool asOriginal)
         {
             try
             {
@@ -542,25 +533,32 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                     return false;
                 }
 
-                // Create or get FileScriptData entry for the NSS file
-                Utils.FileScriptData nssData = null;
-                if (this.filedata.ContainsKey(nssFile))
+                // Create or get FileScriptData entry for the source file
+                Utils.FileScriptData data = null;
+                if (this.filedata.ContainsKey(sourceFile))
                 {
-                    nssData = (Utils.FileScriptData)this.filedata[nssFile];
+                    data = (Utils.FileScriptData)this.filedata[sourceFile];
                 }
-                if (nssData == null)
+                if (data == null)
                 {
-                    nssData = new Utils.FileScriptData();
-                    this.filedata[nssFile] = nssData;
+                    data = new Utils.FileScriptData();
+                    this.filedata[sourceFile] = data;
                 }
 
-                // Store compiled bytecode as "new bytecode" (since NSS files don't have "original" bytecode)
-                nssData.SetNewByteCode(bytecode);
+                // Store bytecode as either "original" or "new"
+                if (asOriginal)
+                {
+                    data.SetOriginalByteCode(bytecode);
+                }
+                else
+                {
+                    data.SetNewByteCode(bytecode);
+                }
                 return true;
             }
             catch (Exception e)
             {
-                JavaSystem.@err.Println("DEBUG captureBytecodeForNssFile: Error capturing bytecode: " + e.Message);
+                JavaSystem.@err.Println("DEBUG captureBytecodeFromNcs: Error capturing bytecode: " + e.Message);
                 e.PrintStackTrace(JavaSystem.@err);
                 return false;
             }
