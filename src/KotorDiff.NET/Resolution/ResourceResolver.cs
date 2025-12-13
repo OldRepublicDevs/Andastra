@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using CSharpKOTOR.Common;
 using CSharpKOTOR.Extract;
+using CSharpKOTOR.Formats.Capsule;
 using CSharpKOTOR.Installation;
 using CSharpKOTOR.Resources;
 using KotorDiff.NET.Diff;
@@ -313,6 +314,408 @@ namespace KotorDiff.NET.Resolution
                 current = Path.GetDirectoryName(current);
             }
             return result;
+        }
+
+        // Helper method to get all FileResources from an installation
+        // In Python, Installation is iterable, but in C# we need to combine different sources
+        private static List<FileResource> GetAllFileResources(Installation installation)
+        {
+            var allResources = new List<FileResource>();
+
+            // Get Chitin resources (includes patch.erf for K1)
+            allResources.AddRange(installation.CoreResources());
+
+            // Get Override resources
+            allResources.AddRange(installation.OverrideResources());
+
+            // Get module resources
+            var moduleRoots = installation.GetModuleRoots();
+            foreach (string moduleRoot in moduleRoots)
+            {
+                var moduleFiles = installation.GetModuleFiles(moduleRoot);
+                foreach (string moduleFile in moduleFiles)
+                {
+                    try
+                    {
+                        var capsule = new LazyCapsule(moduleFile);
+                        allResources.AddRange(capsule.GetResources());
+                    }
+                    catch
+                    {
+                        // Skip modules that can't be loaded
+                    }
+                }
+            }
+
+            return allResources;
+        }
+
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/resolution.py:431-446
+        // Original: def collect_all_resource_identifiers(installation: Installation) -> set[ResourceIdentifier]: ...
+        /// <summary>
+        /// Collect all unique resource identifiers from an installation.
+        /// </summary>
+        public static HashSet<ResourceIdentifier> CollectAllResourceIdentifiers(Installation installation)
+        {
+            var identifiers = new HashSet<ResourceIdentifier>();
+
+            // Get all resources from installation
+            var allResources = GetAllFileResources(installation);
+            foreach (var fileResource in allResources)
+            {
+                identifiers.Add(fileResource.Identifier);
+            }
+
+            return identifiers;
+        }
+
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/resolution.py:449-465
+        // Original: def build_resource_index(installation: Installation) -> dict[ResourceIdentifier, list[FileResource]]: ...
+        /// <summary>
+        /// Build an index mapping ResourceIdentifier to all FileResource instances.
+        /// This dramatically improves performance by avoiding O(n) scans for each resource.
+        /// </summary>
+        public static Dictionary<ResourceIdentifier, List<FileResource>> BuildResourceIndex(Installation installation)
+        {
+            var index = new Dictionary<ResourceIdentifier, List<FileResource>>();
+
+            // Get all resources from installation
+            var allResources = GetAllFileResources(installation);
+            foreach (var fileResource in allResources)
+            {
+                var identifier = fileResource.Identifier;
+                if (!index.ContainsKey(identifier))
+                {
+                    index[identifier] = new List<FileResource>();
+                }
+                index[identifier].Add(fileResource);
+            }
+
+            return index;
+        }
+
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/resolution.py:468-493
+        // Original: def _should_process_tlk_file(resolved: ResolvedResource) -> bool: ...
+        /// <summary>
+        /// Determine if a TLK file should be processed based on filtering rules.
+        /// When both comparison paths are installations, only process TLK files that are:
+        /// - In the root of the installation folder, AND
+        /// - Named 'dialog.tlk' or 'dialog_f.tlk'
+        /// </summary>
+        public static bool ShouldProcessTlkFile(ResolvedResource resolved)
+        {
+            // Always process if we don't have filepath info
+            if (string.IsNullOrEmpty(resolved.Filepath))
+            {
+                return true;
+            }
+
+            // Check location type - only process TLKs from Installation root or Override
+            if (resolved.LocationType != "Installation root" && resolved.LocationType != "Override folder")
+            {
+                return false;
+            }
+
+            // Check filename - only allow dialog.tlk and dialog_f.tlk
+            string filename = Path.GetFileName(resolved.Filepath).ToLowerInvariant();
+            return filename == "dialog.tlk" || filename == "dialog_f.tlk";
+        }
+
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/resolution.py:496-536
+        // Original: def determine_tslpatcher_destination(...) -> str: ...
+        /// <summary>
+        /// Determine the appropriate TSLPatcher destination based on source locations.
+        /// In n-way comparisons, this determines where to install a resource based on
+        /// where it exists across the compared paths. Paths are treated as interchangeable.
+        /// </summary>
+        public static string DetermineTslpatcherDestination(string locationA, string locationB, string filepathB)
+        {
+            // If resource is in Override, destination is Override
+            if (locationB == "Override folder")
+            {
+                return "Override";
+            }
+
+            // If resource is in a module
+            if (!string.IsNullOrEmpty(locationB) && locationB.Contains("Modules") && !string.IsNullOrEmpty(filepathB))
+            {
+                string filepathStr = filepathB.ToLowerInvariant();
+
+                // Check if it's in a .mod file
+                if (filepathStr.Contains(".mod") || filepathStr.Contains(".erf"))
+                {
+                    // Extract module filename
+                    string moduleName = Path.GetFileName(filepathB);
+                    return $"modules\\{moduleName}";
+                }
+
+                // It's in a .rim - need to redirect to corresponding .mod
+                if (filepathStr.Contains(".rim"))
+                {
+                    string moduleRoot = DiffEngineUtils.GetModuleRoot(filepathB);
+                    return $"modules\\{moduleRoot}.mod";
+                }
+            }
+
+            // Default to Override for safety
+            return "Override";
+        }
+
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/resolution.py:312-429
+        // Original: def _log_consolidated_resolution(...): ...
+        /// <summary>
+        /// Log combined resolution results from installations side-by-side.
+        /// Shows which files were CHOSEN by resolution order and which were shadowed.
+        /// Supports n-way comparisons (3+ installations).
+        /// </summary>
+        public static void LogConsolidatedResolution(
+            Installation install1,
+            Installation install2,
+            ResourceIdentifier identifier,
+            ResolvedResource resolved1,
+            ResolvedResource resolved2,
+            Action<string> logFunc,
+            List<ResolvedResource> additionalResolved = null,
+            List<Installation> additionalInstalls = null)
+        {
+            string install1Name = Path.GetFileName(install1.Path);
+            string install2Name = Path.GetFileName(install2.Path);
+
+            // Build list of all installations and resolutions
+            var allNames = new List<string> { install1Name, install2Name };
+            var allResolved = new List<ResolvedResource> { resolved1, resolved2 };
+
+            if (additionalInstalls != null && additionalResolved != null)
+            {
+                foreach (var install in additionalInstalls)
+                {
+                    allNames.Add(Path.GetFileName(install.Path));
+                }
+                allResolved.AddRange(additionalResolved);
+            }
+
+            // Log header showing all installations
+            int installCount = allNames.Count;
+            if (installCount == 2)
+            {
+                logFunc($"Installation 0 ({install1Name}), 1 ({install2Name})");
+            }
+            else
+            {
+                var installList = string.Join(", ", allNames.Select((name, idx) => $"{idx} ({name})"));
+                logFunc($"Installations: {installList}");
+            }
+            logFunc("  Checking each location:");
+
+            // Get all locations from all installations
+            var allInstallationLocations = new List<Dictionary<string, List<string>>>();
+            foreach (var resolved in allResolved)
+            {
+                allInstallationLocations.Add(resolved.AllLocations ?? new Dictionary<string, List<string>>());
+            }
+
+            // Priority order for display
+            var locationOrder = new List<(string key, string display)>
+            {
+                ("Override folder", "1. Override folder"),
+                ("Modules (.mod)", "2. Modules (.mod)"),
+                ("Modules (.rim/_s.rim/.erf)", "3. Modules (.rim/_s.rim/.erf)"),
+                ("Chitin BIFs", "4. Chitin BIFs")
+            };
+
+            // Build list of all installations with their paths for relative path calculation
+            var allInstallationsWithPaths = new List<object> { install1, install2 };
+            if (additionalInstalls != null)
+            {
+                allInstallationsWithPaths.AddRange(additionalInstalls);
+            }
+
+            // Track if we've found a chosen file yet (only ONE chosen across all installations)
+            bool foundChosen = false;
+            string chosenModuleRoot = null; // For module files, track the chosen module root
+
+            foreach (var (locKey, locDisplay) in locationOrder)
+            {
+                // Collect files from all installations at this location
+                var allFilesToShow = new List<(int installIdx, string installName, string filepath, bool isChosen)>();
+
+                for (int idx = 0; idx < allNames.Count; idx++)
+                {
+                    string installName = allNames[idx];
+                    ResolvedResource resolved = allResolved[idx];
+                    Dictionary<string, List<string>> locations = allInstallationLocations[idx];
+
+                    if (locations.ContainsKey(locKey))
+                    {
+                        foreach (string f in locations[locKey])
+                        {
+                            bool isChosen = (resolved.Filepath == f) && !foundChosen;
+
+                            // For module files, only include files with same base name as chosen
+                            if ((locKey == "Modules (.mod)" || locKey == "Modules (.rim/_s.rim/.erf)") && foundChosen && !string.IsNullOrEmpty(chosenModuleRoot))
+                            {
+                                try
+                                {
+                                    string fileModuleRoot = DiffEngineUtils.GetModuleRoot(f);
+                                    if (fileModuleRoot != chosenModuleRoot)
+                                    {
+                                        continue; // Skip files with different base names
+                                    }
+                                }
+                                catch (Exception e)
+                                {
+                                    logFunc($"Warning: Could not get module root for {f}: {e.GetType().Name}: {e.Message}");
+                                    // If we can't get module root, include the file
+                                }
+                            }
+
+                            // Track chosen module root for filtering subsequent files
+                            if (isChosen && (locKey == "Modules (.mod)" || locKey == "Modules (.rim/_s.rim/.erf)"))
+                            {
+                                try
+                                {
+                                    chosenModuleRoot = DiffEngineUtils.GetModuleRoot(f);
+                                }
+                                catch (Exception e)
+                                {
+                                    logFunc($"Warning: Could not get module root for chosen file {f}: {e.GetType().Name}: {e.Message}");
+                                }
+                            }
+
+                            if (isChosen)
+                            {
+                                foundChosen = true;
+                            }
+
+                            allFilesToShow.Add((idx, installName, f, isChosen));
+                        }
+                    }
+                }
+
+                if (allFilesToShow.Count == 0)
+                {
+                    logFunc($"    {locDisplay} -> not found");
+                }
+                else
+                {
+                    foreach (var (installIdx, installName, filepath, isChosen) in allFilesToShow)
+                    {
+                        try
+                        {
+                            object installation = allInstallationsWithPaths[installIdx];
+                            string installPath = installation is Installation inst ? inst.Path : install1.Path;
+                            string relPath = Path.GetRelativePath(installPath, filepath);
+                            string fullPath = $"{installName}/{relPath}";
+
+                            if (isChosen)
+                            {
+                                logFunc($"    {locDisplay} -> CHOSEN (install{installIdx}) - {fullPath}");
+                            }
+                            else
+                            {
+                                logFunc($"    {locDisplay} -> (shadowed, install{installIdx}) {fullPath}");
+                            }
+                        }
+                        catch (ArgumentException)
+                        {
+                            // Couldn't get relative path, just show filename
+                            string filename = Path.GetFileName(filepath);
+                            if (isChosen)
+                            {
+                                logFunc($"    {locDisplay} -> CHOSEN (install{installIdx}) - {filename}");
+                            }
+                            else
+                            {
+                                logFunc($"    {locDisplay} -> (shadowed, install{installIdx}) {filename}");
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/resolution.py:1229-1293
+        // Original: def explain_resolution_order(...): ...
+        /// <summary>
+        /// Explain the resolution order for a resource in user-friendly terms.
+        /// Supports n-way comparisons (3+ installations).
+        /// </summary>
+        public static void ExplainResolutionOrder(
+            ResourceIdentifier identifier,
+            ResolvedResource install1Resolved,
+            ResolvedResource install2Resolved,
+            Action<string> logFunc,
+            List<ResolvedResource> additionalResolved = null,
+            List<string> installNames = null)
+        {
+            logFunc($"\nResolution explanation for {identifier}:");
+            logFunc("");
+            logFunc("  KOTOR loads files in this order (first match wins):");
+            logFunc("    1. Override folder (HIGHEST PRIORITY)");
+            logFunc("    2. Modules folder (.mod files)");
+            logFunc("    3. Modules folder (.rim/_s.rim/_dlg.erf files)");
+            logFunc("    4. Chitin/BIF archives (LOWEST PRIORITY)");
+            logFunc("");
+
+            // Build list of all resolutions
+            var allResolved = new List<ResolvedResource> { install1Resolved, install2Resolved };
+            if (additionalResolved != null)
+            {
+                allResolved.AddRange(additionalResolved);
+            }
+
+            // Default names if not provided
+            if (installNames == null)
+            {
+                installNames = new List<string>();
+                for (int idx = 0; idx < allResolved.Count; idx++)
+                {
+                    installNames.Add($"Installation {idx}");
+                }
+            }
+
+            // Explain each installation
+            for (int idx = 0; idx < allResolved.Count; idx++)
+            {
+                ResolvedResource resolved = allResolved[idx];
+                string name = idx < installNames.Count ? installNames[idx] : $"Installation {idx}";
+                logFunc($"  Installation {idx} ({name}):");
+                if (resolved.Data == null)
+                {
+                    logFunc("    → Resource NOT FOUND");
+                }
+                else
+                {
+                    string priority = GetLocationDisplayName(resolved.LocationType);
+                    logFunc($"    → Found in: {priority}");
+                    logFunc($"    → Path: {resolved.SourceLocation}");
+                }
+                logFunc("");
+            }
+
+            // Explain what this means for modding (compare base vs target)
+            if (install1Resolved.Data != null && install2Resolved.Data != null && install1Resolved.LocationType != install2Resolved.LocationType)
+            {
+                logFunc("  What this means:");
+                if (install2Resolved.LocationType == "Override folder")
+                {
+                    logFunc("    ✓ Resource was moved to Override (will override base version)");
+                    logFunc("    ✓ TSLPatcher should install to Override");
+                }
+                else if (install1Resolved.LocationType == "Chitin BIFs" && install2Resolved.LocationType != null && install2Resolved.LocationType.Contains("Modules"))
+                {
+                    logFunc("    ✓ Resource extracted from BIF to Modules (now modifiable)");
+                    logFunc("    ✓ TSLPatcher should install to appropriate module");
+                }
+                else
+                {
+                    string loc1Name = GetLocationDisplayName(install1Resolved.LocationType);
+                    string loc2Name = GetLocationDisplayName(install2Resolved.LocationType);
+                    logFunc($"    → Priority changed from {loc1Name} to {loc2Name}");
+                }
+            }
+
+            logFunc("");
         }
     }
 }
