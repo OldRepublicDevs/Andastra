@@ -31,6 +31,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             }
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/NodeAnalysisData.java:33-41
+        // Original: public void setPos(Node node, int pos) { NodeAnalysisData.NodeData data = this.nodedatahash.get(node); if (data == null) { data = new NodeAnalysisData.NodeData(pos); this.nodedatahash.put(node, data); } else { data.pos = pos; } }
         public virtual void SetPos(Node node, int pos)
         {
             object existing;
