@@ -91,7 +91,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             {
                 if (this.state == 1)
                 {
-                    ++this.state;
+                    this.state++;
                     return;
                 }
 
@@ -118,7 +118,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
                 int loc = NodeUtils.StackOffsetToPos(node.GetOffset());
                 if (copy == 1 && loc == 1)
                 {
-                    ++this.state;
+                    this.state++;
                 }
                 else
                 {
