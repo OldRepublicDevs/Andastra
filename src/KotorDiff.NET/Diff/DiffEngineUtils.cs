@@ -209,6 +209,50 @@ namespace KotorDiff.NET.Diff
             // Default to Override for loose files in the game root or unknown locations
             return "Override";
         }
+
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/engine.py:1110-1118
+        // Original: def is_capsule_file(filename: str) -> bool: ...
+        public static bool IsCapsuleFile(string filename)
+        {
+            if (string.IsNullOrEmpty(filename))
+            {
+                return false;
+            }
+            string ext = Path.GetExtension(filename).ToLowerInvariant();
+            return ext == ".erf" || ext == ".mod" || ext == ".rim";
+        }
+
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/engine.py:1906-1928
+        // Original: def should_use_composite_for_file(...): ...
+        public static bool ShouldUseCompositeForFile(string filePath, string otherFilePath)
+        {
+            // Check if this file is a .rim file (not in rims folder)
+            if (!IsCapsuleFile(Path.GetFileName(filePath)))
+            {
+                return false;
+            }
+            string parentName = Path.GetDirectoryName(filePath);
+            if (parentName != null && Path.GetFileName(parentName).ToLowerInvariant() == "rims")
+            {
+                return false;
+            }
+            if (Path.GetExtension(filePath).ToLowerInvariant() != ".rim")
+            {
+                return false;
+            }
+
+            // Check if the other file is a .mod file (not in rims folder)
+            if (!IsCapsuleFile(Path.GetFileName(otherFilePath)))
+            {
+                return false;
+            }
+            string otherParentName = Path.GetDirectoryName(otherFilePath);
+            if (otherParentName != null && Path.GetFileName(otherParentName).ToLowerInvariant() == "rims")
+            {
+                return false;
+            }
+            return Path.GetExtension(otherFilePath).ToLowerInvariant() == ".mod";
+        }
     }
 }
 

@@ -643,6 +643,185 @@ namespace KotorDiff.NET.Diff
                 return null;
             }
         }
+
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/engine.py:1704-1774
+        // Original: def diff_files(...): ...
+        public static bool? DiffFiles(
+            string file1,
+            string file2,
+            Action<string> logFunc = null,
+            bool compareHashes = true,
+            ModificationsByType modificationsByType = null)
+        {
+            if (logFunc == null)
+            {
+                logFunc = Console.WriteLine;
+            }
+
+            if (!File.Exists(file1))
+            {
+                logFunc($"Missing file:\t{Path.GetFileName(file1)}");
+                return false;
+            }
+            if (!File.Exists(file2))
+            {
+                logFunc($"Missing file:\t{Path.GetFileName(file2)}");
+                return false;
+            }
+
+            // Check if this is a capsule file
+            if (DiffEngineUtils.IsCapsuleFile(file1))
+            {
+                return DiffCapsuleFiles(
+                    file1,
+                    file2,
+                    Path.GetFileName(file1),
+                    Path.GetFileName(file2),
+                    logFunc: logFunc,
+                    compareHashes: compareHashes,
+                    modificationsByType: modificationsByType);
+            }
+
+            // Regular file diff
+            string ext = DiffEngineUtils.ExtOf(file1);
+            var ctx = new DiffContext(Path.GetFileName(file1), Path.GetFileName(file2), ext);
+            byte[] data1 = File.ReadAllBytes(file1);
+            byte[] data2 = File.ReadAllBytes(file2);
+            return DiffData(data1, data2, ctx, compareHashes, modificationsByType, logFunc);
+        }
+
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/engine.py:1777-1903
+        // Original: def diff_capsule_files(...): ...
+        public static bool? DiffCapsuleFiles(
+            string cFile1,
+            string cFile2,
+            string cFile1Rel,
+            string cFile2Rel,
+            Action<string> logFunc = null,
+            bool compareHashes = true,
+            ModificationsByType modificationsByType = null)
+        {
+            if (logFunc == null)
+            {
+                logFunc = Console.WriteLine;
+            }
+
+            // Check if we should use composite module loading
+            bool useCompositeFile1 = DiffEngineUtils.ShouldUseCompositeForFile(cFile1, cFile2);
+            bool useCompositeFile2 = DiffEngineUtils.ShouldUseCompositeForFile(cFile2, cFile1);
+
+            if (useCompositeFile1)
+            {
+                string stem = Path.GetFileNameWithoutExtension(cFile1);
+                logFunc($"Using composite module loading for {cFile1Rel} ({stem}.rim + {stem}._s.rim + {stem}._dlg.erf)");
+            }
+            if (useCompositeFile2)
+            {
+                string stem = Path.GetFileNameWithoutExtension(cFile2);
+                logFunc($"Using composite module loading for {cFile2Rel} ({stem}.rim + {stem}._s.rim + {stem}._dlg.erf)");
+            }
+
+            // TODO: Implement composite module loading
+            // For now, just load as regular capsules
+
+            // Load capsules
+            CSharpKOTOR.Formats.Capsule.Capsule file1Capsule = null;
+            CSharpKOTOR.Formats.Capsule.Capsule file2Capsule = null;
+
+            try
+            {
+                file1Capsule = new CSharpKOTOR.Formats.Capsule.Capsule(cFile1);
+            }
+            catch (Exception e)
+            {
+                logFunc($"Could not load '{cFile1}'. Reason: {e.GetType().Name}: {e.Message}");
+                return null;
+            }
+
+            try
+            {
+                file2Capsule = new CSharpKOTOR.Formats.Capsule.Capsule(cFile2);
+            }
+            catch (Exception e)
+            {
+                logFunc($"Could not load '{cFile2}'. Reason: {e.GetType().Name}: {e.Message}");
+                return null;
+            }
+
+            // Build dict of resources
+            var capsule1Resources = new Dictionary<string, CSharpKOTOR.Formats.Capsule.CapsuleResource>();
+            var capsule2Resources = new Dictionary<string, CSharpKOTOR.Formats.Capsule.CapsuleResource>();
+
+            foreach (var res in file1Capsule)
+            {
+                string resName = res.ResName;
+                if (!capsule1Resources.ContainsKey(resName))
+                {
+                    capsule1Resources[resName] = res;
+                }
+            }
+
+            foreach (var res in file2Capsule)
+            {
+                string resName = res.ResName;
+                if (!capsule2Resources.ContainsKey(resName))
+                {
+                    capsule2Resources[resName] = res;
+                }
+            }
+
+            // Identify missing resources
+            var missingInCapsule1 = new HashSet<string>(capsule2Resources.Keys);
+            missingInCapsule1.ExceptWith(capsule1Resources.Keys);
+
+            var missingInCapsule2 = new HashSet<string>(capsule1Resources.Keys);
+            missingInCapsule2.ExceptWith(capsule2Resources.Keys);
+
+            // Report missing resources
+            foreach (string resref in missingInCapsule1.OrderBy(r => r))
+            {
+                var res = capsule2Resources[resref];
+                string resExt = res.ResType.Extension.ToUpperInvariant();
+                logFunc($"Resource missing:\t{cFile1Rel}\t{resref}\t{resExt}");
+
+                // TODO: Add to install folders if modificationsByType is provided
+            }
+
+            foreach (string resref in missingInCapsule2.OrderBy(r => r))
+            {
+                var res = capsule1Resources[resref];
+                string resExt = res.ResType.Extension.ToUpperInvariant();
+                logFunc($"Resource missing:\t{cFile2Rel}\t{resref}\t{resExt}");
+            }
+
+            // Check for differences in common resources
+            bool? isSameResult = true;
+            var commonResrefs = new HashSet<string>(capsule1Resources.Keys);
+            commonResrefs.IntersectWith(capsule2Resources.Keys);
+
+            foreach (string resref in commonResrefs.OrderBy(r => r))
+            {
+                var res1 = capsule1Resources[resref];
+                var res2 = capsule2Resources[resref];
+                string ext = res1.ResType.Extension.ToLowerInvariant();
+                var ctx = new DiffContext(cFile1Rel, cFile2Rel, ext, resref);
+
+                byte[] data1 = res1.Data;
+                byte[] data2 = res2.Data;
+
+                bool? result = DiffData(data1, data2, ctx, compareHashes, modificationsByType, logFunc);
+                if (result == null)
+                {
+                    isSameResult = null;
+                }
+                else if (result == false)
+                {
+                    isSameResult = false;
+                }
+            }
+
+            return isSameResult;
+        }
     }
 }
 
