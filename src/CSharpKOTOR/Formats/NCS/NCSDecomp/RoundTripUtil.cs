@@ -61,7 +61,23 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                 {
                     // Use the same decompile method as the test
                     FileDecompiler decompiler = new FileDecompiler();
-                    decompiler.DecompileToFile(ncsFile, tempNssFile, Encoding.UTF8, true);
+                    // Ensure actions are loaded before decompiling (required for decompilation)
+                    try
+                    {
+                        decompiler.LoadActionsData("k2".Equals(gameFlag));
+                    }
+                    catch (DecompilerException e)
+                    {
+                        throw new DecompilerException("Failed to load actions data: " + e.Message, e);
+                    }
+                    try
+                    {
+                        decompiler.DecompileToFile(ncsFile, tempNssFile, Encoding.UTF8, true);
+                    }
+                    catch (IOException e)
+                    {
+                        throw new DecompilerException("Failed to decompile file: " + e.Message, e);
+                    }
 
                     // Read the decompiled code
                     if (tempNssFile.Exists() && tempNssFile.Length > 0)
@@ -138,6 +154,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
 
                 // Use the same decompile method as the test
                 FileDecompiler decompiler = new FileDecompiler();
+                // Ensure actions are loaded before decompiling (required for decompilation)
+                decompiler.LoadActionsData("k2".Equals(gameFlag));
                 decompiler.DecompileToFile(ncsFile, nssOutputFile, charset, true);
 
                 if (!nssOutputFile.Exists())
