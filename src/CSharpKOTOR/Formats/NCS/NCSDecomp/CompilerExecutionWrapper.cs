@@ -263,7 +263,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
         // Original: private File determineNwscriptSource()
         private File DetermineNwscriptSource()
         {
-            File toolsDir = new File(JavaSystem.GetProperty("user.dir"), "tools");
+            File toolsDir = new File(new File(JavaSystem.GetProperty("user.dir")), "tools");
 
             if (isK2)
             {
@@ -489,7 +489,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
         // Original: private void buildEnvironmentOverrides()
         private void BuildEnvironmentOverrides()
         {
-            File toolsDir = new File(JavaSystem.GetProperty("user.dir"), "tools");
+            File toolsDir = new File(new File(JavaSystem.GetProperty("user.dir")), "tools");
 
             // Only apply overrides for legacy compilers that ignore -g or probe registry
             bool needsRootOverride = compiler == KnownExternalCompilers.KOTOR_TOOL
@@ -506,7 +506,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             envOverrides["NWNDir"] = resolvedRoot;
             envOverrides["KOTOR_ROOT"] = resolvedRoot;
             JavaSystem.@out.Println("[INFO] CompilerExecutionWrapper: Applied environment overrides for legacy compiler. "
-                + "NWN_ROOT=" + resolvedRoot + ", compiler=" + compiler.GetName());
+                + "NWN_ROOT=" + resolvedRoot + ", compiler=" + compiler.Name);
         }
 
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/CompilerExecutionWrapper.java:475-483
@@ -532,11 +532,11 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             if (compiler == KnownExternalCompilers.KOTOR_TOOL || compiler == KnownExternalCompilers.KOTOR_SCRIPTING_TOOL)
             {
                 // Use the tools directory as the installation path (where compiler and nwscript files are)
-                File toolsDir = new File(JavaSystem.GetProperty("user.dir"), "tools");
+                File toolsDir = new File(new File(JavaSystem.GetProperty("user.dir")), "tools");
                 try
                 {
                     RegistrySpoofer spoofer = new RegistrySpoofer(toolsDir, isK2);
-                    JavaSystem.@out.Println("[INFO] CompilerExecutionWrapper: Created RegistrySpoofer for " + compiler.GetName());
+                    JavaSystem.@out.Println("[INFO] CompilerExecutionWrapper: Created RegistrySpoofer for " + compiler.Name);
                     return spoofer;
                 }
                 catch (NotSupportedException e)
