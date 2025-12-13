@@ -1233,11 +1233,11 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
                     ScriptNode.AUnkLoopControl unk = unknowns[i];
                     if (unk.GetDestination() > aswitch.GetEnd())
                     {
-                        acase.ReplaceUnknown(unk, (Scriptnode.ScriptNode)(object)new ScriptNode.AContinueStatement());
+                        acase.ReplaceUnknown(unk, new ScriptNode.AContinueStatement());
                     }
                     else
                     {
-                        acase.ReplaceUnknown(unk, (Scriptnode.ScriptNode)(object)new ScriptNode.ABreakStatement());
+                        acase.ReplaceUnknown(unk, new ScriptNode.ABreakStatement());
                     }
                 }
             }

@@ -29,7 +29,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptnode
         protected virtual void VarRef(ScriptNodeNS.AVarRef varref)
         {
             this.varref = varref;
-            varref.Parent(this);
+            varref.Parent((ScriptNodeNS.ScriptNode)(object)this);
         }
 
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/AModifyExp.java:24-27

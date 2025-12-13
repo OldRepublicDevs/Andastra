@@ -46,6 +46,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             }
         }
 
+
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/NodeAnalysisData.java:43-50
         // Original: public int getPos(Node node)
         public virtual int GetPos(Node node)
@@ -167,6 +168,22 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
                 NodeData data = (NodeData)existing;
                 return data.state != 1;
             }
+        }
+
+        private NodeData GetOrCreateNodeData(Node node)
+        {
+            object existing;
+            NodeData data;
+            if (!this.nodedatahash.TryGetValue(node, out existing))
+            {
+                data = new NodeData();
+                this.nodedatahash[node] = data;
+            }
+            else
+            {
+                data = (NodeData)existing;
+            }
+            return data;
         }
 
         public virtual void LogOrCode(Node node, bool logor)

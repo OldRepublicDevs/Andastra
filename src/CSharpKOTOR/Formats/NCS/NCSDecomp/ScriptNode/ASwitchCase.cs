@@ -62,19 +62,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
         public virtual void ReplaceUnknown(AUnkLoopControl unk, Scriptnode.ScriptNode newnode)
         {
             newnode.Parent(this);
-            int index = -1;
-            for (int i = 0; i < this.children.Count; i++)
-            {
-                if (this.children[i] is ScriptNode.AUnkLoopControl && this.children[i] == (Scriptnode.ScriptNode)(object)unk)
-                {
-                    index = i;
-                    break;
-                }
-            }
-            if (index >= 0)
-            {
-                this.children[index] = newnode;
-            }
+            this.children[this.children.IndexOf(unk)] = newnode;
             unk.Parent(null);
         }
 

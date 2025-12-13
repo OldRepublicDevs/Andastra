@@ -1,6 +1,8 @@
+using CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptnode;
+
 namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
 {
-    public class AContinueStatement : ScriptNode
+    public class AContinueStatement : Scriptnode.ScriptNode
     {
         public AContinueStatement()
         {

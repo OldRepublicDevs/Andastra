@@ -1,6 +1,7 @@
 // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/ASub.java:15-135
 // Original: public class ASub extends ScriptRootNode
 using System.Collections.Generic;
+using System.Text;
 using CSharpKOTOR.Formats.NCS.NCSDecomp.Utils;
 using CSharpKOTOR.Formats.NCS.NCSDecomp.Stack;
 using ScriptNodeNS = CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode;

@@ -125,7 +125,11 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
 
                 if (i < commands.Count)
                 {
-                    commands[i].Apply(this);
+                    object cmd = commands[i];
+                    if (cmd is PCmd pcmd)
+                    {
+                        pcmd.Apply(this);
+                    }
                     i++;
                 }
             }

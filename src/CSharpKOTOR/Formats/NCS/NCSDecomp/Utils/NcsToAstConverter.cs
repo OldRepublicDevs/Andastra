@@ -166,9 +166,9 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
                 return null;
             }
 
-            ASubroutine sub = new ASubroutine();
+            AST.ASubroutine sub = new AST.ASubroutine();
             sub.SetId(subId);
-            ACommandBlock cmdBlock = new ACommandBlock();
+            AST.ACommandBlock cmdBlock = new AST.ACommandBlock();
 
             int limit = Math.Min(endIdx, instructions.Count);
             int convertedCount = 0;
@@ -178,7 +178,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
                 PCmd cmd = ConvertInstructionToCmd(ncs, instructions[i], i, instructions);
                 if (cmd != null)
                 {
-                    cmdBlock.GetCmd().Add(cmd);
+                    cmdBlock.GetCmd().Add((AST.PCmd)(object)cmd);
                     convertedCount++;
                 }
                 else
@@ -201,7 +201,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
                     AReturn ret = ConvertRetn(instructions[i], i);
                     if (ret != null)
                     {
-                        sub.SetReturn(ret);
+                        sub.SetReturn((AST.PReturn)(object)ret);
                     }
 
                     break;

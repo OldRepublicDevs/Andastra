@@ -30,7 +30,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
         public override void CaseACommandBlock(ACommandBlock node)
         {
             this.InACommandBlock(node);
-            PCmd[] temp = node.GetCmd().ToArray(new PCmd[0]);
+            PCmd[] temp = node.GetCmd().ToArray();
 
             for (int i = temp.Length - 1; i >= 0; i--)
             {
