@@ -1329,67 +1329,165 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
             return exp;
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptutils/SubScriptState.java:1534-1663
+        // Original: private AExpression removeLastExp(boolean forceOneOnly) { ArrayList<ScriptNode> trailingErrors = new ArrayList<>(); while (this.current.hasChildren() && AErrorComment.class.isInstance(this.current.getLastChild())) { trailingErrors.add(this.current.removeLastChild()); } ... }
         private ScriptNode.AExpression RemoveLastExp(bool forceOneOnly)
         {
+            JavaSystem.@err.Println("DEBUG removeLastExp: forceOneOnly=" + forceOneOnly + ", current=" + this.current.GetType().Name + ", hasChildren=" + this.current.HasChildren());
+
+            List<ScriptNode.ScriptNode> trailingErrors = new List<ScriptNode.ScriptNode>();
+            while (this.current.HasChildren() && typeof(AErrorComment).IsInstanceOfType(this.current.GetLastChild()))
+            {
+                trailingErrors.Add(this.current.RemoveLastChild());
+            }
+
             if (!this.current.HasChildren() && typeof(AIf).IsInstanceOfType(this.current))
             {
+                for (int i = trailingErrors.Count - 1; i >= 0; i--)
+                {
+                    this.current.AddChild(trailingErrors[i]);
+                }
+
                 return this.RemoveIfAsExp();
             }
 
-            ScriptNode.ScriptNode anode = this.current.RemoveLastChild();
-            if (typeof(ScriptNode.AExpression).IsInstanceOfType(anode))
+            ScriptNode.ScriptNode anode = null;
+            List<ScriptNode.AExpressionStatement> foundExpressionStatements = new List<ScriptNode.AExpressionStatement>();
+            while (true)
             {
-                if (!forceOneOnly && typeof(AVarRef).IsInstanceOfType(anode) && !((AVarRef)(object)anode).Var().IsAssigned() && !((AVarRef)(object)anode).Var().IsParam() && this.current.HasChildren())
+                if (!this.current.HasChildren())
                 {
-                    ScriptNode.ScriptNode last = this.current.GetLastChild();
-                    if (typeof(ScriptNode.AExpression).IsInstanceOfType(last) && ((AVarRef)(object)anode).Var().Equals(((ScriptNode.AExpression)last).Stackentry()))
-                    {
-                        return this.RemoveLastExp(false);
-                    }
+                    JavaSystem.@err.Println("DEBUG removeLastExp: no more children, breaking");
+                    break;
+                }
+                anode = this.current.RemoveLastChild();
+                JavaSystem.@err.Println("DEBUG removeLastExp: removed child=" + anode.GetType().Name);
 
-                    if (typeof(ScriptNode.AVarDecl).IsInstanceOfType(last) && ((AVarRef)(object)anode).Var().Equals(((ScriptNode.AVarDecl)last).GetVarVar()) && ((ScriptNode.AVarDecl)last).GetExp() != null)
+                if (typeof(ScriptNode.AExpression).IsInstanceOfType(anode))
+                {
+                    JavaSystem.@err.Println("DEBUG removeLastExp: found AExpression, returning");
+                    // Found a plain expression - put back any AExpressionStatement nodes we found
+                    for (int i = foundExpressionStatements.Count - 1; i >= 0; i--)
                     {
-                        return this.RemoveLastExp(false);
+                        this.current.AddChild(foundExpressionStatements[i]);
+                    }
+                    break;
+                }
+                if (typeof(ScriptNode.AVarDecl).IsInstanceOfType(anode))
+                {
+                    ScriptNode.AVarDecl vardecl = (ScriptNode.AVarDecl)anode;
+                    if (vardecl.IsFcnReturn() && vardecl.GetExp() != null)
+                    {
+                        // Function return value - extract the expression
+                        ScriptNode.AExpression exp = vardecl.RemoveExp();
+                        // Put back any AExpressionStatement nodes we found
+                        for (int i = foundExpressionStatements.Count - 1; i >= 0; i--)
+                        {
+                            this.current.AddChild(foundExpressionStatements[i]);
+                        }
+                        for (int i = trailingErrors.Count - 1; i >= 0; i--)
+                        {
+                            this.current.AddChild(trailingErrors[i]);
+                        }
+                        return exp;
+                    }
+                    else if (!forceOneOnly && vardecl.GetExp() != null)
+                    {
+                        // Regular variable declaration with initializer
+                        ScriptNode.AExpression exp = vardecl.RemoveExp();
+                        // Put back any AExpressionStatement nodes we found
+                        for (int i = foundExpressionStatements.Count - 1; i >= 0; i--)
+                        {
+                            this.current.AddChild(foundExpressionStatements[i]);
+                        }
+                        for (int i = trailingErrors.Count - 1; i >= 0; i--)
+                        {
+                            this.current.AddChild(trailingErrors[i]);
+                        }
+                        return exp;
                     }
                 }
-
-                return (ScriptNode.AExpression)anode;
+                else if (typeof(ScriptNode.AExpressionStatement).IsInstanceOfType(anode))
+                {
+                    // Store AExpressionStatement nodes and continue searching for plain expressions
+                    // Only extract from AExpressionStatement if no plain expressions are found
+                    JavaSystem.@err.Println("DEBUG removeLastExp: found AExpressionStatement, storing and continuing search");
+                    foundExpressionStatements.Add((ScriptNode.AExpressionStatement)anode);
+                    anode = null; // Continue searching
+                    continue;
+                }
+                // Skip non-expression nodes and keep searching.
+                JavaSystem.@err.Println("DEBUG removeLastExp: skipping " + anode.GetType().Name + ", continuing search");
+                anode = null;
             }
 
-            if (typeof(ScriptNode.AVarDecl).IsInstanceOfType(anode))
+            // If no plain expression was found, try extracting from AExpressionStatement nodes
+            if (anode == null && foundExpressionStatements.Count > 0)
             {
-                ScriptNode.AVarDecl vardec = (ScriptNode.AVarDecl)anode;
-                if (vardec.IsFcnReturn() && vardec.GetExp() != null)
+                JavaSystem.@err.Println("DEBUG removeLastExp: no plain expression found, extracting from AExpressionStatement");
+                ScriptNode.AExpressionStatement expstmt = foundExpressionStatements[foundExpressionStatements.Count - 1];
+                foundExpressionStatements.RemoveAt(foundExpressionStatements.Count - 1);
+                ScriptNode.AExpression exp = expstmt.GetExp();
+                if (exp != null)
                 {
-                    ScriptNode.AExpression exp = vardec.GetExp();
-                    vardec.RemoveExp();
+                    exp.Parent(null); // Clear parent since AExpressionStatement is being discarded
+                    // Put back remaining AExpressionStatement nodes
+                    for (int i = foundExpressionStatements.Count - 1; i >= 0; i--)
+                    {
+                        this.current.AddChild(foundExpressionStatements[i]);
+                    }
+                    for (int i = trailingErrors.Count - 1; i >= 0; i--)
+                    {
+                        this.current.AddChild(trailingErrors[i]);
+                    }
+                    JavaSystem.@err.Println("DEBUG removeLastExp: returning expression from AExpressionStatement");
+                    return exp;
+                }
+            }
+
+            if (anode == null)
+            {
+                return this.BuildPlaceholderParam(1);
+            }
+
+            if (!forceOneOnly
+                && typeof(AVarRef).IsInstanceOfType(anode)
+                && !((AVarRef)anode).Var().IsAssigned()
+                && !((AVarRef)anode).Var().IsParam()
+                && this.current.HasChildren())
+            {
+                ScriptNode.ScriptNode last = this.current.GetLastChild();
+                if (typeof(ScriptNode.AExpression).IsInstanceOfType(last)
+                    && ((AVarRef)anode).Var().Equals(((ScriptNode.AExpression)last).Stackentry()))
+                {
+                    ScriptNode.AExpression exp = this.RemoveLastExp(false);
+                    for (int i = trailingErrors.Count - 1; i >= 0; i--)
+                    {
+                        this.current.AddChild(trailingErrors[i]);
+                    }
+
                     return exp;
                 }
 
-                if (vardec.GetExp() != null)
+                if (typeof(ScriptNode.AVarDecl).IsInstanceOfType(last) && ((AVarRef)anode).Var().Equals(((ScriptNode.AVarDecl)last).GetVarVar())
+                    && ((ScriptNode.AVarDecl)last).GetExp() != null)
                 {
-                    return vardec.RemoveExp();
-                }
+                    ScriptNode.AExpression exp = this.RemoveLastExp(false);
+                    for (int i = trailingErrors.Count - 1; i >= 0; i--)
+                    {
+                        this.current.AddChild(trailingErrors[i]);
+                    }
 
-                if (!forceOneOnly)
-                {
-                    AVarRef varref = new AVarRef(vardec.GetVarVar());
-                    return varref;
+                    return exp;
                 }
-
-                throw new Exception("Last child is AVarDecl without expression when forceOneOnly=true: " + anode);
             }
 
-
-            // Handle AExpressionStatement - extract the contained expression
-            if (typeof(ScriptNode.AExpressionStatement).IsInstanceOfType(anode))
+            for (int i = trailingErrors.Count - 1; i >= 0; i--)
             {
-                ScriptNode.AExpressionStatement exprStmt = (ScriptNode.AExpressionStatement)anode;
-                return exprStmt.GetExp();
+                this.current.AddChild(trailingErrors[i]);
             }
 
-            JavaSystem.@out.Println(anode.ToString());
-            throw new Exception("Last child not an expression: " + anode.GetType());
+            return (ScriptNode.AExpression)anode;
         }
 
         private ScriptNode.AExpression GetLastExp()
