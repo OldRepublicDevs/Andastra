@@ -40,9 +40,12 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
             }
             else
             {
+                // Matching Java ASub(int start, int end) constructor - used for globals only
+                // name is intentionally not set (null in Java, null in C#)
+                // This is OK because globals use toStringGlobals() which only calls getBody(), never getHeader()
                 _type = new Type(0);
                 _params = null;
-                _name = "";
+                _name = null;  // Match Java: name is null for globals ASub
             }
             // SetTabs is not available in ScriptNode
         }
@@ -65,9 +68,12 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
             }
             else
             {
+                // Matching Java ASub(int start, int end) constructor - used for globals only
+                // name is intentionally not set (null in Java, null in C#)
+                // This is OK because globals use toStringGlobals() which only calls getBody(), never getHeader()
                 _type = new Type(0);
                 _params = null;
-                _name = "";
+                _name = null;  // Match Java: name is null for globals ASub
             }
             // SetTabs is not available in ScriptNode
         }
@@ -97,10 +103,26 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
             return buff.ToString();
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/ScriptNode/ASub.java:63-77
+        // Original: public String getHeader() { StringBuffer buff = new StringBuffer(); buff.append(this.type + " " + this.name + "("); ... }
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/ASub.java:63-77
+        // Original: public String getHeader() { StringBuffer buff = new StringBuffer(); buff.append(this.type + " " + this.name + "("); ... }
         public string GetHeader()
         {
+            // Matching Java: if name is null, this would throw NullPointerException in Java
+            // In Java, getHeader() is never called for globals (which have null name)
+            // For non-globals, name should always be set
+            // However, if this is somehow called on a globals ASub, return empty string to avoid breaking code generation
+            if (_name == null)
+            {
+                // This should never happen for non-globals subroutines
+                // If it does, it indicates a bug, but we'll return empty string to avoid breaking the decompiler
+                JavaSystem.@out.Println("WARNING: GetHeader() called on ASub with null name. This should only happen for globals, which should use GetBody() instead.");
+                return "";
+            }
             var buff = new StringBuilder();
-            buff.Append((_type != null ? _type.ToString() : "") + " " + _name + "(");
+            string typeStr = _type != null ? _type.ToString() : "void";
+            buff.Append(typeStr + " " + _name + "(");
             string link = "";
             if (_params != null)
             {
@@ -136,7 +158,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
             return _isMain;
         }
 
-        public new Type GetType()
+        public new Utils.Type GetType()
         {
             return _type;
         }
