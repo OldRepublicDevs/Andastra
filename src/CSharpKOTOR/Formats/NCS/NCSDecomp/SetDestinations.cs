@@ -43,49 +43,61 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             return this.origins;
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SetDestinations.java:59-69
+        // Original: @Override public void outAConditionalJumpCommand(AConditionalJumpCommand node) { ... if (this.destination == null) { throw new RuntimeException(...); } else { ... } }
         public override void OutAConditionalJumpCommand(AConditionalJumpCommand node)
         {
             int pos = NodeUtils.GetJumpDestinationPos(node);
             this.LookForPos(pos, true);
             if (this.destination == null)
             {
-                throw new Exception("wasn't able to find dest for " + node + " at pos " + pos);
+                throw new Exception("wasn't able to find dest for " + node + " at pos " + Integer.ToString(pos));
             }
-
-            this.nodedata.SetDestination(node, this.destination);
-            this.AddDestination(node, this.destination);
+            else
+            {
+                this.nodedata.SetDestination(node, this.destination);
+                this.AddDestination(node, this.destination);
+            }
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SetDestinations.java:71-86
+        // Original: @Override public void outAJumpCommand(AJumpCommand node) { ... if (this.destination == null) { throw new RuntimeException(...); } else { ... } }
         public override void OutAJumpCommand(AJumpCommand node)
         {
             int pos = NodeUtils.GetJumpDestinationPos(node);
             this.LookForPos(pos, true);
             if (this.destination == null)
             {
-                throw new Exception("wasn't able to find dest for " + node + " at pos " + pos);
+                throw new Exception("wasn't able to find dest for " + node + " at pos " + Integer.ToString(pos));
             }
-
-            this.nodedata.SetDestination(node, this.destination);
-            if (pos < this.nodedata.GetPos(node))
+            else
             {
-                Node dest = NodeUtils.GetCommandChild(this.destination);
-                this.nodedata.AddOrigin(dest, node);
-            }
+                this.nodedata.SetDestination(node, this.destination);
+                if (pos < this.nodedata.GetPos(node))
+                {
+                    Node dest = NodeUtils.GetCommandChild(this.destination);
+                    this.nodedata.AddOrigin(dest, node);
+                }
 
-            this.AddDestination(node, this.destination);
+                this.AddDestination(node, this.destination);
+            }
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SetDestinations.java:88-98
+        // Original: @Override public void outAJumpToSubroutine(AJumpToSubroutine node) { ... if (this.destination == null) { throw new RuntimeException(...); } else { ... } }
         public override void OutAJumpToSubroutine(AJumpToSubroutine node)
         {
             int pos = NodeUtils.GetJumpDestinationPos(node);
             this.LookForPos(pos, false);
             if (this.destination == null)
             {
-                throw new Exception("wasn't able to find dest for " + node + " at pos " + pos);
+                throw new Exception("wasn't able to find dest for " + node + " at pos " + Integer.ToString(pos));
             }
-
-            this.nodedata.SetDestination(node, this.destination);
-            this.AddDestination(node, this.destination);
+            else
+            {
+                this.nodedata.SetDestination(node, this.destination);
+                this.AddDestination(node, this.destination);
+            }
         }
 
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SetDestinations.java:100-108

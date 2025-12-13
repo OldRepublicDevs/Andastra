@@ -99,9 +99,15 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             this.state = 0;
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SetDeadCode.java:101-113
+        // Original: @Override public void outACopyTopSpCommand(ACopyTopSpCommand node) { if (this.state != 0 && this.state != 2) { this.state = 0; } else { ... } }
         public override void OutACopyTopSpCommand(ACopyTopSpCommand node)
         {
-            if (this.state == 0 || this.state == 2)
+            if (this.state != 0 && this.state != 2)
+            {
+                this.state = 0;
+            }
+            else
             {
                 int copy = NodeUtils.StackSizeToPos(node.GetSize());
                 int loc = NodeUtils.StackOffsetToPos(node.GetOffset());
@@ -113,10 +119,6 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
                 {
                     this.state = 0;
                 }
-            }
-            else
-            {
-                this.state = 0;
             }
         }
 
