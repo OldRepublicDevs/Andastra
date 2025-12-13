@@ -198,15 +198,13 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Stack
             throw new Exception("Stackpos was greater than stack size");
         }
 
-        // Handle edge case: empty struct
-        // Handle edge case: stackpos beyond struct bounds - return last element
-        // This can happen with certain bytecode patterns
-        // Return the last variable element as fallback
-        // Fallback: return first element if we couldn't find exact match
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/stack/VarStruct.java:153-190
+        // Original: public VarStruct structify(int firstelement, int count, SubroutineAnalysisData subdata) { ListIterator<Variable> it = this.vars.listIterator(); int pos = 0; while (it.hasNext()) { StackEntry entry = (StackEntry)it.next(); pos += entry.size(); if (pos == firstelement) { VarStruct varstruct = new VarStruct(); varstruct.addVarStackOrder((Variable)entry); it.set(varstruct); entry = (StackEntry)it.next(); for (int var8 = pos + entry.size(); var8 <= firstelement + count - 1; var8 += entry.size()) { it.remove(); varstruct.addVarStackOrder((Variable)entry); if (!it.hasNext()) { break; } entry = (StackEntry)it.next(); } subdata.addStruct(varstruct); return varstruct; } if (pos == firstelement + count - 1) { return (VarStruct)entry; } if (pos > firstelement + count - 1) { return ((VarStruct)entry).structify(firstelement - (pos - entry.size()), count, subdata); } } return null; }
         public virtual VarStruct Structify(int firstelement, int count, SubroutineAnalysisData subdata)
         {
             ListIterator it = this.vars.ListIterator();
             int pos = 0;
+
             while (it.HasNext())
             {
                 StackEntry entry = (StackEntry)it.Next();
@@ -216,7 +214,9 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Stack
                     VarStruct varstruct = new VarStruct();
                     varstruct.AddVarStackOrder((Variable)entry);
                     it.Set(varstruct);
-                    for (entry = (StackEntry)it.Next(), pos += entry.Size(); pos <= firstelement + count - 1; pos += entry.Size())
+                    entry = (StackEntry)it.Next();
+
+                    for (int var8 = pos + entry.Size(); var8 <= firstelement + count - 1; var8 += entry.Size())
                     {
                         it.Remove();
                         varstruct.AddVarStackOrder((Variable)entry);
