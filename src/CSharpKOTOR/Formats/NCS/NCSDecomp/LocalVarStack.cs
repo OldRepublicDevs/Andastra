@@ -37,6 +37,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Stack
             base.Close();
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/stack/LocalVarStack.java:33-43
+        // Original: public void doneParse() { if (this.stack != null) { ListIterator<StackEntry> it = this.stack.listIterator(); while (it.hasNext()) { it.next().doneParse(); } this.stack = null; } }
         public virtual void DoneParse()
         {
             if (this.stack != null)
@@ -55,6 +57,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Stack
             this.stack = null;
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/stack/LocalVarStack.java:45-54
+        // Original: public void doneWithStack() { if (this.stack != null) { ListIterator<StackEntry> it = this.stack.listIterator(); while (it.hasNext()) { it.next().doneWithStack(this); } this.stack = null; } }
         public virtual void DoneWithStack()
         {
             if (this.stack != null)
@@ -72,6 +76,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Stack
             }
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/stack/LocalVarStack.java:56-67
+        // Original: @Override public int size() { int size = 0; ListIterator<StackEntry> it = this.stack.listIterator(); while (it.hasNext()) { size += it.next().size(); } return size; }
         public override int Size()
         {
             int size = 0;
