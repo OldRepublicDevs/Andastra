@@ -39,6 +39,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             this.globalstructs = new List<object>();
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SubroutineAnalysisData.java:43-60
+        // Original: public void parseDone() { this.nodedata = null; if (this.substates != null) { Enumeration<SubroutineState> subs = this.substates.elements(); while (subs.hasMoreElements()) { subs.nextElement().parseDone(); } subs = null; this.substates = null; } this.subroutines = null; this.mainsub = null; this.globalsub = null; this.globalstate = null; }
         public void ParseDone()
         {
             this.nodedata = null;
