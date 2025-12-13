@@ -32,18 +32,25 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
         {
             try
             {
-                using (SHA256 sha256 = SHA256.Create())
+                using (SHA256 digest = SHA256.Create())
                 {
-                    using (FileStream fs = new FileStream(file.GetAbsolutePath(), FileMode.Open, FileAccess.Read))
+                    using (FileInputStream fis = new FileInputStream(file))
                     {
-                        byte[] hashBytes = sha256.ComputeHash(fs);
-                        return BytesToHex(hashBytes).ToUpperInvariant();
+                        byte[] buffer = new byte[8192];
+                        int bytesRead;
+                        while ((bytesRead = fis.Read(buffer, 0, buffer.Length)) > 0)
+                        {
+                            digest.TransformBlock(buffer, 0, bytesRead, null, 0);
+                        }
+                        digest.TransformFinalBlock(new byte[0], 0, 0);
                     }
+                    byte[] hashBytes = digest.Hash;
+                    return BytesToHex(hashBytes).ToUpperInvariant();
                 }
             }
             catch (Exception e)
             {
-                throw new IOException("SHA-256 calculation failed: " + e.Message);
+                throw new IOException("SHA-256 calculation failed: " + e.Message, e);
             }
         }
 
@@ -59,7 +66,12 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             StringBuilder hexString = new StringBuilder(2 * bytes.Length);
             foreach (byte b in bytes)
             {
-                hexString.Append(b.ToString("x2"));
+                string hex = Convert.ToString(0xff & b, 16);
+                if (hex.Length == 1)
+                {
+                    hexString.Append('0');
+                }
+                hexString.Append(hex);
             }
             return hexString.ToString();
         }
