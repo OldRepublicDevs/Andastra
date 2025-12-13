@@ -7,6 +7,7 @@ using System.Text;
 using CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptnode;
 using CSharpKOTOR.Formats.NCS.NCSDecomp.Stack;
 using CSharpKOTOR.Formats.NCS.NCSDecomp.Utils;
+using ScriptnodeScriptNode = CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptnode.ScriptNode;
 namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
 {
     public class CleanupPass
@@ -46,14 +47,14 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
                 if (this.root.Size() == 1 && typeof(ACodeBlock).IsInstanceOfType(this.root.GetLastChild()))
                 {
                     ACodeBlock block = (ACodeBlock)this.root.RemoveLastChild();
-                    List<ScriptNode> children = block.RemoveChildren();
+                    List<ScriptnodeScriptNode> children = block.RemoveChildren();
                     this.root.AddChildren(children);
                 }
             }
             finally
             {
                 ACodeBlock block = null;
-                List<ScriptNode> children = null;
+                List<ScriptnodeScriptNode> children = null;
             }
         }
 
@@ -63,18 +64,18 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
         {
             try
             {
-                List<ScriptNode> children = rootnode.GetChildren();
+                List<ScriptnodeScriptNode> children = rootnode.GetChildren();
                 ListIterator it = children.ListIterator();
 
                 while (it.HasNext())
                 {
-                    ScriptNode node1 = (ScriptNode)it.Next();
+                    ScriptnodeScriptNode node1 = (ScriptnodeScriptNode)it.Next();
                     if (typeof(AVarDecl).IsInstanceOfType(node1))
                     {
                         AVarDecl decl = (AVarDecl)node1;
                         if (decl.Exp() == null && it.HasNext())
                         {
-                            ScriptNode maybeAssign = (ScriptNode)it.Next();
+                            ScriptnodeScriptNode maybeAssign = (ScriptnodeScriptNode)it.Next();
                             if (typeof(AExpressionStatement).IsInstanceOfType(maybeAssign)
                                 && typeof(AModifyExp).IsInstanceOfType(((AExpressionStatement)maybeAssign).Exp()))
                             {
@@ -104,7 +105,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
                             AVarDecl structdecx = new AVarDecl(structx);
                             if (it.HasNext())
                             {
-                                node1 = (ScriptNode)it.Next();
+                                node1 = (ScriptnodeScriptNode)it.Next();
                             }
                             else
                             {
@@ -117,7 +118,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
                                 node1.Parent(null);
                                 if (it.HasNext())
                                 {
-                                    node1 = (ScriptNode)it.Next();
+                                    node1 = (ScriptnodeScriptNode)it.Next();
                                 }
                                 else
                                 {
@@ -131,7 +132,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
                                 it.Previous();
                             }
 
-                            node1 = (ScriptNode)it.Next();
+                            node1 = (ScriptnodeScriptNode)it.Next();
                             structdecx.Parent(node1.Parent());
                             it.Set(structdecx);
                             node1 = structdecx;
@@ -164,13 +165,13 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
             }
             finally
             {
-                List<ScriptNode> children = null;
+                List<ScriptnodeScriptNode> children = null;
                 ListIterator it = null;
-                ScriptNode node1x = null;
+                ScriptnodeScriptNode node1x = null;
                 Variable var = null;
                 VarStruct structx = null;
                 AVarDecl structdecx = null;
-                ScriptNode node2 = null;
+                ScriptnodeScriptNode node2 = null;
                 AModifyExp modexp = null;
                 AExpressionStatement expstm = null;
                 ASwitchCase acase = null;
