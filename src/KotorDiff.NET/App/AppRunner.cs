@@ -2,6 +2,11 @@
 // Original: def run_application(config: KotorDiffConfig) -> int: ...
 using System;
 using System.IO;
+using System.Linq;
+using CSharpKOTOR.Mods;
+using KotorDiff.NET.Diff;
+using KotorDiff.NET.Generator;
+using KotorDiff.NET.Logger;
 
 namespace KotorDiff.NET.App
 {
@@ -48,8 +53,9 @@ namespace KotorDiff.NET.App
             }
             catch (Exception e)
             {
-                Console.WriteLine($"KeyboardInterrupt - KotorDiff was cancelled: {e.Message}");
-                throw;
+                Console.WriteLine($"Error - KotorDiff was cancelled: {e.Message}");
+                Console.WriteLine(e.StackTrace);
+                return 1;
             }
         }
 
@@ -77,13 +83,102 @@ namespace KotorDiff.NET.App
             Console.WriteLine($"Using --use-profiler={config.UseProfiler}");
         }
 
-        // Matching PyKotor implementation at vendor/PyKotor/Tools/KotorDiff/src/kotordiff/app.py:258-268
-        // Original: def _execute_diff(config: KotorDiffConfig) -> tuple[bool | None, int | None]: ...
+        // Matching PyKotor implementation at vendor/PyKotor/Tools/KotorDiff/src/kotordiff/app.py:417-527
+        // Original: def handle_diff(config: KotorDiffConfig) -> tuple[bool | None, int | None]: ...
         private static bool? ExecuteDiff(KotorDiffConfig config)
         {
-            // TODO: Implement diff execution
-            Console.WriteLine("[Warning] Diff execution not yet implemented");
-            return null;
+            // Create modifications collection for INI generation
+            var modificationsByType = ModificationsByType.CreateEmpty();
+            GlobalConfig.Instance.ModificationsByType = modificationsByType;
+
+            // Use paths from config
+            var allPaths = config.Paths;
+
+            // Create incremental writer if requested
+            // TODO: Implement IncrementalTSLPatchDataWriter
+            if (config.TslPatchDataPath != null && config.UseIncrementalWriter)
+            {
+                Console.WriteLine("[Warning] Incremental writer not yet implemented");
+            }
+
+            // Run the diff
+            Action<string> logFunc = Console.WriteLine;
+            bool? comparison = DiffEngine.RunDifferFromArgsImpl(
+                allPaths,
+                filters: config.Filters,
+                logFunc: logFunc,
+                compareHashes: config.CompareHashes,
+                modificationsByType: modificationsByType);
+
+            // Finalize TSLPatcher data if requested
+            if (config.TslPatchDataPath != null && !config.UseIncrementalWriter)
+            {
+                try
+                {
+                    GenerateTslPatcherData(
+                        config.TslPatchDataPath,
+                        config.IniFilename,
+                        modificationsByType,
+                        baseDataPath: null); // TODO: Determine base path from paths
+                }
+                catch (Exception genError)
+                {
+                    Console.WriteLine($"[Error] Failed to generate TSLPatcher data: {genError.GetType().Name}: {genError.Message}");
+                    Console.WriteLine("Full traceback:");
+                    Console.WriteLine(genError.StackTrace);
+                    return null;
+                }
+            }
+
+            return comparison;
+        }
+
+        // Matching PyKotor implementation at vendor/PyKotor/Tools/KotorDiff/src/kotordiff/app.py:292-374
+        // Original: def generate_tslpatcher_data(...): ...
+        private static void GenerateTslPatcherData(
+            DirectoryInfo tslpatchdataPath,
+            string iniFilename,
+            ModificationsByType modifications,
+            DirectoryInfo baseDataPath = null)
+        {
+            Console.WriteLine($"\nGenerating TSLPatcher data at: {tslpatchdataPath}");
+
+            // Create the generator
+            var generator = new TSLPatchDataGenerator(tslpatchdataPath);
+
+            // Generate all resource files
+            var generatedFiles = generator.GenerateAllFiles(modifications, baseDataPath);
+
+            if (generatedFiles.Count > 0)
+            {
+                Console.WriteLine($"Generated {generatedFiles.Count} resource file(s):");
+                foreach (var filename in generatedFiles.Keys)
+                {
+                    Console.WriteLine($"  - {filename}");
+                }
+            }
+
+            // Update install folders based on generated files and modifications
+            modifications.Install = InstallFolderDeterminer.DetermineInstallFolders(modifications);
+
+            // Generate changes.ini
+            var iniPath = new FileInfo(Path.Combine(tslpatchdataPath.FullName, iniFilename));
+            Console.WriteLine($"\nGenerating {iniFilename} at: {iniPath}");
+
+            // TODO: Implement INI serialization
+            // This should use TSLPatcherINISerializer from CSharpKOTOR (when ported)
+            Console.WriteLine("[Warning] INI serialization not yet implemented");
+
+            // Summary
+            Console.WriteLine("\nTSLPatcher data generation complete:");
+            Console.WriteLine($"  Location: {tslpatchdataPath}");
+            Console.WriteLine($"  INI file: {iniFilename}");
+            Console.WriteLine($"  TLK modifications: {modifications.Tlk?.Count ?? 0}");
+            Console.WriteLine($"  2DA modifications: {modifications.Twoda?.Count ?? 0}");
+            Console.WriteLine($"  GFF modifications: {modifications.Gff?.Count ?? 0}");
+            Console.WriteLine($"  SSF modifications: {modifications.Ssf?.Count ?? 0}");
+            Console.WriteLine($"  NCS modifications: {modifications.Ncs?.Count ?? 0}");
+            Console.WriteLine($"  Install folders: {modifications.Install?.Count ?? 0}");
         }
 
         // Matching PyKotor implementation at vendor/PyKotor/Tools/KotorDiff/src/kotordiff/app.py:271-289

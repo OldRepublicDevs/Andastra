@@ -13,8 +13,7 @@ namespace KotorDiff.NET.App
         public FileInfo OutputLog { get; set; }
         public bool? LoggingEnabled { get; set; }
         public KotorDiffConfig Config { get; set; }
-        // TODO: Add ModificationsByType when porting writer
-        // public ModificationsByType ModificationsByType { get; set; }
+        public CSharpKOTOR.Mods.ModificationsByType ModificationsByType { get; set; }
     }
 }
 
