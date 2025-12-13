@@ -68,33 +68,15 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
 
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/DoGlobalVars.java:67-75
         // Original: @Override public void outARsaddCommand(ARsaddCommand node) { if (!this.freezeStack) { Variable var = new Variable(NodeUtils.getType(node)); this.stack.push(var); this.state.transformRSAdd(node); var = null; } }
-        // Note: The vendor comment says "while still emitting globals code" which suggests we should emit code even when freezeStack is true.
-        // However, the vendor code only processes when !freezeStack. This suggests RSADD commands come before BP in practice.
-        // But if RSADD commands come after BP, they won't be processed, causing globals to be missing.
-        // To match the comment's intent, we should always process RSADD commands for globals, but only mutate the stack when !freezeStack.
         public override void OutARsaddCommand(ARsaddCommand node)
         {
-            // Always process RSADD commands for globals, even when freezeStack is true
-            // This matches the comment "while still emitting globals code"
-            Variable var = new Variable(NodeUtils.GetType(node));
             if (!this.freezeStack)
             {
+                Variable var = new Variable(NodeUtils.GetType(node));
                 this.stack.Push(var);
+                this.state.TransformRSAdd(node);
+                var = null;
             }
-            else
-            {
-                // If freezeStack is true, we still need to emit the variable declaration
-                // But we can't mutate the stack. However, TransformRSAdd reads from stack position 1,
-                // so we need to temporarily push a dummy variable, call TransformRSAdd, then remove it.
-                this.stack.Push(var);
-            }
-            this.state.TransformRSAdd(node);
-            // If freezeStack is true, remove the dummy variable we just pushed
-            if (this.freezeStack)
-            {
-                this.stack.Remove();
-            }
-            var = null;
         }
 
         // Override CaseARsaddCmd to ensure RSADD commands from NcsToAstConverter are visited

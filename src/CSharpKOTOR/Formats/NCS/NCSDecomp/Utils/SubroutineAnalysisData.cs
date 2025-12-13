@@ -509,14 +509,14 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             while (subroutines.Count > 0)
             {
                 node = (ASubroutine)subroutines.RemoveFirst();
-                int pos = this.nodedata.GetPos(node);
+                int pos = this.nodedata.TryGetPos(node);
                 // If the subroutine doesn't have a position set, get it from the first command
                 if (pos < 0)
                 {
                     Node firstCmd = NodeUtils.GetCommandChild(node);
                     if (firstCmd != null)
                     {
-                        pos = this.nodedata.GetPos(firstCmd);
+                        pos = this.nodedata.TryGetPos(firstCmd);
                     }
                 }
                 // Matching NCSDecomp implementation: position 0 is the main, so subroutines must have pos > 0

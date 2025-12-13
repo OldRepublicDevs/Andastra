@@ -65,6 +65,21 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             }
         }
 
+        // Helper method to safely get position without throwing exception
+        // Returns -1 if node is not in hashtable
+        public virtual int TryGetPos(Node node)
+        {
+            object existing;
+            if (!this.nodedatahash.TryGetValue(node, out existing))
+            {
+                return -1;
+            }
+            else
+            {
+                return ((NodeData)existing).pos;
+            }
+        }
+
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/NodeAnalysisData.java:52-61
         // Original: public void setDestination(Node jump, Node destination)
         public virtual void SetDestination(Node jump, Node destination)
