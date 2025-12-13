@@ -1880,6 +1880,16 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
         {
             return this.nodedata.GetPos(this.nodedata.GetDestination(node)) - 2;
         }
+
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptutils/SubScriptState.java:1900-1919
+        // Original: private AVarRef buildPlaceholderParam(int ordinal) { Variable placeholder = new Variable(new Type((byte)-1)); placeholder.name("__unknown_param_" + ordinal); placeholder.isParam(true); return new AVarRef(placeholder); }
+        private AVarRef BuildPlaceholderParam(int ordinal)
+        {
+            Variable placeholder = new Variable(new UtilsType(unchecked((byte)(-1))));
+            placeholder.Name("__unknown_param_" + ordinal);
+            placeholder.IsParam(true);
+            return new AVarRef(placeholder);
+        }
     }
 }
 
