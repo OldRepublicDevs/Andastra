@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using CSharpKOTOR.Formats.NCS.NCSDecomp.Utils;
 using CSharpKOTOR.Formats.NCS.NCSDecomp.AST;
+using JavaSystem = CSharpKOTOR.Formats.NCS.NCSDecomp.JavaSystem;
 using UtilsType = CSharpKOTOR.Formats.NCS.NCSDecomp.Utils.Type;
 namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Stack
 {
