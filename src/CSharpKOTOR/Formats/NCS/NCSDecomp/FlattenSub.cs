@@ -55,7 +55,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
                 }
                 else
                 {
-                    ++this.i;
+                    this.i++;
                 }
             }
         }
