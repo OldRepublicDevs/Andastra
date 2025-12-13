@@ -56,7 +56,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                 }
             }
 
-            return new File(Path.Combine(folder.FullName, filename));
+            return new File(folder, filename);
         }
 
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/CompilerUtil.java:89-108

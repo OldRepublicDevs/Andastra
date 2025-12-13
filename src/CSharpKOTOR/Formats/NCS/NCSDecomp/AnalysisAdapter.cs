@@ -33,7 +33,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Analysis
         {
             if (this.@in == null)
             {
-                this.@in = new Dictionary<object, object>();
+                this.@in = new Dictionary<object, object>(1);
             }
 
             if (@in != null)
@@ -63,7 +63,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Analysis
         {
             if (this.@out == null)
             {
-                this.@out = new Dictionary<object, object>();
+                this.@out = new Dictionary<object, object>(1);
             }
 
             if (@out != null)
