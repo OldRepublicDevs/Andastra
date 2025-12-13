@@ -185,17 +185,43 @@ cd <workspace_path>/vendor/PyKotor; & "<workspace_path>/vendor/PyKotor/.venv_3.1
 
 **IMPORTANT**: Always replace `<workspace_path>` with the actual workspace root path (e.g., `G:\GitHub\HoloPatcher.NET`). All commands are chained with semicolons (`;`) to execute as a single PowerShell command.
 
-## NCS File Comparison
+## NCS/NSS File Operations
 
-When debugging bytecode mismatches, use the `Compare-NcsFiles.ps1` script:
+The `scripts` directory contains comprehensive PowerShell scripts for NCS/NSS file operations:
+
+### Compile-NssFiles.ps1
+Compiles NSS source files to NCS bytecode. Supports single files, multiple files, or recursive directory processing.
+
+```powershell
+.\scripts\Compile-NssFiles.ps1 -InputPath "script.nss" -Game "k2"
+.\scripts\Compile-NssFiles.ps1 -InputPath "C:\Scripts" -Recursive -LibraryLookup "C:\Includes"
+```
+
+### Decompile-NcsFiles.ps1
+Decompiles NCS bytecode files to NSS source code. Supports single files, multiple files, or recursive directory processing.
+
+```powershell
+.\scripts\Decompile-NcsFiles.ps1 -InputPath "script.ncs" -Game "k2"
+.\scripts\Decompile-NcsFiles.ps1 -InputPath "C:\NCS" -OutputPath "C:\Decompiled" -Recursive
+```
+
+### RoundTrip-NssFiles.ps1
+Performs comprehensive round-trip testing: NSS -> NCS -> NSS -> NCS -> Compare. Validates that compilation and decompilation produce identical bytecode.
+
+```powershell
+.\scripts\RoundTrip-NssFiles.ps1 -InputPath "script.nss" -Game "k2"
+.\scripts\RoundTrip-NssFiles.ps1 -InputPath "C:\Scripts" -Recursive -CompareMode "bytecode" -KeepIntermediate
+```
+
+### Compare-NcsFiles.ps1
+Compares two NCS files and displays their instructions side-by-side. Useful for debugging bytecode mismatches.
 
 ```powershell
 .\scripts\Compare-NcsFiles.ps1 -OriginalFile "path/to/original.ncs" -RoundTripFile "path/to/roundtrip.ncs"
+.\scripts\Compare-NcsFiles.ps1 -OriginalFile "test.ncs" -RoundTripFile "test.rt.ncs" -CompareMode "bytecode" -Detailed
 ```
 
-This displays instructions from both files side-by-side with differences highlighted. Use `-ShowOnly "original"` or `-ShowOnly "roundtrip"` to view a single file.
-
-Feel free to modify `Compare-NcsFiles.ps1` to add additional functionality as needed.
+All scripts support `-WhatIf` for dry-run testing and follow PowerShell best practices. They can process single files, multiple files, or entire directory trees recursively.
 
 ## NCSDecomp.NET - External Compiler Prohibition
 
