@@ -1,23 +1,23 @@
-//
-using System;
+// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/stack/VarStruct.java:18-256
+// Original: public class VarStruct extends Variable
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
-using System.Text;
 using CSharpKOTOR.Formats.NCS.NCSDecomp.Utils;
 using NCSDecompLinkedList = CSharpKOTOR.Formats.NCS.NCSDecomp.LinkedList;
 using UtilsType = CSharpKOTOR.Formats.NCS.NCSDecomp.Utils.Type;
 namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Stack
 {
-    // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/stack/VarStruct.java:18-26
-    // Original: public class VarStruct extends Variable
     public class VarStruct : Variable
     {
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/stack/VarStruct.java:19
         // Original: protected LinkedList<Variable> vars = new LinkedList<>();
         // Note: C# LinkedList is not generic, so we use the non-generic version
         protected LinkedList vars = new LinkedList();
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/stack/VarStruct.java:20
+        // Original: protected StructType structtype;
         protected StructType structtype;
+
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/stack/VarStruct.java:22-26
+        // Original: public VarStruct() { super(new Type((byte)-15)); this.size = 0; this.structtype = new StructType(); }
         public VarStruct() : base(new UtilsType(unchecked((byte)(-15))))
         {
             this.size = 0;

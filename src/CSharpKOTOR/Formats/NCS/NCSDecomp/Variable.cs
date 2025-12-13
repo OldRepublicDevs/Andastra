@@ -1,9 +1,6 @@
-//
-using System;
+// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/stack/Variable.java:14-294
+// Original: public class Variable extends StackEntry implements Comparable<Variable>
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
-using System.Text;
 using CSharpKOTOR.Formats.NCS.NCSDecomp.Utils;
 using Comparable = System.IComparable;
 using UtilsType = CSharpKOTOR.Formats.NCS.NCSDecomp.Utils.Type;
@@ -11,14 +8,21 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Stack
 {
     public class Variable : StackEntry, Comparable
     {
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/stack/Variable.java:15-17
+        // Original: protected static final byte FCN_NORMAL = 0; protected static final byte FCN_RETURN = 1; protected static final byte FCN_PARAM = 2;
         protected static readonly byte FCN_NORMAL = 0;
         protected static readonly byte FCN_RETURN = 1;
         protected static readonly byte FCN_PARAM = 2;
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/stack/Variable.java:18-22
+        // Original: private Hashtable<LocalStack<?>, Integer> stackcounts; protected String name; protected boolean assigned; protected VarStruct varstruct; protected byte function;
         private Dictionary<object, object> stackcounts;
         protected string name;
         protected bool assigned;
         protected VarStruct varstruct;
         protected byte function;
+
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/stack/Variable.java:24-31
+        // Original: public Variable(Type type) { this.type = type; this.varstruct = null; this.assigned = false; this.size = 1; this.function = 0; this.stackcounts = new Hashtable<>(1); }
         public Variable(UtilsType type)
         {
             this.type = type;

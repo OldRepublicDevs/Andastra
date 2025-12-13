@@ -1,9 +1,5 @@
-//
-using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
-using System.Text;
+// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SubroutinePathFinder.java:37-343
+// Original: public class SubroutinePathFinder extends PrunedDepthFirstAdapter
 using CSharpKOTOR.Formats.NCS.NCSDecomp;
 using CSharpKOTOR.Formats.NCS.NCSDecomp.Analysis;
 using CSharpKOTOR.Formats.NCS.NCSDecomp.AST;
@@ -12,6 +8,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
 {
     public class SubroutinePathFinder : PrunedDepthFirstAdapter
     {
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SubroutinePathFinder.java:38-46
+        // Original: private NodeAnalysisData nodedata; private SubroutineAnalysisData subdata; private SubroutineState state; private boolean pathfailed; private boolean forcejump; private Hashtable<Integer, Integer> destinationcommands; private boolean limitretries; private int maxretry; private int retry;
         private NodeAnalysisData nodedata;
         private SubroutineAnalysisData subdata;
         private SubroutineState state;
@@ -21,6 +19,9 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
         private bool limitretries;
         private int maxretry;
         private int retry;
+
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SubroutinePathFinder.java:48-67
+        // Original: public SubroutinePathFinder(SubroutineState state, NodeAnalysisData nodedata, SubroutineAnalysisData subdata, int pass) { ... }
         public SubroutinePathFinder(SubroutineState state, NodeAnalysisData nodedata, SubroutineAnalysisData subdata, int pass)
         {
             this.nodedata = nodedata;
