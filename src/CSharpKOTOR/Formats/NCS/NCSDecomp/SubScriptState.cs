@@ -704,6 +704,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
                         }
                     }
                 }
+                }
             }
 
             this.CheckEnd(node);
@@ -1217,6 +1218,65 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
             }
 
             return earliestdec;
+        }
+
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptutils/SubScriptState.java:1294-1337
+        // Original: private boolean isAtIfEnd(Node node) { ... }
+        /**
+         * Checks if the current node position is at the end of any enclosing AIf.
+         * This is used to detect "skip else" jumps that should not be treated as returns.
+         */
+        private bool IsAtIfEnd(Node node)
+        {
+            int nodePos = this.nodedata.GetPos(node);
+
+            // Debug output
+            JavaSystem.@err.Println("DEBUG isAtIfEnd: nodePos=" + nodePos + ", current=" + this.current.GetType().Name + ", currentEnd=" + this.current.GetEnd());
+
+            // Check if current is an AIf and we're at its end
+            if (typeof(AIf).IsInstanceOfType(this.current) && nodePos == this.current.GetEnd())
+            {
+                JavaSystem.@err.Println("DEBUG isAtIfEnd: returning true (current is AIf)");
+                return true;
+            }
+
+            // Check if we're inside a switch case and the enclosing if ends here
+            if (typeof(ASwitchCase).IsInstanceOfType(this.current))
+            {
+                ScriptNode.ScriptNode switchNode = this.current.Parent();
+                JavaSystem.@err.Println("DEBUG isAtIfEnd: in switch case, switchNode=" + (switchNode != null ? switchNode.GetType().Name : "null"));
+                if (typeof(ScriptNode.ASwitch).IsInstanceOfType(switchNode))
+                {
+                    ScriptNode.ScriptNode switchParent = switchNode.Parent();
+                    JavaSystem.@err.Println("DEBUG isAtIfEnd: switchParent=" + (switchParent != null ? switchParent.GetType().Name : "null"));
+                    if (typeof(AIf).IsInstanceOfType(switchParent) && switchParent is ScriptRootNode)
+                    {
+                        int parentEnd = ((ScriptRootNode)switchParent).GetEnd();
+                        JavaSystem.@err.Println("DEBUG isAtIfEnd: parentEnd=" + parentEnd);
+                        if (nodePos == parentEnd)
+                        {
+                            JavaSystem.@err.Println("DEBUG isAtIfEnd: returning true (switch in AIf)");
+                            return true;
+                        }
+                    }
+                }
+            }
+
+            // Walk up the parent chain to find any enclosing AIf at whose end we are
+            ScriptRootNode curr = this.current;
+            while (curr != null && !typeof(ScriptNode.ASub).IsInstanceOfType(curr))
+            {
+                if (typeof(AIf).IsInstanceOfType(curr) && nodePos == curr.GetEnd())
+                {
+                    JavaSystem.@err.Println("DEBUG isAtIfEnd: returning true (found AIf in parent chain)");
+                    return true;
+                }
+                ScriptNode.ScriptNode parent = curr.Parent();
+                curr = parent is ScriptRootNode ? (ScriptRootNode)parent : null;
+            }
+
+            JavaSystem.@err.Println("DEBUG isAtIfEnd: returning false");
+            return false;
         }
 
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptutils/SubScriptState.java:1418-1465
