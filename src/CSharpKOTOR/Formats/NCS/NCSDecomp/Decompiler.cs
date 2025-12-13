@@ -37,6 +37,20 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
         public const string GitHubUrl = "https://github.com/bolabaden";
         public const string SponsorUrl = "https://github.com/sponsors/th3w1zard1";
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/Decompiler.java:124-129
+        // Original: private enum LogSeverity { TRACE, DEBUG, INFO, WARNING, ERROR }
+        /// <summary>
+        /// Log severity levels for UI log filtering.
+        /// </summary>
+        public enum LogSeverity
+        {
+            TRACE,
+            DEBUG,
+            INFO,
+            WARNING,
+            ERROR
+        }
+
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/Decompiler.java:150-175
         // Original: static { settings.load(); String outputDir = settings.getProperty("Output Directory"); ... }
         static Decompiler()
