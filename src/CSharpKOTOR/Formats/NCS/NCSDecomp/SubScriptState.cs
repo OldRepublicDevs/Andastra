@@ -783,50 +783,40 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
             AFcnCallExp jsr = new AFcnCallExp(this.GetFcnId(node), @params);
             if (!this.GetFcnType(node).Equals((byte)0))
             {
-                ScriptNode.ScriptNode lastChild = this.current.GetLastChild();
-                if (typeof(AVarDecl).IsInstanceOfType(lastChild))
+                // Ensure there's a decl to attach; if none, create a placeholder
+                Variable retVar = this.stack.Size() >= 1 ? (Variable)this.stack.Get(1) : new Variable(new UtilsType((byte)0));
+                AVarDecl decl;
+                // Check if variable is already declared to prevent duplicates
+                decl = (AVarDecl)this.vardecs.Get(retVar);
+                if (decl == null)
                 {
-                    ((AVarDecl)lastChild).SetIsFcnReturn(true);
-                    ((AVarDecl)lastChild).InitializeExp(jsr);
-                    jsr.Stackentry(this.stack.Get(1));
+                    // Also check if last child is a matching AVarDecl
+                    if (this.current.HasChildren() && typeof(AVarDecl).IsInstanceOfType(this.current.GetLastChild()))
+                    {
+                        AVarDecl lastDecl = (AVarDecl)this.current.GetLastChild();
+                        if (lastDecl.GetVarVar() == retVar)
+                        {
+                            decl = lastDecl;
+                            this.vardecs.Put(retVar, decl);
+                        }
+                    }
+                    if (decl == null)
+                    {
+                        decl = new AVarDecl(retVar);
+                        this.UpdateVarCount(retVar);
+                        this.current.AddChild(decl);
+                        this.vardecs.Put(retVar, decl);
+                    }
                 }
-                else if (typeof(ScriptNode.AVarRef).IsInstanceOfType(lastChild))
-                {
-
-                    // Handle case where last child is a variable reference instead of declaration
-                    // Create a new variable declaration to hold the function return value
-                    Variable var = (Variable)this.stack.Get(1);
-                    AVarDecl vardec = new AVarDecl(var);
-                    vardec.SetIsFcnReturn(true);
-                    vardec.InitializeExp(jsr);
-                    jsr.Stackentry(var);
-                    this.UpdateVarCount(var);
-
-                    // Replace the var ref with the var decl
-                    this.current.RemoveLastChild();
-                    this.current.AddChild(vardec);
-                    this.vardecs.Put(var, vardec);
-                }
-                else
-                {
-
-                    // Fallback: add the function call as a new declaration
-                    Variable var = (Variable)this.stack.Get(1);
-                    AVarDecl vardec = new AVarDecl(var);
-                    vardec.SetIsFcnReturn(true);
-                    vardec.InitializeExp(jsr);
-                    jsr.Stackentry(var);
-                    this.UpdateVarCount(var);
-                    this.current.AddChild(vardec);
-                    this.vardecs.Put(var, vardec);
-                }
+                decl.SetIsFcnReturn(true);
+                decl.InitializeExp(jsr);
+                jsr.Stackentry(retVar);
             }
             else
             {
                 this.current.AddChild(jsr);
             }
 
-            jsr = null;
             this.CheckEnd(node);
         }
 
@@ -1959,15 +1949,28 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
             return @params;
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptutils/SubScriptState.java:1870-1890
+        // Original: private List<AExpression> removeFcnParams(AJumpToSubroutine node) { ... try { exp = this.removeLastExp(false); } catch (RuntimeException e) { exp = this.buildPlaceholderParam(i + 1); } ... }
         private List<object> RemoveFcnParams(AJumpToSubroutine node)
         {
             List<object> @params = new List<object>();
             int paramcount = this.subdata.GetState(this.nodedata.GetDestination(node)).GetParamCount();
             int i = 0;
+
             while (i < paramcount)
             {
-                ScriptNode.AExpression exp = this.RemoveLastExp(false);
-                i += this.GetExpSize(exp);
+                ScriptNode.AExpression exp;
+                try
+                {
+                    exp = this.RemoveLastExp(false);
+                }
+                catch (Exception)
+                {
+                    exp = this.BuildPlaceholderParam(i + 1);
+                }
+
+                int expSize = this.GetExpSize(exp);
+                i += expSize <= 0 ? 1 : expSize;
                 @params.Add(exp);
             }
 
