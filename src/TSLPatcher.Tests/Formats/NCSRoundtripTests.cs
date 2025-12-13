@@ -458,7 +458,7 @@ namespace CSharpKOTOR.Tests.Formats
         /// ===========================================
         /// Step 1: NSS -> NCS using EXTERNAL nwnnsscomp.exe compiler from ./tools (RunExternalCompiler)
         /// Step 2: NCS -> NSS using INBUILT .NET decompiler (RunDecompile)
-        /// Step 3: NSS -> NCS using INBUILT .NET compiler in ./tools (RunInbuiltCompiler)
+        /// Step 3: NSS -> NCS using INBUILT .NET compiler (RunInbuiltCompiler - uses NCSAuto.CompileNss)
         /// Step 4: Compare bytecode from Step 1 vs Step 3 - PRIMARY PRIORITY (fast-fails on mismatch, shows FULL pcode diff in UDIFF)
         /// Step 5: Compare original NSS vs roundtrip NSS (text comparison) - SECONDARY PRIORITY (warns only, shows UDIFF)
         ///
