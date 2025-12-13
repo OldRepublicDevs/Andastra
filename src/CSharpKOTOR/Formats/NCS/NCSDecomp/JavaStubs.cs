@@ -92,6 +92,27 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
         public bool IsDirectory() { return _fileInfo.Attributes.HasFlag(System.IO.FileAttributes.Directory); }
         public void Delete() { _fileInfo.Delete(); }
         public bool Exists() { return _fileInfo.Exists; }
+        public bool Create()
+        {
+            try
+            {
+                if (!_fileInfo.Exists)
+                {
+                    System.IO.File.Create(_fileInfo.FullName).Close();
+                    _fileInfo.Refresh();
+                    return true;
+                }
+                return false;
+            }
+            catch (System.IO.IOException)
+            {
+                throw;
+            }
+            catch (System.Exception ex)
+            {
+                throw new IOException(ex.Message, ex);
+            }
+        }
         public File GetAbsoluteFile() { return new File(_fileInfo.FullName); }
         public File GetParentFile()
         {

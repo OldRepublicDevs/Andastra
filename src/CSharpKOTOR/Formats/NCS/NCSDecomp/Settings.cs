@@ -38,45 +38,26 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
 
             try
             {
-                if (System.IO.File.Exists(configToLoad))
+                using (var fis = new FileInputStream(configToLoad))
                 {
-                    using (var fis = new FileInputStream(configToLoad))
-                    {
-                        base.Load(fis);
-                    }
-                }
-                else
-                {
-                    try
-                    {
-                        if (!Directory.Exists(configDir))
-                        {
-                            Directory.CreateDirectory(configDir);
-                        }
-                        System.IO.File.Create(configFile).Close();
-                    }
-                    catch (Exception)
-                    {
-                        // Ignore
-                    }
-                    Reset();
-                    Save();
+                    base.Load(fis);
                 }
             }
             catch (Exception ex)
             {
-                ex.PrintStackTrace();
                 try
                 {
-                    if (!Directory.Exists(configDir))
-                    {
-                        Directory.CreateDirectory(configDir);
-                    }
-                    System.IO.File.Create(configFile).Close();
+                    new File(ConfigFileName).Create();
                 }
-                catch (Exception)
+                catch (FileNotFoundException var2)
                 {
-                    // Ignore
+                    var2.PrintStackTrace();
+                    JavaSystem.Exit(1);
+                }
+                catch (IOException var3)
+                {
+                    var3.PrintStackTrace();
+                    JavaSystem.Exit(1);
                 }
                 Reset();
                 Save();

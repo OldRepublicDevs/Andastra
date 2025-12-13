@@ -29,20 +29,20 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             (Decompiler.settings = new Settings()).Load();
             string outputDir = Decompiler.settings.GetProperty("Output Directory");
             // If output directory is not set or empty, use default: ./ncsdecomp_converted
-            if (string.IsNullOrEmpty(outputDir) || !Directory.Exists(outputDir))
+            if (outputDir == null || outputDir.Equals("") || !new File(outputDir).IsDirectory())
             {
-                string defaultOutputDir = Path.Combine(JavaSystem.GetProperty("user.dir"), "ncsdecomp_converted");
+                string defaultOutputDir = new File(new File(JavaSystem.GetProperty("user.dir")), "ncsdecomp_converted").GetAbsolutePath();
                 // If default doesn't exist, try to create it, otherwise prompt user
-                if (!Directory.Exists(defaultOutputDir))
+                File defaultDir = new File(defaultOutputDir);
+                if (!defaultDir.Exists())
                 {
-                    try
+                    if (defaultDir.Mkdirs())
                     {
-                        Directory.CreateDirectory(defaultOutputDir);
                         Decompiler.settings.SetProperty("Output Directory", defaultOutputDir);
                     }
-                    catch
+                    else
                     {
-                        // If we can't create it, prompt user (synchronous version for compatibility)
+                        // If we can't create it, prompt user
                         Decompiler.settings.SetProperty("Output Directory", ChooseOutputDirectory());
                     }
                 }
