@@ -26,11 +26,11 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
         }
 
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/CheckIsGlobals.java:25-37
-        // Original: @Override public void caseACommandBlock(ACommandBlock node)
+        // Original: @Override public void caseACommandBlock(ACommandBlock node) { this.inACommandBlock(node); PCmd[] temp = node.getCmd().toArray(new PCmd[0]); for (int i = temp.length - 1; i >= 0; i--) { temp[i].apply(this); if (this.isGlobals) { return; } } this.outACommandBlock(node); }
         public override void CaseACommandBlock(ACommandBlock node)
         {
             this.InACommandBlock(node);
-            Object[] temp = node.GetCmd().ToArray();
+            PCmd[] temp = node.GetCmd().ToArray(new PCmd[0]);
 
             for (int i = temp.Length - 1; i >= 0; i--)
             {
