@@ -261,7 +261,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                     {
                         type = NodeUtils.GetReturnType(node, this.actions);
                     }
-                    catch (Exception e)
+                    catch (Exception)
                     {
                         // Action metadata missing or invalid - assume void return
                         type = new UtilsType((byte)0);
@@ -391,32 +391,35 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             }
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/MainPass.java:321-345
+        // Original: @Override public void outAMoveSpCommand(AMoveSpCommand node) { if (!this.skipdeadcode) { this.withRecovery(node, () -> { ... }); } else { this.state.transformDeadCode(node); } }
         public override void OutAMoveSpCommand(AMoveSpCommand node)
         {
             if (!this.skipdeadcode)
             {
-                this.state.TransformMoveSp(node);
-                this.backupstack = (LocalVarStack)this.stack.Clone();
-                int remove = NodeUtils.StackOffsetToPos(node.GetOffset());
-                List<object> entries = new List<object>();
-                int i = 0;
-                while (i < remove)
+                this.WithRecovery(node, () =>
                 {
-                    StackEntry entryLocal = this.RemoveFromStack();
-                    i += entryLocal.Size();
-                    if (entryLocal is Variable && !((Variable)entryLocal).IsPlaceholder(this.stack) && !((Variable)entryLocal).IsOnStack(this.stack))
+                    this.state.TransformMoveSp(node);
+                    this.backupstack = (LocalVarStack)this.stack.Clone();
+                    int remove = NodeUtils.StackOffsetToPos(node.GetOffset());
+                    List<object> entries = new List<object>();
+                    int i = 0;
+
+                    while (i < remove)
                     {
-                        entries.Add(entryLocal);
+                        StackEntry entry = this.RemoveFromStack();
+                        i += entry.Size();
+                        if (typeof(Variable).IsInstanceOfType(entry) && !((Variable)entry).IsPlaceholder(this.stack) && !((Variable)entry).IsOnStack(this.stack))
+                        {
+                            entries.Add(entry);
+                        }
                     }
-                }
 
-                if (entries.Count > 0 && !this.nodedata.DeadCode(node))
-                {
-                    this.state.TransformMoveSPVariablesRemoved(entries, node);
-                }
-
-                //StackEntry entry = null;
-                entries = null;
+                    if (entries.Count > 0 && !this.nodedata.DeadCode(node))
+                    {
+                        this.state.TransformMoveSPVariablesRemoved(entries, node);
+                    }
+                });
             }
             else
             {
