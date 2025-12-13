@@ -689,5 +689,156 @@ namespace CSharpKOTOR.Common
             // Nothing to dispose for memory-based writer
         }
     }
+
+    // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/stream.py:46-143
+    // Original: class BinaryWriter(RawBinaryWriter, ABC):
+    /// <summary>
+    /// Abstract binary writer that adds localized string writing capability.
+    /// </summary>
+    public abstract class BinaryWriter : RawBinaryWriter
+    {
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/stream.py:48-53
+        // Original: @abstractmethod def write_locstring(self, value: LocalizedString, *, big: bool = False): ...
+        public abstract void WriteLocString(LocalizedString value, bool big = false);
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/stream.py:56-75
+        // Original: @classmethod def to_bytearray(cls, data: bytearray | None = None) -> BinaryWriterBytearray:
+        public static BinaryWriterBytearray ToByteArray(byte[] data = null)
+        {
+            if (data != null && !(data is byte[]))
+            {
+                throw new ArgumentException("Must be byte array, not bytes or memoryview.");
+            }
+            return new BinaryWriterBytearray(data ?? new byte[0]);
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/stream.py:78-82
+        // Original: @classmethod def to_file(cls, path: str | os.PathLike) -> BinaryWriterFile:
+        public static BinaryWriterFile ToFile(string path)
+        {
+            return new BinaryWriterFile(path);
+        }
+    }
+
+    // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/stream.py:85-113
+    // Original: class BinaryWriterFile(BinaryWriter, RawBinaryWriterFile):
+    public class BinaryWriterFile : BinaryWriter
+    {
+        private readonly RawBinaryWriterFile _fileWriter;
+
+        public BinaryWriterFile(string path)
+        {
+            _fileWriter = RawBinaryWriter.ToFile(path);
+        }
+
+        public BinaryWriterFile(Stream stream, int offset = 0)
+        {
+            _fileWriter = RawBinaryWriter.ToStream(stream, offset);
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/stream.py:86-112
+        // Original: def write_locstring(self, value: LocalizedString, *, big: bool = False):
+        public override void WriteLocString(LocalizedString value, bool big = false)
+        {
+            RawBinaryWriterMemory bw = RawBinaryWriter.ToByteArray(null) as RawBinaryWriterMemory;
+            uint stringref = value.StringRef == -1 ? 0xFFFFFFFF : (uint)value.StringRef;
+            bw.WriteUInt32(stringref, big, true);
+            bw.WriteUInt32((uint)value.Count, big);
+
+            foreach ((Language language, Gender gender, string substring) in value)
+            {
+                int stringId = LocalizedString.SubstringId(language, gender);
+                bw.WriteUInt32((uint)stringId, big);
+                string encodingName = LanguageExtensions.GetEncoding(language);
+                bw.WriteString(substring, encodingName, 4);
+            }
+
+            byte[] locstringData = bw.Data();
+            _fileWriter.WriteUInt32((uint)locstringData.Length);
+            _fileWriter.WriteBytes(locstringData);
+        }
+
+        public override void Close() => _fileWriter.Close();
+        public override int Size() => _fileWriter.Size();
+        public override byte[] Data() => _fileWriter.Data();
+        public override void Clear() => _fileWriter.Clear();
+        public override void Seek(int position) => _fileWriter.Seek(position);
+        public override void End() => _fileWriter.End();
+        public override int Position() => _fileWriter.Position();
+        public override void WriteUInt8(byte value) => _fileWriter.WriteUInt8(value);
+        public override void WriteInt8(sbyte value) => _fileWriter.WriteInt8(value);
+        public override void WriteUInt16(ushort value, bool bigEndian = false) => _fileWriter.WriteUInt16(value, bigEndian);
+        public override void WriteInt16(short value, bool bigEndian = false) => _fileWriter.WriteInt16(value, bigEndian);
+        public override void WriteUInt32(uint value, bool bigEndian = false, bool maxNeg1 = false) => _fileWriter.WriteUInt32(value, bigEndian, maxNeg1);
+        public override void WriteInt32(int value, bool bigEndian = false) => _fileWriter.WriteInt32(value, bigEndian);
+        public override void WriteUInt64(ulong value, bool bigEndian = false) => _fileWriter.WriteUInt64(value, bigEndian);
+        public override void WriteInt64(long value, bool bigEndian = false) => _fileWriter.WriteInt64(value, bigEndian);
+        public override void WriteSingle(float value, bool bigEndian = false) => _fileWriter.WriteSingle(value, bigEndian);
+        public override void WriteDouble(double value, bool bigEndian = false) => _fileWriter.WriteDouble(value, bigEndian);
+        public override void WriteVector3(Vector3 value, bool bigEndian = false) => _fileWriter.WriteVector3(value, bigEndian);
+        public override void WriteVector4(Vector4 value, bool bigEndian = false) => _fileWriter.WriteVector4(value, bigEndian);
+        public override void WriteBytes(byte[] value) => _fileWriter.WriteBytes(value);
+        public override void WriteString(string value, string encoding = "windows-1252", int prefixLength = 0, int stringLength = -1, char padding = '\0', bool bigEndian = false) => _fileWriter.WriteString(value, encoding, prefixLength, stringLength, padding, bigEndian);
+        public override void WriteLocalizedString(LocalizedString value, bool bigEndian = false) => _fileWriter.WriteLocalizedString(value, bigEndian);
+        public override void Dispose() => _fileWriter.Dispose();
+    }
+
+    // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/stream.py:115-143
+    // Original: class BinaryWriterBytearray(BinaryWriter, RawBinaryWriterBytearray):
+    public class BinaryWriterBytearray : BinaryWriter
+    {
+        private readonly RawBinaryWriterMemory _memoryWriter;
+
+        public BinaryWriterBytearray(byte[] data)
+        {
+            _memoryWriter = RawBinaryWriter.ToByteArray(data) as RawBinaryWriterMemory;
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/stream.py:116-142
+        // Original: def write_locstring(self, value: LocalizedString, *, big: bool = False):
+        public override void WriteLocString(LocalizedString value, bool big = false)
+        {
+            RawBinaryWriterMemory bw = RawBinaryWriter.ToByteArray(null) as RawBinaryWriterMemory;
+            uint stringref = value.StringRef == -1 ? 0xFFFFFFFF : (uint)value.StringRef;
+            bw.WriteUInt32(stringref, big, true);
+            bw.WriteUInt32((uint)value.Count, big);
+
+            foreach ((Language language, Gender gender, string substring) in value)
+            {
+                int stringId = LocalizedString.SubstringId(language, gender);
+                bw.WriteUInt32((uint)stringId, big);
+                string encodingName = LanguageExtensions.GetEncoding(language);
+                bw.WriteString(substring, encodingName, 4, -1, '\0', false);
+            }
+
+            byte[] locstringData = bw.Data();
+            _memoryWriter.WriteUInt32((uint)locstringData.Length);
+            _memoryWriter.WriteBytes(locstringData);
+        }
+
+        public override void Close() => _memoryWriter.Close();
+        public override int Size() => _memoryWriter.Size();
+        public override byte[] Data() => _memoryWriter.Data();
+        public override void Clear() => _memoryWriter.Clear();
+        public override void Seek(int position) => _memoryWriter.Seek(position);
+        public override void End() => _memoryWriter.End();
+        public override int Position() => _memoryWriter.Position();
+        public override void WriteUInt8(byte value) => _memoryWriter.WriteUInt8(value);
+        public override void WriteInt8(sbyte value) => _memoryWriter.WriteInt8(value);
+        public override void WriteUInt16(ushort value, bool bigEndian = false) => _memoryWriter.WriteUInt16(value, bigEndian);
+        public override void WriteInt16(short value, bool bigEndian = false) => _memoryWriter.WriteInt16(value, bigEndian);
+        public override void WriteUInt32(uint value, bool bigEndian = false, bool maxNeg1 = false) => _memoryWriter.WriteUInt32(value, bigEndian, maxNeg1);
+        public override void WriteInt32(int value, bool bigEndian = false) => _memoryWriter.WriteInt32(value, bigEndian);
+        public override void WriteUInt64(ulong value, bool bigEndian = false) => _memoryWriter.WriteUInt64(value, bigEndian);
+        public override void WriteInt64(long value, bool bigEndian = false) => _memoryWriter.WriteInt64(value, bigEndian);
+        public override void WriteSingle(float value, bool bigEndian = false) => _memoryWriter.WriteSingle(value, bigEndian);
+        public override void WriteDouble(double value, bool bigEndian = false) => _memoryWriter.WriteDouble(value, bigEndian);
+        public override void WriteVector3(Vector3 value, bool bigEndian = false) => _memoryWriter.WriteVector3(value, bigEndian);
+        public override void WriteVector4(Vector4 value, bool bigEndian = false) => _memoryWriter.WriteVector4(value, bigEndian);
+        public override void WriteBytes(byte[] value) => _memoryWriter.WriteBytes(value);
+        public override void WriteString(string value, string encoding = "windows-1252", int prefixLength = 0, int stringLength = -1, char padding = '\0', bool bigEndian = false) => _memoryWriter.WriteString(value, encoding, prefixLength, stringLength, padding, bigEndian);
+        public override void WriteLocalizedString(LocalizedString value, bool bigEndian = false) => _memoryWriter.WriteLocalizedString(value, bigEndian);
+        public override void Dispose() => _memoryWriter.Dispose();
+    }
 }
 

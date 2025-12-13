@@ -35,7 +35,7 @@ namespace CSharpKOTOR.Common
         }
         public int Remaining => _size - _position;
 
-        private RawBinaryReader(Stream stream, int offset = 0, int? size = null)
+        public RawBinaryReader(Stream stream, int offset = 0, int? size = null)
         {
             _stream = stream ?? throw new ArgumentNullException(nameof(stream));
             _offset = offset;
@@ -651,6 +651,116 @@ namespace CSharpKOTOR.Common
             {
                 _stream?.Dispose();
             }
+        }
+    }
+
+    // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/stream.py:337-345
+    // Original: def get_aurora_scale(obj) -> float:
+    /// <summary>
+    /// If the scale is uniform, i.e, x=y=z, we will return the value. Else we'll return 1.
+    /// </summary>
+    public static class StreamUtils
+    {
+        public static float GetAuroraScale(Vector3 scale)
+        {
+            if (scale.X == scale.Y && scale.Y == scale.Z)
+            {
+                return scale.X;
+            }
+            return 1.0f;
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/stream.py:348-350
+        // Original: def get_aurora_rot_from_object(obj) -> list[float]:
+        public static float[] GetAuroraRotFromObject(Quaternion q)
+        {
+            // Extract axis and angle from quaternion
+            float angle = 2.0f * (float)Math.Acos(Math.Max(-1.0f, Math.Min(1.0f, q.W)));
+            float s = (float)Math.Sqrt(1.0f - q.W * q.W);
+            float x = s > 0.0001f ? q.X / s : 0.0f;
+            float y = s > 0.0001f ? q.Y / s : 0.0f;
+            float z = s > 0.0001f ? q.Z / s : 0.0f;
+            return new[] { x, y, z, angle };
+        }
+    }
+
+    // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/stream.py:19-44
+    // Original: class BinaryReader(RawBinaryReader, ABC):
+    /// <summary>
+    /// Provides easier reading of binary objects that abstracts uniformly to all different stream/data types.
+    /// </summary>
+    public abstract class BinaryReader : RawBinaryReader
+    {
+        protected BinaryReader(Stream stream, int offset = 0, int? size = null)
+            : base(stream, offset, size)
+        {
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/stream.py:22-43
+        // Original: def read_locstring(self) -> LocalizedString:
+        /// <summary>
+        /// Reads the localized string data structure from the stream.
+        /// The binary data structure that is read follows the structure found in the GFF format specification.
+        /// </summary>
+        public LocalizedString ReadLocString()
+        {
+            LocalizedString locString = LocalizedString.FromInvalid();
+            Skip(4); // total number of bytes of the localized string
+            uint stringref = ReadUInt32(false, true);
+            locString.StringRef = (int)stringref;
+            uint stringCount = ReadUInt32();
+            for (int i = 0; i < stringCount; i++)
+            {
+                uint stringId = ReadUInt32();
+                Language language;
+                Gender gender;
+                LocalizedString.SubstringPair((int)stringId, out language, out gender);
+                uint length = ReadUInt32();
+                string encodingName = LanguageExtensions.GetEncoding(language);
+                string text = ReadString((int)length, encodingName);
+                locString.SetData(language, gender, text);
+            }
+            return locString;
+        }
+
+        public static BinaryReader FromFile(string path, int offset = 0, int? size = null)
+        {
+            return new BinaryReaderFile(path, offset, size);
+        }
+
+        public static BinaryReader FromBytes(byte[] data, int offset = 0, int? size = null)
+        {
+            return new BinaryReaderMemory(data, offset, size);
+        }
+
+        public static BinaryReader FromStream(Stream stream, int offset = 0, int? size = null)
+        {
+            return new BinaryReaderStream(stream, offset, size);
+        }
+    }
+
+    internal class BinaryReaderFile : BinaryReader
+    {
+        public BinaryReaderFile(string path, int offset = 0, int? size = null)
+            : base(new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read), offset, size)
+        {
+            AutoClose = true;
+        }
+    }
+
+    internal class BinaryReaderMemory : BinaryReader
+    {
+        public BinaryReaderMemory(byte[] data, int offset = 0, int? size = null)
+            : base(new MemoryStream(data), offset, size)
+        {
+        }
+    }
+
+    internal class BinaryReaderStream : BinaryReader
+    {
+        public BinaryReaderStream(Stream stream, int offset = 0, int? size = null)
+            : base(stream, offset, size)
+        {
         }
     }
 }
