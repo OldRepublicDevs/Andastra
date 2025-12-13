@@ -16,7 +16,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptnode
         private byte id;
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/ASub.java:18
         // Original: private List<ScriptNode> params;
-        private List<ScriptNode> @params;
+        // Note: Using List<object> to handle ScriptNodeNS.AVarRef (ScriptNode namespace) vs Scriptnode.ScriptNode namespace mismatch
+        private List<object> @params;
         private string name;
         private bool ismain;
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/ASub.java:22-34
@@ -25,7 +26,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptnode
         {
             this.type = type;
             this.id = id;
-            this.@params = new List<ScriptNode>();
+            this.@params = new List<object>();
             this.tabs = "";
             for (int i = 0; i < @params.Count; i++)
             {
@@ -71,7 +72,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptnode
             StringBuilder buff = new StringBuilder();
             buff.Append(this.type + " " + this.name + "(");
             string link = "";
-            for (int i = 0; i < this.@params.Count; ++i)
+            for (int i = 0; i < this.@params.Count; i++)
             {
                 ScriptNodeNS.AVarRef param = (ScriptNodeNS.AVarRef)this.@params[i];
                 UtilsType ptype = param.Type();
@@ -120,15 +121,16 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptnode
         }
 
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/ASub.java:106-117
-        // Original: public ArrayList<Variable> getParamVars() { ... }
+        // Original: public ArrayList<Variable> getParamVars() { ArrayList<Variable> vars = new ArrayList<>(); if (this.params != null) { Iterator<ScriptNode> it = this.params.iterator(); while (it.hasNext()) { vars.add(((AVarRef)it.next()).var()); } } return vars; }
         public virtual List<Variable> GetParamVars()
         {
             List<Variable> vars = new List<Variable>();
             if (this.@params != null)
             {
-                foreach (ScriptNode param in this.@params)
+                IEnumerator<object> it = this.@params.GetEnumerator();
+                while (it.MoveNext())
                 {
-                    vars.Add(((ScriptNodeNS.AVarRef)param).Var());
+                    vars.Add(((ScriptNodeNS.AVarRef)it.Current).Var());
                 }
             }
 
@@ -140,11 +142,13 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptnode
         public override void Close()
         {
             base.Close();
+            // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/ASub.java:122-126
+            // Original: if (this.params != null) { for (ScriptNode param : this.params) { param.close(); } }
             if (this.@params != null)
             {
-                foreach (ScriptNode param in this.@params)
+                foreach (object param in this.@params)
                 {
-                    param.Close();
+                    ((ScriptNodeNS.AVarRef)param).Close();
                 }
             }
 
