@@ -38,6 +38,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
                 }
                 buff.Append(this.tabs + "else if" + cond + " {" + this.newline);
 
+                // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/AElse.java:31-33
+                // Original: for (int i = 0; i < ifChild.children.size(); i++) { buff.append(ifChild.children.get(i).toString()); }
                 for (int i = 0; i < ifChild.children.Count; i++)
                 {
                     buff.Append(ifChild.children[i].ToString());

@@ -1,3 +1,5 @@
+// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/ASwitchCase.java:11-75
+// Original: public class ASwitchCase extends ScriptRootNode
 using System.Collections.Generic;
 using System.Text;
 using CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptnode;
@@ -6,127 +8,97 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
 {
     public class ASwitchCase : ScriptRootNode
     {
-        private AConst _val;
-        private int _end;
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/ASwitchCase.java:12
+        // Original: protected AConst val;
+        protected AConst val;
 
-        public ASwitchCase(int start) : this(start, null)
-        {
-        }
-
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/ASwitchCase.java:14-17
+        // Original: public ASwitchCase(int start, AConst val) { super(start, -1); this.val(val); }
         public ASwitchCase(int start, AConst val) : base(start, -1)
         {
-            _end = -1;
-            if (val != null)
+            this.Val(val);
+        }
+
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/ASwitchCase.java:19-21
+        // Original: public ASwitchCase(int start) { super(start, -1); }
+        public ASwitchCase(int start) : base(start, -1)
+        {
+        }
+
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/ASwitchCase.java:23-25
+        // Original: public void end(int end) { this.end = end; }
+        public virtual void End(int end)
+        {
+            this.end = end;
+        }
+
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/ASwitchCase.java:27-30
+        // Original: private void val(AConst val) { val.parent(this); this.val = val; }
+        private void Val(AConst val)
+        {
+            val.Parent(this);
+            this.val = val;
+        }
+
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/ASwitchCase.java:32-42
+        // Original: public List<AUnkLoopControl> getUnknowns() { List<AUnkLoopControl> unks = new ArrayList<>(); for (ScriptNode node : this.children) { if (AUnkLoopControl.class.isInstance(node)) { unks.add((AUnkLoopControl)node); } } return unks; }
+        public virtual List<AUnkLoopControl> GetUnknowns()
+        {
+            List<AUnkLoopControl> unks = new List<AUnkLoopControl>();
+
+            foreach (ScriptNode node in this.children)
             {
-                SetVal(val);
-            }
-        }
-
-        public void SetEnd(int end)
-        {
-            _end = end;
-        }
-
-        public override int GetEnd()
-        {
-            return _end;
-        }
-
-        public AConst GetVal()
-        {
-            return _val;
-        }
-
-        public void SetVal(AConst val)
-        {
-            if (_val != null)
-            {
-                ((AExpression)_val).Parent(null);
-            }
-            if (val != null)
-            {
-                ((AExpression)val).Parent((Scriptnode.ScriptNode)(object)this);
-            }
-            _val = val;
-        }
-
-        public List<AUnkLoopControl> GetUnknowns()
-        {
-            var unks = new List<AUnkLoopControl>();
-            foreach (var node in GetChildren())
-            {
-                if (node is AUnkLoopControl unk)
+                if (typeof(AUnkLoopControl).IsInstanceOfType(node))
                 {
-                    unks.Add(unk);
+                    unks.Add((AUnkLoopControl)node);
                 }
             }
+
             return unks;
         }
 
-        public void ReplaceUnknown(AUnkLoopControl unk, Scriptnode.ScriptNode newNode)
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/ASwitchCase.java:44-48
+        // Original: public void replaceUnknown(AUnkLoopControl unk, ScriptNode newnode) { newnode.parent(this); this.children.set(this.children.indexOf(unk), newnode); unk.parent(null); }
+        public virtual void ReplaceUnknown(AUnkLoopControl unk, ScriptNode newnode)
         {
-            newNode.Parent((Scriptnode.ScriptNode)(object)this);
-            var children = GetChildren();
-            int index = -1;
-            for (int i = 0; i < children.Count; i++)
-            {
-                if (children[i] == unk)
-                {
-                    index = i;
-                    break;
-                }
-            }
-            if (index >= 0)
-            {
-                children[index] = newNode;
-                ((Scriptnode.ScriptNode)(object)unk).Parent(null);
-            }
+            newnode.Parent(this);
+            this.children[this.children.IndexOf(unk)] = newnode;
+            unk.Parent(null);
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/ASwitchCase.java:50-64
+        // Original: @Override public String toString() { StringBuffer buff = new StringBuffer(); if (this.val == null) { buff.append(this.tabs + "default:" + this.newline); } else { buff.append(this.tabs + "case " + this.val.toString() + ":" + this.newline); } for (int i = 0; i < this.children.size(); i++) { buff.append(this.children.get(i).toString()); } return buff.toString(); }
         public override string ToString()
         {
-            var buff = new StringBuilder();
-            var tabs = GetTabsString();
-            var newline = GetNewlineString();
-            if (_val == null)
+            StringBuilder buff = new StringBuilder();
+            if (this.val == null)
             {
-                buff.Append(tabs + "default:" + newline);
+                buff.Append(this.tabs + "default:" + this.newline);
             }
             else
             {
-                buff.Append(tabs + "case " + _val.ToString() + ":" + newline);
+                buff.Append(this.tabs + "case " + this.val.ToString() + ":" + this.newline);
             }
-            foreach (var child in GetChildren())
+
+            for (int i = 0; i < this.children.Count; i++)
             {
-                buff.Append(child.ToString());
+                buff.Append(this.children[i].ToString());
             }
+
             return buff.ToString();
         }
 
-        private string GetTabsString()
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/ASwitchCase.java:66-74
+        // Original: @Override public void close() { super.close(); if (this.val != null) { this.val.close(); } this.val = null; }
+        public override void Close()
         {
-            int depth = 0;
-            Scriptnode.ScriptNode node = this;
-            while (node.Parent() != null)
+            base.Close();
+            if (this.val != null)
             {
-                depth++;
-                node = node.Parent();
+                this.val.Close();
             }
-            return new string('\t', depth);
-        }
 
-        private string GetNewlineString()
-        {
-            return System.Environment.NewLine;
-        }
-
-        public virtual void Close()
-        {
-            if (_val != null)
-            {
-                _val.Close();
-            }
-            _val = null;
+            this.val = null;
         }
     }
 }
