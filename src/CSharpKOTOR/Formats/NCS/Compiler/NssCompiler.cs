@@ -20,12 +20,19 @@ namespace CSharpKOTOR.Formats.NCS.Compiler
         [CanBeNull]
         private readonly List<string> _libraryLookup;
         private readonly bool _debug;
+        [CanBeNull]
+        private readonly List<ScriptFunction> _functions;
+        [CanBeNull]
+        private readonly List<ScriptConstant> _constants;
 
-        public NssCompiler(Game game, [CanBeNull] List<string> libraryLookup = null, bool debug = false)
+        public NssCompiler(Game game, [CanBeNull] List<string> libraryLookup = null, bool debug = false,
+            [CanBeNull] List<ScriptFunction> functions = null, [CanBeNull] List<ScriptConstant> constants = null)
         {
             _game = game;
             _libraryLookup = libraryLookup;
             _debug = debug;
+            _functions = functions;
+            _constants = constants;
         }
 
         /// <summary>
@@ -38,8 +45,9 @@ namespace CSharpKOTOR.Formats.NCS.Compiler
                 throw new ArgumentException("Source cannot be null or empty", nameof(source));
             }
 
-            List<ScriptFunction> functions = _game.IsK1() ? ScriptDefs.KOTOR_FUNCTIONS : ScriptDefs.TSL_FUNCTIONS;
-            List<ScriptConstant> constants = _game.IsK1() ? ScriptDefs.KOTOR_CONSTANTS : ScriptDefs.TSL_CONSTANTS;
+            // Use provided functions/constants or fallback to ScriptDefs
+            List<ScriptFunction> functions = _functions ?? (_game.IsK1() ? ScriptDefs.KOTOR_FUNCTIONS : ScriptDefs.TSL_FUNCTIONS);
+            List<ScriptConstant> constants = _constants ?? (_game.IsK1() ? ScriptDefs.KOTOR_CONSTANTS : ScriptDefs.TSL_CONSTANTS);
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/ncs/ncs_auto.py:184
             // Original: library=KOTOR_LIBRARY if game.is_k1() else TSL_LIBRARY
             var lib = library ?? (_game.IsK1() ? ScriptLib.KOTOR_LIBRARY : ScriptLib.TSL_LIBRARY);

@@ -128,10 +128,14 @@ namespace CSharpKOTOR.Formats.NCS
         /// Args:
         ///     source: The NSS source code string to compile
         ///     game: Target game (K1 or TSL) - determines which function/constant definitions to use
+        ///     library: Optional dictionary of include file names to their byte content.
+        ///             If not provided, uses default game library (ScriptLib.KOTOR_LIBRARY or ScriptLib.TSL_LIBRARY)
         ///     optimizers: Optional list of post-compilation optimizers to apply
         ///     libraryLookup: Paths to search for #include files
         ///     errorlog: Optional error logger for parser (not yet implemented in C#)
         ///     debug: Enable debug output from parser
+        ///     nwscriptPath: Optional path to nwscript.nss file. If provided, functions and constants will be parsed from this file.
+        ///                   If not provided, falls back to ScriptDefs.KOTOR_FUNCTIONS/CONSTANTS or ScriptDefs.TSL_FUNCTIONS/CONSTANTS
         ///
         /// Returns:
         ///     NCS: Compiled NCS bytecode object
@@ -151,9 +155,28 @@ namespace CSharpKOTOR.Formats.NCS
             List<NCSOptimizer> optimizers = null,
             [CanBeNull] List<string> libraryLookup = null,
             [CanBeNull] object errorlog = null,
-            bool debug = false)
+            bool debug = false,
+            [CanBeNull] string nwscriptPath = null)
         {
-            var compiler = new NssCompiler(game, libraryLookup, debug);
+            List<ScriptFunction> functions = null;
+            List<ScriptConstant> constants = null;
+
+            // Parse nwscript.nss if provided
+            if (!string.IsNullOrEmpty(nwscriptPath))
+            {
+                try
+                {
+                    var parsed = Common.Script.NwscriptParser.ParseNwscriptFile(nwscriptPath, game);
+                    functions = parsed.functions;
+                    constants = parsed.constants;
+                }
+                catch (Exception ex)
+                {
+                    throw new InvalidOperationException($"Failed to parse nwscript.nss file: {nwscriptPath}. Error: {ex.Message}", ex);
+                }
+            }
+
+            var compiler = new NssCompiler(game, libraryLookup, debug, functions, constants);
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/ncs/ncs_auto.py:184
             // Original: library=KOTOR_LIBRARY if game.is_k1() else TSL_LIBRARY
             // If library is not provided, use default game library
