@@ -434,12 +434,40 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             {
                 try
                 {
-                    this.CaptureBytecodeFromNcs(file, file, isK2Selected, true);
+                    JavaSystem.@out.Println("[NCSDecomp] Attempting to capture original bytecode from NCS file...");
+                    bool captured = this.CaptureBytecodeFromNcs(file, file, isK2Selected, true);
+                    if (captured)
+                    {
+                        string originalByteCode = data.GetOriginalByteCode();
+                        if (originalByteCode != null && originalByteCode.Trim().Length > 0)
+                        {
+                            JavaSystem.@out.Println("[NCSDecomp] Successfully captured original bytecode (" + originalByteCode.Length + " characters)");
+                        }
+                        else
+                        {
+                            JavaSystem.@out.Println("[NCSDecomp] Warning: Original bytecode file is empty");
+                        }
+                    }
+                    else
+                    {
+                        JavaSystem.@out.Println("[NCSDecomp] Warning: Failed to decompile original NCS file to bytecode");
+                    }
                 }
                 catch (Exception e)
                 {
-                    // Ignore errors - bytecode capture is optional
+                    JavaSystem.@out.Println("[NCSDecomp] Exception while capturing original bytecode:");
+                    JavaSystem.@out.Println("[NCSDecomp]   Exception Type: " + e.GetType().Name);
+                    JavaSystem.@out.Println("[NCSDecomp]   Exception Message: " + e.Message);
+                    if (e.InnerException != null)
+                    {
+                        JavaSystem.@out.Println("[NCSDecomp]   Caused by: " + e.InnerException.GetType().Name + " - " + e.InnerException.Message);
+                    }
+                    e.PrintStackTrace(JavaSystem.@out);
                 }
+            }
+            else
+            {
+                JavaSystem.@out.Println("[NCSDecomp] nwnnsscomp.exe not found - cannot capture original bytecode");
             }
 
             // Try validation, but don't fail if it doesn't work
