@@ -114,6 +114,21 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             }
         }
 
+        // Helper method to safely get destination without throwing exception
+        // Returns null if node is not in hashtable or has no destination
+        public virtual Node TryGetDestination(Node node)
+        {
+            object existing;
+            if (!this.nodedatahash.TryGetValue(node, out existing))
+            {
+                return null;
+            }
+            else
+            {
+                return ((NodeData)existing).jumpDestination;
+            }
+        }
+
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/NodeAnalysisData.java:72-81
         // Original: public void setCodeState(Node node, byte state)
         public virtual void SetCodeState(Node node, byte state)

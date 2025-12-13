@@ -262,7 +262,9 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
             if (this.current.HasChildren())
             {
                 ScriptNode.ScriptNode lastNode = this.current.GetLastChild();
-                if (typeof(ScriptNode.ASwitch).IsInstanceOfType(lastNode) && this.nodedata.GetPos(node) == ((ScriptNode.ASwitch)lastNode).GetFirstCaseStart())
+                // Use TryGetPos to handle cases where node might not be registered
+                int nodePos = this.nodedata.TryGetPos(node);
+                if (nodePos >= 0 && typeof(ScriptNode.ASwitch).IsInstanceOfType(lastNode) && nodePos == ((ScriptNode.ASwitch)lastNode).GetFirstCaseStart())
                 {
                     this.current = ((ScriptNode.ASwitch)lastNode).GetFirstCase();
                 }
@@ -271,9 +273,17 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
 
         private void CheckEnd(Node node)
         {
+            // Use TryGetPos to handle cases where node might not be registered
+            int nodePos = this.nodedata.TryGetPos(node);
+            if (nodePos < 0)
+            {
+                // Node not registered - can't check end position, return early
+                return;
+            }
+
             while (this.current != null)
             {
-                if (this.nodedata.GetPos(node) != this.current.GetEnd())
+                if (nodePos != this.current.GetEnd())
                 {
                     return;
                 }
@@ -296,15 +306,26 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
 
                 if (typeof(AIf).IsInstanceOfType(this.current))
                 {
-                    Node dest = this.nodedata.GetDestination(node);
+                    // Use TryGetDestination to handle cases where node might not be registered
+                    Node dest = this.nodedata.TryGetDestination(node);
                     if (dest == null)
                     {
                         return;
                     }
 
-                    if (this.nodedata.GetPos(dest) != this.current.GetEnd() + 6)
+                    // Use TryGetPos for destination node as well
+                    int destPos = this.nodedata.TryGetPos(dest);
+                    if (destPos < 0)
                     {
-                        AElse aelse = new AElse(this.current.GetEnd() + 6, this.nodedata.GetPos(NodeUtils.GetPreviousCommand(dest, this.nodedata)));
+                        // Destination node not registered - can't check position, return early
+                        return;
+                    }
+
+                    if (destPos != this.current.GetEnd() + 6)
+                    {
+                        Node prevCmd = NodeUtils.GetPreviousCommand(dest, this.nodedata);
+                        int prevPos = prevCmd != null ? this.nodedata.TryGetPos(prevCmd) : -1;
+                        AElse aelse = new AElse(this.current.GetEnd() + 6, prevPos >= 0 ? prevPos : this.current.GetEnd() + 6);
                         (this.current = (ScriptRootNode)this.current.Parent()).AddChild(aelse);
                         this.current = aelse;
                         aelse = null;
