@@ -1,9 +1,5 @@
-//
-using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
-using System.Text;
+// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/AConditionalExp.java:9-77
+// Original: public class AConditionalExp extends ScriptNode implements AExpression
 using CSharpKOTOR.Formats.NCS.NCSDecomp.Stack;
 using CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode;
 
@@ -11,10 +7,21 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptnode
 {
     public class AConditionalExp : ScriptNode, AExpression
     {
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/AConditionalExp.java:10
+        // Original: private AExpression left;
         private AExpression left;
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/AConditionalExp.java:11
+        // Original: private AExpression right;
         private AExpression right;
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/AConditionalExp.java:12
+        // Original: private String op;
         private string op;
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/AConditionalExp.java:13
+        // Original: private StackEntry stackentry;
         private StackEntry stackentry;
+
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/AConditionalExp.java:15-19
+        // Original: public AConditionalExp(AExpression left, AExpression right, String op) { this.left(left); this.right(right); this.op = op; }
         public AConditionalExp(AExpression left, AExpression right, string op)
         {
             this.Left(left);
@@ -38,11 +45,15 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptnode
             right.Parent(this);
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/AConditionalExp.java:31-33
+        // Original: public AExpression left() { return this.left; }
         public virtual AExpression Left()
         {
             return this.left;
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/AConditionalExp.java:35-37
+        // Original: public AExpression right() { return this.right; }
         public virtual AExpression Right()
         {
             return this.right;
@@ -62,18 +73,22 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptnode
             return ExpressionFormatter.Format(this);
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/AConditionalExp.java:48-51
+        // Original: @Override public StackEntry stackentry() { return this.stackentry; }
         public virtual StackEntry Stackentry()
         {
             return this.stackentry;
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/AConditionalExp.java:53-56
+        // Original: @Override public void stackentry(StackEntry stackentry) { this.stackentry = stackentry; }
         public virtual void Stackentry(StackEntry stackentry)
         {
             this.stackentry = stackentry;
         }
 
-        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/AConditionalExp.java
-        // Original: @Override public void close()
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/AConditionalExp.java:58-76
+        // Original: @Override public void close() { super.close(); if (this.left != null) { ((ScriptNode)this.left).close(); this.left = null; } if (this.right != null) { ((ScriptNode)this.right).close(); this.right = null; } if (this.stackentry != null) { this.stackentry.close(); } this.stackentry = null; }
         public override void Close()
         {
             base.Close();
