@@ -1,9 +1,8 @@
 // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptutils/CleanupPass.java:37-191
 // Original: public class CleanupPass
 using System.Collections.Generic;
-using CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptnode;
+using CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode;
 using CSharpKOTOR.Formats.NCS.NCSDecomp.Utils;
-using ScriptnodeScriptNode = CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptnode.ScriptNode;
 namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
 {
     public class CleanupPass
@@ -187,7 +186,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
         // Original: private boolean isDanglingExpression(ScriptNode node) { return AExpression.class.isInstance(node); }
         private bool IsDanglingExpression(Scriptnode.ScriptNode node)
         {
-            return node is AExpression;
+            return typeof(AExpression).IsInstanceOfType(node);
         }
     }
 }
