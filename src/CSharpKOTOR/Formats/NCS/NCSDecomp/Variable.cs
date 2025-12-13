@@ -33,6 +33,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Stack
             this.stackcounts = new Dictionary<object, object>();
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/stack/Variable.java:33-35
+        // Original: public Variable(byte type) { this(new Type(type)); }
         public Variable(byte type) : this(new UtilsType(type))
         {
         }
