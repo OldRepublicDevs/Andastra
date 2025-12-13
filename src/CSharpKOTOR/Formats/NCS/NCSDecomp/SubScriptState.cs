@@ -306,7 +306,16 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
                     this.TransformEndDoLoop();
                 }
 
-                this.current = (ScriptRootNode)this.current.Parent();
+                // Matching DeNCS implementation: if current is root (ASub), parent() returns null, so loop exits
+                // Don't move away from root for globals - if parent is null, we're at root, so exit
+                ScriptRootNode parent = (ScriptRootNode)this.current.Parent();
+                if (parent == null)
+                {
+                    // We're at the root and it has no parent - this is normal for globals
+                    // Don't set state to DONE here, just exit the loop
+                    return;
+                }
+                this.current = parent;
             }
 
             this.state = STATE_DONE;
