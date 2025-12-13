@@ -348,6 +348,19 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
             vardec = null;
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptutils/SubScriptState.java:476-483
+        // Original: public void emitError(Node node, int pos) { String message = "ERROR: failed to decompile statement"; if (pos >= 0) { message = message + " at " + pos; } this.current.addChild(new AErrorComment(message)); }
+        public virtual void EmitError(Node node, int pos)
+        {
+            string message = "ERROR: failed to decompile statement";
+            if (pos >= 0)
+            {
+                message = message + " at " + pos;
+            }
+
+            this.current.AddChild(new AErrorComment(message));
+        }
+
         private bool RemovingSwitchVar(List<object> vars, Node node)
         {
             if (vars.Count == 1 && this.current.HasChildren() && typeof(ScriptNode.ASwitch).IsInstanceOfType(this.current.GetLastChild()))
