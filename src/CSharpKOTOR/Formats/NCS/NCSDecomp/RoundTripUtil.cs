@@ -4,6 +4,7 @@ using System;
 using System.IO;
 using System.Text;
 using File = System.IO.FileInfo;
+using IOException = CSharpKOTOR.Formats.NCS.NCSDecomp.IOException;
 
 namespace CSharpKOTOR.Formats.NCS.NCSDecomp
 {
