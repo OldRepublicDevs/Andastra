@@ -3,6 +3,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Text;
 using CSharpKOTOR.Mods;
 using KotorDiff.NET.Diff;
 using KotorDiff.NET.Generator;
