@@ -63,6 +63,12 @@
     <Nullable>disable</Nullable>
     <!-- Disable reference assembly generation in Debug -->
     <ProduceReferenceAssembly>false</ProduceReferenceAssembly>
+    <!-- Disable XML documentation generation -->
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <DocumentationFile></DocumentationFile>
+    <!-- Disable code analysis -->
+    <RunCodeAnalysis>false</RunCodeAnalysis>
+    <CodeAnalysisRuleSet></CodeAnalysisRuleSet>
     <!-- Enable parallel builds -->
     <BuildInParallel>true</BuildInParallel>
     <MaxCpuCount>0</MaxCpuCount>
@@ -71,6 +77,19 @@
     <UseRidGraph>true</UseRidGraph>
     <!-- Skip validation for faster builds -->
     <SkipValidateExecutableReferences>true</SkipValidateExecutableReferences>
+    <SkipCopyBuildProduct>false</SkipCopyBuildProduct>
+    <!-- Disable deterministic builds for faster compilation -->
+    <Deterministic>false</Deterministic>
+    <!-- Disable source link -->
+    <PublishRepositoryUrl>false</PublishRepositoryUrl>
+    <EmbedUntrackedSources>false</EmbedUntrackedSources>
+    <!-- Disable debug symbols for faster builds (can re-enable if needed) -->
+    <DebugType>none</DebugType>
+    <DebugSymbols>false</DebugSymbols>
+    <!-- Optimize compilation -->
+    <Optimize>false</Optimize>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <WarningLevel>0</WarningLevel>
   </PropertyGroup>
 
   <!-- Default to Library -->
