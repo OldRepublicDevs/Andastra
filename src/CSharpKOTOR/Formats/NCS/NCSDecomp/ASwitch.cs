@@ -159,8 +159,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptnode
             return buff.ToString();
         }
 
-        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/ASwitch.java
-        // Original: @Override public void close()
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/ASwitch.java:108-129
+        // Original: @Override public void close() { super.close(); if (this.cases != null) { for (ScriptNode param : this.cases) { param.close(); } this.cases = null; } if (this.switchexp != null) { ((ScriptNode)this.switchexp).close(); } this.switchexp = null; if (this.defaultcase != null) { this.defaultcase.close(); } this.defaultcase = null; }
         public override void Close()
         {
             base.Close();
