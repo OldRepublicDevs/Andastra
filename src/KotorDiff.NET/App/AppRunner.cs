@@ -221,21 +221,21 @@ namespace KotorDiff.NET.App
                 }
                 else if (!config.UseIncrementalWriter)
                 {
-            {
-                try
-                {
-                    GenerateTslPatcherData(
-                        config.TslPatchDataPath,
-                        config.IniFilename,
-                        modificationsByType,
-                        baseDataPath: null); // TODO: Determine base path from paths
-                }
-                catch (Exception genError)
-                {
-                    DiffLogger.GetLogger()?.Error($"[Error] Failed to generate TSLPatcher data: {genError.GetType().Name}: {genError.Message}");
-                    DiffLogger.GetLogger()?.Debug("Full traceback:");
-                    DiffLogger.GetLogger()?.Debug(genError.StackTrace);
-                    return null;
+                    try
+                    {
+                        GenerateTslPatcherData(
+                            config.TslPatchDataPath,
+                            config.IniFilename,
+                            modificationsByType,
+                            baseDataPath: null); // TODO: Determine base path from paths
+                    }
+                    catch (Exception genError)
+                    {
+                        DiffLogger.GetLogger()?.Error($"[Error] Failed to generate TSLPatcher data: {genError.GetType().Name}: {genError.Message}");
+                        DiffLogger.GetLogger()?.Debug("Full traceback:");
+                        DiffLogger.GetLogger()?.Debug(genError.StackTrace);
+                        return null;
+                    }
                 }
             }
 

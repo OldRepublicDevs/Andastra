@@ -531,7 +531,8 @@ namespace KotorDiff.NET.Diff
             DiffContext context,
             ModificationsByType modificationsByType,
             Action<string> logFunc,
-            bool compareHashes)
+            bool compareHashes,
+            IncrementalTSLPatchDataWriter incrementalWriter = null)
         {
             try
             {
