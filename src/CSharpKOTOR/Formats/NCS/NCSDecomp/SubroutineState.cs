@@ -436,6 +436,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             return NodeUtils.GetSubEnd((ASubroutine)this.root);
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SubroutineState.java:312-318
+        // Original: public void addDecision(Node node, int destination) { SubroutineState.DecisionData decision = new SubroutineState.DecisionData(node, destination, false); this.decisionqueue.addLast(decision); if (this.decisionqueue.size() > 3000) { throw new RuntimeException("Decision queue size over 3000 - probable infinite loop"); } }
         public virtual void AddDecision(Node node, int destination)
         {
             DecisionData decision = new DecisionData(node, destination, false);
@@ -446,12 +448,16 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             }
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SubroutineState.java:320-323
+        // Original: public void addJump(Node node, int destination) { SubroutineState.DecisionData decision = new SubroutineState.DecisionData(node, destination, true); this.decisionqueue.addLast(decision); }
         public virtual void AddJump(Node node, int destination)
         {
             DecisionData decision = new DecisionData(node, destination, true);
             this.decisionqueue.AddLast(decision);
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SubroutineState.java:325-331
+        // Original: public int getCurrentDestination() { SubroutineState.DecisionData data = this.decisionqueue.getLast(); if (data == null) { throw new RuntimeException("Attempted to get a destination but no decision nodes found."); } return data.destination; }
         public virtual int GetCurrentDestination()
         {
             DecisionData data = (DecisionData)this.decisionqueue.GetLast();
@@ -459,10 +465,11 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             {
                 throw new Exception("Attempted to get a destination but no decision nodes found.");
             }
-
             return data.destination;
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SubroutineState.java:333-344
+        // Original: public int switchDecision() { while (this.decisionqueue.size() > 0) { SubroutineState.DecisionData data = this.decisionqueue.getLast(); if (data.switchDecision()) { return data.destination; } this.decisionqueue.removeLast(); } return -1; }
         public virtual int SwitchDecision()
         {
             while (this.decisionqueue.Count > 0)
@@ -479,11 +486,15 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             return -1;
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SubroutineState.java:346-378
+        // Original: private class DecisionData { ... }
         private class DecisionData
         {
             public Node decisionnode;
             public byte decision;
             public int destination;
+            // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SubroutineState.java:351-360
+            // Original: public DecisionData(Node node, int destination, boolean forcejump) { if (forcejump) { this.decision = 2; } else { this.decision = 1; } this.decisionnode = node; this.destination = destination; }
             public DecisionData(Node node, int destination, bool forcejump)
             {
                 if (forcejump)
@@ -499,11 +510,15 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
                 this.destination = destination;
             }
 
+            // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SubroutineState.java:362-364
+            // Original: public boolean doJump() { return this.decision != 1; }
             public virtual bool DoJump()
             {
                 return this.decision != 1;
             }
 
+            // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SubroutineState.java:366-373
+            // Original: public boolean switchDecision() { if (this.decision == 1) { this.decision = 0; return true; } else { return false; } }
             public virtual bool SwitchDecision()
             {
                 if (this.decision == 1)
@@ -511,8 +526,10 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
                     this.decision = 0;
                     return true;
                 }
-
-                return false;
+                else
+                {
+                    return false;
+                }
             }
 
             // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SubroutineState.java:375-377
