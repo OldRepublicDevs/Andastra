@@ -24,10 +24,14 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
         protected NodeAnalysisData nodedata;
         protected SubroutineAnalysisData subdata;
         protected bool skipdeadcode;
+        /** Mutable script output for the current subroutine. */
         protected SubScriptState state;
         private ActionsData actions;
+        /** Whether we are operating on the globals block. */
         protected bool globals;
+        /** Backup stack used around jumps to restore state. */
         protected LocalVarStack backupstack;
+        /** Declared return type of the current subroutine. */
         protected Utils.Type type;
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/MainPass.java:66-76
         // Original: public MainPass(SubroutineState state, NodeAnalysisData nodedata, SubroutineAnalysisData subdata, ActionsData actions)
