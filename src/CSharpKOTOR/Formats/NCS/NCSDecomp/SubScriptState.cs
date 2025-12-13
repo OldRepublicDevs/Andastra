@@ -1704,12 +1704,14 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
             }
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptutils/SubScriptState.java:1705-1715
+        // Original: private void updateVarCount(Variable var) { int count = 1; Type key = var.type(); Integer curcount = this.varcounts.get(key); if (curcount != null) { count += curcount; } var.name(this.varprefix, count); this.varcounts.put(key, Integer.valueOf(count)); }
         private void UpdateVarCount(Variable var)
         {
             int count = 1;
             UtilsType key = var.Type();
-            object curcountObj = this.varcounts[key];
-            if (curcountObj != null)
+            object curcountObj;
+            if (this.varcounts.TryGetValue(key, out curcountObj) && curcountObj != null)
             {
                 int curcount = (int)curcountObj;
                 count += curcount;
