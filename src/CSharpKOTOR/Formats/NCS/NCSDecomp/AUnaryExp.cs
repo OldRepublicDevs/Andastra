@@ -1,9 +1,5 @@
-// 
-using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
-using System.Text;
+// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/AUnaryExp.java:10-62
+// Original: public class AUnaryExp extends ScriptNode implements AExpression
 using CSharpKOTOR.Formats.NCS.NCSDecomp.Stack;
 using CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode;
 
@@ -11,9 +7,18 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptnode
 {
     public class AUnaryExp : ScriptNode, AExpression
     {
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/AUnaryExp.java:11
+        // Original: private AExpression exp;
         private AExpression exp;
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/AUnaryExp.java:12
+        // Original: private String op;
         private string op;
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/AUnaryExp.java:13
+        // Original: private StackEntry stackentry;
         private StackEntry stackentry;
+
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/AUnaryExp.java:15-18
+        // Original: public AUnaryExp(AExpression exp, String op) { this.exp(exp); this.op = op; }
         public AUnaryExp(AExpression exp, string op)
         {
             this.Exp(exp);
@@ -49,16 +54,22 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptnode
             return ExpressionFormatter.Format(this);
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/AUnaryExp.java:38-41
+        // Original: @Override public StackEntry stackentry() { return this.stackentry; }
         public virtual StackEntry Stackentry()
         {
             return this.stackentry;
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/AUnaryExp.java:43-46
+        // Original: @Override public void stackentry(StackEntry stackentry) { this.stackentry = stackentry; }
         public virtual void Stackentry(StackEntry stackentry)
         {
             this.stackentry = stackentry;
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/AUnaryExp.java:48-61
+        // Original: @Override public void close() { super.close(); if (this.exp != null) { ((ScriptNode)this.exp).close(); } this.exp = null; if (this.stackentry != null) { this.stackentry.close(); } this.stackentry = null; }
         public override void Close()
         {
             base.Close();
