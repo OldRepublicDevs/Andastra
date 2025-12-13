@@ -1,4 +1,5 @@
-//
+// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/NodeUtils.java:16-952
+// Original: public final class NodeUtils
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -12,8 +13,13 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
 {
     public sealed class NodeUtils
     {
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/NodeUtils.java:17-18
+        // Original: public static final int CMDSIZE_JUMP = 6; public static final int CMDSIZE_RETN = 2;
         public static readonly int CMDSIZE_JUMP = 6;
         public static readonly int CMDSIZE_RETN = 2;
+
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/NodeUtils.java:20-29
+        // Original: public static boolean isStoreStackNode(Node node) { ... }
         public static bool IsStoreStackNode(Node node)
         {
             if (typeof(ALogiiCmd).IsInstanceOfType(node))

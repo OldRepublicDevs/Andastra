@@ -1,4 +1,5 @@
-//
+// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/StructType.java:15-228
+// Original: public class StructType extends Type
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -9,10 +10,15 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
 {
     public class StructType : Type
     {
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/StructType.java:16-19
+        // Original: private ArrayList<Type> types = new ArrayList<>(); private boolean alltyped = true; private String typename; private ArrayList<String> elements;
         private List<object> types;
         private bool alltyped;
         private string typename;
         private List<object> elements;
+
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/StructType.java:21-24
+        // Original: public StructType() { super((byte)-15); this.size = 0; }
         public StructType() : base(unchecked((byte)(-15)))
         {
             this.types = new List<object>();
@@ -20,6 +26,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             this.size = 0;
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/StructType.java:26-39
+        // Original: @Override public void close() { ... }
         public override void Close()
         {
             if (this.types != null)
@@ -39,6 +47,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             this.elements = null;
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/StructType.java:41-53
+        // Original: public void print() { ... }
         public virtual void Print()
         {
             JavaSystem.@out.Println("Struct has " + this.types.Count + " entries.");

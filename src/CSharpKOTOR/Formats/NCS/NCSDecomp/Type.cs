@@ -1,4 +1,5 @@
-//
+// Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/Type.java:12-427
+// Original: public class Type
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -9,6 +10,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
 {
     public class Type
     {
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/Type.java:13-38
+        // Original: public static final byte VT_NONE = 0; ... public static final byte VT_INVALID = -1;
         public const sbyte VT_NONE = 0;
         public const sbyte VT_STACK = 1;
         public const sbyte VT_INTEGER = 3;
@@ -36,19 +39,28 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
         public const sbyte VT_VECTOR = -16;
         public const sbyte VT_STRUCT = -15;
         public const sbyte VT_INVALID = -1;
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/Type.java:40-41
+        // Original: protected byte type; protected int size;
         protected sbyte type;
         protected int size;
+
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/Type.java:43-46
+        // Original: public Type(byte type) { this.type = type; this.size = 1; }
         public Type(byte type)
             : this(unchecked((sbyte)type))
         {
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/Type.java:43-46
+        // Original: public Type(byte type) { this.type = type; this.size = 1; }
         public Type(sbyte type)
         {
             this.type = type;
             this.size = 1;
         }
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/Type.java:48-51
+        // Original: public Type(String str) { this.type = decode(str); this.size = typeSize(this.type) / 4; }
         public Type(string str)
         {
             this.type = Decode(str);
