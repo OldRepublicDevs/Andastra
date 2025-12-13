@@ -20,7 +20,9 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
             StringBuilder buff = new StringBuilder();
 
             // Handle "else if" case: if the first (and only) child is an AIf, output "else if" instead of "else { if ... }"
-            if (this.children.Count == 1 && typeof(AIf).IsInstanceOfType(this.children[0]))
+            // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/AElse.java:17
+            // Original: if (this.children.size() == 1 && AIf.class.isInstance(this.children.get(0))) { AIf ifChild = (AIf) this.children.get(0);
+            if (this.children.Count == 1 && this.children[0] is AIf)
             {
                 AIf ifChild = (AIf)this.children[0];
                 // Format condition similar to AControlLoop.formattedCondition()
@@ -42,9 +44,9 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
 
                 // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/AElse.java:31-33
                 // Original: for (int i = 0; i < ifChild.children.size(); i++) { buff.append(ifChild.children.get(i).toString()); }
-                for (int i = 0; i < ifChild.GetChildren().Count; i++)
+                for (int i = 0; i < ifChild.children.Count; i++)
                 {
-                    buff.Append(ifChild.GetChildren()[i].ToString());
+                    buff.Append(ifChild.children[i].ToString());
                 }
 
                 buff.Append(this.tabs + "}" + this.newline);
