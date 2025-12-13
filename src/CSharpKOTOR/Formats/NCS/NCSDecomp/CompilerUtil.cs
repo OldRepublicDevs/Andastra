@@ -84,7 +84,239 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             return compilerFile;
         }
 
-        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/CompilerUtil.java:325-352
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/CompilerUtil.java:119-125
+        // Original: public static File getCompilerFromSettingsOrNull()
+        public static File GetCompilerFromSettingsOrNull()
+        {
+            File compiler = GetCompilerFromSettings();
+            if (compiler != null && compiler.Exists() && compiler.IsFile())
+            {
+                return compiler;
+            }
+            return null;
+        }
+
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/CompilerUtil.java:143-206
+        // Original: public static File resolveCompilerPathWithFallbacks(String cliPath)
+        public static File ResolveCompilerPathWithFallbacks(string cliPath)
+        {
+            // 1. If CLI path is specified, use it (could be full path or just filename)
+            if (!string.IsNullOrEmpty(cliPath) && !string.IsNullOrWhiteSpace(cliPath))
+            {
+                File cliFile = new File(cliPath.Trim());
+                if (cliFile.Exists() && cliFile.IsFile())
+                {
+                    JavaSystem.@err.Println("DEBUG CompilerUtil.resolveCompilerPathWithFallbacks: Using CLI path: " + cliFile.GetAbsolutePath());
+                    return cliFile;
+                }
+                // If CLI path is a directory, try known filenames in it
+                if (cliFile.IsDirectory())
+                {
+                    foreach (string name in COMPILER_NAMES)
+                    {
+                        File candidate = new File(cliFile, name);
+                        if (candidate.Exists() && candidate.IsFile())
+                        {
+                            JavaSystem.@err.Println("DEBUG CompilerUtil.resolveCompilerPathWithFallbacks: Found in CLI dir: " + candidate.GetAbsolutePath());
+                            return candidate;
+                        }
+                    }
+                }
+            }
+
+            // 2. Try tools/ directory
+            string toolsDir = Path.Combine(JavaSystem.GetProperty("user.dir"), "tools");
+            foreach (string name in COMPILER_NAMES)
+            {
+                File candidate = new File(Path.Combine(toolsDir, name));
+                if (candidate.Exists() && candidate.IsFile())
+                {
+                    JavaSystem.@err.Println("DEBUG CompilerUtil.resolveCompilerPathWithFallbacks: Found in tools/: " + candidate.GetAbsolutePath());
+                    return candidate;
+                }
+            }
+
+            // 3. Try current working directory
+            string cwd = JavaSystem.GetProperty("user.dir");
+            foreach (string name in COMPILER_NAMES)
+            {
+                File candidate = new File(Path.Combine(cwd, name));
+                if (candidate.Exists() && candidate.IsFile())
+                {
+                    JavaSystem.@err.Println("DEBUG CompilerUtil.resolveCompilerPathWithFallbacks: Found in cwd: " + candidate.GetAbsolutePath());
+                    return candidate;
+                }
+            }
+
+            // 4. Try NCSDecomp installation directory
+            File ncsDecompDir = GetNCSDecompDirectory();
+            File cwdFile = new File(cwd);
+            if (ncsDecompDir != null && !ncsDecompDir.GetAbsolutePath().Equals(cwdFile.GetAbsolutePath()))
+            {
+                foreach (string name in COMPILER_NAMES)
+                {
+                    File candidate = new File(ncsDecompDir, name);
+                    if (candidate.Exists() && candidate.IsFile())
+                    {
+                        JavaSystem.@err.Println("DEBUG CompilerUtil.resolveCompilerPathWithFallbacks: Found in NCSDecomp dir: " + candidate.GetAbsolutePath());
+                        return candidate;
+                    }
+                }
+                // Also try tools/ subdirectory of NCSDecomp directory
+                File ncsToolsDir = new File(ncsDecompDir, "tools");
+                foreach (string name in COMPILER_NAMES)
+                {
+                    File candidate = new File(ncsToolsDir, name);
+                    if (candidate.Exists() && candidate.IsFile())
+                    {
+                        JavaSystem.@err.Println("DEBUG CompilerUtil.resolveCompilerPathWithFallbacks: Found in NCSDecomp tools/: " + candidate.GetAbsolutePath());
+                        return candidate;
+                    }
+                }
+            }
+
+            JavaSystem.@err.Println("DEBUG CompilerUtil.resolveCompilerPathWithFallbacks: No compiler found anywhere");
+            return null;
+        }
+
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/CompilerUtil.java:212-234
+        // Original: public static class CompilerResolutionResult
+        public class CompilerResolutionResult
+        {
+            private readonly File file;
+            private readonly bool isFallback;
+            private readonly string source;
+
+            // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/CompilerUtil.java:217-221
+            // Original: public CompilerResolutionResult(File file, boolean isFallback, String source)
+            public CompilerResolutionResult(File file, bool isFallback, string source)
+            {
+                this.file = file;
+                this.isFallback = isFallback;
+                this.source = source;
+            }
+
+            // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/CompilerUtil.java:223-225
+            // Original: public File getFile()
+            public File GetFile()
+            {
+                return file;
+            }
+
+            // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/CompilerUtil.java:227-229
+            // Original: public boolean isFallback()
+            public bool IsFallback()
+            {
+                return isFallback;
+            }
+
+            // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/CompilerUtil.java:231-233
+            // Original: public String getSource()
+            public string GetSource()
+            {
+                return source;
+            }
+        }
+
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/CompilerUtil.java:244-318
+        // Original: public static CompilerResolutionResult findCompilerFileWithResult(String configuredPath)
+        public static CompilerResolutionResult FindCompilerFileWithResult(string configuredPath)
+        {
+            string[] compilerNames = COMPILER_NAMES;
+
+            string configuredPathTrimmed = !string.IsNullOrEmpty(configuredPath) ? configuredPath.Trim() : "";
+            bool isConfigured = !string.IsNullOrEmpty(configuredPathTrimmed);
+
+            // 1. Try configured path (if set) - all compiler filenames
+            if (isConfigured)
+            {
+                File configuredDir = new File(configuredPathTrimmed);
+                if (configuredDir.IsDirectory())
+                {
+                    // If it's a directory, try all filenames in it
+                    foreach (string name in compilerNames)
+                    {
+                        File candidate = new File(configuredDir, name);
+                        if (candidate.Exists() && candidate.IsFile())
+                        {
+                            return new CompilerResolutionResult(candidate, false, "Configured directory: " + configuredPathTrimmed);
+                        }
+                    }
+                }
+                else
+                {
+                    // If it's a file, check if it exists
+                    if (configuredDir.Exists() && configuredDir.IsFile())
+                    {
+                        return new CompilerResolutionResult(configuredDir, false, "Configured path: " + configuredPathTrimmed);
+                    }
+                    // Also try other filenames in the same directory
+                    File parent = configuredDir.GetParentFile();
+                    if (parent != null)
+                    {
+                        foreach (string name in compilerNames)
+                        {
+                            File candidate = new File(parent, name);
+                            if (candidate.Exists() && candidate.IsFile())
+                            {
+                                return new CompilerResolutionResult(candidate, true, "Fallback in configured directory: " + parent.GetAbsolutePath());
+                            }
+                        }
+                    }
+                }
+            }
+
+            // 2. Try tools/ directory - all compiler filenames
+            File toolsDir = new File(Path.Combine(JavaSystem.GetProperty("user.dir"), "tools"));
+            foreach (string name in compilerNames)
+            {
+                File candidate = new File(toolsDir, name);
+                if (candidate.Exists() && candidate.IsFile())
+                {
+                    return new CompilerResolutionResult(candidate, true, "Fallback: tools/ directory");
+                }
+            }
+
+            // 3. Try current working directory - all compiler filenames
+            File cwd = new File(JavaSystem.GetProperty("user.dir"));
+            foreach (string name in compilerNames)
+            {
+                File candidate = new File(cwd, name);
+                if (candidate.Exists() && candidate.IsFile())
+                {
+                    return new CompilerResolutionResult(candidate, true, "Fallback: current directory");
+                }
+            }
+
+            // 4. Try NCSDecomp installation directory - all compiler filenames
+            File ncsDecompDir = GetNCSDecompDirectory();
+            if (ncsDecompDir != null && !ncsDecompDir.GetAbsolutePath().Equals(cwd.GetAbsolutePath()))
+            {
+                foreach (string name in compilerNames)
+                {
+                    File candidate = new File(ncsDecompDir, name);
+                    if (candidate.Exists() && candidate.IsFile())
+                    {
+                        return new CompilerResolutionResult(candidate, true, "Fallback: NCSDecomp directory");
+                    }
+                }
+                // Also try tools/ subdirectory of NCSDecomp directory
+                File ncsToolsDir = new File(ncsDecompDir, "tools");
+                foreach (string name in compilerNames)
+                {
+                    File candidate = new File(ncsToolsDir, name);
+                    if (candidate.Exists() && candidate.IsFile())
+                    {
+                        return new CompilerResolutionResult(candidate, true, "Fallback: NCSDecomp tools/ directory");
+                    }
+                }
+            }
+
+            // Not found
+            return null;
+        }
+
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/CompilerUtil.java:326-353
         // Original: public static File getNCSDecompDirectory()
         public static File GetNCSDecompDirectory()
         {
@@ -109,7 +341,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             return new File(JavaSystem.GetProperty("user.dir"));
         }
 
-        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/CompilerUtil.java:360-362
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/CompilerUtil.java:361-363
         // Original: public static String[] getCompilerNames()
         public static string[] GetCompilerNames()
         {
