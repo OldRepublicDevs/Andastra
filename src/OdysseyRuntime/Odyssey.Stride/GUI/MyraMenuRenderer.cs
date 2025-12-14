@@ -145,8 +145,8 @@ namespace Odyssey.Stride.GUI
                     Text = "Exit"
                 }
             };
-            _exitButton.GridColumn = 1;
-            _exitButton.GridRow = 6;
+            _exitButton.GridColumn.SetColumn(1);
+            _exitButton.GridRow.SetRow(6);
             _exitButton.Click += (s, a) =>
             {
                 Console.WriteLine("[MyraMenuRenderer] Exit clicked");
@@ -238,7 +238,6 @@ namespace Odyssey.Stride.GUI
                 if (upPressed || _keyRepeatTimer >= KeyRepeatDelay)
                 {
                     _selectedIndex = (_selectedIndex - 1 + 3) % 3; // 3 buttons: Start, Options, Exit
-                    UpdateButtonFocus();
                     Console.WriteLine($"[MyraMenuRenderer] Selected index: {_selectedIndex}");
                     _keyRepeatTimer = 0f; // Reset timer on selection change
                 }
@@ -255,7 +254,6 @@ namespace Odyssey.Stride.GUI
                 if (downPressed || _keyRepeatTimer >= KeyRepeatDelay)
                 {
                     _selectedIndex = (_selectedIndex + 1) % 3; // 3 buttons: Start, Options, Exit
-                    UpdateButtonFocus();
                     Console.WriteLine($"[MyraMenuRenderer] Selected index: {_selectedIndex}");
                     _keyRepeatTimer = 0f; // Reset timer on selection change
                 }
@@ -282,26 +280,6 @@ namespace Odyssey.Stride.GUI
                 _keyRepeatTimer = 0f;
             }
         }
-
-        // Update visual focus of buttons based on selected index
-        // Based on Myra API: Button.HasFocus property controls keyboard focus
-        // Source: https://github.com/rds1983/Myra/wiki/Button
-        private void UpdateButtonFocus()
-        {
-            if (_startButton != null)
-            {
-                _startButton.HasFocus = (_selectedIndex == 0);
-            }
-            if (_optionsButton != null)
-            {
-                _optionsButton.HasFocus = (_selectedIndex == 1);
-            }
-            if (_exitButton != null)
-            {
-                _exitButton.HasFocus = (_selectedIndex == 2);
-            }
-        }
-
 
         public void SetVisible(bool visible)
         {
