@@ -117,7 +117,7 @@ namespace Odyssey.Game.Core
                             envPath = candidatePath;
                             break;
                         }
-                        
+
                         // Also check for .git to know we're at repo root
                         string gitPath = Path.Combine(dir.FullName, ".git");
                         if (Directory.Exists(gitPath) || File.Exists(gitPath))
@@ -129,7 +129,7 @@ namespace Odyssey.Game.Core
                                 break;
                             }
                         }
-                        
+
                         dir = dir.Parent;
                     }
                 }
@@ -162,7 +162,7 @@ namespace Odyssey.Game.Core
                 foreach (string line in lines)
                 {
                     string trimmed = line.Trim();
-                    
+
                     // Skip empty lines and comments
                     if (string.IsNullOrEmpty(trimmed) || trimmed.StartsWith("#"))
                     {

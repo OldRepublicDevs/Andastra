@@ -1,8 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <OutputType>WinExe</OutputType>
-    <TargetFramework>net9.0-windows</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net9.0</TargetFramework>
     <LangVersion>7.3</LangVersion>
     <Nullable>disable</Nullable>
     <ImplicitUsings>disable</ImplicitUsings>
@@ -10,6 +10,8 @@
     <AssemblyName>Odyssey.Game</AssemblyName>
     <Description>Stride executable launcher for Odyssey Engine</Description>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <!-- Use OpenGL exclusively for maximum compatibility. Vulkan/DirectX support will be added later. -->
+    <StrideGraphicsApi>OpenGL</StrideGraphicsApi>
   </PropertyGroup>
 
   <ItemGroup>
