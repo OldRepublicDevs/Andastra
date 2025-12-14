@@ -14,7 +14,11 @@ using CSharpKOTOR.Common;
 using CSharpKOTOR.Installation;
 using CSharpKOTOR.Resources;
 using Game = Microsoft.Xna.Framework.Game;
-using Vector3 = System.Numerics.Vector3;
+using Matrix = Microsoft.Xna.Framework.Matrix;
+using Vector4 = Microsoft.Xna.Framework.Vector4;
+using Vector3 = Microsoft.Xna.Framework.Vector3;
+using Vector2 = Microsoft.Xna.Framework.Vector2;
+using Color = Microsoft.Xna.Framework.Color;
 
 namespace Odyssey.Game.Core
 {
@@ -342,9 +346,9 @@ namespace Odyssey.Game.Core
 
         private void UpdateCamera()
         {
-            Vector3 target = Vector3.Zero;
-            Vector3 cameraPosition;
-            Vector3 up = Vector3.Up;
+            Microsoft.Xna.Framework.Vector3 target = new Microsoft.Xna.Framework.Vector3(0, 0, 0);
+            Microsoft.Xna.Framework.Vector3 cameraPosition;
+            Microsoft.Xna.Framework.Vector3 up = new Microsoft.Xna.Framework.Vector3(0, 1, 0);
 
             // Try to follow player if available
             if (_session != null && _session.PlayerEntity != null)
@@ -352,7 +356,7 @@ namespace Odyssey.Game.Core
                 var transform = _session.PlayerEntity.GetComponent<Odyssey.Kotor.Components.TransformComponent>();
                 if (transform != null)
                 {
-                    target = new Vector3(transform.Position.X, transform.Position.Y, transform.Position.Z);
+                    target = new Microsoft.Xna.Framework.Vector3(transform.Position.X, transform.Position.Y, transform.Position.Z);
 
                     // Camera follows behind and above player
                     float cameraDistance = 8f;
@@ -436,6 +440,16 @@ namespace Odyssey.Game.Core
                 if (entryArea != null && entryArea is Odyssey.Core.Module.RuntimeArea runtimeArea)
                 {
                     DrawAreaRooms(runtimeArea);
+                }
+            }
+
+            // Draw entities from GIT
+            if (_session != null && _session.CurrentRuntimeModule != null)
+            {
+                var entryArea = _session.CurrentRuntimeModule.GetArea(_session.CurrentRuntimeModule.EntryArea);
+                if (entryArea != null && entryArea is Odyssey.Core.Module.RuntimeArea runtimeArea)
+                {
+                    DrawAreaEntities(runtimeArea);
                 }
             }
 
@@ -529,6 +543,133 @@ namespace Odyssey.Game.Core
                         0,
                         0,
                         meshData.IndexCount / 3 // Number of triangles
+                    );
+                }
+            }
+        }
+
+        /// <summary>
+        /// Draws entities from the area (NPCs, doors, placeables, etc.).
+        /// </summary>
+        private void DrawAreaEntities(Odyssey.Core.Module.RuntimeArea area)
+        {
+            if (area == null || _basicEffect == null)
+            {
+                return;
+            }
+
+            // Draw all entities as simple colored boxes
+            foreach (var entity in area.GetAllEntities())
+            {
+                DrawEntity(entity);
+            }
+        }
+
+        /// <summary>
+        /// Draws a single entity as a simple representation.
+        /// </summary>
+        private void DrawEntity(Odyssey.Core.Interfaces.IEntity entity)
+        {
+            if (entity == null || _basicEffect == null)
+            {
+                return;
+            }
+
+            var transform = entity.GetComponent<Odyssey.Kotor.Components.TransformComponent>();
+            if (transform == null)
+            {
+                return;
+            }
+
+            // Choose color based on entity type
+            Color entityColor = Color.Gray;
+            float entityHeight = 1f;
+            float entityWidth = 0.5f;
+
+            switch (entity.ObjectType)
+            {
+                case Odyssey.Core.Enums.ObjectType.Creature:
+                    entityColor = Color.Green;
+                    entityHeight = 2f;
+                    entityWidth = 0.5f;
+                    break;
+                case Odyssey.Core.Enums.ObjectType.Door:
+                    entityColor = Color.Brown;
+                    entityHeight = 3f;
+                    entityWidth = 1f;
+                    break;
+                case Odyssey.Core.Enums.ObjectType.Placeable:
+                    entityColor = Color.Orange;
+                    entityHeight = 1.5f;
+                    entityWidth = 0.8f;
+                    break;
+                case Odyssey.Core.Enums.ObjectType.Trigger:
+                    entityColor = Color.Yellow;
+                    entityHeight = 0.5f;
+                    entityWidth = 1f;
+                    break;
+                case Odyssey.Core.Enums.ObjectType.Waypoint:
+                    entityColor = Color.Cyan;
+                    entityHeight = 0.3f;
+                    entityWidth = 0.3f;
+                    break;
+            }
+
+            var entityPos = new Microsoft.Xna.Framework.Vector3(transform.Position.X, transform.Position.Y, transform.Position.Z);
+            var entityWorld = Matrix.CreateTranslation(entityPos);
+
+            // Create a simple box for the entity
+            float hw = entityWidth * 0.5f;
+            var entityVertices = new VertexPositionColor[]
+            {
+                // Bottom face
+                new VertexPositionColor(new Microsoft.Xna.Framework.Vector3(-hw, -hw, 0), entityColor),
+                new VertexPositionColor(new Microsoft.Xna.Framework.Vector3(hw, -hw, 0), entityColor),
+                new VertexPositionColor(new Microsoft.Xna.Framework.Vector3(hw, hw, 0), entityColor),
+                new VertexPositionColor(new Microsoft.Xna.Framework.Vector3(-hw, hw, 0), entityColor),
+                // Top face
+                new VertexPositionColor(new Microsoft.Xna.Framework.Vector3(-hw, -hw, entityHeight), entityColor),
+                new VertexPositionColor(new Microsoft.Xna.Framework.Vector3(hw, -hw, entityHeight), entityColor),
+                new VertexPositionColor(new Microsoft.Xna.Framework.Vector3(hw, hw, entityHeight), entityColor),
+                new VertexPositionColor(new Microsoft.Xna.Framework.Vector3(-hw, hw, entityHeight), entityColor)
+            };
+
+            var entityIndices = new short[]
+            {
+                // Bottom
+                0, 1, 2, 0, 2, 3,
+                // Top
+                4, 6, 5, 4, 7, 6,
+                // Sides
+                0, 4, 5, 0, 5, 1,
+                1, 5, 6, 1, 6, 2,
+                2, 6, 7, 2, 7, 3,
+                3, 7, 4, 3, 4, 0
+            };
+
+            // Create temporary buffers for entity
+            using (var entityVb = new VertexBuffer(GraphicsDevice, typeof(VertexPositionColor), entityVertices.Length, BufferUsage.WriteOnly))
+            using (var entityIb = new IndexBuffer(GraphicsDevice, IndexElementSize.SixteenBits, entityIndices.Length, BufferUsage.WriteOnly))
+            {
+                entityVb.SetData(entityVertices);
+                entityIb.SetData(entityIndices);
+
+                GraphicsDevice.SetVertexBuffer(entityVb);
+                GraphicsDevice.Indices = entityIb;
+
+                _basicEffect.View = _viewMatrix;
+                _basicEffect.Projection = _projectionMatrix;
+                _basicEffect.World = entityWorld;
+                _basicEffect.VertexColorEnabled = true;
+
+                foreach (EffectPass pass in _basicEffect.CurrentTechnique.Passes)
+                {
+                    pass.Apply();
+                    GraphicsDevice.DrawIndexedPrimitives(
+                        PrimitiveType.TriangleList,
+                        0,
+                        0,
+                        entityIndices.Length / 3
                     );
                 }
             }
@@ -805,7 +946,7 @@ namespace Odyssey.Game.Core
                     float cameraDistance = 8f;
                     float cameraHeight = 4f;
                     float cameraAngle = transform.Facing + (float)Math.PI;
-                    
+
                     var playerPos = transform.Position;
                     return new Microsoft.Xna.Framework.Vector3(
                         playerPos.X + (float)Math.Sin(cameraAngle) * cameraDistance,

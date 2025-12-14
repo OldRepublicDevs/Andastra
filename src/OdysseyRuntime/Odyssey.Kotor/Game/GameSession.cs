@@ -97,7 +97,7 @@ namespace Odyssey.Kotor.Game
             _world = world;
             _vm = vm;
             _globals = globals;
-            
+
             // Create Installation from game path
             CSharpKOTOR.Installation.Installation installation = null;
             if (!string.IsNullOrEmpty(_settings.GamePath))
@@ -111,12 +111,12 @@ namespace Odyssey.Kotor.Game
                     Console.WriteLine("[GameSession] Failed to create Installation: " + ex.Message);
                 }
             }
-            
+
             if (installation == null)
             {
                 throw new InvalidOperationException("Failed to create Installation from game path: " + _settings.GamePath);
             }
-            
+
             _moduleLoader = new Loading.ModuleLoader(installation);
 
             // Create dialogue manager
@@ -249,7 +249,7 @@ namespace Odyssey.Kotor.Game
 
                 // Get navigation mesh from loaded module
                 _currentNavMesh = _moduleLoader.GetNavigationMesh();
-                
+
                 // Set current module in world
                 if (_currentRuntimeModule != null)
                 {
@@ -265,7 +265,7 @@ namespace Odyssey.Kotor.Game
                 }
 
                 // Fire module OnModuleLoad script
-                // TODO: Execute module OnModuleLoad script
+                ExecuteModuleScript(Odyssey.Core.Enums.ScriptEvent.OnModuleLoad, _currentRuntimeModule);
 
                 Console.WriteLine("[GameSession] Module loaded: " + moduleName);
 
@@ -352,6 +352,10 @@ namespace Odyssey.Kotor.Game
             Console.WriteLine("[GameSession] Player entity created at " + entryPos + " with facing " + entryFacing);
         }
 
+        // Heartbeat timing
+        private float _heartbeatTimer = 0f;
+        private const float HeartbeatInterval = 6.0f; // 6 seconds between heartbeats
+
         /// <summary>
         /// Update the game session each frame.
         /// </summary>
@@ -368,14 +372,81 @@ namespace Odyssey.Kotor.Game
             // Process delayed commands
             // TODO: Process delay scheduler
 
-            // Fire heartbeat scripts
-            // TODO: Fire heartbeat every 6 seconds
+            // Fire heartbeat scripts every 6 seconds
+            _heartbeatTimer += deltaTime;
+            if (_heartbeatTimer >= HeartbeatInterval)
+            {
+                _heartbeatTimer = 0f;
+                if (_currentRuntimeModule != null)
+                {
+                    ExecuteModuleScript(Odyssey.Core.Enums.ScriptEvent.OnHeartbeat, _currentRuntimeModule);
+                }
+            }
 
             // Check perception
             // TODO: Perception system
 
             // Process dialogue
             // TODO: Dialogue state machine
+        }
+
+        /// <summary>
+        /// Executes a module script event.
+        /// </summary>
+        private void ExecuteModuleScript(Odyssey.Core.Enums.ScriptEvent eventType, Odyssey.Core.Module.RuntimeModule module)
+        {
+            if (module == null)
+            {
+                return;
+            }
+
+            string scriptResRef = module.GetScript(eventType);
+            if (string.IsNullOrEmpty(scriptResRef))
+            {
+                return; // No script for this event
+            }
+
+            try
+            {
+                // Load script bytes
+                byte[] scriptBytes = LoadScript(scriptResRef);
+                if (scriptBytes == null || scriptBytes.Length == 0)
+                {
+                    Console.WriteLine($"[GameSession] Script not found: {scriptResRef}");
+                    return;
+                }
+
+                // Create execution context
+                // Note: We need to create an engine API instance
+                // For now, create a K1EngineApi (will be game-specific later)
+                var engineApi = new Odyssey.Scripting.EngineApi.K1EngineApi();
+                var ctx = new Odyssey.Scripting.VM.ExecutionContext(
+                    null, // Module scripts have no caller
+                    _world,
+                    engineApi,
+                    _globals
+                );
+
+                // Set resource provider (use Installation for now)
+                try
+                {
+                    var installation = new CSharpKOTOR.Installation.Installation(_settings.GamePath);
+                    ctx.ResourceProvider = installation;
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[GameSession] Failed to create Installation for script context: {ex.Message}");
+                }
+
+                // Execute script
+                int result = _vm.Execute(scriptBytes, ctx);
+                Console.WriteLine($"[GameSession] Executed {eventType} script {scriptResRef}, result: {result}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[GameSession] Error executing {eventType} script {scriptResRef}: {ex.Message}");
+                // Don't throw - script errors shouldn't crash the game
+            }
         }
 
         /// <summary>
