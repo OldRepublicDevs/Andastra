@@ -1,7 +1,9 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using CSharpKOTOR.Common;
+using CSharpKOTOR.Formats.NCS;
 using HolocronToolset.NET.Data;
 using HolocronToolset.NET.Utils;
 
@@ -23,14 +25,27 @@ namespace HolocronToolset.NET.Utils
             var settings = new GlobalSettings();
             string extractPath = ScriptUtils.SetupExtractPath();
 
-            // Use built-in compiler if available
-            // This will be implemented when NCS compiler is available in CSharpKOTOR
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/utils/script_compiler.py:62-64
+            // Original: if os.name == "posix" or return_value == QMessageBox.StandardButton.Yes:
+            // Original: log.debug("user chose Yes, compiling with builtin")
+            // Original: return bytes(bytes_ncs(compile_nss(source, Game.K2 if tsl else Game.K1, library_lookup=[extract_path])))
+            // Use built-in compiler (matching Python behavior on posix or when user chooses built-in)
             try
             {
-                // For now, return empty bytes - will be implemented when compiler is available
-                // Game game = tsl ? Game.TSL : Game.K1;
-                // return CompileNss(source, game, extractPath);
-                return new byte[0];
+                Game game = tsl ? Game.TSL : Game.K1;
+                List<string> libraryLookup = new List<string>();
+                if (!string.IsNullOrEmpty(extractPath))
+                {
+                    libraryLookup.Add(extractPath);
+                }
+                
+                NCS ncs = NCSAuto.CompileNss(source, game, null, null, libraryLookup);
+                if (ncs == null)
+                {
+                    return null;
+                }
+                
+                return NCSAuto.BytesNcs(ncs);
             }
             catch (Exception ex)
             {
