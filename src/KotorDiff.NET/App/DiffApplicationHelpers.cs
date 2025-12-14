@@ -322,10 +322,10 @@ namespace KotorDiff.NET.App
 
             // Create incremental writer if requested
             IncrementalTSLPatchDataWriter incrementalWriter = null;
-            if (!string.IsNullOrEmpty(config.TSLPatchDataPath))
+            if (config.TslPatchDataPath != null)
             {
                 incrementalWriter = new IncrementalTSLPatchDataWriter(
-                    config.TSLPatchDataPath,
+                    config.TslPatchDataPath.FullName,
                     config.IniFilename ?? "changes.ini",
                     config.Paths);
             }
@@ -341,7 +341,7 @@ namespace KotorDiff.NET.App
             {
                 incrementalWriter.Finalize();
             }
-            else if (!string.IsNullOrEmpty(config.TSLPatchDataPath) && modifications.HasModifications())
+            else if (config.TslPatchDataPath != null && modifications.HasModifications())
             {
                 // Use batch generation if not using incremental writer
                 // TODO: Implement generate_tslpatcher_data if needed
