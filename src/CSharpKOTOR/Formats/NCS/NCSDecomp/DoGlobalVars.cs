@@ -61,6 +61,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
         // Original: @Override public void outACopyDownSpCommand(ACopyDownSpCommand node) { if (!this.freezeStack) { this.state.transformCopyDownSp(node); } }
         public override void OutACopyDownSpCommand(ACopyDownSpCommand node)
         {
+            JavaSystem.@out.Println($"DEBUG DoGlobalVars.OutACopyDownSpCommand: freezeStack={this.freezeStack}");
             if (!this.freezeStack)
             {
                 this.state.TransformCopyDownSp(node);

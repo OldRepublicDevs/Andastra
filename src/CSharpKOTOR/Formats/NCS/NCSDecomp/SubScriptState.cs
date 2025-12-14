@@ -957,8 +957,14 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
         public virtual void TransformCopyDownSp(ACopyDownSpCommand node)
         {
             this.CheckStart(node);
+            int nodePos = this.nodedata != null ? this.nodedata.GetPos(node) : -1;
+            bool isRet = this.IsReturn(node);
+            JavaSystem.@out.Println($"DEBUG TransformCopyDownSp: pos={nodePos}, isReturn={isRet}, current={this.current.GetType().Name}, hasChildren={this.current.HasChildren()}");
+            
             AExpression exp = this.RemoveLastExp(false);
-            if (this.IsReturn(node))
+            JavaSystem.@out.Println($"DEBUG TransformCopyDownSp: extracted exp={exp?.GetType().Name ?? "null"}, current hasChildren={this.current.HasChildren()}");
+            
+            if (isRet)
             {
                 AReturnStatement ret = new AReturnStatement(exp);
                 this.current.AddChild(ret);
@@ -969,6 +975,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
                 // Original: AVarRef varref = this.getVarToAssignTo(node); AModifyExp modexp = new AModifyExp(varref, exp); this.updateName(varref, exp); this.current.addChild(modexp); this.state = 1;
                 // Java version casts directly to AVarRef, so GetVarToAssignTo should always return AVarRef for assignments
                 AExpression target = this.GetVarToAssignTo(node);
+                JavaSystem.@out.Println($"DEBUG TransformCopyDownSp: GetVarToAssignTo returned type={target?.GetType().Name ?? "null"}");
+                
                 if (target == null)
                 {
                     JavaSystem.@out.Println("ERROR TransformCopyDownSp: GetVarToAssignTo returned null for node at position " + (this.nodedata != null ? this.nodedata.GetPos(node).ToString() : "unknown"));
@@ -980,6 +988,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
                     this.UpdateName(varref, exp);
                     this.current.AddChild(modexp);
                     this.state = 1;
+                    JavaSystem.@out.Println($"DEBUG TransformCopyDownSp: Created AModifyExp assignment, current hasChildren={this.current.HasChildren()}");
                 }
                 else
                 {
