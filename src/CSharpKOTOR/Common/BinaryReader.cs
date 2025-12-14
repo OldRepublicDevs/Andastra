@@ -168,9 +168,6 @@ namespace CSharpKOTOR.Common
         {
             Seek(_position + offset);
         }
-            _stream.Seek(position + _offset, SeekOrigin.Begin);
-            _position = position;
-        }
 
         /// <summary>
         /// Skips ahead in the stream by the specified number of bytes.
