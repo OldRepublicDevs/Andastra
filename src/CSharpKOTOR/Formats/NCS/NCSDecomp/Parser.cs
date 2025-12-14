@@ -49,7 +49,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Parser
                 try
                 {
                     System.Reflection.Assembly assembly = typeof(Parser).Assembly;
-                    System.IO.Stream stream = assembly.GetManifestResourceStream("CSharpKOTOR.Formats.NCS.NCSDecomp.Parser.parser.dat") ??
+                    System.IO.Stream stream = assembly.GetManifestResourceStream("CSharpKOTOR.Formats.NCS.NCSDecomp.parser.dat") ??
+                                              assembly.GetManifestResourceStream("CSharpKOTOR.Formats.NCS.NCSDecomp.Parser.parser.dat") ??
                                               assembly.GetManifestResourceStream("parser.dat");
                     if (stream == null)
                     {
