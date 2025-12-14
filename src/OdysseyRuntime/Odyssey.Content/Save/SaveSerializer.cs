@@ -723,40 +723,317 @@ namespace Odyssey.Content.Save
                 }
 
                 var root = gff.Root;
+                uint local_c8 = 0;
 
-                state.Gold = root.GetInt32("Gold");
-                state.ExperiencePoints = root.GetInt32("ExperiencePoints");
-
-                // Read selected party
-                GFFList selectedList = root.GetList("SelectedParty");
-                if (selectedList != null)
+                // PT_PCNAME - Player character name
+                string pcName = root.GetString("PT_PCNAME");
+                if (state.PlayerCharacter == null)
                 {
-                    foreach (GFFStruct entry in selectedList)
+                    state.PlayerCharacter = new CreatureState();
+                }
+                state.PlayerCharacter.Tag = pcName;
+
+                // PT_GOLD - Gold/credits
+                state.Gold = root.GetInt32("PT_GOLD");
+
+                // PT_ITEM_COMPONENT - Item component count
+                state.ItemComponent = root.GetInt32("PT_ITEM_COMPONENT");
+
+                // PT_ITEM_CHEMICAL - Item chemical count
+                state.ItemChemical = root.GetInt32("PT_ITEM_CHEMICAL");
+
+                // PT_SWOOP1-3 - Swoop race times
+                state.Swoop1 = root.GetInt32("PT_SWOOP1");
+                state.Swoop2 = root.GetInt32("PT_SWOOP2");
+                state.Swoop3 = root.GetInt32("PT_SWOOP3");
+
+                // PT_XP_POOL - Experience point pool (float)
+                state.ExperiencePoints = (int)root.GetSingle("PT_XP_POOL");
+
+                // PT_PLAYEDSECONDS - Total seconds played (int32, fallback to PT_PLAYEDMINUTES * 60)
+                int seconds = root.GetInt32("PT_PLAYEDSECONDS");
+                if (seconds == 0)
+                {
+                    int minutes = root.GetInt32("PT_PLAYEDMINUTES");
+                    if (minutes > 0)
                     {
-                        string resRef = entry.GetString("ResRef");
-                        state.SelectedParty.Add(resRef);
+                        seconds = minutes * 60;
                     }
                 }
+                state.PlayTime = TimeSpan.FromSeconds(seconds);
 
-                // Read available members
-                GFFList availableList = root.GetList("AvailableMembers");
-                if (availableList != null)
+                // PT_CONTROLLED_NPC - Currently controlled NPC ID (float, -1 if none)
+                float controlledNPC = root.GetSingle("PT_CONTROLLED_NPC");
+                state.ControlledNPC = controlledNPC >= 0 ? (int)controlledNPC : -1;
+
+                // PT_SOLOMODE - Solo mode flag (byte)
+                state.SoloMode = root.GetUInt8("PT_SOLOMODE") != 0;
+
+                // PT_CHEAT_USED - Cheat used flag (byte)
+                state.CheatUsed = root.GetUInt8("PT_CHEAT_USED") != 0;
+
+                // PT_NUM_MEMBERS - Number of party members (byte)
+                byte numMembers = root.GetUInt8("PT_NUM_MEMBERS");
+
+                // PT_MEMBERS - List of party members
+                GFFList membersList = root.GetList("PT_MEMBERS");
+                if (membersList != null)
                 {
-                    foreach (GFFStruct entry in availableList)
+                    int memberCount = Math.Min(numMembers, membersList.Count);
+                    for (int i = 0; i < memberCount; i++)
                     {
-                        string resRef = entry.GetString("ResRef");
-                        bool isAvailable = entry.GetInt32("IsAvailable") != 0;
-                        bool isSelectable = entry.GetInt32("IsSelectable") != 0;
+                        GFFStruct entry = membersList[i];
+                        float memberId = entry.GetSingle("PT_MEMBER_ID");
+                        bool isLeader = entry.GetUInt8("PT_IS_LEADER") != 0;
 
-                        var memberState = new PartyMemberState
+                        // Note: Member ID would need to be mapped to ResRef
+                        // For now, store as placeholder - actual implementation would need ResRef mapping
+                        if (isLeader)
                         {
-                            TemplateResRef = resRef,
-                            IsAvailable = isAvailable,
-                            IsSelectable = isSelectable
-                        };
-                        state.AvailableMembers[resRef] = memberState;
+                            // Would set leader based on member ID
+                        }
                     }
                 }
+
+                // PT_NUM_PUPPETS - Number of puppets (byte)
+                byte numPuppets = root.GetUInt8("PT_NUM_PUPPETS");
+
+                // PT_PUPPETS - List of puppets
+                GFFList puppetsList = root.GetList("PT_PUPPETS");
+                if (puppetsList != null)
+                {
+                    int puppetCount = Math.Min(numPuppets, puppetsList.Count);
+                    for (int i = 0; i < puppetCount; i++)
+                    {
+                        GFFStruct entry = puppetsList[i];
+                        float puppetId = entry.GetSingle("PT_PUPPET_ID");
+                        state.Puppets.Add((uint)puppetId);
+                    }
+                }
+
+                // PT_AVAIL_PUPS - Available puppets list (3 entries)
+                GFFList availPupsList = root.GetList("PT_AVAIL_PUPS");
+                if (availPupsList != null)
+                {
+                    int count = Math.Min(3, availPupsList.Count);
+                    for (int i = 0; i < count; i++)
+                    {
+                        GFFStruct entry = availPupsList[i];
+                        bool available = entry.GetUInt8("PT_PUP_AVAIL") != 0;
+                        bool selectable = entry.GetUInt8("PT_PUP_SELECT") != 0;
+
+                        if (i < state.AvailablePuppets.Count)
+                        {
+                            state.AvailablePuppets[i] = available;
+                        }
+                        else
+                        {
+                            state.AvailablePuppets.Add(available);
+                        }
+
+                        if (i < state.SelectablePuppets.Count)
+                        {
+                            state.SelectablePuppets[i] = selectable;
+                        }
+                        else
+                        {
+                            state.SelectablePuppets.Add(selectable);
+                        }
+                    }
+                }
+
+                // PT_AVAIL_NPCS - Available NPCs list (12 entries)
+                GFFList availNpcsList = root.GetList("PT_AVAIL_NPCS");
+                if (availNpcsList != null)
+                {
+                    int count = Math.Min(12, availNpcsList.Count);
+                    for (int i = 0; i < count; i++)
+                    {
+                        GFFStruct entry = availNpcsList[i];
+                        bool available = entry.GetUInt8("PT_NPC_AVAIL") != 0;
+                        bool selectable = entry.GetUInt8("PT_NPC_SELECT") != 0;
+
+                        // Note: Would need to map index to NPC ResRef
+                        // For now, create placeholder entries
+                        string npcResRef = string.Format("NPC_{0:D2}", i);
+                        if (!state.AvailableMembers.ContainsKey(npcResRef))
+                        {
+                            state.AvailableMembers[npcResRef] = new PartyMemberState
+                            {
+                                TemplateResRef = npcResRef
+                            };
+                        }
+                        state.AvailableMembers[npcResRef].IsAvailable = available;
+                        state.AvailableMembers[npcResRef].IsSelectable = selectable;
+                    }
+                }
+
+                // PT_INFLUENCE - Influence values list (12 entries)
+                GFFList influenceList = root.GetList("PT_INFLUENCE");
+                if (influenceList != null)
+                {
+                    int count = Math.Min(12, influenceList.Count);
+                    for (int i = 0; i < count; i++)
+                    {
+                        GFFStruct entry = influenceList[i];
+                        float influence = entry.GetSingle("PT_NPC_INFLUENCE");
+
+                        if (i < state.Influence.Count)
+                        {
+                            state.Influence[i] = (int)influence;
+                        }
+                        else
+                        {
+                            state.Influence.Add((int)influence);
+                        }
+                    }
+                }
+
+                // PT_AISTATE - AI state (float)
+                state.AIState = (int)root.GetSingle("PT_AISTATE");
+
+                // PT_FOLLOWSTATE - Follow state (float)
+                state.FollowState = (int)root.GetSingle("PT_FOLLOWSTATE");
+
+                // GlxyMap - Galaxy map data
+                if (root.Exists("GlxyMap"))
+                {
+                    GFFStruct glxyMapStruct = root.GetStruct("GlxyMap");
+                    if (glxyMapStruct != null)
+                    {
+                        int numPnts = glxyMapStruct.GetInt32("GlxyMapNumPnts");
+                        state.GalaxyMapPlanetMask = glxyMapStruct.GetInt32("GlxyMapPlntMsk");
+                        state.GalaxyMapSelectedPoint = (int)glxyMapStruct.GetSingle("GlxyMapSelPnt");
+                    }
+                }
+
+                // PT_PAZAAKCARDS - Pazaak cards list (23 entries)
+                GFFList pazaakCardsList = root.GetList("PT_PAZAAKCARDS");
+                if (pazaakCardsList != null)
+                {
+                    int count = Math.Min(23, pazaakCardsList.Count);
+                    for (int i = 0; i < count; i++)
+                    {
+                        GFFStruct entry = pazaakCardsList[i];
+                        float countValue = entry.GetSingle("PT_PAZAAKCOUNT");
+
+                        if (i < state.PazaakCards.Count)
+                        {
+                            state.PazaakCards[i] = (int)countValue;
+                        }
+                        else
+                        {
+                            state.PazaakCards.Add((int)countValue);
+                        }
+                    }
+                }
+
+                // PT_PAZSIDELIST - Pazaak side list (10 entries)
+                GFFList pazaakSideList = root.GetList("PT_PAZSIDELIST");
+                if (pazaakSideList != null)
+                {
+                    int count = Math.Min(10, pazaakSideList.Count);
+                    for (int i = 0; i < count; i++)
+                    {
+                        GFFStruct entry = pazaakSideList[i];
+                        float card = entry.GetSingle("PT_PAZSIDECARD");
+
+                        if (i < state.PazaakSideList.Count)
+                        {
+                            state.PazaakSideList[i] = (int)card;
+                        }
+                        else
+                        {
+                            state.PazaakSideList.Add((int)card);
+                        }
+                    }
+                }
+
+                // PT_TUT_WND_SHOWN - Tutorial windows shown (array of 33 bytes)
+                byte[] tutArray = root.GetBinary("PT_TUT_WND_SHOWN");
+                if (tutArray != null)
+                {
+                    int count = Math.Min(33, tutArray.Length);
+                    for (int i = 0; i < count; i++)
+                    {
+                        bool shown = tutArray[i] != 0;
+                        if (i < state.TutorialWindowsShown.Count)
+                        {
+                            state.TutorialWindowsShown[i] = shown;
+                        }
+                        else
+                        {
+                            state.TutorialWindowsShown.Add(shown);
+                        }
+                    }
+                }
+
+                // PT_LAST_GUI_PNL - Last GUI panel (float)
+                state.LastGUIPanel = (int)root.GetSingle("PT_LAST_GUI_PNL");
+
+                // PT_FB_MSG_LIST - Feedback message list
+                GFFList fbMsgList = root.GetList("PT_FB_MSG_LIST");
+                if (fbMsgList != null)
+                {
+                    foreach (GFFStruct entry in fbMsgList)
+                    {
+                        var msg = new FeedbackMessage
+                        {
+                            Message = entry.GetString("PT_FB_MSG_MSG"),
+                            Type = entry.GetInt32("PT_FB_MSG_TYPE"),
+                            Color = entry.GetUInt8("PT_FB_MSG_COLOR")
+                        };
+                        state.FeedbackMessages.Add(msg);
+                    }
+                }
+
+                // PT_DLG_MSG_LIST - Dialogue message list
+                GFFList dlgMsgList = root.GetList("PT_DLG_MSG_LIST");
+                if (dlgMsgList != null)
+                {
+                    foreach (GFFStruct entry in dlgMsgList)
+                    {
+                        var msg = new DialogueMessage
+                        {
+                            Speaker = entry.GetString("PT_DLG_MSG_SPKR"),
+                            Message = entry.GetString("PT_DLG_MSG_MSG")
+                        };
+                        state.DialogueMessages.Add(msg);
+                    }
+                }
+
+                // PT_COM_MSG_LIST - Combat message list
+                GFFList comMsgList = root.GetList("PT_COM_MSG_LIST");
+                if (comMsgList != null)
+                {
+                    foreach (GFFStruct entry in comMsgList)
+                    {
+                        var msg = new CombatMessage
+                        {
+                            Message = entry.GetString("PT_COM_MSG_MSG"),
+                            Type = entry.GetInt32("PT_COM_MSG_TYPE"),
+                            Color = entry.GetUInt8("PT_COM_MSG_COOR")
+                        };
+                        state.CombatMessages.Add(msg);
+                    }
+                }
+
+                // PT_COST_MULT_LIST - Cost multiplier list
+                GFFList costMultList = root.GetList("PT_COST_MULT_LIST");
+                if (costMultList != null)
+                {
+                    foreach (GFFStruct entry in costMultList)
+                    {
+                        float mult = entry.GetSingle("PT_COST_MULT_VALUE");
+                        state.CostMultipliers.Add(mult);
+                    }
+                }
+
+                // PT_DISABLEMAP - Disable map flag (float)
+                state.DisableMap = root.GetSingle("PT_DISABLEMAP") != 0.0f;
+
+                // PT_DISABLEREGEN - Disable regen flag (float)
+                state.DisableRegen = root.GetSingle("PT_DISABLEREGEN") != 0.0f;
             }
             catch (Exception)
             {
