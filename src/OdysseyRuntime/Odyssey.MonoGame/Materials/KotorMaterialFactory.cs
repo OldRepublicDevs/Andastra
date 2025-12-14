@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using CSharpKOTOR.Formats.TPC;
 using Odyssey.MonoGame.Converters;
+using Odyssey.MonoGame.Enums;
 using JetBrains.Annotations;
 
 namespace Odyssey.MonoGame.Materials
@@ -315,3 +316,4 @@ namespace Odyssey.MonoGame.Materials
         }
     }
 }
+
