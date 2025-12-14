@@ -677,9 +677,39 @@ namespace HolocronToolset.NET.Editors
         // Original: def edit_selected_property(self):
         private void EditSelectedProperty()
         {
-            // Placeholder for property editor dialog
-            // Will be implemented when PropertyEditor dialog is available
-            System.Console.WriteLine("Property editor dialog not yet implemented");
+            // Matching PyKotor implementation: if not self.ui.assignedPropertiesList.selectedItems(): return
+            if (_assignedPropertiesList?.SelectedItem == null)
+            {
+                return;
+            }
+
+            // Matching PyKotor implementation: uti_property: UTIProperty = self.ui.assignedPropertiesList.selectedItems()[0].data(Qt.ItemDataRole.UserRole)
+            if (!(_assignedPropertiesList.SelectedItem is PropertyListItem selectedItem) || selectedItem.Property == null)
+            {
+                return;
+            }
+
+            // Matching PyKotor implementation: dialog = PropertyEditor(self._installation, uti_property)
+            var dialog = new PropertyEditorDialog(this, _installation, selectedItem.Property);
+            
+            // Store reference to update after dialog closes
+            var originalProperty = selectedItem.Property;
+            
+            // Matching PyKotor implementation: if not dialog.exec(): return
+            // Use ShowDialogAsync for proper modal dialog handling
+            dialog.Closed += (s, e) =>
+            {
+                if (dialog.DialogResult)
+                {
+                    // Matching PyKotor implementation: self.ui.assignedPropertiesList.selectedItems()[0].setData(Qt.ItemDataRole.UserRole, dialog.uti_property())
+                    // Matching PyKotor implementation: self.ui.assignedPropertiesList.selectedItems()[0].setText(self.property_summary(dialog.uti_property()))
+                    UTIProperty updatedProperty = dialog.GetUtiProperty();
+                    selectedItem.Property = updatedProperty;
+                    selectedItem.Text = PropertySummary(updatedProperty);
+                }
+            };
+            
+            dialog.Show(this);
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uti.py:270-301
@@ -775,6 +805,95 @@ namespace HolocronToolset.NET.Editors
             return $"Property {prop.PropertyName}: Subtype {prop.Subtype}";
         }
 
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uti.py:488-514
+        // Original: @staticmethod def cost_name(installation: HTInstallation, cost: int, value: int) -> str | None:
+        public static string CostName(HTInstallation installation, int cost, int value)
+        {
+            TwoDA costTableList = installation.HtGetCache2DA(HTInstallation.TwoDAIprpCosttable);
+            if (costTableList == null)
+            {
+                System.Console.WriteLine("Failed to retrieve IPRP_COSTTABLE 2DA.");
+                return null;
+            }
+
+            string costtableName = costTableList.GetCellString(cost, "name");
+            if (string.IsNullOrEmpty(costtableName))
+            {
+                System.Console.WriteLine($"Failed to retrieve costtable 'name' for cost '{cost}'.");
+                return null;
+            }
+
+            TwoDA costtable = installation.HtGetCache2DA(costtableName);
+            if (costtable == null)
+            {
+                System.Console.WriteLine($"Failed to retrieve '{costtableName}' 2DA.");
+                return null;
+            }
+
+            try
+            {
+                TwoDARow row = costtable.GetRow(value);
+                int? stringref = row.GetInteger("name");
+                if (stringref.HasValue)
+                {
+                    return installation.GetStringFromStringRef(stringref.Value);
+                }
+            }
+            catch (Exception)
+            {
+                System.Console.WriteLine("Could not get the costtable 2DA row/value");
+            }
+            return null;
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uti.py:516-557
+        // Original: @staticmethod def param_name(installation: HTInstallation, paramtable: int, param: int) -> str | None:
+        public static string ParamName(HTInstallation installation, int paramtable, int param)
+        {
+            // Get the IPRP_PARAMTABLE 2DA
+            TwoDA paramtableList = installation.HtGetCache2DA(HTInstallation.TwoDAIprpParamtable);
+            if (paramtableList == null)
+            {
+                System.Console.WriteLine("Failed to retrieve IPRP_PARAMTABLE 2DA.");
+                return null;
+            }
+
+            try
+            {
+                // Get the specific parameter table 2DA
+                string tableResref = paramtableList.GetCellString(paramtable, "tableresref");
+                if (string.IsNullOrEmpty(tableResref))
+                {
+                    System.Console.WriteLine($"Failed to retrieve table_resref for paramtable: '{paramtable}'.");
+                    return null;
+                }
+
+                TwoDA paramtable2da = installation.HtGetCache2DA(tableResref);
+                if (paramtable2da == null)
+                {
+                    System.Console.WriteLine($"Failed to retrieve 2DA file: {tableResref}.");
+                    return null;
+                }
+
+                // Get the string reference for the parameter name
+                TwoDARow paramRow = paramtable2da.GetRow(param);
+                int? stringref = paramRow.GetInteger("name");
+                if (stringref.HasValue)
+                {
+                    return installation.GetStringFromStringRef(stringref.Value);
+                }
+                else
+                {
+                    System.Console.WriteLine($"Failed to get 'name' value for param '{param}' in '{tableResref}'");
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Console.WriteLine($"Exception getting param name: {ex.Message}");
+            }
+            return null;
+        }
+
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uti.py:427-435
         // Original: def on_update_icon(self, *args, **kwargs):
         private void UpdateIcon()
@@ -842,7 +961,7 @@ namespace HolocronToolset.NET.Editors
                 for (int i = 0; i < itemProperties.GetHeight(); i++)
                 {
                     // Matching PyKotor implementation: prop_name: str = UTIEditor.property_name(installation, i)
-                    string propName = PropertyName(installation, i);
+                    string propName = GetPropertyName(installation, i);
                     
                     // Matching PyKotor implementation: item = QTreeWidgetItem([prop_name])
                     var item = new TreeViewItem
@@ -881,7 +1000,7 @@ namespace HolocronToolset.NET.Editors
                     for (int j = 0; j < subtype.GetHeight(); j++)
                     {
                         // Matching PyKotor implementation: name: None | str = UTIEditor.subproperty_name(installation, i, j)
-                        string name = SubpropertyName(installation, i, j);
+                        string name = GetSubpropertyName(installation, i, j);
                         if (string.IsNullOrEmpty(name) || string.IsNullOrWhiteSpace(name))
                         {
                             // Matching PyKotor implementation: if not name or not name.strip(): continue
@@ -916,7 +1035,7 @@ namespace HolocronToolset.NET.Editors
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uti.py:451-464
         // Original: @staticmethod def property_name(installation: HTInstallation, prop: int) -> str:
-        private static string PropertyName(HTInstallation installation, int prop)
+        public static string GetPropertyName(HTInstallation installation, int prop)
         {
             // Matching PyKotor implementation: properties: TwoDA | None = installation.ht_get_cache_2da(HTInstallation.TwoDA_ITEM_PROPERTIES)
             TwoDA properties = installation.HtGetCache2DA(HTInstallation.TwoDAItemProperties);
@@ -943,7 +1062,7 @@ namespace HolocronToolset.NET.Editors
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uti.py:466-485
         // Original: @staticmethod def subproperty_name(installation: HTInstallation, prop: int, subprop: int) -> None | str:
         [CanBeNull]
-        private static string SubpropertyName(HTInstallation installation, int prop, int subprop)
+        public static string GetSubpropertyName(HTInstallation installation, int prop, int subprop)
         {
             // Matching PyKotor implementation: properties: TwoDA | None = installation.ht_get_cache_2da(HTInstallation.TwoDA_ITEM_PROPERTIES)
             TwoDA properties = installation.HtGetCache2DA(HTInstallation.TwoDAItemProperties);
