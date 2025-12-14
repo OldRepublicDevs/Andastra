@@ -112,7 +112,23 @@ namespace Odyssey.Core.Actions
                         // Try to open door
                         if (door.IsLocked)
                         {
-                            // TODO: Check if actor can unlock
+                            // Check if actor has the key
+                            if (door.KeyRequired && !string.IsNullOrEmpty(door.KeyTag))
+                            {
+                                // TODO: Check if actor has item with matching tag
+                                // For now, if key is required, fail
+                                return ActionStatus.Failed;
+                            }
+
+                            // If lockable by script and has lock DC, attempt to unlock
+                            if (door.LockableByScript && door.LockDC > 0)
+                            {
+                                // TODO: Roll skill check (Security/Disable Device) vs LockDC
+                                // For now, fail if locked
+                                return ActionStatus.Failed;
+                            }
+
+                            // If just locked without key requirement, fail
                             return ActionStatus.Failed;
                         }
                         door.Open();
@@ -122,11 +138,47 @@ namespace Odyssey.Core.Actions
                 IPlaceableComponent placeable = target.GetComponent<IPlaceableComponent>();
                 if (placeable != null)
                 {
-                    if (!placeable.IsUsable)
+                    if (!placeable.IsUseable)
                     {
                         return ActionStatus.Failed;
                     }
-                    // TODO: Handle placeable use (inventory, etc.)
+
+                    // Handle locked placeables
+                    if (placeable.IsLocked)
+                    {
+                        // Check if actor has the key
+                        if (!string.IsNullOrEmpty(placeable.KeyTag))
+                        {
+                            // TODO: Check if actor has item with matching tag
+                            // For now, if key is required, fail
+                            return ActionStatus.Failed;
+                        }
+
+                        // If has lock DC, attempt to unlock
+                        if (placeable.LockDC > 0)
+                        {
+                            // TODO: Roll skill check (Security/Disable Device) vs LockDC
+                            // For now, fail if locked
+                            return ActionStatus.Failed;
+                        }
+
+                        return ActionStatus.Failed;
+                    }
+
+                    // Handle placeable use
+                    if (placeable.HasInventory)
+                    {
+                        // Container - open it
+                        if (!placeable.IsOpen)
+                        {
+                            placeable.Open();
+                        }
+                    }
+                    else
+                    {
+                        // Regular placeable - activate it
+                        placeable.Activate();
+                    }
                 }
             }
 
