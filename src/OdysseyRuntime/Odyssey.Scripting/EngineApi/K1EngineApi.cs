@@ -17,7 +17,7 @@ namespace Odyssey.Scripting.EngineApi
         public K1EngineApi()
         {
         }
-        
+
         protected override void RegisterFunctions()
         {
             // Register function names from ScriptDefs
@@ -35,7 +35,7 @@ namespace Odyssey.Scripting.EngineApi
             // Note: GetLocalInt/SetLocalInt are handled by the KOTOR-specific local variable functions
             // which use different IDs (679-682 for boolean/number locals)
         }
-        
+
         public override Variable CallEngineFunction(int routineId, IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             // Dispatch to the appropriate handler based on routine ID
@@ -164,29 +164,29 @@ namespace Odyssey.Scripting.EngineApi
                 case 119: return Func_EffectDamageReduction(args, ctx);
                 case 120: return Func_EffectDamageIncrease(args, ctx);
                 // ... more functions
-                
+
                 // PrintVector
                 case 141: return Func_PrintVector(args, ctx);
-                
+
                 // Global string (restricted functions)
                 case 160: return Func_SetGlobalString(args, ctx);
                 case 194: return Func_GetGlobalString(args, ctx);
-                
+
                 // Core object functions (correct IDs from nwscript.nss)
                 case 168: return Func_GetTag(args, ctx);
                 case 200: return Func_GetObjectByTag(args, ctx);
                 case 229: return Func_GetNearestObjectByTag(args, ctx);
-                
+
                 // Module
                 case 242: return Func_GetModule(args, ctx);
                 case 272: return Func_ObjectToString(args, ctx);
-                
+
                 // Global variables (KOTOR specific - different from standard NWN)
                 case 578: return Func_GetGlobalBoolean(args, ctx);
                 case 579: return Func_SetGlobalBoolean(args, ctx);
                 case 580: return Func_GetGlobalNumber(args, ctx);
                 case 581: return Func_SetGlobalNumber(args, ctx);
-                
+
                 // Local variables (KOTOR uses index-based, not name-based like NWN)
                 // 679: GetLocalBoolean(object, int index) - index 0-63
                 // 680: SetLocalBoolean(object, int index, int value)
@@ -196,7 +196,7 @@ namespace Odyssey.Scripting.EngineApi
                 case 680: return Func_SetLocalBoolean(args, ctx);
                 case 681: return Func_GetLocalNumber(args, ctx);
                 case 682: return Func_SetLocalNumber(args, ctx);
-                
+
                 default:
                     // Return default value for unimplemented functions
                     string funcName = GetFunctionName(routineId);
@@ -207,7 +207,7 @@ namespace Odyssey.Scripting.EngineApi
 
         #region Basic Utility Functions
 
-        private Variable Func_Random(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        private new Variable Func_Random(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             // Random(int nMaxInteger) - returns 0 to nMaxInteger-1
             int maxValue = args.Count > 0 ? args[0].AsInt() : 0;
@@ -218,7 +218,7 @@ namespace Odyssey.Scripting.EngineApi
             return Variable.FromInt(_random.Next(maxValue));
         }
 
-        private Variable Func_PrintString(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        private new Variable Func_PrintString(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             // PrintString(string sString) - outputs to console/log
             string message = args.Count > 0 ? args[0].AsString() : "";
@@ -226,7 +226,7 @@ namespace Odyssey.Scripting.EngineApi
             return Variable.Void();
         }
 
-        private Variable Func_GetTag(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        private new Variable Func_GetTag(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             // GetTag(object oObject) - returns the tag string
             uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
@@ -238,7 +238,7 @@ namespace Odyssey.Scripting.EngineApi
             return Variable.FromString("");
         }
 
-        private Variable Func_GetLocalInt(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        private new Variable Func_GetLocalInt(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             // GetLocalInt(object oObject, string sVarName) - get local integer variable
             uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
@@ -251,7 +251,7 @@ namespace Odyssey.Scripting.EngineApi
             return Variable.FromInt(0);
         }
 
-        private Variable Func_SetLocalInt(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        private new Variable Func_SetLocalInt(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             // SetLocalInt(object oObject, string sVarName, int nValue) - set local integer variable
             uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
@@ -268,14 +268,14 @@ namespace Odyssey.Scripting.EngineApi
         #endregion
 
         #region Action Functions
-        
+
         private Variable Func_AssignCommand(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             // AssignCommand(object oActionSubject, action aActionToAssign)
             // This pushes an action onto the target's action queue
             uint targetId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
             var action = args.Count > 1 ? args[1].ComplexValue as IAction : null;
-            
+
             var target = ResolveObject(targetId, ctx);
             if (target != null && action != null)
             {
@@ -285,31 +285,31 @@ namespace Odyssey.Scripting.EngineApi
                     queue.Add(action);
                 }
             }
-            
+
             return Variable.Void();
         }
-        
+
         private Variable Func_DelayCommand(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             // DelayCommand(float fSeconds, action aActionToDelay)
             float delay = args.Count > 0 ? args[0].AsFloat() : 0f;
             var action = args.Count > 1 ? args[1].ComplexValue as IAction : null;
-            
+
             // TODO: Schedule the action in the delay scheduler
-            
+
             return Variable.Void();
         }
-        
+
         private Variable Func_ExecuteScript(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             string scriptName = args.Count > 0 ? args[0].AsString() : string.Empty;
             uint targetId = args.Count > 1 ? args[1].AsObjectId() : ObjectSelf;
-            
+
             // TODO: Execute the script
-            
+
             return Variable.Void();
         }
-        
+
         private Variable Func_ClearAllActions(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             var caller = ctx.Caller;
@@ -323,32 +323,32 @@ namespace Odyssey.Scripting.EngineApi
             }
             return Variable.Void();
         }
-        
+
         private Variable Func_ActionRandomWalk(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             // TODO: Add random walk action
             return Variable.Void();
         }
-        
+
         private Variable Func_ActionMoveToLocation(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             // ActionMoveToLocation(location lDestination, int bRun=FALSE)
             var location = args.Count > 0 ? args[0].ComplexValue : null;
             bool run = args.Count > 1 && args[1].AsInt() != 0;
-            
+
             // Extract position from location object
             // TODO: Proper location handling
-            
+
             return Variable.Void();
         }
-        
+
         private Variable Func_ActionMoveToObject(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             // ActionMoveToObject(object oMoveTo, int bRun=FALSE, float fRange=1.0f)
             uint targetId = args.Count > 0 ? args[0].AsObjectId() : ObjectInvalid;
             bool run = args.Count > 1 && args[1].AsInt() != 0;
             float range = args.Count > 2 ? args[2].AsFloat() : 1.0f;
-            
+
             var target = ResolveObject(targetId, ctx);
             if (target != null && ctx.Caller != null)
             {
@@ -363,21 +363,21 @@ namespace Odyssey.Scripting.EngineApi
                     }
                 }
             }
-            
+
             return Variable.Void();
         }
-        
+
         private Variable Func_ActionMoveAwayFromObject(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             // TODO: Implement
             return Variable.Void();
         }
-        
+
         private Variable Func_ActionSpeakString(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             string text = args.Count > 0 ? args[0].AsString() : string.Empty;
             int volume = args.Count > 1 ? args[1].AsInt() : 0;
-            
+
             var action = new ActionSpeakString(text, volume);
             if (ctx.Caller != null)
             {
@@ -387,16 +387,16 @@ namespace Odyssey.Scripting.EngineApi
                     queue.Add(action);
                 }
             }
-            
+
             return Variable.Void();
         }
-        
+
         private Variable Func_ActionPlayAnimation(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             int animation = args.Count > 0 ? args[0].AsInt() : 0;
             float speed = args.Count > 1 ? args[1].AsFloat() : 1.0f;
             float duration = args.Count > 2 ? args[2].AsFloat() : 0f;
-            
+
             var action = new ActionPlayAnimation(animation, speed, duration);
             if (ctx.Caller != null)
             {
@@ -406,24 +406,24 @@ namespace Odyssey.Scripting.EngineApi
                     queue.Add(action);
                 }
             }
-            
+
             return Variable.Void();
         }
-        
+
         private Variable Func_ActionOpenDoor(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             uint doorId = args.Count > 0 ? args[0].AsObjectId() : ObjectInvalid;
             // TODO: Implement door opening
             return Variable.Void();
         }
-        
+
         private Variable Func_ActionCloseDoor(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             uint doorId = args.Count > 0 ? args[0].AsObjectId() : ObjectInvalid;
             // TODO: Implement door closing
             return Variable.Void();
         }
-        
+
         private Variable Func_ActionAttack(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             uint targetId = args.Count > 0 ? args[0].AsObjectId() : ObjectInvalid;
@@ -431,18 +431,18 @@ namespace Odyssey.Scripting.EngineApi
             // TODO: Implement attack action
             return Variable.Void();
         }
-        
+
         #endregion
-        
+
         #region Object Functions
-        
+
         private Variable Func_PrintObject(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectInvalid;
             Console.WriteLine("[Script] Object: 0x" + objectId.ToString("X8"));
             return Variable.Void();
         }
-        
+
         private Variable Func_SetFacing(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             float facing = args.Count > 0 ? args[0].AsFloat() : 0f;
@@ -456,7 +456,7 @@ namespace Odyssey.Scripting.EngineApi
             }
             return Variable.Void();
         }
-        
+
         private Variable Func_GetFacing(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
@@ -471,7 +471,7 @@ namespace Odyssey.Scripting.EngineApi
             }
             return Variable.FromFloat(0f);
         }
-        
+
         private Variable Func_GetPosition(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
@@ -486,27 +486,27 @@ namespace Odyssey.Scripting.EngineApi
             }
             return Variable.FromVector(Vector3.Zero);
         }
-        
+
         private Variable Func_GetDistanceToObject(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             uint targetId = args.Count > 0 ? args[0].AsObjectId() : ObjectInvalid;
             var target = ResolveObject(targetId, ctx);
-            
+
             if (ctx.Caller != null && target != null)
             {
                 var callerTransform = ctx.Caller.GetComponent<Core.Interfaces.Components.ITransformComponent>();
                 var targetTransform = target.GetComponent<Core.Interfaces.Components.ITransformComponent>();
-                
+
                 if (callerTransform != null && targetTransform != null)
                 {
                     float dist = Vector3.Distance(callerTransform.Position, targetTransform.Position);
                     return Variable.FromFloat(dist);
                 }
             }
-            
+
             return Variable.FromFloat(-1f); // Invalid
         }
-        
+
         private Variable Func_GetObjectType(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
@@ -517,7 +517,7 @@ namespace Odyssey.Scripting.EngineApi
             }
             return Variable.FromInt(0);
         }
-        
+
         private Variable Func_GetEnteringObject(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             if (ctx.Triggerer != null)
@@ -526,7 +526,7 @@ namespace Odyssey.Scripting.EngineApi
             }
             return Variable.FromObject(ObjectInvalid);
         }
-        
+
         private Variable Func_GetExitingObject(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             if (ctx.Triggerer != null)
@@ -535,7 +535,7 @@ namespace Odyssey.Scripting.EngineApi
             }
             return Variable.FromObject(ObjectInvalid);
         }
-        
+
         private Variable Func_GetNearestCreature(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             // GetNearestCreature(int nFirstCriteriaType, int nFirstCriteriaValue, ...)
@@ -548,11 +548,11 @@ namespace Odyssey.Scripting.EngineApi
                     var entities = ctx.World.GetEntitiesInRadius(transform.Position, 100f, ObjectType.Creature);
                     float nearestDist = float.MaxValue;
                     IEntity nearest = null;
-                    
+
                     foreach (var e in entities)
                     {
                         if (e == ctx.Caller) continue;
-                        
+
                         var t = e.GetComponent<Core.Interfaces.Components.ITransformComponent>();
                         if (t != null)
                         {
@@ -564,7 +564,7 @@ namespace Odyssey.Scripting.EngineApi
                             }
                         }
                     }
-                    
+
                     if (nearest != null)
                     {
                         return Variable.FromObject(nearest.ObjectId);
@@ -573,58 +573,58 @@ namespace Odyssey.Scripting.EngineApi
             }
             return Variable.FromObject(ObjectInvalid);
         }
-        
+
         #endregion
-        
+
         #region Global Variable Functions
-        
-        private Variable Func_GetGlobalNumber(IReadOnlyList<Variable> args, IExecutionContext ctx)
+
+        private new Variable Func_GetGlobalNumber(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             string name = args.Count > 0 ? args[0].AsString() : string.Empty;
             return Variable.FromInt(ctx.Globals.GetGlobalInt(name));
         }
-        
-        private Variable Func_SetGlobalNumber(IReadOnlyList<Variable> args, IExecutionContext ctx)
+
+        private new Variable Func_SetGlobalNumber(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             string name = args.Count > 0 ? args[0].AsString() : string.Empty;
             int value = args.Count > 1 ? args[1].AsInt() : 0;
             ctx.Globals.SetGlobalInt(name, value);
             return Variable.Void();
         }
-        
-        private Variable Func_GetGlobalBoolean(IReadOnlyList<Variable> args, IExecutionContext ctx)
+
+        private new Variable Func_GetGlobalBoolean(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             string name = args.Count > 0 ? args[0].AsString() : string.Empty;
             return Variable.FromInt(ctx.Globals.GetGlobalBool(name) ? 1 : 0);
         }
-        
-        private Variable Func_SetGlobalBoolean(IReadOnlyList<Variable> args, IExecutionContext ctx)
+
+        private new Variable Func_SetGlobalBoolean(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             string name = args.Count > 0 ? args[0].AsString() : string.Empty;
             bool value = args.Count > 1 && args[1].AsInt() != 0;
             ctx.Globals.SetGlobalBool(name, value);
             return Variable.Void();
         }
-        
-        private Variable Func_GetGlobalString(IReadOnlyList<Variable> args, IExecutionContext ctx)
+
+        private new Variable Func_GetGlobalString(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             string name = args.Count > 0 ? args[0].AsString() : string.Empty;
             return Variable.FromString(ctx.Globals.GetGlobalString(name));
         }
-        
-        private Variable Func_SetGlobalString(IReadOnlyList<Variable> args, IExecutionContext ctx)
+
+        private new Variable Func_SetGlobalString(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             string name = args.Count > 0 ? args[0].AsString() : string.Empty;
             string value = args.Count > 1 ? args[1].AsString() : string.Empty;
             ctx.Globals.SetGlobalString(name, value);
             return Variable.Void();
         }
-        
+
         private Variable Func_GetLocalObject(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
             string name = args.Count > 1 ? args[1].AsString() : string.Empty;
-            
+
             var entity = ResolveObject(objectId, ctx);
             if (entity != null)
             {
@@ -633,7 +633,7 @@ namespace Odyssey.Scripting.EngineApi
             }
             return Variable.FromObject(ObjectInvalid);
         }
-        
+
         // KOTOR Local Boolean/Number functions (index-based, not name-based like NWN)
         private Variable Func_GetLocalBoolean(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
@@ -641,7 +641,7 @@ namespace Odyssey.Scripting.EngineApi
             // Index range: 0-63
             uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
             int index = args.Count > 1 ? args[1].AsInt() : 0;
-            
+
             var entity = ResolveObject(objectId, ctx);
             if (entity != null && index >= 0 && index < 64)
             {
@@ -650,14 +650,14 @@ namespace Odyssey.Scripting.EngineApi
             }
             return Variable.FromInt(0);
         }
-        
+
         private Variable Func_SetLocalBoolean(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             // SetLocalBoolean(object oObject, int nIndex, int nValue)
             uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
             int index = args.Count > 1 ? args[1].AsInt() : 0;
             int value = args.Count > 2 ? args[2].AsInt() : 0;
-            
+
             var entity = ResolveObject(objectId, ctx);
             if (entity != null && index >= 0 && index < 64)
             {
@@ -665,14 +665,14 @@ namespace Odyssey.Scripting.EngineApi
             }
             return Variable.Void();
         }
-        
+
         private Variable Func_GetLocalNumber(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             // GetLocalNumber(object oObject, int nIndex)
             // Index range: 0 only
             uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
             int index = args.Count > 1 ? args[1].AsInt() : 0;
-            
+
             var entity = ResolveObject(objectId, ctx);
             if (entity != null && index == 0)
             {
@@ -680,7 +680,7 @@ namespace Odyssey.Scripting.EngineApi
             }
             return Variable.FromInt(0);
         }
-        
+
         private Variable Func_SetLocalNumber(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             // SetLocalNumber(object oObject, int nIndex, int nValue)
@@ -688,7 +688,7 @@ namespace Odyssey.Scripting.EngineApi
             uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
             int index = args.Count > 1 ? args[1].AsInt() : 0;
             int value = args.Count > 2 ? args[2].AsInt() : 0;
-            
+
             var entity = ResolveObject(objectId, ctx);
             if (entity != null && index == 0)
             {
@@ -699,88 +699,88 @@ namespace Odyssey.Scripting.EngineApi
             }
             return Variable.Void();
         }
-        
+
         #endregion
-        
+
         #region Math Functions
-        
+
         private Variable Func_fabs(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             float value = args.Count > 0 ? args[0].AsFloat() : 0f;
             return Variable.FromFloat(Math.Abs(value));
         }
-        
+
         private Variable Func_cos(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             float value = args.Count > 0 ? args[0].AsFloat() : 0f;
             return Variable.FromFloat((float)Math.Cos(value));
         }
-        
+
         private Variable Func_sin(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             float value = args.Count > 0 ? args[0].AsFloat() : 0f;
             return Variable.FromFloat((float)Math.Sin(value));
         }
-        
+
         private Variable Func_tan(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             float value = args.Count > 0 ? args[0].AsFloat() : 0f;
             return Variable.FromFloat((float)Math.Tan(value));
         }
-        
+
         private Variable Func_acos(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             float value = args.Count > 0 ? args[0].AsFloat() : 0f;
             return Variable.FromFloat((float)Math.Acos(value));
         }
-        
+
         private Variable Func_asin(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             float value = args.Count > 0 ? args[0].AsFloat() : 0f;
             return Variable.FromFloat((float)Math.Asin(value));
         }
-        
+
         private Variable Func_atan(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             float value = args.Count > 0 ? args[0].AsFloat() : 0f;
             return Variable.FromFloat((float)Math.Atan(value));
         }
-        
+
         private Variable Func_log(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             float value = args.Count > 0 ? args[0].AsFloat() : 0f;
             return Variable.FromFloat((float)Math.Log(value));
         }
-        
+
         private Variable Func_pow(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             float x = args.Count > 0 ? args[0].AsFloat() : 0f;
             float y = args.Count > 1 ? args[1].AsFloat() : 0f;
             return Variable.FromFloat((float)Math.Pow(x, y));
         }
-        
+
         private Variable Func_sqrt(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             float value = args.Count > 0 ? args[0].AsFloat() : 0f;
             return Variable.FromFloat((float)Math.Sqrt(value));
         }
-        
+
         private Variable Func_abs(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             int value = args.Count > 0 ? args[0].AsInt() : 0;
             return Variable.FromInt(Math.Abs(value));
         }
-        
+
         private Variable Func_VectorMagnitude(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             var v = args.Count > 0 ? args[0].AsVector() : Vector3.Zero;
             return Variable.FromFloat(v.Length());
         }
-        
+
         #endregion
-        
+
         #region Dice Functions
-        
+
         private Variable Func_d2(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             int count = args.Count > 0 ? args[0].AsInt() : 1;
@@ -788,7 +788,7 @@ namespace Odyssey.Scripting.EngineApi
             for (int i = 0; i < count; i++) total += _random.Next(1, 3);
             return Variable.FromInt(total);
         }
-        
+
         private Variable Func_d3(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             int count = args.Count > 0 ? args[0].AsInt() : 1;
@@ -796,7 +796,7 @@ namespace Odyssey.Scripting.EngineApi
             for (int i = 0; i < count; i++) total += _random.Next(1, 4);
             return Variable.FromInt(total);
         }
-        
+
         private Variable Func_d4(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             int count = args.Count > 0 ? args[0].AsInt() : 1;
@@ -804,7 +804,7 @@ namespace Odyssey.Scripting.EngineApi
             for (int i = 0; i < count; i++) total += _random.Next(1, 5);
             return Variable.FromInt(total);
         }
-        
+
         private Variable Func_d6(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             int count = args.Count > 0 ? args[0].AsInt() : 1;
@@ -812,7 +812,7 @@ namespace Odyssey.Scripting.EngineApi
             for (int i = 0; i < count; i++) total += _random.Next(1, 7);
             return Variable.FromInt(total);
         }
-        
+
         private Variable Func_d8(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             int count = args.Count > 0 ? args[0].AsInt() : 1;
@@ -820,7 +820,7 @@ namespace Odyssey.Scripting.EngineApi
             for (int i = 0; i < count; i++) total += _random.Next(1, 9);
             return Variable.FromInt(total);
         }
-        
+
         private Variable Func_d10(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             int count = args.Count > 0 ? args[0].AsInt() : 1;
@@ -828,7 +828,7 @@ namespace Odyssey.Scripting.EngineApi
             for (int i = 0; i < count; i++) total += _random.Next(1, 11);
             return Variable.FromInt(total);
         }
-        
+
         private Variable Func_d12(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             int count = args.Count > 0 ? args[0].AsInt() : 1;
@@ -836,7 +836,7 @@ namespace Odyssey.Scripting.EngineApi
             for (int i = 0; i < count; i++) total += _random.Next(1, 13);
             return Variable.FromInt(total);
         }
-        
+
         private Variable Func_d20(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             int count = args.Count > 0 ? args[0].AsInt() : 1;
@@ -844,7 +844,7 @@ namespace Odyssey.Scripting.EngineApi
             for (int i = 0; i < count; i++) total += _random.Next(1, 21);
             return Variable.FromInt(total);
         }
-        
+
         private Variable Func_d100(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             int count = args.Count > 0 ? args[0].AsInt() : 1;
@@ -852,29 +852,29 @@ namespace Odyssey.Scripting.EngineApi
             for (int i = 0; i < count; i++) total += _random.Next(1, 101);
             return Variable.FromInt(total);
         }
-        
+
         #endregion
-        
+
         #region String Functions
-        
+
         private Variable Func_GetStringLength(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             string s = args.Count > 0 ? args[0].AsString() : string.Empty;
             return Variable.FromInt(s.Length);
         }
-        
+
         private Variable Func_GetStringUpperCase(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             string s = args.Count > 0 ? args[0].AsString() : string.Empty;
             return Variable.FromString(s.ToUpperInvariant());
         }
-        
+
         private Variable Func_GetStringLowerCase(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             string s = args.Count > 0 ? args[0].AsString() : string.Empty;
             return Variable.FromString(s.ToLowerInvariant());
         }
-        
+
         private Variable Func_GetStringRight(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             string s = args.Count > 0 ? args[0].AsString() : string.Empty;
@@ -883,7 +883,7 @@ namespace Odyssey.Scripting.EngineApi
             if (count >= s.Length) return Variable.FromString(s);
             return Variable.FromString(s.Substring(s.Length - count));
         }
-        
+
         private Variable Func_GetStringLeft(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             string s = args.Count > 0 ? args[0].AsString() : string.Empty;
@@ -892,7 +892,7 @@ namespace Odyssey.Scripting.EngineApi
             if (count >= s.Length) return Variable.FromString(s);
             return Variable.FromString(s.Substring(0, count));
         }
-        
+
         private Variable Func_InsertString(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             string dest = args.Count > 0 ? args[0].AsString() : string.Empty;
@@ -902,7 +902,7 @@ namespace Odyssey.Scripting.EngineApi
             if (pos > dest.Length) pos = dest.Length;
             return Variable.FromString(dest.Insert(pos, src));
         }
-        
+
         private Variable Func_GetSubString(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             string s = args.Count > 0 ? args[0].AsString() : string.Empty;
@@ -913,7 +913,7 @@ namespace Odyssey.Scripting.EngineApi
             if (start + count > s.Length) count = s.Length - start;
             return Variable.FromString(s.Substring(start, count));
         }
-        
+
         private Variable Func_FindSubString(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             string s = args.Count > 0 ? args[0].AsString() : string.Empty;
@@ -922,121 +922,121 @@ namespace Odyssey.Scripting.EngineApi
             if (start < 0) start = 0;
             return Variable.FromInt(s.IndexOf(sub, start, StringComparison.Ordinal));
         }
-        
+
         #endregion
-        
+
         #region Placeholder Functions
-        
+
         private Variable Func_SwitchPlayerCharacter(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             return Variable.Void();
         }
-        
+
         private Variable Func_SetTime(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             return Variable.Void();
         }
-        
+
         private Variable Func_SetPartyLeader(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             return Variable.Void();
         }
-        
+
         private Variable Func_SetAreaUnescapable(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             return Variable.Void();
         }
-        
+
         private Variable Func_GetAreaUnescapable(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             return Variable.FromInt(0);
         }
-        
+
         private Variable Func_GetTimeHour(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             return Variable.FromInt(12);
         }
-        
+
         private Variable Func_GetTimeMinute(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             return Variable.FromInt(0);
         }
-        
+
         private Variable Func_GetTimeSecond(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             return Variable.FromInt(0);
         }
-        
+
         private Variable Func_GetTimeMillisecond(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             return Variable.FromInt(0);
         }
-        
+
         private new Variable Func_GetArea(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             return Variable.FromObject(0x7F000003);
         }
-        
+
         private Variable Func_GetItemPossessor(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             return Variable.FromObject(ObjectInvalid);
         }
-        
+
         private Variable Func_GetItemPossessedBy(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             return Variable.FromObject(ObjectInvalid);
         }
-        
+
         private Variable Func_CreateItemOnObject(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             return Variable.FromObject(ObjectInvalid);
         }
-        
+
         private Variable Func_ActionEquipItem(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             return Variable.Void();
         }
-        
+
         private Variable Func_ActionUnequipItem(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             return Variable.Void();
         }
-        
+
         private Variable Func_ActionPickUpItem(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             return Variable.Void();
         }
-        
+
         private Variable Func_ActionPutDownItem(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             return Variable.Void();
         }
-        
+
         private Variable Func_GetLastAttacker(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             return Variable.FromObject(ObjectInvalid);
         }
-        
+
         private Variable Func_SetCameraFacing(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             return Variable.Void();
         }
-        
+
         private Variable Func_PlaySound(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             return Variable.Void();
         }
-        
+
         private Variable Func_GetSpellTargetObject(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             return Variable.FromObject(ObjectInvalid);
         }
-        
+
         private Variable Func_ActionCastSpellAtObject(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             return Variable.Void();
         }
-        
+
         private Variable Func_GetCurrentHitPoints(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
@@ -1051,7 +1051,7 @@ namespace Odyssey.Scripting.EngineApi
             }
             return Variable.FromInt(0);
         }
-        
+
         private Variable Func_GetMaxHitPoints(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
@@ -1066,153 +1066,153 @@ namespace Odyssey.Scripting.EngineApi
             }
             return Variable.FromInt(0);
         }
-        
+
         // Effect placeholders
         private Variable Func_EffectAssuredHit(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             return Variable.FromEffect(new object());
         }
-        
+
         private Variable Func_GetLastItemEquipped(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             return Variable.FromObject(ObjectInvalid);
         }
-        
+
         private Variable Func_GetSubScreenID(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             return Variable.FromInt(0);
         }
-        
+
         private Variable Func_CancelCombat(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             return Variable.Void();
         }
-        
+
         private Variable Func_GetCurrentForcePoints(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             return Variable.FromInt(0);
         }
-        
+
         private Variable Func_GetMaxForcePoints(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             return Variable.FromInt(0);
         }
-        
+
         private Variable Func_PauseGame(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             return Variable.Void();
         }
-        
+
         private Variable Func_SetPlayerRestrictMode(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             return Variable.Void();
         }
-        
+
         private Variable Func_GetPlayerRestrictMode(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             return Variable.FromInt(0);
         }
-        
+
         private Variable Func_GetCasterLevel(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             return Variable.FromInt(1);
         }
-        
+
         private Variable Func_GetFirstEffect(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             return Variable.FromEffect(null);
         }
-        
+
         private Variable Func_GetNextEffect(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             return Variable.FromEffect(null);
         }
-        
+
         private Variable Func_RemoveEffect(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             return Variable.Void();
         }
-        
+
         private Variable Func_GetIsEffectValid(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             return Variable.FromInt(0);
         }
-        
+
         private Variable Func_GetEffectDurationType(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             return Variable.FromInt(0);
         }
-        
+
         private Variable Func_GetEffectSubType(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             return Variable.FromInt(0);
         }
-        
+
         private Variable Func_GetEffectCreator(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             return Variable.FromObject(ObjectInvalid);
         }
-        
+
         private Variable Func_GetFirstObjectInArea(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             return Variable.FromObject(ObjectInvalid);
         }
-        
+
         private Variable Func_GetNextObjectInArea(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             return Variable.FromObject(ObjectInvalid);
         }
-        
+
         private Variable Func_GetMetaMagicFeat(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             return Variable.FromInt(0);
         }
-        
+
         private Variable Func_GetRacialType(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             return Variable.FromInt(0);
         }
-        
+
         private Variable Func_FortitudeSave(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             return Variable.FromInt(0);
         }
-        
+
         private Variable Func_ReflexSave(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             return Variable.FromInt(0);
         }
-        
+
         private Variable Func_WillSave(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             return Variable.FromInt(0);
         }
-        
+
         private Variable Func_GetSpellSaveDC(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             return Variable.FromInt(10);
         }
-        
+
         private Variable Func_MagicalEffect(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             return Variable.FromEffect(args.Count > 0 ? args[0].ComplexValue : null);
         }
-        
+
         private Variable Func_SupernaturalEffect(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             return Variable.FromEffect(args.Count > 0 ? args[0].ComplexValue : null);
         }
-        
+
         private Variable Func_ExtraordinaryEffect(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             return Variable.FromEffect(args.Count > 0 ? args[0].ComplexValue : null);
         }
-        
+
         private Variable Func_EffectACIncrease(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             return Variable.FromEffect(new object());
         }
-        
+
         private Variable Func_GetAC(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
@@ -1227,52 +1227,52 @@ namespace Odyssey.Scripting.EngineApi
             }
             return Variable.FromInt(10);
         }
-        
+
         private Variable Func_EffectHeal(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             return Variable.FromEffect(new object());
         }
-        
+
         private Variable Func_EffectDamage(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             return Variable.FromEffect(new object());
         }
-        
+
         private Variable Func_EffectAbilityIncrease(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             return Variable.FromEffect(new object());
         }
-        
+
         private Variable Func_EffectDamageResistance(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             return Variable.FromEffect(new object());
         }
-        
+
         private Variable Func_EffectResurrection(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             return Variable.FromEffect(new object());
         }
-        
+
         private Variable Func_EffectSavingThrowIncrease(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             return Variable.FromEffect(new object());
         }
-        
+
         private Variable Func_EffectAttackIncrease(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             return Variable.FromEffect(new object());
         }
-        
+
         private Variable Func_EffectDamageReduction(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             return Variable.FromEffect(new object());
         }
-        
+
         private Variable Func_EffectDamageIncrease(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             return Variable.FromEffect(new object());
         }
-        
+
         #endregion
     }
 }

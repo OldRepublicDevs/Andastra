@@ -117,7 +117,7 @@ namespace Odyssey.Kotor.Game
                 throw new InvalidOperationException("Failed to create Installation from game path: " + _settings.GamePath);
             }
             
-            _moduleLoader = new ModuleLoader(installation);
+            _moduleLoader = new Loading.ModuleLoader(installation);
 
             // Create dialogue manager
             _dialogueManager = new DialogueManager(
