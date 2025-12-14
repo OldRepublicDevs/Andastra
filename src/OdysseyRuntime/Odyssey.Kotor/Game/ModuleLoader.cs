@@ -1,32 +1,102 @@
 using System;
 using System.IO;
 using System.Collections.Generic;
-using System.Numerics;
 using Odyssey.Core.Entities;
 using Odyssey.Core.Interfaces;
+using Odyssey.Core.Interfaces.Components;
 using Odyssey.Core.Module;
 using Odyssey.Core.Navigation;
-using Odyssey.Core.Enums;
+using CSharpKOTOR.Common;
+using CSharpKOTOR.Installation;
+using CSharpKOTOR.Resources;
+using CSharpKOTOR.Formats.GFF;
+using CSharpKOTOR.Formats.LYT;
+using CSharpKOTOR.Formats.VIS;
+using CSharpKOTOR.Formats.BWM;
+using CSharpKOTOR.Formats.MDL;
+using CSharpKOTOR.Formats.TPC;
+using MDLData = CSharpKOTOR.Formats.MDLData;
+using CSharpKOTOR.Resource.Generics;
 using CSharpKOTOR.Resource.Generics.DLG;
 using JetBrains.Annotations;
+
+// Explicit type aliases to resolve ambiguity
+using SysVector3 = System.Numerics.Vector3;
+using KotorVector3 = CSharpKOTOR.Common.Vector3;
+using OdyObjectType = Odyssey.Core.Enums.ObjectType;
+using InstResourceResult = CSharpKOTOR.Installation.ResourceResult;
 
 namespace Odyssey.Kotor.Game
 {
     /// <summary>
-    /// Loads modules from KOTOR game files.
-    /// TODO: Integrate with CSharpKOTOR resource loading properly.
+    /// Loads modules from KOTOR game files using CSharpKOTOR resource infrastructure.
     /// </summary>
     public class ModuleLoader
     {
         private readonly string _gamePath;
         private readonly World _world;
+        private readonly Installation _installation;
         private NavigationMesh _currentNavMesh;
         private RuntimeArea _currentArea;
+        private string _currentModuleRoot;
+
+        // Cached module resources
+        private IFO _currentIfo;
+        private GIT _currentGit;
+        private LYT _currentLyt;
+        private VIS _currentVis;
+
+        /// <summary>
+        /// Gets the current IFO (module info).
+        /// </summary>
+        [CanBeNull]
+        public IFO CurrentIFO
+        {
+            get { return _currentIfo; }
+        }
+
+        /// <summary>
+        /// Gets the current GIT (game instance data).
+        /// </summary>
+        [CanBeNull]
+        public GIT CurrentGIT
+        {
+            get { return _currentGit; }
+        }
+
+        /// <summary>
+        /// Gets the current LYT (area layout).
+        /// </summary>
+        [CanBeNull]
+        public LYT CurrentLYT
+        {
+            get { return _currentLyt; }
+        }
+
+        /// <summary>
+        /// Gets the current VIS (visibility data).
+        /// </summary>
+        [CanBeNull]
+        public VIS CurrentVIS
+        {
+            get { return _currentVis; }
+        }
 
         public ModuleLoader(string gamePath, World world)
         {
             _gamePath = gamePath;
             _world = world;
+
+            try
+            {
+                _installation = new Installation(gamePath);
+                Console.WriteLine("[ModuleLoader] Installation initialized: " + _installation.Game);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("[ModuleLoader] WARNING: Failed to initialize Installation: " + ex.Message);
+                _installation = null;
+            }
         }
 
         /// <summary>
@@ -49,31 +119,21 @@ namespace Odyssey.Kotor.Game
                 return null;
             }
 
-            // TODO: Integrate with CSharpKOTOR resource provider
-            // For now, try to load from module or override folder
-            string dialogPath = Path.Combine(_gamePath, "override", resRef + ".dlg");
-            if (!File.Exists(dialogPath))
-            {
-                // Try modules folder
-                dialogPath = Path.Combine(_gamePath, "modules", resRef + ".dlg");
-            }
-
-            if (!File.Exists(dialogPath))
-            {
-                Console.WriteLine("[ModuleLoader] Dialogue not found: " + resRef);
-                return null;
-            }
-
             try
             {
-                byte[] data = File.ReadAllBytes(dialogPath);
-                return DLGHelper.ReadDlg(data);
+                InstResourceResult result = _installation?.Resource(resRef, ResourceType.DLG, null, _currentModuleRoot);
+                if (result != null && result.Data != null)
+                {
+                    GFF gff = GFF.FromBytes(result.Data);
+                    return DLGHelper.ConstructDlg(gff);
+                }
             }
             catch (Exception ex)
             {
                 Console.WriteLine("[ModuleLoader] Failed to load dialogue " + resRef + ": " + ex.Message);
-                return null;
             }
+
+            return null;
         }
 
         /// <summary>
@@ -87,30 +147,20 @@ namespace Odyssey.Kotor.Game
                 return null;
             }
 
-            // TODO: Integrate with CSharpKOTOR resource provider
-            // For now, try to load from module or override folder
-            string scriptPath = Path.Combine(_gamePath, "override", resRef + ".ncs");
-            if (!File.Exists(scriptPath))
-            {
-                // Try modules folder
-                scriptPath = Path.Combine(_gamePath, "modules", resRef + ".ncs");
-            }
-
-            if (!File.Exists(scriptPath))
-            {
-                Console.WriteLine("[ModuleLoader] Script not found: " + resRef);
-                return null;
-            }
-
             try
             {
-                return File.ReadAllBytes(scriptPath);
+                InstResourceResult result = _installation?.Resource(resRef, ResourceType.NCS, null, _currentModuleRoot);
+                if (result != null && result.Data != null)
+                {
+                    return result.Data;
+                }
             }
             catch (Exception ex)
             {
                 Console.WriteLine("[ModuleLoader] Failed to load script " + resRef + ": " + ex.Message);
-                return null;
             }
+
+            return null;
         }
 
         /// <summary>
@@ -119,112 +169,658 @@ namespace Odyssey.Kotor.Game
         public void LoadModule(string moduleName)
         {
             Console.WriteLine("[ModuleLoader] Loading module: " + moduleName);
+            _currentModuleRoot = moduleName;
 
-            // Find module files
-            string modulesPath = Path.Combine(_gamePath, "modules");
-            string rimPath = Path.Combine(modulesPath, moduleName + ".rim");
-            string modPath = Path.Combine(modulesPath, moduleName + ".mod");
+            // Clear previous module data
+            ClearWorld();
+            _currentIfo = null;
+            _currentGit = null;
+            _currentLyt = null;
+            _currentVis = null;
 
-            bool moduleExists = File.Exists(modPath) || File.Exists(rimPath);
-            if (!moduleExists)
+            if (_installation == null)
             {
-                Console.Error.WriteLine("[ModuleLoader] WARNING: Module file not found: " + moduleName);
-                Console.Error.WriteLine("[ModuleLoader] Checked: " + modPath);
-                Console.Error.WriteLine("[ModuleLoader] Checked: " + rimPath);
-                // Continue with placeholder data for testing
+                Console.WriteLine("[ModuleLoader] WARNING: No installation - using placeholder data");
+                CreatePlaceholderModule(moduleName);
+                return;
             }
 
-            // TODO: Parse actual module files using CSharpKOTOR
-            // For now, create placeholder module/area for testing
+            // Load IFO (module info)
+            LoadIFO(moduleName);
 
-            var runtimeModule = CreatePlaceholderModule(moduleName);
+            // Load LYT (area layout)
+            LoadLYT(moduleName);
+
+            // Load VIS (visibility)
+            LoadVIS(moduleName);
+
+            // Load GIT (game instance data - entities)
+            LoadGIT(moduleName);
+
+            // Load walkmesh for navigation
+            LoadWalkmesh(moduleName);
+
+            // Create runtime module and area
+            var runtimeModule = CreateRuntimeModule(moduleName);
             _world.CurrentModule = runtimeModule;
 
-            var runtimeArea = CreatePlaceholderArea(moduleName);
+            var runtimeArea = CreateRuntimeArea(moduleName);
             _world.CurrentArea = runtimeArea;
             _currentArea = runtimeArea;
 
-            // Create some placeholder entities
-            CreatePlaceholderEntities(runtimeArea);
+            // Spawn entities from GIT
+            if (_currentGit != null)
+            {
+                SpawnEntitiesFromGIT(_currentGit, runtimeArea);
+            }
 
-            // Create placeholder navigation mesh
-            _currentNavMesh = CreatePlaceholderNavMesh(runtimeArea);
-
-            Console.WriteLine("[ModuleLoader] Module loaded (placeholder): " + moduleName);
+            Console.WriteLine("[ModuleLoader] Module loaded: " + moduleName);
         }
 
-        private RuntimeModule CreatePlaceholderModule(string moduleName)
+        private void ClearWorld()
+        {
+            // Get all entities and destroy them
+            var entities = new List<IEntity>(_world.GetAllEntities());
+            foreach (var entity in entities)
+            {
+                _world.DestroyEntity(entity.ObjectId);
+            }
+        }
+
+        private void LoadIFO(string moduleName)
+        {
+            try
+            {
+                InstResourceResult result = _installation.Resource("module", ResourceType.IFO, null, moduleName);
+                if (result != null && result.Data != null)
+                {
+                    GFF gff = GFF.FromBytes(result.Data);
+                    _currentIfo = IFOHelpers.ConstructIfo(gff);
+                    Console.WriteLine("[ModuleLoader] Loaded IFO - Entry: " + _currentIfo.EntryArea +
+                                      " at (" + _currentIfo.EntryX + ", " + _currentIfo.EntryY + ", " + _currentIfo.EntryZ + ")");
+                }
+                else
+                {
+                    Console.WriteLine("[ModuleLoader] WARNING: module.ifo not found");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("[ModuleLoader] Failed to load IFO: " + ex.Message);
+            }
+        }
+
+        private void LoadLYT(string moduleName)
+        {
+            try
+            {
+                InstResourceResult result = _installation.Resource(moduleName, ResourceType.LYT, null, moduleName);
+                if (result != null && result.Data != null)
+                {
+                    _currentLyt = LYTAuto.ReadLyt(result.Data);
+                    Console.WriteLine("[ModuleLoader] Loaded LYT - " + _currentLyt.Rooms.Count + " rooms, " +
+                                      _currentLyt.Doorhooks.Count + " doorhooks");
+                }
+                else
+                {
+                    Console.WriteLine("[ModuleLoader] WARNING: LYT not found for " + moduleName);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("[ModuleLoader] Failed to load LYT: " + ex.Message);
+            }
+        }
+
+        private void LoadVIS(string moduleName)
+        {
+            try
+            {
+                InstResourceResult result = _installation.Resource(moduleName, ResourceType.VIS, null, moduleName);
+                if (result != null && result.Data != null)
+                {
+                    _currentVis = VISAuto.ReadVis(result.Data);
+                    Console.WriteLine("[ModuleLoader] Loaded VIS");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("[ModuleLoader] Failed to load VIS: " + ex.Message);
+            }
+        }
+
+        private void LoadGIT(string moduleName)
+        {
+            try
+            {
+                InstResourceResult result = _installation.Resource(moduleName, ResourceType.GIT, null, moduleName);
+                if (result != null && result.Data != null)
+                {
+                    GFF gff = GFF.FromBytes(result.Data);
+                    _currentGit = GITHelpers.ConstructGit(gff);
+                    Console.WriteLine("[ModuleLoader] Loaded GIT - " +
+                                      _currentGit.Creatures.Count + " creatures, " +
+                                      _currentGit.Doors.Count + " doors, " +
+                                      _currentGit.Placeables.Count + " placeables, " +
+                                      _currentGit.Triggers.Count + " triggers, " +
+                                      _currentGit.Waypoints.Count + " waypoints");
+                }
+                else
+                {
+                    Console.WriteLine("[ModuleLoader] WARNING: GIT not found for " + moduleName);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("[ModuleLoader] Failed to load GIT: " + ex.Message);
+            }
+        }
+
+        private void LoadWalkmesh(string moduleName)
+        {
+            _currentNavMesh = new NavigationMesh();
+
+            // Load WOK (area walkmesh) files for each room in LYT
+            if (_currentLyt != null)
+            {
+                var allVertices = new List<SysVector3>();
+                var allIndices = new List<int>();
+
+                foreach (var room in _currentLyt.Rooms)
+                {
+                    try
+                    {
+                        string wokName = room.Model.ToLowerInvariant();
+                        InstResourceResult result = _installation.Resource(wokName, ResourceType.WOK, null, moduleName);
+                        if (result != null && result.Data != null)
+                        {
+                            BWM bwm = BWMAuto.ReadBwm(result.Data);
+
+                            // Room offset
+                            KotorVector3 roomOffset = room.Position;
+                            int vertexOffset = allVertices.Count;
+
+                            // Get unique vertices from BWM
+                            List<KotorVector3> bwmVertices = bwm.Vertices();
+
+                            // Add vertices with room offset
+                            foreach (var vertex in bwmVertices)
+                            {
+                                allVertices.Add(new SysVector3(
+                                    vertex.X + roomOffset.X,
+                                    vertex.Y + roomOffset.Y,
+                                    vertex.Z + roomOffset.Z));
+                            }
+
+                            // Add face indices (only walkable faces)
+                            // BWMFace stores actual vertex positions, so we need to find indices
+                            foreach (var face in bwm.Faces)
+                            {
+                                // Check if face is walkable (material check)
+                                if (IsFaceWalkable(face))
+                                {
+                                    int idx1 = FindVertexIndex(bwmVertices, face.V1);
+                                    int idx2 = FindVertexIndex(bwmVertices, face.V2);
+                                    int idx3 = FindVertexIndex(bwmVertices, face.V3);
+
+                                    if (idx1 >= 0 && idx2 >= 0 && idx3 >= 0)
+                                    {
+                                        allIndices.Add(idx1 + vertexOffset);
+                                        allIndices.Add(idx2 + vertexOffset);
+                                        allIndices.Add(idx3 + vertexOffset);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine("[ModuleLoader] Failed to load WOK for room " + room.Model + ": " + ex.Message);
+                    }
+                }
+
+                if (allVertices.Count > 0 && allIndices.Count > 0)
+                {
+                    _currentNavMesh.BuildFromTriangles(allVertices, allIndices);
+                    Console.WriteLine("[ModuleLoader] Built NavMesh: " + allVertices.Count + " vertices, " +
+                                      (allIndices.Count / 3) + " faces");
+                }
+                else
+                {
+                    Console.WriteLine("[ModuleLoader] WARNING: No walkmesh data loaded, creating placeholder");
+                    CreatePlaceholderNavMesh();
+                }
+            }
+            else
+            {
+                Console.WriteLine("[ModuleLoader] WARNING: No LYT data, creating placeholder navmesh");
+                CreatePlaceholderNavMesh();
+            }
+        }
+
+        private int FindVertexIndex(List<KotorVector3> vertices, KotorVector3 target)
+        {
+            for (int i = 0; i < vertices.Count; i++)
+            {
+                if (vertices[i].Equals(target))
+                {
+                    return i;
+                }
+            }
+            return -1;
+        }
+
+        private bool IsFaceWalkable(BWMFace face)
+        {
+            // Surface material 0-30 are typically walkable
+            // Material 7 = non-walk, 10+ = special surfaces
+            // This is a simplified check - could use surfacemat.2da for full accuracy
+            int material = (int)face.Material;
+            return material < 7 || (material >= 8 && material <= 10);
+        }
+
+        private void CreatePlaceholderNavMesh()
+        {
+            var vertices = new List<SysVector3>
+            {
+                new SysVector3(-50, -50, 0),
+                new SysVector3(50, -50, 0),
+                new SysVector3(50, 50, 0),
+                new SysVector3(-50, 50, 0)
+            };
+            var indices = new List<int> { 0, 1, 2, 0, 2, 3 };
+            _currentNavMesh.BuildFromTriangles(vertices, indices);
+        }
+
+        private RuntimeModule CreateRuntimeModule(string moduleName)
         {
             var module = new RuntimeModule();
             module.ResRef = moduleName;
-            module.DisplayName = "Module: " + moduleName;
-            module.EntryArea = moduleName;
 
-            // TODO: Load these from IFO file
-            // module.EntryPosition = new Vector3(0, 0, 0);
-            // module.EntryFacing = 0;
-            module.DawnHour = 6;
-            module.DuskHour = 18;
-            module.MinutesPastMidnight = 720; // Noon
+            if (_currentIfo != null)
+            {
+                module.DisplayName = _currentIfo.ModName?.ToString() ?? ("Module: " + moduleName);
+                module.EntryArea = _currentIfo.EntryArea?.ToString() ?? moduleName;
+                module.DawnHour = _currentIfo.DawnHour;
+                module.DuskHour = _currentIfo.DuskHour;
+            }
+            else
+            {
+                module.DisplayName = "Module: " + moduleName;
+                module.EntryArea = moduleName;
+                module.DawnHour = 6;
+                module.DuskHour = 18;
+            }
 
-            Console.WriteLine("[ModuleLoader] FIXME: Module properties not loaded from IFO");
             return module;
         }
 
-        private RuntimeArea CreatePlaceholderArea(string areaName)
+        private RuntimeArea CreateRuntimeArea(string areaName)
         {
             var area = new RuntimeArea();
             area.ResRef = areaName;
             area.DisplayName = "Area: " + areaName;
             area.Tag = areaName;
 
-            // TODO: Load lighting from ARE file
-            // TODO: Load fog settings
-            // TODO: Load walkmesh from BWM files
-            // TODO: Load room layout from LYT file
-
-            Console.WriteLine("[ModuleLoader] FIXME: Area properties not loaded from ARE/GIT");
+            // TODO: Load ARE file for ambient lighting, fog, etc.
             return area;
         }
 
-        private void CreatePlaceholderEntities(RuntimeArea area)
+        private void SpawnEntitiesFromGIT(GIT git, RuntimeArea area)
         {
-            // Create a placeholder player spawn point
-            var playerSpawn = _world.CreateEntity(ObjectType.Waypoint, Vector3.Zero, 0);
-            playerSpawn.Tag = "wp_player_spawn";
-            area.AddEntity(playerSpawn);
+            Console.WriteLine("[ModuleLoader] Spawning entities from GIT...");
+            int count = 0;
 
-            // TODO: Load creatures from GIT Creature List
-            // TODO: Load placeables from GIT Placeable List
-            // TODO: Load doors from GIT Door List
-            // TODO: Load triggers from GIT TriggerList
-            // TODO: Load waypoints from GIT WaypointList
-            // TODO: Load sounds from GIT SoundList
+            // Spawn waypoints
+            foreach (var waypoint in git.Waypoints)
+            {
+                SpawnWaypoint(waypoint, area);
+                count++;
+            }
 
-            Console.WriteLine("[ModuleLoader] FIXME: Entities not loaded from GIT");
+            // Spawn doors
+            foreach (var door in git.Doors)
+            {
+                SpawnDoor(door, area);
+                count++;
+            }
+
+            // Spawn placeables
+            foreach (var placeable in git.Placeables)
+            {
+                SpawnPlaceable(placeable, area);
+                count++;
+            }
+
+            // Spawn creatures
+            foreach (var creature in git.Creatures)
+            {
+                SpawnCreature(creature, area);
+                count++;
+            }
+
+            // Spawn triggers
+            foreach (var trigger in git.Triggers)
+            {
+                SpawnTrigger(trigger, area);
+                count++;
+            }
+
+            // Spawn sounds
+            foreach (var sound in git.Sounds)
+            {
+                SpawnSound(sound, area);
+                count++;
+            }
+
+            Console.WriteLine("[ModuleLoader] Spawned " + count + " entities");
         }
 
-        private NavigationMesh CreatePlaceholderNavMesh(RuntimeArea area)
+        private SysVector3 ToSysVector3(KotorVector3 v)
         {
-            // Create a simple flat navigation mesh for testing
-            // This would normally be loaded from BWM/WOK files
-            var navMesh = new NavigationMesh();
+            return new SysVector3(v.X, v.Y, v.Z);
+        }
 
-            // Add a simple ground plane for testing
-            var vertices = new List<Vector3>
+        private void SpawnWaypoint(GITWaypoint waypoint, RuntimeArea area)
+        {
+            var entity = _world.CreateEntity(OdyObjectType.Waypoint, ToSysVector3(waypoint.Position), waypoint.Bearing);
+            entity.Tag = waypoint.Tag;
+            area.AddEntity(entity);
+        }
+
+        private void SpawnDoor(GITDoor door, RuntimeArea area)
+        {
+            var entity = _world.CreateEntity(OdyObjectType.Door, ToSysVector3(door.Position), door.Bearing);
+            entity.Tag = door.Tag;
+
+            // Load door template
+            if (!string.IsNullOrEmpty(door.ResRef?.ToString()))
             {
-                new Vector3(-50, 0, -50),
-                new Vector3(50, 0, -50),
-                new Vector3(50, 0, 50),
-                new Vector3(-50, 0, 50)
-            };
+                LoadDoorTemplate(entity, door.ResRef.ToString());
+            }
 
-            var indices = new List<int> { 0, 1, 2, 0, 2, 3 };
+            // Set door-specific properties from GIT
+            var doorComponent = entity.GetComponent<IDoorComponent>();
+            if (doorComponent != null)
+            {
+                doorComponent.LinkedToModule = door.LinkedToModule?.ToString();
+                doorComponent.LinkedTo = door.LinkedTo;
+            }
 
-            navMesh.BuildFromTriangles(vertices, indices);
+            area.AddEntity(entity);
+        }
 
-            Console.WriteLine("[ModuleLoader] FIXME: NavMesh placeholder created - should load from BWM");
-            return navMesh;
+        private void SpawnPlaceable(GITPlaceable placeable, RuntimeArea area)
+        {
+            var entity = _world.CreateEntity(OdyObjectType.Placeable, ToSysVector3(placeable.Position), placeable.Bearing);
+
+            // Load placeable template
+            if (!string.IsNullOrEmpty(placeable.ResRef?.ToString()))
+            {
+                LoadPlaceableTemplate(entity, placeable.ResRef.ToString());
+            }
+
+            area.AddEntity(entity);
+        }
+
+        private void SpawnCreature(GITCreature creature, RuntimeArea area)
+        {
+            var entity = _world.CreateEntity(OdyObjectType.Creature, ToSysVector3(creature.Position), creature.Bearing);
+
+            // Load creature template
+            if (!string.IsNullOrEmpty(creature.ResRef?.ToString()))
+            {
+                LoadCreatureTemplate(entity, creature.ResRef.ToString());
+            }
+
+            area.AddEntity(entity);
+        }
+
+        private void SpawnTrigger(GITTrigger trigger, RuntimeArea area)
+        {
+            var entity = _world.CreateEntity(OdyObjectType.Trigger, ToSysVector3(trigger.Position), 0);
+            entity.Tag = trigger.Tag;
+
+            // Set trigger geometry
+            var triggerComponent = entity.GetComponent<ITriggerComponent>();
+            if (triggerComponent != null)
+            {
+                var geometryList = new List<SysVector3>();
+                foreach (var point in trigger.Geometry)
+                {
+                    geometryList.Add(ToSysVector3(point));
+                }
+                triggerComponent.Geometry = geometryList;
+                triggerComponent.LinkedToModule = trigger.LinkedToModule?.ToString();
+                triggerComponent.LinkedTo = trigger.LinkedTo;
+            }
+
+            area.AddEntity(entity);
+        }
+
+        private void SpawnSound(GITSound sound, RuntimeArea area)
+        {
+            var entity = _world.CreateEntity(OdyObjectType.Sound, ToSysVector3(sound.Position), 0);
+
+            // TODO: Load sound template (UTS)
+
+            area.AddEntity(entity);
+        }
+
+        private void LoadDoorTemplate(IEntity entity, string resRef)
+        {
+            try
+            {
+                InstResourceResult result = _installation.Resource(resRef, ResourceType.UTD, null, _currentModuleRoot);
+                if (result != null && result.Data != null)
+                {
+                    GFF gff = GFF.FromBytes(result.Data);
+                    UTD utd = UTDHelpers.ConstructUtd(gff);
+
+                    entity.Tag = utd.Tag;
+
+                    // Set door component properties
+                    var doorComponent = entity.GetComponent<IDoorComponent>();
+                    if (doorComponent != null)
+                    {
+                        doorComponent.IsLocked = utd.Locked;
+                        doorComponent.IsOpen = utd.OpenState > 0;
+                        doorComponent.KeyRequired = utd.KeyRequired;
+                        doorComponent.KeyTag = utd.KeyName;
+                    }
+
+                    // Set scripts
+                    var scriptsComponent = entity.GetComponent<IScriptHooksComponent>();
+                    if (scriptsComponent != null)
+                    {
+                        scriptsComponent.SetScript(Core.Enums.ScriptEvent.OnOpen, utd.OnOpen?.ToString());
+                        scriptsComponent.SetScript(Core.Enums.ScriptEvent.OnClose, utd.OnClosed?.ToString());
+                        scriptsComponent.SetScript(Core.Enums.ScriptEvent.OnFailToOpen, utd.OnOpenFailed?.ToString());
+                        scriptsComponent.SetScript(Core.Enums.ScriptEvent.OnHeartbeat, utd.OnHeartbeat?.ToString());
+                        scriptsComponent.SetScript(Core.Enums.ScriptEvent.OnClick, utd.OnClick?.ToString());
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("[ModuleLoader] Failed to load UTD " + resRef + ": " + ex.Message);
+            }
+        }
+
+        private void LoadPlaceableTemplate(IEntity entity, string resRef)
+        {
+            try
+            {
+                InstResourceResult result = _installation.Resource(resRef, ResourceType.UTP, null, _currentModuleRoot);
+                if (result != null && result.Data != null)
+                {
+                    GFF gff = GFF.FromBytes(result.Data);
+                    UTP utp = UTPHelpers.ConstructUtp(gff);
+
+                    entity.Tag = utp.Tag;
+
+                    // Set scripts
+                    var scriptsComponent = entity.GetComponent<IScriptHooksComponent>();
+                    if (scriptsComponent != null)
+                    {
+                        scriptsComponent.SetScript(Core.Enums.ScriptEvent.OnUsed, utp.OnUsed?.ToString());
+                        scriptsComponent.SetScript(Core.Enums.ScriptEvent.OnHeartbeat, utp.OnHeartbeat?.ToString());
+                        scriptsComponent.SetScript(Core.Enums.ScriptEvent.OnOpen, utp.OnOpen?.ToString());
+                        scriptsComponent.SetScript(Core.Enums.ScriptEvent.OnClose, utp.OnClosed?.ToString());
+                    }
+
+                    // Store appearance for visual creation
+                    var placeableComponent = entity.GetComponent<IPlaceableComponent>();
+                    if (placeableComponent != null)
+                    {
+                        placeableComponent.IsUseable = utp.Useable;
+                        placeableComponent.IsStatic = utp.Static;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("[ModuleLoader] Failed to load UTP " + resRef + ": " + ex.Message);
+            }
+        }
+
+        private void LoadCreatureTemplate(IEntity entity, string resRef)
+        {
+            try
+            {
+                InstResourceResult result = _installation.Resource(resRef, ResourceType.UTC, null, _currentModuleRoot);
+                if (result != null && result.Data != null)
+                {
+                    GFF gff = GFF.FromBytes(result.Data);
+                    UTC utc = UTCHelpers.ConstructUtc(gff);
+
+                    entity.Tag = utc.Tag;
+
+                    // Set stats
+                    var statsComponent = entity.GetComponent<IStatsComponent>();
+                    if (statsComponent != null)
+                    {
+                        statsComponent.CurrentHP = utc.CurrentHp;
+                        statsComponent.MaxHP = utc.MaxHp;
+                        statsComponent.CurrentFP = utc.Fp;
+                        statsComponent.MaxFP = utc.MaxFp;
+                    }
+
+                    // Set scripts
+                    var scriptsComponent = entity.GetComponent<IScriptHooksComponent>();
+                    if (scriptsComponent != null)
+                    {
+                        scriptsComponent.SetScript(Core.Enums.ScriptEvent.OnSpawn, utc.OnSpawn?.ToString());
+                        scriptsComponent.SetScript(Core.Enums.ScriptEvent.OnDeath, utc.OnDeath?.ToString());
+                        scriptsComponent.SetScript(Core.Enums.ScriptEvent.OnHeartbeat, utc.OnHeartbeat?.ToString());
+                        scriptsComponent.SetScript(Core.Enums.ScriptEvent.OnConversation, utc.OnDialog?.ToString());
+                        scriptsComponent.SetScript(Core.Enums.ScriptEvent.OnDamaged, utc.OnDamaged?.ToString());
+                        scriptsComponent.SetScript(Core.Enums.ScriptEvent.OnPerception, utc.OnNotice?.ToString());
+                        scriptsComponent.SetLocalString("Conversation", utc.Conversation?.ToString());
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("[ModuleLoader] Failed to load UTC " + resRef + ": " + ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// Loads a model by resref.
+        /// </summary>
+        [CanBeNull]
+        public MDLData.MDL LoadModel(string resRef)
+        {
+            if (string.IsNullOrEmpty(resRef) || _installation == null)
+            {
+                return null;
+            }
+
+            try
+            {
+                // Load MDL
+                InstResourceResult mdlResult = _installation.Resource(resRef, ResourceType.MDL, null, _currentModuleRoot);
+                if (mdlResult == null || mdlResult.Data == null)
+                {
+                    return null;
+                }
+
+                // Load MDX
+                InstResourceResult mdxResult = _installation.Resource(resRef, ResourceType.MDX, null, _currentModuleRoot);
+                byte[] mdxData = mdxResult?.Data;
+
+                return MDLAuto.ReadMdl(mdlResult.Data, sourceExt: mdxData);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("[ModuleLoader] Failed to load model " + resRef + ": " + ex.Message);
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Loads a texture by resref.
+        /// </summary>
+        [CanBeNull]
+        public TPC LoadTexture(string resRef)
+        {
+            if (string.IsNullOrEmpty(resRef) || _installation == null)
+            {
+                return null;
+            }
+
+            return _installation.Texture(resRef);
+        }
+
+        /// <summary>
+        /// Gets the entry position from the current module's IFO.
+        /// </summary>
+        public SysVector3 GetEntryPosition()
+        {
+            if (_currentIfo != null)
+            {
+                return new SysVector3(_currentIfo.EntryX, _currentIfo.EntryY, _currentIfo.EntryZ);
+            }
+            return SysVector3.Zero;
+        }
+
+        /// <summary>
+        /// Gets the entry facing from the current module's IFO.
+        /// </summary>
+        public float GetEntryFacing()
+        {
+            if (_currentIfo != null)
+            {
+                return _currentIfo.EntryDirection;
+            }
+            return 0;
+        }
+
+        private void CreatePlaceholderModule(string moduleName)
+        {
+            var runtimeModule = new RuntimeModule();
+            runtimeModule.ResRef = moduleName;
+            runtimeModule.DisplayName = "Module: " + moduleName;
+            runtimeModule.EntryArea = moduleName;
+            runtimeModule.DawnHour = 6;
+            runtimeModule.DuskHour = 18;
+            _world.CurrentModule = runtimeModule;
+
+            var runtimeArea = new RuntimeArea();
+            runtimeArea.ResRef = moduleName;
+            runtimeArea.DisplayName = "Area: " + moduleName;
+            runtimeArea.Tag = moduleName;
+            _world.CurrentArea = runtimeArea;
+            _currentArea = runtimeArea;
+
+            // Create placeholder waypoint
+            var playerSpawn = _world.CreateEntity(OdyObjectType.Waypoint, SysVector3.Zero, 0);
+            playerSpawn.Tag = "wp_player_spawn";
+            runtimeArea.AddEntity(playerSpawn);
+
+            // Create placeholder navmesh
+            CreatePlaceholderNavMesh();
         }
     }
 }
