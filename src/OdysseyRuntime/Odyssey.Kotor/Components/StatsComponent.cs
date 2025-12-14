@@ -11,6 +11,10 @@ namespace Odyssey.Kotor.Components
     /// </summary>
     /// <remarks>
     /// KOTOR D20 System:
+    /// - Based on swkotor2.exe stats system
+    /// - Located via string references: "CurrentHP" @ 0x007c1b40, "Max_HPs" @ 0x007cb714
+    /// - "InCombatHPBase" @ 0x007bf224, "OutOfCombatHPBase" @ 0x007bf210, "DAM_HP" @ 0x007bf130
+    /// - Original implementation: Ability scores, HP, BAB, saves stored in creature GFF structures
     /// - Ability scores: 1-30+ range, modifier = (score - 10) / 2
     /// - Hit points: Based on class hit dice + Con modifier per level
     /// - Attack: BAB + STR/DEX mod vs. Defense
