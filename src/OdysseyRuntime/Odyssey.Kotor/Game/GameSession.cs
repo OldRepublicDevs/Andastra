@@ -2,12 +2,14 @@ using System;
 using System.IO;
 using Odyssey.Core.Entities;
 using Odyssey.Core.Interfaces;
+using Odyssey.Core.Module;
 using Odyssey.Core.Navigation;
 using Odyssey.Core.Enums;
 using Odyssey.Scripting.Interfaces;
 using Odyssey.Scripting.VM;
 using Odyssey.Kotor.Dialogue;
 using Odyssey.Kotor.Components;
+using Odyssey.Kotor.Loading;
 using CSharpKOTOR.Formats.TLK;
 using CSharpKOTOR.Resource.Generics.DLG;
 
@@ -30,10 +32,11 @@ namespace Odyssey.Kotor.Game
         private readonly World _world;
         private readonly NcsVm _vm;
         private readonly IScriptGlobals _globals;
-        private readonly ModuleLoader _moduleLoader;
+        private readonly Loading.ModuleLoader _moduleLoader;
         private readonly DialogueManager _dialogueManager;
 
         private string _currentModuleName;
+        private RuntimeModule _currentRuntimeModule;
         private bool _isRunning;
         private bool _isPaused;
         private NavigationMesh _currentNavMesh;
@@ -73,6 +76,14 @@ namespace Odyssey.Kotor.Game
         }
 
         /// <summary>
+        /// Gets the current runtime module.
+        /// </summary>
+        public RuntimeModule CurrentRuntimeModule
+        {
+            get { return _currentRuntimeModule; }
+        }
+
+        /// <summary>
         /// Gets the dialogue manager.
         /// </summary>
         public DialogueManager DialogueManager
@@ -86,7 +97,27 @@ namespace Odyssey.Kotor.Game
             _world = world;
             _vm = vm;
             _globals = globals;
-            _moduleLoader = new ModuleLoader(_settings.GamePath, _world);
+            
+            // Create Installation from game path
+            CSharpKOTOR.Installation.Installation installation = null;
+            if (!string.IsNullOrEmpty(_settings.GamePath))
+            {
+                try
+                {
+                    installation = new CSharpKOTOR.Installation.Installation(_settings.GamePath);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("[GameSession] Failed to create Installation: " + ex.Message);
+                }
+            }
+            
+            if (installation == null)
+            {
+                throw new InvalidOperationException("Failed to create Installation from game path: " + _settings.GamePath);
+            }
+            
+            _moduleLoader = new ModuleLoader(installation);
 
             // Create dialogue manager
             _dialogueManager = new DialogueManager(
@@ -213,11 +244,25 @@ namespace Odyssey.Kotor.Game
             // Load new module
             try
             {
-                _moduleLoader.LoadModule(moduleName);
+                _currentRuntimeModule = _moduleLoader.LoadModule(moduleName);
                 _currentModuleName = moduleName;
 
                 // Get navigation mesh from loaded module
                 _currentNavMesh = _moduleLoader.GetNavigationMesh();
+                
+                // Set current module in world
+                if (_currentRuntimeModule != null)
+                {
+                    var entryArea = _currentRuntimeModule.GetArea(_currentRuntimeModule.EntryArea);
+                    if (entryArea != null && _world != null)
+                    {
+                        // Set current area in world
+                        if (_world is World concreteWorld)
+                        {
+                            concreteWorld.SetCurrentArea(entryArea);
+                        }
+                    }
+                }
 
                 // Fire module OnModuleLoad script
                 // TODO: Execute module OnModuleLoad script

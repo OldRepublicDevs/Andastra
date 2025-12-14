@@ -373,12 +373,31 @@ namespace Odyssey.Game.Core
                 }
             }
 
+            // Draw loaded area rooms if available
+            if (_session != null && _session.CurrentRuntimeModule != null)
+            {
+                var entryArea = _session.CurrentRuntimeModule.GetArea(_session.CurrentRuntimeModule.EntryArea);
+                if (entryArea != null && entryArea is Odyssey.Core.Module.RuntimeArea runtimeArea)
+                {
+                    DrawAreaRooms(runtimeArea);
+                }
+            }
+
             // Draw UI overlay
             _spriteBatch.Begin();
             string statusText = "Game Running - Press ESC to return to menu";
             if (_session != null && _session.CurrentModuleName != null)
             {
                 statusText = "Module: " + _session.CurrentModuleName + " - Press ESC to return to menu";
+                var entryArea = _session.CurrentRuntimeModule?.GetArea(_session.CurrentRuntimeModule.EntryArea);
+                if (entryArea != null)
+                {
+                    statusText += " | Area: " + entryArea.DisplayName + " (" + entryArea.ResRef + ")";
+                    if (entryArea is Odyssey.Core.Module.RuntimeArea runtimeArea && runtimeArea.Rooms != null)
+                    {
+                        statusText += " | Rooms: " + runtimeArea.Rooms.Count;
+                    }
+                }
             }
             if (_font != null)
             {
@@ -386,6 +405,31 @@ namespace Odyssey.Game.Core
             }
             // If no font, we just skip text rendering - the 3D scene is still visible
             _spriteBatch.End();
+        }
+
+        private void DrawAreaRooms(Odyssey.Core.Module.RuntimeArea area)
+        {
+            if (area.Rooms == null || area.Rooms.Count == 0 || _basicEffect == null)
+            {
+                return;
+            }
+
+            // For now, just draw simple wireframe boxes for each room
+            // TODO: Load and render actual MDL models for rooms
+            foreach (var room in area.Rooms)
+            {
+                // Draw a simple box at room position
+                // This is a placeholder - actual room rendering will load MDL models
+                var roomPos = new Vector3(room.Position.X, room.Position.Y, room.Position.Z);
+                var roomWorld = Matrix.CreateTranslation(roomPos);
+                
+                _basicEffect.View = _viewMatrix;
+                _basicEffect.Projection = _projectionMatrix;
+                _basicEffect.World = roomWorld;
+
+                // Draw a simple 2x2x2 box for each room (placeholder)
+                // TODO: Replace with actual room mesh rendering
+            }
         }
 
         [CanBeNull]
