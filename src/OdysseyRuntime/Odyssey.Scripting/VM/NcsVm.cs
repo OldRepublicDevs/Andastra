@@ -2,6 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using System.Threading;
+using CSharpKOTOR.Resources;
+using Odyssey.Content.Interfaces;
 using Odyssey.Scripting.Interfaces;
 
 namespace Odyssey.Scripting.VM
@@ -25,12 +28,17 @@ namespace Odyssey.Scripting.VM
         private bool _aborted;
         private IExecutionContext _context;
         
+        // String storage (strings are stored off-stack with handles)
+        private Dictionary<int, string> _stringPool;
+        private int _nextStringHandle;
+        
         // Stack size
         private const int StackSize = 65536;
         
         public NcsVm()
         {
             _stack = new byte[StackSize];
+            _stringPool = new Dictionary<int, string>();
             MaxInstructions = DefaultMaxInstructions;
         }
         
@@ -79,6 +87,10 @@ namespace Odyssey.Scripting.VM
             _aborted = false;
             _context = ctx;
             
+            // Clear string pool for new execution
+            _stringPool.Clear();
+            _nextStringHandle = 1; // Start at 1, 0 reserved for null/empty
+            
             Array.Clear(_stack, 0, _stack.Length);
             
             int result = 0;
@@ -115,16 +127,46 @@ namespace Odyssey.Scripting.VM
         
         public int ExecuteScript(string resRef, IExecutionContext ctx)
         {
-            // This would load the NCS from the resource provider
-            // For now, delegate to the context's resource provider
+            // Load the NCS from the resource provider
             var provider = ctx.ResourceProvider;
             if (provider == null)
             {
                 throw new InvalidOperationException("No resource provider in context");
             }
             
-            // Implementation would load the script here
-            throw new NotImplementedException("Script loading from resource provider not yet implemented");
+            byte[] ncsBytes = null;
+            
+            // Try IGameResourceProvider first (Odyssey system)
+            if (provider is IGameResourceProvider gameProvider)
+            {
+                try
+                {
+                    var resourceId = new ResourceIdentifier(resRef, ResourceType.NCS);
+                    var task = gameProvider.GetResourceBytesAsync(resourceId, CancellationToken.None);
+                    task.Wait();
+                    ncsBytes = task.Result;
+                }
+                catch (AggregateException aex)
+                {
+                    throw new InvalidOperationException("Failed to load script: " + resRef, aex.InnerException ?? aex);
+                }
+            }
+            // Fallback to CSharpKOTOR Installation provider
+            else if (provider is CSharpKOTOR.Common.Installation installation)
+            {
+                var result = installation.Resource(resRef, ResourceType.NCS, null, null);
+                if (result != null && result.Data != null)
+                {
+                    ncsBytes = result.Data;
+                }
+            }
+            
+            if (ncsBytes == null || ncsBytes.Length == 0)
+            {
+                throw new FileNotFoundException("Script not found: " + resRef);
+            }
+            
+            return Execute(ncsBytes, ctx);
         }
         
         public void Abort()
@@ -275,16 +317,44 @@ namespace Odyssey.Scripting.VM
         
         private void PushString(string value)
         {
-            // Strings are stored as length-prefixed on the stack
-            // For simplicity, we'll use a placeholder approach
-            PushInt(value?.Length ?? 0);
-            // In a full implementation, string data would be stored separately
+            // Strings are stored in a separate pool and referenced by handle on the stack
+            if (string.IsNullOrEmpty(value))
+            {
+                PushInt(0); // Null string handle
+            }
+            else
+            {
+                int handle = _nextStringHandle++;
+                _stringPool[handle] = value;
+                PushInt(handle);
+            }
         }
         
         private string PopString()
         {
-            int length = PopInt();
-            // In a full implementation, retrieve string data
+            int handle = PopInt();
+            if (handle == 0)
+            {
+                return string.Empty;
+            }
+            if (_stringPool.TryGetValue(handle, out string value))
+            {
+                return value;
+            }
+            return string.Empty;
+        }
+        
+        private string PeekString(int offset)
+        {
+            int handle = PeekInt(offset);
+            if (handle == 0)
+            {
+                return string.Empty;
+            }
+            if (_stringPool.TryGetValue(handle, out string value))
+            {
+                return value;
+            }
             return string.Empty;
         }
         
