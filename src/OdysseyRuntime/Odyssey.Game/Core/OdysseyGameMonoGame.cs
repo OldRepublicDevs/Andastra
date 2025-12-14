@@ -67,16 +67,21 @@ namespace Odyssey.Game.Core
             // Create SpriteBatch for rendering
             _spriteBatch = new SpriteBatch(GraphicsDevice);
             
-            // Try to load a font - if it doesn't exist, we'll create a default one
+            // Try to load a font - if it doesn't exist, menu will still work without text labels
+            // To add a font: Create Content/Fonts/Arial.spritefont using MonoGame Content Pipeline
+            // Or use any TTF font and convert it using the Content Pipeline tool
             try
             {
                 _font = Content.Load<SpriteFont>("Fonts/Arial");
+                Console.WriteLine("[Odyssey] Font loaded successfully");
             }
             catch
             {
-                // Font not found - create a simple default font using SpriteFont from embedded resource
-                // For now, we'll use null and handle it in the menu renderer
-                Console.WriteLine("[Odyssey] WARNING: Font not found, menu will work but text may not display");
+                // Font not found - menu will work but without text labels
+                // Buttons are still fully functional (colored rectangles, clickable)
+                Console.WriteLine("[Odyssey] WARNING: Font not found at 'Fonts/Arial'");
+                Console.WriteLine("[Odyssey] Menu will work without text labels - buttons are still clickable");
+                _font = null;
             }
             
             // Create menu renderer
