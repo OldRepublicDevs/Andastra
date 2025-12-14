@@ -13,6 +13,20 @@ namespace Odyssey.Scripting.VM
     /// <summary>
     /// NWScript Compiled Script Virtual Machine implementation.
     /// </summary>
+    /// <remarks>
+    /// NCS Virtual Machine:
+    /// - Based on swkotor2.exe NCS VM implementation
+    /// - Located via string references: NCS script execution engine handles bytecode interpretation
+    /// - Original implementation: Executes NCS (NWScript Compiled Script) bytecode files
+    /// - NCS file format: "NCS " signature, "V1.0" version, 0x42 marker at offset 8, big-endian file size
+    /// - Instructions start at offset 0x0D (13 decimal)
+    /// - Stack-based VM with 65536-byte stack, 4-byte aligned
+    /// - Opcodes: ACTION (0x2A) calls engine functions, others handle stack operations, jumps, conditionals
+    /// - Original engine uses big-endian encoding for multi-byte values
+    /// - Stack alignment: 4-byte aligned, vectors are 12 bytes (3 floats)
+    /// - Jump offsets: Relative to instruction start, not next instruction
+    /// - ACTION arguments: uint16 routineId + uint8 argCount (stack elements, not bytes)
+    /// </remarks>
     public class NcsVm : INcsVm
     {
         private const int DefaultMaxInstructions = 100000;
@@ -129,7 +143,7 @@ namespace Odyssey.Scripting.VM
         public int ExecuteScript(string resRef, IExecutionContext ctx)
         {
             // Load the NCS from the resource provider
-            var provider = ctx.ResourceProvider;
+            object provider = ctx.ResourceProvider;
             if (provider == null)
             {
                 throw new InvalidOperationException("No resource provider in context");
@@ -143,7 +157,7 @@ namespace Odyssey.Scripting.VM
                 try
                 {
                     var resourceId = new ResourceIdentifier(resRef, ResourceType.NCS);
-                    var task = gameProvider.GetResourceBytesAsync(resourceId, CancellationToken.None);
+                    System.Threading.Tasks.Task<byte[]> task = gameProvider.GetResourceBytesAsync(resourceId, CancellationToken.None);
                     task.Wait();
                     ncsBytes = task.Result;
                 }
@@ -155,7 +169,7 @@ namespace Odyssey.Scripting.VM
             // Fallback to CSharpKOTOR Installation provider
             else if (provider is Installation installation)
             {
-                var result = installation.Resource(resRef, ResourceType.NCS, null, null);
+                CSharpKOTOR.Installation.ResourceResult result = installation.Resource(resRef, ResourceType.NCS, null, null);
                 if (result != null && result.Data != null)
                 {
                     ncsBytes = result.Data;

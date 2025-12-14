@@ -13,7 +13,9 @@ using Odyssey.Core.Actions;
 using Odyssey.Core.Combat;
 using Odyssey.Core.Enums;
 using Odyssey.Core.Interfaces;
+using Odyssey.Core.Interfaces.Components;
 using Odyssey.Kotor.Components;
+using Odyssey.Kotor.Game;
 using Odyssey.Scripting.Interfaces;
 using Odyssey.Scripting.Types;
 using Odyssey.Scripting.VM;
@@ -23,6 +25,16 @@ namespace Odyssey.Scripting.EngineApi
     /// <summary>
     /// KOTOR 1 engine API implementation.
     /// </summary>
+    /// <remarks>
+    /// Engine API (NWScript Functions):
+    /// - Based on swkotor2.exe NWScript engine API implementation
+    /// - Located via string references: Script function dispatch system handles ACTION opcodes in NCS VM
+    /// - Original implementation: NCS VM executes ACTION opcode (0x2A) with routine ID, calls engine function handlers
+    /// - Function IDs match nwscript.nss definitions (ScriptDefs.KOTOR_FUNCTIONS)
+    /// - K1 has ~850 engine functions, K2 has ~950 engine functions
+    /// - Original engine uses function dispatch table indexed by routine ID
+    /// - Function implementations must match NWScript semantics (parameter types, return types, behavior)
+    /// </remarks>
     public class K1EngineApi : BaseEngineApi
     {
         private readonly NcsVm _vm;
@@ -231,12 +243,22 @@ namespace Odyssey.Scripting.EngineApi
                 case 160: return Func_SetGlobalString(args, ctx);
                 case 194: return Func_GetGlobalString(args, ctx);
 
+                // Location functions
+                case 213: return Func_GetLocation(args, ctx);
+                case 214: return Func_ActionJumpToLocation(args, ctx);
+                case 215: return Func_Location(args, ctx);
+
                 // Core object functions (correct IDs from nwscript.nss)
                 case 168: return Func_GetTag(args, ctx);
                 case 197: return Func_GetWaypointByTag(args, ctx);
                 case 200: return Func_GetObjectByTag(args, ctx);
                 case 229: return Func_GetNearestObjectByTag(args, ctx);
+                case 239: return Func_GetStringByStrRef(args, ctx);
+                case 240: return Func_ActionSpeakStringByStrRef(args, ctx);
+                case 241: return Func_DestroyObject(args, ctx);
                 case 253: return Func_GetName(args, ctx);
+                case 254: return Func_GetLastSpeaker(args, ctx);
+                case 255: return Func_BeginConversation(args, ctx);
 
                 // Module
                 case 242: return Func_GetModule(args, ctx);
