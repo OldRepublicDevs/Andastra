@@ -334,6 +334,97 @@ namespace HolocronToolset.NET.Data
             _cacheTpc.Clear();
         }
 
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/installation.py:608-619
+        // Original: def get_item_base_name(self, base_item: int) -> str:
+        public string GetItemBaseName(int baseItem)
+        {
+            try
+            {
+                TwoDA baseitems = HtGetCache2DA(TwoDABaseitems);
+                if (baseitems == null)
+                {
+                    System.Console.WriteLine("Failed to retrieve `baseitems.2da` from your installation.");
+                    return "Unknown";
+                }
+                return baseitems.GetCellString(baseItem, "label") ?? "Unknown";
+            }
+            catch (Exception ex)
+            {
+                System.Console.WriteLine($"An exception occurred while retrieving `baseitems.2da` from your installation: {ex.Message}");
+                return "Unknown";
+            }
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/installation.py:621-623
+        // Original: def get_model_var_name(self, model_variation: int) -> str:
+        public string GetModelVarName(int modelVariation)
+        {
+            return modelVariation == 0 ? "Default" : $"Variation {modelVariation}";
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/installation.py:625-627
+        // Original: def get_texture_var_name(self, texture_variation: int) -> str:
+        public string GetTextureVarName(int textureVariation)
+        {
+            return textureVariation == 0 ? "Default" : $"Texture {textureVariation}";
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/installation.py:629-642
+        // Original: def get_item_icon_path(self, base_item: int, model_variation: int, texture_variation: int) -> str:
+        public string GetItemIconPath(int baseItem, int modelVariation, int textureVariation)
+        {
+            TwoDA baseitems = HtGetCache2DA(TwoDABaseitems);
+            if (baseitems == null)
+            {
+                System.Console.WriteLine("Failed to retrieve `baseitems.2da` from your installation.");
+                return "Unknown";
+            }
+            try
+            {
+                string itemClass = baseitems.GetCellString(baseItem, "itemclass") ?? "";
+                int variation = modelVariation != 0 ? modelVariation : textureVariation;
+                // Pad variation to 3 digits with leading zeros
+                string variationStr = variation.ToString().PadLeft(3, '0');
+                return $"i{itemClass}_{variationStr}";
+            }
+            catch (Exception ex)
+            {
+                System.Console.WriteLine($"An exception occurred while getting cell '{baseItem}' from `baseitems.2da`: {ex.Message}");
+                return "Unknown";
+            }
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/installation.py:644-664
+        // Original: def get_item_icon(self, base_item: int, model_variation: int, texture_variation: int) -> QPixmap:
+        [CanBeNull]
+        public Avalonia.Media.Imaging.Bitmap GetItemIcon(int baseItem, int modelVariation, int textureVariation)
+        {
+            // In Avalonia, we return Bitmap instead of QPixmap
+            // Default icon would be loaded from resources, but for now we'll return null if icon can't be loaded
+            string iconPath = GetItemIconPath(baseItem, modelVariation, textureVariation);
+            System.Console.WriteLine($"Icon path: '{iconPath}'");
+            try
+            {
+                // Extract just the filename (basename) and convert to lowercase
+                string resname = System.IO.Path.GetFileName(iconPath).ToLowerInvariant();
+                CSharpKOTOR.Formats.TPC.TPC texture = HtGetCacheTpc(resname);
+                if (texture == null)
+                {
+                    return null;
+                }
+                // TODO: Convert TPC texture to Avalonia Bitmap
+                // This would require decoding the TPC texture format and converting to Bitmap
+                // For now, we'll just return null as a placeholder
+                // The actual conversion would be: decode TPC -> get mipmap data -> create Bitmap from pixel data
+                return null;
+            }
+            catch (Exception ex)
+            {
+                System.Console.WriteLine($"An error occurred loading the icon at '{iconPath}' model variation '{modelVariation}' and texture variation '{textureVariation}': {ex.Message}");
+                return null;
+            }
+        }
+
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/installation.py
         // Original: def module_path(self) -> Path:
         public string ModulePath()
