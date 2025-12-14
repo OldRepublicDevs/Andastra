@@ -190,9 +190,9 @@ namespace CSharpKOTOR.Utility
             return true;
         }
 
-        void IDictionary<string, T>.Remove(string key)
+        bool IDictionary<string, T>.Remove(string key)
         {
-            Remove(key);
+            return Remove(key);
         }
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/utility/common/more_collections.py:284-285
@@ -322,3 +322,4 @@ namespace CSharpKOTOR.Utility
         }
     }
 }
+
