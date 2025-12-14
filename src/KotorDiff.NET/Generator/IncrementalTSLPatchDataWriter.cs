@@ -18,12 +18,64 @@ using CSharpKOTOR.Mods.NCS;
 using CSharpKOTOR.Mods.SSF;
 using CSharpKOTOR.Mods.TLK;
 using CSharpKOTOR.Mods.TwoDA;
+using CSharpKOTOR.Tools;
+using CSharpKOTOR.Utility;
+using SystemTextEncoding = System.Text.Encoding;
 using JetBrains.Annotations;
 using KotorDiff.NET.Diff;
 using KotorDiff.NET.Logger;
 
 namespace KotorDiff.NET.Generator
 {
+    // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/writer.py:1166-1212
+    // Original: @dataclass class TwoDALinkTarget, PendingStrRefReference, Pending2DARowReference
+    /// <summary>
+    /// Link target for 2DA memory tokens.
+    /// </summary>
+    public class TwoDALinkTarget
+    {
+        public int RowIndex { get; set; }
+        public int TokenId { get; set; }
+        [CanBeNull] public string RowLabel { get; set; }
+    }
+
+    /// <summary>
+    /// Temporarily stored StrRef reference that will be applied when the file is diffed.
+    /// </summary>
+    public class PendingStrRefReference
+    {
+        public string Filename { get; set; }
+        public object SourcePath { get; set; } // Installation or Path
+        public int OldStrref { get; set; }
+        public int TokenId { get; set; }
+        public string LocationType { get; set; } // "2da", "ssf", "gff", "ncs"
+        public Dictionary<string, object> LocationData { get; set; }
+    }
+
+    /// <summary>
+    /// Temporarily stored 2DA row reference that will be applied when the GFF file is diffed.
+    /// </summary>
+    public class Pending2DARowReference
+    {
+        public string GffFilename { get; set; }
+        public object SourcePath { get; set; } // Installation or Path
+        public string TwodaFilename { get; set; }
+        public int RowIndex { get; set; }
+        public int TokenId { get; set; }
+        public List<string> FieldPaths { get; set; }
+    }
+
+    /// <summary>
+    /// Wrapper for TLK modification with its source path.
+    /// </summary>
+    public class TLKModificationWithSource
+    {
+        public ModificationsTLK Modification { get; set; }
+        public object SourcePath { get; set; } // Installation or Path
+        public int SourceIndex { get; set; }
+        public bool IsInstallation { get; set; }
+    }
+
     /// <summary>
     /// Writes tslpatchdata files and INI sections incrementally during diff.
     /// 1:1 port of IncrementalTSLPatchDataWriter from vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/writer.py:1214-4389
@@ -67,22 +119,42 @@ namespace KotorDiff.NET.Generator
         // Track global 2DAMEMORY token allocation
         private int _next2DaTokenId = 0;
 
+        // StrRef and 2DA memory reference caches for linking patches
+        [CanBeNull] private readonly StrRefReferenceCache _strrefCache;
+        [CanBeNull] private readonly Dictionary<int, CaseInsensitiveDict<TwoDAMemoryReferenceCache>> _twodaCaches;
+
+        // Track TLK modifications with their source paths for intelligent cache building
+        // Key: source_index (0=first/vanilla, 1=second/modded, 2=third, etc.)
+        // Value: list of TLKModificationWithSource objects from that source
+        private readonly Dictionary<int, List<TLKModificationWithSource>> _tlkModsBySource = new Dictionary<int, List<TLKModificationWithSource>>();
+
+        // Track pending StrRef references that will be applied when files are diffed
+        // Key: filename (lowercase) -> list of PendingStrRefReference
+        private readonly Dictionary<string, List<PendingStrRefReference>> _pendingStrrefReferences = new Dictionary<string, List<PendingStrRefReference>>();
+
+        // Track pending 2DA row references that will be applied when GFF files are diffed
+        // Key: gff_filename (lowercase) -> list of Pending2DARowReference
+        private readonly Dictionary<string, List<Pending2DARowReference>> _pending2DaRowReferences = new Dictionary<string, List<Pending2DARowReference>>();
+
         /// <summary>
         /// Initialize incremental writer.
+        /// Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/writer.py:1217-1317
         /// </summary>
         public IncrementalTSLPatchDataWriter(
             string tslpatchdataPath,
             string iniFilename,
             [CanBeNull] string baseDataPath = null,
             [CanBeNull] string moddedDataPath = null,
-            [CanBeNull] object strrefCache = null, // TODO: Implement StrRefReferenceCache
-            [CanBeNull] object twodaCaches = null, // TODO: Implement TwoDAMemoryReferenceCache
+            [CanBeNull] StrRefReferenceCache strrefCache = null,
+            [CanBeNull] Dictionary<int, CaseInsensitiveDict<TwoDAMemoryReferenceCache>> twodaCaches = null,
             [CanBeNull] Action<string> logFunc = null)
         {
             _tslpatchdataPath = tslpatchdataPath;
             _iniPath = Path.Combine(tslpatchdataPath, iniFilename);
             _baseDataPath = baseDataPath;
             _moddedDataPath = moddedDataPath;
+            _strrefCache = strrefCache;
+            _twodaCaches = twodaCaches ?? new Dictionary<int, CaseInsensitiveDict<TwoDAMemoryReferenceCache>>();
             _logFunc = logFunc ?? ((msg) => DiffLogger.GetLogger()?.Info(msg));
 
             // Create tslpatchdata directory
@@ -127,7 +199,7 @@ namespace KotorDiff.NET.Generator
             };
 
             var content = string.Join("\n", headerLines.Concat(new[] { "" }).Concat(settingsLines).Concat(sectionHeaders));
-            File.WriteAllText(_iniPath, content, Encoding.UTF8);
+            File.WriteAllText(_iniPath, content, SystemTextEncoding.UTF8);
         }
 
         /// <summary>
@@ -545,7 +617,7 @@ namespace KotorDiff.NET.Generator
             );
 
             // Write the entire file from scratch
-            File.WriteAllText(_iniPath, iniContent, Encoding.UTF8);
+            File.WriteAllText(_iniPath, iniContent, SystemTextEncoding.UTF8);
         }
 
         /// <summary>
