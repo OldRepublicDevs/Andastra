@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net9.0</TargetFramework>
+    <LangVersion>7.3</LangVersion>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <RootNamespace>Odyssey.Tooling</RootNamespace>
+    <AssemblyName>Odyssey.Tooling</AssemblyName>
+    <Description>Headless import/validation CLI commands for Odyssey Engine</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Odyssey.Core\Odyssey.Core.csproj" />
+    <ProjectReference Include="..\Odyssey.Content\Odyssey.Content.csproj" />
+    <ProjectReference Include="..\Odyssey.Scripting\Odyssey.Scripting.csproj" />
+    <ProjectReference Include="..\Odyssey.Kotor\Odyssey.Kotor.csproj" />
+    <ProjectReference Include="..\..\CSharpKOTOR\CSharpKOTOR.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="JetBrains.Annotations" Version="2025.2.4" />
+    <PackageReference Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
+  </ItemGroup>
+
+</Project>

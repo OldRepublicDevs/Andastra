@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <LangVersion>7.3</LangVersion>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <RootNamespace>Odyssey.Content</RootNamespace>
+    <AssemblyName>Odyssey.Content</AssemblyName>
+    <Description>Asset conversion and caching pipeline for Odyssey Engine</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Odyssey.Core\Odyssey.Core.csproj" />
+    <ProjectReference Include="..\..\CSharpKOTOR\CSharpKOTOR.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="JetBrains.Annotations" Version="2025.2.4" />
+  </ItemGroup>
+
+</Project>

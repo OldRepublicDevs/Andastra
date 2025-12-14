@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <LangVersion>7.3</LangVersion>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <RootNamespace>Odyssey.Stride</RootNamespace>
+    <AssemblyName>Odyssey.Stride</AssemblyName>
+    <Description>Stride Game Engine adapters for Odyssey Engine - rendering, physics, audio, UI</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Odyssey.Core\Odyssey.Core.csproj" />
+    <ProjectReference Include="..\Odyssey.Content\Odyssey.Content.csproj" />
+    <ProjectReference Include="..\Odyssey.Kotor\Odyssey.Kotor.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="JetBrains.Annotations" Version="2025.2.4" />
+    <PackageReference Include="Stride.Engine" Version="4.2.0.2122" />
+    <PackageReference Include="Stride.Audio" Version="4.2.0.2122" />
+    <PackageReference Include="Stride.Physics" Version="4.2.0.2122" />
+    <PackageReference Include="Stride.UI" Version="4.2.0.2122" />
+  </ItemGroup>
+
+</Project>

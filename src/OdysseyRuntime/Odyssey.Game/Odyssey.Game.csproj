@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net9.0-windows</TargetFramework>
+    <LangVersion>7.3</LangVersion>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <RootNamespace>Odyssey.Game</RootNamespace>
+    <AssemblyName>Odyssey.Game</AssemblyName>
+    <Description>Stride executable launcher for Odyssey Engine</Description>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Odyssey.Core\Odyssey.Core.csproj" />
+    <ProjectReference Include="..\Odyssey.Content\Odyssey.Content.csproj" />
+    <ProjectReference Include="..\Odyssey.Scripting\Odyssey.Scripting.csproj" />
+    <ProjectReference Include="..\Odyssey.Kotor\Odyssey.Kotor.csproj" />
+    <ProjectReference Include="..\Odyssey.Stride\Odyssey.Stride.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="JetBrains.Annotations" Version="2025.2.4" />
+    <PackageReference Include="Stride.Engine" Version="4.2.0.2122" />
+  </ItemGroup>
+
+</Project>

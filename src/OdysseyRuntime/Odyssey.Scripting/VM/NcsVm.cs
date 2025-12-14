@@ -1,0 +1,677 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Text;
+using Odyssey.Scripting.Interfaces;
+
+namespace Odyssey.Scripting.VM
+{
+    /// <summary>
+    /// NWScript Compiled Script Virtual Machine implementation.
+    /// </summary>
+    public class NcsVm : INcsVm
+    {
+        private const int DefaultMaxInstructions = 100000;
+        private const uint ObjectInvalid = 0x7F000000;
+        
+        // VM State
+        private byte[] _code;
+        private int _pc; // Program counter
+        private int _sp; // Stack pointer
+        private int _bp; // Base pointer
+        private byte[] _stack;
+        private int _instructionCount;
+        private bool _running;
+        private bool _aborted;
+        private IExecutionContext _context;
+        
+        // Stack size
+        private const int StackSize = 65536;
+        
+        public NcsVm()
+        {
+            _stack = new byte[StackSize];
+            MaxInstructions = DefaultMaxInstructions;
+        }
+        
+        public bool IsRunning { get { return _running; } }
+        public int InstructionsExecuted { get { return _instructionCount; } }
+        public int MaxInstructions { get; set; }
+        public bool EnableTracing { get; set; }
+        
+        public int Execute(byte[] ncsBytes, IExecutionContext ctx)
+        {
+            if (ncsBytes == null || ncsBytes.Length < 13)
+            {
+                throw new ArgumentException("Invalid NCS data");
+            }
+            
+            // Validate header
+            if (ncsBytes[0] != 'N' || ncsBytes[1] != 'C' || ncsBytes[2] != 'S' || ncsBytes[3] != ' ')
+            {
+                throw new InvalidDataException("Invalid NCS signature");
+            }
+            
+            if (ncsBytes[4] != 'V' || ncsBytes[5] != '1' || ncsBytes[6] != '.' || ncsBytes[7] != '0')
+            {
+                throw new InvalidDataException("Invalid NCS version");
+            }
+            
+            // Byte at offset 8 must be 0x42 (program size marker)
+            if (ncsBytes[8] != 0x42)
+            {
+                throw new InvalidDataException("Invalid NCS program marker");
+            }
+            
+            // File size is big-endian uint32 at offset 9
+            int fileSize = (ncsBytes[9] << 24) | (ncsBytes[10] << 16) | (ncsBytes[11] << 8) | ncsBytes[12];
+            if (fileSize != ncsBytes.Length)
+            {
+                // Warning but continue - some NCS files have incorrect size
+            }
+            
+            _code = ncsBytes;
+            _pc = 13; // Instructions start at offset 0x0D
+            _sp = 0;
+            _bp = 0;
+            _instructionCount = 0;
+            _running = true;
+            _aborted = false;
+            _context = ctx;
+            
+            Array.Clear(_stack, 0, _stack.Length);
+            
+            int result = 0;
+            
+            try
+            {
+                while (_running && !_aborted && _pc < _code.Length && _instructionCount < MaxInstructions)
+                {
+                    ExecuteInstruction();
+                    _instructionCount++;
+                }
+                
+                // Get return value if any
+                if (_sp >= 4)
+                {
+                    result = PopInt();
+                }
+            }
+            catch (Exception ex)
+            {
+                if (EnableTracing)
+                {
+                    Console.WriteLine("NCS Error at PC={0}: {1}", _pc, ex.Message);
+                }
+                throw;
+            }
+            finally
+            {
+                _running = false;
+            }
+            
+            return result;
+        }
+        
+        public int ExecuteScript(string resRef, IExecutionContext ctx)
+        {
+            // This would load the NCS from the resource provider
+            // For now, delegate to the context's resource provider
+            var provider = ctx.ResourceProvider;
+            if (provider == null)
+            {
+                throw new InvalidOperationException("No resource provider in context");
+            }
+            
+            // Implementation would load the script here
+            throw new NotImplementedException("Script loading from resource provider not yet implemented");
+        }
+        
+        public void Abort()
+        {
+            _aborted = true;
+        }
+        
+        private void ExecuteInstruction()
+        {
+            byte opcode = _code[_pc];
+            byte qualifier = _code[_pc + 1];
+            _pc += 2;
+            
+            if (EnableTracing)
+            {
+                Console.WriteLine("PC={0:X4} OP={1:X2} Q={2:X2}", _pc - 2, opcode, qualifier);
+            }
+            
+            switch (opcode)
+            {
+                case 0x01: CPDOWNSP(); break;
+                case 0x02: RSADDI(); break;
+                case 0x03: RSADDF(); break;
+                case 0x04: RSADDS(); break;
+                case 0x05: RSADDO(); break;
+                case 0x0A: CPTOPSP(); break;
+                case 0x0B: CONSTI(); break;
+                case 0x0C: CONSTF(); break;
+                case 0x0D: CONSTS(); break;
+                case 0x0E: CONSTO(); break;
+                case 0x0F: ACTION(); break;
+                case 0x10: LOGANDII(); break;
+                case 0x11: LOGORII(); break;
+                case 0x12: INCORII(); break;
+                case 0x13: EXCORII(); break;
+                case 0x14: BOOLANDII(); break;
+                case 0x15: EQUALII(); break;
+                case 0x16: EQUALFF(); break;
+                case 0x17: EQUALSS(); break;
+                case 0x18: EQUALOO(); break;
+                case 0x1E: NEQUALII(); break;
+                case 0x1F: NEQUALFF(); break;
+                case 0x20: NEQUALSS(); break;
+                case 0x21: NEQUALOO(); break;
+                case 0x27: GEQII(); break;
+                case 0x28: GEQFF(); break;
+                case 0x29: GTII(); break;
+                case 0x2A: GTFF(); break;
+                case 0x2B: LTII(); break;
+                case 0x2C: LTFF(); break;
+                case 0x2D: LEQII(); break;
+                case 0x2E: LEQFF(); break;
+                case 0x2F: SHLEFTII(); break;
+                case 0x30: SHRIGHTII(); break;
+                case 0x31: USHRIGHTII(); break;
+                case 0x32: ADDII(); break;
+                case 0x33: ADDIF(); break;
+                case 0x34: ADDFI(); break;
+                case 0x35: ADDFF(); break;
+                case 0x36: ADDSS(); break;
+                case 0x37: ADDVV(); break;
+                case 0x38: SUBII(); break;
+                case 0x39: SUBIF(); break;
+                case 0x3A: SUBFI(); break;
+                case 0x3B: SUBFF(); break;
+                case 0x3C: SUBVV(); break;
+                case 0x3D: MULII(); break;
+                case 0x3E: MULIF(); break;
+                case 0x3F: MULFI(); break;
+                case 0x40: MULFF(); break;
+                case 0x41: MULVF(); break;
+                case 0x42: MULFV(); break;
+                case 0x43: DIVII(); break;
+                case 0x44: DIVIF(); break;
+                case 0x45: DIVFI(); break;
+                case 0x46: DIVFF(); break;
+                case 0x47: DIVVF(); break;
+                case 0x49: MODII(); break;
+                case 0x4A: NEGI(); break;
+                case 0x4B: NEGF(); break;
+                case 0x4C: MOVSP(); break;
+                case 0x4D: JMP(); break;
+                case 0x4E: JSR(); break;
+                case 0x4F: JZ(); break;
+                case 0x50: RETN(); break;
+                case 0x51: DESTRUCT(); break;
+                case 0x52: NOTI(); break;
+                case 0x53: DECISP(); break;
+                case 0x54: INCISP(); break;
+                case 0x55: JNZ(); break;
+                case 0x56: CPDOWNBP(); break;
+                case 0x57: CPTOPBP(); break;
+                case 0x58: DECIBP(); break;
+                case 0x59: INCIBP(); break;
+                case 0x5A: SAVEBP(); break;
+                case 0x5B: RESTOREBP(); break;
+                case 0x5C: STORE_STATE(); break;
+                case 0x5D: /* NOP */ break;
+                default:
+                    throw new InvalidOperationException("Unknown opcode: 0x" + opcode.ToString("X2"));
+            }
+        }
+        
+        #region Stack Operations
+        
+        private void PushInt(int value)
+        {
+            _stack[_sp++] = (byte)(value >> 24);
+            _stack[_sp++] = (byte)(value >> 16);
+            _stack[_sp++] = (byte)(value >> 8);
+            _stack[_sp++] = (byte)value;
+        }
+        
+        private int PopInt()
+        {
+            _sp -= 4;
+            return (_stack[_sp] << 24) | (_stack[_sp + 1] << 16) | (_stack[_sp + 2] << 8) | _stack[_sp + 3];
+        }
+        
+        private int PeekInt(int offset)
+        {
+            int idx = _sp + offset;
+            return (_stack[idx] << 24) | (_stack[idx + 1] << 16) | (_stack[idx + 2] << 8) | _stack[idx + 3];
+        }
+        
+        private void PushFloat(float value)
+        {
+            byte[] bytes = BitConverter.GetBytes(value);
+            if (BitConverter.IsLittleEndian)
+            {
+                Array.Reverse(bytes);
+            }
+            Array.Copy(bytes, 0, _stack, _sp, 4);
+            _sp += 4;
+        }
+        
+        private float PopFloat()
+        {
+            _sp -= 4;
+            byte[] bytes = new byte[4];
+            Array.Copy(_stack, _sp, bytes, 0, 4);
+            if (BitConverter.IsLittleEndian)
+            {
+                Array.Reverse(bytes);
+            }
+            return BitConverter.ToSingle(bytes, 0);
+        }
+        
+        private void PushString(string value)
+        {
+            // Strings are stored as length-prefixed on the stack
+            // For simplicity, we'll use a placeholder approach
+            PushInt(value?.Length ?? 0);
+            // In a full implementation, string data would be stored separately
+        }
+        
+        private string PopString()
+        {
+            int length = PopInt();
+            // In a full implementation, retrieve string data
+            return string.Empty;
+        }
+        
+        private short ReadInt16()
+        {
+            short value = (short)((_code[_pc] << 8) | _code[_pc + 1]);
+            _pc += 2;
+            return value;
+        }
+        
+        private int ReadInt32()
+        {
+            int value = (_code[_pc] << 24) | (_code[_pc + 1] << 16) | (_code[_pc + 2] << 8) | _code[_pc + 3];
+            _pc += 4;
+            return value;
+        }
+        
+        private float ReadFloat()
+        {
+            byte[] bytes = new byte[4];
+            Array.Copy(_code, _pc, bytes, 0, 4);
+            if (BitConverter.IsLittleEndian)
+            {
+                Array.Reverse(bytes);
+            }
+            _pc += 4;
+            return BitConverter.ToSingle(bytes, 0);
+        }
+        
+        #endregion
+        
+        #region Instruction Implementations
+        
+        private void CPDOWNSP()
+        {
+            short offset = ReadInt16();
+            short size = ReadInt16();
+            int srcOffset = _sp + offset;
+            for (int i = 0; i < size; i++)
+            {
+                _stack[_sp + i] = _stack[srcOffset + i];
+            }
+            _sp += size;
+        }
+        
+        private void RSADDI() { PushInt(0); }
+        private void RSADDF() { PushFloat(0f); }
+        private void RSADDS() { PushString(string.Empty); }
+        private void RSADDO() { PushInt(unchecked((int)ObjectInvalid)); }
+        
+        private void CPTOPSP()
+        {
+            short offset = ReadInt16();
+            short size = ReadInt16();
+            int srcOffset = _sp + offset;
+            for (int i = 0; i < size; i++)
+            {
+                _stack[_sp + i] = _stack[srcOffset + i];
+            }
+            _sp += size;
+        }
+        
+        private void CONSTI() { PushInt(ReadInt32()); }
+        private void CONSTF() { PushFloat(ReadFloat()); }
+        
+        private void CONSTS()
+        {
+            short length = ReadInt16();
+            string value = Encoding.ASCII.GetString(_code, _pc, length);
+            _pc += length;
+            PushString(value);
+        }
+        
+        private void CONSTO()
+        {
+            int objectId = ReadInt32();
+            PushInt(objectId);
+        }
+        
+        private void ACTION()
+        {
+            ushort routineId = (ushort)((_code[_pc] << 8) | _code[_pc + 1]);
+            _pc += 2;
+            byte argCount = _code[_pc++];
+            
+            // Pop arguments from stack
+            var args = new List<Variable>();
+            for (int i = 0; i < argCount; i++)
+            {
+                // Simplified - real implementation would track types
+                args.Add(Variable.FromInt(PopInt()));
+            }
+            args.Reverse(); // Arguments are in reverse order on stack
+            
+            // Call engine function
+            Variable result = _context.EngineApi.CallEngineFunction(routineId, args, _context);
+            
+            // Push result if not void
+            if (result.Type != VariableType.Void)
+            {
+                switch (result.Type)
+                {
+                    case VariableType.Int:
+                        PushInt(result.IntValue);
+                        break;
+                    case VariableType.Float:
+                        PushFloat(result.FloatValue);
+                        break;
+                    case VariableType.String:
+                        PushString(result.StringValue);
+                        break;
+                    case VariableType.Object:
+                        PushInt(unchecked((int)result.ObjectId));
+                        break;
+                    case VariableType.Vector:
+                        PushFloat(result.VectorValue.X);
+                        PushFloat(result.VectorValue.Y);
+                        PushFloat(result.VectorValue.Z);
+                        break;
+                }
+            }
+        }
+        
+        // Logical operations
+        private void LOGANDII() { int b = PopInt(); int a = PopInt(); PushInt((a != 0 && b != 0) ? 1 : 0); }
+        private void LOGORII() { int b = PopInt(); int a = PopInt(); PushInt((a != 0 || b != 0) ? 1 : 0); }
+        private void INCORII() { int b = PopInt(); int a = PopInt(); PushInt(a | b); }
+        private void EXCORII() { int b = PopInt(); int a = PopInt(); PushInt(a ^ b); }
+        private void BOOLANDII() { int b = PopInt(); int a = PopInt(); PushInt(a & b); }
+        
+        // Equality
+        private void EQUALII() { int b = PopInt(); int a = PopInt(); PushInt(a == b ? 1 : 0); }
+        private void EQUALFF() { float b = PopFloat(); float a = PopFloat(); PushInt(Math.Abs(a - b) < 0.0001f ? 1 : 0); }
+        private void EQUALSS() { string b = PopString(); string a = PopString(); PushInt(a == b ? 1 : 0); }
+        private void EQUALOO() { int b = PopInt(); int a = PopInt(); PushInt(a == b ? 1 : 0); }
+        
+        // Inequality
+        private void NEQUALII() { int b = PopInt(); int a = PopInt(); PushInt(a != b ? 1 : 0); }
+        private void NEQUALFF() { float b = PopFloat(); float a = PopFloat(); PushInt(Math.Abs(a - b) >= 0.0001f ? 1 : 0); }
+        private void NEQUALSS() { string b = PopString(); string a = PopString(); PushInt(a != b ? 1 : 0); }
+        private void NEQUALOO() { int b = PopInt(); int a = PopInt(); PushInt(a != b ? 1 : 0); }
+        
+        // Comparisons
+        private void GEQII() { int b = PopInt(); int a = PopInt(); PushInt(a >= b ? 1 : 0); }
+        private void GEQFF() { float b = PopFloat(); float a = PopFloat(); PushInt(a >= b ? 1 : 0); }
+        private void GTII() { int b = PopInt(); int a = PopInt(); PushInt(a > b ? 1 : 0); }
+        private void GTFF() { float b = PopFloat(); float a = PopFloat(); PushInt(a > b ? 1 : 0); }
+        private void LTII() { int b = PopInt(); int a = PopInt(); PushInt(a < b ? 1 : 0); }
+        private void LTFF() { float b = PopFloat(); float a = PopFloat(); PushInt(a < b ? 1 : 0); }
+        private void LEQII() { int b = PopInt(); int a = PopInt(); PushInt(a <= b ? 1 : 0); }
+        private void LEQFF() { float b = PopFloat(); float a = PopFloat(); PushInt(a <= b ? 1 : 0); }
+        
+        // Bit shifts
+        private void SHLEFTII() { int b = PopInt(); int a = PopInt(); PushInt(a << b); }
+        private void SHRIGHTII() { int b = PopInt(); int a = PopInt(); PushInt(a >> b); }
+        private void USHRIGHTII() { int b = PopInt(); int a = PopInt(); PushInt((int)((uint)a >> b)); }
+        
+        // Arithmetic
+        private void ADDII() { int b = PopInt(); int a = PopInt(); PushInt(a + b); }
+        private void ADDIF() { float b = PopFloat(); int a = PopInt(); PushFloat(a + b); }
+        private void ADDFI() { int b = PopInt(); float a = PopFloat(); PushFloat(a + b); }
+        private void ADDFF() { float b = PopFloat(); float a = PopFloat(); PushFloat(a + b); }
+        private void ADDSS() { string b = PopString(); string a = PopString(); PushString(a + b); }
+        private void ADDVV()
+        {
+            float bz = PopFloat(); float by = PopFloat(); float bx = PopFloat();
+            float az = PopFloat(); float ay = PopFloat(); float ax = PopFloat();
+            PushFloat(ax + bx); PushFloat(ay + by); PushFloat(az + bz);
+        }
+        
+        private void SUBII() { int b = PopInt(); int a = PopInt(); PushInt(a - b); }
+        private void SUBIF() { float b = PopFloat(); int a = PopInt(); PushFloat(a - b); }
+        private void SUBFI() { int b = PopInt(); float a = PopFloat(); PushFloat(a - b); }
+        private void SUBFF() { float b = PopFloat(); float a = PopFloat(); PushFloat(a - b); }
+        private void SUBVV()
+        {
+            float bz = PopFloat(); float by = PopFloat(); float bx = PopFloat();
+            float az = PopFloat(); float ay = PopFloat(); float ax = PopFloat();
+            PushFloat(ax - bx); PushFloat(ay - by); PushFloat(az - bz);
+        }
+        
+        private void MULII() { int b = PopInt(); int a = PopInt(); PushInt(a * b); }
+        private void MULIF() { float b = PopFloat(); int a = PopInt(); PushFloat(a * b); }
+        private void MULFI() { int b = PopInt(); float a = PopFloat(); PushFloat(a * b); }
+        private void MULFF() { float b = PopFloat(); float a = PopFloat(); PushFloat(a * b); }
+        private void MULVF()
+        {
+            float s = PopFloat();
+            float z = PopFloat(); float y = PopFloat(); float x = PopFloat();
+            PushFloat(x * s); PushFloat(y * s); PushFloat(z * s);
+        }
+        private void MULFV()
+        {
+            float z = PopFloat(); float y = PopFloat(); float x = PopFloat();
+            float s = PopFloat();
+            PushFloat(x * s); PushFloat(y * s); PushFloat(z * s);
+        }
+        
+        private void DIVII() { int b = PopInt(); int a = PopInt(); PushInt(b != 0 ? a / b : 0); }
+        private void DIVIF() { float b = PopFloat(); int a = PopInt(); PushFloat(b != 0 ? a / b : 0); }
+        private void DIVFI() { int b = PopInt(); float a = PopFloat(); PushFloat(b != 0 ? a / b : 0); }
+        private void DIVFF() { float b = PopFloat(); float a = PopFloat(); PushFloat(b != 0 ? a / b : 0); }
+        private void DIVVF()
+        {
+            float s = PopFloat();
+            float z = PopFloat(); float y = PopFloat(); float x = PopFloat();
+            if (s != 0)
+            {
+                PushFloat(x / s); PushFloat(y / s); PushFloat(z / s);
+            }
+            else
+            {
+                PushFloat(0); PushFloat(0); PushFloat(0);
+            }
+        }
+        
+        private void MODII() { int b = PopInt(); int a = PopInt(); PushInt(b != 0 ? a % b : 0); }
+        
+        private void NEGI() { PushInt(-PopInt()); }
+        private void NEGF() { PushFloat(-PopFloat()); }
+        
+        private void MOVSP()
+        {
+            int offset = ReadInt32();
+            _sp += offset;
+        }
+        
+        private void JMP()
+        {
+            int offset = ReadInt32();
+            _pc = (_pc - 6) + offset; // Offset from instruction start
+        }
+        
+        private void JSR()
+        {
+            int offset = ReadInt32();
+            PushInt(_pc); // Return address
+            PushInt(_bp); // Save base pointer
+            _bp = _sp;
+            _pc = (_pc - 6) + offset;
+        }
+        
+        private void JZ()
+        {
+            int offset = ReadInt32();
+            int value = PopInt();
+            if (value == 0)
+            {
+                _pc = (_pc - 6) + offset;
+            }
+        }
+        
+        private void RETN()
+        {
+            _sp = _bp;
+            _bp = PopInt();
+            _pc = PopInt();
+            
+            if (_pc == 0 || _pc >= _code.Length)
+            {
+                _running = false;
+            }
+        }
+        
+        private void DESTRUCT()
+        {
+            short sizeToRemove = ReadInt16();
+            short offsetToKeep = ReadInt16();
+            short sizeToKeep = ReadInt16();
+            
+            // Copy the portion to keep
+            byte[] kept = new byte[sizeToKeep];
+            Array.Copy(_stack, _sp - sizeToRemove + offsetToKeep, kept, 0, sizeToKeep);
+            
+            // Remove the full range
+            _sp -= sizeToRemove;
+            
+            // Push back the kept portion
+            Array.Copy(kept, 0, _stack, _sp, sizeToKeep);
+            _sp += sizeToKeep;
+        }
+        
+        private void NOTI() { PushInt(PopInt() == 0 ? 1 : 0); }
+        
+        private void DECISP()
+        {
+            int offset = ReadInt32();
+            int idx = _sp + offset;
+            int value = (_stack[idx] << 24) | (_stack[idx + 1] << 16) | (_stack[idx + 2] << 8) | _stack[idx + 3];
+            value--;
+            _stack[idx] = (byte)(value >> 24);
+            _stack[idx + 1] = (byte)(value >> 16);
+            _stack[idx + 2] = (byte)(value >> 8);
+            _stack[idx + 3] = (byte)value;
+        }
+        
+        private void INCISP()
+        {
+            int offset = ReadInt32();
+            int idx = _sp + offset;
+            int value = (_stack[idx] << 24) | (_stack[idx + 1] << 16) | (_stack[idx + 2] << 8) | _stack[idx + 3];
+            value++;
+            _stack[idx] = (byte)(value >> 24);
+            _stack[idx + 1] = (byte)(value >> 16);
+            _stack[idx + 2] = (byte)(value >> 8);
+            _stack[idx + 3] = (byte)value;
+        }
+        
+        private void JNZ()
+        {
+            int offset = ReadInt32();
+            int value = PopInt();
+            if (value != 0)
+            {
+                _pc = (_pc - 6) + offset;
+            }
+        }
+        
+        private void CPDOWNBP()
+        {
+            int offset = ReadInt32();
+            short size = ReadInt16();
+            int srcOffset = _bp + offset;
+            for (int i = 0; i < size; i++)
+            {
+                _stack[_sp + i] = _stack[srcOffset + i];
+            }
+            _sp += size;
+        }
+        
+        private void CPTOPBP()
+        {
+            int offset = ReadInt32();
+            short size = ReadInt16();
+            _sp -= size;
+            int dstOffset = _bp + offset;
+            Array.Copy(_stack, _sp, _stack, dstOffset, size);
+        }
+        
+        private void DECIBP()
+        {
+            int offset = ReadInt32();
+            int idx = _bp + offset;
+            int value = (_stack[idx] << 24) | (_stack[idx + 1] << 16) | (_stack[idx + 2] << 8) | _stack[idx + 3];
+            value--;
+            _stack[idx] = (byte)(value >> 24);
+            _stack[idx + 1] = (byte)(value >> 16);
+            _stack[idx + 2] = (byte)(value >> 8);
+            _stack[idx + 3] = (byte)value;
+        }
+        
+        private void INCIBP()
+        {
+            int offset = ReadInt32();
+            int idx = _bp + offset;
+            int value = (_stack[idx] << 24) | (_stack[idx + 1] << 16) | (_stack[idx + 2] << 8) | _stack[idx + 3];
+            value++;
+            _stack[idx] = (byte)(value >> 24);
+            _stack[idx + 1] = (byte)(value >> 16);
+            _stack[idx + 2] = (byte)(value >> 8);
+            _stack[idx + 3] = (byte)value;
+        }
+        
+        private void SAVEBP()
+        {
+            PushInt(_bp);
+            _bp = _sp;
+        }
+        
+        private void RESTOREBP()
+        {
+            _sp = _bp;
+            _bp = PopInt();
+        }
+        
+        private void STORE_STATE()
+        {
+            int stackBytes = ReadInt32();
+            int localsBytes = ReadInt32();
+            
+            // Store state for deferred action execution
+            // This is used by DelayCommand and action parameters
+            // The stored state would be pushed to the action system
+            // Full implementation would capture the relevant stack/locals
+        }
+        
+        #endregion
+    }
+}
+
