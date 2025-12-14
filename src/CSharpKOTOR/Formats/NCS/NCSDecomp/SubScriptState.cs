@@ -85,6 +85,15 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
             this.varprefix = prefix;
         }
 
+        // Helper method to safely get position from a node, returning fallback if not available
+        // This prevents exceptions when SetPositions fails to set positions on some nodes
+        private int SafeGetPos(Node node, int fallback = 0)
+        {
+            if (node == null) return fallback;
+            int pos = this.nodedata.TryGetPos(node);
+            return pos >= 0 ? pos : fallback;
+        }
+
         public virtual void SetStack(LocalVarStack stack)
         {
             this.stack = stack;
@@ -604,9 +613,11 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
                                 ScriptNode.ASwitchCase aprevcase = existingSwitch.GetLastCase();
                                 if (aprevcase != null)
                                 {
-                                    aprevcase.End(this.nodedata.GetPos(NodeUtils.GetPreviousCommand(this.nodedata.GetDestination(node), this.nodedata)));
+                                    Node prevCmd = NodeUtils.GetPreviousCommand(this.nodedata.GetDestination(node), this.nodedata);
+                                    aprevcase.End(this.SafeGetPos(prevCmd));
                                 }
-                                ScriptNode.ASwitchCase acasex = new ScriptNode.ASwitchCase(this.nodedata.GetPos(this.nodedata.GetDestination(node)), (ScriptNode.AConst)(object)(ScriptNode.AConst)cond.GetRight());
+                                Node dest = this.nodedata.GetDestination(node);
+                                ScriptNode.ASwitchCase acasex = new ScriptNode.ASwitchCase(this.SafeGetPos(dest), (ScriptNode.AConst)(object)(ScriptNode.AConst)cond.GetRight());
                                 existingSwitch.AddCase(acasex);
                                 this.state = 4;
                                 this.CheckEnd(node);
@@ -618,7 +629,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
                     if (canCreateSwitch)
                     {
                                 ScriptNode.ASwitch aswitch = null;
-                        ScriptNode.ASwitchCase acase = new ScriptNode.ASwitchCase(this.nodedata.GetPos(this.nodedata.GetDestination(node)), (ScriptNode.AConst)(object)(ScriptNode.AConst)cond.GetRight());
+                        Node dest = this.nodedata.GetDestination(node);
+                        ScriptNode.ASwitchCase acase = new ScriptNode.ASwitchCase(this.SafeGetPos(dest), (ScriptNode.AConst)(object)(ScriptNode.AConst)cond.GetRight());
                         if (this.current.HasChildren())
                         {
                             ScriptNode.ScriptNode last = this.current.GetLastChild();
@@ -628,18 +640,18 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
                                 ScriptNode.AExpression exp = this.RemoveLastExp(false);
                                 if (exp is AVarRef varref)
                                 {
-                                    aswitch = new ScriptNode.ASwitch(this.nodedata.GetPos(node), varref);
+                                    aswitch = new ScriptNode.ASwitch(this.SafeGetPos(node), varref);
                                 }
                                 else
                                 {
-                                    aswitch = new ScriptNode.ASwitch(this.nodedata.GetPos(node), cond.GetLeft());
+                                    aswitch = new ScriptNode.ASwitch(this.SafeGetPos(node), cond.GetLeft());
                                 }
                             }
                         }
 
                         if (aswitch == null)
                         {
-                            aswitch = new ScriptNode.ASwitch(this.nodedata.GetPos(node), cond.GetLeft());
+                            aswitch = new ScriptNode.ASwitch(this.SafeGetPos(node), cond.GetLeft());
                         }
 
                         this.current.AddChild(aswitch);
@@ -649,7 +661,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
                     else
                     {
                         // Fall back to if statement if we can't create a switch
-                        AIf aif = new AIf(this.nodedata.GetPos(node), this.nodedata.GetPos(this.nodedata.GetDestination(node)) - 6, cond);
+                        Node dest = this.nodedata.GetDestination(node);
+                        AIf aif = new AIf(this.SafeGetPos(node), this.SafeGetPos(dest) - 6, cond);
                         this.current.AddChild(aif);
                         this.current = aif;
                     }
@@ -659,8 +672,10 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
                     AConditionalExp condx = (AConditionalExp)this.RemoveLastExp(true);
                     ScriptNode.ASwitch aswitchx = (ScriptNode.ASwitch)this.current.GetLastChild();
                     ScriptNode.ASwitchCase aprevcase = aswitchx.GetLastCase();
-                    aprevcase.End(this.nodedata.GetPos(NodeUtils.GetPreviousCommand(this.nodedata.GetDestination(node), this.nodedata)));
-                    ScriptNode.ASwitchCase acasex = new ScriptNode.ASwitchCase(this.nodedata.GetPos(this.nodedata.GetDestination(node)), (ScriptNode.AConst)(object)(ScriptNode.AConst)condx.GetRight());
+                    Node dest = this.nodedata.GetDestination(node);
+                    Node prevCmd = NodeUtils.GetPreviousCommand(dest, this.nodedata);
+                    aprevcase.End(this.SafeGetPos(prevCmd));
+                    ScriptNode.ASwitchCase acasex = new ScriptNode.ASwitchCase(this.SafeGetPos(dest), (ScriptNode.AConst)(object)(ScriptNode.AConst)condx.GetRight());
                     aswitchx.AddCase(acasex);
                 }
             }
@@ -669,7 +684,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
             else if (typeof(AIf).IsInstanceOfType(this.current) && this.IsModifyConditional() && this.state != 4)
             {
                 // Don't modify AIf's end when processing switch cases (state == 4)
-                int newEnd = this.nodedata.GetPos(this.nodedata.GetDestination(node)) - 6;
+                Node dest = this.nodedata.GetDestination(node);
+                int newEnd = this.SafeGetPos(dest) - 6;
                 ((AIf)this.current).End(newEnd);
                 if (this.current.HasChildren())
                 {
@@ -682,7 +698,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
             }
             else if (typeof(AWhileLoop).IsInstanceOfType(this.current) && this.IsModifyConditional())
             {
-                ((AWhileLoop)this.current).End(this.nodedata.GetPos(this.nodedata.GetDestination(node)) - 6);
+                Node dest = this.nodedata.GetDestination(node);
+                ((AWhileLoop)this.current).End(this.SafeGetPos(dest) - 6);
                 if (this.current.HasChildren())
                 {
                     this.current.RemoveLastChild();
@@ -690,7 +707,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
             }
             else
             {
-                AIf aif = new AIf(this.nodedata.GetPos(node), this.nodedata.GetPos(this.nodedata.GetDestination(node)) - 6, this.RemoveLastExp(false));
+                Node dest = this.nodedata.GetDestination(node);
+                AIf aif = new AIf(this.SafeGetPos(node), this.SafeGetPos(dest) - 6, this.RemoveLastExp(false));
                 this.current.AddChild(aif);
                 this.current = aif;
             }
@@ -1291,7 +1309,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
                 return false;
             }
 
-            int nodePos = this.nodedata.GetPos(node);
+            int nodePos = this.nodedata.TryGetPos(node);
             if (nodePos == -1)
             {
                 return false;
@@ -1319,9 +1337,13 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
             if (typeof(AIf).IsInstanceOfType(this.current) || typeof(AElse).IsInstanceOfType(this.current))
             {
                 Node next = NodeUtils.GetNextCommand(node, this.nodedata);
-                if (next != null && this.nodedata.GetPos(next) == this.current.GetEnd())
+                if (next != null)
                 {
-                    return true;
+                    int nextPos = this.nodedata.TryGetPos(next);
+                    if (nextPos >= 0 && nextPos == this.current.GetEnd())
+                    {
+                        return true;
+                    }
                 }
             }
 
@@ -1416,7 +1438,11 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
          */
         private bool IsAtIfEnd(Node node)
         {
-            int nodePos = this.nodedata.GetPos(node);
+            int nodePos = this.nodedata.TryGetPos(node);
+            if (nodePos == -1)
+            {
+                return false;
+            }
 
             // Debug output
             JavaSystem.@err.Println("DEBUG isAtIfEnd: nodePos=" + nodePos + ", current=" + this.current.GetType().Name + ", currentEnd=" + this.current.GetEnd());
