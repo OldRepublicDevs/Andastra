@@ -37,6 +37,22 @@ We treat the four projects as “feature catalogs” and verification aids:
 
 Deliverable from this phase: a **Feature Matrix** (spreadsheet or internal doc outside repo if license-sensitive) mapping: subsystem → behavior expectations → testable acceptance criteria.
 
+## Primary specifications (authoritative docs to implement against)
+
+For a faithful modern reimplementation, treat the following as the canonical written specs for behavior and data layouts (in addition to in-game observation):
+
+- **Resource system + overall Aurora/KotOR context**: `vendor/PyKotor/wiki/Home.md`
+- **NWScript bytecode + VM semantics**: `vendor/PyKotor/wiki/NCS-File-Format.md`
+- **Walkmesh (WOK/PWK/DWK) geometry, adjacency, AABB acceleration**: `vendor/PyKotor/wiki/BWM-File-Format.md`
+- **Area layout assembly (rooms/tracks/obstacles/doorhooks)**: `vendor/PyKotor/wiki/LYT-File-Format.md`
+
+These docs are also useful to keep at hand for the runtime content pipeline:
+
+- `vendor/PyKotor/wiki/MDL-MDX-File-Format.md` (models/animations/attachments)
+- `vendor/PyKotor/wiki/TPC-File-Format.md` + `vendor/PyKotor/wiki/TXI-File-Format.md` (textures + material metadata)
+- `vendor/PyKotor/wiki/VIS-File-Format.md` (room visibility)
+- `vendor/PyKotor/wiki/TLK-File-Format.md`, `vendor/PyKotor/wiki/LIP-File-Format.md`, `vendor/PyKotor/wiki/LTR-File-Format.md` (dialogue/VO/lipsync)
+
 ## High-level architecture
 
 ### Layering (strict)
@@ -122,9 +138,16 @@ To keep a defensible clean-room posture:
 Leverage `CSharpKOTOR.Installation.Installation` and `Module` to implement:
 
 - **Virtual file system** abstraction: `IGameResourceProvider` wrapping CSharpKOTOR lookup semantics:
-  - override → custom modules → modules → texture packs → chitin
+  - **pre-save**: override → currently loaded module archives (MOD/RIM/ERF) → chitin (KEY/BIF) → hardcoded defaults
+  - **post-save**: override → currently loaded module archives → currently loaded save (SAV) → chitin → hardcoded defaults
 - **Streaming**: async read APIs + caching; avoid loading large archives repeatedly.
 - **Deterministic precedence tests**: verify location ordering and fallbacks.
+
+Resource order note (Odyssey/Aurora behavior target, per `vendor/PyKotor/wiki/Home.md`):
+
+- Once a save is loaded, it becomes a **resource overlay** (lookups may resolve to save-contained resources before chitin).
+- Module archives must be treated as a **stack**: the “current module” plus any explicitly loaded capsules.
+- This must remain compatible with mod expectations and KOTOR’s resource resolution rules.
 
 **Acceptance**: can enumerate modules, load `module.ifo`, `*.are`, `*.git`, `*.lyt`, `*.vis`, `*.pth`, `*.dlg` for a chosen module.
 
@@ -148,6 +171,21 @@ Implement `Odyssey.Stride` scene assembly:
 - Read module layout (`LYT`) and visibility (`VIS`) to:
   - instantiate room meshes
   - apply VIS culling groups
+
+LYT specifics to implement (see `vendor/PyKotor/wiki/LYT-File-Format.md`):
+
+- LYT is ASCII text with deterministic framing: `beginlayout` … `donelayout`.
+- Sections are count-based:
+  - `roomcount N` then N lines: `<room_model> <x> <y> <z>`
+  - optional `trackcount`, `obstaclecount` (swoop racing; mostly K2)
+  - `doorhookcount N` then N lines: `<room_name> <door_name> <x> <y> <z> <qx> <qy> <qz> <qw> [optional floats]`
+- **Doorhooks**:
+  - define door placement transforms in the area layout (position + quaternion)
+  - some implementations record extra floats; parser must accept and ignore/roundtrip them safely.
+- **Naming**: room and hook targets are case-insensitive; normalize (lowercase) for caching and lookups.
+- **Important distinction**:
+  - LYT doorhooks define **door placement** in the area layout.
+  - BWM hooks (USE1/USE2) define **interaction points** for doors/placeables (see BWM spec below).
 - Material system:
   - reproduce Odyssey material behaviors: lightmaps, envmaps, additive/alpha blend, cutout, two-sided, etc.
   - unify shading into a small set of Stride effects/shaders.
@@ -160,6 +198,35 @@ Implement `Odyssey.Stride` scene assembly:
   - project movement onto walkmesh triangles
   - handle ledges, ramps, transitions
   - door/trigger volume intersections
+
+Walkmesh implementation requirements (see `vendor/PyKotor/wiki/BWM-File-Format.md`):
+
+- **BWM header**: `"BWM "` + `"V1.0"` signature validation.
+- **Walkmesh types**:
+  - type `1`: area walkmesh (WOK). Includes AABB tree + walkable adjacency + perimeter edges.
+  - type `0`: placeable/door walkmesh (PWK/DWK). Primarily collision; also provides hook vectors.
+- **Hook vectors**:
+  - `relative_hook1/2` and `absolute_hook1/2` (USE1/USE2 style interaction points).
+  - Do not confuse with LYT doorhooks.
+- **Adjacency encoding** (WOK):
+  - per walkable face, three adjacency entries, one per local edge.
+  - neighbor encoding: `adjacency = neighborFaceIndex * 3 + neighborLocalEdgeIndex`, `-1` = no neighbor.
+  - decode: `face = adjacency // 3`, `edge = adjacency % 3`.
+- **Perimeter edges** (WOK):
+  - edges are boundary edges where adjacency is `-1`; edges may include transition IDs.
+  - perimeter markers indicate loop boundaries; treat the on-disk encoding carefully (docs note 1-based end markers).
+- **AABB acceleration** (WOK):
+  - support raycasts (mouse click → walkable triangle), point queries (find face under actor), and line-of-sight tests.
+  - AABB nodes are fixed-size (44 bytes) in the file; child interpretation must be consistent with the spec.
+- **Surface materials / walkability**:
+  - implement walkability rules driven by surface material ids (from `surfacemat.2da` semantics).
+  - collision vs walkability must differ: non-walkable faces still participate in collision.
+
+Click-to-move depends on these primitives:
+
+- raycast from camera into walkmesh using the AABB tree
+- compute intersection point and clamp/project onto walkable triangle set
+- pathfind over walkable adjacency graph (phase 2), but phase 1 can do “direct projected move” for minimal viability.
 - Camera modes:
   - KOTOR-style chase camera + free camera for debugging.
 
@@ -179,6 +246,32 @@ Implement `Odyssey.Stride` scene assembly:
 ### 6) Scripting: NCS
 
 This is the single most schedule-critical subsystem. The engine can render without scripts, but it cannot be *KOTOR* without NWScript behavior.
+
+#### 6.0 NCS format + VM invariants (must match)
+
+Implement the bytecode format and core VM semantics as specified in `vendor/PyKotor/wiki/NCS-File-Format.md`:
+
+- **Header (13 bytes)**:
+  - signature `"NCS "` and version `"V1.0"`
+  - byte at offset 8 must be `0x42` (program size marker, not an executable opcode)
+  - uint32 file size at offset 9 is **big-endian**
+  - instruction stream begins at offset `0x0D`.
+- **Endian**:
+  - all multi-byte integer/float arguments are **big-endian** (network order).
+- **Instruction encoding**:
+  - `<opcode:uint8><qualifier:uint8><args...>`
+  - qualifier selects operand types (II/FF/SS/OO/VV/TT etc.).
+- **Jump offsets**:
+  - `JMP/JSR/JZ/JNZ` store a signed 32-bit **relative offset from the start of the jump instruction**, not from the next instruction.
+- **Engine calls**:
+  - `ACTION` arguments are: `uint16 routineId` + `uint8 argCount` (argCount counts **stack elements**, not bytes).
+- **Deferred actions**:
+  - `STORE_STATE` stores two signed int32 values (stack bytes to preserve, locals bytes to preserve); required for `DelayCommand`/action parameter semantics.
+- **Stack model**:
+  - stack is 4-byte aligned; vectors occupy 12 bytes (3 floats); structures are 4-byte multiples.
+  - BP/SP conventions must support globals (`SAVEBP/RESTOREBP`, `CPTOPBP/CPDOWNBP`).
+- **DESTRUCT semantics**:
+  - complex stack cleanup that removes a range while preserving a subrange; this directly affects correct VM behavior for structure/vector access patterns.
 
 #### 6.1 VM scope and interfaces
 
@@ -241,6 +334,8 @@ Implement Odyssey-like action queues:
 
 **Acceptance**:
 
+- NCS reader validates `"NCS V1.0"` header, `0x42` marker, and big-endian size field; rejects invalid files.
+- Instruction decoder round-trips offsets and resolves jump targets correctly using “offset from instruction start” semantics.
 - Can execute a trivial NCS script that calls `PrintString`, `Random`, `ExecuteScript`, and schedules a delayed action.
 - Action parameter semantics (compiled via `STORE_STATE`) produce correct deferred behavior.
 - A curated set of K1/K2 vanilla scripts (small whitelist) run without VM exceptions.
