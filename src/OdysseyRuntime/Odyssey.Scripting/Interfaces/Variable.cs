@@ -155,6 +155,15 @@ namespace Odyssey.Scripting.Interfaces
             return Vector3.Zero;
         }
         
+        public object AsLocation()
+        {
+            if (Type == VariableType.Location)
+            {
+                return ComplexValue;
+            }
+            return null;
+        }
+        
         public override string ToString()
         {
             switch (Type)

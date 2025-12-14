@@ -1806,13 +1806,37 @@ namespace Odyssey.Scripting.EngineApi
             return Variable.Void();
         }
 
+        /// <summary>
+        /// GetSpellTargetObject() - Returns the target of the last spell cast
+        /// </summary>
         private Variable Func_GetSpellTargetObject(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
+            // This would need to track the last spell target in the action system
+            // For now, return invalid as spell casting is not fully implemented
+            // TODO: Track spell target when ActionCastSpellAtObject is executed
             return Variable.FromObject(ObjectInvalid);
         }
 
+        /// <summary>
+        /// ActionCastSpellAtObject(int nSpell, object oTarget) - Casts a spell at a target object
+        /// </summary>
         private Variable Func_ActionCastSpellAtObject(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
+            int spellId = args.Count > 0 ? args[0].AsInt() : 0;
+            uint targetId = args.Count > 1 ? args[1].AsObjectId() : ObjectInvalid;
+
+            if (ctx.Caller == null)
+            {
+                return Variable.Void();
+            }
+
+            var action = new ActionCastSpellAtObject(spellId, targetId);
+            IActionQueue queue = ctx.Caller.GetComponent<IActionQueue>();
+            if (queue != null)
+            {
+                queue.Add(action);
+            }
+
             return Variable.Void();
         }
 
