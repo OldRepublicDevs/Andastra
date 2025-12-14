@@ -348,7 +348,7 @@ namespace Odyssey.Kotor.Systems
                             _world.RegisterEntity(creature);
 
                             // Add to area
-                            if (area is Module.RuntimeArea runtimeArea)
+                            if (area is RuntimeArea runtimeArea)
                             {
                                 runtimeArea.AddEntity(creature);
                             }
