@@ -64,16 +64,32 @@ namespace CSharpKOTOR.Resource.Generics
             foreach (var propStruct in propertiesList)
             {
                 var prop = new UTIProperty();
-                prop.CostTable = propStruct.Acquire<int>("CostTable", 0);
-                prop.CostValue = propStruct.Acquire<int>("CostValue", 0);
-                prop.Param1 = propStruct.Acquire<int>("Param1", 0);
-                prop.Param1Value = propStruct.Acquire<int>("Param1Value", 0);
-                prop.PropertyName = propStruct.Acquire<int>("PropertyName", 0);
-                prop.Subtype = propStruct.Acquire<int>("Subtype", 0);
-                prop.ChanceAppear = propStruct.Acquire<int>("ChanceAppear", 100);
+                // Matching DismantleUti: CostTable is UInt8
+                byte? costTableNullable = propStruct.GetUInt8("CostTable");
+                prop.CostTable = costTableNullable.HasValue ? (int)costTableNullable.Value : 0;
+                // Matching DismantleUti: CostValue is UInt16
+                ushort? costValueNullable = propStruct.GetUInt16("CostValue");
+                prop.CostValue = costValueNullable.HasValue ? (int)costValueNullable.Value : 0;
+                // Matching DismantleUti: Param1 is UInt8
+                byte? param1Nullable = propStruct.GetUInt8("Param1");
+                prop.Param1 = param1Nullable.HasValue ? (int)param1Nullable.Value : 0;
+                // Matching DismantleUti: Param1Value is UInt8
+                byte? param1ValueNullable = propStruct.GetUInt8("Param1Value");
+                prop.Param1Value = param1ValueNullable.HasValue ? (int)param1ValueNullable.Value : 0;
+                // Matching DismantleUti: PropertyName is UInt16
+                ushort? propertyNameNullable = propStruct.GetUInt16("PropertyName");
+                prop.PropertyName = propertyNameNullable.HasValue ? (int)propertyNameNullable.Value : 0;
+                // Matching DismantleUti: Subtype is UInt16
+                ushort? subtypeNullable = propStruct.GetUInt16("Subtype");
+                prop.Subtype = subtypeNullable.HasValue ? (int)subtypeNullable.Value : 0;
+                // Matching DismantleUti: ChanceAppear is UInt8
+                byte? chanceAppearNullable = propStruct.GetUInt8("ChanceAppear");
+                prop.ChanceAppear = chanceAppearNullable.HasValue ? (int)chanceAppearNullable.Value : 100;
                 if (propStruct.Exists("UpgradeType"))
                 {
-                    prop.UpgradeType = propStruct.Acquire<int>("UpgradeType", 0);
+                    // Matching DismantleUti: UpgradeType is UInt8
+                    byte? upgradeTypeNullable = propStruct.GetUInt8("UpgradeType");
+                    prop.UpgradeType = upgradeTypeNullable.HasValue ? (int)upgradeTypeNullable.Value : 0;
                 }
                 uti.Properties.Add(prop);
             }
