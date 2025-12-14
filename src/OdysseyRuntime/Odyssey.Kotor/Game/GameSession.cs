@@ -232,7 +232,7 @@ namespace Odyssey.Kotor.Game
                 FireScriptEvent, 
                 _moduleLoader,
                 (creature) => creature == _playerEntity, // IsPlayerCheck
-                () => _moduleLoader?.GetCSharpKotorModule() // GetCurrentModule
+                () => _moduleLoader?.GetCurrentModule() // GetCurrentModule
             );
 
             // Create module transition system
@@ -271,25 +271,6 @@ namespace Odyssey.Kotor.Game
             // Check if door triggers a module transition
             if (_moduleTransitionSystem != null && _moduleTransitionSystem.CanDoorTransition(evt.Door))
             {
-                _moduleTransitionSystem.TransitionThroughDoor(evt.Door, evt.Actor);
-            }
-        }
-        {
-            if (evt == null || evt.Door == null)
-            {
-                return;
-            }
-
-            IDoorComponent doorComponent = evt.Door.GetComponent<IDoorComponent>();
-            if (doorComponent == null)
-            {
-                return;
-            }
-
-            // Check if door has a module transition
-            if (!string.IsNullOrEmpty(doorComponent.LinkedToModule))
-            {
-                // Trigger module transition
                 _moduleTransitionSystem.TransitionThroughDoor(evt.Door, evt.Actor);
             }
         }
@@ -573,6 +554,12 @@ namespace Odyssey.Kotor.Game
                 if (_heartbeatSystem != null)
                 {
                     _heartbeatSystem.RegisterAllEntities();
+                }
+
+                // Register all encounters with encounter system
+                if (_encounterSystem != null && entryArea != null)
+                {
+                    RegisterAllEncounters(entryArea);
                 }
 
                 Console.WriteLine("[GameSession] Module loaded: " + moduleName);
@@ -993,6 +980,34 @@ namespace Odyssey.Kotor.Game
             // Restore global variables (handled by SaveSystem.ApplySaveData)
 
             return true;
+        }
+
+        /// <summary>
+        /// Registers all encounters in the current area with the encounter system.
+        /// </summary>
+        private void RegisterAllEncounters(IArea area)
+        {
+            if (_encounterSystem == null || area == null || _world == null)
+            {
+                return;
+            }
+
+            // Get all encounter entities from the world filtered by area
+            IEnumerable<IEntity> allEncounters = _world.GetEntitiesOfType(ObjectType.Encounter);
+            if (allEncounters != null)
+            {
+                int count = 0;
+                foreach (IEntity encounter in allEncounters)
+                {
+                    // Check if encounter is in the current area
+                    if (encounter.World != null && encounter.World.CurrentArea == area)
+                    {
+                        _encounterSystem.RegisterEncounter(encounter);
+                        count++;
+                    }
+                }
+                Console.WriteLine($"[GameSession] Registered {count} encounters");
+            }
         }
 
         public void Dispose()
