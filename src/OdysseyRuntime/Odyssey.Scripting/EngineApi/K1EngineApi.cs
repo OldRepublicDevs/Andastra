@@ -22,7 +22,7 @@ namespace Odyssey.Scripting.EngineApi
         {
             // Register function names from ScriptDefs
             int idx = 0;
-            foreach (var func in ScriptDefs.KOTOR_FUNCTIONS)
+            foreach (ScriptFunction func in ScriptDefs.KOTOR_FUNCTIONS)
             {
                 _functionNames[idx] = func.Name;
                 idx++;
@@ -230,7 +230,7 @@ namespace Odyssey.Scripting.EngineApi
         {
             // GetTag(object oObject) - returns the tag string
             uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
-            var entity = ResolveObject(objectId, ctx);
+            IEntity entity = ResolveObject(objectId, ctx);
             if (entity != null)
             {
                 return Variable.FromString(entity.Tag ?? "");
@@ -243,7 +243,7 @@ namespace Odyssey.Scripting.EngineApi
             // GetLocalInt(object oObject, string sVarName) - get local integer variable
             uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
             string varName = args.Count > 1 ? args[1].AsString() : "";
-            var entity = ResolveObject(objectId, ctx);
+            IEntity entity = ResolveObject(objectId, ctx);
             if (entity != null && !string.IsNullOrEmpty(varName))
             {
                 return Variable.FromInt(ctx.Globals.GetLocalInt(entity, varName));
@@ -257,7 +257,7 @@ namespace Odyssey.Scripting.EngineApi
             uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
             string varName = args.Count > 1 ? args[1].AsString() : "";
             int value = args.Count > 2 ? args[2].AsInt() : 0;
-            var entity = ResolveObject(objectId, ctx);
+            IEntity entity = ResolveObject(objectId, ctx);
             if (entity != null && !string.IsNullOrEmpty(varName))
             {
                 ctx.Globals.SetLocalInt(entity, varName, value);
@@ -274,12 +274,12 @@ namespace Odyssey.Scripting.EngineApi
             // AssignCommand(object oActionSubject, action aActionToAssign)
             // This pushes an action onto the target's action queue
             uint targetId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
-            var action = args.Count > 1 ? args[1].ComplexValue as IAction : null;
+            IAction action = args.Count > 1 ? args[1].ComplexValue as IAction : null;
 
-            var target = ResolveObject(targetId, ctx);
+            IEntity target = ResolveObject(targetId, ctx);
             if (target != null && action != null)
             {
-                var queue = target.GetComponent<IActionQueue>();
+                IActionQueue queue = target.GetComponent<IActionQueue>();
                 if (queue != null)
                 {
                     queue.Add(action);
@@ -293,7 +293,7 @@ namespace Odyssey.Scripting.EngineApi
         {
             // DelayCommand(float fSeconds, action aActionToDelay)
             float delay = args.Count > 0 ? args[0].AsFloat() : 0f;
-            var action = args.Count > 1 ? args[1].ComplexValue as IAction : null;
+            IAction action = args.Count > 1 ? args[1].ComplexValue as IAction : null;
 
             // TODO: Schedule the action in the delay scheduler
 
@@ -312,10 +312,10 @@ namespace Odyssey.Scripting.EngineApi
 
         private Variable Func_ClearAllActions(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
-            var caller = ctx.Caller;
+            IEntity caller = ctx.Caller;
             if (caller != null)
             {
-                var queue = caller.GetComponent<IActionQueue>();
+                IActionQueue queue = caller.GetComponent<IActionQueue>();
                 if (queue != null)
                 {
                     queue.Clear();
@@ -326,14 +326,23 @@ namespace Odyssey.Scripting.EngineApi
 
         private Variable Func_ActionRandomWalk(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
-            // TODO: Add random walk action
+            // ActionRandomWalk() - no parameters in KOTOR
+            if (ctx.Caller != null)
+            {
+                var action = new ActionRandomWalk();
+                IActionQueue queue = ctx.Caller.GetComponent<IActionQueue>();
+                if (queue != null)
+                {
+                    queue.Add(action);
+                }
+            }
             return Variable.Void();
         }
 
         private Variable Func_ActionMoveToLocation(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             // ActionMoveToLocation(location lDestination, int bRun=FALSE)
-            var location = args.Count > 0 ? args[0].ComplexValue : null;
+            object location = args.Count > 0 ? args[0].ComplexValue : null;
             bool run = args.Count > 1 && args[1].AsInt() != 0;
 
             // Extract position from location object
@@ -349,18 +358,13 @@ namespace Odyssey.Scripting.EngineApi
             bool run = args.Count > 1 && args[1].AsInt() != 0;
             float range = args.Count > 2 ? args[2].AsFloat() : 1.0f;
 
-            var target = ResolveObject(targetId, ctx);
-            if (target != null && ctx.Caller != null)
+            if (ctx.Caller != null)
             {
-                var transform = target.GetComponent<Core.Interfaces.Components.ITransformComponent>();
-                if (transform != null)
+                var action = new ActionMoveToObject(targetId, run, range);
+                IActionQueue queue = ctx.Caller.GetComponent<IActionQueue>();
+                if (queue != null)
                 {
-                    var action = new ActionMoveToLocation(transform.Position, run);
-                    var queue = ctx.Caller.GetComponent<IActionQueue>();
-                    if (queue != null)
-                    {
-                        queue.Add(action);
-                    }
+                    queue.Add(action);
                 }
             }
 
@@ -369,7 +373,21 @@ namespace Odyssey.Scripting.EngineApi
 
         private Variable Func_ActionMoveAwayFromObject(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
-            // TODO: Implement
+            // ActionMoveAwayFromObject(object oFleeFrom, int bRun=FALSE, float fMoveAwayRange=40.0f)
+            uint targetId = args.Count > 0 ? args[0].AsObjectId() : ObjectInvalid;
+            bool run = args.Count > 1 && args[1].AsInt() != 0;
+            float distance = args.Count > 2 ? args[2].AsFloat() : 40.0f;
+
+            if (ctx.Caller != null)
+            {
+                var action = new ActionMoveAwayFromObject(targetId, run, distance);
+                IActionQueue queue = ctx.Caller.GetComponent<IActionQueue>();
+                if (queue != null)
+                {
+                    queue.Add(action);
+                }
+            }
+
             return Variable.Void();
         }
 
@@ -381,7 +399,7 @@ namespace Odyssey.Scripting.EngineApi
             var action = new ActionSpeakString(text, volume);
             if (ctx.Caller != null)
             {
-                var queue = ctx.Caller.GetComponent<IActionQueue>();
+                IActionQueue queue = ctx.Caller.GetComponent<IActionQueue>();
                 if (queue != null)
                 {
                     queue.Add(action);
@@ -400,7 +418,7 @@ namespace Odyssey.Scripting.EngineApi
             var action = new ActionPlayAnimation(animation, speed, duration);
             if (ctx.Caller != null)
             {
-                var queue = ctx.Caller.GetComponent<IActionQueue>();
+                IActionQueue queue = ctx.Caller.GetComponent<IActionQueue>();
                 if (queue != null)
                 {
                     queue.Add(action);
@@ -413,14 +431,30 @@ namespace Odyssey.Scripting.EngineApi
         private Variable Func_ActionOpenDoor(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             uint doorId = args.Count > 0 ? args[0].AsObjectId() : ObjectInvalid;
-            // TODO: Implement door opening
+            if (ctx.Caller != null)
+            {
+                var action = new ActionOpenDoor(doorId);
+                IActionQueue queue = ctx.Caller.GetComponent<IActionQueue>();
+                if (queue != null)
+                {
+                    queue.Add(action);
+                }
+            }
             return Variable.Void();
         }
 
         private Variable Func_ActionCloseDoor(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             uint doorId = args.Count > 0 ? args[0].AsObjectId() : ObjectInvalid;
-            // TODO: Implement door closing
+            if (ctx.Caller != null)
+            {
+                var action = new ActionCloseDoor(doorId);
+                IActionQueue queue = ctx.Caller.GetComponent<IActionQueue>();
+                if (queue != null)
+                {
+                    queue.Add(action);
+                }
+            }
             return Variable.Void();
         }
 
@@ -448,7 +482,7 @@ namespace Odyssey.Scripting.EngineApi
             float facing = args.Count > 0 ? args[0].AsFloat() : 0f;
             if (ctx.Caller != null)
             {
-                var transform = ctx.Caller.GetComponent<Core.Interfaces.Components.ITransformComponent>();
+                Core.Interfaces.Components.ITransformComponent transform = ctx.Caller.GetComponent<Core.Interfaces.Components.ITransformComponent>();
                 if (transform != null)
                 {
                     transform.Facing = facing * (float)Math.PI / 180f;
@@ -460,10 +494,10 @@ namespace Odyssey.Scripting.EngineApi
         private Variable Func_GetFacing(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
-            var entity = ResolveObject(objectId, ctx);
+            IEntity entity = ResolveObject(objectId, ctx);
             if (entity != null)
             {
-                var transform = entity.GetComponent<Core.Interfaces.Components.ITransformComponent>();
+                Core.Interfaces.Components.ITransformComponent transform = entity.GetComponent<Core.Interfaces.Components.ITransformComponent>();
                 if (transform != null)
                 {
                     return Variable.FromFloat(transform.Facing * 180f / (float)Math.PI);
@@ -475,10 +509,10 @@ namespace Odyssey.Scripting.EngineApi
         private Variable Func_GetPosition(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
-            var entity = ResolveObject(objectId, ctx);
+            IEntity entity = ResolveObject(objectId, ctx);
             if (entity != null)
             {
-                var transform = entity.GetComponent<Core.Interfaces.Components.ITransformComponent>();
+                Core.Interfaces.Components.ITransformComponent transform = entity.GetComponent<Core.Interfaces.Components.ITransformComponent>();
                 if (transform != null)
                 {
                     return Variable.FromVector(transform.Position);
@@ -490,12 +524,12 @@ namespace Odyssey.Scripting.EngineApi
         private Variable Func_GetDistanceToObject(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             uint targetId = args.Count > 0 ? args[0].AsObjectId() : ObjectInvalid;
-            var target = ResolveObject(targetId, ctx);
+            IEntity target = ResolveObject(targetId, ctx);
 
             if (ctx.Caller != null && target != null)
             {
-                var callerTransform = ctx.Caller.GetComponent<Core.Interfaces.Components.ITransformComponent>();
-                var targetTransform = target.GetComponent<Core.Interfaces.Components.ITransformComponent>();
+                Core.Interfaces.Components.ITransformComponent callerTransform = ctx.Caller.GetComponent<Core.Interfaces.Components.ITransformComponent>();
+                Core.Interfaces.Components.ITransformComponent targetTransform = target.GetComponent<Core.Interfaces.Components.ITransformComponent>();
 
                 if (callerTransform != null && targetTransform != null)
                 {
@@ -510,7 +544,7 @@ namespace Odyssey.Scripting.EngineApi
         private Variable Func_GetObjectType(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
-            var entity = ResolveObject(objectId, ctx);
+            IEntity entity = ResolveObject(objectId, ctx);
             if (entity != null)
             {
                 return Variable.FromInt((int)entity.ObjectType);
@@ -542,18 +576,18 @@ namespace Odyssey.Scripting.EngineApi
             // Simplified implementation
             if (ctx.Caller != null)
             {
-                var transform = ctx.Caller.GetComponent<Core.Interfaces.Components.ITransformComponent>();
+                Core.Interfaces.Components.ITransformComponent transform = ctx.Caller.GetComponent<Core.Interfaces.Components.ITransformComponent>();
                 if (transform != null)
                 {
-                    var entities = ctx.World.GetEntitiesInRadius(transform.Position, 100f, ObjectType.Creature);
+                    IEnumerable<IEntity> entities = ctx.World.GetEntitiesInRadius(transform.Position, 100f, ObjectType.Creature);
                     float nearestDist = float.MaxValue;
                     IEntity nearest = null;
 
-                    foreach (var e in entities)
+                    foreach (IEntity e in entities)
                     {
                         if (e == ctx.Caller) continue;
 
-                        var t = e.GetComponent<Core.Interfaces.Components.ITransformComponent>();
+                        Core.Interfaces.Components.ITransformComponent t = e.GetComponent<Core.Interfaces.Components.ITransformComponent>();
                         if (t != null)
                         {
                             float dist = Vector3.DistanceSquared(transform.Position, t.Position);
@@ -625,10 +659,10 @@ namespace Odyssey.Scripting.EngineApi
             uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
             string name = args.Count > 1 ? args[1].AsString() : string.Empty;
 
-            var entity = ResolveObject(objectId, ctx);
+            IEntity entity = ResolveObject(objectId, ctx);
             if (entity != null)
             {
-                var localObj = ctx.Globals.GetLocalObject(entity, name);
+                IEntity localObj = ctx.Globals.GetLocalObject(entity, name);
                 return Variable.FromObject(localObj?.ObjectId ?? ObjectInvalid);
             }
             return Variable.FromObject(ObjectInvalid);
@@ -642,7 +676,7 @@ namespace Odyssey.Scripting.EngineApi
             uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
             int index = args.Count > 1 ? args[1].AsInt() : 0;
 
-            var entity = ResolveObject(objectId, ctx);
+            IEntity entity = ResolveObject(objectId, ctx);
             if (entity != null && index >= 0 && index < 64)
             {
                 // Store as local int with index-based key
@@ -658,7 +692,7 @@ namespace Odyssey.Scripting.EngineApi
             int index = args.Count > 1 ? args[1].AsInt() : 0;
             int value = args.Count > 2 ? args[2].AsInt() : 0;
 
-            var entity = ResolveObject(objectId, ctx);
+            IEntity entity = ResolveObject(objectId, ctx);
             if (entity != null && index >= 0 && index < 64)
             {
                 ctx.Globals.SetLocalInt(entity, "_LB_" + index, value != 0 ? 1 : 0);
@@ -673,7 +707,7 @@ namespace Odyssey.Scripting.EngineApi
             uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
             int index = args.Count > 1 ? args[1].AsInt() : 0;
 
-            var entity = ResolveObject(objectId, ctx);
+            IEntity entity = ResolveObject(objectId, ctx);
             if (entity != null && index == 0)
             {
                 return Variable.FromInt(ctx.Globals.GetLocalInt(entity, "_LN_" + index));
@@ -689,7 +723,7 @@ namespace Odyssey.Scripting.EngineApi
             int index = args.Count > 1 ? args[1].AsInt() : 0;
             int value = args.Count > 2 ? args[2].AsInt() : 0;
 
-            var entity = ResolveObject(objectId, ctx);
+            IEntity entity = ResolveObject(objectId, ctx);
             if (entity != null && index == 0)
             {
                 // Clamp to -128 to 127
@@ -773,7 +807,7 @@ namespace Odyssey.Scripting.EngineApi
 
         private Variable Func_VectorMagnitude(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
-            var v = args.Count > 0 ? args[0].AsVector() : Vector3.Zero;
+            Vector3 v = args.Count > 0 ? args[0].AsVector() : Vector3.Zero;
             return Variable.FromFloat(v.Length());
         }
 
@@ -1040,10 +1074,10 @@ namespace Odyssey.Scripting.EngineApi
         private Variable Func_GetCurrentHitPoints(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
-            var entity = ResolveObject(objectId, ctx);
+            IEntity entity = ResolveObject(objectId, ctx);
             if (entity != null)
             {
-                var stats = entity.GetComponent<Core.Interfaces.Components.IStatsComponent>();
+                Core.Interfaces.Components.IStatsComponent stats = entity.GetComponent<Core.Interfaces.Components.IStatsComponent>();
                 if (stats != null)
                 {
                     return Variable.FromInt(stats.CurrentHP);
@@ -1055,10 +1089,10 @@ namespace Odyssey.Scripting.EngineApi
         private Variable Func_GetMaxHitPoints(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
-            var entity = ResolveObject(objectId, ctx);
+            IEntity entity = ResolveObject(objectId, ctx);
             if (entity != null)
             {
-                var stats = entity.GetComponent<Core.Interfaces.Components.IStatsComponent>();
+                Core.Interfaces.Components.IStatsComponent stats = entity.GetComponent<Core.Interfaces.Components.IStatsComponent>();
                 if (stats != null)
                 {
                     return Variable.FromInt(stats.MaxHP);
@@ -1216,10 +1250,10 @@ namespace Odyssey.Scripting.EngineApi
         private Variable Func_GetAC(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
-            var entity = ResolveObject(objectId, ctx);
+            IEntity entity = ResolveObject(objectId, ctx);
             if (entity != null)
             {
-                var stats = entity.GetComponent<Core.Interfaces.Components.IStatsComponent>();
+                Core.Interfaces.Components.IStatsComponent stats = entity.GetComponent<Core.Interfaces.Components.IStatsComponent>();
                 if (stats != null)
                 {
                     return Variable.FromInt(stats.ArmorClass);
