@@ -69,7 +69,7 @@ namespace CSharpKOTOR.Formats.GFF
 
             // Write the file
             using (var ms = new MemoryStream())
-            using (var writer = new BinaryWriter(ms))
+            using (var writer = new System.IO.BinaryWriter(ms))
             {
                 // Write header
                 writer.Write(Encoding.ASCII.GetBytes(_gff.Content.ToFourCC()));
@@ -123,22 +123,22 @@ namespace CSharpKOTOR.Formats.GFF
             // Write struct ID (handle -1 as 0xFFFFFFFF)
             if (structId == -1)
             {
-                _structWriter.Write(0xFFFFFFFFu);
+                _structWriter.WriteUInt32(0xFFFFFFFFu);
             }
             else
             {
-                _structWriter.Write(structId);
+                _structWriter.WriteUInt32((uint)structId);
             }
 
             if (fieldCount == 0)
             {
-                _structWriter.Write(0xFFFFFFFFu);
-                _structWriter.Write(0u);
+                _structWriter.WriteUInt32(0xFFFFFFFFu);
+                _structWriter.WriteUInt32(0u);
             }
             else if (fieldCount == 1)
             {
-                _structWriter.Write((uint)_fieldCount);
-                _structWriter.Write((uint)fieldCount);
+                _structWriter.WriteUInt32((uint)_fieldCount);
+                _structWriter.WriteUInt32((uint)fieldCount);
 
                 foreach ((string label, GFFFieldType fieldType, object value) in gffStruct)
                 {
@@ -153,8 +153,8 @@ namespace CSharpKOTOR.Formats.GFF
 
         private void WriteLargeStruct(int fieldCount, GFFStruct gffStruct)
         {
-            _structWriter.Write((uint)_fieldIndicesWriter.Size());
-            _structWriter.Write((uint)fieldCount);
+            _structWriter.WriteUInt32((uint)_fieldIndicesWriter.Size());
+            _structWriter.WriteUInt32((uint)fieldCount);
 
             int pos = _fieldIndicesWriter.Position();
             _fieldIndicesWriter.Seek(_fieldIndicesWriter.Size());
@@ -162,7 +162,7 @@ namespace CSharpKOTOR.Formats.GFF
             // Reserve space for field indices
             for (int i = 0; i < fieldCount; i++)
             {
-                _fieldIndicesWriter.Write(0u);
+                _fieldIndicesWriter.WriteUInt32(0u);
             }
 
             int index = 0;
@@ -170,7 +170,7 @@ namespace CSharpKOTOR.Formats.GFF
             {
                 int currentPos = _fieldIndicesWriter.Position();
                 _fieldIndicesWriter.Seek(pos + index * 4);
-                _fieldIndicesWriter.Write((uint)_fieldCount);
+                _fieldIndicesWriter.WriteUInt32((uint)_fieldCount);
                 _fieldIndicesWriter.Seek(currentPos);
                 BuildField(label, value, fieldType);
                 index++;
@@ -182,13 +182,13 @@ namespace CSharpKOTOR.Formats.GFF
             int pos = _listIndicesWriter.Position();
             _listIndicesWriter.Seek(_listIndicesWriter.Size());
 
-            _listIndicesWriter.Write((uint)gffList.Count);
+            _listIndicesWriter.WriteUInt32((uint)gffList.Count);
             int indexStartPos = _listIndicesWriter.Position();
 
             // Reserve space for struct indices
             for (int i = 0; i < gffList.Count; i++)
             {
-                _listIndicesWriter.Write(0u);
+                _listIndicesWriter.WriteUInt32(0u);
             }
 
             int index = 0;
@@ -196,7 +196,7 @@ namespace CSharpKOTOR.Formats.GFF
             {
                 int currentPos = _listIndicesWriter.Position();
                 _listIndicesWriter.Seek(indexStartPos + index * 4);
-                _listIndicesWriter.Write((uint)_structCount);
+                _listIndicesWriter.WriteUInt32((uint)_structCount);
                 _listIndicesWriter.Seek(currentPos);
                 BuildStruct(gffStruct);
                 index++;
@@ -209,44 +209,44 @@ namespace CSharpKOTOR.Formats.GFF
             uint fieldTypeId = (uint)fieldType;
             uint labelIndex = (uint)GetLabelIndex(label);
 
-            _fieldWriter.Write(fieldTypeId);
-            _fieldWriter.Write(labelIndex);
+            _fieldWriter.WriteUInt32(fieldTypeId);
+            _fieldWriter.WriteUInt32(labelIndex);
 
             if (_complexFields.Contains(fieldType))
             {
-                _fieldWriter.Write((uint)_fieldDataWriter.Size());
+                _fieldWriter.WriteUInt32((uint)_fieldDataWriter.Size());
                 _fieldDataWriter.Seek(_fieldDataWriter.Size());
 
                 switch (fieldType)
                 {
                     case GFFFieldType.UInt64:
-                        _fieldDataWriter.Write(Convert.ToUInt64(value));
+                        _fieldDataWriter.WriteUInt64(Convert.ToUInt64(value));
                         break;
                     case GFFFieldType.Int64:
-                        _fieldDataWriter.Write(Convert.ToInt64(value));
+                        _fieldDataWriter.WriteInt64(Convert.ToInt64(value));
                         break;
                     case GFFFieldType.Double:
-                        _fieldDataWriter.Write(Convert.ToDouble(value));
+                        _fieldDataWriter.WriteDouble(Convert.ToDouble(value));
                         break;
                     case GFFFieldType.String:
                         string str = value.ToString() ?? "";
                         byte[] strBytes = Encoding.ASCII.GetBytes(str);
-                        _fieldDataWriter.Write((uint)strBytes.Length);
-                        _fieldDataWriter.Write(strBytes);
+                        _fieldDataWriter.WriteUInt32((uint)strBytes.Length);
+                        _fieldDataWriter.WriteBytes(strBytes);
                         break;
                     case GFFFieldType.ResRef:
                         string resrefStr = value.ToString() ?? "";
                         byte[] resrefBytes = Encoding.ASCII.GetBytes(resrefStr);
-                        _fieldDataWriter.Write((byte)resrefBytes.Length);
-                        _fieldDataWriter.Write(resrefBytes);
+                        _fieldDataWriter.WriteUInt8((byte)resrefBytes.Length);
+                        _fieldDataWriter.WriteBytes(resrefBytes);
                         break;
                     case GFFFieldType.LocalizedString:
                         _fieldDataWriter.WriteLocalizedString((LocalizedString)value);
                         break;
                     case GFFFieldType.Binary:
                         byte[] binaryData = (byte[])value;
-                        _fieldDataWriter.Write((uint)binaryData.Length);
-                        _fieldDataWriter.Write(binaryData);
+                        _fieldDataWriter.WriteUInt32((uint)binaryData.Length);
+                        _fieldDataWriter.WriteBytes(binaryData);
                         break;
                     case GFFFieldType.Vector4:
                         _fieldDataWriter.WriteVector4((Vector4)value);
@@ -258,12 +258,12 @@ namespace CSharpKOTOR.Formats.GFF
             }
             else if (fieldType == GFFFieldType.Struct)
             {
-                _fieldWriter.Write((uint)_structCount);
+                _fieldWriter.WriteUInt32((uint)_structCount);
                 BuildStruct((GFFStruct)value);
             }
             else if (fieldType == GFFFieldType.List)
             {
-                _fieldWriter.Write((uint)_listIndicesWriter.Size());
+                _fieldWriter.WriteUInt32((uint)_listIndicesWriter.Size());
                 BuildList((GFFList)value);
             }
             else
@@ -273,27 +273,27 @@ namespace CSharpKOTOR.Formats.GFF
                 {
                     case GFFFieldType.UInt8:
                         uint uint8Val = Convert.ToUInt32(value);
-                        _fieldWriter.Write(uint8Val == 0xFFFFFFFF ? 0xFFFFFFFFu : uint8Val);
+                        _fieldWriter.WriteUInt32(uint8Val == 0xFFFFFFFF ? 0xFFFFFFFFu : uint8Val);
                         break;
                     case GFFFieldType.Int8:
-                        _fieldWriter.Write(Convert.ToInt32(value));
+                        _fieldWriter.WriteInt32(Convert.ToInt32(value));
                         break;
                     case GFFFieldType.UInt16:
                         uint uint16Val = Convert.ToUInt32(value);
-                        _fieldWriter.Write(uint16Val == 0xFFFFFFFF ? 0xFFFFFFFFu : uint16Val);
+                        _fieldWriter.WriteUInt32(uint16Val == 0xFFFFFFFF ? 0xFFFFFFFFu : uint16Val);
                         break;
                     case GFFFieldType.Int16:
-                        _fieldWriter.Write(Convert.ToInt32(value));
+                        _fieldWriter.WriteInt32(Convert.ToInt32(value));
                         break;
                     case GFFFieldType.UInt32:
                         uint uint32Val = Convert.ToUInt32(value);
-                        _fieldWriter.Write(uint32Val == 0xFFFFFFFF ? 0xFFFFFFFFu : uint32Val);
+                        _fieldWriter.WriteUInt32(uint32Val == 0xFFFFFFFF ? 0xFFFFFFFFu : uint32Val);
                         break;
                     case GFFFieldType.Int32:
-                        _fieldWriter.Write(Convert.ToInt32(value));
+                        _fieldWriter.WriteInt32(Convert.ToInt32(value));
                         break;
                     case GFFFieldType.Single:
-                        _fieldWriter.Write(Convert.ToSingle(value));
+                        _fieldWriter.WriteSingle(Convert.ToSingle(value));
                         break;
                     default:
                         throw new InvalidOperationException($"Unknown field type '{fieldType}'");

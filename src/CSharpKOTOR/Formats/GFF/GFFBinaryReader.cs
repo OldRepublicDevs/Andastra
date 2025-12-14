@@ -130,7 +130,7 @@ namespace CSharpKOTOR.Formats.GFF
             }
             else if (fieldCount > 1)
             {
-                Reader.Seek(_fieldIndicesOffset + data);
+                Reader.Seek(_fieldIndicesOffset + (int)data);
                 var indices = new List<int>();
                 for (int i = 0; i < fieldCount; i++)
                 {

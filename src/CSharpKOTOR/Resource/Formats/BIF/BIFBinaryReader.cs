@@ -52,7 +52,7 @@ namespace CSharpKOTOR.Resource.Formats.BIF
         private void CheckSignature()
         {
             // vendor/reone/src/libs/resource/format/bifreader.cpp:26-30
-            Reader.BaseStream.Seek(0, SeekOrigin.Begin);
+            Reader.Seek(0);
             string signature = Encoding.ASCII.GetString(Reader.ReadBytes(8)); // "BIFFV1  " or "BZF V1.0"
 
             // Check file type
@@ -99,7 +99,7 @@ namespace CSharpKOTOR.Resource.Formats.BIF
         // Original: def _read_resource_table(self) -> None:
         private void ReadResourceTable()
         {
-            Reader.BaseStream.Seek(_dataOffset, SeekOrigin.Begin);
+            Reader.Seek(_dataOffset);
 
             for (int i = 0; i < _varResCount; i++)
             {
@@ -126,8 +126,8 @@ namespace CSharpKOTOR.Resource.Formats.BIF
             if (_bif.BifType == BIFType.BZF && _bif.Resources.Count > 0)
             {
                 BIFResource lastResource = _bif.Resources[_bif.Resources.Count - 1];
-                long fileSize = Reader.BaseStream.Length;
-                lastResource.PackedSize = (int)(fileSize - lastResource.Offset);
+                int fileSize = Reader.Size();
+                lastResource.PackedSize = fileSize - lastResource.Offset;
             }
         }
 
@@ -137,7 +137,7 @@ namespace CSharpKOTOR.Resource.Formats.BIF
         {
             foreach (BIFResource resource in _bif.Resources)
             {
-                Reader.BaseStream.Seek(resource.Offset, SeekOrigin.Begin);
+                Reader.Seek(resource.Offset);
 
                 if (_bif.BifType == BIFType.BZF)
                 {
