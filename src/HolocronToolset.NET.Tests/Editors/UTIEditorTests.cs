@@ -100,6 +100,95 @@ namespace HolocronToolset.NET.Tests.Editors
             editor.Close();
         }
 
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_uti_editor.py:182-240
+        // Original: def test_uti_editor_all_basic_widgets_interactions(qtbot, installation: HTInstallation):
+        [Fact]
+        public void TestUtiEditorAllBasicWidgetsInteractions()
+        {
+            if (_installation == null)
+            {
+                return; // Skip if no installation available
+            }
+
+            // Matching Python: editor = UTIEditor(None, installation)
+            var editor = new UTIEditor(null, _installation);
+            editor.Show();
+            editor.New();
+
+            // Test tagEdit - TextBox
+            // Matching Python: editor.ui.tagEdit.setText("test_tag_item")
+            // Matching Python: assert editor.ui.tagEdit.text() == "test_tag_item"
+            editor.TagEdit.Text = "test_tag_item";
+            editor.TagEdit.Text.Should().Be("test_tag_item");
+
+            // Test resrefEdit - TextBox
+            // Matching Python: editor.ui.resrefEdit.setText("test_item_resref")
+            // Matching Python: assert editor.ui.resrefEdit.text() == "test_item_resref"
+            editor.ResrefEdit.Text = "test_item_resref";
+            editor.ResrefEdit.Text.Should().Be("test_item_resref");
+
+            // Test baseSelect - ComboBox
+            // Matching Python: for i in range(min(10, editor.ui.baseSelect.count())):
+            if (editor.BaseSelect.ItemCount > 0)
+            {
+                int maxIndex = Math.Min(10, editor.BaseSelect.ItemCount);
+                for (int i = 0; i < maxIndex; i++)
+                {
+                    // Matching Python: editor.ui.baseSelect.setCurrentIndex(i)
+                    // Matching Python: assert editor.ui.baseSelect.currentIndex() == i
+                    editor.BaseSelect.SelectedIndex = i;
+                    editor.BaseSelect.SelectedIndex.Should().Be(i);
+                }
+            }
+
+            // Test ALL spin boxes
+            // Matching Python: spin_tests = [('costSpin', [0, 1, 10, 100, 1000, 10000]), ...]
+            var spinTests = new Dictionary<Avalonia.Controls.NumericUpDown, int[]>
+            {
+                { editor.CostSpin, new[] { 0, 1, 10, 100, 1000, 10000 } },
+                { editor.AdditionalCostSpin, new[] { 0, 1, 10, 100, 1000 } },
+                { editor.UpgradeSpin, new[] { 0, 1, 2, 3, 4, 5 } },
+                { editor.ChargesSpin, new[] { 0, 1, 5, 10, 50, 100 } },
+                { editor.StackSpin, new[] { 1, 5, 10, 50, 100 } },
+                { editor.ModelVarSpin, new[] { 0, 1, 2, 3, 4, 5 } },
+                { editor.BodyVarSpin, new[] { 0, 1, 2, 3, 4, 5 } },
+                { editor.TextureVarSpin, new[] { 0, 1, 2, 3, 4, 5 } }
+            };
+
+            foreach (var (spin, values) in spinTests)
+            {
+                foreach (var val in values)
+                {
+                    // Matching Python: spin.setValue(val)
+                    // Matching Python: assert spin.value() == val
+                    spin.Value = val;
+                    spin.Value.Should().Be(val);
+                }
+            }
+
+            // Test plotCheckbox
+            // Matching Python: editor.ui.plotCheckbox.setChecked(True)
+            // Matching Python: assert editor.ui.plotCheckbox.isChecked()
+            editor.PlotCheckbox.IsChecked = true;
+            editor.PlotCheckbox.IsChecked.Should().BeTrue();
+            editor.PlotCheckbox.IsChecked = false;
+            editor.PlotCheckbox.IsChecked.Should().BeFalse();
+
+            // Test tag generate button
+            // Matching Python: qtbot.mouseClick(editor.ui.tagGenerateButton, Qt.MouseButton.LeftButton)
+            // Matching Python: assert editor.ui.tagEdit.text() == editor.ui.resrefEdit.text()
+            editor.TagGenerateBtn.RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(Avalonia.Controls.Button.ClickEvent));
+            editor.TagEdit.Text.Should().Be(editor.ResrefEdit.Text);
+
+            // Test resref generate button
+            // Matching Python: qtbot.mouseClick(editor.ui.resrefGenerateButton, Qt.MouseButton.LeftButton)
+            editor.ResrefGenerateBtn.RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(Avalonia.Controls.Button.ClickEvent));
+            // Resref should be generated (either from resname or default)
+            editor.ResrefEdit.Text.Should().NotBeNullOrEmpty();
+
+            editor.Close();
+        }
+
         [Fact]
         public void TestUtiEditorNewFileCreation()
         {
