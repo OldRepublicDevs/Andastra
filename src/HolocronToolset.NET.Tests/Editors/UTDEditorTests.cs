@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using CSharpKOTOR.Common;
 using CSharpKOTOR.Formats.GFF;
 using CSharpKOTOR.Resource.Generics;
 using CSharpKOTOR.Resources;
@@ -38,24 +40,170 @@ namespace HolocronToolset.NET.Tests.Editors
             data.Length.Should().BeGreaterThan(0);
         }
 
-        [Fact(Skip = "Requires valid GFF data - will be enabled when test files are available")]
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utd_editor.py:30-55
+        // Original: def test_utd_editor_manipulate_name_locstring(qtbot: QtBot, installation: HTInstallation, test_files_dir: Path):
+        // Note: This test loads an existing UTD file and verifies it works, similar to UTI/UTC/UTP/UTS test patterns
+        [Fact]
         public void TestUtdEditorLoadExistingFile()
         {
-            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utd_editor.py
-            // Original: def test_utd_editor_load_existing_file(qtbot, installation, test_files_dir):
-            // This test requires actual UTD test files - skipping for now
-            var editor = new UTDEditor(null, null);
+            // Get test files directory
+            string testFilesDir = System.IO.Path.Combine(
+                System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+
+            // Try to find naldoor001.utd (used in Python tests)
+            string utdFile = System.IO.Path.Combine(testFilesDir, "naldoor001.utd");
+            if (!System.IO.File.Exists(utdFile))
+            {
+                // Try alternative location
+                testFilesDir = System.IO.Path.Combine(
+                    System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                    "..", "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+                utdFile = System.IO.Path.Combine(testFilesDir, "naldoor001.utd");
+            }
+
+            if (!System.IO.File.Exists(utdFile))
+            {
+                // Skip if no UTD files available for testing (matching Python pytest.skip behavior)
+                return;
+            }
+
+            // Get installation if available
+            string k1Path = Environment.GetEnvironmentVariable("K1_PATH");
+            if (string.IsNullOrEmpty(k1Path))
+            {
+                k1Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k1Path) && System.IO.File.Exists(System.IO.Path.Combine(k1Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k1Path, "Test Installation", tsl: false);
+            }
+            else
+            {
+                // Fallback to K2
+                string k2Path = Environment.GetEnvironmentVariable("K2_PATH");
+                if (string.IsNullOrEmpty(k2Path))
+                {
+                    k2Path = @"C:\Program Files (x86)\Steam\steamapps\common\Knights of the Old Republic II";
+                }
+
+                if (System.IO.Directory.Exists(k2Path) && System.IO.File.Exists(System.IO.Path.Combine(k2Path, "chitin.key")))
+                {
+                    installation = new HTInstallation(k2Path, "Test Installation", tsl: true);
+                }
+            }
+
+            var editor = new UTDEditor(null, installation);
+
+            byte[] originalData = System.IO.File.ReadAllBytes(utdFile);
+            editor.Load(utdFile, "naldoor001", ResourceType.UTD, originalData);
+
+            // Verify editor loaded the data
             editor.Should().NotBeNull();
+
+            // Build and verify it works
+            var (data, _) = editor.Build();
+            data.Should().NotBeNull();
+            data.Length.Should().BeGreaterThan(0);
+
+            // Verify we can read it back
+            var gff = CSharpKOTOR.Formats.GFF.GFF.FromBytes(data);
+            gff.Should().NotBeNull();
         }
 
-        [Fact(Skip = "Requires valid GFF data - will be enabled when test files are available")]
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utd_editor.py:1130-1154
+        // Original: def test_utd_editor_gff_roundtrip_comparison(qtbot: QtBot, installation: HTInstallation, test_files_dir: Path):
+        [Fact]
         public void TestUtdEditorSaveLoadRoundtrip()
         {
-            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utd_editor.py
-            // Original: def test_utd_editor_save_load_roundtrip(qtbot, installation, test_files_dir):
-            // This test requires actual UTD test files - skipping for now
-            var editor = new UTDEditor(null, null);
-            editor.Should().NotBeNull();
+            // Get test files directory
+            string testFilesDir = System.IO.Path.Combine(
+                System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+
+            // Try to find naldoor001.utd
+            string utdFile = System.IO.Path.Combine(testFilesDir, "naldoor001.utd");
+            if (!System.IO.File.Exists(utdFile))
+            {
+                // Try alternative location
+                testFilesDir = System.IO.Path.Combine(
+                    System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                    "..", "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+                utdFile = System.IO.Path.Combine(testFilesDir, "naldoor001.utd");
+            }
+
+            if (!System.IO.File.Exists(utdFile))
+            {
+                // Skip if test file not available
+                return;
+            }
+
+            // Get installation if available
+            string k1Path = Environment.GetEnvironmentVariable("K1_PATH");
+            if (string.IsNullOrEmpty(k1Path))
+            {
+                k1Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k1Path) && System.IO.File.Exists(System.IO.Path.Combine(k1Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k1Path, "Test Installation", tsl: false);
+            }
+            else
+            {
+                // Fallback to K2
+                string k2Path = Environment.GetEnvironmentVariable("K2_PATH");
+                if (string.IsNullOrEmpty(k2Path))
+                {
+                    k2Path = @"C:\Program Files (x86)\Steam\steamapps\common\Knights of the Old Republic II";
+                }
+
+                if (System.IO.Directory.Exists(k2Path) && System.IO.File.Exists(System.IO.Path.Combine(k2Path, "chitin.key")))
+                {
+                    installation = new HTInstallation(k2Path, "Test Installation", tsl: true);
+                }
+            }
+
+            if (installation == null)
+            {
+                // Skip if no installation available
+                return;
+            }
+
+            var editor = new UTDEditor(null, installation);
+            var logMessages = new List<string> { Environment.NewLine };
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utd_editor.py:1140
+            // Original: original_data = utd_file.read_bytes()
+            byte[] data = System.IO.File.ReadAllBytes(utdFile);
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utd_editor.py:1141
+            // Original: original_gff = read_gff(original_data)
+            var old = CSharpKOTOR.Formats.GFF.GFF.FromBytes(data);
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utd_editor.py:1142
+            // Original: editor.load(utd_file, "naldoor001", ResourceType.UTD, original_data)
+            editor.Load(utdFile, "naldoor001", ResourceType.UTD, data);
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utd_editor.py:1145
+            // Original: data, _ = editor.build()
+            var (newData, _) = editor.Build();
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utd_editor.py:1146
+            // Original: new_gff = read_gff(data)
+            var newGff = CSharpKOTOR.Formats.GFF.GFF.FromBytes(newData);
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utd_editor.py:1153
+            // Original: diff = original_gff.compare(new_gff, log_func, ignore_default_changes=True)
+            Action<string> logFunc = msg => logMessages.Add(msg);
+            bool diff = old.Compare(newGff, logFunc, path: null, ignoreDefaultChanges: true);
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utd_editor.py:1154
+            // Original: assert diff, f"GFF comparison failed:\n{chr(10).join(log_messages)}"
+            diff.Should().BeTrue("GFF comparison failed. Log messages: " + string.Join(Environment.NewLine, logMessages));
         }
     }
 }

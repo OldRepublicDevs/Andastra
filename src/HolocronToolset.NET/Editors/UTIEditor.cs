@@ -76,7 +76,7 @@ namespace HolocronToolset.NET.Editors
             {
                 AvaloniaXamlLoader.Load(this);
                 xamlLoaded = true;
-                
+
                 // Try to find controls from XAML
                 _nameEdit = this.FindControl<TextBox>("nameEdit");
                 _nameEditBtn = this.FindControl<Button>("nameEditBtn");
@@ -435,8 +435,8 @@ namespace HolocronToolset.NET.Editors
             uti.Name = uti.Name ?? LocalizedString.FromInvalid();
             uti.Description = uti.Description ?? LocalizedString.FromInvalid();
             uti.Tag = _tagEdit?.Text ?? uti.Tag ?? "";
-            uti.ResRef = _resrefEdit != null && !string.IsNullOrEmpty(_resrefEdit.Text) 
-                ? new ResRef(_resrefEdit.Text) 
+            uti.ResRef = _resrefEdit != null && !string.IsNullOrEmpty(_resrefEdit.Text)
+                ? new ResRef(_resrefEdit.Text)
                 : uti.ResRef;
             uti.BaseItem = _baseSelect?.SelectedIndex ?? uti.BaseItem;
             uti.Cost = _costSpin?.Value != null ? (int)_costSpin.Value : uti.Cost;

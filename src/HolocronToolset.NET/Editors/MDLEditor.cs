@@ -36,20 +36,20 @@ namespace HolocronToolset.NET.Editors
             InitializeComponent();
             SetupUI();
             SetupSignals();
-            
+
             if (_modelRenderer != null)
             {
                 _modelRenderer.Installation = installation;
             }
 
             AddHelpAction();
-            
+
             // Set Content after AddHelpAction (which may wrap it in a DockPanel)
             if (Content == null && _modelRenderer != null)
             {
                 Content = _modelRenderer;
             }
-            
+
             New();
         }
 
@@ -60,7 +60,7 @@ namespace HolocronToolset.NET.Editors
             {
                 AvaloniaXamlLoader.Load(this);
                 xamlLoaded = true;
-                
+
                 // Try to find model renderer from XAML
                 _modelRenderer = this.FindControl<ModelRenderer>("modelRenderer");
             }

@@ -68,13 +68,13 @@ namespace HolocronToolset.NET.Utils
 
             // Create FileDecompiler
             FileDecompiler decompiler = null;
-            
+
             // Try to load nwscript.nss from override folder for actions data
             if (!string.IsNullOrEmpty(installationPath))
             {
                 string overridePath = Path.Combine(installationPath, "override");
                 string nwscriptPath = Path.Combine(overridePath, "nwscript.nss");
-                
+
                 if (File.Exists(nwscriptPath))
                 {
                     try
@@ -105,7 +105,7 @@ namespace HolocronToolset.NET.Utils
 
                 scriptData.GenerateCode();
                 string result = scriptData.GetCode();
-                
+
                 if (string.IsNullOrEmpty(result))
                 {
                     throw new InvalidOperationException("Decompilation failed: result is empty");
