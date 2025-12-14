@@ -36,13 +36,12 @@ namespace Odyssey.Game
                 Console.WriteLine("Path: " + settings.GamePath);
                 Console.WriteLine();
 
-                // Create and run the game
-                using (var game = new OdysseyGame(settings))
+                // Create and run the game (MonoGame version)
+                using (var game = new OdysseyGameMonoGame(settings))
                 {
-                    // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Games.Game.html
-                    // Game.Run() starts the game loop and blocks until the game exits
+                    // MonoGame Game.Run() starts the game loop and blocks until the game exits
+                    // Based on MonoGame API: https://docs.monogame.net/api/Microsoft.Xna.Framework.Game.html
                     // Method signature: void Run()
-                    // Source: https://doc.stride3d.net/latest/en/manual/game-loop/index.html
                     game.Run();
                 }
 
