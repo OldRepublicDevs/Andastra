@@ -140,6 +140,43 @@ namespace CSharpKOTOR.Formats.TPC
             }
             // More conversions can be added as needed
         }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/tpc/tpc_data.py
+        // Original: def copy(self) -> TPC:
+        /// <summary>
+        /// Creates a deep copy of this TPC texture.
+        /// </summary>
+        public TPC Copy()
+        {
+            var copy = new TPC
+            {
+                AlphaTest = AlphaTest,
+                IsCubeMap = IsCubeMap,
+                IsAnimated = IsAnimated,
+                Txi = Txi,
+                TxiObject = TxiObject,
+                _format = _format
+            };
+
+            foreach (var layer in Layers)
+            {
+                var layerCopy = new TPCLayer();
+                foreach (var mipmap in layer.Mipmaps)
+                {
+                    var mipmapCopy = new TPCMipmap
+                    {
+                        Width = mipmap.Width,
+                        Height = mipmap.Height,
+                        TpcFormat = mipmap.TpcFormat,
+                        Data = mipmap.Data != null ? (byte[])mipmap.Data.Clone() : null
+                    };
+                    layerCopy.Mipmaps.Add(mipmapCopy);
+                }
+                copy.Layers.Add(layerCopy);
+            }
+
+            return copy;
+        }
     }
 }
 
