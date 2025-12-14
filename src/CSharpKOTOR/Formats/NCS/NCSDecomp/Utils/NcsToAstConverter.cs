@@ -115,7 +115,28 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
                     {
                         int jumpIdx = ncs.GetInstructionIndex(inst.Jump);
                         // Exclude entry JSR target (main) and position 0 from subroutine starts
-                        if (jumpIdx > 0 && jumpIdx != entryJsrTarget)
+                        // Also exclude positions within globals range (0 to savebpIndex+1) and entry stub
+                        int globalsAndStubEnd = (savebpIndex >= 0) ? savebpIndex + 1 : 0;
+                        if (savebpIndex >= 0)
+                        {
+                            // Check for entry stub and extend globalsAndStubEnd
+                            int entryStubCheck = globalsAndStubEnd;
+                            if (instructions.Count > entryStubCheck + 1 && 
+                                instructions[entryStubCheck].InsType == NCSInstructionType.JSR &&
+                                instructions[entryStubCheck + 1].InsType == NCSInstructionType.RETN)
+                            {
+                                globalsAndStubEnd = entryStubCheck + 2; // JSR + RETN
+                            }
+                            else if (instructions.Count > entryStubCheck + 1 &&
+                                     instructions[entryStubCheck].InsType == NCSInstructionType.JSR &&
+                                     instructions[entryStubCheck + 1].InsType == NCSInstructionType.RESTOREBP)
+                            {
+                                globalsAndStubEnd = entryStubCheck + 2; // JSR + RESTOREBP
+                            }
+                        }
+                        
+                        // Only add if jumpIdx is after globals/entry stub and not the entry JSR target
+                        if (jumpIdx > globalsAndStubEnd && jumpIdx != entryJsrTarget)
                         {
                             subroutineStarts.Add(jumpIdx);
                         }
