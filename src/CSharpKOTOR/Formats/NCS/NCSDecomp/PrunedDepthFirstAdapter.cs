@@ -98,8 +98,13 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Analysis
         public override void CaseASubroutine(ASubroutine node)
         {
             this.InASubroutine(node);
+            string cmdBlockStatus = node.GetCommandBlock() != null ? "not null" : "null";
+            Console.Error.WriteLine("DEBUG PrunedDepthFirstAdapter.CaseASubroutine: ENTERED, commandBlock=" + cmdBlockStatus);
+            JavaSystem.@out.Println("DEBUG PrunedDepthFirstAdapter.CaseASubroutine: ENTERED, commandBlock=" + cmdBlockStatus);
             if (node.GetCommandBlock() != null)
             {
+                Console.Error.WriteLine("DEBUG PrunedDepthFirstAdapter.CaseASubroutine: Visiting commandBlock");
+                JavaSystem.@out.Println("DEBUG PrunedDepthFirstAdapter.CaseASubroutine: Visiting commandBlock");
                 node.GetCommandBlock().Apply(this);
             }
 
