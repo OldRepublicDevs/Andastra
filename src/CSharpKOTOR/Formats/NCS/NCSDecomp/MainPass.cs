@@ -230,6 +230,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                             throw new Exception("Invalid const type " + type);
                     }
                     this.stack.Push(aconst);
+                    JavaSystem.@out.Println($"DEBUG MainPass.OutAConstCommand: type={type.ByteValue()}, value={NodeUtils.GetIntConstValue(node)}, stack size={this.stack.Size()}");
                     this.state.TransformConst(node);
                 });
             }
