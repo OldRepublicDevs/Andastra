@@ -7,7 +7,8 @@
     <ImplicitUsings>disable</ImplicitUsings>
     <RootNamespace>Odyssey.Stride</RootNamespace>
     <AssemblyName>Odyssey.Stride</AssemblyName>
-    <Description>Stride Game Engine adapters for Odyssey Engine - rendering, physics, audio, UI</Description>
+    <Description>Stride Game Engine adapters for Odyssey Engine - multi-backend rendering (Vulkan, DX12, DX11), PBR materials, dynamic lighting, raytracing, NVIDIA RTX Remix support</Description>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <ItemGroup>
@@ -18,10 +19,21 @@
 
   <ItemGroup>
     <PackageReference Include="JetBrains.Annotations" Version="2025.2.4" />
+    <!-- Stride Engine packages -->
     <PackageReference Include="Stride.Engine" Version="4.2.0.2122" />
     <PackageReference Include="Stride.Audio" Version="4.2.0.2122" />
     <PackageReference Include="Stride.Physics" Version="4.2.0.2122" />
     <PackageReference Include="Stride.UI" Version="4.2.0.2122" />
+    <PackageReference Include="Stride.Rendering" Version="4.2.0.2122" />
+    <PackageReference Include="Stride.Graphics" Version="4.2.0.2122" />
+    <PackageReference Include="Stride.Shaders" Version="4.2.0.2122" />
+    <!-- Vulkan interop -->
+    <PackageReference Include="Silk.NET.Vulkan" Version="2.21.0" />
+    <PackageReference Include="Silk.NET.Vulkan.Extensions.KHR" Version="2.21.0" />
+    <!-- DirectX interop -->
+    <PackageReference Include="Vortice.D3DCompiler" Version="3.8.1" />
+    <PackageReference Include="Vortice.Direct3D12" Version="3.8.1" />
+    <PackageReference Include="Vortice.DXGI" Version="3.8.1" />
   </ItemGroup>
 
 </Project>
