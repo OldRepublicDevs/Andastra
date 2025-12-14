@@ -5,7 +5,6 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using Microsoft.Win32;
 using CSharpKOTOR.Common;
-using CSharpKOTOR.Installation;
 using CSharpKOTOR.Logger;
 
 namespace CSharpKOTOR.Tools
