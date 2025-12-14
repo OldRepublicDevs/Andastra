@@ -492,9 +492,12 @@ namespace Odyssey.Stride.GUI
             if (mousePressed && !_mouseButtonWasDown)
             {
                 // Get mouse position in screen coordinates
-                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Graphics.GraphicsDevice.html
-                // GraphicsDevice.Presenter.BackBuffer provides access to back buffer dimensions
-                // BackBuffer.Description.Width/Height gets the width and height in pixels
+                // Access back buffer dimensions from GraphicsDevice.Presenter.BackBuffer
+                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Graphics.GraphicsPresenter.html
+                // GraphicsPresenter.BackBuffer - Gets the back buffer texture used for rendering
+                // BackBuffer is a Texture, access dimensions via Description property
+                // TextureDescription.Width/Height - Gets the width and height of the texture in pixels
+                // Source: https://doc.stride3d.net/latest/en/api/Stride.Graphics.GraphicsPresenter.html
                 var backBuffer = GraphicsDevice.Presenter.BackBuffer;
                 float screenWidth = backBuffer.Description.Width;
                 float screenHeight = backBuffer.Description.Height;
