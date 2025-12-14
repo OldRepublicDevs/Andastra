@@ -58,6 +58,9 @@ namespace Odyssey.Content.MDL
         /// <summary>
         /// Creates an optimized reader from byte arrays (optimal - no additional copy needed).
         /// </summary>
+        /// <param name="mdlData">MDL file data as byte array</param>
+        /// <param name="mdxData">MDX file data as byte array</param>
+        /// <exception cref="ArgumentNullException">Thrown when mdlData or mdxData is null.</exception>
         public MDLOptimizedReader(byte[] mdlData, byte[] mdxData)
         {
             if (mdlData == null)
@@ -76,6 +79,8 @@ namespace Odyssey.Content.MDL
         /// <summary>
         /// Creates an optimized reader from file paths (reads entire files into memory).
         /// </summary>
+        /// <param name="mdlPath">Path to the MDL file</param>
+        /// <param name="mdxPath">Path to the MDX file</param>
         /// <exception cref="ArgumentNullException">Thrown when mdlPath or mdxPath is null or empty.</exception>
         /// <exception cref="FileNotFoundException">Thrown when the specified file does not exist.</exception>
         /// <exception cref="DirectoryNotFoundException">Thrown when the specified path is invalid.</exception>
@@ -99,6 +104,10 @@ namespace Odyssey.Content.MDL
         /// <summary>
         /// Loads the complete MDL model using optimized bulk operations.
         /// </summary>
+        /// <returns>The loaded MDL model containing all geometry, animation, and node data.</returns>
+        /// <exception cref="ObjectDisposedException">Thrown when the reader has been disposed.</exception>
+        /// <exception cref="InvalidDataException">Thrown when the MDL or MDX file is corrupted, truncated, or has invalid data.</exception>
+        /// <exception cref="InvalidOperationException">Thrown when data size calculations overflow or array bounds are exceeded.</exception>
         public MDLModel Load()
         {
             if (_disposed)
@@ -1706,6 +1715,10 @@ namespace Odyssey.Content.MDL
 
         #endregion
 
+        /// <summary>
+        /// Releases all resources used by the MDLOptimizedReader.
+        /// After disposal, calling Load() will throw ObjectDisposedException.
+        /// </summary>
         public void Dispose()
         {
             _disposed = true;
