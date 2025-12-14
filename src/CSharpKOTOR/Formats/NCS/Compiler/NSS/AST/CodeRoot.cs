@@ -102,22 +102,37 @@ namespace CSharpKOTOR.Formats.NCS.Compiler
                 .Concat(Objects.OfType<StructDefinition>())
                 .ToList();
             List<TopLevelObject> others = Objects.Where(obj => !included.Contains(obj) && !scriptGlobals.Contains(obj)).ToList();
-            int stubInsertIndex = 0;
+            
+            // The external compiler (nwnnsscomp) always places the entry stub at the BEGINNING (index 0)
+            // When there are globals: JSR jumps to first global, RETN, then globals, SAVEBP, then RESTOREBP, MOVSP, RETN after SAVEBP
+            // When there are no globals: JSR jumps to main, RETN
+            bool hasGlobals = scriptGlobals.Any();
+            NCSInstruction firstGlobalInstruction = null;
 
-            if (scriptGlobals.Any())
+            if (hasGlobals)
             {
+                // Compile globals first (they'll be after the entry stub we insert at index 0)
                 foreach (TopLevelObject globalDef in scriptGlobals)
                 {
-                    globalDef.Compile(ncs, this);
+                    if (firstGlobalInstruction == null)
+                    {
+                        // Remember the first global instruction for the JSR jump target
+                        int beforeCount = ncs.Instructions.Count;
+                        globalDef.Compile(ncs, this);
+                        if (ncs.Instructions.Count > beforeCount)
+                        {
+                            firstGlobalInstruction = ncs.Instructions[beforeCount];
+                        }
+                    }
+                    else
+                    {
+                        globalDef.Compile(ncs, this);
+                    }
                 }
                 ncs.Add(NCSInstructionType.SAVEBP, new List<object>());
-                stubInsertIndex = ncs.Instructions.Count;
             }
-            else
-            {
-                stubInsertIndex = ncs.Instructions.Count;
-            }
-
+            
+            // Compile functions
             foreach (TopLevelObject obj in others)
             {
                 obj.Compile(ncs, this);
@@ -144,12 +159,40 @@ namespace CSharpKOTOR.Formats.NCS.Compiler
             {
                 NCSInstruction mainStart = FirstNonNop(FunctionMap["main"].Instruction, ncs);
                 FunctionMap["main"] = new FunctionReference(mainStart, FunctionMap["main"].Definition);
-                // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/ncs/compiler/classes.py:410-415
-                // Original: ncs.add(NCSInstructionType.RETN, args=[], index=entry_index) then ncs.add(NCSInstructionType.JSR, ..., index=entry_index)
-                // Adding RETN first, then JSR at the same index, so JSR comes first in the final order
-                ncs.Add(NCSInstructionType.RETN, new List<object>(), null, stubInsertIndex);
-                NCSInstruction entryJsr = ncs.Add(NCSInstructionType.JSR, new List<object>(), mainStart, stubInsertIndex);
-                entryJsr.Jump = mainStart;
+                
+                // The external compiler (nwnnsscomp) always places entry stub at BEGINNING (index 0)
+                // Insert RETN first, then JSR at the same index, so JSR comes first in final order
+                NCSInstruction entryJsrTarget = hasGlobals ? (firstGlobalInstruction ?? mainStart) : mainStart;
+                ncs.Add(NCSInstructionType.RETN, new List<object>(), null, 0);
+                NCSInstruction entryJsr = ncs.Add(NCSInstructionType.JSR, new List<object>(), entryJsrTarget, 0);
+                entryJsr.Jump = entryJsrTarget;
+                
+                if (hasGlobals)
+                {
+                    // After SAVEBP, the external compiler adds: JSR (to main), RESTOREBP, MOVSP, RETN
+                    // Find SAVEBP index (it was added before functions were compiled)
+                    int savebpIndex = -1;
+                    for (int i = 0; i < ncs.Instructions.Count; i++)
+                    {
+                        if (ncs.Instructions[i].InsType == NCSInstructionType.SAVEBP)
+                        {
+                            savebpIndex = i;
+                            break;
+                        }
+                    }
+                    if (savebpIndex >= 0)
+                    {
+                        int globalsSize = ScopeSize();
+                        int afterSavebpIndex = savebpIndex + 1;
+                        // Insert in reverse order so final order is: JSR, RESTOREBP, MOVSP, RETN
+                        // Last inserted comes first, so insert: RETN, MOVSP, RESTOREBP, JSR
+                        ncs.Add(NCSInstructionType.RETN, new List<object>(), null, afterSavebpIndex);
+                        ncs.Add(NCSInstructionType.MOVSP, new List<object> { globalsSize }, null, afterSavebpIndex);
+                        ncs.Add(NCSInstructionType.RESTOREBP, new List<object>(), null, afterSavebpIndex);
+                        NCSInstruction afterSavebpJsr = ncs.Add(NCSInstructionType.JSR, new List<object>(), mainStart, afterSavebpIndex);
+                        afterSavebpJsr.Jump = mainStart;
+                    }
+                }
 
                 if (debug)
                 {
@@ -170,10 +213,11 @@ namespace CSharpKOTOR.Formats.NCS.Compiler
                 // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/ncs/compiler/classes.py:417-423
                 // Original: ncs.add(NCSInstructionType.RETN, args=[], index=entry_index) then JSR then RSADDI, all at entry_index
                 // Adding RETN first, then JSR, then RSADDI at the same index, so final order is RSADDI, JSR, RETN
-                ncs.Add(NCSInstructionType.RETN, new List<object>(), null, stubInsertIndex);
-                NCSInstruction entryJsr = ncs.Add(NCSInstructionType.JSR, new List<object>(), scStart, stubInsertIndex);
+                // The external compiler places entry stub at BEGINNING (index 0) for StartingConditional too
+                ncs.Add(NCSInstructionType.RETN, new List<object>(), null, 0);
+                NCSInstruction entryJsr = ncs.Add(NCSInstructionType.JSR, new List<object>(), scStart, 0);
                 entryJsr.Jump = scStart;
-                ncs.Add(NCSInstructionType.RSADDI, new List<object>(), null, stubInsertIndex);
+                ncs.Add(NCSInstructionType.RSADDI, new List<object>(), null, 0);
 
                 if (debug)
                 {

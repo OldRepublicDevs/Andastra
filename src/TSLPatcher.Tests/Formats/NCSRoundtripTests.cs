@@ -775,8 +775,8 @@ namespace CSharpKOTOR.Tests.Formats
 
                     if (!string.IsNullOrEmpty(pcodeDiff))
                     {
-                        errorMsg.AppendLine("P-CODE DIFF (first 50 lines):");
                         string[] pcodeLines = pcodeDiff.Split(new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
+                        errorMsg.AppendLine("P-CODE DIFF (first 50 lines):");
                         int showLines = Math.Min(50, pcodeLines.Length);
                         for (int i = 0; i < showLines; i++)
                         {
@@ -785,6 +785,58 @@ namespace CSharpKOTOR.Tests.Formats
                         if (pcodeLines.Length > 50)
                         {
                             errorMsg.AppendLine($"... ({pcodeLines.Length - 50} more lines)");
+                        }
+                        errorMsg.AppendLine();
+                        
+                        // Also show last 20 lines to see what's missing at the end
+                        if (pcodeLines.Length > 50)
+                        {
+                            errorMsg.AppendLine("P-CODE DIFF (last 20 lines):");
+                            int startIdx = Math.Max(50, pcodeLines.Length - 20);
+                            for (int i = startIdx; i < pcodeLines.Length; i++)
+                            {
+                                errorMsg.AppendLine(pcodeLines[i]);
+                            }
+                            errorMsg.AppendLine();
+                        }
+                        
+                        // Show first instructions from both files
+                        errorMsg.AppendLine("FIRST INSTRUCTIONS (Original):");
+                        int origFirst = Math.Min(15, originalNcs.Instructions.Count);
+                        for (int i = 0; i < origFirst; i++)
+                        {
+                            NCSInstruction inst = originalNcs.Instructions[i];
+                            string jumpInfo = inst.Jump != null ? $" -> {originalNcs.GetInstructionIndex(inst.Jump):D4}" : "";
+                            errorMsg.AppendLine($"  {i:D4}: {inst.InsType} args=[{string.Join(",", inst.Args ?? new List<object>())}]{jumpInfo}");
+                        }
+                        errorMsg.AppendLine();
+                        errorMsg.AppendLine("FIRST INSTRUCTIONS (Round-trip):");
+                        int rtFirst = Math.Min(15, recompiledNcs.Instructions.Count);
+                        for (int i = 0; i < rtFirst; i++)
+                        {
+                            NCSInstruction inst = recompiledNcs.Instructions[i];
+                            string jumpInfo = inst.Jump != null ? $" -> {recompiledNcs.GetInstructionIndex(inst.Jump):D4}" : "";
+                            errorMsg.AppendLine($"  {i:D4}: {inst.InsType} args=[{string.Join(",", inst.Args ?? new List<object>())}]{jumpInfo}");
+                        }
+                        errorMsg.AppendLine();
+                        
+                        // Show last instructions from both files directly
+                        errorMsg.AppendLine("LAST INSTRUCTIONS (Original):");
+                        int origLast = Math.Min(10, originalNcs.Instructions.Count);
+                        for (int i = originalNcs.Instructions.Count - origLast; i < originalNcs.Instructions.Count; i++)
+                        {
+                            NCSInstruction inst = originalNcs.Instructions[i];
+                            string jumpInfo = inst.Jump != null ? $" -> {originalNcs.GetInstructionIndex(inst.Jump):D4}" : "";
+                            errorMsg.AppendLine($"  {i:D4}: {inst.InsType} args=[{string.Join(",", inst.Args ?? new List<object>())}]{jumpInfo}");
+                        }
+                        errorMsg.AppendLine();
+                        errorMsg.AppendLine("LAST INSTRUCTIONS (Round-trip):");
+                        int rtLast = Math.Min(10, recompiledNcs.Instructions.Count);
+                        for (int i = recompiledNcs.Instructions.Count - rtLast; i < recompiledNcs.Instructions.Count; i++)
+                        {
+                            NCSInstruction inst = recompiledNcs.Instructions[i];
+                            string jumpInfo = inst.Jump != null ? $" -> {recompiledNcs.GetInstructionIndex(inst.Jump):D4}" : "";
+                            errorMsg.AppendLine($"  {i:D4}: {inst.InsType} args=[{string.Join(",", inst.Args ?? new List<object>())}]{jumpInfo}");
                         }
                         errorMsg.AppendLine();
                     }
