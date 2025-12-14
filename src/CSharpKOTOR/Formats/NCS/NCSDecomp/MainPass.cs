@@ -277,6 +277,15 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                     this.WithRecovery(node, () =>
                     {
                     int remove = NodeUtils.ActionRemoveElementCount(node, this.actions);
+                    int stackSize = this.stack.Size();
+                    
+                    // Safety check: don't remove more than we have
+                    if (remove > stackSize)
+                    {
+                        JavaSystem.@out.Println("[MainPass] WARNING: ACTION trying to remove " + remove + " but stack only has " + stackSize + " elements. Action: " + (this.actions != null ? this.actions.GetName(NodeUtils.GetActionId(node)) : "unknown"));
+                        remove = stackSize; // Remove what we can
+                    }
+                    
                     int i = 0;
 
                     while (i < remove)
