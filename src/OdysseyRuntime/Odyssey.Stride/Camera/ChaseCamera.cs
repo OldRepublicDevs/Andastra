@@ -233,7 +233,17 @@ namespace Odyssey.Stride.Camera
             if (input.IsMouseButtonDown(MouseButton.Right))
             {
                 float sensitivity = 0.2f;
+                // Access mouse delta X component for horizontal rotation
+                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.Vector2.html
+                // Vector2.X property gets the X component of the mouse delta vector
+                // Method signature: float X { get; set; }
+                // Source: https://doc.stride3d.net/latest/en/manual/mathematics/index.html
                 _yaw -= input.MouseDelta.X * sensitivity;
+                // Access mouse delta Y component for vertical rotation
+                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.Vector2.html
+                // Vector2.Y property gets the Y component of the mouse delta vector
+                // Method signature: float Y { get; set; }
+                // Source: https://doc.stride3d.net/latest/en/manual/mathematics/index.html
                 _pitch -= input.MouseDelta.Y * sensitivity;
                 _pitch = MathUtil.Clamp(_pitch, _minPitch, _maxPitch);
             }

@@ -1472,7 +1472,17 @@ namespace Odyssey.Game.Core
             // Source: https://doc.stride3d.net/latest/en/manual/input/mouse.html
             if (Input.IsMouseButtonDown(MouseButton.Right))
             {
+                // Access mouse delta X component for horizontal rotation
+                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.Vector2.html
+                // Vector2.X property gets the X component of the mouse delta vector
+                // Method signature: float X { get; set; }
+                // Source: https://doc.stride3d.net/latest/en/manual/mathematics/index.html
                 float yaw = -Input.MouseDelta.X * rotateSpeed;
+                // Access mouse delta Y component for vertical rotation
+                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.Vector2.html
+                // Vector2.Y property gets the Y component of the mouse delta vector
+                // Method signature: float Y { get; set; }
+                // Source: https://doc.stride3d.net/latest/en/manual/mathematics/index.html
                 float pitch = -Input.MouseDelta.Y * rotateSpeed;
 
                 var currentRotation = _cameraEntity.Transform.Rotation;
