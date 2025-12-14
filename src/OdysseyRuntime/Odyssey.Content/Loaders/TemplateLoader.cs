@@ -16,6 +16,15 @@ namespace Odyssey.Content.Loaders
     /// <summary>
     /// Loads entity templates from GFF files (UTC, UTP, UTD, UTT, UTW, UTS, UTE, UTM).
     /// </summary>
+    /// <remarks>
+    /// Template Loader:
+    /// - Based on swkotor2.exe template loading system
+    /// - Template formats: GFF files with signatures "UTC ", "UTP ", "UTD ", "UTT ", "UTW ", "UTS ", "UTE ", "UTM "
+    /// - Located via string references: Template loading errors reference template types
+    /// - Original implementation: Loads GFF template files, parses entity data, creates template objects
+    /// - Templates define base properties for entities (stats, appearance, scripts, etc.)
+    /// - Based on template file format documentation in vendor/PyKotor/wiki/
+    /// </remarks>
     public class TemplateLoader
     {
         private readonly IGameResourceProvider _resourceProvider;
@@ -42,7 +51,7 @@ namespace Odyssey.Content.Loaders
             using (var stream = new MemoryStream(data))
             {
                 var reader = new GFFBinaryReader(stream);
-                var gff = reader.Load();
+                GFF gff = reader.Load();
                 return ParseCreatureTemplate(gff.Root);
             }
         }
@@ -64,7 +73,7 @@ namespace Odyssey.Content.Loaders
             using (var stream = new MemoryStream(data))
             {
                 var reader = new GFFBinaryReader(stream);
-                var gff = reader.Load();
+                GFF gff = reader.Load();
                 return ParsePlaceableTemplate(gff.Root);
             }
         }
@@ -86,7 +95,7 @@ namespace Odyssey.Content.Loaders
             using (var stream = new MemoryStream(data))
             {
                 var reader = new GFFBinaryReader(stream);
-                var gff = reader.Load();
+                GFF gff = reader.Load();
                 return ParseDoorTemplate(gff.Root);
             }
         }
@@ -108,7 +117,7 @@ namespace Odyssey.Content.Loaders
             using (var stream = new MemoryStream(data))
             {
                 var reader = new GFFBinaryReader(stream);
-                var gff = reader.Load();
+                GFF gff = reader.Load();
                 return ParseTriggerTemplate(gff.Root);
             }
         }
@@ -130,7 +139,7 @@ namespace Odyssey.Content.Loaders
             using (var stream = new MemoryStream(data))
             {
                 var reader = new GFFBinaryReader(stream);
-                var gff = reader.Load();
+                GFF gff = reader.Load();
                 return ParseWaypointTemplate(gff.Root);
             }
         }
@@ -152,7 +161,7 @@ namespace Odyssey.Content.Loaders
             using (var stream = new MemoryStream(data))
             {
                 var reader = new GFFBinaryReader(stream);
-                var gff = reader.Load();
+                GFF gff = reader.Load();
                 return ParseSoundTemplate(gff.Root);
             }
         }
@@ -174,7 +183,7 @@ namespace Odyssey.Content.Loaders
             using (var stream = new MemoryStream(data))
             {
                 var reader = new GFFBinaryReader(stream);
-                var gff = reader.Load();
+                GFF gff = reader.Load();
                 return ParseEncounterTemplate(gff.Root);
             }
         }
@@ -196,7 +205,7 @@ namespace Odyssey.Content.Loaders
             using (var stream = new MemoryStream(data))
             {
                 var reader = new GFFBinaryReader(stream);
-                var gff = reader.Load();
+                GFF gff = reader.Load();
                 return ParseStoreTemplate(gff.Root);
             }
         }
@@ -249,7 +258,7 @@ namespace Odyssey.Content.Loaders
 
             // Faction
             template.FactionID = GetInt(root, "FactionID");
-            
+
             // Scripts
             template.OnSpawn = GetString(root, "ScriptSpawn");
             template.OnDeath = GetString(root, "ScriptDeath");

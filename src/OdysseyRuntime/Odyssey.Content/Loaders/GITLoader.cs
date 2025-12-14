@@ -16,6 +16,15 @@ namespace Odyssey.Content.Loaders
     /// GIT files contain the spawned instances of creatures, placeables, doors,
     /// triggers, waypoints, sounds, and encounters in an area.
     /// </summary>
+    /// <remarks>
+    /// GIT Loader:
+    /// - Based on swkotor2.exe GIT file loading
+    /// - Located via string references: "GIT " signature (GFF file format)
+    /// - GIT file format: GFF with "GIT " signature containing area instance data
+    /// - Lists: "Creature List", "Door List", "Placeable List", "TriggerList", "WaypointList", "SoundList", "Encounter List"
+    /// - Original implementation: Parses GIT GFF structure, spawns entities at specified positions
+    /// - Based on GIT file format documentation in vendor/PyKotor/wiki/GFF-GIT.md
+    /// </remarks>
     public class GITLoader
     {
         private readonly IGameResourceProvider _resourceProvider;
@@ -40,7 +49,7 @@ namespace Odyssey.Content.Loaders
             using (var stream = new MemoryStream(data))
             {
                 var reader = new GFFBinaryReader(stream);
-                var gff = reader.Load();
+                GFF gff = reader.Load();
                 return ParseGIT(gff.Root);
             }
         }
@@ -52,7 +61,7 @@ namespace Odyssey.Content.Loaders
             // Parse creature instances
             if (root.TryGetList("Creature List", out GFFList creatureList))
             {
-                foreach (var creatureStruct in creatureList)
+                foreach (GFFStruct creatureStruct in creatureList)
                 {
                     git.Creatures.Add(ParseCreatureInstance(creatureStruct));
                 }
@@ -61,7 +70,7 @@ namespace Odyssey.Content.Loaders
             // Parse door instances
             if (root.TryGetList("Door List", out GFFList doorList))
             {
-                foreach (var doorStruct in doorList)
+                foreach (GFFStruct doorStruct in doorList)
                 {
                     git.Doors.Add(ParseDoorInstance(doorStruct));
                 }
@@ -70,7 +79,7 @@ namespace Odyssey.Content.Loaders
             // Parse placeable instances
             if (root.TryGetList("Placeable List", out GFFList placeableList))
             {
-                foreach (var placeableStruct in placeableList)
+                foreach (GFFStruct placeableStruct in placeableList)
                 {
                     git.Placeables.Add(ParsePlaceableInstance(placeableStruct));
                 }
@@ -79,7 +88,7 @@ namespace Odyssey.Content.Loaders
             // Parse trigger instances
             if (root.TryGetList("TriggerList", out GFFList triggerList))
             {
-                foreach (var triggerStruct in triggerList)
+                foreach (GFFStruct triggerStruct in triggerList)
                 {
                     git.Triggers.Add(ParseTriggerInstance(triggerStruct));
                 }
@@ -88,7 +97,7 @@ namespace Odyssey.Content.Loaders
             // Parse waypoint instances
             if (root.TryGetList("WaypointList", out GFFList waypointList))
             {
-                foreach (var waypointStruct in waypointList)
+                foreach (GFFStruct waypointStruct in waypointList)
                 {
                     git.Waypoints.Add(ParseWaypointInstance(waypointStruct));
                 }
@@ -97,7 +106,7 @@ namespace Odyssey.Content.Loaders
             // Parse sound instances
             if (root.TryGetList("SoundList", out GFFList soundList))
             {
-                foreach (var soundStruct in soundList)
+                foreach (GFFStruct soundStruct in soundList)
                 {
                     git.Sounds.Add(ParseSoundInstance(soundStruct));
                 }
@@ -106,7 +115,7 @@ namespace Odyssey.Content.Loaders
             // Parse encounter instances
             if (root.TryGetList("Encounter List", out GFFList encounterList))
             {
-                foreach (var encounterStruct in encounterList)
+                foreach (GFFStruct encounterStruct in encounterList)
                 {
                     git.Encounters.Add(ParseEncounterInstance(encounterStruct));
                 }
@@ -115,7 +124,7 @@ namespace Odyssey.Content.Loaders
             // Parse store instances
             if (root.TryGetList("StoreList", out GFFList storeList))
             {
-                foreach (var storeStruct in storeList)
+                foreach (GFFStruct storeStruct in storeList)
                 {
                     git.Stores.Add(ParseStoreInstance(storeStruct));
                 }
@@ -124,7 +133,7 @@ namespace Odyssey.Content.Loaders
             // Parse camera instances (KOTOR specific)
             if (root.TryGetList("CameraList", out GFFList cameraList))
             {
-                foreach (var cameraStruct in cameraList)
+                foreach (GFFStruct cameraStruct in cameraList)
                 {
                     git.Cameras.Add(ParseCameraInstance(cameraStruct));
                 }
@@ -141,7 +150,7 @@ namespace Odyssey.Content.Loaders
         private CreatureInstance ParseCreatureInstance(GFFStruct s)
         {
             var instance = new CreatureInstance();
-            
+
             instance.TemplateResRef = GetResRef(s, "TemplateResRef");
             instance.Tag = GetString(s, "Tag");
             instance.XPosition = GetFloat(s, "XPosition");
@@ -156,7 +165,7 @@ namespace Odyssey.Content.Loaders
         private DoorInstance ParseDoorInstance(GFFStruct s)
         {
             var instance = new DoorInstance();
-            
+
             instance.TemplateResRef = GetResRef(s, "TemplateResRef");
             instance.Tag = GetString(s, "Tag");
             instance.LinkedTo = GetString(s, "LinkedTo");
@@ -174,7 +183,7 @@ namespace Odyssey.Content.Loaders
         private PlaceableInstance ParsePlaceableInstance(GFFStruct s)
         {
             var instance = new PlaceableInstance();
-            
+
             instance.TemplateResRef = GetResRef(s, "TemplateResRef");
             instance.Tag = GetString(s, "Tag");
             instance.XPosition = GetFloat(s, "X");
@@ -188,7 +197,7 @@ namespace Odyssey.Content.Loaders
         private TriggerInstance ParseTriggerInstance(GFFStruct s)
         {
             var instance = new TriggerInstance();
-            
+
             instance.TemplateResRef = GetResRef(s, "TemplateResRef");
             instance.Tag = GetString(s, "Tag");
             instance.XPosition = GetFloat(s, "XPosition");
@@ -201,7 +210,7 @@ namespace Odyssey.Content.Loaders
             // Parse geometry
             if (s.TryGetList("Geometry", out GFFList geometryList))
             {
-                foreach (var vertexStruct in geometryList)
+                foreach (GFFStruct vertexStruct in geometryList)
                 {
                     float pointX = GetFloat(vertexStruct, "PointX");
                     float pointY = GetFloat(vertexStruct, "PointY");
@@ -216,7 +225,7 @@ namespace Odyssey.Content.Loaders
         private WaypointInstance ParseWaypointInstance(GFFStruct s)
         {
             var instance = new WaypointInstance();
-            
+
             instance.TemplateResRef = GetResRef(s, "TemplateResRef");
             instance.Tag = GetString(s, "Tag");
             instance.XPosition = GetFloat(s, "XPosition");
@@ -233,7 +242,7 @@ namespace Odyssey.Content.Loaders
         private SoundInstance ParseSoundInstance(GFFStruct s)
         {
             var instance = new SoundInstance();
-            
+
             instance.TemplateResRef = GetResRef(s, "TemplateResRef");
             instance.Tag = GetString(s, "Tag");
             instance.XPosition = GetFloat(s, "XPosition");
@@ -247,7 +256,7 @@ namespace Odyssey.Content.Loaders
         private EncounterInstance ParseEncounterInstance(GFFStruct s)
         {
             var instance = new EncounterInstance();
-            
+
             instance.TemplateResRef = GetResRef(s, "TemplateResRef");
             instance.Tag = GetString(s, "Tag");
             instance.XPosition = GetFloat(s, "XPosition");
@@ -257,7 +266,7 @@ namespace Odyssey.Content.Loaders
             // Parse spawn points
             if (s.TryGetList("SpawnPointList", out GFFList spawnList))
             {
-                foreach (var spawnStruct in spawnList)
+                foreach (GFFStruct spawnStruct in spawnList)
                 {
                     var spawnPoint = new SpawnPoint
                     {
@@ -273,7 +282,7 @@ namespace Odyssey.Content.Loaders
             // Parse geometry
             if (s.TryGetList("Geometry", out GFFList geometryList))
             {
-                foreach (var vertexStruct in geometryList)
+                foreach (GFFStruct vertexStruct in geometryList)
                 {
                     float pointX = GetFloat(vertexStruct, "X");
                     float pointY = GetFloat(vertexStruct, "Y");
@@ -288,7 +297,7 @@ namespace Odyssey.Content.Loaders
         private StoreInstance ParseStoreInstance(GFFStruct s)
         {
             var instance = new StoreInstance();
-            
+
             instance.TemplateResRef = GetResRef(s, "ResRef");
             instance.Tag = GetString(s, "Tag");
             instance.XPosition = GetFloat(s, "XPosition");
@@ -303,7 +312,7 @@ namespace Odyssey.Content.Loaders
         private CameraInstance ParseCameraInstance(GFFStruct s)
         {
             var instance = new CameraInstance();
-            
+
             instance.CameraID = GetInt(s, "CameraID");
             instance.FieldOfView = GetFloat(s, "FieldOfView");
             instance.Height = GetFloat(s, "Height");
@@ -348,7 +357,7 @@ namespace Odyssey.Content.Loaders
         {
             if (s.Exists(name))
             {
-                var resRef = s.GetResRef(name);
+                ResRef resRef = s.GetResRef(name);
                 return resRef?.ToString() ?? string.Empty;
             }
             return string.Empty;
@@ -373,7 +382,7 @@ namespace Odyssey.Content.Loaders
         {
             if (s.Exists(name))
             {
-                var v = s.GetVector3(name);
+                CSharpKOTOR.Common.Vector3 v = s.GetVector3(name);
                 return new System.Numerics.Vector3(v.X, v.Y, v.Z);
             }
             return System.Numerics.Vector3.Zero;
@@ -383,7 +392,7 @@ namespace Odyssey.Content.Loaders
         {
             if (s.Exists(name))
             {
-                var v = s.GetVector4(name);
+                CSharpKOTOR.Common.Vector4 v = s.GetVector4(name);
                 return new System.Numerics.Quaternion(v.X, v.Y, v.Z, v.W);
             }
             return System.Numerics.Quaternion.Identity;
