@@ -26,6 +26,7 @@ namespace HolocronToolset.NET.Editors
         private Panel _filterBox;
         private VerticalHeaderOption _verticalHeaderOption;
         private string _verticalHeaderColumn;
+        private List<string> _columnHeaders; // Store column headers separately
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/twoda.py:32-64
         // Original: def __init__(self, parent, installation):
@@ -39,6 +40,7 @@ namespace HolocronToolset.NET.Editors
             _filteredData = new CollectionViewSource { Source = _sourceData };
             _verticalHeaderOption = VerticalHeaderOption.None;
             _verticalHeaderColumn = "";
+            _columnHeaders = new List<string>();
 
             InitializeComponent();
             SetupUI();
@@ -146,17 +148,27 @@ namespace HolocronToolset.NET.Editors
             headers.AddRange(twoda.GetHeaders());
 
             _sourceData.Clear();
-            _twodaTable.Columns.Clear();
-
-            // Create columns
-            foreach (var header in headers)
+            _columnHeaders.Clear();
+            if (_twodaTable != null)
             {
-                _twodaTable.Columns.Add(new DataGridTextColumn
+                _twodaTable.Columns.Clear();
+            }
+
+            // Store column headers
+            _columnHeaders.AddRange(twoda.GetHeaders());
+
+            // Create columns in DataGrid if available
+            if (_twodaTable != null)
+            {
+                foreach (var header in headers)
                 {
-                    Header = header,
-                    Binding = new Binding($"[{_twodaTable.Columns.Count}]"),
-                    IsReadOnly = false
-                });
+                    _twodaTable.Columns.Add(new DataGridTextColumn
+                    {
+                        Header = header,
+                        Binding = new Binding($"[{_twodaTable.Columns.Count}]"),
+                        IsReadOnly = false
+                    });
+                }
             }
 
             // Load rows
@@ -179,17 +191,37 @@ namespace HolocronToolset.NET.Editors
         {
             var twoda = new TwoDA();
 
-            // Add columns (skip first column which is the label)
-            if (_twodaTable.Columns.Count > 1)
+            // Get column headers from stored headers or DataGrid columns
+            List<string> headers = new List<string>();
+            if (_columnHeaders.Count > 0)
             {
+                headers.AddRange(_columnHeaders);
+            }
+            else if (_twodaTable != null && _twodaTable.Columns.Count > 1)
+            {
+                // Extract headers from DataGrid columns (skip first column which is label)
                 for (int i = 1; i < _twodaTable.Columns.Count; i++)
                 {
-                    var header = _twodaTable.Columns[i].Header?.ToString() ?? "";
+                    string header = _twodaTable.Columns[i].Header?.ToString() ?? "";
                     if (!string.IsNullOrEmpty(header))
                     {
-                        twoda.AddColumn(header);
+                        headers.Add(header);
                     }
                 }
+            }
+            else if (_sourceData.Count > 0 && _sourceData[0].Count > 1)
+            {
+                // Fallback: generate column names from data structure
+                for (int i = 1; i < _sourceData[0].Count; i++)
+                {
+                    headers.Add($"Column{i}");
+                }
+            }
+
+            // Add columns to TwoDA
+            foreach (var header in headers)
+            {
+                twoda.AddColumn(header);
             }
 
             // Add rows
@@ -199,12 +231,10 @@ namespace HolocronToolset.NET.Editors
                 {
                     int rowIndex = twoda.AddRow();
                     twoda.SetLabel(rowIndex, row[0] ?? "");
-                    for (int j = 1; j < row.Count && j <= twoda.GetHeaders().Count; j++)
+                    // Add cell values (skip index 0 which is the label)
+                    for (int j = 1; j < row.Count && j - 1 < headers.Count; j++)
                     {
-                        if (j - 1 < twoda.GetHeaders().Count)
-                        {
-                            twoda.SetCellString(rowIndex, twoda.GetHeaders()[j - 1], row[j] ?? "");
-                        }
+                        twoda.SetCellString(rowIndex, headers[j - 1], row[j] ?? "");
                     }
                 }
             }
@@ -219,8 +249,14 @@ namespace HolocronToolset.NET.Editors
         public override void New()
         {
             base.New();
+            // Set default restype to TwoDA for new files
+            _restype = ResourceType.TwoDA;
             _sourceData.Clear();
-            _twodaTable.Columns.Clear();
+            _columnHeaders.Clear();
+            if (_twodaTable != null)
+            {
+                _twodaTable.Columns.Clear();
+            }
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/twoda.py:239-243

@@ -258,7 +258,10 @@ namespace HolocronToolset.NET.Editors
         // Original: def build(self) -> tuple[bytes, bytes]:
         public override Tuple<byte[], byte[]> Build()
         {
-            if (_restype == ResourceType.RIM)
+            // If restype is not set (e.g., after New()), default to ERF
+            ResourceType restype = _restype ?? ResourceType.ERF;
+            
+            if (restype == ResourceType.RIM)
             {
                 var rim = new RIM();
                 foreach (var viewModel in _sourceResources)
@@ -271,11 +274,11 @@ namespace HolocronToolset.NET.Editors
                 byte[] data = RIMAuto.BytesRim(rim);
                 return Tuple.Create(data, new byte[0]);
             }
-            else if (_restype == ResourceType.ERF || _restype == ResourceType.MOD || _restype == ResourceType.SAV)
+            else if (restype == ResourceType.ERF || restype == ResourceType.MOD || restype == ResourceType.SAV)
             {
-                ERFType erfType = ERFTypeExtensions.FromExtension(_restype.Extension);
+                ERFType erfType = ERFTypeExtensions.FromExtension(restype.Extension);
                 var erf = new ERF(erfType);
-                if (_restype == ResourceType.SAV)
+                if (restype == ResourceType.SAV)
                 {
                     erf.IsSaveErf = true;
                 }
@@ -286,12 +289,12 @@ namespace HolocronToolset.NET.Editors
                         erf.SetData(viewModel.ErfResource.ResRef.ToString(), viewModel.ErfResource.ResType, viewModel.ErfResource.Data);
                     }
                 }
-                byte[] data = ERFAuto.BytesErf(erf, _restype);
+                byte[] data = ERFAuto.BytesErf(erf, restype);
                 return Tuple.Create(data, new byte[0]);
             }
             else
             {
-                throw new InvalidOperationException($"Invalid restype for ERFEditor: {_restype}");
+                throw new InvalidOperationException($"Invalid restype for ERFEditor: {restype}");
             }
         }
 
@@ -305,6 +308,8 @@ namespace HolocronToolset.NET.Editors
             }
             _hasChanges = false;
             base.New();
+            // Set default restype to ERF for new files
+            _restype = ResourceType.ERF;
             _sourceResources.Clear();
             if (_refreshButton != null)
             {

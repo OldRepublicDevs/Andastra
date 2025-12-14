@@ -488,5 +488,202 @@ namespace HolocronToolset.NET.Windows
             // File dialog will be implemented when available
             System.Console.WriteLine("Open from file not yet implemented");
         }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:873-875
+        // Original: def on_core_refresh(self):
+        private void OnCoreRefresh()
+        {
+            RefreshCoreList(reload: true);
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:877-881
+        // Original: def on_module_changed(self, new_module_file: str):
+        private void OnModuleChanged(string newModuleFile)
+        {
+            OnModuleReload(newModuleFile);
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:884-901
+        // Original: def on_module_reload(self, module_file: str):
+        private void OnModuleReload(string moduleFile)
+        {
+            if (_active == null || string.IsNullOrWhiteSpace(moduleFile))
+            {
+                return;
+            }
+
+            try
+            {
+                var resources = _active.ModuleResources(moduleFile);
+                _modulesWidget?.SetResources(resources);
+            }
+            catch (Exception ex)
+            {
+                System.Console.WriteLine($"Failed to reload module '{moduleFile}': {ex}");
+            }
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:917-918
+        // Original: def on_module_refresh(self):
+        private void OnModuleRefresh()
+        {
+            RefreshModuleList(reload: true);
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:1100-1105
+        // Original: def on_override_changed(self, new_directory: str):
+        private void OnOverrideChanged(string newDirectory)
+        {
+            if (_active == null)
+            {
+                return;
+            }
+            _overrideWidget?.SetResources(_active.OverrideResources(newDirectory));
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:1107-1121
+        // Original: def on_override_reload(self, file_or_folder: str):
+        private void OnOverrideReload(string fileOrFolder)
+        {
+            if (_active == null)
+            {
+                return;
+            }
+
+            try
+            {
+                var overridePath = _active.OverridePath();
+                var fileOrFolderPath = Path.Combine(overridePath, fileOrFolder);
+                if (File.Exists(fileOrFolderPath))
+                {
+                    var relFolderpath = Path.GetDirectoryName(fileOrFolderPath);
+                    _active.ReloadOverrideFile(fileOrFolderPath);
+                    _overrideWidget?.SetResources(_active.OverrideResources(relFolderpath ?? ""));
+                }
+                else if (Directory.Exists(fileOrFolderPath))
+                {
+                    _active.LoadOverride(fileOrFolder);
+                    _overrideWidget?.SetResources(_active.OverrideResources(fileOrFolder));
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Console.WriteLine($"Failed to reload override '{fileOrFolder}': {ex}");
+            }
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:1123-1124
+        // Original: def on_override_refresh(self):
+        private void OnOverrideRefresh()
+        {
+            RefreshOverrideList(reload: true);
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:1126-1128
+        // Original: def on_textures_changed(self, texturepackName: str):
+        private void OnTexturesChanged(string texturepackName)
+        {
+            if (_active == null)
+            {
+                return;
+            }
+            _texturesWidget?.SetResources(_active.TexturepackResources(texturepackName));
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:1475-1486
+        // Original: def open_active_talktable(self):
+        private void OpenActiveTalktable()
+        {
+            if (_active == null)
+            {
+                return;
+            }
+
+            var tlkPath = Path.Combine(_active.Path, "dialog.tlk");
+            if (!File.Exists(tlkPath))
+            {
+                // TODO: Show MessageBox when available
+                System.Console.WriteLine($"dialog.tlk not found at {tlkPath}");
+                return;
+            }
+
+            var fileInfo = new FileInfo(tlkPath);
+            var resource = new FileResource("dialog", ResourceType.TLK, (int)fileInfo.Length, 0, tlkPath);
+            WindowUtils.OpenResourceEditor(resource, _active, this);
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:1489-1505
+        // Original: def open_active_journal(self):
+        private void OpenActiveJournal()
+        {
+            if (_active == null)
+            {
+                return;
+            }
+
+            // TODO: Implement journal opening when JRL editor is available
+            System.Console.WriteLine("Journal editor not yet implemented");
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:1508-1514
+        // Original: def open_file_search_dialog(self):
+        private void OpenFileSearchDialog()
+        {
+            if (_active == null)
+            {
+                return;
+            }
+
+            // TODO: Implement file search dialog when available
+            System.Console.WriteLine("File search dialog not yet implemented");
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:1517-1522
+        // Original: def open_indoor_map_builder(self):
+        private void OpenIndoorMapBuilder()
+        {
+            if (_active == null)
+            {
+                return;
+            }
+
+            var builder = new IndoorBuilderWindow(null, _active);
+            builder.Show();
+            WindowUtils.AddWindow(builder);
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:1525-1535
+        // Original: def open_kotordiff(self):
+        private void OpenKotordiff()
+        {
+            var kotordiffWindow = new KotorDiffWindow(null, _installations, _active);
+            kotordiffWindow.Show();
+            WindowUtils.AddWindow(kotordiffWindow);
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:1546-1552
+        // Original: def open_instructions_window(self):
+        private void OpenInstructionsWindow()
+        {
+            var window = new HelpWindow(null);
+            window.Show();
+            WindowUtils.AddWindow(window);
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:1554-1556
+        // Original: def open_about_dialog(self):
+        private void OpenAboutDialog()
+        {
+            // About dialog will be implemented when available
+            System.Console.WriteLine("About dialog not yet implemented");
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:1457-1472
+        // Original: def open_settings_dialog(self):
+        private void OpenSettingsDialog()
+        {
+            // Settings dialog will be implemented when available
+            System.Console.WriteLine("Settings dialog not yet implemented");
+        }
     }
 }

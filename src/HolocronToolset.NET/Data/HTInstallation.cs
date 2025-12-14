@@ -8,6 +8,7 @@ using CSharpKOTOR.Installation;
 using CSharpKOTOR.Resources;
 using JetBrains.Annotations;
 using ResourceResult = CSharpKOTOR.Installation.ResourceResult;
+using LocationResult = CSharpKOTOR.Resources.LocationResult;
 
 namespace HolocronToolset.NET.Data
 {
@@ -175,10 +176,7 @@ namespace HolocronToolset.NET.Data
         // Original: def core_resources(self) -> list[FileResource]:
         public List<FileResource> CoreResources()
         {
-            var resources = new List<FileResource>();
-            // Get core resources from chitin
-            // This will be implemented when resource enumeration is available
-            return resources;
+            return _installation.CoreResources();
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/installation.py
@@ -242,20 +240,7 @@ namespace HolocronToolset.NET.Data
         // Original: def override_list(self) -> list[str]:
         public List<string> OverrideList()
         {
-            var overrideDirs = new List<string>();
-            string overridePath = OverridePath();
-            if (!Directory.Exists(overridePath))
-            {
-                return overrideDirs;
-            }
-
-            // Get all subdirectories in override
-            var dirs = Directory.GetDirectories(overridePath, "*", SearchOption.AllDirectories)
-                .Select(d => System.IO.Path.GetRelativePath(overridePath, d))
-                .ToList();
-            overrideDirs.Add("."); // Root override
-            overrideDirs.AddRange(dirs);
-            return overrideDirs;
+            return _installation.OverrideList();
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/installation.py
@@ -282,8 +267,29 @@ namespace HolocronToolset.NET.Data
         public List<FileResource> ModuleResources(string moduleName)
         {
             var resources = new List<FileResource>();
-            // Get resources from module
-            // This will be implemented when module resource enumeration is available
+            string modulesPath = ModulePath();
+            if (!Directory.Exists(modulesPath))
+            {
+                return resources;
+            }
+
+            string moduleFile = System.IO.Path.Combine(modulesPath, moduleName);
+            if (!File.Exists(moduleFile))
+            {
+                return resources;
+            }
+
+            try
+            {
+                // Use LazyCapsule to read module resources
+                var capsule = new CSharpKOTOR.Formats.Capsule.LazyCapsule(moduleFile);
+                resources.AddRange(capsule.GetResources());
+            }
+            catch (Exception ex)
+            {
+                System.Console.WriteLine($"Failed to load resources from module '{moduleName}': {ex}");
+            }
+
             return resources;
         }
 
@@ -291,10 +297,7 @@ namespace HolocronToolset.NET.Data
         // Original: def override_resources(self, subfolder: str | None = None) -> list[FileResource]:
         public List<FileResource> OverrideResources(string subfolder = null)
         {
-            var resources = new List<FileResource>();
-            // Get resources from override directory
-            // This will be implemented when override resource enumeration is available
-            return resources;
+            return _installation.OverrideResources(subfolder);
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/installation.py
@@ -331,6 +334,118 @@ namespace HolocronToolset.NET.Data
             {
                 return null;
             }
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/installation.py
+        // Original: def reload_module(self, module_name: str):
+        public void ReloadModule(string moduleName)
+        {
+            _installation.ReloadModule(moduleName);
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/installation.py
+        // Original: def load_override(self, directory: str | None = None):
+        public void LoadOverride(string directory = null)
+        {
+            // Clear override cache to force reload
+            // The actual loading will happen on next access via OverrideResources
+            _installation.ClearCache();
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/installation.py
+        // Original: def reload_override_file(self, filepath: Path):
+        public void ReloadOverrideFile(string filepath)
+        {
+            // Clear override cache to force reload
+            _installation.ClearCache();
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/installation.py
+        // Original: def module_id(self, module_file_name: str, use_alternate: bool = False) -> str:
+        public string ModuleId(string moduleFileName, bool useAlternate = false)
+        {
+            // Extract module root from filename
+            string root = CSharpKOTOR.Installation.Installation.GetModuleRoot(moduleFileName);
+            if (useAlternate)
+            {
+                // Try to get area name from module
+                var moduleNames = ModuleNames();
+                if (moduleNames.ContainsKey(moduleFileName))
+                {
+                    string areaName = moduleNames[moduleFileName];
+                    if (!string.IsNullOrEmpty(areaName) && areaName != "<Unknown Area>")
+                    {
+                        return areaName.ToLowerInvariant();
+                    }
+                }
+            }
+            return root.ToLowerInvariant();
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/installation.py
+        // Original: def locations(self, queries: list[ResourceIdentifier], order: list[SearchLocation] | None = None) -> dict[ResourceIdentifier, list[LocationResult]]:
+        public Dictionary<ResourceIdentifier, List<LocationResult>> Locations(
+            List<ResourceIdentifier> queries,
+            SearchLocation[] order = null)
+        {
+            return _installation.Locations(queries, order);
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/installation.py
+        // Original: property saves -> dict[Path, dict[Path, list[FileResource]]]:
+        public Dictionary<string, Dictionary<string, List<FileResource>>> Saves
+        {
+            get
+            {
+                var saves = new Dictionary<string, Dictionary<string, List<FileResource>>>();
+                var saveLocations = SaveLocations();
+                foreach (var saveLocation in saveLocations)
+                {
+                    if (!Directory.Exists(saveLocation))
+                    {
+                        continue;
+                    }
+
+                    var saveDict = new Dictionary<string, List<FileResource>>();
+                    foreach (var saveDir in Directory.GetDirectories(saveLocation))
+                    {
+                        var saveResources = new List<FileResource>();
+                        foreach (var file in Directory.GetFiles(saveDir))
+                        {
+                            try
+                            {
+                                var identifier = ResourceIdentifier.FromPath(file);
+                                if (identifier.ResType != ResourceType.INVALID && !identifier.ResType.IsInvalid)
+                                {
+                                    var fileInfo = new FileInfo(file);
+                                    saveResources.Add(new FileResource(
+                                        identifier.ResName,
+                                        identifier.ResType,
+                                        (int)fileInfo.Length,
+                                        0,
+                                        file
+                                    ));
+                                }
+                            }
+                            catch
+                            {
+                                // Skip invalid files
+                            }
+                        }
+                        saveDict[System.IO.Path.GetFileName(saveDir)] = saveResources;
+                    }
+                    saves[saveLocation] = saveDict;
+                }
+                return saves;
+            }
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/installation.py
+        // Original: def is_save_corrupted(self, save_path: Path) -> bool:
+        public bool IsSaveCorrupted(string savePath)
+        {
+            // TODO: Implement save corruption detection
+            return false;
         }
     }
 }
