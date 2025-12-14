@@ -120,11 +120,26 @@ namespace HolocronToolset.NET.Tests.Dialogs
             dialog.IsVisible.Should().BeTrue();
             dialog.Ui.ModuleList.Items.Count.Should().Be(2);
 
-            // Matching PyKotor implementation at Tools/HolocronToolset/tests/test_ui_dialogs_extra.py:104
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/test_ui_dialogs_extra.py:104-106
             // Original: dialog.ui.filterEdit.setText("Other")
+            //          qtbot.wait(10)  # Ensure Qt processes the filter text change
+            //          # Check if list filtered (if implemented)
             dialog.Ui.FilterEdit.Text = "Other";
-            System.Threading.Thread.Sleep(10); // Ensure Avalonia processes the filter text change
-            // Note: Filtering implementation in OnFilterEdited() needs to be completed
+            // Manually trigger filter since TextChanged event may not fire reliably in headless tests
+            dialog.OnFilterEdited();
+            // Verify filtering works - should show only "Other Module"
+            dialog.Ui.ModuleList.Items.Count.Should().Be(1, "Filtering should reduce list to 1 item matching 'Other'");
+            if (dialog.Ui.ModuleList.Items.Count > 0)
+            {
+                object filteredItem = dialog.Ui.ModuleList.Items[0];
+                filteredItem.Should().NotBeNull();
+                filteredItem.ToString().Should().Contain("Other Module", "Filtered item should contain 'Other Module'");
+            }
+
+            // Clear filter - should show all modules again
+            dialog.Ui.FilterEdit.Text = "";
+            dialog.OnFilterEdited(); // Manually trigger filter
+            dialog.Ui.ModuleList.Items.Count.Should().Be(2, "Clearing filter should show all 2 modules again");
 
             dialog.Close();
         }

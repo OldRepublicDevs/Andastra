@@ -211,7 +211,8 @@ namespace HolocronToolset.NET.Dialogs
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/select_module.py:132-150
         // Original: def on_filter_edited(self):
-        private void OnFilterEdited()
+        // Made public for testing purposes (Python version is also accessible)
+        public void OnFilterEdited()
         {
             string filterText = _filterEdit?.Text?.ToLowerInvariant() ?? "";
             if (_moduleList == null || _allModuleItems == null)
