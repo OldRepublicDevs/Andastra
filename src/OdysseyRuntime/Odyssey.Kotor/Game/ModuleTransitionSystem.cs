@@ -21,6 +21,15 @@ namespace Odyssey.Kotor.Game
     /// <summary>
     /// Handles module transitions (area changes) triggered by doors or triggers.
     /// </summary>
+    /// <remarks>
+    /// Module Transition System:
+    /// - Based on swkotor2.exe module transition system
+    /// - Located via string references: "TransitionDestination" @ 0x007bd7a4
+    /// - "EVENT_AREA_TRANSITION" @ 0x007bcbdc, "Mod_Transition" @ 0x007be8f0
+    /// - Original implementation: Doors/triggers with LinkedToModule and LinkedToFlags trigger transitions
+    /// - Transition flow: Door/Trigger opened -> Load target module -> Position player at waypoint -> Fire events
+    /// - LinkedToFlags bit 1 = module transition, bit 2 = area transition within module
+    /// </remarks>
     public class ModuleTransitionSystem
     {
         private readonly Func<string, Task<bool>> _loadModuleAsync;
@@ -102,7 +111,7 @@ namespace Odyssey.Kotor.Game
                 return false;
             }
 
-            Console.WriteLine("[ModuleTransition] Starting transition from " + 
+            Console.WriteLine("[ModuleTransition] Starting transition from " +
                 (_currentModule ?? "none") + " to " + targetModule);
 
             _isTransitioning = true;
@@ -170,7 +179,7 @@ namespace Odyssey.Kotor.Game
                 return false;
             }
 
-            var doorComponent = door.GetComponent<IDoorComponent>();
+            IDoorComponent doorComponent = door.GetComponent<IDoorComponent>();
             if (doorComponent == null)
             {
                 return false;
@@ -190,7 +199,7 @@ namespace Odyssey.Kotor.Game
                 return false;
             }
 
-            var doorComponent = door.GetComponent<IDoorComponent>();
+            IDoorComponent doorComponent = door.GetComponent<IDoorComponent>();
             if (doorComponent == null)
             {
                 return false;
@@ -199,7 +208,7 @@ namespace Odyssey.Kotor.Game
             string targetModule = doorComponent.LinkedToModule;
             string targetWaypoint = doorComponent.LinkedTo;
 
-            Console.WriteLine("[ModuleTransition] Door transition to " + targetModule + 
+            Console.WriteLine("[ModuleTransition] Door transition to " + targetModule +
                 " waypoint: " + (targetWaypoint ?? "none"));
 
             return StartTransition(targetModule, targetWaypoint, door);
@@ -215,14 +224,14 @@ namespace Odyssey.Kotor.Game
                 return false;
             }
 
-            var triggerComponent = trigger.GetComponent<ITriggerComponent>();
+            ITriggerComponent triggerComponent = trigger.GetComponent<ITriggerComponent>();
             if (triggerComponent == null)
             {
                 return false;
             }
 
             // TriggerType 1 = transition
-            return triggerComponent.TriggerType == 1 && 
+            return triggerComponent.TriggerType == 1 &&
                    !string.IsNullOrEmpty(triggerComponent.LinkedToModule);
         }
 
@@ -236,7 +245,7 @@ namespace Odyssey.Kotor.Game
                 return false;
             }
 
-            var triggerComponent = trigger.GetComponent<ITriggerComponent>();
+            ITriggerComponent triggerComponent = trigger.GetComponent<ITriggerComponent>();
             if (triggerComponent == null)
             {
                 return false;
@@ -245,7 +254,7 @@ namespace Odyssey.Kotor.Game
             string targetModule = triggerComponent.LinkedToModule;
             string targetWaypoint = triggerComponent.LinkedTo;
 
-            Console.WriteLine("[ModuleTransition] Trigger transition to " + targetModule + 
+            Console.WriteLine("[ModuleTransition] Trigger transition to " + targetModule +
                 " waypoint: " + (targetWaypoint ?? "none"));
 
             return StartTransition(targetModule, targetWaypoint, trigger);

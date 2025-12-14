@@ -25,14 +25,20 @@ namespace Odyssey.Kotor.Dialogue
     /// Manages dialogue conversations in the game.
     /// </summary>
     /// <remarks>
-    /// Dialogue flow:
-    /// 1. StartConversation - Begin dialogue with a DLG file
-    /// 2. Evaluate StartingList - Find first valid starter
-    /// 3. EnterNode - Execute scripts, fire events
-    /// 4. GetReplies - Evaluate and filter reply options
-    /// 5. SelectReply - Player chooses reply
-    /// 6. Continue to next entry or end
-    /// 
+    /// Dialogue System:
+    /// - Based on swkotor2.exe dialogue system
+    /// - Located via string references: "ScriptDialogue" @ 0x007bee40, "ScriptEndDialogue" @ 0x007bede0
+    /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_DIALOGUE" @ 0x007bcac4, "OnEndDialogue" @ 0x007c1f60
+    /// - Error: "Error: dialogue can't find object '%s'!" @ 0x007c3730
+    /// - Original implementation: DLG files contain dialogue tree with nodes, entries, replies, scripts
+    /// - Dialogue flow:
+    ///   1. StartConversation - Begin dialogue with a DLG file
+    ///   2. Evaluate StartingList - Find first valid starter
+    ///   3. EnterNode - Execute scripts, fire events
+    ///   4. GetReplies - Evaluate and filter reply options
+    ///   5. SelectReply - Player chooses reply
+    ///   6. Continue to next entry or end
+    ///
     /// Script execution:
     /// - Active1/Active2 on links: Condition scripts (return TRUE/FALSE)
     /// - Script1 on nodes: Fires when node is entered
@@ -190,7 +196,7 @@ namespace Odyssey.Kotor.Dialogue
             }
 
             DLGReply reply = CurrentState.AvailableReplies[replyIndex];
-            
+
             // Exit current entry
             ExitNode(CurrentState.CurrentEntry);
 
@@ -367,8 +373,8 @@ namespace Odyssey.Kotor.Dialogue
 
             // Get available replies
             CurrentState.ClearReplies();
-            var replies = GetValidReplies(entry, CurrentState.Context);
-            foreach (var reply in replies)
+            List<DLGReply> replies = GetValidReplies(entry, CurrentState.Context);
+            foreach (DLGReply reply in replies)
             {
                 CurrentState.AddReply(reply);
             }
@@ -597,8 +603,8 @@ namespace Odyssey.Kotor.Dialogue
             }
 
             // Create execution context
-            var ctx = CreateExecutionContext(caller);
-            
+            IExecutionContext ctx = CreateExecutionContext(caller);
+
             try
             {
                 return _vm.Execute(scriptBytes, ctx);
@@ -653,8 +659,8 @@ namespace Odyssey.Kotor.Dialogue
                 return;
             }
 
-            var ctx = CreateExecutionContext(caller);
-            
+            IExecutionContext ctx = CreateExecutionContext(caller);
+
             try
             {
                 _vm.Execute(scriptBytes, ctx);
@@ -730,7 +736,7 @@ namespace Odyssey.Kotor.Dialogue
             }
 
             // Try any available substring via the enumerator
-            foreach (var tuple in locStr)
+            foreach ((Language, Gender, string) tuple in locStr)
             {
                 if (!string.IsNullOrEmpty(tuple.Item3))
                 {
