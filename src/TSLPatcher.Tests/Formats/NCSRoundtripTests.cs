@@ -10,8 +10,10 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using CSharpKOTOR.Common;
 using CSharpKOTOR.Formats.NCS;
+using CSharpKOTOR.Tests.Performance;
 using FluentAssertions;
 using Xunit;
 
@@ -477,8 +479,8 @@ namespace CSharpKOTOR.Tests.Formats
             string outDir = Path.Combine(scratchRoot, Path.GetDirectoryName(rel) ?? "");
             Directory.CreateDirectory(outDir);
 
-            // Read original source for validation
-            string originalSource = File.ReadAllText(nssPath, Encoding.UTF8);
+            // Read original source for validation (use cache to avoid repeated I/O)
+            string originalSource = ReadFileCached(nssPath);
             int originalSourceLength = originalSource.Length;
             bool originalHasMain = originalSource.Contains("void main") || originalSource.Contains("void main(");
 
@@ -553,7 +555,7 @@ namespace CSharpKOTOR.Tests.Formats
 
                 // Assert: Decompiled file exists and is non-empty
                 File.Exists(decompiled).Should().BeTrue($"Decompiled NSS file should exist at {DisplayPath(decompiled)}");
-                decompiledContent = File.ReadAllText(decompiled, Encoding.UTF8);
+                decompiledContent = ReadFileCached(decompiled);
                 decompiledContent.Length.Should().BeGreaterThan(0,
                     $"Decompiled NSS file should not be empty (size: {decompiledContent.Length} characters)");
 
@@ -597,7 +599,7 @@ namespace CSharpKOTOR.Tests.Formats
             // Step 3: Recompile decompiled NSS -> NCS (second NCS) using INBUILT compiler
             string recompiled = Path.Combine(outDir, Path.GetFileNameWithoutExtension(rel) + ".rt.ncs");
 
-            string decompiledContentForRecompile = decompiledContent ?? File.ReadAllText(decompiled, Encoding.UTF8);
+            string decompiledContentForRecompile = decompiledContent ?? ReadFileCached(decompiled);
 
             string compileInput = decompiled;
             string tempCompileInput = null;
@@ -1071,13 +1073,23 @@ namespace CSharpKOTOR.Tests.Formats
 
                 using (Process proc = Process.Start(psi))
                 {
-                    string output = proc.StandardOutput.ReadToEnd() + proc.StandardError.ReadToEnd();
+                    // Read output asynchronously to avoid blocking
+                    var outputTask = Task.Run(() => proc.StandardOutput.ReadToEnd() + proc.StandardError.ReadToEnd());
 
                     if (!proc.WaitForExit((int)ProcTimeout.TotalMilliseconds))
                     {
-                        proc.Kill();
+                        try
+                        {
+                            proc.Kill();
+                        }
+                        catch
+                        {
+                            // Ignore errors when killing process
+                        }
                         throw new TimeoutException($"nwnnsscomp timed out for {DisplayPath(originalNssPath)}");
                     }
+
+                    string output = outputTask.Result;
 
                     int exitCode = proc.ExitCode;
                     bool fileExists = File.Exists(compiledOut);
@@ -1095,6 +1107,8 @@ namespace CSharpKOTOR.Tests.Formats
             }
             finally
             {
+                // Note: We keep synchronous cleanup here for RunExternalCompiler to ensure temp dirs are cleaned before next test
+                // For RunCompiler, we can use async cleanup since it's less critical
                 if (tempDir != null)
                 {
                     try
@@ -1121,9 +1135,28 @@ namespace CSharpKOTOR.Tests.Formats
             }
         }
 
+        // Cache file content reads to avoid repeated I/O operations
+        private static readonly Dictionary<string, string> _fileContentCache = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        private static readonly object _cacheLock = new object();
+
+        private static string ReadFileCached(string filePath)
+        {
+            lock (_cacheLock)
+            {
+                if (_fileContentCache.TryGetValue(filePath, out string cached))
+                {
+                    return cached;
+                }
+
+                string content = File.ReadAllText(filePath, Encoding.UTF8);
+                _fileContentCache[filePath] = content;
+                return content;
+            }
+        }
+
         private static bool NeedsAscNwscript(string nssPath)
         {
-            string content = File.ReadAllText(nssPath, Encoding.UTF8);
+            string content = ReadFileCached(nssPath);
             Regex pattern = new Regex(@"ActionStartConversation\s*\(([^,)]*,\s*){10}[^)]*\)", RegexOptions.Multiline);
             return pattern.IsMatch(content);
         }
@@ -1177,7 +1210,7 @@ namespace CSharpKOTOR.Tests.Formats
 
         private static List<string> ExtractIncludes(string nssPath)
         {
-            string content = File.ReadAllText(nssPath, Encoding.UTF8);
+            string content = ReadFileCached(nssPath);
             List<string> includes = new List<string>();
             Regex pattern = new Regex(@"#include\s+[""<]([^"">]+)["">]", RegexOptions.Multiline);
             foreach (Match match in pattern.Matches(content))
@@ -2800,14 +2833,21 @@ namespace CSharpKOTOR.Tests.Formats
             Console.WriteLine("═══════════════════════════════════════════════════════════");
         }
 
-        [Fact]
+        [Fact(Timeout = 120000)] // 2 minutes timeout - test will fail if exceeded
         public void TestRoundTripSuite()
         {
-            ResetPerformanceTracking();
-            _testStartTime = Stopwatch.GetTimestamp();
-
-            try
+            // Performance monitoring - will generate profile report and fail if exceeds 2 minutes
+            using (var perfHelper = new Performance.PerformanceTestHelper(
+                nameof(TestRoundTripSuite),
+                null, // No ITestOutputHelper available in this context
+                maxSeconds: 120,
+                enableProfiling: true))
             {
+                try
+                {
+                ResetPerformanceTracking();
+                _testStartTime = Stopwatch.GetTimestamp();
+
                 Preflight();
                 List<RoundTripCase> tests = BuildRoundTripCases();
 
@@ -2825,12 +2865,27 @@ namespace CSharpKOTOR.Tests.Formats
 
                 foreach (RoundTripCase testCase in tests)
                 {
+                    // Check timeout before processing each test case
+                    perfHelper.CheckTimeout();
+                    
                     _testsProcessed++;
                     string relPath = GetRelativePath(VanillaRepoDir, testCase.Item.Path);
                     string displayPath = relPath.Replace('\\', '/');
 
                     try
                     {
+                        // Clear file cache periodically to prevent memory bloat
+                        if (_testsProcessed % 10 == 0)
+                        {
+                            lock (_cacheLock)
+                            {
+                                if (_fileContentCache.Count > 1000)
+                                {
+                                    _fileContentCache.Clear();
+                                }
+                            }
+                        }
+
                         RoundTripResult result = RoundTripSingle(testCase.Item.Path, testCase.Item.GameFlag, testCase.Item.ScratchRoot);
                         
                         // Show one-line summary
@@ -2907,13 +2962,15 @@ namespace CSharpKOTOR.Tests.Formats
                 Console.WriteLine("Tests failed: 0");
                 Console.WriteLine();
 
-                PrintPerformanceSummary();
-            }
-            catch (Exception e)
-            {
-                Console.Error.WriteLine($"FATAL ERROR: {e.Message}");
-                PrintPerformanceSummary();
-                throw;
+                    PrintPerformanceSummary();
+                    perfHelper.CheckTimeout(); // Final timeout check
+                }
+                catch (Exception e)
+                {
+                    Console.Error.WriteLine($"FATAL ERROR: {e.Message}");
+                    PrintPerformanceSummary();
+                    throw;
+                }
             }
         }
     }
