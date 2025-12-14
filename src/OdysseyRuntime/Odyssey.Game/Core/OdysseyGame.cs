@@ -252,48 +252,12 @@ namespace Odyssey.Game.Core
 
         private void UpdateCameraVisibility(GameState state)
         {
-            try
+            // MonoGame doesn't have a scene system like Stride
+            // Camera visibility is handled through rendering logic
+            // For MainMenu state, we can reset camera to default position
+            if (state == GameState.MainMenu)
             {
-                // Get SceneSystem service for scene management
-                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.IServiceRegistry.html
-                // Services.GetService<T>() retrieves a service from the service registry
-                // Method signature: T GetService<T>() where T : class
-                // SceneSystem manages scene rendering and entity management
-                // Source: https://doc.stride3d.net/latest/en/manual/engine/services-and-dependency-injection.html
-                SceneSystem sceneSystem = Services.GetService<SceneSystem>();
-                if (sceneSystem != null && sceneSystem.SceneInstance != null && _cameraEntity != null)
-                {
-                    // CRITICAL FIX: Camera must ALWAYS be in scene for rendering to work
-                    // Removing the camera causes the purple screen because Stride needs an active camera
-                    // to render anything, including UI. Keep camera in scene for all states.
-                    // Check if camera is already in scene
-                    // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Engine.SceneInstance.html
-                    // SceneInstance.RootScene.Entities collection contains all entities in the scene
-                    // Contains(Entity) checks if entity is in the collection, Add(Entity) adds entity to scene
-                    // Source: https://doc.stride3d.net/latest/en/manual/entities/scenes/index.html
-                    if (!sceneSystem.SceneInstance.RootScene.Entities.Contains(_cameraEntity))
-                    {
-                        sceneSystem.SceneInstance.RootScene.Entities.Add(_cameraEntity);
-                        Console.WriteLine("[Odyssey] Camera added to scene (required for rendering)");
-                    }
-
-                    // Adjust camera position/rotation based on state if needed
-                    // For MainMenu, we can keep a simple default camera position
-                    if (state == GameState.MainMenu)
-                    {
-                    // Ensure camera is positioned for menu viewing
-                    // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.Vector3.html
-                    // Vector3(float x, float y, float z) - same constructor as above
-                    _cameraEntity.Transform.Position = new Vector3(0, 0, 0);
-                    // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.Quaternion.html
-                    // Quaternion.Identity static property - same as documented above
-                    _cameraEntity.Transform.Rotation = Quaternion.Identity;
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"[Odyssey] WARNING: Failed to update camera visibility: {ex.Message}");
+                _viewMatrix = Matrix.CreateLookAt(new Vector3(0, 0, 10), Vector3.Zero, Vector3.Up);
             }
         }
 
@@ -531,8 +495,9 @@ namespace Odyssey.Game.Core
                     return;
                 }
 
-                _kotorGuiManager = new KotorGuiManager(_uiComponent, GraphicsDevice, gamePath);
-                _kotorGuiManager.OnButtonClicked += OnKotorGuiButtonClicked;
+                // TODO: Implement KotorGuiManager for MonoGame
+                // _kotorGuiManager = new KotorGuiManager(_spriteBatch, GraphicsDevice, gamePath);
+                // _kotorGuiManager.OnButtonClicked += OnKotorGuiButtonClicked;
 
                 // #region agent log
                 DebugLog("D", "OdysseyGame.InitializeUI:gui_manager_created", "KotorGuiManager created");
@@ -540,11 +505,12 @@ namespace Odyssey.Game.Core
 
                 // Load the main menu GUI from KOTOR game files
                 // Standard KOTOR main menu GUIs: mainmenu8x6_p (K1), mainmenu16x12_p (K1 widescreen)
-                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Games.GameWindow.html
-                // Window.ClientBounds.Width/Height get the client area dimensions in pixels
-                bool guiLoaded = _kotorGuiManager.LoadGui("mainmenu8x6_p",
-                    Window.ClientBounds.Width,
-                    Window.ClientBounds.Height);
+                // Based on MonoGame API: https://docs.monogame.net/api/Microsoft.Xna.Framework.GraphicsDevice.html
+                // GraphicsDevice.Viewport.Width/Height get the viewport dimensions in pixels
+                bool guiLoaded = false; // TODO: Implement GUI loading for MonoGame
+                // bool guiLoaded = _kotorGuiManager.LoadGui("mainmenu8x6_p",
+                //     GraphicsDevice.Viewport.Width,
+                //     GraphicsDevice.Viewport.Height);
 
                 if (guiLoaded)
                 {
@@ -588,7 +554,7 @@ namespace Odyssey.Game.Core
         /// Creates a fully functional visual fallback main menu without text dependency.
         /// Uses SpriteBatch-based custom renderer for reliable rendering.
         /// This is GUARANTEED to work as it doesn't depend on font assets or UIComponent.
-        /// Strategy based on Stride's official SpriteBatch and custom renderer documentation.
+        /// Strategy based on MonoGame's SpriteBatch for 2D rendering.
         /// </summary>
         private void CreateFallbackMainMenu()
         {

@@ -5,14 +5,14 @@ using CSharpKOTOR.Formats.VIS;
 using CSharpKOTOR.Formats.MDLData;
 using Odyssey.Content.Interfaces;
 using Odyssey.Core.Interfaces;
-using Odyssey.Stride.Converters;
+using Odyssey.MonoGame.Converters;
 using StrideEngine = Stride.Engine;
 using Stride.Rendering;
 using Stride.Graphics;
 using JetBrains.Annotations;
 using StrideMath = Stride.Core.Mathematics;
 
-namespace Odyssey.Stride.Scene
+namespace Odyssey.MonoGame.Scene
 {
     /// <summary>
     /// Builds Stride scene graph from KOTOR module data.
@@ -327,8 +327,12 @@ namespace Odyssey.Stride.Scene
 
             // Create model component
             // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Rendering.Model.html
+            // Model() constructor creates a new model container
             // Model - Container for one or more meshes
+            // Method signature: Model()
             // Add(Mesh) - Adds a mesh to the model
+            // Method signature: void Add(Mesh mesh)
+            // Source: https://doc.stride3d.net/latest/en/manual/graphics/models/index.html
             var model = new Model();
             model.Add(mesh);
 

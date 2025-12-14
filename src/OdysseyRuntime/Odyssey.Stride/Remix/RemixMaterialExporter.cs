@@ -3,11 +3,11 @@ using System.Collections.Generic;
 using System.IO;
 using System.Numerics;
 using System.Text;
-using Odyssey.Stride.Enums;
-using Odyssey.Stride.Interfaces;
-using Odyssey.Stride.Materials;
+using Odyssey.MonoGame.Enums;
+using Odyssey.MonoGame.Interfaces;
+using Odyssey.MonoGame.Materials;
 
-namespace Odyssey.Stride.Remix
+namespace Odyssey.MonoGame.Remix
 {
     /// <summary>
     /// Exports materials in a format compatible with RTX Remix.

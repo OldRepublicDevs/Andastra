@@ -1,7 +1,7 @@
 using System;
 using System.Numerics;
 
-namespace Odyssey.Stride.Interfaces
+namespace Odyssey.MonoGame.Interfaces
 {
     /// <summary>
     /// Command list interface for recording rendering commands.

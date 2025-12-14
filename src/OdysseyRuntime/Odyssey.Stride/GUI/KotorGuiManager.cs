@@ -9,7 +9,7 @@ using CSharpKOTOR.Formats.GFF;
 using CSharpKOTOR.Formats.TPC;
 using SearchLocation = CSharpKOTOR.Installation.SearchLocation;
 
-namespace Odyssey.Stride.GUI
+namespace Odyssey.MonoGame.GUI
 {
     /// <summary>
     /// Manages loading and rendering of KOTOR GUI files.

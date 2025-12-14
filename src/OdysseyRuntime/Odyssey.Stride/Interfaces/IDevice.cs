@@ -1,8 +1,8 @@
 using System;
-using Odyssey.Stride.Enums;
-using Odyssey.Stride.Rendering;
+using Odyssey.MonoGame.Enums;
+using Odyssey.MonoGame.Rendering;
 
-namespace Odyssey.Stride.Interfaces
+namespace Odyssey.MonoGame.Interfaces
 {
     /// <summary>
     /// Graphics device abstraction following NVRHI-style patterns.

@@ -1,9 +1,9 @@
 using System;
 using System.Numerics;
-using Odyssey.Stride.Enums;
-using Odyssey.Stride.Interfaces;
+using Odyssey.MonoGame.Enums;
+using Odyssey.MonoGame.Interfaces;
 
-namespace Odyssey.Stride.Materials
+namespace Odyssey.MonoGame.Materials
 {
     /// <summary>
     /// Converts KOTOR's legacy Blinn-Phong materials to modern PBR workflow.

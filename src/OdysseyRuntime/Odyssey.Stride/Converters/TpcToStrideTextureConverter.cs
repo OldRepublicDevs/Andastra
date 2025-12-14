@@ -3,7 +3,7 @@ using Stride.Graphics;
 using CSharpKOTOR.Formats.TPC;
 using JetBrains.Annotations;
 
-namespace Odyssey.Stride.Converters
+namespace Odyssey.MonoGame.Converters
 {
     /// <summary>
     /// Converts CSharpKOTOR TPC texture data to Stride Graphics Texture.

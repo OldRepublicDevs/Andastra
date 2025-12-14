@@ -1,8 +1,8 @@
 using System;
 using System.Numerics;
-using Odyssey.Stride.Enums;
+using Odyssey.MonoGame.Enums;
 
-namespace Odyssey.Stride.Rendering
+namespace Odyssey.MonoGame.Rendering
 {
     /// <summary>
     /// Comprehensive render settings for the Odyssey engine.

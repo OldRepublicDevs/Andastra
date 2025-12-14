@@ -8,7 +8,7 @@ using Stride.UI.Events;
 using Stride.UI.Panels;
 using JetBrains.Annotations;
 
-namespace Odyssey.Stride.UI
+namespace Odyssey.MonoGame.UI
 {
     /// <summary>
     /// Pause menu with Resume and Exit options.

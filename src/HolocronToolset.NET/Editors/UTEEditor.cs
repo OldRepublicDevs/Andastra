@@ -91,7 +91,7 @@ namespace HolocronToolset.NET.Editors
             {
                 AvaloniaXamlLoader.Load(this);
                 xamlLoaded = true;
-                
+
                 // Try to find controls from XAML
                 _nameEdit = this.FindControl<LocalizedStringEdit>("nameEdit");
                 _nameEditBtn = this.FindControl<Button>("nameEditBtn");
@@ -618,7 +618,7 @@ namespace HolocronToolset.NET.Editors
                     var appearanceProp = itemType.GetProperty("Appearance");
                     var crProp = itemType.GetProperty("CR");
                     var singleSpawnProp = itemType.GetProperty("SingleSpawn");
-                    
+
                     if (resRefProp != null)
                     {
                         var resRefValue = resRefProp.GetValue(item);
@@ -654,7 +654,7 @@ namespace HolocronToolset.NET.Editors
                             creature.SingleSpawn = singleSpawn ? 1 : 0;
                         }
                     }
-                    
+
                     ute.Creatures.Add(creature);
                 }
             }
@@ -902,7 +902,7 @@ namespace HolocronToolset.NET.Editors
             {
                 currentList.Add(creatureRow);
             }
-            
+
             // Note: Creatures are stored in DataGrid ItemsSource, Build() will read from there
         }
 

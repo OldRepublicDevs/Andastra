@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
-using Odyssey.Stride.Enums;
-using Odyssey.Stride.Interfaces;
-using Odyssey.Stride.Rendering;
+using Odyssey.MonoGame.Enums;
+using Odyssey.MonoGame.Interfaces;
+using Odyssey.MonoGame.Rendering;
 
-namespace Odyssey.Stride.Backends
+namespace Odyssey.MonoGame.Backends
 {
     /// <summary>
     /// Vulkan graphics backend implementation.

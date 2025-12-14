@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Numerics;
-using Odyssey.Stride.Enums;
-using Odyssey.Stride.Interfaces;
+using Odyssey.MonoGame.Enums;
+using Odyssey.MonoGame.Interfaces;
 
-namespace Odyssey.Stride.Raytracing
+namespace Odyssey.MonoGame.Raytracing
 {
     /// <summary>
     /// Native hardware raytracing system using DXR/Vulkan RT.

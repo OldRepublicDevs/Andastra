@@ -13,7 +13,7 @@ using Myra.Graphics2D;
 using Myra;
 using Myra.Graphics2D.UI;
 
-namespace Odyssey.Stride.GUI
+namespace Odyssey.MonoGame.GUI
 {
     /// <summary>
     /// Myra UI-based menu renderer with actual text buttons.
@@ -145,8 +145,8 @@ namespace Odyssey.Stride.GUI
                     Text = "Exit"
                 }
             };
-            _exitButton.GridColumn.SetColumn(1);
-            _exitButton.GridRow.SetRow(6);
+            _exitButton.GridColumn = 1;
+            _exitButton.GridRow = 6;
             _exitButton.Click += (s, a) =>
             {
                 Console.WriteLine("[MyraMenuRenderer] Exit clicked");

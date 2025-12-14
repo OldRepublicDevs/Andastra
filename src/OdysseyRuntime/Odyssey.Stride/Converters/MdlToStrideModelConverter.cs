@@ -10,7 +10,7 @@ using Vector3 = Stride.Core.Mathematics.Vector3;
 using Quaternion = Stride.Core.Mathematics.Quaternion;
 using Buffer = Stride.Graphics.Buffer;
 
-namespace Odyssey.Stride.Converters
+namespace Odyssey.MonoGame.Converters
 {
     /// <summary>
     /// Converts CSharpKOTOR MDL model data to Stride Graphics Mesh/Model.
@@ -188,15 +188,19 @@ namespace Odyssey.Stride.Converters
 
         private void ConvertNode(MDLNode node, ConversionResult result, List<MeshData> parentList)
         {
+            // Create mesh data structure for node
+            // Based on Stride API: MeshData is a custom class, not a Stride API type
             var meshData = new MeshData
             {
                 Name = node.Name,
                 // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.Vector3.html
                 // Vector3(float x, float y, float z) constructor creates node position
+                // Method signature: Vector3(float x, float y, float z)
                 // Source: https://doc.stride3d.net/latest/en/manual/mathematics/index.html
                 Position = new Vector3(node.Position.X, node.Position.Y, node.Position.Z),
                 // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.Quaternion.html
                 // Quaternion(float x, float y, float z, float w) constructor creates node rotation
+                // Method signature: Quaternion(float x, float y, float z, float w)
                 // X, Y, Z are imaginary parts, W is real part
                 // Source: https://doc.stride3d.net/latest/en/manual/mathematics/index.html
                 Orientation = new Quaternion(
@@ -215,12 +219,20 @@ namespace Odyssey.Stride.Converters
                 meshData.HasLightmap = node.Mesh.Lightmapped > 0.5f;
                 meshData.Render = node.Mesh.Render != 0;
 
+                // Set diffuse color from mesh data
+                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.Color4.html
+                // Color4(float r, float g, float b, float a) constructor creates a color from RGBA float values (0-1)
+                // Method signature: Color4(float r, float g, float b, float a)
+                // Source: https://doc.stride3d.net/latest/en/manual/graphics/colors.html
                 meshData.DiffuseColor = new Color4(
                     node.Mesh.Diffuse.X,
                     node.Mesh.Diffuse.Y,
                     node.Mesh.Diffuse.Z,
                     1f);
 
+                // Set ambient color from mesh data
+                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.Color4.html
+                // Color4(float r, float g, float b, float a) - same constructor as above
                 meshData.AmbientColor = new Color4(
                     node.Mesh.Ambient.X,
                     node.Mesh.Ambient.Y,
@@ -334,9 +346,13 @@ namespace Odyssey.Stride.Converters
 
             // Create mesh draw data structure
             // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Rendering.MeshDraw.html
+            // MeshDraw() constructor creates a new mesh draw data structure
             // MeshDraw - Contains all data needed to render a mesh (vertices, indices, topology)
+            // Method signature: MeshDraw()
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Graphics.PrimitiveType.html
             // PrimitiveType.TriangleList: Vertices form triangles (3 vertices per triangle)
             // DrawCount: Number of indices to draw
+            // Source: https://doc.stride3d.net/latest/en/manual/graphics/low-level-api/index.html
             var meshDraw = new MeshDraw
             {
                 PrimitiveType = PrimitiveType.TriangleList,

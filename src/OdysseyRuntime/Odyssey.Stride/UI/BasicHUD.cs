@@ -7,7 +7,7 @@ using Stride.UI.Controls;
 using Stride.UI.Panels;
 using JetBrains.Annotations;
 
-namespace Odyssey.Stride.UI
+namespace Odyssey.MonoGame.UI
 {
     /// <summary>
     /// Basic HUD showing player health, force points, and debug info.

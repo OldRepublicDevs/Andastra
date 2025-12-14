@@ -1,9 +1,9 @@
 using System;
 using System.Numerics;
-using Odyssey.Stride.Enums;
-using Odyssey.Stride.Rendering;
+using Odyssey.MonoGame.Enums;
+using Odyssey.MonoGame.Rendering;
 
-namespace Odyssey.Stride.Interfaces
+namespace Odyssey.MonoGame.Interfaces
 {
     /// <summary>
     /// Graphics backend capability information.

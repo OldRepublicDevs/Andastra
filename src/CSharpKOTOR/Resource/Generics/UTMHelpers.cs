@@ -76,7 +76,7 @@ namespace CSharpKOTOR.Resource.Generics
             // Matching PyKotor implementation: root.set_uint8("BuySellFlag", utm.can_buy + utm.can_sell * 2)
             int buySellFlag = (utm.CanBuy ? 1 : 0) + (utm.CanSell ? 2 : 0);
             root.SetUInt8("BuySellFlag", (byte)buySellFlag);
-            
+
             // Set deprecated ID field if useDeprecated is true
             // Matching PyKotor implementation: if use_deprecated: root.set_uint8("ID", utm.id)
             if (useDeprecated)
