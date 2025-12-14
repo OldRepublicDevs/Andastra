@@ -10,6 +10,7 @@ using Odyssey.Scripting.Interfaces;
 using Odyssey.Scripting.VM;
 using Odyssey.Kotor.Dialogue;
 using Odyssey.Kotor.Components;
+using Odyssey.Kotor.Combat;
 using Odyssey.Kotor.Loading;
 using Odyssey.Kotor.Systems;
 using CSharpKOTOR.Formats.TLK;
@@ -37,6 +38,9 @@ namespace Odyssey.Kotor.Game
         private readonly Loading.ModuleLoader _moduleLoader;
         private readonly DialogueManager _dialogueManager;
         private readonly TriggerSystem _triggerSystem;
+        private readonly FactionManager _factionManager;
+        private readonly CombatManager _combatManager;
+        private readonly PerceptionManager _perceptionManager;
 
         private string _currentModuleName;
         private RuntimeModule _currentRuntimeModule;
@@ -94,6 +98,30 @@ namespace Odyssey.Kotor.Game
             get { return _dialogueManager; }
         }
 
+        /// <summary>
+        /// Gets the combat manager.
+        /// </summary>
+        public CombatManager CombatManager
+        {
+            get { return _combatManager; }
+        }
+
+        /// <summary>
+        /// Gets the perception manager.
+        /// </summary>
+        public PerceptionManager PerceptionManager
+        {
+            get { return _perceptionManager; }
+        }
+
+        /// <summary>
+        /// Gets the faction manager.
+        /// </summary>
+        public FactionManager FactionManager
+        {
+            get { return _factionManager; }
+        }
+
         public GameSession(object settings, World world, NcsVm vm, IScriptGlobals globals)
         {
             _settings = GameSessionSettings.FromGameSettings(settings);
@@ -132,6 +160,15 @@ namespace Odyssey.Kotor.Game
 
             // Create trigger system
             _triggerSystem = new TriggerSystem(world, FireScriptEvent);
+
+            // Create faction manager
+            _factionManager = new FactionManager(world);
+
+            // Create combat manager
+            _combatManager = new CombatManager(world, _factionManager);
+
+            // Create perception manager
+            _perceptionManager = new PerceptionManager(world);
 
             // Load talk tables
             LoadTalkTables();
@@ -458,11 +495,20 @@ namespace Odyssey.Kotor.Game
                 _triggerSystem.Update();
             }
 
-            // Check perception
-            // TODO: Perception system
+            // Update perception system
+            if (_perceptionManager != null)
+            {
+                _perceptionManager.Update(deltaTime);
+            }
 
-            // Process dialogue
-            // TODO: Dialogue state machine
+            // Update combat system
+            if (_combatManager != null)
+            {
+                _combatManager.Update(deltaTime);
+            }
+
+            // Update world (processes delay scheduler)
+            _world.Update(deltaTime);
         }
 
         /// <summary>
