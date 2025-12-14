@@ -547,9 +547,7 @@ namespace CSharpKOTOR.Tools
         // Original: def _get_gff_field_to_2da_mapping():
         private Dictionary<string, ResourceIdentifier> GetGffFieldTo2daMapping()
         {
-            // This should return the mapping from TwoDARegistry
-            // For now, return empty dict - will be implemented when TwoDARegistry.gff_field_mapping() is available
-            return new Dictionary<string, ResourceIdentifier>();
+            return Extract.TwoDARegistry.GffFieldMapping();
         }
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/reference_cache.py:594-628
