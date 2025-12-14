@@ -35,7 +35,6 @@ bld/
 [Ll]ogs/
 [Pp]ackages/
 TestResults/
-
 # Visual Studio 2015 cache/options directory
 .vs/
 
@@ -45,6 +44,7 @@ TestResults/
 
 # Visual Studio Code
 .vscode/
+
 # Exception: commit launch.json and tasks.json for team debugging configuration
 !.vscode/launch.json
 !.vscode/tasks.json
@@ -70,11 +70,10 @@ ScaffoldingReadMe.txt
 
 # NuGet Packages
 *.nupkg
+
 # NuGet Symbol Packages
 *.snupkg
-
 # dotenv environment variables file
-.env
 
 # Others
 ~$*
@@ -97,7 +96,6 @@ nunit-*.xml
 *.log
 *.vspscc
 *.vssscc
-
 .history/
 dist/osx-x64.zip
 .gitignore
@@ -114,13 +112,7 @@ keys/
 *_private_key.txt
 
 # Build outputs
-dist/
-build/
-*.zip
 *.7z
-
-# Logs
-*.log
 publish_release_*.log
 
 # Appcast files (generated)
@@ -139,4 +131,12 @@ csharpkotor_formats.txt
 pykotor_all_modules.txt
 pykotor_resource_formats.txt
 test-full-output.txt
-test-output.txt
+csharpkotor_all_files.txt
+csharpkotor_files_list.txt
+csharpkotor_files.txt
+pykotor_all_files.txt
+pykotor_files_list.txt
+pykotor_files.txt
+pykotor_modules_to_port.txt
+test-run.txt
+test-run2.txt
