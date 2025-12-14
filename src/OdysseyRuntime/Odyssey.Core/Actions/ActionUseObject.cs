@@ -91,8 +91,16 @@ namespace Odyssey.Core.Actions
                 IScriptHooksComponent scriptHooks = target.GetComponent<IScriptHooksComponent>();
                 if (scriptHooks != null)
                 {
-                    // TODO: Execute script via script system
-                    // For now, just mark as used
+                    string scriptResRef = scriptHooks.GetScript(ScriptEvent.OnUsed);
+                    if (!string.IsNullOrEmpty(scriptResRef))
+                    {
+                        // Fire script event via world event bus
+                        IEventBus eventBus = actor.World.EventBus;
+                        if (eventBus != null)
+                        {
+                            eventBus.FireScriptEvent(target, ScriptEvent.OnUsed, actor);
+                        }
+                    }
                 }
 
                 // Handle door/placeable specific logic
