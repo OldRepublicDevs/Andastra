@@ -35,6 +35,13 @@
 .PARAMETER SingleFile
     Whether to publish as single-file executables. Defaults to $false
 
+.PARAMETER Trimmed
+    Whether to trim unused code (reduces size but may break reflection-heavy code).
+    Defaults to $false
+
+.PARAMETER ReadyToRun
+    Whether to enable ReadyToRun compilation (faster startup). Defaults to $true
+
 .PARAMETER OutputPath
     Base output path. Defaults to "dist"
 
@@ -55,6 +62,12 @@
 
 .PARAMETER SkipPackage
     Skip the packaging step (build only).
+
+.PARAMETER CreateChecksums
+    Whether to create checksum files (SHA256) for archives. Defaults to $false
+
+.PARAMETER Verbose
+    Show verbose output during build and packaging.
 
 .EXAMPLE
     .\Distribute-StrideGame.ps1 -GameName "Odyssey" -Version "1.0.0"
@@ -77,6 +90,8 @@ param(
     [string[]]$Architectures = @("x64"),
     [bool]$SelfContained = $true,
     [bool]$SingleFile = $false,
+    [bool]$Trimmed = $false,
+    [bool]$ReadyToRun = $true,
     [string]$OutputPath = "dist",
     [ValidateSet("zip", "tar", "tar.gz")]
     [string]$ArchiveFormat = "zip",
@@ -84,7 +99,9 @@ param(
     [bool]$IncludeLicenses = $true,
     [switch]$Clean,
     [switch]$SkipBuild,
-    [switch]$SkipPackage
+    [switch]$SkipPackage,
+    [bool]$CreateChecksums = $false,
+    [switch]$Verbose
 )
 
 $ErrorActionPreference = "Stop"
@@ -117,9 +134,15 @@ if (-not $SkipBuild) {
         Architectures = $Architectures
         SelfContained = $SelfContained
         SingleFile = $SingleFile
+        Trimmed = $Trimmed
+        ReadyToRun = $ReadyToRun
         OutputPath = $OutputPath
         Clean = $Clean.IsPresent
         Restore = $true
+    }
+    
+    if ($Verbose) {
+        $BuildParams["Verbose"] = $true
     }
     
     & (Join-Path $ScriptDir "Build-StrideGame.ps1") @BuildParams
@@ -151,6 +174,11 @@ if (-not $SkipPackage) {
         IncludeDocumentation = $IncludeDocumentation
         IncludeLicenses = $IncludeLicenses
         KeepDebugSymbols = $false
+        CreateChecksums = $CreateChecksums
+    }
+    
+    if ($Verbose) {
+        $PackageParams["Verbose"] = $true
     }
     
     & (Join-Path $ScriptDir "Package-StrideGame.ps1") @PackageParams

@@ -2,12 +2,17 @@
 
 <#
 .SYNOPSIS
-    Builds a Stride game project for distribution.
+    Builds a Stride game project for distribution following industry best practices.
 
 .DESCRIPTION
     Builds the Odyssey Game project in Release mode for the specified platform(s).
-    Supports Windows, Linux, and macOS with x64 and x86 architectures.
-    Follows Stride game engine best practices for release builds.
+    Supports Windows, Linux, and macOS with x64, x86, and arm64 architectures.
+    Follows Stride game engine and .NET publishing best practices:
+    - Asset compilation via Stride build system
+    - Self-contained deployments with .NET runtime
+    - ReadyToRun compilation for faster startup
+    - Optional trimming for smaller deployments
+    - Proper folder structure validation
 
 .PARAMETER ProjectPath
     Path to the game project (.csproj file). Defaults to src/OdysseyRuntime/Odyssey.Game/Odyssey.Game.csproj
@@ -29,7 +34,16 @@
 
 .PARAMETER SingleFile
     Whether to publish as a single-file executable.
+    Note: Single-file is a self-extracting archive and may slow startup.
     Defaults to $false
+
+.PARAMETER Trimmed
+    Whether to trim unused code (reduces size but may break reflection-heavy code).
+    Defaults to $false
+
+.PARAMETER ReadyToRun
+    Whether to enable ReadyToRun compilation (faster startup, larger size).
+    Defaults to $true
 
 .PARAMETER OutputPath
     Base output path for builds. Defaults to "dist"
@@ -40,17 +54,30 @@
 .PARAMETER Restore
     Restore NuGet packages before building.
 
+.PARAMETER NoBuild
+    Skip the build step (only restore packages).
+
+.PARAMETER Verbose
+    Show verbose build output.
+
+.PARAMETER VerifyAssets
+    Verify that Stride assets are properly compiled after build.
+    Defaults to $true
+
 .EXAMPLE
     .\Build-StrideGame.ps1
 
 .EXAMPLE
-    .\Build-StrideGame.ps1 -Platforms "Windows" -Architectures "x64,x86"
+    .\Build-StrideGame.ps1 -Platforms "Windows" -Architectures "x64,x86" -Trimmed
 
 .EXAMPLE
-    .\Build-StrideGame.ps1 -Platforms "Linux" -SelfContained $false
+    .\Build-StrideGame.ps1 -Platforms "Linux" -SelfContained $false -SingleFile
+
+.EXAMPLE
+    .\Build-StrideGame.ps1 -Clean -Restore -Verbose
 #>
 
-[CmdletBinding()]
+[CmdletBinding(SupportsShouldProcess = $true)]
 param(
     [string]$ProjectPath = "src/OdysseyRuntime/Odyssey.Game/Odyssey.Game.csproj",
     [ValidateSet("Debug", "Release")]
@@ -59,19 +86,20 @@ param(
     [string[]]$Architectures = @("x64"),
     [bool]$SelfContained = $true,
     [bool]$SingleFile = $false,
+    [bool]$Trimmed = $false,
+    [bool]$ReadyToRun = $true,
     [string]$OutputPath = "dist",
     [switch]$Clean,
-    [switch]$Restore
+    [switch]$Restore,
+    [switch]$NoBuild,
+    [switch]$Verbose,
+    [bool]$VerifyAssets = $true
 )
 
 $ErrorActionPreference = "Stop"
 
 # Cross-platform path handling
-if ($IsWindows -or $env:OS -eq "Windows_NT") {
-    $IsWindowsPlatform = $true
-} else {
-    $IsWindowsPlatform = $false
-}
+$IsWindowsPlatform = ($IsWindows -or $env:OS -eq "Windows_NT")
 
 function Normalize-Path {
     param([string]$Path)
@@ -82,14 +110,39 @@ function Normalize-Path {
     }
 }
 
+function Test-Command {
+    param([string]$Command)
+    $Cmd = Get-Command $Command -ErrorAction SilentlyContinue
+    return $null -ne $Cmd
+}
+
+function Write-VerboseOutput {
+    param([string]$Message)
+    if ($Verbose) {
+        Write-Host $Message -ForegroundColor Gray
+    }
+}
+
 $ProjectPath = Normalize-Path $ProjectPath
 $OutputPath = Normalize-Path $OutputPath
+
+# Validate .NET SDK
+Write-Host "Checking .NET SDK..." -ForegroundColor Cyan
+if (-not (Test-Command "dotnet")) {
+    Write-Error ".NET SDK not found. Please install .NET SDK."
+    exit 1
+}
+
+$DotNetVersion = dotnet --version
+Write-Host "Using .NET SDK: $DotNetVersion" -ForegroundColor Green
 
 # Validate project exists
 if (-not (Test-Path $ProjectPath)) {
     Write-Error "Project file not found: $ProjectPath"
     exit 1
 }
+
+$ProjectPath = Resolve-Path $ProjectPath
 
 # Platform and architecture mappings
 $PlatformRIDs = @{
@@ -145,19 +198,43 @@ if ($BuildTargets.Count -eq 0) {
     exit 1
 }
 
-Write-Host "Building Stride Game for $($BuildTargets.Count) target(s)..." -ForegroundColor Cyan
+Write-Host "`n========================================" -ForegroundColor Cyan
+Write-Host "Stride Game Build Configuration" -ForegroundColor Cyan
+Write-Host "========================================" -ForegroundColor Cyan
+Write-Host "Project: $ProjectPath" -ForegroundColor White
+Write-Host "Configuration: $Configuration" -ForegroundColor White
+Write-Host "Targets: $($BuildTargets.Count)" -ForegroundColor White
+Write-Host "Self-Contained: $SelfContained" -ForegroundColor White
+Write-Host "Single-File: $SingleFile" -ForegroundColor White
+Write-Host "Trimmed: $Trimmed" -ForegroundColor White
+Write-Host "ReadyToRun: $ReadyToRun" -ForegroundColor White
+Write-Host "========================================`n" -ForegroundColor Cyan
 
-# Restore packages if requested
-if ($Restore) {
+# Restore packages
+if ($Restore -or -not $NoBuild) {
     Write-Host "Restoring NuGet packages..." -ForegroundColor Yellow
-    dotnet restore $ProjectPath
+    $RestoreArgs = @("restore", $ProjectPath)
+    if ($Verbose) {
+        $RestoreArgs += "--verbosity", "detailed"
+    }
+    
+    & dotnet $RestoreArgs
     if ($LASTEXITCODE -ne 0) {
         Write-Error "Package restore failed."
         exit 1
     }
+    Write-Host "Package restore completed." -ForegroundColor Green
+}
+
+if ($NoBuild) {
+    Write-Host "Skipping build (NoBuild specified)." -ForegroundColor Yellow
+    exit 0
 }
 
 # Build each target
+$FailedBuilds = @()
+$SuccessfulBuilds = @()
+
 foreach ($Target in $BuildTargets) {
     $RID = $Target.RID
     $Platform = $Target.Platform
@@ -166,12 +243,22 @@ foreach ($Target in $BuildTargets) {
     $PublishDir = Join-Path $OutputPath "$Platform-$Arch"
     $PublishDir = Normalize-Path $PublishDir
     
-    Write-Host "`nBuilding for $Platform ($Arch) - RID: $RID" -ForegroundColor Green
+    Write-Host "`n" + ("=" * 50) -ForegroundColor Cyan
+    Write-Host "Building for $Platform ($Arch) - RID: $RID" -ForegroundColor Green
+    Write-Host ("=" * 50) -ForegroundColor Cyan
     
     # Clean if requested
     if ($Clean -and (Test-Path $PublishDir)) {
-        Write-Host "Cleaning output directory: $PublishDir" -ForegroundColor Yellow
-        Remove-Item -Path $PublishDir -Recurse -Force -ErrorAction SilentlyContinue
+        if ($PSCmdlet.ShouldProcess($PublishDir, "Clean output directory")) {
+            Write-Host "Cleaning output directory: $PublishDir" -ForegroundColor Yellow
+            Remove-Item -Path $PublishDir -Recurse -Force -ErrorAction SilentlyContinue
+        }
+    }
+    
+    # Ensure output directory exists
+    $OutputParent = Split-Path -Parent $PublishDir -ErrorAction SilentlyContinue
+    if ($OutputParent -and -not (Test-Path $OutputParent)) {
+        New-Item -Path $OutputParent -ItemType Directory -Force | Out-Null
     }
     
     # Build publish arguments
@@ -182,25 +269,126 @@ foreach ($Target in $BuildTargets) {
         "--runtime", $RID
         "--output", $PublishDir
         "-p:SelfContained=$SelfContained"
-        "-p:PublishReadyToRun=true"
     )
+    
+    if ($ReadyToRun) {
+        $PublishArgs += "-p:PublishReadyToRun=true"
+    } else {
+        $PublishArgs += "-p:PublishReadyToRun=false"
+    }
     
     if ($SingleFile) {
         $PublishArgs += "-p:PublishSingleFile=true"
+        # Include all content for self-extract (required for assets)
+        $PublishArgs += "-p:IncludeAllContentForSelfExtract=true"
+    }
+    
+    if ($Trimmed) {
+        $PublishArgs += "-p:PublishTrimmed=true"
+        # Enable trimming warnings
+        $PublishArgs += "-p:TrimmerDefaultAction=link"
+    }
+    
+    if ($Verbose) {
+        $PublishArgs += "--verbosity", "detailed"
+    } else {
+        $PublishArgs += "--verbosity", "minimal"
     }
     
     # Execute publish
-    Write-Host "Executing: dotnet $($PublishArgs -join ' ')" -ForegroundColor Gray
+    Write-VerboseOutput "Executing: dotnet $($PublishArgs -join ' ')"
+    
+    $StartTime = Get-Date
     & dotnet $PublishArgs
+    $BuildDuration = (Get-Date) - $StartTime
     
     if ($LASTEXITCODE -ne 0) {
-        Write-Error "Build failed for $Platform ($Arch)"
-        exit 1
+        Write-Error "Build failed for $Platform ($Arch) after $($BuildDuration.TotalSeconds.ToString('F2')) seconds"
+        $FailedBuilds += "$Platform-$Arch"
+        continue
     }
     
-    Write-Host "Build completed: $PublishDir" -ForegroundColor Green
+    Write-Host "Build completed successfully in $($BuildDuration.TotalSeconds.ToString('F2')) seconds" -ForegroundColor Green
+    
+    # Verify build output
+    Write-Host "Verifying build output..." -ForegroundColor Yellow
+    
+    $HasExecutable = $false
+    if ($IsWindowsPlatform -or $Platform -eq "Windows") {
+        $HasExecutable = (Get-ChildItem -Path $PublishDir -Filter "*.exe" -Recurse -ErrorAction SilentlyContinue).Count -gt 0
+    } else {
+        # Check for executable files (no extension or specific patterns)
+        $Files = Get-ChildItem -Path $PublishDir -File -Recurse -ErrorAction SilentlyContinue
+        foreach ($File in $Files) {
+            if ($File.Extension -eq "" -or $File.Name -like "*Odyssey*") {
+                $HasExecutable = $true
+                break
+            }
+        }
+    }
+    
+    if (-not $HasExecutable) {
+        Write-Warning "No executable found in build output for $Platform ($Arch)"
+    } else {
+        Write-Host "Executable found." -ForegroundColor Green
+    }
+    
+    # Verify Stride assets if requested
+    if ($VerifyAssets) {
+        Write-Host "Verifying Stride assets..." -ForegroundColor Yellow
+        
+        # Check for Data folder (Stride asset output)
+        $DataFolders = @(
+            Join-Path $PublishDir "Data"
+            Join-Path $PublishDir "data"
+            Join-Path $PublishDir "Assets"
+        )
+        
+        $FoundAssets = $false
+        foreach ($DataFolder in $DataFolders) {
+            if (Test-Path $DataFolder) {
+                $AssetFiles = Get-ChildItem -Path $DataFolder -Recurse -ErrorAction SilentlyContinue
+                if ($AssetFiles.Count -gt 0) {
+                    Write-Host "Found $($AssetFiles.Count) asset file(s) in $(Split-Path -Leaf $DataFolder)" -ForegroundColor Green
+                    $FoundAssets = $true
+                    break
+                }
+            }
+        }
+        
+        if (-not $FoundAssets) {
+            Write-Warning "No asset files found in build output. Assets may not be compiled."
+            Write-Warning "This is normal if your project doesn't use Stride assets, or if assets are embedded."
+        }
+    }
+    
+    $SuccessfulBuilds += @{
+        Platform = $Platform
+        Architecture = $Arch
+        Path = $PublishDir
+        Duration = $BuildDuration
+    }
+}
+
+Write-Host "`n" + ("=" * 50) -ForegroundColor Cyan
+Write-Host "Build Summary" -ForegroundColor Cyan
+Write-Host ("=" * 50) -ForegroundColor Cyan
+
+Write-Host "`nSuccessful builds: $($SuccessfulBuilds.Count)" -ForegroundColor Green
+foreach ($Build in $SuccessfulBuilds) {
+    Write-Host "  - $($Build.Platform)-$($Build.Architecture): $($Build.Path) ($($Build.Duration.TotalSeconds.ToString('F2'))s)" -ForegroundColor Gray
+}
+
+if ($FailedBuilds.Count -gt 0) {
+    Write-Host "`nFailed builds: $($FailedBuilds.Count)" -ForegroundColor Red
+    foreach ($Build in $FailedBuilds) {
+        Write-Host "  - $Build" -ForegroundColor Red
+    }
+    Write-Host ""
+    Write-Error "Some builds failed. Check the output above for details."
+    exit 1
 }
 
 Write-Host "`nAll builds completed successfully!" -ForegroundColor Cyan
 Write-Host "Output directory: $OutputPath" -ForegroundColor Cyan
-
+Write-Host ""

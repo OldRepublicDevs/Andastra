@@ -120,71 +120,107 @@ Include version in:
 
 ### Build-StrideGame.ps1
 
-Builds the game project for specified platforms and architectures.
+Builds the game project for specified platforms and architectures with comprehensive validation.
 
 **Usage:**
 ```powershell
 .\Build-StrideGame.ps1 [-ProjectPath <path>] [-Configuration Release] `
-    [-Platforms Windows,Linux,macOS] [-Architectures x64,x86] `
-    [-SelfContained] [-SingleFile] [-OutputPath dist]
+    [-Platforms Windows,Linux,macOS] [-Architectures x64,x86,arm64] `
+    [-SelfContained] [-SingleFile] [-Trimmed] [-ReadyToRun] `
+    [-OutputPath dist] [-Clean] [-Restore] [-Verbose]
 ```
+
+**Key Features:**
+- Asset compilation verification
+- Build output validation
+- Cross-platform support (Windows/Linux/macOS)
+- ReadyToRun compilation for faster startup
+- Optional code trimming for smaller deployments
+- Comprehensive error reporting
 
 **Examples:**
 ```powershell
 # Build for all platforms (x64 only)
 .\Build-StrideGame.ps1
 
-# Build for Windows only (x64 and x86)
-.\Build-StrideGame.ps1 -Platforms Windows -Architectures x64,x86
+# Build for Windows only (x64 and x86) with trimming
+.\Build-StrideGame.ps1 -Platforms Windows -Architectures x64,x86 -Trimmed
 
 # Build self-contained single-file executables
 .\Build-StrideGame.ps1 -SingleFile -SelfContained
 
-# Clean build (removes old artifacts first)
-.\Build-StrideGame.ps1 -Clean
+# Clean build with verbose output
+.\Build-StrideGame.ps1 -Clean -Verbose
+
+# Framework-dependent build (requires .NET on target machine)
+.\Build-StrideGame.ps1 -SelfContained $false
 ```
 
 ### Package-StrideGame.ps1
 
-Cleans up build artifacts and creates distribution packages.
+Cleans up build artifacts and creates distribution packages with comprehensive validation.
 
 **Usage:**
 ```powershell
 .\Package-StrideGame.ps1 [-BuildPath dist] [-GameName Odyssey] `
-    [-Version 1.0.0] [-CreateArchive] [-ArchiveFormat zip] `
-    [-IncludeDocumentation] [-IncludeLicenses]
+    [-Version 1.0.0] [-CreateArchive] [-ArchiveFormat zip|tar|tar.gz] `
+    [-ArchiveCompression Optimal|Fastest|NoCompression] `
+    [-IncludeDocumentation] [-IncludeLicenses] [-CreateChecksums] `
+    [-ValidateStructure] [-KeepDebugSymbols] [-Verbose]
 ```
+
+**Key Features:**
+- Automatic debug file cleanup (.pdb, .xml, vshost files)
+- Folder structure validation (Stride best practices)
+- Cross-platform archive creation (ZIP/TAR/TAR.GZ)
+- Checksum generation (SHA256) for integrity verification
+- Size optimization reporting
+- Comprehensive documentation inclusion
 
 **Examples:**
 ```powershell
 # Package with default settings
 .\Package-StrideGame.ps1 -GameName "Odyssey" -Version "1.0.0"
 
-# Package without creating archives
-.\Package-StrideGame.ps1 -CreateArchive $false
+# Package with checksums and verbose output
+.\Package-StrideGame.ps1 -CreateChecksums -Verbose
 
-# Package with TAR.GZ archives (Linux/macOS)
+# Package with TAR.GZ archives (Linux/macOS standard)
 .\Package-StrideGame.ps1 -ArchiveFormat tar.gz
 
-# Keep debug symbols (for testing)
-.\Package-StrideGame.ps1 -KeepDebugSymbols $true
+# Package without validation (faster, less safe)
+.\Package-StrideGame.ps1 -ValidateStructure $false
+
+# Package with fastest compression
+.\Package-StrideGame.ps1 -ArchiveCompression Fastest
 ```
 
 ### Distribute-StrideGame.ps1
 
-Complete distribution pipeline: builds and packages in one command.
+Complete distribution pipeline: builds and packages in one command with all options.
 
 **Usage:**
 ```powershell
 .\Distribute-StrideGame.ps1 [-ProjectPath <path>] [-GameName Odyssey] `
     [-Version 1.0.0] [-Platforms All] [-Architectures x64] `
-    [-SelfContained] [-ArchiveFormat zip] [-Clean]
+    [-SelfContained] [-SingleFile] [-Trimmed] [-ReadyToRun] `
+    [-ArchiveFormat zip] [-CreateChecksums] [-Clean] [-Verbose] `
+    [-SkipBuild] [-SkipPackage]
 ```
+
+**Key Features:**
+- Orchestrates complete build + package pipeline
+- Passes through all build and packaging options
+- Comprehensive error handling and reporting
+- Progress tracking and summaries
 
 **Examples:**
 ```powershell
 # Complete distribution for all platforms
 .\Distribute-StrideGame.ps1 -GameName "Odyssey" -Version "1.0.0"
+
+# Build and package with trimming and checksums
+.\Distribute-StrideGame.ps1 -Trimmed -CreateChecksums -Verbose
 
 # Build and package for specific platforms only
 .\Distribute-StrideGame.ps1 -Platforms Windows,Linux -Architectures x64
@@ -194,6 +230,9 @@ Complete distribution pipeline: builds and packages in one command.
 
 # Skip packaging step (build only)
 .\Distribute-StrideGame.ps1 -SkipPackage
+
+# Framework-dependent with single-file deployment
+.\Distribute-StrideGame.ps1 -SelfContained $false -SingleFile
 ```
 
 ### Add-StrideGameDocumentation.ps1
@@ -268,6 +307,44 @@ The scripts automatically detect the platform and use appropriate commands:
 - Archive creation tools (built-in .NET vs system commands)
 - File permissions handling
 
+## Advanced Options
+
+### Code Trimming
+
+The `-Trimmed` option removes unused code to reduce deployment size:
+```powershell
+.\Build-StrideGame.ps1 -Trimmed
+```
+
+**Warning:** Trimming can break code that uses reflection. Test thoroughly before shipping trimmed builds.
+
+### ReadyToRun Compilation
+
+Enabled by default, ReadyToRun pre-compiles code for faster startup:
+```powershell
+.\Build-StrideGame.ps1 -ReadyToRun $true  # Default
+```
+
+Disable only if you need smaller builds or encounter compatibility issues.
+
+### Single-File Deployment
+
+Single-file creates a self-extracting archive:
+```powershell
+.\Build-StrideGame.ps1 -SingleFile
+```
+
+**Note:** Single-file apps may have slower startup and require temp space extraction.
+
+### Checksums
+
+Generate SHA256 checksums for archive integrity:
+```powershell
+.\Package-StrideGame.ps1 -CreateChecksums
+```
+
+Creates `.sha256` files alongside archives for verification.
+
 ## Distribution Checklist
 
 Before distributing your game, verify:
@@ -276,12 +353,15 @@ Before distributing your game, verify:
 - [ ] Debug files (.pdb, .xml) are removed
 - [ ] vshost files are removed
 - [ ] Unnecessary folders are cleaned up
+- [ ] Stride assets are properly compiled (Data folder present)
 - [ ] Documentation folder is included
 - [ ] License file is included
 - [ ] README.txt is present with system requirements
 - [ ] Version is consistent across all files
 - [ ] Archives are properly named with version
+- [ ] Checksums are generated (if using -CreateChecksums)
 - [ ] Archives can be extracted and run on target platforms
+- [ ] Builds tested on target platforms before distribution
 
 ## References
 
