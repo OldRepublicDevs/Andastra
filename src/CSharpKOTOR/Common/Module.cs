@@ -878,20 +878,234 @@ namespace CSharpKOTOR.Common
             return modId != null ? Resource(modId.ToString(), ResourceType.VIS) : null;
         }
 
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:1225-1245
+        // Original: def items(self) -> list[ModuleResource[UTI]]:
+        /// <summary>
+        /// Returns a list of UTI resources for this module.
+        /// </summary>
+        /// <remarks>
+        /// NOTE: Python implementation has a bug - it checks for ResourceType.UTD instead of ResourceType.UTI.
+        /// Matching Python exactly as per 1:1 porting requirements.
+        /// </remarks>
+        public List<ModuleResource> Items()
+        {
+            return _resources.Values.Where(resource => resource.GetResType() == ResourceType.UTD).ToList();
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:1247-1271
+        // Original: def encounter(self, resname: str) -> ModuleResource[UTE] | None:
+        /// <summary>
+        /// Find UTE resource by the specified resname.
+        /// </summary>
+        [CanBeNull]
+        public ModuleResource Encounter(string resname)
+        {
+            string lowerResname = resname.ToLowerInvariant();
+            return _resources.Values.FirstOrDefault(resource =>
+                resource.GetResType() == ResourceType.UTE &&
+                resource.GetResName().ToLowerInvariant() == lowerResname);
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:1273-1293
+        // Original: def encounters(self) -> list[ModuleResource[UTE]]:
+        /// <summary>
+        /// Returns a list of UTE resources for this module.
+        /// </summary>
+        public List<ModuleResource> Encounters()
+        {
+            return _resources.Values.Where(resource => resource.GetResType() == ResourceType.UTE).ToList();
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:1295-1317
+        // Original: def store(self, resname: str) -> ModuleResource[UTM] | None:
+        /// <summary>
+        /// Looks up a material (UTM) resource by the specified resname from this module and returns the resource data.
+        /// </summary>
+        [CanBeNull]
+        public ModuleResource Store(string resname)
+        {
+            string lowerResname = resname.ToLowerInvariant();
+            return _resources.Values.FirstOrDefault(resource =>
+                resource.GetResType() == ResourceType.UTM &&
+                resource.GetResName().ToLowerInvariant() == lowerResname);
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:1319-1323
+        // Original: def stores(self) -> list[ModuleResource[UTM]]:
+        /// <summary>
+        /// Returns a list of material (UTM) resources for this module.
+        /// </summary>
+        public List<ModuleResource> Stores()
+        {
+            return _resources.Values.Where(resource => resource.GetResType() == ResourceType.UTM).ToList();
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:1325-1350
+        // Original: def trigger(self, resname: str) -> ModuleResource[UTT] | None:
+        /// <summary>
+        /// Returns a trigger (UTT) resource by the specified resname if it exists.
+        /// </summary>
+        [CanBeNull]
+        public ModuleResource Trigger(string resname)
+        {
+            string lowerResname = resname.ToLowerInvariant();
+            return _resources.Values.FirstOrDefault(resource =>
+                resource.GetResType() == ResourceType.UTT &&
+                resource.GetResName().ToLowerInvariant() == lowerResname);
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:1352-1372
+        // Original: def triggers(self) -> list[ModuleResource[UTT]]:
+        /// <summary>
+        /// Returns a list of UTT resources for this module.
+        /// </summary>
+        public List<ModuleResource> Triggers()
+        {
+            return _resources.Values.Where(resource => resource.GetResType() == ResourceType.UTT).ToList();
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:1374-1399
+        // Original: def waypoint(self, resname: str) -> ModuleResource[UTW] | None:
+        /// <summary>
+        /// Returns the UTW resource with the given name if it exists.
+        /// </summary>
+        [CanBeNull]
+        public ModuleResource Waypoint(string resname)
+        {
+            string lowerResname = resname.ToLowerInvariant();
+            return _resources.Values.FirstOrDefault(resource =>
+                resource.GetResType() == ResourceType.UTW &&
+                resource.GetResName().ToLowerInvariant() == lowerResname);
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:1401-1417
+        // Original: def waypoints(self) -> list[ModuleResource[UTW]]:
+        /// <summary>
+        /// Returns list of UTW resources from resources dict.
+        /// </summary>
+        public List<ModuleResource> Waypoints()
+        {
+            return _resources.Values.Where(resource => resource.GetResType() == ResourceType.UTW).ToList();
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:1419-1443
+        // Original: def model(self, resname: str) -> ModuleResource[MDL] | None:
+        /// <summary>
+        /// Returns a ModuleResource object for the given resource name if it exists in this module.
+        /// </summary>
+        [CanBeNull]
+        public ModuleResource Model(string resname)
+        {
+            string lowerResname = resname.ToLowerInvariant();
+            return _resources.Values.FirstOrDefault(resource =>
+                resource.GetResType() == ResourceType.MDL &&
+                resource.GetResName().ToLowerInvariant() == lowerResname);
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:1445-1468
+        // Original: def model_ext(self, resname: str) -> ModuleResource | None:
+        /// <summary>
+        /// Finds a MDX module resource by name from this module.
+        /// </summary>
+        [CanBeNull]
+        public ModuleResource ModelExt(string resname)
+        {
+            string lowerResname = resname.ToLowerInvariant();
+            return _resources.Values.FirstOrDefault(resource =>
+                resource.GetResType() == ResourceType.MDX &&
+                resource.GetResName().ToLowerInvariant() == lowerResname);
+        }
+
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:1470-1488
         // Original: def models(self) -> list[ModuleResource[MDL]]:
         /// <summary>
         /// Returns a list of MDL model resources.
         /// </summary>
-        /// <remarks>
-        /// NOTE: This is a placeholder implementation. The full implementation requires filtering by ResourceType.MDL
-        /// and proper type casting to ModuleResource&lt;MDL&gt;.
-        /// </remarks>
-        public List<object> Models()
+        public List<ModuleResource> Models()
         {
-            // TODO: Filter resources by ResourceType.MDL and return as List&lt;ModuleResource&lt;MDL&gt;&gt;
-            // This requires proper type handling for the generic ModuleResource&lt;T&gt;
-            return new List<object>();
+            return _resources.Values.Where(resource => resource.GetResType() == ResourceType.MDL).ToList();
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:1490-1508
+        // Original: def model_exts(self) -> list[ModuleResource]:
+        /// <summary>
+        /// Returns a list of MDX model resources.
+        /// </summary>
+        public List<ModuleResource> ModelExts()
+        {
+            return _resources.Values.Where(resource => resource.GetResType() == ResourceType.MDX).ToList();
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:1510-1536
+        // Original: def texture(self, resname: str) -> ModuleResource[TPC] | None:
+        /// <summary>
+        /// Looks up a texture resource by resname from this module.
+        /// </summary>
+        [CanBeNull]
+        public ModuleResource Texture(string resname)
+        {
+            string lowerResname = resname.ToLowerInvariant();
+            HashSet<ResourceType> textureTypes = new HashSet<ResourceType> { ResourceType.TPC, ResourceType.TGA };
+            return _resources.Values.FirstOrDefault(resource =>
+                resource.IsActive() &&
+                textureTypes.Contains(resource.GetResType()) &&
+                resource.GetResName().ToLowerInvariant() == lowerResname);
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:1538-1558
+        // Original: def textures(self) -> list[ModuleResource[MDL]]:
+        /// <summary>
+        /// Generates a list of texture resources from this module.
+        /// </summary>
+        public List<ModuleResource> Textures()
+        {
+            HashSet<ResourceType> textureTypes = new HashSet<ResourceType> { ResourceType.TPC, ResourceType.TGA };
+            return _resources.Values.Where(resource =>
+                resource.IsActive() &&
+                textureTypes.Contains(resource.GetResType())).ToList();
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:1586-1606
+        // Original: def sounds(self) -> list[ModuleResource[UTS]]:
+        /// <summary>
+        /// Returns a list of UTS resources.
+        /// </summary>
+        public List<ModuleResource> Sounds()
+        {
+            return _resources.Values.Where(resource => resource.GetResType() == ResourceType.UTS).ToList();
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:1608-1706
+        // Original: def loadscreen(self) -> FileResource | None:
+        /// <summary>
+        /// Returns a FileResource object representing the loadscreen texture for this module.
+        /// </summary>
+        [CanBeNull]
+        public FileResource Loadscreen()
+        {
+            // Get the ARE resource
+            ModuleResource areResource = Are();
+            if (areResource == null)
+            {
+                new RobustLogger().Warning(string.Format("Module '{0}' has no ARE resource, cannot determine loadscreen", _root));
+                return null;
+            }
+
+            // Read the ARE to get LoadScreenID
+            object areData = areResource.Resource();
+            if (areData == null)
+            {
+                new RobustLogger().Warning(string.Format("Failed to read ARE resource for module '{0}'", _root));
+                return null;
+            }
+
+            // TODO: Implement loadscreen logic once ARE class has LoadScreenID property
+            // This requires:
+            // 1. ARE class to have LoadScreenID property
+            // 2. TwoDA reading capability
+            // 3. Installation.resource() method for loading loadscreens.2da
+            new RobustLogger().Warning("Loadscreen() method not fully implemented - requires ARE.LoadScreenID and TwoDA support");
+            return null;
         }
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:584-799
