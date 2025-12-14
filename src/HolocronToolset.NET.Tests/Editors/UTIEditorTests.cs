@@ -155,9 +155,9 @@ namespace HolocronToolset.NET.Tests.Editors
                 { editor.TextureVarSpin, new[] { 0, 1, 2, 3, 4, 5 } }
             };
 
-            foreach (var (spin, values) in spinTests)
+            foreach ((Avalonia.Controls.NumericUpDown spin, int[] values) in spinTests)
             {
-                foreach (var val in values)
+                foreach (int val in values)
                 {
                     // Matching Python: spin.setValue(val)
                     // Matching Python: assert spin.value() == val
@@ -206,18 +206,18 @@ namespace HolocronToolset.NET.Tests.Editors
 
             // Test availablePropertyList - TreeView
             // Matching Python: assert editor.ui.availablePropertyList.topLevelItemCount() > 0
-            editor.AvailablePropertyList.ItemCount.Should().BeGreaterThan(0, "Available properties should be populated from 2DA");
+            editor.AvailablePropertyListItemCount.Should().BeGreaterThan(0, "Available properties should be populated from 2DA");
 
             // Test selecting and adding properties
             // Matching Python: if editor.ui.availablePropertyList.topLevelItemCount() > 0:
-            if (editor.AvailablePropertyList.ItemCount > 0)
+            if (editor.AvailablePropertyListItemCount > 0)
             {
                 // Matching Python: first_item = editor.ui.availablePropertyList.topLevelItem(0)
                 // In Avalonia TreeView, we need to access items differently
                 var items = editor.AvailablePropertyList.Items;
                 if (items != null && ((System.Collections.IList)items).Count > 0)
                 {
-                    var firstItem = ((System.Collections.IList)items)[0];
+                    object firstItem = ((System.Collections.IList)items)[0];
                     editor.AvailablePropertyList.SelectedItem = firstItem;
 
                     // Test add button
@@ -279,7 +279,7 @@ namespace HolocronToolset.NET.Tests.Editors
 
                 // Test icon updates when model variation changes
                 // Matching Python: for val in [0, 1, 2, 3]:
-                foreach (var val in new[] { 0, 1, 2, 3 })
+                foreach (int val in new[] { 0, 1, 2, 3 })
                 {
                     // Matching Python: editor.ui.modelVarSpin.setValue(val)
                     editor.ModelVarSpin.Value = val;
@@ -288,7 +288,7 @@ namespace HolocronToolset.NET.Tests.Editors
 
                 // Test icon updates when body variation changes
                 // Matching Python: for val in [0, 1, 2]:
-                foreach (var val in new[] { 0, 1, 2 })
+                foreach (int val in new[] { 0, 1, 2 })
                 {
                     // Matching Python: editor.ui.bodyVarSpin.setValue(val)
                     editor.BodyVarSpin.Value = val;
@@ -297,7 +297,7 @@ namespace HolocronToolset.NET.Tests.Editors
 
                 // Test icon updates when texture variation changes
                 // Matching Python: for val in [0, 1, 2]:
-                foreach (var val in new[] { 0, 1, 2 })
+                foreach (int val in new[] { 0, 1, 2 })
                 {
                     // Matching Python: editor.ui.textureVarSpin.setValue(val)
                     editor.TextureVarSpin.Value = val;
@@ -334,7 +334,7 @@ namespace HolocronToolset.NET.Tests.Editors
             // Matching Python: data, _ = editor.build()
             var (data, _) = editor.Build();
             // Matching Python: uti = read_uti(data)
-            var uti = UTIHelpers.ConstructUti(CSharpKOTOR.Formats.GFF.GFF.FromBytes(data));
+            UTI uti = UTIHelpers.ConstructUti(CSharpKOTOR.Formats.GFF.GFF.FromBytes(data));
             // Matching Python: assert uti.comment == "Test comment\nLine 2\nLine 3"
             uti.Comment.Should().Be(testComment);
 
@@ -384,9 +384,9 @@ namespace HolocronToolset.NET.Tests.Editors
             // Build and verify
             // Matching Python: data, _ = editor.build()
             var (data, _) = editor.Build();
-            
+
             // Matching Python: uti = read_uti(data)
-            var uti = UTIHelpers.ConstructUti(CSharpKOTOR.Formats.GFF.GFF.FromBytes(data));
+            UTI uti = UTIHelpers.ConstructUti(CSharpKOTOR.Formats.GFF.GFF.FromBytes(data));
 
             // Verify all values were saved correctly
             // Matching Python: assert uti.tag == "test_tag"
@@ -457,7 +457,7 @@ namespace HolocronToolset.NET.Tests.Editors
             // The actual dialog functionality is tested in EditorHelpDialogTests
             // For now, just verify the editor is properly initialized
             editor.Should().NotBeNull();
-            
+
             // The help dialog opening is an integration test that requires
             // the help system to be fully implemented. For now, we verify
             // the editor is set up correctly.
@@ -548,7 +548,7 @@ namespace HolocronToolset.NET.Tests.Editors
             data.Length.Should().BeGreaterThan(0);
 
             // Verify we can read it back
-            var gff = CSharpKOTOR.Formats.GFF.GFF.FromBytes(data);
+            GFF gff = CSharpKOTOR.Formats.GFF.GFF.FromBytes(data);
             gff.Should().NotBeNull();
         }
 
@@ -633,7 +633,7 @@ namespace HolocronToolset.NET.Tests.Editors
 
             // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_uti_editor.py:89
             // Original: new = read_gff(data)
-            var newGff = CSharpKOTOR.Formats.GFF.GFF.FromBytes(newData);
+            GFF newGff = CSharpKOTOR.Formats.GFF.GFF.FromBytes(newData);
 
             // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_uti_editor.py:91
             // Original: diff = old.compare(new, self.log_func, ignore_default_changes=True)
