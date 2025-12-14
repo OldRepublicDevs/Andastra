@@ -74,7 +74,7 @@ namespace KotorDiff.NET.App
                 // Fallback: encode with error handling for Windows console
                 try
                 {
-                    Encoding encoding = Console.OutputEncoding ?? Encoding.UTF8;
+                    SystemTextEncoding encoding = Console.OutputEncoding ?? SystemTextEncoding.UTF8;
                     byte[] bytes = encoding.GetBytes(message);
                     string safeMsg = encoding.GetString(bytes);
                     Console.WriteLine(safeMsg);
@@ -82,8 +82,8 @@ namespace KotorDiff.NET.App
                 catch (Exception)
                 {
                     // Last resort: use ASCII with backslashreplace
-                    byte[] bytes = Encoding.ASCII.GetBytes(message);
-                    string safeMsg = Encoding.ASCII.GetString(bytes);
+                    byte[] bytes = SystemTextEncoding.ASCII.GetBytes(message);
+                    string safeMsg = SystemTextEncoding.ASCII.GetString(bytes);
                     Console.WriteLine(safeMsg);
                 }
             }
@@ -117,7 +117,7 @@ namespace KotorDiff.NET.App
             // Write the message to the file (always use UTF-8 for file)
             try
             {
-                File.AppendAllText(GlobalConfig.Instance.OutputLog.FullName, message + Environment.NewLine, Encoding.UTF8);
+                File.AppendAllText(GlobalConfig.Instance.OutputLog.FullName, message + Environment.NewLine, SystemTextEncoding.UTF8);
             }
             catch (Exception)
             {
