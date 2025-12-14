@@ -54,6 +54,10 @@ namespace Odyssey.Stride.GUI
             _scaleY = screenHeight / BaseHeight;
 
             // Create root canvas
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.Panels.Canvas.html
+            // Canvas is a panel that allows absolute positioning of child elements
+            // Width/Height set the canvas dimensions, HorizontalAlignment/VerticalAlignment control layout
+            // Source: https://doc.stride3d.net/latest/en/manual/user-interface/index.html
             _rootCanvas = new Canvas
             {
                 Width = screenWidth,
@@ -73,7 +77,15 @@ namespace Odyssey.Stride.GUI
             }
 
             // Set the page
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.UIPage.html
+            // UIPage represents a complete UI page with a root element
+            // RootElement property sets the root UI element (Canvas in this case)
+            // Source: https://doc.stride3d.net/latest/en/manual/user-interface/index.html
             var page = new UIPage { RootElement = _rootCanvas };
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Engine.UIComponent.html
+            // UIComponent.Page property sets the active UI page to render
+            // Method signature: UIPage Page { get; set; }
+            // Source: https://doc.stride3d.net/latest/en/manual/user-interface/index.html
             _uiComponent.Page = page;
 
             Console.WriteLine($"[KotorGuiRenderer] Rendered GUI '{gui.Tag}' with {gui.Controls.Count} top-level controls");
@@ -161,6 +173,11 @@ namespace Odyssey.Stride.GUI
         /// </summary>
         private UIElement RenderPanel(GUIPanel panel)
         {
+            // Create Grid panel for container
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.Panels.Grid.html
+            // Grid is a panel that arranges children in rows and columns
+            // BackgroundColor sets the background color of the grid
+            // Source: https://doc.stride3d.net/latest/en/manual/user-interface/index.html
             var grid = new Grid
             {
                 BackgroundColor = GetBackgroundColorFromBorder(panel.Border)
@@ -177,6 +194,11 @@ namespace Odyssey.Stride.GUI
         /// </summary>
         private UIElement RenderButton(GUIButton button)
         {
+            // Create Button control
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.Controls.Button.html
+            // Button is a clickable UI control that can contain content
+            // BackgroundColor sets the button's background color
+            // Source: https://doc.stride3d.net/latest/en/manual/user-interface/index.html
             var strideButton = new Button
             {
                 BackgroundColor = GetBackgroundColorFromBorder(button.Border)
@@ -185,6 +207,12 @@ namespace Odyssey.Stride.GUI
             // Set button text
             if (!string.IsNullOrEmpty(button.Text))
             {
+                // Create TextBlock for button text
+                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.Controls.TextBlock.html
+                // TextBlock displays text with configurable font, size, color, and alignment
+                // Text property sets the displayed text, TextColor sets the text color
+                // TextSize sets font size, TextAlignment controls horizontal text alignment
+                // Source: https://doc.stride3d.net/latest/en/manual/user-interface/index.html
                 var textBlock = new TextBlock
                 {
                     Text = button.Text,
@@ -194,6 +222,10 @@ namespace Odyssey.Stride.GUI
                     VerticalAlignment = VerticalAlignment.Center,
                     HorizontalAlignment = HorizontalAlignment.Center
                 };
+                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.Controls.ContentControl.html
+                // ContentControl.Content property sets the content of the control
+                // Method signature: UIElement Content { get; set; }
+                // Source: https://doc.stride3d.net/latest/en/manual/user-interface/index.html
                 strideButton.Content = textBlock;
             }
             else if (button.GuiText != null && !string.IsNullOrEmpty(button.GuiText.Text))
@@ -215,6 +247,10 @@ namespace Odyssey.Stride.GUI
             strideButton.Name = button.Tag ?? $"Button_{button.Id}";
 
             // Hook up click event
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.Controls.Button.html
+            // Button.Click event fires when the button is clicked
+            // Event signature: event EventHandler<RoutedEventArgs> Click
+            // Source: https://doc.stride3d.net/latest/en/manual/user-interface/index.html
             var buttonTag = button.Tag;
             var buttonId = button.Id;
             strideButton.Click += (sender, args) =>
@@ -231,6 +267,13 @@ namespace Odyssey.Stride.GUI
         /// </summary>
         private UIElement RenderLabel(GUILabel label)
         {
+            // Create TextBlock for label text
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.Controls.TextBlock.html
+            // TextBlock displays static text with configurable properties
+            // Text property sets the displayed text, TextColor sets the text color
+            // TextSize sets font size, TextAlignment controls horizontal text alignment
+            // VerticalAlignment controls vertical alignment within parent
+            // Source: https://doc.stride3d.net/latest/en/manual/user-interface/index.html
             var textBlock = new TextBlock
             {
                 Text = label.Text ?? string.Empty,
@@ -249,16 +292,29 @@ namespace Odyssey.Stride.GUI
         private UIElement RenderListBox(GUIListBox listBox)
         {
             // For now, render as a simple scrollable panel
+            // Create ScrollViewer for scrollable content
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.Controls.ScrollViewer.html
+            // ScrollViewer provides scrolling functionality for content that exceeds viewport
+            // ScrollMode property sets scrolling direction (Vertical, Horizontal, or Both)
+            // Source: https://doc.stride3d.net/latest/en/manual/user-interface/index.html
             var scrollViewer = new ScrollViewer
             {
                 ScrollMode = ScrollingMode.Vertical
             };
 
+            // Create StackPanel for vertical list layout
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.Panels.StackPanel.html
+            // StackPanel arranges children in a single line (horizontal or vertical)
+            // Orientation property sets layout direction (Vertical or Horizontal)
+            // Source: https://doc.stride3d.net/latest/en/manual/user-interface/index.html
             var stackPanel = new StackPanel
             {
                 Orientation = Orientation.Vertical
             };
 
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.Controls.ContentControl.html
+            // ContentControl.Content property sets the scrollable content
+            // Method signature: UIElement Content { get; set; }
             scrollViewer.Content = stackPanel;
 
             return scrollViewer;
@@ -301,12 +357,21 @@ namespace Odyssey.Stride.GUI
             var grid = new Grid();
 
             // Background
+            // Create Border for progress bar background
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.Controls.Border.html
+            // Border is a control that draws a border and/or background around content
+            // BackgroundColor sets the background color, HorizontalAlignment/VerticalAlignment control sizing
+            // Source: https://doc.stride3d.net/latest/en/manual/user-interface/index.html
             var background = new Border
             {
                 BackgroundColor = new Color(50, 50, 50, 255),
                 HorizontalAlignment = HorizontalAlignment.Stretch,
                 VerticalAlignment = VerticalAlignment.Stretch
             };
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.Panels.Panel.html
+            // Panel.Children collection contains child UI elements
+            // Add(UIElement) adds a child element to the panel
+            // Source: https://doc.stride3d.net/latest/en/manual/user-interface/index.html
             grid.Children.Add(background);
 
             // Progress fill
@@ -356,6 +421,10 @@ namespace Odyssey.Stride.GUI
         private void ApplyCommonProperties(UIElement element, GUIControl control)
         {
             // Apply position and size (scaled from 640x480 base)
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.UIElement.html
+            // UIElement.Width/Height properties set element dimensions
+            // Margin property sets spacing around the element (Thickness: left, top, right, bottom)
+            // Source: https://doc.stride3d.net/latest/en/manual/user-interface/index.html
             element.Width = control.Size.X * _scaleX;
             element.Height = control.Size.Y * _scaleY;
             element.Margin = new Thickness(
@@ -366,6 +435,10 @@ namespace Odyssey.Stride.GUI
             );
 
             // Apply visibility
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.UIElement.html
+            // UIElement.Visibility property controls element visibility
+            // Visibility.Visible = shown, Visibility.Collapsed = hidden and doesn't take space
+            // Source: https://doc.stride3d.net/latest/en/manual/user-interface/index.html
             element.Visibility = control.Locked == true ? Visibility.Collapsed : Visibility.Visible;
 
             // Apply color modulation if available
@@ -445,6 +518,11 @@ namespace Odyssey.Stride.GUI
             Console.WriteLine("[KotorGuiRenderer] Creating visual-only fallback UI (no font dependency)");
 
             // Create root canvas - visible background
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.Panels.Canvas.html
+            // Canvas allows absolute positioning of child elements
+            // HorizontalAlignment/VerticalAlignment.Stretch makes canvas fill parent
+            // BackgroundColor sets the canvas background color
+            // Source: https://doc.stride3d.net/latest/en/manual/user-interface/index.html
             _rootCanvas = new Canvas
             {
                 HorizontalAlignment = HorizontalAlignment.Stretch,
@@ -458,6 +536,12 @@ namespace Odyssey.Stride.GUI
             float panelX = (screenWidth - panelWidth) / 2;
             float panelY = (screenHeight - panelHeight) / 2;
 
+            // Create main panel as Border
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.Controls.Border.html
+            // Border draws a border and/or background around content
+            // Width/Height set dimensions, BackgroundColor sets background, BorderColor sets border color
+            // BorderThickness sets border width (Thickness: left, top, right, bottom)
+            // Source: https://doc.stride3d.net/latest/en/manual/user-interface/index.html
             var mainPanel = new Border
             {
                 Width = panelWidth,
@@ -468,15 +552,29 @@ namespace Odyssey.Stride.GUI
                 HorizontalAlignment = HorizontalAlignment.Left,
                 VerticalAlignment = VerticalAlignment.Top
             };
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.Panels.Canvas.html
+            // SetCanvasRelativePosition(Vector3) sets absolute position within Canvas
+            // Method signature: void SetCanvasRelativePosition(Vector3 position)
+            // Source: https://doc.stride3d.net/latest/en/manual/user-interface/index.html
             mainPanel.SetCanvasRelativePosition(new Vector3(panelX, panelY, 0));
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.Panels.Panel.html
+            // Panel.Children.Add(UIElement) adds child element to panel
             _rootCanvas.Children.Add(mainPanel);
 
             // Create a grid to hold buttons - better spacing
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.Panels.Grid.html
+            // Grid arranges children in rows and columns
+            // RowDefinitions collection defines row layout, StripDefinition defines row size
+            // StripType.Fixed sets fixed pixel size, StripType.Star sets proportional sizing
+            // Source: https://doc.stride3d.net/latest/en/manual/user-interface/index.html
             var contentGrid = new Grid
             {
                 HorizontalAlignment = HorizontalAlignment.Stretch,
                 VerticalAlignment = VerticalAlignment.Stretch
             };
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.Panels.StripDefinition.html
+            // StripDefinition(StripType, float) creates a row/column definition
+            // StripType.Fixed with value 80 = fixed 80 pixel height
             contentGrid.RowDefinitions.Add(new StripDefinition(StripType.Fixed, 80));  // Header
             contentGrid.RowDefinitions.Add(new StripDefinition(StripType.Fixed, 15));  // Spacer
             contentGrid.RowDefinitions.Add(new StripDefinition(StripType.Fixed, 70));  // New Game
@@ -498,6 +596,10 @@ namespace Odyssey.Stride.GUI
                 HorizontalAlignment = HorizontalAlignment.Stretch,
                 VerticalAlignment = VerticalAlignment.Stretch
             };
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.Panels.Grid.html
+            // SetGridRow(int) sets which grid row the element occupies
+            // Method signature: void SetGridRow(UIElement element, int row)
+            // Source: https://doc.stride3d.net/latest/en/manual/user-interface/index.html
             headerPanel.SetGridRow(0);
             contentGrid.Children.Add(headerPanel);
 
@@ -598,6 +700,10 @@ namespace Odyssey.Stride.GUI
         /// </summary>
         public void Clear()
         {
+            // Clear UI page
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Engine.UIComponent.html
+            // Setting UIComponent.Page to null removes the active UI page
+            // Method signature: UIPage Page { get; set; }
             if (_uiComponent.Page != null)
             {
                 _uiComponent.Page = null;
