@@ -529,6 +529,17 @@ namespace Odyssey.Content.MDL
             return node;
         }
 
+        /// <summary>
+        /// Reads controller data array from the MDL file.
+        /// Handles compressed quaternion decompression for orientation controllers.
+        /// Reference: vendor/PyKotor/wiki/MDL-MDX-File-Format.md - Controller Data
+        /// </summary>
+        /// <param name="mdlPtr">Pointer to MDL data</param>
+        /// <param name="arrayOffset">Offset to controller array in MDL file</param>
+        /// <param name="count">Number of controllers to read</param>
+        /// <param name="data">Pre-loaded controller data array (float values)</param>
+        /// <returns>Array of controller data</returns>
+        /// <exception cref="InvalidOperationException">Thrown when array size calculations overflow</exception>
         private MDLControllerData[] ReadControllers(byte* mdlPtr, int arrayOffset, int count, float[] data)
         {
             var controllers = new MDLControllerData[count];
