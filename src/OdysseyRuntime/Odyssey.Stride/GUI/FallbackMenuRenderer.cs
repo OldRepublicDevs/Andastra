@@ -149,16 +149,19 @@ namespace Odyssey.Stride.GUI
             // Passing null for blendState uses default (BlendState.AlphaBlend equivalent)
             _spriteBatch.Begin(drawContext.GraphicsContext, SpriteSortMode.Deferred, null);
 
-            // Access viewport from GraphicsDevice.Presenter.BackBuffer.Viewport
-            // Based on Stride documentation: https://doc.stride3d.net/4.0/en/Manual/graphics/low-level-api/textures-and-render-textures.html
-            var viewport = GraphicsDevice.Presenter.BackBuffer.Viewport;
-            
-            // Calculate layout based on current viewport (may change on window resize)
-            CalculateLayout(viewport.Width, viewport.Height);
+            // Access back buffer dimensions from GraphicsDevice.Presenter.BackBuffer
+            // Based on Stride API: BackBuffer is a Texture, access dimensions via Description property
+            // Source: https://doc.stride3d.net/latest/en/api/Stride.Graphics.GraphicsPresenter.html
+            var backBuffer = GraphicsDevice.Presenter.BackBuffer;
+            float screenWidth = backBuffer.Description.Width;
+            float screenHeight = backBuffer.Description.Height;
+
+            // Calculate layout based on current screen size (may change on window resize)
+            CalculateLayout(screenWidth, screenHeight);
 
             // Draw background (full screen dark blue)
             _spriteBatch.Draw(_whiteTexture,
-                new RectangleF(0, 0, viewport.Width, viewport.Height),
+                new RectangleF(0, 0, screenWidth, screenHeight),
                 _backgroundColor);
 
             // Draw main panel background
