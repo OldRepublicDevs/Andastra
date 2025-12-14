@@ -35,6 +35,14 @@ namespace Odyssey.Game.Core
         private MenuRenderer _menuRenderer;
         private GameState _currentState = GameState.MainMenu;
 
+        // Basic 3D rendering
+        private BasicEffect _basicEffect;
+        private VertexBuffer _groundVertexBuffer;
+        private IndexBuffer _groundIndexBuffer;
+        private Matrix _viewMatrix;
+        private Matrix _projectionMatrix;
+        private float _cameraAngle = 0f;
+
         public OdysseyGame(GameSettings settings)
         {
             _settings = settings;
@@ -44,7 +52,7 @@ namespace Odyssey.Game.Core
 
             // Set window title
             Window.Title = "Odyssey Engine - " + (_settings.Game == KotorGame.K1 ? "Knights of the Old Republic" : "The Sith Lords");
-            
+
             Console.WriteLine("[Odyssey] Game window initialized - IsMouseVisible: " + IsMouseVisible);
         }
 
@@ -97,6 +105,10 @@ namespace Odyssey.Game.Core
             Console.WriteLine($"[Odyssey] Menu renderer visible: {_menuRenderer.IsVisible}");
 
             Console.WriteLine("[Odyssey] Menu renderer created and initialized");
+
+            // Initialize game rendering
+            InitializeGameRendering();
+
             Console.WriteLine("[Odyssey] Content loaded");
         }
 
@@ -141,7 +153,16 @@ namespace Odyssey.Game.Core
             // Update game systems if in game
             if (_currentState == GameState.InGame)
             {
-                // TODO: Update game world, entities, etc.
+                // Update game session
+                if (_session != null)
+                {
+                    float deltaTime = (float)gameTime.ElapsedGameTime.TotalSeconds;
+                    _session.Update(deltaTime);
+                }
+
+                // Update camera (simple rotation for demo)
+                _cameraAngle += (float)gameTime.ElapsedGameTime.TotalSeconds * 0.1f;
+                UpdateCamera();
             }
 
             base.Update(gameTime);
@@ -174,11 +195,7 @@ namespace Odyssey.Game.Core
             // Draw game if in game state
             if (_currentState == GameState.InGame)
             {
-                // TODO: Draw game world
-                _spriteBatch.Begin();
-                _spriteBatch.DrawString(_font ?? CreateDefaultFont(), "Game Running - Press ESC to return to menu",
-                    new Vector2(10, 10), Color.White);
-                _spriteBatch.End();
+                DrawGameWorld(gameTime);
             }
 
             base.Draw(gameTime);
@@ -256,6 +273,119 @@ namespace Odyssey.Game.Core
                 Console.Error.WriteLine("[Odyssey] Failed to start game: " + ex.Message);
                 Console.Error.WriteLine(ex.StackTrace);
             }
+        }
+
+        private void InitializeGameRendering()
+        {
+            try
+            {
+                // Initialize basic 3D effect
+                _basicEffect = new BasicEffect(GraphicsDevice);
+                _basicEffect.VertexColorEnabled = true;
+                _basicEffect.LightingEnabled = false;
+
+                // Create a simple ground plane
+                CreateGroundPlane();
+
+                // Initialize camera
+                UpdateCamera();
+
+                Console.WriteLine("[Odyssey] Game rendering initialized");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("[Odyssey] WARNING: Failed to initialize game rendering: " + ex.Message);
+            }
+        }
+
+        private void CreateGroundPlane()
+        {
+            // Create a simple 10x10 ground plane
+            var vertices = new VertexPositionColor[]
+            {
+                new VertexPositionColor(new Vector3(-5, 0, -5), Color.Gray),
+                new VertexPositionColor(new Vector3(5, 0, -5), Color.Gray),
+                new VertexPositionColor(new Vector3(5, 0, 5), Color.Gray),
+                new VertexPositionColor(new Vector3(-5, 0, 5), Color.Gray)
+            };
+
+            var indices = new short[]
+            {
+                0, 1, 2,
+                0, 2, 3
+            };
+
+            _groundVertexBuffer = new VertexBuffer(GraphicsDevice, typeof(VertexPositionColor), vertices.Length, BufferUsage.WriteOnly);
+            _groundVertexBuffer.SetData(vertices);
+
+            _groundIndexBuffer = new IndexBuffer(GraphicsDevice, IndexElementSize.SixteenBits, indices.Length, BufferUsage.WriteOnly);
+            _groundIndexBuffer.SetData(indices);
+        }
+
+        private void UpdateCamera()
+        {
+            // Simple camera that orbits around origin
+            float distance = 10f;
+            float height = 5f;
+            Vector3 cameraPosition = new Vector3(
+                (float)Math.Sin(_cameraAngle) * distance,
+                height,
+                (float)Math.Cos(_cameraAngle) * distance
+            );
+            Vector3 target = Vector3.Zero;
+            Vector3 up = Vector3.Up;
+
+            _viewMatrix = Matrix.CreateLookAt(cameraPosition, target, up);
+
+            float aspectRatio = (float)GraphicsDevice.Viewport.Width / GraphicsDevice.Viewport.Height;
+            _projectionMatrix = Matrix.CreatePerspectiveFieldOfView(
+                MathHelper.ToRadians(60f),
+                aspectRatio,
+                0.1f,
+                100f
+            );
+        }
+
+        private void DrawGameWorld(GameTime gameTime)
+        {
+            // Clear with a sky color
+            GraphicsDevice.Clear(new Color(135, 206, 250, 255)); // Sky blue
+
+            // Draw 3D scene
+            if (_groundVertexBuffer != null && _groundIndexBuffer != null && _basicEffect != null)
+            {
+                GraphicsDevice.SetVertexBuffer(_groundVertexBuffer);
+                GraphicsDevice.Indices = _groundIndexBuffer;
+
+                _basicEffect.View = _viewMatrix;
+                _basicEffect.Projection = _projectionMatrix;
+                _basicEffect.World = Matrix.Identity;
+
+                foreach (EffectPass pass in _basicEffect.CurrentTechnique.Passes)
+                {
+                    pass.Apply();
+                    GraphicsDevice.DrawIndexedPrimitives(
+                        PrimitiveType.TriangleList,
+                        0,
+                        0,
+                        2 // 2 triangles
+                    );
+                }
+            }
+
+            // Draw UI overlay
+            _spriteBatch.Begin();
+            string statusText = "Game Running - Press ESC to return to menu";
+            if (_session != null && _session.CurrentModuleName != null)
+            {
+                statusText = "Module: " + _session.CurrentModuleName + " - Press ESC to return to menu";
+            }
+            if (_font != null)
+            {
+                _spriteBatch.DrawString(_font, statusText, new Vector2(10, 10), Color.White);
+            }
+            // If no font, we just skip text rendering - the 3D scene is still visible
+            _spriteBatch.End();
         }
 
         [CanBeNull]
