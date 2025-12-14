@@ -9,6 +9,7 @@ using CSharpKOTOR.Common;
 using CSharpKOTOR.Extract;
 using CSharpKOTOR.Formats.Capsule;
 using CSharpKOTOR.Formats.GFF;
+using CSharpKOTOR.Formats.LIP;
 using CSharpKOTOR.Formats.SSF;
 using CSharpKOTOR.Formats.TLK;
 using CSharpKOTOR.Formats.TwoDA;
@@ -1185,17 +1186,68 @@ namespace KotorDiff.NET.Generator
         /// <summary>
         /// Write resource using appropriate io function.
         /// </summary>
+        /// <summary>
+        /// Write resource using appropriate io function.
+        /// Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/writer.py:4164-4195
+        /// Original: def _write_resource_with_io(self, data: bytes, dest_path: Path, file_ext: str) -> None: ...
+        /// </summary>
         private void WriteResourceWithIo(byte[] data, string destPath, string fileExt)
         {
             try
             {
-                // TODO: Implement format-specific writers
-                // For now, just write binary
-                File.WriteAllBytes(destPath, data);
+                string extUpper = fileExt.ToUpperInvariant();
+                
+                // Check if it's a GFF extension
+                var gffExtensions = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+                {
+                    "GFF", "BIC", "BTC", "BTD", "BTE", "BTI", "BTP", "BTM", "BTT",
+                    "UTC", "UTD", "UTE", "UTI", "UTP", "UTS", "UTM", "UTT", "UTW",
+                    "ARE", "DLG", "FAC", "GIT", "GUI", "IFO", "ITP", "JRL",
+                    "PTH", "NFO", "PT", "GVT", "INV"
+                };
+                
+                if (gffExtensions.Contains(extUpper))
+                {
+                    var reader = new GFFBinaryReader(data);
+                    GFF gff = reader.Load();
+                    ResourceType resType = ResourceType.FromExtension(fileExt);
+                    GFFAuto.WriteGff(gff, destPath, resType);
+                }
+                else if (extUpper == "2DA")
+                {
+                    var reader = new TwoDABinaryReader(data);
+                    TwoDA twoda = reader.Load();
+                    TwoDAAuto.WriteTwoDA(twoda, destPath, ResourceType.TwoDA);
+                }
+                else if (extUpper == "TLK")
+                {
+                    var reader = new TLKBinaryReader(data);
+                    TLK tlk = reader.Load();
+                    TLKAuto.WriteTlk(tlk, destPath, ResourceType.TLK);
+                }
+                else if (extUpper == "SSF")
+                {
+                    var reader = new SSFBinaryReader(data);
+                    SSF ssf = reader.Load();
+                    SSFAuto.WriteSsf(ssf, destPath, ResourceType.SSF);
+                }
+                else if (extUpper == "LIP")
+                {
+                    var reader = new LIPBinaryReader(data);
+                    LIP lip = reader.Load();
+                    LIPAuto.WriteLip(lip, destPath, ResourceType.LIP);
+                }
+                else
+                {
+                    // Binary file
+                    File.WriteAllBytes(destPath, data);
+                }
             }
             catch (Exception e)
             {
                 _logFunc?.Invoke($"[Warning] Failed to use io function for {fileExt}, using binary write: {e.GetType().Name}: {e.Message}");
+                _logFunc?.Invoke($"Full traceback:");
+                _logFunc?.Invoke(e.StackTrace ?? "");
                 File.WriteAllBytes(destPath, data);
             }
         }
