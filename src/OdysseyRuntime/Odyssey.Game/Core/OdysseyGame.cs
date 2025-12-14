@@ -40,13 +40,15 @@ namespace Odyssey.Game.Core
         private K1EngineApi _engineApi;
         private NcsVm _vm;
 
-        // Menu - Simple MonoGame menu implementation
+        // Menu - Professional MonoGame menu implementation
         private GameState _currentState = GameState.MainMenu;
         private int _selectedMenuIndex = 0;
         private string[] _menuItems = { "Start Game", "Options", "Exit" };
         private Texture2D _menuTexture; // 1x1 white texture for drawing rectangles
         private KeyboardState _previousMenuKeyboardState;
         private MouseState _previousMenuMouseState;
+        private float _menuAnimationTime = 0f; // For smooth animations
+        private int _hoveredMenuIndex = -1; // Track mouse hover
 
         // Basic 3D rendering
         private BasicEffect _basicEffect;
@@ -101,20 +103,21 @@ namespace Odyssey.Game.Core
             // Create SpriteBatch for rendering
             _spriteBatch = new SpriteBatch(GraphicsDevice);
 
-            // Try to load a font - if it doesn't exist, menu will still work without text labels
-            // To add a font: Create Content/Fonts/Arial.spritefont using MonoGame Content Pipeline
-            // Or use any TTF font and convert it using the Content Pipeline tool
+            // Load font with comprehensive error handling
+            // Based on MonoGame API: https://docs.monogame.net/api/Microsoft.Xna.Framework.Content.ContentManager.html
+            // Method signature: T Load<T>(string assetName)
+            // The font must be processed by the MGCB Editor Content Pipeline first
             try
             {
                 _font = Content.Load<SpriteFont>("Fonts/Arial");
-                Console.WriteLine("[Odyssey] Font loaded successfully");
+                Console.WriteLine("[Odyssey] Font loaded successfully from 'Fonts/Arial'");
             }
-            catch
+            catch (Exception ex)
             {
-                // Font not found - menu will work but without text labels
-                // Buttons are still fully functional (colored rectangles, clickable)
-                Console.WriteLine("[Odyssey] WARNING: Font not found at 'Fonts/Arial'");
-                Console.WriteLine("[Odyssey] Menu will work without text labels - buttons are still clickable");
+                // Font not found - this is a critical issue for menu display
+                Console.WriteLine("[Odyssey] ERROR: Failed to load font from 'Fonts/Arial': " + ex.Message);
+                Console.WriteLine("[Odyssey] The font file must be built by the MonoGame Content Pipeline");
+                Console.WriteLine("[Odyssey] Ensure Content/Fonts/Arial.spritefont exists and is included in Content.mgcb");
                 _font = null;
             }
 
@@ -158,6 +161,7 @@ namespace Odyssey.Game.Core
             // Update menu if visible
             if (_currentState == GameState.MainMenu)
             {
+                _menuAnimationTime += (float)gameTime.ElapsedGameTime.TotalSeconds;
                 UpdateMainMenu(gameTime);
             }
 
@@ -200,12 +204,40 @@ namespace Odyssey.Game.Core
 
         /// <summary>
         /// Updates the main menu state and handles input.
-        /// Standard MonoGame menu implementation.
+        /// Professional MonoGame menu implementation with keyboard and mouse support.
         /// </summary>
         private void UpdateMainMenu(GameTime gameTime)
         {
             KeyboardState currentKeyboardState = Keyboard.GetState();
             MouseState currentMouseState = Mouse.GetState();
+            int viewportWidth = GraphicsDevice.Viewport.Width;
+            int viewportHeight = GraphicsDevice.Viewport.Height;
+
+            // Calculate menu button positions (matching DrawMainMenu layout)
+            int centerX = viewportWidth / 2;
+            int startY = viewportHeight / 2;
+            int buttonWidth = 400;
+            int buttonHeight = 60;
+            int buttonSpacing = 15;
+            int titleOffset = 180;
+
+            // Track mouse hover
+            _hoveredMenuIndex = -1;
+            Point mousePos = currentMouseState.Position;
+
+            // Check which button the mouse is over
+            for (int i = 0; i < _menuItems.Length; i++)
+            {
+                int buttonY = startY - titleOffset + i * (buttonHeight + buttonSpacing);
+                Rectangle buttonRect = new Rectangle(centerX - buttonWidth / 2, buttonY, buttonWidth, buttonHeight);
+
+                if (buttonRect.Contains(mousePos))
+                {
+                    _hoveredMenuIndex = i;
+                    _selectedMenuIndex = i; // Update selection on hover
+                    break;
+                }
+            }
 
             // Keyboard navigation
             if (IsKeyJustPressed(_previousMenuKeyboardState, currentKeyboardState, Keys.Up))
@@ -225,31 +257,13 @@ namespace Odyssey.Game.Core
                 HandleMenuSelection(_selectedMenuIndex);
             }
 
-            // Mouse input
+            // Mouse click
             if (currentMouseState.LeftButton == ButtonState.Pressed &&
                 _previousMenuMouseState.LeftButton == ButtonState.Released)
             {
-                Point mousePos = currentMouseState.Position;
-                int viewportWidth = GraphicsDevice.Viewport.Width;
-                int viewportHeight = GraphicsDevice.Viewport.Height;
-
-                // Calculate menu button positions
-                int centerX = viewportWidth / 2;
-                int startY = viewportHeight / 2 - 50;
-                int buttonHeight = 50;
-                int buttonSpacing = 10;
-
-                for (int i = 0; i < _menuItems.Length; i++)
+                if (_hoveredMenuIndex >= 0 && _hoveredMenuIndex < _menuItems.Length)
                 {
-                    int buttonY = startY + i * (buttonHeight + buttonSpacing);
-                    Rectangle buttonRect = new Rectangle(centerX - 150, buttonY, 300, buttonHeight);
-
-                    if (buttonRect.Contains(mousePos))
-                    {
-                        _selectedMenuIndex = i;
-                        HandleMenuSelection(i);
-                        break;
-                    }
+                    HandleMenuSelection(_hoveredMenuIndex);
                 }
             }
 
@@ -279,84 +293,163 @@ namespace Odyssey.Game.Core
         }
 
         /// <summary>
-        /// Draws the main menu using standard MonoGame practices.
-        /// Based on MonoGame best practices for menu rendering.
+        /// Draws a professional main menu with proper text rendering, shadows, and visual effects.
+        /// Based on MonoGame best practices: https://docs.monogame.net/api/Microsoft.Xna.Framework.Graphics.SpriteBatch.html
         /// </summary>
         private void DrawMainMenu(GameTime gameTime)
         {
-            // Clear to dark background
-            GraphicsDevice.Clear(new Color(30, 30, 50, 255));
+            // Clear to dark space-like background (deep blue/black gradient effect)
+            GraphicsDevice.Clear(new Color(15, 15, 25, 255));
 
+            // Begin sprite batch rendering
+            // Based on MonoGame API: https://docs.monogame.net/api/Microsoft.Xna.Framework.Graphics.SpriteBatch.html
+            // Begin() starts a sprite batch operation for efficient rendering
             _spriteBatch.Begin();
 
             int viewportWidth = GraphicsDevice.Viewport.Width;
             int viewportHeight = GraphicsDevice.Viewport.Height;
             int centerX = viewportWidth / 2;
-            int startY = viewportHeight / 2 - 50;
-            int buttonWidth = 300;
-            int buttonHeight = 50;
-            int buttonSpacing = 10;
+            int centerY = viewportHeight / 2;
 
-            // Draw title
-            string title = "Odyssey Engine";
+            // Menu layout constants
+            int titleOffset = 180;
+            int buttonWidth = 400;
+            int buttonHeight = 60;
+            int buttonSpacing = 15;
+            int startY = centerY;
+
+            // Draw background gradient effect (subtle)
+            Rectangle backgroundRect = new Rectangle(0, 0, viewportWidth, viewportHeight);
+            _spriteBatch.Draw(_menuTexture, backgroundRect, new Color(20, 20, 35, 255));
+
+            // Draw title with shadow effect
+            // Shadow rendering: draw text twice - once offset for shadow, once for main text
             if (_font != null)
             {
+                string title = "ODYSSEY ENGINE";
+                string subtitle = _settings.Game == KotorGame.K1
+                    ? "Knights of the Old Republic"
+                    : "The Sith Lords";
+                string version = "Demo Build";
+
+                // Title - large with shadow
                 Vector2 titleSize = _font.MeasureString(title);
-                Vector2 titlePos = new Vector2(centerX - titleSize.X / 2, startY - 100);
-                _spriteBatch.DrawString(_font, title, titlePos, Color.White);
+                Vector2 titlePos = new Vector2(centerX - titleSize.X / 2, startY - titleOffset - 80);
+
+                // Draw shadow first (offset by 3 pixels)
+                _spriteBatch.DrawString(_font, title, titlePos + new Vector2(3, 3), new Color(0, 0, 0, 180));
+                // Draw main title text
+                _spriteBatch.DrawString(_font, title, titlePos, new Color(255, 215, 0, 255)); // Gold color
+
+                // Subtitle
+                Vector2 subtitleSize = _font.MeasureString(subtitle);
+                Vector2 subtitlePos = new Vector2(centerX - subtitleSize.X / 2, titlePos.Y + titleSize.Y + 10);
+                _spriteBatch.DrawString(_font, subtitle, subtitlePos + new Vector2(2, 2), new Color(0, 0, 0, 150));
+                _spriteBatch.DrawString(_font, subtitle, subtitlePos, new Color(200, 200, 220, 255));
+
+                // Version label
+                Vector2 versionSize = _font.MeasureString(version);
+                Vector2 versionPos = new Vector2(centerX - versionSize.X / 2, subtitlePos.Y + subtitleSize.Y + 15);
+                _spriteBatch.DrawString(_font, version, versionPos, new Color(150, 150, 150, 255));
             }
             else
             {
-                // Draw title as a rectangle if no font
-                Rectangle titleRect = new Rectangle(centerX - 200, startY - 120, 400, 40);
-                _spriteBatch.Draw(_menuTexture, titleRect, Color.White);
+                // Fallback: draw title as rectangle if font is missing
+                Rectangle titleRect = new Rectangle(centerX - 200, startY - titleOffset - 60, 400, 40);
+                _spriteBatch.Draw(_menuTexture, titleRect, new Color(255, 215, 0, 255));
+                Console.WriteLine("[Odyssey] WARNING: Font not available - menu text cannot be displayed");
             }
 
-            // Draw menu items
+            // Draw menu buttons with professional styling
             for (int i = 0; i < _menuItems.Length; i++)
             {
-                int buttonY = startY + i * (buttonHeight + buttonSpacing);
+                int buttonY = startY - titleOffset + i * (buttonHeight + buttonSpacing);
                 Rectangle buttonRect = new Rectangle(centerX - buttonWidth / 2, buttonY, buttonWidth, buttonHeight);
 
-                // Button color based on selection
-                Color buttonColor = (i == _selectedMenuIndex) ? new Color(100, 150, 255, 255) : new Color(60, 60, 100, 255);
-                Color borderColor = (i == _selectedMenuIndex) ? Color.White : new Color(150, 150, 150, 255);
+                // Determine if button is selected or hovered
+                bool isSelected = (i == _selectedMenuIndex);
+                bool isHovered = (_hoveredMenuIndex == i);
+
+                // Button colors with smooth transitions
+                Color buttonBgColor;
+                Color buttonBorderColor;
+                Color buttonTextColor = Color.White;
+                float buttonScale = 1.0f;
+
+                if (isSelected || isHovered)
+                {
+                    // Selected/hovered: bright blue with white border
+                    buttonBgColor = new Color(60, 120, 200, 255);
+                    buttonBorderColor = Color.White;
+                    buttonScale = 1.05f; // Slightly larger when selected
+                }
+                else
+                {
+                    // Normal: dark blue-gray
+                    buttonBgColor = new Color(40, 50, 70, 220);
+                    buttonBorderColor = new Color(100, 120, 150, 255);
+                }
+
+                // Apply scale to button (center the scaling)
+                int scaledWidth = (int)(buttonWidth * buttonScale);
+                int scaledHeight = (int)(buttonHeight * buttonScale);
+                int scaledX = centerX - scaledWidth / 2;
+                int scaledY = buttonY - (scaledHeight - buttonHeight) / 2;
+                Rectangle scaledButtonRect = new Rectangle(scaledX, scaledY, scaledWidth, scaledHeight);
+
+                // Draw button shadow (subtle)
+                Rectangle shadowRect = new Rectangle(scaledButtonRect.X + 4, scaledButtonRect.Y + 4, scaledButtonRect.Width, scaledButtonRect.Height);
+                _spriteBatch.Draw(_menuTexture, shadowRect, new Color(0, 0, 0, 100));
 
                 // Draw button background
-                _spriteBatch.Draw(_menuTexture, buttonRect, buttonColor);
+                _spriteBatch.Draw(_menuTexture, scaledButtonRect, buttonBgColor);
 
-                // Draw button border
-                int borderThickness = (i == _selectedMenuIndex) ? 3 : 2;
-                DrawRectangleBorder(_spriteBatch, buttonRect, borderThickness, borderColor);
+                // Draw button border (thicker when selected)
+                int borderThickness = isSelected ? 4 : 3;
+                DrawRectangleBorder(_spriteBatch, scaledButtonRect, borderThickness, buttonBorderColor);
 
-                // Draw button text
+                // Draw button text with shadow
                 if (_font != null)
                 {
                     Vector2 textSize = _font.MeasureString(_menuItems[i]);
                     Vector2 textPos = new Vector2(
-                        buttonRect.X + (buttonRect.Width - textSize.X) / 2,
-                        buttonRect.Y + (buttonRect.Height - textSize.Y) / 2
+                        scaledButtonRect.X + (scaledButtonRect.Width - textSize.X) / 2,
+                        scaledButtonRect.Y + (scaledButtonRect.Height - textSize.Y) / 2
                     );
-                    _spriteBatch.DrawString(_font, _menuItems[i], textPos, Color.White);
+
+                    // Draw text shadow
+                    _spriteBatch.DrawString(_font, _menuItems[i], textPos + new Vector2(2, 2), new Color(0, 0, 0, 200));
+                    // Draw main text
+                    _spriteBatch.DrawString(_font, _menuItems[i], textPos, buttonTextColor);
                 }
                 else
                 {
-                    // Draw indicator for selected item if no font
-                    if (i == _selectedMenuIndex)
+                    // Fallback indicator when font is missing
+                    if (isSelected)
                     {
-                        Rectangle indicatorRect = new Rectangle(buttonRect.X + 10, buttonRect.Y + buttonRect.Height / 2 - 5, 10, 10);
+                        int indicatorSize = 20;
+                        Rectangle indicatorRect = new Rectangle(
+                            scaledButtonRect.X + 20,
+                            scaledButtonRect.Y + (scaledButtonRect.Height - indicatorSize) / 2,
+                            indicatorSize,
+                            indicatorSize
+                        );
                         _spriteBatch.Draw(_menuTexture, indicatorRect, Color.White);
                     }
                 }
             }
 
-            // Draw instructions
-            string instructions = "Use Arrow Keys or Mouse to navigate, Enter/Space to select";
+            // Draw instructions at bottom with shadow
             if (_font != null)
             {
+                string instructions = "Arrow Keys / Mouse: Navigate  |  Enter / Space / Click: Select  |  ESC: Exit";
                 Vector2 instSize = _font.MeasureString(instructions);
-                Vector2 instPos = new Vector2(centerX - instSize.X / 2, viewportHeight - 50);
-                _spriteBatch.DrawString(_font, instructions, instPos, new Color(150, 150, 150, 255));
+                Vector2 instPos = new Vector2(centerX - instSize.X / 2, viewportHeight - 60);
+
+                // Shadow
+                _spriteBatch.DrawString(_font, instructions, instPos + new Vector2(1, 1), new Color(0, 0, 0, 150));
+                // Main text
+                _spriteBatch.DrawString(_font, instructions, instPos, new Color(150, 150, 170, 255));
             }
 
             _spriteBatch.End();
@@ -603,7 +696,7 @@ namespace Odyssey.Game.Core
 
             // Draw UI overlay
             _spriteBatch.Begin();
-            
+
             // Draw dialogue UI if in conversation
             if (_session != null && _session.DialogueManager != null && _session.DialogueManager.IsConversationActive)
             {
