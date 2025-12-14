@@ -288,7 +288,9 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             // CRITICAL: Ensure we always have at least one subroutine (main)
             // If no subroutines were created, create a main subroutine from the entire instruction range
             // This handles edge cases where the entry stub detection fails or files have unusual structure
-            if (program.GetSubroutine().Count == 0 && instructions.Count > 0)
+            int subroutineCount = program.GetSubroutine().Count;
+            JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Final subroutine count before fallback check: {subroutineCount}, instructions: {instructions.Count}");
+            if (subroutineCount == 0 && instructions.Count > 0)
             {
                 JavaSystem.@out.Println("DEBUG NcsToAstConverter: No subroutines created, creating fallback main subroutine from entire instruction range");
                 int fallbackMainStart = 0;

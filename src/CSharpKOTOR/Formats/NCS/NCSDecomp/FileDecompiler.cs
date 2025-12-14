@@ -2630,12 +2630,60 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                 JavaSystem.@out.Println("TRACE DecompileNcsObject: AST conversion complete, ast=" + (ast != null ? ast.GetType().Name : "null"));
                 nodedata = new NodeAnalysisData();
                 subdata = new SubroutineAnalysisData(nodedata);
-                ast.Apply(new SetPositions(nodedata));
-                setdest = new SetDestinations(ast, nodedata, subdata);
-                ast.Apply(setdest);
-                ast.Apply(new SetDeadCode(nodedata, subdata, setdest.GetOrigins()));
-                setdest.Done();
-                setdest = null;
+                
+                // Set positions on all nodes - critical for decompilation
+                try
+                {
+                    ast.Apply(new SetPositions(nodedata));
+                    JavaSystem.@out.Println("TRACE DecompileNcsObject: SetPositions completed successfully");
+                }
+                catch (Exception e)
+                {
+                    JavaSystem.@out.Println("Error in SetPositions, continuing with partial positions: " + e.Message);
+                    e.PrintStackTrace(JavaSystem.@out);
+                    // Continue - some nodes might not have positions, but we'll try to recover
+                }
+                
+                try
+                {
+                    setdest = new SetDestinations(ast, nodedata, subdata);
+                    ast.Apply(setdest);
+                }
+                catch (Exception e)
+                {
+                    JavaSystem.@out.Println("Error in SetDestinations, continuing without destination resolution: " + e.Message);
+                    setdest = null;
+                }
+                
+                try
+                {
+                    if (setdest != null)
+                    {
+                        ast.Apply(new SetDeadCode(nodedata, subdata, setdest.GetOrigins()));
+                    }
+                    else
+                    {
+                        // Try without origins if setdest failed
+                        ast.Apply(new SetDeadCode(nodedata, subdata, null));
+                    }
+                }
+                catch (Exception e)
+                {
+                    JavaSystem.@out.Println("Error in SetDeadCode, continuing without dead code analysis: " + e.Message);
+                }
+                
+                if (setdest != null)
+                {
+                    try
+                    {
+                        setdest.Done();
+                    }
+                    catch (Exception e)
+                    {
+                        JavaSystem.@out.Println("Error finalizing SetDestinations: " + e.Message);
+                    }
+                    setdest = null;
+                }
                 try
                 {
                     subdata.SplitOffSubroutines(ast);

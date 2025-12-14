@@ -519,6 +519,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
 
             bool conditional = NodeUtils.IsConditionalProgram(rootStart);
             var subList = ((AProgram)rootStart.GetPProgram()).GetSubroutine();
+            JavaSystem.@out.Println($"DEBUG SplitOffSubroutines: AST program has {subList.Count} subroutines");
             TypedLinkedList subroutines = new TypedLinkedList();
             foreach (var sub in subList)
             {
@@ -529,6 +530,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             if (subroutines.Count == 0)
             {
                 JavaSystem.@out.Println("WARNING: No subroutines found in AST - cannot decompile.");
+                JavaSystem.@out.Println("DEBUG SplitOffSubroutines: subList.Count=" + subList.Count + ", subroutines.Count=" + subroutines.Count);
                 return;
             }
             

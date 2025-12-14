@@ -34,10 +34,18 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
         // Original: @Override public void defaultIn(Node node) { int pos = NodeUtils.getCommandPos(node); if (pos > 0) { this.currentPos = pos; } }
         public override void DefaultIn(Node node)
         {
-            int pos = NodeUtils.GetCommandPos(node);
-            if (pos > 0)
+            try
             {
-                this.currentPos = pos;
+                int pos = NodeUtils.GetCommandPos(node);
+                if (pos > 0)
+                {
+                    this.currentPos = pos;
+                }
+            }
+            catch (Exception)
+            {
+                // Node doesn't have a position token or GetCommandPos failed
+                // Continue with currentPos unchanged - position will be set from parent or remain 0
             }
         }
 
