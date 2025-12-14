@@ -93,7 +93,10 @@ namespace Odyssey.Stride.UI
 
             // Center content
             // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.Panels.StackPanel.html
+            // StackPanel() constructor creates a new stack panel
             // StackPanel arranges children vertically, HorizontalAlignment/VerticalAlignment.Center centers content
+            // Method signature: StackPanel()
+            // Orientation.Vertical stacks children vertically
             // Source: https://doc.stride3d.net/latest/en/manual/user-interface/layout-and-panels.html
             var contentPanel = new StackPanel
             {
@@ -104,13 +107,18 @@ namespace Odyssey.Stride.UI
             };
 
             // Loading title
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.Controls.TextBlock.html
+            // TextBlock() constructor creates a new text block element
+            // Method signature: TextBlock()
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.Color.html
+            // Color.Gold is a static property representing gold color
+            // Source: https://doc.stride3d.net/latest/en/manual/graphics/colors.html
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.Thickness.html
+            // Thickness(float, float, float, float) - same constructor as above
             _loadingText = new TextBlock
             {
                 Font = _font,
                 TextSize = 32,
-                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.Color.html
-                // Color.Gold is a static property representing gold color
-                // Source: https://doc.stride3d.net/latest/en/manual/graphics/colors.html
                 TextColor = Color.Gold,
                 Text = "LOADING",
                 HorizontalAlignment = HorizontalAlignment.Center,
@@ -119,13 +127,18 @@ namespace Odyssey.Stride.UI
             contentPanel.Children.Add(_loadingText);
 
             // Status text
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.Controls.TextBlock.html
+            // TextBlock() constructor creates a new text block element
+            // Method signature: TextBlock()
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.Color.html
+            // Color.LightGray is a static property representing light gray color
+            // Source: https://doc.stride3d.net/latest/en/manual/graphics/colors.html
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.Thickness.html
+            // Thickness(float, float, float, float) - same constructor as above
             _statusText = new TextBlock
             {
                 Font = _font,
                 TextSize = 16,
-                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.Color.html
-                // Color.LightGray is a static property representing light gray color
-                // Source: https://doc.stride3d.net/latest/en/manual/graphics/colors.html
                 TextColor = Color.LightGray,
                 Text = "Please wait...",
                 HorizontalAlignment = HorizontalAlignment.Center,
@@ -134,6 +147,10 @@ namespace Odyssey.Stride.UI
             contentPanel.Children.Add(_statusText);
 
             // Progress bar background
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.Panels.Grid.html
+            // Grid() constructor creates a new grid panel
+            // Method signature: Grid()
+            // Source: https://doc.stride3d.net/latest/en/manual/user-interface/layout-and-panels.html
             var progressContainer = new Grid
             {
                 Width = 350,
@@ -141,13 +158,22 @@ namespace Odyssey.Stride.UI
                 HorizontalAlignment = HorizontalAlignment.Center
             };
 
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.Controls.Border.html
+            // Border() constructor creates a new border control
+            // Method signature: Border()
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.Color.html
+            // Color(byte r, byte g, byte b, byte a) constructor creates background color
+            // Method signature: Color(byte r, byte g, byte b, byte a)
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.Thickness.html
+            // Thickness(float, float, float, float) constructor creates border thickness
+            // Method signature: Thickness(float left, float top, float right, float bottom)
+            // Source: https://doc.stride3d.net/latest/en/manual/user-interface/controls.html
             _progressBarBackground = new Border
             {
-                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.Color.html
-                // Color(byte r, byte g, byte b, byte a) constructor - same as documented above
                 BackgroundColor = new Color(40, 40, 60, 255),
                 // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.Color.html
-                // Color.DarkGoldenrod static property - same as documented above
+                // Color.DarkGoldenrod is a static property representing dark goldenrod color
+                // Source: https://doc.stride3d.net/latest/en/manual/graphics/colors.html
                 BorderColor = Color.DarkGoldenrod,
                 BorderThickness = new Thickness(2, 2, 2, 2),
                 Width = 350,
@@ -156,6 +182,15 @@ namespace Odyssey.Stride.UI
             progressContainer.Children.Add(_progressBarBackground);
 
             // Progress bar fill
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.Controls.Border.html
+            // Border() constructor creates a new border control used as progress fill
+            // Method signature: Border()
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.Color.html
+            // Color.Goldenrod is a static property representing goldenrod color
+            // Source: https://doc.stride3d.net/latest/en/manual/graphics/colors.html
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.Thickness.html
+            // Thickness(float, float, float, float) - same constructor as above
+            // Source: https://doc.stride3d.net/latest/en/manual/user-interface/controls.html
             _progressBar = new Border
             {
                 BackgroundColor = Color.Goldenrod,

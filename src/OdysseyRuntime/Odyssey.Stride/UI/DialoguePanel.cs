@@ -119,10 +119,20 @@ namespace Odyssey.Stride.UI
             _rootPanel.Children.Add(_portraitImage);
 
             // Dialogue content area
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.Panels.Grid.html
+            // Grid() constructor creates a new grid panel
+            // Method signature: Grid()
+            // Source: https://doc.stride3d.net/latest/en/manual/user-interface/layout-and-panels.html
             var dialogueArea = new Grid();
             dialogueArea.SetGridColumn(1);
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.Panels.StripDefinition.html
+            // StripDefinition(StripType.Fixed, float) - Fixed type sets fixed pixel height
             dialogueArea.RowDefinitions.Add(new StripDefinition(StripType.Fixed, 30)); // Speaker name
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.Panels.StripDefinition.html
+            // StripDefinition(StripType.Star, float) - Star type fills remaining space proportionally
             dialogueArea.RowDefinitions.Add(new StripDefinition(StripType.Star, 1));   // Dialogue text
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.Panels.StripDefinition.html
+            // StripDefinition(StripType.Star, float) - same constructor as above
             dialogueArea.RowDefinitions.Add(new StripDefinition(StripType.Star, 1));   // Replies
 
             // Speaker name
@@ -169,8 +179,12 @@ namespace Odyssey.Stride.UI
 
             // Replies panel
             // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.Controls.ScrollViewer.html
+            // ScrollViewer() constructor creates a new scroll viewer
             // ScrollViewer provides scrolling for content that exceeds visible area
+            // Method signature: ScrollViewer()
             // ScrollMode.Vertical enables vertical scrolling, Content property sets scrollable content
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.Thickness.html
+            // Thickness(float, float, float, float) - same constructor as above
             // Source: https://doc.stride3d.net/latest/en/manual/user-interface/controls.html
             var repliesContainer = new ScrollViewer
             {
@@ -180,7 +194,9 @@ namespace Odyssey.Stride.UI
             repliesContainer.SetGridRow(2);
 
             // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.Panels.StackPanel.html
+            // StackPanel() constructor creates a new stack panel
             // StackPanel arranges children in a single line (horizontal or vertical)
+            // Method signature: StackPanel()
             // Orientation.Vertical stacks children vertically
             // Source: https://doc.stride3d.net/latest/en/manual/user-interface/layout-and-panels.html
             _repliesPanel = new StackPanel
@@ -258,15 +274,28 @@ namespace Odyssey.Stride.UI
                 // Format reply number
                 string displayText = (i + 1).ToString() + ". " + (replyText ?? "[Continue]");
 
+                // Create button for reply option
+                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.Controls.Button.html
+                // Button() constructor creates a new button control
+                // Method signature: Button()
+                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.Controls.TextBlock.html
+                // TextBlock() constructor creates text content for button
+                // Method signature: TextBlock()
+                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.Color.html
+                // Color.LightGoldenrodYellow is a static property representing light goldenrod yellow color
+                // Source: https://doc.stride3d.net/latest/en/manual/graphics/colors.html
+                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.Thickness.html
+                // Thickness(float, float, float, float) - same constructor as above
+                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.Color.html
+                // Color(byte r, byte g, byte b, byte a) constructor creates button background color
+                // Method signature: Color(byte r, byte g, byte b, byte a)
+                // Source: https://doc.stride3d.net/latest/en/manual/user-interface/controls.html
                 var button = new Button
                 {
                     Content = new TextBlock
                     {
                         Font = _font,
                         TextSize = 14,
-                        // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.Color.html
-                        // Color.LightGoldenrodYellow is a static property representing light goldenrod yellow color
-                        // Source: https://doc.stride3d.net/latest/en/manual/graphics/colors.html
                         TextColor = Color.LightGoldenrodYellow,
                         Text = displayText,
                         Margin = new Thickness(5, 2, 5, 2)
