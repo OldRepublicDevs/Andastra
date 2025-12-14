@@ -1,0 +1,721 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using CSharpKOTOR.Common;
+using CSharpKOTOR.Extract;
+using CSharpKOTOR.Formats.GFF;
+using CSharpKOTOR.Formats.SSF;
+using CSharpKOTOR.Formats.TwoDA;
+using CSharpKOTOR.Installation;
+using CSharpKOTOR.Logger;
+using CSharpKOTOR.Resources;
+using JetBrains.Annotations;
+
+namespace CSharpKOTOR.Tools
+{
+    // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/reference_cache.py:40-47
+    // Original: _SCAN_RESULTS_CACHE: dict[tuple, list[tuple[int, str]]] = {}
+    internal static class ScanResultsCache
+    {
+        private static readonly Dictionary<string, List<(int strref, string location)>> _cache = new Dictionary<string, List<(int, string)>>();
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/reference_cache.py:45-47
+        // Original: def clear_scan_cache() -> None:
+        public static void Clear()
+        {
+            _cache.Clear();
+        }
+    }
+
+    // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/reference_cache.py:88-119
+    // Original: @dataclass class TwoDARefLocation, SSFRefLocation, GFFRefLocation, NCSRefLocation:
+    public class TwoDARefLocation
+    {
+        public int RowIndex { get; set; }
+        public string ColumnName { get; set; }
+
+        public TwoDARefLocation(int rowIndex, string columnName)
+        {
+            RowIndex = rowIndex;
+            ColumnName = columnName;
+        }
+    }
+
+    public class SSFRefLocation
+    {
+        public SSFSound Sound { get; set; }
+
+        public SSFRefLocation(SSFSound sound)
+        {
+            Sound = sound;
+        }
+    }
+
+    public class GFFRefLocation
+    {
+        public string FieldPath { get; set; }
+
+        public GFFRefLocation(string fieldPath)
+        {
+            FieldPath = fieldPath;
+        }
+    }
+
+    public class NCSRefLocation
+    {
+        public int ByteOffset { get; set; }
+
+        public NCSRefLocation(int byteOffset)
+        {
+            ByteOffset = byteOffset;
+        }
+    }
+
+    // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/reference_cache.py:122-128
+    // Original: @dataclass class StrRefSearchResult:
+    public class StrRefSearchResult
+    {
+        public FileResource Resource { get; set; }
+        public List<object> Locations { get; set; }
+
+        public StrRefSearchResult(FileResource resource, List<object> locations)
+        {
+            Resource = resource;
+            Locations = locations;
+        }
+    }
+
+    // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/reference_cache.py:130-479
+    // Original: class StrRefReferenceCache:
+    /// <summary>
+    /// Cache of StrRef references found during resource scanning.
+    /// Maps StrRef -> list of (resource_identifier, locations) where it's referenced.
+    /// </summary>
+    public class StrRefReferenceCache
+    {
+        private readonly Game _game;
+        private readonly Dictionary<int, Dictionary<ResourceIdentifier, List<string>>> _cache = new Dictionary<int, Dictionary<ResourceIdentifier, List<string>>>();
+        private readonly Dictionary<string, HashSet<string>> _strref2daColumns;
+        private int _totalReferencesFound;
+        private readonly HashSet<string> _filesWithStrrefs = new HashSet<string>();
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/reference_cache.py:136-159
+        // Original: def __init__(self, game: Game):
+        public StrRefReferenceCache(Game game)
+        {
+            _game = game;
+
+            // Get game-specific 2DA column definitions
+            if (_game == Game.K1)
+            {
+                _strref2daColumns = TwoDARegistry.ColumnsFor("strref", false);
+            }
+            else if (_game == Game.TSL)
+            {
+                _strref2daColumns = TwoDARegistry.ColumnsFor("strref", true);
+            }
+            else
+            {
+                _strref2daColumns = new Dictionary<string, HashSet<string>>();
+            }
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/reference_cache.py:161-201
+        // Original: def scan_resource(self, resource: FileResource, data: bytes) -> None:
+        public void ScanResource(FileResource resource, byte[] data)
+        {
+            if (resource == null || data == null)
+            {
+                return;
+            }
+
+            ResourceIdentifier identifier = resource.Identifier;
+            ResourceType restype = resource.ResType;
+            string filename = resource.Filename().ToLowerInvariant();
+
+            try
+            {
+                // 2DA files
+                if (restype == ResourceType.TwoDA && _strref2daColumns.ContainsKey(filename))
+                {
+                    Scan2DA(identifier, data, filename);
+                }
+                // SSF files
+                else if (restype == ResourceType.SSF)
+                {
+                    ScanSSF(identifier, data);
+                }
+                // NCS files - FIXME: TEMPORARILY DISABLED (will revisit later)
+                // GFF files
+                else if (restype.IsGff())
+                {
+                    try
+                    {
+                        var gffObj = GFFAuto.ReadGff(data);
+                        if (gffObj != null)
+                        {
+                            ScanGFF(identifier, gffObj.Root);
+                        }
+                    }
+                    catch
+                    {
+                        // Failed to parse GFF, skip
+                    }
+                }
+            }
+            catch
+            {
+                // Skip files that fail to scan
+            }
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/reference_cache.py:203-223
+        // Original: def _scan_2da(self, identifier: ResourceIdentifier, data: bytes, filename: str) -> None:
+        private void Scan2DA(ResourceIdentifier identifier, byte[] data, string filename)
+        {
+            var twodaObj = new TwoDABinaryReader(data).Load();
+            if (!_strref2daColumns.TryGetValue(filename, out HashSet<string> columnsWithStrrefs))
+            {
+                return;
+            }
+
+            for (int rowIdx = 0; rowIdx < twodaObj.GetHeight(); rowIdx++)
+            {
+                foreach (string columnName in columnsWithStrrefs)
+                {
+                    if (columnName == ">>##HEADER##<<")
+                    {
+                        continue;
+                    }
+
+                    string cell = twodaObj.GetCell(rowIdx, columnName);
+                    if (!string.IsNullOrEmpty(cell) && cell.Trim().All(char.IsDigit))
+                    {
+                        int strref = int.Parse(cell.Trim());
+                        string location = $"row_{rowIdx}.{columnName}";
+                        LogDebug($"Found StrRef {strref} in 2DA file '{filename}' at row {rowIdx}, column '{columnName}'");
+                        AddReference(strref, identifier, location);
+                    }
+                }
+            }
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/reference_cache.py:225-239
+        // Original: def _scan_ssf(self, identifier: ResourceIdentifier, data: bytes) -> None:
+        private void ScanSSF(ResourceIdentifier identifier, byte[] data)
+        {
+            var ssfObj = SSFAuto.ReadSsf(data);
+            string filename = $"{identifier.ResName}.{identifier.ResType.Extension}";
+
+            foreach (SSFSound sound in Enum.GetValues(typeof(SSFSound)))
+            {
+                int? strref = ssfObj.Get(sound);
+                if (strref.HasValue && strref.Value != -1)
+                {
+                    string location = $"sound_{sound}";
+                    LogDebug($"Found StrRef {strref.Value} in SSF file '{filename}' at sound slot '{sound}'");
+                    AddReference(strref.Value, identifier, location);
+                }
+            }
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/reference_cache.py:308-346
+        // Original: def _scan_gff(self, identifier: ResourceIdentifier, gff_struct: GFFStruct, current_path: str = "") -> None:
+        private void ScanGFF(ResourceIdentifier identifier, GFFStruct gffStruct, string currentPath = "")
+        {
+            foreach (var field in gffStruct)
+            {
+                // Build field path
+                string fieldPath = string.IsNullOrEmpty(currentPath) ? field.Label : $"{currentPath}.{field.Label}";
+
+                // LocalizedString fields
+                if (field.Type == GFFFieldType.LocalizedString && field.Value is LocalizedString locstring)
+                {
+                    if (locstring.StringRef != -1)
+                    {
+                        string filename = $"{identifier.ResName}.{identifier.ResType.Extension}";
+                        LogDebug($"Found StrRef {locstring.StringRef} in GFF file '{filename}' at field path '{fieldPath}'");
+                        AddReference(locstring.StringRef, identifier, fieldPath);
+                    }
+                }
+
+                // Nested structs
+                if (field.Type == GFFFieldType.Struct && field.Value is GFFStruct nestedStruct)
+                {
+                    ScanGFF(identifier, nestedStruct, fieldPath);
+                }
+
+                // Lists
+                if (field.Type == GFFFieldType.List && field.Value is GFFList list)
+                {
+                    for (int idx = 0; idx < list.Count; idx++)
+                    {
+                        if (list[idx] is GFFStruct listStruct)
+                        {
+                            string listPath = $"{fieldPath}[{idx}]";
+                            ScanGFF(identifier, listStruct, listPath);
+                        }
+                    }
+                }
+            }
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/reference_cache.py:348-375
+        // Original: def _add_reference(self, strref: int, identifier: ResourceIdentifier, location: str) -> None:
+        private void AddReference(int strref, ResourceIdentifier identifier, string location)
+        {
+            string filename = $"{identifier.ResName}.{identifier.ResType.Extension}";
+
+            // Track statistics
+            _totalReferencesFound++;
+            _filesWithStrrefs.Add(filename);
+
+            // Initialize dict for this StrRef if needed
+            if (!_cache.ContainsKey(strref))
+            {
+                _cache[strref] = new Dictionary<ResourceIdentifier, List<string>>();
+                LogVerbose($"  → Cached new StrRef {strref} from '{filename}' at '{location}'");
+            }
+
+            // O(1) dictionary lookup instead of O(n) linear search
+            if (_cache[strref].ContainsKey(identifier))
+            {
+                // Identifier already exists, append location
+                _cache[strref][identifier].Add(location);
+            }
+            else
+            {
+                // New identifier for this StrRef
+                _cache[strref][identifier] = new List<string> { location };
+            }
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/reference_cache.py:377-388
+        // Original: def get_references(self, strref: int) -> list[tuple[ResourceIdentifier, list[str]]]:
+        public List<(ResourceIdentifier identifier, List<string> locations)> GetReferences(int strref)
+        {
+            if (!_cache.TryGetValue(strref, out Dictionary<ResourceIdentifier, List<string>> strrefDict))
+            {
+                return new List<(ResourceIdentifier, List<string>)>();
+            }
+            return strrefDict.Select(kvp => (kvp.Key, kvp.Value)).ToList();
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/reference_cache.py:390-392
+        // Original: def has_references(self, strref: int) -> bool:
+        public bool HasReferences(int strref)
+        {
+            return _cache.ContainsKey(strref);
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/reference_cache.py:394-404
+        // Original: def get_statistics(self) -> dict[str, int]:
+        public Dictionary<string, int> GetStatistics()
+        {
+            return new Dictionary<string, int>
+            {
+                { "unique_strrefs", _cache.Count },
+                { "total_references", _totalReferencesFound },
+                { "files_with_strrefs", _filesWithStrrefs.Count }
+            };
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/reference_cache.py:406-414
+        // Original: def log_summary(self) -> None:
+        public void LogSummary()
+        {
+            var stats = GetStatistics();
+            LogVerbose(
+                $"\nStrRef Cache Summary:\n" +
+                $"  • {stats["unique_strrefs"]} unique StrRefs cached\n" +
+                $"  • {stats["total_references"]} total StrRef references found\n" +
+                $"  • {stats["files_with_strrefs"]} files contain StrRef references"
+            );
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/reference_cache.py:416-434
+        // Original: def to_dict(self) -> dict[str, list[dict[str, str | list[str]]]]:
+        public Dictionary<string, List<Dictionary<string, object>>> ToDict()
+        {
+            var serialized = new Dictionary<string, List<Dictionary<string, object>>>();
+
+            foreach (var kvp in _cache)
+            {
+                int strref = kvp.Key;
+                var referencesDict = kvp.Value;
+                serialized[strref.ToString()] = referencesDict.Select(identifierKvp => new Dictionary<string, object>
+                {
+                    { "resname", identifierKvp.Key.ResName },
+                    { "restype", identifierKvp.Key.ResType.Extension },
+                    { "locations", identifierKvp.Value }
+                }).ToList();
+            }
+
+            return serialized;
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/reference_cache.py:436-479
+        // Original: @classmethod def from_dict(cls, game: Game, data: dict[str, list[dict[str, str | list[str]]]]) -> StrRefReferenceCache:
+        public static StrRefReferenceCache FromDict(Game game, Dictionary<string, List<Dictionary<string, object>>> data)
+        {
+            var cache = new StrRefReferenceCache(game);
+
+            foreach (var kvp in data)
+            {
+                string strrefStr = kvp.Key;
+                var references = kvp.Value;
+                int strref = int.Parse(strrefStr);
+                cache._cache[strref] = new Dictionary<ResourceIdentifier, List<string>>();
+
+                foreach (var refData in references)
+                {
+                    string resname = refData["resname"].ToString();
+                    string restypeExt = refData["restype"].ToString();
+                    var locationsList = refData["locations"] as List<object>;
+                    var locations = locationsList?.Cast<string>().ToList() ?? new List<string>();
+
+                    // Recreate ResourceIdentifier
+                    ResourceType restype = ResourceType.FromExtension(restypeExt);
+                    if (restype == null || !restype.IsValid())
+                    {
+                        continue;
+                    }
+
+                    var identifier = new ResourceIdentifier(resname, restype);
+
+                    // Use dict assignment
+                    cache._cache[strref][identifier] = locations;
+
+                    // Update statistics
+                    cache._totalReferencesFound += locations.Count;
+                    string filename = $"{resname}.{restypeExt}";
+                    cache._filesWithStrrefs.Add(filename);
+                }
+            }
+
+            LogVerbose($"Restored StrRef cache from saved data: {cache._cache.Count} StrRefs, {cache._totalReferencesFound} references");
+
+            return cache;
+        }
+
+        private static void LogDebug(string msg)
+        {
+            int logLevel = Environment.GetEnvironmentVariable("KOTORDIFF_DEBUG") != null ? 2 : (Environment.GetEnvironmentVariable("KOTORDIFF_VERBOSE") != null ? 1 : 0);
+            if (logLevel >= 2)
+            {
+                Console.WriteLine($"[DEBUG] {msg}");
+            }
+        }
+
+        private static void LogVerbose(string msg)
+        {
+            int logLevel = Environment.GetEnvironmentVariable("KOTORDIFF_DEBUG") != null ? 2 : (Environment.GetEnvironmentVariable("KOTORDIFF_VERBOSE") != null ? 1 : 0);
+            if (logLevel >= 1)
+            {
+                Console.WriteLine($"[VERBOSE] {msg}");
+            }
+        }
+    }
+
+    // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/reference_cache.py:482-755
+    // Original: class TwoDAMemoryReferenceCache:
+    /// <summary>
+    /// Cache of 2DA memory token references found during resource scanning.
+    /// Maps (2da_filename, row_index) -> {resource_identifier: [field_paths]} where that row is referenced.
+    /// </summary>
+    public class TwoDAMemoryReferenceCache
+    {
+        private readonly Game _game;
+        private readonly Dictionary<(string twodaFilename, int rowIndex), Dictionary<ResourceIdentifier, List<string>>> _cache = new Dictionary<(string, int), Dictionary<ResourceIdentifier, List<string>>>();
+        private int _totalReferencesFound;
+        private readonly HashSet<string> _filesWith2daRefs = new HashSet<string>();
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/reference_cache.py:492-498
+        // Original: def __init__(self, game: Game):
+        public TwoDAMemoryReferenceCache(Game game)
+        {
+            _game = game;
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/reference_cache.py:508-535
+        // Original: def scan_resource(self, resource: FileResource, data: bytes) -> None:
+        public void ScanResource(FileResource resource, byte[] data)
+        {
+            if (resource == null || data == null)
+            {
+                return;
+            }
+
+            ResourceIdentifier identifier = resource.Identifier;
+            ResourceType restype = resource.ResType;
+
+            try
+            {
+                // Only scan GFF files for 2DA references
+                if (restype.IsGff())
+                {
+                    try
+                    {
+                        var gffObj = GFFAuto.ReadGff(data);
+                        if (gffObj != null)
+                        {
+                            ScanGFF(identifier, gffObj.Root);
+                        }
+                    }
+                    catch
+                    {
+                        // Failed to parse GFF, skip
+                    }
+                }
+            }
+            catch
+            {
+                // Skip files that fail to scan
+            }
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/reference_cache.py:537-592
+        // Original: def _scan_gff(self, identifier: ResourceIdentifier, gff_struct: GFFStruct, current_path: str = "") -> None:
+        private void ScanGFF(ResourceIdentifier identifier, GFFStruct gffStruct, string currentPath = "")
+        {
+            // Get the mapping lazily to avoid circular dependency
+            var gffFieldTo2daMapping = GetGffFieldTo2daMapping();
+
+            foreach (var field in gffStruct)
+            {
+                // Build field path
+                string fieldPath = string.IsNullOrEmpty(currentPath) ? field.Label : $"{currentPath}.{field.Label}";
+
+                // Check if this field references a 2DA
+                if (gffFieldTo2daMapping.TryGetValue(field.Label, out ResourceIdentifier twodaIdentifier))
+                {
+                    // This field references a 2DA file
+                    string twodaFilename = $"{twodaIdentifier.ResName}.{twodaIdentifier.ResType.Extension}";
+
+                    // Extract the numeric value (row index)
+                    int? rowIndex = null;
+                    if (field.Type == GFFFieldType.Int8 || field.Type == GFFFieldType.Int16 || field.Type == GFFFieldType.Int32 || field.Type == GFFFieldType.Int64)
+                    {
+                        if (field.Value is int intVal)
+                        {
+                            rowIndex = intVal;
+                        }
+                    }
+                    else if (field.Type == GFFFieldType.UInt8 || field.Type == GFFFieldType.UInt16 || field.Type == GFFFieldType.UInt32 || field.Type == GFFFieldType.UInt64)
+                    {
+                        if (field.Value is uint uintVal)
+                        {
+                            rowIndex = (int)uintVal;
+                        }
+                        else if (field.Value is int intVal)
+                        {
+                            rowIndex = intVal;
+                        }
+                    }
+
+                    if (rowIndex.HasValue && rowIndex.Value >= 0)
+                    {
+                        AddReference(twodaFilename, rowIndex.Value, identifier, fieldPath);
+                    }
+                }
+
+                // Recurse into nested structures
+                if (field.Type == GFFFieldType.Struct && field.Value is GFFStruct nestedStruct)
+                {
+                    ScanGFF(identifier, nestedStruct, fieldPath);
+                }
+                else if (field.Type == GFFFieldType.List && field.Value is GFFList list)
+                {
+                    for (int idx = 0; idx < list.Count; idx++)
+                    {
+                        if (list[idx] is GFFStruct listStruct)
+                        {
+                            string listPath = $"{fieldPath}[{idx}]";
+                            ScanGFF(identifier, listStruct, listPath);
+                        }
+                    }
+                }
+            }
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/reference_cache.py:57-61
+        // Original: def _get_gff_field_to_2da_mapping():
+        private Dictionary<string, ResourceIdentifier> GetGffFieldTo2daMapping()
+        {
+            // This should return the mapping from TwoDARegistry
+            // For now, return empty dict - will be implemented when TwoDARegistry.gff_field_mapping() is available
+            return new Dictionary<string, ResourceIdentifier>();
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/reference_cache.py:594-628
+        // Original: def _add_reference(self, twoda_filename: str, row_index: int, identifier: ResourceIdentifier, location: str) -> None:
+        private void AddReference(string twodaFilename, int rowIndex, ResourceIdentifier identifier, string location)
+        {
+            var key = (twodaFilename.ToLowerInvariant(), rowIndex);
+            string filename = $"{identifier.ResName}.{identifier.ResType.Extension}";
+
+            // Track statistics
+            _totalReferencesFound++;
+            _filesWith2daRefs.Add(filename);
+
+            // Initialize dict for this 2DA row if needed
+            if (!_cache.ContainsKey(key))
+            {
+                _cache[key] = new Dictionary<ResourceIdentifier, List<string>>();
+            }
+
+            // O(1) dictionary lookup instead of O(n) linear search
+            if (_cache[key].ContainsKey(identifier))
+            {
+                // Identifier already exists, append location
+                _cache[key][identifier].Add(location);
+            }
+            else
+            {
+                // New identifier for this 2DA row
+                _cache[key][identifier] = new List<string> { location };
+            }
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/reference_cache.py:630-647
+        // Original: def get_references(self, twoda_filename: str, row_index: int) -> list[tuple[ResourceIdentifier, list[str]]]:
+        public List<(ResourceIdentifier identifier, List<string> locations)> GetReferences(string twodaFilename, int rowIndex)
+        {
+            var key = (twodaFilename.ToLowerInvariant(), rowIndex);
+            if (!_cache.TryGetValue(key, out Dictionary<ResourceIdentifier, List<string>> twodaDict))
+            {
+                return new List<(ResourceIdentifier, List<string>)>();
+            }
+            return twodaDict.Select(kvp => (kvp.Key, kvp.Value)).ToList();
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/reference_cache.py:649-664
+        // Original: def has_references(self, twoda_filename: str, row_index: int) -> bool:
+        public bool HasReferences(string twodaFilename, int rowIndex)
+        {
+            var key = (twodaFilename.ToLowerInvariant(), rowIndex);
+            return _cache.ContainsKey(key);
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/reference_cache.py:666-677
+        // Original: def get_statistics(self) -> dict[str, int]:
+        public Dictionary<string, int> GetStatistics()
+        {
+            return new Dictionary<string, int>
+            {
+                { "unique_2da_refs", _cache.Count },
+                { "total_references", _totalReferencesFound },
+                { "files_with_2da_refs", _filesWith2daRefs.Count }
+            };
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/reference_cache.py:679-684
+        // Original: def log_summary(self) -> None:
+        public void LogSummary()
+        {
+            var stats = GetStatistics();
+            LogVerbose($"2DA Memory Reference Cache: {stats["unique_2da_refs"]} unique 2DA rows referenced");
+            LogVerbose($"  Total references: {stats["total_references"]}");
+            LogVerbose($"  Files with 2DA refs: {stats["files_with_2da_refs"]}");
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/reference_cache.py:686-705
+        // Original: def to_dict(self) -> dict[str, list[dict[str, str | int | list[str]]]]:
+        public Dictionary<string, List<Dictionary<string, object>>> ToDict()
+        {
+            var result = new Dictionary<string, List<Dictionary<string, object>>>();
+
+            foreach (var kvp in _cache)
+            {
+                var (twodaFilename, rowIndex) = kvp.Key;
+                var referencesDict = kvp.Value;
+                string key = $"{twodaFilename}:{rowIndex}";
+                result[key] = referencesDict.Select(identifierKvp => new Dictionary<string, object>
+                {
+                    { "resname", identifierKvp.Key.ResName },
+                    { "restype", identifierKvp.Key.ResType.Extension },
+                    { "locations", identifierKvp.Value }
+                }).ToList();
+            }
+
+            return result;
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/reference_cache.py:707-755
+        // Original: @classmethod def from_dict(cls, game: Game, data: dict[str, list[dict[str, str | int | list[str]]]]) -> TwoDAMemoryReferenceCache:
+        public static TwoDAMemoryReferenceCache FromDict(Game game, Dictionary<string, List<Dictionary<string, object>>> data)
+        {
+            var cache = new TwoDAMemoryReferenceCache(game);
+
+            foreach (var kvp in data)
+            {
+                string keyStr = kvp.Key;
+                var references = kvp.Value;
+
+                // Parse key: "soundset.2da:123" -> ("soundset.2da", 123)
+                string[] parts = keyStr.Split(':');
+                if (parts.Length != 2)
+                {
+                    continue;
+                }
+
+                string twodaFilename = parts[0];
+                if (!int.TryParse(parts[1], out int rowIndex))
+                {
+                    continue;
+                }
+
+                var cacheKey = (twodaFilename.ToLowerInvariant(), rowIndex);
+                cache._cache[cacheKey] = new Dictionary<ResourceIdentifier, List<string>>();
+
+                foreach (var refData in references)
+                {
+                    string resname = refData["resname"].ToString();
+                    string restypeExt = refData["restype"].ToString();
+                    var locationsList = refData["locations"] as List<object>;
+                    var locations = locationsList?.Cast<string>().ToList() ?? new List<string>();
+
+                    // Recreate ResourceIdentifier
+                    ResourceType restype = ResourceType.FromExtension(restypeExt);
+                    if (restype == null || !restype.IsValid())
+                    {
+                        continue;
+                    }
+
+                    var identifier = new ResourceIdentifier(resname, restype);
+
+                    // Use dict assignment
+                    cache._cache[cacheKey][identifier] = locations;
+
+                    // Update statistics
+                    cache._totalReferencesFound += locations.Count;
+                    string filename = $"{resname}.{restypeExt}";
+                    cache._filesWith2daRefs.Add(filename);
+                }
+            }
+
+            return cache;
+        }
+
+        private static void LogVerbose(string msg)
+        {
+            int logLevel = Environment.GetEnvironmentVariable("KOTORDIFF_DEBUG") != null ? 2 : (Environment.GetEnvironmentVariable("KOTORDIFF_VERBOSE") != null ? 1 : 0);
+            if (logLevel >= 1)
+            {
+                Console.WriteLine($"[VERBOSE] {msg}");
+            }
+        }
+    }
+
+    // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/reference_cache.py:68
+    // Original: GFF_FIELD_TO_2DA_MAPPING: dict[str, ResourceIdentifier] = _get_gff_field_to_2da_mapping()
+    public static class ReferenceCacheHelpers
+    {
+        // This will be populated from TwoDARegistry when gff_field_mapping() is implemented
+        public static Dictionary<string, ResourceIdentifier> GffFieldTo2daMapping()
+        {
+            // TODO: Implement when TwoDARegistry.gff_field_mapping() is available
+            return new Dictionary<string, ResourceIdentifier>();
+        }
+    }
+}
