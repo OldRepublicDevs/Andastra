@@ -529,7 +529,13 @@ namespace HolocronToolset.NET.Editors
                 OnUserDefined = source.OnUserDefined,
                 OnLock = source.OnLock,
                 OnPower = source.OnPower,
-                Tag = source.Tag
+                Tag = source.Tag,
+                TrapDetectable = source.TrapDetectable,
+                TrapDisarmable = source.TrapDisarmable,
+                DisarmDc = source.DisarmDc,
+                TrapOneShot = source.TrapOneShot,
+                TrapType = source.TrapType,
+                PaletteId = source.PaletteId
             };
 
             return copy;

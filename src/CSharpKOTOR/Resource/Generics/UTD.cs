@@ -69,6 +69,14 @@ namespace CSharpKOTOR.Resource.Generics
         public int Reflex { get; set; }
         public int Willpower { get; set; }
 
+        // Trap properties (deprecated, toolset only)
+        public bool TrapDetectable { get; set; }
+        public bool TrapDisarmable { get; set; }
+        public int DisarmDc { get; set; }
+        public bool TrapOneShot { get; set; }
+        public int TrapType { get; set; }
+        public int PaletteId { get; set; }
+
         // Script hooks
         public ResRef OnClick { get; set; } = ResRef.FromBlank();
         public ResRef OnClosed { get; set; } = ResRef.FromBlank();
