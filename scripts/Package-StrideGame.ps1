@@ -257,8 +257,25 @@ function Get-FileHash {
 $BuildPath = Normalize-Path $BuildPath
 $DocumentationPath = Normalize-Path $DocumentationPath
 
+# Validate build path exists
 if (-not (Test-Path $BuildPath)) {
-    Write-Error "Build path not found: $BuildPath"
+    try {
+        $ResolvedPath = Resolve-Path $BuildPath -ErrorAction Stop
+        $ErrorMsg = "Build path not found: $BuildPath"
+        if ($ResolvedPath -ne $BuildPath) {
+            $ErrorMsg += "`nResolved to: $ResolvedPath"
+        }
+        $ErrorMsg += "`nPlease verify the build was completed successfully."
+        Write-Error $ErrorMsg
+    } catch {
+        Write-Error "Build path not found: $BuildPath`nPlease verify the build was completed successfully."
+    }
+    exit 1
+}
+
+# Validate it's a directory
+if (-not (Test-Path $BuildPath -PathType Container)) {
+    Write-Error "Build path is not a directory: $BuildPath"
     exit 1
 }
 

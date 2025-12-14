@@ -64,6 +64,18 @@
     Verify that Stride assets are properly compiled after build.
     Defaults to $true
 
+.PARAMETER RetryCount
+    Number of retry attempts for transient build failures.
+    Defaults to 0 (no retries).
+
+.PARAMETER RetryDelaySeconds
+    Delay in seconds between retry attempts.
+    Defaults to 5.
+
+.PARAMETER ClearNuGetCache
+    Clear NuGet package cache before building (helps with corrupted packages).
+    Defaults to $false.
+
 .EXAMPLE
     .\Build-StrideGame.ps1
 
@@ -93,7 +105,10 @@ param(
     [switch]$Restore,
     [switch]$NoBuild,
     [switch]$Verbose,
-    [bool]$VerifyAssets = $true
+    [bool]$VerifyAssets = $true,
+    [int]$RetryCount = 0,
+    [int]$RetryDelaySeconds = 5,
+    [switch]$ClearNuGetCache
 )
 
 $ErrorActionPreference = "Stop"
@@ -136,13 +151,45 @@ if (-not (Test-Command "dotnet")) {
 $DotNetVersion = dotnet --version
 Write-Host "Using .NET SDK: $DotNetVersion" -ForegroundColor Green
 
+# Clear NuGet cache if requested
+if ($ClearNuGetCache) {
+    Write-Host "Clearing NuGet cache..." -ForegroundColor Yellow
+    try {
+        dotnet nuget locals all --clear
+        if ($LASTEXITCODE -eq 0) {
+            Write-Host "NuGet cache cleared successfully." -ForegroundColor Green
+        } else {
+            Write-Warning "NuGet cache clearing had issues, but continuing..."
+        }
+    } catch {
+        Write-Warning "Failed to clear NuGet cache: $_"
+    }
+}
+
 # Validate project exists
 if (-not (Test-Path $ProjectPath)) {
-    Write-Error "Project file not found: $ProjectPath"
+    $FullPath = Resolve-Path $ProjectPath -ErrorAction SilentlyContinue
+    $ErrorMsg = "Project file not found: $ProjectPath"
+    if ($FullPath) {
+        $ErrorMsg += "`nResolved to: $FullPath"
+    }
+    $ErrorMsg += "`nPlease verify the project path is correct."
+    Write-Error $ErrorMsg
     exit 1
 }
 
-$ProjectPath = Resolve-Path $ProjectPath
+try {
+    $ProjectPath = Resolve-Path $ProjectPath -ErrorAction Stop
+} catch {
+    Write-Error "Failed to resolve project path '$ProjectPath': $_"
+    exit 1
+}
+
+# Validate project file is actually a .csproj
+if ($ProjectPath -notmatch '\.csproj$') {
+    Write-Error "Project path must point to a .csproj file: $ProjectPath"
+    exit 1
+}
 
 # Platform and architecture mappings
 $PlatformRIDs = @{
@@ -295,15 +342,48 @@ foreach ($Target in $BuildTargets) {
         $PublishArgs += "--verbosity", "minimal"
     }
     
-    # Execute publish
+    # Execute publish with retry logic
     Write-VerboseOutput "Executing: dotnet $($PublishArgs -join ' ')"
     
     $StartTime = Get-Date
-    & dotnet $PublishArgs
+    $BuildSucceeded = $false
+    $Attempt = 0
+    $MaxAttempts = $RetryCount + 1
+    
+    while ($Attempt -lt $MaxAttempts -and -not $BuildSucceeded) {
+        $Attempt++
+        
+        if ($Attempt -gt 1) {
+            Write-Host "Retry attempt $Attempt of $MaxAttempts after $RetryDelaySeconds second(s)..." -ForegroundColor Yellow
+            Start-Sleep -Seconds $RetryDelaySeconds
+        }
+        
+        try {
+            & dotnet $PublishArgs
+            
+            if ($LASTEXITCODE -eq 0) {
+                $BuildSucceeded = $true
+            } else {
+                if ($Attempt -lt $MaxAttempts) {
+                    Write-Warning "Build attempt $Attempt failed (exit code: $LASTEXITCODE). Will retry..."
+                } else {
+                    Write-Error "Build failed after $Attempt attempt(s) (exit code: $LASTEXITCODE)"
+                }
+            }
+        } catch {
+            if ($Attempt -lt $MaxAttempts) {
+                Write-Warning "Build attempt $Attempt threw exception: $_. Will retry..."
+            } else {
+                Write-Error "Build failed after $Attempt attempt(s) with exception: $_"
+                throw
+            }
+        }
+    }
+    
     $BuildDuration = (Get-Date) - $StartTime
     
-    if ($LASTEXITCODE -ne 0) {
-        Write-Error "Build failed for $Platform ($Arch) after $($BuildDuration.TotalSeconds.ToString('F2')) seconds"
+    if (-not $BuildSucceeded) {
+        Write-Error "Build failed for $Platform ($Arch) after $Attempt attempt(s) and $($BuildDuration.TotalSeconds.ToString('F2')) seconds total"
         $FailedBuilds += "$Platform-$Arch"
         continue
     }
