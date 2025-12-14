@@ -159,5 +159,91 @@ namespace CSharpKOTOR.Diff
         {
             return false;
         }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tslpatcher/diff/engine.py:2010-2012
+        // Original: def is_modules_directory(dir_path: Path) -> bool:
+        /// <summary>
+        /// Check if a directory is a modules directory.
+        /// </summary>
+        public static bool IsModulesDirectory(string dirPath)
+        {
+            if (string.IsNullOrEmpty(dirPath))
+            {
+                return false;
+            }
+            string dirName = Path.GetFileName(dirPath).ToLowerInvariant();
+            return dirName == "modules" || dirName == "module" || dirName == "mods";
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tslpatcher/diff/engine.py:1159-1172
+        // Original: def relative_path_from_to(src: PurePath, dst: PurePath) -> Path:
+        /// <summary>
+        /// Calculate relative path from src to dst.
+        /// </summary>
+        public static string RelativePathFromTo(string src, string dst)
+        {
+            try
+            {
+                return Path.GetRelativePath(src, dst).Replace('\\', '/');
+            }
+            catch
+            {
+                // Fallback if paths are on different drives or cannot be made relative
+                return dst;
+            }
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tslpatcher/diff/engine.py:2252-2288
+        // Original: def should_include_in_filtered_diff(file_path: str, filters: list[str] | None) -> bool:
+        /// <summary>
+        /// Check if a file should be included based on filter criteria.
+        /// </summary>
+        public static bool ShouldIncludeInFilteredDiff(string filePath, List<string> filters)
+        {
+            if (filters == null || filters.Count == 0)
+            {
+                return true; // No filters means include everything
+            }
+
+            string fileName = Path.GetFileName(filePath).ToLowerInvariant();
+            string[] pathParts = filePath.Split(new[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar }, StringSplitOptions.RemoveEmptyEntries);
+
+            foreach (string filterPattern in filters)
+            {
+                string filterName = Path.GetFileName(filterPattern).ToLowerInvariant();
+
+                // Direct filename match
+                if (filterName == fileName)
+                {
+                    return true;
+                }
+
+                // Check if filter name appears in parent directories
+                if (pathParts.Any(p => p.Equals(filterName, StringComparison.OrdinalIgnoreCase)))
+                {
+                    return true;
+                }
+
+                // Module name match (for .rim/.mod/.erf files)
+                string ext = Path.GetExtension(filePath).ToLowerInvariant();
+                if (ext == ".rim" || ext == ".mod" || ext == ".erf")
+                {
+                    try
+                    {
+                        string root = Common.Module.NameToRoot(filePath);
+                        if (!string.IsNullOrEmpty(filterName) && filterName.Equals(root, StringComparison.OrdinalIgnoreCase))
+                        {
+                            return true;
+                        }
+                    }
+                    catch
+                    {
+                        // Ignore errors in module root extraction
+                    }
+                }
+            }
+
+            return false;
+        }
     }
 }
