@@ -99,3 +99,4 @@ namespace CSharpKOTOR.Common
         }
     }
 }
+
