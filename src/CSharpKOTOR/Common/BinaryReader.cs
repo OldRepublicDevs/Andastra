@@ -5,7 +5,6 @@ using JetBrains.Annotations;
 
 namespace CSharpKOTOR.Common
 {
-
     /// <summary>
     /// Binary reader with enhanced functionality matching Python's RawBinaryReader.
     /// Provides offset/size constrained reading, encoding support, and bounds checking.
@@ -15,6 +14,18 @@ namespace CSharpKOTOR.Common
     /// </remarks>
     public class RawBinaryReader : IDisposable
     {
+        // Static initializer to ensure CodePages encoding provider is registered
+        static RawBinaryReader()
+        {
+            try
+            {
+                Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+            }
+            catch
+            {
+                // Already registered, ignore
+            }
+        }
         private readonly Stream _stream;
         private readonly int _offset;
         private readonly int _size;
@@ -433,7 +444,15 @@ namespace CSharpKOTOR.Common
                 }
                 catch (ArgumentException)
                 {
-                    enc = Encoding.GetEncoding(1252, EncoderFallback.ReplacementFallback, DecoderFallback.ReplacementFallback);
+                    try
+                    {
+                        enc = Encoding.GetEncoding(1252, EncoderFallback.ReplacementFallback, DecoderFallback.ReplacementFallback);
+                    }
+                    catch
+                    {
+                        // Fallback to UTF-8 if Windows-1252 is not available
+                        enc = Encoding.UTF8;
+                    }
                 }
             }
             else
@@ -450,12 +469,29 @@ namespace CSharpKOTOR.Common
 
                 try
                 {
+                    // Ensure provider is registered before getting encoding
+                    try
+                    {
+                        Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+                    }
+                    catch
+                    {
+                        // Already registered
+                    }
                     enc = Encoding.GetEncoding(encoding, EncoderFallback.ReplacementFallback, decoderFallback);
                 }
                 catch (ArgumentException)
                 {
-                    // Fallback to windows-1252 if encoding not found
-                    enc = Encoding.GetEncoding(1252, EncoderFallback.ReplacementFallback, decoderFallback);
+                    try
+                    {
+                        // Fallback to windows-1252 if encoding not found
+                        enc = Encoding.GetEncoding(1252, EncoderFallback.ReplacementFallback, decoderFallback);
+                    }
+                    catch
+                    {
+                        // Final fallback to UTF-8
+                        enc = Encoding.UTF8;
+                    }
                 }
             }
 

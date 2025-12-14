@@ -187,8 +187,8 @@ namespace CSharpKOTOR.Tests
         [Test]
         public void TestSalvageValidation()
         {
-            // Test Salvage.ValidateResource with null
-            var result = Salvage.ValidateResource(null);
+            // Test Salvage.ValidateResourceFile with null
+            var result = Salvage.ValidateResourceFile(null);
             Assert.IsFalse(result);
         }
     }

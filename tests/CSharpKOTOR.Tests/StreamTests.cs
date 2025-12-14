@@ -25,6 +25,16 @@ namespace CSharpKOTOR.Tests
         [SetUp]
         public void SetUp()
         {
+            // Register CodePages encoding provider for Windows encodings (required for .NET Core/5+)
+            try
+            {
+                System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
+            }
+            catch
+            {
+                // Already registered, ignore
+            }
+
             _data1 = new byte[] { 0x01, 0x02, 0x00, 0x03, 0x00, 0x00, 0x00, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
             _data2 = Encoding.ASCII.GetBytes("helloworld\x00");
             _data3 = new byte[] { 0xFF, 0xFE, 0xFF, 0xFD, 0xFF, 0xFF, 0xFF, 0xFC, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };

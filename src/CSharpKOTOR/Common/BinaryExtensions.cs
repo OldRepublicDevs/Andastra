@@ -68,7 +68,16 @@ namespace CSharpKOTOR.Common
                 uint length = reader.ReadUInt32();
 
                 // Get encoding for the language
-                var encoding = Encoding.GetEncoding(LanguageExtensions.GetEncoding(language));
+                string encodingName = LanguageExtensions.GetEncoding(language);
+                Encoding encoding;
+                try
+                {
+                    encoding = Encoding.GetEncoding(encodingName);
+                }
+                catch
+                {
+                    encoding = Encoding.UTF8;
+                }
                 byte[] textBytes = reader.ReadBytes((int)length);
                 string text = encoding.GetString(textBytes).TrimEnd('\0');
 
@@ -99,7 +108,16 @@ namespace CSharpKOTOR.Common
                     int stringId = LocalizedString.SubstringId(language, gender);
                     tempWriter.WriteUInt32((uint)stringId);
 
-                    var encoding = Encoding.GetEncoding(LanguageExtensions.GetEncoding(language));
+                    string encodingName = LanguageExtensions.GetEncoding(language);
+                    Encoding encoding;
+                    try
+                    {
+                        encoding = Encoding.GetEncoding(encodingName);
+                    }
+                    catch
+                    {
+                        encoding = Encoding.UTF8;
+                    }
                     byte[] textBytes = encoding.GetBytes(text);
                     tempWriter.WriteUInt32((uint)textBytes.Length);
                     tempWriter.WriteBytes(textBytes);

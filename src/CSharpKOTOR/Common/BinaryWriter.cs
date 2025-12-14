@@ -15,6 +15,18 @@ namespace CSharpKOTOR.Common
     /// </remarks>
     public abstract class RawBinaryWriter : IDisposable
     {
+        // Static initializer to ensure CodePages encoding provider is registered
+        static RawBinaryWriter()
+        {
+            try
+            {
+                Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+            }
+            catch
+            {
+                // Already registered, ignore
+            }
+        }
         public bool AutoClose { get; set; } = true;
 
         /// <summary>
@@ -357,9 +369,22 @@ namespace CSharpKOTOR.Common
             }
 
             // Write the string bytes
-            Encoding enc = encoding != null
-                ? Encoding.GetEncoding(encoding)
-                : Encoding.UTF8;
+            Encoding enc;
+            if (encoding != null)
+            {
+                try
+                {
+                    enc = Encoding.GetEncoding(encoding);
+                }
+                catch
+                {
+                    enc = Encoding.UTF8;
+                }
+            }
+            else
+            {
+                enc = Encoding.UTF8;
+            }
 
             byte[] bytes = enc.GetBytes(value);
             _stream.Write(bytes, 0, bytes.Length);
@@ -647,9 +672,22 @@ namespace CSharpKOTOR.Common
             }
 
             // Write the string bytes
-            Encoding enc = encoding != null
-                ? Encoding.GetEncoding(encoding)
-                : Encoding.UTF8;
+            Encoding enc;
+            if (encoding != null)
+            {
+                try
+                {
+                    enc = Encoding.GetEncoding(encoding);
+                }
+                catch
+                {
+                    enc = Encoding.UTF8;
+                }
+            }
+            else
+            {
+                enc = Encoding.UTF8;
+            }
 
             byte[] bytes = enc.GetBytes(value);
             WriteBytes(bytes);
@@ -673,7 +711,16 @@ namespace CSharpKOTOR.Common
                 int stringId = LocalizedString.SubstringId(language, gender);
                 tempWriter.WriteUInt32((uint)stringId, bigEndian);
 
-                Encoding encoding = Encoding.GetEncoding(LanguageExtensions.GetEncoding(language));
+                string encodingName = LanguageExtensions.GetEncoding(language);
+                Encoding encoding;
+                try
+                {
+                    encoding = Encoding.GetEncoding(encodingName);
+                }
+                catch
+                {
+                    encoding = Encoding.UTF8;
+                }
                 byte[] textBytes = encoding.GetBytes(text);
                 tempWriter.WriteUInt32((uint)textBytes.Length, bigEndian);
                 tempWriter.WriteBytes(textBytes);
