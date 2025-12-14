@@ -1062,7 +1062,7 @@ namespace Odyssey.Content.MDL
         {
             if (count <= 0)
             {
-                return new MDLFaceData[0];
+                return Array.Empty<MDLFaceData>();
             }
 
             // Validate bounds - each face is 32 bytes (3*float + float + int + 6*short = 12+4+4+12 = 32)
