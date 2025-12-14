@@ -36,7 +36,15 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.AST
 
         public override void Apply(Analysis.AnalysisAdapter sw)
         {
-            sw.DefaultIn(this);
+            // Matching DeNCS implementation - cast to IAnalysis interface and call CaseAActionCommand directly
+            if (sw is Analysis.IAnalysis analysis)
+            {
+                analysis.CaseAActionCommand(this);
+            }
+            else
+            {
+                sw.DefaultIn(this);
+            }
         }
 
         public TAction GetAction()
