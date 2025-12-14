@@ -39,6 +39,10 @@ namespace Odyssey.Game
                 // Create and run the game
                 using (var game = new OdysseyGame(settings))
                 {
+                    // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Games.Game.html
+                    // Game.Run() starts the game loop and blocks until the game exits
+                    // Method signature: void Run()
+                    // Source: https://doc.stride3d.net/latest/en/manual/game-loop/index.html
                     game.Run();
                 }
 
