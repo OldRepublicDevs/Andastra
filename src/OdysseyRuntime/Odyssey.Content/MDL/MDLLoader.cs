@@ -10,8 +10,8 @@ namespace Odyssey.Content.MDL
     /// 
     /// Optimization features:
     /// - Automatic model caching (configurable via UseCache property)
-    /// - Bulk I/O operations using MDLBulkReader for best performance
-    /// - Falls back to MDLFastReader for stream-based loading
+    /// - Ultra-optimized unsafe reader (MDLOptimizedReader) for maximum performance
+    /// - Falls back to MDLBulkReader or MDLFastReader based on configuration
     /// 
     /// Usage:
     /// <code>
@@ -21,11 +21,17 @@ namespace Odyssey.Content.MDL
     /// 
     /// Performance characteristics:
     /// - Bulk read of entire MDL/MDX files into memory
+    /// - Unsafe pointer operations for zero-copy direct memory access
     /// - Pre-allocated arrays based on header counts
-    /// - Zero-copy struct reading where possible
+    /// - Pre-computed vertex attribute offsets for single-pass reading
     /// - LRU cache with configurable size (default 100 models)
     /// 
-    /// Reference: KotOR.js MDLLoader.ts, reone mdlmdxreader.cpp
+    /// Reader selection (configurable via properties):
+    /// - MDLOptimizedReader (default): Fastest, uses unsafe code and zero-copy operations
+    /// - MDLBulkReader: Good performance with safe code, bulk operations
+    /// - MDLFastReader: Stream-based loading for low-memory scenarios
+    /// 
+    /// Reference: KotOR.js MDLLoader.ts, reone mdlmdxreader.cpp, MDLOps
     /// </summary>
     public sealed class MDLLoader
     {
