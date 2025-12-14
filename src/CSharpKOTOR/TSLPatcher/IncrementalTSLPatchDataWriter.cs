@@ -1,6 +1,7 @@
 // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/writer.py:1214-4389
 // Original: class IncrementalTSLPatchDataWriter: ...
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -1298,10 +1299,306 @@ namespace CSharpKOTOR.TSLPatcher
         }
 
         /// <summary>
+        /// Allocate a new 2DAMEMORY token ID.
+        /// Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/writer.py:1673-1677
+        /// </summary>
+        private int Allocate2DaToken()
+        {
+            int tokenId = _next2DaTokenId;
+            _next2DaTokenId++;
+            return tokenId;
+        }
+
+        /// <summary>
+        /// Reserve existing 2DA token IDs to prevent conflicts.
+        /// Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/writer.py:1668-1671
+        /// </summary>
+        private void ReserveExistingTwodaTokens(IEnumerable<int> tokenIds)
+        {
+            foreach (int tokenId in tokenIds)
+            {
+                if (tokenId >= _next2DaTokenId)
+                {
+                    _next2DaTokenId = tokenId + 1;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Create 2DAMEMORY tokens for AddColumn index_insert values that match GFF field values.
+        /// Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/writer.py:1679-1780
+        /// </summary>
+        private void CreateAddColumn2DAMemoryTokens()
+        {
+            // Build a map of cell values -> list of (AddColumn, store_key) that have that value
+            var valueToAddColumnCells = new Dictionary<string, List<Tuple<AddColumn2DA, string>>>();
+
+            foreach (var mod2da in AllModifications.Twoda)
+            {
+                foreach (var modifier in mod2da.Modifiers)
+                {
+                    if (!(modifier is AddColumn2DA addColumn))
+                    {
+                        continue;
+                    }
+
+                    // Scan index_insert for values (I#)
+                    if (addColumn.IndexInsert != null)
+                    {
+                        foreach (var kvp in addColumn.IndexInsert)
+                        {
+                            int rowIdx = kvp.Key;
+                            var rowValue = kvp.Value;
+                            if (!(rowValue is RowValueConstant constant))
+                            {
+                                continue;
+                            }
+
+                            string cellValueStr = constant.String;
+                            string storeKey = $"I{rowIdx}";
+                            if (!valueToAddColumnCells.ContainsKey(cellValueStr))
+                            {
+                                valueToAddColumnCells[cellValueStr] = new List<Tuple<AddColumn2DA, string>>();
+                            }
+                            valueToAddColumnCells[cellValueStr].Add(Tuple.Create(addColumn, storeKey));
+                        }
+                    }
+
+                    // Scan label_insert for values (Llabel)
+                    if (addColumn.LabelInsert != null)
+                    {
+                        foreach (var kvp in addColumn.LabelInsert)
+                        {
+                            string rowLabel = kvp.Key;
+                            var rowValue = kvp.Value;
+                            if (!(rowValue is RowValueConstant constant))
+                            {
+                                continue;
+                            }
+
+                            string cellValueStr = constant.String;
+                            string storeKey = $"L{rowLabel}";
+                            if (!valueToAddColumnCells.ContainsKey(cellValueStr))
+                            {
+                                valueToAddColumnCells[cellValueStr] = new List<Tuple<AddColumn2DA, string>>();
+                            }
+                            valueToAddColumnCells[cellValueStr].Add(Tuple.Create(addColumn, storeKey));
+                        }
+                    }
+                }
+            }
+
+            if (valueToAddColumnCells.Count == 0)
+            {
+                return; // No AddColumn values to link
+            }
+
+            // Scan all GFF modifications for matching field values
+            int tokensCreated = 0;
+            foreach (var modGff in AllModifications.Gff)
+            {
+                foreach (var gffModifier in modGff.Modifiers)
+                {
+                    if (!(gffModifier is ModifyFieldGFF modifyField))
+                    {
+                        continue;
+                    }
+
+                    // Check if this field value matches any AddColumn cell value
+                    if (!(modifyField.Value is FieldValueConstant fieldConstant))
+                    {
+                        continue;
+                    }
+
+                    // Convert field value to string for comparison
+                    string fieldValueStr = fieldConstant.Stored?.ToString() ?? "";
+
+                    if (!valueToAddColumnCells.ContainsKey(fieldValueStr))
+                    {
+                        continue;
+                    }
+
+                    // MATCH FOUND! Create token and link
+                    // Use the first matching AddColumn cell (if multiple match the same value)
+                    var (addColumnModifier, storeKey) = valueToAddColumnCells[fieldValueStr][0];
+
+                    // Check if a token already exists for this value
+                    int? existingTokenId = null;
+                    if (addColumnModifier.Store2DA != null)
+                    {
+                        foreach (var kvp in addColumnModifier.Store2DA)
+                        {
+                            int tokenId = kvp.Key;
+                            string storeValue = kvp.Value;
+                            if (storeValue == storeKey)
+                            {
+                                existingTokenId = tokenId;
+                                break;
+                            }
+                        }
+                    }
+
+                    int tokenIdToUse;
+                    if (!existingTokenId.HasValue)
+                    {
+                        // Allocate new token
+                        tokenIdToUse = Allocate2DaToken();
+
+                        // Store in AddColumn: 2DAMEMORY#=I{row_idx}
+                        // Note: store_2da for AddColumn uses string values, not RowValue objects
+                        // Store2DA is initialized in constructor, so it should never be null
+                        // We can modify the dictionary contents even though the property is read-only
+                        addColumnModifier.Store2DA[tokenIdToUse] = storeKey;
+
+                        _logFunc?.Invoke($"  [AddColumn Token] Created 2DAMEMORY{tokenIdToUse}={storeKey} for value '{fieldValueStr}'");
+                        tokensCreated++;
+                    }
+                    else
+                    {
+                        tokenIdToUse = existingTokenId.Value;
+                        _logFunc?.Invoke($"  [AddColumn Token] Reusing existing 2DAMEMORY{tokenIdToUse}={storeKey} for value '{fieldValueStr}'");
+                    }
+
+                    // Replace GFF field value with token reference
+                    modifyField.Value = new FieldValue2DAMemory(tokenIdToUse);
+                    _logFunc?.Invoke($"  [AddColumn Token] Replaced {modGff.SourceFile} {modifyField.Path} = {fieldValueStr} with 2DAMEMORY{tokenIdToUse}");
+                }
+            }
+
+            if (tokensCreated > 0)
+            {
+                _logFunc?.Invoke($"  Created {tokensCreated} AddColumn 2DAMEMORY token(s) with cross-file linking");
+            }
+        }
+
+        /// <summary>
+        /// Replace cell values with 2DAMEMORY token references when values match stored tokens.
+        /// Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/writer.py:1782-1880
+        /// </summary>
+        private void ReplaceCellsWith2DAMemoryTokens()
+        {
+            // First, handle AddColumn token linking (must happen before processing other modifiers)
+            CreateAddColumn2DAMemoryTokens();
+
+            // Track which tokens are available at each point (tokens that have been stored)
+            // Format: {stored_value: token_id} - only includes tokens that have been stored so far
+            var availableTokens = new Dictionary<string, int>();
+
+            int replacementsMade = 0;
+
+            // Process modifiers in order to ensure tokens are stored before being used
+            foreach (var mod2da in AllModifications.Twoda)
+            {
+                foreach (var modifier in mod2da.Modifiers)
+                {
+                    if (!(modifier is ChangeRow2DA changeRow) && !(modifier is AddRow2DA addRow))
+                    {
+                        continue;
+                    }
+
+                    // First, process store_2da entries to add tokens to availableTokens
+                    if (modifier.Store2DA != null)
+                    {
+                        foreach (var kvp in modifier.Store2DA)
+                        {
+                            int tokenId = kvp.Key;
+                            object rowValue = kvp.Value;
+                            string storedValue = null;
+
+                            if (rowValue is RowValueRowIndex)
+                            {
+                                // For RowIndex, the stored value is the row index as a string
+                                if (modifier is AddRow2DA)
+                                {
+                                    // For AddRow2DA with RowValueRowIndex, the row index isn't known until runtime
+                                    // So we can't match it statically - skip this token for matching
+                                    continue;
+                                }
+                                if (modifier is ChangeRow2DA changeRowMod && 
+                                    changeRowMod.Target != null &&
+                                    changeRowMod.Target.TargetType == TargetType.ROW_INDEX &&
+                                    changeRowMod.Target.Value is int rowIndex)
+                                {
+                                    storedValue = rowIndex.ToString();
+                                }
+                            }
+                            else if (rowValue is RowValueConstant constant)
+                            {
+                                // For constant values, the stored value is the string itself
+                                storedValue = constant.String;
+                            }
+                            else if (rowValue is RowValueRowLabel rowLabel)
+                            {
+                                // For RowLabel, we can match if we have the row label
+                                if (modifier is ChangeRow2DA changeRowMod && 
+                                    changeRowMod.Target != null &&
+                                    changeRowMod.Target.TargetType == TargetType.ROW_LABEL &&
+                                    changeRowMod.Target.Value is string label)
+                                {
+                                    storedValue = label;
+                                }
+                                else if (modifier is AddRow2DA addRowMod && !string.IsNullOrEmpty(addRowMod.RowLabel))
+                                {
+                                    storedValue = addRowMod.RowLabel;
+                                }
+                            }
+                            // Note: RowValueRowCell requires runtime evaluation, skip for now
+
+                            if (storedValue != null &&
+                                (!availableTokens.ContainsKey(storedValue) || tokenId < availableTokens[storedValue]))
+                            {
+                                availableTokens[storedValue] = tokenId;
+                            }
+                        }
+                    }
+
+                    // Now check cell values and replace with available tokens
+                    // Only replace with tokens that have been stored in previous modifiers
+                    if (modifier.Cells != null)
+                    {
+                        var cellsToUpdate = new Dictionary<string, RowValue>();
+                        foreach (var kvp in modifier.Cells)
+                        {
+                            string columnName = kvp.Key;
+                            RowValue cellValue = kvp.Value;
+
+                            if (cellValue is RowValueConstant constant)
+                            {
+                                string cellString = constant.String;
+                                if (availableTokens.ContainsKey(cellString))
+                                {
+                                    int tokenId = availableTokens[cellString];
+                                    // Replace with 2DAMEMORY token reference
+                                    cellsToUpdate[columnName] = new RowValue2DAMemory(tokenId);
+                                    replacementsMade++;
+                                    _logFunc?.Invoke($"  Replaced {mod2da.SourceFile} {modifier.Identifier} {columnName}={cellString} with 2DAMEMORY{tokenId}");
+                                }
+                            }
+                        }
+
+                        // Apply updates
+                        foreach (var kvp in cellsToUpdate)
+                        {
+                            modifier.Cells[kvp.Key] = kvp.Value;
+                        }
+                    }
+                }
+            }
+
+            if (replacementsMade > 0)
+            {
+                _logFunc?.Invoke($"  Replaced {replacementsMade} cell value(s) with 2DAMEMORY token references");
+            }
+        }
+
+        /// <summary>
         /// Completely rewrite the INI file from all accumulated modifications.
         /// </summary>
         private void RewriteIniComplete()
         {
+            // Replace cell values with 2DAMEMORY token references before rewriting
+            ReplaceCellsWith2DAMemoryTokens();
+
             var serializer = new TSLPatcherINISerializer();
 
             // Build InstallFile list from install_folders tracking
