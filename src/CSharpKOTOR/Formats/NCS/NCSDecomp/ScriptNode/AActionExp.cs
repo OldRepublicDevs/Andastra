@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Text;
+using CSharpKOTOR.Formats.NCS.NCSDecomp;
 using CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode;
 using CSharpKOTOR.Formats.NCS.NCSDecomp.Stack;
 
@@ -11,12 +12,23 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.ScriptNode
         private int _id;
         private List<AExpression> _params;
         private StackEntry _stackEntry;
+        private ActionsData _actionsData;
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/AActionExp.java:24-26
+        // Original: public AActionExp(String action, int id, List<AExpression> params) { this(action, id, params, null); }
         public AActionExp(string action, int idVal, List<AExpression> @params)
+            : this(action, idVal, @params, null)
+        {
+        }
+
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptnode/AActionExp.java:28-39
+        // Original: public AActionExp(String action, int id, List<AExpression> params, ActionsData actionsData) { ... }
+        public AActionExp(string action, int idVal, List<AExpression> @params, ActionsData actionsData)
         {
             _action = action;
             _id = idVal;
             _params = new List<AExpression>();
+            _actionsData = actionsData;
             if (@params != null)
             {
                 foreach (var param in @params)

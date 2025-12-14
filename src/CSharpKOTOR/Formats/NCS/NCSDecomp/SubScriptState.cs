@@ -959,7 +959,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
             }
             // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptutils/SubScriptState.java:937
             // Original: AActionExp act = new AActionExp(actionName, NodeUtils.getActionId(node), params, this.actions);
-            AActionExp act = new AActionExp(actionName, NodeUtils.GetActionId(node), @params);
+            AActionExp act = new AActionExp(actionName, NodeUtils.GetActionId(node), @params, this.actions);
             // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptutils/SubScriptState.java:938-944
             // Original: Type type; try { type = NodeUtils.getReturnType(node, this.actions); } catch (RuntimeException e) { type = new Type((byte) 0); }
             UtilsType type;
