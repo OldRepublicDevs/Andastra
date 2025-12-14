@@ -32,16 +32,27 @@ namespace Odyssey.Scripting.EngineApi
         // Iteration state for GetFirstFactionMember/GetNextFactionMember
         // Key: caller entity ID, Value: list of faction members and current index
         private readonly Dictionary<uint, FactionMemberIteration> _factionMemberIterations;
+        
+        // Iteration state for GetFirstObjectInArea/GetNextObjectInArea
+        // Key: caller entity ID, Value: list of area objects and current index
+        private readonly Dictionary<uint, AreaObjectIteration> _areaObjectIterations;
 
         public K1EngineApi()
         {
             _vm = new NcsVm();
             _factionMemberIterations = new Dictionary<uint, FactionMemberIteration>();
+            _areaObjectIterations = new Dictionary<uint, AreaObjectIteration>();
         }
         
         private class FactionMemberIteration
         {
             public List<IEntity> Members { get; set; }
+            public int CurrentIndex { get; set; }
+        }
+        
+        private class AreaObjectIteration
+        {
+            public List<IEntity> Objects { get; set; }
             public int CurrentIndex { get; set; }
         }
 
@@ -229,6 +240,10 @@ namespace Odyssey.Scripting.EngineApi
                 case 316: return Func_GetAttackTarget(args, ctx);
                 case 319: return Func_GetDistanceBetween2D(args, ctx);
                 case 320: return Func_GetIsInCombat(args, ctx);
+                
+                // Object type checks
+                case 217: return Func_GetIsPC(args, ctx);
+                case 218: return Func_GetIsNPC(args, ctx);
 
                 // GetAbilityModifier (routine 331)
                 case 331: return Func_GetAbilityModifier(args, ctx);
@@ -2227,13 +2242,181 @@ namespace Odyssey.Scripting.EngineApi
             return Variable.FromObject(ObjectInvalid);
         }
 
+        /// <summary>
+        /// GetFirstObjectInArea(object oArea=OBJECT_INVALID, int nObjectType=OBJECT_TYPE_ALL) - starts iteration over objects in area
+        /// </summary>
         private Variable Func_GetFirstObjectInArea(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
+            uint areaId = args.Count > 0 ? args[0].AsObjectId() : ObjectInvalid;
+            int objectType = args.Count > 1 ? args[1].AsInt() : -1; // OBJECT_TYPE_ALL = -1
+
+            if (ctx.Caller == null || ctx.World == null)
+            {
+                return Variable.FromObject(ObjectInvalid);
+            }
+
+            // Get area
+            IArea area = null;
+            if (areaId == ObjectInvalid || areaId == ObjectSelf)
+            {
+                area = ctx.World.CurrentArea;
+            }
+            else
+            {
+                // If specific area ID provided, use current area as fallback
+                // (Areas are typically accessed via CurrentArea, not as entities)
+                area = ctx.World.CurrentArea;
+            }
+
+            if (area == null)
+            {
+                return Variable.FromObject(ObjectInvalid);
+            }
+
+            // Collect all objects in area by iterating through all entity types
+            List<IEntity> objects = new List<IEntity>();
+            
+            // Get all entities from world that are in the current area
+            // We'll filter by checking if they're creatures, placeables, doors, etc. from the area
+            foreach (IEntity entity in ctx.World.GetAllEntities())
+            {
+                if (entity == null || !entity.IsValid)
+                {
+                    continue;
+                }
+
+                // Filter by object type if specified
+                if (objectType >= 0 && (int)entity.ObjectType != objectType)
+                {
+                    continue;
+                }
+
+                // Check if entity is in the area by checking area's collections
+                bool inArea = false;
+                if (entity.ObjectType == Core.Enums.ObjectType.Creature)
+                {
+                    foreach (IEntity creature in area.Creatures)
+                    {
+                        if (creature != null && creature.ObjectId == entity.ObjectId)
+                        {
+                            inArea = true;
+                            break;
+                        }
+                    }
+                }
+                else if (entity.ObjectType == Core.Enums.ObjectType.Placeable)
+                {
+                    foreach (IEntity placeable in area.Placeables)
+                    {
+                        if (placeable != null && placeable.ObjectId == entity.ObjectId)
+                        {
+                            inArea = true;
+                            break;
+                        }
+                    }
+                }
+                else if (entity.ObjectType == Core.Enums.ObjectType.Door)
+                {
+                    foreach (IEntity door in area.Doors)
+                    {
+                        if (door != null && door.ObjectId == entity.ObjectId)
+                        {
+                            inArea = true;
+                            break;
+                        }
+                    }
+                }
+                else if (entity.ObjectType == Core.Enums.ObjectType.Trigger)
+                {
+                    foreach (IEntity trigger in area.Triggers)
+                    {
+                        if (trigger != null && trigger.ObjectId == entity.ObjectId)
+                        {
+                            inArea = true;
+                            break;
+                        }
+                    }
+                }
+                else if (entity.ObjectType == Core.Enums.ObjectType.Waypoint)
+                {
+                    foreach (IEntity waypoint in area.Waypoints)
+                    {
+                        if (waypoint != null && waypoint.ObjectId == entity.ObjectId)
+                        {
+                            inArea = true;
+                            break;
+                        }
+                    }
+                }
+                else if (entity.ObjectType == Core.Enums.ObjectType.Sound)
+                {
+                    foreach (IEntity sound in area.Sounds)
+                    {
+                        if (sound != null && sound.ObjectId == entity.ObjectId)
+                        {
+                            inArea = true;
+                            break;
+                        }
+                    }
+                }
+                else if (objectType < 0)
+                {
+                    // OBJECT_TYPE_ALL - include other types too
+                    inArea = true;
+                }
+
+                if (inArea)
+                {
+                    objects.Add(entity);
+                }
+            }
+
+            // Store iteration state
+            _areaObjectIterations[ctx.Caller.ObjectId] = new AreaObjectIteration
+            {
+                Objects = objects,
+                CurrentIndex = 0
+            };
+
+            // Return first object
+            if (objects.Count > 0)
+            {
+                return Variable.FromObject(objects[0].ObjectId);
+            }
+
             return Variable.FromObject(ObjectInvalid);
         }
 
+        /// <summary>
+        /// GetNextObjectInArea(object oArea=OBJECT_INVALID, int nObjectType=OBJECT_TYPE_ALL) - continues iteration over objects in area
+        /// </summary>
         private Variable Func_GetNextObjectInArea(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
+            uint areaId = args.Count > 0 ? args[0].AsObjectId() : ObjectInvalid;
+            int objectType = args.Count > 1 ? args[1].AsInt() : -1;
+
+            if (ctx.Caller == null)
+            {
+                return Variable.FromObject(ObjectInvalid);
+            }
+
+            // Get iteration state
+            if (!_areaObjectIterations.TryGetValue(ctx.Caller.ObjectId, out AreaObjectIteration iteration))
+            {
+                return Variable.FromObject(ObjectInvalid);
+            }
+
+            // Advance index
+            iteration.CurrentIndex++;
+
+            // Return next object
+            if (iteration.CurrentIndex < iteration.Objects.Count)
+            {
+                return Variable.FromObject(iteration.Objects[iteration.CurrentIndex].ObjectId);
+            }
+
+            // End of iteration - clear state
+            _areaObjectIterations.Remove(ctx.Caller.ObjectId);
             return Variable.FromObject(ObjectInvalid);
         }
 
@@ -2327,13 +2510,29 @@ namespace Odyssey.Scripting.EngineApi
             return Variable.FromEffect(effect);
         }
 
+        private Variable Func_GetBaseAttackBonus(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            // GetBaseAttackBonus(object oCreature=OBJECT_SELF) - Returns the base attack bonus (BAB) of a creature
+            uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
+            IEntity entity = ResolveObject(objectId, ctx);
+            if (entity != null)
+            {
+                IStatsComponent stats = entity.GetComponent<IStatsComponent>();
+                if (stats != null)
+                {
+                    return Variable.FromInt(stats.BaseAttackBonus);
+                }
+            }
+            return Variable.FromInt(0);
+        }
+
         private Variable Func_GetAC(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
             IEntity entity = ResolveObject(objectId, ctx);
             if (entity != null)
             {
-                Core.Interfaces.Components.IStatsComponent stats = entity.GetComponent<Core.Interfaces.Components.IStatsComponent>();
+                IStatsComponent stats = entity.GetComponent<IStatsComponent>();
                 if (stats != null)
                 {
                     return Variable.FromInt(stats.ArmorClass);
