@@ -150,34 +150,37 @@ namespace KotorDiff.NET.App
 
             // Create incremental writer if requested
             IncrementalTSLPatchDataWriter incrementalWriter = null;
-            if (config.TslPatchDataPath != null && config.UseIncrementalWriter)
+            DirectoryInfo baseDataPath = null;
+            if (config.TslPatchDataPath != null)
             {
-                string baseDataPath = null;
-                // Try to determine base path from first valid directory path
+                // Determine base path from first valid directory path (matching Python line 435-438)
                 foreach (var candidatePath in allPaths)
                 {
                     if (candidatePath is Installation install)
                     {
-                        baseDataPath = install.Path;
+                        baseDataPath = new DirectoryInfo(install.Path);
                         break;
                     }
                     else if (candidatePath is string pathStr && Directory.Exists(pathStr))
                     {
-                        baseDataPath = pathStr;
+                        baseDataPath = new DirectoryInfo(pathStr);
                         break;
                     }
                 }
 
-                incrementalWriter = new IncrementalTSLPatchDataWriter(
-                    config.TslPatchDataPath.FullName,
-                    config.IniFilename,
-                    baseDataPath: baseDataPath,
-                    moddedDataPath: null, // TODO: Determine modded path
-                    strrefCache: null, // TODO: Implement StrRefReferenceCache
-                    twodaCaches: null, // TODO: Implement TwoDAMemoryReferenceCache
-                    logFunc: (msg) => DiffLogger.GetLogger()?.Info(msg)
-                );
-                DiffLogger.GetLogger()?.Info($"Using incremental writer for tslpatchdata: {config.TslPatchDataPath}");
+                if (config.UseIncrementalWriter)
+                {
+                    incrementalWriter = new IncrementalTSLPatchDataWriter(
+                        config.TslPatchDataPath.FullName,
+                        config.IniFilename,
+                        baseDataPath: baseDataPath?.FullName,
+                        moddedDataPath: null, // TODO: Determine modded path
+                        strrefCache: null, // TODO: Implement StrRefReferenceCache
+                        twodaCaches: null, // TODO: Implement TwoDAMemoryReferenceCache
+                        logFunc: (msg) => DiffLogger.GetLogger()?.Info(msg)
+                    );
+                    DiffLogger.GetLogger()?.Info($"Using incremental writer for tslpatchdata: {config.TslPatchDataPath}");
+                }
             }
 
             // Run the diff
@@ -190,7 +193,7 @@ namespace KotorDiff.NET.App
                 modificationsByType: modificationsByType,
                 incrementalWriter: incrementalWriter);
 
-            // Finalize TSLPatcher data if requested
+            // Finalize TSLPatcher data if requested (matching Python lines 483-525)
             if (config.TslPatchDataPath != null)
             {
                 if (config.UseIncrementalWriter && incrementalWriter != null)
@@ -225,11 +228,12 @@ namespace KotorDiff.NET.App
                 {
                     try
                     {
+                        // Matching Python line 512-516: pass base_data_path if it's a Path (DirectoryInfo in C#)
                         GenerateTslPatcherData(
                             config.TslPatchDataPath,
                             config.IniFilename,
                             modificationsByType,
-                            baseDataPath: null); // TODO: Determine base path from paths
+                            baseDataPath: baseDataPath);
                     }
                     catch (Exception genError)
                     {
