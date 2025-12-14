@@ -89,8 +89,8 @@ namespace Odyssey.Game.Core
         // KOTOR GUI System
         private KotorGuiManager _kotorGuiManager;
 
-        // Fallback menu renderer (SpriteBatch-based, no font dependency)
-        private FallbackMenuRenderer _fallbackMenuRenderer;
+        // Myra UI menu renderer (text-based buttons)
+        private MyraMenuRenderer _fallbackMenuRenderer;
 
         private bool _showDebugInfo = true; // Default to debug mode for demo
         private bool _isPaused = false;
@@ -172,7 +172,12 @@ namespace Odyssey.Game.Core
             // Position camera at origin - UI is rendered in screen space, camera position doesn't matter for UI
             // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Engine.TransformComponent.html
             // TransformComponent.Position sets the entity's world position
-            // TransformComponent.Rotation sets the entity's rotation (Quaternion.Identity = no rotation)
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.Vector3.html
+            // Vector3(float x, float y, float z) constructor creates a 3D position vector
+            // Method signature: Vector3(float x, float y, float z)
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.Quaternion.html
+            // Quaternion.Identity is a static property representing no rotation (0, 0, 0, 1)
+            // TransformComponent.Rotation sets the entity's rotation
             // Source: https://doc.stride3d.net/latest/en/manual/entities/transforms/index.html
             _cameraEntity.Transform.Position = new Vector3(0, 0, 10);
             _cameraEntity.Transform.Rotation = Quaternion.Identity;
@@ -294,9 +299,13 @@ namespace Odyssey.Game.Core
                     // For MainMenu, we can keep a simple default camera position
                     if (state == GameState.MainMenu)
                     {
-                        // Ensure camera is positioned for menu viewing
-                        _cameraEntity.Transform.Position = new Vector3(0, 0, 0);
-                        _cameraEntity.Transform.Rotation = Quaternion.Identity;
+                    // Ensure camera is positioned for menu viewing
+                    // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.Vector3.html
+                    // Vector3(float x, float y, float z) - same constructor as above
+                    _cameraEntity.Transform.Position = new Vector3(0, 0, 0);
+                    // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.Quaternion.html
+                    // Quaternion.Identity static property - same as documented above
+                    _cameraEntity.Transform.Rotation = Quaternion.Identity;
                     }
                 }
             }
@@ -449,10 +458,13 @@ namespace Odyssey.Game.Core
             // ResolutionStretch controls how UI scales to match screen size
             // IsBillboard controls if UI faces camera, IsFullScreen makes UI fill entire screen
             // RenderGroup sets which render group the UI belongs to
-            // Source: https://doc.stride3d.net/latest/en/manual/user-interface/index.html
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.Vector3.html
+            // Vector3(float x, float y, float z) constructor creates UI resolution vector
+            // Method signature: Vector3(float x, float y, float z)
             // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Games.GameWindow.html
             // Window.ClientBounds property gets the client area bounds (width and height in pixels)
-            // Source: https://doc.stride3d.net/latest/en/manual/graphics/window-management.html
+            // ClientBounds.Width/Height get dimensions in pixels
+            // Source: https://doc.stride3d.net/latest/en/manual/user-interface/index.html
             _uiComponent.Resolution = new Vector3(Window.ClientBounds.Width, Window.ClientBounds.Height, 1000);
             _uiComponent.ResolutionStretch = ResolutionStretch.FixedWidthAdaptableHeight;
             _uiComponent.IsBillboard = false;
@@ -911,7 +923,8 @@ namespace Odyssey.Game.Core
 
             // Create SceneInstance if it doesn't exist
             // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Engine.Scene.html
-            // Scene constructor creates a new scene container for entities
+            // Scene() constructor creates a new scene container for entities
+            // Method signature: Scene()
             // Source: https://doc.stride3d.net/latest/en/manual/entities/scenes/index.html
             if (sceneSystem.SceneInstance == null)
             {
@@ -979,20 +992,25 @@ namespace Odyssey.Game.Core
 
             try
             {
-                // Create a basic graphics compositor
-                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Rendering.Compositing.GraphicsCompositor.html
-                // GraphicsCompositor defines the rendering pipeline and camera slots
-                // Source: https://doc.stride3d.net/latest/en/manual/graphics/graphics-compositor/index.html
-                var compositor = new GraphicsCompositor();
+            // Create a basic graphics compositor
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Rendering.Compositing.GraphicsCompositor.html
+            // GraphicsCompositor() constructor creates a new graphics compositor
+            // GraphicsCompositor defines the rendering pipeline and camera slots
+            // Method signature: GraphicsCompositor()
+            // Source: https://doc.stride3d.net/latest/en/manual/graphics/graphics-compositor/index.html
+            var compositor = new GraphicsCompositor();
 
-                // Create a camera slot
-                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Rendering.Compositing.SceneCameraSlot.html
-                // SceneCameraSlot defines a camera slot in the compositor
-                // GraphicsCompositor.Cameras collection contains all camera slots
-                // Add(SceneCameraSlot) adds a camera slot to the compositor
-                // Source: https://doc.stride3d.net/latest/en/manual/graphics/graphics-compositor/index.html
-                var cameraSlot = new SceneCameraSlot();
-                compositor.Cameras.Add(cameraSlot);
+            // Create a camera slot
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Rendering.Compositing.SceneCameraSlot.html
+            // SceneCameraSlot() constructor creates a new camera slot
+            // SceneCameraSlot defines a camera slot in the compositor
+            // Method signature: SceneCameraSlot()
+            // GraphicsCompositor.Cameras collection contains all camera slots
+            // Add(SceneCameraSlot) adds a camera slot to the compositor
+            // Method signature: void Add(SceneCameraSlot slot)
+            // Source: https://doc.stride3d.net/latest/en/manual/graphics/graphics-compositor/index.html
+            var cameraSlot = new SceneCameraSlot();
+            compositor.Cameras.Add(cameraSlot);
 
                 // #region agent log
                 DebugLog("E", "SetupGraphicsCompositor:camera_slot", "Camera slot created", cameraSlot.Id.ToString());
@@ -1007,15 +1025,23 @@ namespace Odyssey.Game.Core
 
                 // Create the forward renderer (Stride standard renderer; also where UI is rendered by default)
                 // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Rendering.Compositing.ForwardRenderer.html
-                // ForwardRenderer should use the current RenderView and the current camera.
+                // ForwardRenderer() constructor creates a new forward renderer
+                // ForwardRenderer should use the current RenderView and the current camera
+                // Method signature: ForwardRenderer()
+                // Source: https://doc.stride3d.net/latest/en/manual/graphics/graphics-compositor/scene-renderers.html
                 var forwardRenderer = new ForwardRenderer
                 {
                     // Clear renderer used by ForwardRenderer
                     // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Rendering.Compositing.ClearRenderer.html
+                    // ClearRenderer() constructor creates a new clear renderer
+                    // Method signature: ClearRenderer()
+                    // Source: https://doc.stride3d.net/latest/en/manual/graphics/graphics-compositor/scene-renderers.html
                     Clear = new ClearRenderer
                     {
                         // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.Color4.html
-                        // Color4(float r, float g, float b, float a)
+                        // Color4(float r, float g, float b, float a) constructor creates a color from RGBA float values (0-1)
+                        // Method signature: Color4(float r, float g, float b, float a)
+                        // Source: https://doc.stride3d.net/latest/en/manual/graphics/colors.html
                         Color = new Color4(0.04f, 0.04f, 0.12f, 1f), // Dark blue
                         ClearFlags = ClearRendererFlags.ColorAndDepth
                     }
@@ -1027,18 +1053,27 @@ namespace Odyssey.Game.Core
 
                 // Combine forward rendering + our fallback SpriteBatch overlay.
                 // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Rendering.Compositing.SceneRendererCollection.html
+                // SceneRendererCollection() constructor creates a new scene renderer collection
+                // SceneRendererCollection allows combining multiple renderers
+                // Method signature: SceneRendererCollection()
+                // Children.Add(ISceneRenderer) adds a child renderer to the collection
+                // Method signature: void Add(ISceneRenderer renderer)
+                // Source: https://doc.stride3d.net/latest/en/manual/graphics/graphics-compositor/scene-renderers.html
                 var sceneRenderer = new SceneRendererCollection();
                 sceneRenderer.Children.Add(forwardRenderer);
 
-                // Create and add fallback menu renderer (SpriteBatch-based, renders on top)
-                _fallbackMenuRenderer = new FallbackMenuRenderer();
+                // Create and add Myra UI menu renderer (text-based buttons, renders on top)
+                _fallbackMenuRenderer = new MyraMenuRenderer();
                 _fallbackMenuRenderer.MenuItemSelected += OnFallbackMenuItemSelected;
                 sceneRenderer.Children.Add(_fallbackMenuRenderer);
 
                 // Bind the render pipeline to our camera slot
                 // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Rendering.Compositing.SceneCameraRenderer.html
-                // Camera property type: SceneCameraSlot
-                // Child property type: ISceneRenderer
+                // SceneCameraRenderer() constructor creates a new camera renderer
+                // Camera property type: SceneCameraSlot - assigns camera slot to renderer
+                // Child property type: ISceneRenderer - sets the child renderer to execute
+                // Method signature: SceneCameraRenderer()
+                // Source: https://doc.stride3d.net/latest/en/manual/graphics/graphics-compositor/scene-renderers.html
                 var cameraRenderer = new SceneCameraRenderer
                 {
                     Camera = cameraSlot,
@@ -1055,7 +1090,10 @@ namespace Odyssey.Game.Core
                 // Update our camera component to use this slot
                 // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Engine.CameraComponent.html
                 // CameraComponent.Slot property assigns camera to a specific camera slot
-                // SceneCameraSlotId wraps the slot identifier
+                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Rendering.Compositing.SceneCameraSlotId.html
+                // SceneCameraSlotId(Guid) constructor wraps the slot identifier
+                // Method signature: SceneCameraSlotId(Guid id)
+                // SceneCameraSlot.Id property gets the unique identifier for the slot
                 // Source: https://doc.stride3d.net/latest/en/manual/graphics/cameras/index.html
                 if (_cameraComponent != null)
                 {
@@ -1603,7 +1641,14 @@ namespace Odyssey.Game.Core
                     if (_cameraEntity != null)
                     {
                         var playerPos = playerTransform.Position;
+                        // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.Vector3.html
+                        // Vector3(float x, float y, float z) constructor creates camera position offset from player
+                        // Method signature: Vector3(float x, float y, float z)
                         _cameraEntity.Transform.Position = new Vector3(playerPos.X, playerPos.Z + 15, playerPos.Y + 15);
+                        // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.Quaternion.html
+                        // Quaternion.RotationX(float) creates a quaternion representing rotation around X axis
+                        // Method signature: static Quaternion RotationX(float angle)
+                        // Source: https://doc.stride3d.net/latest/en/manual/mathematics/index.html
                         _cameraEntity.Transform.Rotation = Quaternion.RotationX(-0.5f);
                     }
                 }
@@ -1818,9 +1863,10 @@ namespace Odyssey.Game.Core
                 // CommandList.Clear(Texture, Color4) clears a render target with a color
                 // CommandList.Clear(Texture, DepthStencilClearOptions) clears depth/stencil buffer
                 // Method signatures: void Clear(Texture renderTarget, Color4 color), void Clear(Texture depthStencilBuffer, DepthStencilClearOptions options)
-                // Source: https://doc.stride3d.net/latest/en/manual/graphics/low-level-api/index.html
                 // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.Color4.html
-                // Color4(float r, float g, float b, float a) creates a color from RGBA float values
+                // Color4(float r, float g, float b, float a) constructor creates a color from RGBA float values (0-1)
+                // Method signature: Color4(float r, float g, float b, float a)
+                // Source: https://doc.stride3d.net/latest/en/manual/graphics/low-level-api/index.html
                 GraphicsContext.CommandList.Clear(GraphicsDevice.Presenter.BackBuffer, new Color4(0.04f, 0.04f, 0.12f, 1f));
                 // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Graphics.DepthStencilClearOptions.html
                 // DepthStencilClearOptions.DepthBuffer clears only the depth buffer
@@ -1861,7 +1907,24 @@ namespace Odyssey.Game.Core
             // Game.Destroy() is called when the game is shutting down
             // Method signature: protected virtual void Destroy()
             // Source: https://doc.stride3d.net/latest/en/manual/game-loop/index.html
-            base.Destroy();
+            // Note: On some systems, the OpenGL context may be destroyed before resources are cleaned up,
+            // causing a "No GL driver has been loaded" error from Silk.NET during cleanup.
+            // This is safe to suppress during shutdown as the application is already closing.
+            try
+            {
+                base.Destroy();
+            }
+            catch (Exception ex) when (ex.Message != null && (
+                ex.Message.Contains("GL driver") || 
+                ex.Message.Contains("No GL") ||
+                ex.Message.Contains("OpenGL") ||
+                ex.GetType().Name.Contains("OpenGL") ||
+                ex.GetType().Name.Contains("GL")))
+            {
+                // Suppress OpenGL/graphics cleanup errors during shutdown - the application is already closing
+                // This can occur when the OpenGL context is destroyed before resources are cleaned up
+                Console.WriteLine("[Odyssey] Suppressed graphics cleanup error during shutdown: " + ex.Message);
+            }
         }
     }
 
