@@ -49,17 +49,70 @@ namespace KotorDiff.NET.Resolution
                 logFunc = Console.WriteLine;
             }
 
+            // Convert Path objects to Installations if they are KOTOR installations
+            // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/resolution.py:539-615
+            // Original: def diff_installations_with_resolution(...): ...
+            var convertedPaths = new List<object>();
+            foreach (var path in filesAndFoldersAndInstallations)
+            {
+                if (path is Installation installation)
+                {
+                    convertedPaths.Add(installation);
+                }
+                else
+                {
+                    // Try to convert Path to Installation if it's a KOTOR installation
+                    string pathStr = null;
+                    if (path is string str)
+                    {
+                        pathStr = str;
+                    }
+                    else if (path is DirectoryInfo dirInfo)
+                    {
+                        pathStr = dirInfo.FullName;
+                    }
+                    else if (path is FileInfo fileInfo)
+                    {
+                        pathStr = fileInfo.DirectoryName;
+                    }
+
+                    if (pathStr != null && DiffEngineUtils.IsKotorInstallDir(pathStr))
+                    {
+                        try
+                        {
+                            var newInstallation = new Installation(pathStr);
+                            convertedPaths.Add(newInstallation);
+                            logFunc?.Invoke($"Converted path to Installation: {pathStr}");
+                        }
+                        catch (Exception e)
+                        {
+                            logFunc?.Invoke($"Warning: Could not convert path to Installation: {pathStr} - {e.Message}");
+                            // Fall back to regular comparison by returning null
+                            // This will cause RunDifferFromArgsImpl to use non-resolution comparison
+                            return null;
+                        }
+                    }
+                    else
+                    {
+                        // Not a KOTOR installation - fall back to regular comparison
+                        logFunc?.Invoke($"Path is not a KOTOR installation, falling back to regular comparison: {pathStr ?? path.ToString()}");
+                        return null;
+                    }
+                }
+            }
+
             // For now, delegate to the 2-way function if exactly 2 installations
             // This is a compatibility shim while we complete the full n-way implementation
-            if (filesAndFoldersAndInstallations.Count == 2)
+            if (convertedPaths.Count == 2)
             {
-                object install1Candidate = filesAndFoldersAndInstallations[0];
-                object install2Candidate = filesAndFoldersAndInstallations[1];
+                object install1Candidate = convertedPaths[0];
+                object install2Candidate = convertedPaths[1];
 
                 if (!(install1Candidate is Installation) || !(install2Candidate is Installation))
                 {
-                    string msg = "Current implementation requires Installation objects, Path support coming soon";
-                    throw new NotImplementedException(msg);
+                    // Should not happen after conversion, but handle gracefully
+                    logFunc?.Invoke("Warning: Could not convert all paths to Installations, falling back to regular comparison");
+                    return null;
                 }
 
                 return DiffInstallationsWithResolutionImpl(
@@ -74,14 +127,15 @@ namespace KotorDiff.NET.Resolution
             }
 
             // For 3+ installations, delegate with additional_installs
-            object install1Candidate2 = filesAndFoldersAndInstallations[0];
-            object install2Candidate2 = filesAndFoldersAndInstallations[1];
-            var additionalCandidates = filesAndFoldersAndInstallations.Skip(2).ToList();
+            object install1Candidate2 = convertedPaths[0];
+            object install2Candidate2 = convertedPaths[1];
+            var additionalCandidates = convertedPaths.Skip(2).ToList();
 
             if (!(install1Candidate2 is Installation) || !(install2Candidate2 is Installation))
             {
-                string msg = "Current implementation requires Installation objects, Path support coming soon";
-                throw new NotImplementedException(msg);
+                // Should not happen after conversion, but handle gracefully
+                logFunc?.Invoke("Warning: Could not convert all paths to Installations, falling back to regular comparison");
+                return null;
             }
 
             var additionalInstallations = additionalCandidates
