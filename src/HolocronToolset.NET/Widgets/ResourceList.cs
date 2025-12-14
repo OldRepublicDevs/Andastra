@@ -82,7 +82,39 @@ namespace HolocronToolset.NET.Widgets
                 _modulesModel.Clear();
             }
             _modulesModel.AddResourcesBatch(resources, customCategory);
-            // TODO: Update TreeView with model data when TreeView binding is implemented
+            UpdateTreeView();
+        }
+
+        private void UpdateTreeView()
+        {
+            if (_resourceTree == null)
+            {
+                return;
+            }
+
+            // Create tree data structure from model
+            var treeData = new List<TreeViewItem>();
+            foreach (var category in _modulesModel.GetCategories())
+            {
+                var categoryItem = new TreeViewItem
+                {
+                    Header = category,
+                    IsExpanded = true
+                };
+                var resourceItems = new List<TreeViewItem>();
+                foreach (var resource in _modulesModel.GetResourcesInCategory(category))
+                {
+                    var resourceItem = new TreeViewItem
+                    {
+                        Header = $"{resource.Text} ({resource.Resource.ResType.Extension})",
+                        Tag = resource.Resource
+                    };
+                    resourceItems.Add(resourceItem);
+                }
+                categoryItem.ItemsSource = resourceItems;
+                treeData.Add(categoryItem);
+            }
+            _resourceTree.ItemsSource = treeData;
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/main_widgets.py:189-195
@@ -106,7 +138,10 @@ namespace HolocronToolset.NET.Widgets
             var selected = new List<FileResource>();
             if (_resourceTree != null && _resourceTree.SelectedItem != null)
             {
-                // TODO: Get selected resources from TreeView when binding is implemented
+                if (_resourceTree.SelectedItem is TreeViewItem item && item.Tag is FileResource resource)
+                {
+                    selected.Add(resource);
+                }
             }
             return selected;
         }
@@ -122,7 +157,9 @@ namespace HolocronToolset.NET.Widgets
         // Original: def on_filter_string_updated(self):
         private void OnFilterStringUpdated()
         {
-            // TODO: Update filter when TreeView filtering is implemented
+            string filterText = _searchEdit?.Text ?? "";
+            _modulesModel.SetFilterString(filterText);
+            UpdateTreeView();
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/main_widgets.py:234-238
@@ -184,6 +221,7 @@ namespace HolocronToolset.NET.Widgets
     public class ResourceModel
     {
         private readonly Dictionary<string, ResourceCategoryItem> _categoryItems = new Dictionary<string, ResourceCategoryItem>();
+        private string _filterString = "";
 
         public ResourceModel()
         {
@@ -238,6 +276,34 @@ namespace HolocronToolset.NET.Widgets
                 _categoryItems.Remove(category);
             }
         }
+
+        public void SetFilterString(string filterString)
+        {
+            _filterString = filterString?.ToLowerInvariant() ?? "";
+        }
+
+        public IEnumerable<string> GetCategories()
+        {
+            return _categoryItems.Keys;
+        }
+
+        public IEnumerable<ResourceStandardItem> GetResourcesInCategory(string category)
+        {
+            if (!_categoryItems.ContainsKey(category))
+            {
+                return Enumerable.Empty<ResourceStandardItem>();
+            }
+
+            var items = _categoryItems[category].GetResources();
+            if (string.IsNullOrEmpty(_filterString))
+            {
+                return items;
+            }
+
+            return items.Where(item => 
+                item.Text.ToLowerInvariant().Contains(_filterString) ||
+                item.Resource.ResName.ToLowerInvariant().Contains(_filterString));
+        }
     }
 
     // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/main_widgets.py:69
@@ -270,5 +336,10 @@ namespace HolocronToolset.NET.Widgets
         }
 
         public int ResourceCount => _resources.Count;
+
+        public IEnumerable<ResourceStandardItem> GetResources()
+        {
+            return _resources;
+        }
     }
 }
