@@ -187,6 +187,9 @@ namespace Odyssey.Scripting.EngineApi
                 // GetItemInSlot (routine 155)
                 case 155: return Func_GetItemInSlot(args, ctx);
                 
+                // GetItemStackSize (routine 138)
+                case 138: return Func_GetItemStackSize(args, ctx);
+                
                 // PrintVector
                 case 141: return Func_PrintVector(args, ctx);
                 
@@ -1306,13 +1309,69 @@ namespace Odyssey.Scripting.EngineApi
             return base.Func_ObjectToString(args, ctx);
         }
 
+        /// <summary>
+        /// GetItemPossessor(object oItem) - returns the creature/placeable that possesses the item
+        /// </summary>
         private Variable Func_GetItemPossessor(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
+            uint itemId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
+            IEntity item = ResolveObject(itemId, ctx);
+            
+            if (item == null || item.ObjectType != Core.Enums.ObjectType.Item)
+            {
+                return Variable.FromObject(ObjectInvalid);
+            }
+
+            // Search for item in inventories
+            foreach (IEntity entity in ctx.World.GetAllEntities())
+            {
+                IInventoryComponent inventory = entity.GetComponent<IInventoryComponent>();
+                if (inventory != null)
+                {
+                    // Check all inventory slots
+                    for (int slot = 0; slot < 20; slot++) // Standard inventory slots
+                    {
+                        IEntity slotItem = inventory.GetItemInSlot(slot);
+                        if (slotItem != null && slotItem.ObjectId == itemId)
+                        {
+                            return Variable.FromObject(entity.ObjectId);
+                        }
+                    }
+                }
+            }
+
             return Variable.FromObject(ObjectInvalid);
         }
 
+        /// <summary>
+        /// GetItemPossessedBy(object oCreature, string sItemTag) - returns the item with the given tag possessed by the creature
+        /// </summary>
         private Variable Func_GetItemPossessedBy(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
+            uint creatureId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
+            string itemTag = args.Count > 1 ? args[1].AsString() : string.Empty;
+            
+            IEntity creature = ResolveObject(creatureId, ctx);
+            if (creature == null || string.IsNullOrEmpty(itemTag))
+            {
+                return Variable.FromObject(ObjectInvalid);
+            }
+
+            IInventoryComponent inventory = creature.GetComponent<IInventoryComponent>();
+            if (inventory == null)
+            {
+                return Variable.FromObject(ObjectInvalid);
+            }
+
+            // Search inventory for item with matching tag
+            foreach (IEntity item in inventory.GetAllItems())
+            {
+                if (item != null && string.Equals(item.Tag, itemTag, StringComparison.OrdinalIgnoreCase))
+                {
+                    return Variable.FromObject(item.ObjectId);
+                }
+            }
+
             return Variable.FromObject(ObjectInvalid);
         }
 
