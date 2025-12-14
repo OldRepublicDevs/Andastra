@@ -37,7 +37,7 @@ namespace Odyssey.Game
                 Console.WriteLine();
 
                 // Create and run the game (MonoGame version)
-                using (var game = new OdysseyGameMonoGame(settings))
+                using (var game = new OdysseyGame(settings))
                 {
                     // MonoGame Game.Run() starts the game loop and blocks until the game exits
                     // Based on MonoGame API: https://docs.monogame.net/api/Microsoft.Xna.Framework.Game.html
