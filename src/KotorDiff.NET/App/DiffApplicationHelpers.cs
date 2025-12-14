@@ -3,11 +3,13 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using CSharpKOTOR.Installation;
 using CSharpKOTOR.Mods;
 using KotorDiff.NET.Diff;
 using CSharpKOTOR.TSLPatcher;
+using Tuple = System.Tuple;
 
 namespace KotorDiff.NET.App
 {
@@ -414,9 +416,6 @@ namespace KotorDiff.NET.App
 
             LogOutput($"\nGenerating TSLPatcher data at: {tslpatchdataPath.FullName}");
 
-            // Use TSLPatchDataGenerator for batch generation
-            var generator = new CSharpKOTOR.TSLPatcher.TSLPatchDataGenerator(tslpatchdataPath);
-            
             // Determine base data path from first path if it's a directory
             DirectoryInfo baseDataPath = null;
             if (paths != null && paths.Count > 0)
@@ -431,6 +430,55 @@ namespace KotorDiff.NET.App
                     baseDataPath = dirInfo;
                 }
             }
+
+            // Analyze TLK StrRef references and create linking patches BEFORE generating files
+            // Matching PyKotor implementation at vendor/PyKotor/Tools/KotorDiff/src/kotordiff/app.py:311-340
+            // Original: if modifications.tlk and base_data_path: ... analyze_tlk_strref_references(...)
+            if (modifications.Tlk != null && modifications.Tlk.Count > 0 && baseDataPath != null)
+            {
+                LogOutput("\n=== Analyzing StrRef References ===");
+                LogOutput("Searching entire installation/folder for files that reference modified StrRefs...");
+
+                foreach (var tlkMod in modifications.Tlk)
+                {
+                    try
+                    {
+                        // Build the tuple expected by AnalyzeTlkStrrefReferences signature
+                        // Here we do not have strref_mappings directly, so pass empty mapping for now
+                        var strrefMappings = new Dictionary<int, int>();
+                        var tlkModTuple = Tuple.Create(tlkMod, strrefMappings);
+                        
+                        ReferenceAnalyzers.AnalyzeTlkStrrefReferences(
+                            tlkModTuple,
+                            strrefMappings,
+                            baseDataPath.FullName,
+                            modifications.Gff,
+                            modifications.Twoda,
+                            modifications.Ssf,
+                            modifications.Ncs,
+                            (string msg) => LogOutput(msg));
+                    }
+                    catch (Exception e)
+                    {
+                        LogOutput($"[Warning] StrRef analysis failed for tlk_mod={tlkMod}: {e.GetType().Name}: {e.Message}");
+                        LogOutput($"Full traceback (tlk_mod={tlkMod}):");
+                        LogOutput($"  {e.StackTrace}");
+                    }
+                }
+
+                LogOutput("StrRef analysis complete. Added linking patches:");
+                int gffCount = modifications.Gff?.Sum(m => m.Modifiers?.Count ?? 0) ?? 0;
+                int twodaCount = modifications.Twoda?.Sum(m => m.Modifiers?.Count ?? 0) ?? 0;
+                int ssfCount = modifications.Ssf?.Sum(m => m.Modifiers?.Count ?? 0) ?? 0;
+                int ncsCount = modifications.Ncs?.Sum(m => m.Modifiers?.Count ?? 0) ?? 0;
+                LogOutput($"  GFF patches: {gffCount}");
+                LogOutput($"  2DA patches: {twodaCount}");
+                LogOutput($"  SSF patches: {ssfCount}");
+                LogOutput($"  NCS patches: {ncsCount}");
+            }
+
+            // Use TSLPatchDataGenerator for batch generation
+            var generator = new CSharpKOTOR.TSLPatcher.TSLPatchDataGenerator(tslpatchdataPath);
 
             var generatedFiles = generator.GenerateAllFiles(modifications, baseDataPath);
 
