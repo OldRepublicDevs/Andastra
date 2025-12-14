@@ -271,6 +271,9 @@ namespace Odyssey.Stride.UI
             {
                 Font = _font,
                 TextSize = 12,
+                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.Color.html
+                // Color.Yellow is a static property representing yellow color
+                // Source: https://doc.stride3d.net/latest/en/manual/graphics/colors.html
                 TextColor = Color.Yellow,
                 Text = "",
                 Margin = new Thickness(20, 5, 20, 20),
