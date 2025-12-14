@@ -213,6 +213,9 @@ namespace Odyssey.Stride.UI
             background = new Border
             {
                 BackgroundColor = new Color(40, 40, 40, 200),
+                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.Color.html
+                // Color.Gray is a static property representing gray color
+                // Source: https://doc.stride3d.net/latest/en/manual/graphics/colors.html
                 BorderColor = Color.Gray,
                 BorderThickness = new Thickness(1, 1, 1, 1),
                 Height = 16,
