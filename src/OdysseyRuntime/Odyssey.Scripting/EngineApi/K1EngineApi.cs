@@ -3595,6 +3595,151 @@ namespace Odyssey.Scripting.EngineApi
         }
 
         #endregion
+
+        #region Location Helper Functions
+
+        /// <summary>
+        /// GetPositionFromLocation(location lLocation) - Get the position vector from lLocation
+        /// </summary>
+        private Variable Func_GetPositionFromLocation(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            if (args.Count == 0)
+            {
+                return Variable.FromVector(Vector3.Zero);
+            }
+            
+            object locObj = args[0].AsLocation();
+            if (locObj == null || !(locObj is Location location))
+            {
+                return Variable.FromVector(Vector3.Zero);
+            }
+            
+            return Variable.FromVector(location.Position);
+        }
+
+        /// <summary>
+        /// GetFacingFromLocation(location lLocation) - Get the orientation value from lLocation
+        /// </summary>
+        private Variable Func_GetFacingFromLocation(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            if (args.Count == 0)
+            {
+                return Variable.FromFloat(0f);
+            }
+            
+            object locObj = args[0].AsLocation();
+            if (locObj == null || !(locObj is Location location))
+            {
+                return Variable.FromFloat(0f);
+            }
+            
+            return Variable.FromFloat(location.Facing);
+        }
+
+        #endregion
+
+        #region Object Creation
+
+        /// <summary>
+        /// CreateObject(int nObjectType, string sTemplate, location lLocation, int bUseAppearAnimation=FALSE) - Create an object of the specified type at lLocation
+        /// </summary>
+        private Variable Func_CreateObject(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            int objectType = args.Count > 0 ? args[0].AsInt() : 0;
+            string template = args.Count > 1 ? args[1].AsString() : "";
+            object locObj = args.Count > 2 ? args[2].AsLocation() : null;
+            int useAppearAnimation = args.Count > 3 ? args[3].AsInt() : 0;
+            
+            if (ctx.World == null || ctx.World.CurrentArea == null)
+            {
+                return Variable.FromObject(ObjectInvalid);
+            }
+            
+            // Extract position and facing from location
+            Vector3 position = Vector3.Zero;
+            float facing = 0f;
+            if (locObj != null && locObj is Location location)
+            {
+                position = location.Position;
+                facing = location.Facing;
+            }
+            
+            // Convert object type constant to ObjectType enum
+            Core.Enums.ObjectType odyObjectType = Core.Enums.ObjectType.Creature; // Default
+            ResourceType resourceType = ResourceType.UTC; // Default
+            
+            // Map NWScript object type constants to Odyssey ObjectType
+            // OBJECT_TYPE_CREATURE = 1, OBJECT_TYPE_ITEM = 2, OBJECT_TYPE_PLACEABLE = 4, OBJECT_TYPE_STORE = 5, OBJECT_TYPE_WAYPOINT = 6
+            switch (objectType)
+            {
+                case 1: // OBJECT_TYPE_CREATURE
+                    odyObjectType = Core.Enums.ObjectType.Creature;
+                    resourceType = ResourceType.UTC;
+                    break;
+                case 2: // OBJECT_TYPE_ITEM
+                    odyObjectType = Core.Enums.ObjectType.Item;
+                    resourceType = ResourceType.UTI;
+                    break;
+                case 4: // OBJECT_TYPE_PLACEABLE
+                    odyObjectType = Core.Enums.ObjectType.Placeable;
+                    resourceType = ResourceType.UTP;
+                    break;
+                case 5: // OBJECT_TYPE_STORE
+                    odyObjectType = Core.Enums.ObjectType.Store;
+                    resourceType = ResourceType.UTM;
+                    break;
+                case 6: // OBJECT_TYPE_WAYPOINT
+                    odyObjectType = Core.Enums.ObjectType.Waypoint;
+                    resourceType = ResourceType.UTW;
+                    break;
+                default:
+                    return Variable.FromObject(ObjectInvalid);
+            }
+            
+            // Create entity
+            IEntity entity = ctx.World.CreateEntity(odyObjectType, position, facing);
+            if (entity == null)
+            {
+                return Variable.FromObject(ObjectInvalid);
+            }
+            
+            // Set tag from template (for waypoints, template is the tag)
+            if (objectType == 6) // Waypoint
+            {
+                entity.Tag = template;
+            }
+            else if (!string.IsNullOrEmpty(template))
+            {
+                // Load template from installation
+                // Access ModuleLoader via GameServicesContext
+                if (ctx is Odyssey.Scripting.VM.ExecutionContext execCtx && execCtx.AdditionalContext is Odyssey.Kotor.Game.GameServicesContext services)
+                {
+                    if (services.ModuleLoader != null)
+                    {
+                        // Use ModuleLoader to load template
+                        // This is a simplified version - full implementation would need to call the appropriate Load*Template method
+                        entity.Tag = template;
+                        
+                        // TODO: Actually load template data (UTC, UTI, UTP, UTM) based on resourceType
+                        // For now, just set the tag and create the entity
+                        // Full template loading would require access to Installation and ModuleLoader methods
+                    }
+                }
+                else
+                {
+                    entity.Tag = template;
+                }
+            }
+            
+            // Add to current area
+            ctx.World.CurrentArea.AddEntity(entity);
+            
+            // TODO: Implement appear animation if bUseAppearAnimation is TRUE
+            
+            return Variable.FromObject(entity.ObjectId);
+        }
+
+        #endregion
     }
 }
 
