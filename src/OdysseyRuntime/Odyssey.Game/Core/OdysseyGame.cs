@@ -14,6 +14,7 @@ using CSharpKOTOR.Common;
 using CSharpKOTOR.Installation;
 using CSharpKOTOR.Resources;
 using Game = Microsoft.Xna.Framework.Game;
+using Vector3 = System.Numerics.Vector3;
 
 namespace Odyssey.Game.Core
 {
@@ -51,6 +52,9 @@ namespace Odyssey.Game.Core
         private Odyssey.MonoGame.Converters.RoomMeshRenderer _roomRenderer;
         private Dictionary<string, Odyssey.MonoGame.Converters.RoomMeshData> _roomMeshes;
 
+        // Input tracking
+        private Microsoft.Xna.Framework.Input.MouseState _previousMouseState;
+
         public OdysseyGame(GameSettings settings)
         {
             _settings = settings;
@@ -74,6 +78,9 @@ namespace Odyssey.Game.Core
             _engineApi = new K1EngineApi();
             _vm = new NcsVm();
             _session = new GameSession(_settings, _world, _vm, _globals);
+
+            // Initialize input state
+            _previousMouseState = Microsoft.Xna.Framework.Input.Mouse.GetState();
 
             base.Initialize();
 
@@ -639,7 +646,7 @@ namespace Odyssey.Game.Core
                 // Note: This is inefficient - we should cache the Module object
                 var installation = new Installation(_settings.GamePath);
                 var module = new Module(moduleName, installation);
-                
+
                 var mdlResource = module.Resource(modelResRef, ResourceType.MDL);
                 if (mdlResource == null)
                 {
@@ -683,6 +690,10 @@ namespace Odyssey.Game.Core
             float turnSpeed = 2f * (float)gameTime.ElapsedGameTime.TotalSeconds;
             bool moved = false;
 
+            // Get navigation mesh for collision
+            var navMesh = _session.NavigationMesh as Odyssey.Core.Navigation.NavigationMesh;
+            bool hasNavMesh = navMesh != null && navMesh.FaceCount > 0;
+
             // Keyboard movement (WASD)
             if (keyboardState.IsKeyDown(Keys.W))
             {
@@ -715,17 +726,121 @@ namespace Odyssey.Game.Core
                 moved = true;
             }
 
-            // Click-to-move (basic implementation)
-            if (mouseState.LeftButton == Microsoft.Xna.Framework.Input.ButtonState.Pressed)
+            // Click-to-move with walkmesh raycasting
+            if (mouseState.LeftButton == Microsoft.Xna.Framework.Input.ButtonState.Pressed &&
+                _previousMouseState.LeftButton == Microsoft.Xna.Framework.Input.ButtonState.Released)
             {
-                // TODO: Raycast to walkmesh and move player to clicked position
-                // For now, just move forward in camera direction
-                var pos = transform.Position;
-                pos.X += (float)Math.Sin(transform.Facing) * moveSpeed * 2f;
-                pos.Z += (float)Math.Cos(transform.Facing) * moveSpeed * 2f;
-                transform.Position = pos;
-                moved = true;
+                // Only trigger on click (not hold)
+                if (hasNavMesh)
+                {
+                    // Raycast from camera through mouse position to walkmesh
+                    Vector3 rayOrigin = GetCameraPosition();
+                    Vector3 rayDirection = GetMouseRayDirection(mouseState.X, mouseState.Y);
+
+                    System.Numerics.Vector3 hitPoint;
+                    if (navMesh.Raycast(
+                        new System.Numerics.Vector3(rayOrigin.X, rayOrigin.Y, rayOrigin.Z),
+                        new System.Numerics.Vector3(rayDirection.X, rayDirection.Y, rayDirection.Z),
+                        1000f,
+                        out hitPoint))
+                    {
+                        // Project to walkable surface
+                        var nearest = navMesh.GetNearestPoint(hitPoint);
+                        if (nearest.HasValue)
+                        {
+                            var targetPos = nearest.Value;
+                            transform.Position = new System.Numerics.Vector3(targetPos.X, targetPos.Y, targetPos.Z);
+                            // Face towards target
+                            var dir = targetPos - new System.Numerics.Vector3(transform.Position.X, transform.Position.Y, transform.Position.Z);
+                            if (dir.LengthSquared() > 0.01f)
+                            {
+                                transform.Facing = (float)Math.Atan2(dir.X, dir.Z);
+                            }
+                            moved = true;
+                        }
+                    }
+                }
             }
+
+            // Clamp player to walkmesh surface
+            if (hasNavMesh && moved)
+            {
+                var pos = transform.Position;
+                var worldPos = new System.Numerics.Vector3(pos.X, pos.Y, pos.Z);
+
+                // Project position to walkmesh surface
+                System.Numerics.Vector3 projectedPos;
+                float height;
+                if (navMesh.ProjectToSurface(worldPos, out projectedPos, out height))
+                {
+                    // Update Z coordinate to match walkmesh height
+                    transform.Position = new System.Numerics.Vector3(projectedPos.X, projectedPos.Y, projectedPos.Z);
+                }
+                else
+                {
+                    // If not on walkmesh, find nearest walkable point
+                    var nearest = navMesh.GetNearestPoint(worldPos);
+                    if (nearest.HasValue)
+                    {
+                        var nearestPos = nearest.Value;
+                        transform.Position = new System.Numerics.Vector3(nearestPos.X, nearestPos.Y, nearestPos.Z);
+                    }
+                }
+            }
+
+            _previousMouseState = mouseState;
+        }
+
+        /// <summary>
+        /// Gets the camera position for raycasting.
+        /// </summary>
+        private Microsoft.Xna.Framework.Vector3 GetCameraPosition()
+        {
+            if (_session != null && _session.PlayerEntity != null)
+            {
+                var transform = _session.PlayerEntity.GetComponent<Odyssey.Kotor.Components.TransformComponent>();
+                if (transform != null)
+                {
+                    // Camera is behind and above player
+                    float cameraDistance = 8f;
+                    float cameraHeight = 4f;
+                    float cameraAngle = transform.Facing + (float)Math.PI;
+                    
+                    var playerPos = transform.Position;
+                    return new Microsoft.Xna.Framework.Vector3(
+                        playerPos.X + (float)Math.Sin(cameraAngle) * cameraDistance,
+                        playerPos.Y + cameraHeight,
+                        playerPos.Z + (float)Math.Cos(cameraAngle) * cameraDistance
+                    );
+                }
+            }
+            return Microsoft.Xna.Framework.Vector3.Zero;
+        }
+
+        /// <summary>
+        /// Gets the ray direction from mouse position.
+        /// </summary>
+        private Microsoft.Xna.Framework.Vector3 GetMouseRayDirection(int mouseX, int mouseY)
+        {
+            // Convert mouse position to normalized device coordinates (-1 to 1)
+            float x = (2.0f * mouseX / GraphicsDevice.Viewport.Width) - 1.0f;
+            float y = 1.0f - (2.0f * mouseY / GraphicsDevice.Viewport.Height);
+
+            // Create ray in view space
+            Vector4 rayClip = new Vector4(x, y, -1.0f, 1.0f);
+
+            // Transform to eye space
+            Matrix invProjection = Matrix.Invert(_projectionMatrix);
+            Vector4 rayEye = Vector4.Transform(rayClip, invProjection);
+            rayEye = new Vector4(rayEye.X, rayEye.Y, -1.0f, 0.0f);
+
+            // Transform to world space
+            Matrix invView = Matrix.Invert(_viewMatrix);
+            Vector4 rayWorld = Vector4.Transform(rayEye, invView);
+            Vector3 rayDir = new Vector3(rayWorld.X, rayWorld.Y, rayWorld.Z);
+            rayDir.Normalize();
+
+            return rayDir;
         }
     }
 }
