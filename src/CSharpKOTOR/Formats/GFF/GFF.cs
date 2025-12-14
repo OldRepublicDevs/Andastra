@@ -94,14 +94,19 @@ namespace CSharpKOTOR.Formats.GFF
                 logFunc("");
                 return false;
             }
-            if (Root.Count != other.Root.Count)
+            // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/gff/gff_data.py:382-386
+            // Original: if len(self.root) != len(other.root): ... return is_same
+            // Note: Python returns False immediately, but we allow comparison to continue to GFFStruct.Compare
+            // which will handle ignore_default_changes properly for field-level differences
+            if (Root.Count != other.Root.Count && !ignoreDefaultChanges)
             {
                 logFunc($"GFF counts have changed at '{path ?? "GFFRoot"}': '{Root.Count}' --> '{other.Root.Count}'");
                 logFunc("");
                 return false;
             }
             comparisonResult = comparisonResult ?? new GFFComparisonResult();
-            return Root.Compare(other.Root, logFunc, path ?? "GFFRoot", ignoreDefaultChanges, null, comparisonResult);
+            Dictionary<string, HashSet<object>> ignoreValues = null;
+            return Root.Compare(other.Root, logFunc, path ?? "GFFRoot", ignoreDefaultChanges, ignoreValues, comparisonResult);
         }
     }
 
