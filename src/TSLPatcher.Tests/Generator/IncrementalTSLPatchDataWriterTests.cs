@@ -164,7 +164,7 @@ namespace CSharpKOTOR.Tests.Generator
             // Create test SSF data
             var ssf = new SSF();
             var ssfPath = Path.Combine(_tempDir, "temp.ssf");
-            SSFAuto.Save(ssf, ssfPath);
+            SSFAuto.WriteSsf(ssf, ssfPath, ResourceType.SSF);
             var ssfData = File.ReadAllBytes(ssfPath);
 
             // Act

@@ -111,7 +111,7 @@ namespace CSharpKOTOR.Tests.Generator
             appendTlkPath.Exists.Should().BeTrue();
             
             // Verify TLK file can be read
-            var tlk = TLKAuto.Load(appendTlkPath.FullName);
+            var tlk = TLKAuto.ReadTlk(appendTlkPath.FullName);
             tlk.Should().NotBeNull();
             tlk.Count.Should().BeGreaterThan(0);
         }
@@ -141,7 +141,7 @@ namespace CSharpKOTOR.Tests.Generator
             generated2DAPath.Exists.Should().BeTrue();
             
             // Verify 2DA file can be read
-            var generated2DA = TwoDAAuto.Load(generated2DAPath.FullName);
+            var generated2DA = new TwoDABinaryReader(generated2DAPath.FullName).Load();
             generated2DA.Should().NotBeNull();
             generated2DA.GetHeaders().Should().Contain("Col1");
             generated2DA.GetHeaders().Should().Contain("Col2");
@@ -168,7 +168,7 @@ namespace CSharpKOTOR.Tests.Generator
             generatedGFFPath.Exists.Should().BeTrue();
             
             // Verify GFF file can be read
-            var gff = GFFAuto.Load(generatedGFFPath.FullName);
+            var gff = new GFFBinaryReader(generatedGFFPath.FullName).Load();
             gff.Should().NotBeNull();
         }
 
