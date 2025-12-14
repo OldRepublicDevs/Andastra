@@ -26,17 +26,35 @@ namespace CSharpKOTOR.Resource.Generics
             uti.Description = root.Acquire<LocalizedString>("DescIdentified", LocalizedString.FromInvalid());
             uti.DescriptionUnidentified = root.Acquire<LocalizedString>("Description", LocalizedString.FromInvalid());
             uti.Tag = root.Acquire<string>("Tag", "");
-            uti.Charges = root.Acquire<int>("Charges", 0);
-            uti.Cost = root.Acquire<int>("Cost", 0);
-            uti.StackSize = root.Acquire<int>("StackSize", 0);
-            uti.Plot = root.Acquire<int>("Plot", 0);
-            uti.AddCost = root.Acquire<int>("AddCost", 0);
-            uti.PaletteId = root.Acquire<int>("PaletteID", 0);
+            // Charges is stored as UInt8, so we need to read it as byte, not int
+            byte? chargesNullable = root.GetUInt8("Charges");
+            uti.Charges = chargesNullable ?? 0;
+            // Cost is stored as UInt32, so we need to read it as uint, not int
+            uint? costNullable = root.GetUInt32("Cost");
+            uti.Cost = costNullable.HasValue ? (int)costNullable.Value : 0;
+            // StackSize is stored as UInt16, so we need to read it as ushort, not int
+            ushort? stackSizeNullable = root.GetUInt16("StackSize");
+            uti.StackSize = stackSizeNullable ?? 0;
+            // Plot is stored as UInt8, so we need to read it as byte, not int
+            byte? plotNullable = root.GetUInt8("Plot");
+            uti.Plot = plotNullable ?? 0;
+            // AddCost is stored as UInt32, so we need to read it as uint, not int
+            uint? addCostNullable = root.GetUInt32("AddCost");
+            uti.AddCost = addCostNullable.HasValue ? (int)addCostNullable.Value : 0;
+            // PaletteID is stored as UInt8, so we need to read it as byte, not int
+            byte? paletteIdNullable = root.GetUInt8("PaletteID");
+            uti.PaletteId = paletteIdNullable ?? 0;
             uti.Comment = root.Acquire<string>("Comment", "");
-            uti.ModelVariation = root.Acquire<int>("ModelVariation", 0);
-            uti.BodyVariation = root.Acquire<int>("BodyVariation", 0);
-            uti.TextureVariation = root.Acquire<int>("TextureVar", 0);
-            uti.UpgradeLevel = root.Acquire<int>("UpgradeLevel", 0);
+            // ModelVariation, BodyVariation, and TextureVar are stored as UInt8, so we need to read them as byte, not int
+            byte? modelVariationNullable = root.GetUInt8("ModelVariation");
+            uti.ModelVariation = modelVariationNullable ?? 0;
+            byte? bodyVariationNullable = root.GetUInt8("BodyVariation");
+            uti.BodyVariation = bodyVariationNullable ?? 0;
+            byte? textureVarNullable = root.GetUInt8("TextureVar");
+            uti.TextureVariation = textureVarNullable ?? 0;
+            // UpgradeLevel is stored as UInt8 in K2, so we need to read it as byte, not int
+            byte? upgradeLevelNullable = root.GetUInt8("UpgradeLevel");
+            uti.UpgradeLevel = upgradeLevelNullable ?? 0;
             uti.Stolen = root.Acquire<int>("Stolen", 0);
             uti.Identified = root.Acquire<int>("Identified", 0);
 
