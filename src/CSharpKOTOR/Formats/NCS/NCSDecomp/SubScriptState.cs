@@ -966,7 +966,18 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
             else
             {
                 AExpression target = this.GetVarToAssignTo(node);
-                if (typeof(ScriptNode.AVarRef).IsInstanceOfType(target))
+                if (target == null)
+                {
+                    // If GetVarToAssignTo returns null, log a warning but continue
+                    JavaSystem.@out.Println("WARNING TransformCopyDownSp: GetVarToAssignTo returned null for node at position " + (this.nodedata != null ? this.nodedata.GetPos(node).ToString() : "unknown"));
+                    // Still try to create an assignment if we have an expression
+                    if (exp != null)
+                    {
+                        // For globals, we might need to handle this differently
+                        // But for now, just skip creating the assignment
+                    }
+                }
+                else if (typeof(ScriptNode.AVarRef).IsInstanceOfType(target))
                 {
                     ScriptNode.AVarRef varref = (ScriptNode.AVarRef)target;
                     AModifyExp modexp = new AModifyExp(varref, exp);
@@ -981,6 +992,10 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
                     {
                         AModifyExp modexp = new AModifyExp(targetVarRef, exp);
                         this.current.AddChild(modexp);
+                    }
+                    else
+                    {
+                        JavaSystem.@out.Println("WARNING TransformCopyDownSp: target is not AVarRef, type=" + (target != null ? target.GetType().Name : "null"));
                     }
                 }
 
