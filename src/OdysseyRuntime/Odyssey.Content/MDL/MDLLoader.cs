@@ -72,7 +72,7 @@ namespace Odyssey.Content.MDL
         {
             if (resourceProvider == null)
             {
-                throw new ArgumentNullException("resourceProvider");
+                throw new ArgumentNullException(nameof(resourceProvider));
             }
             _resourceProvider = resourceProvider;
             _useCache = true;
@@ -89,7 +89,7 @@ namespace Odyssey.Content.MDL
         {
             if (string.IsNullOrEmpty(resRef))
             {
-                throw new ArgumentNullException("resRef");
+                throw new ArgumentNullException(nameof(resRef));
             }
 
             string normalizedRef = resRef.ToLowerInvariant();
