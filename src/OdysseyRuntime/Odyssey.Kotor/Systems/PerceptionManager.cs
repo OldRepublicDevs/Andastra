@@ -64,12 +64,12 @@ namespace Odyssey.Kotor.Systems
         public void SwapBuffers()
         {
             // Swap current to last for delta detection
-            var tempSeen = LastSeenObjects;
+            HashSet<uint> tempSeen = LastSeenObjects;
             LastSeenObjects = SeenObjects;
             SeenObjects = tempSeen;
             SeenObjects.Clear();
 
-            var tempHeard = LastHeardObjects;
+            HashSet<uint> tempHeard = LastHeardObjects;
             LastHeardObjects = HeardObjects;
             HeardObjects = tempHeard;
             HeardObjects.Clear();
@@ -87,12 +87,12 @@ namespace Odyssey.Kotor.Systems
     ///   - OnPerceive: New object seen/heard
     ///   - OnVanish: Object no longer seen
     ///   - OnInaudible: Object no longer heard
-    /// 
+    ///
     /// Sight checks:
     /// - Distance within sight range
     /// - Line of sight (optional raycasting)
     /// - Not invisible (unless has See Invisibility)
-    /// 
+    ///
     /// Hearing checks:
     /// - Distance within hearing range
     /// - Sound source is active
@@ -145,8 +145,8 @@ namespace Odyssey.Kotor.Systems
             _timeSinceUpdate = 0f;
 
             // Update perception for all creatures
-            var creatures = _world.GetEntitiesOfType(ObjectType.Creature);
-            foreach (var creature in creatures)
+            IEnumerable<IEntity> creatures = _world.GetEntitiesOfType(ObjectType.Creature);
+            foreach (IEntity creature in creatures)
             {
                 UpdateCreaturePerception(creature);
             }
@@ -174,12 +174,12 @@ namespace Odyssey.Kotor.Systems
             data.SwapBuffers();
 
             // Get creature's perception component
-            var perception = creature.GetComponent<IPerceptionComponent>();
+            IPerceptionComponent perception = creature.GetComponent<IPerceptionComponent>();
             float sightRange = perception != null ? perception.SightRange : DefaultSightRange;
             float hearingRange = perception != null ? perception.HearingRange : DefaultHearingRange;
 
             // Get creature position
-            var transform = creature.GetComponent<ITransformComponent>();
+            ITransformComponent transform = creature.GetComponent<ITransformComponent>();
             if (transform == null)
             {
                 return;
@@ -190,7 +190,7 @@ namespace Odyssey.Kotor.Systems
             float hearingRangeSq = hearingRange * hearingRange;
 
             // Check all potential targets
-            foreach (var target in _world.GetAllEntities())
+            foreach (IEntity target in _world.GetAllEntities())
             {
                 if (target == creature)
                 {
@@ -205,7 +205,7 @@ namespace Odyssey.Kotor.Systems
                     continue;
                 }
 
-                var targetTransform = target.GetComponent<ITransformComponent>();
+                ITransformComponent targetTransform = target.GetComponent<ITransformComponent>();
                 if (targetTransform == null)
                 {
                     continue;
@@ -233,9 +233,9 @@ namespace Odyssey.Kotor.Systems
             // Update perception component if present
             if (perception != null)
             {
-                foreach (var seenId in data.SeenObjects)
+                foreach (uint seenId in data.SeenObjects)
                 {
-                    var seen = _world.GetEntity(seenId);
+                    IEntity seen = _world.GetEntity(seenId);
                     if (seen != null)
                     {
                         bool wasHeard = data.HeardObjects.Contains(seenId);
@@ -243,11 +243,11 @@ namespace Odyssey.Kotor.Systems
                     }
                 }
 
-                foreach (var heardId in data.HeardObjects)
+                foreach (uint heardId in data.HeardObjects)
                 {
                     if (!data.SeenObjects.Contains(heardId))
                     {
-                        var heard = _world.GetEntity(heardId);
+                        IEntity heard = _world.GetEntity(heardId);
                         if (heard != null)
                         {
                             perception.UpdatePerception(heard, false, true);
@@ -266,11 +266,25 @@ namespace Odyssey.Kotor.Systems
 
             // Check if target is invisible
             // TODO: Check for invisibility effect and See Invisibility ability
+            // For now, assume visible
 
-            // Check line of sight
-            // TODO: Raycast through navigation mesh or world geometry
+            // Check line of sight using navigation mesh raycasting
+            IArea area = _world.CurrentArea;
+            if (area != null && area.NavigationMesh != null)
+            {
+                // Use navigation mesh to test line of sight
+                // Adjust positions slightly above ground for creature eye level
+                Vector3 eyePos = creaturePos + new Vector3(0, 1.5f, 0); // Approximate eye height
+                Vector3 targetEyePos = targetPos + new Vector3(0, 1.5f, 0);
 
-            // For now, just assume visible if in range
+                // Test line of sight
+                bool hasLOS = area.NavigationMesh.TestLineOfSight(eyePos, targetEyePos);
+                if (!hasLOS)
+                {
+                    return false; // Blocked by geometry
+                }
+            }
+
             return true;
         }
 
@@ -302,11 +316,11 @@ namespace Odyssey.Kotor.Systems
         private void FirePerceptionEvents(IEntity creature, PerceptionData data)
         {
             // New objects seen
-            foreach (var seenId in data.SeenObjects)
+            foreach (uint seenId in data.SeenObjects)
             {
                 if (!data.LastSeenObjects.Contains(seenId))
                 {
-                    var seen = _world.GetEntity(seenId);
+                    IEntity seen = _world.GetEntity(seenId);
                     if (seen != null)
                     {
                         OnPerceptionChanged?.Invoke(this, new PerceptionEventArgs
@@ -320,11 +334,11 @@ namespace Odyssey.Kotor.Systems
             }
 
             // Objects that vanished
-            foreach (var lastSeenId in data.LastSeenObjects)
+            foreach (uint lastSeenId in data.LastSeenObjects)
             {
                 if (!data.SeenObjects.Contains(lastSeenId))
                 {
-                    var vanished = _world.GetEntity(lastSeenId);
+                    IEntity vanished = _world.GetEntity(lastSeenId);
                     if (vanished != null)
                     {
                         OnPerceptionChanged?.Invoke(this, new PerceptionEventArgs
@@ -338,11 +352,11 @@ namespace Odyssey.Kotor.Systems
             }
 
             // New objects heard
-            foreach (var heardId in data.HeardObjects)
+            foreach (uint heardId in data.HeardObjects)
             {
                 if (!data.LastHeardObjects.Contains(heardId))
                 {
-                    var heard = _world.GetEntity(heardId);
+                    IEntity heard = _world.GetEntity(heardId);
                     if (heard != null)
                     {
                         OnPerceptionChanged?.Invoke(this, new PerceptionEventArgs
@@ -356,11 +370,11 @@ namespace Odyssey.Kotor.Systems
             }
 
             // Objects that became inaudible
-            foreach (var lastHeardId in data.LastHeardObjects)
+            foreach (uint lastHeardId in data.LastHeardObjects)
             {
                 if (!data.HeardObjects.Contains(lastHeardId))
                 {
-                    var inaudible = _world.GetEntity(lastHeardId);
+                    IEntity inaudible = _world.GetEntity(lastHeardId);
                     if (inaudible != null)
                     {
                         OnPerceptionChanged?.Invoke(this, new PerceptionEventArgs
@@ -387,9 +401,9 @@ namespace Odyssey.Kotor.Systems
             PerceptionData data;
             if (_perceptionData.TryGetValue(creature.ObjectId, out data))
             {
-                foreach (var seenId in data.SeenObjects)
+                foreach (uint seenId in data.SeenObjects)
                 {
-                    var seen = _world.GetEntity(seenId);
+                    IEntity seen = _world.GetEntity(seenId);
                     if (seen != null)
                     {
                         yield return seen;
@@ -411,9 +425,9 @@ namespace Odyssey.Kotor.Systems
             PerceptionData data;
             if (_perceptionData.TryGetValue(creature.ObjectId, out data))
             {
-                foreach (var heardId in data.HeardObjects)
+                foreach (uint heardId in data.HeardObjects)
                 {
-                    var heard = _world.GetEntity(heardId);
+                    IEntity heard = _world.GetEntity(heardId);
                     if (heard != null)
                     {
                         yield return heard;
@@ -489,7 +503,7 @@ namespace Odyssey.Kotor.Systems
                 return null;
             }
 
-            var transform = creature.GetComponent<ITransformComponent>();
+            ITransformComponent transform = creature.GetComponent<ITransformComponent>();
             if (transform == null)
             {
                 return null;
@@ -499,7 +513,7 @@ namespace Odyssey.Kotor.Systems
             IEntity nearest = null;
             float nearestDistSq = float.MaxValue;
 
-            foreach (var seen in GetSeenObjects(creature))
+            foreach (IEntity seen in GetSeenObjects(creature))
             {
                 if (seen.ObjectType != ObjectType.Creature)
                 {
@@ -511,7 +525,7 @@ namespace Odyssey.Kotor.Systems
                     continue;
                 }
 
-                var seenTransform = seen.GetComponent<ITransformComponent>();
+                ITransformComponent seenTransform = seen.GetComponent<ITransformComponent>();
                 if (seenTransform == null)
                 {
                     continue;
@@ -538,7 +552,7 @@ namespace Odyssey.Kotor.Systems
                 return null;
             }
 
-            var transform = creature.GetComponent<ITransformComponent>();
+            ITransformComponent transform = creature.GetComponent<ITransformComponent>();
             if (transform == null)
             {
                 return null;
@@ -548,7 +562,7 @@ namespace Odyssey.Kotor.Systems
             IEntity nearest = null;
             float nearestDistSq = float.MaxValue;
 
-            foreach (var seen in GetSeenObjects(creature))
+            foreach (IEntity seen in GetSeenObjects(creature))
             {
                 if (seen.ObjectType != ObjectType.Creature)
                 {
@@ -560,7 +574,7 @@ namespace Odyssey.Kotor.Systems
                     continue;
                 }
 
-                var seenTransform = seen.GetComponent<ITransformComponent>();
+                ITransformComponent seenTransform = seen.GetComponent<ITransformComponent>();
                 if (seenTransform == null)
                 {
                     continue;

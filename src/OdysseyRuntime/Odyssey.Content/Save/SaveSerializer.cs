@@ -54,15 +54,24 @@ namespace Odyssey.Content.Save
         {
             // Use CSharpKOTOR GFF writer
             var gff = new GFF(GFFContent.GFF);
-            var root = gff.Root;
+            GFFStruct root = gff.Root;
 
             root.SetString(FIELD_SAVE_NAME, saveData.Name ?? "");
             root.SetString(FIELD_MODULE_NAME, saveData.CurrentModule ?? "");
             root.SetString(FIELD_SAVE_DATE, saveData.SaveTime.ToString("yyyy-MM-dd"));
             root.SetString(FIELD_SAVE_TIME, saveData.SaveTime.ToString("HH:mm:ss"));
             root.SetInt32(FIELD_TIME_PLAYED, (int)saveData.PlayTime.TotalSeconds);
-            root.SetString(FIELD_PLAYER_NAME, ""); // TODO: Get player name from party state
-            root.SetInt32(FIELD_CHEAT_USED, 0); // TODO: Track cheat usage
+            
+            // Get player name from party state
+            string playerName = "";
+            if (saveData.PartyState != null && saveData.PartyState.PlayerCharacter != null)
+            {
+                // PlayerCharacter is the main player character
+                playerName = saveData.PartyState.PlayerCharacter.Tag ?? "";
+            }
+            root.SetString(FIELD_PLAYER_NAME, playerName);
+            
+            root.SetInt32(FIELD_CHEAT_USED, 0); // TODO: Track cheat usage (would need to track during gameplay)
 
             return gff.ToBytes();
         }

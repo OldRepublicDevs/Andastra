@@ -1,4 +1,6 @@
 using System;
+using System.Linq;
+using Odyssey.Core.Combat;
 using Odyssey.Core.Enums;
 using Odyssey.Core.Interfaces;
 using Odyssey.Core.Interfaces.Components;
@@ -40,20 +42,20 @@ namespace Odyssey.Kotor.Combat
     /// </summary>
     /// <remarks>
     /// KOTOR D20 Combat System:
-    /// 
+    ///
     /// Attack Roll:
     /// - Roll d20 + Attack Bonus vs Defense
     /// - Natural 1 always misses
     /// - Natural 20 always hits (and threatens critical)
-    /// 
+    ///
     /// Attack Bonus = BAB + STR mod (melee) or DEX mod (ranged) + modifiers
     /// Defense = 10 + DEX mod + Armor + Deflection + Class bonus
-    /// 
+    ///
     /// Critical Hits:
     /// - Threat range (usually 19-20 or 20)
     /// - Confirmation roll: d20 + attack bonus vs defense
     /// - If confirmed: damage x multiplier (usually x2)
-    /// 
+    ///
     /// Damage:
     /// - Weapon dice + STR mod (melee) + bonuses
     /// - Resistances reduce damage
@@ -61,15 +63,30 @@ namespace Odyssey.Kotor.Combat
     public class DamageCalculator
     {
         private readonly Random _random;
+        private readonly EffectSystem _effectSystem;
 
         public DamageCalculator()
         {
             _random = new Random();
+            _effectSystem = null;
         }
 
         public DamageCalculator(int seed)
         {
             _random = new Random(seed);
+            _effectSystem = null;
+        }
+
+        public DamageCalculator(EffectSystem effectSystem)
+        {
+            _random = new Random();
+            _effectSystem = effectSystem;
+        }
+
+        public DamageCalculator(int seed, EffectSystem effectSystem)
+        {
+            _random = new Random(seed);
+            _effectSystem = effectSystem;
         }
 
         /// <summary>
@@ -125,7 +142,7 @@ namespace Odyssey.Kotor.Combat
             var result = new AttackRollResult();
 
             // Get target defense
-            var targetStats = attack.Target.GetComponent<IStatsComponent>();
+            IStatsComponent targetStats = attack.Target.GetComponent<IStatsComponent>();
             result.TargetDefense = targetStats != null ? targetStats.ArmorClass : 10;
 
             // Roll attack
@@ -270,7 +287,7 @@ namespace Odyssey.Kotor.Combat
         /// </summary>
         public int CalculateMeleeDamageBonus(IEntity attacker, bool isTwoHanded = false, bool isOffhand = false)
         {
-            var stats = attacker.GetComponent<IStatsComponent>();
+            IStatsComponent stats = attacker.GetComponent<IStatsComponent>();
             if (stats == null)
             {
                 return 0;
@@ -306,16 +323,17 @@ namespace Odyssey.Kotor.Combat
             }
 
             // Get stats component
-            var stats = target.GetComponent<StatsComponent>();
+            StatsComponent stats = target.GetComponent<StatsComponent>();
             if (stats == null)
             {
                 return 0;
             }
 
-            // TODO: Apply damage resistances based on damageType
+            // Apply damage resistances based on damageType
+            int finalDamage = ApplyDamageResistances(target, damage, (DamageType)damageType);
 
             // Apply damage
-            int actualDamage = stats.TakeDamage(damage);
+            int actualDamage = stats.TakeDamage(finalDamage);
             return actualDamage;
         }
 
@@ -333,7 +351,7 @@ namespace Odyssey.Kotor.Combat
                 return false;
             }
 
-            var stats = target.GetComponent<StatsComponent>();
+            StatsComponent stats = target.GetComponent<StatsComponent>();
             if (stats == null)
             {
                 return false;
@@ -341,6 +359,70 @@ namespace Odyssey.Kotor.Combat
 
             int roll = RollD20();
             return stats.MakeSavingThrow(saveType, dc, roll);
+        }
+
+        /// <summary>
+        /// Applies damage resistances to reduce damage.
+        /// </summary>
+        /// <param name="target">The entity taking damage</param>
+        /// <param name="damage">Base damage amount</param>
+        /// <param name="damageType">Type of damage</param>
+        /// <returns>Damage after resistances are applied</returns>
+        private int ApplyDamageResistances(IEntity target, int damage, DamageType damageType)
+        {
+            if (target == null || damage <= 0 || _effectSystem == null)
+            {
+                return damage;
+            }
+
+            // Universal damage bypasses all resistances
+            if (damageType == DamageType.Universal)
+            {
+                return damage;
+            }
+
+            int finalDamage = damage;
+            int totalResistance = 0;
+            bool hasImmunity = false;
+
+            // Check all active effects for resistances/immunities
+            foreach (var activeEffect in _effectSystem.GetEffects(target))
+            {
+                var effect = activeEffect.Effect;
+
+                // Check for damage immunity
+                if (effect.Type == EffectType.DamageImmunity)
+                {
+                    DamageType effectDamageType = (DamageType)effect.SubType;
+                    if (effectDamageType == damageType || effectDamageType == DamageType.Universal)
+                    {
+                        hasImmunity = true;
+                        break; // Immunity completely negates damage
+                    }
+                }
+
+                // Check for damage resistance
+                if (effect.Type == EffectType.DamageResistance && !hasImmunity)
+                {
+                    DamageType effectDamageType = (DamageType)effect.SubType;
+                    if (effectDamageType == damageType || effectDamageType == DamageType.Universal)
+                    {
+                        // Add resistance amount (can stack)
+                        totalResistance += effect.Amount;
+                    }
+                }
+            }
+
+            // Immunity completely negates damage
+            if (hasImmunity)
+            {
+                return 0;
+            }
+
+            // Apply resistance (subtract from damage, minimum 0)
+            finalDamage = Math.Max(0, finalDamage - totalResistance);
+
+            return finalDamage;
         }
     }
 }
