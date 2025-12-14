@@ -4,7 +4,6 @@ using System.IO;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-using Odyssey.Game.GUI;
 using Odyssey.Kotor.Game;
 using Odyssey.Scripting.EngineApi;
 using Odyssey.Scripting.VM;
@@ -153,10 +152,6 @@ namespace Odyssey.Game.Core
                 {
                     // Return to main menu
                     _currentState = GameState.MainMenu;
-                    if (_menuRenderer != null)
-                    {
-                        _menuRenderer.SetVisible(true);
-                    }
                 }
             }
 
@@ -1127,7 +1122,7 @@ namespace Odyssey.Game.Core
 
             // Check number keys 1-9 for reply selection
             Keys[] numberKeys = { Keys.D1, Keys.D2, Keys.D3, Keys.D4, Keys.D5, Keys.D6, Keys.D7, Keys.D8, Keys.D9 };
-            
+
             for (int i = 0; i < Math.Min(numberKeys.Length, state.AvailableReplies.Count); i++)
             {
                 if (keyboardState.IsKeyDown(numberKeys[i]) && _previousKeyboardState.IsKeyUp(numberKeys[i]))
