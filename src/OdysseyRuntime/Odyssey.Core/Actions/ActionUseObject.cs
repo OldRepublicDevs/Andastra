@@ -6,8 +6,6 @@ using Odyssey.Core.Interfaces.Components;
 
 namespace Odyssey.Core.Actions
 {
-namespace Odyssey.Core.Actions
-{
     /// <summary>
     /// Skill constants for KOTOR.
     /// </summary>
@@ -22,6 +20,7 @@ namespace Odyssey.Core.Actions
         public const int SKILL_SECURITY = 6;
         public const int SKILL_TREAT_INJURY = 7;
     }
+
     /// <summary>
     /// Action to use/interact with an object (door, placeable, etc.).
     /// Based on NWScript ActionUseObject semantics.
