@@ -199,12 +199,17 @@ namespace Odyssey.Scripting.EngineApi
 
                 // Core object functions (correct IDs from nwscript.nss)
                 case 168: return Func_GetTag(args, ctx);
+                case 197: return Func_GetWaypointByTag(args, ctx);
                 case 200: return Func_GetObjectByTag(args, ctx);
                 case 229: return Func_GetNearestObjectByTag(args, ctx);
+                case 253: return Func_GetName(args, ctx);
 
                 // Module
                 case 242: return Func_GetModule(args, ctx);
                 case 272: return Func_ObjectToString(args, ctx);
+                
+                // Faction manipulation
+                case 173: return Func_ChangeFaction(args, ctx);
 
                 // Combat functions
                 case 316: return Func_GetAttackTarget(args, ctx);
@@ -1244,8 +1249,6 @@ namespace Odyssey.Scripting.EngineApi
                 }
             }
             return Variable.FromInt(0);
-        }
-            return Variable.Void();
         }
 
         private Variable Func_SetAreaUnescapable(IReadOnlyList<Variable> args, IExecutionContext ctx)
@@ -2337,6 +2340,130 @@ namespace Odyssey.Scripting.EngineApi
                 }
             }
             return Variable.FromInt(0);
+        }
+
+        /// <summary>
+        /// GetWaypointByTag(string sWaypointTag) - returns waypoint with specified tag
+        /// </summary>
+        private Variable Func_GetWaypointByTag(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            string waypointTag = args.Count > 0 ? args[0].AsString() : string.Empty;
+            
+            if (string.IsNullOrEmpty(waypointTag) || ctx.World == null)
+            {
+                return Variable.FromObject(ObjectInvalid);
+            }
+
+            // Search in current area first
+            IArea area = ctx.World.CurrentArea;
+            if (area != null)
+            {
+                IEntity waypoint = area.GetObjectByTag(waypointTag, 0);
+                if (waypoint != null && waypoint.ObjectType == ObjectType.Waypoint)
+                {
+                    return Variable.FromObject(waypoint.ObjectId);
+                }
+            }
+
+            // Fallback to world search
+            IEntity found = ctx.World.GetEntityByTag(waypointTag, 0);
+            if (found != null && found.ObjectType == ObjectType.Waypoint)
+            {
+                return Variable.FromObject(found.ObjectId);
+            }
+
+            return Variable.FromObject(ObjectInvalid);
+        }
+
+        /// <summary>
+        /// GetName(object oObject) - returns the name of the object
+        /// </summary>
+        private Variable Func_GetName(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
+            IEntity entity = ResolveObject(objectId, ctx);
+            
+            if (entity == null)
+            {
+                return Variable.FromString(string.Empty);
+            }
+
+            // Try to get name from entity data (set by EntityFactory from UTC/UTP/etc.)
+            // Cast to Entity to access GetData method
+            if (entity is Odyssey.Core.Entities.Entity concreteEntity)
+            {
+                string firstName = concreteEntity.GetData<string>("FirstName", null);
+                string lastName = concreteEntity.GetData<string>("LastName", null);
+                
+                if (!string.IsNullOrEmpty(firstName) || !string.IsNullOrEmpty(lastName))
+                {
+                    string fullName = string.Empty;
+                    if (!string.IsNullOrEmpty(firstName))
+                    {
+                        fullName = firstName;
+                    }
+                    if (!string.IsNullOrEmpty(lastName))
+                    {
+                        if (!string.IsNullOrEmpty(fullName))
+                        {
+                            fullName += " ";
+                        }
+                        fullName += lastName;
+                    }
+                    return Variable.FromString(fullName);
+                }
+            }
+
+            // Fallback to tag if no name is set
+            if (!string.IsNullOrEmpty(entity.Tag))
+            {
+                return Variable.FromString(entity.Tag);
+            }
+
+            return Variable.FromString(string.Empty);
+        }
+
+        /// <summary>
+        /// ChangeFaction(object oObjectToChangeFaction, object oMemberOfFactionToJoin) - changes faction of object
+        /// </summary>
+        private Variable Func_ChangeFaction(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            uint objectToChangeId = args.Count > 0 ? args[0].AsObjectId() : ObjectInvalid;
+            uint memberOfFactionId = args.Count > 1 ? args[1].AsObjectId() : ObjectInvalid;
+            
+            IEntity objectToChange = ResolveObject(objectToChangeId, ctx);
+            IEntity memberOfFaction = ResolveObject(memberOfFactionId, ctx);
+            
+            if (objectToChange == null || memberOfFaction == null)
+            {
+                return Variable.Void();
+            }
+
+            // Get faction component from member
+            IFactionComponent memberFaction = memberOfFaction.GetComponent<IFactionComponent>();
+            if (memberFaction == null)
+            {
+                return Variable.Void();
+            }
+
+            // Get or create faction component for object to change
+            IFactionComponent targetFaction = objectToChange.GetComponent<IFactionComponent>();
+            if (targetFaction == null)
+            {
+                // Create faction component if it doesn't exist
+                // For now, we'll just set the data - proper component creation would require EntityFactory
+                if (objectToChange is Odyssey.Core.Entities.Entity concreteEntity)
+                {
+                    concreteEntity.SetData("FactionID", memberFaction.FactionId);
+                }
+            }
+            else
+            {
+                // Change faction ID
+                targetFaction.FactionId = memberFaction.FactionId;
+            }
+
+            return Variable.Void();
         }
 
         #endregion
