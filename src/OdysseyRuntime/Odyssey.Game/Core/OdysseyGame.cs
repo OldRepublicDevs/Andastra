@@ -694,6 +694,12 @@ namespace Odyssey.Game.Core
                 VerticalAlignment = VerticalAlignment.Stretch
             };
             headerPanel.SetGridRow(0);
+            // Add header panel to grid children
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.UIElement.html
+            // UIElement.Children property gets the collection of child UI elements
+            // Children.Add(UIElement) adds a child element to the UI element's children collection
+            // Method signature: void Add(UIElement element)
+            // Source: https://doc.stride3d.net/latest/en/manual/user-interface/controls.html
             mainPanel.Children.Add(headerPanel);
 
             // Determine if game path is available
