@@ -66,7 +66,7 @@ namespace HolocronToolset.NET.Tests.Data
             // Test caching functionality
             var twoDA1 = installation.HtGetCache2DA("appearance");
             var twoDA2 = installation.HtGetCache2DA("appearance");
-            
+
             // Should return same instance (cached)
             twoDA1.Should().NotBeNull();
             twoDA2.Should().NotBeNull();

@@ -102,7 +102,7 @@ namespace HolocronToolset.NET.Tests.Editors
             // Load again
             editor.Load("test.txt", "test", ResourceType.TXT, savedData);
             var (data2, _) = editor.Build();
-            
+
             // Content should match (normalized for line endings)
             string decoded1 = DecodeBytesWithFallbacks(savedData);
             string decoded2 = DecodeBytesWithFallbacks(data2);
