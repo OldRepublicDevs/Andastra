@@ -214,6 +214,13 @@ namespace Odyssey.Scripting.EngineApi
                 // GetAbilityModifier (routine 331)
                 case 331: return Func_GetAbilityModifier(args, ctx);
                 
+                // Party management functions
+                case 126: return Func_GetPartyMemberCount(args, ctx);
+                case 577: return Func_GetPartyMemberByIndex(args, ctx);
+                case 576: return Func_IsObjectPartyMember(args, ctx);
+                case 574: return Func_AddPartyMember(args, ctx);
+                case 575: return Func_RemovePartyMember(args, ctx);
+                
                 // Global variables (KOTOR specific - different from standard NWN)
                 case 578: return Func_GetGlobalBoolean(args, ctx);
                 case 579: return Func_SetGlobalBoolean(args, ctx);

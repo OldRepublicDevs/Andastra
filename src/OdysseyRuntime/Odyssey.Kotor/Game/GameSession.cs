@@ -58,6 +58,7 @@ namespace Odyssey.Kotor.Game
         private readonly PerceptionManager _perceptionManager;
         private readonly ModuleTransitionSystem _moduleTransitionSystem;
         private readonly SaveSystem _saveSystem;
+        private readonly PartyManager _partyManager;
 
         private string _currentModuleName;
         private RuntimeModule _currentRuntimeModule;
@@ -206,6 +207,9 @@ namespace Odyssey.Kotor.Game
             // Create perception manager
             _perceptionManager = new PerceptionManager(world);
 
+            // Create party manager
+            _partyManager = new PartyManager(world);
+
             // Create module transition system
             _moduleTransitionSystem = new ModuleTransitionSystem(
                 LoadModuleAsync,
@@ -221,6 +225,9 @@ namespace Odyssey.Kotor.Game
             var saveDataProvider = new SaveDataProvider(savesDirectory, saveSerializer);
             _saveSystem = new SaveSystem(world, saveDataProvider);
             _saveSystem.SetScriptGlobals(globals);
+
+            // Create party manager
+            _partyManager = new PartyManager(world);
 
             // Load talk tables
             LoadTalkTables();
