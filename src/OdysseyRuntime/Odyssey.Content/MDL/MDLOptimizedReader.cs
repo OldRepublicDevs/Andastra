@@ -112,6 +112,16 @@ namespace Odyssey.Content.MDL
             var model = new MDLModel();
             int pos = 0;
 
+            // Validate minimum file size before reading
+            // MDL file must be at least FILE_HEADER_SIZE (12 bytes) to read the header
+            if (_mdlData.Length < MDLConstants.FILE_HEADER_SIZE)
+            {
+                throw new InvalidDataException(
+                    $"MDL file is too small: expected at least {MDLConstants.FILE_HEADER_SIZE} bytes, " +
+                    $"got {_mdlData.Length} bytes. File may be corrupted or truncated."
+                );
+            }
+
             // Phase 1: Read file header (12 bytes)
             // Reference: vendor/PyKotor/wiki/MDL-MDX-File-Format.md - MDL File Header
             int unused = ReadInt32(mdlPtr, ref pos); // Always 0
@@ -134,6 +144,17 @@ namespace Odyssey.Content.MDL
                     $"MDX header size field ({mdxSize}) is invalid. " +
                     $"Expected value between 0 and {_mdxData.Length} (actual file size). " +
                     "File may be corrupted or truncated."
+                );
+            }
+
+            // Validate that MDL file is large enough to contain the geometry header
+            // Geometry header starts at offset FILE_HEADER_SIZE (12) and is 80 bytes
+            int minimumRequiredSize = MDLConstants.FILE_HEADER_SIZE + MDLConstants.GEOMETRY_HEADER_SIZE;
+            if (_mdlData.Length < minimumRequiredSize)
+            {
+                throw new InvalidDataException(
+                    $"MDL file is too small to contain geometry header: expected at least {minimumRequiredSize} bytes, " +
+                    $"got {_mdlData.Length} bytes. File may be corrupted or truncated."
                 );
             }
 
