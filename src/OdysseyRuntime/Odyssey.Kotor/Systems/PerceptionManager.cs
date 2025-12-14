@@ -98,6 +98,12 @@ namespace Odyssey.Kotor.Systems
     /// - Distance within hearing range
     /// - Sound source is active
     /// - Not silenced
+    ///
+    /// Based on swkotor2.exe: FUN_005fb0f0 @ 0x005fb0f0
+    /// Located via string reference: "PERCEPTIONDIST" @ 0x007c4070
+    /// Original implementation: Updates perception for all creatures, checks sight/hearing ranges,
+    /// fires script events "CSWSSCRIPTEVENT_EVENTTYPE_ON_PERCEPTION" @ 0x007bcb68 when perception changes
+    /// Uses PERCEPTIONDIST field from appearance.2da for sight range, PerceptionRange field for hearing range
     /// </remarks>
     public class PerceptionManager
     {
