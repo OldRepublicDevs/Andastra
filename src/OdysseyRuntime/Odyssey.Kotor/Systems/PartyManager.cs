@@ -21,19 +21,25 @@ namespace Odyssey.Kotor.Systems
     /// Manages the player's party in KOTOR.
     /// </summary>
     /// <remarks>
-    /// KOTOR party rules:
-    /// - Maximum 3 active party members (including PC)
-    /// - Up to 9 available party members can be recruited
-    /// - Party selection UI shows available members
-    /// - Party members follow the leader
-    /// - Party members share XP
-    /// - NPCs in party table are stored by NPC index (0-8)
-    /// 
+    /// Party Management System:
+    /// - Based on swkotor2.exe party system
+    /// - Located via string references: "PARTYTABLE" @ 0x007c1910, "Party" @ 0x007c24dc
+    /// - "PartyInteract" @ 0x007c1fc0, "SetByPlayerParty" @ 0x007c1d04
+    /// - "OnPartyDeath" @ 0x007bd9f4, "CB_PARTYKILLED" @ 0x007d29e4
+    /// - Original implementation: Party state stored in PARTYTABLE.res GFF file (see SaveSerializer)
+    /// - KOTOR party rules:
+    ///   - Maximum 3 active party members (including PC)
+    ///   - Up to 9 available party members can be recruited
+    ///   - Party selection UI shows available members
+    ///   - Party members follow the leader
+    ///   - Party members share XP
+    ///   - NPCs in party table are stored by NPC index (0-8)
+    ///
     /// Party formation:
     /// - Leader (slot 0): Player character
     /// - Member 1 (slot 1): First party member
     /// - Member 2 (slot 2): Second party member
-    /// 
+    ///
     /// Key 2DA: partytable.2da defines available party members
     /// </remarks>
     public class PartyManager
@@ -253,7 +259,7 @@ namespace Odyssey.Kotor.Systems
 
             IEntity member = _availableMembers[npcIndex];
             int slot = _activeParty.IndexOf(member);
-            
+
             _activeParty.Remove(member);
             _selectedMembers.Remove(npcIndex);
 
@@ -301,7 +307,7 @@ namespace Odyssey.Kotor.Systems
         /// <returns>NPC index (0-8) or -1 if not found</returns>
         public int GetNpcIndex(IEntity member)
         {
-            foreach (var kvp in _availableMembers)
+            foreach (KeyValuePair<int, IEntity> kvp in _availableMembers)
             {
                 if (kvp.Value == member)
                 {
@@ -318,11 +324,11 @@ namespace Odyssey.Kotor.Systems
         {
             for (int i = _activeParty.Count - 1; i >= 0; i--)
             {
-                var member = _activeParty[i];
+                IEntity member = _activeParty[i];
                 _activeParty.RemoveAt(i);
 
                 // Find and remove from selected
-                foreach (var kvp in _availableMembers)
+                foreach (KeyValuePair<int, IEntity> kvp in _availableMembers)
                 {
                     if (kvp.Value == member)
                     {
@@ -377,10 +383,10 @@ namespace Odyssey.Kotor.Systems
 
             int xpPerMember = split ? xp / _activeParty.Count : xp;
 
-            foreach (var member in _activeParty)
+            foreach (IEntity member in _activeParty)
             {
                 // Award XP through creature's stats component
-                var stats = member.GetComponent<Odyssey.Kotor.Components.StatsComponent>();
+                Components.StatsComponent stats = member.GetComponent<Odyssey.Kotor.Components.StatsComponent>();
                 if (stats != null)
                 {
                     stats.Experience += xpPerMember;
