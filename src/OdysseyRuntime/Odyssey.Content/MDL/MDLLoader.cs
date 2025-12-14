@@ -201,11 +201,11 @@ namespace Odyssey.Content.MDL
         {
             if (string.IsNullOrEmpty(mdlPath))
             {
-                throw new ArgumentNullException("mdlPath");
+                throw new ArgumentNullException(nameof(mdlPath));
             }
             if (string.IsNullOrEmpty(mdxPath))
             {
-                throw new ArgumentNullException("mdxPath");
+                throw new ArgumentNullException(nameof(mdxPath));
             }
 
             using (var reader = new MDLBulkReader(mdlPath, mdxPath))

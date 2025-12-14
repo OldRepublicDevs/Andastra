@@ -43,8 +43,8 @@ namespace Odyssey.Content.MDL
         /// </summary>
         public MDLBulkReader(byte[] mdlData, byte[] mdxData)
         {
-            if (mdlData == null) throw new ArgumentNullException("mdlData");
-            if (mdxData == null) throw new ArgumentNullException("mdxData");
+            if (mdlData == null) throw new ArgumentNullException(nameof(mdlData));
+            if (mdxData == null) throw new ArgumentNullException(nameof(mdxData));
 
             _mdlData = mdlData;
             _mdxData = mdxData;
@@ -57,8 +57,8 @@ namespace Odyssey.Content.MDL
         /// </summary>
         public MDLBulkReader(string mdlPath, string mdxPath)
         {
-            if (string.IsNullOrEmpty(mdlPath)) throw new ArgumentNullException("mdlPath");
-            if (string.IsNullOrEmpty(mdxPath)) throw new ArgumentNullException("mdxPath");
+            if (string.IsNullOrEmpty(mdlPath)) throw new ArgumentNullException(nameof(mdlPath));
+            if (string.IsNullOrEmpty(mdxPath)) throw new ArgumentNullException(nameof(mdxPath));
 
             _mdlData = File.ReadAllBytes(mdlPath);
             _mdxData = File.ReadAllBytes(mdxPath);
