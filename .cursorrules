@@ -256,8 +256,13 @@ When working on Odyssey Engine code (anything in `src/OdysseyRuntime/`), AI agen
 1. **Use Ghidra MCP** for understanding original engine behavior:
    - The Ghidra MCP server has `swkotor2.exe` loaded
    - Use `mcp_ghidra_*` tools to search functions, decompile code, find strings
-   - Search for relevant strings to locate engine functions (e.g., "BWM", "pathfind", "walkmesh")
+   - Search for relevant strings to locate engine functions (e.g., "BWM", "pathfind", "walkmesh", "GLOBALVARS", "PARTYTABLE")
    - Verify implementation faithfulness against original engine behavior
+   - **MANDATORY**: When modifying ANY code in `src/OdysseyRuntime/`, AI agents MUST:
+     - Search Ghidra for related functions using string searches and function name searches
+     - Decompile relevant functions to understand original implementation
+     - Add detailed comments with Ghidra function addresses and context
+     - Use consistent comment format matching the MonoGame API documentation pattern
 
 2. **Reference Documentation**:
    - Primary: `vendor/PyKotor/wiki/` for file format documentation
@@ -307,12 +312,65 @@ When working on Odyssey Engine code (anything in `src/OdysseyRuntime/`), AI agen
    - Comments must explain the "what" and "why", not just reference the URL
    - Use Context7 for library docs, Firecrawl/Tavily for web search, web_search as fallback
 
-4. **Clean-Room Process**:
+4. **CRITICAL: Ghidra MCP Documentation for Engine Code**:
+   When implementing or modifying ANY code in `src/OdysseyRuntime/`, AI agents MUST:
+
+   **Required Workflow**:
+   1. **Search**: Use `mcp_ghidra_list_strings`, `mcp_ghidra_search_functions_by_name`, or `mcp_ghidra_get_xrefs_to` to find relevant engine functions
+   2. **Decompile**: Use `mcp_ghidra_decompile_function_by_address` or `mcp_ghidra_decompile_function` to understand original implementation
+   3. **Document**: Add comments above the code with:
+      - Clear explanation of what the code does
+      - Ghidra function address (hex format, e.g., `0x004eb750`)
+      - Function name if available (e.g., `FUN_004eb750`)
+      - Key implementation details from decompiled code
+      - String references used to locate the function (e.g., "GLOBALVARS", "PARTYTABLE")
+
+   **Comment Format**:
+
+   ```csharp
+   // Brief description of operation
+   // Based on swkotor2.exe: FUN_004eb750 @ 0x004eb750
+   // Located via string reference: "savenfo" @ 0x007be1f0
+   // Original implementation: [key detail from decompiled code]
+   actualCodeHere();
+   ```
+
+   **Example**:
+
+   ```csharp
+   // Save global variables to GFF format
+   // Based on swkotor2.exe: FUN_005ac670 @ 0x005ac670
+   // Located via string reference: "GLOBALVARS" @ 0x007c27bc
+   // Original implementation: Constructs path "SAVES:\{saveName}\GLOBALVARS", writes GFF with global variable state
+   private void SaveGlobalVariables(SaveGameData saveData)
+   {
+       // Implementation...
+   }
+
+   // Serialize save metadata to NFO GFF format
+   // Based on swkotor2.exe: FUN_004eb750 @ 0x004eb750
+   // Located via string reference: "savenfo" @ 0x007be1f0
+   // Original implementation: Creates GFF with "NFO " signature, writes SAVEGAMENAME, TIMEPLAYED, AREANAME, etc.
+   public byte[] SerializeSaveNfo(SaveGameData saveData)
+   {
+       // Implementation...
+   }
+   ```
+
+   **Requirements**:
+   - ALL function addresses must be verified in Ghidra (use `mcp_ghidra_decompile_function_by_address`)
+   - Include string references that were used to locate the function
+   - Include key implementation details from decompiled code
+   - Comments must explain the "what" and "why", not just reference the address
+   - Use natural language and intuitive terminology relevant to the task
+   - Be concise but thorough - provide enough context to find the function in Ghidra
+
+5. **Clean-Room Process**:
    - Derive behavior from observation and specs, not code copying
    - Match original engine behavior exactly where documented
    - Document any deviations or improvements
 
-5. **Code Organization**:
+6. **Code Organization**:
    - `Odyssey.Core` - Pure domain, no MonoGame dependency
    - `Odyssey.Content` - Asset conversion/caching
    - `Odyssey.Scripting` - NCS VM + NWScript API
@@ -320,7 +378,7 @@ When working on Odyssey Engine code (anything in `src/OdysseyRuntime/`), AI agen
    - `Odyssey.MonoGame` - MonoGame rendering adapters
    - `Odyssey.Game` - Executable launcher
 
-6. **Maintain C# 7.3 Compatibility**: Even in OdysseyRuntime projects
+7. **Maintain C# 7.3 Compatibility**: Even in OdysseyRuntime projects
 
 ### Engine Architecture Principles
 

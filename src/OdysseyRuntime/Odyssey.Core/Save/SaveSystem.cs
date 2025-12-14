@@ -42,6 +42,12 @@ namespace Odyssey.Core.Save
     /// - PARTYTABLE.res - Party member list and selection
     /// - [module]_s.rim - Per-module state (positions, etc.)
     /// - NFO.res - Save metadata (name, time, screenshot)
+    /// 
+    /// Based on swkotor2.exe save system implementation:
+    /// - Main save function: FUN_004eb750 @ 0x004eb750 (located via "savenfo" @ 0x007be1f0)
+    /// - Load save function: FUN_00708990 @ 0x00708990 (located via "LoadSavegame" @ 0x007bdc90)
+    /// - Auto-save function: FUN_004f0c50 @ 0x004f0c50
+    /// - Load save metadata: FUN_00707290 @ 0x00707290
     /// </remarks>
     public class SaveSystem
     {
@@ -96,6 +102,13 @@ namespace Odyssey.Core.Save
         /// <param name="saveName">Name for the save.</param>
         /// <param name="saveType">Type of save.</param>
         /// <returns>True if save succeeded.</returns>
+        /// <remarks>
+        /// Based on swkotor2.exe: FUN_004eb750 @ 0x004eb750
+        /// Located via string reference: "savenfo" @ 0x007be1f0
+        /// Original implementation: Creates save directory "SAVES:\{saveName}", writes savenfo.res (GFF with "NFO " signature),
+        /// creates savegame.sav (ERF with "MOD V1.0" signature) containing GLOBALVARS.res, PARTYTABLE.res, and module state files.
+        /// Progress updates at 5%, 10%, 15%, 20%, 25%, 30% completion milestones.
+        /// </remarks>
         public bool Save(string saveName, SaveType saveType = SaveType.Manual)
         {
             if (string.IsNullOrEmpty(saveName))
@@ -133,6 +146,11 @@ namespace Odyssey.Core.Save
         /// <summary>
         /// Creates save data from current game state.
         /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: FUN_004eb750 @ 0x004eb750
+        /// Original implementation: Collects module info (current module, entry position/facing), game time (year/month/day/hour/minute),
+        /// global variables, party state, and area states. Saves entity positions, HP, door/placeable states for current area.
+        /// </remarks>
         private SaveGameData CreateSaveData(string saveName, SaveType saveType)
         {
             var saveData = new SaveGameData();
@@ -174,6 +192,11 @@ namespace Odyssey.Core.Save
             return saveData;
         }
 
+        // Save global variables to save data structure
+        // Based on swkotor2.exe: FUN_005ac670 @ 0x005ac670
+        // Located via string reference: "GLOBALVARS" @ 0x007c27bc
+        // Original implementation: Constructs path "SAVES:\{saveName}\GLOBALVARS", writes GFF file containing all global int/bool/string variables
+        // Uses reflection to access private dictionaries in ScriptGlobals (_globalInts, _globalBools, _globalStrings)
         private void SaveGlobalVariables(SaveGameData saveData)
         {
             saveData.GlobalVariables = new GlobalVariableState();
@@ -226,6 +249,11 @@ namespace Odyssey.Core.Save
             }
         }
 
+        // Save party member list and selection state
+        // Based on swkotor2.exe: FUN_0057bd70 @ 0x0057bd70
+        // Located via string reference: "PARTYTABLE" @ 0x007c1910
+        // Original implementation: Writes GFF file with "PT  " signature containing party members, puppets, available NPCs,
+        // influence values, gold, XP pool, solo mode flag, cheat used flag, and various game state flags
         private void SavePartyState(SaveGameData saveData)
         {
             // Save party member list and selection
@@ -322,6 +350,12 @@ namespace Odyssey.Core.Save
         /// </summary>
         /// <param name="saveName">Name of the save to load.</param>
         /// <returns>True if load succeeded.</returns>
+        /// <remarks>
+        /// Based on swkotor2.exe: FUN_00708990 @ 0x00708990
+        /// Located via string reference: "LoadSavegame" @ 0x007bdc90
+        /// Original implementation: Reads savegame.sav ERF archive, extracts GLOBALVARS.res and PARTYTABLE.res,
+        /// loads module state files, restores global variables and party state. Progress updates at 5%, 10%, 15%, 20%, 25%, 30%, 50% completion.
+        /// </remarks>
         public bool Load(string saveName)
         {
             if (string.IsNullOrEmpty(saveName))
@@ -384,6 +418,11 @@ namespace Odyssey.Core.Save
             return true;
         }
 
+        // Restore global variables from save data
+        // Based on swkotor2.exe: FUN_005ac740 @ 0x005ac740
+        // Located via string reference: "GLOBALVARS" @ 0x007c27bc
+        // Original implementation: Reads GFF file from "SAVES:\{saveName}\GLOBALVARS", restores all global int/bool/string variables
+        // Uses reflection to call SetGlobalInt, SetGlobalBool, SetGlobalString methods on ScriptGlobals
         private void RestoreGlobalVariables(SaveGameData saveData)
         {
             if (saveData.GlobalVariables == null || _globals == null)
@@ -423,6 +462,11 @@ namespace Odyssey.Core.Save
             }
         }
 
+        // Restore party member list and selection state
+        // Based on swkotor2.exe: FUN_0057dcd0 @ 0x0057dcd0
+        // Located via string reference: "PARTYTABLE" @ 0x007c1910
+        // Original implementation: Reads GFF file with "PT  " signature, restores party members, puppets, available NPCs,
+        // influence values, gold, XP pool, solo mode flag, and various game state flags
         private void RestorePartyState(SaveGameData saveData)
         {
             if (saveData.PartyState == null)

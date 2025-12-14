@@ -21,7 +21,11 @@ namespace Odyssey.Content.Save
     ///   - PARTYTABLE.res (GFF)
     ///   - [module]_s.rim files
     ///
-    /// TODO: Integrate with CSharpKOTOR GFF/ERF readers/writers
+    /// Based on swkotor2.exe save serialization:
+    /// - Save NFO: FUN_004eb750 @ 0x004eb750 (creates GFF with "NFO " signature, "V2.0" version)
+    /// - Save archive: FUN_004eb750 @ 0x004eb750 (creates ERF with "MOD V1.0" signature @ 0x007be0d4)
+    /// - GLOBALVARS serialization: FUN_005ac670 @ 0x005ac670
+    /// - PARTYTABLE serialization: FUN_0057bd70 @ 0x0057bd70 (creates GFF with "PT  " signature)
     /// </remarks>
     public class SaveSerializer : ISaveSerializer
     {
@@ -40,6 +44,12 @@ namespace Odyssey.Content.Save
 
         #region ISaveSerializer Implementation
 
+        // Serialize save metadata to NFO GFF format
+        // Based on swkotor2.exe: FUN_004eb750 @ 0x004eb750
+        // Located via string reference: "savenfo" @ 0x007be1f0
+        // Original implementation: Creates GFF with "NFO " signature and "V2.0" version string
+        // Writes fields: SAVEGAMENAME, MODULENAME, SAVEDATE, SAVETIME, TIMEPLAYED, PLAYERNAME, PORTRAIT, CHEATUSED,
+        // AREANAME, LASTMODULE, PCNAME, SAVENUMBER, GAMEPLAYHINT, STORYHINT0-9, LIVECONTENT, TIMESTAMP
         public byte[] SerializeSaveNfo(SaveGameData saveData)
         {
             // Use CSharpKOTOR GFF writer
@@ -57,6 +67,12 @@ namespace Odyssey.Content.Save
             return gff.ToBytes();
         }
 
+        // Deserialize save metadata from NFO GFF format
+        // Based on swkotor2.exe: FUN_00707290 @ 0x00707290
+        // Located via string reference: "savenfo" @ 0x007be1f0
+        // Original implementation: Reads GFF with "NFO " signature, extracts SAVEGAMENAME, MODULENAME, SAVEDATE, SAVETIME,
+        // TIMEPLAYED, PLAYERNAME, CHEATUSED, REBOOTAUTOSAVE, PCAUTOSAVE, SCREENSHOT, TIMESTAMP, PCNAME, SAVENUMBER,
+        // GAMEPLAYHINT, STORYHINT0-9, LIVECONTENT flags
         public SaveGameData DeserializeSaveNfo(byte[] data)
         {
             // Use CSharpKOTOR GFF reader
@@ -100,6 +116,11 @@ namespace Odyssey.Content.Save
             return saveData;
         }
 
+        // Serialize save game archive to ERF format
+        // Based on swkotor2.exe: FUN_004eb750 @ 0x004eb750
+        // Located via string reference: "MOD V1.0" @ 0x007be0d4
+        // Original implementation: Creates ERF archive with "MOD V1.0" signature, adds GLOBALVARS.res (GFF),
+        // PARTYTABLE.res (GFF), and module state files ([module]_s.rim) for each visited area
         public byte[] SerializeSaveArchive(SaveGameData saveData)
         {
             // Use CSharpKOTOR ERF writer
@@ -132,6 +153,11 @@ namespace Odyssey.Content.Save
             return writer.Write();
         }
 
+        // Deserialize save game archive from ERF format
+        // Based on swkotor2.exe: FUN_00708990 @ 0x00708990
+        // Located via string reference: "LoadSavegame" @ 0x007bdc90
+        // Original implementation: Reads ERF archive with "MOD V1.0" signature, extracts GLOBALVARS.res and PARTYTABLE.res,
+        // reads module state files ([module]_s.rim) for each area and stores in AreaStates dictionary
         public void DeserializeSaveArchive(byte[] data, SaveGameData saveData)
         {
             // Use CSharpKOTOR ERF reader
@@ -190,6 +216,11 @@ namespace Odyssey.Content.Save
 
         #region Global Variables
 
+        // Serialize global variables to GFF format
+        // Based on swkotor2.exe: FUN_005ac670 @ 0x005ac670
+        // Located via string reference: "GLOBALVARS" @ 0x007c27bc
+        // Original implementation: Creates GFF file, stores booleans, numbers, and strings as separate lists
+        // Each list entry contains "Name" (string) and "Value" (int32 for bools/ints, string for strings)
         private byte[] SerializeGlobalVariables(GlobalVariableState state)
         {
             if (state == null)
@@ -231,6 +262,11 @@ namespace Odyssey.Content.Save
             return gff.ToBytes();
         }
 
+        // Deserialize global variables from GFF format
+        // Based on swkotor2.exe: FUN_005ac740 @ 0x005ac740
+        // Located via string reference: "GLOBALVARS" @ 0x007c27bc
+        // Original implementation: Reads GFF file, extracts "Booleans", "Numbers", and "Strings" lists,
+        // restores each variable by name and value from list entries
         private GlobalVariableState DeserializeGlobalVariables(byte[] data)
         {
             var state = new GlobalVariableState();
@@ -299,6 +335,15 @@ namespace Odyssey.Content.Save
 
         #region Party Table
 
+        // Serialize party table to GFF format
+        // Based on swkotor2.exe: FUN_0057bd70 @ 0x0057bd70
+        // Located via string reference: "PARTYTABLE" @ 0x007c1910
+        // Original implementation: Creates GFF with "PT  " signature and "V2.0" version string
+        // Writes fields: PT_PCNAME, PT_GOLD, PT_ITEM_COMPONENT, PT_ITEM_CHEMICAL, PT_SWOOP1-3, PT_XP_POOL,
+        // PT_PLAYEDSECONDS, PT_CONTROLLED_NPC, PT_SOLOMODE, PT_CHEAT_USED, PT_NUM_MEMBERS, PT_MEMBERS (list),
+        // PT_NUM_PUPPETS, PT_PUPPETS (list), PT_AVAIL_PUPS (list), PT_AVAIL_NPCS (list), PT_INFLUENCE (list),
+        // PT_AISTATE, PT_FOLLOWSTATE, GlxyMap data, PT_PAZAAKCARDS, PT_PAZSIDELIST, PT_TUT_WND_SHOWN, PT_LAST_GUI_PNL,
+        // PT_FB_MSG_LIST, PT_DLG_MSG_LIST, PT_COM_MSG_LIST, PT_COST_MULT_LIST, PT_DISABLEMAP, PT_DISABLEREGEN
         private byte[] SerializePartyTable(PartyState state)
         {
             if (state == null)
@@ -334,6 +379,12 @@ namespace Odyssey.Content.Save
             return gff.ToBytes();
         }
 
+        // Deserialize party table from GFF format
+        // Based on swkotor2.exe: FUN_0057dcd0 @ 0x0057dcd0
+        // Located via string reference: "PARTYTABLE" @ 0x007c1910
+        // Original implementation: Reads GFF with "PT  " signature, extracts all party-related fields including
+        // party members, puppets, available NPCs, influence values, gold, XP pool, solo mode, cheat flags,
+        // galaxy map state, Pazaak cards, tutorial windows, message lists, cost multipliers, and various game state flags
         private PartyState DeserializePartyTable(byte[] data)
         {
             var state = new PartyState();
