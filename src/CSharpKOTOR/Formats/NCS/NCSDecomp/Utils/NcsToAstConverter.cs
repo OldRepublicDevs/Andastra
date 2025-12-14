@@ -285,6 +285,47 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
                 }
             }
 
+            // CRITICAL: Ensure we always have at least one subroutine (main)
+            // If no subroutines were created, create a main subroutine from the entire instruction range
+            // This handles edge cases where the entry stub detection fails or files have unusual structure
+            if (program.GetSubroutine().Count == 0 && instructions.Count > 0)
+            {
+                JavaSystem.@out.Println("DEBUG NcsToAstConverter: No subroutines created, creating fallback main subroutine from entire instruction range");
+                int fallbackMainStart = 0;
+                int fallbackMainEnd = instructions.Count;
+                // Skip globals if SAVEBP was found
+                if (savebpIndex >= 0)
+                {
+                    fallbackMainStart = savebpIndex + 1;
+                    // Check for entry stub
+                    if (instructions.Count > fallbackMainStart + 1 &&
+                        instructions[fallbackMainStart].InsType == NCSInstructionType.JSR &&
+                        (instructions[fallbackMainStart + 1].InsType == NCSInstructionType.RETN ||
+                         instructions[fallbackMainStart + 1].InsType == NCSInstructionType.RESTOREBP))
+                    {
+                        fallbackMainStart += 2; // Skip JSR + RETN/RESTOREBP
+                    }
+                }
+                
+                if (fallbackMainStart < fallbackMainEnd && fallbackMainStart >= 0)
+                {
+                    ASubroutine fallbackMain = ConvertInstructionRangeToSubroutine(ncs, instructions, fallbackMainStart, fallbackMainEnd, fallbackMainStart);
+                    if (fallbackMain != null)
+                    {
+                        program.GetSubroutine().Add(fallbackMain);
+                        JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Created fallback main subroutine (range {fallbackMainStart}-{fallbackMainEnd})");
+                    }
+                    else
+                    {
+                        JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Fallback main subroutine creation returned null (range {fallbackMainStart}-{fallbackMainEnd})");
+                    }
+                }
+                else
+                {
+                    JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Fallback main subroutine range invalid (start={fallbackMainStart}, end={fallbackMainEnd})");
+                }
+            }
+
             return new Start(program, new EOF());
         }
 
