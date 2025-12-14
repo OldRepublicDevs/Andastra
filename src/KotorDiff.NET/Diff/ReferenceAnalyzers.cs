@@ -11,6 +11,7 @@ using CSharpKOTOR.Formats.NCS;
 using CSharpKOTOR.Installation;
 using CSharpKOTOR.Mods;
 using CSharpKOTOR.Mods.GFF;
+using CSharpKOTOR.Mods.TLK;
 using CSharpKOTOR.Mods.NCS;
 using CSharpKOTOR.Mods.SSF;
 using CSharpKOTOR.Mods.TwoDA;
