@@ -1405,15 +1405,13 @@ namespace Odyssey.Scripting.EngineApi
             IEntity entity = ResolveObject(objectId, ctx);
             if (entity != null)
             {
-                // Check if entity is the player entity
-                // We need to access GameSession or store player entity ID
-                // For now, check if it's a creature with ObjectType.Creature and has special flag
-                // This is a simplified check - in full implementation, we'd track player entity
-                if (entity.ObjectType == ObjectType.Creature)
+                // Check if entity is the player entity via GameServicesContext
+                if (ctx is Odyssey.Scripting.VM.ExecutionContext execCtx && execCtx.AdditionalContext is Odyssey.Kotor.Game.GameServicesContext services)
                 {
-                    // TODO: Properly identify player entity via GameSession or component
-                    // For now, return 0 (not implemented)
-                    return Variable.FromInt(0);
+                    if (services.PlayerEntity != null && services.PlayerEntity.ObjectId == entity.ObjectId)
+                    {
+                        return Variable.FromInt(1);
+                    }
                 }
             }
             return Variable.FromInt(0);
@@ -1424,8 +1422,13 @@ namespace Odyssey.Scripting.EngineApi
             // GetPCSpeaker() - Get the PC that is involved in the conversation
             // Returns OBJECT_INVALID on error
             // This should return the player entity participating in dialogue
-            // For now, return OBJECT_INVALID as we need GameSession access
-            // TODO: Access GameSession to get player entity
+            if (ctx is Odyssey.Scripting.VM.ExecutionContext execCtx && execCtx.AdditionalContext is Odyssey.Kotor.Game.GameServicesContext services)
+            {
+                if (services.PlayerEntity != null)
+                {
+                    return Variable.FromObject(services.PlayerEntity.ObjectId);
+                }
+            }
             return Variable.FromObject(ObjectInvalid);
         }
 
@@ -1477,10 +1480,18 @@ namespace Odyssey.Scripting.EngineApi
                 return Variable.FromInt(0); // Failed
             }
 
-            // TODO: Access DialogueManager from GameSession to start conversation
-            // For now, return 0 (not fully implemented)
-            // The DialogueManager would need to be accessible from the execution context
-            return Variable.FromInt(0);
+            // Access DialogueManager from GameServicesContext
+            if (ctx is Odyssey.Scripting.VM.ExecutionContext execCtx && execCtx.AdditionalContext is Odyssey.Kotor.Game.GameServicesContext services)
+            {
+                if (services.DialogueManager != null && services.PlayerEntity != null)
+                {
+                    // Start conversation using DialogueManager
+                    bool started = services.DialogueManager.StartConversation(resRef, targetEntity, services.PlayerEntity);
+                    return Variable.FromInt(started ? 1 : 0);
+                }
+            }
+            
+            return Variable.FromInt(0); // Failed - no DialogueManager available
         }
 
         private Variable Func_GetSkillRank(IReadOnlyList<Variable> args, IExecutionContext ctx)

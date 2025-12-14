@@ -23,11 +23,17 @@ namespace Odyssey.Scripting.VM
         public IScriptGlobals Globals { get; }
         public object ResourceProvider { get; set; }
         
+        /// <summary>
+        /// Additional context data (e.g., DialogueManager, GameSession, etc.)
+        /// </summary>
+        public object AdditionalContext { get; set; }
+        
         public IExecutionContext WithCaller(IEntity newCaller)
         {
             var ctx = new ExecutionContext(newCaller, World, EngineApi, Globals);
             ctx.Triggerer = Triggerer;
             ctx.ResourceProvider = ResourceProvider;
+            ctx.AdditionalContext = AdditionalContext;
             return ctx;
         }
         
@@ -36,6 +42,7 @@ namespace Odyssey.Scripting.VM
             var ctx = new ExecutionContext(Caller, World, EngineApi, Globals);
             ctx.Triggerer = newTriggerer;
             ctx.ResourceProvider = ResourceProvider;
+            ctx.AdditionalContext = AdditionalContext;
             return ctx;
         }
         
