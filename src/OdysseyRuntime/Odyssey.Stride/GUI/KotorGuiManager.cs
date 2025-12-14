@@ -165,7 +165,9 @@ namespace Odyssey.Stride.GUI
         /// </summary>
         // Load texture from game resources and return Stride Texture
         // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Graphics.Texture.html
-        // Texture represents image data for rendering
+        // Texture represents image data for rendering, returned type is Texture class
+        // Method signature: Texture LoadTexture(string resRef)
+        // Returns null if texture cannot be loaded or converted
         // Source: https://doc.stride3d.net/latest/en/manual/graphics/low-level-api/textures-and-render-textures.html
         public Texture LoadTexture(string resRef)
         {
@@ -231,6 +233,11 @@ namespace Odyssey.Stride.GUI
         /// <summary>
         /// Clears the currently displayed GUI.
         /// </summary>
+        // Clear the currently rendered GUI from the UI component
+        // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Engine.UIComponent.html
+        // UIComponent.Page property can be set to null to clear the active UI page
+        // Method signature: UIPage Page { get; set; }
+        // Source: https://doc.stride3d.net/latest/en/manual/user-interface/index.html
         public void Clear()
         {
             _renderer.Clear();
