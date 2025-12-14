@@ -27,9 +27,7 @@ namespace CSharpKOTOR.Resource.Generics
                 float x = pointStruct.Acquire<float>("X", 0.0f);
                 float y = pointStruct.Acquire<float>("Y", 0.0f);
 
-                var point = new Vector2(x, y);
-                pth.AddPoint(point);
-                int sourceIndex = pth.Count - 1;
+                int sourceIndex = pth.Add(x, y);
 
                 for (int i = firstConnection; i < firstConnection + connections; i++)
                 {
@@ -39,7 +37,7 @@ namespace CSharpKOTOR.Resource.Generics
                         continue;
                     }
                     int target = connectionStruct.Acquire<int>("Destination", 0);
-                    pth.AddConnection(new PTHEdge(sourceIndex, target));
+                    pth.Connect(sourceIndex, target);
                 }
             }
 
@@ -59,17 +57,9 @@ namespace CSharpKOTOR.Resource.Generics
             root.SetList("Path_Points", pointsList);
 
             int pointIndex = 0;
-            foreach (var point in pth.GetPoints())
+            foreach (var point in pth)
             {
-                var allConnections = pth.GetConnections();
-                var outgoingConnections = new List<PTHEdge>();
-                foreach (var conn in allConnections)
-                {
-                    if (conn.SourceIndex == pointIndex)
-                    {
-                        outgoingConnections.Add(conn);
-                    }
-                }
+                var outgoingConnections = pth.Outgoing(pointIndex);
 
                 var pointStruct = pointsList.Add(2);
                 pointStruct.SetUInt32("Conections", (uint)outgoingConnections.Count);
