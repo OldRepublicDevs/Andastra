@@ -254,7 +254,10 @@ namespace Odyssey.Scripting.EngineApi
                 case 200: return Func_GetObjectByTag(args, ctx);
                 case 226: return Func_GetNearestCreatureToLocation(args, ctx);
                 case 227: return Func_GetNearestObject(args, ctx);
+                case 228: return Func_GetNearestObjectToLocation(args, ctx);
                 case 229: return Func_GetNearestObjectByTag(args, ctx);
+                case 230: return Func_IntToFloat(args, ctx);
+                case 231: return Func_FloatToInt(args, ctx);
                 case 239: return Func_GetStringByStrRef(args, ctx);
                 case 240: return Func_ActionSpeakStringByStrRef(args, ctx);
                 case 241: return Func_DestroyObject(args, ctx);
