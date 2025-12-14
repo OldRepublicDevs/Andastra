@@ -180,6 +180,276 @@ namespace CSharpKOTOR.Formats.GFF
             }
         }
 
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/gff/gff_data.py:609-739
+        // Original: def compare(self, other: object, log_func: Callable = print, current_path: PureWindowsPath | os.PathLike | str | None = None, ignore_default_changes: bool = False, ignore_values: dict[str, set[Any]] | None = None, comparison_result: GFFComparisonResult | None = None) -> bool:
+        public bool Compare(GFFStruct other, Action<string> logFunc, string currentPath = null, bool ignoreDefaultChanges = false, Dictionary<string, HashSet<object>> ignoreValues = null, GFFComparisonResult comparisonResult = null)
+        {
+            HashSet<string> ignoreLabels = new HashSet<string> { "KTInfoDate", "KTGameVerIndex", "KTInfoVersion", "EditorInfo" };
+            ignoreValues = ignoreValues ?? new Dictionary<string, HashSet<object>>();
+            comparisonResult = comparisonResult ?? new GFFComparisonResult();
+            currentPath = currentPath ?? "GFFRoot";
+
+            bool IsIgnorableValue(string label, object v)
+            {
+                // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/gff/gff_data.py:644-646
+                // Original: return not v or str(v) in {"0", "-1"} or (label in ignore_values and v in ignore_values[label])
+                if (v == null) return true;
+
+                // Check for empty strings, empty collections, zero values
+                if (v is string str && string.IsNullOrEmpty(str)) return true;
+                if (v is System.Collections.ICollection coll && coll.Count == 0) return true;
+
+                string strVal = v.ToString();
+                if (strVal == "0" || strVal == "-1" || string.IsNullOrEmpty(strVal)) return true;
+
+                if (ignoreValues != null && ignoreValues.ContainsKey(label) && ignoreValues[label].Contains(v)) return true;
+                return false;
+            }
+
+            bool IsIgnorableComparison(string label, object oldValue, object newValue)
+            {
+                return IsIgnorableValue(label, oldValue) && IsIgnorableValue(label, newValue);
+            }
+
+            if (other == null)
+            {
+                logFunc($"GFFStruct counts have changed at '{currentPath}': '{Count}' --> '<unknown>'");
+                logFunc("");
+                return false;
+            }
+
+            bool isSame = true;
+
+            if (Count != other.Count && !ignoreDefaultChanges)
+            {
+                logFunc("");
+                logFunc($"GFFStruct: number of fields have changed at '{currentPath}': '{Count}' --> '{other.Count}'");
+                isSame = false;
+            }
+
+            if (StructId != other.StructId)
+            {
+                logFunc($"Struct ID is different at '{currentPath}': '{StructId}' --> '{other.StructId}'");
+                isSame = false;
+            }
+
+            Dictionary<string, (GFFFieldType fieldType, object value)> oldDict = new Dictionary<string, (GFFFieldType, object)>();
+            Dictionary<string, (GFFFieldType fieldType, object value)> newDict = new Dictionary<string, (GFFFieldType, object)>();
+
+            int idx = 0;
+            foreach ((string label, GFFFieldType ftype, object value) in this)
+            {
+                if (!ignoreLabels.Contains(label))
+                {
+                    string dictKey = label ?? $"gffstruct({idx})";
+                    oldDict[dictKey] = (ftype, value);
+                }
+                idx++;
+            }
+
+            idx = 0;
+            foreach ((string label, GFFFieldType ftype, object value) in other)
+            {
+                if (!ignoreLabels.Contains(label))
+                {
+                    string dictKey = label ?? $"gffstruct({idx})";
+                    newDict[dictKey] = (ftype, value);
+                }
+                idx++;
+            }
+
+            HashSet<string> allLabels = new HashSet<string>(oldDict.Keys);
+            foreach (string key in newDict.Keys)
+            {
+                allLabels.Add(key);
+            }
+
+            foreach (string label in allLabels)
+            {
+                string childPath = string.IsNullOrEmpty(currentPath) ? label : $"{currentPath}/{label}";
+                oldDict.TryGetValue(label, out var oldEntry);
+                newDict.TryGetValue(label, out var newEntry);
+
+                GFFFieldType? oldFtype = oldEntry.fieldType;
+                object oldValue = oldEntry.value;
+                GFFFieldType? newFtype = newEntry.fieldType;
+                object newValue = newEntry.value;
+
+                if (ignoreDefaultChanges && IsIgnorableComparison(label, oldValue, newValue))
+                {
+                    continue;
+                }
+
+                if (oldFtype == null || oldValue == null)
+                {
+                    if (newFtype == null)
+                    {
+                        throw new InvalidOperationException($"newFtype shouldn't be None here. Relevance: oldFtype={oldFtype}, oldValue={oldValue}, newValue={newValue}");
+                    }
+                    // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/gff/gff_data.py:689-695
+                    // Original: if old_ftype is None or old_value is None: ... log_func(...) ... continue
+                    // If ignore_default_changes is true and the new value is ignorable, skip it
+                    if (ignoreDefaultChanges && IsIgnorableValue(label, newValue))
+                    {
+                        continue;
+                    }
+                    logFunc($"Extra '{newFtype.Value}' field found at '{childPath}': {FormatText(SafeRepr(newValue))}");
+                    comparisonResult.AddFieldStat("extra", label);
+                    isSame = false;
+                    continue;
+                }
+
+                if (newValue == null || newFtype == null)
+                {
+                    logFunc($"Missing '{oldFtype.Value}' field at '{childPath}': {FormatText(SafeRepr(oldValue))}");
+                    comparisonResult.AddFieldStat("missing", label);
+                    isSame = false;
+                    continue;
+                }
+
+                if (oldFtype != newFtype)
+                {
+                    logFunc($"Field type is different at '{childPath}': '{oldFtype.Value}'-->'{newFtype.Value}'");
+                    comparisonResult.AddFieldStat("mismatched", label);
+                    comparisonResult.AddValueMismatch(childPath, "field_type", oldFtype.Value.ToString(), newFtype.Value.ToString());
+                    isSame = false;
+                    continue;
+                }
+
+                if (oldFtype == GFFFieldType.Struct)
+                {
+                    GFFStruct oldStruct = oldValue as GFFStruct;
+                    GFFStruct newStruct = newValue as GFFStruct;
+                    if (oldStruct == null || newStruct == null)
+                    {
+                        logFunc($"Struct type mismatch at '{childPath}'");
+                        isSame = false;
+                        continue;
+                    }
+
+                    if (oldStruct.StructId != newStruct.StructId)
+                    {
+                        logFunc($"Struct ID is different at '{childPath}': '{oldStruct.StructId}'-->'{newStruct.StructId}'");
+                        comparisonResult.AddStructIdMismatch(childPath, oldStruct.StructId, newStruct.StructId);
+                        isSame = false;
+                    }
+
+                    if (!oldStruct.Compare(newStruct, logFunc, childPath, ignoreDefaultChanges, ignoreValues, comparisonResult))
+                    {
+                        isSame = false;
+                    }
+                }
+                else if (oldFtype == GFFFieldType.List)
+                {
+                    GFFList oldList = oldValue as GFFList;
+                    GFFList newList = newValue as GFFList;
+                    if (oldList == null || newList == null)
+                    {
+                        logFunc($"List type mismatch at '{childPath}'");
+                        isSame = false;
+                        continue;
+                    }
+
+                    if (!oldList.Compare(newList, logFunc, childPath, ignoreDefaultChanges, ignoreValues, comparisonResult))
+                    {
+                        isSame = false;
+                    }
+                }
+                else if (!ValuesAreEqual(oldValue, newValue))
+                {
+                    // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/gff/gff_data.py:723-735
+                    // Original: elif old_value != new_value: ... (with float comparison and string comparison checks)
+                    if (oldValue is float oldFloat && newValue is float newFloat && Math.Abs(oldFloat - newFloat) < 0.0001f)
+                    {
+                        comparisonResult.AddFieldStat("used", label);
+                        continue;
+                    }
+
+                    // Check if both values are 0 or default (for numeric types)
+                    if (ignoreDefaultChanges)
+                    {
+                        bool oldIsZero = IsZeroOrDefault(oldValue);
+                        bool newIsZero = IsZeroOrDefault(newValue);
+                        if (oldIsZero && newIsZero)
+                        {
+                            continue; // Both are zero/default, ignore the difference
+                        }
+                    }
+
+                    if (oldValue.ToString() == newValue.ToString())
+                    {
+                        logFunc($"Field '{oldFtype.Value}' is different at '{childPath}': String representations match, but have other properties that don't (such as a lang id difference).");
+                        continue;
+                    }
+
+                    logFunc($"Field '{oldFtype.Value}' is different at '{childPath}':");
+                    logFunc(FormatDiff(oldValue, newValue, label));
+                    comparisonResult.AddFieldStat("mismatched", label);
+                    comparisonResult.AddValueMismatch(childPath, oldFtype.Value.ToString(), oldValue, newValue);
+                    isSame = false;
+                }
+                else
+                {
+                    comparisonResult.AddFieldStat("used", label);
+                }
+            }
+
+            return isSame;
+        }
+
+        private static bool ValuesAreEqual(object v1, object v2)
+        {
+            if (v1 == null && v2 == null) return true;
+            if (v1 == null || v2 == null) return false;
+            if (v1.Equals(v2)) return true;
+            return false;
+        }
+
+        private static bool IsZeroOrDefault(object v)
+        {
+            if (v == null) return true;
+            if (v is byte b && b == 0) return true;
+            if (v is sbyte sb && sb == 0) return true;
+            if (v is ushort us && us == 0) return true;
+            if (v is short s && s == 0) return true;
+            if (v is uint ui && ui == 0) return true;
+            if (v is int i && i == 0) return true;
+            if (v is ulong ul && ul == 0) return true;
+            if (v is long l && l == 0) return true;
+            if (v is float f && Math.Abs(f) < 0.0001f) return true;
+            if (v is double d && Math.Abs(d) < 0.0001) return true;
+            if (v is string str && string.IsNullOrEmpty(str)) return true;
+            if (v is ResRef resRef && string.IsNullOrEmpty(resRef.ToString())) return true;
+            return false;
+        }
+
+        private static string FormatText(string text)
+        {
+            if (string.IsNullOrEmpty(text)) return "";
+            if (text.Length > 80) return text.Substring(0, 77) + "...";
+            return text;
+        }
+
+        private static string SafeRepr(object obj)
+        {
+            if (obj == null) return "null";
+            try
+            {
+                return obj.ToString();
+            }
+            catch
+            {
+                return "<repr failed>";
+            }
+        }
+
+        private static string FormatDiff(object oldValue, object newValue, string name)
+        {
+            string oldStr = oldValue?.ToString() ?? "null";
+            string newStr = newValue?.ToString() ?? "null";
+            return $"--- (old){name}\n+++ (new){name}\n@@ -1 +1 @@\n-{oldStr}\n+{newStr}";
+        }
+
         /// <summary>
         /// Internal field storage class
         /// </summary>
