@@ -482,6 +482,58 @@ namespace HolocronToolset.NET.Data
             return _installation.Locations(queries, order);
         }
 
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/installation.py:471-518
+        // Original: def get_relevant_resources(self, restype: ResourceType, src_filepath: Path | None = None) -> set[FileResource]:
+        public HashSet<FileResource> GetRelevantResources(ResourceType restype, string srcFilepath = null)
+        {
+            if (srcFilepath == null)
+            {
+                // Return all resources of the specified type
+                var allResources = new HashSet<FileResource>();
+                allResources.UnionWith(CoreResources().Where(r => r.ResType == restype));
+                allResources.UnionWith(OverrideResources().Where(r => r.ResType == restype));
+                return allResources;
+            }
+
+            var relevantResources = new HashSet<FileResource>();
+            relevantResources.UnionWith(OverrideResources().Where(r => r.ResType == restype));
+            relevantResources.UnionWith(_installation.ChitinResources().Where(r => r.ResType == restype));
+
+            string srcAbsolute = System.IO.Path.GetFullPath(srcFilepath);
+            string modulePath = System.IO.Path.GetFullPath(ModulePath());
+            string overridePath = System.IO.Path.GetFullPath(OverridePath());
+
+            bool IsWithin(string child, string parent)
+            {
+                try
+                {
+                    var childUri = new Uri(child);
+                    var parentUri = new Uri(parent);
+                    return parentUri.IsBaseOf(childUri);
+                }
+                catch
+                {
+                    return false;
+                }
+            }
+
+            if (IsWithin(srcAbsolute, modulePath))
+            {
+                // Add resources from matching modules
+                string moduleFileName = System.IO.Path.GetFileName(srcFilepath);
+                var moduleResources = ModuleResources(moduleFileName);
+                relevantResources.UnionWith(moduleResources.Where(r => r.ResType == restype));
+            }
+            else if (IsWithin(srcAbsolute, overridePath))
+            {
+                // Add resources from override
+                var overrideResources = OverrideResources();
+                relevantResources.UnionWith(overrideResources.Where(r => r.ResType == restype));
+            }
+
+            return relevantResources;
+        }
+
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/installation.py
         // Original: property saves -> dict[Path, dict[Path, list[FileResource]]]:
         public Dictionary<string, Dictionary<string, List<FileResource>>> Saves
