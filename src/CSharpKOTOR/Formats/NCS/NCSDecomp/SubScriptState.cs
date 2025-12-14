@@ -1090,43 +1090,143 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
         public virtual void TransformMoveSp(AMoveSpCommand node)
         {
             this.CheckStart(node);
+            int nodePos = this.nodedata != null ? this.nodedata.TryGetPos(node) : -1;
+            JavaSystem.@err.Println("DEBUG transformMoveSp: pos=" + nodePos + ", state=" + this.state +
+                  ", current=" + this.current.GetType().Name);
+
             if (this.state == 1)
             {
-                ScriptNode.ScriptNode last = this.current.GetLastChild();
+                ScriptNode.ScriptNode last = this.current.HasChildren() ? this.current.GetLastChild() : null;
+                JavaSystem.@err.Println("DEBUG transformMoveSp: state==1, last=" +
+                      (last != null ? last.GetType().Name : "null"));
+
                 if (!typeof(AReturnStatement).IsInstanceOfType(last))
                 {
-
-                    // Handle both AModifyExp (x = y) and AUnaryModExp (x++, ++x)
+                    AExpression expr = null;
                     if (typeof(AModifyExp).IsInstanceOfType(last))
                     {
-                        AModifyExp modexp = (AModifyExp)this.RemoveLastExp(true);
-                        AExpressionStatement stmt = new AExpressionStatement(modexp);
-                        this.current.AddChild(stmt);
-                        stmt.Parent(this.current);
+                        JavaSystem.@err.Println("DEBUG transformMoveSp: last is AModifyExp, removing as expression");
+                        expr = (AModifyExp)this.RemoveLastExp(true);
                     }
-                    else if (typeof(AUnaryModExp).IsInstanceOfType(last))
+                    else if (typeof(AVarDecl).IsInstanceOfType(last) && ((AVarDecl)last).IsFcnReturn() && ((AVarDecl)last).GetExp() != null)
                     {
-                        AUnaryModExp unaryModExp = (AUnaryModExp)this.RemoveLastExp(true);
-                        AExpressionStatement stmt = new AExpressionStatement(unaryModExp);
+                        JavaSystem.@err.Println("DEBUG transformMoveSp: last is AVarDecl with function return");
+                        // Function return value - extract the expression and convert to statement
+                        // However, don't extract function calls (AActionExp) as standalone statements
+                        // when in assignment context, as they're almost always part of a larger expression
+                        // (e.g., GetGlobalNumber("X") == value, or function calls in binary operations).
+                        AExpression funcExp = ((AVarDecl)last).GetExp();
+                        if (typeof(ScriptNode.AActionExp).IsInstanceOfType(funcExp))
+                        {
+                            // Don't extract function calls as statements in assignment context
+                            // They're almost always part of a larger expression being built
+                            // Leave the AVarDecl in place - it will be used by EQUAL/other operations
+                            // NEVER extract function calls as statements when state == 1 (assignment context)
+                            JavaSystem.@err.Println("DEBUG transformMoveSp: function call, NOT extracting as statement");
+                            expr = null; // Don't extract as statement
+                        }
+                        else
+                        {
+                            // Non-function-call expressions can be extracted
+                            JavaSystem.@err.Println("DEBUG transformMoveSp: extracting expression from AVarDecl");
+                            expr = ((AVarDecl)last).RemoveExp();
+                            this.current.RemoveLastChild(); // Remove the AVarDecl
+                        }
+                    }
+                    else if (typeof(AUnaryModExp).IsInstanceOfType(last) || typeof(AExpression).IsInstanceOfType(last))
+                    {
+                        JavaSystem.@err.Println("DEBUG transformMoveSp: last is AUnaryModExp or AExpression, removing as expression");
+                        // Gracefully handle postfix/prefix inc/dec and other loose expressions.
+                        // However, don't extract function calls (AActionExp) as standalone statements
+                        // when in assignment context, as they're almost always part of a larger expression
+                        // (e.g., GetGlobalNumber("X") == value, or function calls in binary operations).
+                        // In assignment context, function calls should remain as part of the expression tree
+                        // until the full expression is built (e.g., by EQUAL, ADD, etc. operations).
+                        expr = (AExpression)this.RemoveLastExp(true);
+                        JavaSystem.@err.Println("DEBUG transformMoveSp: removed expression=" +
+                              (expr != null ? expr.GetType().Name : "null"));
+                        // Don't extract function calls as statements in assignment context
+                        // They're almost always part of a larger expression being built.
+                        // In assignment context (state == 1), function calls should remain as part of the expression tree
+                        // until the full expression is built (e.g., by EQUAL, ADD, etc. operations).
+                        if (typeof(ScriptNode.AActionExp).IsInstanceOfType(expr))
+                        {
+                            // Put the function call back - it's part of a larger expression
+                            // Function calls in assignment context are almost never standalone statements
+                            JavaSystem.@err.Println("DEBUG transformMoveSp: function call, putting back");
+                            this.current.AddChild((ScriptNode.ScriptNode)expr);
+                            expr = null; // Don't extract as statement
+                        }
+                    }
+                    else if (typeof(AExpressionStatement).IsInstanceOfType(last))
+                    {
+                        // Already an expression statement - leave it as is
+                        JavaSystem.@err.Println("DEBUG transformMoveSp: last is AExpressionStatement, leaving as is");
+                        expr = null; // Don't extract as statement
+                    }
+                    else
+                    {
+                        JavaSystem.@err.Println("DEBUG transformMoveSp: WARNING - unexpected last child type: " +
+                              (last != null ? last.GetType().Name : "null") + " at " + nodePos);
+                        JavaSystem.@out.Println("uh-oh... not a modify exp at " + nodePos + ", " + last);
+                    }
+
+                    if (expr != null)
+                    {
+                        JavaSystem.@err.Println("DEBUG transformMoveSp: creating AExpressionStatement with " + expr.GetType().Name);
+                        AExpressionStatement stmt = new AExpressionStatement(expr);
                         this.current.AddChild(stmt);
                         stmt.Parent(this.current);
                     }
                     else
                     {
-
-                        // Fallback: treat any expression as a statement
-                        AExpression exp = this.RemoveLastExp(true);
-                        AExpressionStatement stmt = new AExpressionStatement(exp);
-                        this.current.AddChild(stmt);
-                        stmt.Parent(this.current);
+                        JavaSystem.@err.Println("DEBUG transformMoveSp: NOT creating AExpressionStatement (expr is null)");
                     }
+                }
+                else
+                {
+                    JavaSystem.@err.Println("DEBUG transformMoveSp: last is AReturnStatement, skipping expression statement creation");
                 }
 
                 this.state = 0;
             }
             else
             {
-                this.CheckSwitchEnd(node);
+                JavaSystem.@err.Println("DEBUG transformMoveSp: state != 1, checking for standalone expression statement");
+                // When state == 0, check if we have a standalone expression (like int3;)
+                // that should be converted to an expression statement
+                if (this.current.HasChildren())
+                {
+                    ScriptNode.ScriptNode last = this.current.GetLastChild();
+                    // If the last child is a plain expression (AVarRef, AConst, etc.) that's not part of
+                    // a larger expression, convert it to an expression statement
+                    // But don't do this for function calls (AActionExp) as they're usually part of expressions
+                    if (typeof(AExpression).IsInstanceOfType(last) && !typeof(ScriptNode.AActionExp).IsInstanceOfType(last)
+                          && !typeof(AModifyExp).IsInstanceOfType(last) && !typeof(AUnaryModExp).IsInstanceOfType(last)
+                          && !typeof(AReturnStatement).IsInstanceOfType(last))
+                    {
+                        JavaSystem.@err.Println("DEBUG transformMoveSp: converting standalone expression to statement: " +
+                              last.GetType().Name);
+                        AExpression expr = (AExpression)this.RemoveLastExp(true);
+                        if (expr != null)
+                        {
+                            AExpressionStatement stmt = new AExpressionStatement(expr);
+                            this.current.AddChild(stmt);
+                            stmt.Parent(this.current);
+                            JavaSystem.@err.Println("DEBUG transformMoveSp: created AExpressionStatement");
+                        }
+                    }
+                    else
+                    {
+                        JavaSystem.@err.Println("DEBUG transformMoveSp: last child is not a standalone expression, calling checkSwitchEnd");
+                        this.CheckSwitchEnd(node);
+                    }
+                }
+                else
+                {
+                    JavaSystem.@err.Println("DEBUG transformMoveSp: no children, calling checkSwitchEnd");
+                    this.CheckSwitchEnd(node);
+                }
             }
 
             this.CheckEnd(node);
