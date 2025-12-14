@@ -26,6 +26,7 @@ using Odyssey.Content.Interfaces;
 using CSharpKOTOR.Formats.LYT;
 using CSharpKOTOR.Formats.VIS;
 using CSharpKOTOR.Resources;
+using JetBrains.Annotations;
 
 namespace Odyssey.Game.Core
 {
@@ -38,18 +39,23 @@ namespace Odyssey.Game.Core
         private K1EngineApi _engineApi;
         private NcsVm _vm;
 
+        // Game state
+        private GameState _currentState = GameState.MainMenu;
+
         // Scene rendering
         private SceneBuilder _sceneBuilder;
         private StrideEngine.Entity _cameraEntity;
         private CameraComponent _cameraComponent;
 
-        private ChaseCamera _chaseCamera;
+        [CanBeNull]
+        private readonly ChaseCamera _chaseCamera = null;
         private Odyssey.Kotor.Input.PlayerController _playerController;
         private TriggerSystem _triggerSystem;
         private HeartbeatSystem _heartbeatSystem;
         private ModuleTransitionSystem _transitionSystem;
 
         // UI
+        private MainMenu _mainMenu;
         private BasicHUD _hud;
         private PauseMenu _pauseMenu;
         private LoadingScreen _loadingScreen;
@@ -105,9 +111,118 @@ namespace Odyssey.Game.Core
             _cameraEntity.Transform.Position = new Vector3(0, 5, 10);
             _cameraEntity.Transform.Rotation = Quaternion.RotationX(-0.3f);
 
-            SceneSystem.SceneInstance.RootScene.Entities.Add(_cameraEntity);
+            // Defer adding to scene until BeginRun when SceneSystem is available
+            Console.WriteLine("[Odyssey] Camera entity created (will be added to scene in BeginRun)");
+        }
 
-            Console.WriteLine("[Odyssey] Camera initialized at " + _cameraEntity.Transform.Position);
+        private void SetGameState(GameState newState)
+        {
+            GameState oldState = _currentState;
+            _currentState = newState;
+
+            Console.WriteLine($"[Odyssey] Game state changed: {oldState} -> {newState}");
+
+            // Hide all UI elements first
+            if (_mainMenu != null) _mainMenu.IsVisible = false;
+            if (_hud != null) _hud.IsVisible = false;
+            if (_pauseMenu != null) _pauseMenu.IsVisible = false;
+            if (_loadingScreen != null) _loadingScreen.IsVisible = false;
+            if (_dialoguePanel != null) _dialoguePanel.IsVisible = false;
+
+            // Handle camera/scene visibility based on state
+            UpdateCameraVisibility(newState);
+
+            // Show UI appropriate for the new state
+            switch (newState)
+            {
+                case GameState.MainMenu:
+                    if (_mainMenu != null) _mainMenu.IsVisible = true;
+                    break;
+
+                case GameState.Loading:
+                    if (_loadingScreen != null) _loadingScreen.Show("Loading...");
+                    break;
+
+                case GameState.InGame:
+                    if (_hud != null) _hud.IsVisible = true;
+                    break;
+
+                case GameState.Paused:
+                    if (_pauseMenu != null) _pauseMenu.IsVisible = true;
+                    break;
+            }
+        }
+
+        private void UpdateCameraVisibility(GameState state)
+        {
+            try
+            {
+                SceneSystem sceneSystem = Services.GetService<SceneSystem>();
+                if (sceneSystem != null && sceneSystem.SceneInstance != null && _cameraEntity != null)
+                {
+                    // CRITICAL FIX: Camera must ALWAYS be in scene for rendering to work
+                    // Removing the camera causes the purple screen because Stride needs an active camera
+                    // to render anything, including UI. Keep camera in scene for all states.
+                    if (!sceneSystem.SceneInstance.RootScene.Entities.Contains(_cameraEntity))
+                    {
+                        sceneSystem.SceneInstance.RootScene.Entities.Add(_cameraEntity);
+                        Console.WriteLine("[Odyssey] Camera added to scene (required for rendering)");
+                    }
+                    
+                    // Adjust camera position/rotation based on state if needed
+                    // For MainMenu, we can keep a simple default camera position
+                    if (state == GameState.MainMenu)
+                    {
+                        // Ensure camera is positioned for menu viewing
+                        _cameraEntity.Transform.Position = new Vector3(0, 0, 0);
+                        _cameraEntity.Transform.Rotation = Quaternion.Identity;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[Odyssey] WARNING: Failed to update camera visibility: {ex.Message}");
+            }
+        }
+
+        private void OnStartGame(object sender, GameStartEventArgs e)
+        {
+            Console.WriteLine($"[Odyssey] Starting game with install path: {e.InstallPath}, module: {e.ModuleName}");
+
+            // Update settings with user selections
+            var updatedSettings = new GameSettings
+            {
+                Game = _settings.Game,
+                GamePath = e.InstallPath,
+                StartModule = e.ModuleName
+            };
+
+            // Create new session with updated settings
+            _session = new GameSession(updatedSettings, _world, _vm, _globals);
+
+            // Transition to loading state
+            SetGameState(GameState.Loading);
+
+            try
+            {
+                // Start the game session
+                _session.StartNewGame();
+
+                // If successful, transition to in-game
+                SetGameState(GameState.InGame);
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine("[Odyssey] Failed to start game: " + ex.Message);
+                Console.Error.WriteLine(ex.StackTrace);
+
+                // Show error and return to main menu
+                if (_mainMenu != null)
+                {
+                    _mainMenu.SetStatusText($"Error starting game: {ex.Message}");
+                }
+                SetGameState(GameState.MainMenu);
+            }
         }
 
         private void InitializeSystems()
@@ -147,7 +262,19 @@ namespace Odyssey.Game.Core
             var page = new UIPage { RootElement = canvas };
             _uiComponent.Page = page;
 
-            SceneSystem.SceneInstance.RootScene.Entities.Add(uiEntity);
+            // Add UI entity to scene
+            try
+            {
+                var sceneSystem = Services.GetService<SceneSystem>();
+                if (sceneSystem != null && sceneSystem.SceneInstance != null)
+                {
+                    sceneSystem.SceneInstance.RootScene.Entities.Add(uiEntity);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("[Odyssey] WARNING: Failed to add UI entity to scene: " + ex.Message);
+            }
 
             // Try to load font
             try
@@ -163,11 +290,13 @@ namespace Odyssey.Game.Core
             if (_font != null)
             {
                 _uiAvailable = true;
+                _mainMenu = new MainMenu(_uiComponent, _font);
                 _hud = new BasicHUD(_uiComponent, _font);
                 _pauseMenu = new PauseMenu(_uiComponent, _font);
                 _loadingScreen = new LoadingScreen(_uiComponent, _font);
                 _dialoguePanel = new DialoguePanel(_uiComponent, _font);
 
+                _mainMenu.OnStartGame += OnStartGame;
                 _pauseMenu.OnResume += OnResumeGame;
                 _pauseMenu.OnExit += OnExitGame;
                 _dialoguePanel.OnReplySelected += OnDialogueReplySelected;
@@ -203,9 +332,23 @@ namespace Odyssey.Game.Core
             _sceneBuilder = new SceneBuilder(GraphicsDevice, resourceProvider);
 
             // Add scene root to Stride scene
-            SceneSystem.SceneInstance.RootScene.Entities.Add(_sceneBuilder.RootEntity);
-
-            Console.WriteLine("[Odyssey] SceneBuilder initialized");
+            try
+            {
+                var sceneSystem = Services.GetService<SceneSystem>();
+                if (sceneSystem != null && sceneSystem.SceneInstance != null)
+                {
+                    sceneSystem.SceneInstance.RootScene.Entities.Add(_sceneBuilder.RootEntity);
+                    Console.WriteLine("[Odyssey] SceneBuilder initialized and added to scene");
+                }
+                else
+                {
+                    Console.WriteLine("[Odyssey] WARNING: SceneSystem not available for SceneBuilder");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("[Odyssey] WARNING: Failed to add SceneBuilder root to scene: " + ex.Message);
+            }
         }
 
         private void FireScriptEvent(IEntity entity, ScriptEvent scriptEvent, IEntity triggeredBy)
@@ -248,20 +391,47 @@ namespace Odyssey.Game.Core
         {
             base.BeginRun();
 
+            // CRITICAL: Create SceneInstance if it doesn't exist
+            // Without a SceneInstance, nothing will render (purple screen)
+            var sceneSystem = Services.GetService<SceneSystem>();
+            if (sceneSystem != null && sceneSystem.SceneInstance == null)
+            {
+                var rootScene = new StrideEngine.Scene();
+                sceneSystem.SceneInstance = new SceneInstance(Services, rootScene);
+                Console.WriteLine("[Odyssey] Created root SceneInstance for rendering");
+            }
+
+            // Add camera to scene now that SceneSystem is available
+            // Camera MUST be in scene for rendering to work, even in MainMenu state
+            if (_cameraEntity != null)
+            {
+                try
+                {
+                    if (sceneSystem != null && sceneSystem.SceneInstance != null)
+                    {
+                        // Ensure camera is in scene (needed for all states including MainMenu)
+                        if (!sceneSystem.SceneInstance.RootScene.Entities.Contains(_cameraEntity))
+                        {
+                            sceneSystem.SceneInstance.RootScene.Entities.Add(_cameraEntity);
+                            Console.WriteLine("[Odyssey] Camera added to scene at " + _cameraEntity.Transform.Position);
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine("[Odyssey] WARNING: SceneSystem not available, camera not added");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("[Odyssey] WARNING: Failed to add camera to scene: " + ex.Message);
+                }
+            }
+
             InitializeUI();
             InitializeSceneBuilder();
 
-            if (_loadingScreen != null) _loadingScreen.Show("Starting Game");
-
-            try
-            {
-                _session.StartNewGame();
-            }
-            catch (Exception ex)
-            {
-                Console.Error.WriteLine("[Odyssey] Failed to start: " + ex.Message);
-                Console.Error.WriteLine(ex.StackTrace);
-            }
+            // Start in main menu state
+            SetGameState(GameState.MainMenu);
         }
 
         protected override void Update(GameTime gameTime)
@@ -270,7 +440,15 @@ namespace Odyssey.Game.Core
 
             float deltaTime = (float)gameTime.Elapsed.TotalSeconds;
 
-            ProcessInput(deltaTime);
+            // Only process game input when actually in-game
+            if (_currentState == GameState.InGame)
+            {
+                ProcessInput(deltaTime);
+            }
+            else if (_currentState == GameState.MainMenu)
+            {
+                ProcessMainMenuInput();
+            }
 
             if (_isPaused) return;
             if (_transitionSystem != null && _transitionSystem.IsTransitioning) return;
@@ -366,6 +544,17 @@ namespace Odyssey.Game.Core
             }
 
             if (Input.IsKeyPressed(Keys.Space)) TryInteractWithNearestObject();
+        }
+
+        private void ProcessMainMenuInput()
+        {
+            // Allow escape to exit from main menu
+            if (Input.IsKeyPressed(Keys.Escape))
+            {
+                Exit();
+            }
+
+            // For now, just handle escape. UI elements handle their own input through events.
         }
 
         private void ProcessCameraInput(float deltaTime)
@@ -738,7 +927,8 @@ namespace Odyssey.Game.Core
 
         protected override void Draw(GameTime gameTime)
         {
-            // Clear with a dark space-ish blue
+            // Clear with a dark space-ish blue (not purple!)
+            // Purple screen was caused by missing camera/scene, not clear color
             GraphicsContext.CommandList.Clear(GraphicsDevice.Presenter.BackBuffer, new Color4(0.02f, 0.02f, 0.08f, 1f));
             GraphicsContext.CommandList.Clear(GraphicsDevice.Presenter.DepthStencilBuffer, DepthStencilClearOptions.DepthBuffer);
             base.Draw(gameTime);
