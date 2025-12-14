@@ -9,6 +9,14 @@ namespace Odyssey.Core.Actions
     /// <summary>
     /// Action to open a door.
     /// </summary>
+    /// <remarks>
+    /// Open Door Action:
+    /// - Based on swkotor2.exe door interaction system
+    /// - Original implementation: Moves actor to door, checks lock state, opens door if unlocked
+    /// - Fires OnOpen script event when door opens
+    /// - Use distance: ~2.0 units (InteractRange)
+    /// - Script events: OnOpen (door opened), OnLocked (door locked)
+    /// </remarks>
     public class ActionOpenDoor : ActionBase
     {
         private readonly uint _doorObjectId;
@@ -23,20 +31,20 @@ namespace Odyssey.Core.Actions
 
         protected override ActionStatus ExecuteInternal(IEntity actor, float deltaTime)
         {
-            var transform = actor.GetComponent<ITransformComponent>();
+            ITransformComponent transform = actor.GetComponent<ITransformComponent>();
             if (transform == null)
             {
                 return ActionStatus.Failed;
             }
 
             // Get door entity
-            var door = actor.World.GetEntity(_doorObjectId);
+            IEntity door = actor.World.GetEntity(_doorObjectId);
             if (door == null || !door.IsValid)
             {
                 return ActionStatus.Failed;
             }
 
-            var doorTransform = door.GetComponent<ITransformComponent>();
+            ITransformComponent doorTransform = door.GetComponent<ITransformComponent>();
             if (doorTransform == null)
             {
                 return ActionStatus.Failed;
@@ -49,7 +57,7 @@ namespace Odyssey.Core.Actions
             // Move towards door if not in range
             if (distance > InteractRange && !_approached)
             {
-                var stats = actor.GetComponent<IStatsComponent>();
+                IStatsComponent stats = actor.GetComponent<IStatsComponent>();
                 float speed = stats != null ? stats.WalkSpeed : 2.5f;
 
                 Vector3 direction = Vector3.Normalize(toTarget);
@@ -70,13 +78,13 @@ namespace Odyssey.Core.Actions
             _approached = true;
 
             // Open the door
-            var doorState = door.GetComponent<IDoorComponent>();
+            IDoorComponent doorState = door.GetComponent<IDoorComponent>();
             if (doorState != null)
             {
                 if (doorState.IsLocked)
                 {
                     // Fire locked door event
-                    var eventBus = actor.World.EventBus;
+                    IEventBus eventBus = actor.World.EventBus;
                     if (eventBus != null)
                     {
                         eventBus.Publish(new DoorLockedEvent { Actor = actor, Door = door });
@@ -87,7 +95,7 @@ namespace Odyssey.Core.Actions
                 doorState.IsOpen = true;
 
                 // Fire opened event
-                var eventBus2 = actor.World.EventBus;
+                IEventBus eventBus2 = actor.World.EventBus;
                 if (eventBus2 != null)
                 {
                     eventBus2.Publish(new DoorOpenedEvent { Actor = actor, Door = door });
@@ -115,19 +123,19 @@ namespace Odyssey.Core.Actions
 
         protected override ActionStatus ExecuteInternal(IEntity actor, float deltaTime)
         {
-            var transform = actor.GetComponent<ITransformComponent>();
+            ITransformComponent transform = actor.GetComponent<ITransformComponent>();
             if (transform == null)
             {
                 return ActionStatus.Failed;
             }
 
-            var door = actor.World.GetEntity(_doorObjectId);
+            IEntity door = actor.World.GetEntity(_doorObjectId);
             if (door == null || !door.IsValid)
             {
                 return ActionStatus.Failed;
             }
 
-            var doorTransform = door.GetComponent<ITransformComponent>();
+            ITransformComponent doorTransform = door.GetComponent<ITransformComponent>();
             if (doorTransform == null)
             {
                 return ActionStatus.Failed;
@@ -139,7 +147,7 @@ namespace Odyssey.Core.Actions
 
             if (distance > InteractRange && !_approached)
             {
-                var stats = actor.GetComponent<IStatsComponent>();
+                IStatsComponent stats = actor.GetComponent<IStatsComponent>();
                 float speed = stats != null ? stats.WalkSpeed : 2.5f;
 
                 Vector3 direction = Vector3.Normalize(toTarget);
@@ -159,12 +167,12 @@ namespace Odyssey.Core.Actions
 
             _approached = true;
 
-            var doorState = door.GetComponent<IDoorComponent>();
+            IDoorComponent doorState = door.GetComponent<IDoorComponent>();
             if (doorState != null)
             {
                 doorState.IsOpen = false;
 
-                var eventBus = actor.World.EventBus;
+                IEventBus eventBus = actor.World.EventBus;
                 if (eventBus != null)
                 {
                     eventBus.Publish(new DoorClosedEvent { Actor = actor, Door = door });
