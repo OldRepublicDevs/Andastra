@@ -241,6 +241,14 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             // Only create main if it has valid range
             if (mainStart < mainEnd && mainStart >= 0)
             {
+                Console.Error.WriteLine($"DEBUG NcsToAstConverter: Creating main subroutine, range={mainStart}-{mainEnd}, total instructions={instructions.Count}");
+                JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Creating main subroutine, range={mainStart}-{mainEnd}, total instructions={instructions.Count}");
+                // Log instruction types in main range
+                for (int i = mainStart; i < Math.Min(mainEnd, instructions.Count) && i < mainStart + 20; i++)
+                {
+                    Console.Error.WriteLine($"DEBUG NcsToAstConverter: Main instruction[{i}]={instructions[i].InsType}");
+                    JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Main instruction[{i}]={instructions[i].InsType}");
+                }
                 ASubroutine mainSub = ConvertInstructionRangeToSubroutine(ncs, instructions, mainStart, mainEnd, mainStart);
                 if (mainSub != null)
                 {
@@ -362,7 +370,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
                 PCmd cmd = ConvertInstructionToCmd(ncs, instructions[i], i, instructions);
                 if (cmd != null)
                 {
-                    cmdBlock.GetCmd().Add((AST.PCmd)(object)cmd);
+                    cmdBlock.AddCmd((AST.PCmd)(object)cmd);
                     convertedCount++;
                 }
                 else
