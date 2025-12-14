@@ -193,6 +193,69 @@ namespace HolocronToolset.NET.Tests.Editors
             return Path.Combine(assemblyDir, "test_files");
         }
 
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_2da_editor.py:110-124
+        // Original: def test_2da_save_load_from_k2_installation(self):
+        [Fact]
+        public void Test2DASaveLoadFromK2Installation()
+        {
+            if (_installation == null)
+            {
+                return; // Skip if K2_PATH not set
+            }
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_2da_editor.py:115
+            // Original: self.installation = Installation(K2_PATH)
+            // Note: _installation is already set up in static constructor for K2
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_2da_editor.py:116
+            // Original: for twoda_resource in (resource for resource in self.installation if resource.restype() is ResourceType.TwoDA):
+            var chitinResources = _installation.Installation.Resources.GetChitinResources();
+            var twodaResources = chitinResources.Where(r => r.ResourceType == ResourceType.TwoDA).ToList();
+
+            if (twodaResources.Count == 0)
+            {
+                return; // Skip if no TwoDA resources found
+            }
+
+            var editor = new TwoDAEditor(null, _installation);
+
+            foreach (var twodaResource in twodaResources)
+            {
+                _logMessages.Clear();
+                _logMessages.Add(Environment.NewLine);
+
+                // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_2da_editor.py:117
+                // Original: old = read_2da(twoda_resource.data())
+                byte[] resourceData = twodaResource.GetData();
+                if (resourceData == null || resourceData.Length == 0)
+                {
+                    continue; // Skip if resource data is invalid
+                }
+
+                var old = new TwoDABinaryReader(resourceData).Load();
+
+                // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_2da_editor.py:118
+                // Original: self.editor.load(twoda_resource.filepath(), twoda_resource.resname(), twoda_resource.restype(), twoda_resource.data())
+                editor.Load(twodaResource.FilePath, twodaResource.ResRef, twodaResource.ResourceType, resourceData);
+
+                // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_2da_editor.py:120
+                // Original: data, _ = self.editor.build()
+                var (newData, _) = editor.Build();
+
+                // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_2da_editor.py:121
+                // Original: new = read_2da(data)
+                var newTwoda = new TwoDABinaryReader(newData).Load();
+
+                // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_2da_editor.py:123
+                // Original: diff = old.compare(new, self.log_func)
+                bool diff = old.Compare(newTwoda, LogFunc);
+
+                // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_2da_editor.py:124
+                // Original: assert diff, os.linesep.join(self.log_messages)
+                diff.Should().BeTrue($"TwoDA comparison failed for {twodaResource.ResRef}.{twodaResource.ResourceType.Extension}. Log messages: {string.Join(Environment.NewLine, _logMessages)}");
+            }
+        }
+
         [Fact]
         public void TestTwoDAEditorNewFileCreation()
         {
