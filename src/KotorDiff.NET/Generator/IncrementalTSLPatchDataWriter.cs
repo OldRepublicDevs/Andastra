@@ -1359,6 +1359,31 @@ namespace CSharpKOTOR.TSLPatcher
         /// </summary>
         public void FinalizeWriter()
         {
+            // Analyze 2DA memory references BEFORE finalizing
+            // This searches for GFF files that reference modified 2DA rows and creates patches
+            if (AllModifications.Twoda != null && AllModifications.Twoda.Count > 0)
+            {
+                string installationPath = _moddedDataPath ?? _baseDataPath;
+                if (!string.IsNullOrEmpty(installationPath))
+                {
+                    _logFunc?.Invoke("\n=== Analyzing 2DA Memory References ===");
+                    _logFunc?.Invoke("Searching entire installation/folder for GFF files that reference modified 2DA rows...");
+                    
+                    KotorDiff.NET.Diff.ReferenceAnalyzers.Analyze2DaMemoryReferences(
+                        AllModifications.Twoda,
+                        installationPath,
+                        AllModifications.Gff,
+                        _logFunc
+                    );
+                    
+                    _logFunc?.Invoke("2DA memory reference analysis complete.");
+                    if (AllModifications.Gff.Count > 0)
+                    {
+                        _logFunc?.Invoke($"  Added {AllModifications.Gff.Sum(m => m.Modifiers.Count)} GFF patches for 2DA references");
+                    }
+                }
+            }
+
             // Flush any remaining pending writes
             FlushPendingWrites();
 
