@@ -30,14 +30,20 @@ namespace Odyssey.Content.Save
     public class SaveSerializer : ISaveSerializer
     {
         // GFF field labels for save NFO
-        private const string FIELD_SAVE_NAME = "SAVENAME";
-        private const string FIELD_MODULE_NAME = "MODULENAME";
-        private const string FIELD_SAVE_DATE = "SAVEDATE";
-        private const string FIELD_SAVE_TIME = "SAVETIME";
+        // Based on swkotor2.exe: FUN_004eb750 @ 0x004eb750
+        // Located via string reference: "savenfo" @ 0x007be1f0
+        // Original implementation uses these exact field names from GFF structure
+        private const string FIELD_SAVE_NAME = "SAVEGAMENAME";
+        private const string FIELD_MODULE_NAME = "LASTMODULE";
+        private const string FIELD_AREA_NAME = "AREANAME";
         private const string FIELD_TIME_PLAYED = "TIMEPLAYED";
-        private const string FIELD_PLAYER_NAME = "PLAYERNAME";
-        private const string FIELD_PORTRAIT = "PORTRAIT";
+        private const string FIELD_PLAYER_NAME = "PCNAME";
         private const string FIELD_CHEAT_USED = "CHEATUSED";
+        private const string FIELD_SAVE_NUMBER = "SAVENUMBER";
+        private const string FIELD_GAMEPLAY_HINT = "GAMEPLAYHINT";
+        private const string FIELD_STORY_HINT = "STORYHINT";
+        private const string FIELD_LIVE_CONTENT = "LIVECONTENT";
+        private const string FIELD_TIMESTAMP = "TIMESTAMP";
 
         // ERF types
         private const string ERF_TYPE_SAV = "SAV ";
@@ -48,30 +54,73 @@ namespace Odyssey.Content.Save
         // Based on swkotor2.exe: FUN_004eb750 @ 0x004eb750
         // Located via string reference: "savenfo" @ 0x007be1f0
         // Original implementation: Creates GFF with "NFO " signature and "V2.0" version string
-        // Writes fields: SAVEGAMENAME, MODULENAME, SAVEDATE, SAVETIME, TIMEPLAYED, PLAYERNAME, PORTRAIT, CHEATUSED,
-        // AREANAME, LASTMODULE, PCNAME, SAVENUMBER, GAMEPLAYHINT, STORYHINT0-9, LIVECONTENT, TIMESTAMP
+        // Writes fields: AREANAME, LASTMODULE, TIMEPLAYED, CHEATUSED, SAVEGAMENAME, TIMESTAMP, PCNAME, SAVENUMBER,
+        // GAMEPLAYHINT, STORYHINT0-9, LIVECONTENT
+        // Note: GFF signature is "NFO " (4 bytes), version string is "V2.0"
         public byte[] SerializeSaveNfo(SaveGameData saveData)
         {
             // Use CSharpKOTOR GFF writer
+            // Original creates GFF with "NFO " signature and "V2.0" version
             var gff = new GFF(GFFContent.GFF);
             GFFStruct root = gff.Root;
 
-            root.SetString(FIELD_SAVE_NAME, saveData.Name ?? "");
+            // AREANAME - Current area name
+            root.SetString(FIELD_AREA_NAME, saveData.CurrentAreaName ?? "");
+            
+            // LASTMODULE - Last module ResRef
             root.SetString(FIELD_MODULE_NAME, saveData.CurrentModule ?? "");
-            root.SetString(FIELD_SAVE_DATE, saveData.SaveTime.ToString("yyyy-MM-dd"));
-            root.SetString(FIELD_SAVE_TIME, saveData.SaveTime.ToString("HH:mm:ss"));
+            
+            // TIMEPLAYED - Total seconds played
             root.SetInt32(FIELD_TIME_PLAYED, (int)saveData.PlayTime.TotalSeconds);
             
-            // Get player name from party state
+            // CHEATUSED - Whether cheats were used (byte)
+            root.SetUInt8(FIELD_CHEAT_USED, saveData.CheatUsed ? (byte)1 : (byte)0);
+            
+            // SAVEGAMENAME - Save name
+            root.SetString(FIELD_SAVE_NAME, saveData.Name ?? "");
+            
+            // TIMESTAMP - FileTime (64-bit integer: dwLowDateTime, dwHighDateTime)
+            // Original uses GetLocalTime + SystemTimeToFileTime to create FILETIME
+            DateTime saveTime = saveData.SaveTime;
+            long fileTime = saveTime.ToFileTime();
+            root.SetInt64(FIELD_TIMESTAMP, fileTime);
+            
+            // PCNAME - Player character name
             string playerName = "";
             if (saveData.PartyState != null && saveData.PartyState.PlayerCharacter != null)
             {
-                // PlayerCharacter is the main player character
                 playerName = saveData.PartyState.PlayerCharacter.Tag ?? "";
             }
             root.SetString(FIELD_PLAYER_NAME, playerName);
             
-            root.SetInt32(FIELD_CHEAT_USED, 0); // TODO: Track cheat usage (would need to track during gameplay)
+            // SAVENUMBER - Save slot number
+            root.SetInt32(FIELD_SAVE_NUMBER, saveData.SaveNumber);
+            
+            // GAMEPLAYHINT - Gameplay hint flag (byte)
+            root.SetUInt8(FIELD_GAMEPLAY_HINT, saveData.GameplayHint ? (byte)1 : (byte)0);
+            
+            // STORYHINT0-9 - Story hint flags (bytes)
+            for (int i = 0; i < 10; i++)
+            {
+                string hintField = FIELD_STORY_HINT + i.ToString();
+                bool hintValue = saveData.StoryHints != null && i < saveData.StoryHints.Count && saveData.StoryHints[i];
+                root.SetUInt8(hintField, hintValue ? (byte)1 : (byte)0);
+            }
+            
+            // LIVECONTENT - Bitmask for live content flags (byte)
+            // Original uses bitmask: 1 << (i-1) for each enabled live content
+            byte liveContent = 0;
+            if (saveData.LiveContent != null)
+            {
+                for (int i = 0; i < saveData.LiveContent.Count && i < 32; i++)
+                {
+                    if (saveData.LiveContent[i])
+                    {
+                        liveContent |= (byte)(1 << (i & 0x1F));
+                    }
+                }
+            }
+            root.SetUInt8(FIELD_LIVE_CONTENT, liveContent);
 
             return gff.ToBytes();
         }
@@ -79,9 +128,9 @@ namespace Odyssey.Content.Save
         // Deserialize save metadata from NFO GFF format
         // Based on swkotor2.exe: FUN_00707290 @ 0x00707290
         // Located via string reference: "savenfo" @ 0x007be1f0
-        // Original implementation: Reads GFF with "NFO " signature, extracts SAVEGAMENAME, MODULENAME, SAVEDATE, SAVETIME,
-        // TIMEPLAYED, PLAYERNAME, CHEATUSED, REBOOTAUTOSAVE, PCAUTOSAVE, SCREENSHOT, TIMESTAMP, PCNAME, SAVENUMBER,
-        // GAMEPLAYHINT, STORYHINT0-9, LIVECONTENT flags
+        // Original implementation: Reads GFF with "NFO " signature, extracts AREANAME, LASTMODULE, TIMEPLAYED,
+        // CHEATUSED, SAVEGAMENAME, TIMESTAMP, PCNAME, SAVENUMBER, GAMEPLAYHINT, STORYHINT0-9, LIVECONTENT,
+        // REBOOTAUTOSAVE, PCAUTOSAVE, SCREENSHOT
         public SaveGameData DeserializeSaveNfo(byte[] data)
         {
             // Use CSharpKOTOR GFF reader
@@ -103,24 +152,84 @@ namespace Odyssey.Content.Save
             var saveData = new SaveGameData();
             var root = gff.Root;
 
-            saveData.Name = root.GetString(FIELD_SAVE_NAME);
+            // AREANAME
+            saveData.CurrentAreaName = root.GetString(FIELD_AREA_NAME);
+            
+            // LASTMODULE
             saveData.CurrentModule = root.GetString(FIELD_MODULE_NAME);
-
-            string dateStr = root.GetString(FIELD_SAVE_DATE);
-            string timeStr = root.GetString(FIELD_SAVE_TIME);
-
-            DateTime saveTime;
-            if (DateTime.TryParse(dateStr + " " + timeStr, out saveTime))
+            
+            // TIMEPLAYED - Total seconds played
+            int seconds = root.GetInt32(FIELD_TIME_PLAYED);
+            saveData.PlayTime = TimeSpan.FromSeconds(seconds);
+            
+            // CHEATUSED
+            saveData.CheatUsed = root.GetUInt8(FIELD_CHEAT_USED) != 0;
+            
+            // SAVEGAMENAME
+            saveData.Name = root.GetString(FIELD_SAVE_NAME);
+            if (string.IsNullOrEmpty(saveData.Name))
             {
-                saveData.SaveTime = saveTime;
+                // Original sets to "Old Save Game" if empty
+                saveData.Name = "Old Save Game";
+            }
+            
+            // TIMESTAMP - FileTime (64-bit integer)
+            long fileTime = root.GetInt64(FIELD_TIMESTAMP);
+            if (fileTime != 0)
+            {
+                saveData.SaveTime = DateTime.FromFileTime(fileTime);
             }
             else
             {
                 saveData.SaveTime = DateTime.Now;
             }
-
-            int seconds = root.GetInt32(FIELD_TIME_PLAYED);
-            saveData.PlayTime = TimeSpan.FromSeconds(seconds);
+            
+            // PCNAME
+            saveData.PlayerName = root.GetString(FIELD_PLAYER_NAME);
+            
+            // SAVENUMBER
+            saveData.SaveNumber = root.GetInt32(FIELD_SAVE_NUMBER);
+            
+            // GAMEPLAYHINT
+            saveData.GameplayHint = root.GetUInt8(FIELD_GAMEPLAY_HINT) != 0;
+            
+            // STORYHINT0-9
+            if (saveData.StoryHints == null)
+            {
+                saveData.StoryHints = new List<bool>();
+            }
+            for (int i = 0; i < 10; i++)
+            {
+                string hintField = FIELD_STORY_HINT + i.ToString();
+                bool hintValue = root.GetUInt8(hintField) != 0;
+                if (i < saveData.StoryHints.Count)
+                {
+                    saveData.StoryHints[i] = hintValue;
+                }
+                else
+                {
+                    saveData.StoryHints.Add(hintValue);
+                }
+            }
+            
+            // LIVECONTENT - Bitmask
+            byte liveContent = root.GetUInt8(FIELD_LIVE_CONTENT);
+            if (saveData.LiveContent == null)
+            {
+                saveData.LiveContent = new List<bool>();
+            }
+            for (int i = 0; i < 32; i++)
+            {
+                bool enabled = (liveContent & (1 << (i & 0x1F))) != 0;
+                if (i < saveData.LiveContent.Count)
+                {
+                    saveData.LiveContent[i] = enabled;
+                }
+                else
+                {
+                    saveData.LiveContent.Add(enabled);
+                }
+            }
 
             return saveData;
         }
@@ -361,31 +470,232 @@ namespace Odyssey.Content.Save
             }
 
             // Use CSharpKOTOR GFF writer
+            // Original creates GFF with "PT  " signature and "V2.0" version
             var gff = new GFF(GFFContent.GFF);
             var root = gff.Root;
 
-            root.SetInt32("Gold", state.Gold);
-            root.SetInt32("ExperiencePoints", state.ExperiencePoints);
-
-            // Store selected party as a list
-            var selectedList = root.Acquire<GFFList>("SelectedParty", new GFFList());
-            foreach (string member in state.SelectedParty)
+            // PT_PCNAME - Player character name
+            string pcName = "";
+            if (state.PlayerCharacter != null)
             {
-                GFFStruct entry = selectedList.Add();
-                entry.SetString("ResRef", member);
+                pcName = state.PlayerCharacter.Tag ?? "";
+            }
+            root.SetString("PT_PCNAME", pcName);
+            
+            // PT_GOLD - Gold/credits
+            root.SetInt32("PT_GOLD", state.Gold);
+            
+            // PT_ITEM_COMPONENT - Item component count
+            root.SetInt32("PT_ITEM_COMPONENT", state.ItemComponent);
+            
+            // PT_ITEM_CHEMICAL - Item chemical count
+            root.SetInt32("PT_ITEM_CHEMICAL", state.ItemChemical);
+            
+            // PT_SWOOP1-3 - Swoop race times
+            root.SetInt32("PT_SWOOP1", state.Swoop1);
+            root.SetInt32("PT_SWOOP2", state.Swoop2);
+            root.SetInt32("PT_SWOOP3", state.Swoop3);
+            
+            // PT_XP_POOL - Experience point pool (float)
+            root.SetSingle("PT_XP_POOL", state.ExperiencePoints);
+            
+            // PT_PLAYEDSECONDS - Total seconds played
+            root.SetInt32("PT_PLAYEDSECONDS", (int)state.PlayTime.TotalSeconds);
+            
+            // PT_CONTROLLED_NPC - Currently controlled NPC ID (float, -1 if none)
+            root.SetSingle("PT_CONTROLLED_NPC", state.ControlledNPC >= 0 ? (float)state.ControlledNPC : -1.0f);
+            
+            // PT_SOLOMODE - Solo mode flag (byte)
+            root.SetUInt8("PT_SOLOMODE", state.SoloMode ? (byte)1 : (byte)0);
+            
+            // PT_CHEAT_USED - Cheat used flag (byte)
+            root.SetUInt8("PT_CHEAT_USED", state.CheatUsed ? (byte)1 : (byte)0);
+            
+            // PT_NUM_MEMBERS - Number of party members (byte)
+            int numMembers = state.SelectedParty != null ? state.SelectedParty.Count : 0;
+            root.SetUInt8("PT_NUM_MEMBERS", (byte)numMembers);
+            
+            // PT_MEMBERS - List of party members
+            var membersList = root.Acquire<GFFList>("PT_MEMBERS", new GFFList());
+            if (state.SelectedParty != null)
+            {
+                foreach (string memberResRef in state.SelectedParty)
+                {
+                    GFFStruct entry = membersList.Add();
+                    // PT_MEMBER_ID - Member ID (float)
+                    entry.SetSingle("PT_MEMBER_ID", GetMemberId(memberResRef));
+                    // PT_IS_LEADER - Whether this member is the leader (byte)
+                    bool isLeader = state.LeaderResRef == memberResRef;
+                    entry.SetUInt8("PT_IS_LEADER", isLeader ? (byte)1 : (byte)0);
+                }
+            }
+            
+            // PT_NUM_PUPPETS - Number of puppets (byte)
+            int numPuppets = state.Puppets != null ? state.Puppets.Count : 0;
+            root.SetUInt8("PT_NUM_PUPPETS", (byte)numPuppets);
+            
+            // PT_PUPPETS - List of puppets
+            var puppetsList = root.Acquire<GFFList>("PT_PUPPETS", new GFFList());
+            if (state.Puppets != null)
+            {
+                foreach (uint puppetId in state.Puppets)
+                {
+                    GFFStruct entry = puppetsList.Add();
+                    entry.SetSingle("PT_PUPPET_ID", (float)puppetId);
+                }
+            }
+            
+            // PT_AVAIL_PUPS - Available puppets list (3 entries)
+            var availPupsList = root.Acquire<GFFList>("PT_AVAIL_PUPS", new GFFList());
+            for (int i = 0; i < 3; i++)
+            {
+                GFFStruct entry = availPupsList.Add();
+                bool available = state.AvailablePuppets != null && i < state.AvailablePuppets.Count && state.AvailablePuppets[i];
+                entry.SetUInt8("PT_PUP_AVAIL", available ? (byte)1 : (byte)0);
+                bool selectable = state.SelectablePuppets != null && i < state.SelectablePuppets.Count && state.SelectablePuppets[i];
+                entry.SetUInt8("PT_PUP_SELECT", selectable ? (byte)1 : (byte)0);
             }
 
-            // Store available members as a list
-            var availableList = root.Acquire<GFFList>("AvailableMembers", new GFFList());
-            foreach (KeyValuePair<string, PartyMemberState> kvp in state.AvailableMembers)
+            // PT_AVAIL_NPCS - Available NPCs list (12 entries)
+            GFFList availNpcsList = root.Acquire<GFFList>("PT_AVAIL_NPCS", new GFFList());
+            List<PartyMemberState> memberList = state.AvailableMembers != null ? new List<PartyMemberState>(state.AvailableMembers.Values) : new List<PartyMemberState>();
+            for (int i = 0; i < 12; i++)
             {
-                GFFStruct entry = availableList.Add();
-                entry.SetString("ResRef", kvp.Key);
-                entry.SetInt32("IsAvailable", kvp.Value.IsAvailable ? 1 : 0);
-                entry.SetInt32("IsSelectable", kvp.Value.IsSelectable ? 1 : 0);
+                GFFStruct entry = availNpcsList.Add();
+                bool available = i < memberList.Count;
+                entry.SetUInt8("PT_NPC_AVAIL", available ? (byte)1 : (byte)0);
+                bool selectable = available && memberList[i].IsSelectable;
+                entry.SetUInt8("PT_NPC_SELECT", selectable ? (byte)1 : (byte)0);
             }
+            
+            // PT_INFLUENCE - Influence values list (12 entries)
+            var influenceList = root.Acquire<GFFList>("PT_INFLUENCE", new GFFList());
+            for (int i = 0; i < 12; i++)
+            {
+                GFFStruct entry = influenceList.Add();
+                float influence = 0.0f;
+                if (state.Influence != null && i < state.Influence.Count)
+                {
+                    influence = (float)state.Influence[i];
+                }
+                entry.SetSingle("PT_NPC_INFLUENCE", influence);
+            }
+            
+            // PT_AISTATE - AI state (float)
+            root.SetSingle("PT_AISTATE", (float)state.AIState);
+            
+            // PT_FOLLOWSTATE - Follow state (float)
+            root.SetSingle("PT_FOLLOWSTATE", (float)state.FollowState);
+            
+            // GlxyMap - Galaxy map data
+            var glxyMapStruct = root.Acquire<GFFStruct>("GlxyMap", new GFFStruct());
+            glxyMapStruct.SetInt32("GlxyMapNumPnts", 16); // Always 16 points
+            glxyMapStruct.SetInt32("GlxyMapPlntMsk", state.GalaxyMapPlanetMask);
+            glxyMapStruct.SetSingle("GlxyMapSelPnt", (float)state.GalaxyMapSelectedPoint);
+            
+            // PT_PAZAAKCARDS - Pazaak cards list (23 entries)
+            var pazaakCardsList = root.Acquire<GFFList>("PT_PAZAAKCARDS", new GFFList());
+            for (int i = 0; i < 23; i++)
+            {
+                GFFStruct entry = pazaakCardsList.Add();
+                int count = 0;
+                if (state.PazaakCards != null && i < state.PazaakCards.Count)
+                {
+                    count = state.PazaakCards[i];
+                }
+                entry.SetSingle("PT_PAZAAKCOUNT", (float)count);
+            }
+            
+            // PT_PAZSIDELIST - Pazaak side list (10 entries)
+            var pazaakSideList = root.Acquire<GFFList>("PT_PAZSIDELIST", new GFFList());
+            for (int i = 0; i < 10; i++)
+            {
+                GFFStruct entry = pazaakSideList.Add();
+                int card = 0;
+                if (state.PazaakSideList != null && i < state.PazaakSideList.Count)
+                {
+                    card = state.PazaakSideList[i];
+                }
+                entry.SetSingle("PT_PAZSIDECARD", (float)card);
+            }
+            
+            // PT_TUT_WND_SHOWN - Tutorial windows shown (array of 33 bytes)
+            if (state.TutorialWindowsShown != null)
+            {
+                byte[] tutArray = new byte[33];
+                for (int i = 0; i < 33 && i < state.TutorialWindowsShown.Count; i++)
+                {
+                    tutArray[i] = state.TutorialWindowsShown[i] ? (byte)1 : (byte)0;
+                }
+                root.SetBinary("PT_TUT_WND_SHOWN", tutArray);
+            }
+            
+            // PT_LAST_GUI_PNL - Last GUI panel (float)
+            root.SetSingle("PT_LAST_GUI_PNL", (float)state.LastGUIPanel);
+            
+            // PT_FB_MSG_LIST - Feedback message list
+            var fbMsgList = root.Acquire<GFFList>("PT_FB_MSG_LIST", new GFFList());
+            if (state.FeedbackMessages != null)
+            {
+                foreach (var msg in state.FeedbackMessages)
+                {
+                    GFFStruct entry = fbMsgList.Add();
+                    entry.SetString("PT_FB_MSG_MSG", msg.Message ?? "");
+                    entry.SetInt32("PT_FB_MSG_TYPE", msg.Type);
+                    entry.SetUInt8("PT_FB_MSG_COLOR", msg.Color);
+                }
+            }
+            
+            // PT_DLG_MSG_LIST - Dialogue message list
+            var dlgMsgList = root.Acquire<GFFList>("PT_DLG_MSG_LIST", new GFFList());
+            if (state.DialogueMessages != null)
+            {
+                foreach (var msg in state.DialogueMessages)
+                {
+                    GFFStruct entry = dlgMsgList.Add();
+                    entry.SetString("PT_DLG_MSG_SPKR", msg.Speaker ?? "");
+                    entry.SetString("PT_DLG_MSG_MSG", msg.Message ?? "");
+                }
+            }
+            
+            // PT_COM_MSG_LIST - Combat message list
+            var comMsgList = root.Acquire<GFFList>("PT_COM_MSG_LIST", new GFFList());
+            if (state.CombatMessages != null)
+            {
+                foreach (var msg in state.CombatMessages)
+                {
+                    GFFStruct entry = comMsgList.Add();
+                    entry.SetString("PT_COM_MSG_MSG", msg.Message ?? "");
+                    entry.SetInt32("PT_COM_MSG_TYPE", msg.Type);
+                    entry.SetUInt8("PT_COM_MSG_COOR", msg.Color);
+                }
+            }
+            
+            // PT_COST_MULT_LIST - Cost multiplier list
+            GFFList costMultList = root.Acquire<GFFList>("PT_COST_MULT_LIST", new GFFList());
+            if (state.CostMultipliers != null)
+            {
+                foreach (var mult in state.CostMultipliers)
+                {
+                    GFFStruct entry = costMultList.Add();
+                    entry.SetSingle("PT_COST_MULT_VALUE", mult);
+                }
+            }
+            
+            // PT_DISABLEMAP - Disable map flag (float)
+            root.SetSingle("PT_DISABLEMAP", state.DisableMap ? 1.0f : 0.0f);
+            
+            // PT_DISABLEREGEN - Disable regen flag (float)
+            root.SetSingle("PT_DISABLEREGEN", state.DisableRegen ? 1.0f : 0.0f);
 
             return gff.ToBytes();
+        }
+        
+        // Helper to get member ID from ResRef (would need actual implementation)
+        private float GetMemberId(string resRef)
+        {
+            // TODO: Map ResRef to member ID
+            return 0.0f;
         }
 
         // Deserialize party table from GFF format

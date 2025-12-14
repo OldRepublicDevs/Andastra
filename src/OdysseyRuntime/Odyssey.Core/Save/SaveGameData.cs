@@ -88,6 +88,41 @@ namespace Odyssey.Core.Save
         /// </summary>
         public string GameVersion { get; set; }
 
+        /// <summary>
+        /// Current area name (for display).
+        /// </summary>
+        public string CurrentAreaName { get; set; }
+
+        /// <summary>
+        /// Whether cheats were used.
+        /// </summary>
+        public bool CheatUsed { get; set; }
+
+        /// <summary>
+        /// Save slot number.
+        /// </summary>
+        public int SaveNumber { get; set; }
+
+        /// <summary>
+        /// Gameplay hint flag.
+        /// </summary>
+        public bool GameplayHint { get; set; }
+
+        /// <summary>
+        /// Story hint flags (10 flags).
+        /// </summary>
+        public List<bool> StoryHints { get; set; }
+
+        /// <summary>
+        /// Live content flags (bitmask).
+        /// </summary>
+        public List<bool> LiveContent { get; set; }
+
+        /// <summary>
+        /// Player character name.
+        /// </summary>
+        public string PlayerName { get; set; }
+
         public SaveGameData()
         {
             AreaStates = new Dictionary<string, AreaState>();
@@ -95,6 +130,8 @@ namespace Odyssey.Core.Save
             GameTime = new GameTime();
             GlobalVariables = new GlobalVariableState();
             PartyState = new PartyState();
+            StoryHints = new List<bool>();
+            LiveContent = new List<bool>();
         }
     }
 
@@ -247,20 +284,166 @@ namespace Odyssey.Core.Save
         public int Gold { get; set; }
 
         /// <summary>
-        /// Influence values (K2 only).
+        /// Influence values (K2 only, 12 entries).
         /// </summary>
-        public Dictionary<string, int> Influence { get; set; }
+        public List<int> Influence { get; set; }
 
         /// <summary>
         /// Current XP.
         /// </summary>
         public int ExperiencePoints { get; set; }
 
+        /// <summary>
+        /// Item component count.
+        /// </summary>
+        public int ItemComponent { get; set; }
+
+        /// <summary>
+        /// Item chemical count.
+        /// </summary>
+        public int ItemChemical { get; set; }
+
+        /// <summary>
+        /// Swoop race time 1.
+        /// </summary>
+        public int Swoop1 { get; set; }
+
+        /// <summary>
+        /// Swoop race time 2.
+        /// </summary>
+        public int Swoop2 { get; set; }
+
+        /// <summary>
+        /// Swoop race time 3.
+        /// </summary>
+        public int Swoop3 { get; set; }
+
+        /// <summary>
+        /// Total play time.
+        /// </summary>
+        public TimeSpan PlayTime { get; set; }
+
+        /// <summary>
+        /// Currently controlled NPC ID (-1 if none).
+        /// </summary>
+        public int ControlledNPC { get; set; }
+
+        /// <summary>
+        /// Solo mode flag.
+        /// </summary>
+        public bool SoloMode { get; set; }
+
+        /// <summary>
+        /// Cheat used flag.
+        /// </summary>
+        public bool CheatUsed { get; set; }
+
+        /// <summary>
+        /// Leader ResRef.
+        /// </summary>
+        public string LeaderResRef { get; set; }
+
+        /// <summary>
+        /// Puppet IDs.
+        /// </summary>
+        public List<uint> Puppets { get; set; }
+
+        /// <summary>
+        /// Available puppets (3 flags).
+        /// </summary>
+        public List<bool> AvailablePuppets { get; set; }
+
+        /// <summary>
+        /// Selectable puppets (3 flags).
+        /// </summary>
+        public List<bool> SelectablePuppets { get; set; }
+
+        /// <summary>
+        /// AI state.
+        /// </summary>
+        public int AIState { get; set; }
+
+        /// <summary>
+        /// Follow state.
+        /// </summary>
+        public int FollowState { get; set; }
+
+        /// <summary>
+        /// Galaxy map planet mask.
+        /// </summary>
+        public int GalaxyMapPlanetMask { get; set; }
+
+        /// <summary>
+        /// Galaxy map selected point.
+        /// </summary>
+        public int GalaxyMapSelectedPoint { get; set; }
+
+        /// <summary>
+        /// Pazaak cards (23 entries).
+        /// </summary>
+        public List<int> PazaakCards { get; set; }
+
+        /// <summary>
+        /// Pazaak side list (10 entries).
+        /// </summary>
+        public List<int> PazaakSideList { get; set; }
+
+        /// <summary>
+        /// Tutorial windows shown (33 flags).
+        /// </summary>
+        public List<bool> TutorialWindowsShown { get; set; }
+
+        /// <summary>
+        /// Last GUI panel.
+        /// </summary>
+        public int LastGUIPanel { get; set; }
+
+        /// <summary>
+        /// Feedback messages.
+        /// </summary>
+        public List<FeedbackMessage> FeedbackMessages { get; set; }
+
+        /// <summary>
+        /// Dialogue messages.
+        /// </summary>
+        public List<DialogueMessage> DialogueMessages { get; set; }
+
+        /// <summary>
+        /// Combat messages.
+        /// </summary>
+        public List<CombatMessage> CombatMessages { get; set; }
+
+        /// <summary>
+        /// Cost multipliers.
+        /// </summary>
+        public List<float> CostMultipliers { get; set; }
+
+        /// <summary>
+        /// Disable map flag.
+        /// </summary>
+        public bool DisableMap { get; set; }
+
+        /// <summary>
+        /// Disable regen flag.
+        /// </summary>
+        public bool DisableRegen { get; set; }
+
         public PartyState()
         {
             AvailableMembers = new Dictionary<string, PartyMemberState>();
             SelectedParty = new List<string>();
-            Influence = new Dictionary<string, int>();
+            Influence = new List<int>();
+            Puppets = new List<uint>();
+            AvailablePuppets = new List<bool>();
+            SelectablePuppets = new List<bool>();
+            PazaakCards = new List<int>();
+            PazaakSideList = new List<int>();
+            TutorialWindowsShown = new List<bool>();
+            FeedbackMessages = new List<FeedbackMessage>();
+            DialogueMessages = new List<DialogueMessage>();
+            CombatMessages = new List<CombatMessage>();
+            CostMultipliers = new List<float>();
+            ControlledNPC = -1;
         }
     }
 
@@ -503,5 +686,34 @@ namespace Odyssey.Core.Save
         /// When entry was added.
         /// </summary>
         public DateTime DateAdded { get; set; }
+    }
+
+    /// <summary>
+    /// Feedback message.
+    /// </summary>
+    public class FeedbackMessage
+    {
+        public string Message { get; set; }
+        public int Type { get; set; }
+        public byte Color { get; set; }
+    }
+
+    /// <summary>
+    /// Dialogue message.
+    /// </summary>
+    public class DialogueMessage
+    {
+        public string Speaker { get; set; }
+        public string Message { get; set; }
+    }
+
+    /// <summary>
+    /// Combat message.
+    /// </summary>
+    public class CombatMessage
+    {
+        public string Message { get; set; }
+        public int Type { get; set; }
+        public byte Color { get; set; }
     }
 }
