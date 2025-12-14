@@ -41,9 +41,13 @@ namespace Odyssey.Game.Core
         private K1EngineApi _engineApi;
         private NcsVm _vm;
 
-        // Menu
-        private MenuRenderer _menuRenderer;
+        // Menu - Simple MonoGame menu implementation
         private GameState _currentState = GameState.MainMenu;
+        private int _selectedMenuIndex = 0;
+        private string[] _menuItems = { "Start Game", "Options", "Exit" };
+        private Texture2D _menuTexture; // 1x1 white texture for drawing rectangles
+        private KeyboardState _previousMenuKeyboardState;
+        private MouseState _previousMenuMouseState;
 
         // Basic 3D rendering
         private BasicEffect _basicEffect;
@@ -115,17 +119,15 @@ namespace Odyssey.Game.Core
                 _font = null;
             }
 
-            // Create menu renderer
-            _menuRenderer = new MenuRenderer(GraphicsDevice, _font);
+            // Create 1x1 white texture for menu drawing
+            _menuTexture = new Texture2D(GraphicsDevice, 1, 1);
+            _menuTexture.SetData(new[] { Color.White });
 
-            // CRITICAL: Connect event handler BEFORE setting visible
-            _menuRenderer.MenuItemSelected += OnMenuItemSelected;
-            Console.WriteLine("[Odyssey] MenuItemSelected event handler connected");
+            // Initialize menu input states
+            _previousMenuKeyboardState = Keyboard.GetState();
+            _previousMenuMouseState = Mouse.GetState();
 
-            _menuRenderer.SetVisible(true);
-            Console.WriteLine($"[Odyssey] Menu renderer visible: {_menuRenderer.IsVisible}");
-
-            Console.WriteLine("[Odyssey] Menu renderer created and initialized");
+            Console.WriteLine("[Odyssey] Menu system initialized");
 
             // Initialize game rendering
             InitializeGameRendering();
@@ -161,18 +163,7 @@ namespace Odyssey.Game.Core
             // Update menu if visible
             if (_currentState == GameState.MainMenu)
             {
-                if (_menuRenderer != null)
-                {
-                    _menuRenderer.Update(gameTime, GraphicsDevice);
-                }
-                else
-                {
-                    // Log error only once per second to avoid spam
-                    if (gameTime.TotalGameTime.TotalSeconds % 1.0 < 0.016)
-                    {
-                        Console.WriteLine("[Odyssey] ERROR: Menu renderer is null in Update!");
-                    }
-                }
+                UpdateMainMenu(gameTime);
             }
 
             // Update game systems if in game
@@ -212,29 +203,180 @@ namespace Odyssey.Game.Core
             base.Draw(gameTime);
         }
 
-        private void OnMenuItemSelected(object sender, int menuIndex)
+        /// <summary>
+        /// Updates the main menu state and handles input.
+        /// Standard MonoGame menu implementation.
+        /// </summary>
+        private void UpdateMainMenu(GameTime gameTime)
         {
-            Console.WriteLine($"[Odyssey] ====== OnMenuItemSelected CALLED ======");
-            Console.WriteLine($"[Odyssey] Menu item {menuIndex} selected");
-            Console.WriteLine($"[Odyssey] Current game state: {_currentState}");
+            KeyboardState currentKeyboardState = Keyboard.GetState();
+            MouseState currentMouseState = Mouse.GetState();
 
+            // Keyboard navigation
+            if (IsKeyJustPressed(_previousMenuKeyboardState, currentKeyboardState, Keys.Up))
+            {
+                _selectedMenuIndex = (_selectedMenuIndex - 1 + _menuItems.Length) % _menuItems.Length;
+            }
+
+            if (IsKeyJustPressed(_previousMenuKeyboardState, currentKeyboardState, Keys.Down))
+            {
+                _selectedMenuIndex = (_selectedMenuIndex + 1) % _menuItems.Length;
+            }
+
+            // Select menu item
+            if (IsKeyJustPressed(_previousMenuKeyboardState, currentKeyboardState, Keys.Enter) ||
+                IsKeyJustPressed(_previousMenuKeyboardState, currentKeyboardState, Keys.Space))
+            {
+                HandleMenuSelection(_selectedMenuIndex);
+            }
+
+            // Mouse input
+            if (currentMouseState.LeftButton == ButtonState.Pressed &&
+                _previousMenuMouseState.LeftButton == ButtonState.Released)
+            {
+                Point mousePos = currentMouseState.Position;
+                int viewportWidth = GraphicsDevice.Viewport.Width;
+                int viewportHeight = GraphicsDevice.Viewport.Height;
+
+                // Calculate menu button positions
+                int centerX = viewportWidth / 2;
+                int startY = viewportHeight / 2 - 50;
+                int buttonHeight = 50;
+                int buttonSpacing = 10;
+
+                for (int i = 0; i < _menuItems.Length; i++)
+                {
+                    int buttonY = startY + i * (buttonHeight + buttonSpacing);
+                    Rectangle buttonRect = new Rectangle(centerX - 150, buttonY, 300, buttonHeight);
+
+                    if (buttonRect.Contains(mousePos))
+                    {
+                        _selectedMenuIndex = i;
+                        HandleMenuSelection(i);
+                        break;
+                    }
+                }
+            }
+
+            _previousMenuKeyboardState = currentKeyboardState;
+            _previousMenuMouseState = currentMouseState;
+        }
+
+        private bool IsKeyJustPressed(KeyboardState previous, KeyboardState current, Keys key)
+        {
+            return previous.IsKeyUp(key) && current.IsKeyDown(key);
+        }
+
+        private void HandleMenuSelection(int menuIndex)
+        {
             switch (menuIndex)
             {
                 case 0: // Start Game
-                    Console.WriteLine("[Odyssey] Calling StartGame()...");
                     StartGame();
                     break;
                 case 1: // Options
                     Console.WriteLine("[Odyssey] Options menu not implemented");
                     break;
                 case 2: // Exit
-                    Console.WriteLine("[Odyssey] Exiting game...");
                     Exit();
                     break;
-                default:
-                    Console.WriteLine($"[Odyssey] WARNING: Unknown menu index: {menuIndex}");
-                    break;
             }
+        }
+
+        /// <summary>
+        /// Draws the main menu using standard MonoGame practices.
+        /// Based on MonoGame best practices for menu rendering.
+        /// </summary>
+        private void DrawMainMenu(GameTime gameTime)
+        {
+            // Clear to dark background
+            GraphicsDevice.Clear(new Color(30, 30, 50, 255));
+
+            _spriteBatch.Begin();
+
+            int viewportWidth = GraphicsDevice.Viewport.Width;
+            int viewportHeight = GraphicsDevice.Viewport.Height;
+            int centerX = viewportWidth / 2;
+            int startY = viewportHeight / 2 - 50;
+            int buttonWidth = 300;
+            int buttonHeight = 50;
+            int buttonSpacing = 10;
+
+            // Draw title
+            string title = "Odyssey Engine";
+            if (_font != null)
+            {
+                Vector2 titleSize = _font.MeasureString(title);
+                Vector2 titlePos = new Vector2(centerX - titleSize.X / 2, startY - 100);
+                _spriteBatch.DrawString(_font, title, titlePos, Color.White);
+            }
+            else
+            {
+                // Draw title as a rectangle if no font
+                Rectangle titleRect = new Rectangle(centerX - 200, startY - 120, 400, 40);
+                _spriteBatch.Draw(_menuTexture, titleRect, Color.White);
+            }
+
+            // Draw menu items
+            for (int i = 0; i < _menuItems.Length; i++)
+            {
+                int buttonY = startY + i * (buttonHeight + buttonSpacing);
+                Rectangle buttonRect = new Rectangle(centerX - buttonWidth / 2, buttonY, buttonWidth, buttonHeight);
+
+                // Button color based on selection
+                Color buttonColor = (i == _selectedMenuIndex) ? new Color(100, 150, 255, 255) : new Color(60, 60, 100, 255);
+                Color borderColor = (i == _selectedMenuIndex) ? Color.White : new Color(150, 150, 150, 255);
+
+                // Draw button background
+                _spriteBatch.Draw(_menuTexture, buttonRect, buttonColor);
+
+                // Draw button border
+                int borderThickness = (i == _selectedMenuIndex) ? 3 : 2;
+                DrawRectangleBorder(_spriteBatch, buttonRect, borderThickness, borderColor);
+
+                // Draw button text
+                if (_font != null)
+                {
+                    Vector2 textSize = _font.MeasureString(_menuItems[i]);
+                    Vector2 textPos = new Vector2(
+                        buttonRect.X + (buttonRect.Width - textSize.X) / 2,
+                        buttonRect.Y + (buttonRect.Height - textSize.Y) / 2
+                    );
+                    _spriteBatch.DrawString(_font, _menuItems[i], textPos, Color.White);
+                }
+                else
+                {
+                    // Draw indicator for selected item if no font
+                    if (i == _selectedMenuIndex)
+                    {
+                        Rectangle indicatorRect = new Rectangle(buttonRect.X + 10, buttonRect.Y + buttonRect.Height / 2 - 5, 10, 10);
+                        _spriteBatch.Draw(_menuTexture, indicatorRect, Color.White);
+                    }
+                }
+            }
+
+            // Draw instructions
+            string instructions = "Use Arrow Keys or Mouse to navigate, Enter/Space to select";
+            if (_font != null)
+            {
+                Vector2 instSize = _font.MeasureString(instructions);
+                Vector2 instPos = new Vector2(centerX - instSize.X / 2, viewportHeight - 50);
+                _spriteBatch.DrawString(_font, instructions, instPos, new Color(150, 150, 150, 255));
+            }
+
+            _spriteBatch.End();
+        }
+
+        private void DrawRectangleBorder(SpriteBatch spriteBatch, Rectangle rect, int thickness, Color color)
+        {
+            // Top
+            spriteBatch.Draw(_menuTexture, new Rectangle(rect.X, rect.Y, rect.Width, thickness), color);
+            // Bottom
+            spriteBatch.Draw(_menuTexture, new Rectangle(rect.X, rect.Y + rect.Height - thickness, rect.Width, thickness), color);
+            // Left
+            spriteBatch.Draw(_menuTexture, new Rectangle(rect.X, rect.Y, thickness, rect.Height), color);
+            // Right
+            spriteBatch.Draw(_menuTexture, new Rectangle(rect.X + rect.Width - thickness, rect.Y, thickness, rect.Height), color);
         }
 
         private void StartGame()
@@ -272,10 +414,6 @@ namespace Odyssey.Game.Core
 
                 // Transition to in-game state
                 _currentState = GameState.InGame;
-                if (_menuRenderer != null)
-                {
-                    _menuRenderer.SetVisible(false);
-                }
 
                 Console.WriteLine("[Odyssey] Game started successfully");
             }
@@ -527,7 +665,14 @@ namespace Odyssey.Game.Core
 
                 if (meshData == null || meshData.VertexBuffer == null || meshData.IndexBuffer == null)
                 {
+                    // Skip rooms that failed to load - this is normal for some modules
                     continue;
+                }
+
+                // Validate mesh data before rendering
+                if (meshData.IndexCount < 3)
+                {
+                    continue; // Need at least one triangle
                 }
 
                 // Set up transform
@@ -542,6 +687,7 @@ namespace Odyssey.Game.Core
                 _basicEffect.Projection = _projectionMatrix;
                 _basicEffect.World = roomWorld;
                 _basicEffect.VertexColorEnabled = true;
+                _basicEffect.LightingEnabled = true; // Ensure lighting is enabled
 
                 // Draw the mesh
                 foreach (EffectPass pass in _basicEffect.CurrentTechnique.Passes)
@@ -746,6 +892,8 @@ namespace Odyssey.Game.Core
                 _basicEffect.View = _viewMatrix;
                 _basicEffect.Projection = _projectionMatrix;
                 _basicEffect.World = playerWorld;
+                _basicEffect.VertexColorEnabled = true;
+                _basicEffect.LightingEnabled = true; // Ensure lighting is enabled
                 _basicEffect.VertexColorEnabled = true;
 
                 foreach (EffectPass pass in _basicEffect.CurrentTechnique.Passes)
