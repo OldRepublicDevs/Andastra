@@ -19,7 +19,6 @@ namespace Odyssey.Stride.GUI
     /// Renders KOTOR GUI controls using Stride's UI system.
     /// Converts CSharpKOTOR.Resource.Generics.GUI controls to Stride UI elements.
     /// Base resolution: 640x480 (KOTOR standard), scaled to actual screen resolution.
-    /// Reference: vendor/KotOR.js GUI rendering, vendor/reone GUI system
     /// </summary>
     public class KotorGuiRenderer
     {
@@ -438,24 +437,12 @@ namespace Odyssey.Stride.GUI
 
         /// <summary>
         /// Creates a simple fallback UI that works without any external resources or fonts.
-        /// Uses system defaults and basic Stride UI elements.
+        /// Uses purely visual elements (colors, borders) to create an interactive UI.
+        /// This is GUARANTEED to work as it doesn't depend on font assets.
         /// </summary>
         public void CreateFallbackUI(int screenWidth, int screenHeight)
         {
-            Console.WriteLine("[KotorGuiRenderer] Creating fallback UI");
-
-            // Try to create a default font for text rendering
-            SpriteFont defaultFont = null;
-            try
-            {
-                defaultFont = CreateDefaultFont();
-                Console.WriteLine("[KotorGuiRenderer] Created default font for fallback UI");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"[KotorGuiRenderer] WARNING: Could not create default font: {ex.Message}");
-                Console.WriteLine("[KotorGuiRenderer] Fallback UI will use buttons without text labels");
-            }
+            Console.WriteLine("[KotorGuiRenderer] Creating visual-only fallback UI (no font dependency)");
 
             // Create root canvas
             _rootCanvas = new Canvas
@@ -469,7 +456,7 @@ namespace Odyssey.Stride.GUI
 
             // Create a centered panel/window
             float panelWidth = 400;
-            float panelHeight = 300;
+            float panelHeight = 350;
             float panelX = (screenWidth - panelWidth) / 2;
             float panelY = (screenHeight - panelHeight) / 2;
 
@@ -477,145 +464,123 @@ namespace Odyssey.Stride.GUI
             {
                 Width = panelWidth,
                 Height = panelHeight,
-                BackgroundColor = new Color(60, 60, 60, 255),
-                BorderColor = new Color(100, 100, 100, 255),
-                BorderThickness = new Thickness(2, 2, 2, 2),
+                BackgroundColor = new Color(40, 40, 50, 255),
+                BorderColor = new Color(100, 100, 120, 255),
+                BorderThickness = new Thickness(3, 3, 3, 3),
                 HorizontalAlignment = HorizontalAlignment.Left,
                 VerticalAlignment = VerticalAlignment.Top
             };
             mainPanel.SetCanvasRelativePosition(new Vector3(panelX, panelY, 0));
             _rootCanvas.Children.Add(mainPanel);
 
-            // Create a grid to hold title and buttons
+            // Create a grid to hold buttons
             var contentGrid = new Grid
             {
                 HorizontalAlignment = HorizontalAlignment.Stretch,
                 VerticalAlignment = VerticalAlignment.Stretch
             };
+            contentGrid.RowDefinitions.Add(new StripDefinition(StripType.Fixed, 80));  // Header
+            contentGrid.RowDefinitions.Add(new StripDefinition(StripType.Fixed, 20));  // Spacer
+            contentGrid.RowDefinitions.Add(new StripDefinition(StripType.Fixed, 60));  // New Game
+            contentGrid.RowDefinitions.Add(new StripDefinition(StripType.Fixed, 10));  // Spacer
+            contentGrid.RowDefinitions.Add(new StripDefinition(StripType.Fixed, 60));  // Load Game
+            contentGrid.RowDefinitions.Add(new StripDefinition(StripType.Fixed, 10));  // Spacer
+            contentGrid.RowDefinitions.Add(new StripDefinition(StripType.Fixed, 60));  // Options
+            contentGrid.RowDefinitions.Add(new StripDefinition(StripType.Fixed, 10));  // Spacer
+            contentGrid.RowDefinitions.Add(new StripDefinition(StripType.Fixed, 60));  // Exit
+            contentGrid.RowDefinitions.Add(new StripDefinition(StripType.Star, 1));    // Bottom space
 
-            // Create title text (only if we have a font)
-            if (defaultFont != null)
+            // Header panel (golden bar to represent title)
+            var headerPanel = new Border
             {
-                var titleText = new TextBlock
-                {
-                    Font = defaultFont,
-                    Text = "KOTOR Main Menu",
-                    TextColor = Color.White,
-                    TextSize = 24,
-                    HorizontalAlignment = HorizontalAlignment.Center,
-                    VerticalAlignment = VerticalAlignment.Top,
-                    Margin = new Thickness(0, 20, 0, 0)
-                };
-                contentGrid.Children.Add(titleText);
-            }
-
-            // Create a stack panel for buttons
-            var buttonPanel = new StackPanel
-            {
-                Orientation = Orientation.Vertical,
-                HorizontalAlignment = HorizontalAlignment.Center,
-                VerticalAlignment = VerticalAlignment.Center,
-                Margin = new Thickness(0, 60, 0, 0)
+                BackgroundColor = new Color(200, 150, 50, 255), // Gold
+                BorderColor = new Color(180, 130, 40, 255),
+                BorderThickness = new Thickness(2, 2, 2, 2),
+                Margin = new Thickness(20, 15, 20, 10),
+                HorizontalAlignment = HorizontalAlignment.Stretch,
+                VerticalAlignment = VerticalAlignment.Stretch
             };
+            headerPanel.SetGridRow(0);
+            contentGrid.Children.Add(headerPanel);
 
-            // Create buttons
-            var newGameButton = CreateFallbackButton("New Game", 200, 40, defaultFont);
+            // New Game button (green = start/go)
+            var newGameButton = CreateFallbackButton(new Color(40, 140, 40, 255), new Color(60, 180, 60, 255));
+            newGameButton.SetGridRow(2);
+            newGameButton.Margin = new Thickness(40, 5, 40, 5);
             newGameButton.Click += (sender, args) =>
             {
                 Console.WriteLine("[FallbackUI] New Game button clicked");
                 _guiManager.TriggerButtonClick("BTN_NEWGAME", null);
             };
-            buttonPanel.Children.Add(newGameButton);
+            contentGrid.Children.Add(newGameButton);
 
-            var loadGameButton = CreateFallbackButton("Load Game", 200, 40, defaultFont);
+            // Load Game button (blue = load/open)
+            var loadGameButton = CreateFallbackButton(new Color(40, 80, 140, 255), new Color(60, 100, 180, 255));
+            loadGameButton.SetGridRow(4);
+            loadGameButton.Margin = new Thickness(40, 5, 40, 5);
             loadGameButton.Click += (sender, args) =>
             {
                 Console.WriteLine("[FallbackUI] Load Game button clicked");
                 _guiManager.TriggerButtonClick("BTN_LOADGAME", null);
             };
-            buttonPanel.Children.Add(loadGameButton);
+            contentGrid.Children.Add(loadGameButton);
 
-            var optionsButton = CreateFallbackButton("Options", 200, 40, defaultFont);
+            // Options button (cyan = settings/configure)
+            var optionsButton = CreateFallbackButton(new Color(40, 120, 120, 255), new Color(60, 150, 150, 255));
+            optionsButton.SetGridRow(6);
+            optionsButton.Margin = new Thickness(40, 5, 40, 5);
             optionsButton.Click += (sender, args) =>
             {
                 Console.WriteLine("[FallbackUI] Options button clicked");
                 _guiManager.TriggerButtonClick("BTN_OPTIONS", null);
             };
-            buttonPanel.Children.Add(optionsButton);
+            contentGrid.Children.Add(optionsButton);
 
-            var exitButton = CreateFallbackButton("Exit", 200, 40, defaultFont);
+            // Exit button (red = stop/exit)
+            var exitButton = CreateFallbackButton(new Color(140, 40, 40, 255), new Color(180, 60, 60, 255));
+            exitButton.SetGridRow(8);
+            exitButton.Margin = new Thickness(40, 5, 40, 5);
             exitButton.Click += (sender, args) =>
             {
                 Console.WriteLine("[FallbackUI] Exit button clicked");
                 _guiManager.TriggerButtonClick("BTN_EXIT", null);
             };
-            buttonPanel.Children.Add(exitButton);
+            contentGrid.Children.Add(exitButton);
 
-            contentGrid.Children.Add(buttonPanel);
             mainPanel.Content = contentGrid;
 
             // Set the page
             var page = new UIPage { RootElement = _rootCanvas };
             _uiComponent.Page = page;
 
-            Console.WriteLine("[KotorGuiRenderer] Fallback UI created successfully");
+            Console.WriteLine("[KotorGuiRenderer] Visual-only fallback UI created successfully");
+            Console.WriteLine("[KotorGuiRenderer] UI Layout: Gold header, Green=New Game, Blue=Load Game, Cyan=Options, Red=Exit");
+            Console.WriteLine("[KotorGuiRenderer] No font dependency - purely visual color-coded buttons");
         }
 
         /// <summary>
-        /// Creates a default runtime font for the fallback UI.
-        /// Uses Stride's built-in font system to create a simple font.
+        /// Creates a simple visual button for the fallback UI (no text, color-coded).
         /// </summary>
-        private SpriteFont CreateDefaultFont()
-        {
-            // Create a simple runtime font using Stride's font system
-            // This creates a basic font that can render ASCII characters
-            var fontSystem = new RuntimeRasterizedSpriteFont();
-            fontSystem.Size = 16;
-            fontSystem.FontType = new RuntimeRasterizedSpriteFont.FontTypeSpecification
-            {
-                FontName = "Arial", // Try Arial first, fallback to system default
-                Style = Stride.Graphics.Font.FontStyle.Regular,
-                AntiAlias = true
-            };
-
-            // Build the font
-            fontSystem.CharacterRegions.Add(new CharacterRegion(' ', '~')); // ASCII printable range
-            fontSystem.Build(_graphicsDevice);
-
-            return fontSystem;
-        }
-
-        /// <summary>
-        /// Creates a simple button for the fallback UI.
-        /// </summary>
-        private Button CreateFallbackButton(string text, float width, float height, SpriteFont font)
+        private Button CreateFallbackButton(Color backgroundColor, Color innerColor)
         {
             var button = new Button
             {
-                Width = width,
-                Height = height,
-                BackgroundColor = new Color(80, 80, 120, 255),
-                HorizontalAlignment = HorizontalAlignment.Center,
-                VerticalAlignment = VerticalAlignment.Center,
-                Margin = new Thickness(0, 5, 0, 5)
+                BackgroundColor = backgroundColor,
+                HorizontalAlignment = HorizontalAlignment.Stretch,
+                VerticalAlignment = VerticalAlignment.Stretch
             };
 
-            // Only add text if we have a font
-            if (font != null)
+            // Inner border to make it visually distinct and clickable
+            var innerBorder = new Border
             {
-                var textBlock = new TextBlock
-                {
-                    Font = font,
-                    Text = text,
-                    TextColor = Color.White,
-                    TextSize = 16,
-                    TextAlignment = TextAlignment.Center,
-                    HorizontalAlignment = HorizontalAlignment.Center,
-                    VerticalAlignment = VerticalAlignment.Center
-                };
-                button.Content = textBlock;
-            }
-            // If no font, button will still be clickable but without text label
+                BackgroundColor = innerColor,
+                BorderColor = Color.White,
+                BorderThickness = new Thickness(2, 2, 2, 2),
+                Margin = new Thickness(8, 8, 8, 8),
+                HorizontalAlignment = HorizontalAlignment.Stretch,
+                VerticalAlignment = VerticalAlignment.Stretch
+            };
+            button.Content = innerBorder;
 
             return button;
         }
