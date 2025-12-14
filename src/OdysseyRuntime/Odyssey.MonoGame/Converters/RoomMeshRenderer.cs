@@ -77,22 +77,101 @@ namespace Odyssey.MonoGame.Converters
 
         /// <summary>
         /// Extracts basic geometry from MDL (simplified for quick demo).
+        /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/mdl/mdl_data.py
         /// </summary>
         private void ExtractBasicGeometry(MDL mdl, List<VertexPositionColor> vertices, List<int> indices)
         {
-            // This is a simplified extraction - for a full implementation, we'd need to:
-            // 1. Parse all nodes recursively
-            // 2. Handle transformations
-            // 3. Load textures and materials
-            // 4. Handle skin meshes, animations, etc.
+            if (mdl == null || mdl.Root == null)
+            {
+                CreatePlaceholderBox(vertices, indices);
+                return;
+            }
 
-            // For now, try to extract from the first available geometry
-            // This is a placeholder - actual MDL parsing is complex
-            // We'll render a simple placeholder box for now
+            // Extract geometry from all mesh nodes recursively
+            ExtractNodeGeometry(mdl.Root, Matrix.Identity, vertices, indices);
 
-            // Create a simple placeholder box (10x10x10 units)
-            // TODO: Replace with actual MDL geometry extraction
-            CreatePlaceholderBox(vertices, indices);
+            // If no geometry found, create placeholder
+            if (vertices.Count == 0 || indices.Count == 0)
+            {
+                CreatePlaceholderBox(vertices, indices);
+            }
+        }
+
+        /// <summary>
+        /// Recursively extracts geometry from MDL nodes.
+        /// </summary>
+        private void ExtractNodeGeometry(MDLNode node, Matrix parentTransform, List<VertexPositionColor> vertices, List<int> indices)
+        {
+            if (node == null)
+            {
+                return;
+            }
+
+            // Build node transform
+            Matrix nodeTransform = Matrix.Identity;
+            nodeTransform *= Matrix.CreateTranslation(node.Position.X, node.Position.Y, node.Position.Z);
+            nodeTransform *= Matrix.CreateScale(node.ScaleX, node.ScaleY, node.ScaleZ);
+            // Note: Orientation is a quaternion, but for quick demo we'll skip rotation
+            Matrix finalTransform = nodeTransform * parentTransform;
+
+            // Extract mesh geometry if present
+            if (node.Mesh != null)
+            {
+                ExtractMeshGeometry(node.Mesh, finalTransform, vertices, indices);
+            }
+
+            // Process children recursively
+            if (node.Children != null)
+            {
+                foreach (var child in node.Children)
+                {
+                    ExtractNodeGeometry(child, finalTransform, vertices, indices);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Extracts vertices and faces from an MDLMesh.
+        /// </summary>
+        private void ExtractMeshGeometry(MDLMesh mesh, Matrix transform, List<VertexPositionColor> vertices, List<int> indices)
+        {
+            if (mesh == null || mesh.Vertices == null || mesh.Faces == null)
+            {
+                return;
+            }
+
+            int baseVertexIndex = vertices.Count;
+            Color meshColor = Color.Gray;
+
+            // Transform and add vertices
+            foreach (var vertex in mesh.Vertices)
+            {
+                // Transform vertex position
+                var transformedPos = Microsoft.Xna.Framework.Vector3.Transform(
+                    new Microsoft.Xna.Framework.Vector3(vertex.X, vertex.Y, vertex.Z),
+                    transform
+                );
+                vertices.Add(new VertexPositionColor(transformedPos, meshColor));
+            }
+
+            // Add faces as indices
+            foreach (var face in mesh.Faces)
+            {
+                // MDL faces are 0-indexed in CSharpKOTOR
+                // Ensure indices are within valid range
+                int v1 = face.V1;
+                int v2 = face.V2;
+                int v3 = face.V3;
+
+                if (v1 >= 0 && v1 < mesh.Vertices.Count &&
+                    v2 >= 0 && v2 < mesh.Vertices.Count &&
+                    v3 >= 0 && v3 < mesh.Vertices.Count)
+                {
+                    indices.Add(baseVertexIndex + v1);
+                    indices.Add(baseVertexIndex + v2);
+                    indices.Add(baseVertexIndex + v3);
+                }
+            }
         }
 
         /// <summary>

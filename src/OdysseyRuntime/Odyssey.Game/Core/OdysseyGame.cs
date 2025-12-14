@@ -10,6 +10,9 @@ using Odyssey.Scripting.EngineApi;
 using Odyssey.Scripting.VM;
 using Odyssey.Core.Entities;
 using JetBrains.Annotations;
+using CSharpKOTOR.Common;
+using CSharpKOTOR.Installation;
+using CSharpKOTOR.Resources;
 using Game = Microsoft.Xna.Framework.Game;
 
 namespace Odyssey.Game.Core
@@ -478,9 +481,14 @@ namespace Odyssey.Game.Core
                 Odyssey.MonoGame.Converters.RoomMeshData meshData;
                 if (!_roomMeshes.TryGetValue(room.ModelName, out meshData))
                 {
-                    // For now, create a placeholder mesh
-                    // TODO: Load actual MDL model from module resources
-                    meshData = _roomRenderer.LoadRoomMesh(room.ModelName, null);
+                    // Try to load actual MDL model from module resources
+                    CSharpKOTOR.Formats.MDLData.MDL mdl = null;
+                    if (_session != null && _session.CurrentRuntimeModule != null)
+                    {
+                        mdl = LoadMDLModel(room.ModelName);
+                    }
+
+                    meshData = _roomRenderer.LoadRoomMesh(room.ModelName, mdl);
                     if (meshData != null)
                     {
                         _roomMeshes[room.ModelName] = meshData;
@@ -603,6 +611,56 @@ namespace Odyssey.Game.Core
             // This is a fallback - ideally we'd have a proper font file
             // For now, return null - text won't display but menu is still functional
             return null;
+        }
+
+        /// <summary>
+        /// Loads an MDL model from the current module.
+        /// </summary>
+        [CanBeNull]
+        private CSharpKOTOR.Formats.MDLData.MDL LoadMDLModel(string modelResRef)
+        {
+            if (string.IsNullOrEmpty(modelResRef) || _session == null)
+            {
+                return null;
+            }
+
+            try
+            {
+                // Get module from session - we need access to the CSharpKOTOR Module object
+                // For now, we'll need to store it or access it differently
+                // This is a simplified approach - in a full implementation, we'd cache the Module object
+                var moduleName = _session.CurrentModuleName;
+                if (string.IsNullOrEmpty(moduleName))
+                {
+                    return null;
+                }
+
+                // Create a temporary module to load the resource
+                // Note: This is inefficient - we should cache the Module object
+                var installation = new Installation(_settings.GamePath);
+                var module = new Module(moduleName, installation);
+                
+                var mdlResource = module.Resource(modelResRef, ResourceType.MDL);
+                if (mdlResource == null)
+                {
+                    return null;
+                }
+
+                var activePath = mdlResource.Activate();
+                if (string.IsNullOrEmpty(activePath))
+                {
+                    return null;
+                }
+
+                // Load MDL using ResourceAuto
+                var mdlData = ResourceAuto.LoadResource(activePath, ResourceType.MDL);
+                return mdlData as CSharpKOTOR.Formats.MDLData.MDL;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[Odyssey] Failed to load MDL model {modelResRef}: {ex.Message}");
+                return null;
+            }
         }
 
         /// <summary>
