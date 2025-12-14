@@ -186,17 +186,22 @@ Current focus for achieving first playable module.
 - [ ] Combat AI patterns
 - [ ] Heartbeat AI decisions
 
-### Phase 6: Party System
+### Phase 6: Party System (Foundation Complete)
 
 #### 6.1 Party Management
-- [ ] Party member addition/removal
-- [ ] Party member selection
-- [ ] Leader switching
-- [ ] Party inventory
+- [x] `PartySystem` core with PC and NPC management
+- [x] Party member addition/removal
+- [x] Available/selectable member tracking
+- [x] Party member selection (max 3 active)
+- [x] Leader switching/cycling
+- [x] Gold and XP management with distribution
+- [x] `PartyInventory` with stacking and events
+- [x] Influence system (K2)
 
 #### 6.2 Follower AI
+- [x] `PartyMember` with AI mode settings
+- [x] Formation positioning (basic)
 - [ ] Follow behavior
-- [ ] Formation positioning
 - [ ] Combat assistance
 - [ ] Script hooks
 
