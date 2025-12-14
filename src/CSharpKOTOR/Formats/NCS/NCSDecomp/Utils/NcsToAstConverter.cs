@@ -350,8 +350,15 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             int limit = Math.Min(endIdx, instructions.Count);
             int convertedCount = 0;
             int nullCount = 0;
+            int actionCount = 0;
             for (int i = startIdx; i < limit; i++)
             {
+                if (instructions[i].InsType == NCSInstructionType.ACTION)
+                {
+                    actionCount++;
+                    Console.Error.WriteLine($"DEBUG ConvertInstructionRangeToSubroutine: Found ACTION instruction at index {i}, pos={i}");
+                    JavaSystem.@out.Println($"DEBUG ConvertInstructionRangeToSubroutine: Found ACTION instruction at index {i}, pos={i}");
+                }
                 PCmd cmd = ConvertInstructionToCmd(ncs, instructions[i], i, instructions);
                 if (cmd != null)
                 {
@@ -367,6 +374,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
                     }
                 }
             }
+            Console.Error.WriteLine($"DEBUG ConvertInstructionRangeToSubroutine: Found {actionCount} ACTION instructions in range {startIdx}-{limit}");
+            JavaSystem.@out.Println($"DEBUG ConvertInstructionRangeToSubroutine: Found {actionCount} ACTION instructions in range {startIdx}-{limit}");
             JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Converted {convertedCount} commands, {nullCount} returned null (range {startIdx}-{limit})");
 
             sub.SetCommandBlock(cmdBlock);
@@ -582,15 +591,6 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
 
         private static AActionCmd ConvertActionCmd(NCSInstruction inst, int pos)
         {
-            AActionCmd actionCmd = new AActionCmd();
-            AActionCommand actionCommand = new AActionCommand();
-
-            actionCommand.SetAction(new TAction(pos, 0));
-            actionCommand.SetPos(new TIntegerConstant(Convert.ToString(pos, CultureInfo.InvariantCulture), pos, 0));
-
-            int typeVal = GetQualifier(inst.InsType);
-            actionCommand.SetType(new TIntegerConstant(Convert.ToString(typeVal, CultureInfo.InvariantCulture), pos, 0));
-
             int idVal = 0;
             int argCountVal = 0;
             if (inst.Args != null && inst.Args.Count >= 1)
@@ -601,6 +601,16 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
                     argCountVal = GetArgAsInt(inst, 1);
                 }
             }
+            Console.Error.WriteLine($"DEBUG ConvertActionCmd: pos={pos}, actionId={idVal}, argCount={argCountVal}");
+            JavaSystem.@out.Println($"DEBUG ConvertActionCmd: pos={pos}, actionId={idVal}, argCount={argCountVal}");
+            AActionCmd actionCmd = new AActionCmd();
+            AActionCommand actionCommand = new AActionCommand();
+
+            actionCommand.SetAction(new TAction(pos, 0));
+            actionCommand.SetPos(new TIntegerConstant(Convert.ToString(pos, CultureInfo.InvariantCulture), pos, 0));
+
+            int typeVal = GetQualifier(inst.InsType);
+            actionCommand.SetType(new TIntegerConstant(Convert.ToString(typeVal, CultureInfo.InvariantCulture), pos, 0));
 
             actionCommand.SetId(new TIntegerConstant(Convert.ToString(idVal, CultureInfo.InvariantCulture), pos, 0));
             actionCommand.SetArgCount(new TIntegerConstant(Convert.ToString(argCountVal, CultureInfo.InvariantCulture), pos, 0));
