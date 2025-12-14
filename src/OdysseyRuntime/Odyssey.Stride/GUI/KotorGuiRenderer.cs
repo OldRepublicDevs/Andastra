@@ -11,6 +11,7 @@ using Stride.UI.Panels;
 using CSharpKOTOR.Resource.Generics.GUI;
 using CSharpKOTOR.Resources;
 using Odyssey.Content.Interfaces;
+using Stride.Graphics.Font;
 
 namespace Odyssey.Stride.GUI
 {
@@ -443,6 +444,19 @@ namespace Odyssey.Stride.GUI
         {
             Console.WriteLine("[KotorGuiRenderer] Creating fallback UI");
 
+            // Try to create a default font for text rendering
+            SpriteFont defaultFont = null;
+            try
+            {
+                defaultFont = CreateDefaultFont();
+                Console.WriteLine("[KotorGuiRenderer] Created default font for fallback UI");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[KotorGuiRenderer] WARNING: Could not create default font: {ex.Message}");
+                Console.WriteLine("[KotorGuiRenderer] Fallback UI will use buttons without text labels");
+            }
+
             // Create root canvas
             _rootCanvas = new Canvas
             {
@@ -479,17 +493,21 @@ namespace Odyssey.Stride.GUI
                 VerticalAlignment = VerticalAlignment.Stretch
             };
 
-            // Create title text
-            var titleText = new TextBlock
+            // Create title text (only if we have a font)
+            if (defaultFont != null)
             {
-                Text = "KOTOR Main Menu",
-                TextColor = Color.White,
-                TextSize = 24,
-                HorizontalAlignment = HorizontalAlignment.Center,
-                VerticalAlignment = VerticalAlignment.Top,
-                Margin = new Thickness(0, 20, 0, 0)
-            };
-            contentGrid.Children.Add(titleText);
+                var titleText = new TextBlock
+                {
+                    Font = defaultFont,
+                    Text = "KOTOR Main Menu",
+                    TextColor = Color.White,
+                    TextSize = 24,
+                    HorizontalAlignment = HorizontalAlignment.Center,
+                    VerticalAlignment = VerticalAlignment.Top,
+                    Margin = new Thickness(0, 20, 0, 0)
+                };
+                contentGrid.Children.Add(titleText);
+            }
 
             // Create a stack panel for buttons
             var buttonPanel = new StackPanel
@@ -501,7 +519,7 @@ namespace Odyssey.Stride.GUI
             };
 
             // Create buttons
-            var newGameButton = CreateFallbackButton("New Game", 200, 40);
+            var newGameButton = CreateFallbackButton("New Game", 200, 40, defaultFont);
             newGameButton.Click += (sender, args) =>
             {
                 Console.WriteLine("[FallbackUI] New Game button clicked");
@@ -509,7 +527,7 @@ namespace Odyssey.Stride.GUI
             };
             buttonPanel.Children.Add(newGameButton);
 
-            var loadGameButton = CreateFallbackButton("Load Game", 200, 40);
+            var loadGameButton = CreateFallbackButton("Load Game", 200, 40, defaultFont);
             loadGameButton.Click += (sender, args) =>
             {
                 Console.WriteLine("[FallbackUI] Load Game button clicked");
@@ -517,7 +535,7 @@ namespace Odyssey.Stride.GUI
             };
             buttonPanel.Children.Add(loadGameButton);
 
-            var optionsButton = CreateFallbackButton("Options", 200, 40);
+            var optionsButton = CreateFallbackButton("Options", 200, 40, defaultFont);
             optionsButton.Click += (sender, args) =>
             {
                 Console.WriteLine("[FallbackUI] Options button clicked");
@@ -525,7 +543,7 @@ namespace Odyssey.Stride.GUI
             };
             buttonPanel.Children.Add(optionsButton);
 
-            var exitButton = CreateFallbackButton("Exit", 200, 40);
+            var exitButton = CreateFallbackButton("Exit", 200, 40, defaultFont);
             exitButton.Click += (sender, args) =>
             {
                 Console.WriteLine("[FallbackUI] Exit button clicked");
@@ -544,9 +562,33 @@ namespace Odyssey.Stride.GUI
         }
 
         /// <summary>
+        /// Creates a default runtime font for the fallback UI.
+        /// Uses Stride's built-in font system to create a simple font.
+        /// </summary>
+        private SpriteFont CreateDefaultFont()
+        {
+            // Create a simple runtime font using Stride's font system
+            // This creates a basic font that can render ASCII characters
+            var fontSystem = new RuntimeRasterizedSpriteFont();
+            fontSystem.Size = 16;
+            fontSystem.FontType = new RuntimeRasterizedSpriteFont.FontTypeSpecification
+            {
+                FontName = "Arial", // Try Arial first, fallback to system default
+                Style = Stride.Graphics.Font.FontStyle.Regular,
+                AntiAlias = true
+            };
+
+            // Build the font
+            fontSystem.CharacterRegions.Add(new CharacterRegion(' ', '~')); // ASCII printable range
+            fontSystem.Build(_graphicsDevice);
+
+            return fontSystem;
+        }
+
+        /// <summary>
         /// Creates a simple button for the fallback UI.
         /// </summary>
-        private Button CreateFallbackButton(string text, float width, float height)
+        private Button CreateFallbackButton(string text, float width, float height, SpriteFont font)
         {
             var button = new Button
             {
@@ -558,16 +600,22 @@ namespace Odyssey.Stride.GUI
                 Margin = new Thickness(0, 5, 0, 5)
             };
 
-            var textBlock = new TextBlock
+            // Only add text if we have a font
+            if (font != null)
             {
-                Text = text,
-                TextColor = Color.White,
-                TextSize = 16,
-                TextAlignment = TextAlignment.Center,
-                HorizontalAlignment = HorizontalAlignment.Center,
-                VerticalAlignment = VerticalAlignment.Center
-            };
-            button.Content = textBlock;
+                var textBlock = new TextBlock
+                {
+                    Font = font,
+                    Text = text,
+                    TextColor = Color.White,
+                    TextSize = 16,
+                    TextAlignment = TextAlignment.Center,
+                    HorizontalAlignment = HorizontalAlignment.Center,
+                    VerticalAlignment = VerticalAlignment.Center
+                };
+                button.Content = textBlock;
+            }
+            // If no font, button will still be clickable but without text label
 
             return button;
         }
