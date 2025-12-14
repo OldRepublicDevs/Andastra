@@ -153,12 +153,13 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
 
         public virtual string ToStringGlobals()
         {
-            string body = this.root.GetBody();
-            // Post-process to merge variable declarations with assignments into initializers
-            // Pattern: "int varName;\nvarName = value;" -> "int varName = value;"
-            return MergeGlobalInitializers(body);
+            // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptutils/SubScriptState.java:203-205
+            // Original: public String toStringGlobals() { return this.root.getBody(); }
+            return this.root.GetBody();
         }
         
+        // Removed MergeGlobalInitializers - not present in Java version
+        // The Java version simply returns root.getBody() without post-processing
         private string MergeGlobalInitializers(string code)
         {
             if (string.IsNullOrEmpty(code))
