@@ -1460,8 +1460,14 @@ namespace CSharpKOTOR.TSLPatcher
                     }
 
                     // Replace GFF field value with token reference
-                    modifyField.Value = new FieldValue2DAMemory(tokenIdToUse);
-                    _logFunc?.Invoke($"  [AddColumn Token] Replaced {modGff.SourceFile} {modifyField.Path} = {fieldValueStr} with 2DAMEMORY{tokenIdToUse}");
+                    // Since Value is read-only, we need to create a new ModifyFieldGFF and replace it in the list
+                    int modifierIndex = modGff.Modifiers.IndexOf(modifyField);
+                    if (modifierIndex >= 0)
+                    {
+                        var newModifyField = new ModifyFieldGFF(modifyField.Path, new FieldValue2DAMemory(tokenIdToUse), modifyField.Identifier);
+                        modGff.Modifiers[modifierIndex] = newModifyField;
+                        _logFunc?.Invoke($"  [AddColumn Token] Replaced {modGff.SourceFile} {modifyField.Path} = {fieldValueStr} with 2DAMEMORY{tokenIdToUse}");
+                    }
                 }
             }
 
@@ -1496,10 +1502,17 @@ namespace CSharpKOTOR.TSLPatcher
                         continue;
                     }
 
+                    // Cast to concrete type to access properties
+                    ChangeRow2DA changeRowMod = modifier as ChangeRow2DA;
+                    AddRow2DA addRowMod = modifier as AddRow2DA;
+                    Dictionary<int, RowValue> store2DA = changeRowMod?.Store2DA ?? addRowMod?.Store2DA;
+                    Dictionary<string, RowValue> cells = changeRowMod?.Cells ?? addRowMod?.Cells;
+                    string identifier = changeRowMod?.Identifier ?? addRowMod?.Identifier;
+
                     // First, process store_2da entries to add tokens to availableTokens
-                    if (modifier.Store2DA != null)
+                    if (store2DA != null)
                     {
-                        foreach (var kvp in modifier.Store2DA)
+                        foreach (var kvp in store2DA)
                         {
                             int tokenId = kvp.Key;
                             object rowValue = kvp.Value;
@@ -1508,13 +1521,13 @@ namespace CSharpKOTOR.TSLPatcher
                             if (rowValue is RowValueRowIndex)
                             {
                                 // For RowIndex, the stored value is the row index as a string
-                                if (modifier is AddRow2DA)
+                                if (addRowMod != null)
                                 {
                                     // For AddRow2DA with RowValueRowIndex, the row index isn't known until runtime
                                     // So we can't match it statically - skip this token for matching
                                     continue;
                                 }
-                                if (modifier is ChangeRow2DA changeRowMod && 
+                                if (changeRowMod != null && 
                                     changeRowMod.Target != null &&
                                     changeRowMod.Target.TargetType == TargetType.ROW_INDEX &&
                                     changeRowMod.Target.Value is int rowIndex)
@@ -1530,14 +1543,14 @@ namespace CSharpKOTOR.TSLPatcher
                             else if (rowValue is RowValueRowLabel rowLabel)
                             {
                                 // For RowLabel, we can match if we have the row label
-                                if (modifier is ChangeRow2DA changeRowMod && 
+                                if (changeRowMod != null && 
                                     changeRowMod.Target != null &&
                                     changeRowMod.Target.TargetType == TargetType.ROW_LABEL &&
                                     changeRowMod.Target.Value is string label)
                                 {
                                     storedValue = label;
                                 }
-                                else if (modifier is AddRow2DA addRowMod && !string.IsNullOrEmpty(addRowMod.RowLabel))
+                                else if (addRowMod != null && !string.IsNullOrEmpty(addRowMod.RowLabel))
                                 {
                                     storedValue = addRowMod.RowLabel;
                                 }
@@ -1554,10 +1567,10 @@ namespace CSharpKOTOR.TSLPatcher
 
                     // Now check cell values and replace with available tokens
                     // Only replace with tokens that have been stored in previous modifiers
-                    if (modifier.Cells != null)
+                    if (cells != null)
                     {
                         var cellsToUpdate = new Dictionary<string, RowValue>();
-                        foreach (var kvp in modifier.Cells)
+                        foreach (var kvp in cells)
                         {
                             string columnName = kvp.Key;
                             RowValue cellValue = kvp.Value;
@@ -1571,7 +1584,7 @@ namespace CSharpKOTOR.TSLPatcher
                                     // Replace with 2DAMEMORY token reference
                                     cellsToUpdate[columnName] = new RowValue2DAMemory(tokenId);
                                     replacementsMade++;
-                                    _logFunc?.Invoke($"  Replaced {mod2da.SourceFile} {modifier.Identifier} {columnName}={cellString} with 2DAMEMORY{tokenId}");
+                                    _logFunc?.Invoke($"  Replaced {mod2da.SourceFile} {identifier} {columnName}={cellString} with 2DAMEMORY{tokenId}");
                                 }
                             }
                         }
@@ -1579,7 +1592,7 @@ namespace CSharpKOTOR.TSLPatcher
                         // Apply updates
                         foreach (var kvp in cellsToUpdate)
                         {
-                            modifier.Cells[kvp.Key] = kvp.Value;
+                            cells[kvp.Key] = kvp.Value;
                         }
                     }
                 }
