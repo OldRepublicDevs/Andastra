@@ -523,7 +523,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
             if (earliestdec != -1)
             {
                 Node prev = NodeUtils.GetPreviousCommand(node, this.nodedata);
-                ACodeBlock block = new ACodeBlock(-1, this.nodedata.GetPos(prev));
+                ACodeBlock block = new ACodeBlock(-1, this.SafeGetPos(prev));
                 List<ScriptNode.ScriptNode> children = this.current.RemoveChildren(earliestdec);
                 this.current.AddChild(block);
                 block.AddChildren(children);
@@ -837,7 +837,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
 
                             targetNode.AddChild(areturn);
                         }
-                        else if (this.nodedata.GetPos(dest) >= this.nodedata.GetPos(node))
+                        else if (this.SafeGetPos(dest) >= this.SafeGetPos(node))
                         {
                             ScriptRootNode loop = this.GetBreakable();
                             if (typeof(ASwitchCase).IsInstanceOfType(loop))
