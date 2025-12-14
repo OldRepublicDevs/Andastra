@@ -98,6 +98,9 @@ namespace Odyssey.Stride.GUI
             // Texture.New2D<T>(GraphicsDevice, int, int, PixelFormat, T[], TextureFlags, GraphicsResourceUsage, TextureOptions)
             // Method signature: New2D<T>(GraphicsDevice device, int width, int height, PixelFormat format, T[] textureData, ...)
             // Each value in textureData is a pixel in the destination texture.
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.Color.html
+            // Color.White is a static property representing white color (R=255, G=255, B=255, A=255)
+            // Source: https://doc.stride3d.net/latest/en/manual/graphics/colors.html
             _whiteTexture = Texture.New2D(GraphicsDevice, 1, 1, PixelFormat.R8G8B8A8_UNorm, new[] { Color.White });
 
             Console.WriteLine("[FallbackMenuRenderer] SpriteBatch and white texture created successfully");
@@ -106,7 +109,9 @@ namespace Odyssey.Stride.GUI
         private void CalculateLayout(float screenWidth, float screenHeight)
         {
             // Calculate layout based on screen dimensions
-
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.Vector2.html
+            // Vector2(float x, float y) constructor creates a 2D vector with X and Y components
+            // Source: https://doc.stride3d.net/latest/en/manual/mathematics/index.html
             _screenCenter = new Vector2(screenWidth * 0.5f, screenHeight * 0.5f);
 
             // Main panel - 600x400, centered
@@ -114,10 +119,15 @@ namespace Odyssey.Stride.GUI
             float panelHeight = 400;
             float panelX = _screenCenter.X - panelWidth * 0.5f;
             float panelY = _screenCenter.Y - panelHeight * 0.5f;
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.RectangleF.html
+            // RectangleF(float x, float y, float width, float height) constructor creates a rectangle
+            // Source: https://doc.stride3d.net/latest/en/manual/mathematics/index.html
             _mainPanelRect = new RectangleF(panelX, panelY, panelWidth, panelHeight);
 
             // Header - golden bar at top of panel
             float headerHeight = 80;
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.RectangleF.html
+            // RectangleF(float x, float y, float width, float height) - same constructor as above
             _headerRect = new RectangleF(panelX + 30, panelY + 10, panelWidth - 60, headerHeight);
 
             // Buttons - evenly spaced below header
@@ -128,6 +138,8 @@ namespace Odyssey.Stride.GUI
             float startY = panelY + headerHeight + 30;
 
             // Start Game button (green)
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.RectangleF.html
+            // RectangleF(float x, float y, float width, float height) - same constructor as above
             _menuButtons[0] = new MenuButton(
                 new RectangleF(buttonX, startY, buttonWidth, buttonHeight),
                 _buttonStartColor,
@@ -283,7 +295,10 @@ namespace Odyssey.Stride.GUI
                     // Draw inner border highlight for selected button
                     // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Graphics.SpriteBatch.html
                     // Draw(Texture, RectangleF, Color) - Draws inner highlight with semi-transparent white
+                    // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.Color.html
+                    // Color(byte r, byte g, byte b, byte a) constructor creates a color from RGBA byte values (0-255)
                     // Color(255, 255, 255, 128) creates a 50% opacity white overlay
+                    // Source: https://doc.stride3d.net/latest/en/manual/graphics/colors.html
                     _spriteBatch.Draw(_whiteTexture, innerRect, new Color(255, 255, 255, 128));
                 }
             }
