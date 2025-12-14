@@ -29,6 +29,11 @@ namespace Odyssey.Core.Entities
         public ObjectType ObjectType { get; }
         public bool IsValid { get { return _isValid; } }
         public IWorld World { get; }
+        
+        /// <summary>
+        /// The resource reference of the template this entity was spawned from.
+        /// </summary>
+        public string TemplateResRef { get; set; }
 
         public T GetComponent<T>() where T : class, IComponent
         {

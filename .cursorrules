@@ -277,3 +277,129 @@ When working on Odyssey Engine code (anything in `src/OdysseyRuntime/`), AI agen
    - `Odyssey.Game` - Executable launcher
 
 5. **Maintain C# 7.3 Compatibility**: Even in OdysseyRuntime projects
+
+### Engine Implementation Guidelines
+
+**Module Loading Pipeline**:
+When implementing module loading:
+1. Parse IFO for module metadata (tag, name, entry location)
+2. Load ARE for area properties (ambient color, fog, grass)
+3. Parse LYT for room layout and doorhook positions
+4. Parse VIS for room visibility graph
+5. Load GIT for entity spawn lists
+6. Spawn entities from templates (UTC/UTP/UTD/etc.)
+
+**Entity System**:
+- Use `IEntityTemplate` for template loading from GFF
+- Templates provide `Spawn(IWorld, Vector3, float)` factory method
+- Components: `ITransformComponent`, `IRenderableComponent`, `IScriptHooksComponent`, `IStatsComponent`
+- Entity lifecycle: Spawn → Register → OnSpawn script → Update loop → OnDestroy script → Unregister
+
+**Script Event Order**:
+1. OnModuleLoad (module scripts)
+2. OnSpawn (per entity)
+3. OnEnter (triggers/areas)
+4. OnHeartbeat (6-second intervals)
+5. OnPerception (sight/sound detection)
+6. OnConversation, OnUsed, OnAttacked, etc.
+
+**Resource Precedence (Odyssey Standard)**:
+1. Override directory (loose files)
+2. Currently loaded module archives (MOD/RIM/ERF)
+3. Save overlay (when save is loaded)
+4. Texture packs (swpc_tex_*.erf)
+5. Chitin archives (KEY/BIF)
+6. Hardcoded defaults
+
+**Walkmesh Integration**:
+- Use `BWM` format from CSharpKOTOR
+- Surface materials define walkability (see surfacemat.2da)
+- Adjacency encoding: `neighbor_face * 3 + edge_index`
+- AABB tree for raycast acceleration
+- Hook vectors (USE1/USE2) for interaction points
+
+**Combat System (D20)**:
+- 3-second combat rounds
+- Attack roll: 1d20 + attack bonus vs defense
+- Damage: weapon damage + modifiers - damage reduction
+- Critical hits: natural 20 threatens, confirm with second roll
+- Effects have duration in rounds or permanent
+
+**Action Queue System**:
+- FIFO queue per entity
+- AssignCommand pushes to target's queue
+- DelayCommand uses time wheel (min-heap by execution time)
+- ActionDoCommand allows script execution as action
+- ClearAllActions clears queue except current
+
+**Dialogue System**:
+- DLG is a directed graph (entries are NPC lines, replies are PC choices)
+- Conditional scripts gate availability
+- Entry/reply scripts fire on selection
+- Camera switches between speaker/listener
+- VO plays from StreamVoice/StreamWaves, LIP provides lipsync
+
+### Aurora/Eclipse Engine Abstraction
+
+For future support of other Aurora-family engines:
+
+**Common Abstractions**:
+```csharp
+// Game-agnostic interfaces in Odyssey.Core
+public interface IGameProfile
+{
+    string GameId { get; }  // "k1", "k2", "nwn", "jade"
+    IEngineApi CreateEngineApi();
+    ITwoDARegistry GetTwoDARegistry();
+    ICombatRules GetCombatRules();
+}
+
+// Game-specific implementations
+// Odyssey.Kotor/K1Profile.cs
+// Odyssey.Kotor/K2Profile.cs
+// (future) Odyssey.Nwn/NwnProfile.cs
+```
+
+**Extensibility Points**:
+- `IEngineApi` - Game-specific NWScript functions
+- `ICombatRules` - Combat resolution differences
+- `ITwoDARegistry` - Game-specific data tables
+- `IResourceProvider` - Archive format differences
+
+**Engine Differences to Abstract**:
+| Feature | Odyssey (KOTOR) | Aurora (NWN) | Electron (Jade) |
+|---------|-----------------|--------------|-----------------|
+| Combat | Real-time w/pause | Real-time w/pause | Full real-time |
+| Party size | 3 | 4 (henchmen) | Variable |
+| Dialogue | Cinematic | Static camera | Cinematic |
+| Tilesets | No | Yes | No |
+
+### File Format Quick Reference
+
+**GFF-based Templates** (use `CSharpKOTOR.Formats.GFF`):
+- `UTC` - Creature template
+- `UTP` - Placeable template  
+- `UTD` - Door template
+- `UTT` - Trigger template
+- `UTW` - Waypoint template
+- `UTS` - Sound template
+- `UTE` - Encounter template
+- `UTI` - Item template
+- `DLG` - Dialogue tree
+- `ARE` - Area properties
+- `GIT` - Instance list
+- `IFO` - Module info
+
+**ASCII Formats**:
+- `LYT` - Room layout (rooms, doorhooks, tracks)
+- `VIS` - Visibility graph (room-to-room)
+- `TXI` - Texture properties
+- `2DA` - Data tables
+
+**Binary Formats**:
+- `MDL/MDX` - Models and vertex data
+- `TPC` - Compressed textures (DXT)
+- `BWM` - Walkmesh (WOK/PWK/DWK)
+- `NCS` - Compiled scripts
+- `LIP` - Lipsync keyframes
+- `WAV` - Audio

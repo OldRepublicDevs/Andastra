@@ -45,8 +45,11 @@ namespace Odyssey.Core.Enums
         // Door events
         OnOpen,
         OnClose,
+        OnClosed,
         OnFailToOpen,
         OnDoorClick,
+        OnLock,
+        OnUnlock,
         
         // Placeable events
         OnUsed,
