@@ -1830,6 +1830,30 @@ namespace Odyssey.Scripting.EngineApi
             return Variable.FromInt(0);
         }
 
+        private Variable Func_GetIsNPC(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            // GetIsNPC(object oCreature) - Returns TRUE if oCreature is an NPC (not a PC)
+            uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
+            IEntity entity = ResolveObject(objectId, ctx);
+            if (entity != null && entity.ObjectType == ObjectType.Creature)
+            {
+                // Check if entity is NOT the player entity
+                if (ctx is Odyssey.Scripting.VM.ExecutionContext execCtx && execCtx.AdditionalContext is Odyssey.Kotor.Game.GameServicesContext services)
+                {
+                    if (services.PlayerEntity == null || services.PlayerEntity.ObjectId != entity.ObjectId)
+                    {
+                        return Variable.FromInt(1); // Is NPC
+                    }
+                }
+                else
+                {
+                    // No player entity context, assume NPC if it's a creature
+                    return Variable.FromInt(1);
+                }
+            }
+            return Variable.FromInt(0);
+        }
+
         private Variable Func_GetPCSpeaker(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             // GetPCSpeaker() - Get the PC that is involved in the conversation
