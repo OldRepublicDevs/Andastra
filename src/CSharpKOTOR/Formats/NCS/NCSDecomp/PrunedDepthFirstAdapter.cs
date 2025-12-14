@@ -128,11 +128,16 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Analysis
         {
             this.InACommandBlock(node);
             Object[] temp = node.GetCmd().ToArray();
+            Console.Error.WriteLine($"DEBUG PrunedDepthFirstAdapter.CaseACommandBlock: Found {temp.Length} commands");
+            JavaSystem.@out.Println($"DEBUG PrunedDepthFirstAdapter.CaseACommandBlock: Found {temp.Length} commands");
 
             for (int i = 0; i < temp.Length; i++)
             {
                 if (temp[i] is PCmd cmd)
                 {
+                    string cmdType = cmd.GetType().Name;
+                    Console.Error.WriteLine($"DEBUG PrunedDepthFirstAdapter.CaseACommandBlock: Visiting command[{i}]={cmdType}");
+                    JavaSystem.@out.Println($"DEBUG PrunedDepthFirstAdapter.CaseACommandBlock: Visiting command[{i}]={cmdType}");
                     cmd.Apply(this);
                 }
             }
@@ -519,10 +524,21 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Analysis
 
         public override void CaseAActionCmd(AActionCmd node)
         {
+            Console.Error.WriteLine("DEBUG PrunedDepthFirstAdapter.CaseAActionCmd: ENTERED, actionCommand=" + (node.GetActionCommand() != null ? "not null" : "null"));
+            JavaSystem.@out.Println("DEBUG PrunedDepthFirstAdapter.CaseAActionCmd: ENTERED, actionCommand=" + (node.GetActionCommand() != null ? "not null" : "null"));
             this.InAActionCmd(node);
             if (node.GetActionCommand() != null)
             {
+                Console.Error.WriteLine("DEBUG PrunedDepthFirstAdapter.CaseAActionCmd: calling Apply on actionCommand");
+                JavaSystem.@out.Println("DEBUG PrunedDepthFirstAdapter.CaseAActionCmd: calling Apply on actionCommand");
                 node.GetActionCommand().Apply(this);
+                Console.Error.WriteLine("DEBUG PrunedDepthFirstAdapter.CaseAActionCmd: Apply completed");
+                JavaSystem.@out.Println("DEBUG PrunedDepthFirstAdapter.CaseAActionCmd: Apply completed");
+            }
+            else
+            {
+                Console.Error.WriteLine("DEBUG PrunedDepthFirstAdapter.CaseAActionCmd: actionCommand is null!");
+                JavaSystem.@out.Println("DEBUG PrunedDepthFirstAdapter.CaseAActionCmd: actionCommand is null!");
             }
 
             this.OutAActionCmd(node);
