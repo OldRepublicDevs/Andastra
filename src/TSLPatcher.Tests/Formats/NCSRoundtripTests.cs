@@ -732,21 +732,88 @@ namespace CSharpKOTOR.Tests.Formats
                     result.PcodeDiff = pcodeDiff;
                     result.BytecodeMatch = false;
 
+                    // Get action names for better debugging
+                    string originalAction = GetActionNameAtOffset(compiledFirst, bytecodeDiff.Offset, gameFlag);
+                    string roundTripAction = GetActionNameAtOffset(recompiled, bytecodeDiff.Offset, gameFlag);
+
                     StringBuilder errorMsg = new StringBuilder();
                     errorMsg.AppendLine("═══════════════════════════════════════════════════════════════");
-                    errorMsg.AppendLine("BYTECODE MISMATCH (PRIMARY FAILURE)");
+                    errorMsg.AppendLine($"BYTECODE MISMATCH: {displayRelPath}");
                     errorMsg.AppendLine("═══════════════════════════════════════════════════════════════");
-                    errorMsg.AppendLine($"Source: {DisplayPath(nssPath)}");
-                    errorMsg.AppendLine($"Original NCS: {DisplayPath(compiledFirst)}");
-                    errorMsg.AppendLine($"Recompiled NCS: {DisplayPath(recompiled)}");
                     errorMsg.AppendLine();
-                    errorMsg.AppendLine("FULL PCODE DIFF (UDIFF format):");
-                    errorMsg.AppendLine(pcodeDiff ?? "Unable to generate pcode diff");
-                    errorMsg.AppendLine();
-                    errorMsg.AppendLine("Byte-level diff:");
+                    errorMsg.AppendLine("LOCATION:");
                     errorMsg.AppendLine($"  Offset: {bytecodeDiff.Offset} (0x{bytecodeDiff.Offset:X})");
-                    errorMsg.AppendLine($"  Original: {FormatByteValue(bytecodeDiff.OriginalByte)}");
-                    errorMsg.AppendLine($"  Round-trip: {FormatByteValue(bytecodeDiff.RoundTripByte)}");
+                    errorMsg.Append("  Original: ").Append(FormatByteValue(bytecodeDiff.OriginalByte));
+                    if (!string.IsNullOrEmpty(originalAction))
+                    {
+                        errorMsg.Append(" → ").Append(originalAction);
+                    }
+                    errorMsg.AppendLine();
+                    errorMsg.Append("  Round-trip: ").Append(FormatByteValue(bytecodeDiff.RoundTripByte));
+                    if (!string.IsNullOrEmpty(roundTripAction))
+                    {
+                        errorMsg.Append(" → ").Append(roundTripAction);
+                    }
+                    errorMsg.AppendLine();
+                    errorMsg.AppendLine();
+                    errorMsg.AppendLine("FILES:");
+                    errorMsg.AppendLine($"  Original NCS: {DisplayPath(compiledFirst)}");
+                    errorMsg.AppendLine($"  Round-trip NCS: {DisplayPath(recompiled)}");
+                    if (File.Exists(decompiled))
+                    {
+                        errorMsg.AppendLine($"  Decompiled NSS: {DisplayPath(decompiled)}");
+                    }
+                    errorMsg.AppendLine();
+                    errorMsg.AppendLine("BYTECODE CONTEXT:");
+                    errorMsg.AppendLine($"  Original:  {bytecodeDiff.OriginalContext}");
+                    errorMsg.AppendLine($"  Round-trip: {bytecodeDiff.RoundTripContext}");
+                    errorMsg.AppendLine();
+                    errorMsg.AppendLine("FILE SIZES:");
+                    errorMsg.AppendLine($"  Original: {bytecodeDiff.OriginalLength} bytes");
+                    errorMsg.AppendLine($"  Round-trip: {bytecodeDiff.RoundTripLength} bytes");
+                    errorMsg.AppendLine();
+
+                    if (!string.IsNullOrEmpty(pcodeDiff))
+                    {
+                        errorMsg.AppendLine("P-CODE DIFF (first 50 lines):");
+                        string[] pcodeLines = pcodeDiff.Split(new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
+                        int showLines = Math.Min(50, pcodeLines.Length);
+                        for (int i = 0; i < showLines; i++)
+                        {
+                            errorMsg.AppendLine(pcodeLines[i]);
+                        }
+                        if (pcodeLines.Length > 50)
+                        {
+                            errorMsg.AppendLine($"... ({pcodeLines.Length - 50} more lines)");
+                        }
+                        errorMsg.AppendLine();
+                    }
+
+                    if (File.Exists(decompiled))
+                    {
+                        try
+                        {
+                            string decompiledContent = File.ReadAllText(decompiled, Encoding.UTF8);
+                            string[] decompiledLines = decompiledContent.Split(new[] { '\n', '\r' }, StringSplitOptions.None);
+                            errorMsg.AppendLine("DECOMPILED OUTPUT (first 30 lines):");
+                            int showLines = Math.Min(30, decompiledLines.Length);
+                            for (int i = 0; i < showLines; i++)
+                            {
+                                errorMsg.AppendLine($"{i + 1,4}: {decompiledLines[i]}");
+                            }
+                            if (decompiledLines.Length > 30)
+                            {
+                                errorMsg.AppendLine($"... ({decompiledLines.Length - 30} more lines)");
+                            }
+                            errorMsg.AppendLine();
+                        }
+                        catch (Exception ex)
+                        {
+                            errorMsg.AppendLine($"(Unable to read decompiled file: {ex.Message})");
+                            errorMsg.AppendLine();
+                        }
+                    }
+
                     errorMsg.AppendLine("═══════════════════════════════════════════════════════════════");
 
                     result.ErrorMessage = errorMsg.ToString();
@@ -2727,6 +2794,69 @@ namespace CSharpKOTOR.Tests.Formats
         }
 
         /// <summary>
+        /// Attempts to identify the action name at a given bytecode offset.
+        /// Returns null if unable to determine.
+        /// Matching Java implementation at vendor/DeNCS/src/test/java/com/kotor/resource/formats/ncs/NCSDecompCLIRoundTripTest.java:3656-3699
+        /// </summary>
+        private static string GetActionNameAtOffset(string ncsFile, long offset, string gameFlag)
+        {
+            try
+            {
+                byte[] bytes = File.ReadAllBytes(ncsFile);
+                int offsetInt = (int)offset;
+                if (offsetInt < 0 || offsetInt >= bytes.Length)
+                {
+                    return null;
+                }
+
+                // Action opcodes are typically at specific positions
+                // Look backwards for the action ID byte (usually 1-2 bytes before the action parameters)
+                // This is a heuristic - actual parsing would require full NCS structure analysis
+                if (offsetInt > 0 && (bytes[offsetInt] & 0xFF) < 200)
+                {
+                    // Likely an action ID - try to look it up
+                    int actionId = bytes[offsetInt] & 0xFF;
+                    try
+                    {
+                        string nwscriptPath = gameFlag.Equals("k2") ? K2Nwscript : K1Nwscript;
+                        if (File.Exists(nwscriptPath))
+                        {
+                            string content = File.ReadAllText(nwscriptPath, Encoding.UTF8);
+                            // Look for "// actionId:" pattern (with or without description)
+                            string pattern = "// " + actionId + ":";
+                            int idx = content.IndexOf(pattern);
+                            if (idx >= 0)
+                            {
+                                // Find the function signature after the comment
+                                // Format: "// 120: Description\n// ...\nvoid FunctionName(...);"
+                                int searchStart = idx + pattern.Length;
+                                int searchEnd = Math.Min(searchStart + 500, content.Length); // Look ahead up to 500 chars
+                                string section = content.Substring(searchStart, searchEnd - searchStart);
+
+                                // Look for function signature pattern: "void FunctionName" or "int FunctionName" etc.
+                                Regex funcPattern = new Regex(@"\b(void|int|float|string|object|location|effect|talent|action|itemproperty|vector)\s+(\w+)\s*\(");
+                                Match match = funcPattern.Match(section);
+                                if (match.Success)
+                                {
+                                    return match.Groups[2].Value; // Return function name
+                                }
+                            }
+                        }
+                    }
+                    catch
+                    {
+                        // Ignore lookup failures
+                    }
+                }
+            }
+            catch
+            {
+                // Ignore all errors
+            }
+            return null;
+        }
+
+        /// <summary>
         /// Formats NCS instructions as strings for pcode diff output.
         /// </summary>
         private static string FormatPcodeInstructions(NCS ncs)
@@ -2888,8 +3018,8 @@ namespace CSharpKOTOR.Tests.Formats
 
                         RoundTripResult result = RoundTripSingle(testCase.Item.Path, testCase.Item.GameFlag, testCase.Item.ScratchRoot);
                         
-                        // Show one-line summary
-                        string status = result.Passed ? "✓ PASS" : "✗ FAIL";
+                        // Show one-line summary (matching Java format: [testNum/total] path - STATUS)
+                        string status = result.Passed ? "PASS" : "FAIL";
                         string details = "";
                         if (!result.TextMatch && result.TextDiff != null)
                         {
@@ -2899,7 +3029,7 @@ namespace CSharpKOTOR.Tests.Formats
                         {
                             details += " [BYTECODE MISMATCH]";
                         }
-                        Console.WriteLine($"{status} {displayPath}{details}");
+                        Console.WriteLine($"[{_testsProcessed}/{_totalTests}] {displayPath} - {status}{details}");
 
                         // Show text diff if there's a mismatch (SECONDARY - warning only)
                         if (!result.TextMatch && result.TextDiff != null)
@@ -2934,11 +3064,11 @@ namespace CSharpKOTOR.Tests.Formats
                     }
                     catch (SourceCompilationException)
                     {
-                        Console.WriteLine($"⊘ SKIP {displayPath} (original source file has compilation errors)");
+                        Console.WriteLine($"[{_testsProcessed}/{_totalTests}] {displayPath} - SKIP (original source file has compilation errors)");
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine($"✗ FAIL {displayPath}");
+                        Console.WriteLine($"[{_testsProcessed}/{_totalTests}] {displayPath} - FAIL");
                         Console.Error.WriteLine();
                         Console.Error.WriteLine("═══════════════════════════════════════════════════════════");
                         Console.Error.WriteLine($"FAILURE: {testCase.DisplayName}");
