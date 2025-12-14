@@ -84,5 +84,24 @@ namespace CSharpKOTOR.Utility
                 return false;
             }
         }
+
+        // Matching PyKotor implementation at Libraries/Utility/src/utility/misc.py
+        // Original: def generate_hash(data: bytes) -> str:
+        /// <summary>
+        /// Generate SHA256 hash of data.
+        /// </summary>
+        public static string GenerateHash(byte[] data)
+        {
+            if (data == null || data.Length == 0)
+            {
+                return string.Empty;
+            }
+
+            using (System.Security.Cryptography.SHA256 sha256 = System.Security.Cryptography.SHA256.Create())
+            {
+                byte[] hashBytes = sha256.ComputeHash(data);
+                return BitConverter.ToString(hashBytes).Replace("-", "").ToLowerInvariant();
+            }
+        }
     }
 }
