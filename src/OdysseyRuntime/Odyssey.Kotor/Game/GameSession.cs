@@ -534,9 +534,10 @@ namespace Odyssey.Kotor.Game
                 _currentNavMesh = _moduleLoader.GetNavigationMesh();
 
                 // Set current module in world
+                IArea entryArea = null;
                 if (_currentRuntimeModule != null)
                 {
-                    IArea entryArea = _currentRuntimeModule.GetArea(_currentRuntimeModule.EntryArea);
+                    entryArea = _currentRuntimeModule.GetArea(_currentRuntimeModule.EntryArea);
                     if (entryArea != null && _world != null)
                     {
                         // Set current area in world
