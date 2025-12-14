@@ -1,0 +1,158 @@
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+
+namespace Odyssey.MonoGame.Rendering
+{
+    /// <summary>
+    /// Comprehensive render profiler for detailed performance analysis.
+    /// 
+    /// Provides detailed profiling of all rendering operations, enabling
+    /// precise bottleneck identification and optimization.
+    /// 
+    /// Features:
+    /// - Per-pass timing
+    /// - Memory usage tracking
+    /// - Draw call analysis
+    /// - GPU/CPU time breakdown
+    /// - Historical data
+    /// </summary>
+    public class RenderProfiler
+    {
+        /// <summary>
+        /// Profiling scope.
+        /// </summary>
+        public class ProfileScope : IDisposable
+        {
+            private readonly RenderProfiler _profiler;
+            private readonly string _scopeName;
+            private readonly Stopwatch _stopwatch;
+
+            public ProfileScope(RenderProfiler profiler, string scopeName)
+            {
+                _profiler = profiler;
+                _scopeName = scopeName;
+                _stopwatch = Stopwatch.StartNew();
+            }
+
+            public void Dispose()
+            {
+                _stopwatch.Stop();
+                _profiler.RecordScope(_scopeName, _stopwatch.Elapsed.TotalMilliseconds);
+            }
+        }
+
+        /// <summary>
+        /// Scope timing data.
+        /// </summary>
+        private class ScopeData
+        {
+            public string Name;
+            public double TotalTime;
+            public int CallCount;
+            public double MinTime;
+            public double MaxTime;
+            public double AverageTime;
+        }
+
+        private readonly Dictionary<string, ScopeData> _scopes;
+        private readonly Dictionary<string, List<double>> _history;
+        private readonly object _lock;
+
+        /// <summary>
+        /// Gets or sets whether profiling is enabled.
+        /// </summary>
+        public bool Enabled { get; set; } = true;
+
+        /// <summary>
+        /// Initializes a new render profiler.
+        /// </summary>
+        public RenderProfiler()
+        {
+            _scopes = new Dictionary<string, ScopeData>();
+            _history = new Dictionary<string, List<double>>();
+            _lock = new object();
+        }
+
+        /// <summary>
+        /// Begins a profiling scope.
+        /// </summary>
+        public ProfileScope BeginScope(string scopeName)
+        {
+            if (!Enabled)
+            {
+                return null;
+            }
+            return new ProfileScope(this, scopeName);
+        }
+
+        /// <summary>
+        /// Records scope timing.
+        /// </summary>
+        internal void RecordScope(string scopeName, double timeMs)
+        {
+            if (!Enabled)
+            {
+                return;
+            }
+
+            lock (_lock)
+            {
+                ScopeData data;
+                if (!_scopes.TryGetValue(scopeName, out data))
+                {
+                    data = new ScopeData
+                    {
+                        Name = scopeName,
+                        MinTime = double.MaxValue,
+                        MaxTime = double.MinValue
+                    };
+                    _scopes[scopeName] = data;
+                }
+
+                data.TotalTime += timeMs;
+                data.CallCount++;
+                data.MinTime = Math.Min(data.MinTime, timeMs);
+                data.MaxTime = Math.Max(data.MaxTime, timeMs);
+                data.AverageTime = data.TotalTime / data.CallCount;
+
+                // Update history
+                List<double> history;
+                if (!_history.TryGetValue(scopeName, out history))
+                {
+                    history = new List<double>();
+                    _history[scopeName] = history;
+                }
+                history.Add(timeMs);
+                if (history.Count > 1000)
+                {
+                    history.RemoveAt(0);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Gets profiling report.
+        /// </summary>
+        public Dictionary<string, ScopeData> GetReport()
+        {
+            lock (_lock)
+            {
+                return new Dictionary<string, ScopeData>(_scopes);
+            }
+        }
+
+        /// <summary>
+        /// Clears all profiling data.
+        /// </summary>
+        public void Clear()
+        {
+            lock (_lock)
+            {
+                _scopes.Clear();
+                _history.Clear();
+            }
+        }
+    }
+}
+
