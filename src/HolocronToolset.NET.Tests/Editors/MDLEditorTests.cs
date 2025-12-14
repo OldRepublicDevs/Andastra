@@ -60,14 +60,14 @@ namespace HolocronToolset.NET.Tests.Editors
             // Try to find an MDL file (MDL files require both .mdl and .mdx files)
             string mdlFile = null;
             string mdxFile = null;
-            
+
             // Look for common MDL files
             string[] commonMdlFiles = { "p_robe_01.mdl", "p_robe_02.mdl", "p_jedi_robe.mdl" };
             foreach (string mdlName in commonMdlFiles)
             {
                 string testMdlPath = System.IO.Path.Combine(testFilesDir, mdlName);
                 string testMdxPath = System.IO.Path.ChangeExtension(testMdlPath, ".mdx");
-                
+
                 if (System.IO.File.Exists(testMdlPath) && System.IO.File.Exists(testMdxPath))
                 {
                     mdlFile = testMdlPath;
@@ -82,12 +82,12 @@ namespace HolocronToolset.NET.Tests.Editors
                 testFilesDir = System.IO.Path.Combine(
                     System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
                     "..", "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
-                
+
                 foreach (string mdlName in commonMdlFiles)
                 {
                     string testMdlPath = System.IO.Path.Combine(testFilesDir, mdlName);
                     string testMdxPath = System.IO.Path.ChangeExtension(testMdlPath, ".mdx");
-                    
+
                     if (System.IO.File.Exists(testMdlPath) && System.IO.File.Exists(testMdxPath))
                     {
                         mdlFile = testMdlPath;

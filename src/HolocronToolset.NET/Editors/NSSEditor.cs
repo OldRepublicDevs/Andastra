@@ -49,7 +49,7 @@ namespace HolocronToolset.NET.Editors
             {
                 AvaloniaXamlLoader.Load(this);
                 xamlLoaded = true;
-                
+
                 // Try to find code editor from XAML
                 _codeEdit = this.FindControl<CodeEditor>("codeEdit");
             }
@@ -116,7 +116,7 @@ namespace HolocronToolset.NET.Editors
                         text = Encoding.GetEncoding("latin-1").GetString(data);
                     }
                 }
-                
+
                 if (_codeEdit != null)
                 {
                     _codeEdit.SetPlainText(text);
@@ -153,7 +153,7 @@ namespace HolocronToolset.NET.Editors
                     errorOccurred = true;
                     System.Console.WriteLine($"Decompilation/Download Failed: {ex.Message}");
                 }
-                
+
                 if (errorOccurred)
                 {
                     New();
@@ -183,7 +183,7 @@ namespace HolocronToolset.NET.Editors
                     System.Console.WriteLine($"Decompilation failed: {ex.Message}");
                 }
             }
-            
+
             // If decompilation fails, raise ValueError (matching Python behavior)
             throw new InvalidOperationException("Decompilation failed: decompile_ncs returned None");
         }
@@ -198,7 +198,7 @@ namespace HolocronToolset.NET.Editors
             }
 
             string text = _codeEdit.ToPlainText();
-            
+
             if (_restype == ResourceType.NCS)
             {
                 // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:2281-2291
@@ -233,7 +233,7 @@ namespace HolocronToolset.NET.Editors
                     data = Encoding.GetEncoding("latin-1").GetBytes(text);
                 }
             }
-            
+
             return Tuple.Create(data, new byte[0]);
         }
 

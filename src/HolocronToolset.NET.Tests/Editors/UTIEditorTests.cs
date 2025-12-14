@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using CSharpKOTOR.Formats.GFF;
 using CSharpKOTOR.Resource.Generics;
 using CSharpKOTOR.Resources;
@@ -109,14 +110,97 @@ namespace HolocronToolset.NET.Tests.Editors
             gff.Should().NotBeNull();
         }
 
-        [Fact(Skip = "Requires valid GFF data - will be enabled when test files are available")]
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_uti_editor.py:81-92
+        // Original: def test_save_and_load(self):
+        [Fact]
         public void TestUtiEditorSaveLoadRoundtrip()
         {
-            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_uti_editor.py
-            // Original: def test_uti_editor_save_load_roundtrip(qtbot, installation, test_files_dir):
-            // This test requires actual UTI test files - skipping for now
-            var editor = new UTIEditor(null, null);
-            editor.Should().NotBeNull();
+            // Get test files directory
+            string testFilesDir = System.IO.Path.Combine(
+                System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+
+            // Try to find baragwin.uti
+            string utiFile = System.IO.Path.Combine(testFilesDir, "baragwin.uti");
+            if (!System.IO.File.Exists(utiFile))
+            {
+                // Try alternative location
+                testFilesDir = System.IO.Path.Combine(
+                    System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                    "..", "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+                utiFile = System.IO.Path.Combine(testFilesDir, "baragwin.uti");
+            }
+
+            if (!System.IO.File.Exists(utiFile))
+            {
+                // Skip if test file not available
+                return;
+            }
+
+            // Get installation if available (K2 preferred for UTI files)
+            string k2Path = Environment.GetEnvironmentVariable("K2_PATH");
+            if (string.IsNullOrEmpty(k2Path))
+            {
+                k2Path = @"C:\Program Files (x86)\Steam\steamapps\common\Knights of the Old Republic II";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k2Path) && System.IO.File.Exists(System.IO.Path.Combine(k2Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k2Path, "Test Installation", tsl: true);
+            }
+            else
+            {
+                // Fallback to K1
+                string k1Path = Environment.GetEnvironmentVariable("K1_PATH");
+                if (string.IsNullOrEmpty(k1Path))
+                {
+                    k1Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor";
+                }
+
+                if (System.IO.Directory.Exists(k1Path) && System.IO.File.Exists(System.IO.Path.Combine(k1Path, "chitin.key")))
+                {
+                    installation = new HTInstallation(k1Path, "Test Installation", tsl: false);
+                }
+            }
+
+            if (installation == null)
+            {
+                // Skip if no installation available
+                return;
+            }
+
+            var editor = new UTIEditor(null, installation);
+            var logMessages = new List<string> { Environment.NewLine };
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_uti_editor.py:84
+            // Original: data = filepath.read_bytes()
+            byte[] data = System.IO.File.ReadAllBytes(utiFile);
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_uti_editor.py:85
+            // Original: old = read_gff(data)
+            var old = CSharpKOTOR.Formats.GFF.GFF.FromBytes(data);
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_uti_editor.py:86
+            // Original: self.editor.load(filepath, "baragwin", ResourceType.UTI, data)
+            editor.Load(utiFile, "baragwin", ResourceType.UTI, data);
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_uti_editor.py:88
+            // Original: data, _ = self.editor.build()
+            var (newData, _) = editor.Build();
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_uti_editor.py:89
+            // Original: new = read_gff(data)
+            var newGff = CSharpKOTOR.Formats.GFF.GFF.FromBytes(newData);
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_uti_editor.py:91
+            // Original: diff = old.compare(new, self.log_func, ignore_default_changes=True)
+            Action<string> logFunc = msg => logMessages.Add(msg);
+            bool diff = old.Compare(newGff, logFunc, path: null, ignoreDefaultChanges: true);
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_uti_editor.py:92
+            // Original: assert diff, os.linesep.join(self.log_messages)
+            diff.Should().BeTrue($"GFF comparison failed. Log messages: {string.Join(Environment.NewLine, logMessages)}");
         }
     }
 }

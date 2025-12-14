@@ -77,7 +77,7 @@ namespace HolocronToolset.NET.Tests.Editors
                 testFilesDir = System.IO.Path.Combine(
                     System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
                     "..", "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
-                
+
                 foreach (string nssName in commonNssFiles)
                 {
                     string testNssPath = System.IO.Path.Combine(testFilesDir, nssName);
@@ -144,7 +144,7 @@ namespace HolocronToolset.NET.Tests.Editors
             var (data, _) = editor.Build();
             data.Should().NotBeNull();
             data.Length.Should().BeGreaterThan(0);
-            
+
             // Verify the script content is in the data
             string dataText = Encoding.UTF8.GetString(data);
             dataText.Should().Contain("void main");

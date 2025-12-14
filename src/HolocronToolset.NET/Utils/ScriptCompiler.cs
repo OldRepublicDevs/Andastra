@@ -38,13 +38,13 @@ namespace HolocronToolset.NET.Utils
                 {
                     libraryLookup.Add(extractPath);
                 }
-                
+
                 NCS ncs = NCSAuto.CompileNss(source, game, null, null, libraryLookup);
                 if (ncs == null)
                 {
                     return null;
                 }
-                
+
                 return NCSAuto.BytesNcs(ncs);
             }
             catch (Exception ex)

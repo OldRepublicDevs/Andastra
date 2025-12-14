@@ -1,7 +1,8 @@
 using System;
+using System.IO;
 using Avalonia.Controls;
+using Avalonia.Layout;
 using Avalonia.Markup.Xaml;
-using CSharpKOTOR.Formats.WAV;
 using CSharpKOTOR.Resources;
 using HolocronToolset.NET.Data;
 
@@ -11,13 +12,21 @@ namespace HolocronToolset.NET.Editors
     // Original: class WAVEditor(Editor):
     public class WAVEditor : Editor
     {
-        private WAV _wav;
-        private Button _playButton;
-        private Button _stopButton;
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/wav.py:74-76
+        // Original: self._audio_data: bytes = b""
+        // Original: self._temp_file: str | None = None
+        // Original: self._detected_format: str = "Unknown"
+        private byte[] _audioData = new byte[0];
+        private string _tempFile = null;
+        private string _detectedFormat = "Unknown";
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/wav.py
         // Original: self.ui = Ui_Editor() - UI wrapper class exposing all controls
         public WAVEditorUi Ui { get; private set; }
+
+        // Public properties for testing (matching Python's public attributes)
+        public byte[] AudioData => _audioData;
+        public string DetectedFormat => _detectedFormat;
 
         public WAVEditor(Window parent = null, HTInstallation installation = null)
             : base(parent, "Audio Editor", "audio",
@@ -34,7 +43,18 @@ namespace HolocronToolset.NET.Editors
 
         private void InitializeComponent()
         {
-            if (!TryLoadXaml())
+            bool xamlLoaded = false;
+            try
+            {
+                AvaloniaXamlLoader.Load(this);
+                xamlLoaded = true;
+            }
+            catch
+            {
+                // XAML not available - will use programmatic UI
+            }
+
+            if (!xamlLoaded)
             {
                 SetupUI();
             }
@@ -42,23 +62,46 @@ namespace HolocronToolset.NET.Editors
 
         private void SetupUI()
         {
-            var panel = new StackPanel();
-            
-            // Create play/stop buttons
-            var buttonPanel = new StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal, Spacing = 5 };
-            _playButton = new Button { Content = "Play" };
-            _stopButton = new Button { Content = "Stop" };
-            buttonPanel.Children.Add(_playButton);
-            buttonPanel.Children.Add(_stopButton);
+            var panel = new StackPanel { Orientation = Orientation.Vertical };
+
+            // Create play/pause/stop buttons
+            var buttonPanel = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 5 };
+            var playButton = new Button { Content = "Play" };
+            var pauseButton = new Button { Content = "Pause" };
+            var stopButton = new Button { Content = "Stop" };
+            buttonPanel.Children.Add(playButton);
+            buttonPanel.Children.Add(pauseButton);
+            buttonPanel.Children.Add(stopButton);
             panel.Children.Add(buttonPanel);
-            
+
+            // Time slider
+            var timeSlider = new Slider { Minimum = 0, Maximum = 0, Value = 0 };
+            panel.Children.Add(timeSlider);
+
+            // Time labels
+            var timeLabelPanel = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 10 };
+            var currentTimeLabel = new TextBlock { Text = "00:00:00" };
+            var totalTimeLabel = new TextBlock { Text = "00:00:00" };
+            timeLabelPanel.Children.Add(currentTimeLabel);
+            timeLabelPanel.Children.Add(totalTimeLabel);
+            panel.Children.Add(timeLabelPanel);
+
+            // Format label
+            var formatLabel = new TextBlock { Text = "Format: -" };
+            panel.Children.Add(formatLabel);
+
             Content = panel;
 
             // Find controls from XAML if available
             try
             {
-                _playButton = this.FindControl<Button>("playButton") ?? _playButton;
-                _stopButton = this.FindControl<Button>("stopButton") ?? _stopButton;
+                playButton = this.FindControl<Button>("playButton") ?? playButton;
+                pauseButton = this.FindControl<Button>("pauseButton") ?? pauseButton;
+                stopButton = this.FindControl<Button>("stopButton") ?? stopButton;
+                timeSlider = this.FindControl<Slider>("timeSlider") ?? timeSlider;
+                currentTimeLabel = this.FindControl<TextBlock>("currentTimeLabel") ?? currentTimeLabel;
+                totalTimeLabel = this.FindControl<TextBlock>("totalTimeLabel") ?? totalTimeLabel;
+                formatLabel = this.FindControl<TextBlock>("formatLabel") ?? formatLabel;
             }
             catch
             {
@@ -68,34 +111,173 @@ namespace HolocronToolset.NET.Editors
             // Create UI wrapper for testing
             Ui = new WAVEditorUi
             {
-                PlayButton = _playButton,
-                StopButton = _stopButton
+                PlayButton = playButton,
+                PauseButton = pauseButton,
+                StopButton = stopButton,
+                TimeSlider = timeSlider,
+                CurrentTimeLabel = currentTimeLabel,
+                TotalTimeLabel = totalTimeLabel,
+                FormatLabel = formatLabel
             };
         }
 
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/wav.py:145-187
+        // Original: @staticmethod def detect_audio_format(data: bytes | bytearray) -> str:
+        public static string DetectAudioFormat(byte[] data)
+        {
+            if (data == null || data.Length < 4)
+            {
+                return ".wav";
+            }
+
+            // Check for MP3 signatures
+            // ID3 header (ID3v2 tags at start of MP3)
+            if (data.Length >= 3 && data[0] == (byte)'I' && data[1] == (byte)'D' && data[2] == (byte)'3')
+            {
+                return ".mp3";
+            }
+            // MP3 frame sync (0xFF 0xFB, 0xFF 0xFA, 0xFF 0xF3, 0xFF 0xF2)
+            if (data.Length >= 2 && data[0] == 0xFF && (data[1] & 0xE0) == 0xE0)
+            {
+                return ".mp3";
+            }
+            // LAME header
+            if (data.Length >= 4 && data[0] == (byte)'L' && data[1] == (byte)'A' && data[2] == (byte)'M' && data[3] == (byte)'E')
+            {
+                return ".mp3";
+            }
+
+            // Check for RIFF/WAVE
+            if (data.Length >= 4 && data[0] == (byte)'R' && data[1] == (byte)'I' && data[2] == (byte)'F' && data[3] == (byte)'F')
+            {
+                return ".wav";
+            }
+
+            // Check for OGG
+            if (data.Length >= 4 && data[0] == (byte)'O' && data[1] == (byte)'g' && data[2] == (byte)'g' && data[3] == (byte)'S')
+            {
+                return ".ogg";
+            }
+
+            // Check for FLAC
+            if (data.Length >= 4 && data[0] == (byte)'f' && data[1] == (byte)'L' && data[2] == (byte)'a' && data[3] == (byte)'C')
+            {
+                return ".flac";
+            }
+
+            // Default to wav
+            return ".wav";
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/wav.py:189-205
+        // Original: @staticmethod def get_format_name(extension: str) -> str:
+        public static string GetFormatName(string extension)
+        {
+            if (string.IsNullOrEmpty(extension))
+            {
+                return "Unknown";
+            }
+
+            string extLower = extension.ToLowerInvariant();
+            switch (extLower)
+            {
+                case ".wav":
+                    return "WAV (RIFF)";
+                case ".mp3":
+                    return "MP3";
+                case ".ogg":
+                    return "OGG Vorbis";
+                case ".flac":
+                    return "FLAC";
+                default:
+                    return "Unknown";
+            }
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/wav.py:211-236
+        // Original: def load(self, filepath: os.PathLike | str, resref: str, restype: ResourceType, data: bytes | bytearray) -> None:
         public override void Load(string filepath, string resref, ResourceType restype, byte[] data)
         {
             base.Load(filepath, resref, restype, data);
-            _wav = WAVAuto.ReadWav(data);
-            LoadWAV(_wav);
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/wav.py:228-230
+            // Original: data_bytes = bytes(data) if isinstance(data, bytearray) else data
+            // Original: self._audio_data = data_bytes
+            // Original: self._detected_format = self.get_format_name(self.detect_audio_format(data_bytes))
+            byte[] dataBytes = data ?? new byte[0];
+            _audioData = dataBytes;
+            _detectedFormat = GetFormatName(DetectAudioFormat(dataBytes));
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/wav.py:233
+            // Original: self.ui.formatLabel.setText(f"Format: {self._detected_format}")
+            if (Ui?.FormatLabel != null)
+            {
+                Ui.FormatLabel.Text = "Format: " + _detectedFormat;
+            }
         }
 
-        private void LoadWAV(WAV wav)
-        {
-            // Load WAV data into UI player
-        }
-
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/wav.py:238-244
+        // Original: def build(self) -> tuple[bytes, bytes]:
         public override Tuple<byte[], byte[]> Build()
         {
-            ResourceType wavType = _restype ?? ResourceType.WAV;
-            byte[] data = WAVAuto.BytesWav(_wav, wavType);
-            return Tuple.Create(data, new byte[0]);
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/wav.py:244
+            // Original: return self._audio_data, b""
+            return Tuple.Create(_audioData ?? new byte[0], new byte[0]);
         }
 
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/wav.py:246-262
+        // Original: def new(self) -> None:
         public override void New()
         {
             base.New();
-            _wav = new WAV();
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/wav.py:250-251
+            // Original: self._audio_data = b""
+            // Original: self._detected_format = "Unknown"
+            _audioData = new byte[0];
+            _detectedFormat = "Unknown";
+            CleanupTempFile();
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/wav.py:255-259
+            // Original: Reset UI
+            if (Ui != null)
+            {
+                if (Ui.CurrentTimeLabel != null)
+                {
+                    Ui.CurrentTimeLabel.Text = "00:00:00";
+                }
+                if (Ui.TotalTimeLabel != null)
+                {
+                    Ui.TotalTimeLabel.Text = "00:00:00";
+                }
+                if (Ui.TimeSlider != null)
+                {
+                    Ui.TimeSlider.Value = 0;
+                    Ui.TimeSlider.Maximum = 0;
+                }
+                if (Ui.FormatLabel != null)
+                {
+                    Ui.FormatLabel.Text = "Format: -";
+                }
+            }
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/wav.py:421-428
+        // Original: def _cleanup_temp_file(self) -> None:
+        private void CleanupTempFile()
+        {
+            if (!string.IsNullOrEmpty(_tempFile) && File.Exists(_tempFile))
+            {
+                try
+                {
+                    File.Delete(_tempFile);
+                }
+                catch
+                {
+                    // Ignore errors when deleting temp file
+                }
+            }
+            _tempFile = null;
         }
 
         public override void SaveAs()
@@ -109,6 +291,11 @@ namespace HolocronToolset.NET.Editors
     public class WAVEditorUi
     {
         public Button PlayButton { get; set; }
+        public Button PauseButton { get; set; }
         public Button StopButton { get; set; }
+        public Slider TimeSlider { get; set; }
+        public TextBlock CurrentTimeLabel { get; set; }
+        public TextBlock TotalTimeLabel { get; set; }
+        public TextBlock FormatLabel { get; set; }
     }
 }

@@ -210,7 +210,7 @@ namespace HolocronToolset.NET.Tests.Editors
             // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_2da_editor.py:116
             // Original: for twoda_resource in (resource for resource in self.installation if resource.restype() is ResourceType.TwoDA):
             var chitinResources = _installation.Installation.Resources.GetChitinResources();
-            var twodaResources = chitinResources.Where(r => r.ResourceType == ResourceType.TwoDA).ToList();
+            var twodaResources = chitinResources.Where(r => r.ResType == ResourceType.TwoDA).ToList();
 
             if (twodaResources.Count == 0)
             {
@@ -236,7 +236,7 @@ namespace HolocronToolset.NET.Tests.Editors
 
                 // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_2da_editor.py:118
                 // Original: self.editor.load(twoda_resource.filepath(), twoda_resource.resname(), twoda_resource.restype(), twoda_resource.data())
-                editor.Load(twodaResource.FilePath, twodaResource.ResRef, twodaResource.ResourceType, resourceData);
+                editor.Load(twodaResource.FilePath, twodaResource.ResName, twodaResource.ResType, resourceData);
 
                 // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_2da_editor.py:120
                 // Original: data, _ = self.editor.build()
@@ -252,7 +252,8 @@ namespace HolocronToolset.NET.Tests.Editors
 
                 // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_2da_editor.py:124
                 // Original: assert diff, os.linesep.join(self.log_messages)
-                diff.Should().BeTrue($"TwoDA comparison failed for {twodaResource.ResRef}.{twodaResource.ResourceType.Extension}. Log messages: {string.Join(Environment.NewLine, _logMessages)}");
+                string message = "TwoDA comparison failed for " + twodaResource.ResName + "." + twodaResource.ResType.Extension + ". Log messages: " + string.Join(Environment.NewLine, _logMessages);
+                diff.Should().BeTrue(message);
             }
         }
 
