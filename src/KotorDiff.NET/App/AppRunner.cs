@@ -45,20 +45,21 @@ namespace KotorDiff.NET.App
 
             try
             {
-                var comparison = ExecuteDiff(config);
+                var (comparison, exitCode) = ExecuteDiff(config);
 
                 if (profiler != null)
                 {
                     StopProfiler(profiler);
                 }
 
-                // Format and return final output
+                // Format and return final output (matching Python lines 618-631)
                 if (comparison.HasValue)
                 {
                     return FormatComparisonOutput(comparison.Value, config);
                 }
 
-                return 0;
+                // Matching Python line 631: return exit_code or 0
+                return exitCode ?? 0;
             }
             catch (OperationCanceledException)
             {
@@ -138,7 +139,13 @@ namespace KotorDiff.NET.App
 
         // Matching PyKotor implementation at vendor/PyKotor/Tools/KotorDiff/src/kotordiff/app.py:417-527
         // Original: def handle_diff(config: KotorDiffConfig) -> tuple[bool | None, int | None]: ...
-        private static bool? ExecuteDiff(KotorDiffConfig config)
+        /// <summary>
+        /// Handle N-way diff execution.
+        /// Returns: Tuple of (comparison_result, exit_code)
+        /// If comparison_result is not None, use that for final output
+        /// Otherwise use exit_code
+        /// </summary>
+        private static (bool? comparison, int? exitCode) ExecuteDiff(KotorDiffConfig config)
         {
             // Create modifications collection for INI generation
             var modificationsByType = ModificationsByType.CreateEmpty();
@@ -220,8 +227,11 @@ namespace KotorDiff.NET.App
                         DiffLogger.GetLogger()?.Error($"[Error] Failed to finalize TSLPatcher data: {genError.GetType().Name}: {genError.Message}");
                         DiffLogger.GetLogger()?.Debug("Full traceback:");
                         DiffLogger.GetLogger()?.Debug(genError.StackTrace);
-                        return null;
+                        // Matching Python line 506: return None, 1
+                        return (null, 1);
                     }
+                    // Matching Python line 508: return None, 0
+                    return (null, 0);
                 }
                 else if (!config.UseIncrementalWriter)
                 {
@@ -239,12 +249,16 @@ namespace KotorDiff.NET.App
                         DiffLogger.GetLogger()?.Error($"[Error] Failed to generate TSLPatcher data: {genError.GetType().Name}: {genError.Message}");
                         DiffLogger.GetLogger()?.Debug("Full traceback:");
                         DiffLogger.GetLogger()?.Debug(genError.StackTrace);
-                        return null;
+                        // Matching Python line 523: return None, 1
+                        return (null, 1);
                     }
+                    // Matching Python line 525: return None, 0
+                    return (null, 0);
                 }
             }
 
-            return comparison;
+            // Matching Python line 527: return comparison, None
+            return (comparison, null);
         }
 
         // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/application.py:261-340
