@@ -88,7 +88,7 @@ namespace Odyssey.Game.Core
 
         // KOTOR GUI System
         private KotorGuiManager _kotorGuiManager;
-        
+
         // Fallback menu renderer (SpriteBatch-based, no font dependency)
         private FallbackMenuRenderer _fallbackMenuRenderer;
 
@@ -207,7 +207,7 @@ namespace Odyssey.Game.Core
                     {
                         _mainMenu.IsVisible = true;
                     }
-                    
+
                     // Show fallback menu renderer if available
                     if (_fallbackMenuRenderer != null)
                     {
@@ -229,7 +229,7 @@ namespace Odyssey.Game.Core
                     {
                         _hud.IsVisible = true;
                     }
-                    
+
                     // Hide fallback menu when in game
                     if (_fallbackMenuRenderer != null)
                     {
@@ -535,7 +535,7 @@ namespace Odyssey.Game.Core
         private void CreateFallbackMainMenu()
         {
             Console.WriteLine("[Odyssey] Using SpriteBatch-based fallback menu renderer");
-            
+
             // The FallbackMenuRenderer is already created in SetupGraphicsCompositor
             // Just make sure it's visible
             if (_fallbackMenuRenderer != null)
@@ -548,10 +548,10 @@ namespace Odyssey.Game.Core
             {
                 Console.WriteLine("[Odyssey] ERROR: FallbackMenuRenderer not initialized!");
             }
-            
+
             // OLD UIComponent-based code removed - using SpriteBatch renderer instead
             return;
-            
+
             /*
             // OLD CODE BELOW - KEPT FOR REFERENCE BUT NOT USED
             // Create root canvas - full screen with a clear background to see if UI renders at all
@@ -695,14 +695,14 @@ namespace Odyssey.Game.Core
             Console.WriteLine("[Odyssey] ====================================");
             */
         }
-        
+
         /// <summary>
         /// Handles menu item selection from the fallback menu renderer.
         /// </summary>
         private void OnFallbackMenuItemSelected(object sender, int menuIndex)
         {
             Console.WriteLine($"[Odyssey] Fallback menu item {menuIndex} selected");
-            
+
             switch (menuIndex)
             {
                 case 0: // Start Game
@@ -942,10 +942,9 @@ namespace Odyssey.Game.Core
                 // Add the single render stage for 3D content and UI
                 var singleStageRenderer = new SingleStageRenderer();
                 sceneRenderer.Children.Add(singleStageRenderer);
-                
+
                 // Create and add fallback menu renderer (SpriteBatch-based, renders on top)
                 _fallbackMenuRenderer = new FallbackMenuRenderer();
-                _fallbackMenuRenderer.Services = Services; // Required for initialization
                 _fallbackMenuRenderer.MenuItemSelected += OnFallbackMenuItemSelected;
                 sceneRenderer.Children.Add(_fallbackMenuRenderer);
 
@@ -995,7 +994,7 @@ namespace Odyssey.Game.Core
             else if (_currentState == GameState.MainMenu)
             {
                 ProcessMainMenuInput();
-                
+
                 // Update fallback menu renderer input
                 if (_fallbackMenuRenderer != null && _fallbackMenuRenderer.IsVisible)
                 {
