@@ -58,9 +58,9 @@ namespace Odyssey.Content.MDL
         public MDLFastReader(string mdlPath, string mdxPath)
         {
             if (string.IsNullOrEmpty(mdlPath))
-                throw new ArgumentNullException("mdlPath");
+                throw new ArgumentNullException(nameof(mdlPath));
             if (string.IsNullOrEmpty(mdxPath))
-                throw new ArgumentNullException("mdxPath");
+                throw new ArgumentNullException(nameof(mdxPath));
 
             _mdlReader = new BinaryReader(
                 new BufferedStream(File.OpenRead(mdlPath), DEFAULT_BUFFER_SIZE),
@@ -82,9 +82,9 @@ namespace Odyssey.Content.MDL
         public MDLFastReader(byte[] mdlData, byte[] mdxData)
         {
             if (mdlData == null)
-                throw new ArgumentNullException("mdlData");
+                throw new ArgumentNullException(nameof(mdlData));
             if (mdxData == null)
-                throw new ArgumentNullException("mdxData");
+                throw new ArgumentNullException(nameof(mdxData));
 
             _mdlReader = new BinaryReader(new MemoryStream(mdlData, false), Encoding.ASCII);
             _mdxReader = new BinaryReader(new MemoryStream(mdxData, false), Encoding.ASCII);
@@ -103,9 +103,9 @@ namespace Odyssey.Content.MDL
         public MDLFastReader(Stream mdlStream, Stream mdxStream, bool ownsStreams = false)
         {
             if (mdlStream == null)
-                throw new ArgumentNullException("mdlStream");
+                throw new ArgumentNullException(nameof(mdlStream));
             if (mdxStream == null)
-                throw new ArgumentNullException("mdxStream");
+                throw new ArgumentNullException(nameof(mdxStream));
 
             _mdlReader = new BinaryReader(mdlStream, Encoding.ASCII, !ownsStreams);
             _mdxReader = new BinaryReader(mdxStream, Encoding.ASCII, !ownsStreams);
