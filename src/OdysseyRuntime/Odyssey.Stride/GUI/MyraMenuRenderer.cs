@@ -6,6 +6,7 @@ using Stride.Rendering.Compositing;
 using Stride.Games;
 using Stride.Core;
 using Stride.Core.Mathematics;
+using Stride.Input;
 using RenderContext = Stride.Rendering.RenderContext;
 using Myra.Graphics2D;
 
@@ -22,6 +23,20 @@ namespace Odyssey.Stride.GUI
     {
         private Desktop _desktop;
         private bool _isVisible = true;
+
+        // Button references for keyboard navigation
+        private Button _startButton;
+        private Button _optionsButton;
+        private Button _exitButton;
+        private int _selectedIndex = 0;
+
+        // Input debouncing
+        private float _keyRepeatTimer = 0f;
+        private const float KeyRepeatDelay = 0.15f; // 150ms delay between key repeats
+        private bool _upKeyWasDown = false;
+        private bool _downKeyWasDown = false;
+        private bool _enterKeyWasDown = false;
+        private bool _spaceKeyWasDown = false;
 
         // Menu action callback
         public event EventHandler<int> MenuItemSelected;
@@ -89,55 +104,55 @@ namespace Odyssey.Stride.GUI
             // Start Game button
             // Based on Myra API: Button with Click event handler
             // Source: https://github.com/rds1983/Myra/wiki/Button
-            var startButton = new Button
+            _startButton = new Button
             {
                 Content = new Label
                 {
                     Text = "Start Game"
                 }
             };
-            startButton.GridColumn = 1;
-            startButton.GridRow = 2;
-            startButton.Click += (s, a) =>
+            _startButton.GridColumn = 1;
+            _startButton.GridRow = 2;
+            _startButton.Click += (s, a) =>
             {
                 Console.WriteLine("[MyraMenuRenderer] Start Game clicked");
                 MenuItemSelected?.Invoke(this, 0);
             };
-            grid.Widgets.Add(startButton);
+            grid.Widgets.Add(_startButton);
 
             // Options button
-            var optionsButton = new Button
+            _optionsButton = new Button
             {
                 Content = new Label
                 {
                     Text = "Options"
                 }
             };
-            optionsButton.GridColumn = 1;
-            optionsButton.GridRow = 4;
-            optionsButton.Click += (s, a) =>
+            _optionsButton.GridColumn = 1;
+            _optionsButton.GridRow = 4;
+            _optionsButton.Click += (s, a) =>
             {
                 Console.WriteLine("[MyraMenuRenderer] Options clicked");
                 MenuItemSelected?.Invoke(this, 1);
             };
-            grid.Widgets.Add(optionsButton);
+            grid.Widgets.Add(_optionsButton);
 
             // Exit button
-            var exitButton = new Button
+            _exitButton = new Button
             {
                 Content = new Label
                 {
                     Text = "Exit"
                 }
             };
-            exitButton.GridColumn = 1;
-            exitButton.GridRow = 6;
-            exitButton.Click += (s, a) =>
+            _exitButton.GridColumn = 1;
+            _exitButton.GridRow = 6;
+            _exitButton.Click += (s, a) =>
             {
                 Console.WriteLine("[MyraMenuRenderer] Exit clicked");
                 MenuItemSelected?.Invoke(this, 2);
             };
-            grid.Widgets.Add(exitButton);
+            grid.Widgets.Add(_exitButton);
 
             // Create desktop with grid as root
             // Based on Myra API: Desktop is the root container for all UI widgets
@@ -180,6 +195,113 @@ namespace Odyssey.Stride.GUI
             // Source: https://github.com/rds1983/Myra/wiki/Desktop
             _desktop.Render();
         }
+
+        /// <summary>
+        /// Updates menu state based on input.
+        /// </summary>
+        // Update menu based on input
+        // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Input.InputManager.html
+        // InputManager provides access to input devices (keyboard, mouse, gamepad)
+        // Source: https://doc.stride3d.net/latest/en/manual/input/index.html
+        public void UpdateMenu(InputManager input, GameTime gameTime = null)
+        {
+            if (!_isVisible)
+                return;
+
+            // Get delta time for debouncing
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Games.GameTime.html
+            // GameTime.Elapsed property gets the elapsed time since the last frame
+            // TotalSeconds property gets the elapsed time in seconds as a double
+            // Source: https://doc.stride3d.net/latest/en/manual/game-loop/index.html
+            float deltaTime = gameTime != null ? (float)gameTime.Elapsed.TotalSeconds : 0.016f; // Default to ~60fps if no gameTime
+            _keyRepeatTimer += deltaTime;
+
+            // Handle keyboard navigation with debouncing
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Input.InputManager.html
+            // IsKeyPressed(Keys) checks if a key was just pressed this frame (returns true once per press)
+            // IsKeyDown(Keys) checks if a key is currently held down (returns true while key is pressed)
+            // Method signatures: bool IsKeyPressed(Keys key), bool IsKeyDown(Keys key)
+            // Keys enum defines keyboard key codes (Up, Down, Enter, Space, etc.)
+            // Source: https://doc.stride3d.net/latest/en/manual/input/keyboard.html
+            bool upPressed = input.IsKeyPressed(Keys.Up);
+            bool upDown = input.IsKeyDown(Keys.Up);
+            bool downPressed = input.IsKeyPressed(Keys.Down);
+            bool downDown = input.IsKeyDown(Keys.Down);
+            bool enterPressed = input.IsKeyPressed(Keys.Enter);
+            bool enterDown = input.IsKeyDown(Keys.Enter);
+            bool spacePressed = input.IsKeyPressed(Keys.Space);
+            bool spaceDown = input.IsKeyDown(Keys.Space);
+
+            // Handle Up key - move selection up
+            if (upPressed || (upDown && _upKeyWasDown && _keyRepeatTimer >= KeyRepeatDelay))
+            {
+                if (upPressed || _keyRepeatTimer >= KeyRepeatDelay)
+                {
+                    _selectedIndex = (_selectedIndex - 1 + 3) % 3; // 3 buttons: Start, Options, Exit
+                    UpdateButtonFocus();
+                    Console.WriteLine($"[MyraMenuRenderer] Selected index: {_selectedIndex}");
+                    _keyRepeatTimer = 0f; // Reset timer on selection change
+                }
+                _upKeyWasDown = true;
+            }
+            else
+            {
+                _upKeyWasDown = false;
+            }
+
+            // Handle Down key - move selection down
+            if (downPressed || (downDown && _downKeyWasDown && _keyRepeatTimer >= KeyRepeatDelay))
+            {
+                if (downPressed || _keyRepeatTimer >= KeyRepeatDelay)
+                {
+                    _selectedIndex = (_selectedIndex + 1) % 3; // 3 buttons: Start, Options, Exit
+                    UpdateButtonFocus();
+                    Console.WriteLine($"[MyraMenuRenderer] Selected index: {_selectedIndex}");
+                    _keyRepeatTimer = 0f; // Reset timer on selection change
+                }
+                _downKeyWasDown = true;
+            }
+            else
+            {
+                _downKeyWasDown = false;
+            }
+
+            // Handle Enter/Space - select menu item
+            if ((enterPressed && !_enterKeyWasDown) || (spacePressed && !_spaceKeyWasDown))
+            {
+                Console.WriteLine($"[MyraMenuRenderer] Menu item selected via keyboard: index {_selectedIndex}");
+                // Directly invoke MenuItemSelected event (same as button Click handler does)
+                MenuItemSelected?.Invoke(this, _selectedIndex);
+            }
+            _enterKeyWasDown = enterDown;
+            _spaceKeyWasDown = spaceDown;
+
+            // Reset timer if no keys are being held
+            if (!upDown && !downDown)
+            {
+                _keyRepeatTimer = 0f;
+            }
+        }
+
+        // Update visual focus of buttons based on selected index
+        // Based on Myra API: Button.HasFocus property controls keyboard focus
+        // Source: https://github.com/rds1983/Myra/wiki/Button
+        private void UpdateButtonFocus()
+        {
+            if (_startButton != null)
+            {
+                _startButton.HasFocus = (_selectedIndex == 0);
+            }
+            if (_optionsButton != null)
+            {
+                _optionsButton.HasFocus = (_selectedIndex == 1);
+            }
+            if (_exitButton != null)
+            {
+                _exitButton.HasFocus = (_selectedIndex == 2);
+            }
+        }
+
 
         public void SetVisible(bool visible)
         {
