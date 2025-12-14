@@ -8,6 +8,8 @@ using CSharpKOTOR.Mods;
 using CSharpKOTOR.Common;
 using CSharpKOTOR.Installation;
 using CSharpKOTOR.TSLPatcher;
+using CSharpKOTOR.Formats.Capsule;
+using CSharpKOTOR.Resources;
 using KotorDiff.NET.Resolution;
 using KotorDiff.NET.Cache;
 
@@ -1387,6 +1389,402 @@ namespace KotorDiff.NET.Diff
             {
                 incrementalWriter.AddInstallFile(destination, filename, file2Path);
             }
+        }
+
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/engine.py:2579-2624
+        // Original: def resolve_resource_with_installation(...): ...
+        private static Tuple<byte[], string, string> ResolveResourceWithInstallation(
+            Installation installation,
+            string resourceName,
+            ResourceType resourceType,
+            string moduleRoot = null,
+            InstallationLogger installationLogger = null)
+        {
+            try
+            {
+                if (installationLogger == null)
+                {
+                    installationLogger = new InstallationLogger();
+                }
+
+                installationLogger.Log($"Processing resource: {resourceName}.{resourceType.Extension}");
+                installationLogger.Log($"Resolving resource '{resourceName}.{resourceType.Extension}' in installation...");
+
+                var resourceResult = installation.Resource(resourceName, resourceType, moduleRoot: moduleRoot, logger: installationLogger);
+
+                if (resourceResult != null)
+                {
+                    string searchLog = installationLogger.GetResourceLog($"{resourceName}.{resourceType.Extension}");
+                    return Tuple.Create(resourceResult.Data, resourceResult.FilePath, searchLog);
+                }
+
+                installationLogger.Log($"Resource '{resourceName}.{resourceType.Extension}' not found in any location");
+                string notFoundLog = installationLogger.GetResourceLog($"{resourceName}.{resourceType.Extension}");
+                return Tuple.Create<byte[], string, string>(null, "Not found in installation", notFoundLog);
+            }
+            catch (Exception e)
+            {
+                string errorMsg = $"Error resolving resource: {e.GetType().Name}: {e.Message}";
+                if (installationLogger != null)
+                {
+                    installationLogger.Log(errorMsg);
+                    string searchLog = installationLogger.GetResourceLog($"{resourceName}.{resourceType.Extension}");
+                    installationLogger.Log("Full traceback:");
+                    installationLogger.Log($"  {e}");
+                    return Tuple.Create<byte[], string, string>(null, errorMsg, searchLog);
+                }
+                else
+                {
+                    Console.WriteLine("Full traceback:");
+                    Console.WriteLine($"  {e}");
+                    return Tuple.Create<byte[], string, string>(null, errorMsg, "");
+                }
+            }
+        }
+
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/engine.py:2758-2823
+        // Original: def process_container_resource(...): ...
+        private static Tuple<bool?, bool> ProcessContainerResource(
+            FileResource resource,
+            string containerPath,
+            Installation installation,
+            bool containerFirst,
+            string moduleRoot,
+            InstallationLogger installationLogger,
+            Action<string> logFunc,
+            Func<byte[], byte[], DiffContext, bool?> diffDataFunc)
+        {
+            string resname = resource.ResName();
+            ResourceType restype = resource.ResType();
+            string resourceIdentifier = $"{resname}.{restype.Extension}";
+
+            // Get resource data from container
+            byte[] containerData;
+            try
+            {
+                containerData = resource.Data();
+            }
+            catch (Exception e)
+            {
+                logFunc?.Invoke($"Error reading resource '{resourceIdentifier}' from container: {e.GetType().Name}: {e.Message}");
+                logFunc?.Invoke("Full traceback:");
+                logFunc?.Invoke($"  {e}");
+                return Tuple.Create<bool?, bool>(null, true);
+            }
+
+            // Resolve resource in installation
+            var resolveResult = ResolveResourceWithInstallation(
+                installation,
+                resname,
+                restype,
+                moduleRoot: moduleRoot,
+                installationLogger: installationLogger);
+            byte[] installationData = resolveResult.Item1;
+            string searchLog = resolveResult.Item3;
+
+            if (installationData == null)
+            {
+                logFunc?.Invoke($"Resource '{resourceIdentifier}' not found in installation - container only");
+                return Tuple.Create<bool?, bool>(false, true);
+            }
+
+            // Compare the resources
+            string containerName = Path.GetFileName(containerPath);
+            string containerRel = $"{containerName}/{resourceIdentifier}";
+            string installationRel = $"installation/{resourceIdentifier}";
+
+            try
+            {
+                bool? result;
+                if (containerFirst)
+                {
+                    var ctx = new DiffContext(containerRel, installationRel, restype.Extension.ToLowerInvariant());
+                    result = diffDataFunc(containerData, installationData, ctx);
+                }
+                else
+                {
+                    var ctx = new DiffContext(installationRel, containerRel, restype.Extension.ToLowerInvariant());
+                    result = diffDataFunc(installationData, containerData, ctx);
+                }
+
+                // Only show installation search logs if a diff was found
+                if (result == false && !string.IsNullOrEmpty(searchLog))
+                {
+                    logFunc?.Invoke(searchLog);
+                }
+                return Tuple.Create(result, true);
+            }
+            catch (Exception e)
+            {
+                logFunc?.Invoke($"Error comparing '{resourceIdentifier}': {e.GetType().Name}: {e.Message}");
+                logFunc?.Invoke("Full traceback:");
+                logFunc?.Invoke($"  {e}");
+                return Tuple.Create<bool?, bool>(null, true);
+            }
+        }
+
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/engine.py:2826-2886
+        // Original: def diff_container_vs_installation(...): ...
+        public static bool? DiffContainerVsInstallation(
+            string containerPath,
+            Installation installation,
+            bool containerFirst = true,
+            Action<string> logFunc = null,
+            Func<byte[], byte[], DiffContext, bool?> diffDataFunc = null)
+        {
+            if (logFunc == null)
+            {
+                logFunc = Console.WriteLine;
+            }
+            if (diffDataFunc == null)
+            {
+                diffDataFunc = (a, b, ctx) => DiffData(a, b, ctx);
+            }
+
+            string containerName = Path.GetFileName(containerPath);
+            logFunc($"Comparing container '{containerName}' against installation resolution...");
+
+            // Determine composite loading strategy
+            var compositeResult = ModuleHelpers.DetermineCompositeLoading(containerPath);
+            bool useComposite = compositeResult.Item1;
+            var relatedFiles = compositeResult.Item2;
+            string moduleRoot = compositeResult.Item3;
+
+            if (useComposite)
+            {
+                logFunc($"Found {relatedFiles.Count} related module files for '{moduleRoot}': [{string.Join(", ", relatedFiles.Select(Path.GetFileName))}]");
+            }
+
+            // Load the container
+            CompositeModuleCapsule containerCapsule = null;
+            Capsule singleCapsule = null;
+            if (useComposite)
+            {
+                try
+                {
+                    containerCapsule = new CompositeModuleCapsule(new FileInfo(containerPath));
+                }
+                catch (Exception e)
+                {
+                    logFunc($"Error loading container '{containerPath}': {e.GetType().Name}: {e.Message}");
+                    logFunc("Full traceback:");
+                    logFunc($"  {e}");
+                    return null;
+                }
+            }
+            else
+            {
+                try
+                {
+                    singleCapsule = new Capsule(containerPath);
+                }
+                catch (Exception e)
+                {
+                    logFunc($"Error loading container '{containerPath}': {e.GetType().Name}: {e.Message}");
+                    logFunc("Full traceback:");
+                    logFunc($"  {e}");
+                    return null;
+                }
+            }
+
+            // Create installation logger to capture search output
+            var installationLogger = new InstallationLogger();
+
+            // Process all resources
+            bool? isSameResult = true;
+            int totalResources = 0;
+            int comparedResources = 0;
+
+            // Determine module root for resource resolution
+            string resolutionModuleRoot = null;
+            if (DiffEngineUtils.IsCapsuleFile(Path.GetFileName(containerPath)))
+            {
+                var containerDir = new DirectoryInfo(Path.GetDirectoryName(containerPath));
+                if (containerDir.Name.ToLowerInvariant() != "rims")
+                {
+                    resolutionModuleRoot = DiffEngineUtils.GetModuleRoot(containerPath);
+                    logFunc($"Constraining search to module root '{resolutionModuleRoot}'");
+                }
+            }
+
+            IEnumerable<FileResource> resources = useComposite ? containerCapsule : singleCapsule;
+            foreach (var resource in resources)
+            {
+                totalResources++;
+
+                var processResult = ProcessContainerResource(
+                    resource,
+                    containerPath,
+                    installation,
+                    containerFirst: containerFirst,
+                    moduleRoot: resolutionModuleRoot,
+                    installationLogger: installationLogger,
+                    logFunc: logFunc,
+                    diffDataFunc: diffDataFunc);
+
+                bool? result = processResult.Item1;
+                bool shouldContinue = processResult.Item2;
+
+                if (result == null)
+                {
+                    isSameResult = null;
+                }
+                else if (result == false)
+                {
+                    isSameResult = false;
+                }
+
+                if (shouldContinue)
+                {
+                    comparedResources++;
+                }
+            }
+
+            logFunc($"Container comparison complete: {comparedResources}/{totalResources} resources processed");
+            return isSameResult;
+        }
+
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/engine.py:2889-2955
+        // Original: def diff_resource_vs_installation(...): ...
+        public static bool? DiffResourceVsInstallation(
+            string resourcePath,
+            Installation installation,
+            bool resourceFirst = true,
+            Action<string> logFunc = null,
+            Func<byte[], byte[], DiffContext, bool?> diffDataFunc = null)
+        {
+            if (logFunc == null)
+            {
+                logFunc = Console.WriteLine;
+            }
+            if (diffDataFunc == null)
+            {
+                diffDataFunc = (a, b, ctx) => DiffData(a, b, ctx);
+            }
+
+            string resourceName = Path.GetFileName(resourcePath);
+            logFunc($"Comparing resource '{resourceName}' against installation resolution...");
+
+            // Read the standalone resource
+            byte[] resourceData;
+            try
+            {
+                resourceData = File.ReadAllBytes(resourcePath);
+            }
+            catch (Exception e)
+            {
+                logFunc($"Error reading resource file '{resourcePath}': {e.GetType().Name}: {e.Message}");
+                logFunc("Full traceback:");
+                logFunc($"  {e}");
+                return null;
+            }
+
+            // Parse resource name and type
+            string namePart;
+            ResourceType resourceType;
+            string ext = Path.GetExtension(resourcePath).TrimStart('.').ToLowerInvariant();
+            if (string.IsNullOrEmpty(ext))
+            {
+                logFunc($"Cannot determine resource type for: {resourceName}");
+                return false;
+            }
+
+            try
+            {
+                resourceType = ResourceType.FromExtension(ext);
+                namePart = Path.GetFileNameWithoutExtension(resourcePath);
+            }
+            catch
+            {
+                logFunc($"Unknown resource type extension: {ext}");
+                return false;
+            }
+
+            // Create installation logger
+            var installationLogger = new InstallationLogger();
+
+            // Resolve the resource in the installation
+            var resolveResult = ResolveResourceWithInstallation(
+                installation,
+                namePart,
+                resourceType,
+                installationLogger: installationLogger);
+            byte[] installationData = resolveResult.Item1;
+            string searchLog = resolveResult.Item3;
+
+            if (installationData == null)
+            {
+                logFunc($"Resource '{resourceName}' not found in installation");
+                return false;
+            }
+
+            // Perform the comparison
+            string resourceRel = resourceName;
+            string installationRel = $"installation/{resourceName}";
+
+            bool? result;
+            if (resourceFirst)
+            {
+                var ctx = new DiffContext(resourceRel, installationRel, ext);
+                result = diffDataFunc(resourceData, installationData, ctx);
+            }
+            else
+            {
+                var ctx = new DiffContext(installationRel, resourceRel, ext);
+                result = diffDataFunc(installationData, resourceData, ctx);
+            }
+
+            // Only show installation search logs if a diff was found
+            if (result == false && !string.IsNullOrEmpty(searchLog))
+            {
+                logFunc(searchLog);
+            }
+
+            return result;
+        }
+
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/engine.py:3025-3056
+        // Original: def handle_special_comparisons(...): ...
+        public static bool? HandleSpecialComparisons(
+            string mine,
+            string older,
+            Installation installation1,
+            Installation installation2,
+            List<string> filters,
+            Func<string, Installation, bool, Action<string>, Func<byte[], byte[], DiffContext, bool?>, bool?> diffContainerVsInstallationFunc,
+            Func<string, Installation, bool, Action<string>, Func<byte[], byte[], DiffContext, bool?>, bool?> diffResourceVsInstallationFunc,
+            Func<Installation, Installation, List<string>, bool?> diffInstallsWithObjectsFunc)
+        {
+            var mineInfo = new FileInfo(mine);
+            var olderInfo = new FileInfo(older);
+
+            // Handle container vs installation comparison
+            if (mineInfo.Exists && DiffEngineUtils.IsCapsuleFile(mineInfo.Name) && installation2 != null)
+            {
+                return diffContainerVsInstallationFunc(mine, installation2, containerFirst: true, logFunc: null, diffDataFunc: null);
+            }
+            if (installation1 != null && olderInfo.Exists && DiffEngineUtils.IsCapsuleFile(olderInfo.Name))
+            {
+                return diffContainerVsInstallationFunc(older, installation1, containerFirst: false, logFunc: null, diffDataFunc: null);
+            }
+
+            // Handle single resource vs installation comparison
+            if (mineInfo.Exists && !DiffEngineUtils.IsCapsuleFile(mineInfo.Name) && installation2 != null)
+            {
+                return diffResourceVsInstallationFunc(mine, installation2, resourceFirst: true, logFunc: null, diffDataFunc: null);
+            }
+            if (installation1 != null && olderInfo.Exists && !DiffEngineUtils.IsCapsuleFile(olderInfo.Name))
+            {
+                return diffResourceVsInstallationFunc(older, installation1, resourceFirst: false, logFunc: null, diffDataFunc: null);
+            }
+
+            // Handle installation vs installation comparison
+            if (installation1 != null && installation2 != null)
+            {
+                return diffInstallsWithObjectsFunc(installation1, installation2, filters);
+            }
+
+            return null; // Indicates no special case was handled
         }
     }
 }
