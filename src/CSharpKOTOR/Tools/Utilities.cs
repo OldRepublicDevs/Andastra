@@ -62,7 +62,7 @@ namespace CSharpKOTOR.Tools
 
                 if (!string.IsNullOrEmpty(outputPath))
                 {
-                    File.WriteAllText(outputPath, result, Encoding.UTF8);
+                    File.WriteAllText(outputPath, result, System.Text.Encoding.UTF8);
                 }
 
                 return result;
@@ -94,7 +94,7 @@ namespace CSharpKOTOR.Tools
 
                 if (!string.IsNullOrEmpty(outputPath))
                 {
-                    File.WriteAllText(outputPath, result, Encoding.UTF8);
+                    File.WriteAllText(outputPath, result, System.Text.Encoding.UTF8);
                 }
 
                 return result;
@@ -125,7 +125,7 @@ namespace CSharpKOTOR.Tools
 
                 if (!string.IsNullOrEmpty(outputPath))
                 {
-                    File.WriteAllText(outputPath, result, Encoding.UTF8);
+                    File.WriteAllText(outputPath, result, System.Text.Encoding.UTF8);
                 }
 
                 return result;
@@ -155,7 +155,7 @@ namespace CSharpKOTOR.Tools
 
             if (!string.IsNullOrEmpty(outputPath))
             {
-                File.WriteAllText(outputPath, result, Encoding.UTF8);
+                File.WriteAllText(outputPath, result, System.Text.Encoding.UTF8);
             }
 
             return result;
@@ -194,7 +194,7 @@ namespace CSharpKOTOR.Tools
 
             try
             {
-                using (var reader = new StreamReader(filePath, Encoding.UTF8, true))
+                using (var reader = new StreamReader(filePath, System.Text.Encoding.UTF8, true))
                 {
                     int lineNum = 1;
                     string line;
@@ -213,7 +213,7 @@ namespace CSharpKOTOR.Tools
             {
                 // Try binary search
                 byte[] data = File.ReadAllBytes(filePath);
-                byte[] searchBytes = Encoding.UTF8.GetBytes(caseSensitive ? pattern : pattern.ToLowerInvariant());
+                byte[] searchBytes = System.Text.Encoding.UTF8.GetBytes(caseSensitive ? pattern : pattern.ToLowerInvariant());
                 if (ContainsBytes(data, searchBytes))
                 {
                     matches.Add((0, $"Pattern found in binary file: {Path.GetFileName(filePath)}"));
@@ -476,7 +476,11 @@ namespace CSharpKOTOR.Tools
                 lines.Add(string.Join("\t", twoda.Headers));
                 foreach (var row in twoda.Rows)
                 {
-                    var values = twoda.Headers.Select(header => row.ContainsKey(header) ? row[header]?.ToString() ?? "" : "").ToList();
+                    var values = twoda.Headers.Select(header => 
+                    {
+                        try { return row.GetString(header) ?? ""; }
+                        catch { return ""; }
+                    }).ToList();
                     lines.Add(string.Join("\t", values));
                 }
             }
@@ -559,3 +563,4 @@ namespace CSharpKOTOR.Tools
         }
     }
 }
+

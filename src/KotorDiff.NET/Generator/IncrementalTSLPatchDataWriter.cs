@@ -13,6 +13,7 @@ using CSharpKOTOR.Formats.LIP;
 using CSharpKOTOR.Formats.SSF;
 using CSharpKOTOR.Formats.TLK;
 using CSharpKOTOR.Formats.TwoDA;
+using CSharpKOTOR.Resources;
 using CSharpKOTOR.Mods;
 using CSharpKOTOR.Mods.GFF;
 using CSharpKOTOR.Mods.NCS;

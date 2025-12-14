@@ -39,6 +39,25 @@ namespace CSharpKOTOR.Formats.SSF
             var writer = new SSFBinaryWriter(ssf);
             return writer.Write();
         }
+
+        /// <summary>
+        /// Reads an SSF file from a file path or byte array.
+        /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/ssf/ssf_auto.py
+        /// </summary>
+        public static SSF ReadSsf(object source)
+        {
+            if (source is string filepath)
+            {
+                var reader = new SSFBinaryReader(filepath);
+                return reader.Load();
+            }
+            if (source is byte[] data)
+            {
+                var reader = new SSFBinaryReader(data);
+                return reader.Load();
+            }
+            throw new ArgumentException("Source must be string or byte[]");
+        }
     }
 }
 

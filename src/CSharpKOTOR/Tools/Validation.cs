@@ -32,14 +32,14 @@ namespace CSharpKOTOR.Tools
             foreach (string texName in textureNames)
             {
                 var resId = new ResourceIdentifier(texName, ResourceType.TXI);
-                var locations = installation.Inner.Resources.Locations(new[] { resId }, searchLocations);
+                var locations = installation.Inner.Locations(new List<ResourceIdentifier> { resId }, searchLocations);
                 var foundPaths = new List<string>();
 
                 foreach (var kvp in locations)
                 {
                     foreach (var loc in kvp.Value)
                     {
-                        string filePath = loc.Filepath ?? loc.FilePath;
+                        string filePath = loc.FilePath;
                         if (!string.IsNullOrEmpty(filePath) && !foundPaths.Contains(filePath))
                         {
                             foundPaths.Add(filePath);
@@ -63,14 +63,14 @@ namespace CSharpKOTOR.Tools
             }
 
             var resId = new ResourceIdentifier(twodaName, ResourceType.TwoDA);
-            var locations = installation.Inner.Resources.Locations(new[] { resId }, searchLocations);
+            var locations = installation.Inner.Locations(new List<ResourceIdentifier> { resId }, searchLocations);
 
             var foundPaths = new List<string>();
             foreach (var kvp in locations)
             {
                 foreach (var loc in kvp.Value)
                 {
-                    string filePath = loc.Filepath ?? loc.FilePath;
+                    string filePath = loc.FilePath;
                     if (!string.IsNullOrEmpty(filePath) && !foundPaths.Contains(filePath))
                     {
                         foundPaths.Add(filePath);
@@ -135,3 +135,4 @@ namespace CSharpKOTOR.Tools
         }
     }
 }
+

@@ -46,6 +46,25 @@ namespace CSharpKOTOR.Formats.TLK
         {
             return BytesTlk(tlk, ResourceType.TLK);
         }
+
+        /// <summary>
+        /// Reads a TLK file from a file path or byte array.
+        /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/tlk/tlk_auto.py
+        /// </summary>
+        public static TLK ReadTlk(object source)
+        {
+            if (source is string filepath)
+            {
+                var reader = new TLKBinaryReader(filepath);
+                return reader.Load();
+            }
+            if (source is byte[] data)
+            {
+                var reader = new TLKBinaryReader(data);
+                return reader.Load();
+            }
+            throw new ArgumentException("Source must be string or byte[]");
+        }
     }
 }
 

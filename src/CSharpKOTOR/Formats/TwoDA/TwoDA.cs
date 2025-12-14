@@ -30,6 +30,21 @@ namespace CSharpKOTOR.Formats.TwoDA
 
         public List<string> GetHeaders() => new List<string>(_headers);
         public List<string> GetLabels() => new List<string>(_labels);
+        
+        // Properties for compatibility with Utilities.cs
+        public List<string> Headers => GetHeaders();
+        public List<TwoDARow> Rows
+        {
+            get
+            {
+                var result = new List<TwoDARow>();
+                for (int i = 0; i < _rows.Count; i++)
+                {
+                    result.Add(new TwoDARow(GetLabel(i), _rows[i]));
+                }
+                return result;
+            }
+        }
 
         public string GetLabel(int rowIndex)
         {

@@ -17,6 +17,7 @@ using CSharpKOTOR.Formats.TPC;
 using CSharpKOTOR.Formats.TwoDA;
 using CSharpKOTOR.Formats.VIS;
 using CSharpKOTOR.Resource.Generics;
+using CSharpKOTOR.Resource.Generics.DLG;
 using JetBrains.Annotations;
 
 namespace CSharpKOTOR.Resources
@@ -85,8 +86,8 @@ namespace CSharpKOTOR.Resources
                     LIP lip = LIPAuto.ReadLip(source);
                     return LIPAuto.BytesLip(lip);
                 }
-                if (ResourceType.FromExtension(resourceExt) == ResourceType.ERF || 
-                    ResourceType.FromExtension(resourceExt) == ResourceType.MOD || 
+                if (ResourceType.FromExtension(resourceExt) == ResourceType.ERF ||
+                    ResourceType.FromExtension(resourceExt) == ResourceType.MOD ||
                     ResourceType.FromExtension(resourceExt) == ResourceType.SAV)
                 {
                     ERF erf = source is string s4 ? ERFAuto.ReadErf(s4) : ERFAuto.ReadErf(source as byte[]);
@@ -111,7 +112,7 @@ namespace CSharpKOTOR.Resources
                 }
                 if (resourceExt == "mdl")
                 {
-                    MDLData.MDL mdl = MDLAuto.ReadMdl(source);
+                    MDL mdl = MDLAuto.ReadMdl(source);
                     using (var ms = new MemoryStream())
                     {
                         MDLAuto.WriteMdl(mdl, ms);
@@ -220,7 +221,7 @@ namespace CSharpKOTOR.Resources
 
             try
             {
-                MDLData.MDL mdl = MDLAuto.ReadMdl(source);
+                MDL mdl = MDLAuto.ReadMdl(source);
                 using (var ms = new MemoryStream())
                 {
                     MDLAuto.WriteMdl(mdl, ms);
@@ -264,9 +265,9 @@ namespace CSharpKOTOR.Resources
         // Original: def resource_to_bytes(resource: ...) -> bytes:
         public static byte[] ResourceToBytes(object resource)
         {
-            if (resource is ARE || resource is DLG || resource is GIT || resource is IFO || 
-                resource is JRL || resource is PTH || resource is UTC || resource is UTD || 
-                resource is UTE || resource is UTM || resource is UTP || resource is UTS || 
+            if (resource is ARE || resource is DLG || resource is GIT || resource is IFO ||
+                resource is JRL || resource is PTH || resource is UTC || resource is UTD ||
+                resource is UTE || resource is UTM || resource is UTP || resource is UTS ||
                 resource is UTW)
             {
                 // GFF generics - would need dismantle methods
@@ -296,7 +297,7 @@ namespace CSharpKOTOR.Resources
             {
                 return LYTAuto.BytesLyt(lyt);
             }
-            if (resource is MDLData.MDL mdl)
+            if (resource is MDL mdl)
             {
                 using (var ms = new MemoryStream())
                 {
