@@ -86,6 +86,7 @@ namespace Odyssey.Game.Core
 
             // Initialize input state
             _previousMouseState = Microsoft.Xna.Framework.Input.Mouse.GetState();
+            _previousKeyboardState = Microsoft.Xna.Framework.Input.Keyboard.GetState();
 
             base.Initialize();
 
@@ -193,32 +194,19 @@ namespace Odyssey.Game.Core
 
         protected override void Draw(GameTime gameTime)
         {
-            GraphicsDevice.Clear(new Color(20, 30, 60, 255)); // Dark blue background
-
             // Draw menu if in main menu state
             if (_currentState == GameState.MainMenu)
             {
-                if (_menuRenderer != null)
-                {
-                    if (_menuRenderer.IsVisible)
-                    {
-                        _menuRenderer.Draw(gameTime, GraphicsDevice);
-                    }
-                    else
-                    {
-                        Console.WriteLine("[Odyssey] WARNING: Menu renderer exists but is not visible!");
-                    }
-                }
-                else
-                {
-                    Console.WriteLine("[Odyssey] ERROR: Menu renderer is null in Draw! Menu cannot be displayed.");
-                }
+                DrawMainMenu(gameTime);
             }
-
-            // Draw game if in game state
-            if (_currentState == GameState.InGame)
+            else if (_currentState == GameState.InGame)
             {
                 DrawGameWorld(gameTime);
+            }
+            else
+            {
+                // Fallback: clear to black
+                GraphicsDevice.Clear(Color.Black);
             }
 
             base.Draw(gameTime);
@@ -305,25 +293,25 @@ namespace Odyssey.Game.Core
                 // Initialize basic 3D effect
                 _basicEffect = new BasicEffect(GraphicsDevice);
                 _basicEffect.VertexColorEnabled = true;
-                
+
                 // Enable basic lighting for better visuals
                 _basicEffect.LightingEnabled = true;
                 _basicEffect.PreferPerPixelLighting = false;
-                
+
                 // Set up ambient light (base illumination)
                 _basicEffect.AmbientLightColor = new Vector3(0.3f, 0.3f, 0.3f);
-                
+
                 // Set up directional light (simulating sun/moon)
                 _basicEffect.DirectionalLight0.Enabled = true;
                 _basicEffect.DirectionalLight0.Direction = new Vector3(-0.5f, -1.0f, -0.3f); // Light from above and slightly behind
                 _basicEffect.DirectionalLight0.DiffuseColor = new Vector3(0.8f, 0.8f, 0.7f); // Slightly warm white
                 _basicEffect.DirectionalLight0.SpecularColor = new Vector3(0.2f, 0.2f, 0.2f);
-                
+
                 // Enable a second directional light for fill lighting
                 _basicEffect.DirectionalLight1.Enabled = true;
                 _basicEffect.DirectionalLight1.Direction = new Vector3(0.5f, -0.5f, 0.5f); // Fill light from opposite side
                 _basicEffect.DirectionalLight1.DiffuseColor = new Vector3(0.3f, 0.3f, 0.4f); // Cooler fill light
-                
+
                 // Disable third light (not needed for basic demo)
                 _basicEffect.DirectionalLight2.Enabled = false;
 
@@ -831,13 +819,25 @@ namespace Odyssey.Game.Core
             }
         }
 
+        // Track previous keyboard state for dialogue input
+        private KeyboardState _previousKeyboardState;
+
         /// <summary>
         /// Handles player input for movement.
         /// </summary>
         private void HandlePlayerInput(KeyboardState keyboardState, Microsoft.Xna.Framework.Input.MouseState mouseState, GameTime gameTime)
         {
+            // Handle dialogue input first (if in dialogue)
+            if (_session != null && _session.DialogueManager != null && _session.DialogueManager.IsConversationActive)
+            {
+                HandleDialogueInput(keyboardState);
+                _previousKeyboardState = keyboardState;
+                return; // Don't process movement while in dialogue
+            }
+
             if (_session == null || _session.PlayerEntity == null)
             {
+                _previousKeyboardState = keyboardState;
                 return;
             }
 
@@ -958,6 +958,45 @@ namespace Odyssey.Game.Core
             }
 
             _previousMouseState = mouseState;
+            _previousKeyboardState = keyboardState;
+        }
+
+        /// <summary>
+        /// Handles keyboard input for dialogue replies.
+        /// </summary>
+        private void HandleDialogueInput(KeyboardState keyboardState)
+        {
+            if (_session == null || _session.DialogueManager == null || !_session.DialogueManager.IsConversationActive)
+            {
+                return;
+            }
+
+            var state = _session.DialogueManager.CurrentState;
+            if (state == null || state.AvailableReplies == null || state.AvailableReplies.Count == 0)
+            {
+                return;
+            }
+
+            // Check number keys 1-9 for reply selection
+            Keys[] numberKeys = { Keys.D1, Keys.D2, Keys.D3, Keys.D4, Keys.D5, Keys.D6, Keys.D7, Keys.D8, Keys.D9 };
+            
+            for (int i = 0; i < Math.Min(numberKeys.Length, state.AvailableReplies.Count); i++)
+            {
+                if (keyboardState.IsKeyDown(numberKeys[i]) && _previousKeyboardState.IsKeyUp(numberKeys[i]))
+                {
+                    // Key was just pressed
+                    Console.WriteLine($"[Dialogue] Selected reply {i + 1}");
+                    _session.DialogueManager.SelectReply(i);
+                    break;
+                }
+            }
+
+            // ESC to abort conversation
+            if (keyboardState.IsKeyDown(Keys.Escape) && _previousKeyboardState.IsKeyUp(Keys.Escape))
+            {
+                Console.WriteLine("[Dialogue] Conversation aborted");
+                _session.DialogueManager.AbortConversation();
+            }
         }
 
         /// <summary>
