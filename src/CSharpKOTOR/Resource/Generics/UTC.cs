@@ -19,96 +19,139 @@ namespace CSharpKOTOR.Resource.Generics
         // Original: BINARY_TYPE = ResourceType.UTC
         public static readonly ResourceType BinaryType = ResourceType.UTC;
 
+        // Internal use only, to preserve original order
+        private readonly Dictionary<int, int> _originalFeatMapping = new Dictionary<int, int>();
+        private readonly List<int> _extraUnimplementedSkills = new List<int>();
+
         // Basic creature properties
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/utc.py:36-47
-        // Original: resref: "TemplateResRef" field
-        public ResRef ResRef { get; set; }
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/utc.py:343-349
+        public ResRef ResRef { get; set; } = ResRef.FromBlank();
+        public ResRef Conversation { get; set; } = ResRef.FromBlank();
+        public string Tag { get; set; } = string.Empty;
+        public string Comment { get; set; } = string.Empty;
 
-        // Original: tag: "Tag" field
-        public string Tag { get; set; }
+        public LocalizedString FirstName { get; set; } = LocalizedString.FromInvalid();
+        public LocalizedString LastName { get; set; } = LocalizedString.FromInvalid();
 
-        // Original: comment: "Comment" field
-        public string Comment { get; set; }
-
-        // Original: conversation: "Conversation" field
-        public ResRef Conversation { get; set; }
-
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/utc.py:348
-        // Original: self.first_name: LocalizedString = LocalizedString.from_invalid()
-        public LocalizedString FirstName { get; set; }
-
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/utc.py:383
-        // Original: self.alignment: int = 0
-        public int Alignment { get; set; }
-
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/utc.py:434
-        // Original: self.equipment: dict[EquipmentSlot, InventoryItem] = {}
-        public Dictionary<EquipmentSlot, InventoryItem> Equipment { get; set; }
-
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/utc.py:18
-        // Original: def __init__(self):
-        public UTC()
-        {
-            ResRef = ResRef.FromBlank();
-            Tag = string.Empty;
-            Comment = string.Empty;
-            Conversation = ResRef.FromBlank();
-            FirstName = LocalizedString.FromInvalid();
-            Alignment = 0;
-            Equipment = new Dictionary<EquipmentSlot, InventoryItem>();
-        }
-
-        // Additional basic properties that would be implemented in full version
-        public int AppearanceId { get; set; }
-        public int SoundSetFile { get; set; }
+        // Appearance and identity
+        public int SubraceId { get; set; }
         public int PortraitId { get; set; }
+        public int PerceptionId { get; set; }
+        public int RaceId { get; set; }
+        public int AppearanceId { get; set; }
+        public int GenderId { get; set; }
         public int FactionId { get; set; }
-        public int Race { get; set; }
-        public int Subrace { get; set; }
-        public int Gender { get; set; }
-        public int Class1 { get; set; }
-        public int ClassLevel1 { get; set; }
-        public int HitPoints { get; set; }
-        public int CurrentHitPoints { get; set; }
-        public int MaxHitPoints { get; set; }
-        public int ForcePoints { get; set; }
-        public int Experience { get; set; }
-        public int NaturalAC { get; set; }
-        public bool IsPC { get; set; }
-        public bool Interruptable { get; set; }
-        public bool NoPermDeath { get; set; }
-        public bool Plot { get; set; }
+        public int WalkrateId { get; set; }
+        public int SoundsetId { get; set; }
+        public int SaveWill { get; set; }
+        public int SaveFortitude { get; set; }
+        public int Morale { get; set; }
+        public int MoraleRecovery { get; set; }
+        public int MoraleBreakpoint { get; set; }
+        public int BodyVariation { get; set; }
+        public int TextureVariation { get; set; }
+        public ResRef PortraitResRef { get; set; } = ResRef.FromBlank();
+
+        // Boolean flags
         public bool NotReorienting { get; set; }
+        public bool PartyInteract { get; set; }
+        public bool NoPermDeath { get; set; }
+        public bool Min1Hp { get; set; }
+        public bool Plot { get; set; }
+        public bool Interruptable { get; set; }
+        public bool IsPc { get; set; }
+        public bool Disarmable { get; set; }
+        public bool IgnoreCrePath { get; set; } // KotOR 2 Only
+        public bool Hologram { get; set; } // KotOR 2 Only
+        public bool WillNotRender { get; set; } // KotOR 2 Only
 
-        // Equipment slots (simplified)
-        public ResRef RightHand { get; set; } = ResRef.FromBlank();
-        public ResRef LeftHand { get; set; } = ResRef.FromBlank();
-        public ResRef Body { get; set; } = ResRef.FromBlank();
-        public ResRef Head { get; set; } = ResRef.FromBlank();
-        public ResRef Implant { get; set; } = ResRef.FromBlank();
-        public ResRef Belt { get; set; } = ResRef.FromBlank();
-        public ResRef Armor { get; set; } = ResRef.FromBlank();
-        public ResRef Gloves { get; set; } = ResRef.FromBlank();
-        public ResRef Boots { get; set; } = ResRef.FromBlank();
+        // Stats
+        public int Alignment { get; set; }
+        public float ChallengeRating { get; set; }
+        public float Blindspot { get; set; } // KotOR 2 Only
+        public int MultiplierSet { get; set; } // KotOR 2 Only
+        public int NaturalAc { get; set; }
+        public int ReflexBonus { get; set; }
+        public int WillpowerBonus { get; set; }
+        public int FortitudeBonus { get; set; }
 
-        // Script hooks (simplified)
-        public ResRef OnSpawn { get; set; } = ResRef.FromBlank();
-        public ResRef OnDeath { get; set; } = ResRef.FromBlank();
+        // Hit points and force points
+        public int CurrentHp { get; set; }
+        public int MaxHp { get; set; }
+        public int Hp { get; set; }
+        public int MaxFp { get; set; }
+        public int Fp { get; set; }
+
+        // Ability scores
+        public int Strength { get; set; }
+        public int Dexterity { get; set; }
+        public int Constitution { get; set; }
+        public int Intelligence { get; set; }
+        public int Wisdom { get; set; }
+        public int Charisma { get; set; }
+
+        // Skills
+        public int ComputerUse { get; set; }
+        public int Demolitions { get; set; }
+        public int Stealth { get; set; }
+        public int Awareness { get; set; }
+        public int Persuade { get; set; }
+        public int Repair { get; set; }
+        public int Security { get; set; }
+        public int TreatInjury { get; set; }
+
+        // Script hooks
+        public ResRef OnEndDialog { get; set; } = ResRef.FromBlank();
+        public ResRef OnBlocked { get; set; } = ResRef.FromBlank();
         public ResRef OnHeartbeat { get; set; } = ResRef.FromBlank();
         public ResRef OnNotice { get; set; } = ResRef.FromBlank();
-        public ResRef OnSpellAt { get; set; } = ResRef.FromBlank();
+        public ResRef OnSpell { get; set; } = ResRef.FromBlank();
         public ResRef OnAttacked { get; set; } = ResRef.FromBlank();
         public ResRef OnDamaged { get; set; } = ResRef.FromBlank();
-        public ResRef OnEndRound { get; set; } = ResRef.FromBlank();
-        public ResRef OnEndCombatRound { get; set; } = ResRef.FromBlank();
-        public ResRef OnDialogue { get; set; } = ResRef.FromBlank();
-        public ResRef OnBlocked { get; set; } = ResRef.FromBlank();
         public ResRef OnDisturbed { get; set; } = ResRef.FromBlank();
-        public ResRef OnCombatRoundEnd { get; set; } = ResRef.FromBlank();
-        public ResRef OnSpawned { get; set; } = ResRef.FromBlank();
+        public ResRef OnEndRound { get; set; } = ResRef.FromBlank();
+        public ResRef OnDialog { get; set; } = ResRef.FromBlank();
+        public ResRef OnSpawn { get; set; } = ResRef.FromBlank();
         public ResRef OnRested { get; set; } = ResRef.FromBlank();
-        public ResRef OnCreatureDamaged { get; set; } = ResRef.FromBlank();
-        public ResRef OnInventoryDisturbed { get; set; } = ResRef.FromBlank();
-        public ResRef OnDeath2 { get; set; } = ResRef.FromBlank();
+        public ResRef OnDeath { get; set; } = ResRef.FromBlank();
+        public ResRef OnUserDefined { get; set; } = ResRef.FromBlank();
+
+        // Classes, feats, inventory, equipment
+        public List<UTCClass> Classes { get; set; } = new List<UTCClass>();
+        public List<int> Feats { get; set; } = new List<int>();
+        public List<InventoryItem> Inventory { get; set; } = new List<InventoryItem>();
+        public Dictionary<EquipmentSlot, InventoryItem> Equipment { get; set; } = new Dictionary<EquipmentSlot, InventoryItem>();
+
+        // Deprecated fields
+        public int PaletteId { get; set; }
+        public int BodybagId { get; set; } = 1;
+        public string Deity { get; set; } = string.Empty;
+        public LocalizedString Description { get; set; } = LocalizedString.FromInvalid();
+        public int Lawfulness { get; set; }
+        public int PhenotypeId { get; set; }
+        public string SubraceName { get; set; } = string.Empty;
+
+        public UTC()
+        {
+        }
+    }
+
+    // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/utc.py:447-497
+    // Original: class UTCClass:
+    [PublicAPI]
+    public sealed class UTCClass
+    {
+        // Internal use only, to preserve original order
+        private readonly Dictionary<int, int> _originalPowersMapping = new Dictionary<int, int>();
+
+        public int ClassId { get; set; }
+        public int ClassLevel { get; set; }
+        public List<int> Powers { get; set; } = new List<int>();
+
+        public UTCClass(int classId, int classLevel = 0)
+        {
+            ClassId = classId;
+            ClassLevel = classLevel;
+        }
     }
 }

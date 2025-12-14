@@ -196,6 +196,11 @@ namespace CSharpKOTOR.Resources
                 var ifo = IFOHelpers.ConstructIfo(gff);
                 return GFFAuto.BytesGff(IFOHelpers.DismantleIfo(ifo), ResourceType.GFF);
             }
+            if (restype == ResourceType.UTC)
+            {
+                var utc = UTCHelpers.ConstructUtc(gff);
+                return GFFAuto.BytesGff(UTCHelpers.DismantleUtc(utc), ResourceType.GFF);
+            }
             // Other resource types would need their construct/dismantle functions ported
             return GFFAuto.BytesGff(gff, ResourceType.GFF);
         }
