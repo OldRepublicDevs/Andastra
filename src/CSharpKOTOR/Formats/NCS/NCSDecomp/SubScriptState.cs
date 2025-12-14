@@ -957,7 +957,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
         public virtual void TransformCopyDownSp(ACopyDownSpCommand node)
         {
             this.CheckStart(node);
-            int nodePos = this.nodedata != null ? this.nodedata.GetPos(node) : -1;
+            int nodePos = this.nodedata != null ? this.nodedata.TryGetPos(node) : -1;
             bool isRet = this.IsReturn(node);
             JavaSystem.@out.Println($"DEBUG TransformCopyDownSp: pos={nodePos}, isReturn={isRet}, current={this.current.GetType().Name}, hasChildren={this.current.HasChildren()}");
             
@@ -979,7 +979,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
                 
                 if (target == null)
                 {
-                    JavaSystem.@out.Println("ERROR TransformCopyDownSp: GetVarToAssignTo returned null for node at position " + (this.nodedata != null ? this.nodedata.GetPos(node).ToString() : "unknown"));
+                    JavaSystem.@out.Println("ERROR TransformCopyDownSp: GetVarToAssignTo returned null for node at position " + (nodePos >= 0 ? nodePos.ToString() : "unknown"));
                 }
                 else if (typeof(ScriptNode.AVarRef).IsInstanceOfType(target))
                 {
@@ -1002,7 +1002,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
                     }
                     else
                     {
-                        JavaSystem.@out.Println("ERROR TransformCopyDownSp: target is not AVarRef, type=" + (target != null ? target.GetType().Name : "null") + ", skipping assignment. Node position: " + (this.nodedata != null ? this.nodedata.GetPos(node).ToString() : "unknown"));
+                        JavaSystem.@out.Println("ERROR TransformCopyDownSp: target is not AVarRef, type=" + (target != null ? target.GetType().Name : "null") + ", skipping assignment. Node position: " + (nodePos >= 0 ? nodePos.ToString() : "unknown"));
                     }
                 }
             }

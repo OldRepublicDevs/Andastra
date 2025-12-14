@@ -20,7 +20,20 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.AST
 
         public override void Apply(Analysis.AnalysisAdapter sw)
         {
-            sw.DefaultIn(this);
+            // Call CaseACopydownspCmd directly if sw is PrunedReversedDepthFirstAdapter or PrunedDepthFirstAdapter
+            // This ensures the visitor pattern routes correctly to CaseACopydownspCmd
+            if (sw is Analysis.PrunedReversedDepthFirstAdapter prdfa)
+            {
+                prdfa.CaseACopydownspCmd(this);
+            }
+            else if (sw is Analysis.PrunedDepthFirstAdapter pdfa)
+            {
+                pdfa.CaseACopydownspCmd(this);
+            }
+            else
+            {
+                sw.DefaultIn(this);
+            }
         }
 
         public PCopyDownSpCommand GetCopyDownSpCommand()

@@ -20,7 +20,20 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.AST
 
         public override void Apply(Analysis.AnalysisAdapter sw)
         {
-            sw.DefaultIn(this);
+            // Call CaseAConstCmd directly if sw is PrunedReversedDepthFirstAdapter or PrunedDepthFirstAdapter
+            // This ensures the visitor pattern routes correctly to CaseAConstCmd
+            if (sw is Analysis.PrunedReversedDepthFirstAdapter prdfa)
+            {
+                prdfa.CaseAConstCmd(this);
+            }
+            else if (sw is Analysis.PrunedDepthFirstAdapter pdfa)
+            {
+                pdfa.CaseAConstCmd(this);
+            }
+            else
+            {
+                sw.DefaultIn(this);
+            }
         }
 
         public PConstCommand GetConstCommand()

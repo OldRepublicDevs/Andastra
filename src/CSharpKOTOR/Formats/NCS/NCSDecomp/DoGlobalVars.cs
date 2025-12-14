@@ -98,6 +98,35 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             this.DefaultOut(node);
         }
 
+        // Override CaseACopydownspCmd to ensure CPDOWNSP commands from NcsToAstConverter are visited
+        // CaseACopydownspCmd calls node.GetCopyDownSpCommand().Apply(this), which routes to OutACopyDownSpCommand
+        // This ensures CPDOWNSP commands are processed even when wrapped in ACopydownspCmd
+        public override void CaseACopydownspCmd(AST.ACopydownspCmd node)
+        {
+            JavaSystem.@out.Println($"DEBUG DoGlobalVars.CaseACopydownspCmd: node={node?.GetType().Name ?? "null"}, freezeStack={this.freezeStack}");
+            this.InACopydownspCmd(node);
+            if (node.GetCopyDownSpCommand() != null)
+            {
+                JavaSystem.@out.Println($"DEBUG DoGlobalVars.CaseACopydownspCmd: calling GetCopyDownSpCommand().Apply(this)");
+                node.GetCopyDownSpCommand().Apply(this);
+            }
+            else
+            {
+                JavaSystem.@out.Println("DEBUG DoGlobalVars.CaseACopydownspCmd: GetCopyDownSpCommand() returned null");
+            }
+            this.OutACopydownspCmd(node);
+        }
+        
+        public override void InACopydownspCmd(AST.ACopydownspCmd node)
+        {
+            this.DefaultIn(node);
+        }
+        
+        public override void OutACopydownspCmd(AST.ACopydownspCmd node)
+        {
+            this.DefaultOut(node);
+        }
+
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/DoGlobalVars.java:77-79
         // Original: public LocalVarStack getStack() { return this.stack; }
         public virtual LocalVarStack GetStack()
