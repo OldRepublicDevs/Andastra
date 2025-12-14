@@ -41,12 +41,19 @@ namespace Odyssey.Core.Dialogue
     /// VO playback, and lipsync.
     /// </summary>
     /// <remarks>
+    /// Dialogue System:
+    /// - Based on swkotor2.exe dialogue system
+    /// - Located via string references: "ScriptDialogue" @ 0x007bee40, "ScriptEndDialogue" @ 0x007bede0
+    /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_DIALOGUE" @ 0x007bcac4, "OnEndDialogue" @ 0x007c1f60
+    /// - DLG file format: GFF with "DLG " signature containing dialogue tree
+    /// - Original implementation: Parses DLG GFF structure, evaluates condition scripts, executes entry/reply scripts
+    /// 
     /// Dialogue Flow:
-    /// 1. StartConversation - Load DLG, find first valid entry
-    /// 2. EnterNode - Execute entry script, play VO, gather replies
+    /// 1. StartConversation - Load DLG, find first valid entry (StartingList)
+    /// 2. EnterNode - Execute entry script (Script1), play VO, gather replies
     /// 3. WaitForReply - Show player choices (or auto-advance for single [Continue])
-    /// 4. SelectReply - Execute reply script, find next valid entry
-    /// 5. Repeat 2-4 until no more entries, then EndConversation
+    /// 4. SelectReply - Execute reply script, find next valid entry (EndConversation or next node)
+    /// 5. Repeat 2-4 until no more entries, then EndConversation (fires OnEnd script)
     /// </remarks>
     public class DialogueSystem
     {
@@ -170,9 +177,9 @@ namespace Odyssey.Core.Dialogue
             _availableReplies = new List<DialogueReply>();
 
             // Find first valid entry point
-            foreach (var starterIndex in _currentDialogue.StarterIndices)
+            foreach (int starterIndex in _currentDialogue.StarterIndices)
             {
-                var entry = _currentDialogue.GetEntry(starterIndex);
+                DialogueEntry entry = _currentDialogue.GetEntry(starterIndex);
                 if (entry != null && EvaluateCondition(entry.ConditionalScript))
                 {
                     EnterNode(entry);
@@ -250,9 +257,9 @@ namespace Odyssey.Core.Dialogue
         {
             _availableReplies = new List<DialogueReply>();
 
-            foreach (var linkIndex in entry.ReplyLinks)
+            foreach (int linkIndex in entry.ReplyLinks)
             {
-                var reply = _currentDialogue.GetReply(linkIndex);
+                DialogueReply reply = _currentDialogue.GetReply(linkIndex);
                 if (reply != null && EvaluateCondition(reply.ConditionalScript))
                 {
                     _availableReplies.Add(reply);
@@ -289,7 +296,7 @@ namespace Odyssey.Core.Dialogue
                 return;
             }
 
-            var reply = _availableReplies[index];
+            DialogueReply reply = _availableReplies[index];
 
             // Execute reply script
             if (!string.IsNullOrEmpty(reply.Script1))
@@ -304,9 +311,9 @@ namespace Odyssey.Core.Dialogue
             }
 
             // Find next entry
-            foreach (var entryIndex in reply.EntryLinks)
+            foreach (int entryIndex in reply.EntryLinks)
             {
-                var entry = _currentDialogue.GetEntry(entryIndex);
+                DialogueEntry entry = _currentDialogue.GetEntry(entryIndex);
                 if (entry != null && EvaluateCondition(entry.ConditionalScript))
                 {
                     EnterNode(entry);

@@ -8,11 +8,15 @@ namespace Odyssey.Core.Journal
     /// </summary>
     /// <remarks>
     /// KOTOR Journal System:
+    /// - Based on swkotor2.exe journal/quest system
+    /// - Located via string references: Journal-related functions handle quest state
+    /// - Original implementation: Journal entries stored in JRL files, quest states in global variables
     /// - Quests organized by planet/category
-    /// - Multiple states per quest (progress stages)
+    /// - Multiple states per quest (progress stages: 0 = not started, 1+ = in progress, -1 = completed)
     /// - Can be marked active/completed
-    /// - Journal entries from JRL files
+    /// - Journal entries from JRL files (GFF with "JRL " signature)
     /// - Plot manager (PTT/PTM) integration for story flags
+    /// - Quest state changes trigger journal updates and UI notifications
     /// </remarks>
     public class JournalSystem
     {
@@ -130,10 +134,10 @@ namespace Odyssey.Core.Journal
             _questStates[questTag] = state;
 
             // Add journal entry for this state
-            var quest = GetQuest(questTag);
+            QuestData quest = GetQuest(questTag);
             if (quest != null)
             {
-                var stageData = quest.GetStage(state);
+                QuestStage stageData = quest.GetStage(state);
                 if (stageData != null)
                 {
                     AddEntry(questTag, state, stageData.Text, stageData.XPReward);
@@ -177,7 +181,7 @@ namespace Odyssey.Core.Journal
         /// </summary>
         public bool IsQuestCompleted(string questTag)
         {
-            var quest = GetQuest(questTag);
+            QuestData quest = GetQuest(questTag);
             if (quest == null)
             {
                 return false;
@@ -235,7 +239,7 @@ namespace Odyssey.Core.Journal
         {
             var result = new List<JournalEntry>();
 
-            foreach (var entry in _entries)
+            foreach (JournalEntry entry in _entries)
             {
                 if (string.Equals(entry.QuestTag, questTag, StringComparison.OrdinalIgnoreCase))
                 {
@@ -253,7 +257,7 @@ namespace Odyssey.Core.Journal
         {
             JournalEntry latest = null;
 
-            foreach (var entry in _entries)
+            foreach (JournalEntry entry in _entries)
             {
                 if (string.Equals(entry.QuestTag, questTag, StringComparison.OrdinalIgnoreCase))
                 {
@@ -278,7 +282,7 @@ namespace Odyssey.Core.Journal
         {
             var result = new List<QuestData>();
 
-            foreach (var quest in _quests.Values)
+            foreach (QuestData quest in _quests.Values)
             {
                 if (quest.Category == category)
                 {
@@ -296,7 +300,7 @@ namespace Odyssey.Core.Journal
         {
             var result = new List<QuestData>();
 
-            foreach (var quest in _quests.Values)
+            foreach (QuestData quest in _quests.Values)
             {
                 if (quest.Category == category && IsQuestActive(quest.Tag))
                 {
@@ -314,7 +318,7 @@ namespace Odyssey.Core.Journal
         {
             var result = new List<QuestData>();
 
-            foreach (var quest in _quests.Values)
+            foreach (QuestData quest in _quests.Values)
             {
                 if (IsQuestCompleted(quest.Tag))
                 {
@@ -347,7 +351,7 @@ namespace Odyssey.Core.Journal
                 return;
             }
 
-            foreach (var kvp in states)
+            foreach (KeyValuePair<string, int> kvp in states)
             {
                 _questStates[kvp.Key] = kvp.Value;
             }
@@ -362,7 +366,7 @@ namespace Odyssey.Core.Journal
             _entries.Clear();
 
             // Reset all quests to state 0
-            foreach (var questTag in _quests.Keys)
+            foreach (string questTag in _quests.Keys)
             {
                 _questStates[questTag] = 0;
             }
