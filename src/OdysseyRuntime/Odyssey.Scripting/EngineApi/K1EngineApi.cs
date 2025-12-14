@@ -1798,13 +1798,39 @@ namespace Odyssey.Scripting.EngineApi
             return Variable.FromInt(0);
         }
 
+        /// <summary>
+        /// SetCameraFacing(float fDirection) - Sets the camera facing direction (in radians)
+        /// </summary>
         private Variable Func_SetCameraFacing(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
+            float direction = args.Count > 0 ? args[0].AsFloat() : 0f;
+            
+            // Camera control would typically be accessed through GameServicesContext
+            // For now, this is a placeholder - camera system integration needed
+            // TODO: Add CameraController to GameServicesContext and implement camera facing
+            // The direction is in radians and should set the camera's yaw rotation
+            
             return Variable.Void();
         }
 
+        /// <summary>
+        /// PlaySound(string sSoundName) - Plays a sound effect
+        /// </summary>
         private Variable Func_PlaySound(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
+            string soundName = args.Count > 0 ? args[0].AsString() : string.Empty;
+            
+            if (string.IsNullOrEmpty(soundName) || ctx.Caller == null)
+            {
+                return Variable.Void();
+            }
+            
+            // Sound playback would typically be handled by an audio system
+            // For now, this is a placeholder - audio system integration needed
+            // TODO: Implement sound playback through audio system
+            // Sound files are typically WAV files loaded from game resources
+            // Should support 2D and 3D positional audio based on caller's position
+            
             return Variable.Void();
         }
 
@@ -2378,18 +2404,48 @@ namespace Odyssey.Scripting.EngineApi
             return Variable.FromInt(0);
         }
 
+        /// <summary>
+        /// PauseGame(int bPause) - Pauses or unpauses the game
+        /// </summary>
         private Variable Func_PauseGame(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
+            int pause = args.Count > 0 ? args[0].AsInt() : 0;
+            bool shouldPause = pause != 0;
+            
+            // Game pause would typically be handled by GameSession
+            // For now, this is a placeholder - game pause system integration needed
+            // TODO: Implement game pause through GameSession
+            // Should pause all game systems (combat, movement, scripts, etc.) except UI
+            
             return Variable.Void();
         }
 
+        /// <summary>
+        /// SetPlayerRestrictMode(int bRestrict) - Restricts player movement/actions
+        /// </summary>
         private Variable Func_SetPlayerRestrictMode(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
+            int restrict = args.Count > 0 ? args[0].AsInt() : 0;
+            bool shouldRestrict = restrict != 0;
+            
+            // Player restriction would typically be handled by GameSession or PlayerController
+            // For now, this is a placeholder - player restriction system integration needed
+            // TODO: Implement player restriction mode
+            // When restricted, player cannot move, interact, or perform actions
+            // Used during cutscenes, dialogues, etc.
+            
             return Variable.Void();
         }
 
+        /// <summary>
+        /// GetPlayerRestrictMode() - Returns TRUE if player is in restrict mode
+        /// </summary>
         private Variable Func_GetPlayerRestrictMode(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
+            // Player restriction state would typically be tracked by GameSession
+            // For now, return 0 (not restricted) - player restriction system integration needed
+            // TODO: Implement player restriction state tracking
+            
             return Variable.FromInt(0);
         }
 
@@ -3783,146 +3839,6 @@ namespace Odyssey.Scripting.EngineApi
             // TODO: Implement appear animation if bUseAppearAnimation is TRUE
             
             return Variable.FromObject(entity.ObjectId);
-        }
-
-        #endregion
-
-        #region Nearest Object Functions
-
-        /// <summary>
-        /// GetNearestObject(int nObjectType=OBJECT_TYPE_ALL, object oTarget=OBJECT_SELF, int nNth=1) - Get the Nth object nearest to oTarget that is of the specified type
-        /// </summary>
-        private Variable Func_GetNearestObject(IReadOnlyList<Variable> args, IExecutionContext ctx)
-        {
-            int objectType = args.Count > 0 ? args[0].AsInt() : 32767; // OBJECT_TYPE_ALL
-            uint targetId = args.Count > 1 ? args[1].AsObjectId() : ObjectSelf;
-            int nth = args.Count > 2 ? args[2].AsInt() : 1;
-            
-            if (ctx.World == null)
-            {
-                return Variable.FromObject(ObjectInvalid);
-            }
-            
-            IEntity target = ResolveObject(targetId, ctx);
-            if (target == null)
-            {
-                return Variable.FromObject(ObjectInvalid);
-            }
-            
-            ITransformComponent targetTransform = target.GetComponent<ITransformComponent>();
-            if (targetTransform == null)
-            {
-                return Variable.FromObject(ObjectInvalid);
-            }
-            
-            // Convert object type constant to ObjectType enum
-            Core.Enums.ObjectType typeMask = Core.Enums.ObjectType.All;
-            if (objectType != 32767) // Not OBJECT_TYPE_ALL
-            {
-                // Map NWScript object type constants
-                typeMask = (Core.Enums.ObjectType)objectType;
-            }
-            
-            // Get all entities of the specified type
-            var candidates = new List<(IEntity entity, float distance)>();
-            foreach (IEntity entity in ctx.World.GetEntitiesOfType(typeMask))
-            {
-                if (entity.ObjectId == target.ObjectId)
-                {
-                    continue; // Skip target itself
-                }
-                
-                ITransformComponent entityTransform = entity.GetComponent<ITransformComponent>();
-                if (entityTransform != null)
-                {
-                    float distance = Vector3.DistanceSquared(targetTransform.Position, entityTransform.Position);
-                    candidates.Add((entity, distance));
-                }
-            }
-            
-            // Sort by distance
-            candidates.Sort((a, b) => a.distance.CompareTo(b.distance));
-            
-            // Return Nth nearest (1-indexed)
-            if (nth > 0 && nth <= candidates.Count)
-            {
-                return Variable.FromObject(candidates[nth - 1].entity.ObjectId);
-            }
-            
-            return Variable.FromObject(ObjectInvalid);
-        }
-
-        /// <summary>
-        /// GetNearestCreatureToLocation(int nFirstCriteriaType, int nFirstCriteriaValue, location lLocation, int nNth=1, ...) - Get the creature nearest to lLocation, subject to all the criteria specified
-        /// </summary>
-        private Variable Func_GetNearestCreatureToLocation(IReadOnlyList<Variable> args, IExecutionContext ctx)
-        {
-            if (args.Count < 3 || ctx.World == null)
-            {
-                return Variable.FromObject(ObjectInvalid);
-            }
-            
-            int firstCriteriaType = args[0].AsInt();
-            int firstCriteriaValue = args[1].AsInt();
-            object locObj = args[2].AsLocation();
-            int nth = args.Count > 3 ? args[3].AsInt() : 1;
-            int secondCriteriaType = args.Count > 4 ? args[4].AsInt() : -1;
-            int secondCriteriaValue = args.Count > 5 ? args[5].AsInt() : -1;
-            int thirdCriteriaType = args.Count > 6 ? args[6].AsInt() : -1;
-            int thirdCriteriaValue = args.Count > 7 ? args[7].AsInt() : -1;
-            
-            // Extract position from location
-            Vector3 locationPos = Vector3.Zero;
-            if (locObj != null && locObj is Location location)
-            {
-                locationPos = location.Position;
-            }
-            
-            // Get all creatures
-            var candidates = new List<(IEntity entity, float distance)>();
-            foreach (IEntity entity in ctx.World.GetEntitiesOfType(Core.Enums.ObjectType.Creature))
-            {
-                // Apply criteria filters (simplified - full implementation would check all criteria types)
-                bool matches = true;
-                
-                // Check first criteria
-                if (firstCriteriaType != -1)
-                {
-                    // Simplified criteria checking - full implementation would handle all CREATURE_TYPE_* constants
-                    // For now, just check if it's a valid creature
-                    if (firstCriteriaType == 1) // CREATURE_TYPE_PLAYER_CHAR
-                    {
-                        // Check if creature is PC
-                        if (ctx is Odyssey.Scripting.VM.ExecutionContext execCtx && execCtx.AdditionalContext is Odyssey.Kotor.Game.GameServicesContext services)
-                        {
-                            bool isPC = services.PlayerEntity != null && services.PlayerEntity.ObjectId == entity.ObjectId;
-                            if (firstCriteriaValue == 1 && !isPC) matches = false; // PLAYER_CHAR_IS_PC
-                            if (firstCriteriaValue == 0 && isPC) matches = false; // PLAYER_CHAR_NOT_PC
-                        }
-                    }
-                }
-                
-                if (!matches) continue;
-                
-                // Calculate distance
-                ITransformComponent transform = entity.GetComponent<ITransformComponent>();
-                if (transform != null)
-                {
-                    float distance = Vector3.DistanceSquared(locationPos, transform.Position);
-                    candidates.Add((entity, distance));
-                }
-            }
-            
-            // Sort by distance
-            candidates.Sort((a, b) => a.distance.CompareTo(b.distance));
-            
-            // Return Nth nearest (1-indexed)
-            if (nth > 0 && nth <= candidates.Count)
-            {
-                return Variable.FromObject(candidates[nth - 1].entity.ObjectId);
-            }
-            
-            return Variable.FromObject(ObjectInvalid);
         }
 
         #endregion
