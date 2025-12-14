@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -42,6 +43,10 @@ namespace Odyssey.Game.Core
         private Matrix _viewMatrix;
         private Matrix _projectionMatrix;
         private float _cameraAngle = 0f;
+
+        // Room rendering
+        private Odyssey.MonoGame.Converters.RoomMeshRenderer _roomRenderer;
+        private Dictionary<string, Odyssey.MonoGame.Converters.RoomMeshData> _roomMeshes;
 
         public OdysseyGame(GameSettings settings)
         {
@@ -109,6 +114,10 @@ namespace Odyssey.Game.Core
             // Initialize game rendering
             InitializeGameRendering();
 
+            // Initialize room renderer
+            _roomRenderer = new Odyssey.MonoGame.Converters.RoomMeshRenderer(GraphicsDevice);
+            _roomMeshes = new Dictionary<string, Odyssey.MonoGame.Converters.RoomMeshData>();
+
             Console.WriteLine("[Odyssey] Content loaded");
         }
 
@@ -160,8 +169,7 @@ namespace Odyssey.Game.Core
                     _session.Update(deltaTime);
                 }
 
-                // Update camera (simple rotation for demo)
-                _cameraAngle += (float)gameTime.ElapsedGameTime.TotalSeconds * 0.1f;
+                // Update camera to follow player
                 UpdateCamera();
             }
 
@@ -324,16 +332,54 @@ namespace Odyssey.Game.Core
 
         private void UpdateCamera()
         {
-            // Simple camera that orbits around origin
-            float distance = 10f;
-            float height = 5f;
-            Vector3 cameraPosition = new Vector3(
-                (float)Math.Sin(_cameraAngle) * distance,
-                height,
-                (float)Math.Cos(_cameraAngle) * distance
-            );
             Vector3 target = Vector3.Zero;
+            Vector3 cameraPosition;
             Vector3 up = Vector3.Up;
+
+            // Try to follow player if available
+            if (_session != null && _session.PlayerEntity != null)
+            {
+                var transform = _session.PlayerEntity.GetComponent<Odyssey.Kotor.Components.TransformComponent>();
+                if (transform != null)
+                {
+                    target = new Vector3(transform.Position.X, transform.Position.Y, transform.Position.Z);
+
+                    // Camera follows behind and above player
+                    float cameraDistance = 8f;
+                    float cameraHeight = 4f;
+                    float cameraAngle = transform.Facing + (float)Math.PI; // Behind player
+
+                    cameraPosition = new Vector3(
+                        target.X + (float)Math.Sin(cameraAngle) * cameraDistance,
+                        target.Y + cameraHeight,
+                        target.Z + (float)Math.Cos(cameraAngle) * cameraDistance
+                    );
+                }
+                else
+                {
+                    // Fallback: simple orbit around origin
+                    _cameraAngle += 0.01f;
+                    float distance = 10f;
+                    float height = 5f;
+                    cameraPosition = new Vector3(
+                        (float)Math.Sin(_cameraAngle) * distance,
+                        height,
+                        (float)Math.Cos(_cameraAngle) * distance
+                    );
+                }
+            }
+            else
+            {
+                // Fallback: simple orbit around origin
+                _cameraAngle += 0.01f;
+                float distance = 10f;
+                float height = 5f;
+                cameraPosition = new Vector3(
+                    (float)Math.Sin(_cameraAngle) * distance,
+                    height,
+                    (float)Math.Cos(_cameraAngle) * distance
+                );
+            }
 
             _viewMatrix = Matrix.CreateLookAt(cameraPosition, target, up);
 
@@ -409,26 +455,61 @@ namespace Odyssey.Game.Core
 
         private void DrawAreaRooms(Odyssey.Core.Module.RuntimeArea area)
         {
-            if (area.Rooms == null || area.Rooms.Count == 0 || _basicEffect == null)
+            if (area.Rooms == null || area.Rooms.Count == 0 || _basicEffect == null || _roomRenderer == null)
             {
                 return;
             }
 
-            // For now, just draw simple wireframe boxes for each room
-            // TODO: Load and render actual MDL models for rooms
+            // Load and render room meshes
             foreach (var room in area.Rooms)
             {
-                // Draw a simple box at room position
-                // This is a placeholder - actual room rendering will load MDL models
+                if (string.IsNullOrEmpty(room.ModelName))
+                {
+                    continue;
+                }
+
+                // Get or load room mesh
+                Odyssey.MonoGame.Converters.RoomMeshData meshData;
+                if (!_roomMeshes.TryGetValue(room.ModelName, out meshData))
+                {
+                    // For now, create a placeholder mesh
+                    // TODO: Load actual MDL model from module resources
+                    meshData = _roomRenderer.LoadRoomMesh(room.ModelName, null);
+                    if (meshData != null)
+                    {
+                        _roomMeshes[room.ModelName] = meshData;
+                    }
+                }
+
+                if (meshData == null || meshData.VertexBuffer == null || meshData.IndexBuffer == null)
+                {
+                    continue;
+                }
+
+                // Set up transform
                 var roomPos = new Vector3(room.Position.X, room.Position.Y, room.Position.Z);
                 var roomWorld = Matrix.CreateTranslation(roomPos);
-                
+
+                // Set up rendering state
+                GraphicsDevice.SetVertexBuffer(meshData.VertexBuffer);
+                GraphicsDevice.Indices = meshData.IndexBuffer;
+
                 _basicEffect.View = _viewMatrix;
                 _basicEffect.Projection = _projectionMatrix;
                 _basicEffect.World = roomWorld;
+                _basicEffect.VertexColorEnabled = true;
 
-                // Draw a simple 2x2x2 box for each room (placeholder)
-                // TODO: Replace with actual room mesh rendering
+                // Draw the mesh
+                foreach (EffectPass pass in _basicEffect.CurrentTechnique.Passes)
+                {
+                    pass.Apply();
+                    GraphicsDevice.DrawIndexedPrimitives(
+                        PrimitiveType.TriangleList,
+                        0,
+                        0,
+                        meshData.IndexCount / 3 // Number of triangles
+                    );
+                }
             }
         }
 
@@ -439,6 +520,71 @@ namespace Odyssey.Game.Core
             // This is a fallback - ideally we'd have a proper font file
             // For now, return null - text won't display but menu is still functional
             return null;
+        }
+
+        /// <summary>
+        /// Handles player input for movement.
+        /// </summary>
+        private void HandlePlayerInput(KeyboardState keyboardState, Microsoft.Xna.Framework.Input.MouseState mouseState, GameTime gameTime)
+        {
+            if (_session == null || _session.PlayerEntity == null)
+            {
+                return;
+            }
+
+            var transform = _session.PlayerEntity.GetComponent<Odyssey.Kotor.Components.TransformComponent>();
+            if (transform == null)
+            {
+                return;
+            }
+
+            float moveSpeed = 5f * (float)gameTime.ElapsedGameTime.TotalSeconds;
+            float turnSpeed = 2f * (float)gameTime.ElapsedGameTime.TotalSeconds;
+            bool moved = false;
+
+            // Keyboard movement (WASD)
+            if (keyboardState.IsKeyDown(Keys.W))
+            {
+                // Move forward
+                var pos = transform.Position;
+                pos.X += (float)Math.Sin(transform.Facing) * moveSpeed;
+                pos.Z += (float)Math.Cos(transform.Facing) * moveSpeed;
+                transform.Position = pos;
+                moved = true;
+            }
+            if (keyboardState.IsKeyDown(Keys.S))
+            {
+                // Move backward
+                var pos = transform.Position;
+                pos.X -= (float)Math.Sin(transform.Facing) * moveSpeed;
+                pos.Z -= (float)Math.Cos(transform.Facing) * moveSpeed;
+                transform.Position = pos;
+                moved = true;
+            }
+            if (keyboardState.IsKeyDown(Keys.A))
+            {
+                // Turn left
+                transform.Facing -= turnSpeed;
+                moved = true;
+            }
+            if (keyboardState.IsKeyDown(Keys.D))
+            {
+                // Turn right
+                transform.Facing += turnSpeed;
+                moved = true;
+            }
+
+            // Click-to-move (basic implementation)
+            if (mouseState.LeftButton == Microsoft.Xna.Framework.Input.ButtonState.Pressed)
+            {
+                // TODO: Raycast to walkmesh and move player to clicked position
+                // For now, just move forward in camera direction
+                var pos = transform.Position;
+                pos.X += (float)Math.Sin(transform.Facing) * moveSpeed * 2f;
+                pos.Z += (float)Math.Cos(transform.Facing) * moveSpeed * 2f;
+                transform.Position = pos;
+                moved = true;
+            }
         }
     }
 }
