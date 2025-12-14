@@ -7,6 +7,8 @@ using CSharpKOTOR.Formats.ERF;
 using CSharpKOTOR.Formats.GFF;
 using CSharpKOTOR.Formats.RIM;
 using CSharpKOTOR.Logger;
+using CSharpKOTOR.Resource.Generics;
+using CSharpKOTOR.Resources;
 using CSharpKOTOR.Tools;
 using JetBrains.Annotations;
 
@@ -182,8 +184,11 @@ namespace CSharpKOTOR.Resources
             switch (restype)
             {
                 case ResourceType.ARE:
-                    var are = Resource.Generics.AREHelpers.ConstructAre(gff);
-                    return GFFAuto.BytesGff(Resource.Generics.AREHelpers.DismantleAre(are), ResourceType.GFF);
+                    var are = AREHelpers.ConstructAre(gff);
+                    return GFFAuto.BytesGff(AREHelpers.DismantleAre(are), ResourceType.GFF);
+                case ResourceType.GIT:
+                    var git = GITHelpers.ConstructGit(gff);
+                    return GFFAuto.BytesGff(GITHelpers.DismantleGit(git), ResourceType.GFF);
                 // Other resource types would need their construct/dismantle functions ported
                 default:
                     return GFFAuto.BytesGff(gff, ResourceType.GFF);

@@ -139,58 +139,131 @@ namespace CSharpKOTOR.Resource.Generics
         }
     }
 
-    // Placeholder classes - need to be implemented
+    // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/git.py:388-1594
+    // Original: GIT instance classes
     [PublicAPI]
     public sealed class GITCamera
     {
-        public ResRef ResRef { get; set; }
+        public const int GffStructId = 14;
+        public int CameraId { get; set; }
+        public float Fov { get; set; } = 45.0f;
+        public float Height { get; set; }
+        public float MicRange { get; set; }
+        public Vector4 Orientation { get; set; } = new Vector4();
+        public Vector3 Position { get; set; } = new Vector3();
+        public float Pitch { get; set; }
+        public ResRef ResRef { get; set; } = ResRef.FromBlank();
     }
 
     [PublicAPI]
     public sealed class GITCreature
     {
-        public ResRef ResRef { get; set; }
+        public const int GffStructId = 4;
+        public ResRef ResRef { get; set; } = ResRef.FromBlank();
+        public Vector3 Position { get; set; } = new Vector3();
+        public float Bearing { get; set; }
     }
 
     [PublicAPI]
     public sealed class GITDoor
     {
-        public ResRef ResRef { get; set; }
+        public const int GffStructId = 8;
+        public ResRef ResRef { get; set; } = ResRef.FromBlank();
+        public float Bearing { get; set; }
+        public Color TweakColor { get; set; }
+        public string Tag { get; set; } = string.Empty;
+        public string LinkedTo { get; set; } = string.Empty;
+        public GITModuleLink LinkedToFlags { get; set; } = GITModuleLink.NoLink;
+        public ResRef LinkedToModule { get; set; } = ResRef.FromBlank();
+        public LocalizedString TransitionDestination { get; set; } = LocalizedString.FromInvalid();
+        public Vector3 Position { get; set; } = new Vector3();
     }
 
     [PublicAPI]
     public sealed class GITEncounter
     {
-        public ResRef ResRef { get; set; }
+        public const int GffStructId = 7;
+        public const int GffGeometryStructId = 1;
+        public const int GffSpawnStructId = 2;
+        public ResRef ResRef { get; set; } = ResRef.FromBlank();
+        public Vector3 Position { get; set; } = new Vector3();
+        public List<Vector3> Geometry { get; set; } = new List<Vector3>();
+        public List<GITEncounterSpawnPoint> SpawnPoints { get; set; } = new List<GITEncounterSpawnPoint>();
+    }
+
+    [PublicAPI]
+    public sealed class GITEncounterSpawnPoint
+    {
+        public float X { get; set; }
+        public float Y { get; set; }
+        public float Z { get; set; }
+        public float Orientation { get; set; }
     }
 
     [PublicAPI]
     public sealed class GITPlaceable
     {
-        public ResRef ResRef { get; set; }
+        public const int GffStructId = 9;
+        public ResRef ResRef { get; set; } = ResRef.FromBlank();
+        public Vector3 Position { get; set; } = new Vector3();
+        public float Bearing { get; set; }
+        public Color TweakColor { get; set; }
+        public string Tag { get; set; } = string.Empty;
     }
 
     [PublicAPI]
     public sealed class GITSound
     {
-        public ResRef ResRef { get; set; }
+        public const int GffStructId = 6;
+        public ResRef ResRef { get; set; } = ResRef.FromBlank();
+        public Vector3 Position { get; set; } = new Vector3();
+        public string Tag { get; set; } = string.Empty;
     }
 
     [PublicAPI]
     public sealed class GITStore
     {
-        public ResRef ResRef { get; set; }
+        public const int GffStructId = 11;
+        public ResRef ResRef { get; set; } = ResRef.FromBlank();
+        public Vector3 Position { get; set; } = new Vector3();
+        public float Bearing { get; set; }
     }
 
     [PublicAPI]
     public sealed class GITTrigger
     {
-        public ResRef ResRef { get; set; }
+        public const int GffStructId = 1;
+        public const int GffGeometryStructId = 3;
+        public ResRef ResRef { get; set; } = ResRef.FromBlank();
+        public Vector3 Position { get; set; } = new Vector3();
+        public List<Vector3> Geometry { get; set; } = new List<Vector3>();
+        public string Tag { get; set; } = string.Empty;
+        public string LinkedTo { get; set; } = string.Empty;
+        public GITModuleLink LinkedToFlags { get; set; } = GITModuleLink.NoLink;
+        public ResRef LinkedToModule { get; set; } = ResRef.FromBlank();
+        public LocalizedString TransitionDestination { get; set; } = LocalizedString.FromInvalid();
     }
 
     [PublicAPI]
     public sealed class GITWaypoint
     {
-        public ResRef ResRef { get; set; }
+        public const int GffStructId = 5;
+        public ResRef ResRef { get; set; } = ResRef.FromBlank();
+        public Vector3 Position { get; set; } = new Vector3();
+        public string Tag { get; set; } = string.Empty;
+        public LocalizedString Name { get; set; } = LocalizedString.FromInvalid();
+        public LocalizedString MapNote { get; set; }
+        public bool MapNoteEnabled { get; set; }
+        public bool HasMapNote { get; set; }
+        public float Bearing { get; set; }
+    }
+
+    // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/git.py:591-594
+    // Original: class GITModuleLink(IntEnum):
+    public enum GITModuleLink
+    {
+        NoLink = 0,
+        ToDoor = 1,
+        ToWaypoint = 2
     }
 }
