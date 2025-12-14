@@ -379,7 +379,16 @@ namespace Odyssey.Content.MDL
                         valuesPerRow *= 3;
                     }
 
-                    ctrl.Values = new float[ctrl.RowCount * (isCompressedQuat ? 4 : valuesPerRow)];
+                    // Check for potential integer overflow
+                    long valuesCountLong = (long)ctrl.RowCount * (isCompressedQuat ? 4 : valuesPerRow);
+                    if (valuesCountLong > int.MaxValue)
+                    {
+                        throw new InvalidOperationException(
+                            $"Controller values array size calculation overflow: rowCount={ctrl.RowCount}, " +
+                            $"valuesPerRow={(isCompressedQuat ? 4 : valuesPerRow)}"
+                        );
+                    }
+                    ctrl.Values = new float[(int)valuesCountLong];
 
                     for (int r = 0; r < ctrl.RowCount; r++)
                     {
@@ -631,10 +640,18 @@ namespace Odyssey.Content.MDL
                 return;
             }
 
-            // Validate MDX data bounds
-            int totalVertexBytes = mesh.VertexCount * mesh.MDXVertexSize;
-            int maxOffset = mesh.MDXDataOffset + totalVertexBytes;
-            if (maxOffset > _mdxData.Length)
+            // Validate MDX data bounds (check for potential integer overflow)
+            long totalVertexBytesLong = (long)mesh.VertexCount * mesh.MDXVertexSize;
+            if (totalVertexBytesLong > int.MaxValue)
+            {
+                throw new InvalidOperationException(
+                    $"MDX vertex data size calculation overflow: vertexCount={mesh.VertexCount}, " +
+                    $"vertexSize={mesh.MDXVertexSize}"
+                );
+            }
+            int totalVertexBytes = (int)totalVertexBytesLong;
+            long maxOffsetLong = (long)mesh.MDXDataOffset + totalVertexBytes;
+            if (maxOffsetLong > int.MaxValue || maxOffsetLong > _mdxData.Length)
             {
                 throw new InvalidOperationException(
                     $"MDX vertex data extends beyond file bounds: " +
@@ -916,7 +933,15 @@ namespace Odyssey.Content.MDL
             // Read QBones (quaternion bind poses)
             if (qBonesCount > 0)
             {
-                float[] qBoneValues = ReadFloatArray(mdlPtr, MDLConstants.FILE_HEADER_SIZE + qBonesOffset, qBonesCount * 4);
+                // Check for potential integer overflow
+                long qBoneValuesCountLong = (long)qBonesCount * 4;
+                if (qBoneValuesCountLong > int.MaxValue)
+                {
+                    throw new InvalidOperationException(
+                        $"QBones array size calculation overflow: qBonesCount={qBonesCount}"
+                    );
+                }
+                float[] qBoneValues = ReadFloatArray(mdlPtr, MDLConstants.FILE_HEADER_SIZE + qBonesOffset, (int)qBoneValuesCountLong);
                 skin.QBones = new Vector4Data[qBonesCount];
                 for (int i = 0; i < qBonesCount; i++)
                 {
@@ -936,7 +961,15 @@ namespace Odyssey.Content.MDL
             // Read TBones (translation bind poses)
             if (tBonesCount > 0)
             {
-                float[] tBoneValues = ReadFloatArray(mdlPtr, MDLConstants.FILE_HEADER_SIZE + tBonesOffset, tBonesCount * 3);
+                // Check for potential integer overflow
+                long tBoneValuesCountLong = (long)tBonesCount * 3;
+                if (tBoneValuesCountLong > int.MaxValue)
+                {
+                    throw new InvalidOperationException(
+                        $"TBones array size calculation overflow: tBonesCount={tBonesCount}"
+                    );
+                }
+                float[] tBoneValues = ReadFloatArray(mdlPtr, MDLConstants.FILE_HEADER_SIZE + tBonesOffset, (int)tBoneValuesCountLong);
                 skin.TBones = new Vector3Data[tBonesCount];
                 for (int i = 0; i < tBonesCount; i++)
                 {
@@ -1066,7 +1099,15 @@ namespace Odyssey.Content.MDL
             }
 
             // Validate bounds - each face is 32 bytes (3*float + float + int + 6*short = 12+4+4+12 = 32)
-            int requiredBytes = count * 32;
+            // Check for potential integer overflow in multiplication
+            long requiredBytesLong = (long)count * 32;
+            if (requiredBytesLong > int.MaxValue)
+            {
+                throw new InvalidOperationException(
+                    $"Face array size calculation overflow: count={count}, bytesPerFace=32"
+                );
+            }
+            int requiredBytes = (int)requiredBytesLong;
             if (offset < 0 || offset + requiredBytes > _mdlData.Length)
             {
                 throw new InvalidOperationException(
@@ -1141,7 +1182,15 @@ namespace Odyssey.Content.MDL
             }
             if (flareColorShiftsCount > 0)
             {
-                float[] colorData = ReadFloatArray(mdlPtr, MDLConstants.FILE_HEADER_SIZE + flareColorShiftsOffset, flareColorShiftsCount * 3);
+                // Check for potential integer overflow
+                long colorDataCountLong = (long)flareColorShiftsCount * 3;
+                if (colorDataCountLong > int.MaxValue)
+                {
+                    throw new InvalidOperationException(
+                        $"Flare color shifts array size calculation overflow: flareColorShiftsCount={flareColorShiftsCount}"
+                    );
+                }
+                float[] colorData = ReadFloatArray(mdlPtr, MDLConstants.FILE_HEADER_SIZE + flareColorShiftsOffset, (int)colorDataCountLong);
                 light.FlareColorShifts = new Vector3Data[flareColorShiftsCount];
                 for (int i = 0; i < flareColorShiftsCount; i++)
                 {
@@ -1322,8 +1371,15 @@ namespace Odyssey.Content.MDL
                 return Array.Empty<int>();
             }
 
-            // Validate bounds
-            int requiredBytes = count * sizeof(int);
+            // Validate bounds (check for potential integer overflow in multiplication)
+            long requiredBytesLong = (long)count * sizeof(int);
+            if (requiredBytesLong > int.MaxValue)
+            {
+                throw new InvalidOperationException(
+                    $"Int32 array size calculation overflow: count={count}, sizeof(int)={sizeof(int)}"
+                );
+            }
+            int requiredBytes = (int)requiredBytesLong;
             if (offset < 0 || offset + requiredBytes > _mdlData.Length)
             {
                 throw new InvalidOperationException(
@@ -1353,7 +1409,15 @@ namespace Odyssey.Content.MDL
             }
 
             // Validate bounds with explicit data length parameter (for MDX data)
-            int requiredBytes = count * sizeof(int);
+            // Check for potential integer overflow in multiplication
+            long requiredBytesLong = (long)count * sizeof(int);
+            if (requiredBytesLong > int.MaxValue)
+            {
+                throw new InvalidOperationException(
+                    $"Int32 array size calculation overflow: count={count}, sizeof(int)={sizeof(int)}"
+                );
+            }
+            int requiredBytes = (int)requiredBytesLong;
             if (offset < 0 || offset + requiredBytes > dataLength)
             {
                 throw new InvalidOperationException(
@@ -1382,8 +1446,15 @@ namespace Odyssey.Content.MDL
                 return Array.Empty<float>();
             }
 
-            // Validate bounds
-            int requiredBytes = count * sizeof(float);
+            // Validate bounds (check for potential integer overflow in multiplication)
+            long requiredBytesLong = (long)count * sizeof(float);
+            if (requiredBytesLong > int.MaxValue)
+            {
+                throw new InvalidOperationException(
+                    $"Float array size calculation overflow: count={count}, sizeof(float)={sizeof(float)}"
+                );
+            }
+            int requiredBytes = (int)requiredBytesLong;
             if (offset < 0 || offset + requiredBytes > _mdlData.Length)
             {
                 throw new InvalidOperationException(
@@ -1412,8 +1483,15 @@ namespace Odyssey.Content.MDL
                 return Array.Empty<ushort>();
             }
 
-            // Validate bounds
-            int requiredBytes = count * sizeof(ushort);
+            // Validate bounds (check for potential integer overflow in multiplication)
+            long requiredBytesLong = (long)count * sizeof(ushort);
+            if (requiredBytesLong > int.MaxValue)
+            {
+                throw new InvalidOperationException(
+                    $"UInt16 array size calculation overflow: count={count}, sizeof(ushort)={sizeof(ushort)}"
+                );
+            }
+            int requiredBytes = (int)requiredBytesLong;
             if (offset < 0 || offset + requiredBytes > _mdlData.Length)
             {
                 throw new InvalidOperationException(
