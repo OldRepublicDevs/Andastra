@@ -129,27 +129,49 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             int mainStart = 0;
             int mainEnd = instructions.Count;
             
-            // If SAVEBP is found, create globals subroutine (0 to SAVEBP+1) and main starts after entry stub
+            // Calculate where main should start based on globals and entry stub
             if (savebpIndex >= 0)
             {
-                mainStart = savebpIndex + 1; // Start after SAVEBP (entry stub will be at mainStart)
-            }
-            
-            // If entry stub detected, main starts at the entry JSR target (after the entry stub)
-            // But ensure mainStart is after the globals range (0 to savebpIndex+1)
-            // Also ensure entryJsrTarget is not 0 (which would be the start of globals)
-            if (entryJsrTarget >= 0)
-            {
-                int globalsEnd = (savebpIndex >= 0) ? savebpIndex + 1 : 0;
-                // Only use entryJsrTarget if it's after the globals range AND not position 0
-                if (entryJsrTarget > globalsEnd && entryJsrTarget > 0)
+                // Globals end at savebpIndex+1 (SAVEBP is at savebpIndex)
+                int globalsEnd = savebpIndex + 1;
+                // Entry stub starts at globalsEnd (savebpIndex+1)
+                int entryStubEnd = globalsEnd;
+                
+                // Check for entry stub pattern at savebpIndex+1
+                // Pattern 1: JSR (at savebpIndex+1) + RETN (at savebpIndex+2)
+                if (instructions.Count > entryStubEnd + 1 && 
+                    instructions[entryStubEnd].InsType == NCSInstructionType.JSR &&
+                    instructions[entryStubEnd + 1].InsType == NCSInstructionType.RETN)
+                {
+                    entryStubEnd = entryStubEnd + 2; // JSR + RETN
+                }
+                // Pattern 2: JSR (at savebpIndex+1) + RESTOREBP (at savebpIndex+2)
+                else if (instructions.Count > entryStubEnd + 1 &&
+                         instructions[entryStubEnd].InsType == NCSInstructionType.JSR &&
+                         instructions[entryStubEnd + 1].InsType == NCSInstructionType.RESTOREBP)
+                {
+                    entryStubEnd = entryStubEnd + 2; // JSR + RESTOREBP
+                }
+                
+                // Main starts after entry stub
+                // If entryJsrTarget is valid and after entry stub, use it; otherwise use entryStubEnd
+                if (entryJsrTarget >= 0 && entryJsrTarget > entryStubEnd)
                 {
                     mainStart = entryJsrTarget;
-                    JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Main starts at entry JSR target: {mainStart} (globals end at {globalsEnd})");
+                    JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Main starts at entryJsrTarget {entryJsrTarget} (after entry stub at {entryStubEnd})");
                 }
                 else
                 {
-                    JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Entry JSR target {entryJsrTarget} is within globals range (0-{globalsEnd}) or is 0, using {mainStart} instead");
+                    mainStart = entryStubEnd;
+                    JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Main starts at entryStubEnd {entryStubEnd} (entryJsrTarget {entryJsrTarget} invalid or in globals range)");
+                }
+            }
+            else
+            {
+                // No SAVEBP - no globals, main starts at 0 or entryJsrTarget
+                if (entryJsrTarget >= 0 && entryJsrTarget > 0)
+                {
+                    mainStart = entryJsrTarget;
                 }
             }
             
