@@ -346,6 +346,14 @@ namespace Odyssey.Kotor.Game
                 );
                 ctx.SetTriggerer(triggerer);
                 ctx.ResourceProvider = _moduleLoader;
+                
+                // Store GameSession services in additional context
+                var gameServices = new GameServicesContext
+                {
+                    DialogueManager = _dialogueManager,
+                    PlayerEntity = _playerEntity
+                };
+                ctx.AdditionalContext = gameServices;
 
                 _vm.Execute(scriptBytes, ctx);
             }
@@ -522,7 +530,7 @@ namespace Odyssey.Kotor.Game
                 ExecuteModuleScript(Odyssey.Core.Enums.ScriptEvent.OnModuleLeave, _currentRuntimeModule);
             }
 
-            // Save persistent state (area states, etc.)
+            // TODO: Save persistent state (area states, etc.)
             // This would be handled by the save system when saving
 
             // Clear entities
