@@ -285,7 +285,17 @@ namespace Odyssey.Stride.Camera
             {
                 // Binary search to find closest unblocked position
                 Vector3 direction = camera - target;
+                // Get direction vector length
+                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.Vector3.html
+                // Vector3.Length property gets the length (magnitude) of the vector
+                // Method signature: float Length { get; }
+                // Source: https://doc.stride3d.net/latest/en/manual/mathematics/index.html
                 float maxDist = direction.Length();
+                // Normalize direction vector to unit length
+                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.Vector3.html
+                // Vector3.Normalize() normalizes the vector in-place to unit length (length = 1.0)
+                // Method signature: void Normalize()
+                // Source: https://doc.stride3d.net/latest/en/manual/mathematics/index.html
                 direction.Normalize();
 
                 float minDist = 0.5f; // Minimum distance from target
