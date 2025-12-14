@@ -1096,6 +1096,10 @@ namespace Odyssey.Game.Core
             // Source: https://doc.stride3d.net/latest/en/manual/game-loop/index.html
             base.Update(gameTime);
 
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Games.GameTime.html
+            // GameTime.Elapsed property gets the elapsed time since the last frame
+            // TotalSeconds property gets the elapsed time in seconds as a double
+            // Source: https://doc.stride3d.net/latest/en/manual/game-loop/index.html
             float deltaTime = (float)gameTime.Elapsed.TotalSeconds;
 
             // Only process game input when actually in-game
@@ -1776,6 +1780,11 @@ namespace Odyssey.Game.Core
             // #region agent log
             if (_drawCallCount == 0 || _drawCallCount == 60)
             {
+                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Games.Game.html
+                // Game.Services property provides access to the service registry
+                // GetService<T>() retrieves a service of type T from the registry
+                // Method signature: T GetService<T>() where T : class
+                // Source: https://doc.stride3d.net/latest/en/manual/game-loop/index.html
                 var sceneSystem = Services.GetService<SceneSystem>();
                 DebugLog("F", "OdysseyGame.Draw", "Draw frame " + _drawCallCount,
                     "compositor=" + (sceneSystem?.GraphicsCompositor != null) +
@@ -1823,6 +1832,8 @@ namespace Odyssey.Game.Core
             // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Games.Game.html
             // Game.Draw(GameTime) is called each frame to render the scene
             // Method signature: protected virtual void Draw(GameTime gameTime)
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Games.GameTime.html
+            // GameTime parameter provides timing information for the current frame
             // Source: https://doc.stride3d.net/latest/en/manual/game-loop/index.html
             base.Draw(gameTime);
         }
