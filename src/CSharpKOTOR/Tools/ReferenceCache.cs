@@ -1212,11 +1212,11 @@ namespace CSharpKOTOR.Tools
             }
         }
 
-        // This will be populated from TwoDARegistry when gff_field_mapping() is implemented
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/reference_cache.py:57-61
+        // Original: def _get_gff_field_to_2da_mapping(): ...
         public static Dictionary<string, ResourceIdentifier> GffFieldTo2daMapping()
         {
-            // TODO: Implement when TwoDARegistry.gff_field_mapping() is available
-            return new Dictionary<string, ResourceIdentifier>();
+            return Extract.TwoDARegistry.GffFieldMapping();
         }
     }
 }

@@ -337,6 +337,7 @@ namespace KotorDiff.NET.App
             {
                 // Extract base data path from first path if it's a directory
                 string baseDataPath = null;
+                string moddedDataPath = null;
                 if (config.Paths != null && config.Paths.Count > 0)
                 {
                     object firstPath = config.Paths[0];
@@ -348,12 +349,27 @@ namespace KotorDiff.NET.App
                     {
                         baseDataPath = dirInfo.FullName;
                     }
+                    
+                    // Extract modded data path from second path if available
+                    if (config.Paths.Count > 1)
+                    {
+                        object secondPath = config.Paths[1];
+                        if (secondPath is string pathStr2 && Directory.Exists(pathStr2))
+                        {
+                            moddedDataPath = pathStr2;
+                        }
+                        else if (secondPath is DirectoryInfo dirInfo2)
+                        {
+                            moddedDataPath = dirInfo2.FullName;
+                        }
+                    }
                 }
 
                 incrementalWriter = new IncrementalTSLPatchDataWriter(
                     config.TslPatchDataPath.FullName,
                     config.IniFilename ?? "changes.ini",
-                    baseDataPath);
+                    baseDataPath,
+                    moddedDataPath);
             }
 
             // Call handle_diff_internal

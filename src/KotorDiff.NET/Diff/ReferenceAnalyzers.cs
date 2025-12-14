@@ -677,7 +677,14 @@ namespace KotorDiff.NET.Diff
             foreach (var kvp in gffFieldTo2daMapping)
             {
                 string fieldName = kvp.Key;
-                string twodaFilenameLower = kvp.Value.ResName.ToLowerInvariant();
+                string twodaResName = kvp.Value.ResName.ToLowerInvariant();
+                // ResName might be "baseitems" but we need to match "baseitems.2da"
+                // Add both the ResName and ResName.2da to handle both cases
+                string twodaFilenameLower = twodaResName;
+                if (!twodaFilenameLower.EndsWith(".2da", StringComparison.OrdinalIgnoreCase))
+                {
+                    twodaFilenameLower = twodaFilenameLower + ".2da";
+                }
                 if (!twodaToFields.ContainsKey(twodaFilenameLower))
                 {
                     twodaToFields[twodaFilenameLower] = new List<string>();
@@ -695,31 +702,121 @@ namespace KotorDiff.NET.Diff
                 // Process each modifier to extract row indices and token IDs
                 foreach (Modify2DA modifier in mod2da.Modifiers)
                 {
-                    if (modifier is AddRow2DA addRow && addRow.Store2DA != null)
+                    if (modifier is AddRow2DA addRow)
                     {
-                        // AddRow rows have unknown indices until patch-time; we cannot create static mappings for RowIndex storage.
-                        foreach (var kvp in addRow.Store2DA)
+                        // For AddRow2DA, we need to determine the row index from the modded 2DA file
+                        // Load the modded 2DA to find what row index this new row will have
+                        int? newRowIndex = null;
+                        try
                         {
-                            int tokenId = kvp.Key;
-                            RowValue rowValue = kvp.Value;
-                            if (rowValue is RowValueRowIndex)
+                            // Try to find the modded 2DA file
+                            string modded2daPath = Find2DaFile(installationOrFolderPath, twodaFilename);
+                            if (!string.IsNullOrEmpty(modded2daPath) && File.Exists(modded2daPath))
                             {
-                                logFunc($"Skipping AddRow2DA mapping for 2DAMEMORY token {tokenId}: row index is determined at install time");
-                                continue;
-                            }
-                            if (rowValue is RowValueConstant constantValue)
-                            {
-                                try
+                                var modded2da = new TwoDABinaryReader(modded2daPath).Load();
+                                // Find the row by label
+                                if (!string.IsNullOrEmpty(addRow.RowLabel))
                                 {
-                                    int rowIdx = int.Parse(constantValue.String);
-                                    rowToToken[Tuple.Create(twodaFilename, rowIdx)] = tokenId;
-                                    logFunc($"Mapped {twodaFilename} row {rowIdx} -> 2DAMEMORY{tokenId}");
+                                    for (int i = 0; i < modded2da.GetHeight(); i++)
+                                    {
+                                        if (modded2da.GetLabel(i) == addRow.RowLabel)
+                                        {
+                                            newRowIndex = i;
+                                            break;
+                                        }
+                                    }
                                 }
-                                catch (Exception e)
+                                // If not found by label, use the last row index (assuming it's the new row)
+                                if (!newRowIndex.HasValue && modded2da.GetHeight() > 0)
                                 {
-                                    logFunc($"Failed to map {twodaFilename} row {constantValue.String} -> 2DAMEMORY{tokenId}: {e.GetType().Name}: {e.Message}");
-                                    logFunc($"Full traceback: {e.StackTrace}");
+                                    newRowIndex = modded2da.GetHeight() - 1;
+                                }
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            logFunc($"Failed to determine row index for AddRow2DA in {twodaFilename}: {e.GetType().Name}: {e.Message}");
+                        }
+
+                        // If we found the row index, assign a token if needed and add to mapping
+                        if (newRowIndex.HasValue)
+                        {
+                            int tokenId;
+                            if (addRow.Store2DA != null && addRow.Store2DA.Count > 0)
+                            {
+                                // Use existing token
+                                tokenId = addRow.Store2DA.Keys.First();
+                            }
+                            else
+                            {
+                                // Assign new token - Store2DA dictionary is mutable even though property is read-only
+                                // Find the next available token ID by checking all existing tokens
+                                int maxTokenId = -1;
+                                foreach (Modifications2DA mod2daForToken in twodaModifications)
+                                {
+                                    foreach (Modify2DA modForToken in mod2daForToken.Modifiers)
+                                    {
+                                        Dictionary<int, RowValue> store2daForToken = null;
+                                        if (modForToken is AddRow2DA addRowMod)
+                                        {
+                                            store2daForToken = addRowMod.Store2DA;
+                                        }
+                                        else if (modForToken is ChangeRow2DA changeRowMod)
+                                        {
+                                            store2daForToken = changeRowMod.Store2DA;
+                                        }
+                                        else if (modForToken is CopyRow2DA copyRowMod)
+                                        {
+                                            store2daForToken = copyRowMod.Store2DA;
+                                        }
+                                        
+                                        if (store2daForToken != null)
+                                        {
+                                            foreach (int existingTokenId in store2daForToken.Keys)
+                                            {
+                                                if (existingTokenId > maxTokenId)
+                                                {
+                                                    maxTokenId = existingTokenId;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                                tokenId = maxTokenId + 1;
+                                
+                                // Add token to Store2DA dictionary (dictionary is mutable)
+                                addRow.Store2DA[tokenId] = new RowValueRowIndex();
+                                logFunc($"Assigned 2DAMEMORY token {tokenId} to AddRow2DA in {twodaFilename} (row {newRowIndex.Value})");
+                            }
+                            rowToToken[Tuple.Create(twodaFilename, newRowIndex.Value)] = tokenId;
+                            logFunc($"Mapped {twodaFilename} row {newRowIndex.Value} -> 2DAMEMORY{tokenId}");
+                        }
+                        else if (addRow.Store2DA != null)
+                        {
+                            // Fallback: process existing Store2DA entries
+                            foreach (var kvp in addRow.Store2DA)
+                            {
+                                int tokenId = kvp.Key;
+                                RowValue rowValue = kvp.Value;
+                                if (rowValue is RowValueRowIndex)
+                                {
+                                    logFunc($"Skipping AddRow2DA mapping for 2DAMEMORY token {tokenId}: row index is determined at install time");
                                     continue;
+                                }
+                                if (rowValue is RowValueConstant constantValue)
+                                {
+                                    try
+                                    {
+                                        int rowIdx = int.Parse(constantValue.String);
+                                        rowToToken[Tuple.Create(twodaFilename, rowIdx)] = tokenId;
+                                        logFunc($"Mapped {twodaFilename} row {rowIdx} -> 2DAMEMORY{tokenId}");
+                                    }
+                                    catch (Exception e)
+                                    {
+                                        logFunc($"Failed to map {twodaFilename} row {constantValue.String} -> 2DAMEMORY{tokenId}: {e.GetType().Name}: {e.Message}");
+                                        logFunc($"Full traceback: {e.StackTrace}");
+                                        continue;
+                                    }
                                 }
                             }
                         }
@@ -820,14 +917,21 @@ namespace KotorDiff.NET.Diff
                     int rowIndex = kvp.Key.Item2;
                     int tokenId = kvp.Value;
 
-                    // Get field names that reference this 2DA
-                    if (!twodaToFields.ContainsKey(twodaFilename))
+                    // Normalize 2DA filename for lookup (ensure it has .2da extension)
+                    string twodaFilenameForLookup = twodaFilename.ToLowerInvariant();
+                    if (!twodaFilenameForLookup.EndsWith(".2da", StringComparison.OrdinalIgnoreCase))
                     {
-                        logFunc($"No known field mappings for {twodaFilename}");
+                        twodaFilenameForLookup = twodaFilenameForLookup + ".2da";
+                    }
+
+                    // Get field names that reference this 2DA
+                    if (!twodaToFields.ContainsKey(twodaFilenameForLookup))
+                    {
+                        logFunc($"No known field mappings for {twodaFilename} (lookup key: {twodaFilenameForLookup})");
                         continue;
                     }
 
-                    List<string> fieldNames = twodaToFields[twodaFilename];
+                    List<string> fieldNames = twodaToFields[twodaFilenameForLookup];
                     logFunc($"Analyzing {twodaFilename} row {rowIndex} -> token {tokenId} (fields: {string.Join(", ", fieldNames)})");
 
                     int foundCount = 0;
@@ -835,6 +939,7 @@ namespace KotorDiff.NET.Diff
                     // Search each resource
                     foreach (FileResource resource in allResources)
                     {
+                        string filename = resource.Filename().ToLowerInvariant();
                         try
                         {
                             byte[] data = resource.GetData();
@@ -850,7 +955,6 @@ namespace KotorDiff.NET.Diff
                             if (fieldPaths.Count > 0)
                             {
                                 foundCount += fieldPaths.Count;
-                                string filename = resource.Filename().ToLowerInvariant();
 
                                 // Check if we already have a modification for this file
                                 ModificationsGFF existingGffMod = gffModifications.FirstOrDefault(m => m.SourceFile.ToLowerInvariant() == filename);
@@ -871,9 +975,10 @@ namespace KotorDiff.NET.Diff
                                 }
                             }
                         }
-                        catch (Exception)
+                        catch (Exception e)
                         {
                             // Not a GFF file or failed to parse, skip
+                            logFunc($"  [WARNING] Failed to process GFF file {filename}: {e.GetType().Name}: {e.Message}");
                             continue;
                         }
                     }
@@ -908,11 +1013,48 @@ namespace KotorDiff.NET.Diff
 
                 // Check if this is one of the fields we're looking for and value matches
                 bool isTargetField = fieldNames.Contains(label);
-                bool isIntValue = value is int;
-                bool matchesTarget = isIntValue && (int)value == targetValue;
-                if (isTargetField && matchesTarget)
+                if (isTargetField)
                 {
-                    locations.Add(fieldPath);
+                    // Handle various numeric types that might be stored
+                    int? numericValue = null;
+                    if (value is int intVal)
+                    {
+                        numericValue = intVal;
+                    }
+                    else if (value is uint uintVal)
+                    {
+                        numericValue = (int)uintVal;
+                    }
+                    else if (value is long longVal)
+                    {
+                        numericValue = (int)longVal;
+                    }
+                    else if (value is ulong ulongVal)
+                    {
+                        numericValue = (int)ulongVal;
+                    }
+                    else if (value is short shortVal)
+                    {
+                        numericValue = (int)shortVal;
+                    }
+                    else if (value is ushort ushortVal)
+                    {
+                        numericValue = (int)ushortVal;
+                    }
+                    else if (value is byte byteVal)
+                    {
+                        numericValue = (int)byteVal;
+                    }
+                    else if (value is sbyte sbyteVal)
+                    {
+                        numericValue = (int)sbyteVal;
+                    }
+                    
+                    bool matchesTarget = numericValue.HasValue && numericValue.Value == targetValue;
+                    if (matchesTarget)
+                    {
+                        locations.Add(fieldPath);
+                    }
                 }
 
                 // Recurse into nested structures
@@ -994,6 +1136,53 @@ namespace KotorDiff.NET.Diff
                 }
             }
             return fallbackIndex;
+        }
+
+        // Helper method to find a 2DA file in the installation/folder
+        private static string Find2DaFile(string installationOrFolderPath, string twodaFilename)
+        {
+            if (string.IsNullOrEmpty(installationOrFolderPath) || string.IsNullOrEmpty(twodaFilename))
+            {
+                return null;
+            }
+
+            // Ensure filename has .2da extension
+            if (!twodaFilename.EndsWith(".2da", StringComparison.OrdinalIgnoreCase))
+            {
+                twodaFilename = twodaFilename + ".2da";
+            }
+
+            // Try common locations: Override, root, modules
+            string[] searchPaths = new[]
+            {
+                Path.Combine(installationOrFolderPath, "Override", twodaFilename),
+                Path.Combine(installationOrFolderPath, twodaFilename),
+                Path.Combine(installationOrFolderPath, "modules", twodaFilename)
+            };
+
+            foreach (string searchPath in searchPaths)
+            {
+                if (File.Exists(searchPath))
+                {
+                    return searchPath;
+                }
+            }
+
+            // Also search recursively for the file
+            try
+            {
+                var files = Directory.GetFiles(installationOrFolderPath, twodaFilename, SearchOption.AllDirectories);
+                if (files.Length > 0)
+                {
+                    return files[0];
+                }
+            }
+            catch
+            {
+                // Ignore search errors
+            }
+
+            return null;
         }
     }
 }
