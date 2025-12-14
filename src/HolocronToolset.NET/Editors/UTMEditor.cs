@@ -353,12 +353,16 @@ namespace HolocronToolset.NET.Editors
             // Note: NumericUpDown.Value is decimal?, but Python's QSpinBox.value() always returns an int
             // Matching PyKotor implementation: Python always reads from UI without null checks
             // Python: utm.id = self.ui.idSpin.value() - always returns int, never None
+            // Matching PyKotor implementation: Python always reads from UI
+            // Python: utm.id = self.ui.idSpin.value() - always returns int, never None
             if (_idSpin != null)
             {
                 // Always read from UI (matching Python behavior)
-                // Use the property to ensure we're reading from the same instance the test sets
-                var idSpinValue = IdSpin?.Value;
-                utm.Id = idSpinValue.HasValue ? (int)idSpinValue.Value : 0;
+                // Directly read from _idSpin to match Python's direct UI access
+                // Python's QSpinBox.value() always returns an int, never None
+                // NumericUpDown.Value is decimal?, so we need to handle null
+                var value = _idSpin.Value;
+                utm.Id = value.HasValue ? (int)value.Value : 0;
             }
             // Matching PyKotor implementation: utm.mark_up = self.ui.markUpSpin.value()
             if (_markUpSpin != null && _markUpSpin.Value.HasValue)
@@ -384,14 +388,11 @@ namespace HolocronToolset.NET.Editors
 
             // Matching PyKotor implementation: utm.can_buy = bool((self.ui.storeFlagSelect.currentIndex() + 1) & 1)
             // Matching PyKotor implementation: utm.can_sell = bool((self.ui.storeFlagSelect.currentIndex() + 1) & 2)
-            // Python always reads from UI, even if currentIndex() is -1 (which gives flagValue = 0, both flags false)
-            if (_storeFlagSelect != null)
-            {
-                int index = _storeFlagSelect.SelectedIndex >= 0 ? _storeFlagSelect.SelectedIndex : -1;
-                int flagValue = index + 1; // -1 + 1 = 0, 0 + 1 = 1, 1 + 1 = 2, 2 + 1 = 3
-                utm.CanBuy = (flagValue & 1) != 0;
-                utm.CanSell = (flagValue & 2) != 0;
-            }
+            // Python always reads from UI without null checks - currentIndex() returns -1 if nothing selected
+            int index = _storeFlagSelect != null && _storeFlagSelect.SelectedIndex >= 0 ? _storeFlagSelect.SelectedIndex : -1;
+            int flagValue = index + 1; // -1 + 1 = 0, 0 + 1 = 1, 1 + 1 = 2, 2 + 1 = 3
+            utm.CanBuy = (flagValue & 1) != 0;
+            utm.CanSell = (flagValue & 2) != 0;
 
             // Comments
             // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utm.py:167

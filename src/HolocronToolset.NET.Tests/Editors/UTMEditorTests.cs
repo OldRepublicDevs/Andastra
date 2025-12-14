@@ -684,16 +684,25 @@ namespace HolocronToolset.NET.Tests.Editors
 
             // Matching PyKotor implementation: for i in range(editor.ui.storeFlagSelect.count()):
             editor.StoreFlagSelect.Should().NotBeNull("StoreFlagSelect should be initialized");
-            for (int i = 0; i < editor.StoreFlagSelect.ItemCount; i++)
+            int itemCount = editor.StoreFlagSelect.ItemCount;
+            for (int i = 0; i < itemCount; i++)
             {
                 // Matching PyKotor implementation: editor.ui.storeFlagSelect.setCurrentIndex(i)
                 editor.StoreFlagSelect.SelectedIndex = i;
+
+                // Debug: Verify SelectedIndex was actually set
+                int actualSelectedIndex = editor.StoreFlagSelect.SelectedIndex;
+                Assert.Equal(i, actualSelectedIndex); // This should pass, or we'd know the SelectedIndex isn't being set
 
                 // Matching PyKotor implementation: data, _ = editor.build()
                 var (data, _) = editor.Build();
 
                 // Matching PyKotor implementation: modified_utm = read_utm(data)
-                var modifiedUtm = UTMHelpers.ConstructUtm(CSharpKOTOR.Formats.GFF.GFF.FromBytes(data));
+                var gff = CSharpKOTOR.Formats.GFF.GFF.FromBytes(data);
+                var modifiedUtm = UTMHelpers.ConstructUtm(gff);
+
+                // Debug: Check what was written to GFF
+                int buySellFlagInGff = gff.Root.Acquire<int>("BuySellFlag", -1);
 
                 // Matching PyKotor implementation: expected_can_buy = bool((i + 1) & 1)
                 // Matching PyKotor implementation: expected_can_sell = bool((i + 1) & 2)
@@ -702,8 +711,10 @@ namespace HolocronToolset.NET.Tests.Editors
 
                 // Matching PyKotor implementation: assert modified_utm.can_buy == expected_can_buy
                 // Matching PyKotor implementation: assert modified_utm.can_sell == expected_can_sell
-                modifiedUtm.CanBuy.Should().Be(expectedCanBuy);
-                modifiedUtm.CanSell.Should().Be(expectedCanSell);
+                Assert.True(modifiedUtm.CanBuy == expectedCanBuy, 
+                    $"Iteration {i}: CanBuy mismatch. Expected={expectedCanBuy}, Actual={modifiedUtm.CanBuy}, BuySellFlag in GFF={buySellFlagInGff}, SelectedIndex={actualSelectedIndex}");
+                Assert.True(modifiedUtm.CanSell == expectedCanSell,
+                    $"Iteration {i}: CanSell mismatch. Expected={expectedCanSell}, Actual={modifiedUtm.CanSell}, BuySellFlag in GFF={buySellFlagInGff}, SelectedIndex={actualSelectedIndex}");
 
                 // Matching PyKotor implementation: editor.load(utm_file, "m_chano", ResourceType.UTM, data)
                 editor.Load(utmFile, "m_chano", ResourceType.UTM, data);
