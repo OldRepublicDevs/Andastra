@@ -284,7 +284,30 @@ namespace Odyssey.Content.MDL
             }
 
             // Phase 6: Read node hierarchy
-            model.RootNode = ReadNode(mdlPtr, MDLConstants.FILE_HEADER_SIZE + rootNodeOffset);
+            // Validate root node offset before reading
+            if (rootNodeOffset >= 0)
+            {
+                long absoluteOffsetLong = (long)MDLConstants.FILE_HEADER_SIZE + rootNodeOffset;
+                if (absoluteOffsetLong >= 0 && absoluteOffsetLong < _mdlData.Length)
+                {
+                    model.RootNode = ReadNode(mdlPtr, (int)absoluteOffsetLong);
+                }
+                else
+                {
+                    throw new InvalidDataException(
+                        $"Root node offset is out of bounds: " +
+                        $"FILE_HEADER_SIZE ({MDLConstants.FILE_HEADER_SIZE}) + " +
+                        $"rootNodeOffset ({rootNodeOffset}) = {absoluteOffsetLong}, " +
+                        $"file length = {_mdlData.Length}"
+                    );
+                }
+            }
+            else
+            {
+                throw new InvalidDataException(
+                    $"Root node offset is negative ({rootNodeOffset}), indicating corrupted data."
+                );
+            }
 
             return model;
         }
