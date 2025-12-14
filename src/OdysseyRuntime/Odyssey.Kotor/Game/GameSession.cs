@@ -41,6 +41,7 @@ namespace Odyssey.Kotor.Game
         private readonly FactionManager _factionManager;
         private readonly CombatManager _combatManager;
         private readonly PerceptionManager _perceptionManager;
+        private readonly ModuleTransitionSystem _moduleTransitionSystem;
 
         private string _currentModuleName;
         private RuntimeModule _currentRuntimeModule;
@@ -122,6 +123,14 @@ namespace Odyssey.Kotor.Game
             get { return _factionManager; }
         }
 
+        /// <summary>
+        /// Gets the module transition system.
+        /// </summary>
+        public ModuleTransitionSystem ModuleTransitionSystem
+        {
+            get { return _moduleTransitionSystem; }
+        }
+
         public GameSession(object settings, World world, NcsVm vm, IScriptGlobals globals)
         {
             _settings = GameSessionSettings.FromGameSettings(settings);
@@ -170,8 +179,72 @@ namespace Odyssey.Kotor.Game
             // Create perception manager
             _perceptionManager = new PerceptionManager(world);
 
+            // Create module transition system
+            _moduleTransitionSystem = new ModuleTransitionSystem(
+                LoadModuleAsync,
+                PositionPlayerAtWaypoint
+            );
+
             // Load talk tables
             LoadTalkTables();
+        }
+
+        /// <summary>
+        /// Loads a module asynchronously.
+        /// </summary>
+        private async System.Threading.Tasks.Task<bool> LoadModuleAsync(string moduleName)
+        {
+            try
+            {
+                return await System.Threading.Tasks.Task.Run(() =>
+                {
+                    try
+                    {
+                        LoadModule(moduleName);
+                        return true;
+                    }
+                    catch
+                    {
+                        return false;
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[GameSession] Error loading module {moduleName}: {ex.Message}");
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Positions the player at a waypoint.
+        /// </summary>
+        private void PositionPlayerAtWaypoint(IEntity player, string waypointTag)
+        {
+            if (player == null || string.IsNullOrEmpty(waypointTag))
+            {
+                return;
+            }
+
+            IEntity waypoint = _world.GetEntityByTag(waypointTag);
+            if (waypoint == null)
+            {
+                Console.WriteLine($"[GameSession] Waypoint not found: {waypointTag}");
+                return;
+            }
+
+            ITransformComponent waypointTransform = waypoint.GetComponent<ITransformComponent>();
+            if (waypointTransform == null)
+            {
+                return;
+            }
+
+            ITransformComponent playerTransform = player.GetComponent<ITransformComponent>();
+            if (playerTransform != null)
+            {
+                playerTransform.Position = waypointTransform.Position;
+                playerTransform.Facing = waypointTransform.Facing;
+            }
         }
 
         /// <summary>
