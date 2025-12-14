@@ -246,6 +246,16 @@ Object (abstract base)
 - [ ] Perception-driven reactions
 - [ ] Script-driven overrides
 
+## Phase 8.5: Area Management ✅
+
+### 8.5.1 Area Loading Orchestrator
+- [x] `AreaManager` - Complete area loading orchestrator
+- [x] Progress callback support for loading screens
+- [x] Entity spawning from GIT instances
+- [x] Navigation mesh loading and pathfinding integration
+- [x] Room visibility queries
+- [x] Area unloading and cleanup
+
 ## Phase 9: Transitions + State
 
 ### 9.1 Door Transitions
