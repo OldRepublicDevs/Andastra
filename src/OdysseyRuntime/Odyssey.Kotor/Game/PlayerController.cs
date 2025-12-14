@@ -21,7 +21,7 @@ namespace Odyssey.Kotor.Game
         private readonly float _runSpeed = 8.0f;
 
         private Vector3 _targetPosition;
-#pragma warning disable CS0414 // Field is assigned but never used - reserved for future pathfinding logic
+#pragma warning disable CS0414 // TODO: Field is assigned but never used - reserved for future pathfinding logic
         private bool _hasTarget;
 #pragma warning restore CS0414
         private bool _isRunning;

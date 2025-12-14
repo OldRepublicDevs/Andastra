@@ -21,11 +21,11 @@ $missingFiles = @()
 foreach ($pyFile in $pyFiles) {
     $relativePath = $pyFile.FullName -replace [regex]::Escape((Resolve-Path $PyKotorPath).Path + "\"), ""
     $moduleName = $pyFile.BaseName
-    
+
     # Try to find corresponding C# file
     $found = $false
     $matchingCs = $csFiles | Where-Object { $_.BaseName -eq $moduleName -or $_.BaseName -like "*$moduleName*" }
-    
+
     if ($matchingCs.Count -gt 0) {
         $portingMap[$relativePath] = @{
             Status = "PortExists"
@@ -33,7 +33,7 @@ foreach ($pyFile in $pyFiles) {
         }
         $found = $true
     }
-    
+
     if (-not $found) {
         $missingFiles += $relativePath
         $portingMap[$relativePath] = @{
