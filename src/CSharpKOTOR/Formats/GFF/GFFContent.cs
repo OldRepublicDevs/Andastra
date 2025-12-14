@@ -46,6 +46,32 @@ namespace CSharpKOTOR.Formats.GFF
             return content.ToString().PadRight(4);
         }
 
+        public static GFFContent FromResName(string resname)
+        {
+            if (string.IsNullOrEmpty(resname))
+            {
+                return GFFContent.GFF;
+            }
+
+            string lower = resname.ToLowerInvariant();
+            if (lower.EndsWith(".are")) return GFFContent.ARE;
+            if (lower.EndsWith(".dlg")) return GFFContent.DLG;
+            if (lower.EndsWith(".git")) return GFFContent.GIT;
+            if (lower.EndsWith(".ifo")) return GFFContent.IFO;
+            if (lower.EndsWith(".jrl")) return GFFContent.JRL;
+            if (lower.EndsWith(".pth")) return GFFContent.PTH;
+            if (lower.EndsWith(".utc")) return GFFContent.UTC;
+            if (lower.EndsWith(".utd")) return GFFContent.UTD;
+            if (lower.EndsWith(".ute")) return GFFContent.UTE;
+            if (lower.EndsWith(".uti")) return GFFContent.UTI;
+            if (lower.EndsWith(".utm")) return GFFContent.UTM;
+            if (lower.EndsWith(".utp")) return GFFContent.UTP;
+            if (lower.EndsWith(".uts")) return GFFContent.UTS;
+            if (lower.EndsWith(".utt")) return GFFContent.UTT;
+            if (lower.EndsWith(".utw")) return GFFContent.UTW;
+            return GFFContent.GFF;
+        }
+
         public static GFFContent FromFourCC(string fourCC)
         {
             switch (fourCC.Trim())
