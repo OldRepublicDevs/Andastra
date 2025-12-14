@@ -1,7 +1,7 @@
 #----------------------------- Global Properties ----------------------------#
 
-/outputDir:bin/$(Platform)/Content
-/intermediateDir:obj/$(Platform)/Content
+/outputDir:Content
+/intermediateDir:obj/Content
 /platform:DesktopGL
 /config:
 /profile:HiDef
