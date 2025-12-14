@@ -24,6 +24,8 @@ namespace HolocronToolset.NET.Editors
 
         // UI Controls - Basic
         private LocalizedStringEdit _nameEdit;
+        // Matching PyKotor implementation: Expose nameEdit for testing (Python uses editor.ui.nameEdit)
+        public LocalizedStringEdit NameEdit => _nameEdit;
         private Button _nameEditBtn;
         private TextBox _tagEdit;
         private Button _tagGenerateBtn;
@@ -69,7 +71,7 @@ namespace HolocronToolset.NET.Editors
             {
                 AvaloniaXamlLoader.Load(this);
                 xamlLoaded = true;
-                
+
                 // Try to find controls from XAML
                 _nameEdit = this.FindControl<LocalizedStringEdit>("nameEdit");
                 _nameEditBtn = this.FindControl<Button>("nameEditBtn");
@@ -328,7 +330,7 @@ namespace HolocronToolset.NET.Editors
             utm.OnOpenScript = _onOpenEdit != null && !string.IsNullOrEmpty(_onOpenEdit.Text)
                 ? new ResRef(_onOpenEdit.Text)
                 : utm.OnOpenScript;
-            
+
             // Matching PyKotor implementation: utm.can_buy = bool((self.ui.storeFlagSelect.currentIndex() + 1) & 1)
             // Matching PyKotor implementation: utm.can_sell = bool((self.ui.storeFlagSelect.currentIndex() + 1) & 2)
             if (_storeFlagSelect?.SelectedIndex != null && _storeFlagSelect.SelectedIndex >= 0)
@@ -501,7 +503,7 @@ namespace HolocronToolset.NET.Editors
                 hideEquipment: true,
                 isStore: true
             );
-            
+
             if (inventoryEditor.ShowDialog())
             {
                 // Matching PyKotor implementation: self._utm.inventory = inventoryEditor.inventory
