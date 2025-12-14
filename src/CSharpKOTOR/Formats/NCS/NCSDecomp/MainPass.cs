@@ -667,12 +667,13 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             catch (Exception e)
             {
                 // Log the exception details for debugging while allowing decompiler to continue
-                JavaSystem.@err.Println("Decompiler recovery triggered at position " + this.nodedata.GetPos(node) + ": " + e.Message);
+                int nodePos = this.nodedata.TryGetPos(node);
+                JavaSystem.@err.Println("Decompiler recovery triggered at position " + (nodePos >= 0 ? nodePos.ToString() : "unknown") + ": " + e.Message);
                 e.PrintStackTrace(JavaSystem.@err);
                 this.stack = stackSnapshot;
                 this.state.SetStack(this.stack);
                 this.backupstack = backupSnapshot;
-                this.state.EmitError(node, this.nodedata.GetPos(node));
+                this.state.EmitError(node, nodePos >= 0 ? nodePos : 0);
             }
         }
 
