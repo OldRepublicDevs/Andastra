@@ -235,8 +235,20 @@ namespace CSharpKOTOR.Tools
                     return;
                 }
                 LogMessage(config, $"Corrupted GFF: '{resource.PathIdent()}', will start validation process of '{Path.GetFileName(resource.FilePath)}'...");
-                // validate_capsule needs to be ported
-                LogMessage(config, $"Validation not yet implemented");
+                object newErfRim = Salvage.ValidateCapsule(resource.FilePath, strict: true, game: toGame);
+                if (newErfRim is ERF newErf)
+                {
+                    LogMessage(config, $"Saving salvaged ERF to '{savepath}'");
+                    ERFAuto.WriteErf(newErf, savepath, ResourceType.ERF);
+                    return;
+                }
+                if (newErfRim is RIM newRim)
+                {
+                    LogMessage(config, $"Saving salvaged RIM to '{savepath}'");
+                    RIMAuto.WriteRim(newRim, savepath, ResourceType.RIM);
+                    return;
+                }
+                LogMessage(config, $"Whole erf/rim is corrupt: {resource}");
             }
         }
 
