@@ -236,7 +236,7 @@ namespace CSharpKOTOR.Formats.NCS
             if (!string.IsNullOrEmpty(nwscriptPath) && System.IO.File.Exists(nwscriptPath))
             {
                 // Use nwscript file directly if provided
-                var nwscriptFile = new NCSDecomp.File(nwscriptPath);
+                var nwscriptFile = new NCSDecomp.NcsFile(nwscriptPath);
                 fileDecompiler = new NCSDecomp.FileDecompiler(nwscriptFile);
             }
             else

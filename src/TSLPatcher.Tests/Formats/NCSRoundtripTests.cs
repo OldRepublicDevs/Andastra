@@ -348,6 +348,58 @@ namespace CSharpKOTOR.Tests.Formats
             _k1Scratch = PrepareScratch("k1", K1Nwscript);
             _k2Scratch = PrepareScratch("k2", K2Nwscript);
 
+            // Copy nwscript files to tools/ directory for FileDecompiler
+            // Matching DeNCS implementation at vendor/DeNCS/src/test/java/com/kotor/resource/formats/ncs/NCSDecompCLIRoundTripTest.java:318-345
+            // Original: // Copy nwscript files to tools/ directory for FileDecompiler
+            string cwd = Directory.GetCurrentDirectory();
+            string toolsDir = Path.Combine(cwd, "tools");
+            if (!Directory.Exists(toolsDir))
+            {
+                Directory.CreateDirectory(toolsDir);
+            }
+            string k1NwscriptTarget = Path.Combine(toolsDir, "k1_nwscript.nss");
+            string k2NwscriptTarget = Path.Combine(toolsDir, "tsl_nwscript.nss");
+
+            // Copy K1 nwscript if it doesn't exist or is different
+            if (!File.Exists(k1NwscriptTarget) || !AreFilesSame(K1Nwscript, k1NwscriptTarget))
+            {
+                try
+                {
+                    CopyWithRetry(K1Nwscript, k1NwscriptTarget);
+                }
+                catch (Exception ex)
+                {
+                    if (File.Exists(k1NwscriptTarget))
+                    {
+                        Console.WriteLine($"! Warning: could not refresh k1_nwscript.nss ({ex.Message}); using existing copy at {DisplayPath(k1NwscriptTarget)}");
+                    }
+                    else
+                    {
+                        throw;
+                    }
+                }
+            }
+
+            // Copy K2 nwscript if it doesn't exist or is different
+            if (!File.Exists(k2NwscriptTarget) || !AreFilesSame(K2Nwscript, k2NwscriptTarget))
+            {
+                try
+                {
+                    CopyWithRetry(K2Nwscript, k2NwscriptTarget);
+                }
+                catch (Exception ex)
+                {
+                    if (File.Exists(k2NwscriptTarget))
+                    {
+                        Console.WriteLine($"! Warning: could not refresh tsl_nwscript.nss ({ex.Message}); using existing copy at {DisplayPath(k2NwscriptTarget)}");
+                    }
+                    else
+                    {
+                        throw;
+                    }
+                }
+            }
+
             Console.WriteLine("=== Preflight Complete ===\n");
         }
 
@@ -703,7 +755,7 @@ namespace CSharpKOTOR.Tests.Formats
             try
             {
                 RunInbuiltCompiler(compileInput, recompiled, gameFlag);
-                
+
                 // Basic validation - if file doesn't exist or is empty, recompilation failed
                 if (!File.Exists(recompiled) || new FileInfo(recompiled).Length == 0)
                 {
@@ -826,7 +878,7 @@ namespace CSharpKOTOR.Tests.Formats
                             errorMsg.AppendLine($"... ({pcodeLines.Length - 50} more lines)");
                         }
                         errorMsg.AppendLine();
-                        
+
                         // Also show last 20 lines to see what's missing at the end
                         if (pcodeLines.Length > 50)
                         {
@@ -838,7 +890,7 @@ namespace CSharpKOTOR.Tests.Formats
                             }
                             errorMsg.AppendLine();
                         }
-                        
+
                         // Show first instructions from both files
                         errorMsg.AppendLine("FIRST INSTRUCTIONS (Original):");
                         int origFirst = Math.Min(15, originalNcs.Instructions.Count);
@@ -858,7 +910,7 @@ namespace CSharpKOTOR.Tests.Formats
                             errorMsg.AppendLine($"  {i:D4}: {inst.InsType} args=[{string.Join(",", inst.Args ?? new List<object>())}]{jumpInfo}");
                         }
                         errorMsg.AppendLine();
-                        
+
                         // Show last instructions from both files directly
                         errorMsg.AppendLine("LAST INSTRUCTIONS (Original):");
                         int origLast = Math.Min(10, originalNcs.Instructions.Count);
@@ -1422,21 +1474,21 @@ namespace CSharpKOTOR.Tests.Formats
                 // Original: RoundTripUtil.decompileNcsToNssFile(ncsFile, nssFile, gameFlag, StandardCharsets.UTF_8);
                 NcsFile ncsFile = new NcsFile(ncsPath);
                 NcsFile nssFile = new NcsFile(nssOut);
-                
+
                 // Capture all console output during decompilation for exhaustive debugging
                 var originalOut = Console.Out;
                 var originalErr = Console.Error;
                 var outputCapture = new StringWriter();
                 var errorCapture = new StringWriter();
-                
+
                 Exception decompileEx = null;
-                
+
                 try
                 {
                     // Temporarily redirect output to capture verbose logging
                     Console.SetOut(outputCapture);
                     Console.SetError(errorCapture);
-                    
+
                     RoundTripUtil.DecompileNcsToNssFile(ncsFile, nssFile, gameFlag, Encoding.UTF8);
                 }
                 catch (Exception ex)
@@ -1449,7 +1501,7 @@ namespace CSharpKOTOR.Tests.Formats
                     Console.SetOut(originalOut);
                     Console.SetError(originalErr);
                 }
-                
+
                 // Output captured logs for debugging (always, if there's any output)
                 string capturedOutput = outputCapture.ToString();
                 string capturedError = errorCapture.ToString();
@@ -1472,7 +1524,7 @@ namespace CSharpKOTOR.Tests.Formats
                     Console.Error.WriteLine("═══════════════════════════════════════════════════════════");
                     Console.Error.WriteLine();
                 }
-                
+
                 // Now handle the result
                 if (decompileEx != null)
                 {
@@ -2337,7 +2389,7 @@ namespace CSharpKOTOR.Tests.Formats
         private static List<FunctionSignature> ExtractFunctionSignatures(string code)
         {
             List<FunctionSignature> signatures = new List<FunctionSignature>();
-            
+
             Regex funcPattern = new Regex(
                 @"^\s*((?:void|int|float|string|object|vector|location|effect|itemproperty|talent|action|event|\w+)\s+(?:const\s+)?\*?\s*(\w+)\s*\(([^)]*)\)\s*\{)",
                 RegexOptions.Multiline);
@@ -2444,7 +2496,7 @@ namespace CSharpKOTOR.Tests.Formats
             }
 
             Dictionary<FunctionSignature, string> originalFunctionBodies = new Dictionary<FunctionSignature, string>();
-            
+
             foreach (FunctionSignature sig in originalFunctions)
             {
                 string functionBody = ExtractFunctionBody(expandedOriginal, sig);
@@ -2503,7 +2555,7 @@ namespace CSharpKOTOR.Tests.Formats
                     {
                         currentFunction.Append("\n");
                     }
-                    
+
                     braceDepth += CountChar(line, '{');
                     braceDepth -= CountChar(line, '}');
 
@@ -2694,7 +2746,7 @@ namespace CSharpKOTOR.Tests.Formats
         {
             // CRITICAL: Bytecode must match 1:1, byte-by-byte, with zero tolerance for differences
             // This is the PRIMARY validation - any mismatch is a failure and causes test to FAST FAIL
-            
+
             // First, verify both files exist and are readable
             if (!File.Exists(originalNcs))
             {
@@ -2758,7 +2810,7 @@ namespace CSharpKOTOR.Tests.Formats
             // Read both files as raw byte arrays for strict comparison
             byte[] originalBytes = File.ReadAllBytes(originalNcs);
             byte[] roundTripBytes = File.ReadAllBytes(roundTripNcs);
-            
+
             // Quick check: if lengths differ, files cannot be identical
             if (originalBytes.Length != roundTripBytes.Length)
             {
@@ -2783,7 +2835,7 @@ namespace CSharpKOTOR.Tests.Formats
                 // Compare as unsigned bytes (0-255) to ensure correct comparison
                 int original = originalBytes[i] & 0xFF;
                 int roundTrip = roundTripBytes[i] & 0xFF;
-                
+
                 if (original != roundTrip)
                 {
                     // First byte mismatch found - return detailed diff information
@@ -3049,7 +3101,7 @@ namespace CSharpKOTOR.Tests.Formats
                 {
                     // Check timeout before processing each test case
                     perfHelper.CheckTimeout();
-                    
+
                     _testsProcessed++;
                     string relPath = GetRelativePath(VanillaRepoDir, testCase.Item.Path);
                     string displayPath = relPath.Replace('\\', '/');
@@ -3069,7 +3121,7 @@ namespace CSharpKOTOR.Tests.Formats
                         }
 
                         RoundTripResult result = RoundTripSingle(testCase.Item.Path, testCase.Item.GameFlag, testCase.Item.ScratchRoot);
-                        
+
                         // Show one-line summary (matching Java format: [testNum/total] path - STATUS)
                         string status = result.Passed ? "PASS" : "FAIL";
                         string details = "";

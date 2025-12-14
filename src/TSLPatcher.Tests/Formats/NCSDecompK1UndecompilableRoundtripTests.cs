@@ -8,7 +8,7 @@ using CSharpKOTOR.Formats.NCS.NCSDecomp;
 using FluentAssertions;
 using Xunit;
 using IOFile = System.IO.File;
-using JavaFile = CSharpKOTOR.Formats.NCS.NCSDecomp.File;
+using NcsFile = CSharpKOTOR.Formats.NCS.NCSDecomp.NcsFile;
 
 namespace CSharpKOTOR.Tests.Formats
 {
