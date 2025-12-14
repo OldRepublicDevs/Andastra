@@ -101,6 +101,13 @@ namespace HolocronToolset.NET.Editors
                 _markDownSpin = this.FindControl<NumericUpDown>("markDownSpin");
                 _onOpenEdit = this.FindControl<TextBox>("onOpenEdit");
                 _storeFlagSelect = this.FindControl<ComboBox>("storeFlagSelect");
+                // Ensure ComboBox has items populated (even if loaded from XAML)
+                if (_storeFlagSelect != null && _storeFlagSelect.Items.Count == 0)
+                {
+                    _storeFlagSelect.Items.Add("Only Buy");
+                    _storeFlagSelect.Items.Add("Only Sell");
+                    _storeFlagSelect.Items.Add("Buy and Sell");
+                }
                 _commentsEdit = this.FindControl<TextBox>("commentsEdit");
 
                 // Check if all critical controls were found
@@ -389,7 +396,13 @@ namespace HolocronToolset.NET.Editors
             // Matching PyKotor implementation: utm.can_buy = bool((self.ui.storeFlagSelect.currentIndex() + 1) & 1)
             // Matching PyKotor implementation: utm.can_sell = bool((self.ui.storeFlagSelect.currentIndex() + 1) & 2)
             // Python always reads from UI without null checks - currentIndex() returns -1 if nothing selected
-            int index = _storeFlagSelect != null && _storeFlagSelect.SelectedIndex >= 0 ? _storeFlagSelect.SelectedIndex : -1;
+            // In Avalonia, SelectedIndex can be 0 (first item), so we need to check for >= 0, not > 0
+            int index = -1;
+            if (_storeFlagSelect != null)
+            {
+                // SelectedIndex can be 0 (first item), so we check >= 0
+                index = _storeFlagSelect.SelectedIndex >= 0 ? _storeFlagSelect.SelectedIndex : -1;
+            }
             int flagValue = index + 1; // -1 + 1 = 0, 0 + 1 = 1, 1 + 1 = 2, 2 + 1 = 3
             utm.CanBuy = (flagValue & 1) != 0;
             utm.CanSell = (flagValue & 2) != 0;

@@ -26,12 +26,16 @@ namespace CSharpKOTOR.Resource.Generics
             utm.MarkDown = root.Acquire<int>("MarkDown", 0);
             utm.OnOpenScript = root.Acquire<ResRef>("OnOpenStore", ResRef.FromBlank());
             utm.Comment = root.Acquire<string>("Comment", "");
-            utm.Id = root.Acquire<int>("ID", 0);
+            // ID is stored as UInt8, so we need to read it as byte, not int
+            byte? idNullable = root.GetUInt8("ID");
+            utm.Id = idNullable ?? 0;
 
             // Extract BuySellFlag
             // Matching PyKotor implementation: utm.can_buy = root.acquire("BuySellFlag", 0) & 1 != 0
             // Matching PyKotor implementation: utm.can_sell = root.acquire("BuySellFlag", 0) & 2 != 0
-            int buySellFlag = root.Acquire<int>("BuySellFlag", 0);
+            // BuySellFlag is stored as UInt8, so we need to read it as byte, not int
+            byte? buySellFlagNullable = root.GetUInt8("BuySellFlag");
+            byte buySellFlag = buySellFlagNullable ?? (byte)0;
             utm.CanBuy = (buySellFlag & 1) != 0;
             utm.CanSell = (buySellFlag & 2) != 0;
 
