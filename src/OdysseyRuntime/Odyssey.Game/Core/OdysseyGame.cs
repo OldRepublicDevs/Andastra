@@ -354,10 +354,21 @@ namespace Odyssey.Game.Core
             }
             else
             {
-                // Fallback: draw title as rectangle if font is missing
-                Rectangle titleRect = new Rectangle(centerX - 200, startY - titleOffset - 60, 400, 40);
-                _spriteBatch.Draw(_menuTexture, titleRect, new Color(255, 215, 0, 255));
-                Console.WriteLine("[Odyssey] WARNING: Font not available - menu text cannot be displayed");
+                // Fallback: draw title as a large visual indicator
+                // Draw a stylized "O" symbol for Odyssey using rectangles
+                int titleSize = 80;
+                int titleX = centerX - titleSize / 2;
+                int titleY = startY - titleOffset - 60;
+                
+                // Outer ring (gold)
+                Rectangle outerRing = new Rectangle(titleX, titleY, titleSize, titleSize);
+                DrawRectangleBorder(_spriteBatch, outerRing, 6, new Color(255, 215, 0, 255));
+                
+                // Inner circle (hollow)
+                Rectangle innerRing = new Rectangle(titleX + 15, titleY + 15, titleSize - 30, titleSize - 30);
+                DrawRectangleBorder(_spriteBatch, innerRing, 4, new Color(255, 215, 0, 180));
+                
+                Console.WriteLine("[Odyssey] WARNING: Font not available - using visual fallback indicators");
             }
 
             // Draw menu buttons with professional styling
@@ -648,6 +659,12 @@ namespace Odyssey.Game.Core
         {
             // Clear with a sky color
             GraphicsDevice.Clear(new Color(135, 206, 250, 255)); // Sky blue
+
+            // Set up graphics device state for 3D rendering
+            GraphicsDevice.DepthStencilState = DepthStencilState.Default;
+            GraphicsDevice.RasterizerState = RasterizerState.CullCounterClockwise;
+            GraphicsDevice.BlendState = BlendState.Opaque;
+            GraphicsDevice.SamplerStates[0] = SamplerState.LinearWrap;
 
             // Draw 3D scene
             if (_groundVertexBuffer != null && _groundIndexBuffer != null && _basicEffect != null)
