@@ -5,6 +5,7 @@ using CSharpKOTOR.Formats.TLK;
 using CSharpKOTOR.Resource.Generics.DLG;
 using JetBrains.Annotations;
 using Odyssey.Core.Interfaces;
+using Odyssey.Core.Dialogue;
 using Odyssey.Scripting.Interfaces;
 
 namespace Odyssey.Kotor.Dialogue
@@ -52,6 +53,8 @@ namespace Odyssey.Kotor.Dialogue
         private readonly IWorld _world;
         private readonly Func<string, DLG> _dialogueLoader;
         private readonly Func<string, byte[]> _scriptLoader;
+        private readonly IVoicePlayer _voicePlayer;
+        private readonly ILipSyncController _lipSyncController;
 
         private TLK _baseTlk;
         private TLK _customTlk;
@@ -94,12 +97,16 @@ namespace Odyssey.Kotor.Dialogue
             INcsVm vm,
             IWorld world,
             Func<string, DLG> dialogueLoader,
-            Func<string, byte[]> scriptLoader)
+            Func<string, byte[]> scriptLoader,
+            IVoicePlayer voicePlayer = null,
+            ILipSyncController lipSyncController = null)
         {
             _vm = vm ?? throw new ArgumentNullException("vm");
             _world = world ?? throw new ArgumentNullException("world");
             _dialogueLoader = dialogueLoader ?? throw new ArgumentNullException("dialogueLoader");
             _scriptLoader = scriptLoader ?? throw new ArgumentNullException("scriptLoader");
+            _voicePlayer = voicePlayer;
+            _lipSyncController = lipSyncController;
         }
 
         /// <summary>
@@ -237,6 +244,16 @@ namespace Odyssey.Kotor.Dialogue
         /// </summary>
         public void AbortConversation()
         {
+            // Stop voiceover and lip sync
+            if (_voicePlayer != null)
+            {
+                _voicePlayer.Stop();
+            }
+            if (_lipSyncController != null)
+            {
+                _lipSyncController.Stop();
+            }
+
             EndConversation(true);
         }
 
@@ -248,6 +265,18 @@ namespace Odyssey.Kotor.Dialogue
             if (CurrentState == null || !CurrentState.IsActive || CurrentState.IsPaused)
             {
                 return;
+            }
+
+            // Update lip sync
+            if (_lipSyncController != null)
+            {
+                _lipSyncController.Update(deltaTime);
+            }
+
+            // Check if voiceover finished
+            if (CurrentState.WaitingForVoiceover && _voicePlayer != null && !_voicePlayer.IsPlaying)
+            {
+                CurrentState.WaitingForVoiceover = false;
             }
 
             // Handle auto-advance timing
@@ -350,10 +379,33 @@ namespace Odyssey.Kotor.Dialogue
             IEntity speaker = CurrentState.GetCurrentSpeaker();
             IEntity listener = CurrentState.GetCurrentListener();
 
+            // Play voiceover if available
+            string voResRef = GetVoiceoverResRef(entry);
+            if (!string.IsNullOrEmpty(voResRef) && _voicePlayer != null && speaker != null)
+            {
+                CurrentState.WaitingForVoiceover = true;
+                _voicePlayer.Play(voResRef, speaker, () =>
+                {
+                    CurrentState.WaitingForVoiceover = false;
+                });
+            }
+
+            // Start lip sync if available
+            if (!string.IsNullOrEmpty(voResRef) && _lipSyncController != null && speaker != null)
+            {
+                // LIP file has same resref as VO file
+                _lipSyncController.Start(speaker, voResRef);
+            }
+
             // Calculate display time based on text length or delay
             if (entry.Delay >= 0)
             {
                 CurrentState.TimeRemaining = entry.Delay;
+            }
+            else if (CurrentState.WaitingForVoiceover && _voicePlayer != null)
+            {
+                // Use voiceover duration if available
+                CurrentState.TimeRemaining = _voicePlayer.CurrentTime + 0.5f; // Add small buffer
             }
             else
             {
@@ -430,6 +482,16 @@ namespace Odyssey.Kotor.Dialogue
                 return;
             }
 
+            // Stop voiceover and lip sync
+            if (_voicePlayer != null)
+            {
+                _voicePlayer.Stop();
+            }
+            if (_lipSyncController != null)
+            {
+                _lipSyncController.Stop();
+            }
+
             // Execute Script2 (on-exit)
             ExecuteNodeScript(node.Script2, node);
 
@@ -492,6 +554,16 @@ namespace Odyssey.Kotor.Dialogue
             if (CurrentState == null)
             {
                 return;
+            }
+
+            // Stop voiceover and lip sync
+            if (_voicePlayer != null)
+            {
+                _voicePlayer.Stop();
+            }
+            if (_lipSyncController != null)
+            {
+                _lipSyncController.Stop();
             }
 
             DLG dialog = CurrentState.Dialog;
