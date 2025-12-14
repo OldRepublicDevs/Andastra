@@ -139,7 +139,7 @@ namespace Odyssey.Game.GUI
             {
                 int screenWidth = graphicsDevice.Viewport.Width;
                 int screenHeight = graphicsDevice.Viewport.Height;
-                
+
                 // Recalculate layout if screen size changed or if not yet calculated
                 if (screenWidth != _lastScreenWidth || screenHeight != _lastScreenHeight || _lastScreenWidth == 0)
                 {
@@ -179,13 +179,13 @@ namespace Odyssey.Game.GUI
             {
                 Point mousePos = currentMouseState.Position;
                 Console.WriteLine($"[MonoGameMenuRenderer] Mouse clicked at: {mousePos.X}, {mousePos.Y}");
-                
+
                 bool clicked = false;
                 for (int i = 0; i < _menuButtons.Length; i++)
                 {
                     var button = _menuButtons[i];
                     Console.WriteLine($"[MonoGameMenuRenderer] Button {i} ({button.Label}) rect: X={button.Rect.X}, Y={button.Rect.Y}, W={button.Rect.Width}, H={button.Rect.Height}");
-                    
+
                     if (button.Rect.Contains(mousePos))
                     {
                         _selectedIndex = i;
@@ -195,7 +195,7 @@ namespace Odyssey.Game.GUI
                         break;
                     }
                 }
-                
+
                 if (!clicked)
                 {
                     Console.WriteLine($"[MonoGameMenuRenderer] Mouse click not on any button");

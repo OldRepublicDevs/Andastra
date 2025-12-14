@@ -1,11 +1,11 @@
 using System;
 using System.Numerics;
-using Odyssey.Stride.Backends;
-using Odyssey.Stride.Enums;
-using Odyssey.Stride.Interfaces;
-using Odyssey.Stride.Remix;
+using Odyssey.MonoGame.Backends;
+using Odyssey.MonoGame.Enums;
+using Odyssey.MonoGame.Interfaces;
+using Odyssey.MonoGame.Remix;
 
-namespace Odyssey.Stride.Rendering
+namespace Odyssey.MonoGame.Rendering
 {
     /// <summary>
     /// Main Odyssey renderer coordinating all graphics systems.

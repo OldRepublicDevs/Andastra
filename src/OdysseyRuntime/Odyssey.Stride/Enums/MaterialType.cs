@@ -1,6 +1,6 @@
 using System;
 
-namespace Odyssey.Stride.Enums
+namespace Odyssey.MonoGame.Enums
 {
     /// <summary>
     /// PBR material types supported by the Odyssey renderer.

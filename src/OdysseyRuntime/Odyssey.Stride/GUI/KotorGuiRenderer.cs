@@ -13,7 +13,7 @@ using CSharpKOTOR.Resources;
 using Odyssey.Content.Interfaces;
 using Stride.Graphics.Font;
 
-namespace Odyssey.Stride.GUI
+namespace Odyssey.MonoGame.GUI
 {
     /// <summary>
     /// Renders KOTOR GUI controls using Stride's UI system.

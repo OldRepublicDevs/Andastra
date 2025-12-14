@@ -8,7 +8,7 @@ using Stride.UI.Controls;
 using Stride.UI.Panels;
 using JetBrains.Annotations;
 
-namespace Odyssey.Stride.UI
+namespace Odyssey.MonoGame.UI
 {
     /// <summary>
     /// Main menu UI for selecting install path, module, and starting the game.
@@ -103,6 +103,10 @@ namespace Odyssey.Stride.UI
             {
                 Width = 600,
                 Height = 400,
+                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.Color.html
+                // Color(byte r, byte g, byte b, byte a) constructor creates a color from RGBA byte values (0-255)
+                // Method signature: Color(byte r, byte g, byte b, byte a)
+                // Source: https://doc.stride3d.net/latest/en/manual/graphics/colors.html
                 BackgroundColor = new Color(0, 0, 0, 200),
                 HorizontalAlignment = HorizontalAlignment.Center,
                 VerticalAlignment = VerticalAlignment.Center
@@ -110,14 +114,28 @@ namespace Odyssey.Stride.UI
 
             // Define grid rows using StripDefinition
             // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.Panels.StripDefinition.html
-            // StripDefinition defines a row or column in a Grid, StripType.Fixed sets fixed size, StripType.Star sets proportional size
+            // StripDefinition(StripType, float) constructor creates a row/column definition
+            // Method signature: StripDefinition(StripType type, float value)
+            // StripType.Fixed sets fixed size in pixels, StripType.Star sets proportional size
             // Source: https://doc.stride3d.net/latest/en/manual/user-interface/layout-and-panels.html
             _mainPanel.RowDefinitions.Add(new StripDefinition(StripType.Fixed, 60)); // Title
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.Panels.StripDefinition.html
+            // StripDefinition(StripType, float) - same constructor as above
             _mainPanel.RowDefinitions.Add(new StripDefinition(StripType.Fixed, 40)); // Install path label
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.Panels.StripDefinition.html
+            // StripDefinition(StripType, float) - same constructor as above
             _mainPanel.RowDefinitions.Add(new StripDefinition(StripType.Fixed, 50)); // Install path button
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.Panels.StripDefinition.html
+            // StripDefinition(StripType, float) - same constructor as above
             _mainPanel.RowDefinitions.Add(new StripDefinition(StripType.Fixed, 40)); // Module label
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.Panels.StripDefinition.html
+            // StripDefinition(StripType, float) - same constructor as above
             _mainPanel.RowDefinitions.Add(new StripDefinition(StripType.Fixed, 50)); // Module combo
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.Panels.StripDefinition.html
+            // StripDefinition(StripType, float) - same constructor as above
             _mainPanel.RowDefinitions.Add(new StripDefinition(StripType.Fixed, 60)); // Start button
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.Panels.StripDefinition.html
+            // StripDefinition(StripType.Star, float) - Star type fills remaining space proportionally
             _mainPanel.RowDefinitions.Add(new StripDefinition(StripType.Star, 1));  // Status text
 
             // Title
@@ -145,9 +163,14 @@ namespace Odyssey.Stride.UI
 
             // Install path label
             // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.Controls.TextBlock.html
+            // TextBlock() constructor creates a new text block element
+            // Method signature: TextBlock()
             // Margin property sets spacing around the element using Thickness
             // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.Thickness.html
             // Thickness(float left, float top, float right, float bottom) constructor creates a thickness with left, top, right, bottom values
+            // Method signature: Thickness(float left, float top, float right, float bottom)
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.Color.html
+            // Color.White is a static property representing white color (R=255, G=255, B=255, A=255)
             // Source: https://doc.stride3d.net/latest/en/manual/user-interface/layout-and-panels.html
             var installLabel = new TextBlock
             {
@@ -164,9 +187,16 @@ namespace Odyssey.Stride.UI
 
             // Install path text and button
             // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.Panels.Grid.html
+            // Grid() constructor creates a new grid panel
+            // Method signature: Grid()
             // ColumnDefinitions defines grid columns, StripType.Star makes column fill remaining space
+            // Source: https://doc.stride3d.net/latest/en/manual/user-interface/layout-and-panels.html
             var installPathPanel = new Grid();
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.Panels.StripDefinition.html
+            // StripDefinition(StripType.Star, float) - Star type fills remaining space proportionally
             installPathPanel.ColumnDefinitions.Add(new StripDefinition(StripType.Star, 1));
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.Panels.StripDefinition.html
+            // StripDefinition(StripType.Fixed, float) - Fixed type sets fixed pixel width
             installPathPanel.ColumnDefinitions.Add(new StripDefinition(StripType.Fixed, 120));
 
             _installPathText = new TextBlock
@@ -215,6 +245,14 @@ namespace Odyssey.Stride.UI
             _mainPanel.Children.Add(installPathPanel);
 
             // Module label
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.Controls.TextBlock.html
+            // TextBlock() constructor creates a new text block element
+            // Method signature: TextBlock()
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.Color.html
+            // Color.White static property - same as documented above
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.Thickness.html
+            // Thickness(float, float, float, float) - same constructor as above
+            // Source: https://doc.stride3d.net/latest/en/manual/user-interface/controls.html
             var moduleLabel = new TextBlock
             {
                 Font = _font,

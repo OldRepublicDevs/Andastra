@@ -8,7 +8,7 @@ using Stride.Rendering;
 using Stride.Rendering.Compositing;
 using Stride.Games;
 
-namespace Odyssey.Stride.GUI
+namespace Odyssey.MonoGame.GUI
 {
     /// <summary>
     /// Custom SceneRendererBase implementation for fallback main menu.

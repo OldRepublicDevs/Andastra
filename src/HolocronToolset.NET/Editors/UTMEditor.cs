@@ -32,20 +32,34 @@ namespace HolocronToolset.NET.Editors
         public TextBox TagEdit => _tagEdit;
         private Button _tagGenerateBtn;
         private TextBox _resrefEdit;
+        // Matching PyKotor implementation: Expose resrefEdit for testing
+        public TextBox ResrefEdit => _resrefEdit;
         private Button _resrefGenerateBtn;
         private NumericUpDown _idSpin;
+        // Matching PyKotor implementation: Expose idSpin for testing
+        public NumericUpDown IdSpin => _idSpin;
         private Button _inventoryButton;
 
         // UI Controls - Pricing
         private NumericUpDown _markUpSpin;
+        // Matching PyKotor implementation: Expose markUpSpin for testing
+        public NumericUpDown MarkUpSpin => _markUpSpin;
         private NumericUpDown _markDownSpin;
+        // Matching PyKotor implementation: Expose markDownSpin for testing
+        public NumericUpDown MarkDownSpin => _markDownSpin;
 
         // UI Controls - Store
         private TextBox _onOpenEdit;
+        // Matching PyKotor implementation: Expose onOpenEdit for testing
+        public TextBox OnOpenEdit => _onOpenEdit;
         private ComboBox _storeFlagSelect;
+        // Matching PyKotor implementation: Expose storeFlagSelect for testing
+        public ComboBox StoreFlagSelect => _storeFlagSelect;
 
         // UI Controls - Comments
         private TextBox _commentsEdit;
+        // Matching PyKotor implementation: Expose commentsEdit for testing
+        public TextBox CommentsEdit => _commentsEdit;
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utm.py:28-68
         // Original: def __init__(self, parent, installation):

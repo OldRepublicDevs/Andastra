@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Numerics;
-using Odyssey.Stride.Enums;
-using Odyssey.Stride.Interfaces;
+using Odyssey.MonoGame.Enums;
+using Odyssey.MonoGame.Interfaces;
 
-namespace Odyssey.Stride.Lighting
+namespace Odyssey.MonoGame.Lighting
 {
     /// <summary>
     /// Clustered forward+ lighting system.

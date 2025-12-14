@@ -1,6 +1,6 @@
 using System;
 
-namespace Odyssey.Stride.Enums
+namespace Odyssey.MonoGame.Enums
 {
     /// <summary>
     /// Supported graphics API backends.

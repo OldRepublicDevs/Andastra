@@ -4,7 +4,7 @@ using Stride.Input;
 using Stride.Engine;
 using JetBrains.Annotations;
 
-namespace Odyssey.Stride.Camera
+namespace Odyssey.MonoGame.Camera
 {
     /// <summary>
     /// KOTOR-style chase camera that follows the player character.

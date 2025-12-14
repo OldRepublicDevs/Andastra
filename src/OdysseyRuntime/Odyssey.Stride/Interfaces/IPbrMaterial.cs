@@ -1,8 +1,8 @@
 using System;
 using System.Numerics;
-using Odyssey.Stride.Enums;
+using Odyssey.MonoGame.Enums;
 
-namespace Odyssey.Stride.Interfaces
+namespace Odyssey.MonoGame.Interfaces
 {
     /// <summary>
     /// Physically-based rendering material interface.

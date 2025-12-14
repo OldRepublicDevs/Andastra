@@ -1,11 +1,11 @@
 using System;
 using System.Numerics;
 using System.Runtime.InteropServices;
-using Odyssey.Stride.Enums;
-using Odyssey.Stride.Interfaces;
-using Odyssey.Stride.Rendering;
+using Odyssey.MonoGame.Enums;
+using Odyssey.MonoGame.Interfaces;
+using Odyssey.MonoGame.Rendering;
 
-namespace Odyssey.Stride.Remix
+namespace Odyssey.MonoGame.Remix
 {
     /// <summary>
     /// DirectX 9 wrapper that enables NVIDIA RTX Remix interception.

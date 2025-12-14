@@ -9,7 +9,7 @@ using Stride.UI.Panels;
 using Odyssey.Kotor.Dialogue;
 using JetBrains.Annotations;
 
-namespace Odyssey.Stride.UI
+namespace Odyssey.MonoGame.UI
 {
     /// <summary>
     /// UI panel for displaying dialogue conversations.

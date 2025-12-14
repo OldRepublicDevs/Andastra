@@ -7,7 +7,7 @@ using Stride.UI.Controls;
 using Stride.UI.Panels;
 using JetBrains.Annotations;
 
-namespace Odyssey.Stride.UI
+namespace Odyssey.MonoGame.UI
 {
     /// <summary>
     /// Loading screen shown during module transitions.
