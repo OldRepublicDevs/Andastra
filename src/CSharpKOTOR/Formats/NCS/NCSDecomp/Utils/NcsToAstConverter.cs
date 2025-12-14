@@ -49,21 +49,61 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Converting {instructions.Count} instructions to AST");
 
             HashSet<int> subroutineStarts = new HashSet<int>();
-            // Identify entry stub pattern: JSR at position 0 followed by RETN
+            // Matching NCSDecomp implementation: detect SAVEBP to split globals from main
+            // Globals subroutine ends at SAVEBP, main starts after SAVEBP
+            int savebpIndex = -1;
+            for (int i = 0; i < instructions.Count; i++)
+            {
+                if (instructions[i].InsType == NCSInstructionType.SAVEBP)
+                {
+                    savebpIndex = i;
+                    JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Found SAVEBP at instruction index {i}");
+                    break;
+                }
+            }
+            if (savebpIndex == -1)
+            {
+                JavaSystem.@out.Println("DEBUG NcsToAstConverter: No SAVEBP instruction found - no globals subroutine will be created");
+            }
+            
+            // Identify entry stub pattern: JSR followed by RETN (or JSR, RESTOREBP, RETN)
+            // If there's a SAVEBP, entry stub starts at savebpIndex+1
+            // Otherwise, entry stub is at position 0
             // The entry JSR target is main, not a separate subroutine
             int entryJsrTarget = -1;
-            if (instructions.Count >= 2 && 
-                instructions[0].InsType == NCSInstructionType.JSR && 
-                instructions[0].Jump != null &&
-                instructions[1].InsType == NCSInstructionType.RETN)
+            int entryStubStart = (savebpIndex >= 0) ? savebpIndex + 1 : 0;
+            if (instructions.Count >= entryStubStart + 2)
             {
-                try
+                JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Checking entry stub at {entryStubStart}: {instructions[entryStubStart].InsType}, next: {instructions[entryStubStart + 1].InsType}");
+                // Pattern 1: JSR followed by RETN (simple entry stub)
+                if (instructions[entryStubStart].InsType == NCSInstructionType.JSR && 
+                    instructions[entryStubStart].Jump != null &&
+                    instructions[entryStubStart + 1].InsType == NCSInstructionType.RETN)
                 {
-                    entryJsrTarget = ncs.GetInstructionIndex(instructions[0].Jump);
-                    JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Detected entry stub pattern - JSR at 0 targets {entryJsrTarget} (main)");
+                    try
+                    {
+                        entryJsrTarget = ncs.GetInstructionIndex(instructions[entryStubStart].Jump);
+                        JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Detected entry stub pattern (JSR+RETN) - JSR at {entryStubStart} targets {entryJsrTarget} (main)");
+                    }
+                    catch (Exception)
+                    {
+                    }
                 }
-                catch (Exception)
+                // Pattern 2: JSR, RESTOREBP, RETN (entry stub with RESTOREBP)
+                else if (instructions.Count >= entryStubStart + 3 &&
+                         instructions[entryStubStart].InsType == NCSInstructionType.JSR && 
+                         instructions[entryStubStart].Jump != null &&
+                         instructions[entryStubStart + 1].InsType == NCSInstructionType.RESTOREBP &&
+                         instructions[entryStubStart + 2].InsType == NCSInstructionType.RETN)
                 {
+                    try
+                    {
+                        entryJsrTarget = ncs.GetInstructionIndex(instructions[entryStubStart].Jump);
+                        JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Detected entry stub pattern (JSR+RESTOREBP+RETN) - JSR at {entryStubStart} targets {entryJsrTarget} (main)");
+                    }
+                    catch (Exception)
+                    {
+                    }
                 }
             }
             
@@ -87,27 +127,16 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
                 }
             }
 
-            // Matching NCSDecomp implementation: detect SAVEBP to split globals from main
-            // Globals subroutine ends at SAVEBP, main starts after SAVEBP
-            int savebpIndex = -1;
-            for (int i = 0; i < instructions.Count; i++)
-            {
-                if (instructions[i].InsType == NCSInstructionType.SAVEBP)
-                {
-                    savebpIndex = i;
-                    JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Found SAVEBP at instruction index {i}");
-                    break;
-                }
-            }
-            if (savebpIndex == -1)
-            {
-                JavaSystem.@out.Println("DEBUG NcsToAstConverter: No SAVEBP instruction found - no globals subroutine will be created");
-            }
-
             int mainStart = 0;
             int mainEnd = instructions.Count;
             
-            // If entry stub detected, main starts at the entry JSR target
+            // If SAVEBP is found, create globals subroutine (0 to SAVEBP+1) and main starts after entry stub
+            if (savebpIndex >= 0)
+            {
+                mainStart = savebpIndex + 1; // Start after SAVEBP (entry stub will be at mainStart)
+            }
+            
+            // If entry stub detected, main starts at the entry JSR target (after the entry stub)
             if (entryJsrTarget >= 0)
             {
                 mainStart = entryJsrTarget;
@@ -128,7 +157,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
                 mainEnd = min;
             }
 
-            // If SAVEBP is found, create globals subroutine (0 to SAVEBP+1) and main starts after SAVEBP
+            // If SAVEBP is found, create globals subroutine (0 to SAVEBP+1)
             if (savebpIndex >= 0)
             {
                 ASubroutine globalsSub = ConvertInstructionRangeToSubroutine(ncs, instructions, 0, savebpIndex + 1, 0);
@@ -136,7 +165,6 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
                 {
                     program.GetSubroutine().Add(globalsSub);
                 }
-                mainStart = savebpIndex + 1;
             }
 
             ASubroutine mainSub = ConvertInstructionRangeToSubroutine(ncs, instructions, mainStart, mainEnd, mainStart);
