@@ -2355,7 +2355,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
                 JavaSystem.@out.Println("DEBUG removeActionParams: returning " + @params.Count + " params (metadata missing case)");
                 return @params;
             }
-            // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptutils/SubScriptState.java:1994-2001
+            // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptutils/SubScriptState.java:2027-2034
             // Original: // getActionParamCount returns bytes, not parameter count
             // Original: // paramtypes contains the actual parameter types from the action definition
             // Original: // Use paramtypes.size() as the parameter count - it represents the function signature
