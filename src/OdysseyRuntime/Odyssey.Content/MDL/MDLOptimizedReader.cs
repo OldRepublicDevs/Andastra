@@ -710,7 +710,8 @@ namespace Odyssey.Content.MDL
                     }
 
                     // Position (3 floats = 12 bytes)
-                    if ((flags & MDLConstants.MDX_VERTICES) != 0 && offsets.Position >= 0)
+                    // Positions array is always allocated, but check for safety
+                    if ((flags & MDLConstants.MDX_VERTICES) != 0 && offsets.Position >= 0 && mesh.Positions != null)
                     {
                         int posOffset = vertexBase + offsets.Position;
                         if (posOffset + 12 <= _mdxData.Length)
@@ -721,7 +722,8 @@ namespace Odyssey.Content.MDL
                     }
 
                     // Normal (3 floats = 12 bytes)
-                    if ((flags & MDLConstants.MDX_VERTEX_NORMALS) != 0 && offsets.Normal >= 0)
+                    // Normals array is always allocated, but check for safety
+                    if ((flags & MDLConstants.MDX_VERTEX_NORMALS) != 0 && offsets.Normal >= 0 && mesh.Normals != null)
                     {
                         int normOffset = vertexBase + offsets.Normal;
                         if (normOffset + 12 <= _mdxData.Length)
@@ -732,7 +734,7 @@ namespace Odyssey.Content.MDL
                     }
 
                     // Texture coordinates 0 (2 floats = 8 bytes)
-                    if ((flags & MDLConstants.MDX_TEX0_VERTICES) != 0 && offsets.Tex0 >= 0)
+                    if ((flags & MDLConstants.MDX_TEX0_VERTICES) != 0 && offsets.Tex0 >= 0 && mesh.TexCoords0 != null)
                     {
                         int texOffset = vertexBase + offsets.Tex0;
                         if (texOffset + 8 <= _mdxData.Length)
@@ -743,7 +745,7 @@ namespace Odyssey.Content.MDL
                     }
 
                     // Texture coordinates 1 (lightmap) (2 floats = 8 bytes)
-                    if ((flags & MDLConstants.MDX_TEX1_VERTICES) != 0 && offsets.Tex1 >= 0)
+                    if ((flags & MDLConstants.MDX_TEX1_VERTICES) != 0 && offsets.Tex1 >= 0 && mesh.TexCoords1 != null)
                     {
                         int texOffset = vertexBase + offsets.Tex1;
                         if (texOffset + 8 <= _mdxData.Length)
@@ -754,7 +756,7 @@ namespace Odyssey.Content.MDL
                     }
 
                     // Texture coordinates 2 (2 floats = 8 bytes)
-                    if ((flags & MDLConstants.MDX_TEX2_VERTICES) != 0 && offsets.Tex2 >= 0)
+                    if ((flags & MDLConstants.MDX_TEX2_VERTICES) != 0 && offsets.Tex2 >= 0 && mesh.TexCoords2 != null)
                     {
                         int texOffset = vertexBase + offsets.Tex2;
                         if (texOffset + 8 <= _mdxData.Length)
@@ -765,7 +767,7 @@ namespace Odyssey.Content.MDL
                     }
 
                     // Texture coordinates 3 (2 floats = 8 bytes)
-                    if ((flags & MDLConstants.MDX_TEX3_VERTICES) != 0 && offsets.Tex3 >= 0)
+                    if ((flags & MDLConstants.MDX_TEX3_VERTICES) != 0 && offsets.Tex3 >= 0 && mesh.TexCoords3 != null)
                     {
                         int texOffset = vertexBase + offsets.Tex3;
                         if (texOffset + 8 <= _mdxData.Length)
@@ -776,7 +778,7 @@ namespace Odyssey.Content.MDL
                     }
 
                     // Vertex colors (3 floats = 12 bytes)
-                    if ((flags & MDLConstants.MDX_VERTEX_COLORS) != 0 && offsets.Color >= 0)
+                    if ((flags & MDLConstants.MDX_VERTEX_COLORS) != 0 && offsets.Color >= 0 && mesh.Colors != null)
                     {
                         int colorOffset = vertexBase + offsets.Color;
                         if (colorOffset + 12 <= _mdxData.Length)
@@ -788,7 +790,8 @@ namespace Odyssey.Content.MDL
 
                     // Tangent space (9 floats = 36 bytes: tangent XYZ, bitangent XYZ, normal XYZ)
                     // We only read tangent and bitangent since we already have normals separately
-                    if ((flags & MDLConstants.MDX_TANGENT_SPACE) != 0 && offsets.Tangent >= 0)
+                    if ((flags & MDLConstants.MDX_TANGENT_SPACE) != 0 && offsets.Tangent >= 0 && 
+                        mesh.Tangents != null && mesh.Bitangents != null)
                     {
                         int tangentOffset = vertexBase + offsets.Tangent;
                         if (tangentOffset + 36 <= _mdxData.Length)
@@ -1024,22 +1027,32 @@ namespace Odyssey.Content.MDL
                         vertexIdx = i - 80;
                     }
 
-                    if (vertexIdx < mesh.VertexCount)
+                    // Validate vertexIdx is within bounds for all arrays
+                    if (vertexIdx >= 0 && vertexIdx < mesh.VertexCount)
                     {
-                        mesh.Positions[i] = new Vector3Data(
-                            saberVerts[vertexIdx * 3],
-                            saberVerts[vertexIdx * 3 + 1],
-                            saberVerts[vertexIdx * 3 + 2]
-                        );
-                        mesh.Normals[i] = new Vector3Data(
-                            saberNormals[vertexIdx * 3],
-                            saberNormals[vertexIdx * 3 + 1],
-                            saberNormals[vertexIdx * 3 + 2]
-                        );
-                        mesh.TexCoords0[i] = new Vector2Data(
-                            saberTexCoords[vertexIdx * 2],
-                            saberTexCoords[vertexIdx * 2 + 1]
-                        );
+                        int vertBase = vertexIdx * 3;
+                        int texBase = vertexIdx * 2;
+                        
+                        // Additional bounds check for source arrays
+                        if (vertBase + 2 < saberVerts.Length && 
+                            vertBase + 2 < saberNormals.Length && 
+                            texBase + 1 < saberTexCoords.Length)
+                        {
+                            mesh.Positions[i] = new Vector3Data(
+                                saberVerts[vertBase],
+                                saberVerts[vertBase + 1],
+                                saberVerts[vertBase + 2]
+                            );
+                            mesh.Normals[i] = new Vector3Data(
+                                saberNormals[vertBase],
+                                saberNormals[vertBase + 1],
+                                saberNormals[vertBase + 2]
+                            );
+                            mesh.TexCoords0[i] = new Vector2Data(
+                                saberTexCoords[texBase],
+                                saberTexCoords[texBase + 1]
+                            );
+                        }
                     }
                 }
             }
@@ -1306,7 +1319,7 @@ namespace Odyssey.Content.MDL
         {
             if (count <= 0)
             {
-                return new int[0];
+                return Array.Empty<int>();
             }
 
             // Validate bounds
