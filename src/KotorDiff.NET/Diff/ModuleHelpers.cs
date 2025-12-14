@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using CSharpKOTOR.Installation;
+using CSharpKOTOR.Formats.Capsule;
 
 namespace KotorDiff.NET.Diff
 {
@@ -240,6 +241,56 @@ namespace KotorDiff.NET.Diff
             }
 
             return resolvedFiles;
+        }
+
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/engine.py:2723-2735
+        // Original: def determine_composite_loading(...): ...
+        /// <summary>
+        /// Determine if composite loading should be used and find related files.
+        /// </summary>
+        public static Tuple<bool, List<string>, string> DetermineCompositeLoading(string containerPath)
+        {
+            string moduleRoot = GetModuleRoot(containerPath);
+            string containerDir = Path.GetDirectoryName(containerPath);
+            var relatedFiles = new List<string>();
+
+            string[] extensions = { ".mod", ".rim", "_s.rim", "_dlg.erf" };
+            foreach (string ext in extensions)
+            {
+                string relatedFile = Path.Combine(containerDir, $"{moduleRoot}{ext}");
+                if (File.Exists(relatedFile))
+                {
+                    relatedFiles.Add(relatedFile);
+                }
+            }
+
+            bool useComposite = relatedFiles.Count > 1;
+            return Tuple.Create(useComposite, relatedFiles, moduleRoot);
+        }
+
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/engine.py:1930-1943
+        // Original: def load_capsule(...): ...
+        /// <summary>
+        /// Load a capsule file, either as a simple Capsule or CompositeModuleCapsule.
+        /// </summary>
+        public static object LoadCapsule(string filePath, bool useComposite, Action<string> logFunc)
+        {
+            try
+            {
+                if (useComposite)
+                {
+                    return new CompositeModuleCapsule(filePath);
+                }
+                return new CSharpKOTOR.Formats.Capsule.Capsule(filePath);
+            }
+            catch (Exception e)
+            {
+                if (logFunc != null)
+                {
+                    logFunc($"Could not load '{filePath}'. Reason: {e.GetType().Name}: {e.Message}");
+                }
+                return null;
+            }
         }
     }
 }

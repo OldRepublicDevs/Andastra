@@ -359,51 +359,7 @@ namespace KotorDiff.NET.Diff
         // Original: def should_include_in_filtered_diff(...): ...
         private static bool ShouldIncludeInFilteredDiff(string filePath, List<string> filters)
         {
-            if (filters == null || filters.Count == 0)
-            {
-                return true;
-            }
-
-            string fileName = Path.GetFileName(filePath).ToLowerInvariant();
-            string filePathLower = filePath.ToLowerInvariant();
-
-            foreach (string filterPattern in filters)
-            {
-                string filterLower = filterPattern.ToLowerInvariant();
-                string filterName = Path.GetFileName(filterLower);
-
-                // Direct filename match
-                if (filterName == fileName)
-                {
-                    return true;
-                }
-
-                // Check if filter name appears in path
-                if (filePathLower.Contains(filterName))
-                {
-                    return true;
-                }
-
-                // Module name match (for .rim/.mod/.erf files)
-                string ext = Path.GetExtension(filePath).ToLowerInvariant();
-                if (ext == ".rim" || ext == ".mod" || ext == ".erf")
-                {
-                    try
-                    {
-                        string root = DiffEngineUtils.GetModuleRoot(filePath);
-                        if (filterLower == root.ToLowerInvariant())
-                        {
-                            return true;
-                        }
-                    }
-                    catch (Exception)
-                    {
-                        // Continue to next filter
-                    }
-                }
-            }
-
-            return false;
+            return DiffEngineUtils.ShouldIncludeInFilteredDiff(filePath, filters);
         }
 
         // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/engine.py:1236-1701
@@ -1126,7 +1082,7 @@ namespace KotorDiff.NET.Diff
         }
 
 
-        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/engine.py:2109-2250
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/engine.py:2109-2249
         // Original: def diff_module_directories(...): ...
         private static Tuple<bool?, HashSet<string>> DiffModuleDirectories(
             string cDir1,
@@ -1136,12 +1092,176 @@ namespace KotorDiff.NET.Diff
             Action<string> logFunc,
             Func<string, string, string, string, bool?> diffCapsuleFilesFunc)
         {
+            // Special diffing for modules dirs. Only do composite module loading for filenames sharing the same basename, and only for .mod, .rim, _s.rim, _dlg.erf.
             bool? isSameResult = true;
             var filesToSkip = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-            // For now, simplified implementation - just compare files normally
-            // Full composite module loading logic would be very complex
-            // TODO: Implement full composite module loading if needed
+            // Resolve each side to proper files using the previous resolution order logic
+            var resolvedFiles1 = ModuleHelpers.ApplyFolderResolutionOrder(filesPath1, logFunc);
+            var resolvedFiles2 = ModuleHelpers.ApplyFolderResolutionOrder(filesPath2, logFunc);
+
+            var filteredOut1 = new HashSet<string>(filesPath1, StringComparer.OrdinalIgnoreCase);
+            filteredOut1.ExceptWith(resolvedFiles1);
+            var filteredOut2 = new HashSet<string>(filesPath2, StringComparer.OrdinalIgnoreCase);
+            filteredOut2.ExceptWith(resolvedFiles2);
+            filesToSkip.UnionWith(filteredOut1);
+            filesToSkip.UnionWith(filteredOut2);
+
+            // Build {basename -> [file]} mapping for valid module extensions on each side
+            Dictionary<string, List<string>> GroupByBasename(HashSet<string> files)
+            {
+                var grouped = new Dictionary<string, List<string>>(StringComparer.OrdinalIgnoreCase);
+                foreach (string f in files)
+                {
+                    string fname = Path.GetFileName(f);
+                    string lower = fname.ToLowerInvariant();
+                    string baseName = null;
+                    if (lower.EndsWith(".mod"))
+                    {
+                        baseName = fname.Substring(0, fname.Length - 4);
+                    }
+                    else if (lower.EndsWith("_dlg.erf"))
+                    {
+                        baseName = fname.Substring(0, fname.Length - 8);
+                    }
+                    else if (lower.EndsWith("_s.rim"))
+                    {
+                        baseName = fname.Substring(0, fname.Length - 6);
+                    }
+                    else if (lower.EndsWith(".rim"))
+                    {
+                        baseName = fname.Substring(0, fname.Length - 4);
+                    }
+                    if (baseName != null)
+                    {
+                        string baseLower = baseName.ToLowerInvariant();
+                        if (!grouped.ContainsKey(baseLower))
+                        {
+                            grouped[baseLower] = new List<string>();
+                        }
+                        grouped[baseLower].Add(f);
+                    }
+                }
+                return grouped;
+            }
+
+            var groups1 = GroupByBasename(resolvedFiles1);
+            var groups2 = GroupByBasename(resolvedFiles2);
+            var allBasenames = new HashSet<string>(groups1.Keys, StringComparer.OrdinalIgnoreCase);
+            allBasenames.UnionWith(groups2.Keys);
+
+            foreach (string basename in allBasenames.OrderBy(b => b))
+            {
+                var files1 = groups1.ContainsKey(basename) ? groups1[basename] : new List<string>();
+                var files2 = groups2.ContainsKey(basename) ? groups2[basename] : new List<string>();
+
+                // No composite module logic unless both have >0, and at least two different extensions
+                var exts1 = new HashSet<string>(files1.Select(f => Path.GetFileName(f).ToLowerInvariant().Substring(basename.Length)), StringComparer.OrdinalIgnoreCase);
+                var exts2 = new HashSet<string>(files2.Select(f => Path.GetFileName(f).ToLowerInvariant().Substring(basename.Length)), StringComparer.OrdinalIgnoreCase);
+
+                // Only consider .mod/.rim/_s.rim/_dlg.erf as per requirements
+                var kind1 = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                var kind2 = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                foreach (string ext in exts1)
+                {
+                    if (ext == ".mod" || ext == ".rim" || ext.EndsWith("_s.rim") || ext.EndsWith("_dlg.erf"))
+                    {
+                        kind1.Add(ext);
+                    }
+                }
+                foreach (string ext in exts2)
+                {
+                    if (ext == ".mod" || ext == ".rim" || ext.EndsWith("_s.rim") || ext.EndsWith("_dlg.erf"))
+                    {
+                        kind2.Add(ext);
+                    }
+                }
+
+                // Composite module loading logic: only run for basenames that have any of these extensions on both sides
+                if (kind1.Count > 0 && kind2.Count > 0)
+                {
+                    // Does one side have .mod, the other has only rimlike?
+                    var filenames1 = files1.Where(f => Path.GetFileName(f).ToLowerInvariant().EndsWith(".mod")).ToList();
+                    var filenames2 = files2.Where(f => Path.GetFileName(f).ToLowerInvariant().EndsWith(".mod")).ToList();
+
+                    var rimlike1 = files1.Where(f =>
+                    {
+                        string fname = Path.GetFileName(f).ToLowerInvariant();
+                        return fname.EndsWith(".rim") || fname.EndsWith("_s.rim") || fname.EndsWith("_dlg.erf");
+                    }).ToList();
+                    var rimlike2 = files2.Where(f =>
+                    {
+                        string fname = Path.GetFileName(f).ToLowerInvariant();
+                        return fname.EndsWith(".rim") || fname.EndsWith("_s.rim") || fname.EndsWith("_dlg.erf");
+                    }).ToList();
+
+                    Tuple<string, string, string, List<string>> sideCase = null;
+                    if (filenames1.Count > 0 && rimlike2.Count > 0) // mod in #1, rimlike in #2
+                    {
+                        sideCase = Tuple.Create(cDir1, cDir2, filenames1[0], rimlike2);
+                    }
+                    else if (filenames2.Count > 0 && rimlike1.Count > 0) // mod in #2, rimlike in #1
+                    {
+                        sideCase = Tuple.Create(cDir2, cDir1, filenames2[0], rimlike1);
+                    }
+
+                    if (sideCase != null)
+                    {
+                        string modDir = sideCase.Item1;
+                        string rimDir = sideCase.Item2;
+                        string modFile = sideCase.Item3;
+                        var rimFiles = sideCase.Item4;
+
+                        // Pick 'main' .rim: the file that has extension ".rim" and not ending with "_s"
+                        string mainRim = null;
+                        foreach (string rf in rimFiles)
+                        {
+                            string pname = Path.GetFileName(rf);
+                            if (pname.ToLowerInvariant().EndsWith(".rim") && !pname.ToLowerInvariant().EndsWith("_s.rim"))
+                            {
+                                mainRim = rf;
+                                break;
+                            }
+                        }
+                        if (mainRim == null && rimFiles.Count > 0)
+                        {
+                            // fallback: use first rimlike file (should not generally happen)
+                            mainRim = rimFiles[0];
+                        }
+
+                        if (mainRim != null)
+                        {
+                            string modPath = Path.Combine(modDir, modFile);
+                            string rimPath = Path.Combine(rimDir, mainRim);
+
+                            // always use relative paths for both
+                            string cFile1Rel = RelativePathFromTo(rimDir, modPath);
+                            string cFile2Rel = RelativePathFromTo(modDir, rimPath);
+
+                            // Compare using composite module loading via supplied function
+                            // (Order: "main" side resource, composite side resource, rel1, rel2)
+                            bool? result;
+                            if (modDir == cDir1)
+                            {
+                                // mod_dir1/mod_file vs rim_dir2/main_rim
+                                result = diffCapsuleFilesFunc(modPath, rimPath, cFile1Rel, cFile2Rel);
+                            }
+                            else
+                            {
+                                // mod_dir2/mod_file vs rim_dir1/main_rim
+                                result = diffCapsuleFilesFunc(rimPath, modPath, cFile2Rel, cFile1Rel);
+                            }
+                            isSameResult = result == null ? null : (isSameResult.HasValue && isSameResult.Value && result.Value ? (bool?)true : false);
+                            filesToSkip.UnionWith(files1);
+                            filesToSkip.UnionWith(files2);
+                        }
+                        else
+                        {
+                            logFunc($"Warning: Could not find main rim for basename '{basename}', using normal comparison");
+                        }
+                    }
+                }
+            }
 
             return Tuple.Create(isSameResult, filesToSkip);
         }

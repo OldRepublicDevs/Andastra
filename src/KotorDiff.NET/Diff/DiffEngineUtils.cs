@@ -104,6 +104,152 @@ namespace KotorDiff.NET.Diff
             return false; // Currently unused but kept for future filtering capabilities
         }
 
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/engine.py:1175-1187
+        // Original: def visual_length(...): ...
+        /// <summary>
+        /// Calculate visual length of string accounting for tabs.
+        /// </summary>
+        public static int VisualLength(string s, int tabLength = 8)
+        {
+            if (string.IsNullOrEmpty(s) || !s.Contains("\t"))
+            {
+                return s?.Length ?? 0;
+            }
+
+            string[] parts = s.Split('\t');
+            int visLength = parts.Sum(part => part.Length);
+            for (int i = 0; i < parts.Length - 1; i++)
+            {
+                visLength += tabLength - (parts[i].Length % tabLength);
+            }
+            return visLength;
+        }
+
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/engine.py:1190-1196
+        // Original: def walk_files(root: Path) -> set[str]: ...
+        /// <summary>
+        /// Walk all files in a directory tree.
+        /// </summary>
+        public static HashSet<string> WalkFiles(string root)
+        {
+            if (string.IsNullOrEmpty(root) || !Directory.Exists(root) && !File.Exists(root))
+            {
+                return new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            }
+
+            if (File.Exists(root))
+            {
+                return new HashSet<string>(StringComparer.OrdinalIgnoreCase) { Path.GetFileName(root).ToLowerInvariant() };
+            }
+
+            var files = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var file in Directory.GetFiles(root, "*", SearchOption.AllDirectories))
+            {
+                string relPath = Path.GetRelativePath(root, file).Replace('\\', '/').ToLowerInvariant();
+                files.Add(relPath);
+            }
+            return files;
+        }
+
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/engine.py:1213-1233
+        // Original: def print_udiff(...): ...
+        /// <summary>
+        /// Print unified diff between two files.
+        /// </summary>
+        public static void PrintUdiff(string fromFile, string toFile, string labelFrom, string labelTo, Action<string> logFunc)
+        {
+            if (logFunc == null)
+            {
+                logFunc = Console.WriteLine;
+            }
+
+            List<string> a = ReadTextLines(fromFile);
+            List<string> b = ReadTextLines(toFile);
+            if (a.Count == 0 && b.Count == 0)
+            {
+                return;
+            }
+
+            // Simple unified diff implementation
+            // For a full implementation, would need a proper diff library
+            int maxLines = Math.Max(a.Count, b.Count);
+            for (int i = 0; i < maxLines; i++)
+            {
+                string lineA = i < a.Count ? a[i] : "";
+                string lineB = i < b.Count ? b[i] : "";
+                if (lineA != lineB)
+                {
+                    if (i < a.Count)
+                    {
+                        logFunc($"--- {labelFrom}:{i + 1}");
+                        logFunc($"-{lineA}");
+                    }
+                    if (i < b.Count)
+                    {
+                        logFunc($"+++ {labelTo}:{i + 1}");
+                        logFunc($"+{lineB}");
+                    }
+                }
+            }
+        }
+
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/engine.py:2252-2288
+        // Original: def should_include_in_filtered_diff(...): ...
+        /// <summary>
+        /// Check if a file should be included based on filter criteria.
+        /// </summary>
+        public static bool ShouldIncludeInFilteredDiff(string filePath, List<string> filters)
+        {
+            if (filters == null || filters.Count == 0)
+            {
+                return true; // No filters means include everything
+            }
+
+            var filePathInfo = new FileInfo(filePath);
+            foreach (string filterPattern in filters)
+            {
+                var filterPath = new FileInfo(filterPattern);
+
+                // Direct filename match: check via filename equality or filename containment
+                if (string.Equals(filterPath.Name, filePathInfo.Name, StringComparison.OrdinalIgnoreCase))
+                {
+                    return true;
+                }
+
+                // Check parent directory names
+                var fileParent = filePathInfo.Directory;
+                while (fileParent != null)
+                {
+                    if (string.Equals(filterPath.Name, fileParent.Name, StringComparison.OrdinalIgnoreCase))
+                    {
+                        return true;
+                    }
+                    fileParent = fileParent.Parent;
+                }
+
+                // Module name match (for .rim/.mod/.erf files)
+                string ext = Path.GetExtension(filePath).ToLowerInvariant();
+                if (ext == ".rim" || ext == ".mod" || ext == ".erf")
+                {
+                    try
+                    {
+                        string root = GetModuleRoot(filePath);
+                        if (!string.IsNullOrEmpty(filterPath.Name) && 
+                            string.Equals(filterPath.Name, root, StringComparison.OrdinalIgnoreCase))
+                        {
+                            return true;
+                        }
+                    }
+                    catch (Exception)
+                    {
+                        // Continue to next filter
+                    }
+                }
+            }
+
+            return false;
+        }
+
         // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/engine.py:1199-1202
         // Original: def ext_of(path: Path) -> str: ...
         public static string ExtOf(string path)
