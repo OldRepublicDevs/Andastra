@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Numerics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Odyssey.MonoGame.Culling;
@@ -8,6 +7,7 @@ using Odyssey.MonoGame.LOD;
 using Odyssey.MonoGame.Loading;
 using Odyssey.MonoGame.Memory;
 using Odyssey.Content.Interfaces;
+using Vector3 = Microsoft.Xna.Framework.Vector3;
 
 namespace Odyssey.MonoGame.Rendering
 {
@@ -35,26 +35,26 @@ namespace Odyssey.MonoGame.Rendering
         private readonly IGameResourceProvider _resourceProvider;
 
         // Culling systems
-        private Frustum _frustum;
-        private OcclusionCuller _occlusionCuller;
-        private DistanceCuller _distanceCuller;
+        private readonly Frustum _frustum;
+        private readonly OcclusionCuller _occlusionCuller;
+        private readonly DistanceCuller _distanceCuller;
 
         // LOD system
-        private LODSystem _lodSystem;
+        private readonly LODSystem _lodSystem;
 
         // Rendering systems
-        private DepthPrePass _depthPrePass;
-        private RenderBatchManager _batchManager;
-        private GPUInstancing _gpuInstancing;
+        private readonly DepthPrePass _depthPrePass;
+        private readonly RenderBatchManager _batchManager;
+        private readonly GPUInstancing _gpuInstancing;
 
         // Async loading
-        private AsyncResourceLoader _asyncLoader;
+        private readonly AsyncResourceLoader _asyncLoader;
 
         // Memory management
-        private ObjectPool<List<RenderObject>> _renderListPool;
+        private readonly ObjectPool<List<RenderObject>> _renderListPool;
 
         // Statistics
-        private RenderStats _stats;
+        private readonly RenderStats _stats;
 
         // Frame state
         private Matrix _viewMatrix;
@@ -218,7 +218,13 @@ namespace Odyssey.MonoGame.Rendering
                 // Frustum culling
                 if (FrustumCullingEnabled)
                 {
-                    if (!_frustum.SphereInFrustum(obj.BoundingCenter, obj.BoundingRadius))
+                    // Convert XNA Vector3 to System.Numerics.Vector3 for frustum
+                    System.Numerics.Vector3 center = new System.Numerics.Vector3(
+                        obj.BoundingCenter.X,
+                        obj.BoundingCenter.Y,
+                        obj.BoundingCenter.Z
+                    );
+                    if (!_frustum.SphereInFrustum(center, obj.BoundingRadius))
                     {
                         _stats.FrustumCulled++;
                         continue;
@@ -228,8 +234,17 @@ namespace Odyssey.MonoGame.Rendering
                 // Occlusion culling
                 if (OcclusionCullingEnabled)
                 {
-                    Vector3 minPoint = obj.BoundingCenter - new Vector3(obj.BoundingRadius);
-                    Vector3 maxPoint = obj.BoundingCenter + new Vector3(obj.BoundingRadius);
+                    float radius = obj.BoundingRadius;
+                    System.Numerics.Vector3 minPoint = new System.Numerics.Vector3(
+                        obj.BoundingCenter.X - radius,
+                        obj.BoundingCenter.Y - radius,
+                        obj.BoundingCenter.Z - radius
+                    );
+                    System.Numerics.Vector3 maxPoint = new System.Numerics.Vector3(
+                        obj.BoundingCenter.X + radius,
+                        obj.BoundingCenter.Y + radius,
+                        obj.BoundingCenter.Z + radius
+                    );
                     if (_occlusionCuller.IsOccluded(minPoint, maxPoint, obj.ObjectId))
                     {
                         _stats.OcclusionCulled++;
@@ -241,8 +256,13 @@ namespace Odyssey.MonoGame.Rendering
                 if (LODEnabled)
                 {
                     float distance = Vector3.Distance(_cameraPosition, obj.BoundingCenter);
+                    System.Numerics.Vector3 worldPos = new System.Numerics.Vector3(
+                        obj.BoundingCenter.X,
+                        obj.BoundingCenter.Y,
+                        obj.BoundingCenter.Z
+                    );
                     float screenSize = _lodSystem.CalculateScreenSpaceSize(
-                        obj.BoundingCenter,
+                        worldPos,
                         obj.BoundingRadius,
                         _viewMatrix,
                         _projectionMatrix,
@@ -324,16 +344,16 @@ namespace Odyssey.MonoGame.Rendering
         public void PollAsyncResources()
         {
             // Poll completed textures
-            AsyncResourceLoader.TextureLoadTask[] textures = _asyncLoader.PollCompletedTextures(8);
-            foreach (AsyncResourceLoader.TextureLoadTask task in textures)
+            TextureLoadTask[] textures = _asyncLoader.PollCompletedTextures(8);
+            foreach (TextureLoadTask task in textures)
             {
                 // Create texture from loaded data on main thread
                 // (OpenGL context required)
             }
 
             // Poll completed models
-            AsyncResourceLoader.ModelLoadTask[] models = _asyncLoader.PollCompletedModels(4);
-            foreach (AsyncResourceLoader.ModelLoadTask task in models)
+            ModelLoadTask[] models = _asyncLoader.PollCompletedModels(4);
+            foreach (ModelLoadTask task in models)
             {
                 // Create mesh from loaded data on main thread
             }

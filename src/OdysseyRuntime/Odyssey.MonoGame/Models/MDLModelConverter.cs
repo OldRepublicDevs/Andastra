@@ -11,16 +11,20 @@ namespace Odyssey.MonoGame.Models
     /// 
     /// Optimization strategies:
     /// 1. Pre-calculates total vertex/index counts for buffer pre-allocation
-    /// 2. Uses a single vertex buffer where possible (batching meshes)
+    /// 2. Batches multiple meshes into single vertex buffers when possible
     /// 3. Builds node transforms during traversal to avoid repeated matrix multiplications
-    /// 4. Creates index buffers with optimal primitive type (16-bit when possible)
+    /// 4. Creates index buffers with optimal element size (16-bit when possible, 32-bit for large meshes)
+    /// 5. Supports skinned mesh conversion with bone data
+    /// 6. Uses BufferUsage.WriteOnly for optimal GPU transfer
+    /// 
+    /// Reference: vendor/PyKotor/wiki/MDL-MDX-File-Format.md
     /// </summary>
     public sealed class MDLModelConverter
     {
         private readonly GraphicsDevice _device;
 
         /// <summary>
-        /// Vertex format for MDL meshes.
+        /// Standard vertex format for MDL meshes.
         /// Uses VertexPositionNormalTexture for compatibility with BasicEffect.
         /// </summary>
         public struct MDLVertex : IVertexType
@@ -33,6 +37,55 @@ namespace Odyssey.MonoGame.Models
                 new VertexElement(0, VertexElementFormat.Vector3, VertexElementUsage.Position, 0),
                 new VertexElement(12, VertexElementFormat.Vector3, VertexElementUsage.Normal, 0),
                 new VertexElement(24, VertexElementFormat.Vector2, VertexElementUsage.TextureCoordinate, 0)
+            );
+
+            VertexDeclaration IVertexType.VertexDeclaration
+            {
+                get { return VertexDeclaration; }
+            }
+        }
+
+        /// <summary>
+        /// Extended vertex format with lightmap UVs.
+        /// </summary>
+        public struct MDLVertexLightmapped : IVertexType
+        {
+            public Vector3 Position;
+            public Vector3 Normal;
+            public Vector2 TexCoord0;
+            public Vector2 TexCoord1; // Lightmap UVs
+
+            public static readonly VertexDeclaration VertexDeclaration = new VertexDeclaration(
+                new VertexElement(0, VertexElementFormat.Vector3, VertexElementUsage.Position, 0),
+                new VertexElement(12, VertexElementFormat.Vector3, VertexElementUsage.Normal, 0),
+                new VertexElement(24, VertexElementFormat.Vector2, VertexElementUsage.TextureCoordinate, 0),
+                new VertexElement(32, VertexElementFormat.Vector2, VertexElementUsage.TextureCoordinate, 1)
+            );
+
+            VertexDeclaration IVertexType.VertexDeclaration
+            {
+                get { return VertexDeclaration; }
+            }
+        }
+
+        /// <summary>
+        /// Skinned vertex format for skeletal animation.
+        /// Supports up to 4 bone influences per vertex.
+        /// </summary>
+        public struct MDLVertexSkinned : IVertexType
+        {
+            public Vector3 Position;
+            public Vector3 Normal;
+            public Vector2 TexCoord;
+            public Vector4 BoneWeights;
+            public Byte4 BoneIndices;
+
+            public static readonly VertexDeclaration VertexDeclaration = new VertexDeclaration(
+                new VertexElement(0, VertexElementFormat.Vector3, VertexElementUsage.Position, 0),
+                new VertexElement(12, VertexElementFormat.Vector3, VertexElementUsage.Normal, 0),
+                new VertexElement(24, VertexElementFormat.Vector2, VertexElementUsage.TextureCoordinate, 0),
+                new VertexElement(32, VertexElementFormat.Vector4, VertexElementUsage.BlendWeight, 0),
+                new VertexElement(48, VertexElementFormat.Byte4, VertexElementUsage.BlendIndices, 0)
             );
 
             VertexDeclaration IVertexType.VertexDeclaration
@@ -151,6 +204,26 @@ namespace Odyssey.MonoGame.Models
             /// Bounding box maximum in local space.
             /// </summary>
             public Vector3 LocalBoundsMax;
+
+            /// <summary>
+            /// True if this mesh uses skeletal animation.
+            /// </summary>
+            public bool IsSkinned;
+
+            /// <summary>
+            /// True if this mesh has lightmap UVs.
+            /// </summary>
+            public bool HasLightmap;
+
+            /// <summary>
+            /// Bone matrices for skinned meshes (inverse bind pose * current pose).
+            /// </summary>
+            public Matrix[] BoneMatrices;
+
+            /// <summary>
+            /// Bone map for skinned meshes (local bone index to skeleton bone).
+            /// </summary>
+            public int[] BoneMap;
         }
 
         public MDLModelConverter(GraphicsDevice device)

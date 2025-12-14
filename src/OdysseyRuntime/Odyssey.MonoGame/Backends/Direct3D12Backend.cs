@@ -148,7 +148,7 @@ namespace Odyssey.MonoGame.Backends
             // Flush command queue
 
             // Destroy all resources
-            foreach (var resource in _resources.Values)
+            foreach (ResourceInfo resource in _resources.Values)
             {
                 DestroyResourceInternal(resource);
             }

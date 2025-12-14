@@ -127,7 +127,7 @@ namespace Odyssey.MonoGame.Backends
             }
 
             // Destroy all resources
-            foreach (var resource in _resources.Values)
+            foreach (ResourceInfo resource in _resources.Values)
             {
                 DestroyResourceInternal(resource);
             }

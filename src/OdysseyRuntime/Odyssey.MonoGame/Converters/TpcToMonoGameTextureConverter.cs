@@ -44,7 +44,7 @@ namespace Odyssey.MonoGame.Converters
             }
 
             // Get dimensions from first layer, first mipmap
-            var baseMipmap = tpc.Layers[0].Mipmaps[0];
+            TPCMipmap baseMipmap = tpc.Layers[0].Mipmaps[0];
             int width = baseMipmap.Width;
             int height = baseMipmap.Height;
             TPCTextureFormat format = tpc.Format();
@@ -76,13 +76,13 @@ namespace Odyssey.MonoGame.Converters
                 return new byte[0];
             }
 
-            var mipmap = tpc.Layers[0].Mipmaps[0];
+            TPCMipmap mipmap = tpc.Layers[0].Mipmaps[0];
             return ConvertMipmapToRgba(mipmap);
         }
 
         private static Texture2D Convert2DTexture(TPCLayer layer, GraphicsDevice device, bool generateMipmaps)
         {
-            var baseMipmap = layer.Mipmaps[0];
+            TPCMipmap baseMipmap = layer.Mipmaps[0];
             int width = baseMipmap.Width;
             int height = baseMipmap.Height;
 
@@ -101,7 +101,7 @@ namespace Odyssey.MonoGame.Converters
             // We'll create the texture and then set the data
             // Source: https://docs.monogame.net/articles/getting_to_know/howto/graphics/HowTo_Load_Texture.html
             Texture2D texture = new Texture2D(device, width, height, generateMipmaps, SurfaceFormat.Color);
-            
+
             // Convert byte array to Color array for SetData
             Color[] colorData = new Color[width * height];
             for (int i = 0; i < colorData.Length; i++)
