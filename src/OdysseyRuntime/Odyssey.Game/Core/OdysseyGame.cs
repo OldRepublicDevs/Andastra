@@ -572,7 +572,7 @@ namespace Odyssey.Game.Core
                 VerticalAlignment = VerticalAlignment.Stretch,
                 IsEnabled = gameAvailable
             };
-            
+
             // Inner colored box to make it clear it's interactive
             var startInner = new Border
             {
@@ -597,7 +597,7 @@ namespace Odyssey.Game.Core
                 VerticalAlignment = VerticalAlignment.Stretch,
                 IsEnabled = false // Disabled for minimal UI
             };
-            
+
             var optionsInner = new Border
             {
                 BackgroundColor = new Color(60, 100, 180, 255),
@@ -619,7 +619,7 @@ namespace Odyssey.Game.Core
                 HorizontalAlignment = HorizontalAlignment.Stretch,
                 VerticalAlignment = VerticalAlignment.Stretch
             };
-            
+
             var exitInner = new Border
             {
                 BackgroundColor = new Color(220, 60, 60, 255),

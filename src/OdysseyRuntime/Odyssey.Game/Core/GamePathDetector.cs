@@ -11,10 +11,18 @@ namespace Odyssey.Game.Core
     {
         /// <summary>
         /// Detect KOTOR installation path.
+        /// Checks in order: environment variables (.env/K1_PATH), registry, Steam paths, GOG paths, common paths.
         /// </summary>
         public static string DetectKotorPath(KotorGame game)
         {
-            // Try registry first
+            // Try environment variable first (supports .env file via K1_PATH or K2_PATH)
+            string envPath = TryEnvironmentVariable(game);
+            if (!string.IsNullOrEmpty(envPath))
+            {
+                return envPath;
+            }
+
+            // Try registry
             string registryPath = TryRegistry(game);
             if (!string.IsNullOrEmpty(registryPath))
             {
@@ -43,6 +51,147 @@ namespace Odyssey.Game.Core
             }
 
             return null;
+        }
+
+        /// <summary>
+        /// Tries to get the game path from environment variables.
+        /// Supports K1_PATH for K1 and K2_PATH for K2.
+        /// Also loads .env file from repository root if available.
+        /// </summary>
+        private static string TryEnvironmentVariable(KotorGame game)
+        {
+            // Load .env file if it exists in the repository root
+            LoadEnvFile();
+
+            // Get environment variable based on game
+            string envVarName = game == KotorGame.K1 ? "K1_PATH" : "K2_PATH";
+            string path = Environment.GetEnvironmentVariable(envVarName);
+
+            if (!string.IsNullOrEmpty(path) && IsValidInstallation(path, game))
+            {
+                return path;
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Loads .env file from repository root if it exists.
+        /// Format: KEY=value (one per line, # for comments, blank lines ignored)
+        /// Searches in: current working directory, executable directory, and walking up to find .git/.env
+        /// </summary>
+        private static void LoadEnvFile()
+        {
+            try
+            {
+                string envPath = null;
+
+                // Try current working directory first (for development/testing)
+                string workingDir = Environment.CurrentDirectory;
+                string candidatePath = Path.Combine(workingDir, ".env");
+                if (File.Exists(candidatePath))
+                {
+                    envPath = candidatePath;
+                }
+
+                // Try executable directory
+                if (envPath == null)
+                {
+                    string exeDir = AppDomain.CurrentDomain.BaseDirectory;
+                    candidatePath = Path.Combine(exeDir, ".env");
+                    if (File.Exists(candidatePath))
+                    {
+                        envPath = candidatePath;
+                    }
+                }
+
+                // Walk up from executable directory to find .env (look for .git as indicator of repo root)
+                if (envPath == null)
+                {
+                    DirectoryInfo dir = new DirectoryInfo(AppDomain.CurrentDomain.BaseDirectory);
+                    for (int i = 0; i < 10 && dir != null; i++)
+                    {
+                        candidatePath = Path.Combine(dir.FullName, ".env");
+                        if (File.Exists(candidatePath))
+                        {
+                            envPath = candidatePath;
+                            break;
+                        }
+                        
+                        // Also check for .git to know we're at repo root
+                        string gitPath = Path.Combine(dir.FullName, ".git");
+                        if (Directory.Exists(gitPath) || File.Exists(gitPath))
+                        {
+                            // We're at repo root, if .env exists here, use it
+                            if (File.Exists(candidatePath))
+                            {
+                                envPath = candidatePath;
+                                break;
+                            }
+                        }
+                        
+                        dir = dir.Parent;
+                    }
+                }
+
+                // Also try workspace root environment variable (for CI/CD)
+                if (envPath == null)
+                {
+                    string workspaceRoot = Environment.GetEnvironmentVariable("WORKSPACE_ROOT");
+                    if (string.IsNullOrEmpty(workspaceRoot))
+                    {
+                        workspaceRoot = Environment.GetEnvironmentVariable("GITHUB_WORKSPACE");
+                    }
+                    if (!string.IsNullOrEmpty(workspaceRoot))
+                    {
+                        candidatePath = Path.Combine(workspaceRoot, ".env");
+                        if (File.Exists(candidatePath))
+                        {
+                            envPath = candidatePath;
+                        }
+                    }
+                }
+
+                if (envPath == null || !File.Exists(envPath))
+                {
+                    return;
+                }
+
+                // Load .env file
+                string[] lines = File.ReadAllLines(envPath);
+                foreach (string line in lines)
+                {
+                    string trimmed = line.Trim();
+                    
+                    // Skip empty lines and comments
+                    if (string.IsNullOrEmpty(trimmed) || trimmed.StartsWith("#"))
+                    {
+                        continue;
+                    }
+
+                    // Parse KEY=value
+                    int equalsIndex = trimmed.IndexOf('=');
+                    if (equalsIndex > 0)
+                    {
+                        string key = trimmed.Substring(0, equalsIndex).Trim();
+                        string value = trimmed.Substring(equalsIndex + 1).Trim();
+
+                        // Remove quotes if present
+                        if ((value.StartsWith("\"") && value.EndsWith("\"")) ||
+                            (value.StartsWith("'") && value.EndsWith("'")))
+                        {
+                            value = value.Substring(1, value.Length - 2);
+                        }
+
+                        // Set environment variable for current process
+                        Environment.SetEnvironmentVariable(key, value, EnvironmentVariableTarget.Process);
+                    }
+                }
+            }
+            catch
+            {
+                // Silently fail if .env can't be loaded
+            }
         }
 
         private static string TryRegistry(KotorGame game)
