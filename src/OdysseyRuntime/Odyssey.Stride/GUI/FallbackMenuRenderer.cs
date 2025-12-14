@@ -169,8 +169,12 @@ namespace Odyssey.Stride.GUI
         // Render the menu using SpriteBatch
         // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Rendering.Compositing.SceneRendererBase.html
         // DrawCore(RenderContext, RenderDrawContext) - Called each frame to render the scene
-        // RenderContext: Contains scene information and rendering state
-        // RenderDrawContext: Provides graphics context and command list for drawing operations
+        // Method signature: protected virtual void DrawCore(RenderContext context, RenderDrawContext drawContext)
+        // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Rendering.RenderContext.html
+        // RenderContext contains scene information and rendering state
+        // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Rendering.RenderDrawContext.html
+        // RenderDrawContext provides graphics context and command list for drawing operations
+        // Source: https://doc.stride3d.net/latest/en/manual/graphics/graphics-compositor/index.html
         protected override void DrawCore(RenderContext context, RenderDrawContext drawContext)
         {
             if (!_isVisible)
