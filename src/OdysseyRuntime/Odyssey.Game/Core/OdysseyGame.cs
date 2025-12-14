@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Linq;
 using StrideEngine = Stride.Engine;
 using Stride.Games;
@@ -8,6 +9,7 @@ using Stride.Core.Mathematics;
 using Stride.Engine;
 using Stride.Rendering;
 using Stride.Rendering.Compositing;
+using Stride.Rendering.UI;
 using Stride.UI;
 using Stride.UI.Panels;
 using Stride.UI.Controls;
@@ -25,6 +27,7 @@ using Odyssey.Stride.Camera;
 using Odyssey.Stride.Scene;
 using Odyssey.Stride.UI;
 using Odyssey.Content.Interfaces;
+using Odyssey.Stride.GUI;
 using CSharpKOTOR.Formats.LYT;
 using CSharpKOTOR.Formats.VIS;
 using CSharpKOTOR.Resources;
@@ -34,6 +37,23 @@ namespace Odyssey.Game.Core
 {
     public class OdysseyGame : StrideEngine.Game
     {
+        // #region agent log
+        private static readonly string DebugLogPath = @"g:\GitHub\HoloPatcher.NET\.cursor\debug.log";
+        private static void DebugLog(string hypothesisId, string location, string message, object data = null)
+        {
+            try
+            {
+                string json = "{\"timestamp\":" + DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() +
+                    ",\"sessionId\":\"debug-session\",\"hypothesisId\":\"" + hypothesisId +
+                    "\",\"location\":\"" + location.Replace("\\", "\\\\") +
+                    "\",\"message\":\"" + message.Replace("\"", "\\\"").Replace("\n", "\\n") +
+                    "\",\"data\":" + (data != null ? "\"" + data.ToString().Replace("\"", "\\\"").Replace("\n", "\\n") + "\"" : "null") + "}";
+                File.AppendAllText(DebugLogPath, json + "\n");
+            }
+            catch { }
+        }
+        // #endregion
+
         private readonly GameSettings _settings;
         private GameSession _session;
         private World _world;
@@ -66,12 +86,15 @@ namespace Odyssey.Game.Core
         private SpriteFont _font;
         private bool _uiAvailable;
 
+        // KOTOR GUI System
+        private KotorGuiManager _kotorGuiManager;
+
         private bool _showDebugInfo = true; // Default to debug mode for demo
         private bool _isPaused = false;
         private bool _inDialogue = false;
 
         // Debug text overlay
-        private TextBlock _debugTextBlock;
+        private readonly TextBlock _debugTextBlock;
 
         public OdysseyGame(GameSettings settings)
         {
@@ -80,7 +103,15 @@ namespace Odyssey.Game.Core
 
         protected override void Initialize()
         {
+            // #region agent log
+            DebugLog("A", "OdysseyGame.Initialize:start", "Initialize() starting");
+            // #endregion
+
             base.Initialize();
+
+            // #region agent log
+            DebugLog("C", "OdysseyGame.Initialize:compositor_check", "Checking GraphicsCompositor", SceneSystem?.GraphicsCompositor != null ? "compositor_exists" : "compositor_null");
+            // #endregion
 
             Window.Title = "Odyssey Engine - " + (_settings.Game == KotorGame.K1 ? "Knights of the Old Republic" : "The Sith Lords");
 
@@ -94,26 +125,38 @@ namespace Odyssey.Game.Core
             InitializeSystems();
             InitializeCamera();
 
+            // #region agent log
+            DebugLog("A", "OdysseyGame.Initialize:end", "Initialize() complete");
+            // #endregion
+
             Console.WriteLine("[Odyssey] Core systems initialized");
         }
 
         private void InitializeCamera()
         {
+            // #region agent log
+            DebugLog("B", "OdysseyGame.InitializeCamera:start", "Creating camera entity");
+            // #endregion
+
             // Create main camera entity
             _cameraEntity = new StrideEngine.Entity("MainCamera");
             _cameraComponent = new CameraComponent
             {
                 NearClipPlane = 0.1f,
                 FarClipPlane = 1000f,
-                UseCustomAspectRatio = false
+                UseCustomAspectRatio = false,
+                Slot = new SceneCameraSlotId() // Assign to the default camera slot - will be updated in CreateDefaultGraphicsCompositor
             };
             _cameraEntity.Add(_cameraComponent);
 
-            // Position camera at a default viewing position
-            _cameraEntity.Transform.Position = new Vector3(0, 5, 10);
-            _cameraEntity.Transform.Rotation = Quaternion.RotationX(-0.3f);
+            // Position camera at origin - UI is rendered in screen space, camera position doesn't matter for UI
+            _cameraEntity.Transform.Position = new Vector3(0, 0, 10);
+            _cameraEntity.Transform.Rotation = Quaternion.Identity;
 
-            // Defer adding to scene until BeginRun when SceneSystem is available
+            // #region agent log
+            DebugLog("B", "OdysseyGame.InitializeCamera:end", "Camera entity created", "slot=" + _cameraComponent.Slot.Id);
+            // #endregion
+
             Console.WriteLine("[Odyssey] Camera entity created (will be added to scene in BeginRun)");
         }
 
@@ -125,11 +168,30 @@ namespace Odyssey.Game.Core
             Console.WriteLine($"[Odyssey] Game state changed: {oldState} -> {newState}");
 
             // Hide all UI elements first
-            if (_mainMenu != null) _mainMenu.IsVisible = false;
-            if (_hud != null) _hud.IsVisible = false;
-            if (_pauseMenu != null) _pauseMenu.IsVisible = false;
-            if (_loadingScreen != null) _loadingScreen.IsVisible = false;
-            if (_dialoguePanel != null) _dialoguePanel.IsVisible = false;
+            if (_mainMenu != null)
+            {
+                _mainMenu.IsVisible = false;
+            }
+
+            if (_hud != null)
+            {
+                _hud.IsVisible = false;
+            }
+
+            if (_pauseMenu != null)
+            {
+                _pauseMenu.IsVisible = false;
+            }
+
+            if (_loadingScreen != null)
+            {
+                _loadingScreen.IsVisible = false;
+            }
+
+            if (_dialoguePanel != null)
+            {
+                _dialoguePanel.IsVisible = false;
+            }
 
             // Handle camera/scene visibility based on state
             UpdateCameraVisibility(newState);
@@ -138,19 +200,35 @@ namespace Odyssey.Game.Core
             switch (newState)
             {
                 case GameState.MainMenu:
-                    if (_mainMenu != null) _mainMenu.IsVisible = true;
+                    if (_mainMenu != null)
+                    {
+                        _mainMenu.IsVisible = true;
+                    }
+
                     break;
 
                 case GameState.Loading:
-                    if (_loadingScreen != null) _loadingScreen.Show("Loading...");
+                    if (_loadingScreen != null)
+                    {
+                        _loadingScreen.Show("Loading...");
+                    }
+
                     break;
 
                 case GameState.InGame:
-                    if (_hud != null) _hud.IsVisible = true;
+                    if (_hud != null)
+                    {
+                        _hud.IsVisible = true;
+                    }
+
                     break;
 
                 case GameState.Paused:
-                    if (_pauseMenu != null) _pauseMenu.IsVisible = true;
+                    if (_pauseMenu != null)
+                    {
+                        _pauseMenu.IsVisible = true;
+                    }
+
                     break;
             }
         }
@@ -254,8 +332,66 @@ namespace Odyssey.Game.Core
             _session.OnModuleLoaded += (sender, e) => OnModuleLoaded(e);
         }
 
+        private void OnKotorGuiButtonClicked(object sender, GuiButtonClickedEventArgs e)
+        {
+            Console.WriteLine($"[Odyssey] KOTOR GUI button clicked: Tag='{e.ButtonTag}', ID={e.ButtonId}");
+
+            // Handle main menu button clicks
+            // KOTOR main menu typical button tags: BTN_LOADGAME, BTN_NEWGAME, BTN_MOVIES, BTN_OPTIONS, BTN_EXIT
+            // Button IDs vary, so we primarily use tags
+            string buttonTag = e.ButtonTag?.ToLowerInvariant() ?? string.Empty;
+
+            if (buttonTag.Contains("newgame") || buttonTag.Contains("new") || buttonTag.Contains("loadgame") || buttonTag.Contains("load"))
+            {
+                // Start the game - load first level
+                Console.WriteLine("[Odyssey] Starting new game from KOTOR GUI");
+
+                string gamePath = _settings.GamePath;
+                if (string.IsNullOrEmpty(gamePath))
+                {
+                    gamePath = GamePathDetector.DetectKotorPath(_settings.Game);
+                }
+
+                if (!string.IsNullOrEmpty(gamePath))
+                {
+                    OnStartGame(this, new GameStartEventArgs(gamePath, "end_m01aa"));
+                }
+                else
+                {
+                    Console.WriteLine("[Odyssey] ERROR: No game path available to start game!");
+                }
+            }
+            else if (buttonTag.Contains("exit") || buttonTag.Contains("quit"))
+            {
+                // Exit the game
+                Console.WriteLine("[Odyssey] Exit requested from KOTOR GUI");
+                Exit();
+            }
+            else
+            {
+                // For any other button, just start the game for testing
+                // This ensures we can test with any clickable button
+                Console.WriteLine($"[Odyssey] Unrecognized button '{e.ButtonTag}', starting game anyway for testing");
+
+                string gamePath = _settings.GamePath;
+                if (string.IsNullOrEmpty(gamePath))
+                {
+                    gamePath = GamePathDetector.DetectKotorPath(_settings.Game);
+                }
+
+                if (!string.IsNullOrEmpty(gamePath))
+                {
+                    OnStartGame(this, new GameStartEventArgs(gamePath, "end_m01aa"));
+                }
+            }
+        }
+
         private void InitializeUI()
         {
+            // #region agent log
+            DebugLog("D", "OdysseyGame.InitializeUI:start", "InitializeUI starting");
+            // #endregion
+
             var uiEntity = new StrideEngine.Entity("UI");
             _uiComponent = new UIComponent();
             uiEntity.Add(_uiComponent);
@@ -263,105 +399,157 @@ namespace Odyssey.Game.Core
             // Add UI entity to scene FIRST
             try
             {
-                var sceneSystem = Services.GetService<SceneSystem>();
+                SceneSystem sceneSystem = Services.GetService<SceneSystem>();
                 if (sceneSystem != null && sceneSystem.SceneInstance != null)
                 {
                     sceneSystem.SceneInstance.RootScene.Entities.Add(uiEntity);
+                    // #region agent log
+                    DebugLog("D", "OdysseyGame.InitializeUI:ui_added", "UI entity added to scene");
+                    // #endregion
                     Console.WriteLine("[Odyssey] UI entity added to scene");
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("[Odyssey] WARNING: Failed to add UI entity to scene: " + ex.Message);
-            }
-
-            // Try to load font - Stride's Content.Load may return null instead of throwing
-            _font = null;
-            try
-            {
-                _font = Content.Load<SpriteFont>("DefaultFont");
-                if (_font != null)
-                {
-                    Console.WriteLine("[Odyssey] Font loaded successfully");
                 }
                 else
                 {
-                    Console.WriteLine("[Odyssey] Warning: DefaultFont returned null");
+                    // #region agent log
+                    DebugLog("D", "OdysseyGame.InitializeUI:scene_null", "SceneSystem or SceneInstance null", sceneSystem == null ? "sceneSystem=null" : "sceneInstance=null");
+                    // #endregion
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine("[Odyssey] Warning: DefaultFont not found: " + ex.Message);
-                _font = null;
+                // #region agent log
+                DebugLog("D", "OdysseyGame.InitializeUI:ui_error", "Failed to add UI entity", ex.Message);
+                // #endregion
+                Console.WriteLine("[Odyssey] WARNING: Failed to add UI entity to scene: " + ex.Message);
             }
 
-            // ALWAYS use fallback for now - the font system isn't working
-            // TODO: Properly create and include a SpriteFont asset
-            _font = null; // Force fallback mode
-
-            if (_font != null)
+            // Initialize KOTOR GUI System
+            try
             {
-                // Full UI with fonts
-                var canvas = new Canvas();
-                var page = new UIPage { RootElement = canvas };
-                _uiComponent.Page = page;
+                // Determine game path
+                string gamePath = _settings.GamePath;
+                if (string.IsNullOrEmpty(gamePath))
+                {
+                    gamePath = GamePathDetector.DetectKotorPath(_settings.Game);
+                    Console.WriteLine($"[Odyssey] Auto-detected game path: {gamePath}");
+                }
+                else
+                {
+                    Console.WriteLine($"[Odyssey] Using configured game path: {gamePath}");
+                }
 
-                _uiAvailable = true;
-                _mainMenu = new MainMenu(_uiComponent, _font);
-                _hud = new BasicHUD(_uiComponent, _font);
-                _pauseMenu = new PauseMenu(_uiComponent, _font);
-                _loadingScreen = new LoadingScreen(_uiComponent, _font);
-                _dialoguePanel = new DialoguePanel(_uiComponent, _font);
+                // #region agent log
+                DebugLog("D", "OdysseyGame.InitializeUI:game_path", "Game path", gamePath ?? "null");
+                // #endregion
 
-                _mainMenu.OnStartGame += OnStartGame;
-                _pauseMenu.OnResume += OnResumeGame;
-                _pauseMenu.OnExit += OnExitGame;
-                _dialoguePanel.OnReplySelected += OnDialogueReplySelected;
-                _dialoguePanel.OnSkipRequested += OnDialogueSkip;
+                if (string.IsNullOrEmpty(gamePath) || !Directory.Exists(gamePath))
+                {
+                    Console.WriteLine($"[Odyssey] WARNING: Game path not found or invalid: {gamePath}");
+                    Console.WriteLine("[Odyssey] Using fallback UI (no game files available)");
+                    CreateFallbackMainMenu();
+                    _uiAvailable = true;
+                    return;
+                }
 
-                Console.WriteLine("[Odyssey] UI initialized with font");
+                _kotorGuiManager = new KotorGuiManager(_uiComponent, GraphicsDevice, gamePath);
+                _kotorGuiManager.OnButtonClicked += OnKotorGuiButtonClicked;
+
+                // #region agent log
+                DebugLog("D", "OdysseyGame.InitializeUI:gui_manager_created", "KotorGuiManager created");
+                // #endregion
+
+                // Load the main menu GUI from KOTOR game files
+                // Standard KOTOR main menu GUIs: mainmenu8x6_p (K1), mainmenu16x12_p (K1 widescreen)
+                bool guiLoaded = _kotorGuiManager.LoadGui("mainmenu8x6_p",
+                    Window.ClientBounds.Width,
+                    Window.ClientBounds.Height);
+
+                if (guiLoaded)
+                {
+                    Console.WriteLine("[Odyssey] KOTOR main menu GUI loaded successfully");
+                    _uiAvailable = true;
+
+                    // #region agent log
+                    DebugLog("D", "OdysseyGame.InitializeUI:kotor_gui_loaded", "KOTOR GUI loaded successfully");
+                    // #endregion
+                }
+                else
+                {
+                    Console.WriteLine("[Odyssey] WARNING: Failed to load KOTOR main menu GUI, using fallback");
+                    // #region agent log
+                    DebugLog("D", "OdysseyGame.InitializeUI:kotor_gui_failed", "KOTOR GUI loading failed, using fallback");
+                    // #endregion
+                    CreateFallbackMainMenu();
+                    _uiAvailable = true;
+                }
             }
-            else
+            catch (Exception ex)
             {
-                // FALLBACK: Create a simple colored UI without fonts
-                // This ensures we always have SOMETHING visible on screen
-                _uiAvailable = true; // Mark as available since we have fallback
-                Console.WriteLine("[Odyssey] Creating fallback UI (no font available)");
+                Console.WriteLine($"[Odyssey] ERROR initializing KOTOR GUI system: {ex.Message}");
+                Console.WriteLine($"[Odyssey] Stack trace: {ex.StackTrace}");
+
+                // #region agent log
+                DebugLog("D", "OdysseyGame.InitializeUI:kotor_gui_error", "KOTOR GUI error", ex.Message);
+                // #endregion
+
+                // Fall back to simple UI
                 CreateFallbackMainMenu();
+                _uiAvailable = true;
             }
+
+            // #region agent log
+            DebugLog("D", "OdysseyGame.InitializeUI:end", "InitializeUI complete", "uiAvailable=" + _uiAvailable + " page=" + (_uiComponent.Page != null));
+            // #endregion
         }
 
         /// <summary>
-        /// Creates a simple fallback main menu using only colored rectangles.
-        /// This is used when no font is available.
+        /// Creates a fully functional fallback main menu with proper font support and interactive elements.
+        /// This is used when KOTOR GUI files cannot be loaded.
         /// </summary>
         private void CreateFallbackMainMenu()
         {
-            // Create root canvas with full screen dark background
+            // Create or load a system font for text rendering
+            SpriteFont fallbackFont = null;
+            try
+            {
+                // Try to create a system font - Stride supports creating fonts from system fonts
+                // Use Arial as a reliable fallback font available on most systems
+                fallbackFont = SpriteFont.FromSystemFont(GraphicsDevice, "Arial", 16, FontStyle.Regular);
+                Console.WriteLine("[Odyssey] Created system font for fallback UI");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[Odyssey] WARNING: Failed to create system font: {ex.Message}");
+                Console.WriteLine("[Odyssey] Text may not render properly in fallback UI");
+            }
+
+            // Create root canvas with full screen background
             var canvas = new Canvas
             {
                 BackgroundColor = new Color(10, 10, 30, 255), // Dark blue background
                 HorizontalAlignment = HorizontalAlignment.Stretch,
-                VerticalAlignment = VerticalAlignment.Stretch
+                VerticalAlignment = VerticalAlignment.Stretch,
+                Width = Window.ClientBounds.Width,
+                Height = Window.ClientBounds.Height
             };
 
-            // Main panel - centered colored rectangle
+            // Main panel - centered, properly sized
             var mainPanel = new Grid
             {
-                Width = 600,
-                Height = 450,
+                Width = 700,
+                Height = 500,
                 BackgroundColor = new Color(20, 20, 50, 240), // Darker panel
                 HorizontalAlignment = HorizontalAlignment.Center,
                 VerticalAlignment = VerticalAlignment.Center
             };
 
-            // Add row definitions
-            mainPanel.RowDefinitions.Add(new StripDefinition(StripType.Fixed, 80));  // Title area
+            // Add row definitions for proper layout
+            mainPanel.RowDefinitions.Add(new StripDefinition(StripType.Fixed, 90));  // Title area
             mainPanel.RowDefinitions.Add(new StripDefinition(StripType.Fixed, 20));  // Spacer
-            mainPanel.RowDefinitions.Add(new StripDefinition(StripType.Fixed, 60));  // Info row 1
-            mainPanel.RowDefinitions.Add(new StripDefinition(StripType.Fixed, 60));  // Info row 2
-            mainPanel.RowDefinitions.Add(new StripDefinition(StripType.Fixed, 20));  // Spacer
-            mainPanel.RowDefinitions.Add(new StripDefinition(StripType.Fixed, 70));  // Start button
+            mainPanel.RowDefinitions.Add(new StripDefinition(StripType.Fixed, 70));  // Info row 1
+            mainPanel.RowDefinitions.Add(new StripDefinition(StripType.Fixed, 70));  // Info row 2
+            mainPanel.RowDefinitions.Add(new StripDefinition(StripType.Fixed, 30));  // Spacer
+            mainPanel.RowDefinitions.Add(new StripDefinition(StripType.Fixed, 80));  // Start button
             mainPanel.RowDefinitions.Add(new StripDefinition(StripType.Star, 1));    // Status area
 
             // Title bar (golden/amber color for Star Wars feel)
@@ -375,14 +563,15 @@ namespace Odyssey.Game.Core
             titleBar.SetGridRow(0);
             mainPanel.Children.Add(titleBar);
 
-            // Add title text if we can
+            // Title text with font
             var titleText = new TextBlock
             {
                 Text = "ODYSSEY ENGINE",
-                TextSize = 28,
+                TextSize = 32,
                 TextColor = new Color(10, 10, 30, 255), // Dark text on gold
                 HorizontalAlignment = HorizontalAlignment.Center,
-                VerticalAlignment = VerticalAlignment.Center
+                VerticalAlignment = VerticalAlignment.Center,
+                Font = fallbackFont
             };
             titleBar.Content = titleText;
 
@@ -396,17 +585,18 @@ namespace Odyssey.Game.Core
             };
             var infoText1 = new TextBlock
             {
-                Text = "KOTOR 1 Detected",
-                TextSize = 16,
+                Text = _settings.Game == KotorGame.K1 ? "Knights of the Old Republic" : "The Sith Lords",
+                TextSize = 18,
                 TextColor = new Color(150, 200, 255, 255), // Light blue
                 HorizontalAlignment = HorizontalAlignment.Center,
-                VerticalAlignment = VerticalAlignment.Center
+                VerticalAlignment = VerticalAlignment.Center,
+                Font = fallbackFont
             };
             infoPanel1.Content = infoText1;
             infoPanel1.SetGridRow(2);
             mainPanel.Children.Add(infoPanel1);
 
-            // Info panel 2 - Module
+            // Info panel 2 - Module info
             var infoPanel2 = new Border
             {
                 BackgroundColor = new Color(40, 60, 80, 255),
@@ -414,33 +604,44 @@ namespace Odyssey.Game.Core
                 HorizontalAlignment = HorizontalAlignment.Stretch,
                 VerticalAlignment = VerticalAlignment.Stretch
             };
+            string gamePath = _settings.GamePath;
+            if (string.IsNullOrEmpty(gamePath))
+            {
+                gamePath = GamePathDetector.DetectKotorPath(_settings.Game);
+            }
+            string moduleInfo = string.IsNullOrEmpty(gamePath) 
+                ? "No game path detected" 
+                : $"Game Path: {gamePath}";
             var infoText2 = new TextBlock
             {
-                Text = "Module: end_m01aa (Endar Spire)",
+                Text = moduleInfo,
                 TextSize = 14,
                 TextColor = new Color(150, 200, 255, 255),
                 HorizontalAlignment = HorizontalAlignment.Center,
-                VerticalAlignment = VerticalAlignment.Center
+                VerticalAlignment = VerticalAlignment.Center,
+                Font = fallbackFont
             };
             infoPanel2.Content = infoText2;
             infoPanel2.SetGridRow(3);
             mainPanel.Children.Add(infoPanel2);
 
-            // Start button (green)
+            // Start button (green, properly sized and clickable)
             var startButton = new Button
             {
                 BackgroundColor = new Color(30, 120, 30, 255), // Green
-                Margin = new Thickness(80, 10, 80, 10),
+                Margin = new Thickness(100, 15, 100, 15),
                 HorizontalAlignment = HorizontalAlignment.Stretch,
-                VerticalAlignment = VerticalAlignment.Stretch
+                VerticalAlignment = VerticalAlignment.Stretch,
+                IsEnabled = !string.IsNullOrEmpty(gamePath) // Enable only if game path is available
             };
             var startText = new TextBlock
             {
-                Text = "CLICK TO START",
-                TextSize = 20,
+                Text = string.IsNullOrEmpty(gamePath) ? "NO GAME PATH" : "CLICK TO START GAME",
+                TextSize = 22,
                 TextColor = Color.White,
                 HorizontalAlignment = HorizontalAlignment.Center,
-                VerticalAlignment = VerticalAlignment.Center
+                VerticalAlignment = VerticalAlignment.Center,
+                Font = fallbackFont
             };
             startButton.Content = startText;
             startButton.Click += OnFallbackStartClicked;
@@ -450,12 +651,13 @@ namespace Odyssey.Game.Core
             // Status text at bottom
             var statusText = new TextBlock
             {
-                Text = "Press ESCAPE to exit",
-                TextSize = 12,
+                Text = "Press ESCAPE to exit | Click button to start game",
+                TextSize = 14,
                 TextColor = new Color(180, 180, 100, 255), // Yellow-ish
-                Margin = new Thickness(20, 10, 20, 10),
+                Margin = new Thickness(20, 15, 20, 15),
                 HorizontalAlignment = HorizontalAlignment.Center,
-                VerticalAlignment = VerticalAlignment.Top
+                VerticalAlignment = VerticalAlignment.Top,
+                Font = fallbackFont
             };
             statusText.SetGridRow(6);
             mainPanel.Children.Add(statusText);
@@ -464,7 +666,7 @@ namespace Odyssey.Game.Core
             var outerBorder = new Border
             {
                 BorderColor = new Color(100, 80, 40, 255), // Bronze border
-                BorderThickness = new Thickness(3, 3, 3, 3),
+                BorderThickness = new Thickness(4, 4, 4, 4),
                 Content = mainPanel,
                 HorizontalAlignment = HorizontalAlignment.Center,
                 VerticalAlignment = VerticalAlignment.Center
@@ -472,11 +674,11 @@ namespace Odyssey.Game.Core
 
             canvas.Children.Add(outerBorder);
 
-            // Set the page
+            // Set the page - CRITICAL: This must be set for UI to render
             var page = new UIPage { RootElement = canvas };
             _uiComponent.Page = page;
 
-            Console.WriteLine("[Odyssey] Fallback main menu created");
+            Console.WriteLine("[Odyssey] Fallback main menu created with full functionality");
         }
 
         private void OnFallbackStartClicked(object sender, RoutedEventArgs e)
@@ -534,10 +736,16 @@ namespace Odyssey.Game.Core
         private void FireScriptEvent(IEntity entity, ScriptEvent scriptEvent, IEntity triggeredBy)
         {
             var scriptHooks = entity.GetComponent<IScriptHooksComponent>();
-            if (scriptHooks == null) return;
+            if (scriptHooks == null)
+            {
+                return;
+            }
 
             string scriptResRef = scriptHooks.GetScript(scriptEvent);
-            if (string.IsNullOrEmpty(scriptResRef)) return;
+            if (string.IsNullOrEmpty(scriptResRef))
+            {
+                return;
+            }
 
             try
             {
@@ -552,10 +760,16 @@ namespace Odyssey.Game.Core
 
         private void PositionPlayerAtWaypoint(IEntity player, string waypointTag)
         {
-            if (player == null || string.IsNullOrEmpty(waypointTag)) return;
+            if (player == null || string.IsNullOrEmpty(waypointTag))
+            {
+                return;
+            }
 
             var waypoint = _world.GetEntityByTag(waypointTag);
-            if (waypoint == null) return;
+            if (waypoint == null)
+            {
+                return;
+            }
 
             var waypointTransform = waypoint.GetComponent<ITransformComponent>();
             var playerTransform = player.GetComponent<ITransformComponent>();
@@ -569,44 +783,70 @@ namespace Odyssey.Game.Core
 
         protected override void BeginRun()
         {
+            // #region agent log
+            DebugLog("A", "OdysseyGame.BeginRun:start", "BeginRun() starting");
+            // #endregion
+
             base.BeginRun();
 
-            // CRITICAL: Set up the GraphicsCompositor for rendering
-            // Without a compositor, NOTHING will render to screen
-            SetupGraphicsCompositor();
+            Console.WriteLine("[Odyssey] BeginRun - Setting up scene and UI...");
 
-            // CRITICAL: Create SceneInstance if it doesn't exist
-            // Without a SceneInstance, nothing will render (purple screen)
+            // Get or create the scene system and instance
             var sceneSystem = Services.GetService<SceneSystem>();
-            if (sceneSystem != null && sceneSystem.SceneInstance == null)
+            // #region agent log
+            DebugLog("A", "OdysseyGame.BeginRun:scene_system", "SceneSystem check", sceneSystem != null ? "exists" : "null");
+            // #endregion
+
+            if (sceneSystem == null)
+            {
+                Console.WriteLine("[Odyssey] ERROR: SceneSystem service not found!");
+                return;
+            }
+
+            // #region agent log
+            DebugLog("E", "OdysseyGame.BeginRun:compositor_before", "GraphicsCompositor before setup", sceneSystem.GraphicsCompositor != null ? "exists_will_replace" : "null_will_create");
+            // #endregion
+
+            // CRITICAL FIX: ALWAYS set up our compositor - Stride's default doesn't work properly
+            // The previous code checked for null but Stride creates a default that doesn't clear correctly
+            SetupGraphicsCompositor(sceneSystem);
+
+            // #region agent log
+            DebugLog("E", "OdysseyGame.BeginRun:compositor_after", "GraphicsCompositor after setup", sceneSystem.GraphicsCompositor != null ? "exists" : "null");
+            // #endregion
+
+            // Create SceneInstance if it doesn't exist
+            if (sceneSystem.SceneInstance == null)
             {
                 var rootScene = new StrideEngine.Scene();
                 sceneSystem.SceneInstance = new SceneInstance(Services, rootScene);
                 Console.WriteLine("[Odyssey] Created root SceneInstance for rendering");
             }
 
+            // #region agent log
+            DebugLog("A", "OdysseyGame.BeginRun:scene_instance", "SceneInstance check", sceneSystem.SceneInstance != null ? "exists" : "null");
+            // #endregion
+
             // Add camera to scene now that SceneSystem is available
-            // Camera MUST be in scene for rendering to work, even in MainMenu state
-            if (_cameraEntity != null)
+            if (_cameraEntity != null && sceneSystem.SceneInstance != null)
             {
                 try
                 {
-                    if (sceneSystem != null && sceneSystem.SceneInstance != null)
+                    if (!sceneSystem.SceneInstance.RootScene.Entities.Contains(_cameraEntity))
                     {
-                        // Ensure camera is in scene (needed for all states including MainMenu)
-                        if (!sceneSystem.SceneInstance.RootScene.Entities.Contains(_cameraEntity))
-                        {
-                            sceneSystem.SceneInstance.RootScene.Entities.Add(_cameraEntity);
-                            Console.WriteLine("[Odyssey] Camera added to scene at " + _cameraEntity.Transform.Position);
-                        }
+                        sceneSystem.SceneInstance.RootScene.Entities.Add(_cameraEntity);
+                        Console.WriteLine("[Odyssey] Camera added to scene at " + _cameraEntity.Transform.Position);
                     }
-                    else
-                    {
-                        Console.WriteLine("[Odyssey] WARNING: SceneSystem not available, camera not added");
-                    }
+
+                    // #region agent log
+                    DebugLog("B", "OdysseyGame.BeginRun:camera_added", "Camera entity added to scene", _cameraEntity.Transform.Position.ToString());
+                    // #endregion
                 }
                 catch (Exception ex)
                 {
+                    // #region agent log
+                    DebugLog("B", "OdysseyGame.BeginRun:camera_error", "Camera add failed", ex.Message);
+                    // #endregion
                     Console.WriteLine("[Odyssey] WARNING: Failed to add camera to scene: " + ex.Message);
                 }
             }
@@ -616,20 +856,24 @@ namespace Odyssey.Game.Core
 
             // Start in main menu state
             SetGameState(GameState.MainMenu);
+
+            // #region agent log
+            DebugLog("A", "OdysseyGame.BeginRun:end", "BeginRun() complete", "state=" + _currentState);
+            // #endregion
+
+            Console.WriteLine("[Odyssey] BeginRun complete - Game ready");
         }
 
         /// <summary>
         /// Sets up a basic GraphicsCompositor for rendering.
         /// This is REQUIRED for anything to appear on screen in Stride.
+        /// Based on the working version that successfully displayed the dark blue background.
         /// </summary>
-        private void SetupGraphicsCompositor()
+        private void SetupGraphicsCompositor(SceneSystem sceneSystem)
         {
-            var sceneSystem = Services.GetService<SceneSystem>();
-            if (sceneSystem == null)
-            {
-                Console.WriteLine("[Odyssey] ERROR: SceneSystem not available for compositor setup");
-                return;
-            }
+            // #region agent log
+            DebugLog("E", "SetupGraphicsCompositor:start", "Setting up compositor");
+            // #endregion
 
             try
             {
@@ -640,16 +884,24 @@ namespace Odyssey.Game.Core
                 var cameraSlot = new SceneCameraSlot();
                 compositor.Cameras.Add(cameraSlot);
 
+                // #region agent log
+                DebugLog("E", "SetupGraphicsCompositor:camera_slot", "Camera slot created", cameraSlot.Id.ToString());
+                // #endregion
+
                 // Create a simple game with just a scene renderer for UI
                 var sceneRenderer = new SceneRendererCollection();
 
-                // Add a clear renderer to clear the background
+                // Add a clear renderer to clear the background - THIS IS CRITICAL
                 var clearRenderer = new ClearRenderer
                 {
                     Color = new Color4(0.04f, 0.04f, 0.12f, 1f), // Dark blue
                     ClearFlags = ClearRendererFlags.ColorAndDepth
                 };
                 sceneRenderer.Children.Add(clearRenderer);
+
+                // #region agent log
+                DebugLog("E", "SetupGraphicsCompositor:clear_added", "ClearRenderer added", clearRenderer.Color.ToString());
+                // #endregion
 
                 // Add the single render stage for 3D content and UI
                 var singleStageRenderer = new SingleStageRenderer();
@@ -660,13 +912,29 @@ namespace Odyssey.Game.Core
                 game.Children.Add(sceneRenderer);
                 compositor.Game = game;
 
-                // Set the compositor
+                // Update our camera component to use this slot
+                if (_cameraComponent != null)
+                {
+                    _cameraComponent.Slot = new SceneCameraSlotId(cameraSlot.Id);
+                    // #region agent log
+                    DebugLog("E", "SetupGraphicsCompositor:camera_assigned", "Camera slot assigned", cameraSlot.Id.ToString());
+                    // #endregion
+                }
+
+                // Set the compositor - ALWAYS replace the default one
                 sceneSystem.GraphicsCompositor = compositor;
+
+                // #region agent log
+                DebugLog("E", "SetupGraphicsCompositor:complete", "Compositor set successfully");
+                // #endregion
 
                 Console.WriteLine("[Odyssey] GraphicsCompositor set up successfully");
             }
             catch (Exception ex)
             {
+                // #region agent log
+                DebugLog("E", "SetupGraphicsCompositor:error", "Failed to set up compositor", ex.Message);
+                // #endregion
                 Console.WriteLine("[Odyssey] ERROR: Failed to set up GraphicsCompositor: " + ex.Message);
             }
         }
@@ -687,12 +955,23 @@ namespace Odyssey.Game.Core
                 ProcessMainMenuInput();
             }
 
-            if (_isPaused) return;
-            if (_transitionSystem != null && _transitionSystem.IsTransitioning) return;
+            if (_isPaused)
+            {
+                return;
+            }
+
+            if (_transitionSystem != null && _transitionSystem.IsTransitioning)
+            {
+                return;
+            }
 
             _session?.Update(deltaTime);
             _world?.Update(deltaTime);
-            if (_playerController != null && !_inDialogue) _playerController.Update(deltaTime);
+            if (_playerController != null && !_inDialogue)
+            {
+                _playerController.Update(deltaTime);
+            }
+
             _triggerSystem?.Update();
             _heartbeatSystem?.Update(deltaTime);
             _session?.DialogueManager?.Update(deltaTime);
@@ -706,7 +985,10 @@ namespace Odyssey.Game.Core
             if (Input.IsKeyPressed(Keys.F1))
             {
                 _showDebugInfo = !_showDebugInfo;
-                if (_hud != null) _hud.ShowDebug = _showDebugInfo;
+                if (_hud != null)
+                {
+                    _hud.ShowDebug = _showDebugInfo;
+                }
             }
 
             if (Input.IsKeyPressed(Keys.Escape))
@@ -722,7 +1004,10 @@ namespace Odyssey.Game.Core
                 else if (_uiAvailable)
                 {
                     _isPaused = true;
-                    if (_pauseMenu != null) _pauseMenu.IsVisible = true;
+                    if (_pauseMenu != null)
+                    {
+                        _pauseMenu.IsVisible = true;
+                    }
                 }
                 else
                 {
@@ -780,7 +1065,10 @@ namespace Odyssey.Game.Core
                 }
             }
 
-            if (Input.IsKeyPressed(Keys.Space)) TryInteractWithNearestObject();
+            if (Input.IsKeyPressed(Keys.Space))
+            {
+                TryInteractWithNearestObject();
+            }
         }
 
         private void ProcessMainMenuInput()
@@ -796,19 +1084,45 @@ namespace Odyssey.Game.Core
 
         private void ProcessCameraInput(float deltaTime)
         {
-            if (_cameraEntity == null) return;
+            if (_cameraEntity == null)
+            {
+                return;
+            }
 
             float moveSpeed = 20f * deltaTime;
             float rotateSpeed = 2f * deltaTime;
 
             // WASD movement
             Vector3 movement = Vector3.Zero;
-            if (Input.IsKeyDown(Keys.W)) movement.Z -= 1;
-            if (Input.IsKeyDown(Keys.S)) movement.Z += 1;
-            if (Input.IsKeyDown(Keys.A)) movement.X -= 1;
-            if (Input.IsKeyDown(Keys.D)) movement.X += 1;
-            if (Input.IsKeyDown(Keys.Q)) movement.Y -= 1;
-            if (Input.IsKeyDown(Keys.E)) movement.Y += 1;
+            if (Input.IsKeyDown(Keys.W))
+            {
+                movement.Z -= 1;
+            }
+
+            if (Input.IsKeyDown(Keys.S))
+            {
+                movement.Z += 1;
+            }
+
+            if (Input.IsKeyDown(Keys.A))
+            {
+                movement.X -= 1;
+            }
+
+            if (Input.IsKeyDown(Keys.D))
+            {
+                movement.X += 1;
+            }
+
+            if (Input.IsKeyDown(Keys.Q))
+            {
+                movement.Y -= 1;
+            }
+
+            if (Input.IsKeyDown(Keys.E))
+            {
+                movement.Y += 1;
+            }
 
             if (movement != Vector3.Zero)
             {
@@ -855,7 +1169,10 @@ namespace Odyssey.Game.Core
 
         private void UpdateDebugDisplay()
         {
-            if (!_showDebugInfo) return;
+            if (!_showDebugInfo)
+            {
+                return;
+            }
 
             string debug = "=== Odyssey Engine Demo ===\n";
             debug += "Module: " + (_session?.CurrentModuleName ?? "none") + "\n";
@@ -897,10 +1214,16 @@ namespace Odyssey.Game.Core
         private void TryInteractWithNearestObject()
         {
             var player = _session?.PlayerEntity;
-            if (player == null) return;
+            if (player == null)
+            {
+                return;
+            }
 
             var playerTransform = player.GetComponent<ITransformComponent>();
-            if (playerTransform == null) return;
+            if (playerTransform == null)
+            {
+                return;
+            }
 
             float nearestDist = 3.0f;
             IEntity nearestEntity = null;
@@ -935,7 +1258,10 @@ namespace Odyssey.Game.Core
 
             foreach (var creature in _world.GetEntitiesOfType(ObjectType.Creature))
             {
-                if (creature == player) continue;
+                if (creature == player)
+                {
+                    continue;
+                }
 
                 var creatureTransform = creature.GetComponent<ITransformComponent>();
                 if (creatureTransform != null)
@@ -949,7 +1275,10 @@ namespace Odyssey.Game.Core
                 }
             }
 
-            if (nearestEntity != null) InteractWith(nearestEntity);
+            if (nearestEntity != null)
+            {
+                InteractWith(nearestEntity);
+            }
         }
 
         private void InteractWith(IEntity entity)
@@ -965,7 +1294,10 @@ namespace Odyssey.Game.Core
         private void InteractWithDoor(IEntity door)
         {
             var doorComponent = door.GetComponent<IDoorComponent>();
-            if (doorComponent == null) return;
+            if (doorComponent == null)
+            {
+                return;
+            }
 
             if (_transitionSystem != null && _transitionSystem.CanDoorTransition(door))
             {
@@ -1014,12 +1346,18 @@ namespace Odyssey.Game.Core
 
         private void StartConversation(IEntity npc, string dialogueResRef)
         {
-            if (_session.DialogueManager == null) return;
+            if (_session.DialogueManager == null)
+            {
+                return;
+            }
 
             if (_session.DialogueManager.StartConversation(dialogueResRef, npc, _session.PlayerEntity))
             {
                 _inDialogue = true;
-                if (_hud != null) _hud.IsVisible = false;
+                if (_hud != null)
+                {
+                    _hud.IsVisible = false;
+                }
             }
         }
 
@@ -1027,7 +1365,10 @@ namespace Odyssey.Game.Core
         {
             Console.WriteLine("[Odyssey] Module loaded: " + e.ModuleName);
 
-            if (_loadingScreen != null) _loadingScreen.Hide();
+            if (_loadingScreen != null)
+            {
+                _loadingScreen.Hide();
+            }
 
             // Build scene from LYT
             BuildSceneFromModule();
@@ -1064,7 +1405,43 @@ namespace Odyssey.Game.Core
                 _heartbeatSystem.RegisterAllEntities();
             }
 
-            if (_hud != null) _hud.IsVisible = true;
+            // Load in-game HUD GUI from KOTOR game files
+            if (_kotorGuiManager != null)
+            {
+                try
+                {
+                    // Standard KOTOR HUD: "default" or "partybar"
+                    bool hudLoaded = _kotorGuiManager.LoadGui("partybar",
+                        Window.ClientBounds.Width,
+                        Window.ClientBounds.Height);
+
+                    if (!hudLoaded)
+                    {
+                        // Try alternate HUD name
+                        hudLoaded = _kotorGuiManager.LoadGui("default",
+                            Window.ClientBounds.Width,
+                            Window.ClientBounds.Height);
+                    }
+
+                    if (hudLoaded)
+                    {
+                        Console.WriteLine("[Odyssey] In-game HUD GUI loaded");
+                    }
+                    else
+                    {
+                        Console.WriteLine("[Odyssey] WARNING: Could not load in-game HUD GUI");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[Odyssey] ERROR loading HUD GUI: {ex.Message}");
+                }
+            }
+            else if (_hud != null)
+            {
+                // Fallback to custom HUD if KOTOR GUI failed
+                _hud.IsVisible = true;
+            }
         }
 
         private ModuleLoader GetModuleLoader()
@@ -1123,27 +1500,51 @@ namespace Odyssey.Game.Core
 
         private void OnTransitionStart(object sender, ModuleTransitionEventArgs e)
         {
-            if (_loadingScreen != null) _loadingScreen.Show(e.TargetModule);
-            if (_hud != null) _hud.IsVisible = false;
+            if (_loadingScreen != null)
+            {
+                _loadingScreen.Show(e.TargetModule);
+            }
+
+            if (_hud != null)
+            {
+                _hud.IsVisible = false;
+            }
         }
 
         private void OnTransitionComplete(object sender, ModuleTransitionEventArgs e)
         {
             if (!string.IsNullOrEmpty(e.TargetWaypoint))
+            {
                 PositionPlayerAtWaypoint(_session.PlayerEntity, e.TargetWaypoint);
-            if (_loadingScreen != null) _loadingScreen.Hide();
-            if (_hud != null) _hud.IsVisible = true;
+            }
+
+            if (_loadingScreen != null)
+            {
+                _loadingScreen.Hide();
+            }
+
+            if (_hud != null)
+            {
+                _hud.IsVisible = true;
+            }
         }
 
         private void OnTransitionFailed(object sender, ModuleTransitionEventArgs e)
         {
-            if (_loadingScreen != null) _loadingScreen.Hide();
+            if (_loadingScreen != null)
+            {
+                _loadingScreen.Hide();
+            }
         }
 
         private void OnResumeGame()
         {
             _isPaused = false;
-            if (_pauseMenu != null) _pauseMenu.IsVisible = false;
+            if (_pauseMenu != null)
+            {
+                _pauseMenu.IsVisible = false;
+            }
+
             _session?.Resume();
         }
 
@@ -1162,15 +1563,37 @@ namespace Odyssey.Game.Core
             _session.DialogueManager?.SkipNode();
         }
 
+        private int _drawCallCount = 0;
+
         protected override void Draw(GameTime gameTime)
         {
-            // CRITICAL: First set the render target to the back buffer
-            GraphicsContext.CommandList.SetRenderTargetAndViewport(GraphicsDevice.Presenter.DepthStencilBuffer, GraphicsDevice.Presenter.BackBuffer);
+            // #region agent log
+            if (_drawCallCount == 0 || _drawCallCount == 60)
+            {
+                var sceneSystem = Services.GetService<SceneSystem>();
+                DebugLog("F", "OdysseyGame.Draw", "Draw frame " + _drawCallCount,
+                    "compositor=" + (sceneSystem?.GraphicsCompositor != null) +
+                    " sceneInstance=" + (sceneSystem?.SceneInstance != null) +
+                    " entities=" + (sceneSystem?.SceneInstance?.RootScene?.Entities?.Count ?? 0) +
+                    " presenter=" + (GraphicsDevice?.Presenter != null) +
+                    " backBuffer=" + (GraphicsDevice?.Presenter?.BackBuffer != null));
+            }
+            _drawCallCount++;
+            // #endregion
 
-            // Clear with a solid dark blue background
-            // This ensures we ALWAYS have a visible background, not transparent/purple
-            GraphicsContext.CommandList.Clear(GraphicsDevice.Presenter.BackBuffer, new Color4(0.04f, 0.04f, 0.12f, 1f));
-            GraphicsContext.CommandList.Clear(GraphicsDevice.Presenter.DepthStencilBuffer, DepthStencilClearOptions.DepthBuffer);
+            // CRITICAL: First set the render target to the back buffer
+            // Without this, rendering may go to the wrong target (black screen)
+            if (GraphicsDevice?.Presenter?.BackBuffer != null && GraphicsDevice?.Presenter?.DepthStencilBuffer != null)
+            {
+                GraphicsContext.CommandList.SetRenderTargetAndViewport(
+                    GraphicsDevice.Presenter.DepthStencilBuffer,
+                    GraphicsDevice.Presenter.BackBuffer);
+
+                // Clear with a solid dark blue background
+                // This ensures we ALWAYS have a visible background, not transparent/black
+                GraphicsContext.CommandList.Clear(GraphicsDevice.Presenter.BackBuffer, new Color4(0.04f, 0.04f, 0.12f, 1f));
+                GraphicsContext.CommandList.Clear(GraphicsDevice.Presenter.DepthStencilBuffer, DepthStencilClearOptions.DepthBuffer);
+            }
 
             // Call base to render scene and UI
             base.Draw(gameTime);
