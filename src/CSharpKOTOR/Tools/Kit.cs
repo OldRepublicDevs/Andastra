@@ -266,3 +266,4 @@ namespace CSharpKOTOR.Tools
         }
     }
 }
+

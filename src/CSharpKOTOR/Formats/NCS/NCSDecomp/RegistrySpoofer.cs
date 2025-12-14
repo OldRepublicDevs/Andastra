@@ -32,7 +32,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
 
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/RegistrySpoofer.java:51-80
         // Original: public RegistrySpoofer(File installationPath, boolean isK2)
-        public RegistrySpoofer(File installationPath, bool isK2)
+        public RegistrySpoofer(NcsFile installationPath, bool isK2)
         {
             if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
@@ -758,7 +758,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
         {
             try
             {
-                File installDir = new File(installationPath);
+                NcsFile installDir = new NcsFile(installationPath);
                 if (!installDir.Exists())
                 {
                     JavaSystem.@out.Println("[INFO] RegistrySpoofer: Installation directory doesn't exist, creating: " + installationPath);
@@ -773,7 +773,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
 
                 // Create chitin.key - this is CRITICAL for initialization
                 // ALWAYS recreate it to ensure it's valid (previous versions may have been corrupt)
-                File chitinKey = new File(installDir, "chitin.key");
+                NcsFile chitinKey = new NcsFile(installDir, "chitin.key");
                 JavaSystem.@out.Println("[INFO] RegistrySpoofer: Creating chitin.key file: " + chitinKey.GetAbsolutePath());
                 if (chitinKey.Exists())
                 {
@@ -822,7 +822,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                 string[] dirs = { "override", "modules", "hak" };
                 foreach (string dirName in dirs)
                 {
-                    File dir = new File(installDir, dirName);
+                    NcsFile dir = new NcsFile(installDir, dirName);
                     if (!dir.Exists())
                     {
                         JavaSystem.@out.Println("[INFO] RegistrySpoofer: CREATING directory: " + dir.GetAbsolutePath());

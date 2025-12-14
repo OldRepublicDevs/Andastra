@@ -161,7 +161,7 @@ namespace KotorDiff.NET.Tests.Comprehensive
             {
                 { "BaseItem", (GFFFieldType.Int32, 0) }
             });
-            GFFAuto.WriteGff(vanillaGff, Path.Combine(_vanillaDir.FullName, "item.uti"), ResourceType.GFF);
+            GFFAuto.WriteGff(vanillaGff, Path.Combine(_vanillaDir.FullName, "item.uti"), ResourceType.UTI);
 
             // Modded: weaponsounds.2da with 3 rows (new row 2)
             var moddedWeaponsounds = TestDataHelper.CreateBasic2DA(
@@ -190,7 +190,7 @@ namespace KotorDiff.NET.Tests.Comprehensive
             {
                 { "BaseItem", (GFFFieldType.Int32, 2) }
             });
-            GFFAuto.WriteGff(moddedGff, Path.Combine(_moddedDir.FullName, "item.uti"), ResourceType.GFF);
+            GFFAuto.WriteGff(moddedGff, Path.Combine(_moddedDir.FullName, "item.uti"), ResourceType.UTI);
 
             // Run diff
             string iniContent = TestDataHelper.RunDiff(_vanillaDir, _moddedDir, _tslpatchdataDir, loggingEnabled: true);

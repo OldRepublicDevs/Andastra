@@ -47,7 +47,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             {
                 try
                 {
-                    new File(ConfigFileName).Create();
+                    new NcsFile(ConfigFileName).Create();
                 }
                 catch (FileNotFoundException var2)
                 {

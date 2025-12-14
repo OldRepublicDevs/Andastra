@@ -85,6 +85,25 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             new string[] { }
         );
 
+        // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/KnownExternalCompilers.java:101-109
+        // Original:
+        //   NCSDIS(
+        //      "B1F398C2F64F4ACF2F39C417E7C7EB6F5483369BB95853C63A009F925A2E257C",
+        //      "ncsdis",
+        //      LocalDate.of(2020, 8, 3),
+        //      "Unknown", // TODO: Identify original author
+        //      new String[]{}, // ncsdis doesn't support compilation
+        //      new String[]{"{source}", "{output}"} // ncsdis.exe <input.ncs> <output.pcode>
+        //   );
+        public static readonly CompilerInfo NCSDIS = new CompilerInfo(
+            "B1F398C2F64F4ACF2F39C417E7C7EB6F5483369BB95853C63A009F925A2E257C",
+            "ncsdis",
+            new DateTime(2020, 8, 3),
+            "Unknown", // TODO: Identify original author
+            new string[] { }, // ncsdis doesn't support compilation
+            new string[] { "{source}", "{output}" } // ncsdis.exe <input.ncs> <output.pcode>
+        );
+
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/KnownExternalCompilers.java:111-119
         // Original: private static final Map<String, KnownExternalCompilers> BY_HASH
         private static readonly Dictionary<string, CompilerInfo> BY_HASH = new Dictionary<string, CompilerInfo>();

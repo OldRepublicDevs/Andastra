@@ -7,6 +7,7 @@ using System;
 using System.IO;
 using System.Security.Cryptography;
 using System.Text;
+using File = CSharpKOTOR.Formats.NCS.NCSDecomp.NcsFile;
 
 namespace CSharpKOTOR.Formats.NCS.NCSDecomp
 {
@@ -28,7 +29,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
         /// <param name="file">The file to hash</param>
         /// <returns>The SHA256 hash as an uppercase hexadecimal string</returns>
         /// <exception cref="IOException">If the file cannot be read</exception>
-        public static string CalculateSHA256(File file)
+        public static string CalculateSHA256(NcsFile file)
         {
             try
             {

@@ -61,11 +61,11 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             (Decompiler.settings = new Settings()).Load();
             string outputDir = Decompiler.settings.GetProperty("Output Directory");
             // If output directory is not set or empty, use default: ./ncsdecomp_converted
-            if (outputDir == null || outputDir.Equals("") || !new File(outputDir).IsDirectory())
+            if (outputDir == null || outputDir.Equals("") || !new NcsFile(outputDir).IsDirectory())
             {
-                string defaultOutputDir = new File(new File(JavaSystem.GetProperty("user.dir")), "ncsdecomp_converted").GetAbsolutePath();
+                string defaultOutputDir = new NcsFile(new NcsFile(JavaSystem.GetProperty("user.dir")), "ncsdecomp_converted").GetAbsolutePath();
                 // If default doesn't exist, try to create it, otherwise prompt user
-                File defaultDir = new File(defaultOutputDir);
+                NcsFile defaultDir = new NcsFile(defaultOutputDir);
                 if (!defaultDir.Exists())
                 {
                     if (defaultDir.Mkdirs())

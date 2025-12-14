@@ -254,13 +254,13 @@ namespace CSharpKOTOR.Formats.NCS
             catch (Exception ex)
             {
                 throw new InvalidOperationException(
-                    "Decompilation failed with exception: " + ex.Message + 
+                    "Decompilation failed with exception: " + ex.Message +
                     (ex.InnerException != null ? " (Inner: " + ex.InnerException.Message + ")" : "") +
                     ". FileDecompiler returned null. " +
                     "This usually means the decompiler couldn't analyze the NCS bytecode structure. " +
                     "Check console output for detailed error messages.", ex);
             }
-            
+
             if (data == null)
             {
                 throw new InvalidOperationException(

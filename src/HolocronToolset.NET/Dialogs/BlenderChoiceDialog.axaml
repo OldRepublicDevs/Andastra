@@ -13,8 +13,8 @@
         </Border>
 
         <!-- Question -->
-        <TextBlock Text="How would you like to open the Module Designer?" 
-                   FontWeight="Bold" 
+        <TextBlock Text="How would you like to open the Module Designer?"
+                   FontWeight="Bold"
                    HorizontalAlignment="Center" />
 
         <!-- Choice Buttons -->

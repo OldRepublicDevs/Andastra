@@ -77,7 +77,7 @@ namespace HolocronToolset.NET.Dialogs
             formPanel.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
             formPanel.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
             formPanel.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
-            
+
             var nameLabel = new TextBlock { Text = "Name:", VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center };
             _nameEdit = new LocalizedStringEdit();
             Grid.SetRow(nameLabel, 0);

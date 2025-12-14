@@ -1139,9 +1139,20 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
             this.CheckStart(node);
             Const theconst = (Const)this.stack.Get(1);
             AConst constdec = new AConst(theconst);
-            // Wrap expression in AExpressionStatement so it's a valid statement
-            AExpressionStatement stmt = new AExpressionStatement(constdec);
-            this.current.AddChild(stmt);
+            // In globals context (varprefix starts with "GLOB_"), constants shouldn't be added as standalone statements
+            // They should only be part of variable initializations. Skip adding them directly.
+            if (this.varprefix != null && this.varprefix.StartsWith("GLOB_"))
+            {
+                // In globals, constants are typically part of variable initializations, not standalone
+                // Don't add as a child - it will be used as part of an expression if needed
+                // If it's truly standalone, it's likely dead code and should be ignored
+            }
+            else
+            {
+                // In function context, wrap expression in AExpressionStatement so it's a valid statement
+                AExpressionStatement stmt = new AExpressionStatement(constdec);
+                this.current.AddChild(stmt);
+            }
             this.CheckEnd(node);
         }
 
