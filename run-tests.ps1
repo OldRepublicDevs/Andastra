@@ -1,8 +1,19 @@
 $ErrorActionPreference = 'Continue'
-$output = dotnet test src/TSLPatcher.Tests/TSLPatcher.Tests.csproj --filter "FullyQualifiedName~NCSRoundtripTests" --logger "console;verbosity=normal" 2>&1
-$output | Out-File -FilePath "test-results.txt" -Encoding utf8
-Write-Host "Test completed. Results saved to test-results.txt"
-Get-Content "test-results.txt" -Tail 100
+
+# Run tests with performance profiling and timeout enforcement
+Write-Host "Running tests with performance profiling..."
+Write-Host "All tests have 2-minute timeout enforcement."
+Write-Host ""
+
+& "$PSScriptRoot\scripts\RunAllTestsWithProfiling.ps1" `
+    -Projects @("src\TSLPatcher.Tests\TSLPatcher.Tests.csproj") `
+    -Filter "FullyQualifiedName~NCSRoundtripTests" `
+    -MaxSeconds 120 `
+    -EnableProfiling:$true `
+    -OutputDir "profiles"
+
+Write-Host ""
+Write-Host "Test execution completed. Check profiles/ directory for performance reports."
 
 
 

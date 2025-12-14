@@ -20,8 +20,8 @@ namespace CSharpKOTOR.Tests.Performance
         private readonly Process _process;
         private readonly long _initialMemory;
         private readonly StringBuilder _profileReport = new StringBuilder();
-        private readonly string _testName;
-        private readonly ITestOutputHelper _output;
+        private string _testName;
+        private ITestOutputHelper _output;
 
         /// <summary>
         /// Creates a performance test attribute with a maximum execution time.
