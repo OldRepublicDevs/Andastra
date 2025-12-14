@@ -325,10 +325,25 @@ namespace KotorDiff.NET.App
             IncrementalTSLPatchDataWriter incrementalWriter = null;
             if (config.TslPatchDataPath != null)
             {
+                // Extract base data path from first path if it's a directory
+                string baseDataPath = null;
+                if (config.Paths != null && config.Paths.Count > 0)
+                {
+                    object firstPath = config.Paths[0];
+                    if (firstPath is string pathStr && Directory.Exists(pathStr))
+                    {
+                        baseDataPath = pathStr;
+                    }
+                    else if (firstPath is DirectoryInfo dirInfo)
+                    {
+                        baseDataPath = dirInfo.FullName;
+                    }
+                }
+
                 incrementalWriter = new IncrementalTSLPatchDataWriter(
                     config.TslPatchDataPath.FullName,
                     config.IniFilename ?? "changes.ini",
-                    config.Paths);
+                    baseDataPath);
             }
 
             // Call handle_diff_internal
@@ -340,9 +355,9 @@ namespace KotorDiff.NET.App
             // Finalize TSLPatcher data if requested
             if (incrementalWriter != null)
             {
-                incrementalWriter.Finalize();
+                incrementalWriter.FinalizeWriter();
             }
-            else if (config.TslPatchDataPath != null && modifications.HasModifications())
+            else if (config.TslPatchDataPath != null && HasModifications(modifications))
             {
                 // Use batch generation if not using incremental writer
                 GenerateTSLPatcherData(
@@ -366,7 +381,7 @@ namespace KotorDiff.NET.App
             ModificationsByType modifications,
             List<object> paths)
         {
-            if (tslpatchdataPath == null || !modifications.HasModifications())
+            if (tslpatchdataPath == null || !HasModifications(modifications))
             {
                 return;
             }
@@ -415,12 +430,33 @@ namespace KotorDiff.NET.App
             LogOutput("\nTSLPatcher data generation complete:");
             LogOutput($"  Location: {tslpatchdataPath.FullName}");
             LogOutput($"  INI file: {iniFilename}");
-            LogOutput($"  TLK modifications: {modifications.TLK?.Count ?? 0}");
-            LogOutput($"  2DA modifications: {modifications.TwoDA?.Count ?? 0}");
-            LogOutput($"  GFF modifications: {modifications.GFF?.Count ?? 0}");
-            LogOutput($"  SSF modifications: {modifications.SSF?.Count ?? 0}");
-            LogOutput($"  NCS modifications: {modifications.NCS?.Count ?? 0}");
+            LogOutput($"  TLK modifications: {modifications.Tlk?.Count ?? 0}");
+            LogOutput($"  2DA modifications: {modifications.Twoda?.Count ?? 0}");
+            LogOutput($"  GFF modifications: {modifications.Gff?.Count ?? 0}");
+            LogOutput($"  SSF modifications: {modifications.Ssf?.Count ?? 0}");
+            LogOutput($"  NCS modifications: {modifications.Ncs?.Count ?? 0}");
             LogOutput($"  Install folders: {modifications.Install?.Count ?? 0}");
+        }
+
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/writer.py:145-150
+        // Original: def has_modifications(self) -> bool: ...
+        /// <summary>
+        /// Check if modifications collection has any modifications.
+        /// </summary>
+        private static bool HasModifications(ModificationsByType modifications)
+        {
+            if (modifications == null)
+            {
+                return false;
+            }
+
+            return (modifications.Tlk != null && modifications.Tlk.Count > 0) ||
+                   (modifications.Twoda != null && modifications.Twoda.Count > 0) ||
+                   (modifications.Gff != null && modifications.Gff.Count > 0) ||
+                   (modifications.Ssf != null && modifications.Ssf.Count > 0) ||
+                   (modifications.Ncs != null && modifications.Ncs.Count > 0) ||
+                   (modifications.Nss != null && modifications.Nss.Count > 0) ||
+                   (modifications.Install != null && modifications.Install.Count > 0);
         }
     }
 }

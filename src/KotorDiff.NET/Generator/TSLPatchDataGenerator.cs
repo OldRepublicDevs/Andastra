@@ -349,15 +349,14 @@ namespace CSharpKOTOR.TSLPatcher
                     {
                         if (modifier is CSharpKOTOR.Mods.SSF.ModifySSF modifySsf)
                         {
-                            // Resolve StrRef token value if it's a token, otherwise use the value directly
-                            int strrefValue = modifySsf.StringRefValue;
-                            if (strrefValue < 0)
+                            // Resolve StrRef token value - use a dummy memory for now
+                            // The actual token resolution happens at install time
+                            var dummyMemory = new CSharpKOTOR.Memory.PatcherMemory();
+                            string strrefValueStr = modifySsf.Stringref.Value(dummyMemory);
+                            if (int.TryParse(strrefValueStr, out int strrefValue))
                             {
-                                // Negative values indicate tokens - would need memory resolution at install time
-                                // Use the absolute value as a temporary value (actual token resolution happens at install time)
-                                strrefValue = Math.Abs(strrefValue);
+                                ssf.SetData(modifySsf.Sound, strrefValue);
                             }
-                            ssf.SetData(modifySsf.Sound, strrefValue);
                         }
                     }
                 }
@@ -443,17 +442,21 @@ namespace CSharpKOTOR.TSLPatcher
                                 {
                                     // Extract resource from capsule file
                                     var capsule = new CSharpKOTOR.Formats.Capsule.Capsule(modulePath.FullName);
-                                    var resources = capsule.GetResources();
-                                    var targetResource = resources.FirstOrDefault(r => 
-                                        r.ResName.Equals(resourceName, StringComparison.OrdinalIgnoreCase) &&
-                                        r.ResType.Extension.Equals(ext, StringComparison.OrdinalIgnoreCase));
+                                    string resref = Path.GetFileNameWithoutExtension(filename);
+                                    string resExt = Path.GetExtension(filename).TrimStart('.').ToLowerInvariant();
+                                    ResourceType resType = ResourceType.FromExtension(resExt);
                                     
-                                    if (targetResource != null)
+                                    foreach (var capsuleRes in capsule)
                                     {
-                                        byte[] resourceData = targetResource.Data;
-                                        File.WriteAllBytes(outputPath.FullName, resourceData);
-                                        generated[filename] = outputPath;
-                                        continue;
+                                        if (capsuleRes.ResName.Equals(resref, StringComparison.OrdinalIgnoreCase) &&
+                                            capsuleRes.ResType == resType)
+                                        {
+                                            byte[] resourceData = capsuleRes.Data;
+                                            var destFileInner = new FileInfo(Path.Combine(_tslpatchdataPath.FullName, filename));
+                                            WriteResourceWithIo(resourceData, destFileInner.FullName, resExt);
+                                            copiedFiles[filename] = destFileInner;
+                                            break;
+                                        }
                                     }
                                     Console.WriteLine($"[DEBUG] Module resource extraction not yet implemented: {filename} from {moduleName}");
                                 }

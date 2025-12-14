@@ -288,9 +288,9 @@ namespace KotorDiff.NET.Resolution
 
                 // Get modifier count based on type
                 int modifiersCount = 0;
-                if (modifications is CSharpKOTOR.Mods.TwoDA.Modifications2DA mod2da)
+                if (modifications is CSharpKOTOR.Mods.TwoDA.Modifications2DA mod2daCount)
                 {
-                    modifiersCount = mod2da.Modifiers != null ? mod2da.Modifiers.Count : 0;
+                    modifiersCount = mod2daCount.Modifiers != null ? mod2daCount.Modifiers.Count : 0;
                 }
                 else if (modifications is CSharpKOTOR.Mods.GFF.ModificationsGFF modGff2)
                 {
@@ -363,8 +363,9 @@ namespace KotorDiff.NET.Resolution
                     CSharpKOTOR.Formats.GFF.GFFContent gffContent;
                     try
                     {
-                        // Map extension to GFFContent enum using FromExtension
-                        gffContent = CSharpKOTOR.Formats.GFF.GFFContent.FromExtension(ext);
+                        // Map extension to GFFContent enum using FromResName (pass filename with extension)
+                        string filename = $"dummy.{ext}";
+                        gffContent = CSharpKOTOR.Formats.GFF.GFFContentExtensions.FromResName(filename);
                     }
                     catch
                     {
