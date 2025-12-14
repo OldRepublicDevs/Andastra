@@ -13,6 +13,16 @@ namespace Odyssey.Kotor.Systems
     /// System for detecting entity entry/exit into trigger volumes.
     /// Fires OnEnter and OnExit script events.
     /// </summary>
+    /// <remarks>
+    /// Trigger System:
+    /// - Based on swkotor2.exe trigger system
+    /// - Located via string references: "Trigger" @ 0x007bc51c, "TriggerList" @ 0x007bd254
+    /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_MINE_TRIGGERED" @ 0x007bc7ac
+    /// - "EVENT_ENTERED_TRIGGER" @ 0x007bce08, "EVENT_LEFT_TRIGGER" @ 0x007bcdf4
+    /// - Original implementation: Triggers have polygon geometry, detect creature entry/exit
+    /// - Script events: OnEnter, OnExit, OnClick, OnDisarm, OnTrapTriggered
+    /// - Trigger geometry stored as polygon vertices in GFF structure
+    /// </remarks>
     public class TriggerSystem
     {
         private readonly IWorld _world;
@@ -37,20 +47,20 @@ namespace Odyssey.Kotor.Systems
         public void Update()
         {
             // Get all trigger entities
-            var triggers = _world.GetEntitiesOfType(ObjectType.Trigger);
+            IEnumerable<IEntity> triggers = _world.GetEntitiesOfType(ObjectType.Trigger);
             if (triggers == null)
             {
                 return;
             }
 
             // Get all creatures that can trigger
-            var creatures = _world.GetEntitiesOfType(ObjectType.Creature);
+            IEnumerable<IEntity> creatures = _world.GetEntitiesOfType(ObjectType.Creature);
             if (creatures == null)
             {
                 return;
             }
 
-            foreach (var trigger in triggers)
+            foreach (IEntity trigger in triggers)
             {
                 UpdateTrigger(trigger, creatures);
             }
@@ -58,14 +68,14 @@ namespace Odyssey.Kotor.Systems
 
         private void UpdateTrigger(IEntity trigger, IEnumerable<IEntity> creatures)
         {
-            var triggerComponent = trigger.GetComponent<ITriggerComponent>();
+            ITriggerComponent triggerComponent = trigger.GetComponent<ITriggerComponent>();
             if (triggerComponent == null)
             {
                 return;
             }
 
             // Get or create occupant set for this trigger
-            if (!_occupants.TryGetValue(trigger, out var previousOccupants))
+            if (!_occupants.TryGetValue(trigger, out HashSet<IEntity> previousOccupants))
             {
                 previousOccupants = new HashSet<IEntity>();
                 _occupants[trigger] = previousOccupants;
@@ -74,9 +84,9 @@ namespace Odyssey.Kotor.Systems
             var currentOccupants = new HashSet<IEntity>();
 
             // Check each creature
-            foreach (var creature in creatures)
+            foreach (IEntity creature in creatures)
             {
-                var transform = creature.GetComponent<ITransformComponent>();
+                ITransformComponent transform = creature.GetComponent<ITransformComponent>();
                 if (transform == null)
                 {
                     continue;
@@ -90,7 +100,7 @@ namespace Odyssey.Kotor.Systems
             }
 
             // Fire OnEnter for new occupants
-            foreach (var entity in currentOccupants)
+            foreach (IEntity entity in currentOccupants)
             {
                 if (!previousOccupants.Contains(entity))
                 {
@@ -99,7 +109,7 @@ namespace Odyssey.Kotor.Systems
             }
 
             // Fire OnExit for entities that left
-            foreach (var entity in previousOccupants)
+            foreach (IEntity entity in previousOccupants)
             {
                 if (!currentOccupants.Contains(entity))
                 {
@@ -169,7 +179,7 @@ namespace Odyssey.Kotor.Systems
         /// </summary>
         public IReadOnlyCollection<IEntity> GetOccupants(IEntity trigger)
         {
-            if (_occupants.TryGetValue(trigger, out var occupants))
+            if (_occupants.TryGetValue(trigger, out HashSet<IEntity> occupants))
             {
                 return occupants;
             }
@@ -181,7 +191,7 @@ namespace Odyssey.Kotor.Systems
         /// </summary>
         public IEntity GetTriggerAt(IEntity entity)
         {
-            foreach (var kvp in _occupants)
+            foreach (KeyValuePair<IEntity, HashSet<IEntity>> kvp in _occupants)
             {
                 if (kvp.Value.Contains(entity))
                 {
