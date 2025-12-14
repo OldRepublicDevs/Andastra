@@ -3461,6 +3461,140 @@ namespace Odyssey.Scripting.EngineApi
         }
 
         #endregion
+
+        #region Location Functions
+
+        /// <summary>
+        /// GetLocation(object oObject) - Get the location of oObject
+        /// </summary>
+        private Variable Func_GetLocation(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
+            IEntity entity = ResolveObject(objectId, ctx);
+            
+            if (entity == null)
+            {
+                return Variable.FromLocation(null);
+            }
+            
+            ITransformComponent transform = entity.GetComponent<ITransformComponent>();
+            if (transform == null)
+            {
+                return Variable.FromLocation(null);
+            }
+            
+            var location = new Location(transform.Position, transform.Facing);
+            return Variable.FromLocation(location);
+        }
+
+        /// <summary>
+        /// ActionJumpToLocation(location lLocation) - The subject will jump to lLocation instantly (even between areas)
+        /// </summary>
+        private Variable Func_ActionJumpToLocation(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            if (args.Count == 0 || ctx.Caller == null)
+            {
+                return Variable.Void();
+            }
+            
+            object locObj = args[0].AsLocation();
+            if (locObj == null || !(locObj is Location location))
+            {
+                return Variable.Void();
+            }
+            
+            var action = new ActionJumpToLocation(location.Position, location.Facing);
+            IActionQueue queue = ctx.Caller.GetComponent<IActionQueue>();
+            if (queue != null)
+            {
+                queue.Add(action);
+            }
+            
+            return Variable.Void();
+        }
+
+        /// <summary>
+        /// Location(vector vPosition, float fOrientation) - Create a location
+        /// </summary>
+        private Variable Func_Location(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            Vector3 position = args.Count > 0 ? args[0].AsVector() : Vector3.Zero;
+            float facing = args.Count > 1 ? args[1].AsFloat() : 0f;
+            
+            var location = new Location(position, facing);
+            return Variable.FromLocation(location);
+        }
+
+        #endregion
+
+        #region String and Object Functions
+
+        /// <summary>
+        /// ActionSpeakStringByStrRef(int nStrRef, int nTalkVolume=TALKVOLUME_TALK) - Causes the creature to speak a translated string
+        /// </summary>
+        private Variable Func_ActionSpeakStringByStrRef(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            int strRef = args.Count > 0 ? args[0].AsInt() : 0;
+            int talkVolume = args.Count > 1 ? args[1].AsInt() : 0;
+            
+            if (ctx.Caller == null)
+            {
+                return Variable.Void();
+            }
+            
+            // Look up string from TLK
+            string text = "";
+            if (ctx is Odyssey.Scripting.VM.ExecutionContext execCtx && execCtx.AdditionalContext is Odyssey.Kotor.Game.GameServicesContext services)
+            {
+                if (services.DialogueManager != null)
+                {
+                    text = services.DialogueManager.LookupString(strRef);
+                }
+            }
+            
+            var action = new ActionSpeakString(text, talkVolume);
+            IActionQueue queue = ctx.Caller.GetComponent<IActionQueue>();
+            if (queue != null)
+            {
+                queue.Add(action);
+            }
+            
+            return Variable.Void();
+        }
+
+        /// <summary>
+        /// DestroyObject(object oDestroy, float fDelay=0.0f, int bNoFade = FALSE, float fDelayUntilFade = 0.0f) - Destroy oObject (irrevocably)
+        /// </summary>
+        private Variable Func_DestroyObject(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
+            float delay = args.Count > 1 ? args[1].AsFloat() : 0f;
+            int noFade = args.Count > 2 ? args[2].AsInt() : 0;
+            float delayUntilFade = args.Count > 3 ? args[3].AsFloat() : 0f;
+            
+            IEntity entity = ResolveObject(objectId, ctx);
+            if (entity == null)
+            {
+                return Variable.Void();
+            }
+            
+            // Cannot destroy modules or areas
+            if (entity.ObjectType == Core.Enums.ObjectType.Module || entity.ObjectType == Core.Enums.ObjectType.Area)
+            {
+                return Variable.Void();
+            }
+            
+            // TODO: Implement delayed destruction with fade effects
+            // For now, just remove from world immediately
+            if (ctx.World != null)
+            {
+                ctx.World.DestroyEntity(entity);
+            }
+            
+            return Variable.Void();
+        }
+
+        #endregion
     }
 }
 
