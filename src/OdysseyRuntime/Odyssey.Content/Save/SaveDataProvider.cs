@@ -10,11 +10,15 @@ namespace Odyssey.Content.Save
     /// </summary>
     /// <remarks>
     /// KOTOR Save Structure:
+    /// - Based on swkotor2.exe: FUN_004eb750 @ 0x004eb750, FUN_00708990 @ 0x00708990
+    /// - Located via string reference: "SAVES:" @ 0x007be284, "savenfo" @ 0x007be1f0
+    /// - Save path format: "SAVES:\{saveName}\" (original uses "SAVES:" prefix)
+    /// - Save name format: "%06d - %s" (6-digit number - name) @ 0x007be298
     /// - saves/[SaveName]/
-    ///   - savenfo.res      - Save metadata (GFF)
-    ///   - savegame.sav     - ERF archive containing:
+    ///   - savenfo.res      - Save metadata (GFF with "NFO " signature)
+    ///   - savegame.sav     - ERF archive with "MOD V1.0" signature containing:
     ///     - GLOBALVARS.res - Global variables (GFF)
-    ///     - PARTYTABLE.res - Party state (GFF)
+    ///     - PARTYTABLE.res - Party state (GFF with "PT  " signature)
     ///     - [module]_s.rim - Per-module state data
     ///   - screen.tga       - Screenshot
     ///   - SAVEGAME.xxx     - Platform-specific data
@@ -52,19 +56,43 @@ namespace Odyssey.Content.Save
         /// <summary>
         /// Gets the path to a specific save folder.
         /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: FUN_004eb750 @ 0x004eb750
+        /// Original implementation constructs path as "SAVES:\{saveName}\"
+        /// Save name format: "%06d - %s" (6-digit number - name) from string @ 0x007be298
+        /// </remarks>
         private string GetSavePath(string saveName)
         {
+            // Original engine uses "SAVES:" prefix, but we use filesystem path
             // Sanitize save name for filesystem
             string safeName = SanitizeSaveName(saveName);
             return Path.Combine(_savesDirectory, safeName);
+        }
+        
+        /// <summary>
+        /// Formats save name in original engine format: "%06d - %s"
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: FUN_00708990 @ 0x00708990
+        /// Located via string reference: "%06d - %s" @ 0x007be298
+        /// Original uses 6-digit zero-padded number followed by " - " and save name
+        /// </remarks>
+        private string FormatSaveName(int saveNumber, string saveName)
+        {
+            return string.Format("{0:D6} - {1}", saveNumber, saveName ?? "");
         }
 
         /// <summary>
         /// Gets the path to the slot folder for numbered saves.
         /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: FUN_00708990 @ 0x00708990
+        /// Original uses format "%06d - %s" for save names
+        /// </remarks>
         private string GetSlotPath(int slotNumber)
         {
-            string slotName = string.Format("Save{0:D2}", slotNumber);
+            // Use original engine format: 6-digit zero-padded number
+            string slotName = string.Format("{0:D6}", slotNumber);
             return Path.Combine(_savesDirectory, slotName);
         }
 
@@ -130,7 +158,7 @@ namespace Odyssey.Content.Save
             try
             {
                 // Read save NFO for metadata
-                var saveData = ReadSaveNfo(savePath);
+                SaveGameData saveData = ReadSaveNfo(savePath);
                 if (saveData == null)
                 {
                     return null;
@@ -161,7 +189,7 @@ namespace Odyssey.Content.Save
 
             foreach (string dir in Directory.GetDirectories(_savesDirectory))
             {
-                var info = TryReadSaveInfo(dir);
+                SaveGameInfo info = TryReadSaveInfo(dir);
                 if (info != null)
                 {
                     saves.Add(info);
@@ -204,6 +232,10 @@ namespace Odyssey.Content.Save
 
         #region File Operations
 
+        // Write save metadata to savenfo.res
+        // Based on swkotor2.exe: FUN_004eb750 @ 0x004eb750
+        // Located via string reference: "savenfo" @ 0x007be1f0
+        // Original implementation: Constructs path "SAVES:\{saveName}\savenfo", writes GFF with "NFO " signature
         private void WriteSaveNfo(string savePath, SaveGameData saveData)
         {
             string nfoPath = Path.Combine(savePath, "savenfo.res");
@@ -227,6 +259,10 @@ namespace Odyssey.Content.Save
             return _serializer.DeserializeSaveNfo(nfoData);
         }
 
+        // Write save archive to savegame.sav
+        // Based on swkotor2.exe: FUN_004eb750 @ 0x004eb750
+        // Located via string reference: "SAVEGAME" @ 0x007be28c, "MOD V1.0" @ 0x007be0d4
+        // Original implementation: Constructs path "SAVES:\{saveName}\SAVEGAME", writes ERF with "MOD V1.0" signature
         private void WriteSaveArchive(string savePath, SaveGameData saveData)
         {
             string savFile = Path.Combine(savePath, "savegame.sav");
@@ -280,7 +316,7 @@ namespace Odyssey.Content.Save
                 }
 
                 byte[] nfoData = File.ReadAllBytes(nfoPath);
-                var saveData = _serializer.DeserializeSaveNfo(nfoData);
+                SaveGameData saveData = _serializer.DeserializeSaveNfo(nfoData);
 
                 if (saveData == null)
                 {
@@ -341,7 +377,7 @@ namespace Odyssey.Content.Save
         {
             var saves = new List<SaveGameInfo>();
 
-            foreach (var info in EnumerateSaves())
+            foreach (SaveGameInfo info in EnumerateSaves())
             {
                 if (info.SaveType == SaveType.Auto)
                 {
