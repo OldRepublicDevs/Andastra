@@ -109,7 +109,7 @@ namespace HolocronToolset.NET.Tests.Dialogs
 
             // Test filenameEdit - TextBox with prefix generation
             // Note: filenameEdit has MaxLength=16, so filenames longer than 16 chars will be truncated
-            var testFilenames = new[]
+            (string, string)[] testFilenames = new[]
             {
                 ("new_module", "NEW"),
                 ("a_module", "A_M"),
@@ -121,7 +121,7 @@ namespace HolocronToolset.NET.Tests.Dialogs
                 ("", ""),
             };
 
-            foreach (var (filename, expectedPrefix) in testFilenames)
+            foreach ((string filename, string expectedPrefix) in testFilenames)
             {
                 dialog.Ui.FilenameEdit.Text = filename;
                 // Manually trigger prefix update (TextChanged may not fire in headless test mode)
@@ -138,7 +138,7 @@ namespace HolocronToolset.NET.Tests.Dialogs
             dialog.Ui.PrefixEdit.Text.Should().Be("CUS");
 
             // Test nameEdit - TextBox
-            var testNames = new[]
+            string[] testNames = new[]
             {
                 "Test Module",
                 "Another Module",
@@ -147,13 +147,15 @@ namespace HolocronToolset.NET.Tests.Dialogs
                 "Very Long Module Name That Might Wrap",
             };
 
-            foreach (var name in testNames)
+            foreach (string name in testNames)
             {
                 dialog.Ui.NameEdit.Text = name;
                 dialog.Ui.NameEdit.Text.Should().Be(name);
             }
 
             // Test ALL checkboxes - every combination
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/test_ui_clone.py:106-124
+            // Original: checkboxes = [("copyTexturesCheckbox", True), ...]
             var checkboxes = new[]
             {
                 (dialog.Ui.CopyTexturesCheckbox, true),
@@ -172,8 +174,11 @@ namespace HolocronToolset.NET.Tests.Dialogs
 
             foreach (var (checkbox, checkedState) in checkboxes)
             {
-                checkbox.IsChecked = checkedState;
-                checkbox.IsChecked.Should().Be(checkedState);
+                if (checkbox != null)
+                {
+                    checkbox.IsChecked = checkedState;
+                    checkbox.IsChecked.Should().Be(checkedState);
+                }
             }
 
             // Test all checkboxes checked simultaneously
@@ -231,7 +236,7 @@ namespace HolocronToolset.NET.Tests.Dialogs
             dialog.Show();
 
             // Test various filename patterns
-            var testCases = new[]
+            (string, string)[] testCases = new[]
             {
                 ("single", "SIN"),
                 ("ab", "AB"),
@@ -248,7 +253,7 @@ namespace HolocronToolset.NET.Tests.Dialogs
                 ("a", "A"),
             };
 
-            foreach (var (filename, expected) in testCases)
+            foreach ((string filename, string expected) in testCases)
             {
                 dialog.Ui.FilenameEdit.Text = filename;
                 // Manually trigger prefix update (TextChanged may not fire in headless test mode)
