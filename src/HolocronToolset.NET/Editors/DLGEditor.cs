@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using CSharpKOTOR.Common;
@@ -14,14 +15,21 @@ namespace HolocronToolset.NET.Editors
     // Original: class DLGEditor(Editor):
     public class DLGEditor : Editor
     {
-        private DLG _dlg;
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:116
+        // Original: self.core_dlg: DLG = DLG()
+        private DLG _coreDlg;
+        private DLGModel _model;
 
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:101-177
+        // Original: def __init__(self, parent: QWidget | None = None, installation: HTInstallation | None = None):
         public DLGEditor(Window parent = null, HTInstallation installation = null)
             : base(parent, "Dialog Editor", "dialog",
                 new[] { ResourceType.DLG },
                 new[] { ResourceType.DLG },
                 installation)
         {
+            _coreDlg = new DLG();
+            _model = new DLGModel();
             InitializeComponent();
             SetupUI();
             New();
@@ -41,41 +49,71 @@ namespace HolocronToolset.NET.Editors
             Content = panel;
         }
 
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:1135-1171
+        // Original: def load(self, filepath: os.PathLike | str, resref: str, restype: ResourceType, data: bytes | bytearray):
         public override void Load(string filepath, string resref, ResourceType restype, byte[] data)
         {
             base.Load(filepath, resref, restype, data);
-            var gff = GFF.FromBytes(data);
-            // DLG conversion will be implemented when DLG conversion methods are available
-            _dlg = new DLG();
-            LoadDLG(_dlg);
+
+            _coreDlg = DLGHelper.ReadDlg(data);
+            LoadDLG(_coreDlg);
         }
 
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:1193-1227
+        // Original: def _load_dlg(self, dlg: DLG):
         private void LoadDLG(DLG dlg)
         {
-            // Load DLG data into UI tree
+            _coreDlg = dlg;
+            _model.ResetModel();
+            foreach (DLGLink start in dlg.Starters)
+            {
+                _model.AddStarter(start);
+            }
         }
 
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:1229-1254
+        // Original: def build(self) -> tuple[bytes, bytes]:
         public override Tuple<byte[], byte[]> Build()
         {
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py
-            // Original: def build(self) -> tuple[bytes, bytes]:
-            // TODO: Implement DLGHelpers.DismantleDlg when available
-            // For now, create a minimal valid GFF structure
-            var gff = new GFF(GFFContent.DLG);
-            // Build basic structure - full implementation will populate from _dlg
-            byte[] data = GFFAuto.BytesGff(gff, ResourceType.DLG);
+            Game gameToUse = _installation?.Game ?? Game.K2;
+            byte[] data = DLGHelper.BytesDlg(_coreDlg, gameToUse, ResourceType.DLG);
             return Tuple.Create(data, new byte[0]);
         }
 
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:1256-1260
+        // Original: def new(self):
         public override void New()
         {
             base.New();
-            _dlg = new DLG();
+            _coreDlg = new DLG();
+            _model.ResetModel();
         }
 
         public override void SaveAs()
         {
             Save();
+        }
+
+        // Properties for tests
+        public DLG CoreDlg => _coreDlg;
+        public DLGModel Model => _model;
+    }
+
+    // Simple model class for tests (matching Python DLGStandardItemModel)
+    public class DLGModel
+    {
+        private List<DLGLink> _starters = new List<DLGLink>();
+
+        public int RowCount => _starters.Count;
+
+        public void ResetModel()
+        {
+            _starters.Clear();
+        }
+
+        public void AddStarter(DLGLink link)
+        {
+            _starters.Add(link);
         }
     }
 }
