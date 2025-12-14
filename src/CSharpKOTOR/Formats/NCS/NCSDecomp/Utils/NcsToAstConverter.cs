@@ -129,19 +129,9 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             int mainStart = 0;
             int mainEnd = instructions.Count;
             
-            if (subroutineStarts.Count > 0)
-            {
-                int min = int.MaxValue;
-                foreach (int start in subroutineStarts)
-                {
-                    if (start < min)
-                    {
-                        min = start;
-                    }
-                }
-
-                mainEnd = min;
-            }
+            // Calculate mainEnd - it should be the minimum of all subroutine starts that are AFTER mainStart
+            // But we need to calculate mainStart first, so we'll do this after mainStart is determined
+            // For now, just set it to instructions.Count as default
 
             // If SAVEBP is found, create globals subroutine (0 to SAVEBP+1)
             // Then calculate where main should start (after globals and entry stub)
