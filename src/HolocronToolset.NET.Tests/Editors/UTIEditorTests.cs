@@ -254,6 +254,93 @@ namespace HolocronToolset.NET.Tests.Editors
             editor.Close();
         }
 
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_uti_editor.py:302-330
+        // Original: def test_uti_editor_icon_updates(qtbot, installation: HTInstallation):
+        [Fact]
+        public void TestUtiEditorIconUpdates()
+        {
+            if (_installation == null)
+            {
+                return; // Skip if no installation available
+            }
+
+            // Matching Python: editor = UTIEditor(None, installation)
+            var editor = new UTIEditor(null, _installation);
+            editor.Show();
+            editor.New();
+
+            // Matching Python: if editor.ui.baseSelect.count() > 0:
+            if (editor.BaseSelect != null && editor.BaseSelect.ItemCount > 0)
+            {
+                // Test icon updates when base changes
+                // Matching Python: editor.ui.baseSelect.setCurrentIndex(0)
+                editor.BaseSelect.SelectedIndex = 0;
+                System.Threading.Thread.Sleep(10); // Allow icon to update
+
+                // Test icon updates when model variation changes
+                // Matching Python: for val in [0, 1, 2, 3]:
+                foreach (var val in new[] { 0, 1, 2, 3 })
+                {
+                    // Matching Python: editor.ui.modelVarSpin.setValue(val)
+                    editor.ModelVarSpin.Value = val;
+                    System.Threading.Thread.Sleep(5);
+                }
+
+                // Test icon updates when body variation changes
+                // Matching Python: for val in [0, 1, 2]:
+                foreach (var val in new[] { 0, 1, 2 })
+                {
+                    // Matching Python: editor.ui.bodyVarSpin.setValue(val)
+                    editor.BodyVarSpin.Value = val;
+                    System.Threading.Thread.Sleep(5);
+                }
+
+                // Test icon updates when texture variation changes
+                // Matching Python: for val in [0, 1, 2]:
+                foreach (var val in new[] { 0, 1, 2 })
+                {
+                    // Matching Python: editor.ui.textureVarSpin.setValue(val)
+                    editor.TextureVarSpin.Value = val;
+                    System.Threading.Thread.Sleep(5);
+                }
+            }
+
+            editor.Close();
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_uti_editor.py:331-346
+        // Original: def test_uti_editor_comments_widget(qtbot, installation: HTInstallation):
+        [Fact]
+        public void TestUtiEditorCommentsWidget()
+        {
+            if (_installation == null)
+            {
+                return; // Skip if no installation available
+            }
+
+            // Matching Python: editor = UTIEditor(None, installation)
+            var editor = new UTIEditor(null, _installation);
+            editor.Show();
+            editor.New();
+
+            // Test comments text edit
+            // Matching Python: editor.ui.commentsEdit.setPlainText("Test comment\nLine 2\nLine 3")
+            // Matching Python: assert editor.ui.commentsEdit.toPlainText() == "Test comment\nLine 2\nLine 3"
+            string testComment = "Test comment\nLine 2\nLine 3";
+            editor.CommentsEdit.Text = testComment;
+            editor.CommentsEdit.Text.Should().Be(testComment);
+
+            // Verify it saves
+            // Matching Python: data, _ = editor.build()
+            var (data, _) = editor.Build();
+            // Matching Python: uti = read_uti(data)
+            var uti = UTIHelpers.ConstructUti(CSharpKOTOR.Formats.GFF.GFF.FromBytes(data));
+            // Matching Python: assert uti.comment == "Test comment\nLine 2\nLine 3"
+            uti.Comment.Should().Be(testComment);
+
+            editor.Close();
+        }
+
         [Fact]
         public void TestUtiEditorNewFileCreation()
         {
