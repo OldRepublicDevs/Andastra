@@ -1382,6 +1382,125 @@ namespace Odyssey.Scripting.EngineApi
             return Variable.FromInt(0);
         }
 
+        private Variable Func_GetIsDead(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            // GetIsDead(object oCreature) - Returns TRUE if oCreature is dead, dying, or a dead PC
+            uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
+            IEntity entity = ResolveObject(objectId, ctx);
+            if (entity != null)
+            {
+                Core.Interfaces.Components.IStatsComponent stats = entity.GetComponent<Core.Interfaces.Components.IStatsComponent>();
+                if (stats != null)
+                {
+                    return Variable.FromInt(stats.IsDead ? 1 : 0);
+                }
+            }
+            return Variable.FromInt(0);
+        }
+
+        private Variable Func_GetIsPC(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            // GetIsPC(object oCreature) - Returns TRUE if oCreature is a Player Controlled character
+            uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
+            IEntity entity = ResolveObject(objectId, ctx);
+            if (entity != null)
+            {
+                // Check if entity is the player entity
+                // We need to access GameSession or store player entity ID
+                // For now, check if it's a creature with ObjectType.Creature and has special flag
+                // This is a simplified check - in full implementation, we'd track player entity
+                if (entity.ObjectType == ObjectType.Creature)
+                {
+                    // TODO: Properly identify player entity via GameSession or component
+                    // For now, return 0 (not implemented)
+                    return Variable.FromInt(0);
+                }
+            }
+            return Variable.FromInt(0);
+        }
+
+        private Variable Func_GetPCSpeaker(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            // GetPCSpeaker() - Get the PC that is involved in the conversation
+            // Returns OBJECT_INVALID on error
+            // This should return the player entity participating in dialogue
+            // For now, return OBJECT_INVALID as we need GameSession access
+            // TODO: Access GameSession to get player entity
+            return Variable.FromObject(ObjectInvalid);
+        }
+
+        private Variable Func_BeginConversation(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            // BeginConversation(string sResRef="", object oObjectToDialog=OBJECT_INVALID)
+            // Starts a conversation with the specified DLG file
+            string resRef = args.Count > 0 ? args[0].AsString() : "";
+            uint objectId = args.Count > 1 ? args[1].AsObjectId() : ObjectInvalid;
+
+            if (string.IsNullOrEmpty(resRef))
+            {
+                // Use default dialogue from object
+                IEntity target = ResolveObject(objectId, ctx);
+                if (target == null && ctx.Caller != null)
+                {
+                    target = ctx.Caller;
+                }
+
+                if (target != null)
+                {
+                    // Try to get dialogue resref from component or script hooks
+                    Core.Interfaces.Components.IScriptHooksComponent hooks = target.GetComponent<Core.Interfaces.Components.IScriptHooksComponent>();
+                    if (hooks != null)
+                    {
+                        CSharpKOTOR.Common.ResRef dialogueResRef = hooks.GetScript(Core.Enums.ScriptEvent.OnConversation);
+                        if (dialogueResRef != null && !dialogueResRef.IsBlank())
+                        {
+                            resRef = dialogueResRef.ToString();
+                        }
+                    }
+                }
+            }
+
+            if (string.IsNullOrEmpty(resRef))
+            {
+                return Variable.FromInt(0); // Failed
+            }
+
+            // Get target entity
+            IEntity targetEntity = ResolveObject(objectId, ctx);
+            if (targetEntity == null && ctx.Caller != null)
+            {
+                targetEntity = ctx.Caller;
+            }
+
+            if (targetEntity == null)
+            {
+                return Variable.FromInt(0); // Failed
+            }
+
+            // TODO: Access DialogueManager from GameSession to start conversation
+            // For now, return 0 (not fully implemented)
+            // The DialogueManager would need to be accessible from the execution context
+            return Variable.FromInt(0);
+        }
+
+        private Variable Func_GetSkillRank(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            // GetSkillRank(int nSkill, object oTarget=OBJECT_SELF)
+            // Returns -1 if oTarget doesn't have nSkill, 0 if untrained
+            int skill = args.Count > 0 ? args[0].AsInt() : 0;
+            uint objectId = args.Count > 1 ? args[1].AsObjectId() : ObjectSelf;
+
+            IEntity entity = ResolveObject(objectId, ctx);
+            if (entity != null)
+            {
+                // TODO: Access skill component to get skill rank
+                // For now, return 0 (untrained)
+                // This would require an ISkillComponent interface
+                return Variable.FromInt(0);
+            }
+            return Variable.FromInt(-1); // Invalid target
+        }
+
         private Variable Func_GetAbilityScore(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             // GetAbilityScore(object oCreature, int nAbilityType)
