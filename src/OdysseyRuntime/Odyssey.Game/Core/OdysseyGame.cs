@@ -384,7 +384,7 @@ namespace Odyssey.Game.Core
             }
 
             Console.WriteLine($"[Odyssey] Found {_availablePaths.Count} installation path(s)");
-            foreach (var path in _availablePaths)
+            foreach (string path in _availablePaths)
             {
                 Console.WriteLine($"[Odyssey]   - {path}");
             }
@@ -1019,7 +1019,7 @@ namespace Odyssey.Game.Core
                 new VertexPositionColor(new Vector3(-5, 0, 5), Color.Gray)
             };
 
-            var indices = new short[]
+            short[] indices = new short[]
             {
                 0, 1, 2,
                 0, 2, 3
@@ -1041,7 +1041,7 @@ namespace Odyssey.Game.Core
             // Try to follow player if available
             if (_session != null && _session.PlayerEntity != null)
             {
-                var transform = _session.PlayerEntity.GetComponent<Odyssey.Kotor.Components.TransformComponent>();
+                Kotor.Components.TransformComponent transform = _session.PlayerEntity.GetComponent<Odyssey.Kotor.Components.TransformComponent>();
                 if (transform != null)
                 {
                     target = new Microsoft.Xna.Framework.Vector3(transform.Position.X, transform.Position.Y, transform.Position.Z);
@@ -1130,7 +1130,7 @@ namespace Odyssey.Game.Core
             // Draw loaded area rooms if available
             if (_session != null && _session.CurrentRuntimeModule != null)
             {
-                var entryArea = _session.CurrentRuntimeModule.GetArea(_session.CurrentRuntimeModule.EntryArea);
+                Odyssey.Core.Interfaces.IArea entryArea = _session.CurrentRuntimeModule.GetArea(_session.CurrentRuntimeModule.EntryArea);
                 if (entryArea != null && entryArea is Odyssey.Core.Module.RuntimeArea runtimeArea)
                 {
                     DrawAreaRooms(runtimeArea);
@@ -1140,7 +1140,7 @@ namespace Odyssey.Game.Core
             // Draw entities from GIT
             if (_session != null && _session.CurrentRuntimeModule != null)
             {
-                var entryArea = _session.CurrentRuntimeModule.GetArea(_session.CurrentRuntimeModule.EntryArea);
+                Odyssey.Core.Interfaces.IArea entryArea = _session.CurrentRuntimeModule.GetArea(_session.CurrentRuntimeModule.EntryArea);
                 if (entryArea != null && entryArea is Odyssey.Core.Module.RuntimeArea runtimeArea)
                 {
                     DrawAreaEntities(runtimeArea);
@@ -1168,7 +1168,7 @@ namespace Odyssey.Game.Core
                 if (_session != null && _session.CurrentModuleName != null)
                 {
                     statusText = "Module: " + _session.CurrentModuleName + " - Press ESC to return to menu";
-                    var entryArea = _session.CurrentRuntimeModule?.GetArea(_session.CurrentRuntimeModule.EntryArea);
+                    Odyssey.Core.Interfaces.IArea entryArea = _session.CurrentRuntimeModule?.GetArea(_session.CurrentRuntimeModule.EntryArea);
                     if (entryArea != null)
                     {
                         statusText += " | Area: " + entryArea.DisplayName + " (" + entryArea.ResRef + ")";
@@ -1198,7 +1198,7 @@ namespace Odyssey.Game.Core
             int currentRoomIndex = -1;
             if (_session != null && _session.PlayerEntity != null)
             {
-                var transform = _session.PlayerEntity.GetComponent<Odyssey.Kotor.Components.TransformComponent>();
+                Kotor.Components.TransformComponent transform = _session.PlayerEntity.GetComponent<Odyssey.Kotor.Components.TransformComponent>();
                 if (transform != null)
                 {
                     currentRoomIndex = FindPlayerRoom(area, transform.Position);
@@ -1208,8 +1208,8 @@ namespace Odyssey.Game.Core
             // Load and render room meshes (with VIS culling if possible)
             for (int i = 0; i < area.Rooms.Count; i++)
             {
-                var room = area.Rooms[i];
-                
+                Odyssey.Core.Module.RoomInfo room = area.Rooms[i];
+
                 if (string.IsNullOrEmpty(room.ModelName))
                 {
                     continue;
@@ -1284,7 +1284,7 @@ namespace Odyssey.Game.Core
             }
 
             // Draw all entities as simple colored boxes
-            foreach (var entity in area.GetAllEntities())
+            foreach (Odyssey.Core.Interfaces.IEntity entity in area.GetAllEntities())
             {
                 DrawEntity(entity);
             }
@@ -1300,7 +1300,7 @@ namespace Odyssey.Game.Core
                 return;
             }
 
-            var transform = entity.GetComponent<Odyssey.Kotor.Components.TransformComponent>();
+            Kotor.Components.TransformComponent transform = entity.GetComponent<Odyssey.Kotor.Components.TransformComponent>();
             if (transform == null)
             {
                 return;
@@ -1359,7 +1359,7 @@ namespace Odyssey.Game.Core
                 new VertexPositionColor(new Microsoft.Xna.Framework.Vector3(-hw, hw, entityHeight), entityColor)
             };
 
-            var entityIndices = new short[]
+            short[] entityIndices = new short[]
             {
                 // Bottom
                 0, 1, 2, 0, 2, 3,
@@ -1410,7 +1410,7 @@ namespace Odyssey.Game.Core
                 return;
             }
 
-            var transform = playerEntity.GetComponent<Odyssey.Kotor.Components.TransformComponent>();
+            Kotor.Components.TransformComponent transform = playerEntity.GetComponent<Odyssey.Kotor.Components.TransformComponent>();
             if (transform == null)
             {
                 return;
@@ -1436,7 +1436,7 @@ namespace Odyssey.Game.Core
                 new VertexPositionColor(new Vector3(-0.5f, 0.5f, 2), Color.Blue)
             };
 
-            var playerIndices = new short[]
+            short[] playerIndices = new short[]
             {
                 // Bottom
                 0, 1, 2, 0, 2, 3,
@@ -1504,7 +1504,7 @@ namespace Odyssey.Game.Core
                 // Get module from session - we need access to the CSharpKOTOR Module object
                 // For now, we'll need to store it or access it differently
                 // This is a simplified approach - in a full implementation, we'd cache the Module object
-                var moduleName = _session.CurrentModuleName;
+                string moduleName = _session.CurrentModuleName;
                 if (string.IsNullOrEmpty(moduleName))
                 {
                     return null;
@@ -1515,13 +1515,13 @@ namespace Odyssey.Game.Core
                 var installation = new Installation(_settings.GamePath);
                 var module = new Module(moduleName, installation);
 
-                var mdlResource = module.Resource(modelResRef, ResourceType.MDL);
+                ModuleResource mdlResource = module.Resource(modelResRef, ResourceType.MDL);
                 if (mdlResource == null)
                 {
                     return null;
                 }
 
-                var activePath = mdlResource.Activate();
+                string activePath = mdlResource.Activate();
                 if (string.IsNullOrEmpty(activePath))
                 {
                     return null;
@@ -1559,7 +1559,7 @@ namespace Odyssey.Game.Core
                 return;
             }
 
-            var transform = _session.PlayerEntity.GetComponent<Odyssey.Kotor.Components.TransformComponent>();
+            Kotor.Components.TransformComponent transform = _session.PlayerEntity.GetComponent<Odyssey.Kotor.Components.TransformComponent>();
             if (transform == null)
             {
                 return;
@@ -1577,7 +1577,7 @@ namespace Odyssey.Game.Core
             if (keyboardState.IsKeyDown(Keys.W))
             {
                 // Move forward
-                var pos = transform.Position;
+                System.Numerics.Vector3 pos = transform.Position;
                 pos.X += (float)Math.Sin(transform.Facing) * moveSpeed;
                 pos.Z += (float)Math.Cos(transform.Facing) * moveSpeed;
                 transform.Position = pos;
@@ -1586,7 +1586,7 @@ namespace Odyssey.Game.Core
             if (keyboardState.IsKeyDown(Keys.S))
             {
                 // Move backward
-                var pos = transform.Position;
+                System.Numerics.Vector3 pos = transform.Position;
                 pos.X -= (float)Math.Sin(transform.Facing) * moveSpeed;
                 pos.Z -= (float)Math.Cos(transform.Facing) * moveSpeed;
                 transform.Position = pos;
@@ -1632,13 +1632,13 @@ namespace Odyssey.Game.Core
                         out hitPoint))
                     {
                         // Project to walkable surface
-                        var nearest = navMesh.GetNearestPoint(hitPoint);
+                        System.Numerics.Vector3? nearest = navMesh.GetNearestPoint(hitPoint);
                         if (nearest.HasValue)
                         {
-                            var targetPos = nearest.Value;
+                            System.Numerics.Vector3 targetPos = nearest.Value;
                             transform.Position = new System.Numerics.Vector3(targetPos.X, targetPos.Y, targetPos.Z);
                             // Face towards target
-                            var dir = targetPos - new System.Numerics.Vector3(transform.Position.X, transform.Position.Y, transform.Position.Z);
+                            System.Numerics.Vector3 dir = targetPos - new System.Numerics.Vector3(transform.Position.X, transform.Position.Y, transform.Position.Z);
                             if (dir.LengthSquared() > 0.01f)
                             {
                                 transform.Facing = (float)Math.Atan2(dir.X, dir.Z);
@@ -1652,7 +1652,7 @@ namespace Odyssey.Game.Core
             // Clamp player to walkmesh surface
             if (hasNavMesh && moved)
             {
-                var pos = transform.Position;
+                System.Numerics.Vector3 pos = transform.Position;
                 var worldPos = new System.Numerics.Vector3(pos.X, pos.Y, pos.Z);
 
                 // Project position to walkmesh surface
@@ -1666,10 +1666,10 @@ namespace Odyssey.Game.Core
                 else
                 {
                     // If not on walkmesh, find nearest walkable point
-                    var nearest = navMesh.GetNearestPoint(worldPos);
+                    System.Numerics.Vector3? nearest = navMesh.GetNearestPoint(worldPos);
                     if (nearest.HasValue)
                     {
-                        var nearestPos = nearest.Value;
+                        System.Numerics.Vector3 nearestPos = nearest.Value;
                         transform.Position = new System.Numerics.Vector3(nearestPos.X, nearestPos.Y, nearestPos.Z);
                     }
                 }
@@ -1689,7 +1689,7 @@ namespace Odyssey.Game.Core
                 return;
             }
 
-            var state = _session.DialogueManager.CurrentState;
+            Kotor.Dialogue.DialogueState state = _session.DialogueManager.CurrentState;
             if (state == null || state.AvailableReplies == null || state.AvailableReplies.Count == 0)
             {
                 return;
@@ -1724,7 +1724,7 @@ namespace Odyssey.Game.Core
         {
             if (_session != null && _session.PlayerEntity != null)
             {
-                var transform = _session.PlayerEntity.GetComponent<Odyssey.Kotor.Components.TransformComponent>();
+                Kotor.Components.TransformComponent transform = _session.PlayerEntity.GetComponent<Odyssey.Kotor.Components.TransformComponent>();
                 if (transform != null)
                 {
                     // Camera is behind and above player
@@ -1732,7 +1732,7 @@ namespace Odyssey.Game.Core
                     float cameraHeight = 4f;
                     float cameraAngle = transform.Facing + (float)Math.PI;
 
-                    var playerPos = transform.Position;
+                    System.Numerics.Vector3 playerPos = transform.Position;
                     return new Microsoft.Xna.Framework.Vector3(
                         playerPos.X + (float)Math.Sin(cameraAngle) * cameraDistance,
                         playerPos.Y + cameraHeight,
@@ -1779,7 +1779,7 @@ namespace Odyssey.Game.Core
                 return null;
             }
 
-            var entryArea = _session.CurrentRuntimeModule.GetArea(_session.CurrentRuntimeModule.EntryArea);
+            Odyssey.Core.Interfaces.IArea entryArea = _session.CurrentRuntimeModule.GetArea(_session.CurrentRuntimeModule.EntryArea);
             if (entryArea == null || !(entryArea is Odyssey.Core.Module.RuntimeArea runtimeArea))
             {
                 return null;
@@ -1790,9 +1790,9 @@ namespace Odyssey.Game.Core
             float closestDistance = float.MaxValue;
             Odyssey.Core.Interfaces.IEntity closestEntity = null;
 
-            foreach (var entity in runtimeArea.GetAllEntities())
+            foreach (Odyssey.Core.Interfaces.IEntity entity in runtimeArea.GetAllEntities())
             {
-                var transform = entity.GetComponent<Odyssey.Kotor.Components.TransformComponent>();
+                Kotor.Components.TransformComponent transform = entity.GetComponent<Odyssey.Kotor.Components.TransformComponent>();
                 if (transform == null)
                 {
                     continue;
@@ -1814,8 +1814,8 @@ namespace Odyssey.Game.Core
                 }
 
                 var entityPos = new Vector3(transform.Position.X, transform.Position.Y, transform.Position.Z);
-                var entityMin = entityPos - new Vector3(entitySize, entitySize, entitySize);
-                var entityMax = entityPos + new Vector3(entitySize, entitySize, entitySize);
+                Vector3 entityMin = entityPos - new Vector3(entitySize, entitySize, entitySize);
+                Vector3 entityMax = entityPos + new Vector3(entitySize, entitySize, entitySize);
 
                 // Simple ray-AABB intersection
                 float tmin = 0.0f;
@@ -1967,7 +1967,7 @@ namespace Odyssey.Game.Core
             }
 
             // Try to get conversation from ScriptHooksComponent local string
-            var scriptsComponent = entity.GetComponent<Odyssey.Kotor.Components.ScriptHooksComponent>();
+            Kotor.Components.ScriptHooksComponent scriptsComponent = entity.GetComponent<Odyssey.Kotor.Components.ScriptHooksComponent>();
             if (scriptsComponent != null)
             {
                 string conversation = scriptsComponent.GetLocalString("Conversation");
@@ -1978,14 +1978,14 @@ namespace Odyssey.Game.Core
             }
 
             // Try to get from PlaceableComponent
-            var placeableComponent = entity.GetComponent<Odyssey.Kotor.Components.PlaceableComponent>();
+            Kotor.Components.PlaceableComponent placeableComponent = entity.GetComponent<Odyssey.Kotor.Components.PlaceableComponent>();
             if (placeableComponent != null && !string.IsNullOrEmpty(placeableComponent.Conversation))
             {
                 return placeableComponent.Conversation;
             }
 
             // Try to get from DoorComponent
-            var doorComponent = entity.GetComponent<Odyssey.Kotor.Components.DoorComponent>();
+            Kotor.Components.DoorComponent doorComponent = entity.GetComponent<Odyssey.Kotor.Components.DoorComponent>();
             if (doorComponent != null && !string.IsNullOrEmpty(doorComponent.Conversation))
             {
                 return doorComponent.Conversation;
@@ -2004,7 +2004,7 @@ namespace Odyssey.Game.Core
                 return;
             }
 
-            var doorComponent = doorEntity.GetComponent<Odyssey.Kotor.Components.DoorComponent>();
+            Kotor.Components.DoorComponent doorComponent = doorEntity.GetComponent<Odyssey.Kotor.Components.DoorComponent>();
             if (doorComponent == null)
             {
                 Console.WriteLine("[Odyssey] Door entity has no DoorComponent");
@@ -2034,12 +2034,24 @@ namespace Odyssey.Game.Core
             if (doorComponent.IsModuleTransition)
             {
                 Console.WriteLine("[Odyssey] Door leads to module: " + doorComponent.LinkedToModule);
-                // TODO: Implement module transition
+                if (_session != null)
+                {
+                    _session.TransitionToModule(doorComponent.LinkedToModule, doorComponent.TransitionDestination);
+                }
             }
             else if (doorComponent.IsAreaTransition)
             {
                 Console.WriteLine("[Odyssey] Door leads to area: " + doorComponent.LinkedTo);
-                // TODO: Implement area transition
+                if (_session != null && _session.CurrentRuntimeModule != null)
+                {
+                    // Find the area ResRef from the linked waypoint or use LinkedTo directly
+                    string areaResRef = doorComponent.LinkedTo;
+                    string waypointTag = doorComponent.TransitionDestination;
+                    
+                    // If LinkedTo is a waypoint tag, we need to find which area it's in
+                    // For now, assume LinkedTo is the area ResRef
+                    _session.TransitionToArea(areaResRef, waypointTag);
+                }
             }
         }
 
@@ -2053,7 +2065,7 @@ namespace Odyssey.Game.Core
                 return;
             }
 
-            var triggerComponent = triggerEntity.GetComponent<Odyssey.Kotor.Components.TriggerComponent>();
+            Kotor.Components.TriggerComponent triggerComponent = triggerEntity.GetComponent<Odyssey.Kotor.Components.TriggerComponent>();
             if (triggerComponent == null)
             {
                 Console.WriteLine("[Odyssey] Trigger entity has no TriggerComponent");
@@ -2066,12 +2078,24 @@ namespace Odyssey.Game.Core
             if (triggerComponent.IsModuleTransition)
             {
                 Console.WriteLine("[Odyssey] Trigger leads to module: " + triggerComponent.LinkedToModule);
-                // TODO: Implement module transition
+                if (_session != null)
+                {
+                    _session.TransitionToModule(triggerComponent.LinkedToModule, triggerComponent.TransitionDestination);
+                }
             }
             else if (triggerComponent.IsAreaTransition)
             {
                 Console.WriteLine("[Odyssey] Trigger leads to area: " + triggerComponent.LinkedTo);
-                // TODO: Implement area transition
+                if (_session != null && _session.CurrentRuntimeModule != null)
+                {
+                    // Find the area ResRef from the linked waypoint or use LinkedTo directly
+                    string areaResRef = triggerComponent.LinkedTo;
+                    string waypointTag = triggerComponent.TransitionDestination;
+                    
+                    // If LinkedTo is a waypoint tag, we need to find which area it's in
+                    // For now, assume LinkedTo is the area ResRef
+                    _session.TransitionToArea(areaResRef, waypointTag);
+                }
             }
 
             // TODO: Execute trigger scripts (OnEnter, OnExit, OnHeartbeat)
@@ -2095,7 +2119,7 @@ namespace Odyssey.Game.Core
 
             for (int i = 0; i < area.Rooms.Count; i++)
             {
-                var room = area.Rooms[i];
+                Odyssey.Core.Module.RoomInfo room = area.Rooms[i];
                 var roomPos = new System.Numerics.Vector3(room.Position.X, room.Position.Y, room.Position.Z);
                 float distance = System.Numerics.Vector3.Distance(playerPosition, roomPos);
 
@@ -2130,7 +2154,7 @@ namespace Odyssey.Game.Core
                 Console.WriteLine($"[Dialogue] Available replies: {e.State.AvailableReplies.Count}");
                 for (int i = 0; i < e.State.AvailableReplies.Count; i++)
                 {
-                    var reply = e.State.AvailableReplies[i];
+                    CSharpKOTOR.Resource.Generics.DLG.DLGReply reply = e.State.AvailableReplies[i];
                     string replyText = _session.DialogueManager.GetNodeText(reply);
                     Console.WriteLine($"  [{i}] {replyText}");
                 }
@@ -2168,7 +2192,7 @@ namespace Odyssey.Game.Core
                 return;
             }
 
-            var state = _session.DialogueManager.CurrentState;
+            Kotor.Dialogue.DialogueState state = _session.DialogueManager.CurrentState;
             if (state == null)
             {
                 return;
@@ -2200,7 +2224,7 @@ namespace Odyssey.Game.Core
                 float replyY = dialogueBoxY + 80; // Below dialogue text
                 for (int i = 0; i < state.AvailableReplies.Count && i < 9; i++)
                 {
-                    var reply = state.AvailableReplies[i];
+                    CSharpKOTOR.Resource.Generics.DLG.DLGReply reply = state.AvailableReplies[i];
                     string replyText = _session.DialogueManager.GetNodeText(reply);
                     if (string.IsNullOrEmpty(replyText))
                     {

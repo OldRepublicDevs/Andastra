@@ -253,7 +253,7 @@ namespace Odyssey.Kotor.Game
                 // Set current module in world
                 if (_currentRuntimeModule != null)
                 {
-                    var entryArea = _currentRuntimeModule.GetArea(_currentRuntimeModule.EntryArea);
+                    IArea entryArea = _currentRuntimeModule.GetArea(_currentRuntimeModule.EntryArea);
                     if (entryArea != null && _world != null)
                     {
                         // Set current area in world
@@ -480,11 +480,100 @@ namespace Odyssey.Kotor.Game
 
             // TODO: Save party state
             // TODO: Fade out
-            // TODO: Load module
-            // TODO: Position party at waypoint
-            // TODO: Fade in
-
+            
+            // Load the new module
             LoadModule(moduleName);
+            
+            // Position player at destination waypoint if specified
+            if (!string.IsNullOrEmpty(waypointTag))
+            {
+                PositionPlayerAtWaypoint(waypointTag);
+            }
+            
+            // TODO: Fade in
+        }
+
+        /// <summary>
+        /// Transitions to a different area within the current module.
+        /// </summary>
+        public void TransitionToArea(string areaResRef, string waypointTag)
+        {
+            if (_currentRuntimeModule == null)
+            {
+                Console.WriteLine("[GameSession] Cannot transition: no module loaded");
+                return;
+            }
+
+            Console.WriteLine("[GameSession] Transitioning to area: " + areaResRef + " (waypoint: " + waypointTag + ")");
+
+            // Get the destination area
+            IArea destinationArea = _currentRuntimeModule.GetArea(areaResRef);
+            if (destinationArea == null)
+            {
+                Console.WriteLine("[GameSession] Area not found: " + areaResRef);
+                return;
+            }
+
+            // Update world's current area
+            if (_world is World concreteWorld)
+            {
+                concreteWorld.SetCurrentArea(destinationArea);
+            }
+
+            // Position player at destination waypoint
+            if (!string.IsNullOrEmpty(waypointTag))
+            {
+                PositionPlayerAtWaypoint(waypointTag);
+            }
+            else
+            {
+                // Use module's entry position if no waypoint specified
+                if (_currentRuntimeModule != null)
+                {
+                    var transform = _playerEntity?.GetComponent<Components.TransformComponent>();
+                    if (transform != null)
+                    {
+                        transform.Position = _currentRuntimeModule.EntryPosition;
+                        transform.Facing = (float)Math.Atan2(_currentRuntimeModule.EntryDirectionY, _currentRuntimeModule.EntryDirectionX);
+                    }
+                }
+            }
+
+            Console.WriteLine("[GameSession] Transitioned to area: " + areaResRef);
+        }
+
+        /// <summary>
+        /// Positions the player at a waypoint by tag.
+        /// </summary>
+        private void PositionPlayerAtWaypoint(string waypointTag)
+        {
+            if (_playerEntity == null || _currentRuntimeModule == null)
+            {
+                return;
+            }
+
+            // Search all areas in the current module for the waypoint
+            foreach (var area in _currentRuntimeModule.Areas)
+            {
+                IEntity waypoint = area.GetObjectByTag(waypointTag);
+                if (waypoint != null)
+                {
+                    var transform = waypoint.GetComponent<Components.TransformComponent>();
+                    if (transform != null)
+                    {
+                    var playerTransform = _playerEntity.GetComponent<Components.TransformComponent>();
+                    if (playerTransform != null)
+                    {
+                        playerTransform.Position = transform.Position;
+                        playerTransform.Facing = transform.Facing;
+                        Console.WriteLine("[GameSession] Positioned player at waypoint: " + waypointTag);
+                        return;
+                    }
+                    }
+                }
+            }
+
+            Console.WriteLine("[GameSession] Waypoint not found: " + waypointTag);
         }
 
         public void Dispose()
@@ -512,10 +601,10 @@ namespace Odyssey.Kotor.Game
             // to avoid circular dependency
             var result = new GameSessionSettings();
 
-            var type = settings.GetType();
-            var gameProp = type.GetProperty("Game");
-            var pathProp = type.GetProperty("GamePath");
-            var moduleProp = type.GetProperty("StartModule");
+            Type type = settings.GetType();
+            System.Reflection.PropertyInfo gameProp = type.GetProperty("Game");
+            System.Reflection.PropertyInfo pathProp = type.GetProperty("GamePath");
+            System.Reflection.PropertyInfo moduleProp = type.GetProperty("StartModule");
 
             if (gameProp != null)
             {
