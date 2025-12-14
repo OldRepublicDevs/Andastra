@@ -82,13 +82,15 @@ Current focus for achieving first playable module.
 - [ ] VIS culling groups
 - [ ] Material assignment
 
-### Phase 2: Player Interaction
+### Phase 2: Player Interaction (In Progress)
 
 #### 2.1 Character Controller
-- [ ] Walkmesh projection and movement
-- [ ] Click-to-move input handling
-- [ ] Pathfinding integration
-- [ ] Door/trigger intersection detection
+- [x] `CharacterController` with pathfinding integration
+- [x] Walkmesh-constrained movement
+- [x] Click-to-move input handling (`PlayerInputHandler`)
+- [x] Pathfinding integration (with `NavigationMesh`)
+- [x] Trigger intersection detection
+- [x] Smooth turning and speed transitions
 - [ ] Ledge and ramp handling
 
 #### 2.2 Camera System
@@ -99,11 +101,13 @@ Current focus for achieving first playable module.
 - [ ] Cinematic camera scripting
 
 #### 2.3 Object Interaction
-- [ ] Click-to-select entities
-- [ ] Use/interact actions
+- [x] Click-to-select entities
+- [x] Cursor mode detection (attack, talk, use, etc.)
+- [x] Context-sensitive right-click actions
+- [ ] Use/interact actions (execution)
 - [ ] Door open/close states
 - [ ] Placeable activation
-- [ ] Trigger enter/exit events
+- [x] Trigger enter/exit events
 
 ### Phase 3: Scripting Completion
 
