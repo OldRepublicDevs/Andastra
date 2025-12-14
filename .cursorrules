@@ -277,3 +277,117 @@ When working on Odyssey Engine code (anything in `src/OdysseyRuntime/`), AI agen
    - `Odyssey.Game` - Executable launcher
 
 5. **Maintain C# 7.3 Compatibility**: Even in OdysseyRuntime projects
+
+## Odyssey Engine Implementation Guidelines
+
+**CRITICAL: When implementing Odyssey Engine features, follow these guidelines:**
+
+### Architecture Principles
+
+1. **Layered Architecture**:
+   - `Odyssey.Core` - Pure domain, NO Stride dependency
+   - `Odyssey.Content` - Asset conversion/caching, depends on CSharpKOTOR
+   - `Odyssey.Scripting` - NCS VM + NWScript, NO rendering dependency
+   - `Odyssey.Kotor` - K1/K2 specific rules, data tables
+   - `Odyssey.Stride` - Stride adapters ONLY
+   - `Odyssey.Game` - Executable launcher
+
+2. **Dependency Direction**:
+   - Core → (nothing external)
+   - Content → Core, CSharpKOTOR
+   - Scripting → Core
+   - Kotor → Core, Content, Scripting
+   - Stride → Core, Content, Kotor (adapter layer)
+   - Game → All
+
+3. **No Game Assets**: The runtime must load from user-provided KOTOR/TSL installation. Never ship game assets.
+
+### Implementation Order (Dependency-First)
+
+When implementing features, follow this order to avoid rework:
+1. Foundation: projects, config, Stride window
+2. Resource provider: wrap CSharpKOTOR.Installation
+3. Content cache: texture/model decode
+4. Area rendering: LYT + VIS + room meshes
+5. Walkmesh: collision + navigation
+6. Entity spawn: GIT parsing
+7. NCS VM: script execution
+8. Engine API: NWScript function implementations
+9. Transitions: doors, triggers, modules
+10. Dialogue: DLG/TLK/VO
+11. Combat: attack resolution, HP
+12. Save/Load: state persistence
+
+### NWScript Implementation Strategy
+
+**Do NOT implement all NWScript functions alphabetically.** Implement by usage tiers:
+
+- **Tier 0**: Boot/Basic (~50 functions) - PrintString, Random, GetTag, GetLocal*, etc.
+- **Tier 1**: Movement/Actions (~80 functions) - ActionMove*, AssignCommand, DelayCommand
+- **Tier 2**: Creatures/Stats (~100 functions) - GetAbilityScore, GetCurrentHitPoints
+- **Tier 3**: Combat (~80 functions) - ActionAttack, EffectDamage, ApplyEffectToObject
+- **Tier 4**: Dialogue (~40 functions) - SpeakString, GetPCSpeaker, BeginConversation
+- **Tier 5**: Inventory (~60 functions) - GetItemInSlot, CreateItemOnObject
+- **Tier 6**: Force Powers (~50 functions) - ActionCastSpellAtObject, GetHasSpell
+
+### NCS VM Invariants (Must Match)
+
+- Header: `"NCS "` + `"V1.0"`, byte at offset 8 = `0x42`, big-endian file size at offset 9
+- Instructions start at offset `0x0D`
+- All multi-byte arguments are **big-endian**
+- Jump offsets are **relative to the start of the jump instruction**
+- Stack is 4-byte aligned; vectors = 12 bytes (3 floats)
+
+### Game Loop (Fixed Timestep)
+
+The engine uses a fixed-timestep game loop (60 Hz simulation):
+1. Input Phase: collect input, update camera
+2. Script Phase: process delay wheel, heartbeats, action queues
+3. Simulation Phase: entity positions, perception, combat
+4. Animation Phase: skeletal, particles, lip sync
+5. Scene Sync Phase: runtime transforms → Stride scene graph
+6. Render Phase: VIS culling, transparency sort, draw calls
+7. Audio Phase: spatial audio positions, one-shots
+
+### Clean-Room Process
+
+- Implementation is derived from behavioral observation and specification documents
+- **No code copying** from other implementations
+- Match original engine behavior exactly where documented
+- Document any deviations or improvements
+- Avoid GPL/LGPL/AGPL dependencies in shipped runtime
+
+### File Format References
+
+When implementing format handling, reference these CSharpKOTOR parsers:
+- NCS: `CSharpKOTOR/Formats/NCS/` - NWScript bytecode
+- BWM: `CSharpKOTOR/Formats/BWM/` - Walkmesh (WOK/PWK/DWK)
+- LYT: `CSharpKOTOR/Formats/LYT/` - Area layout
+- VIS: `CSharpKOTOR/Formats/VIS/` - Room visibility
+- MDL/MDX: `CSharpKOTOR/Formats/MDL/` - Models/animations
+- TPC/TXI: `CSharpKOTOR/Formats/TPC/` - Textures
+- DLG: `CSharpKOTOR/Formats/DLG/` - Dialogue
+- GIT: `CSharpKOTOR/Formats/GIT/` - Instance spawning
+- GFF templates: UTC, UTP, UTD, UTT, UTW, UTS, UTE, UTI
+
+### Extensibility for Aurora/Eclipse Family
+
+Design for extensibility to other engines:
+- Keep `IGameProfile` interface for game-specific behavior
+- Game rules in `Odyssey.Kotor`, not `Odyssey.Core`
+- Resource paradigms (GFF, archives, scripting) shared
+- Game-specific 2DA/rules are pluggable
+
+### Testing Requirements
+
+- NCS VM: deterministic unit tests for all opcodes
+- Resource precedence: synthetic mini-installation fixtures
+- Content decoding: golden-file tests
+- Vertical slice: playable integration tests
+
+### Performance Budgets
+
+- Module load (warm): seconds, not minutes
+- Frame rate: stable 60fps on midrange GPU
+- Script budget: capped instructions per frame
+- Memory: bounded caches with LRU eviction
