@@ -32,12 +32,70 @@ namespace HolocronToolset.NET.Widgets
 
         private void InitializeComponent()
         {
-            AvaloniaXamlLoader.Load(this);
-            _sectionCombo = this.FindControl<ComboBox>("sectionCombo");
-            _searchEdit = this.FindControl<TextBox>("searchEdit");
-            _reloadButton = this.FindControl<Button>("reloadButton");
-            _refreshButton = this.FindControl<Button>("refreshButton");
-            _resourceTree = this.FindControl<TreeView>("resourceTree");
+            bool xamlLoaded = false;
+            try
+            {
+                AvaloniaXamlLoader.Load(this);
+                xamlLoaded = true;
+            }
+            catch
+            {
+                // XAML not available - will use programmatic UI
+            }
+
+            if (xamlLoaded)
+            {
+                _sectionCombo = this.FindControl<ComboBox>("sectionCombo");
+                _searchEdit = this.FindControl<TextBox>("searchEdit");
+                _reloadButton = this.FindControl<Button>("reloadButton");
+                _refreshButton = this.FindControl<Button>("refreshButton");
+                _resourceTree = this.FindControl<TreeView>("resourceTree");
+            }
+            else
+            {
+                SetupProgrammaticUI();
+            }
+        }
+
+        private void SetupProgrammaticUI()
+        {
+            var grid = new Grid();
+            grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+            grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+            grid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
+
+            // Section Combo and Refresh Button
+            var topGrid = new Grid { Margin = new Avalonia.Thickness(5) };
+            topGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            topGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+            _sectionCombo = new ComboBox { Margin = new Avalonia.Thickness(0, 0, 5, 0) };
+            _refreshButton = new Button { Content = "Refresh", Width = 70 };
+            topGrid.Children.Add(_sectionCombo);
+            Grid.SetColumn(_sectionCombo, 0);
+            topGrid.Children.Add(_refreshButton);
+            Grid.SetColumn(_refreshButton, 1);
+            grid.Children.Add(topGrid);
+            Grid.SetRow(topGrid, 0);
+
+            // Search and Reload
+            var searchGrid = new Grid { Margin = new Avalonia.Thickness(5, 0, 5, 5) };
+            searchGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            searchGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+            _searchEdit = new TextBox { Watermark = "search...", Margin = new Avalonia.Thickness(0, 0, 5, 0) };
+            _reloadButton = new Button { Content = "Reload", Width = 70 };
+            searchGrid.Children.Add(_searchEdit);
+            Grid.SetColumn(_searchEdit, 0);
+            searchGrid.Children.Add(_reloadButton);
+            Grid.SetColumn(_reloadButton, 1);
+            grid.Children.Add(searchGrid);
+            Grid.SetRow(searchGrid, 1);
+
+            // Resource Tree
+            _resourceTree = new TreeView();
+            grid.Children.Add(_resourceTree);
+            Grid.SetRow(_resourceTree, 2);
+
+            Content = grid;
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/main_widgets.py:122-129
