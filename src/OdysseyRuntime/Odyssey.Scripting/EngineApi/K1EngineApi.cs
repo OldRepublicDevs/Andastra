@@ -464,9 +464,29 @@ namespace Odyssey.Scripting.EngineApi
 
         private Variable Func_ActionAttack(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
+            // ActionAttack(object oTarget, int bPassive = FALSE)
             uint targetId = args.Count > 0 ? args[0].AsObjectId() : ObjectInvalid;
             bool passive = args.Count > 1 && args[1].AsInt() != 0;
-            // TODO: Implement attack action
+
+            if (ctx.Caller == null)
+            {
+                return Variable.Void();
+            }
+
+            IEntity target = ctx.World.GetEntity(targetId);
+            if (target == null || !target.IsValid)
+            {
+                return Variable.Void();
+            }
+
+            // Create and queue attack action
+            var attackAction = new Actions.ActionAttack(targetId, passive);
+            IActionQueueComponent actionQueue = ctx.Caller.GetComponent<IActionQueueComponent>();
+            if (actionQueue != null)
+            {
+                actionQueue.EnqueueAction(attackAction);
+            }
+
             return Variable.Void();
         }
 
