@@ -1,0 +1,14 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="HolocronToolset.NET.Dialogs.FileResultsDialog"
+        Title="Search Results"
+        Width="303" Height="401"
+        WindowStartupLocation="CenterOwner">
+    <StackPanel Margin="10" Spacing="10">
+        <ListBox Name="resultList" />
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="5">
+            <Button Name="openButton" Content="Open" Width="75" />
+            <Button Name="okButton" Content="OK" Width="75" />
+        </StackPanel>
+    </StackPanel>
+</Window>

@@ -358,7 +358,7 @@ namespace HolocronToolset.NET.Widgets
                 return items;
             }
 
-            return items.Where(item => 
+            return items.Where(item =>
                 item.Text.ToLowerInvariant().Contains(_filterString) ||
                 item.Resource.ResName.ToLowerInvariant().Contains(_filterString));
         }

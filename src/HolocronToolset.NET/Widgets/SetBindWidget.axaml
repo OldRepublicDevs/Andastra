@@ -1,0 +1,16 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="HolocronToolset.NET.Widgets.SetBindWidget">
+    <StackPanel Orientation="Horizontal" Spacing="5">
+        <ComboBox Name="mouseCombo" MinWidth="80">
+            <ComboBoxItem Content="Left" />
+            <ComboBoxItem Content="Middle" />
+            <ComboBoxItem Content="Right" />
+            <ComboBoxItem Content="Any" />
+            <ComboBoxItem Content="None" />
+        </ComboBox>
+        <TextBox Name="setKeysEdit" IsReadOnly="True" Watermark="none" />
+        <Button Name="setButton" Content="Set" MaxWidth="40" />
+        <Button Name="clearButton" Content="Clear" MaxWidth="40" />
+    </StackPanel>
+</UserControl>
