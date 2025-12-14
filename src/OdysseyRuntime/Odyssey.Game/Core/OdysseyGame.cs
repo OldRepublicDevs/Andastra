@@ -1044,23 +1044,55 @@ namespace Odyssey.Game.Core
                 float tmin = 0.0f;
                 float tmax = 1000.0f;
 
-                for (int i = 0; i < 3; i++)
+                // Check X axis
+                float invDx = 1.0f / rayDirection.X;
+                float t0x = (entityMin.X - rayOrigin.X) * invDx;
+                float t1x = (entityMax.X - rayOrigin.X) * invDx;
+                if (invDx < 0.0f)
                 {
-                    float invD = 1.0f / rayDirection[i];
-                    float t0 = (entityMin[i] - rayOrigin[i]) * invD;
-                    float t1 = (entityMax[i] - rayOrigin[i]) * invD;
-                    if (invD < 0.0f)
-                    {
-                        float temp = t0;
-                        t0 = t1;
-                        t1 = temp;
-                    }
-                    tmin = t0 > tmin ? t0 : tmin;
-                    tmax = t1 < tmax ? t1 : tmax;
-                    if (tmax < tmin)
-                    {
-                        break;
-                    }
+                    float temp = t0x;
+                    t0x = t1x;
+                    t1x = temp;
+                }
+                tmin = t0x > tmin ? t0x : tmin;
+                tmax = t1x < tmax ? t1x : tmax;
+                if (tmax < tmin)
+                {
+                    continue;
+                }
+
+                // Check Y axis
+                float invDy = 1.0f / rayDirection.Y;
+                float t0y = (entityMin.Y - rayOrigin.Y) * invDy;
+                float t1y = (entityMax.Y - rayOrigin.Y) * invDy;
+                if (invDy < 0.0f)
+                {
+                    float temp = t0y;
+                    t0y = t1y;
+                    t1y = temp;
+                }
+                tmin = t0y > tmin ? t0y : tmin;
+                tmax = t1y < tmax ? t1y : tmax;
+                if (tmax < tmin)
+                {
+                    continue;
+                }
+
+                // Check Z axis
+                float invDz = 1.0f / rayDirection.Z;
+                float t0z = (entityMin.Z - rayOrigin.Z) * invDz;
+                float t1z = (entityMax.Z - rayOrigin.Z) * invDz;
+                if (invDz < 0.0f)
+                {
+                    float temp = t0z;
+                    t0z = t1z;
+                    t1z = temp;
+                }
+                tmin = t0z > tmin ? t0z : tmin;
+                tmax = t1z < tmax ? t1z : tmax;
+                if (tmax < tmin)
+                {
+                    continue;
                 }
 
                 if (tmax >= tmin && tmin < closestDistance)
@@ -1089,16 +1121,16 @@ namespace Odyssey.Game.Core
             switch (entity.ObjectType)
             {
                 case Odyssey.Core.Enums.ObjectType.Creature:
-                    Console.WriteLine("[Odyssey] Creature clicked - would start dialogue or attack");
-                    // TODO: Start dialogue or attack based on creature type
+                    // Try to start dialogue
+                    StartDialogueWithEntity(entity);
                     break;
                 case Odyssey.Core.Enums.ObjectType.Door:
                     Console.WriteLine("[Odyssey] Door clicked - would open/close door");
                     // TODO: Open/close door
                     break;
                 case Odyssey.Core.Enums.ObjectType.Placeable:
-                    Console.WriteLine("[Odyssey] Placeable clicked - would interact with placeable");
-                    // TODO: Interact with placeable (container, etc.)
+                    // Try to start dialogue or interact
+                    StartDialogueWithEntity(entity);
                     break;
                 case Odyssey.Core.Enums.ObjectType.Trigger:
                     Console.WriteLine("[Odyssey] Trigger clicked - would activate trigger");
@@ -1107,6 +1139,126 @@ namespace Odyssey.Game.Core
                 default:
                     Console.WriteLine($"[Odyssey] Unknown entity type clicked: {entity.ObjectType}");
                     break;
+            }
+        }
+
+        /// <summary>
+        /// Starts a dialogue with an entity if it has a conversation.
+        /// </summary>
+        private void StartDialogueWithEntity(Odyssey.Core.Interfaces.IEntity entity)
+        {
+            if (_session == null || _session.PlayerEntity == null || entity == null)
+            {
+                return;
+            }
+
+            // Get conversation ResRef from entity
+            string conversationResRef = GetEntityConversation(entity);
+            if (string.IsNullOrEmpty(conversationResRef))
+            {
+                Console.WriteLine($"[Odyssey] Entity {entity.ObjectType} has no conversation");
+                return;
+            }
+
+            Console.WriteLine($"[Odyssey] Starting dialogue: {conversationResRef}");
+
+            // Start conversation using dialogue manager
+            if (_session.DialogueManager != null)
+            {
+                bool started = _session.DialogueManager.StartConversation(conversationResRef, entity, _session.PlayerEntity);
+                if (started)
+                {
+                    Console.WriteLine($"[Odyssey] Dialogue started successfully");
+                    // Subscribe to dialogue events for console output
+                    _session.DialogueManager.OnNodeEnter += OnDialogueNodeEnter;
+                    _session.DialogueManager.OnRepliesReady += OnDialogueRepliesReady;
+                    _session.DialogueManager.OnConversationEnd += OnDialogueEnd;
+                }
+                else
+                {
+                    Console.WriteLine($"[Odyssey] Failed to start dialogue: {conversationResRef}");
+                }
+            }
+        }
+
+        /// <summary>
+        /// Gets the conversation ResRef from an entity.
+        /// </summary>
+        private string GetEntityConversation(Odyssey.Core.Interfaces.IEntity entity)
+        {
+            if (entity == null)
+            {
+                return null;
+            }
+
+            // Try to get conversation from ScriptHooksComponent local string
+            var scriptsComponent = entity.GetComponent<Odyssey.Kotor.Components.ScriptHooksComponent>();
+            if (scriptsComponent != null)
+            {
+                string conversation = scriptsComponent.GetLocalString("Conversation");
+                if (!string.IsNullOrEmpty(conversation))
+                {
+                    return conversation;
+                }
+            }
+
+            // Try to get from PlaceableComponent
+            var placeableComponent = entity.GetComponent<Odyssey.Kotor.Components.PlaceableComponent>();
+            if (placeableComponent != null && !string.IsNullOrEmpty(placeableComponent.Conversation))
+            {
+                return placeableComponent.Conversation;
+            }
+
+            // Try to get from DoorComponent
+            var doorComponent = entity.GetComponent<Odyssey.Kotor.Components.DoorComponent>();
+            if (doorComponent != null && !string.IsNullOrEmpty(doorComponent.Conversation))
+            {
+                return doorComponent.Conversation;
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Handles dialogue node enter events.
+        /// </summary>
+        private void OnDialogueNodeEnter(object sender, Odyssey.Kotor.Dialogue.DialogueEventArgs e)
+        {
+            if (e != null && !string.IsNullOrEmpty(e.Text))
+            {
+                Console.WriteLine($"[Dialogue] {e.Text}");
+            }
+        }
+
+        /// <summary>
+        /// Handles dialogue replies ready events.
+        /// </summary>
+        private void OnDialogueRepliesReady(object sender, Odyssey.Kotor.Dialogue.DialogueEventArgs e)
+        {
+            if (e != null && e.State != null && e.State.AvailableReplies != null)
+            {
+                Console.WriteLine($"[Dialogue] Available replies: {e.State.AvailableReplies.Count}");
+                for (int i = 0; i < e.State.AvailableReplies.Count; i++)
+                {
+                    var reply = e.State.AvailableReplies[i];
+                    string replyText = _session.DialogueManager.GetNodeText(reply);
+                    Console.WriteLine($"  [{i}] {replyText}");
+                }
+            }
+        }
+
+        /// <summary>
+        /// Handles dialogue end events.
+        /// </summary>
+        private void OnDialogueEnd(object sender, Odyssey.Kotor.Dialogue.DialogueEventArgs e)
+        {
+            Console.WriteLine("[Dialogue] Conversation ended");
+            // Unsubscribe from events
+            if (_session != null && _session.DialogueManager != null)
+            {
+                _session.DialogueManager.OnNodeEnter -= OnDialogueNodeEnter;
+                _session.DialogueManager.OnRepliesReady -= OnDialogueRepliesReady;
+                _session.DialogueManager.OnConversationEnd -= OnDialogueEnd;
             }
         }
     }
