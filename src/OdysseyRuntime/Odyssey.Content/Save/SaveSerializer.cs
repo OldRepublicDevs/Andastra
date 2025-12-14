@@ -814,8 +814,293 @@ namespace Odyssey.Content.Save
                 return state;
             }
 
-            // TODO: Proper GFF parsing with CSharpKOTOR
+            // Parse GFF using CSharpKOTOR
+            try
+            {
+                GFF gff = GFF.FromBytes(data);
+                GFFStruct root = gff.Root;
+
+                // Area ResRef
+                if (root.Exists("AreaResRef"))
+                {
+                    state.AreaResRef = root.GetString("AreaResRef") ?? "";
+                }
+
+                // Visited flag
+                if (root.Exists("Visited"))
+                {
+                    state.Visited = root.GetUInt8("Visited") != 0;
+                }
+
+                // Deserialize entity state lists
+                DeserializeEntityStateList(root, "CreatureList", state.CreatureStates);
+                DeserializeEntityStateList(root, "DoorList", state.DoorStates);
+                DeserializeEntityStateList(root, "PlaceableList", state.PlaceableStates);
+                DeserializeEntityStateList(root, "TriggerList", state.TriggerStates);
+                DeserializeEntityStateList(root, "StoreList", state.StoreStates);
+                DeserializeEntityStateList(root, "SoundList", state.SoundStates);
+                DeserializeEntityStateList(root, "WaypointList", state.WaypointStates);
+                DeserializeEntityStateList(root, "EncounterList", state.EncounterStates);
+                DeserializeEntityStateList(root, "CameraList", state.CameraStates);
+
+                // Destroyed entity IDs
+                if (root.Exists("DestroyedList"))
+                {
+                    GFFList destroyedList = root.GetList("DestroyedList");
+                    if (destroyedList != null)
+                    {
+                        foreach (GFFStruct item in destroyedList)
+                        {
+                            if (item.Exists("ObjectId"))
+                            {
+                                state.DestroyedEntityIds.Add((uint)item.GetUInt32("ObjectId"));
+                            }
+                        }
+                    }
+                }
+
+                // Spawned entities
+                if (root.Exists("SpawnedList"))
+                {
+                    GFFList spawnedList = root.GetList("SpawnedList");
+                    if (spawnedList != null)
+                    {
+                        foreach (GFFStruct item in spawnedList)
+                        {
+                            var spawnedState = new SpawnedEntityState();
+                            DeserializeEntityState(item, spawnedState);
+                            if (item.Exists("BlueprintResRef"))
+                            {
+                                spawnedState.BlueprintResRef = item.GetString("BlueprintResRef") ?? "";
+                            }
+                            if (item.Exists("SpawnedBy"))
+                            {
+                                spawnedState.SpawnedBy = item.GetString("SpawnedBy") ?? "";
+                            }
+                            state.SpawnedEntities.Add(spawnedState);
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("[SaveSerializer] Failed to deserialize area state: " + ex.Message);
+            }
+
             return state;
+        }
+
+        private void DeserializeEntityStateList(GFFStruct root, string listName, List<EntityState> targetList)
+        {
+            if (!root.Exists(listName))
+            {
+                return;
+            }
+
+            GFFList list = root.GetList(listName);
+            if (list == null)
+            {
+                return;
+            }
+
+            foreach (GFFStruct item in list)
+            {
+                var entityState = new EntityState();
+                DeserializeEntityState(item, entityState);
+                targetList.Add(entityState);
+            }
+        }
+
+        private void DeserializeEntityState(GFFStruct structData, EntityState state)
+        {
+            // Tag
+            if (structData.Exists("Tag"))
+            {
+                state.Tag = structData.GetString("Tag") ?? "";
+            }
+
+            // ObjectId
+            if (structData.Exists("ObjectId"))
+            {
+                state.ObjectId = (uint)structData.GetUInt32("ObjectId");
+            }
+
+            // ObjectType
+            if (structData.Exists("ObjectType"))
+            {
+                state.ObjectType = (ObjectType)structData.GetUInt32("ObjectType");
+            }
+
+            // TemplateResRef
+            if (structData.Exists("TemplateResRef"))
+            {
+                ResRef resRef = structData.GetResRef("TemplateResRef");
+                if (resRef != null)
+                {
+                    state.TemplateResRef = resRef.ToString();
+                }
+            }
+
+            // Position
+            if (structData.Exists("Position"))
+            {
+                Vector3 pos = structData.GetVector3("Position");
+                state.Position = new System.Numerics.Vector3(pos.X, pos.Y, pos.Z);
+            }
+
+            // Facing
+            if (structData.Exists("Facing"))
+            {
+                state.Facing = structData.GetSingle("Facing");
+            }
+
+            // HP
+            if (structData.Exists("CurrentHP"))
+            {
+                state.CurrentHP = structData.GetInt32("CurrentHP");
+            }
+            if (structData.Exists("MaxHP"))
+            {
+                state.MaxHP = structData.GetInt32("MaxHP");
+            }
+
+            // Flags
+            if (structData.Exists("IsDestroyed"))
+            {
+                state.IsDestroyed = structData.GetUInt8("IsDestroyed") != 0;
+            }
+            if (structData.Exists("IsPlot"))
+            {
+                state.IsPlot = structData.GetUInt8("IsPlot") != 0;
+            }
+            if (structData.Exists("IsOpen"))
+            {
+                state.IsOpen = structData.GetUInt8("IsOpen") != 0;
+            }
+            if (structData.Exists("IsLocked"))
+            {
+                state.IsLocked = structData.GetUInt8("IsLocked") != 0;
+            }
+            if (structData.Exists("AnimationState"))
+            {
+                state.AnimationState = structData.GetInt32("AnimationState");
+            }
+
+            // Local variables
+            if (structData.Exists("LocalVars"))
+            {
+                DeserializeLocalVariables(structData.GetStruct("LocalVars"), state.LocalVariables);
+            }
+
+            // Active effects
+            if (structData.Exists("Effects"))
+            {
+                GFFList effectsList = structData.GetList("Effects");
+                if (effectsList != null)
+                {
+                    foreach (GFFStruct effectStruct in effectsList)
+                    {
+                        var effect = new SavedEffect();
+                        if (effectStruct.Exists("EffectType"))
+                        {
+                            effect.EffectType = effectStruct.GetInt32("EffectType");
+                        }
+                        if (effectStruct.Exists("SubType"))
+                        {
+                            effect.SubType = effectStruct.GetInt32("SubType");
+                        }
+                        if (effectStruct.Exists("DurationType"))
+                        {
+                            effect.DurationType = effectStruct.GetInt32("DurationType");
+                        }
+                        if (effectStruct.Exists("RemainingDuration"))
+                        {
+                            effect.RemainingDuration = effectStruct.GetSingle("RemainingDuration");
+                        }
+                        if (effectStruct.Exists("CreatorId"))
+                        {
+                            effect.CreatorId = (uint)effectStruct.GetUInt32("CreatorId");
+                        }
+                        if (effectStruct.Exists("SpellId"))
+                        {
+                            effect.SpellId = effectStruct.GetInt32("SpellId");
+                        }
+                        state.ActiveEffects.Add(effect);
+                    }
+                }
+            }
+        }
+
+        private void DeserializeLocalVariables(GFFStruct varsStruct, LocalVariableSet target)
+        {
+            if (varsStruct == null)
+            {
+                return;
+            }
+
+            // Int variables
+            if (varsStruct.Exists("Ints"))
+            {
+                GFFList intList = varsStruct.GetList("Ints");
+                if (intList != null)
+                {
+                    foreach (GFFStruct item in intList)
+                    {
+                        if (item.Exists("Name") && item.Exists("Value"))
+                        {
+                            target.Ints[item.GetString("Name") ?? ""] = item.GetInt32("Value");
+                        }
+                    }
+                }
+            }
+
+            // Float variables
+            if (varsStruct.Exists("Floats"))
+            {
+                GFFList floatList = varsStruct.GetList("Floats");
+                if (floatList != null)
+                {
+                    foreach (GFFStruct item in floatList)
+                    {
+                        if (item.Exists("Name") && item.Exists("Value"))
+                        {
+                            target.Floats[item.GetString("Name") ?? ""] = item.GetSingle("Value");
+                        }
+                    }
+                }
+            }
+
+            // String variables
+            if (varsStruct.Exists("Strings"))
+            {
+                GFFList stringList = varsStruct.GetList("Strings");
+                if (stringList != null)
+                {
+                    foreach (GFFStruct item in stringList)
+                    {
+                        if (item.Exists("Name") && item.Exists("Value"))
+                        {
+                            target.Strings[item.GetString("Name") ?? ""] = item.GetString("Value") ?? "";
+                        }
+                    }
+                }
+            }
+
+            // Object variables
+            if (varsStruct.Exists("Objects"))
+            {
+                GFFList objectList = varsStruct.GetList("Objects");
+                if (objectList != null)
+                {
+                    foreach (GFFStruct item in objectList)
+                    {
+                        if (item.Exists("Name") && item.Exists("Value"))
+                        {
+                            target.Objects[item.GetString("Name") ?? ""] = (uint)item.GetUInt32("Value");
+                        }
+                    }
+                }
+            }
         }
 
         private void SerializeEntityStates(System.IO.BinaryWriter writer, string label, List<EntityState> states)
