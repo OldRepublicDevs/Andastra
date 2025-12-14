@@ -70,10 +70,10 @@ src/OdysseyRuntime/
 - [ ] **Models**: MDL/MDX → Stride.Model
   - [ ] Geometry, skinning, animations
   - [ ] Attachment nodes
-- [ ] **Walkmesh**: BWM → NavigationMesh
-  - [ ] Triangle adjacency decoding
-  - [ ] AABB tree for spatial queries
-  - [ ] Surface materials from surfacemat.2da
+- [x] **Walkmesh**: BWM → NavigationMesh (`BwmToNavigationMeshConverter`)
+  - [x] Triangle adjacency decoding
+  - [x] AABB tree for spatial queries
+  - [x] Surface materials from surfacemat.2da
 - [ ] **Audio**: WAV decode → Stride.AudioClip
 
 ### 2.2 Content Cache
@@ -84,9 +84,9 @@ src/OdysseyRuntime/
 
 ## Phase 3: Rendering
 
-### 3.1 Area Scene Assembly
-- [ ] LYT parsing (room layout, doorhooks)
-- [ ] VIS parsing (room visibility)
+### 3.1 Area Scene Assembly ⏳
+- [x] LYT parsing (room layout, doorhooks) - via `ModuleLoader`
+- [x] VIS parsing (room visibility) - via `ModuleLoader`
 - [ ] Room mesh instantiation
 - [ ] VIS culling groups
 - [ ] Doorhook placement
@@ -106,13 +106,14 @@ src/OdysseyRuntime/
 
 ## Phase 4: Navigation + Movement
 
-### 4.1 Walkmesh System ⏳
+### 4.1 Walkmesh System ✅
 - [x] `NavigationMesh` class structure
 - [x] `NavigationMeshFactory` interface
-- [ ] BWM file parsing and loading
-- [ ] Triangle adjacency for navigation
-- [ ] AABB tree for spatial queries
-- [ ] Surface walkability from surfacemat.2da
+- [x] BWM file parsing and loading (via CSharpKOTOR)
+- [x] `BwmToNavigationMeshConverter` for conversion
+- [x] Triangle adjacency for navigation
+- [x] AABB tree for spatial queries
+- [x] Surface walkability from surfacemat.2da
 
 ### 4.2 Pathfinding
 - [ ] A* over walkmesh adjacency graph
@@ -179,10 +180,12 @@ Object (abstract base)
 ### 6.3 Engine API Surface
 - [x] `IEngineApi` interface
 - [x] `BaseEngineApi` with dispatch mechanism
-- [x] `K1EngineApi` profile started
-- [ ] Generated dispatch tables from ScriptDefs
-- [ ] Tier 0 functions (~50): Print*, Random, Get/SetLocal*, GetTag, etc.
-- [ ] Tier 1 functions (~80): ActionMove*, AssignCommand, DelayCommand, etc.
+- [x] `K1EngineApi` profile (core functions implemented)
+- [x] `K2EngineApi` profile (TSL-specific functions: influence, forms, etc.)
+- [x] Generated dispatch tables from ScriptDefs
+- [x] Tier 0 functions (~50): Print*, Random, Get/SetLocal*, GetTag, etc.
+- [x] Tier 1 functions (~80): ActionMove*, AssignCommand, DelayCommand, etc.
+- [ ] Tier 2-6 function implementation in progress
 
 ### 6.4 Script Events
 - [x] `ScriptEvent` enum (OnSpawn, OnHeartbeat, OnPerception, etc.)
@@ -318,7 +321,7 @@ Object (abstract base)
 
 ## Extensibility: Aurora/Eclipse Engine Family
 
-### Game Profiles
+### Game Profiles ✅
 The engine is designed for extensibility to other BioWare/Obsidian engines:
 
 ```csharp
@@ -326,16 +329,23 @@ public interface IGameProfile
 {
     GameType GameType { get; }
     string Name { get; }
-    IResourceLayout ResourceLayout { get; }
-    IEngineFunctionSet EngineFunctions { get; }
-    ITableSchemas TableSchemas { get; }
-    IRuleVariants RuleVariants { get; }
+    EngineFamily EngineFamily { get; }
+    IEngineApi CreateEngineApi();
+    IResourceConfig ResourceConfig { get; }
+    ITableConfig TableConfig { get; }
+    bool SupportsFeature(GameFeature feature);
 }
 ```
 
+Implementation in `Odyssey.Kotor.Profiles`:
+- `IGameProfile` - Core interface defining game profile contract
+- `K1GameProfile` - KOTOR 1 specific configuration
+- `K2GameProfile` - TSL specific configuration with influence system support
+- `GameProfileFactory` - Factory for creating profiles by game type
+
 ### Supported Profiles (Implementation Status)
-- **Odyssey.Profiles.Kotor1** - Primary target ⏳
-- **Odyssey.Profiles.Kotor2** - Primary target ⏳
+- **K1GameProfile** - KOTOR 1 primary target ✅
+- **K2GameProfile** - TSL primary target ✅
 - **Odyssey.Profiles.Placeholder.JadeEmpire** - Future placeholder
 - **Odyssey.Profiles.Placeholder.NWN** - Future placeholder (Aurora)
 - **Odyssey.Profiles.Placeholder.MassEffect** - Future placeholder (Eclipse/Unreal)
