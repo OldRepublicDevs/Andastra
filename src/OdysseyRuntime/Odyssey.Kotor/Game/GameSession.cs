@@ -6,6 +6,8 @@ using Odyssey.Core.Interfaces.Components;
 using Odyssey.Core.Module;
 using Odyssey.Core.Navigation;
 using Odyssey.Core.Enums;
+using Odyssey.Core.Save;
+using Odyssey.Core.Actions;
 using Odyssey.Scripting.Interfaces;
 using Odyssey.Scripting.VM;
 using Odyssey.Kotor.Dialogue;
@@ -13,6 +15,7 @@ using Odyssey.Kotor.Components;
 using Odyssey.Kotor.Combat;
 using Odyssey.Kotor.Loading;
 using Odyssey.Kotor.Systems;
+using Odyssey.Content.Save;
 using CSharpKOTOR.Formats.TLK;
 using CSharpKOTOR.Resource.Generics.DLG;
 
@@ -42,6 +45,7 @@ namespace Odyssey.Kotor.Game
         private readonly CombatManager _combatManager;
         private readonly PerceptionManager _perceptionManager;
         private readonly ModuleTransitionSystem _moduleTransitionSystem;
+        private readonly SaveSystem _saveSystem;
 
         private string _currentModuleName;
         private RuntimeModule _currentRuntimeModule;
@@ -131,6 +135,14 @@ namespace Odyssey.Kotor.Game
             get { return _moduleTransitionSystem; }
         }
 
+        /// <summary>
+        /// Gets the save system.
+        /// </summary>
+        public SaveSystem SaveSystem
+        {
+            get { return _saveSystem; }
+        }
+
         public GameSession(object settings, World world, NcsVm vm, IScriptGlobals globals)
         {
             _settings = GameSessionSettings.FromGameSettings(settings);
@@ -185,8 +197,41 @@ namespace Odyssey.Kotor.Game
                 PositionPlayerAtWaypoint
             );
 
+            // Subscribe to door events for module transitions
+            world.EventBus.Subscribe<DoorOpenedEvent>(OnDoorOpened);
+
+            // Create save system
+            string savesDirectory = Path.Combine(_settings.GamePath, "saves");
+            var saveSerializer = new Odyssey.Content.Save.SaveSerializer();
+            var saveDataProvider = new SaveDataProvider(savesDirectory, saveSerializer);
+            _saveSystem = new SaveSystem(world, saveDataProvider);
+
             // Load talk tables
             LoadTalkTables();
+        }
+
+        /// <summary>
+        /// Handles door opened events and triggers module transitions if needed.
+        /// </summary>
+        private void OnDoorOpened(DoorOpenedEvent evt)
+        {
+            if (evt == null || evt.Door == null)
+            {
+                return;
+            }
+
+            IDoorComponent doorComponent = evt.Door.GetComponent<IDoorComponent>();
+            if (doorComponent == null)
+            {
+                return;
+            }
+
+            // Check if door has a module transition
+            if (!string.IsNullOrEmpty(doorComponent.LinkedToModule))
+            {
+                // Trigger module transition
+                _moduleTransitionSystem.TransitionThroughDoor(evt.Door, evt.Actor);
+            }
         }
 
         /// <summary>
@@ -762,6 +807,67 @@ namespace Odyssey.Kotor.Game
             }
 
             Console.WriteLine("[GameSession] Waypoint not found: " + waypointTag);
+        }
+
+        /// <summary>
+        /// Saves the current game state.
+        /// </summary>
+        public bool SaveGame(string saveName, SaveType saveType = SaveType.Manual)
+        {
+            if (_saveSystem == null)
+            {
+                return false;
+            }
+
+            return _saveSystem.Save(saveName, saveType);
+        }
+
+        /// <summary>
+        /// Loads a saved game.
+        /// </summary>
+        public bool LoadGame(string saveName)
+        {
+            if (_saveSystem == null)
+            {
+                return false;
+            }
+
+            bool success = _saveSystem.Load(saveName);
+            if (!success)
+            {
+                return false;
+            }
+
+            SaveGameData saveData = _saveSystem.CurrentSave;
+            if (saveData == null)
+            {
+                return false;
+            }
+
+            // Load the module
+            if (!string.IsNullOrEmpty(saveData.CurrentModule))
+            {
+                LoadModule(saveData.CurrentModule);
+            }
+
+            // Restore player position
+            if (saveData.EntryPosition != System.Numerics.Vector3.Zero && _playerEntity != null)
+            {
+                ITransformComponent transform = _playerEntity.GetComponent<ITransformComponent>();
+                if (transform != null)
+                {
+                    transform.Position = saveData.EntryPosition;
+                    transform.Facing = saveData.EntryFacing;
+                }
+            }
+
+            // Restore global variables
+            if (saveData.GlobalVariables != null && _globals != null)
+            {
+                // TODO: Restore global variables from save data
+            }
+
+            return true;
         }
 
         public void Dispose()
