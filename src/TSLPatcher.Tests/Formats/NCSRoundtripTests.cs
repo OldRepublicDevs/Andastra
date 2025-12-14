@@ -3146,6 +3146,24 @@ namespace CSharpKOTOR.Tests.Formats
 
                         if (!result.Passed)
                         {
+                            // Save decompiled output for debugging
+                            try
+                            {
+                                string debugOutputDir = Path.Combine(Directory.GetCurrentDirectory(), "debug-decompiled-output");
+                                Directory.CreateDirectory(debugOutputDir);
+                                string debugFile = Path.Combine(debugOutputDir, Path.GetFileName(displayPath.Replace('/', '_').Replace('\\', '_')) + ".dec.nss");
+                                string decompiledPath = Path.Combine(testCase.Item.ScratchRoot, GetRelativePath(VanillaRepoDir, testCase.Item.Path).Replace(Path.GetExtension(testCase.Item.Path), ".dec.nss"));
+                                if (File.Exists(decompiledPath))
+                                {
+                                    File.Copy(decompiledPath, debugFile, true);
+                                    Console.Error.WriteLine($"DEBUG: Saved decompiled output to {debugFile}");
+                                }
+                            }
+                            catch (Exception debugEx)
+                            {
+                                // Ignore debug file save errors
+                            }
+
                             // Show bytecode diff if there's a mismatch (PRIMARY - fast fail)
                             if (!result.BytecodeMatch && result.PcodeDiff != null)
                             {
