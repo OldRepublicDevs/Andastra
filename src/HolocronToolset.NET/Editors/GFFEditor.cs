@@ -54,8 +54,15 @@ namespace HolocronToolset.NET.Editors
 
         private void InitializeComponent()
         {
-            AvaloniaXamlLoader.Load(this);
-            // Initialize UI controls - will be done via XAML or programmatically
+            if (!TryLoadXaml())
+            {
+                SetupProgrammaticUI();
+            }
+        }
+
+        private void SetupProgrammaticUI()
+        {
+            // Initialize UI controls programmatically
             var panel = new StackPanel();
             Content = panel;
         }
@@ -65,8 +72,29 @@ namespace HolocronToolset.NET.Editors
         public override void Load(string filepath, string resref, ResourceType restype, byte[] data)
         {
             base.Load(filepath, resref, restype, data);
-            _gff = GFF.FromBytes(data);
-            LoadGff(_gff);
+            if (data == null || data.Length == 0)
+            {
+                // Determine content type from resname if available
+                GFFContent content = GFFContent.GFF;
+                if (!string.IsNullOrEmpty(resref))
+                {
+                    // Try to determine content type from resname
+                    // This will be expanded when GFFContent detection is available
+                }
+                _gff = new GFF(content);
+                return;
+            }
+            try
+            {
+                _gff = GFF.FromBytes(data);
+                LoadGff(_gff);
+            }
+            catch
+            {
+                // If loading fails, create empty GFF
+                GFFContent content = GFFContent.GFF;
+                _gff = new GFF(content);
+            }
         }
 
         private void LoadGff(GFF gff)

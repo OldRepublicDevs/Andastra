@@ -57,11 +57,31 @@ namespace HolocronToolset.NET.Editors
 
         private void InitializeComponent()
         {
-            AvaloniaXamlLoader.Load(this);
-            // Initialize controls - will be done via XAML or programmatically
-            // For now, create basic structure
+            bool xamlLoaded = false;
+            try
+            {
+                AvaloniaXamlLoader.Load(this);
+                xamlLoaded = true;
+                // Try to find controls from XAML
+                _battlecry1StrrefSpin = this.FindControl<NumericUpDown>("Battlecry1StrrefSpin");
+            }
+            catch
+            {
+                // XAML not available - will use programmatic UI
+            }
+
+            if (!xamlLoaded)
+            {
+                SetupProgrammaticUI();
+            }
+        }
+
+        private void SetupProgrammaticUI()
+        {
+            // Create basic UI structure programmatically
             var panel = new StackPanel();
             Content = panel;
+            // Note: UI controls will be created when needed or when XAML is available
         }
 
         private void SetupSignals()
@@ -75,7 +95,21 @@ namespace HolocronToolset.NET.Editors
         public override void Load(string filepath, string resref, ResourceType restype, byte[] data)
         {
             base.Load(filepath, resref, restype, data);
-            SSF ssf = SSF.FromBytes(data);
+            if (data == null || data.Length == 0)
+            {
+                // Empty SSF - all values will be 0
+                return;
+            }
+            SSF ssf;
+            try
+            {
+                ssf = SSF.FromBytes(data);
+            }
+            catch
+            {
+                // If loading fails, create empty SSF
+                ssf = new SSF();
+            }
 
             if (_battlecry1StrrefSpin != null) _battlecry1StrrefSpin.Value = ssf.Get(SSFSound.BATTLE_CRY_1) ?? 0;
             if (_battlecry2StrrefSpin != null) _battlecry2StrrefSpin.Value = ssf.Get(SSFSound.BATTLE_CRY_2) ?? 0;

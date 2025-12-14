@@ -25,7 +25,10 @@ namespace HolocronToolset.NET.Editors
 
         private void InitializeComponent()
         {
-            AvaloniaXamlLoader.Load(this);
+            if (!TryLoadXaml())
+            {
+                SetupUI();
+            }
         }
 
         private void SetupUI()

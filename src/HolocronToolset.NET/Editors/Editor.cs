@@ -26,6 +26,9 @@ namespace HolocronToolset.NET.Editors
         protected ResourceType[] _readSupported;
         protected ResourceType[] _writeSupported;
 
+        // Expose filepath for derived classes
+        protected string Filepath => _filepath;
+
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editor.py:303-350
         // Original: def __init__(self, parent, title, iconName, readSupported, writeSupported, installation):
         protected Editor(
@@ -138,6 +141,20 @@ namespace HolocronToolset.NET.Editors
                 return $"{_resname}.{_restype.Extension}";
             }
             return "";
+        }
+
+        // Helper method for editors to safely initialize XAML
+        protected bool TryLoadXaml()
+        {
+            try
+            {
+                Avalonia.Markup.Xaml.AvaloniaXamlLoader.Load(this);
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
         }
     }
 }

@@ -113,6 +113,44 @@ namespace CSharpKOTOR.Formats.Capsule
             }
         }
 
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/extract/capsule.py:207-244
+        // Original: def resources(self) -> list[FileResource]:
+        public List<FileResource> Resources()
+        {
+            // Check if file is empty (0 bytes) - empty files cannot be valid capsules
+            if (File.Exists(_filepath) && new FileInfo(_filepath).Length == 0)
+            {
+                return new List<FileResource>();
+            }
+
+            if (!File.Exists(_filepath))
+            {
+                return new List<FileResource>();
+            }
+
+            using (var reader = RawBinaryReader.FromFile(_filepath))
+            {
+                string fileType = reader.ReadString(4);
+                reader.Skip(4); // file version
+
+                List<FileResource> resources;
+                if (fileType == "ERF " || fileType == "MOD " || fileType == "SAV " || fileType == "HAK ")
+                {
+                    resources = LoadERFMetadata(reader);
+                }
+                else if (fileType == "RIM ")
+                {
+                    resources = LoadRIMMetadata(reader);
+                }
+                else
+                {
+                    throw new NotImplementedException($"File '{_filepath}' must be a ERF/MOD/SAV/RIM capsule, '{Path.GetExtension(_filepath)}' is not implemented.");
+                }
+
+                return resources;
+            }
+        }
+
         /// <summary>
         /// Gets the list of FileResources from the capsule (metadata only, no data loaded).
         /// </summary>
@@ -225,23 +263,60 @@ namespace CSharpKOTOR.Formats.Capsule
             return resource?.GetData();
         }
 
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/extract/capsule.py:182-205
+        // Original: def info(self, resref: str, restype: ResourceType) -> FileResource | None:
+        [CanBeNull]
+        public FileResource Info(string resref, ResourceType restype)
+        {
+            var query = new ResourceIdentifier(resref, restype);
+            return Resources().FirstOrDefault(r => r.Identifier.Equals(query));
+        }
+
         /// <summary>
         /// Gets information about a resource without loading its data.
         /// </summary>
         [CanBeNull]
         public FileResource GetResourceInfo(string resname, ResourceType restype)
         {
-            return GetResources().FirstOrDefault(r =>
-                string.Equals(r.ResName, resname, StringComparison.OrdinalIgnoreCase) &&
-                r.ResType == restype);
+            return Info(resname, restype);
         }
 
-        /// <summary>
-        /// Checks if a resource exists in the capsule.
-        /// </summary>
-        public bool Contains(string resname, ResourceType restype)
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/extract/capsule.py:153-180
+        // Original: def contains(self, resref: str, restype: ResourceType) -> bool:
+        public bool Contains(string resref, ResourceType restype)
         {
-            return GetResourceInfo(resname, restype) != null;
+            var query = new ResourceIdentifier(resref, restype);
+            return Resources().Any(r => r.Identifier.Equals(query));
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/extract/capsule.py:105-151
+        // Original: def batch(self, queries: list[ResourceIdentifier]) -> dict[ResourceIdentifier, ResourceResult | None]:
+        public Dictionary<ResourceIdentifier, ResourceResult> Batch(List<ResourceIdentifier> queries)
+        {
+            var results = new Dictionary<ResourceIdentifier, ResourceResult>();
+            using (var reader = RawBinaryReader.FromFile(_filepath))
+            {
+                foreach (var query in queries)
+                {
+                    results[query] = null;
+
+                    var resource = Resources().FirstOrDefault(r => r.Identifier.Equals(query));
+                    if (resource == null)
+                    {
+                        continue;
+                    }
+
+                    reader.Seek(resource.Offset);
+                    byte[] data = reader.ReadBytes(resource.Size);
+                    results[query] = new ResourceResult(
+                        query.ResName,
+                        query.ResType,
+                        _filepath,
+                        data
+                    );
+                }
+            }
+            return results;
         }
 
         /// <summary>

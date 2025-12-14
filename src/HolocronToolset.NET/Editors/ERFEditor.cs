@@ -32,8 +32,15 @@ namespace HolocronToolset.NET.Editors
 
         private void InitializeComponent()
         {
-            AvaloniaXamlLoader.Load(this);
-            // Initialize UI controls - will be done via XAML or programmatically
+            if (!TryLoadXaml())
+            {
+                SetupProgrammaticUI();
+            }
+        }
+
+        private void SetupProgrammaticUI()
+        {
+            // Initialize UI controls programmatically
             var panel = new StackPanel();
             Content = panel;
         }

@@ -6,6 +6,7 @@ using Avalonia.Controls;
 using HolocronToolset.NET.Data;
 using HolocronToolset.NET.Editors;
 using CSharpKOTOR.Resources;
+using FileResource = CSharpKOTOR.Resources.FileResource;
 using JetBrains.Annotations;
 
 namespace HolocronToolset.NET.Utils
@@ -63,6 +64,40 @@ namespace HolocronToolset.NET.Utils
             }
 
             settings.SetValue("RecentFiles", recentFiles);
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/utils/window.py:75-356
+        // Original: def open_resource_editor(...):
+        [CanBeNull]
+        public static Tuple<string, Window> OpenResourceEditor(
+            FileResource resource,
+            HTInstallation installation = null,
+            Window parentWindow = null,
+            bool? gffSpecialized = null)
+        {
+            if (resource == null)
+            {
+                return null;
+            }
+
+            try
+            {
+                byte[] data = resource.GetData();
+                return OpenResourceEditor(
+                    resource.FilePath,
+                    resource.ResName,
+                    resource.ResType,
+                    data,
+                    installation,
+                    parentWindow,
+                    gffSpecialized);
+            }
+            catch (Exception ex)
+            {
+                System.Console.WriteLine($"Error getting resource data: {ex}");
+                // TODO: Show MessageBox when MessageBox.Avalonia is available
+                return null;
+            }
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/utils/window.py:127-356
@@ -295,8 +330,8 @@ namespace HolocronToolset.NET.Utils
             {
                 editor = new WAVEditor(parentWindow, installation);
             }
-            else if (restype == CSharpKOTOR.Resources.ResourceType.ERF || restype == CSharpKOTOR.Resources.ResourceType.SAV || 
-                     restype == CSharpKOTOR.Resources.ResourceType.MOD || restype == CSharpKOTOR.Resources.ResourceType.RIM || 
+            else if (restype == CSharpKOTOR.Resources.ResourceType.ERF || restype == CSharpKOTOR.Resources.ResourceType.SAV ||
+                     restype == CSharpKOTOR.Resources.ResourceType.MOD || restype == CSharpKOTOR.Resources.ResourceType.RIM ||
                      restype == CSharpKOTOR.Resources.ResourceType.BIF)
             {
                 editor = new ERFEditor(parentWindow, installation);

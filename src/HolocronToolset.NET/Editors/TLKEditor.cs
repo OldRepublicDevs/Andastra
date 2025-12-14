@@ -26,21 +26,53 @@ namespace HolocronToolset.NET.Editors
 
         private void InitializeComponent()
         {
-            AvaloniaXamlLoader.Load(this);
+            bool xamlLoaded = false;
+            try
+            {
+                AvaloniaXamlLoader.Load(this);
+                xamlLoaded = true;
+            }
+            catch
+            {
+                // XAML not available - will use programmatic UI
+            }
+
+            if (!xamlLoaded)
+            {
+                SetupProgrammaticUI();
+            }
         }
 
-        private void SetupUI()
+        private void SetupProgrammaticUI()
         {
             var panel = new StackPanel();
             Content = panel;
         }
 
+        private void SetupUI()
+        {
+            // UI setup - will be done in SetupProgrammaticUI or via XAML
+        }
+
         public override void Load(string filepath, string resref, ResourceType restype, byte[] data)
         {
             base.Load(filepath, resref, restype, data);
-            var reader = new TLKBinaryReader(data);
-            _tlk = reader.Load();
-            LoadTLK(_tlk);
+            if (data == null || data.Length == 0)
+            {
+                _tlk = new TLK();
+                return;
+            }
+            try
+            {
+                var reader = new TLKBinaryReader(data);
+                _tlk = reader.Load();
+                LoadTLK(_tlk);
+            }
+            catch
+            {
+                // If loading fails, create empty TLK
+                _tlk = new TLK();
+            }
         }
 
         private void LoadTLK(TLK tlk)

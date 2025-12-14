@@ -33,8 +33,26 @@ namespace HolocronToolset.NET.Editors
 
         private void InitializeComponent()
         {
-            AvaloniaXamlLoader.Load(this);
-            // Initialize UI controls - will be done via XAML or programmatically
+            bool xamlLoaded = false;
+            try
+            {
+                AvaloniaXamlLoader.Load(this);
+                xamlLoaded = true;
+            }
+            catch
+            {
+                // XAML not available - will use programmatic UI
+            }
+
+            if (!xamlLoaded)
+            {
+                SetupProgrammaticUI();
+            }
+        }
+
+        private void SetupProgrammaticUI()
+        {
+            // Create basic UI structure programmatically
             var panel = new StackPanel();
             Content = panel;
         }
@@ -50,8 +68,23 @@ namespace HolocronToolset.NET.Editors
         public override void Load(string filepath, string resref, ResourceType restype, byte[] data)
         {
             base.Load(filepath, resref, restype, data);
-            _ltr = LTRAuto.ReadLtr(data, 0, null);
-            UpdateUIFromLTR();
+            if (data == null || data.Length == 0)
+            {
+                _ltr = new LTR();
+                UpdateUIFromLTR();
+                return;
+            }
+            try
+            {
+                _ltr = LTRAuto.ReadLtr(data, 0, null);
+                UpdateUIFromLTR();
+            }
+            catch
+            {
+                // If loading fails, create empty LTR
+                _ltr = new LTR();
+                UpdateUIFromLTR();
+            }
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/ltr.py:282-283

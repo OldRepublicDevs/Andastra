@@ -41,7 +41,7 @@ namespace HolocronToolset.NET.Editors
             {
                 // XAML not available - will use programmatic UI
             }
-            
+
             if (_textEdit == null)
             {
                 SetupProgrammaticUI();

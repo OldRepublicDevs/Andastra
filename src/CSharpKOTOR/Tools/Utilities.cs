@@ -476,7 +476,7 @@ namespace CSharpKOTOR.Tools
                 lines.Add(string.Join("\t", twoda.Headers));
                 foreach (var row in twoda.Rows)
                 {
-                    var values = twoda.Headers.Select(header => 
+                    var values = twoda.Headers.Select(header =>
                     {
                         try { return row.GetString(header) ?? ""; }
                         catch { return ""; }
