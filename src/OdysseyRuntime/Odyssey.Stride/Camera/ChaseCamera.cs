@@ -176,11 +176,23 @@ namespace Odyssey.Stride.Camera
             _currentLookAt = Vector3.Lerp(_currentLookAt, lookAtPoint, t);
 
             // Apply to camera entity
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Engine.TransformComponent.html
+            // Transform.Position - Sets the world position of the camera entity
             _camera.Entity.Transform.Position = _currentPosition;
 
             // Look at target
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.Matrix.html
+            // Matrix.LookAtRH(Vector3, Vector3, Vector3) - Creates a right-handed look-at matrix
+            // Method signature: LookAtRH(Vector3 eye, Vector3 target, Vector3 up)
+            // eye: Camera position, target: Point to look at, up: Up vector direction
             Matrix lookAtMatrix = Matrix.LookAtRH(_currentPosition, _currentLookAt, Vector3.UnitY);
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.Matrix.html
+            // Matrix.Invert(ref Matrix, out Matrix) - Inverts a matrix (view to world transform)
             Matrix.Invert(ref lookAtMatrix, out Matrix viewInverse);
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.Quaternion.html
+            // Quaternion.RotationMatrix(Matrix) - Converts rotation matrix to quaternion
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Engine.TransformComponent.html
+            // Transform.Rotation - Sets the rotation of the camera entity
             _camera.Entity.Transform.Rotation = Quaternion.RotationMatrix(viewInverse);
         }
 

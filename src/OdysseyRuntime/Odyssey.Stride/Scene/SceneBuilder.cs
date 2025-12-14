@@ -217,9 +217,14 @@ namespace Odyssey.Stride.Scene
             }
 
             // Create room entity
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Engine.Entity.html
+            // Entity(string) - Creates a new entity with the specified name
             var roomEntity = new StrideEngine.Entity(modelName);
 
             // Position from LYT
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Engine.TransformComponent.html
+            // Transform.Position - Gets or sets the world position of the entity
+            // Vector3 - 3D position (X, Y, Z coordinates)
             roomEntity.Transform.Position = new StrideMath.Vector3(
                 room.Position.X,
                 room.Position.Y,
@@ -254,11 +259,16 @@ namespace Odyssey.Stride.Scene
             var meshEntity = new StrideEngine.Entity(meshData.Name ?? "mesh");
 
             // Local transform
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Engine.TransformComponent.html
+            // Transform.Position - Sets the local position relative to parent entity
             meshEntity.Transform.Position = new StrideMath.Vector3(
                 meshData.Position.X,
                 meshData.Position.Y,
                 meshData.Position.Z);
 
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Engine.TransformComponent.html
+            // Transform.Rotation - Sets the local rotation as a quaternion
+            // Quaternion(X, Y, Z, W) - Represents rotation (X, Y, Z are imaginary parts, W is real part)
             meshEntity.Transform.Rotation = new global::Stride.Core.Mathematics.Quaternion(
                 meshData.Orientation.X,
                 meshData.Orientation.Y,
@@ -266,23 +276,39 @@ namespace Odyssey.Stride.Scene
                 meshData.Orientation.W);
 
             // Create mesh component
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Rendering.Mesh.html
+            // Mesh - Represents a single mesh with draw data
+            // Draw property contains MeshDraw with vertex/index buffers and topology
             var mesh = new global::Stride.Rendering.Mesh
             {
                 Draw = meshData.MeshDraw
             };
 
             // Create model component
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Rendering.Model.html
+            // Model - Container for one or more meshes
+            // Add(Mesh) - Adds a mesh to the model
             var model = new Model();
             model.Add(mesh);
 
+            // Create ModelComponent to attach model to entity
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Engine.ModelComponent.html
+            // ModelComponent - Component that renders a Model on an Entity
+            // Model property - The model to render
             var modelComponent = new StrideEngine.ModelComponent
             {
                 Model = model
             };
 
+            // Add ModelComponent to entity
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Engine.Entity.html
+            // Entity.Add(EntityComponent) - Adds a component to the entity
             meshEntity.Add(modelComponent);
 
-            // Add to parent
+            // Add to parent entity hierarchy
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Engine.TransformComponent.html
+            // Transform.Children - Collection of child transforms (creates parent-child relationship)
+            // Add(TransformComponent) - Adds a child transform, making the entity a child of the parent
             parentEntity.Transform.Children.Add(meshEntity.Transform);
 
             // Process children
@@ -463,12 +489,22 @@ namespace Odyssey.Stride.Scene
         private void SetEntityEnabled(StrideEngine.Entity entity, bool enabled)
         {
             // Enable/disable all model components in this entity and children
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Engine.Entity.html
+            // Entity.Get<T>() - Gets a component of type T from the entity
+            // Returns null if component doesn't exist
             var modelComponent = entity.Get<StrideEngine.ModelComponent>();
             if (modelComponent != null)
             {
+                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Engine.EntityComponent.html
+                // EntityComponent.Enabled - Gets or sets whether the component is enabled
+                // When disabled, the component is not processed during update/render
                 modelComponent.Enabled = enabled;
             }
 
+            // Recursively enable/disable child entities
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Engine.TransformComponent.html
+            // Transform.Children - Collection of child transforms
+            // Transform.Entity - Gets the entity that owns this transform
             foreach (var childTransform in entity.Transform.Children)
             {
                 SetEntityEnabled(childTransform.Entity, enabled);

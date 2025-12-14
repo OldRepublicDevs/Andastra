@@ -264,6 +264,11 @@ namespace Odyssey.Stride.Converters
             }
 
             // Create vertex buffer
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Graphics.Buffer.html
+            // Buffer.New(GraphicsDevice, T[], BufferFlags, GraphicsResourceUsage) - Creates a buffer with data
+            // Method signature: New<T>(GraphicsDevice device, T[] data, BufferFlags flags, GraphicsResourceUsage usage)
+            // BufferFlags.VertexBuffer: Buffer contains vertex data
+            // GraphicsResourceUsage.Immutable: Buffer contents cannot be modified after creation (best performance)
             var vertexBuffer = Buffer.New(
                 _device,
                 vertices.ToArray(),
@@ -271,11 +276,17 @@ namespace Odyssey.Stride.Converters
                 GraphicsResourceUsage.Immutable);
 
             // Create index buffer
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Graphics.Buffer.html
+            // Determine if 32-bit indices are needed (more than 65535 vertices requires 32-bit)
             bool use32BitIndices = vertices.Count > 65535;
             Buffer indexBuffer;
 
             if (use32BitIndices)
             {
+                // Create 32-bit index buffer
+                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Graphics.Buffer.html
+                // Buffer.New with int[] creates a 32-bit index buffer
+                // BufferFlags.IndexBuffer: Buffer contains index data
                 indexBuffer = Buffer.New(
                     _device,
                     indices.ToArray(),
@@ -284,6 +295,9 @@ namespace Odyssey.Stride.Converters
             }
             else
             {
+                // Create 16-bit index buffer for better performance when possible
+                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Graphics.Buffer.html
+                // Buffer.New with ushort[] creates a 16-bit index buffer
                 var shortIndices = new ushort[indices.Count];
                 for (int i = 0; i < indices.Count; i++)
                 {
@@ -296,15 +310,29 @@ namespace Odyssey.Stride.Converters
                     GraphicsResourceUsage.Immutable);
             }
 
-            // Create mesh draw
+            // Create mesh draw data structure
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Rendering.MeshDraw.html
+            // MeshDraw - Contains all data needed to render a mesh (vertices, indices, topology)
+            // PrimitiveType.TriangleList: Vertices form triangles (3 vertices per triangle)
+            // DrawCount: Number of indices to draw
             var meshDraw = new MeshDraw
             {
                 PrimitiveType = PrimitiveType.TriangleList,
                 DrawCount = indices.Count,
+                // Create index buffer binding
+                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Rendering.IndexBufferBinding.html
+                // IndexBufferBinding(Buffer, bool, int) - Binds an index buffer
+                // Method signature: IndexBufferBinding(Buffer buffer, bool is32Bit, int count)
+                // is32Bit: true for 32-bit indices (int), false for 16-bit indices (ushort)
                 IndexBuffer = new IndexBufferBinding(
                     indexBuffer,
                     use32BitIndices,
                     indices.Count),
+                // Create vertex buffer bindings array
+                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Rendering.VertexBufferBinding.html
+                // VertexBufferBinding(Buffer, VertexDeclaration, int) - Binds a vertex buffer with layout
+                // Method signature: VertexBufferBinding(Buffer buffer, VertexDeclaration declaration, int count)
+                // VertexPositionNormalTexture.Layout: Vertex layout definition (position, normal, texture coordinate)
                 VertexBuffers = new[]
                 {
                     new VertexBufferBinding(
@@ -377,6 +405,13 @@ namespace Odyssey.Stride.Converters
         public Vector3 Normal;
         public Vector2 TextureCoordinate;
 
+        // Define vertex layout declaration
+        // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Graphics.VertexDeclaration.html
+        // VertexDeclaration - Defines the structure of vertex data in the vertex buffer
+        // VertexElement.Position<Vector3>() - 3D position element (12 bytes)
+        // VertexElement.Normal<Vector3>() - 3D normal vector element (12 bytes)
+        // VertexElement.TextureCoordinate<Vector2>() - 2D texture coordinate element (8 bytes)
+        // Total vertex size: 32 bytes
         public static readonly VertexDeclaration Layout = new VertexDeclaration(
             VertexElement.Position<Vector3>(),
             VertexElement.Normal<Vector3>(),
