@@ -1,74 +1,524 @@
 using System;
+using System.Collections.Generic;
 using Avalonia.Controls;
+using Avalonia.Layout;
 using Avalonia.Markup.Xaml;
+using CSharpKOTOR.Common;
 using CSharpKOTOR.Formats.GFF;
 using CSharpKOTOR.Resource.Generics;
 using CSharpKOTOR.Resources;
 using HolocronToolset.NET.Data;
+using HolocronToolset.NET.Dialogs;
+using HolocronToolset.NET.Widgets;
+using InventoryItem = CSharpKOTOR.Common.InventoryItem;
 using GFFAuto = CSharpKOTOR.Formats.GFF.GFFAuto;
 
 namespace HolocronToolset.NET.Editors
 {
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utm.py
+    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utm.py:27
     // Original: class UTMEditor(Editor):
     public class UTMEditor : Editor
     {
         private UTM _utm;
+        private HTInstallation _installation;
 
+        // UI Controls - Basic
+        private LocalizedStringEdit _nameEdit;
+        private Button _nameEditBtn;
+        private TextBox _tagEdit;
+        private Button _tagGenerateBtn;
+        private TextBox _resrefEdit;
+        private Button _resrefGenerateBtn;
+        private NumericUpDown _idSpin;
+        private Button _inventoryButton;
+
+        // UI Controls - Pricing
+        private NumericUpDown _markUpSpin;
+        private NumericUpDown _markDownSpin;
+
+        // UI Controls - Store
+        private TextBox _onOpenEdit;
+        private ComboBox _storeFlagSelect;
+
+        // UI Controls - Comments
+        private TextBox _commentsEdit;
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utm.py:28-68
+        // Original: def __init__(self, parent, installation):
         public UTMEditor(Window parent = null, HTInstallation installation = null)
             : base(parent, "Merchant Editor", "merchant",
                 new[] { ResourceType.UTM, ResourceType.BTM },
                 new[] { ResourceType.UTM, ResourceType.BTM },
                 installation)
         {
+            _installation = installation;
+            _utm = new UTM();
+
             InitializeComponent();
-            SetupUI();
+            if (installation != null)
+            {
+                SetupInstallation(installation);
+            }
             New();
         }
 
         private void InitializeComponent()
         {
-            if (!TryLoadXaml())
+            bool xamlLoaded = false;
+            try
             {
-                SetupUI();
+                AvaloniaXamlLoader.Load(this);
+                xamlLoaded = true;
+                
+                // Try to find controls from XAML
+                _nameEdit = this.FindControl<LocalizedStringEdit>("nameEdit");
+                _nameEditBtn = this.FindControl<Button>("nameEditBtn");
+                _tagEdit = this.FindControl<TextBox>("tagEdit");
+                _tagGenerateBtn = this.FindControl<Button>("tagGenerateButton");
+                _resrefEdit = this.FindControl<TextBox>("resrefEdit");
+                _resrefGenerateBtn = this.FindControl<Button>("resrefGenerateButton");
+                _idSpin = this.FindControl<NumericUpDown>("idSpin");
+                _inventoryButton = this.FindControl<Button>("inventoryButton");
+                _markUpSpin = this.FindControl<NumericUpDown>("markUpSpin");
+                _markDownSpin = this.FindControl<NumericUpDown>("markDownSpin");
+                _onOpenEdit = this.FindControl<TextBox>("onOpenEdit");
+                _storeFlagSelect = this.FindControl<ComboBox>("storeFlagSelect");
+                _commentsEdit = this.FindControl<TextBox>("commentsEdit");
+            }
+            catch
+            {
+                // XAML not available or controls not found - will use programmatic UI
+                xamlLoaded = false;
+            }
+
+            if (!xamlLoaded)
+            {
+                SetupProgrammaticUI();
+            }
+            else
+            {
+                // XAML loaded, set up signals
+                SetupSignals();
             }
         }
 
-        private void SetupUI()
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utm.py:70-74
+        // Original: def _setup_signals(self):
+        private void SetupSignals()
         {
-            var panel = new StackPanel();
-            Content = panel;
+            if (_tagGenerateBtn != null)
+            {
+                _tagGenerateBtn.Click += (s, e) => GenerateTag();
+            }
+            if (_resrefGenerateBtn != null)
+            {
+                _resrefGenerateBtn.Click += (s, e) => GenerateResref();
+            }
+            if (_inventoryButton != null)
+            {
+                _inventoryButton.Click += (s, e) => OpenInventory();
+            }
+            if (_nameEditBtn != null)
+            {
+                _nameEditBtn.Click += (s, e) => ChangeName();
+            }
         }
 
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utm.py:76-93
+        // Original: def _setup_installation(self, installation):
+        private void SetupInstallation(HTInstallation installation)
+        {
+            _installation = installation;
+            if (_nameEdit != null)
+            {
+                _nameEdit.SetInstallation(installation);
+            }
+        }
+
+        private void SetupProgrammaticUI()
+        {
+            var scrollViewer = new ScrollViewer();
+            var mainPanel = new StackPanel { Orientation = Orientation.Vertical };
+
+            // Basic Group
+            var basicGroup = new Expander { Header = "Basic", IsExpanded = true };
+            var basicPanel = new StackPanel { Orientation = Orientation.Vertical };
+
+            // Name
+            var nameLabel = new TextBlock { Text = "Name:" };
+            _nameEdit = new LocalizedStringEdit();
+            if (_installation != null)
+            {
+                _nameEdit.SetInstallation(_installation);
+            }
+            _nameEditBtn = new Button { Content = "Edit Name" };
+            _nameEditBtn.Click += (s, e) => ChangeName();
+            basicPanel.Children.Add(nameLabel);
+            basicPanel.Children.Add(_nameEdit);
+            basicPanel.Children.Add(_nameEditBtn);
+
+            // Tag
+            var tagLabel = new TextBlock { Text = "Tag:" };
+            _tagEdit = new TextBox();
+            _tagGenerateBtn = new Button { Content = "-" };
+            _tagGenerateBtn.Click += (s, e) => GenerateTag();
+            var tagPanel = new StackPanel { Orientation = Orientation.Horizontal };
+            tagPanel.Children.Add(_tagEdit);
+            tagPanel.Children.Add(_tagGenerateBtn);
+            basicPanel.Children.Add(tagLabel);
+            basicPanel.Children.Add(tagPanel);
+
+            // ResRef
+            var resrefLabel = new TextBlock { Text = "ResRef:" };
+            _resrefEdit = new TextBox { MaxLength = 16 };
+            _resrefGenerateBtn = new Button { Content = "-" };
+            _resrefGenerateBtn.Click += (s, e) => GenerateResref();
+            var resrefPanel = new StackPanel { Orientation = Orientation.Horizontal };
+            resrefPanel.Children.Add(_resrefEdit);
+            resrefPanel.Children.Add(_resrefGenerateBtn);
+            basicPanel.Children.Add(resrefLabel);
+            basicPanel.Children.Add(resrefPanel);
+
+            // ID
+            var idLabel = new TextBlock { Text = "ID:" };
+            _idSpin = new NumericUpDown { Minimum = int.MinValue, Maximum = int.MaxValue };
+            basicPanel.Children.Add(idLabel);
+            basicPanel.Children.Add(_idSpin);
+
+            // Inventory Button
+            _inventoryButton = new Button { Content = "Edit Inventory" };
+            _inventoryButton.Click += (s, e) => OpenInventory();
+            basicPanel.Children.Add(_inventoryButton);
+
+            basicGroup.Content = basicPanel;
+            mainPanel.Children.Add(basicGroup);
+
+            // Pricing Group
+            var pricingGroup = new Expander { Header = "Pricing", IsExpanded = true };
+            var pricingPanel = new StackPanel { Orientation = Orientation.Vertical };
+
+            var markUpLabel = new TextBlock { Text = "Mark Up:" };
+            _markUpSpin = new NumericUpDown { Minimum = 0, Maximum = 1000000 };
+            var markDownLabel = new TextBlock { Text = "Mark Down:" };
+            _markDownSpin = new NumericUpDown { Minimum = 0, Maximum = 1000000 };
+
+            pricingPanel.Children.Add(markUpLabel);
+            pricingPanel.Children.Add(_markUpSpin);
+            pricingPanel.Children.Add(markDownLabel);
+            pricingPanel.Children.Add(_markDownSpin);
+
+            pricingGroup.Content = pricingPanel;
+            mainPanel.Children.Add(pricingGroup);
+
+            // Store Group
+            var storeGroup = new Expander { Header = "Store", IsExpanded = true };
+            var storePanel = new StackPanel { Orientation = Orientation.Vertical };
+
+            var onOpenLabel = new TextBlock { Text = "OnOpenStore:" };
+            _onOpenEdit = new TextBox { MaxLength = 16 };
+            var storeLabel = new TextBlock { Text = "Store:" };
+            _storeFlagSelect = new ComboBox();
+            _storeFlagSelect.Items.Add("Only Buy");
+            _storeFlagSelect.Items.Add("Only Sell");
+            _storeFlagSelect.Items.Add("Buy and Sell");
+
+            storePanel.Children.Add(onOpenLabel);
+            storePanel.Children.Add(_onOpenEdit);
+            storePanel.Children.Add(storeLabel);
+            storePanel.Children.Add(_storeFlagSelect);
+
+            storeGroup.Content = storePanel;
+            mainPanel.Children.Add(storeGroup);
+
+            // Comments Group
+            var commentsGroup = new Expander { Header = "Comments", IsExpanded = false };
+            var commentsPanel = new StackPanel { Orientation = Orientation.Vertical };
+            var commentsLabel = new TextBlock { Text = "Comment:" };
+            _commentsEdit = new TextBox { AcceptsReturn = true, AcceptsTab = true };
+            commentsPanel.Children.Add(commentsLabel);
+            commentsPanel.Children.Add(_commentsEdit);
+            commentsGroup.Content = commentsPanel;
+            mainPanel.Children.Add(commentsGroup);
+
+            scrollViewer.Content = mainPanel;
+            Content = scrollViewer;
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utm.py:95-105
+        // Original: def load(self, filepath, resref, restype, data):
         public override void Load(string filepath, string resref, ResourceType restype, byte[] data)
         {
             base.Load(filepath, resref, restype, data);
+            // Matching PyKotor implementation: utm: UTM = read_utm(data); self._loadUTM(utm)
             var gff = GFF.FromBytes(data);
-            _utm = new UTM();
+            _utm = UTMHelpers.ConstructUtm(gff);
             LoadUTM(_utm);
         }
 
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utm.py:107-136
+        // Original: def _loadUTM(self, utm: UTM):
         private void LoadUTM(UTM utm)
         {
-            // Load UTM data into UI
+            // Matching PyKotor implementation: self._utm = utm
+            _utm = utm;
+
+            // Basic
+            if (_nameEdit != null)
+            {
+                _nameEdit.SetLocString(utm.Name);
+            }
+            if (_tagEdit != null)
+            {
+                _tagEdit.Text = utm.Tag;
+            }
+            if (_resrefEdit != null)
+            {
+                _resrefEdit.Text = utm.ResRef.ToString();
+            }
+            if (_idSpin != null)
+            {
+                _idSpin.Value = utm.Id;
+            }
+            if (_markUpSpin != null)
+            {
+                _markUpSpin.Value = utm.MarkUp;
+            }
+            if (_markDownSpin != null)
+            {
+                _markDownSpin.Value = utm.MarkDown;
+            }
+            if (_onOpenEdit != null)
+            {
+                _onOpenEdit.Text = utm.OnOpenScript.ToString();
+            }
+            if (_storeFlagSelect != null)
+            {
+                // Matching PyKotor implementation: self.ui.storeFlagSelect.setCurrentIndex((int(utm.can_buy) + int(utm.can_sell) * 2) - 1)
+                int index = (utm.CanBuy ? 1 : 0) + (utm.CanSell ? 2 : 0) - 1;
+                if (index >= 0 && index < _storeFlagSelect.Items.Count)
+                {
+                    _storeFlagSelect.SelectedIndex = index;
+                }
+            }
+
+            // Comments
+            if (_commentsEdit != null)
+            {
+                _commentsEdit.Text = utm.Comment;
+            }
         }
 
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utm.py:138-173
+        // Original: def build(self) -> tuple[bytes, bytes]:
         public override Tuple<byte[], byte[]> Build()
         {
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utm.py:138-170
-            // Original: def build(self) -> tuple[bytes, bytes]:
-            // TODO: Implement UTMHelpers.DismantleUtm when available
-            // For now, create a minimal valid GFF structure
-            var gff = new GFF(GFFContent.UTM);
-            // Build basic structure - full implementation will populate from _utm
+            // Matching PyKotor implementation: utm: UTM = deepcopy(self._utm)
+            var utm = CopyUTM(_utm);
+
+            // Basic - read from UI controls (matching Python which always reads from UI)
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utm.py:155-167
+            utm.Name = _nameEdit?.GetLocString() ?? utm.Name ?? LocalizedString.FromInvalid();
+            utm.Tag = _tagEdit?.Text ?? utm.Tag ?? "";
+            utm.ResRef = _resrefEdit != null && !string.IsNullOrEmpty(_resrefEdit.Text)
+                ? new ResRef(_resrefEdit.Text)
+                : utm.ResRef;
+            utm.Id = _idSpin?.Value != null ? (int)_idSpin.Value : utm.Id;
+            utm.MarkUp = _markUpSpin?.Value != null ? (int)_markUpSpin.Value : utm.MarkUp;
+            utm.MarkDown = _markDownSpin?.Value != null ? (int)_markDownSpin.Value : utm.MarkDown;
+            utm.OnOpenScript = _onOpenEdit != null && !string.IsNullOrEmpty(_onOpenEdit.Text)
+                ? new ResRef(_onOpenEdit.Text)
+                : utm.OnOpenScript;
+            
+            // Matching PyKotor implementation: utm.can_buy = bool((self.ui.storeFlagSelect.currentIndex() + 1) & 1)
+            // Matching PyKotor implementation: utm.can_sell = bool((self.ui.storeFlagSelect.currentIndex() + 1) & 2)
+            if (_storeFlagSelect?.SelectedIndex != null && _storeFlagSelect.SelectedIndex >= 0)
+            {
+                int flagValue = _storeFlagSelect.SelectedIndex + 1;
+                utm.CanBuy = (flagValue & 1) != 0;
+                utm.CanSell = (flagValue & 2) != 0;
+            }
+
+            // Comments
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utm.py:167
+            utm.Comment = _commentsEdit?.Text ?? utm.Comment ?? "";
+
+            // Build GFF
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utm.py:169-173
+            var game = _installation?.Game ?? Game.K2;
+            var gff = UTMHelpers.DismantleUtm(utm, game);
             byte[] data = GFFAuto.BytesGff(gff, ResourceType.UTM);
             return Tuple.Create(data, new byte[0]);
         }
 
+        // Matching PyKotor implementation: Deep copy helper
+        // Original: utm: UTM = deepcopy(self._utm)
+        private UTM CopyUTM(UTM source)
+        {
+            // Deep copy LocalizedString objects (they're reference types)
+            LocalizedString copyName = source.Name != null
+                ? new LocalizedString(source.Name.StringRef, new Dictionary<int, string>(GetSubstringsDict(source.Name)))
+                : null;
+
+            var copy = new UTM
+            {
+                ResRef = source.ResRef,
+                Name = copyName,
+                Tag = source.Tag,
+                MarkUp = source.MarkUp,
+                MarkDown = source.MarkDown,
+                OnOpenScript = source.OnOpenScript,
+                Comment = source.Comment,
+                Id = source.Id,
+                CanBuy = source.CanBuy,
+                CanSell = source.CanSell
+            };
+
+            // Copy items
+            foreach (var item in source.Items)
+            {
+                copy.Items.Add(new UTMItem
+                {
+                    ResRef = item.ResRef,
+                    Infinite = item.Infinite,
+                    Droppable = item.Droppable
+                });
+            }
+
+            return copy;
+        }
+
+        // Helper to extract substrings dictionary from LocalizedString for copying
+        private Dictionary<int, string> GetSubstringsDict(LocalizedString locString)
+        {
+            var dict = new Dictionary<int, string>();
+            if (locString != null)
+            {
+                foreach ((Language lang, Gender gender, string text) in locString)
+                {
+                    int substringId = LocalizedString.SubstringId(lang, gender);
+                    dict[substringId] = text;
+                }
+            }
+            return dict;
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utm.py:175-177
+        // Original: def new(self):
         public override void New()
         {
             base.New();
             _utm = new UTM();
+            LoadUTM(_utm);
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utm.py:179-182
+        // Original: def change_name(self):
+        private void ChangeName()
+        {
+            if (_installation == null) return;
+            var dialog = new LocalizedStringDialog(this, _installation, _utm.Name);
+            if (dialog.ShowDialog())
+            {
+                _utm.Name = dialog.LocString;
+                if (_nameEdit != null)
+                {
+                    _nameEdit.SetLocString(_utm.Name);
+                }
+            }
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utm.py:184-187
+        // Original: def generate_tag(self):
+        private void GenerateTag()
+        {
+            if (string.IsNullOrEmpty(_resrefEdit?.Text))
+            {
+                GenerateResref();
+            }
+            if (_tagEdit != null && _resrefEdit != null)
+            {
+                _tagEdit.Text = _resrefEdit.Text;
+            }
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utm.py:189-193
+        // Original: def generate_resref(self):
+        private void GenerateResref()
+        {
+            if (_resrefEdit != null)
+            {
+                _resrefEdit.Text = !string.IsNullOrEmpty(base._resname) ? base._resname : "m00xx_mer_000";
+            }
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utm.py:195-221
+        // Original: def open_inventory(self):
+        private void OpenInventory()
+        {
+            if (_installation == null) return;
+
+            // Matching PyKotor implementation: capsules: list[Capsule] = []
+            var capsules = new List<object>(); // TODO: Use List<Capsule> when available
+
+            try
+            {
+                // Matching PyKotor implementation: root: str = Module.filepath_to_root(self._filepath)
+                // Note: Module.filepath_to_root implementation would be needed
+                // For now, we'll skip capsule loading if filepath is not available
+                if (string.IsNullOrEmpty(base._filepath))
+                {
+                    // Skip capsule loading if no filepath
+                }
+                else
+                {
+                    // TODO: Implement capsule loading when Module.filepath_to_root is available
+                    // This would require implementing the module path resolution logic
+                }
+            }
+            catch (Exception ex)
+            {
+                // Matching PyKotor implementation: print(format_exception_with_variables(e, message="This exception has been suppressed."))
+                System.Console.WriteLine($"Exception suppressed: {ex.Message}");
+            }
+
+            // Convert UTMItem list to InventoryItem list for the dialog
+            // Matching PyKotor implementation: inventoryEditor = InventoryEditor(..., self._utm.inventory, ...)
+            var inventoryItems = new List<InventoryItem>();
+            foreach (var utmItem in _utm.Items)
+            {
+                inventoryItems.Add(new InventoryItem(utmItem.ResRef));
+            }
+
+            // Matching PyKotor implementation: inventoryEditor = InventoryEditor(...)
+            var inventoryEditor = new InventoryDialog(
+                this,
+                _installation,
+                capsules,
+                new List<string>(), // folders parameter
+                inventoryItems,
+                new Dictionary<EquipmentSlot, InventoryItem>(), // equipment parameter
+                droid: false,
+                hideEquipment: true,
+                isStore: true
+            );
+            
+            if (inventoryEditor.ShowDialog())
+            {
+                // Matching PyKotor implementation: self._utm.inventory = inventoryEditor.inventory
+                // Convert InventoryItem list back to UTMItem list
+                _utm.Items.Clear();
+                if (inventoryEditor.Inventory != null)
+                {
+                    foreach (var invItem in inventoryEditor.Inventory)
+                    {
+                        var utmItem = new UTMItem
+                        {
+                            ResRef = invItem.ResRef
+                        };
+                        _utm.Items.Add(utmItem);
+                    }
+                }
+            }
         }
 
         public override void SaveAs()

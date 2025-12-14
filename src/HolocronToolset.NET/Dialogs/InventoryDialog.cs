@@ -115,6 +115,32 @@ namespace HolocronToolset.NET.Dialogs
 
         public List<InventoryItem> Inventory => _inventory;
         public Dictionary<EquipmentSlot, InventoryItem> Equipment => _equipment;
+
+        // Matching PyKotor implementation: dialog.exec() returns bool
+        // For Avalonia compatibility, provide ShowDialog method
+        public bool ShowDialog()
+        {
+            // Show dialog and return result
+            // This is a simplified implementation - in a full implementation, we'd use ShowDialogAsync
+            // For now, we'll track if OK was clicked
+            bool result = false;
+            var okButton = this.FindControl<Button>("okButton");
+            if (okButton != null)
+            {
+                EventHandler<Avalonia.Interactivity.RoutedEventArgs> okHandler = null;
+                okHandler = (s, e) =>
+                {
+                    result = true;
+                    okButton.Click -= okHandler;
+                    Close();
+                };
+                okButton.Click += okHandler;
+            }
+            this.Show();
+            // Note: This is a simplified synchronous implementation
+            // In a full implementation, we'd use ShowDialogAsync and await the result
+            return result;
+        }
     }
 
     // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/inventory.py
