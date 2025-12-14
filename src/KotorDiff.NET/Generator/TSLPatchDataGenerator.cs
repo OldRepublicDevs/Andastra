@@ -15,11 +15,13 @@ using CSharpKOTOR.Formats.TLK;
 using CSharpKOTOR.Formats.SSF;
 using CSharpKOTOR.Resources;
 using CSharpKOTOR.Common;
+using CSharpKOTOR.Formats.LIP;
 using GFFContent = CSharpKOTOR.Formats.GFF.GFFContent;
 using TLKAuto = CSharpKOTOR.Formats.TLK.TLKAuto;
 using TwoDAAuto = CSharpKOTOR.Formats.TwoDA.TwoDAAuto;
 using GFFAuto = CSharpKOTOR.Formats.GFF.GFFAuto;
 using SSFAuto = CSharpKOTOR.Formats.SSF.SSFAuto;
+using LIPAuto = CSharpKOTOR.Formats.LIP.LIPAuto;
 
 namespace KotorDiff.NET.Generator
 {
@@ -398,16 +400,126 @@ namespace KotorDiff.NET.Generator
                 foreach (string filename in filenames)
                 {
                     var sourceFile = new FileInfo(Path.Combine(sourceFolder.FullName, filename));
+                    var destFile = new FileInfo(Path.Combine(_tslpatchdataPath.FullName, filename));
+
+                    // Handle module capsules specially
+                    if (folder == "modules")
+                    {
+                        if (sourceFile.Exists)
+                        {
+                            try
+                            {
+                                byte[] sourceData = File.ReadAllBytes(sourceFile.FullName);
+                                WriteResourceWithIo(sourceData, destFile.FullName, Path.GetExtension(filename).TrimStart('.').ToLowerInvariant());
+                                copiedFiles[filename] = destFile;
+                            }
+                            catch (Exception e)
+                            {
+                                Console.WriteLine($"[ERROR] Failed to copy module capsule {filename}: {e.Message}");
+                            }
+                        }
+                        continue;
+                    }
+
+                    // For module-specific resources, extract from capsule
+                    if (folder.StartsWith("modules\\") || folder.StartsWith("modules/"))
+                    {
+                        // Extract from module capsule
+                        string[] folderParts = folder.Split(new[] { '\\', '/' }, StringSplitOptions.RemoveEmptyEntries);
+                        if (folderParts.Length >= 2)
+                        {
+                            string moduleName = folderParts[1];
+                            var modulePath = new FileInfo(Path.Combine(baseDataPath.FullName, "modules", moduleName));
+
+                            if (modulePath.Exists)
+                            {
+                                try
+                                {
+                                    // TODO: Extract from capsule - requires Capsule implementation
+                                    // For now, skip module resource extraction
+                                    Console.WriteLine($"[DEBUG] Module resource extraction not yet implemented: {filename} from {moduleName}");
+                                }
+                                catch (Exception e)
+                                {
+                                    Console.WriteLine($"[ERROR] Failed to extract {filename} from {moduleName}: {e.Message}");
+                                }
+                            }
+                        }
+                        continue;
+                    }
+
+                    // For regular files, copy using appropriate method
                     if (sourceFile.Exists)
                     {
-                        var destFile = new FileInfo(Path.Combine(_tslpatchdataPath.FullName, filename));
-                        File.Copy(sourceFile.FullName, destFile.FullName, true);
-                        copiedFiles[filename] = destFile;
+                        try
+                        {
+                            string fileExt = Path.GetExtension(filename).TrimStart('.').ToLowerInvariant();
+                            byte[] sourceData = File.ReadAllBytes(sourceFile.FullName);
+                            WriteResourceWithIo(sourceData, destFile.FullName, fileExt);
+                            copiedFiles[filename] = destFile;
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine($"[ERROR] Failed to copy {filename}: {e.Message}");
+                        }
                     }
                 }
             }
 
             return copiedFiles;
+        }
+
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/generator.py:233-287
+        // Original: def _write_resource_with_io(...): ...
+        private void WriteResourceWithIo(byte[] data, string destPath, string fileExt)
+        {
+            try
+            {
+                // Use appropriate io function based on file type
+                var gffExtensions = GetGffExtensions();
+                if (gffExtensions.Contains(fileExt.ToUpperInvariant()))
+                {
+                    // GFF-based format - use io_gff
+                    var gffObj = new GFFBinaryReader(data).Load();
+                    ResourceType resourceType = ResourceType.FromExtension(fileExt);
+                    GFFAuto.WriteGff(gffObj, destPath, resourceType);
+                }
+                else if (fileExt == "2da")
+                {
+                    // 2DA file - use io_2da
+                    var twodaObj = new TwoDABinaryReader(data).Load();
+                    TwoDAAuto.WriteTwoDA(twodaObj, destPath, ResourceType.TwoDA);
+                }
+                else if (fileExt == "tlk")
+                {
+                    // TLK file - use io_tlk
+                    var tlkObj = new TLKBinaryReader(data).Load();
+                    TLKAuto.WriteTlk(tlkObj, destPath, ResourceType.TLK);
+                }
+                else if (fileExt == "ssf")
+                {
+                    // SSF file - use io_ssf
+                    var ssfObj = new SSFBinaryReader(data).Load();
+                    SSFAuto.WriteSsf(ssfObj, destPath, ResourceType.SSF);
+                }
+                else if (fileExt == "lip")
+                {
+                    // LIP file - use io_lip
+                    var lipObj = new LIPBinaryReader(data).Load();
+                    LIPAuto.WriteLip(lipObj, destPath, ResourceType.LIP);
+                }
+                else
+                {
+                    // For other formats (NCS, MDL, MDX, WAV, TGA, BIK, etc.), write as binary
+                    File.WriteAllBytes(destPath, data);
+                }
+            }
+            catch (Exception e)
+            {
+                // If parsing fails, fall back to binary write
+                Console.WriteLine($"[ERROR] Failed to use io function for {fileExt}, falling back to binary write: {e.Message}");
+                File.WriteAllBytes(destPath, data);
+            }
         }
 
         // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/generator.py:490-508
@@ -921,6 +1033,20 @@ namespace KotorDiff.NET.Generator
                     }
                 }
             }
+        }
+
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/formats/gff/gff_data.py
+        // Original: GFFContent.get_extensions()
+        private static HashSet<string> GetGffExtensions()
+        {
+            // All GFF content types map to their lowercase extension
+            return new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+            {
+                "gff", "bic", "btc", "btd", "bte", "bti", "btp", "btm", "btt",
+                "utc", "utd", "ute", "uti", "utp", "uts", "utm", "utt", "utw",
+                "are", "dlg", "fac", "git", "gui", "ifo", "itp", "jrl", "pth",
+                "nfo", "pt", "gvt", "inv"
+            };
         }
     }
 }
