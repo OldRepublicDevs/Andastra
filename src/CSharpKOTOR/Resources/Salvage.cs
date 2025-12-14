@@ -178,9 +178,16 @@ namespace CSharpKOTOR.Resources
         // Original: def validate_gff(...)
         private static byte[] ValidateGff(GFF gff, ResourceType restype)
         {
-            // construct/dismantle functions need to be ported
-            // For now, return bytes_gff
-            return GFFAuto.BytesGff(gff, ResourceType.GFF);
+            // Use construct/dismantle functions to validate GFF
+            switch (restype)
+            {
+                case ResourceType.ARE:
+                    var are = Resource.Generics.AREHelpers.ConstructAre(gff);
+                    return GFFAuto.BytesGff(Resource.Generics.AREHelpers.DismantleAre(are), ResourceType.GFF);
+                // Other resource types would need their construct/dismantle functions ported
+                default:
+                    return GFFAuto.BytesGff(gff, ResourceType.GFF);
+            }
         }
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/salvage.py:257-302
