@@ -76,7 +76,7 @@ namespace Odyssey.Content.Loaders
             SetScriptHook(scriptHooks, ScriptEvent.OnDamaged, template.OnDamaged);
             SetScriptHook(scriptHooks, ScriptEvent.OnAttacked, template.OnAttacked);
             SetScriptHook(scriptHooks, ScriptEvent.OnEndRound, template.OnEndRound);
-            SetScriptHook(scriptHooks, ScriptEvent.OnDialogue, template.OnDialogue);
+            SetScriptHook(scriptHooks, ScriptEvent.OnConversation, template.OnDialogue);
             SetScriptHook(scriptHooks, ScriptEvent.OnDisturbed, template.OnDisturbed);
             SetScriptHook(scriptHooks, ScriptEvent.OnBlocked, template.OnBlocked);
             SetScriptHook(scriptHooks, ScriptEvent.OnUserDefined, template.OnUserDefined);
@@ -92,7 +92,7 @@ namespace Odyssey.Content.Loaders
             entity.AddComponent<IRenderableComponent>(renderable);
 
             // Register with world
-            _world.AddEntity(entity);
+            _world.RegisterEntity(entity);
 
             return entity;
         }
@@ -146,7 +146,7 @@ namespace Odyssey.Content.Loaders
             entity.AddComponent<IRenderableComponent>(renderable);
 
             // Register with world
-            _world.AddEntity(entity);
+            _world.RegisterEntity(entity);
 
             return entity;
         }
@@ -213,7 +213,7 @@ namespace Odyssey.Content.Loaders
             entity.AddComponent<IRenderableComponent>(renderable);
 
             // Register with world
-            _world.AddEntity(entity);
+            _world.RegisterEntity(entity);
 
             return entity;
         }
@@ -272,7 +272,7 @@ namespace Odyssey.Content.Loaders
             entity.AddComponent<ITriggerComponent>(triggerComponent);
 
             // Register with world
-            _world.AddEntity(entity);
+            _world.RegisterEntity(entity);
 
             return entity;
         }
@@ -306,7 +306,7 @@ namespace Odyssey.Content.Loaders
             // Waypoints are invisible markers, no renderable component
 
             // Register with world
-            _world.AddEntity(entity);
+            _world.RegisterEntity(entity);
 
             return entity;
         }
@@ -352,7 +352,7 @@ namespace Odyssey.Content.Loaders
             entity.AddComponent<IAudioComponent>(audioComponent);
 
             // Register with world
-            _world.AddEntity(entity);
+            _world.RegisterEntity(entity);
 
             return entity;
         }
@@ -376,6 +376,41 @@ namespace Odyssey.Content.Loaders
         public IEntity Owner { get; set; }
         public Vector3 Position { get; set; }
         public float Facing { get; set; }
+        public Vector3 Scale { get; set; } = Vector3.One;
+        public IEntity Parent { get; set; }
+
+        public Vector3 Forward
+        {
+            get
+            {
+                return new Vector3(
+                    (float)Math.Sin(Facing),
+                    0,
+                    (float)Math.Cos(Facing)
+                );
+            }
+        }
+
+        public Vector3 Right
+        {
+            get
+            {
+                Vector3 forward = Forward;
+                return new Vector3(forward.Z, 0, -forward.X);
+            }
+        }
+
+        public Matrix4x4 WorldMatrix
+        {
+            get
+            {
+                // Build transform matrix from position, rotation, scale
+                Matrix4x4 scale = Matrix4x4.CreateScale(Scale);
+                Matrix4x4 rotation = Matrix4x4.CreateRotationY(Facing);
+                Matrix4x4 translation = Matrix4x4.CreateTranslation(Position);
+                return scale * rotation * translation;
+            }
+        }
         
         public void OnAttach() { }
         public void OnDetach() { }
@@ -386,6 +421,8 @@ namespace Odyssey.Content.Loaders
     /// </summary>
     internal class StatsComponent : IStatsComponent
     {
+        private readonly Dictionary<Ability, int> _abilities;
+
         public IEntity Owner { get; set; }
         public int CurrentHP { get; set; }
         public int MaxHP { get; set; }
@@ -398,6 +435,66 @@ namespace Odyssey.Content.Loaders
         public int Intelligence { get; set; }
         public int Wisdom { get; set; }
         public int Charisma { get; set; }
+
+        public StatsComponent()
+        {
+            _abilities = new Dictionary<Ability, int>();
+        }
+
+        public int GetAbility(Ability ability)
+        {
+            if (_abilities.TryGetValue(ability, out int value))
+            {
+                return value;
+            }
+            return 10; // Default ability score
+        }
+
+        public void SetAbility(Ability ability, int value)
+        {
+            _abilities[ability] = value;
+        }
+
+        public int GetAbilityModifier(Ability ability)
+        {
+            int score = GetAbility(ability);
+            return (score - 10) / 2;
+        }
+
+        public bool IsDead
+        {
+            get { return CurrentHP <= 0; }
+        }
+
+        public int BaseAttackBonus
+        {
+            get { return 0; } // TODO: Calculate from class/level
+        }
+
+        public int FortitudeSave
+        {
+            get { return 0; } // TODO: Calculate from class/level
+        }
+
+        public int ReflexSave
+        {
+            get { return 0; } // TODO: Calculate from class/level
+        }
+
+        public int WillSave
+        {
+            get { return 0; } // TODO: Calculate from class/level
+        }
+
+        public float WalkSpeed
+        {
+            get { return 2.5f; } // Default walk speed in m/s
+        }
+
+        public float RunSpeed
+        {
+            get { return 5.0f; } // Default run speed in m/s
+        }
 
         public void OnAttach() { }
         public void OnDetach() { }
@@ -415,9 +512,23 @@ namespace Odyssey.Content.Loaders
         public bool IsVisible { get; set; }
         public bool IsStatic { get; set; }
 
+        public string ModelResRef { get; set; }
+        public bool Visible
+        {
+            get { return IsVisible; }
+            set { IsVisible = value; }
+        }
+        public bool IsLoaded { get; set; }
+        public int AppearanceRow
+        {
+            get { return AppearanceId; }
+            set { AppearanceId = value; }
+        }
+
         public RenderableComponent()
         {
             IsVisible = true;
+            IsLoaded = false;
         }
 
         public void OnAttach() { }
@@ -430,12 +541,18 @@ namespace Odyssey.Content.Loaders
     internal class ScriptHooksComponent : IScriptHooksComponent
     {
         private readonly Dictionary<ScriptEvent, string> _scripts;
+        private readonly Dictionary<string, int> _localInts;
+        private readonly Dictionary<string, float> _localFloats;
+        private readonly Dictionary<string, string> _localStrings;
 
         public IEntity Owner { get; set; }
 
         public ScriptHooksComponent()
         {
             _scripts = new Dictionary<ScriptEvent, string>();
+            _localInts = new Dictionary<string, int>();
+            _localFloats = new Dictionary<string, float>();
+            _localStrings = new Dictionary<string, string>();
         }
 
         public string GetScript(ScriptEvent evt)
@@ -462,6 +579,48 @@ namespace Odyssey.Content.Loaders
         public bool HasScript(ScriptEvent evt)
         {
             return _scripts.ContainsKey(evt) && !string.IsNullOrEmpty(_scripts[evt]);
+        }
+
+        public int GetLocalInt(string name)
+        {
+            if (_localInts.TryGetValue(name, out int value))
+            {
+                return value;
+            }
+            return 0;
+        }
+
+        public void SetLocalInt(string name, int value)
+        {
+            _localInts[name] = value;
+        }
+
+        public float GetLocalFloat(string name)
+        {
+            if (_localFloats.TryGetValue(name, out float value))
+            {
+                return value;
+            }
+            return 0f;
+        }
+
+        public void SetLocalFloat(string name, float value)
+        {
+            _localFloats[name] = value;
+        }
+
+        public string GetLocalString(string name)
+        {
+            if (_localStrings.TryGetValue(name, out string value))
+            {
+                return value;
+            }
+            return string.Empty;
+        }
+
+        public void SetLocalString(string name, string value)
+        {
+            _localStrings[name] = value ?? string.Empty;
         }
 
         public void OnAttach() { }

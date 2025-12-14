@@ -4,6 +4,7 @@ using System.IO;
 using System.Numerics;
 using System.Threading;
 using System.Threading.Tasks;
+using CSharpKOTOR.Resources;
 using Odyssey.Content.Interfaces;
 using Odyssey.Core.Enums;
 using Odyssey.Core.Module;
@@ -104,7 +105,7 @@ namespace Odyssey.Content.Loading
 
         private async Task LoadIfoAsync(RuntimeModule module, string moduleResRef, CancellationToken ct)
         {
-            var ifoId = new ResourceIdentifier(moduleResRef, ResourceType.IFO);
+            var ifoId = new CSharpKOTOR.Resources.ResourceIdentifier(moduleResRef, CSharpKOTOR.Resources.ResourceType.IFO);
             byte[] ifoData = await _resourceProvider.GetResourceBytesAsync(ifoId, ct);
 
             if (ifoData == null || ifoData.Length == 0)
@@ -148,7 +149,7 @@ namespace Odyssey.Content.Loading
 
         private async Task LoadAreAsync(RuntimeArea area, string areaResRef, CancellationToken ct)
         {
-            var areId = new ResourceIdentifier(areaResRef, ResourceType.ARE);
+            var areId = new CSharpKOTOR.Resources.ResourceIdentifier(areaResRef, CSharpKOTOR.Resources.ResourceType.ARE);
             byte[] areData = await _resourceProvider.GetResourceBytesAsync(areId, ct);
 
             if (areData == null || areData.Length == 0)
@@ -172,7 +173,7 @@ namespace Odyssey.Content.Loading
 
         private async Task LoadLytAsync(RuntimeArea area, string areaResRef, CancellationToken ct)
         {
-            var lytId = new ResourceIdentifier(areaResRef, ResourceType.LYT);
+            var lytId = new CSharpKOTOR.Resources.ResourceIdentifier(areaResRef, CSharpKOTOR.Resources.ResourceType.LYT);
             byte[] lytData = await _resourceProvider.GetResourceBytesAsync(lytId, ct);
 
             if (lytData == null || lytData.Length == 0)
@@ -278,7 +279,7 @@ namespace Odyssey.Content.Loading
 
         private async Task LoadVisAsync(RuntimeArea area, string areaResRef, CancellationToken ct)
         {
-            var visId = new ResourceIdentifier(areaResRef, ResourceType.VIS);
+            var visId = new CSharpKOTOR.Resources.ResourceIdentifier(areaResRef, CSharpKOTOR.Resources.ResourceType.VIS);
             byte[] visData = await _resourceProvider.GetResourceBytesAsync(visId, ct);
 
             if (visData == null || visData.Length == 0)
@@ -354,7 +355,7 @@ namespace Odyssey.Content.Loading
 
         private async Task LoadGitAsync(RuntimeArea area, string areaResRef, CancellationToken ct)
         {
-            var gitId = new ResourceIdentifier(areaResRef, ResourceType.GIT);
+            var gitId = new CSharpKOTOR.Resources.ResourceIdentifier(areaResRef, CSharpKOTOR.Resources.ResourceType.GIT);
             byte[] gitData = await _resourceProvider.GetResourceBytesAsync(gitId, ct);
 
             if (gitData == null || gitData.Length == 0)
@@ -394,7 +395,7 @@ namespace Odyssey.Content.Loading
                 }
 
                 // WOK files are walkmeshes for room models
-                var wokId = new ResourceIdentifier(room.ModelName, ResourceType.WOK);
+                var wokId = new CSharpKOTOR.Resources.ResourceIdentifier(room.ModelName, CSharpKOTOR.Resources.ResourceType.WOK);
                 byte[] wokData = await _resourceProvider.GetResourceBytesAsync(wokId, ct);
 
                 if (wokData != null && wokData.Length > 0)

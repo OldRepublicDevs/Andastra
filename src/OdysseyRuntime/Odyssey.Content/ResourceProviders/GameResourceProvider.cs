@@ -6,8 +6,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using CSharpKOTOR.Common;
 using CSharpKOTOR.Installation;
+using CSharpKOTOR.Resources;
 using Odyssey.Content.Interfaces;
-using KotorResourceType = CSharpKOTOR.Resources.ResourceType;
 using KotorSearchLocation = CSharpKOTOR.Installation.SearchLocation;
 using OdysseySearchLocation = Odyssey.Content.Interfaces.SearchLocation;
 
@@ -49,15 +49,9 @@ namespace Odyssey.Content.ResourceProviders
             {
                 ct.ThrowIfCancellationRequested();
 
-                KotorResourceType kotorType = ConvertResourceType(id.Type);
-                if (kotorType == null)
-                {
-                    return null;
-                }
-
                 var result = _installation.Resources.LookupResource(
-                    id.ResRef,
-                    kotorType,
+                    id.ResName,
+                    id.ResType,
                     null,
                     _currentModule
                 );
@@ -83,15 +77,9 @@ namespace Odyssey.Content.ResourceProviders
             {
                 ct.ThrowIfCancellationRequested();
 
-                KotorResourceType kotorType = ConvertResourceType(id.Type);
-                if (kotorType == null)
-                {
-                    return false;
-                }
-
                 var result = _installation.Resources.LookupResource(
-                    id.ResRef,
-                    kotorType,
+                    id.ResName,
+                    id.ResType,
                     null,
                     _currentModule
                 );
@@ -100,7 +88,7 @@ namespace Odyssey.Content.ResourceProviders
             }, ct);
         }
 
-        public async Task<IReadOnlyList<LocationResult>> LocateAsync(
+        public async Task<IReadOnlyList<Odyssey.Content.Interfaces.LocationResult>> LocateAsync(
             ResourceIdentifier id,
             OdysseySearchLocation[] order,
             CancellationToken ct)
@@ -109,27 +97,21 @@ namespace Odyssey.Content.ResourceProviders
             {
                 ct.ThrowIfCancellationRequested();
 
-                KotorResourceType kotorType = ConvertResourceType(id.Type);
-                if (kotorType == null)
-                {
-                    return new List<LocationResult>();
-                }
-
                 KotorSearchLocation[] kotorOrder = order != null
                     ? order.Select(ConvertSearchLocation).Where(l => l.HasValue).Select(l => l.Value).ToArray()
                     : null;
 
                 var results = _installation.Resources.LocateResource(
-                    id.ResRef,
-                    kotorType,
+                    id.ResName,
+                    id.ResType,
                     kotorOrder,
                     _currentModule
                 );
 
-                var converted = new List<LocationResult>();
+                var converted = new List<Odyssey.Content.Interfaces.LocationResult>();
                 foreach (var r in results)
                 {
-                    converted.Add(new LocationResult
+                    converted.Add(new Odyssey.Content.Interfaces.LocationResult
                     {
                         Location = ConvertBackSearchLocation(r.FilePath),
                         Path = r.FilePath,
@@ -138,7 +120,7 @@ namespace Odyssey.Content.ResourceProviders
                     });
                 }
 
-                return converted;
+                return (IReadOnlyList<Odyssey.Content.Interfaces.LocationResult>)converted;
             }, ct);
         }
 
@@ -155,15 +137,9 @@ namespace Odyssey.Content.ResourceProviders
             {
                 ct.ThrowIfCancellationRequested();
 
-                KotorResourceType kotorType = ConvertResourceType(id.Type);
-                if (kotorType == null)
-                {
-                    return null;
-                }
-
                 var result = _installation.Resources.LookupResource(
-                    id.ResRef,
-                    kotorType,
+                    id.ResName,
+                    id.ResType,
                     null,
                     _currentModule
                 );
@@ -173,50 +149,6 @@ namespace Odyssey.Content.ResourceProviders
         }
 
         #region Type Conversion
-
-        private static KotorResourceType ConvertResourceType(ResourceType type)
-        {
-            switch (type)
-            {
-                case ResourceType.TGA: return KotorResourceType.TGA;
-                case ResourceType.WAV: return KotorResourceType.WAV;
-                case ResourceType.TXT: return KotorResourceType.TXT;
-                case ResourceType.MDL: return KotorResourceType.MDL;
-                case ResourceType.MDX: return KotorResourceType.MDX;
-                case ResourceType.NSS: return KotorResourceType.NSS;
-                case ResourceType.NCS: return KotorResourceType.NCS;
-                case ResourceType.ARE: return KotorResourceType.ARE;
-                case ResourceType.IFO: return KotorResourceType.IFO;
-                case ResourceType.WOK: return KotorResourceType.WOK;
-                case ResourceType.TwoDA: return KotorResourceType.TwoDA;
-                case ResourceType.TLK: return KotorResourceType.TLK;
-                case ResourceType.TXI: return KotorResourceType.TXI;
-                case ResourceType.GIT: return KotorResourceType.GIT;
-                case ResourceType.UTI: return KotorResourceType.UTI;
-                case ResourceType.UTC: return KotorResourceType.UTC;
-                case ResourceType.DLG: return KotorResourceType.DLG;
-                case ResourceType.UTT: return KotorResourceType.UTT;
-                case ResourceType.UTS: return KotorResourceType.UTS;
-                case ResourceType.LTR: return KotorResourceType.LTR;
-                case ResourceType.GFF: return KotorResourceType.GFF;
-                case ResourceType.UTE: return KotorResourceType.UTE;
-                case ResourceType.UTD: return KotorResourceType.UTD;
-                case ResourceType.UTP: return KotorResourceType.UTP;
-                case ResourceType.UTM: return KotorResourceType.UTM;
-                case ResourceType.DWK: return KotorResourceType.DWK;
-                case ResourceType.PWK: return KotorResourceType.PWK;
-                case ResourceType.UTW: return KotorResourceType.UTW;
-                case ResourceType.SSF: return KotorResourceType.SSF;
-                case ResourceType.LYT: return KotorResourceType.LYT;
-                case ResourceType.VIS: return KotorResourceType.VIS;
-                case ResourceType.PTH: return KotorResourceType.PTH;
-                case ResourceType.LIP: return KotorResourceType.LIP;
-                // Note: BWM uses WOK type ID in CSharpKOTOR
-                case ResourceType.BWM: return KotorResourceType.WOK;
-                case ResourceType.TPC: return KotorResourceType.TPC;
-                default: return null;
-            }
-        }
 
         private static KotorSearchLocation? ConvertSearchLocation(OdysseySearchLocation location)
         {

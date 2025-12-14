@@ -30,7 +30,7 @@ namespace Odyssey.Content.Loaders
         /// </summary>
         public async Task<GITData> LoadAsync(string areaResRef, CancellationToken ct = default(CancellationToken))
         {
-            var id = new ResourceIdentifier(areaResRef, ResourceType.GIT);
+            var id = new CSharpKOTOR.Resources.ResourceIdentifier(areaResRef, CSharpKOTOR.Resources.ResourceType.GIT);
             byte[] data = await _resourceProvider.GetResourceBytesAsync(id, ct);
             if (data == null)
             {
@@ -38,8 +38,8 @@ namespace Odyssey.Content.Loaders
             }
 
             using (var stream = new MemoryStream(data))
-            using (var reader = new GFFBinaryReader(stream))
             {
+                var reader = new GFFBinaryReader(stream);
                 var gff = reader.Load();
                 return ParseGIT(gff.Root);
             }
@@ -206,7 +206,7 @@ namespace Odyssey.Content.Loaders
                     float pointX = GetFloat(vertexStruct, "PointX");
                     float pointY = GetFloat(vertexStruct, "PointY");
                     float pointZ = GetFloat(vertexStruct, "PointZ");
-                    instance.Geometry.Add(new Vector3(pointX, pointY, pointZ));
+                    instance.Geometry.Add(new System.Numerics.Vector3(pointX, pointY, pointZ));
                 }
             }
 
@@ -278,7 +278,7 @@ namespace Odyssey.Content.Loaders
                     float pointX = GetFloat(vertexStruct, "X");
                     float pointY = GetFloat(vertexStruct, "Y");
                     float pointZ = GetFloat(vertexStruct, "Z");
-                    instance.Geometry.Add(new Vector3(pointX, pointY, pointZ));
+                    instance.Geometry.Add(new System.Numerics.Vector3(pointX, pointY, pointZ));
                 }
             }
 
@@ -349,7 +349,7 @@ namespace Odyssey.Content.Loaders
             if (s.Exists(name))
             {
                 var resRef = s.GetResRef(name);
-                return resRef?.Value ?? string.Empty;
+                return resRef?.ToString() ?? string.Empty;
             }
             return string.Empty;
         }
@@ -369,14 +369,14 @@ namespace Odyssey.Content.Loaders
             return s.Exists(name) ? s.GetSingle(name) : 0f;
         }
 
-        private Vector3 GetVector3(GFFStruct s, string name)
+        private System.Numerics.Vector3 GetVector3(GFFStruct s, string name)
         {
             if (s.Exists(name))
             {
                 var v = s.GetVector3(name);
-                return new Vector3(v.X, v.Y, v.Z);
+                return new System.Numerics.Vector3(v.X, v.Y, v.Z);
             }
-            return Vector3.Zero;
+            return System.Numerics.Vector3.Zero;
         }
 
         private System.Numerics.Quaternion GetVector4(GFFStruct s, string name)
@@ -435,9 +435,9 @@ namespace Odyssey.Content.Loaders
         public float YPosition { get; set; }
         public float ZPosition { get; set; }
 
-        public Vector3 Position
+        public System.Numerics.Vector3 Position
         {
-            get { return new Vector3(XPosition, YPosition, ZPosition); }
+            get { return new System.Numerics.Vector3(XPosition, YPosition, ZPosition); }
         }
     }
 
@@ -483,11 +483,11 @@ namespace Odyssey.Content.Loaders
         public float XOrientation { get; set; }
         public float YOrientation { get; set; }
         public float ZOrientation { get; set; }
-        public List<Vector3> Geometry { get; private set; }
+        public List<System.Numerics.Vector3> Geometry { get; private set; }
 
         public TriggerInstance()
         {
-            Geometry = new List<Vector3>();
+            Geometry = new List<System.Numerics.Vector3>();
         }
     }
 
@@ -521,12 +521,12 @@ namespace Odyssey.Content.Loaders
     public class EncounterInstance : GITInstance
     {
         public List<SpawnPoint> SpawnPoints { get; private set; }
-        public List<Vector3> Geometry { get; private set; }
+        public List<System.Numerics.Vector3> Geometry { get; private set; }
 
         public EncounterInstance()
         {
             SpawnPoints = new List<SpawnPoint>();
-            Geometry = new List<Vector3>();
+            Geometry = new List<System.Numerics.Vector3>();
         }
     }
 
@@ -550,7 +550,7 @@ namespace Odyssey.Content.Loaders
         public float MicRange { get; set; }
         public System.Numerics.Quaternion Orientation { get; set; }
         public float Pitch { get; set; }
-        public Vector3 Position { get; set; }
+        public System.Numerics.Vector3 Position { get; set; }
     }
 
     /// <summary>
@@ -563,9 +563,9 @@ namespace Odyssey.Content.Loaders
         public float Z { get; set; }
         public float Orientation { get; set; }
 
-        public Vector3 Position
+        public System.Numerics.Vector3 Position
         {
-            get { return new Vector3(X, Y, Z); }
+            get { return new System.Numerics.Vector3(X, Y, Z); }
         }
     }
 

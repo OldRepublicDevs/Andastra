@@ -40,7 +40,7 @@ namespace Odyssey.Content.Loaders
         /// </summary>
         public async Task<LYT> LoadLayoutAsync(string moduleResRef, CancellationToken ct = default(CancellationToken))
         {
-            var id = new ResourceIdentifier(moduleResRef, ResourceType.LYT);
+            var id = new CSharpKOTOR.Resources.ResourceIdentifier(moduleResRef, CSharpKOTOR.Resources.ResourceType.LYT);
             byte[] data = await _resourceProvider.GetResourceBytesAsync(id, ct);
             if (data == null)
             {
@@ -58,7 +58,7 @@ namespace Odyssey.Content.Loaders
         /// </summary>
         public async Task<VIS> LoadVisibilityAsync(string moduleResRef, CancellationToken ct = default(CancellationToken))
         {
-            var id = new ResourceIdentifier(moduleResRef, ResourceType.VIS);
+            var id = new CSharpKOTOR.Resources.ResourceIdentifier(moduleResRef, CSharpKOTOR.Resources.ResourceType.VIS);
             byte[] data = await _resourceProvider.GetResourceBytesAsync(id, ct);
             if (data == null)
             {
@@ -76,7 +76,7 @@ namespace Odyssey.Content.Loaders
         /// </summary>
         public async Task<NavigationMesh> LoadWalkmeshAsync(string roomModel, CancellationToken ct = default(CancellationToken))
         {
-            var id = new ResourceIdentifier(roomModel, ResourceType.WOK);
+            var id = new CSharpKOTOR.Resources.ResourceIdentifier(roomModel, CSharpKOTOR.Resources.ResourceType.WOK);
             byte[] data = await _resourceProvider.GetResourceBytesAsync(id, ct);
             if (data == null)
             {
@@ -85,7 +85,8 @@ namespace Odyssey.Content.Loaders
 
             using (var stream = new MemoryStream(data))
             {
-                var bwm = BWMBinaryReader.Read(stream);
+                var reader = new BWMBinaryReader(stream);
+                var bwm = reader.Load();
                 return BwmToNavigationMeshConverter.Convert(bwm);
             }
         }
@@ -98,7 +99,7 @@ namespace Odyssey.Content.Loaders
             Vector3 offset,
             CancellationToken ct = default(CancellationToken))
         {
-            var id = new ResourceIdentifier(roomModel, ResourceType.WOK);
+            var id = new CSharpKOTOR.Resources.ResourceIdentifier(roomModel, CSharpKOTOR.Resources.ResourceType.WOK);
             byte[] data = await _resourceProvider.GetResourceBytesAsync(id, ct);
             if (data == null)
             {
@@ -107,7 +108,8 @@ namespace Odyssey.Content.Loaders
 
             using (var stream = new MemoryStream(data))
             {
-                var bwm = BWMBinaryReader.Read(stream);
+                var reader = new BWMBinaryReader(stream);
+                var bwm = reader.Load();
                 return BwmToNavigationMeshConverter.ConvertWithOffset(bwm, offset);
             }
         }
@@ -149,7 +151,7 @@ namespace Odyssey.Content.Loaders
         /// </summary>
         public async Task<NavigationMesh> LoadDoorWalkmeshAsync(string doorTemplate, CancellationToken ct = default(CancellationToken))
         {
-            var id = new ResourceIdentifier(doorTemplate, ResourceType.DWK);
+            var id = new CSharpKOTOR.Resources.ResourceIdentifier(doorTemplate, CSharpKOTOR.Resources.ResourceType.DWK);
             byte[] data = await _resourceProvider.GetResourceBytesAsync(id, ct);
             if (data == null)
             {
@@ -158,7 +160,8 @@ namespace Odyssey.Content.Loaders
 
             using (var stream = new MemoryStream(data))
             {
-                var bwm = BWMBinaryReader.Read(stream);
+                var reader = new BWMBinaryReader(stream);
+                var bwm = reader.Load();
                 return BwmToNavigationMeshConverter.Convert(bwm);
             }
         }
@@ -168,7 +171,7 @@ namespace Odyssey.Content.Loaders
         /// </summary>
         public async Task<NavigationMesh> LoadPlaceableWalkmeshAsync(string placeableTemplate, CancellationToken ct = default(CancellationToken))
         {
-            var id = new ResourceIdentifier(placeableTemplate, ResourceType.PWK);
+            var id = new CSharpKOTOR.Resources.ResourceIdentifier(placeableTemplate, CSharpKOTOR.Resources.ResourceType.PWK);
             byte[] data = await _resourceProvider.GetResourceBytesAsync(id, ct);
             if (data == null)
             {
@@ -177,7 +180,8 @@ namespace Odyssey.Content.Loaders
 
             using (var stream = new MemoryStream(data))
             {
-                var bwm = BWMBinaryReader.Read(stream);
+                var reader = new BWMBinaryReader(stream);
+                var bwm = reader.Load();
                 return BwmToNavigationMeshConverter.Convert(bwm);
             }
         }

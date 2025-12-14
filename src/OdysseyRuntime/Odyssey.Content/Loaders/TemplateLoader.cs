@@ -32,7 +32,7 @@ namespace Odyssey.Content.Loaders
             string templateResRef,
             CancellationToken ct = default(CancellationToken))
         {
-            var id = new ResourceIdentifier(templateResRef, ResourceType.UTC);
+            var id = new CSharpKOTOR.Resources.ResourceIdentifier(templateResRef, CSharpKOTOR.Resources.ResourceType.UTC);
             byte[] data = await _resourceProvider.GetResourceBytesAsync(id, ct);
             if (data == null)
             {
@@ -40,8 +40,8 @@ namespace Odyssey.Content.Loaders
             }
 
             using (var stream = new MemoryStream(data))
-            using (var reader = new GFFBinaryReader(stream))
             {
+                var reader = new GFFBinaryReader(stream);
                 var gff = reader.Load();
                 return ParseCreatureTemplate(gff.Root);
             }
@@ -54,7 +54,7 @@ namespace Odyssey.Content.Loaders
             string templateResRef,
             CancellationToken ct = default(CancellationToken))
         {
-            var id = new ResourceIdentifier(templateResRef, ResourceType.UTP);
+            var id = new CSharpKOTOR.Resources.ResourceIdentifier(templateResRef, CSharpKOTOR.Resources.ResourceType.UTP);
             byte[] data = await _resourceProvider.GetResourceBytesAsync(id, ct);
             if (data == null)
             {
@@ -62,8 +62,8 @@ namespace Odyssey.Content.Loaders
             }
 
             using (var stream = new MemoryStream(data))
-            using (var reader = new GFFBinaryReader(stream))
             {
+                var reader = new GFFBinaryReader(stream);
                 var gff = reader.Load();
                 return ParsePlaceableTemplate(gff.Root);
             }
@@ -76,7 +76,7 @@ namespace Odyssey.Content.Loaders
             string templateResRef,
             CancellationToken ct = default(CancellationToken))
         {
-            var id = new ResourceIdentifier(templateResRef, ResourceType.UTD);
+            var id = new CSharpKOTOR.Resources.ResourceIdentifier(templateResRef, CSharpKOTOR.Resources.ResourceType.UTD);
             byte[] data = await _resourceProvider.GetResourceBytesAsync(id, ct);
             if (data == null)
             {
@@ -84,8 +84,8 @@ namespace Odyssey.Content.Loaders
             }
 
             using (var stream = new MemoryStream(data))
-            using (var reader = new GFFBinaryReader(stream))
             {
+                var reader = new GFFBinaryReader(stream);
                 var gff = reader.Load();
                 return ParseDoorTemplate(gff.Root);
             }
@@ -98,7 +98,7 @@ namespace Odyssey.Content.Loaders
             string templateResRef,
             CancellationToken ct = default(CancellationToken))
         {
-            var id = new ResourceIdentifier(templateResRef, ResourceType.UTT);
+            var id = new CSharpKOTOR.Resources.ResourceIdentifier(templateResRef, CSharpKOTOR.Resources.ResourceType.UTT);
             byte[] data = await _resourceProvider.GetResourceBytesAsync(id, ct);
             if (data == null)
             {
@@ -106,8 +106,8 @@ namespace Odyssey.Content.Loaders
             }
 
             using (var stream = new MemoryStream(data))
-            using (var reader = new GFFBinaryReader(stream))
             {
+                var reader = new GFFBinaryReader(stream);
                 var gff = reader.Load();
                 return ParseTriggerTemplate(gff.Root);
             }
@@ -120,7 +120,7 @@ namespace Odyssey.Content.Loaders
             string templateResRef,
             CancellationToken ct = default(CancellationToken))
         {
-            var id = new ResourceIdentifier(templateResRef, ResourceType.UTW);
+            var id = new CSharpKOTOR.Resources.ResourceIdentifier(templateResRef, CSharpKOTOR.Resources.ResourceType.UTW);
             byte[] data = await _resourceProvider.GetResourceBytesAsync(id, ct);
             if (data == null)
             {
@@ -128,8 +128,8 @@ namespace Odyssey.Content.Loaders
             }
 
             using (var stream = new MemoryStream(data))
-            using (var reader = new GFFBinaryReader(stream))
             {
+                var reader = new GFFBinaryReader(stream);
                 var gff = reader.Load();
                 return ParseWaypointTemplate(gff.Root);
             }
@@ -142,7 +142,7 @@ namespace Odyssey.Content.Loaders
             string templateResRef,
             CancellationToken ct = default(CancellationToken))
         {
-            var id = new ResourceIdentifier(templateResRef, ResourceType.UTS);
+            var id = new CSharpKOTOR.Resources.ResourceIdentifier(templateResRef, CSharpKOTOR.Resources.ResourceType.UTS);
             byte[] data = await _resourceProvider.GetResourceBytesAsync(id, ct);
             if (data == null)
             {
@@ -150,8 +150,8 @@ namespace Odyssey.Content.Loaders
             }
 
             using (var stream = new MemoryStream(data))
-            using (var reader = new GFFBinaryReader(stream))
             {
+                var reader = new GFFBinaryReader(stream);
                 var gff = reader.Load();
                 return ParseSoundTemplate(gff.Root);
             }
@@ -164,7 +164,7 @@ namespace Odyssey.Content.Loaders
             string templateResRef,
             CancellationToken ct = default(CancellationToken))
         {
-            var id = new ResourceIdentifier(templateResRef, ResourceType.UTE);
+            var id = new CSharpKOTOR.Resources.ResourceIdentifier(templateResRef, CSharpKOTOR.Resources.ResourceType.UTE);
             byte[] data = await _resourceProvider.GetResourceBytesAsync(id, ct);
             if (data == null)
             {
@@ -172,8 +172,8 @@ namespace Odyssey.Content.Loaders
             }
 
             using (var stream = new MemoryStream(data))
-            using (var reader = new GFFBinaryReader(stream))
             {
+                var reader = new GFFBinaryReader(stream);
                 var gff = reader.Load();
                 return ParseEncounterTemplate(gff.Root);
             }
@@ -186,7 +186,7 @@ namespace Odyssey.Content.Loaders
             string templateResRef,
             CancellationToken ct = default(CancellationToken))
         {
-            var id = new ResourceIdentifier(templateResRef, ResourceType.UTM);
+            var id = new CSharpKOTOR.Resources.ResourceIdentifier(templateResRef, CSharpKOTOR.Resources.ResourceType.UTM);
             byte[] data = await _resourceProvider.GetResourceBytesAsync(id, ct);
             if (data == null)
             {
@@ -194,8 +194,8 @@ namespace Odyssey.Content.Loaders
             }
 
             using (var stream = new MemoryStream(data))
-            using (var reader = new GFFBinaryReader(stream))
             {
+                var reader = new GFFBinaryReader(stream);
                 var gff = reader.Load();
                 return ParseStoreTemplate(gff.Root);
             }

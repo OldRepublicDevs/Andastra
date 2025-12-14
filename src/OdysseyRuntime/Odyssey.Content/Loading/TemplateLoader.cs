@@ -1,6 +1,7 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using CSharpKOTOR.Resources;
 using Odyssey.Content.Interfaces;
 using Odyssey.Core.Templates;
 
@@ -26,7 +27,7 @@ namespace Odyssey.Content.Loading
                 return null;
             }
 
-            var utcId = new ResourceIdentifier(resRef, ResourceType.UTC);
+            var utcId = new CSharpKOTOR.Resources.ResourceIdentifier(resRef, CSharpKOTOR.Resources.ResourceType.UTC);
             byte[] data = await _resourceProvider.GetResourceBytesAsync(utcId, ct);
 
             if (data == null || data.Length == 0)
@@ -44,7 +45,7 @@ namespace Odyssey.Content.Loading
                 return null;
             }
 
-            var utdId = new ResourceIdentifier(resRef, ResourceType.UTD);
+            var utdId = new CSharpKOTOR.Resources.ResourceIdentifier(resRef, CSharpKOTOR.Resources.ResourceType.UTD);
             byte[] data = await _resourceProvider.GetResourceBytesAsync(utdId, ct);
 
             if (data == null || data.Length == 0)
@@ -62,7 +63,7 @@ namespace Odyssey.Content.Loading
                 return null;
             }
 
-            var utpId = new ResourceIdentifier(resRef, ResourceType.UTP);
+            var utpId = new CSharpKOTOR.Resources.ResourceIdentifier(resRef, CSharpKOTOR.Resources.ResourceType.UTP);
             byte[] data = await _resourceProvider.GetResourceBytesAsync(utpId, ct);
 
             if (data == null || data.Length == 0)
@@ -80,7 +81,7 @@ namespace Odyssey.Content.Loading
                 return null;
             }
 
-            var uttId = new ResourceIdentifier(resRef, ResourceType.UTT);
+            var uttId = new CSharpKOTOR.Resources.ResourceIdentifier(resRef, CSharpKOTOR.Resources.ResourceType.UTT);
             byte[] data = await _resourceProvider.GetResourceBytesAsync(uttId, ct);
 
             if (data == null || data.Length == 0)
@@ -98,7 +99,7 @@ namespace Odyssey.Content.Loading
                 return null;
             }
 
-            var utwId = new ResourceIdentifier(resRef, ResourceType.UTW);
+            var utwId = new CSharpKOTOR.Resources.ResourceIdentifier(resRef, CSharpKOTOR.Resources.ResourceType.UTW);
             byte[] data = await _resourceProvider.GetResourceBytesAsync(utwId, ct);
 
             if (data == null || data.Length == 0)
@@ -116,7 +117,7 @@ namespace Odyssey.Content.Loading
                 return null;
             }
 
-            var utsId = new ResourceIdentifier(resRef, ResourceType.UTS);
+            var utsId = new CSharpKOTOR.Resources.ResourceIdentifier(resRef, CSharpKOTOR.Resources.ResourceType.UTS);
             byte[] data = await _resourceProvider.GetResourceBytesAsync(utsId, ct);
 
             if (data == null || data.Length == 0)
@@ -134,7 +135,7 @@ namespace Odyssey.Content.Loading
                 return null;
             }
 
-            var uteId = new ResourceIdentifier(resRef, ResourceType.UTE);
+            var uteId = new CSharpKOTOR.Resources.ResourceIdentifier(resRef, CSharpKOTOR.Resources.ResourceType.UTE);
             byte[] data = await _resourceProvider.GetResourceBytesAsync(uteId, ct);
 
             if (data == null || data.Length == 0)
@@ -152,7 +153,7 @@ namespace Odyssey.Content.Loading
                 return null;
             }
 
-            var utmId = new ResourceIdentifier(resRef, ResourceType.UTM);
+            var utmId = new CSharpKOTOR.Resources.ResourceIdentifier(resRef, CSharpKOTOR.Resources.ResourceType.UTM);
             byte[] data = await _resourceProvider.GetResourceBytesAsync(utmId, ct);
 
             if (data == null || data.Length == 0)

@@ -1,4 +1,5 @@
 using System.IO;
+using CSharpKOTOR.Resources;
 
 namespace Odyssey.Content.Interfaces
 {

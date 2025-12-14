@@ -295,7 +295,7 @@ namespace Odyssey.Content.Loaders
             {
                 if (entity != null)
                 {
-                    _world.RemoveEntity(entity);
+                    _world.UnregisterEntity(entity);
                     if (entity is Entity coreEntity)
                     {
                         coreEntity.Destroy();
@@ -319,12 +319,15 @@ namespace Odyssey.Content.Loaders
             }
 
             var vis = _currentArea.Visibility;
-            if (vis.Rooms.TryGetValue(fromRoom.ToLowerInvariant(), out var visibleRooms))
+            try
             {
-                return visibleRooms.Contains(toRoom.ToLowerInvariant());
+                return vis.GetVisible(fromRoom, toRoom);
             }
-
-            return false;
+            catch (ArgumentException)
+            {
+                // One of the rooms doesn't exist
+                return false;
+            }
         }
 
         /// <summary>
