@@ -136,12 +136,12 @@ namespace HolocronToolset.NET.Editors
         private void SetupUI()
         {
             // Try to find controls from XAML if available
-            _tableView = EditorHelpers.FindControlSafe<DataGrid>(this, "TableView");
-            _extractButton = EditorHelpers.FindControlSafe<Button>(this, "ExtractButton");
-            _loadButton = EditorHelpers.FindControlSafe<Button>(this, "LoadButton");
-            _unloadButton = EditorHelpers.FindControlSafe<Button>(this, "UnloadButton");
-            _openButton = EditorHelpers.FindControlSafe<Button>(this, "OpenButton");
-            _refreshButton = EditorHelpers.FindControlSafe<Button>(this, "RefreshButton");
+            _tableView = this.FindControl<DataGrid>("tableView");
+            _extractButton = this.FindControl<Button>("extractButton");
+            _loadButton = this.FindControl<Button>("loadButton");
+            _unloadButton = this.FindControl<Button>("unloadButton");
+            _openButton = this.FindControl<Button>("openButton");
+            _refreshButton = this.FindControl<Button>("refreshButton");
 
             if (_tableView != null)
             {

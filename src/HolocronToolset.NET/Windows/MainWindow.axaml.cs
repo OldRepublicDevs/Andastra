@@ -176,6 +176,91 @@ namespace HolocronToolset.NET.Windows
             {
                 _specialActionButton.Click += (sender, e) => OpenModuleDesigner();
             }
+
+            // Connect menu actions from XAML
+            ConnectMenuActions();
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:485-665
+        // Original: Connect menu actions
+        private void ConnectMenuActions()
+        {
+            // Find menu items from XAML and connect them
+            // File menu
+            var actionNewTLK = this.FindControl<MenuItem>("actionNewTLK");
+            if (actionNewTLK != null)
+            {
+                actionNewTLK.Click += (s, e) => { /* TODO: Open TLK editor */ };
+            }
+
+            var actionSettings = this.FindControl<MenuItem>("actionSettings");
+            if (actionSettings != null)
+            {
+                actionSettings.Click += (s, e) => OpenSettingsDialog();
+            }
+
+            var actionExit = this.FindControl<MenuItem>("actionExit");
+            if (actionExit != null)
+            {
+                actionExit.Click += (s, e) => Close();
+            }
+
+            var openAction = this.FindControl<MenuItem>("openAction");
+            if (openAction != null)
+            {
+                openAction.Click += (s, e) => OpenFromFile();
+            }
+
+            // Help menu
+            var actionHelpAbout = this.FindControl<MenuItem>("actionHelpAbout");
+            if (actionHelpAbout != null)
+            {
+                actionHelpAbout.Click += (s, e) => OpenAboutDialog();
+            }
+
+            var actionHelpUpdates = this.FindControl<MenuItem>("actionHelpUpdates");
+            if (actionHelpUpdates != null)
+            {
+                actionHelpUpdates.Click += (s, e) => _updateManager?.CheckForUpdates(silent: false);
+            }
+
+            var actionInstructions = this.FindControl<MenuItem>("actionInstructions");
+            if (actionInstructions != null)
+            {
+                actionInstructions.Click += (s, e) => OpenInstructionsWindow();
+            }
+
+            // Tools menu
+            var actionModuleDesigner = this.FindControl<MenuItem>("actionModuleDesigner");
+            if (actionModuleDesigner != null)
+            {
+                actionModuleDesigner.Click += (s, e) => OpenModuleDesigner();
+            }
+
+            var actionFileSearch = this.FindControl<MenuItem>("actionFileSearch");
+            if (actionFileSearch != null)
+            {
+                actionFileSearch.Click += (s, e) => OpenFileSearchDialog();
+            }
+
+            var actionCloneModule = this.FindControl<MenuItem>("actionCloneModule");
+            if (actionCloneModule != null)
+            {
+                actionCloneModule.Click += (s, e) => { /* TODO: Open clone module dialog */ };
+            }
+
+            // Edit menu
+            var actionEditTLK = this.FindControl<MenuItem>("actionEditTLK");
+            if (actionEditTLK != null)
+            {
+                actionEditTLK.Click += (s, e) => OpenActiveTalktable();
+            }
+
+            var actionEditJRL = this.FindControl<MenuItem>("actionEditJRL");
+            if (actionEditJRL != null)
+            {
+                actionEditJRL.Click += (s, e) => OpenActiveJournal();
+            }
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:823-846
@@ -316,7 +401,8 @@ namespace HolocronToolset.NET.Windows
         private void UpdateMenus()
         {
             // Update menu states based on active installation
-            // This will be implemented when menus are available
+            // Enable/disable menu items based on whether installation is active
+            // This will be fully implemented when menu items are available from XAML
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:1705-1716
@@ -684,16 +770,17 @@ namespace HolocronToolset.NET.Windows
         // Original: def open_about_dialog(self):
         private void OpenAboutDialog()
         {
-            // About dialog will be implemented when available
-            System.Console.WriteLine("About dialog not yet implemented");
+            var dialog = new Dialogs.AboutDialog(this);
+            dialog.ShowDialog(this);
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:1457-1472
         // Original: def open_settings_dialog(self):
         private void OpenSettingsDialog()
         {
-            // Settings dialog will be implemented when available
-            System.Console.WriteLine("Settings dialog not yet implemented");
+            var dialog = new Dialogs.SettingsDialog(this);
+            dialog.ShowDialog(this);
+            // TODO: Reload installations if settings were edited
         }
     }
 }

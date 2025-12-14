@@ -72,12 +72,13 @@ namespace HolocronToolset.NET.Editors
             var mainPanel = new StackPanel { Orientation = Orientation.Vertical };
 
             // Filter box
-            _filterBox = new StackPanel { Orientation = Orientation.Horizontal, IsVisible = false };
+            var filterBoxPanel = new StackPanel { Orientation = Orientation.Horizontal, IsVisible = false };
             _filterEdit = new TextBox { Watermark = "Filter..." };
             var filterButton = new Button { Content = "Filter" };
             filterButton.Click += (s, e) => DoFilter(_filterEdit?.Text ?? "");
-            _filterBox.Children.Add(_filterEdit);
-            _filterBox.Children.Add(filterButton);
+            filterBoxPanel.Children.Add(_filterEdit);
+            filterBoxPanel.Children.Add(filterButton);
+            _filterBox = filterBoxPanel;
             mainPanel.Children.Add(_filterBox);
 
             // Table
@@ -96,9 +97,18 @@ namespace HolocronToolset.NET.Editors
         private void SetupUI()
         {
             // Try to find controls from XAML if available
-            _twodaTable = EditorHelpers.FindControlSafe<DataGrid>(this, "TwodaTable");
-            _filterEdit = EditorHelpers.FindControlSafe<TextBox>(this, "FilterEdit");
-            _filterBox = EditorHelpers.FindControlSafe<Panel>(this, "FilterBox");
+            _twodaTable = this.FindControl<DataGrid>("twodaTable");
+            _filterEdit = this.FindControl<TextBox>("filterEdit");
+            var filterBoxExpander = this.FindControl<Expander>("filterBox");
+            if (filterBoxExpander != null)
+            {
+                // Find the content panel inside the expander
+                var content = filterBoxExpander.Content as Panel;
+                if (content != null)
+                {
+                    _filterBox = content;
+                }
+            }
 
             if (_twodaTable != null)
             {
