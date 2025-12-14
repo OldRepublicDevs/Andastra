@@ -5,7 +5,10 @@ using CSharpKOTOR.Common.Script;
 using Odyssey.Core.Actions;
 using Odyssey.Core.Enums;
 using Odyssey.Core.Interfaces;
+using Odyssey.Core.Interfaces.Components;
 using Odyssey.Scripting.Interfaces;
+using Odyssey.Scripting.Types;
+using Odyssey.Scripting.VM;
 
 namespace Odyssey.Scripting.EngineApi
 {
@@ -14,8 +17,11 @@ namespace Odyssey.Scripting.EngineApi
     /// </summary>
     public class K1EngineApi : BaseEngineApi
     {
+        private readonly NcsVm _vm;
+
         public K1EngineApi()
         {
+            _vm = new NcsVm();
         }
 
         protected override void RegisterFunctions()
@@ -306,10 +312,41 @@ namespace Odyssey.Scripting.EngineApi
 
         private Variable Func_ExecuteScript(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
+            // ExecuteScript(string sScript, object oTarget = OBJECT_SELF)
             string scriptName = args.Count > 0 ? args[0].AsString() : string.Empty;
             uint targetId = args.Count > 1 ? args[1].AsObjectId() : ObjectSelf;
 
-            // TODO: Execute the script
+            if (string.IsNullOrEmpty(scriptName))
+            {
+                return Variable.Void();
+            }
+
+            IEntity target = ResolveObject(targetId, ctx);
+            if (target == null)
+            {
+                target = ctx.Caller;
+            }
+
+            if (target == null || ctx.World == null)
+            {
+                return Variable.Void();
+            }
+
+            // Execute script on target entity
+            try
+            {
+                // Use VM to execute script with new context
+                if (ctx.ResourceProvider != null)
+                {
+                    IExecutionContext scriptCtx = ctx.WithCaller(target);
+                    int result = _vm.ExecuteScript(scriptName, scriptCtx);
+                    return Variable.FromInt(result);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[K1EngineApi] Error executing script {scriptName}: {ex.Message}");
+            }
 
             return Variable.Void();
         }
@@ -346,11 +383,50 @@ namespace Odyssey.Scripting.EngineApi
         private Variable Func_ActionMoveToLocation(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             // ActionMoveToLocation(location lDestination, int bRun=FALSE)
-            object location = args.Count > 0 ? args[0].ComplexValue : null;
+            object locationObj = args.Count > 0 ? args[0].ComplexValue : null;
             bool run = args.Count > 1 && args[1].AsInt() != 0;
 
+            if (ctx.Caller == null)
+            {
+                return Variable.Void();
+            }
+
             // Extract position from location object
-            // TODO: Proper location handling
+            Vector3 destination = Vector3.Zero;
+            if (locationObj is Location location)
+            {
+                destination = location.Position;
+            }
+            else if (locationObj is Vector3 vector)
+            {
+                destination = vector;
+            }
+            else
+            {
+                // Try to extract from complex value
+                // Location should have Position and Facing properties
+                var locationType = locationObj?.GetType();
+                if (locationType != null)
+                {
+                    var positionProp = locationType.GetProperty("Position");
+                    if (positionProp != null)
+                    {
+                        object posValue = positionProp.GetValue(locationObj);
+                        if (posValue is Vector3 pos)
+                        {
+                            destination = pos;
+                        }
+                    }
+                }
+            }
+
+            // Create and queue move action
+            var moveAction = new ActionMoveToLocation(destination, run);
+            IActionQueueComponent actionQueue = ctx.Caller.GetComponent<IActionQueueComponent>();
+            if (actionQueue != null)
+            {
+                actionQueue.Add(moveAction);
+            }
 
             return Variable.Void();
         }
@@ -480,11 +556,11 @@ namespace Odyssey.Scripting.EngineApi
             }
 
             // Create and queue attack action
-            var attackAction = new Actions.ActionAttack(targetId, passive);
+            var attackAction = new ActionAttack(targetId, passive);
             IActionQueueComponent actionQueue = ctx.Caller.GetComponent<IActionQueueComponent>();
             if (actionQueue != null)
             {
-                actionQueue.EnqueueAction(attackAction);
+                actionQueue.Add(attackAction);
             }
 
             return Variable.Void();
