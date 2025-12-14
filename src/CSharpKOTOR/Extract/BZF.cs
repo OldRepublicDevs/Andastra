@@ -19,7 +19,7 @@ namespace CSharpKOTOR.Extract
 
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/extract/bzf.py:17-22
     // Original: @dataclass class IResource:
-    internal class IResource
+    public class IResource
     {
         public int Offset { get; set; }
         public int Size { get; set; }
@@ -276,3 +276,4 @@ namespace CSharpKOTOR.Extract
         }
     }
 }
+
