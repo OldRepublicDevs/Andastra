@@ -394,6 +394,15 @@ namespace Odyssey.Game.Core
 
             var uiEntity = new StrideEngine.Entity("UI");
             _uiComponent = new UIComponent();
+
+            // CRITICAL FIX: Set resolution for UI rendering
+            // Without this, UI elements won't render at all
+            _uiComponent.Resolution = new Vector3(Window.ClientBounds.Width, Window.ClientBounds.Height, 1000);
+            _uiComponent.ResolutionStretch = ResolutionStretch.FixedWidthAdaptableHeight;
+            _uiComponent.IsBillboard = false;
+            _uiComponent.IsFullScreen = true;
+            _uiComponent.RenderGroup = RenderGroup.Group0;
+
             uiEntity.Add(_uiComponent);
 
             // Add UI entity to scene FIRST
@@ -512,43 +521,41 @@ namespace Odyssey.Game.Core
         {
             Console.WriteLine("[Odyssey] Creating visual-only fallback UI (no font dependency)");
 
-            // Create root canvas - full screen dark space background
+            // Create root canvas - full screen with a clear background to see if UI renders at all
             var canvas = new Canvas
             {
-                BackgroundColor = new Color(5, 5, 15, 255), // Very dark blue/black
+                BackgroundColor = new Color(20, 30, 60, 255), // Visible dark blue
                 HorizontalAlignment = HorizontalAlignment.Stretch,
-                VerticalAlignment = VerticalAlignment.Stretch,
-                Width = Window.ClientBounds.Width,
-                Height = Window.ClientBounds.Height
+                VerticalAlignment = VerticalAlignment.Stretch
             };
 
-            // Main panel - centered visual menu
+            // Main panel - centered visual menu - much larger for visibility
             var mainPanel = new Grid
             {
-                Width = 800,
-                Height = 600,
-                BackgroundColor = Color.Transparent,
+                Width = 600,
+                Height = 400,
+                BackgroundColor = new Color(40, 50, 80, 255), // Visible background
                 HorizontalAlignment = HorizontalAlignment.Center,
                 VerticalAlignment = VerticalAlignment.Center
             };
 
-            // Simple row layout
-            mainPanel.RowDefinitions.Add(new StripDefinition(StripType.Fixed, 120)); // Title/header
-            mainPanel.RowDefinitions.Add(new StripDefinition(StripType.Fixed, 50));  // Spacer
-            mainPanel.RowDefinitions.Add(new StripDefinition(StripType.Fixed, 100)); // Main button
-            mainPanel.RowDefinitions.Add(new StripDefinition(StripType.Fixed, 30));  // Spacer
-            mainPanel.RowDefinitions.Add(new StripDefinition(StripType.Fixed, 100)); // Options button
-            mainPanel.RowDefinitions.Add(new StripDefinition(StripType.Fixed, 30));  // Spacer
-            mainPanel.RowDefinitions.Add(new StripDefinition(StripType.Fixed, 100)); // Exit button
+            // Simple row layout - larger spacing
+            mainPanel.RowDefinitions.Add(new StripDefinition(StripType.Fixed, 80)); // Title/header
+            mainPanel.RowDefinitions.Add(new StripDefinition(StripType.Fixed, 20));  // Spacer
+            mainPanel.RowDefinitions.Add(new StripDefinition(StripType.Fixed, 80)); // Main button
+            mainPanel.RowDefinitions.Add(new StripDefinition(StripType.Fixed, 20));  // Spacer
+            mainPanel.RowDefinitions.Add(new StripDefinition(StripType.Fixed, 80)); // Options button
+            mainPanel.RowDefinitions.Add(new StripDefinition(StripType.Fixed, 20));  // Spacer
+            mainPanel.RowDefinitions.Add(new StripDefinition(StripType.Fixed, 80)); // Exit button
             mainPanel.RowDefinitions.Add(new StripDefinition(StripType.Star, 1));    // Bottom space
 
-            // HEADER PANEL - Golden bar (represents title)
+            // HEADER PANEL - Bright golden bar (represents title) - VERY visible
             var headerPanel = new Border
             {
-                BackgroundColor = new Color(220, 180, 80, 255), // Gold/amber
-                BorderColor = new Color(180, 140, 40, 255),
-                BorderThickness = new Thickness(3),
-                Margin = new Thickness(50, 20, 50, 10),
+                BackgroundColor = new Color(255, 200, 50, 255), // Bright gold
+                BorderColor = new Color(255, 255, 255, 255), // White border for maximum visibility
+                BorderThickness = new Thickness(4, 4, 4, 4),
+                Margin = new Thickness(40, 10, 40, 5),
                 HorizontalAlignment = HorizontalAlignment.Stretch,
                 VerticalAlignment = VerticalAlignment.Stretch
             };
@@ -563,23 +570,23 @@ namespace Odyssey.Game.Core
             }
             bool gameAvailable = !string.IsNullOrEmpty(gamePath) && Directory.Exists(gamePath);
 
-            // START GAME BUTTON - Green means "go", clickable visual
+            // START GAME BUTTON - Bright green means "go", highly visible
             var startButton = new Button
             {
-                BackgroundColor = gameAvailable ? new Color(40, 180, 40, 255) : new Color(80, 80, 80, 255),
-                Margin = new Thickness(100, 10, 100, 10),
+                BackgroundColor = gameAvailable ? new Color(50, 200, 50, 255) : new Color(80, 80, 80, 255),
+                Margin = new Thickness(50, 5, 50, 5),
                 HorizontalAlignment = HorizontalAlignment.Stretch,
                 VerticalAlignment = VerticalAlignment.Stretch,
                 IsEnabled = gameAvailable
             };
 
-            // Inner colored box to make it clear it's interactive
+            // Inner colored box to make it clear it's interactive - BRIGHT for visibility
             var startInner = new Border
             {
-                BackgroundColor = gameAvailable ? new Color(60, 220, 60, 255) : new Color(100, 100, 100, 255),
-                Margin = new Thickness(10),
-                BorderColor = Color.White,
-                BorderThickness = new Thickness(3),
+                BackgroundColor = gameAvailable ? new Color(100, 255, 100, 255) : new Color(120, 120, 120, 255),
+                Margin = new Thickness(12, 12, 12, 12),
+                BorderColor = new Color(255, 255, 255, 255),
+                BorderThickness = new Thickness(4, 4, 4, 4),
                 HorizontalAlignment = HorizontalAlignment.Stretch,
                 VerticalAlignment = VerticalAlignment.Stretch
             };
@@ -588,11 +595,11 @@ namespace Odyssey.Game.Core
             startButton.SetGridRow(2);
             mainPanel.Children.Add(startButton);
 
-            // OPTIONS BUTTON - Blue panel (disabled for now)
+            // OPTIONS BUTTON - Bright blue panel (disabled for now but visible)
             var optionsButton = new Button
             {
-                BackgroundColor = new Color(40, 80, 160, 255),
-                Margin = new Thickness(100, 10, 100, 10),
+                BackgroundColor = new Color(60, 100, 200, 255),
+                Margin = new Thickness(50, 5, 50, 5),
                 HorizontalAlignment = HorizontalAlignment.Stretch,
                 VerticalAlignment = VerticalAlignment.Stretch,
                 IsEnabled = false // Disabled for minimal UI
@@ -600,10 +607,10 @@ namespace Odyssey.Game.Core
 
             var optionsInner = new Border
             {
-                BackgroundColor = new Color(60, 100, 180, 255),
-                Margin = new Thickness(10),
-                BorderColor = new Color(100, 100, 100, 255),
-                BorderThickness = new Thickness(2),
+                BackgroundColor = new Color(100, 150, 255, 255),
+                Margin = new Thickness(12, 12, 12, 12),
+                BorderColor = new Color(150, 150, 150, 255),
+                BorderThickness = new Thickness(4, 4, 4, 4),
                 HorizontalAlignment = HorizontalAlignment.Stretch,
                 VerticalAlignment = VerticalAlignment.Stretch
             };
@@ -611,21 +618,21 @@ namespace Odyssey.Game.Core
             optionsButton.SetGridRow(4);
             mainPanel.Children.Add(optionsButton);
 
-            // EXIT BUTTON - Red means "stop/exit", clickable visual
+            // EXIT BUTTON - Bright red means "stop/exit", highly visible
             var exitButton = new Button
             {
-                BackgroundColor = new Color(180, 40, 40, 255),
-                Margin = new Thickness(100, 10, 100, 10),
+                BackgroundColor = new Color(200, 50, 50, 255),
+                Margin = new Thickness(50, 5, 50, 5),
                 HorizontalAlignment = HorizontalAlignment.Stretch,
                 VerticalAlignment = VerticalAlignment.Stretch
             };
 
             var exitInner = new Border
             {
-                BackgroundColor = new Color(220, 60, 60, 255),
-                Margin = new Thickness(10),
-                BorderColor = Color.White,
-                BorderThickness = new Thickness(3),
+                BackgroundColor = new Color(255, 100, 100, 255),
+                Margin = new Thickness(12, 12, 12, 12),
+                BorderColor = new Color(255, 255, 255, 255),
+                BorderThickness = new Thickness(4, 4, 4, 4),
                 HorizontalAlignment = HorizontalAlignment.Stretch,
                 VerticalAlignment = VerticalAlignment.Stretch
             };
@@ -634,11 +641,11 @@ namespace Odyssey.Game.Core
             exitButton.SetGridRow(6);
             mainPanel.Children.Add(exitButton);
 
-            // Outer frame border - makes it look like a contained UI
+            // Outer frame border - bright white border for maximum visibility
             var outerFrame = new Border
             {
-                BorderColor = new Color(120, 100, 60, 255),
-                BorderThickness = new Thickness(5),
+                BorderColor = new Color(255, 255, 255, 255), // Bright white border
+                BorderThickness = new Thickness(6, 6, 6, 6),
                 Content = mainPanel,
                 HorizontalAlignment = HorizontalAlignment.Center,
                 VerticalAlignment = VerticalAlignment.Center
@@ -650,9 +657,18 @@ namespace Odyssey.Game.Core
             var page = new UIPage { RootElement = canvas };
             _uiComponent.Page = page;
 
-            Console.WriteLine("[Odyssey] Visual-only fallback UI created successfully");
-            Console.WriteLine("[Odyssey] UI Layout: Golden header bar, Green=Start, Blue=Options(disabled), Red=Exit");
-            Console.WriteLine("[Odyssey] No font dependency - purely visual elements");
+            Console.WriteLine("[Odyssey] ====================================");
+            Console.WriteLine("[Odyssey] FALLBACK UI CREATED SUCCESSFULLY");
+            Console.WriteLine("[Odyssey] ====================================");
+            Console.WriteLine("[Odyssey] UI Layout:");
+            Console.WriteLine("[Odyssey]   - BRIGHT GOLD BAR at top = Title");
+            Console.WriteLine("[Odyssey]   - BRIGHT GREEN button = Start Game " + (gameAvailable ? "(ENABLED)" : "(DISABLED)"));
+            Console.WriteLine("[Odyssey]   - BRIGHT BLUE button = Options (disabled)");
+            Console.WriteLine("[Odyssey]   - BRIGHT RED button = Exit");
+            Console.WriteLine("[Odyssey] All buttons have WHITE borders for visibility");
+            Console.WriteLine("[Odyssey] Click the GREEN button to start game");
+            Console.WriteLine("[Odyssey] Click the RED button to exit");
+            Console.WriteLine("[Odyssey] ====================================");
         }
 
         private void OnFallbackStartClicked(object sender, RoutedEventArgs e)

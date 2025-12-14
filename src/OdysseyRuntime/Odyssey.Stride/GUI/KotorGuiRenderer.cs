@@ -444,19 +444,17 @@ namespace Odyssey.Stride.GUI
         {
             Console.WriteLine("[KotorGuiRenderer] Creating visual-only fallback UI (no font dependency)");
 
-            // Create root canvas
+            // Create root canvas - visible background
             _rootCanvas = new Canvas
             {
-                Width = screenWidth,
-                Height = screenHeight,
                 HorizontalAlignment = HorizontalAlignment.Stretch,
                 VerticalAlignment = VerticalAlignment.Stretch,
-                BackgroundColor = new Color(30, 30, 30, 255) // Dark background
+                BackgroundColor = new Color(20, 30, 60, 255) // Visible dark blue background
             };
 
-            // Create a centered panel/window
-            float panelWidth = 400;
-            float panelHeight = 350;
+            // Create a centered panel/window - larger and more visible
+            float panelWidth = 600;
+            float panelHeight = 400;
             float panelX = (screenWidth - panelWidth) / 2;
             float panelY = (screenHeight - panelHeight) / 2;
 
@@ -464,49 +462,49 @@ namespace Odyssey.Stride.GUI
             {
                 Width = panelWidth,
                 Height = panelHeight,
-                BackgroundColor = new Color(40, 40, 50, 255),
-                BorderColor = new Color(100, 100, 120, 255),
-                BorderThickness = new Thickness(3, 3, 3, 3),
+                BackgroundColor = new Color(40, 50, 80, 255), // More visible background
+                BorderColor = new Color(255, 255, 255, 255), // Bright white border
+                BorderThickness = new Thickness(6, 6, 6, 6),
                 HorizontalAlignment = HorizontalAlignment.Left,
                 VerticalAlignment = VerticalAlignment.Top
             };
             mainPanel.SetCanvasRelativePosition(new Vector3(panelX, panelY, 0));
             _rootCanvas.Children.Add(mainPanel);
 
-            // Create a grid to hold buttons
+            // Create a grid to hold buttons - better spacing
             var contentGrid = new Grid
             {
                 HorizontalAlignment = HorizontalAlignment.Stretch,
                 VerticalAlignment = VerticalAlignment.Stretch
             };
             contentGrid.RowDefinitions.Add(new StripDefinition(StripType.Fixed, 80));  // Header
-            contentGrid.RowDefinitions.Add(new StripDefinition(StripType.Fixed, 20));  // Spacer
-            contentGrid.RowDefinitions.Add(new StripDefinition(StripType.Fixed, 60));  // New Game
+            contentGrid.RowDefinitions.Add(new StripDefinition(StripType.Fixed, 15));  // Spacer
+            contentGrid.RowDefinitions.Add(new StripDefinition(StripType.Fixed, 70));  // New Game
             contentGrid.RowDefinitions.Add(new StripDefinition(StripType.Fixed, 10));  // Spacer
-            contentGrid.RowDefinitions.Add(new StripDefinition(StripType.Fixed, 60));  // Load Game
+            contentGrid.RowDefinitions.Add(new StripDefinition(StripType.Fixed, 70));  // Load Game
             contentGrid.RowDefinitions.Add(new StripDefinition(StripType.Fixed, 10));  // Spacer
-            contentGrid.RowDefinitions.Add(new StripDefinition(StripType.Fixed, 60));  // Options
+            contentGrid.RowDefinitions.Add(new StripDefinition(StripType.Fixed, 70));  // Options
             contentGrid.RowDefinitions.Add(new StripDefinition(StripType.Fixed, 10));  // Spacer
-            contentGrid.RowDefinitions.Add(new StripDefinition(StripType.Fixed, 60));  // Exit
+            contentGrid.RowDefinitions.Add(new StripDefinition(StripType.Fixed, 70));  // Exit
             contentGrid.RowDefinitions.Add(new StripDefinition(StripType.Star, 1));    // Bottom space
 
-            // Header panel (golden bar to represent title)
+            // Header panel - BRIGHT golden bar to represent title
             var headerPanel = new Border
             {
-                BackgroundColor = new Color(200, 150, 50, 255), // Gold
-                BorderColor = new Color(180, 130, 40, 255),
-                BorderThickness = new Thickness(2, 2, 2, 2),
-                Margin = new Thickness(20, 15, 20, 10),
+                BackgroundColor = new Color(255, 200, 50, 255), // Bright gold
+                BorderColor = new Color(255, 255, 255, 255), // White border
+                BorderThickness = new Thickness(4, 4, 4, 4),
+                Margin = new Thickness(30, 10, 30, 5),
                 HorizontalAlignment = HorizontalAlignment.Stretch,
                 VerticalAlignment = VerticalAlignment.Stretch
             };
             headerPanel.SetGridRow(0);
             contentGrid.Children.Add(headerPanel);
 
-            // New Game button (green = start/go)
-            var newGameButton = CreateFallbackButton(new Color(40, 140, 40, 255), new Color(60, 180, 60, 255));
+            // New Game button - BRIGHT green = start/go
+            var newGameButton = CreateFallbackButton(new Color(50, 200, 50, 255), new Color(100, 255, 100, 255));
             newGameButton.SetGridRow(2);
-            newGameButton.Margin = new Thickness(40, 5, 40, 5);
+            newGameButton.Margin = new Thickness(40, 3, 40, 3);
             newGameButton.Click += (sender, args) =>
             {
                 Console.WriteLine("[FallbackUI] New Game button clicked");
@@ -514,10 +512,10 @@ namespace Odyssey.Stride.GUI
             };
             contentGrid.Children.Add(newGameButton);
 
-            // Load Game button (blue = load/open)
-            var loadGameButton = CreateFallbackButton(new Color(40, 80, 140, 255), new Color(60, 100, 180, 255));
+            // Load Game button - BRIGHT blue = load/open
+            var loadGameButton = CreateFallbackButton(new Color(50, 100, 200, 255), new Color(100, 150, 255, 255));
             loadGameButton.SetGridRow(4);
-            loadGameButton.Margin = new Thickness(40, 5, 40, 5);
+            loadGameButton.Margin = new Thickness(40, 3, 40, 3);
             loadGameButton.Click += (sender, args) =>
             {
                 Console.WriteLine("[FallbackUI] Load Game button clicked");
@@ -525,10 +523,10 @@ namespace Odyssey.Stride.GUI
             };
             contentGrid.Children.Add(loadGameButton);
 
-            // Options button (cyan = settings/configure)
-            var optionsButton = CreateFallbackButton(new Color(40, 120, 120, 255), new Color(60, 150, 150, 255));
+            // Options button - BRIGHT cyan = settings/configure
+            var optionsButton = CreateFallbackButton(new Color(50, 180, 180, 255), new Color(100, 220, 220, 255));
             optionsButton.SetGridRow(6);
-            optionsButton.Margin = new Thickness(40, 5, 40, 5);
+            optionsButton.Margin = new Thickness(40, 3, 40, 3);
             optionsButton.Click += (sender, args) =>
             {
                 Console.WriteLine("[FallbackUI] Options button clicked");
@@ -536,10 +534,10 @@ namespace Odyssey.Stride.GUI
             };
             contentGrid.Children.Add(optionsButton);
 
-            // Exit button (red = stop/exit)
-            var exitButton = CreateFallbackButton(new Color(140, 40, 40, 255), new Color(180, 60, 60, 255));
+            // Exit button - BRIGHT red = stop/exit
+            var exitButton = CreateFallbackButton(new Color(200, 50, 50, 255), new Color(255, 100, 100, 255));
             exitButton.SetGridRow(8);
-            exitButton.Margin = new Thickness(40, 5, 40, 5);
+            exitButton.Margin = new Thickness(40, 3, 40, 3);
             exitButton.Click += (sender, args) =>
             {
                 Console.WriteLine("[FallbackUI] Exit button clicked");
@@ -553,13 +551,23 @@ namespace Odyssey.Stride.GUI
             var page = new UIPage { RootElement = _rootCanvas };
             _uiComponent.Page = page;
 
-            Console.WriteLine("[KotorGuiRenderer] Visual-only fallback UI created successfully");
-            Console.WriteLine("[KotorGuiRenderer] UI Layout: Gold header, Green=New Game, Blue=Load Game, Cyan=Options, Red=Exit");
-            Console.WriteLine("[KotorGuiRenderer] No font dependency - purely visual color-coded buttons");
+            Console.WriteLine("[KotorGuiRenderer] ========================================");
+            Console.WriteLine("[KotorGuiRenderer] FALLBACK UI CREATED SUCCESSFULLY");
+            Console.WriteLine("[KotorGuiRenderer] ========================================");
+            Console.WriteLine("[KotorGuiRenderer] UI Layout:");
+            Console.WriteLine("[KotorGuiRenderer]   - BRIGHT GOLD header bar");
+            Console.WriteLine("[KotorGuiRenderer]   - BRIGHT GREEN = New Game");
+            Console.WriteLine("[KotorGuiRenderer]   - BRIGHT BLUE = Load Game");
+            Console.WriteLine("[KotorGuiRenderer]   - BRIGHT CYAN = Options");
+            Console.WriteLine("[KotorGuiRenderer]   - BRIGHT RED = Exit");
+            Console.WriteLine("[KotorGuiRenderer] All buttons have THICK WHITE borders");
+            Console.WriteLine("[KotorGuiRenderer] No font dependency - purely visual");
+            Console.WriteLine("[KotorGuiRenderer] ========================================");
         }
 
         /// <summary>
         /// Creates a simple visual button for the fallback UI (no text, color-coded).
+        /// Bright colors with thick white borders for maximum visibility.
         /// </summary>
         private Button CreateFallbackButton(Color backgroundColor, Color innerColor)
         {
@@ -570,13 +578,13 @@ namespace Odyssey.Stride.GUI
                 VerticalAlignment = VerticalAlignment.Stretch
             };
 
-            // Inner border to make it visually distinct and clickable
+            // Inner border to make it visually distinct and clickable - THICK white border
             var innerBorder = new Border
             {
                 BackgroundColor = innerColor,
-                BorderColor = Color.White,
-                BorderThickness = new Thickness(2, 2, 2, 2),
-                Margin = new Thickness(8, 8, 8, 8),
+                BorderColor = new Color(255, 255, 255, 255), // Bright white
+                BorderThickness = new Thickness(4, 4, 4, 4), // Thicker border
+                Margin = new Thickness(10, 10, 10, 10),
                 HorizontalAlignment = HorizontalAlignment.Stretch,
                 VerticalAlignment = VerticalAlignment.Stretch
             };
