@@ -1,8 +1,10 @@
+using System;
 using System.Collections.Generic;
 using CSharpKOTOR.Common;
 using CSharpKOTOR.Formats.GFF;
 using CSharpKOTOR.Resources;
 using static CSharpKOTOR.Common.GameExtensions;
+using GFFAuto = CSharpKOTOR.Formats.GFF.GFFAuto;
 
 namespace CSharpKOTOR.Resource.Generics
 {
@@ -121,6 +123,32 @@ namespace CSharpKOTOR.Resource.Generics
             }
 
             return gff;
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/uti.py:371-390
+        // Original: def read_uti(source: SOURCE_TYPES, offset: int = 0, size: int | None = None) -> UTI:
+        public static UTI ReadUti(byte[] data, int offset = 0, int size = -1)
+        {
+            byte[] dataToRead = data;
+            if (size > 0 && offset + size <= data.Length)
+            {
+                dataToRead = new byte[size];
+                System.Array.Copy(data, offset, dataToRead, 0, size);
+            }
+            GFF gff = GFF.FromBytes(dataToRead);
+            return ConstructUti(gff);
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/uti.py:392-407
+        // Original: def bytes_uti(uti: UTI, game: Game = Game.K2, file_format: ResourceType = ResourceType.GFF) -> bytes:
+        public static byte[] BytesUti(UTI uti, Game game = Game.K2, ResourceType fileFormat = null)
+        {
+            if (fileFormat == null)
+            {
+                fileFormat = ResourceType.UTI;
+            }
+            GFF gff = DismantleUti(uti, game);
+            return GFFAuto.BytesGff(gff, fileFormat);
         }
     }
 }
