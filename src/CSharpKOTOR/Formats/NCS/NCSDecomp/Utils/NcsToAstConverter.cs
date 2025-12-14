@@ -160,6 +160,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             }
 
             int mainStart = 0;
+            int alternativeMainStart = -1;
             int mainEnd = instructions.Count;
 
             // Calculate mainEnd - it should be the minimum of all subroutine starts that are AFTER mainStart
@@ -169,12 +170,28 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
 
             // If SAVEBP is found, create globals subroutine (0 to SAVEBP+1)
             // Then calculate where main should start (after globals and entry stub)
+            bool entryJsrTargetIsLastRetn = (entryJsrTarget >= 0 && entryJsrTarget == instructions.Count - 1);
+            bool shouldDeferGlobals = false;
+
             if (savebpIndex >= 0)
             {
-                ASubroutine globalsSub = ConvertInstructionRangeToSubroutine(ncs, instructions, 0, savebpIndex + 1, 0);
-                if (globalsSub != null)
+                // Check if entry JSR targets last RETN - if so, main code might be in globals range
+                // In that case, we'll split globals later after determining main start
+                if (!entryJsrTargetIsLastRetn)
                 {
-                    program.GetSubroutine().Add(globalsSub);
+                    // Normal case: create globals subroutine from 0 to SAVEBP+1
+                    ASubroutine globalsSub = ConvertInstructionRangeToSubroutine(ncs, instructions, 0, savebpIndex + 1, 0);
+                    if (globalsSub != null)
+                    {
+                        program.GetSubroutine().Add(globalsSub);
+                    }
+                }
+                else
+                {
+                    // Special case: entry JSR targets last RETN - defer globals creation
+                    // We'll create it after determining main start, splitting if needed
+                    shouldDeferGlobals = true;
+                    JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Deferring globals creation (entry JSR targets last RETN, may need to split)");
                 }
 
                 // Calculate where globals and entry stub end
@@ -203,20 +220,20 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
                 // If entryJsrTarget points to globals range (0 to entryStubEnd), ignore it
                 // Also ignore if entryJsrTarget points to the last RETN (likely wrong target)
                 // The last RETN is typically at instructions.Count - 1
-                bool entryJsrTargetIsLastRetn = (entryJsrTarget >= 0 && entryJsrTarget == instructions.Count - 1);
-                
+                bool entryJsrTargetIsLastRetn2 = (entryJsrTarget >= 0 && entryJsrTarget == instructions.Count - 1);
+
                 // Special case: If entry JSR targets last RETN, check if there's a JSR at position 0
                 // that might be the actual main entry point (common in some compiler outputs)
-                int alternativeMainStart = -1;
-                if (entryJsrTargetIsLastRetn && instructions.Count > 0 && 
+                if (entryJsrTargetIsLastRetn2 && instructions.Count > 0 &&
                     instructions[0].InsType == NCSInstructionType.JSR && instructions[0].Jump != null)
                 {
                     try
                     {
                         int jsr0Target = ncs.GetInstructionIndex(instructions[0].Jump);
-                        // If JSR at 0 targets something after globals initialization (typically > 20),
-                        // and it's before the entry stub, it might be the main function
-                        if (jsr0Target > 20 && jsr0Target < entryStubEnd)
+                        // If JSR at 0 targets something after position 0 and before the entry stub,
+                        // it might be the main function (even if it's <= 20, as globals initialization
+                        // might be shorter in some files)
+                        if (jsr0Target > 0 && jsr0Target < entryStubEnd)
                         {
                             alternativeMainStart = jsr0Target;
                             JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Found alternative main start at {alternativeMainStart} (JSR at 0 targets {jsr0Target}, entry JSR targets last RETN)");
@@ -226,8 +243,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
                     {
                     }
                 }
-                
-                if (entryJsrTarget >= 0 && entryJsrTarget > entryStubEnd && !entryJsrTargetIsLastRetn)
+
+                if (entryJsrTarget >= 0 && entryJsrTarget > entryStubEnd && !entryJsrTargetIsLastRetn2)
                 {
                     // entryJsrTarget is valid and after entry stub and not the last RETN - use it
                     mainStart = entryJsrTarget;
@@ -284,15 +301,31 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             }
 
             // Ensure mainStart is after globals and entry stub
-            if (mainStart <= globalsEndForMain)
+            // BUT: Don't override alternative main start that was set from JSR at 0
+            // (alternative main start is intentionally in the globals range)
+            bool isAlternativeMainStart = (alternativeMainStart >= 0 && mainStart == alternativeMainStart);
+            if (mainStart <= globalsEndForMain && !isAlternativeMainStart)
             {
                 mainStart = globalsEndForMain;
                 JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Final adjustment: mainStart set to {mainStart} (after globals/entry stub at {globalsEndForMain})");
             }
+            else if (isAlternativeMainStart)
+            {
+                JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Keeping alternative mainStart {mainStart} (in globals range, entry JSR targets last RETN)");
+            }
 
             // Calculate mainEnd - it should be the minimum of all subroutine starts that are AFTER mainStart
             // This ensures main doesn't include other subroutines
-            if (subroutineStarts.Count > 0)
+            // NOTE: If mainStart is in globals range (alternative main start), mainEnd will be updated
+            // in the split globals logic below to include SAVEBP
+            if (isAlternativeMainStart && savebpIndex >= 0)
+            {
+                // Alternative main start is in globals range - initially set to SAVEBP
+                // This will be updated to savebpIndex+1 if we split globals (to include SAVEBP in main)
+                mainEnd = savebpIndex;
+                JavaSystem.@out.Println($"DEBUG NcsToAstConverter: mainEnd initially set to {mainEnd} (SAVEBP, alternative main start in globals range, may be updated if splitting globals)");
+            }
+            else if (subroutineStarts.Count > 0)
             {
                 List<int> sortedSubStarts = new List<int>(subroutineStarts);
                 sortedSubStarts.Sort();
@@ -303,6 +336,39 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
                         mainEnd = subStart;
                         JavaSystem.@out.Println($"DEBUG NcsToAstConverter: mainEnd set to {mainEnd} (first subroutine start after mainStart)");
                         break;
+                    }
+                }
+            }
+
+            // If we deferred globals creation (entry JSR targets last RETN), create it now
+            // Split globals if mainStart is in the globals range
+            if (shouldDeferGlobals && savebpIndex >= 0)
+            {
+                if (mainStart < savebpIndex + 1 && mainStart > 0)
+                {
+                    // Split globals:
+                    // - Globals: 0 to mainStart (globals initialization only, no overlap)
+                    // - Main: mainStart to savebpIndex+1 (includes main code and SAVEBP)
+                    // This ensures no overlap: globals is 0-mainStart, main is mainStart-SAVEBP+1
+                    // SAVEBP is included in main function (it's the boundary instruction)
+                    ASubroutine globalsSub = ConvertInstructionRangeToSubroutine(ncs, instructions, 0, mainStart, 0);
+                    if (globalsSub != null)
+                    {
+                        program.GetSubroutine().Add(globalsSub);
+                        JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Created split globals subroutine (range 0-{mainStart}, globals initialization only)");
+                    }
+                    // Update mainEnd to include SAVEBP since main function code is in globals range
+                    mainEnd = savebpIndex + 1;
+                    JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Updated mainEnd to {mainEnd} (SAVEBP+1, includes main code and SAVEBP)");
+                }
+                else
+                {
+                    // Main start is after globals - create normal globals subroutine
+                    ASubroutine globalsSub = ConvertInstructionRangeToSubroutine(ncs, instructions, 0, savebpIndex + 1, 0);
+                    if (globalsSub != null)
+                    {
+                        program.GetSubroutine().Add(globalsSub);
+                        JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Created globals subroutine (range 0-{savebpIndex + 1})");
                     }
                 }
             }
