@@ -21,6 +21,7 @@ namespace Odyssey.Core.Enums
         OnUnacquireItem,
         OnActivateItem,
         OnUserDefined,
+        OnSpawnButtonDown,
         
         // Area events
         OnEnter,
@@ -34,12 +35,14 @@ namespace Odyssey.Core.Enums
         OnHeartbeat,
         OnPerception,
         OnCombatRoundEnd,
+        OnEndCombatRound,
         OnConversation,
         OnDisturbed,
         OnBlocked,
         OnEndRound,
         OnSpellCastAt,
         OnAttacked,
+        OnPhysicalAttacked,
         OnRested,
         
         // Door events
@@ -47,6 +50,11 @@ namespace Odyssey.Core.Enums
         OnClose,
         OnFailToOpen,
         OnDoorClick,
+        OnClick,
+        OnLock,
+        OnUnlock,
+        OnDisarm,
+        OnTrapTriggered,
         
         // Placeable events
         OnUsed,
@@ -63,7 +71,7 @@ namespace Odyssey.Core.Enums
         
         // Encounter events
         OnEncounterEntered,
-        OnEncounterExhausted,
+        OnExhausted,
         
         // Store events
         OnStoreOpen,
