@@ -44,23 +44,23 @@ namespace HolocronToolset.NET.Dialogs
             var posLayout = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 5 };
             var posLabel = new TextBlock { Text = "Position:", VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center };
             posLayout.Children.Add(posLabel);
-            
+
             var xLabel = new TextBlock { Text = "X:", VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center };
             var pos = _room.Position;
             _xSpin = new NumericUpDown { Minimum = -10000M, Maximum = 10000M, Increment = 0.01M, Value = (decimal)pos.X, Width = 100 };
             posLayout.Children.Add(xLabel);
             posLayout.Children.Add(_xSpin);
-            
+
             var yLabel = new TextBlock { Text = "Y:", VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center };
             _ySpin = new NumericUpDown { Minimum = -10000M, Maximum = 10000M, Increment = 0.01M, Value = (decimal)pos.Y, Width = 100 };
             posLayout.Children.Add(yLabel);
             posLayout.Children.Add(_ySpin);
-            
+
             var zLabel = new TextBlock { Text = "Z:", VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center };
             _zSpin = new NumericUpDown { Minimum = -10000M, Maximum = 10000M, Increment = 0.01M, Value = (decimal)pos.Z, Width = 100 };
             posLayout.Children.Add(zLabel);
             posLayout.Children.Add(_zSpin);
-            
+
             mainPanel.Children.Add(posLayout);
 
             // Buttons
@@ -98,7 +98,7 @@ namespace HolocronToolset.NET.Dialogs
                     (float)(_zSpin?.Value ?? 0)
                 );
                 _room.Position = newPos;
-                
+
                 Close();
             }
             catch (Exception ex)
@@ -146,23 +146,23 @@ namespace HolocronToolset.NET.Dialogs
             var posLayout = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 5 };
             var posLabel = new TextBlock { Text = "Position:", VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center };
             posLayout.Children.Add(posLabel);
-            
+
             var xLabel = new TextBlock { Text = "X:", VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center };
             var trackPos = _track.Position;
             _xSpin = new NumericUpDown { Minimum = -10000M, Maximum = 10000M, Increment = 0.01M, Value = (decimal)trackPos.X, Width = 100 };
             posLayout.Children.Add(xLabel);
             posLayout.Children.Add(_xSpin);
-            
+
             var yLabel = new TextBlock { Text = "Y:", VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center };
             _ySpin = new NumericUpDown { Minimum = -10000M, Maximum = 10000M, Increment = 0.01M, Value = (decimal)trackPos.Y, Width = 100 };
             posLayout.Children.Add(yLabel);
             posLayout.Children.Add(_ySpin);
-            
+
             var zLabel = new TextBlock { Text = "Z:", VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center };
             _zSpin = new NumericUpDown { Minimum = -10000M, Maximum = 10000M, Increment = 0.01M, Value = (decimal)trackPos.Z, Width = 100 };
             posLayout.Children.Add(zLabel);
             posLayout.Children.Add(_zSpin);
-            
+
             mainPanel.Children.Add(posLayout);
 
             // Buttons
@@ -198,7 +198,7 @@ namespace HolocronToolset.NET.Dialogs
                     (float)(_zSpin?.Value ?? 0)
                 );
                 _track.Position = newTrackPos;
-                
+
                 Close();
             }
             catch (Exception ex)

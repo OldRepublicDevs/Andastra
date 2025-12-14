@@ -13,6 +13,11 @@ namespace HolocronToolset.NET.Dialogs
         private HTInstallation _installation;
         public LocalizedString LocString { get; private set; }
 
+        // Public parameterless constructor for XAML
+        public LocalizedStringDialog() : this(null, null, null)
+        {
+        }
+
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/edit/locstring.py:21-107
         // Original: def __init__(self, parent, installation, locstring):
         public LocalizedStringDialog(Window parent, HTInstallation installation, LocalizedString locstring)

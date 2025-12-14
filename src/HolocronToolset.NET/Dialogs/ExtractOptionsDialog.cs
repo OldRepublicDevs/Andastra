@@ -13,9 +13,14 @@ namespace HolocronToolset.NET.Dialogs
         private bool _mdlDecompile;
         private bool _mdlExtractTextures;
 
+        // Public parameterless constructor for XAML
+        public ExtractOptionsDialog() : this(null)
+        {
+        }
+
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/extract_options.py:11-40
         // Original: def __init__(self, parent=None):
-        public ExtractOptionsDialog(Window parent = null)
+        public ExtractOptionsDialog(Window parent)
         {
             InitializeComponent();
             SetupUI();

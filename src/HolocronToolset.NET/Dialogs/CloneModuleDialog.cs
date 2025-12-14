@@ -23,12 +23,17 @@ namespace HolocronToolset.NET.Dialogs
         private bool _keepSounds;
         private bool _keepPathing;
 
+        // Public parameterless constructor for XAML
+        public CloneModuleDialog() : this(null, null, null)
+        {
+        }
+
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/clone_module.py:31-83
         // Original: def __init__(self, parent, active, installations):
         public CloneModuleDialog(
-            Window parent = null,
-            HTInstallation active = null,
-            Dictionary<string, HTInstallation> installations = null)
+            Window parent,
+            HTInstallation active,
+            Dictionary<string, HTInstallation> installations)
         {
             InitializeComponent();
             _active = active;

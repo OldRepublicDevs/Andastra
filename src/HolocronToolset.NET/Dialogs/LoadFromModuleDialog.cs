@@ -16,9 +16,14 @@ namespace HolocronToolset.NET.Dialogs
         private List<ResourceType> _supported;
         private FileResource _selectedResource;
 
+        // Public parameterless constructor for XAML
+        public LoadFromModuleDialog() : this(null, null)
+        {
+        }
+
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/load_from_module.py:17-60
         // Original: def __init__(self, capsule, supported):
-        public LoadFromModuleDialog(List<FileResource> resources = null, List<ResourceType> supported = null)
+        public LoadFromModuleDialog(List<FileResource> resources, List<ResourceType> supported)
         {
             InitializeComponent();
             _resources = resources ?? new List<FileResource>();

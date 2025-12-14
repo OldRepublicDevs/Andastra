@@ -16,9 +16,14 @@ namespace HolocronToolset.NET.Dialogs
         private Dictionary<string, HTInstallation> _installations;
         private HTInstallation _selectedInstallation;
 
+        // Public parameterless constructor for XAML
+        public FileSearcherDialog() : this(null, null)
+        {
+        }
+
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/search.py:42-72
         // Original: def __init__(self, parent, installations):
-        public FileSearcherDialog(Window parent = null, Dictionary<string, HTInstallation> installations = null)
+        public FileSearcherDialog(Window parent, Dictionary<string, HTInstallation> installations)
         {
             InitializeComponent();
             _installations = installations ?? new Dictionary<string, HTInstallation>();
