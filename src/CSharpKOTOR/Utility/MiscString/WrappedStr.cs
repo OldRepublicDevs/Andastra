@@ -36,10 +36,19 @@ namespace CSharpKOTOR.Utility.MiscString
             {
                 throw new Exception($"Cannot initialize {GetType().Name}(None), expected a str-like argument");
             }
-            // C# 7.3 compatible: use as cast instead of pattern matching
-            // content is string, so we can't use pattern matching with WrappedStr
-            // Just assign content directly since it's already a string
             _content = content;
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/utility/common/misc_string/mutable_str.py:21-30
+        // Original: def __init__(self, content: Self | str = ""):
+        // Additional constructor to handle WrappedStr instances
+        public WrappedStr(WrappedStr content)
+        {
+            if (content == null)
+            {
+                throw new Exception($"Cannot initialize {GetType().Name}(None), expected a str-like argument");
+            }
+            _content = content._content;
         }
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/utility/common/misc_string/mutable_str.py:32-33
