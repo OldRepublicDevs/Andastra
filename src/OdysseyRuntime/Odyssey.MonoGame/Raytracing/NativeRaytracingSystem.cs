@@ -135,7 +135,7 @@ namespace Odyssey.MonoGame.Raytracing
             }
 
             // Destroy all BLAS
-            foreach (var entry in _blasEntries.Values)
+            foreach (BlasEntry entry in _blasEntries.Values)
             {
                 _backend.DestroyResource(entry.Handle);
             }
@@ -246,7 +246,7 @@ namespace Odyssey.MonoGame.Raytracing
             {
                 if (_tlasInstances[i].BlasHandle == blas)
                 {
-                    var instance = _tlasInstances[i];
+                    TlasInstance instance = _tlasInstances[i];
                     instance.Transform = transform;
                     _tlasInstances[i] = instance;
                 }

@@ -123,7 +123,7 @@ namespace Odyssey.MonoGame.Converters
             // Process children recursively
             if (node.Children != null)
             {
-                foreach (var child in node.Children)
+                foreach (MDLNode child in node.Children)
                 {
                     ExtractNodeGeometry(child, finalTransform, vertices, indices);
                 }
@@ -144,7 +144,7 @@ namespace Odyssey.MonoGame.Converters
             Color meshColor = Color.Gray;
 
             // Transform and add vertices
-            foreach (var vertex in mesh.Vertices)
+            foreach (CSharpKOTOR.Common.Vector3 vertex in mesh.Vertices)
             {
                 // Transform vertex position
                 var transformedPos = Microsoft.Xna.Framework.Vector3.Transform(
@@ -155,7 +155,7 @@ namespace Odyssey.MonoGame.Converters
             }
 
             // Add faces as indices
-            foreach (var face in mesh.Faces)
+            foreach (MDLFace face in mesh.Faces)
             {
                 // MDL faces are 0-indexed in CSharpKOTOR
                 // Ensure indices are within valid range
@@ -218,7 +218,7 @@ namespace Odyssey.MonoGame.Converters
         /// </summary>
         public void Clear()
         {
-            foreach (var mesh in _loadedMeshes.Values)
+            foreach (RoomMeshData mesh in _loadedMeshes.Values)
             {
                 mesh.VertexBuffer?.Dispose();
                 mesh.IndexBuffer?.Dispose();

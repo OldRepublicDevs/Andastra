@@ -14,27 +14,27 @@ namespace Odyssey.MonoGame.Raytracing
         private readonly IRaytracingSystem _rtSystem;
         private RaytracedEffectsConfig _config;
         private bool _disposed;
-        
+
         // Output textures
         private IntPtr _shadowMask;
         private IntPtr _reflectionBuffer;
         private IntPtr _aoBuffer;
         private IntPtr _giBuffer;
-        
+
         // History buffers for temporal accumulation
         private IntPtr _shadowHistory;
         private IntPtr _reflectionHistory;
         private IntPtr _giHistory;
-        
+
         // Frame counter for temporal jittering
         private int _frameIndex;
-        
+
         public RaytracedEffects(IRaytracingSystem rtSystem)
         {
             _rtSystem = rtSystem;
             _config = RaytracedEffectsConfig.CreateDefault();
         }
-        
+
         /// <summary>
         /// Configures the raytraced effects.
         /// </summary>
@@ -42,7 +42,7 @@ namespace Odyssey.MonoGame.Raytracing
         {
             _config = config;
         }
-        
+
         /// <summary>
         /// Traces all enabled raytraced effects for the current frame.
         /// </summary>
@@ -52,34 +52,34 @@ namespace Odyssey.MonoGame.Raytracing
             {
                 return;
             }
-            
+
             _frameIndex++;
-            
+
             // Shadows
             if (_config.ShadowsEnabled && _rtSystem.CurrentLevel != RaytracingLevel.ReflectionsOnly)
             {
                 TraceShadows(input);
             }
-            
+
             // Reflections
             if (_config.ReflectionsEnabled && _rtSystem.CurrentLevel != RaytracingLevel.ShadowsOnly)
             {
                 TraceReflections(input);
             }
-            
+
             // Ambient Occlusion
             if (_config.AmbientOcclusionEnabled)
             {
                 TraceAmbientOcclusion(input);
             }
-            
+
             // Global Illumination
             if (_config.GlobalIlluminationEnabled && _rtSystem.CurrentLevel == RaytracingLevel.Full)
             {
                 TraceGlobalIllumination(input);
             }
         }
-        
+
         /// <summary>
         /// Gets the raytraced shadow mask texture.
         /// </summary>
@@ -87,7 +87,7 @@ namespace Odyssey.MonoGame.Raytracing
         {
             return _shadowMask;
         }
-        
+
         /// <summary>
         /// Gets the raytraced reflection buffer.
         /// </summary>
@@ -95,7 +95,7 @@ namespace Odyssey.MonoGame.Raytracing
         {
             return _reflectionBuffer;
         }
-        
+
         /// <summary>
         /// Gets the raytraced AO buffer.
         /// </summary>
@@ -103,7 +103,7 @@ namespace Odyssey.MonoGame.Raytracing
         {
             return _aoBuffer;
         }
-        
+
         /// <summary>
         /// Gets the raytraced GI buffer.
         /// </summary>
@@ -111,7 +111,7 @@ namespace Odyssey.MonoGame.Raytracing
         {
             return _giBuffer;
         }
-        
+
         private void TraceShadows(RaytracedEffectsInput input)
         {
             var parameters = new ShadowRayParams
@@ -122,9 +122,9 @@ namespace Odyssey.MonoGame.Raytracing
                 SamplesPerPixel = _config.ShadowSamplesPerPixel,
                 SoftShadowAngle = _config.SoftShadowAngle
             };
-            
+
             _rtSystem.TraceShadowRays(parameters);
-            
+
             // Denoise shadows
             if (_config.DenoiserEnabled)
             {
@@ -139,7 +139,7 @@ namespace Odyssey.MonoGame.Raytracing
                 });
             }
         }
-        
+
         private void TraceReflections(RaytracedEffectsInput input)
         {
             var parameters = new ReflectionRayParams
@@ -152,9 +152,9 @@ namespace Odyssey.MonoGame.Raytracing
                 SamplesPerPixel = _config.ReflectionSamplesPerPixel,
                 RoughnessThreshold = _config.ReflectionRoughnessThreshold
             };
-            
+
             _rtSystem.TraceReflectionRays(parameters);
-            
+
             // Denoise reflections
             if (_config.DenoiserEnabled)
             {
@@ -170,7 +170,7 @@ namespace Odyssey.MonoGame.Raytracing
                 });
             }
         }
-        
+
         private void TraceAmbientOcclusion(RaytracedEffectsInput input)
         {
             var parameters = new AoRayParams
@@ -182,10 +182,10 @@ namespace Odyssey.MonoGame.Raytracing
                 SamplesPerPixel = _config.AoSamplesPerPixel,
                 Intensity = _config.AoIntensity
             };
-            
+
             _rtSystem.TraceAmbientOcclusion(parameters);
         }
-        
+
         private void TraceGlobalIllumination(RaytracedEffectsInput input)
         {
             var parameters = new GiRayParams
@@ -197,9 +197,9 @@ namespace Odyssey.MonoGame.Raytracing
                 SamplesPerPixel = _config.GiSamplesPerPixel,
                 IndirectIntensity = _config.GiIntensity
             };
-            
+
             _rtSystem.TraceGlobalIllumination(parameters);
-            
+
             // GI needs aggressive denoising
             if (_config.DenoiserEnabled)
             {
@@ -215,21 +215,21 @@ namespace Odyssey.MonoGame.Raytracing
                 });
             }
         }
-        
+
         public void Dispose()
         {
             if (_disposed)
             {
                 return;
             }
-            
+
             // Release output textures
             // Release history buffers
-            
+
             _disposed = true;
         }
     }
-    
+
     /// <summary>
     /// Configuration for raytraced effects.
     /// </summary>
@@ -240,30 +240,30 @@ namespace Odyssey.MonoGame.Raytracing
         public int ShadowSamplesPerPixel;
         public float ShadowMaxDistance;
         public float SoftShadowAngle;
-        
+
         // Reflections
         public bool ReflectionsEnabled;
         public int ReflectionSamplesPerPixel;
         public int ReflectionMaxBounces;
         public float ReflectionRoughnessThreshold;
-        
+
         // Ambient Occlusion
         public bool AmbientOcclusionEnabled;
         public int AoSamplesPerPixel;
         public float AoRadius;
         public float AoIntensity;
-        
+
         // Global Illumination
         public bool GlobalIlluminationEnabled;
         public int GiSamplesPerPixel;
         public int GiMaxBounces;
         public float GiIntensity;
-        
+
         // Denoising
         public bool DenoiserEnabled;
         public DenoiserType DenoiserType;
         public float TemporalBlendFactor;
-        
+
         public static RaytracedEffectsConfig CreateDefault()
         {
             return new RaytracedEffectsConfig
@@ -272,40 +272,40 @@ namespace Odyssey.MonoGame.Raytracing
                 ShadowSamplesPerPixel = 1,
                 ShadowMaxDistance = 1000f,
                 SoftShadowAngle = 0.5f,
-                
+
                 ReflectionsEnabled = true,
                 ReflectionSamplesPerPixel = 1,
                 ReflectionMaxBounces = 2,
                 ReflectionRoughnessThreshold = 0.3f,
-                
+
                 AmbientOcclusionEnabled = true,
                 AoSamplesPerPixel = 1,
                 AoRadius = 2.0f,
                 AoIntensity = 1.0f,
-                
+
                 GlobalIlluminationEnabled = false,
                 GiSamplesPerPixel = 1,
                 GiMaxBounces = 2,
                 GiIntensity = 1.0f,
-                
+
                 DenoiserEnabled = true,
                 DenoiserType = DenoiserType.Temporal,
                 TemporalBlendFactor = 0.1f
             };
         }
-        
+
         public static RaytracedEffectsConfig CreatePerformance()
         {
-            var config = CreateDefault();
+            RaytracedEffectsConfig config = CreateDefault();
             config.ReflectionsEnabled = false;
             config.GlobalIlluminationEnabled = false;
             config.AoSamplesPerPixel = 1;
             return config;
         }
-        
+
         public static RaytracedEffectsConfig CreateQuality()
         {
-            var config = CreateDefault();
+            RaytracedEffectsConfig config = CreateDefault();
             config.ShadowSamplesPerPixel = 2;
             config.ReflectionSamplesPerPixel = 2;
             config.AoSamplesPerPixel = 2;
@@ -313,10 +313,10 @@ namespace Odyssey.MonoGame.Raytracing
             config.GiSamplesPerPixel = 2;
             return config;
         }
-        
+
         public static RaytracedEffectsConfig CreateUltra()
         {
-            var config = CreateQuality();
+            RaytracedEffectsConfig config = CreateQuality();
             config.ShadowSamplesPerPixel = 4;
             config.ReflectionSamplesPerPixel = 4;
             config.ReflectionMaxBounces = 4;
@@ -326,7 +326,7 @@ namespace Odyssey.MonoGame.Raytracing
             return config;
         }
     }
-    
+
     /// <summary>
     /// Input data for raytraced effects.
     /// </summary>
@@ -338,15 +338,15 @@ namespace Odyssey.MonoGame.Raytracing
         public IntPtr GBufferRoughness;
         public IntPtr GBufferMetallic;
         public IntPtr GBufferDepth;
-        
+
         // Motion vectors for temporal accumulation
         public IntPtr MotionVectors;
-        
+
         // Light information
         public Vector3 SunDirection;
         public Vector3 SunColor;
         public float SunIntensity;
-        
+
         // Camera data
         public Matrix4x4 ViewMatrix;
         public Matrix4x4 ProjectionMatrix;

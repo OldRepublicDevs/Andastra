@@ -76,10 +76,7 @@ namespace Odyssey.MonoGame.Memory
             }
 
             // Reset object if reset function provided
-            if (_reset != null)
-            {
-                _reset(obj);
-            }
+            _reset?.Invoke(obj);
 
             // Return to pool if not at max size
             if (_maxSize == 0 || _pool.Count < _maxSize)

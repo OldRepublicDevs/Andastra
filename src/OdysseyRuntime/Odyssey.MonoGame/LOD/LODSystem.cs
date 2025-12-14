@@ -146,7 +146,7 @@ namespace Odyssey.MonoGame.LOD
         /// <param name="viewportHeight">Viewport height in pixels.</param>
         /// <returns>Screen-space size in pixels.</returns>
         public float CalculateScreenSpaceSize(
-            Vector3 worldPosition,
+            System.Numerics.Vector3 worldPosition,
             float boundingRadius,
             Matrix viewMatrix,
             Matrix projectionMatrix,

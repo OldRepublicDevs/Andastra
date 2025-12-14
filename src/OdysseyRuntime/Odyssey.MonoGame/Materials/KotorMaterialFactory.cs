@@ -70,7 +70,7 @@ namespace Odyssey.MonoGame.Materials
             string key = (diffuseTexName ?? "default") + "_" + (lightmapTexName ?? "none");
 
             // Check cache
-            if (_materialCache.TryGetValue(key, out var cached))
+            if (_materialCache.TryGetValue(key, out MaterialData cached))
             {
                 return cached;
             }
@@ -249,7 +249,7 @@ namespace Odyssey.MonoGame.Materials
             string key = textureName.ToLowerInvariant();
 
             // Check cache
-            if (_textureCache.TryGetValue(key, out var cached))
+            if (_textureCache.TryGetValue(key, out Texture2D cached))
             {
                 return cached;
             }
@@ -307,7 +307,7 @@ namespace Odyssey.MonoGame.Materials
         // Source: https://docs.monogame.net/articles/getting_to_know/howto/graphics/HowTo_Load_Texture.html
         public void ClearCache()
         {
-            foreach (var tex in _textureCache.Values)
+            foreach (Texture2D tex in _textureCache.Values)
             {
                 tex.Dispose();
             }

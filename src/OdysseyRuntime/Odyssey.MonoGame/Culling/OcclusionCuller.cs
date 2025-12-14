@@ -108,7 +108,7 @@ namespace Odyssey.MonoGame.Culling
         /// <param name="maxPoint">Maximum corner of AABB.</param>
         /// <param name="objectId">Unique ID for temporal caching.</param>
         /// <returns>True if object is occluded (should be culled).</returns>
-        public bool IsOccluded(Vector3 minPoint, Vector3 maxPoint, uint objectId)
+        public bool IsOccluded(System.Numerics.Vector3 minPoint, System.Numerics.Vector3 maxPoint, uint objectId)
         {
             if (!Enabled)
             {
