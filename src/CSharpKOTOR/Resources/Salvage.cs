@@ -191,6 +191,11 @@ namespace CSharpKOTOR.Resources
                 var git = GITHelpers.ConstructGit(gff);
                 return GFFAuto.BytesGff(GITHelpers.DismantleGit(git), ResourceType.GFF);
             }
+            if (restype == ResourceType.IFO)
+            {
+                var ifo = IFOHelpers.ConstructIfo(gff);
+                return GFFAuto.BytesGff(IFOHelpers.DismantleIfo(ifo), ResourceType.GFF);
+            }
             // Other resource types would need their construct/dismantle functions ported
             return GFFAuto.BytesGff(gff, ResourceType.GFF);
         }
