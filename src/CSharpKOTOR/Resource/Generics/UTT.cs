@@ -17,35 +17,38 @@ namespace CSharpKOTOR.Resource.Generics
         // Original: BINARY_TYPE = ResourceType.UTT
         public static readonly ResourceType BinaryType = ResourceType.UTT;
 
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/utt.py:171-209
+        // Original: UTT properties initialization
         // Basic UTT properties
         public ResRef ResRef { get; set; } = ResRef.FromBlank();
         public string Tag { get; set; } = string.Empty;
-        public bool AutoRemoveKey { get; set; }
+        public bool AutoRemoveKey { get; set; } = true;
         public int FactionId { get; set; }
         public int Cursor { get; set; }
-        public int HighlightHeight { get; set; }
-        public int KeyName { get; set; }
-        public ResRef KeyRequired { get; set; } = ResRef.FromBlank();
+        public float HighlightHeight { get; set; }
+        public string KeyName { get; set; } = string.Empty;
         public LocalizedString Name { get; set; } = LocalizedString.FromInvalid();
-        public LocalizedString Description { get; set; } = LocalizedString.FromInvalid();
-        public int TrapDetectable { get; set; }
+        public int TypeId { get; set; }
+        public bool TrapDetectable { get; set; }
         public int TrapDetectDc { get; set; }
-        public int TrapDisarmable { get; set; }
+        public bool TrapDisarmable { get; set; }
         public int TrapDisarmDc { get; set; }
-        public int TrapFlag { get; set; }
-        public int TrapOneShot { get; set; }
-        public ResRef TrapType { get; set; } = ResRef.FromBlank();
-        public int ScriptHeartbeat { get; set; }
-        public int ScriptOnEnter { get; set; }
-        public int ScriptOnExit { get; set; }
-        public int ScriptUserDefined { get; set; }
+        public bool IsTrap { get; set; }
+        public int TrapType { get; set; }
+        public bool TrapOnce { get; set; }
+        public ResRef OnDisarmScript { get; set; } = ResRef.FromBlank();
+        public ResRef OnTrapTriggeredScript { get; set; } = ResRef.FromBlank();
+        public ResRef OnClickScript { get; set; } = ResRef.FromBlank();
         public ResRef OnHeartbeatScript { get; set; } = ResRef.FromBlank();
         public ResRef OnEnterScript { get; set; } = ResRef.FromBlank();
         public ResRef OnExitScript { get; set; } = ResRef.FromBlank();
         public ResRef OnUserDefinedScript { get; set; } = ResRef.FromBlank();
-        public ResRef OnDisarmScript { get; set; } = ResRef.FromBlank();
-        public ResRef OnTrapTriggeredScript { get; set; } = ResRef.FromBlank();
         public string Comment { get; set; } = string.Empty;
+        
+        // Deprecated fields
+        public int PortraitId { get; set; }
+        public int LoadscreenId { get; set; }
+        public int PaletteId { get; set; }
 
         public UTT()
         {
