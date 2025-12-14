@@ -1335,7 +1335,110 @@ namespace Odyssey.Scripting.EngineApi
 
         private Variable Func_GetLastAttacker(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
+            // GetLastAttacker(object oTarget=OBJECT_SELF)
+            // Returns the last entity that attacked the target
+            uint targetId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
+            IEntity target = ResolveObject(targetId, ctx);
+            
+            if (target == null)
+            {
+                return Variable.FromObject(ObjectInvalid);
+            }
+
+            // Try to get CombatManager from GameServicesContext
+            if (ctx.AdditionalContext is GameSession.GameServicesContext services && services.CombatManager != null)
+            {
+                // CombatManager doesn't currently track last attacker, so we'll need to add that
+                // For now, return invalid - this needs to be tracked during combat
+                // TODO: Add last attacker tracking to CombatManager
+                return Variable.FromObject(ObjectInvalid);
+            }
+
             return Variable.FromObject(ObjectInvalid);
+        }
+
+        private Variable Func_GetAttackTarget(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            // GetAttackTarget(object oCreature=OBJECT_SELF)
+            // Returns the current attack target of the creature (only works when in combat)
+            uint creatureId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
+            IEntity creature = ResolveObject(creatureId, ctx);
+            
+            if (creature == null)
+            {
+                return Variable.FromObject(ObjectInvalid);
+            }
+
+            // Try to get CombatManager from GameServicesContext
+            if (ctx.AdditionalContext is GameSession.GameServicesContext services && services.CombatManager != null)
+            {
+                IEntity target = services.CombatManager.GetAttackTarget(creature);
+                if (target != null)
+                {
+                    return Variable.FromObject(target.ObjectId);
+                }
+            }
+
+            return Variable.FromObject(ObjectInvalid);
+        }
+
+        private Variable Func_GetDistanceBetween2D(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            // GetDistanceBetween2D(object oObjectA, object oObjectB)
+            // Returns the 2D distance (ignoring Y) between two objects
+            uint objectAId = args.Count > 0 ? args[0].AsObjectId() : ObjectInvalid;
+            uint objectBId = args.Count > 1 ? args[1].AsObjectId() : ObjectInvalid;
+
+            IEntity objectA = ResolveObject(objectAId, ctx);
+            IEntity objectB = ResolveObject(objectBId, ctx);
+
+            if (objectA == null || objectB == null)
+            {
+                return Variable.FromFloat(0f);
+            }
+
+            Core.Interfaces.Components.ITransformComponent transformA = objectA.GetComponent<Core.Interfaces.Components.ITransformComponent>();
+            Core.Interfaces.Components.ITransformComponent transformB = objectB.GetComponent<Core.Interfaces.Components.ITransformComponent>();
+
+            if (transformA == null || transformB == null)
+            {
+                return Variable.FromFloat(0f);
+            }
+
+            // Calculate 2D distance (ignore Y component)
+            Vector3 posA = transformA.Position;
+            Vector3 posB = transformB.Position;
+            float dx = posB.X - posA.X;
+            float dz = posB.Z - posA.Z;
+            float distance = (float)Math.Sqrt(dx * dx + dz * dz);
+
+            return Variable.FromFloat(distance);
+        }
+
+        private Variable Func_GetIsInCombat(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            // GetIsInCombat(object oCreature=OBJECT_SELF, int bOnlyCountReal=FALSE)
+            // Returns TRUE if the creature is in combat
+            uint creatureId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
+            bool onlyCountReal = args.Count > 1 && args[1].AsInt() != 0;
+
+            IEntity creature = ResolveObject(creatureId, ctx);
+            
+            if (creature == null)
+            {
+                return Variable.FromInt(0);
+            }
+
+            // Try to get CombatManager from GameServicesContext
+            if (ctx.AdditionalContext is GameSession.GameServicesContext services && services.CombatManager != null)
+            {
+                bool inCombat = services.CombatManager.IsInCombat(creature);
+                // Note: bOnlyCountReal parameter is not yet implemented - would need to distinguish
+                // between "real" combat (actively fighting) vs "fake" combat (just targeted)
+                return Variable.FromInt(inCombat ? 1 : 0);
+            }
+
+            return Variable.FromInt(0);
         }
 
         private Variable Func_SetCameraFacing(IReadOnlyList<Variable> args, IExecutionContext ctx)
