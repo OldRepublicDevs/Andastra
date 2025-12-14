@@ -60,14 +60,14 @@ namespace Odyssey.Kotor.Game
                 return;
             }
 
-            var area = _world.CurrentArea;
+            IArea area = _world.CurrentArea;
             if (area == null)
             {
                 return;
             }
 
             // Check if clicking on an object
-            var clickedEntity = FindEntityAt(worldPosition);
+            IEntity clickedEntity = FindEntityAt(worldPosition);
             if (clickedEntity != null)
             {
                 HandleObjectClick(clickedEntity, isRightClick);
@@ -83,21 +83,33 @@ namespace Odyssey.Kotor.Game
         /// </summary>
         public void MoveToLocation(Vector3 position)
         {
-            // TODO: Use pathfinding via NavigationMesh
-            // TODO: Project position onto walkmesh
+            IArea area = _world.CurrentArea;
+            if (area == null || area.NavigationMesh == null)
+            {
+                Console.WriteLine("[PlayerController] No navigation mesh available");
+                return;
+            }
 
-            _targetPosition = position;
+            // Project position onto walkmesh
+            Vector3? projectedPosition = area.NavigationMesh.GetNearestPoint(position);
+            if (projectedPosition == null)
+            {
+                Console.WriteLine("[PlayerController] Could not project position onto walkmesh");
+                return;
+            }
+
+            _targetPosition = projectedPosition.Value;
             _hasTarget = true;
 
-            // Queue a move action
-            var actionQueue = _playerEntity.GetComponent<IActionQueueComponent>();
+            // Queue a move action (ActionMoveToLocation uses pathfinding internally)
+            IActionQueueComponent actionQueue = _playerEntity.GetComponent<IActionQueueComponent>();
             if (actionQueue != null)
             {
                 actionQueue.Clear();
-                actionQueue.Add(new ActionMoveToLocation(position, _isRunning));
+                actionQueue.Add(new ActionMoveToLocation(_targetPosition, _isRunning));
             }
 
-            Console.WriteLine("[PlayerController] Moving to: " + position);
+            Console.WriteLine("[PlayerController] Moving to: " + _targetPosition);
         }
 
         /// <summary>
@@ -149,7 +161,7 @@ namespace Odyssey.Kotor.Game
 
         private void HandleDoorClick(IEntity door)
         {
-            var doorComponent = door.GetComponent<IDoorComponent>();
+            IDoorComponent doorComponent = door.GetComponent<IDoorComponent>();
             if (doorComponent != null)
             {
                 if (doorComponent.IsLocked)
@@ -160,7 +172,7 @@ namespace Odyssey.Kotor.Game
                 else if (!doorComponent.IsOpen)
                 {
                     // Queue open door action
-                    var actionQueue = _playerEntity.GetComponent<IActionQueueComponent>();
+                    IActionQueueComponent actionQueue = _playerEntity.GetComponent<IActionQueueComponent>();
                     if (actionQueue != null)
                     {
                         actionQueue.Clear();
@@ -177,7 +189,7 @@ namespace Odyssey.Kotor.Game
 
         private void HandlePlaceableClick(IEntity placeable)
         {
-            var placeableComponent = placeable.GetComponent<IPlaceableComponent>();
+            IPlaceableComponent placeableComponent = placeable.GetComponent<IPlaceableComponent>();
             if (placeableComponent != null && placeableComponent.IsUseable)
             {
                 // TODO: Queue use action
@@ -190,7 +202,7 @@ namespace Odyssey.Kotor.Game
 
         private void MoveToEntity(IEntity target)
         {
-            var targetTransform = target.GetComponent<ITransformComponent>();
+            ITransformComponent targetTransform = target.GetComponent<ITransformComponent>();
             if (targetTransform != null)
             {
                 MoveToLocation(targetTransform.Position);
@@ -203,7 +215,7 @@ namespace Odyssey.Kotor.Game
         /// </summary>
         private IEntity FindEntityAt(Vector3 position)
         {
-            var area = _world.CurrentArea;
+            IArea area = _world.CurrentArea;
             if (area == null)
             {
                 return null;
@@ -213,7 +225,7 @@ namespace Odyssey.Kotor.Game
             IEntity closest = null;
 
             // Check all interactable entities
-            foreach (var entity in area.Creatures)
+            foreach (IEntity entity in area.Creatures)
             {
                 float dist = CheckEntityDistance(entity, position);
                 if (dist < closestDistance)
@@ -223,7 +235,7 @@ namespace Odyssey.Kotor.Game
                 }
             }
 
-            foreach (var entity in area.Placeables)
+            foreach (IEntity entity in area.Placeables)
             {
                 float dist = CheckEntityDistance(entity, position);
                 if (dist < closestDistance)
@@ -233,7 +245,7 @@ namespace Odyssey.Kotor.Game
                 }
             }
 
-            foreach (var entity in area.Doors)
+            foreach (IEntity entity in area.Doors)
             {
                 float dist = CheckEntityDistance(entity, position);
                 if (dist < closestDistance)
@@ -248,7 +260,7 @@ namespace Odyssey.Kotor.Game
 
         private float CheckEntityDistance(IEntity entity, Vector3 position)
         {
-            var transform = entity.GetComponent<ITransformComponent>();
+            ITransformComponent transform = entity.GetComponent<ITransformComponent>();
             if (transform == null)
             {
                 return float.MaxValue;
@@ -284,7 +296,7 @@ namespace Odyssey.Kotor.Game
                 return;
             }
 
-            var transform = _playerEntity.GetComponent<ITransformComponent>();
+            ITransformComponent transform = _playerEntity.GetComponent<ITransformComponent>();
             if (transform == null)
             {
                 return;
@@ -305,8 +317,32 @@ namespace Odyssey.Kotor.Game
         /// </summary>
         public void StartDialogue(IEntity npc)
         {
-            // TODO: Implement dialogue system integration
-            Console.WriteLine("[PlayerController] FIXME: Dialogue not implemented with: " + npc.Tag);
+            if (npc == null)
+            {
+                return;
+            }
+
+            // Get dialogue ResRef from NPC component
+            ICreatureComponent creatureComponent = npc.GetComponent<ICreatureComponent>();
+            if (creatureComponent == null)
+            {
+                Console.WriteLine("[PlayerController] NPC has no creature component: " + npc.Tag);
+                return;
+            }
+
+            string dialogueResRef = creatureComponent.DialogueResRef;
+            if (string.IsNullOrEmpty(dialogueResRef))
+            {
+                Console.WriteLine("[PlayerController] NPC has no dialogue: " + npc.Tag);
+                return;
+            }
+
+            // Get dialogue manager from world (would need to be accessible)
+            // For now, just log - full integration requires access to DialogueManager
+            Console.WriteLine("[PlayerController] Starting dialogue with " + npc.Tag + " using " + dialogueResRef);
+            
+            // TODO: Access DialogueManager from GameSession to start conversation
+            // _world.GetDialogueManager()?.StartConversation(dialogueResRef, npc, _playerEntity);
         }
     }
 }

@@ -42,6 +42,7 @@ namespace Odyssey.Kotor.Game
         private readonly Loading.ModuleLoader _moduleLoader;
         private readonly DialogueManager _dialogueManager;
         private readonly TriggerSystem _triggerSystem;
+        private readonly HeartbeatSystem _heartbeatSystem;
         private readonly FactionManager _factionManager;
         private readonly CombatManager _combatManager;
         private readonly PerceptionManager _perceptionManager;
@@ -182,6 +183,9 @@ namespace Odyssey.Kotor.Game
 
             // Create trigger system
             _triggerSystem = new TriggerSystem(world, FireScriptEvent);
+
+            // Create heartbeat system
+            _heartbeatSystem = new HeartbeatSystem(world, FireScriptEvent);
 
             // Create faction manager
             _factionManager = new FactionManager(world);
@@ -490,6 +494,12 @@ namespace Odyssey.Kotor.Game
                 // Fire module OnModuleLoad script
                 ExecuteModuleScript(Odyssey.Core.Enums.ScriptEvent.OnModuleLoad, _currentRuntimeModule);
 
+                // Register all entities with heartbeat system
+                if (_heartbeatSystem != null)
+                {
+                    _heartbeatSystem.RegisterAllEntities();
+                }
+
                 Console.WriteLine("[GameSession] Module loaded: " + moduleName);
 
                 // Fire event
@@ -600,10 +610,6 @@ namespace Odyssey.Kotor.Game
             Console.WriteLine("[GameSession] Player entity created at " + entryPos + " with facing " + entryFacing);
         }
 
-        // Heartbeat timing
-        private float _heartbeatTimer = 0f;
-        private const float HeartbeatInterval = 6.0f; // 6 seconds between heartbeats
-
         /// <summary>
         /// Update the game session each frame.
         /// </summary>
@@ -631,15 +637,16 @@ namespace Odyssey.Kotor.Game
 
             // Process delayed commands (handled by World.Update)
 
-            // Fire heartbeat scripts every 6 seconds
-            _heartbeatTimer += deltaTime;
-            if (_heartbeatTimer >= HeartbeatInterval)
+            // Update heartbeat system (fires OnHeartbeat scripts for entities)
+            if (_heartbeatSystem != null)
             {
-                _heartbeatTimer = 0f;
-                if (_currentRuntimeModule != null)
-                {
-                    ExecuteModuleScript(Odyssey.Core.Enums.ScriptEvent.OnHeartbeat, _currentRuntimeModule);
-                }
+                _heartbeatSystem.Update(deltaTime);
+            }
+
+            // Fire module heartbeat script
+            if (_currentRuntimeModule != null)
+            {
+                ExecuteModuleScript(Odyssey.Core.Enums.ScriptEvent.OnHeartbeat, _currentRuntimeModule);
             }
 
             // Update dialogue manager
@@ -648,7 +655,7 @@ namespace Odyssey.Kotor.Game
                 _dialogueManager.Update(deltaTime);
             }
 
-            // Update trigger system
+            // Update trigger system (fires OnEnter/OnExit scripts)
             if (_triggerSystem != null)
             {
                 _triggerSystem.Update();

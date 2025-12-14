@@ -14,6 +14,7 @@ using Odyssey.Core.Combat;
 using Odyssey.Core.Enums;
 using Odyssey.Core.Interfaces;
 using Odyssey.Core.Interfaces.Components;
+using Odyssey.Kotor.Components;
 using Odyssey.Scripting.Interfaces;
 using Odyssey.Scripting.Types;
 using Odyssey.Scripting.VM;
@@ -1244,10 +1245,48 @@ namespace Odyssey.Scripting.EngineApi
                     itemEntity.Tag = itemTemplate;
                 }
 
-                // TODO: Add item component with UTI template data
-                // This would require creating an IItemComponent interface that stores:
-                // - BaseItem, StackSize, Charges, Cost, Properties, etc.
-                // For now, the entity is created with the tag
+                // Add item component with UTI template data
+                if (utiTemplate != null)
+                {
+                    var itemComponent = new ItemComponent
+                    {
+                        BaseItem = utiTemplate.BaseItem,
+                        StackSize = utiTemplate.StackSize,
+                        Charges = utiTemplate.Charges,
+                        Cost = utiTemplate.Cost,
+                        Identified = utiTemplate.Identified != 0,
+                        TemplateResRef = itemTemplate
+                    };
+
+                    // Convert UTI properties to ItemProperty
+                    foreach (var utiProp in utiTemplate.Properties)
+                    {
+                        var prop = new Odyssey.Core.Interfaces.Components.ItemProperty
+                        {
+                            PropertyType = utiProp.PropertyName,
+                            Subtype = utiProp.Subtype,
+                            CostTable = utiProp.CostTable,
+                            CostValue = utiProp.CostValue,
+                            Param1 = utiProp.Param1,
+                            Param1Value = utiProp.Param1Value
+                        };
+                        itemComponent.AddProperty(prop);
+                    }
+
+                    // Convert UTI upgrades to ItemUpgrade
+                    for (int i = 0; i < utiTemplate.Upgrades.Count; i++)
+                    {
+                        var utiUpgrade = utiTemplate.Upgrades[i];
+                        var upgrade = new Odyssey.Core.Interfaces.Components.ItemUpgrade
+                        {
+                            UpgradeType = i, // Index-based upgrade type
+                            Index = i
+                        };
+                        itemComponent.AddUpgrade(upgrade);
+                    }
+
+                    itemEntity.AddComponent(itemComponent);
+                }
 
                 // Add to target's inventory if target has inventory component
                 IInventoryComponent inventory = target.GetComponent<IInventoryComponent>();
