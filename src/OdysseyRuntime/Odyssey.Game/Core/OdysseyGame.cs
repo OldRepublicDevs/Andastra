@@ -116,6 +116,11 @@ namespace Odyssey.Game.Core
             DebugLog("C", "OdysseyGame.Initialize:compositor_check", "Checking GraphicsCompositor", SceneSystem?.GraphicsCompositor != null ? "compositor_exists" : "compositor_null");
             // #endregion
 
+            // Set window title
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Games.GameWindow.html
+            // Window.Title property sets the window title bar text
+            // Method signature: string Title { get; set; }
+            // Source: https://doc.stride3d.net/latest/en/manual/graphics/window-management.html
             Window.Title = "Odyssey Engine - " + (_settings.Game == KotorGame.K1 ? "Knights of the Old Republic" : "The Sith Lords");
 
             _world = new World();
