@@ -6,10 +6,12 @@ using Avalonia.Layout;
 using Avalonia.Markup.Xaml;
 using CSharpKOTOR.Common;
 using CSharpKOTOR.Formats.GFF;
+using CSharpKOTOR.Formats.TwoDA;
 using CSharpKOTOR.Resource.Generics;
 using CSharpKOTOR.Resources;
 using HolocronToolset.NET.Data;
 using HolocronToolset.NET.Dialogs;
+using JetBrains.Annotations;
 using GFFAuto = CSharpKOTOR.Formats.GFF.GFFAuto;
 
 namespace HolocronToolset.NET.Editors
@@ -69,6 +71,8 @@ namespace HolocronToolset.NET.Editors
         public Button TagGenerateBtn => _tagGenerateBtn;
         public Button ResrefGenerateBtn => _resrefGenerateBtn;
         public TreeView AvailablePropertyList => _availablePropertyList;
+        // Property to expose ItemCount for testing (matching Python's topLevelItemCount())
+        public int AvailablePropertyListItemCount => _availablePropertyList?.Items?.Count ?? 0;
         public ListBox AssignedPropertiesList => _assignedPropertiesList;
         public Button AddPropertyBtn => _addPropertyBtn;
         public Button RemovePropertyBtn => _removePropertyBtn;
@@ -88,6 +92,7 @@ namespace HolocronToolset.NET.Editors
 
             InitializeComponent();
             SetupUI();
+            // SetupInstallation is now called from InitializeComponent after UI is set up
             MinWidth = 700;
             MinHeight = 350;
             New();
@@ -141,6 +146,12 @@ namespace HolocronToolset.NET.Editors
             {
                 // XAML loaded, set up signals
                 SetupSignals();
+            }
+
+            // Setup installation after UI is initialized
+            if (_installation != null)
+            {
+                SetupInstallation(_installation);
             }
         }
 
@@ -693,6 +704,207 @@ namespace HolocronToolset.NET.Editors
             // Placeholder for icon update
             // Will be implemented when icon loading is available
             System.Console.WriteLine("Icon update not yet implemented");
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uti.py:106-154
+        // Original: def _setup_installation(self, installation):
+        private void SetupInstallation(HTInstallation installation)
+        {
+            if (installation == null)
+            {
+                return;
+            }
+
+            _installation = installation;
+
+            // Matching PyKotor implementation: required: list[str] = [HTInstallation.TwoDA_BASEITEMS, HTInstallation.TwoDA_ITEM_PROPERTIES]
+            var required = new List<string> { HTInstallation.TwoDABaseitems, HTInstallation.TwoDAItemProperties };
+            installation.HtBatchCache2DA(required);
+
+            // Matching PyKotor implementation: baseitems: TwoDA | None = installation.ht_get_cache_2da(HTInstallation.TwoDA_BASEITEMS)
+            TwoDA baseitems = installation.HtGetCache2DA(HTInstallation.TwoDABaseitems);
+            if (baseitems == null)
+            {
+                System.Console.WriteLine("Failed to retrieve BASEITEMS 2DA.");
+            }
+            else
+            {
+                // Matching PyKotor implementation: self.ui.baseSelect.set_items(baseitems.get_column("label"))
+                if (_baseSelect != null)
+                {
+                    _baseSelect.Items.Clear();
+                    for (int i = 0; i < baseitems.GetHeight(); i++)
+                    {
+                        string label = baseitems.GetCellString(i, "label") ?? "";
+                        _baseSelect.Items.Add(label);
+                    }
+                }
+            }
+
+            // Matching PyKotor implementation: self.ui.availablePropertyList.clear()
+            if (_availablePropertyList == null)
+            {
+                System.Console.WriteLine("AvailablePropertyList is null - cannot populate properties");
+                return;
+            }
+
+            _availablePropertyList.Items.Clear();
+
+            // Matching PyKotor implementation: item_properties: TwoDA | None = installation.ht_get_cache_2da(HTInstallation.TwoDA_ITEM_PROPERTIES)
+            TwoDA itemProperties = installation.HtGetCache2DA(HTInstallation.TwoDAItemProperties);
+            if (itemProperties == null)
+            {
+                System.Console.WriteLine("Failed to retrieve ITEM_PROPERTIES 2DA.");
+                return;
+            }
+
+            if (itemProperties != null)
+            {
+                // Matching PyKotor implementation: for i in range(item_properties.get_height()):
+                for (int i = 0; i < itemProperties.GetHeight(); i++)
+                {
+                    // Matching PyKotor implementation: prop_name: str = UTIEditor.property_name(installation, i)
+                    string propName = PropertyName(installation, i);
+                    
+                    // Matching PyKotor implementation: item = QTreeWidgetItem([prop_name])
+                    var item = new TreeViewItem
+                    {
+                        Header = propName
+                    };
+                    // Store property index and subproperty index in Tag (using a simple object)
+                    item.Tag = new PropertyTreeItemData { PropertyIndex = i, SubPropertyIndex = i };
+
+                    // Matching PyKotor implementation: subtype_resname: str = item_properties.get_cell(i, "subtyperesref")
+                    string subtypeResname = itemProperties.GetCellString(i, "subtyperesref") ?? "";
+                    if (string.IsNullOrEmpty(subtypeResname))
+                    {
+                        // No subtype, just add the item
+                        if (_availablePropertyList != null)
+                        {
+                            _availablePropertyList.Items.Add(item);
+                        }
+                        continue;
+                    }
+
+                    // Matching PyKotor implementation: subtype: TwoDA | None = installation.ht_get_cache_2da(subtype_resname)
+                    TwoDA subtype = installation.HtGetCache2DA(subtypeResname);
+                    if (subtype == null)
+                    {
+                        System.Console.WriteLine($"Failed to retrieve subtype '{subtypeResname}' for property name '{propName}' at index {i}. Skipping...");
+                        if (_availablePropertyList != null)
+                        {
+                            _availablePropertyList.Items.Add(item);
+                        }
+                        continue;
+                    }
+
+                    // Matching PyKotor implementation: for j in range(subtype.get_height()):
+                    var childItems = new List<TreeViewItem>();
+                    for (int j = 0; j < subtype.GetHeight(); j++)
+                    {
+                        // Matching PyKotor implementation: name: None | str = UTIEditor.subproperty_name(installation, i, j)
+                        string name = SubpropertyName(installation, i, j);
+                        if (string.IsNullOrEmpty(name) || string.IsNullOrWhiteSpace(name))
+                        {
+                            // Matching PyKotor implementation: if not name or not name.strip(): continue
+                            continue;
+                        }
+
+                        // Matching PyKotor implementation: child = QTreeWidgetItem([name])
+                        var child = new TreeViewItem
+                        {
+                            Header = name
+                        };
+                        // Matching PyKotor implementation: child.setData(0, Qt.ItemDataRole.UserRole, i)
+                        // Matching PyKotor implementation: child.setData(0, Qt.ItemDataRole.UserRole + 1, j)
+                        child.Tag = new PropertyTreeItemData { PropertyIndex = i, SubPropertyIndex = j };
+                        childItems.Add(child);
+                    }
+                    item.ItemsSource = childItems;
+                    if (_availablePropertyList != null)
+                    {
+                        _availablePropertyList.Items.Add(item);
+                    }
+                }
+            }
+        }
+
+        // Helper class to store property tree item data
+        private class PropertyTreeItemData
+        {
+            public int PropertyIndex { get; set; }
+            public int SubPropertyIndex { get; set; }
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uti.py:451-464
+        // Original: @staticmethod def property_name(installation: HTInstallation, prop: int) -> str:
+        private static string PropertyName(HTInstallation installation, int prop)
+        {
+            // Matching PyKotor implementation: properties: TwoDA | None = installation.ht_get_cache_2da(HTInstallation.TwoDA_ITEM_PROPERTIES)
+            TwoDA properties = installation.HtGetCache2DA(HTInstallation.TwoDAItemProperties);
+            if (properties == null)
+            {
+                System.Console.WriteLine("Failed to retrieve ITEM_PROPERTIES 2DA.");
+                return "Unknown";
+            }
+
+            // Matching PyKotor implementation: stringref: int | None = properties.get_row(prop).get_integer("name")
+            TwoDARow row = properties.GetRow(prop);
+            int? stringrefNullable = row.GetInteger("name");
+            if (!stringrefNullable.HasValue)
+            {
+                System.Console.WriteLine($"Failed to retrieve name stringref for property {prop}.");
+                return "Unknown";
+            }
+            int stringref = stringrefNullable.Value;
+
+            // Matching PyKotor implementation: return installation.talktable().string(stringref)
+            return installation.GetStringFromStringRef(stringref);
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uti.py:466-485
+        // Original: @staticmethod def subproperty_name(installation: HTInstallation, prop: int, subprop: int) -> None | str:
+        [CanBeNull]
+        private static string SubpropertyName(HTInstallation installation, int prop, int subprop)
+        {
+            // Matching PyKotor implementation: properties: TwoDA | None = installation.ht_get_cache_2da(HTInstallation.TwoDA_ITEM_PROPERTIES)
+            TwoDA properties = installation.HtGetCache2DA(HTInstallation.TwoDAItemProperties);
+            if (properties == null)
+            {
+                System.Console.WriteLine("Failed to retrieve ITEM_PROPERTIES 2DA.");
+                return null;
+            }
+
+            // Matching PyKotor implementation: subtype_resname: str | None = properties.get_cell(prop, "subtyperesref")
+            TwoDARow propRow = properties.GetRow(prop);
+            string subtypeResname = propRow.GetString("subtyperesref") ?? "";
+            if (string.IsNullOrEmpty(subtypeResname))
+            {
+                System.Console.WriteLine($"Failed to retrieve subtype_resname for property {prop}.");
+                return null;
+            }
+
+            // Matching PyKotor implementation: subproperties: TwoDA | None = installation.ht_get_cache_2da(subtype_resname)
+            TwoDA subproperties = installation.HtGetCache2DA(subtypeResname);
+            if (subproperties == null)
+            {
+                return null;
+            }
+
+            // Matching PyKotor implementation: header_strref: Literal["name", "string_ref"] = "name" if "name" in subproperties.get_headers() else "string_ref"
+            string headerStrref = subproperties.GetHeaders().Contains("name") ? "name" : "string_ref";
+
+            // Matching PyKotor implementation: name_strref: int | None = subproperties.get_row(subprop).get_integer(header_strref)
+            TwoDARow subpropRow = subproperties.GetRow(subprop);
+            int? nameStrrefNullable = subpropRow.GetInteger(headerStrref);
+            if (nameStrrefNullable.HasValue)
+            {
+                // Matching PyKotor implementation: return installation.talktable().string(name_strref)
+                return installation.GetStringFromStringRef(nameStrrefNullable.Value);
+            }
+
+            // Matching PyKotor implementation: return subproperties.get_cell(subprop, "label") if name_strref is None else installation.talktable().string(name_strref)
+            return subpropRow.GetString("label") ?? "";
         }
 
         // Helper class for property list items

@@ -39,7 +39,7 @@ namespace HolocronToolset.NET.Data
         public const string TwoDASkills = "skills.2da";
         public const string TwoDAUpgrades = "upcrystals.2da";
         public const string TwoDAEncDifficulties = "encdifficulty.2da";
-        public const string TwoDAItemProperties = "itemprops.2da";
+        public const string TwoDAItemProperties = "itempropdef";
         public const string TwoDAIprpParamtable = "iprp_paramtable.2da";
         public const string TwoDAIprpCosttable = "iprp_costtable.2da";
         public const string TwoDAIprpAbilities = "iprp_abilities.2da";
@@ -604,6 +604,32 @@ namespace HolocronToolset.NET.Data
             }
 
             return results;
+        }
+
+        // Matching PyKotor implementation: Helper method to get string from stringref (for use in editors)
+        // Original: installation.talktable().string(stringref)
+        public string GetStringFromStringRef(int stringref)
+        {
+            if (stringref == -1)
+            {
+                return "";
+            }
+
+            string tlkPath = System.IO.Path.Combine(Path, "dialog.tlk");
+            if (!File.Exists(tlkPath))
+            {
+                return "";
+            }
+
+            try
+            {
+                var talkTable = new CSharpKOTOR.Extract.TalkTable(tlkPath);
+                return talkTable.GetString(stringref);
+            }
+            catch
+            {
+                return "";
+            }
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/installation.py
