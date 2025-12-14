@@ -244,3 +244,36 @@ The tool supports `-WhatIf` for dry-run testing, `-Verbose` for detailed output,
 **Note**: This restriction applies ONLY to `src/NCSDecomp` and `src/CSharpKOTOR/Formats/NCS/NCSDecomp`. Other parts of HoloPatcher.NET (e.g., tests, round-trip validation utilities) MAY use external compilers, but the core decompiler library must NOT.
 
 **If you see code in NCSDecomp.NET that calls external compilers, it should be removed or refactored to use internal implementations only.**
+
+## Odyssey Engine Development
+
+**CRITICAL: Ghidra MCP Usage for Engine-Related Code**
+
+When working on Odyssey Engine code (anything in `src/OdysseyRuntime/`), AI agents MUST:
+
+1. **Use Ghidra MCP** for understanding original engine behavior:
+   - The Ghidra MCP server has `swkotor2.exe` loaded
+   - Use `mcp_ghidra_*` tools to search functions, decompile code, find strings
+   - Search for relevant strings to locate engine functions (e.g., "BWM", "pathfind", "walkmesh")
+   - Verify implementation faithfulness against original engine behavior
+
+2. **Reference Documentation**:
+   - Primary: `vendor/PyKotor/wiki/` for file format documentation
+   - Secondary: `vendor/PyKotor/vendor/xoreos-docs/` for official BioWare specs
+   - Implementation plan: `.cursor/plans/stride_odyssey_engine_e8927e4a.plan.md`
+   - Roadmap: `docs/engine_roadmap.md`
+
+3. **Clean-Room Process**:
+   - Derive behavior from observation and specs, not code copying
+   - Match original engine behavior exactly where documented
+   - Document any deviations or improvements
+
+4. **Code Organization**:
+   - `Odyssey.Core` - Pure domain, no Stride dependency
+   - `Odyssey.Content` - Asset conversion/caching
+   - `Odyssey.Scripting` - NCS VM + NWScript API
+   - `Odyssey.Kotor` - K1/K2 specific rules
+   - `Odyssey.Stride` - Stride rendering adapters
+   - `Odyssey.Game` - Executable launcher
+
+5. **Maintain C# 7.3 Compatibility**: Even in OdysseyRuntime projects
