@@ -1,0 +1,9 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="HolocronToolset.NET.Widgets.Edit.ColorEdit">
+    <StackPanel Orientation="Horizontal" Spacing="5">
+        <Border Name="colorLabel" Width="16" Height="16" Background="White" BorderBrush="Gray" BorderThickness="1" />
+        <NumericUpDown Name="colorSpin" Minimum="0" Maximum="4294967295" Width="100" />
+        <Button Name="editButton" Content="Edit" Width="60" />
+    </StackPanel>
+</UserControl>
