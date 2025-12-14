@@ -278,6 +278,7 @@ When working on Odyssey Engine code (anything in `src/OdysseyRuntime/`), AI agen
       - Any relevant implementation notes
 
    **Comment Format**:
+
    ```csharp
    // Brief description of operation
    // Based on [Library] API: [Full URL to official documentation]
@@ -287,6 +288,7 @@ When working on Odyssey Engine code (anything in `src/OdysseyRuntime/`), AI agen
    ```
 
    **Example**:
+
    ```csharp
    // Begin sprite batch
    // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Graphics.SpriteBatch.html
@@ -494,58 +496,11 @@ When implementing format handling, reference these CSharpKOTOR parsers:
 - GIT: `CSharpKOTOR/Formats/GIT/` - Instance spawning
 - GFF templates: UTC, UTP, UTD, UTT, UTW, UTS, UTE, UTI
 
-### Future Engine Support (Aurora Family)
-
-The architecture supports future engines via abstraction:
-
-| Engine | Games | Notes |
-|--------|-------|-------|
-| Odyssey | KotOR 1/2 | Current focus |
-| Aurora | NWN | Similar NCS, different rendering |
-| Electron | Jade Empire | Modified NCS |
-| Eclipse | Dragon Age | Different script system |
-
-**Engine Family Abstraction** (for future Aurora/Eclipse support):
-
-```csharp
-public interface IGameProfile
-{
-    string GameId { get; }
-    int ScriptFunctionCount { get; }
-    IResourceLayout ResourceLayout { get; }
-    IRuleSet RuleSet { get; }
-}
-```
-
 Design for extensibility to other engines:
 
 - Keep `IGameProfile` interface for game-specific behavior
 - Game rules in `Odyssey.Kotor`, not `Odyssey.Core`
-- Resource paradigms (GFF, archives, scripting) shared
-- Game-specific 2DA/rules are pluggable
-
-### Key Files to Reference
-
-| Subsystem | Reference Files |
-|-----------|-----------------|
-| VM Implementation | `Odyssey.Scripting/VM/NcsVm.cs` |
-| Navigation | `Odyssey.Core/Navigation/NavigationMesh.cs` |
-| Actions | `Odyssey.Core/Actions/*.cs` |
-| Entity System | `Odyssey.Core/Entities/Entity.cs`, `World.cs` |
-| Format Parsing | `CSharpKOTOR/Formats/*` |
-| Full Plan | `.cursor/plans/stride_odyssey_engine_e8927e4a.plan.md` |
-| Roadmap | `docs/engine_roadmap.md` |
-
-### Key 2DA Tables
-
-| Table | Purpose |
-|-------|---------|
-| `appearance.2da` | Model resref, walk/run speed |
-| `baseitems.2da` | Item categories, damage |
-| `feat.2da` | Feat definitions |
-| `spells.2da` | Force powers |
-| `classes.2da` | Class progression |
-| `surfacemat.2da` | Surface walkability |
+- Stride-only logic/code is allowed in OdysseyRunner. Keep ANY AND ALL other code in a shared library named CSharpKOTOR.
 
 ### Clean-Room Process
 
@@ -574,7 +529,7 @@ Design for extensibility to other engines:
 A feature is complete when:
 
 - Implementation matches original engine behavior
-- Unit tests pass for deterministic logic
+- Unit tests meticulously written, and passing for deterministic logic
 - Integration with CSharpKOTOR format parsers works
-- No C# 8+ syntax used
+- C# 7.3 syntax or lower, 8+ isn't supported.
 - Code compiles with no warnings

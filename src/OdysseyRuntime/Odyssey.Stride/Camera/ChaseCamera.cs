@@ -106,10 +106,24 @@ namespace Odyssey.Stride.Camera
         /// Creates a new chase camera.
         /// </summary>
         /// <param name="camera">The Stride camera component to control.</param>
+        // Initialize chase camera with camera component
+        // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Engine.CameraComponent.html
+        // CameraComponent defines camera properties for rendering
+        // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Engine.Entity.html
+        // CameraComponent.Entity property gets the entity that owns the camera component
+        // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Engine.TransformComponent.html
+        // Transform.Position property gets the current world position of the camera entity
+        // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.Vector3.html
+        // Vector3.UnitZ is a static property representing forward vector (0, 0, 1)
+        // Source: https://doc.stride3d.net/latest/en/manual/graphics/cameras/index.html
         public ChaseCamera([NotNull] CameraComponent camera)
         {
             _camera = camera ?? throw new ArgumentNullException("camera");
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Engine.TransformComponent.html
+            // Transform.Position gets the initial camera position from the entity
             _currentPosition = camera.Entity.Transform.Position;
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.Vector3.html
+            // Vector3 addition creates look-at point offset from camera position
             _currentLookAt = _currentPosition + Vector3.UnitZ;
         }
 
@@ -148,7 +162,14 @@ namespace Odyssey.Stride.Camera
             }
 
             // Get target position (character position + eye height)
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Engine.TransformComponent.html
+            // Transform.Position property gets the world position of the follow target entity
+            // Source: https://doc.stride3d.net/latest/en/manual/entities/transforms/index.html
             Vector3 targetPos = _followTarget.Transform.Position;
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.Vector3.html
+            // Vector3.UnitY is a static property representing up vector (0, 1, 0)
+            // Vector3 multiplication scales the up vector by height offset
+            // Source: https://doc.stride3d.net/latest/en/manual/mathematics/index.html
             Vector3 lookAtPoint = targetPos + Vector3.UnitY * _height * 0.5f;
 
             // Calculate ideal camera position
@@ -170,7 +191,12 @@ namespace Odyssey.Stride.Camera
                 idealPosition = HandleCollision(lookAtPoint, idealPosition);
             }
 
-            // Smooth interpolation
+            // Smooth interpolation using exponential decay
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.Vector3.html
+            // Vector3.Lerp(Vector3, Vector3, float) linearly interpolates between two vectors
+            // Method signature: static Vector3 Lerp(Vector3 value1, Vector3 value2, float amount)
+            // amount: Interpolation factor (0.0 = value1, 1.0 = value2)
+            // Source: https://doc.stride3d.net/latest/en/manual/mathematics/index.html
             float t = 1.0f - (float)Math.Exp(-_lagFactor * deltaTime);
             _currentPosition = Vector3.Lerp(_currentPosition, idealPosition, t);
             _currentLookAt = Vector3.Lerp(_currentLookAt, lookAtPoint, t);
