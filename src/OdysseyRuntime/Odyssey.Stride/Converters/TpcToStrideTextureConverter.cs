@@ -91,6 +91,12 @@ namespace Odyssey.Stride.Converters
             byte[] rgbaData = ConvertMipmapToRgba(baseMipmap);
 
             // Create texture description
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Graphics.TextureDescription.html
+            // TextureDescription.New2D(int, int, int, PixelFormat, TextureFlags) - Creates a 2D texture description
+            // Method signature: New2D(int width, int height, int mipLevels, PixelFormat format, TextureFlags flags)
+            // mipLevels: Number of mipmap levels (1 for no mipmaps, or calculated count)
+            // PixelFormat.R8G8B8A8_UNorm: 8-bit RGBA format, normalized to [0,1] range
+            // TextureFlags.ShaderResource: Texture can be bound as a shader resource
             var desc = TextureDescription.New2D(
                 width,
                 height,
@@ -99,6 +105,10 @@ namespace Odyssey.Stride.Converters
                 TextureFlags.ShaderResource);
 
             // Create the texture with data
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Graphics.Texture.html
+            // Texture.New2D(GraphicsDevice, int, int, PixelFormat, byte[]) - Creates a 2D texture with initial data
+            // Method signature: New2D(GraphicsDevice device, int width, int height, PixelFormat format, byte[] data)
+            // The byte array contains RGBA pixel data in row-major order
             var texture = Texture.New2D(device, width, height, PixelFormat.R8G8B8A8_UNorm, rgbaData);
             return texture;
         }
@@ -124,7 +134,14 @@ namespace Odyssey.Stride.Converters
                 faceData[i] = ConvertMipmapToRgba(tpc.Layers[i].Mipmaps[0]);
             }
 
-            // Create cube map texture
+            // Create cube map texture description
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Graphics.TextureDescription.html
+            // TextureDescription.NewCube(int, int, PixelFormat, TextureFlags) - Creates a cube map texture description
+            // Method signature: NewCube(int size, int mipLevels, PixelFormat format, TextureFlags flags)
+            // size: Width and height of each cube face (must be square)
+            // mipLevels: Number of mipmap levels
+            // PixelFormat.R8G8B8A8_UNorm: 8-bit RGBA format
+            // TextureFlags.ShaderResource: Texture can be bound as a shader resource
             var desc = TextureDescription.NewCube(
                 size,
                 CalculateMipmapCount(size, size),
@@ -132,6 +149,9 @@ namespace Odyssey.Stride.Converters
                 TextureFlags.ShaderResource);
 
             // TODO: Cube map upload needs proper CommandList handling
+            // FIXME: Currently returns a 2D texture instead of a proper cube map
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Graphics.Texture.html
+            // Texture.New2D(GraphicsDevice, int, int, PixelFormat, byte[]) - Creates a 2D texture (temporary workaround)
             // For now, return a simple 2D texture from face 0
             return Texture.New2D(device, size, size, PixelFormat.R8G8B8A8_UNorm, faceData[0]);
         }
@@ -144,6 +164,10 @@ namespace Odyssey.Stride.Converters
             int height = baseMipmap.Height;
             int mipmapCount = layer.Mipmaps.Count;
 
+            // Create compressed texture description
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Graphics.TextureDescription.html
+            // TextureDescription.New2D(int, int, int, PixelFormat, TextureFlags) - Creates description for compressed texture
+            // format: Compressed format (BC1_UNorm for DXT1, BC2_UNorm for DXT3, BC3_UNorm for DXT5)
             var desc = TextureDescription.New2D(
                 width,
                 height,
@@ -152,7 +176,9 @@ namespace Odyssey.Stride.Converters
                 TextureFlags.ShaderResource);
 
             // TODO: Compressed texture upload needs proper CommandList handling  
-            // For now, decompress base mipmap to RGBA
+            // FIXME: Currently decompresses instead of using compressed format directly
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Graphics.Texture.html
+            // For now, decompress base mipmap to RGBA and create uncompressed texture
             byte[] rgbaData = ConvertMipmapToRgba(baseMipmap);
             return Texture.New2D(device, width, height, PixelFormat.R8G8B8A8_UNorm, rgbaData);
         }
