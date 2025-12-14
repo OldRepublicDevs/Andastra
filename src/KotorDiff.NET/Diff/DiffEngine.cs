@@ -1181,38 +1181,92 @@ namespace KotorDiff.NET.Diff
             if (DiffEngineUtils.IsCapsuleFile(filename))
             {
                 logFunc($"  Extracting resources from capsule: {filename}");
-                // TODO: Implement capsule extraction logic
+                if (Path.GetExtension(filename).ToLowerInvariant() == ".mod")
+                {
+                    string capsuleDestination = relPath.Replace("/", "\\");
+                    Resolution.InstallationDiffHelpers.EnsureCapsuleInstall(
+                        modificationsByType,
+                        capsuleDestination,
+                        capsulePath: file2Path,
+                        logFunc: logFunc,
+                        incrementalWriter: incrementalWriter);
+                }
+                Resolution.InstallationDiffHelpers.ExtractAndAddCapsuleResources(
+                    file2Path,
+                    modificationsByType,
+                    incrementalWriter,
+                    logFunc);
                 return;
             }
 
-            // Determine destination folder
+            // Determine destination folder based on parent directories
+            var parentNames = new List<string>();
+            var fileInfo = new FileInfo(file2Path);
+            if (fileInfo.Directory != null)
+            {
+                var dir = fileInfo.Directory;
+                while (dir != null)
+                {
+                    parentNames.Add(dir.Name.ToLowerInvariant());
+                    dir = dir.Parent;
+                }
+            }
+
             string destination = "Override";
-            string lowerPath = relPath.ToLowerInvariant();
-            if (lowerPath.Contains("modules"))
+            if (parentNames.Contains("modules"))
             {
                 destination = "modules";
             }
-            else if (lowerPath.Contains("lips"))
+            else if (parentNames.Contains("override"))
             {
-                destination = "Lips";
+                destination = "Override";
             }
-            else if (lowerPath.Contains("streamwaves") || lowerPath.Contains("streamvoice"))
+            else if (parentNames.Contains("streamwaves") || parentNames.Contains("streamvoice"))
             {
-                destination = "StreamWaves";
+                destination = "streamwaves";
+            }
+            else if (parentNames.Contains("streamsounds"))
+            {
+                destination = "streamsounds";
+            }
+            else if (parentNames.Contains("movies"))
+            {
+                destination = "movies";
             }
 
-            // Add to InstallList
-            if (modificationsByType.Install == null)
+            // Load modded file data for patch creation
+            byte[] moddedData = null;
+            if (!string.IsNullOrEmpty(file2Path) && File.Exists(file2Path))
             {
-                modificationsByType.Install = new List<CSharpKOTOR.Mods.InstallFile>();
+                moddedData = File.ReadAllBytes(file2Path);
             }
 
-            var installFile = new CSharpKOTOR.Mods.InstallFile(filename, replaceExisting: true, destination: destination);
-            modificationsByType.Install.Add(installFile);
+            // Create context for patch creation
+            DiffContext moddedContext = null;
+            if (!string.IsNullOrEmpty(file2Path))
+            {
+                var file1Rel = new FileInfo(relPath); // Vanilla (missing)
+                var file2Rel = new FileInfo(relPath); // Modded (exists)
+                string ext = Path.GetExtension(file2Path).TrimStart('.').ToLowerInvariant();
+                moddedContext = new DiffContext(file1Rel.FullName, file2Rel.FullName, ext);
+            }
 
-            // Write immediately if incremental writer is provided
-            // Note: IncrementalTSLPatchDataWriter will handle InstallList generation at the end
-            // No immediate write needed for InstallFile
+            // Add to install folder (will also create patch if supported)
+            Resolution.InstallationDiffHelpers.AddToInstallFolder(
+                modificationsByType,
+                destination,
+                filename,
+                logFunc: logFunc,
+                moddedData: moddedData,
+                moddedPath: file2Path,
+                context: moddedContext,
+                incrementalWriter: incrementalWriter);
+
+            // If incremental writer is available, copy the file immediately
+            if (incrementalWriter != null && !string.IsNullOrEmpty(file2Path))
+            {
+                incrementalWriter.AddInstallFile(destination, filename, file2Path);
+            }
         }
     }
 }

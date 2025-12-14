@@ -84,23 +84,68 @@ namespace KotorDiff.NET.Diff
         // Original: def _from_capsule(self, file_path: Path) -> Iterable[ComparableResource]: ...
         private IEnumerable<ComparableResource> FromCapsule(FileInfo filePath)
         {
-            // TODO: Implement composite module loading for RIM files
-            // For now, use regular single capsule loading
-            try
+            // Check if this is a RIM file that should use composite module loading
+            // Only use composite loading if both paths are module files
+            bool shouldUseComposite = ShouldUseCompositeLoading(filePath);
+
+            if (shouldUseComposite)
             {
-                var capsule = new CSharpKOTOR.Formats.Capsule.Capsule(filePath.FullName);
-                foreach (var res in capsule)
+                // Use CompositeModuleCapsule to include related module files
+                var composite = new CompositeModuleCapsule(filePath.FullName);
+                foreach (var res in composite)
                 {
                     string ext = res.ResType.Extension.ToLowerInvariant();
-                    string identifier = $"{filePath.Name}/{res.ResName}.{ext}";
+                    string identifier = $"{composite.Name}/{res.ResName}.{ext}";
                     yield return new ComparableResource(identifier, ext, res.Data);
                 }
             }
-            catch (Exception)
+            else
             {
-                // Return empty on error
-                yield break;
+                // Use regular single capsule loading
+                try
+                {
+                    var capsule = new CSharpKOTOR.Formats.Capsule.Capsule(filePath.FullName);
+                    foreach (var res in capsule)
+                    {
+                        string ext = res.ResType.Extension.ToLowerInvariant();
+                        string identifier = $"{filePath.Name}/{res.ResName}.{ext}";
+                        yield return new ComparableResource(identifier, ext, res.Data);
+                    }
+                }
+                catch (Exception)
+                {
+                    // Return empty on error
+                    yield break;
+                }
             }
+        }
+
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/engine.py:911-914
+        // Original: @staticmethod def _is_in_rims_folder(file_path: Path) -> bool: ...
+        private static bool IsInRimsFolder(FileInfo filePath)
+        {
+            return filePath.Directory != null && filePath.Directory.Name.Equals("rims", StringComparison.OrdinalIgnoreCase);
+        }
+
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/engine.py:915-929
+        // Original: def _should_use_composite_loading(self, file_path: Path) -> bool: ...
+        private bool ShouldUseCompositeLoading(FileInfo filePath)
+        {
+            // Only use composite loading when comparing module files to other module files
+            if (_otherRoot == null)
+            {
+                return true; // Default to composite loading if no comparison context
+            }
+
+            // Check if the other root is also a module file
+            if (_otherRoot is FileInfo otherFile && IsCapsuleFile(otherFile.Name))
+            {
+                // Both are capsule files - check if they're both module files (not in rims folder)
+                return !IsInRimsFolder(otherFile);
+            }
+
+            // Other root is not a module file (directory, installation, etc.)
+            return false;
         }
 
         // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/engine.py:964-980

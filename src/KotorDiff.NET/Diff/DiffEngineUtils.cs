@@ -177,36 +177,176 @@ namespace KotorDiff.NET.Diff
             }
         }
 
-        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/engine.py:1050-1068
-        // Original: def _determine_destination_for_source(...): ...
-        public static string DetermineDestinationForSource(string sourceFilePath)
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/engine.py:113-130
+        // Original: def _is_readonly_source(source_path: Path) -> bool: ...
+        /// <summary>
+        /// Check if a source path is read-only (RIM, ERF, BIF, etc.).
+        /// </summary>
+        public static bool IsReadonlySource(string sourcePath)
         {
-            if (string.IsNullOrEmpty(sourceFilePath))
+            if (string.IsNullOrEmpty(sourcePath))
             {
+                return false;
+            }
+
+            string sourceLower = sourcePath.ToLowerInvariant();
+            string suffix = Path.GetExtension(sourcePath).ToLowerInvariant();
+
+            // RIM and ERF files are read-only
+            if (suffix == ".rim" || suffix == ".erf")
+            {
+                return true;
+            }
+
+            // Files in BIF archives (chitin references)
+            return sourceLower.Contains("chitin") || sourceLower.Contains("bif") || sourceLower.Contains("data");
+        }
+
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/engine.py:133-152
+        // Original: def _determine_tslpatchdata_source(...): ...
+        /// <summary>
+        /// Determine which source file should be copied to tslpatchdata.
+        /// </summary>
+        public static string DetermineTslpatchdataSource(string file1Path, string file2Path = null)
+        {
+            // For now, implement 2-way logic (use vanilla/base version)
+            // TODO: Extend for N-way comparison when that's fully implemented
+            return $"vanilla ({file1Path.Replace('/', Path.DirectorySeparatorChar)})";
+        }
+
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/engine.py:155-261
+        // Original: def _determine_destination_for_source(...): ...
+        /// <summary>
+        /// Determine the proper TSLPatcher destination based on resource resolution order.
+        /// </summary>
+        public static string DetermineDestinationForSource(
+            string sourcePath,
+            string resourceName = null,
+            bool verbose = true,
+            Action<string> logFunc = null,
+            string locationType = null,
+            string sourceFilepath = null)
+        {
+            if (logFunc == null)
+            {
+                logFunc = _ => { };
+            }
+
+            string displayName = !string.IsNullOrEmpty(resourceName) ? resourceName : Path.GetFileName(sourcePath);
+
+            // PRIORITY 1: Use explicit location_type if provided (resolution-aware path)
+            if (!string.IsNullOrEmpty(locationType))
+            {
+                if (locationType == "Override folder")
+                {
+                    if (verbose)
+                    {
+                        logFunc($"    +-- Resolution: {displayName} found in Override");
+                        logFunc("    +-- Destination: Override (highest priority)");
+                    }
+                    return "Override";
+                }
+
+                if (locationType == "Modules (.mod)")
+                {
+                    // Resource is in a .mod file - patch directly to that .mod
+                    string actualFilepath = !string.IsNullOrEmpty(sourceFilepath) ? sourceFilepath : sourcePath;
+                    string destination = $"modules\\{Path.GetFileName(actualFilepath)}";
+                    if (verbose)
+                    {
+                        logFunc($"    +-- Resolution: {displayName} found in {Path.GetFileName(actualFilepath)}");
+                        logFunc($"    +-- Destination: {destination} (patch .mod directly)");
+                    }
+                    return destination;
+                }
+
+                if (locationType == "Modules (.rim)" || locationType == "Modules (.rim/_s.rim/_dlg.erf)")
+                {
+                    // Resource is in read-only .rim/.erf - redirect to corresponding .mod
+                    string actualFilepath = !string.IsNullOrEmpty(sourceFilepath) ? sourceFilepath : sourcePath;
+                    string moduleRoot = GetModuleRoot(actualFilepath);
+                    string destination = $"modules\\{moduleRoot}.mod";
+                    if (verbose)
+                    {
+                        logFunc($"    +-- Resolution: {displayName} found in {Path.GetFileName(actualFilepath)} (read-only)");
+                        logFunc($"    +-- Destination: {destination} (.mod overrides .rim/.erf)");
+                    }
+                    return destination;
+                }
+
+                if (locationType == "Chitin BIFs")
+                {
+                    // Resource only in BIFs - must go to Override (can't modify BIFs)
+                    if (verbose)
+                    {
+                        logFunc($"    +-- Resolution: {displayName} found in Chitin BIFs (read-only)");
+                        logFunc("    +-- Destination: Override (BIFs cannot be modified)");
+                    }
+                    return "Override";
+                }
+
+                // Unknown location type - log warning and fall through to path inference
+                if (verbose)
+                {
+                    logFunc($"    +-- Warning: Unknown location_type '{locationType}', using path inference");
+                }
+            }
+
+            // FALLBACK: Path-based inference (for non-resolution-aware code paths)
+            var sourceFileInfo = !string.IsNullOrEmpty(sourceFilepath) ? new FileInfo(sourceFilepath) : new FileInfo(sourcePath);
+            var parentNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            if (sourceFileInfo.Directory != null)
+            {
+                var dir = sourceFileInfo.Directory;
+                while (dir != null)
+                {
+                    parentNames.Add(dir.Name);
+                    dir = dir.Parent;
+                }
+            }
+
+            if (parentNames.Contains("override"))
+            {
+                // Determine if it's a read-only source (RIM/ERF)
+                if (!IsReadonlySource(sourcePath))
+                {
+                    // MOD file - can patch directly
+                    string destination = $"modules\\{Path.GetFileName(sourcePath)}";
+                    if (verbose)
+                    {
+                        logFunc($"    +-- Path inference: {displayName} in writable .mod");
+                        logFunc($"    +-- Destination: {destination} (patch directly)");
+                    }
+                    return destination;
+                }
+                // Read-only module file - redirect to .mod
+                string moduleRoot2 = GetModuleRoot(sourcePath);
+                string destination2 = $"modules\\{moduleRoot2}.mod";
+                if (verbose)
+                {
+                    logFunc($"    +-- Path inference: {displayName} in read-only {Path.GetExtension(sourcePath)}");
+                    logFunc($"    +-- Destination: {destination2} (.mod overrides read-only)");
+                }
+                return destination2;
+            }
+
+            // BIF/chitin sources go to Override
+            if (IsReadonlySource(sourcePath))
+            {
+                if (verbose)
+                {
+                    logFunc($"    +-- Path inference: {displayName} in read-only BIF/chitin");
+                    logFunc("    +-- Destination: Override (read-only source)");
+                }
                 return "Override";
             }
 
-            string lowerPath = sourceFilePath.ToLowerInvariant();
-            if (lowerPath.Contains("override"))
+            // Default to Override for other cases
+            if (verbose)
             {
-                return "Override";
+                logFunc($"    +-- Path inference: {displayName} (no specific location detected)");
+                logFunc("    +-- Destination: Override (default)");
             }
-            if (lowerPath.Contains("modules"))
-            {
-                // Extract module name if it's a resource inside a module
-                // e.g., "modules/tar_m01aa.mod/some_file.utc" -> "modules/tar_m01aa.mod"
-                // This needs to be more robust. For now, return "modules"
-                return "modules";
-            }
-            if (lowerPath.Contains("lips"))
-            {
-                return "Lips";
-            }
-            if (lowerPath.Contains("streamwaves") || lowerPath.Contains("streamvoice"))
-            {
-                return "StreamWaves";
-            }
-            // Default to Override for loose files in the game root or unknown locations
             return "Override";
         }
 

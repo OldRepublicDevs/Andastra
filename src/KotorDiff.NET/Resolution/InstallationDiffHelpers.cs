@@ -6,7 +6,14 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using CSharpKOTOR.Formats.Capsule;
+using CSharpKOTOR.Formats.GFF;
+using CSharpKOTOR.Formats.SSF;
+using CSharpKOTOR.Formats.TwoDA;
 using CSharpKOTOR.Mods;
+using CSharpKOTOR.Mods.GFF;
+using CSharpKOTOR.Mods.SSF;
+using CSharpKOTOR.Mods.TwoDA;
 using CSharpKOTOR.Resources;
 using KotorDiff.NET.Diff;
 using KotorDiff.NET.Generator;
@@ -202,10 +209,249 @@ namespace KotorDiff.NET.Resolution
                 return; // No extension, can't determine type
             }
 
-            // TODO: Implement patch creation using analyzers
-            // This requires DiffAnalyzerFactory and format-specific analyzers
-            // For now, we'll skip patch creation and just add to install list
-            logFunc($"  Note: Patch creation for {filename} not yet implemented");
+            // Get analyzer for this file type
+            var analyzer = DiffAnalyzerFactory.GetAnalyzer(fileExt);
+            if (analyzer == null)
+            {
+                return; // No analyzer for this type, skip patch creation
+            }
+
+            try
+            {
+                // Create an empty/minimal file of the same type for comparison
+                // For patchable formats, we'll compare modded file against an empty structure
+                byte[] emptyData = CreateEmptyFileData(fileExt);
+                if (emptyData == null)
+                {
+                    // Can't create empty file for this type, skip patch
+                    return;
+                }
+
+                // Create identifier for the file (use context if available, otherwise construct)
+                string identifier = context != null ? context.Where : filename;
+
+                // Analyze differences (comparing modded file against empty)
+                var result = analyzer.Analyze(emptyData, moddedData, identifier);
+                if (result == null)
+                {
+                    return;
+                }
+
+                PatcherModifications modifications;
+                if (result is ValueTuple<PatcherModifications, Dictionary<int, int>> tuple)
+                {
+                    modifications = tuple.Item1;
+                    // Ignore strref_mappings for now
+                }
+                else if (result is PatcherModifications mods)
+                {
+                    modifications = mods;
+                }
+                else
+                {
+                    return;
+                }
+
+                if (modifications == null)
+                {
+                    return;
+                }
+
+                logFunc($"\n[PATCH] {filename}");
+
+                // Set destination and sourcefile
+                string resourceName = Path.GetFileName(filename);
+                modifications.Destination = folder;
+                modifications.SourceFile = resourceName;
+
+                if (modifications is CSharpKOTOR.Mods.TwoDA.Modifications2DA mod2da)
+                {
+                    modificationsByType.Twoda.Add(mod2da);
+                    logFunc("  |-- Type: [2DAList]");
+                }
+                else if (modifications is CSharpKOTOR.Mods.GFF.ModificationsGFF modGff)
+                {
+                    modGff.SaveAs = resourceName;
+                    modificationsByType.Gff.Add(modGff);
+                    logFunc("  |-- Type: [GFFList]");
+                }
+                else if (modifications is CSharpKOTOR.Mods.SSF.ModificationsSSF modSsf)
+                {
+                    modificationsByType.Ssf.Add(modSsf);
+                    logFunc("  |-- Type: [SSFList]");
+                }
+                else
+                {
+                    // Unknown type, skip
+                    return;
+                }
+
+                int modifiersCount = modifications.Modifiers != null ? modifications.Modifiers.Count : 0;
+                if (modifiersCount > 0)
+                {
+                    logFunc($"  |-- Modifications: {modifiersCount} changes");
+                }
+
+                logFunc("  +-- tslpatchdata: Will use installed file as base, then apply patch");
+
+                // Write immediately if using incremental writer
+                if (incrementalWriter != null)
+                {
+                    // Use the modded file as the "vanilla" source (it's what will be installed)
+                    incrementalWriter.WriteModification(modifications);
+                }
+            }
+            catch (Exception e)
+            {
+                logFunc($"  Warning: Failed to create patch for {filename}: {e.GetType().Name}: {e.Message}");
+            }
+        }
+
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/engine.py:598-639
+        // Original: def _create_empty_file_data(ext: str) -> bytes | None: ...
+        /// <summary>
+        /// Create an empty/minimal file data for a given extension.
+        /// </summary>
+        public static byte[] CreateEmptyFileData(string ext)
+        {
+            if (string.IsNullOrEmpty(ext))
+            {
+                return null;
+            }
+
+            string extLower = ext.ToLowerInvariant();
+
+            try
+            {
+                // For 2DA files, create empty TwoDA
+                if (extLower == "2da")
+                {
+                    var empty2da = new CSharpKOTOR.Formats.TwoDA.TwoDA();
+                    return CSharpKOTOR.Formats.TwoDA.TwoDAAuto.BytesTwoDA(empty2da, ResourceType.TwoDA);
+                }
+
+                // For SSF files, create empty SSF
+                if (extLower == "ssf")
+                {
+                    var emptySsf = new CSharpKOTOR.Formats.SSF.SSF();
+                    return CSharpKOTOR.Formats.SSF.SSFAuto.BytesSsf(emptySsf, ResourceType.SSF);
+                }
+
+                // For GFF files, create empty GFF with appropriate content type based on extension
+                var gffTypes = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+                {
+                    "utc", "uti", "utp", "ute", "utm", "utd", "utw", "dlg", "are", "git", "ifo", "gui", "jrl", "fac", "gff"
+                };
+
+                if (gffTypes.Contains(extLower))
+                {
+                    // Try to determine GFFContent from extension
+                    CSharpKOTOR.Formats.GFF.GFFContent gffContent;
+                    try
+                    {
+                        // Map extension to GFFContent enum
+                        gffContent = CSharpKOTOR.Formats.GFF.GFFContent.GFF; // Default
+                        // TODO: Map specific extensions to their GFFContent types if needed
+                    }
+                    catch
+                    {
+                        // Fallback to generic GFF content type
+                        gffContent = CSharpKOTOR.Formats.GFF.GFFContent.GFF;
+                    }
+
+                    // Create empty GFF with determined content type
+                    var emptyGff = new CSharpKOTOR.Formats.GFF.GFF(gffContent);
+                    return CSharpKOTOR.Formats.GFF.GFFAuto.BytesGff(emptyGff, ResourceType.GFF);
+                }
+            }
+            catch (Exception e)
+            {
+                // Log the exception for debugging
+                Console.WriteLine($"Failed to create empty file data for extension '{ext}': {e.GetType().Name}: {e.Message}");
+            }
+
+            return null;
+        }
+
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/engine.py:322-380
+        // Original: def _extract_and_add_capsule_resources(...): ...
+        /// <summary>
+        /// Extract all resources from a capsule and add them to install folders.
+        /// </summary>
+        public static void ExtractAndAddCapsuleResources(
+            string capsulePath,
+            ModificationsByType modificationsByType,
+            IncrementalTSLPatchDataWriter incrementalWriter,
+            Action<string> logFunc)
+        {
+            try
+            {
+                var capsule = new CSharpKOTOR.Formats.Capsule.Capsule(capsulePath);
+                string capsuleName = Path.GetFileName(capsulePath);
+
+                // Determine destination based on capsule location and type
+                string destination = "Override";
+                string parentPath = Path.GetDirectoryName(capsulePath);
+                if (!string.IsNullOrEmpty(parentPath))
+                {
+                    var parentInfo = new DirectoryInfo(parentPath);
+                    var parentNames = new List<string>();
+                    var current = parentInfo;
+                    while (current != null)
+                    {
+                        parentNames.Add(current.Name.ToLowerInvariant());
+                        current = current.Parent;
+                    }
+
+                    if (parentNames.Contains("modules"))
+                    {
+                        destination = $"modules\\{capsuleName}";
+                    }
+                }
+
+                if (Path.GetExtension(capsulePath).ToLowerInvariant() == ".mod")
+                {
+                    string capsuleDestinationStr = destination.ToLowerInvariant().EndsWith(".mod") ? destination : $"{destination}\\{capsuleName}";
+                    EnsureCapsuleInstall(
+                        modificationsByType,
+                        capsuleDestinationStr,
+                        capsulePath: capsulePath,
+                        logFunc: logFunc,
+                        incrementalWriter: incrementalWriter);
+                }
+
+                int resourceCount = 0;
+                foreach (var resource in capsule)
+                {
+                    string resname = resource.ResName;
+                    ResourceType restype = resource.ResType;
+                    string filename = $"{resname}.{restype.Extension.ToLowerInvariant()}";
+
+                    // Add to install folder
+                    AddToInstallFolder(
+                        modificationsByType,
+                        destination,
+                        filename,
+                        logFunc: logFunc,
+                        createPatch: false); // Don't create patch here, just add to install
+
+                    // Extract and copy immediately if incremental writer available
+                    if (incrementalWriter != null)
+                    {
+                        incrementalWriter.AddInstallFile(destination, filename, capsulePath);
+                    }
+
+                    resourceCount++;
+                }
+
+                logFunc($"    Extracted {resourceCount} resources from {capsuleName}");
+            }
+            catch (Exception e)
+            {
+                logFunc($"  [Error] Failed to extract resources from capsule {Path.GetFileName(capsulePath)}: {e.GetType().Name}: {e.Message}");
+                logFunc("  Full traceback:");
+                logFunc($"    {e}");
+            }
         }
     }
 }
