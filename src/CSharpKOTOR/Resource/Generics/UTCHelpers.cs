@@ -281,7 +281,6 @@ namespace CSharpKOTOR.Resource.Generics
             root.SetResRef("ScriptEndRound", utc.OnEndRound);
             root.SetResRef("ScriptDialogue", utc.OnDialog);
             root.SetResRef("ScriptSpawn", utc.OnSpawn);
-            root.SetResRef("ScriptRested", utc.OnRested);
             root.SetResRef("ScriptDeath", utc.OnDeath);
             root.SetResRef("ScriptUserDefine", utc.OnUserDefined);
 
@@ -290,14 +289,22 @@ namespace CSharpKOTOR.Resource.Generics
             // Set skills in SkillList
             var skillList = new GFFList();
             root.SetList("SkillList", skillList);
-            skillList.Add(0).SetUInt8("Rank", (byte)utc.ComputerUse);
-            skillList.Add(0).SetUInt8("Rank", (byte)utc.Demolitions);
-            skillList.Add(0).SetUInt8("Rank", (byte)utc.Stealth);
-            skillList.Add(0).SetUInt8("Rank", (byte)utc.Awareness);
-            skillList.Add(0).SetUInt8("Rank", (byte)utc.Persuade);
-            skillList.Add(0).SetUInt8("Rank", (byte)utc.Repair);
-            skillList.Add(0).SetUInt8("Rank", (byte)utc.Security);
-            skillList.Add(0).SetUInt8("Rank", (byte)utc.TreatInjury);
+            var skill0 = skillList.Add(0);
+            skill0.SetUInt8("Rank", (byte)utc.ComputerUse);
+            var skill1 = skillList.Add(0);
+            skill1.SetUInt8("Rank", (byte)utc.Demolitions);
+            var skill2 = skillList.Add(0);
+            skill2.SetUInt8("Rank", (byte)utc.Stealth);
+            var skill3 = skillList.Add(0);
+            skill3.SetUInt8("Rank", (byte)utc.Awareness);
+            var skill4 = skillList.Add(0);
+            skill4.SetUInt8("Rank", (byte)utc.Persuade);
+            var skill5 = skillList.Add(0);
+            skill5.SetUInt8("Rank", (byte)utc.Repair);
+            var skill6 = skillList.Add(0);
+            skill6.SetUInt8("Rank", (byte)utc.Security);
+            var skill7 = skillList.Add(0);
+            skill7.SetUInt8("Rank", (byte)utc.TreatInjury);
 
             // Set classes in ClassList
             var classList = new GFFList();
@@ -373,6 +380,7 @@ namespace CSharpKOTOR.Resource.Generics
                 root.SetLocString("Description", utc.Description);
                 root.SetUInt8("LawfulChaotic", (byte)utc.Lawfulness);
                 root.SetInt32("Phenotype", utc.PhenotypeId);
+                root.SetResRef("ScriptRested", utc.OnRested);
                 root.SetString("Subrace", utc.SubraceName);
                 root.SetList("SpecAbilityList", new GFFList());
                 root.SetList("TemplateList", new GFFList());

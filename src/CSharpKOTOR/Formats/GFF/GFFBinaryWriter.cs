@@ -268,26 +268,27 @@ namespace CSharpKOTOR.Formats.GFF
             }
             else
             {
-                // Simple types (stored inline)
+                // Simple types (stored inline as 4-byte values in the field entry)
+                // Matching PyKotor implementation: writer writes 4-byte values for all simple types
                 switch (fieldType)
                 {
                     case GFFFieldType.UInt8:
                         uint uint8Val = Convert.ToUInt32(value);
-                        _fieldWriter.WriteUInt32(uint8Val == 0xFFFFFFFF ? 0xFFFFFFFFu : uint8Val);
+                        _fieldWriter.WriteUInt32(uint8Val == 0xFFFFFFFFu ? 0xFFFFFFFFu : uint8Val);
                         break;
                     case GFFFieldType.Int8:
                         _fieldWriter.WriteInt32(Convert.ToInt32(value));
                         break;
                     case GFFFieldType.UInt16:
                         uint uint16Val = Convert.ToUInt32(value);
-                        _fieldWriter.WriteUInt32(uint16Val == 0xFFFFFFFF ? 0xFFFFFFFFu : uint16Val);
+                        _fieldWriter.WriteUInt32(uint16Val == 0xFFFFFFFFu ? 0xFFFFFFFFu : uint16Val);
                         break;
                     case GFFFieldType.Int16:
                         _fieldWriter.WriteInt32(Convert.ToInt32(value));
                         break;
                     case GFFFieldType.UInt32:
                         uint uint32Val = Convert.ToUInt32(value);
-                        _fieldWriter.WriteUInt32(uint32Val == 0xFFFFFFFF ? 0xFFFFFFFFu : uint32Val);
+                        _fieldWriter.WriteUInt32(uint32Val == 0xFFFFFFFFu ? 0xFFFFFFFFu : uint32Val);
                         break;
                     case GFFFieldType.Int32:
                         _fieldWriter.WriteInt32(Convert.ToInt32(value));

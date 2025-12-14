@@ -208,20 +208,28 @@ namespace CSharpKOTOR.Formats.GFF
             }
             else
             {
-                // Simple types (stored inline in the field data)
+                // Simple types (stored inline as 4-byte values in the field entry)
+                // The writer writes all simple types as 4-byte values, so we read 4 bytes and extract
+                // Matching PyKotor implementation: writer writes 4 bytes, reader should read 4 bytes
+                // However, Python reader reads 1-2 bytes which may be a bug - we'll read 4 bytes to match writer
                 switch (fieldType)
                 {
                     case GFFFieldType.UInt8:
-                        gffStruct.SetUInt8(label, Reader.ReadUInt8());
+                        // Read 4 bytes, extract first byte
+                        uint uint8Val = Reader.ReadUInt32();
+                        gffStruct.SetUInt8(label, (byte)(uint8Val == 0xFFFFFFFFu ? 0xFF : (uint8Val & 0xFF)));
                         break;
                     case GFFFieldType.Int8:
-                        gffStruct.SetInt8(label, Reader.ReadInt8());
+                        int int8Val = Reader.ReadInt32();
+                        gffStruct.SetInt8(label, (sbyte)(int8Val == -1 ? -1 : (int8Val & 0xFF)));
                         break;
                     case GFFFieldType.UInt16:
-                        gffStruct.SetUInt16(label, Reader.ReadUInt16());
+                        uint uint16Val = Reader.ReadUInt32();
+                        gffStruct.SetUInt16(label, (ushort)(uint16Val == 0xFFFFFFFFu ? 0xFFFF : (uint16Val & 0xFFFF)));
                         break;
                     case GFFFieldType.Int16:
-                        gffStruct.SetInt16(label, Reader.ReadInt16());
+                        int int16Val = Reader.ReadInt32();
+                        gffStruct.SetInt16(label, (short)(int16Val == -1 ? -1 : (int16Val & 0xFFFF)));
                         break;
                     case GFFFieldType.UInt32:
                         gffStruct.SetUInt32(label, Reader.ReadUInt32());
