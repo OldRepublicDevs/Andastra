@@ -7,10 +7,10 @@ namespace CSharpKOTOR.Utility
     // Original: def is_int(val: str | int | Buffer | SupportsInt | SupportsIndex) -> bool:
     /// <summary>
     /// Can be cast to an int without raising an error.
-    /// 
+    ///
     /// Args:
     ///     val: The value to try to convert
-    /// 
+    ///
     /// Returns:
     ///     True if val can be converted else False
     /// </summary>
@@ -50,10 +50,10 @@ namespace CSharpKOTOR.Utility
         // Original: def is_float(val: str | float | Buffer | SupportsFloat | SupportsIndex) -> bool:
         /// <summary>
         /// Can be cast to a float without raising an error.
-        /// 
+        ///
         /// Args:
         ///     val: The value to try to convert
-        /// 
+        ///
         /// Returns:
         ///     True if val can be converted else False
         /// </summary>

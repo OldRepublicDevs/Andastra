@@ -40,16 +40,16 @@ namespace CSharpKOTOR.Extract
     // Original: class BZFFile:
     /// <summary>
     /// Reads BZF (compressed BIF) files.
-    /// 
+    ///
     /// BZF files are LZMA-compressed BIF archives used in KotOR. This class handles
     /// decompression and resource indexing for compressed BIF files.
-    /// 
+    ///
     /// References:
     /// ----------
     ///     vendor/reone/src/libs/resource/format/bifreader.cpp (BIF/BZF reading)
     ///     vendor/xoreos-tools/src/unkeybif.cpp (BIF/BZF extraction)
     ///     vendor/KotOR-Bioware-Libs/BIF.pm (Perl BIF/BZF implementation)
-    /// 
+    ///
     /// Missing Features:
     /// ----------------
     ///     - Fixed resources not yet supported (see line 67)

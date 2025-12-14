@@ -204,17 +204,36 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
                 {
                     if (!state.IsMain())
                     {
-                        string proto = state.GetProto();
-                        if (proto != null && !proto.Trim().Equals(""))
+                        try
                         {
-                            protobuff.Append(proto + ";" + newline);
+                            string proto = state.GetProto();
+                            // Matching Java behavior: just check if proto is not null and not empty
+                            // Java doesn't validate prototype content - it trusts the decompiler output
+                            if (proto != null && !proto.Trim().Equals(""))
+                            {
+                                protobuff.Append(proto + ";" + newline);
+                            }
+                        }
+                        catch (Exception protoEx)
+                        {
+                            JavaSystem.@out.Println("Error getting prototype for subroutine, skipping: " + protoEx.Message);
                         }
                     }
 
-                    string funcCode = state.ToString();
-                    if (funcCode != null && !funcCode.Trim().Equals(""))
+                    try
                     {
-                        fcnbuff.Append(funcCode + newline);
+                        string funcCode = state.ToString();
+                        // Matching Java behavior: just check if code is not null and not empty
+                        // Java doesn't validate function signatures - it trusts the decompiler output
+                        if (funcCode != null && !funcCode.Trim().Equals(""))
+                        {
+                            fcnbuff.Append(funcCode + newline);
+                        }
+                    }
+                    catch (Exception funcEx)
+                    {
+                        JavaSystem.@out.Println("Error generating function code for subroutine, adding placeholder: " + funcEx.Message);
+                        fcnbuff.Append("// Error: Could not decompile subroutine\n");
                     }
                 }
                 catch (Exception e)

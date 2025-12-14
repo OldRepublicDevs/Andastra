@@ -56,9 +56,28 @@ namespace CSharpKOTOR.Formats.TPC
             {
                 loaded = new TPCBinaryReader(source is string s ? File.ReadAllBytes(s) : source as byte[], offset, size ?? 0).Load();
             }
+            else if (format == ResourceType.DDS)
+            {
+                if (source is string filepath)
+                {
+                    loaded = new TPCDDSReader(filepath, offset, size).Load();
+                }
+                else if (source is byte[] data)
+                {
+                    loaded = new TPCDDSReader(data, offset, size).Load();
+                }
+                else if (source is Stream stream)
+                {
+                    loaded = new TPCDDSReader(stream, offset, size).Load();
+                }
+                else
+                {
+                    throw new ArgumentException("Unsupported source type for DDS reading");
+                }
+            }
             else
             {
-                throw new ArgumentException("Unsupported TPC format in simplified reader");
+                throw new ArgumentException($"Unsupported TPC format: {format}");
             }
             if (txiSource is string txiPath && File.Exists(txiPath))
             {
@@ -71,29 +90,56 @@ namespace CSharpKOTOR.Formats.TPC
         public static void WriteTpc(TPC tpc, object target, ResourceType fileFormat = null)
         {
             ResourceType fmt = fileFormat ?? ResourceType.TPC;
-            if (fmt != ResourceType.TPC)
+            if (fmt == ResourceType.TPC)
             {
-                throw new ArgumentException("Unsupported format specified; use TPC.");
+                if (target is string filepath)
+                {
+                    new TPCBinaryWriter(tpc, filepath).Write();
+                }
+                else if (target is Stream stream)
+                {
+                    new TPCBinaryWriter(tpc, stream).Write();
+                }
+                else
+                {
+                    throw new ArgumentException("Target must be string or Stream for TPC");
+                }
             }
-            if (target is string filepath)
+            else if (fmt == ResourceType.DDS)
             {
-                new TPCBinaryWriter(tpc, filepath).Write();
-            }
-            else if (target is Stream stream)
-            {
-                new TPCBinaryWriter(tpc, stream).Write();
+                if (target is string filepath)
+                {
+                    new TPCDDSWriter(tpc, filepath).Write();
+                }
+                else if (target is Stream stream)
+                {
+                    new TPCDDSWriter(tpc, stream).Write();
+                }
+                else
+                {
+                    throw new ArgumentException("Target must be string or Stream for DDS");
+                }
             }
             else
             {
-                throw new ArgumentException("Target must be string or Stream for TPC");
+                throw new ArgumentException($"Unsupported format specified: {fmt}");
             }
         }
 
         public static byte[] BytesTpc(TPC tpc, ResourceType fileFormat = null)
         {
+            ResourceType fmt = fileFormat ?? ResourceType.TPC;
+            if (fmt == ResourceType.DDS)
+            {
+                using (var writer = new TPCDDSWriter(tpc))
+                {
+                    writer.Write(autoClose: false);
+                    return writer.GetBytes();
+                }
+            }
             using (var ms = new MemoryStream())
             {
-                WriteTpc(tpc, ms, fileFormat ?? ResourceType.TPC);
+                WriteTpc(tpc, ms, fmt);
                 return ms.ToArray();
             }
         }

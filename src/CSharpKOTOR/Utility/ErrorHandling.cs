@@ -14,10 +14,10 @@ namespace CSharpKOTOR.Utility
     {
         /// <summary>
         /// Simplify exceptions into a standardized format.
-        /// 
+        ///
         /// Args:
         ///     e: Exception - The exception to simplify
-        /// 
+        ///
         /// Returns:
         ///     error_name: string - The name of the exception
         ///     error_message: string - A human-readable message for the exception
@@ -78,7 +78,7 @@ namespace CSharpKOTOR.Utility
 
             // Try to extract error details from common exception attributes
             var errorMessages = new System.Collections.Generic.List<string>();
-            
+
             // Check for common exception properties
             var props = e.GetType().GetProperties();
             foreach (var prop in props)

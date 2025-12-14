@@ -647,6 +647,11 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
                 return GetCommandChild(((AAddVarCmd)node).GetRsaddCommand());
             }
 
+            if (typeof(ARsaddCmd).IsInstanceOfType(node))
+            {
+                return GetCommandChild(((ARsaddCmd)node).GetRsaddCommand());
+            }
+
             if (typeof(AActionJumpCmd).IsInstanceOfType(node))
             {
                 return GetCommandChild(((AActionJumpCmd)node).GetStoreStateCommand());

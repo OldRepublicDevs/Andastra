@@ -34,7 +34,7 @@ namespace CSharpKOTOR.Resource.Formats.BIF
 
         public void Write(Stream stream)
         {
-            using (var writer = new BinaryWriter(stream, Encoding.ASCII, true))
+            using (var writer = new System.IO.BinaryWriter(stream, Encoding.ASCII, true))
             {
                 WriteHeader(writer);
                 WriteResourceTable(writer);
@@ -44,7 +44,7 @@ namespace CSharpKOTOR.Resource.Formats.BIF
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/bif/io_bif.py:183-192
         // Original: def _write_header(self) -> None:
-        private void WriteHeader(BinaryWriter writer)
+        private void WriteHeader(System.IO.BinaryWriter writer)
         {
             // Write signature
             writer.Write(Encoding.ASCII.GetBytes(BIFTypeExtensions.ToFourCC(_bif.BifType)));
@@ -58,7 +58,7 @@ namespace CSharpKOTOR.Resource.Formats.BIF
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/bif/io_bif.py:194-220
         // Original: def _write_resource_table(self) -> None:
-        private void WriteResourceTable(BinaryWriter writer)
+        private void WriteResourceTable(System.IO.BinaryWriter writer)
         {
             // Calculate absolute file offsets for resource data
             // Data section starts after header and resource table
@@ -99,7 +99,7 @@ namespace CSharpKOTOR.Resource.Formats.BIF
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/bif/io_bif.py:222-238
         // Original: def _write_resource_data(self) -> None:
-        private void WriteResourceData(BinaryWriter writer)
+        private void WriteResourceData(System.IO.BinaryWriter writer)
         {
             foreach (BIFResource resource in _bif.Resources)
             {

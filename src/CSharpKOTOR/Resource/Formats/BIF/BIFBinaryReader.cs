@@ -13,7 +13,7 @@ namespace CSharpKOTOR.Resource.Formats.BIF
     // Original: class BIFBinaryReader(ResourceReader):
     /// <summary>
     /// Reads BIF/BZF files.
-    /// 
+    ///
     /// BIF (BioWare Index File) files contain game resources indexed by KEY files.
     /// BZF files are compressed BIF files using LZMA compression.
     /// </summary>
