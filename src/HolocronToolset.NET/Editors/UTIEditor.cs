@@ -898,9 +898,85 @@ namespace HolocronToolset.NET.Editors
         // Original: def on_update_icon(self, *args, **kwargs):
         private void UpdateIcon()
         {
-            // Placeholder for icon update
-            // Will be implemented when icon loading is available
-            System.Console.WriteLine("Icon update not yet implemented");
+            if (_installation == null)
+            {
+                return;
+            }
+
+            // Matching PyKotor implementation: base_item: int = self.ui.baseSelect.currentIndex()
+            int baseItem = _baseSelect?.SelectedIndex ?? 0;
+            
+            // Matching PyKotor implementation: model_variation: int = self.ui.modelVarSpin.value()
+            int modelVariation = _modelVarSpin?.Value != null ? (int)_modelVarSpin.Value : 0;
+            
+            // Matching PyKotor implementation: texture_variation: int = self.ui.textureVarSpin.value()
+            int textureVariation = _textureVarSpin?.Value != null ? (int)_textureVarSpin.Value : 0;
+
+            // Matching PyKotor implementation: pixmap: QPixmap | None = self._installation.get_item_icon(base_item, model_variation, texture_variation)
+            var bitmap = _installation.GetItemIcon(baseItem, modelVariation, textureVariation);
+            
+            // Matching PyKotor implementation: if pixmap is not None:
+            // Matching PyKotor implementation: self.ui.iconLabel.setPixmap(pixmap)
+            // Note: In Avalonia, we would set the bitmap on an Image control if one exists
+            // For now, we just call the method - the icon display would be implemented when an iconLabel control is added
+            if (bitmap != null)
+            {
+                // TODO: Set bitmap on iconLabel Image control when it's added to the UI
+                // iconLabel.Source = bitmap;
+            }
+            
+            // Matching PyKotor implementation: self.ui.iconLabel.setToolTip(self._generate_icon_tooltip(as_html=True))
+            // Note: Tooltip would be set on iconLabel when it's added
+            // string tooltip = GenerateIconTooltip(true);
+            // if (iconLabel != null) iconLabel.ToolTip.SetValue(Avalonia.Controls.ToolTip.TipProperty, tooltip);
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uti.py:332-352
+        // Original: def _generate_icon_tooltip(self, *, as_html: bool = False) -> str:
+        private string GenerateIconTooltip(bool asHtml = false)
+        {
+            if (_installation == null)
+            {
+                return "";
+            }
+
+            // Matching PyKotor implementation: base_item: int = self.ui.baseSelect.currentIndex()
+            int baseItem = _baseSelect?.SelectedIndex ?? 0;
+            
+            // Matching PyKotor implementation: model_variation: int = self.ui.modelVarSpin.value()
+            int modelVariation = _modelVarSpin?.Value != null ? (int)_modelVarSpin.Value : 0;
+            
+            // Matching PyKotor implementation: texture_variation: int = self.ui.textureVarSpin.value()
+            int textureVariation = _textureVarSpin?.Value != null ? (int)_textureVarSpin.Value : 0;
+
+            // Matching PyKotor implementation: base_item_name: str = self._installation.get_item_base_name(base_item)
+            string baseItemName = _installation.GetItemBaseName(baseItem);
+            
+            // Matching PyKotor implementation: model_var_name: str = self._installation.get_model_var_name(model_variation)
+            string modelVarName = _installation.GetModelVarName(modelVariation);
+            
+            // Matching PyKotor implementation: texture_var_name: str = self._installation.get_texture_var_name(texture_variation)
+            string textureVarName = _installation.GetTextureVarName(textureVariation);
+            
+            // Matching PyKotor implementation: icon_path: str = self._installation.get_item_icon_path(base_item, model_variation, texture_variation)
+            string iconPath = _installation.GetItemIconPath(baseItem, modelVariation, textureVariation);
+
+            if (asHtml)
+            {
+                // Matching PyKotor implementation: tooltip = f"<b>Base Item:</b> {base_item_name} (ID: {base_item})<br>" ...
+                return $"<b>Base Item:</b> {baseItemName} (ID: {baseItem})<br>" +
+                       $"<b>Model Variation:</b> {modelVarName} (ID: {modelVariation})<br>" +
+                       $"<b>Texture Variation:</b> {textureVarName} (ID: {textureVariation})<br>" +
+                       $"<b>Icon Name:</b> {iconPath}";
+            }
+            else
+            {
+                // Matching PyKotor implementation: tooltip = f"Base Item: {base_item_name} (ID: {base_item})\n" ...
+                return $"Base Item: {baseItemName} (ID: {baseItem})\n" +
+                       $"Model Variation: {modelVarName} (ID: {modelVariation})\n" +
+                       $"Texture Variation: {textureVarName} (ID: {textureVariation})\n" +
+                       $"Icon Name: {iconPath}";
+            }
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uti.py:106-154
