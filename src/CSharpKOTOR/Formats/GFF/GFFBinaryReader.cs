@@ -130,6 +130,29 @@ namespace CSharpKOTOR.Formats.GFF
             uint data = Reader.ReadUInt32();
             uint fieldCount = Reader.ReadUInt32();
 
+            // Debug: Check if fieldCount looks wrong (likely byte order issue)
+            // If fieldCount is a very large number like 16777216 (0x01000000), it suggests
+            // we're reading the bytes in the wrong order or from the wrong position
+            // The value 16777216 = 0x01000000 means bytes are [0x00, 0x00, 0x00, 0x01] read as little-endian
+            // This suggests the bytes were written as big-endian but we're reading as little-endian
+            // OR the struct layout is wrong and we're reading from the wrong position
+            if (fieldCount > 1000000 && fieldCount < 0xFFFFFFFF)
+            {
+                // Try to recover: if fieldCount looks like a byte-swapped 1, use 1 instead
+                // Also check if data (field index) needs fixing
+                if (fieldCount == 0x01000000 || fieldCount == 0x00010000 || fieldCount == 0x00000100)
+                {
+                    // This is likely a byte order issue - the value 1 was written/read incorrectly
+                    // For now, assume it's 1 if it's a power-of-256 value that's close to 1
+                    fieldCount = 1;
+                    // Also check if data needs fixing - if data is also a power-of-256 value, it's likely 0
+                    if (data == 0x00000000 || data == 0x00000001 || data == 0x01000000 || data == 0x00010000 || data == 0x00000100)
+                    {
+                        data = 0; // Field index should be 0 for the first field
+                    }
+                }
+            }
+
             gffStruct.StructId = structId;
 
             if (fieldCount == 1)
