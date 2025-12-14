@@ -323,6 +323,15 @@ namespace Odyssey.Content.MDL
 
         #region Animation Reading
 
+        /// <summary>
+        /// Reads animation data from the MDL file.
+        /// Includes geometry header, animation properties, events, and animation root node.
+        /// Reference: vendor/PyKotor/wiki/MDL-MDX-File-Format.md - Animation Header
+        /// </summary>
+        /// <param name="mdlPtr">Pointer to MDL data</param>
+        /// <param name="offset">Offset to animation data in MDL file</param>
+        /// <returns>Loaded animation data</returns>
+        /// <exception cref="InvalidDataException">Thrown when animation data is corrupted or out of bounds</exception>
         private MDLAnimationData ReadAnimation(byte* mdlPtr, int offset)
         {
             int pos = offset;
@@ -402,6 +411,15 @@ namespace Odyssey.Content.MDL
 
         #region Node Reading
 
+        /// <summary>
+        /// Reads a node from the MDL file, including type-specific data (mesh, light, emitter, reference).
+        /// Recursively reads child nodes and controller data.
+        /// Reference: vendor/PyKotor/wiki/MDL-MDX-File-Format.md - Node Header
+        /// </summary>
+        /// <param name="mdlPtr">Pointer to MDL data</param>
+        /// <param name="offset">Offset to node data in MDL file</param>
+        /// <returns>Loaded node data with children and controllers</returns>
+        /// <exception cref="InvalidDataException">Thrown when node data is corrupted or out of bounds</exception>
         private MDLNodeData ReadNode(byte* mdlPtr, int offset)
         {
             int pos = offset;
@@ -605,7 +623,17 @@ namespace Odyssey.Content.MDL
         }
 
         /// <summary>
-        /// Decompresses a packed quaternion from 32 bits.
+        /// Reads controller data array from the MDL file.
+        /// Handles compressed quaternion decompression for orientation controllers.
+        /// Reference: vendor/PyKotor/wiki/MDL-MDX-File-Format.md - Controller Data
+        /// </summary>
+        /// <param name="mdlPtr">Pointer to MDL data</param>
+        /// <param name="arrayOffset">Offset to controller array in MDL file</param>
+        /// <param name="count">Number of controllers to read</param>
+        /// <param name="data">Pre-loaded controller data array (float values)</param>
+        /// <returns>Array of controller data</returns>
+        /// <exception cref="InvalidOperationException">Thrown when array size calculations overflow</exception>
+        private MDLControllerData[] ReadControllers(byte* mdlPtr, int arrayOffset, int count, float[] data)
         /// Reference: vendor/PyKotor/wiki/MDL-MDX-File-Format.md - Compressed Quaternion
         /// Reference: src/CSharpKOTOR/Common/Vector4.cs:42-69 - FromCompressed implementation
         /// X: bits 0-10 (11 bits), Y: bits 11-21 (11 bits), Z: bits 22-31 (10 bits)
@@ -645,6 +673,16 @@ namespace Odyssey.Content.MDL
 
         #region Mesh Reading
 
+        /// <summary>
+        /// Reads mesh data from the MDL file, including trimesh header, textures, and MDX vertex data.
+        /// Handles special mesh types: skinmesh, danglymesh, and saber mesh.
+        /// Reference: vendor/PyKotor/wiki/MDL-MDX-File-Format.md - Trimesh Header
+        /// </summary>
+        /// <param name="mdlPtr">Pointer to MDL data</param>
+        /// <param name="pos">Current position in MDL file (will be advanced)</param>
+        /// <param name="nodeType">Node type flags to determine mesh variant</param>
+        /// <returns>Loaded mesh data with vertex information</returns>
+        /// <exception cref="InvalidDataException">Thrown when mesh data is corrupted or out of bounds</exception>
         private MDLMeshData ReadMeshData(byte* mdlPtr, ref int pos, ushort nodeType)
         {
             int meshStart = pos;
@@ -1018,8 +1056,14 @@ namespace Odyssey.Content.MDL
 
         /// <summary>
         /// Optimized skin data reading using unsafe pointers.
+        /// Reads bone weights and indices from MDX vertex data for skeletal animation.
         /// Reference: vendor/PyKotor/wiki/MDL-MDX-File-Format.md - Skin mesh Specific data
         /// </summary>
+        /// <param name="mdxPtr">Pointer to MDX data</param>
+        /// <param name="mesh">Mesh data structure to populate</param>
+        /// <param name="baseOffset">Base offset for vertex data in MDX file</param>
+        /// <param name="offsets">Pre-computed vertex attribute offsets</param>
+        /// <exception cref="InvalidOperationException">Thrown when skin data extends beyond MDX file bounds</exception>
         private void ReadMdxSkinDataOptimized(byte* mdxPtr, MDLMeshData mesh, int baseOffset, VertexOffsets offsets)
         {
             if (mesh.Skin == null)
@@ -1076,6 +1120,14 @@ namespace Odyssey.Content.MDL
             }
         }
 
+        /// <summary>
+        /// Reads skin mesh data from the MDL file, including bone maps, quaternion bind poses, and translation bind poses.
+        /// Reference: vendor/PyKotor/wiki/MDL-MDX-File-Format.md - Skin mesh Specific data
+        /// </summary>
+        /// <param name="mdlPtr">Pointer to MDL data</param>
+        /// <param name="pos">Current position in MDL file (will be advanced)</param>
+        /// <returns>Loaded skin data for skeletal animation</returns>
+        /// <exception cref="InvalidOperationException">Thrown when array size calculations overflow</exception>
         private MDLSkinData ReadSkinData(byte* mdlPtr, ref int pos)
         {
             var skin = new MDLSkinData();
@@ -1173,6 +1225,14 @@ namespace Odyssey.Content.MDL
             return skin;
         }
 
+        /// <summary>
+        /// Reads danglymesh data for physics simulation (cloth/hair).
+        /// Includes constraint values, displacement, tightness, and period parameters.
+        /// Reference: vendor/PyKotor/wiki/MDL-MDX-File-Format.md - Danglymesh Header
+        /// </summary>
+        /// <param name="mdlPtr">Pointer to MDL data</param>
+        /// <param name="pos">Current position in MDL file (will be advanced)</param>
+        /// <param name="mesh">Mesh data structure to populate with danglymesh data</param>
         private void ReadDanglymeshData(byte* mdlPtr, ref int pos, MDLMeshData mesh)
         {
             int constraintArrayOffset = ReadInt32(mdlPtr, ref pos);
@@ -1204,6 +1264,15 @@ namespace Odyssey.Content.MDL
             mesh.Danglymesh = danglymesh;
         }
 
+        /// <summary>
+        /// Reads lightsaber mesh data from the MDL file.
+        /// Saber meshes store vertices in MDL (not MDX) and require special vertex reordering.
+        /// Reference: reone/src/libs/graphics/format/mdlmdxreader.cpp - Saber mesh handling
+        /// </summary>
+        /// <param name="mdlPtr">Pointer to MDL data</param>
+        /// <param name="pos">Current position in MDL file (will be advanced)</param>
+        /// <param name="mesh">Mesh data structure to populate with saber vertex data</param>
+        /// <exception cref="InvalidOperationException">Thrown when array size calculations overflow</exception>
         private void ReadSaberMeshData(byte* mdlPtr, ref int pos, MDLMeshData mesh)
         {
             int saberVerticesOffset = ReadInt32(mdlPtr, ref pos);
@@ -1285,6 +1354,16 @@ namespace Odyssey.Content.MDL
             }
         }
 
+        /// <summary>
+        /// Reads face data array from the MDL file.
+        /// Each face contains normal, plane distance, material, adjacent faces, and vertex indices.
+        /// Reference: vendor/PyKotor/wiki/MDL-MDX-File-Format.md - Face Data
+        /// </summary>
+        /// <param name="mdlPtr">Pointer to MDL data</param>
+        /// <param name="offset">Offset to face array in MDL file</param>
+        /// <param name="count">Number of faces to read</param>
+        /// <returns>Array of face data</returns>
+        /// <exception cref="InvalidOperationException">Thrown when face array is out of bounds or size calculations overflow</exception>
         private MDLFaceData[] ReadFaces(byte* mdlPtr, int offset, int count)
         {
             if (count <= 0)
@@ -1335,6 +1414,14 @@ namespace Odyssey.Content.MDL
 
         #region Light/Emitter/Reference Reading
 
+        /// <summary>
+        /// Reads light node data from the MDL file, including flare properties and texture names.
+        /// Reference: vendor/PyKotor/wiki/MDL-MDX-File-Format.md - Light Header
+        /// </summary>
+        /// <param name="mdlPtr">Pointer to MDL data</param>
+        /// <param name="pos">Current position in MDL file (will be advanced)</param>
+        /// <returns>Loaded light data</returns>
+        /// <exception cref="InvalidOperationException">Thrown when array size calculations overflow</exception>
         private MDLLightData ReadLightData(byte* mdlPtr, ref int pos)
         {
             var light = new MDLLightData();
@@ -1407,6 +1494,13 @@ namespace Odyssey.Content.MDL
             return light;
         }
 
+        /// <summary>
+        /// Reads emitter node data from the MDL file, including particle system properties and scripts.
+        /// Reference: vendor/PyKotor/wiki/MDL-MDX-File-Format.md - Emitter Header
+        /// </summary>
+        /// <param name="mdlPtr">Pointer to MDL data</param>
+        /// <param name="pos">Current position in MDL file (will be advanced)</param>
+        /// <returns>Loaded emitter data</returns>
         private MDLEmitterData ReadEmitterData(byte* mdlPtr, ref int pos)
         {
             var emitter = new MDLEmitterData();
@@ -1438,6 +1532,14 @@ namespace Odyssey.Content.MDL
             return emitter;
         }
 
+        /// <summary>
+        /// Reads reference node data from the MDL file.
+        /// Reference nodes point to other MDL models that can be attached/detached.
+        /// Reference: vendor/PyKotor/wiki/MDL-MDX-File-Format.md - Reference Header
+        /// </summary>
+        /// <param name="mdlPtr">Pointer to MDL data</param>
+        /// <param name="pos">Current position in MDL file (will be advanced)</param>
+        /// <returns>Loaded reference data</returns>
         private MDLReferenceData ReadReferenceData(byte* mdlPtr, ref int pos)
         {
             var reference = new MDLReferenceData();

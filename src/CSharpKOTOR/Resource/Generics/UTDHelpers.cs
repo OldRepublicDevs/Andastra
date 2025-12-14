@@ -78,6 +78,20 @@ namespace CSharpKOTOR.Resource.Generics
             byte? notBlastableNullable = root.GetUInt8("NotBlastable");
             utd.NotBlastable = (notBlastableNullable ?? 0) != 0;
 
+            // Extract trap properties (deprecated, toolset only)
+            byte? trapDetectableNullable = root.GetUInt8("TrapDetectable");
+            utd.TrapDetectable = (trapDetectableNullable ?? 0) != 0;
+            byte? trapDisarmableNullable = root.GetUInt8("TrapDisarmable");
+            utd.TrapDisarmable = (trapDisarmableNullable ?? 0) != 0;
+            byte? disarmDcNullable = root.GetUInt8("DisarmDC");
+            utd.DisarmDc = disarmDcNullable ?? 0;
+            byte? trapOneShotNullable = root.GetUInt8("TrapOneShot");
+            utd.TrapOneShot = (trapOneShotNullable ?? 0) != 0;
+            byte? trapTypeNullable = root.GetUInt8("TrapType");
+            utd.TrapType = trapTypeNullable ?? 0;
+            byte? paletteIdNullable = root.GetUInt8("PaletteID");
+            utd.PaletteId = paletteIdNullable ?? 0;
+
             // Extract script hooks
             utd.OnClosed = root.Acquire<ResRef>("OnClosed", ResRef.FromBlank());
             utd.OnDamaged = root.Acquire<ResRef>("OnDamaged", ResRef.FromBlank());
@@ -126,10 +140,18 @@ namespace CSharpKOTOR.Resource.Generics
             root.SetString("Comment", utd.Comment);
 
             // KotOR 2 only fields
-            if (game.IsK2())
+            // Write OpenLockDiff if it has a non-zero value (for roundtrip compatibility)
+            // or if game is K2 (matching Python behavior)
+            if (game.IsK2() || utd.UnlockDiff != 0)
             {
                 root.SetUInt8("OpenLockDiff", (byte)utd.UnlockDiff);
+            }
+            if (game.IsK2() || utd.UnlockDiffMod != 0)
+            {
                 root.SetInt8("OpenLockDiffMod", (sbyte)utd.UnlockDiffMod);
+            }
+            if (game.IsK2())
+            {
                 root.SetUInt8("OpenState", (byte)utd.OpenState);
                 root.SetUInt8("NotBlastable", utd.NotBlastable ? (byte)1 : (byte)0);
             }
@@ -139,6 +161,12 @@ namespace CSharpKOTOR.Resource.Generics
                 root.SetLocString("Description", utd.Description);
                 root.SetUInt8("Ref", (byte)utd.Reflex);
                 root.SetUInt8("Will", (byte)utd.Willpower);
+                root.SetUInt8("TrapDetectable", utd.TrapDetectable ? (byte)1 : (byte)0);
+                root.SetUInt8("TrapDisarmable", utd.TrapDisarmable ? (byte)1 : (byte)0);
+                root.SetUInt8("DisarmDC", (byte)utd.DisarmDc);
+                root.SetUInt8("TrapOneShot", utd.TrapOneShot ? (byte)1 : (byte)0);
+                root.SetUInt8("TrapType", (byte)utd.TrapType);
+                root.SetUInt8("PaletteID", (byte)utd.PaletteId);
             }
 
             // Set script hooks
