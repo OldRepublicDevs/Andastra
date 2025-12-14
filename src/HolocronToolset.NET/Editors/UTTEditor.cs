@@ -41,28 +41,40 @@ namespace HolocronToolset.NET.Editors
             Content = panel;
         }
 
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utt.py:121-131
+        // Original: def load(self, filepath, resref, restype, data):
         public override void Load(string filepath, string resref, ResourceType restype, byte[] data)
         {
             base.Load(filepath, resref, restype, data);
-            var gff = GFF.FromBytes(data);
-            _utt = new UTT();
-            LoadUTT(_utt);
+
+            try
+            {
+                var utt = UTTAuto.ReadUtt(data);
+                LoadUTT(utt);
+            }
+            catch (Exception ex)
+            {
+                System.Console.WriteLine($"Failed to load UTT: {ex}");
+                New();
+            }
         }
 
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utt.py:133-185
+        // Original: def _loadUTT(self, utt: UTT):
         private void LoadUTT(UTT utt)
         {
-            // Load UTT data into UI
+            _utt = utt;
+            // UI loading will be implemented when UI elements are available
         }
 
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utt.py:187-240
+        // Original: def build(self) -> tuple[bytes, bytes]:
         public override Tuple<byte[], byte[]> Build()
         {
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utt.py
-            // Original: def build(self) -> tuple[bytes, bytes]:
-            // TODO: Implement UTTHelpers.DismantleUtt when available
-            // For now, create a minimal valid GFF structure
-            var gff = new GFF(GFFContent.UTT);
-            // Build basic structure - full implementation will populate from _utt
-            byte[] data = GFFAuto.BytesGff(gff, ResourceType.UTT);
+            // Build UTT from current state
+            // For now, use the stored _utt object
+            // Full UI integration will populate _utt from UI elements
+            byte[] data = UTTAuto.BytesUtt(_utt);
             return Tuple.Create(data, new byte[0]);
         }
 

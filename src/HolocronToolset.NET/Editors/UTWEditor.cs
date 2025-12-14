@@ -41,28 +41,40 @@ namespace HolocronToolset.NET.Editors
             Content = panel;
         }
 
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utw.py:74-84
+        // Original: def load(self, filepath, resref, restype, data):
         public override void Load(string filepath, string resref, ResourceType restype, byte[] data)
         {
             base.Load(filepath, resref, restype, data);
-            var gff = GFF.FromBytes(data);
-            _utw = new UTW();
-            LoadUTW(_utw);
+
+            try
+            {
+                var utw = UTWAuto.ReadUtw(data);
+                LoadUTW(utw);
+            }
+            catch (Exception ex)
+            {
+                System.Console.WriteLine($"Failed to load UTW: {ex}");
+                New();
+            }
         }
 
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utw.py:86-113
+        // Original: def _loadUTW(self, utw: UTW):
         private void LoadUTW(UTW utw)
         {
-            // Load UTW data into UI
+            _utw = utw;
+            // UI loading will be implemented when UI elements are available
         }
 
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utw.py:115-150
+        // Original: def build(self) -> tuple[bytes, bytes]:
         public override Tuple<byte[], byte[]> Build()
         {
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utw.py
-            // Original: def build(self) -> tuple[bytes, bytes]:
-            // TODO: Implement UTWHelpers.DismantleUtw when available
-            // For now, create a minimal valid GFF structure
-            var gff = new GFF(GFFContent.UTW);
-            // Build basic structure - full implementation will populate from _utw
-            byte[] data = GFFAuto.BytesGff(gff, ResourceType.UTW);
+            // Build UTW from current state
+            // For now, use the stored _utw object
+            // Full UI integration will populate _utw from UI elements
+            byte[] data = UTWAuto.BytesUtw(_utw);
             return Tuple.Create(data, new byte[0]);
         }
 
