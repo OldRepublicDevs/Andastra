@@ -30,6 +30,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
         {
             if (key == "user.dir")
                 return Environment.CurrentDirectory;
+            if (key == "line.separator")
+                return Environment.NewLine;
             if (key == "NCSDecomp.debug.stack")
                 return Environment.GetEnvironmentVariable("NCSDecomp_DEBUG_STACK") ?? "";
             return "";
