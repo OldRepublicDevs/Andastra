@@ -1,4 +1,5 @@
 using System;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using CSharpKOTOR.Formats.TPC;
 using JetBrains.Annotations;
