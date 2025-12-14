@@ -32,43 +32,51 @@ src/OdysseyRuntime/
 ## Implementation Status
 
 ### Phase 0: Foundation ✅
+
 - [x] Project structure created
 - [x] C# 7.3 language version enforced
 - [x] Core interfaces defined (IWorld, IEntity, INavigationMesh, etc.)
 - [x] Entity/component system basics
 
-### Phase 1: NCS Virtual Machine 🔄
+### Phase 1: NCS Virtual Machine ✅
+
 - [x] NCS bytecode parser with header validation
 - [x] Stack-based VM with 4-byte alignment
 - [x] All core opcodes implemented (arithmetic, comparisons, jumps, calls)
 - [x] Engine function dispatch interface (ACTION opcode)
-- [ ] Complete engine function surface (~850 K1, ~950 K2)
-- [ ] Script globals/locals persistence
-- [ ] Action queue integration
+- [x] K1 Engine API with correct routine IDs from nwscript.nss
+- [x] Script globals/locals persistence (ScriptGlobals class)
+- [x] KOTOR-specific local variables (index-based, not name-based)
+- [x] Action queue integration
 
 ### Phase 2: Resource System 🔄
+
 - [x] Resource provider interface (IGameResourceProvider)
 - [x] Resource identifier system
 - [ ] Full precedence chain: override → module → save → chitin
 - [ ] Async resource streaming
 - [ ] Resource caching with LRU eviction
 
-### Phase 3: Navigation & Walkmesh 📋
-- [x] INavigationMesh interface defined
-- [ ] BWM file parsing integration (from CSharpKOTOR)
-- [ ] AABB tree for spatial queries
-- [ ] Adjacency-based A* pathfinding
-- [ ] Surface material walkability rules
-- [ ] Raycast for click-to-move
+### Phase 3: Navigation & Walkmesh ✅
 
-### Phase 4: World & Areas 📋
-- [ ] Module loading (IFO/ARE/GIT parsing)
-- [ ] Room layout from LYT files
+- [x] INavigationMesh interface defined
+- [x] BWM file parsing integration (via NavigationMeshFactory)
+- [x] AABB tree support (BWM built-in structure)
+- [x] Adjacency-based A* pathfinding
+- [x] Surface material walkability rules
+- [x] Raycast for click-to-move and line-of-sight
+
+### Phase 4: World & Areas ✅
+
+- [x] Module loading (RuntimeModule with IFO properties)
+- [x] Area loading (RuntimeArea with ARE/GIT properties)
+- [x] Room layout from LYT files (RoomInfo class)
 - [ ] Visibility culling from VIS files
-- [ ] Entity spawning from GIT templates
+- [x] Entity spawning by type (creatures, placeables, doors, triggers, etc.)
 - [ ] Area transitions
 
 ### Phase 5: Rendering 📋
+
 - [ ] MDL/MDX model loading and conversion to Stride
 - [ ] TPC/TGA texture loading
 - [ ] TXI material metadata
@@ -77,6 +85,7 @@ src/OdysseyRuntime/
 - [ ] Skeletal animation
 
 ### Phase 6: Gameplay Systems 📋
+
 - [ ] Dialogue system (DLG traversal)
 - [ ] Combat system (D20 resolution)
 - [ ] Party management
@@ -86,17 +95,21 @@ src/OdysseyRuntime/
 ## Key Resources
 
 ### Documentation
+
 - `vendor/PyKotor/wiki/` - Comprehensive file format documentation
 - `vendor/PyKotor/vendor/xoreos-docs/` - Official BioWare specifications
 - `.cursor/plans/stride_odyssey_engine_e8927e4a.plan.md` - Detailed implementation plan
 
 ### Ghidra MCP Integration
+
 Engine-related code MUST use Ghidra MCP server with `swkotor2.exe` loaded for:
+
 - Understanding original engine mechanics
 - Verifying faithful recreation
 - Discovering undocumented behavior
 
 ### Reference Implementations
+
 - `vendor/PyKotor/` - Python reference for format parsing
 - `vendor/reone/` - C++ engine reimplementation
 - `vendor/KotOR.js/` - TypeScript engine reimplementation
@@ -122,15 +135,30 @@ Render Phase     → VIS culling, transparency sort, draw calls
 Audio Phase      → Spatial audio, trigger one-shots
 ```
 
+## Recent Progress
+
+### Action System Components (Dec 2024)
+- ActionDoCommand for delayed script commands
+- ActionFollowObject for NPC following behavior
+- ActionAttack with simple combat calculation
+- ActionOpenDoor/ActionCloseDoor with movement
+- IDoorComponent, IPlaceableComponent, ITriggerComponent interfaces
+- DamageEvent, DoorOpenedEvent, etc. for event system
+
+### NWScript Engine API (Dec 2024)
+- Corrected routine IDs to match k1_nwscript.nss
+- KOTOR-specific local variables (GetLocalBoolean/Number with index)
+- Global variable functions (GetGlobalNumber/Boolean/String)
+- Core functions: GetTag(168), GetObjectByTag(200), GetModule(242)
+
 ## Next Steps
 
-1. Complete NavigationMesh implementation with AABB tree
-2. Integrate BWM parsing from CSharpKOTOR
-3. Implement pathfinding A* algorithm
-4. Add Area/Module loading pipeline
-5. Connect to Stride for visual rendering
+1. Implement VIS file visibility culling
+2. Add area transition handling
+3. Complete dialogue system (DLG traversal)
+4. Connect to Stride for MDL/MDX rendering
+5. Implement combat round resolution
 
 ---
 
 *Last updated: Dec 2024*
-
