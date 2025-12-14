@@ -249,6 +249,106 @@ namespace KotorDiff.NET.App
         {
             return DiffEngineUtils.GetModuleRoot(filename);
         }
+
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/application.py:204-211
+        // Original: def _setup_logging(config: DiffConfig) -> None: ...
+        /// <summary>
+        /// Set up the logging system with the provided configuration.
+        /// </summary>
+        public static void SetupLogging(KotorDiffConfig config)
+        {
+            // Logging setup is optional - if not available, just skip
+        }
+
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/application.py:214-224
+        // Original: def _log_configuration(config: DiffConfig) -> None: ...
+        /// <summary>
+        /// Log the current configuration.
+        /// </summary>
+        public static void LogConfiguration(KotorDiffConfig config)
+        {
+            LogOutput("");
+            LogOutput("Configuration:");
+            LogOutput($"  Mode: {config.Paths.Count}-way comparison");
+
+            for (int i = 0; i < config.Paths.Count; i++)
+            {
+                object path = config.Paths[i];
+                string pathStr = path?.ToString() ?? "null";
+                LogOutput($"  Path {i + 1}: '{pathStr}'");
+            }
+
+            LogOutput($"Using --compare-hashes={config.CompareHashes}");
+            LogOutput($"Using --use-profiler={config.UseProfiler}");
+        }
+
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/application.py:227-237
+        // Original: def _execute_diff(config: DiffConfig) -> tuple[bool | None, int | None]: ...
+        /// <summary>
+        /// Execute the diff operation based on configuration.
+        /// </summary>
+        public static bool? ExecuteDiff(KotorDiffConfig config)
+        {
+            // Use unified n-way handling for all cases
+            var result = HandleDiff(config);
+            return result.comparison;
+        }
+
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/application.py:240-258
+        // Original: def _format_comparison_output(comparison: bool | None, config: DiffConfig) -> int: ...
+        /// <summary>
+        /// Format and output the final comparison result.
+        /// </summary>
+        public static int FormatComparisonOutput(bool? comparison, KotorDiffConfig config)
+        {
+            if (config.Paths.Count >= 2)
+            {
+                string matchText = comparison == true ? " MATCHES " : " DOES NOT MATCH ";
+                LogOutput($"Comparison of {config.Paths.Count} paths: {matchText}");
+            }
+            return comparison == true ? 0 : (comparison == false ? 2 : 3);
+        }
+
+        // Matching PyKotor implementation at vendor/PyKotor/Tools/KotorDiff/src/kotordiff/app.py:417-499
+        // Original: def handle_diff(config: KotorDiffConfig) -> tuple[bool | None, int | None]: ...
+        /// <summary>
+        /// Handle diff operation with TSLPatcher data generation support.
+        /// </summary>
+        public static (bool? comparison, int? exitCode) HandleDiff(KotorDiffConfig config)
+        {
+            // Create modifications collection
+            var modifications = new ModificationsByType();
+            GlobalConfig.Instance.ModificationsByType = modifications;
+
+            // Create incremental writer if requested
+            IncrementalTSLPatchDataWriter incrementalWriter = null;
+            if (!string.IsNullOrEmpty(config.TSLPatchDataPath))
+            {
+                incrementalWriter = new IncrementalTSLPatchDataWriter(
+                    config.TSLPatchDataPath,
+                    config.IniFilename ?? "changes.ini",
+                    config.Paths);
+            }
+
+            // Call handle_diff_internal
+            var result = HandleDiffInternal(
+                config.Paths,
+                filters: config.Filters,
+                incrementalWriter: incrementalWriter);
+
+            // Finalize TSLPatcher data if requested
+            if (incrementalWriter != null)
+            {
+                incrementalWriter.Finalize();
+            }
+            else if (!string.IsNullOrEmpty(config.TSLPatchDataPath) && modifications.HasModifications())
+            {
+                // Use batch generation if not using incremental writer
+                // TODO: Implement generate_tslpatcher_data if needed
+            }
+
+            return result;
+        }
     }
 }
 
