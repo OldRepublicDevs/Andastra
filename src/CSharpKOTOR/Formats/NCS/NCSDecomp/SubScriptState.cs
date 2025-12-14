@@ -2317,7 +2317,14 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
                 }
                 return @params;
             }
-            int paramcount = Math.Min(NodeUtils.GetActionParamCount(node), paramtypes.Count);
+            // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptutils/SubScriptState.java:1994-2001
+            // Original: // getActionParamCount returns bytes, not parameter count
+            // Original: // paramtypes contains the actual parameter types from the action definition
+            // Original: // Use paramtypes.size() as the parameter count - it represents the function signature
+            // Original: int argBytes = NodeUtils.getActionParamCount(node);
+            // Original: int paramcount = paramtypes.size();
+            int argBytes = NodeUtils.GetActionParamCount(node);
+            int paramcount = paramtypes.Count;
 
             for (int i = 0; i < paramcount; i++)
             {
