@@ -52,16 +52,21 @@ namespace HolocronToolset.NET.Dialogs
 
         private void SetupProgrammaticUI()
         {
-            var panel = new StackPanel();
+            var scrollViewer = new ScrollViewer
+            {
+                HorizontalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Auto,
+                VerticalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Auto
+            };
             _textBrowser = new TextBox
             {
                 IsReadOnly = true,
                 AcceptsReturn = true,
                 AcceptsTab = false,
-                TextWrapping = Avalonia.Media.TextWrapping.Wrap
+                TextWrapping = Avalonia.Media.TextWrapping.Wrap,
+                FontFamily = new FontFamily("Consolas")
             };
-            panel.Children.Add(_textBrowser);
-            Content = panel;
+            scrollViewer.Content = _textBrowser;
+            Content = scrollViewer;
         }
 
         private void SetupUI()
@@ -132,8 +137,11 @@ namespace HolocronToolset.NET.Dialogs
                 if (_textBrowser != null)
                 {
                     // TODO: Use HTML rendering when available in Avalonia
-                    // For now, just show the markdown text (HTML rendering not yet available)
-                    _textBrowser.Text = text;
+                    // For now, show the markdown text (HTML rendering requires WebView which may not be available)
+                    // Strip HTML tags for plain text display
+                    string plainText = System.Text.RegularExpressions.Regex.Replace(htmlBody, "<.*?>", "");
+                    plainText = System.Net.WebUtility.HtmlDecode(plainText);
+                    _textBrowser.Text = plainText;
                 }
             }
             catch (Exception ex)
