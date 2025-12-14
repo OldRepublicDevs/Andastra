@@ -125,9 +125,9 @@ namespace CSharpKOTOR.Utility
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/utility/common/more_collections.py:258-259
         // Original: def __iter__(self) -> Iterator[str]:
-        public IEnumerator<string> GetEnumerator()
+        public IEnumerator<KeyValuePair<string, T>> GetEnumerator()
         {
-            return _dictionary.Keys.GetEnumerator();
+            return _dictionary.GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator()
