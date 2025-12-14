@@ -383,6 +383,12 @@ namespace Odyssey.Kotor.Game
                 }
             }
 
+            // Update dialogue manager
+            if (_dialogueManager != null)
+            {
+                _dialogueManager.Update(deltaTime);
+            }
+
             // Check perception
             // TODO: Perception system
 
