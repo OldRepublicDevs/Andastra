@@ -651,7 +651,7 @@ namespace Odyssey.Content.MDL
             }
             int totalVertexBytes = (int)totalVertexBytesLong;
             long maxOffsetLong = (long)mesh.MDXDataOffset + totalVertexBytes;
-            if (maxOffsetLong > int.MaxValue || maxOffsetLong > _mdxData.Length)
+            if (maxOffsetLong > _mdxData.Length)
             {
                 throw new InvalidOperationException(
                     $"MDX vertex data extends beyond file bounds: " +
