@@ -29,6 +29,22 @@ namespace Odyssey.Core.Entities
 
         public IArea CurrentArea { get; set; }
         public IModule CurrentModule { get; set; }
+
+        /// <summary>
+        /// Sets the current area.
+        /// </summary>
+        public void SetCurrentArea(IArea area)
+        {
+            CurrentArea = area;
+        }
+
+        /// <summary>
+        /// Sets the current module.
+        /// </summary>
+        public void SetCurrentModule(IModule module)
+        {
+            CurrentModule = module;
+        }
         public ITimeManager TimeManager { get; }
         public IEventBus EventBus { get; }
 

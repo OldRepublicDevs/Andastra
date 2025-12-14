@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using CSharpKOTOR.Common;
 using CSharpKOTOR.Formats.GFF;
@@ -8,6 +9,7 @@ using CSharpKOTOR.Formats.LYT;
 using CSharpKOTOR.Formats.VIS;
 using Odyssey.Content.Interfaces;
 using CSharpKOTOR.Installation;
+using CSharpKOTOR.Resources;
 using JetBrains.Annotations;
 using Odyssey.Core.Enums;
 using Odyssey.Core.Interfaces;
@@ -74,6 +76,9 @@ namespace Odyssey.Kotor.Loading
                     runtimeModule.AddArea(area);
                 }
             }
+
+            // Store as current module
+            _currentModule = runtimeModule;
 
             return runtimeModule;
         }
@@ -587,6 +592,115 @@ namespace Odyssey.Kotor.Loading
             // For each room, load its walkmesh and combine
             var combinedNavMesh = _navMeshFactory.CreateFromModule(module, area.Rooms);
             area.NavigationMesh = combinedNavMesh;
+        }
+
+        /// <summary>
+        /// Gets the currently loaded module (if any).
+        /// </summary>
+        private RuntimeModule _currentModule;
+
+        /// <summary>
+        /// Gets the currently loaded module.
+        /// </summary>
+        public RuntimeModule CurrentModule
+        {
+            get { return _currentModule; }
+        }
+
+        /// <summary>
+        /// Loads a dialogue by ResRef.
+        /// </summary>
+        public CSharpKOTOR.Resource.Generics.DLG.DLG LoadDialogue(string resRef)
+        {
+            if (_currentModule == null)
+            {
+                return null;
+            }
+
+            // Load from module resources
+            var module = new Module(_currentModule.ResRef, _installation);
+            var dlgResource = module.Resource(resRef, ResourceType.DLG);
+            if (dlgResource == null)
+            {
+                return null;
+            }
+
+            object dlgData = dlgResource.Resource();
+            return dlgData as CSharpKOTOR.Resource.Generics.DLG.DLG;
+        }
+
+        /// <summary>
+        /// Loads a script (NCS) by ResRef.
+        /// </summary>
+        public byte[] LoadScript(string resRef)
+        {
+            if (_currentModule == null)
+            {
+                return null;
+            }
+
+            // Load from module resources
+            var module = new Module(_currentModule.ResRef, _installation);
+            var ncsResource = module.Resource(resRef, ResourceType.NCS);
+            if (ncsResource == null)
+            {
+                return null;
+            }
+
+            // Activate the resource to get the file path
+            string activePath = ncsResource.Activate();
+            if (string.IsNullOrEmpty(activePath))
+            {
+                return null;
+            }
+
+            // Read NCS bytes using ResourceAuto
+            return CSharpKOTOR.Resources.ResourceAuto.ReadResource(activePath, ResourceType.NCS);
+        }
+
+        /// <summary>
+        /// Gets the navigation mesh for the current module's entry area.
+        /// </summary>
+        public Odyssey.Core.Navigation.NavigationMesh GetNavigationMesh()
+        {
+            if (_currentModule == null)
+            {
+                return null;
+            }
+
+            var entryArea = _currentModule.GetArea(_currentModule.EntryArea);
+            if (entryArea == null)
+            {
+                return null;
+            }
+
+            return entryArea.NavigationMesh as Odyssey.Core.Navigation.NavigationMesh;
+        }
+
+        /// <summary>
+        /// Gets the entry position for the current module.
+        /// </summary>
+        public System.Numerics.Vector3 GetEntryPosition()
+        {
+            if (_currentModule == null)
+            {
+                return System.Numerics.Vector3.Zero;
+            }
+
+            return _currentModule.EntryPosition;
+        }
+
+        /// <summary>
+        /// Gets the entry facing angle for the current module.
+        /// </summary>
+        public float GetEntryFacing()
+        {
+            if (_currentModule == null)
+            {
+                return 0f;
+            }
+
+            return _currentModule.EntryFacing;
         }
 
         #region Helper Methods
