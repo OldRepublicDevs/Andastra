@@ -111,9 +111,20 @@ namespace Odyssey.Game.Core
             DebugLog("A", "OdysseyGame.Initialize:start", "Initialize() starting");
             // #endregion
 
+            // Call base initialization to set up Game base class
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Games.Game.html
+            // Game.Initialize() initializes the game and sets up core systems
+            // Method signature: protected virtual void Initialize()
+            // Must be called before using Game services and systems
+            // Source: https://doc.stride3d.net/latest/en/manual/game-loop/index.html
             base.Initialize();
 
             // #region agent log
+            // Check GraphicsCompositor availability
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Engine.SceneSystem.html
+            // SceneSystem.GraphicsCompositor property gets the graphics compositor for rendering
+            // Method signature: GraphicsCompositor GraphicsCompositor { get; }
+            // Source: https://doc.stride3d.net/latest/en/manual/graphics/graphics-compositor/index.html
             DebugLog("C", "OdysseyGame.Initialize:compositor_check", "Checking GraphicsCompositor", SceneSystem?.GraphicsCompositor != null ? "compositor_exists" : "compositor_null");
             // #endregion
 
@@ -286,6 +297,12 @@ namespace Odyssey.Game.Core
         {
             try
             {
+                // Get SceneSystem service for scene management
+                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.IServiceRegistry.html
+                // Services.GetService<T>() retrieves a service from the service registry
+                // Method signature: T GetService<T>() where T : class
+                // SceneSystem manages scene rendering and entity management
+                // Source: https://doc.stride3d.net/latest/en/manual/engine/services-and-dependency-injection.html
                 SceneSystem sceneSystem = Services.GetService<SceneSystem>();
                 if (sceneSystem != null && sceneSystem.SceneInstance != null && _cameraEntity != null)
                 {
@@ -846,6 +863,12 @@ namespace Odyssey.Game.Core
             // Add scene root to Stride scene
             try
             {
+                // Get SceneSystem service for scene management
+                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.IServiceRegistry.html
+                // Services.GetService<T>() retrieves a service from the service registry
+                // Method signature: T GetService<T>() where T : class
+                // SceneSystem manages scene rendering and entity management
+                // Source: https://doc.stride3d.net/latest/en/manual/engine/services-and-dependency-injection.html
                 var sceneSystem = Services.GetService<SceneSystem>();
                 if (sceneSystem != null && sceneSystem.SceneInstance != null)
                 {
@@ -927,6 +950,12 @@ namespace Odyssey.Game.Core
             Console.WriteLine("[Odyssey] BeginRun - Setting up scene and UI...");
 
             // Get or create the scene system and instance
+            // Get SceneSystem service for scene management
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.IServiceRegistry.html
+            // Services.GetService<T>() retrieves a service from the service registry
+            // Method signature: T GetService<T>() where T : class
+            // SceneSystem manages scene rendering and entity management
+            // Source: https://doc.stride3d.net/latest/en/manual/engine/services-and-dependency-injection.html
             var sceneSystem = Services.GetService<SceneSystem>();
             // #region agent log
             DebugLog("A", "OdysseyGame.BeginRun:scene_system", "SceneSystem check", sceneSystem != null ? "exists" : "null");
