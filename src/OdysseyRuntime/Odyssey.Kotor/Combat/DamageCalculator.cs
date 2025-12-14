@@ -42,6 +42,12 @@ namespace Odyssey.Kotor.Combat
     /// </summary>
     /// <remarks>
     /// KOTOR D20 Combat System:
+    /// - Based on swkotor2.exe combat system
+    /// - Located via string references: "DamageValue" @ 0x007bf890, "DamageList" @ 0x007bf89c
+    /// - "ScriptDamaged" @ 0x007bee70, "OnDamaged" @ 0x007c1a80
+    /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_DAMAGED" @ 0x007bcb14
+    /// - Damage types: "DAM_HP" @ 0x007bf130, "DAM_STR" @ 0x007bf120 (ability damage)
+    /// - Original implementation: D20 attack/damage resolution with critical hits, resistances
     ///
     /// Attack Roll:
     /// - Roll d20 + Attack Bonus vs Defense
