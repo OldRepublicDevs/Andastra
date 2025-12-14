@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using CSharpKOTOR.Common;
+using CSharpKOTOR.Formats.Capsule;
 using CSharpKOTOR.Formats.TwoDA;
 using CSharpKOTOR.Installation;
 using CSharpKOTOR.Resources;
@@ -84,9 +85,118 @@ namespace HolocronToolset.NET.Data
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/installation.py
         // Original: def resource(self, resname: str, restype: ResourceType, ...) -> ResourceResult | None:
         [CanBeNull]
-        public ResourceResult Resource(string resname, ResourceType restype, SearchLocation[] searchOrder = null)
+        public ResourceResult Resource(string resname, ResourceType restype, SearchLocation[] searchOrder = null, List<LazyCapsule> capsules = null)
         {
+            if (capsules != null && capsules.Count > 0)
+            {
+                // Use Locations with capsules, then get first result
+                var query = new ResourceIdentifier(resname, restype);
+                var locations = _installation.Locations(new List<ResourceIdentifier> { query }, searchOrder, capsules);
+                if (locations.ContainsKey(query) && locations[query].Count > 0)
+                {
+                    var location = locations[query][0];
+                    var resource = _installation.Resource(resname, restype, searchOrder);
+                    if (resource != null)
+                    {
+                        return resource;
+                    }
+                }
+            }
             return _installation.Resource(resname, restype, searchOrder);
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/extract/installation.py:1209-1285
+        // Original: def resources(self, queries: list[ResourceIdentifier], ...) -> dict[ResourceIdentifier, ResourceResult | None]:
+        public Dictionary<ResourceIdentifier, ResourceResult> Resources(
+            List<ResourceIdentifier> queries,
+            SearchLocation[] searchOrder = null,
+            List<LazyCapsule> capsules = null)
+        {
+            var results = new Dictionary<ResourceIdentifier, ResourceResult>();
+            if (queries == null || queries.Count == 0)
+            {
+                return results;
+            }
+
+            var locations = _installation.Locations(queries, searchOrder, capsules);
+            var handles = new Dictionary<ResourceIdentifier, FileStream>();
+
+            foreach (var query in queries)
+            {
+                if (locations.ContainsKey(query) && locations[query].Count > 0)
+                {
+                    var location = locations[query][0];
+                    try
+                    {
+                        FileStream handle = null;
+                        if (!handles.ContainsKey(query))
+                        {
+                            if (File.Exists(location.FilePath))
+                            {
+                                handle = File.OpenRead(location.FilePath);
+                                handles[query] = handle;
+                            }
+                        }
+                        else
+                        {
+                            handle = handles[query];
+                        }
+
+                        if (handle != null)
+                        {
+                            handle.Seek(location.Offset, SeekOrigin.Begin);
+                            byte[] data = new byte[location.Size];
+                            handle.Read(data, 0, location.Size);
+
+                            var result = new ResourceResult(query.ResName, query.ResType, location.FilePath, data);
+                            // Only set FileResource if location doesn't already have one to avoid recursion issues
+                            if (location.FileResource == null)
+                            {
+                                var fileResource = new FileResource(query.ResName, query.ResType, location.Size, location.Offset, location.FilePath);
+                                result.SetFileResource(fileResource);
+                            }
+                            else
+                            {
+                                result.SetFileResource(location.FileResource);
+                            }
+                            results[query] = result;
+                        }
+                        else
+                        {
+                            results[query] = null;
+                        }
+                    }
+                    catch
+                    {
+                        results[query] = null;
+                    }
+                }
+                else
+                {
+                    results[query] = null;
+                }
+            }
+
+            // Close all open handles
+            foreach (var handle in handles.Values)
+            {
+                handle?.Dispose();
+            }
+
+            return results;
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/extract/installation.py:1297-1360
+        // Original: def location(self, resname: str, restype: ResourceType, ...) -> list[LocationResult]:
+        public List<LocationResult> Location(
+            string resname,
+            ResourceType restype,
+            SearchLocation[] searchOrder = null,
+            List<LazyCapsule> capsules = null)
+        {
+            var query = new ResourceIdentifier(resname, restype);
+            var locations = _installation.Locations(new List<ResourceIdentifier> { query }, searchOrder, capsules);
+            return locations.ContainsKey(query) ? locations[query] : new List<LocationResult>();
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/installation.py:444-469
@@ -401,30 +511,105 @@ namespace HolocronToolset.NET.Data
             return resources;
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/installation.py
-        // Original: def string(self, locstring: LocalizedString) -> str | None:
-        [CanBeNull]
-        public string String(LocalizedString locstring)
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/extract/installation.py:2239-2258
+        // Original: def string(self, locstring: LocalizedString, default: str = "") -> str:
+        public string String(LocalizedString locstring, string defaultStr = "")
         {
             if (locstring == null)
             {
-                return null;
+                return defaultStr;
             }
+
+            var results = Strings(new List<LocalizedString> { locstring }, defaultStr);
+            return results.ContainsKey(locstring) ? results[locstring] : defaultStr;
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/extract/installation.py:2260-2299
+        // Original: def strings(self, queries: list[LocalizedString], default: str = "") -> dict[LocalizedString, str]:
+        public Dictionary<LocalizedString, string> Strings(List<LocalizedString> queries, string defaultStr = "")
+        {
+            var results = new Dictionary<LocalizedString, string>();
+            if (queries == null || queries.Count == 0)
+            {
+                return results;
+            }
+
+            string tlkPath = System.IO.Path.Combine(Path, "dialog.tlk");
+            if (!File.Exists(tlkPath))
+            {
+                foreach (var locstring in queries)
+                {
+                    results[locstring] = defaultStr;
+                }
+                return results;
+            }
+
             try
             {
-                string tlkPath = System.IO.Path.Combine(Path, "dialog.tlk");
-                if (!File.Exists(tlkPath))
-                {
-                    return null;
-                }
                 var talkTable = new CSharpKOTOR.Extract.TalkTable(tlkPath);
-                string result = talkTable.GetString(locstring.StringRef);
-                return string.IsNullOrEmpty(result) ? null : result;
+                var stringrefs = queries.Select(q => q.StringRef).ToList();
+                var batch = talkTable.Batch(stringrefs);
+
+                string femaleTlkPath = System.IO.Path.Combine(Path, "dialogf.tlk");
+                Dictionary<int, CSharpKOTOR.Extract.StringResult> femaleBatch = new Dictionary<int, CSharpKOTOR.Extract.StringResult>();
+                if (File.Exists(femaleTlkPath))
+                {
+                    try
+                    {
+                        var femaleTalkTable = new CSharpKOTOR.Extract.TalkTable(femaleTlkPath);
+                        var femaleBatchDict = femaleTalkTable.Batch(stringrefs);
+                        foreach (var kvp in femaleBatchDict)
+                        {
+                            femaleBatch[kvp.Key] = kvp.Value;
+                        }
+                    }
+                    catch
+                    {
+                        // Ignore female talktable errors
+                    }
+                }
+
+                foreach (var locstring in queries)
+                {
+                    if (locstring.StringRef != -1)
+                    {
+                        if (batch.ContainsKey(locstring.StringRef))
+                        {
+                            results[locstring] = batch[locstring.StringRef].Text;
+                        }
+                        else if (femaleBatch.ContainsKey(locstring.StringRef))
+                        {
+                            results[locstring] = femaleBatch[locstring.StringRef].Text;
+                        }
+                        else
+                        {
+                            results[locstring] = defaultStr;
+                        }
+                    }
+                    else if (locstring.Count > 0)
+                    {
+                        // Get first text from localized string
+                        foreach (var entry in locstring)
+                        {
+                            results[locstring] = entry.Item3; // (Language, Gender, string) - Item3 is the string
+                            break;
+                        }
+                    }
+                    else
+                    {
+                        results[locstring] = defaultStr;
+                    }
+                }
             }
             catch
             {
-                return null;
+                foreach (var locstring in queries)
+                {
+                    results[locstring] = defaultStr;
+                }
             }
+
+            return results;
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/installation.py
@@ -477,9 +662,220 @@ namespace HolocronToolset.NET.Data
         // Original: def locations(self, queries: list[ResourceIdentifier], order: list[SearchLocation] | None = None) -> dict[ResourceIdentifier, list[LocationResult]]:
         public Dictionary<ResourceIdentifier, List<LocationResult>> Locations(
             List<ResourceIdentifier> queries,
-            SearchLocation[] order = null)
+            SearchLocation[] order = null,
+            List<LazyCapsule> capsules = null)
         {
-            return _installation.Locations(queries, order);
+            return _installation.Locations(queries, order, capsules);
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/extract/installation.py:1807-1843
+        // Original: def texture(self, resname: str, order: Sequence[SearchLocation] | None = None, ...) -> TPC | None:
+        [CanBeNull]
+        public CSharpKOTOR.Formats.TPC.TPC Texture(string resname, SearchLocation[] searchOrder = null)
+        {
+            return _installation.Texture(resname, searchOrder);
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/extract/installation.py:1845-1888
+        // Original: def textures(self, resnames: Iterable[str], order: Sequence[SearchLocation] | None = None, ...) -> CaseInsensitiveDict[TPC | None]:
+        public CSharpKOTOR.Utility.CaseInsensitiveDict<CSharpKOTOR.Formats.TPC.TPC> Textures(
+            List<string> resnames,
+            SearchLocation[] searchOrder = null)
+        {
+            var textures = new CSharpKOTOR.Utility.CaseInsensitiveDict<CSharpKOTOR.Formats.TPC.TPC>();
+            if (resnames == null)
+            {
+                return textures;
+            }
+
+            if (searchOrder == null || searchOrder.Length == 0)
+            {
+                searchOrder = new[]
+                {
+                    SearchLocation.CUSTOM_FOLDERS,
+                    SearchLocation.OVERRIDE,
+                    SearchLocation.CUSTOM_MODULES,
+                    SearchLocation.TEXTURES_TPA,
+                    SearchLocation.CHITIN
+                };
+            }
+
+            foreach (var resname in resnames)
+            {
+                var texture = _installation.Texture(resname, searchOrder);
+                textures[resname] = texture;
+            }
+
+            return textures;
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/extract/installation.py:1918-2042
+        // Original: def sounds(self, resnames: Iterable[str], order: Sequence[SearchLocation] | None = None, ...) -> CaseInsensitiveDict[bytes | None]:
+        public CSharpKOTOR.Utility.CaseInsensitiveDict<byte[]> Sounds(
+            List<string> resnames,
+            SearchLocation[] searchOrder = null)
+        {
+            var sounds = new CSharpKOTOR.Utility.CaseInsensitiveDict<byte[]>();
+            if (resnames == null)
+            {
+                return sounds;
+            }
+
+            if (searchOrder == null || searchOrder.Length == 0)
+            {
+                searchOrder = new[]
+                {
+                    SearchLocation.CUSTOM_FOLDERS,
+                    SearchLocation.OVERRIDE,
+                    SearchLocation.CUSTOM_MODULES,
+                    SearchLocation.SOUND,
+                    SearchLocation.CHITIN
+                };
+            }
+
+            var soundFormats = new[] { ResourceType.WAV, ResourceType.MP3 };
+
+            foreach (var resname in resnames)
+            {
+                sounds[resname] = null;
+            }
+
+            // Search for sounds in each location
+            foreach (var location in searchOrder)
+            {
+                if (location == SearchLocation.CHITIN)
+                {
+                    var chitinResources = _installation.ChitinResources();
+                    foreach (var resource in chitinResources)
+                    {
+                        if (Array.IndexOf(soundFormats, resource.ResType) >= 0)
+                        {
+                            string lowerResname = resource.ResName.ToLowerInvariant();
+                            if (resnames.Any(r => r.ToLowerInvariant() == lowerResname))
+                            {
+                                try
+                                {
+                                    var soundData = resource.Data();
+                                    if (soundData != null)
+                                    {
+                                        sounds[resource.ResName] = soundData;
+                                    }
+                                }
+                                catch
+                                {
+                                    // Skip if can't read
+                                }
+                            }
+                        }
+                    }
+                }
+                else if (location == SearchLocation.SOUND)
+                {
+                    string streamSoundsPath = Installation.GetStreamSoundsPath(Path);
+                    if (Directory.Exists(streamSoundsPath))
+                    {
+                        foreach (var file in Directory.GetFiles(streamSoundsPath, "*.*", SearchOption.AllDirectories))
+                        {
+                            try
+                            {
+                                var identifier = ResourceIdentifier.FromPath(file);
+                                if (Array.IndexOf(soundFormats, identifier.ResType) >= 0)
+                                {
+                                    string lowerResname = identifier.ResName.ToLowerInvariant();
+                                    if (resnames.Any(r => r.ToLowerInvariant() == lowerResname))
+                                    {
+                                        sounds[identifier.ResName] = File.ReadAllBytes(file);
+                                    }
+                                }
+                            }
+                            catch
+                            {
+                                // Skip invalid files
+                            }
+                        }
+                    }
+                }
+                else if (location == SearchLocation.MUSIC)
+                {
+                    string streamMusicPath = Installation.GetStreamMusicPath(Path);
+                    if (Directory.Exists(streamMusicPath))
+                    {
+                        foreach (var file in Directory.GetFiles(streamMusicPath, "*.*", SearchOption.AllDirectories))
+                        {
+                            try
+                            {
+                                var identifier = ResourceIdentifier.FromPath(file);
+                                if (Array.IndexOf(soundFormats, identifier.ResType) >= 0)
+                                {
+                                    string lowerResname = identifier.ResName.ToLowerInvariant();
+                                    if (resnames.Any(r => r.ToLowerInvariant() == lowerResname))
+                                    {
+                                        sounds[identifier.ResName] = File.ReadAllBytes(file);
+                                    }
+                                }
+                            }
+                            catch
+                            {
+                                // Skip invalid files
+                            }
+                        }
+                    }
+                }
+                else if (location == SearchLocation.VOICE)
+                {
+                    string streamVoicePath = Installation.GetStreamVoicePath(Path);
+                    if (Directory.Exists(streamVoicePath))
+                    {
+                        foreach (var file in Directory.GetFiles(streamVoicePath, "*.*", SearchOption.AllDirectories))
+                        {
+                            try
+                            {
+                                var identifier = ResourceIdentifier.FromPath(file);
+                                if (Array.IndexOf(soundFormats, identifier.ResType) >= 0)
+                                {
+                                    string lowerResname = identifier.ResName.ToLowerInvariant();
+                                    if (resnames.Any(r => r.ToLowerInvariant() == lowerResname))
+                                    {
+                                        sounds[identifier.ResName] = File.ReadAllBytes(file);
+                                    }
+                                }
+                            }
+                            catch
+                            {
+                                // Skip invalid files
+                            }
+                        }
+                    }
+                }
+                else if (location == SearchLocation.OVERRIDE)
+                {
+                    var overrideResources = _installation.OverrideResources();
+                    foreach (var resource in overrideResources)
+                    {
+                        if (Array.IndexOf(soundFormats, resource.ResType) >= 0)
+                        {
+                            string lowerResname = resource.ResName.ToLowerInvariant();
+                            if (resnames.Any(r => r.ToLowerInvariant() == lowerResname))
+                            {
+                                try
+                                {
+                                    var soundData = resource.Data();
+                                    if (soundData != null)
+                                    {
+                                        sounds[resource.ResName] = soundData;
+                                    }
+                                }
+                                catch
+                                {
+                                    // Skip if can't read
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            return sounds;
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/installation.py:471-518

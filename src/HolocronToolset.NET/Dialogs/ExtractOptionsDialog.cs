@@ -73,6 +73,11 @@ namespace HolocronToolset.NET.Dialogs
         private Button _okButton;
         private Button _cancelButton;
 
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/extract_options.py:14-15
+        // Original: self.ui = Ui_ExtractOptionsDialog()
+        // Expose UI widgets for testing
+        public ExtractOptionsDialogUi Ui { get; private set; }
+
         private void SetupUI()
         {
             // Find controls from XAML
@@ -82,6 +87,15 @@ namespace HolocronToolset.NET.Dialogs
             _mdlTexturesCheckbox = this.FindControl<CheckBox>("mdlTexturesCheckbox");
             _okButton = this.FindControl<Button>("okButton");
             _cancelButton = this.FindControl<Button>("cancelButton");
+
+            // Create UI wrapper for testing
+            Ui = new ExtractOptionsDialogUi
+            {
+                TpcDecompileCheckbox = _tpcDecompileCheckbox,
+                TpcTxiCheckbox = _tpcTxiCheckbox,
+                MdlDecompileCheckbox = _mdlDecompileCheckbox,
+                MdlTexturesCheckbox = _mdlTexturesCheckbox
+            };
 
             if (_okButton != null)
             {
@@ -131,30 +145,75 @@ namespace HolocronToolset.NET.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/extract_options.py:22-40
-        // Original: @property def tpc_decompile(self) -> bool:
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/extract_options.py:22-25
+        // Original: @property def tpc_decompile(self) -> bool: return self.ui.tpcDecompileCheckbox.isChecked()
         public bool TpcDecompile
         {
-            get => _tpcDecompile;
-            set => _tpcDecompile = value;
+            get => _tpcDecompileCheckbox?.IsChecked ?? false;
+            set
+            {
+                _tpcDecompile = value;
+                if (_tpcDecompileCheckbox != null)
+                {
+                    _tpcDecompileCheckbox.IsChecked = value;
+                }
+            }
         }
 
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/extract_options.py:27-30
+        // Original: @property def tpc_extract_txi(self) -> bool: return self.ui.tpcTxiCheckbox.isChecked()
         public bool TpcExtractTxi
         {
-            get => _tpcExtractTxi;
-            set => _tpcExtractTxi = value;
+            get => _tpcTxiCheckbox?.IsChecked ?? false;
+            set
+            {
+                _tpcExtractTxi = value;
+                if (_tpcTxiCheckbox != null)
+                {
+                    _tpcTxiCheckbox.IsChecked = value;
+                }
+            }
         }
 
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/extract_options.py:32-35
+        // Original: @property def mdl_decompile(self) -> bool: return self.ui.mdlDecompileCheckbox.isChecked()
         public bool MdlDecompile
         {
-            get => _mdlDecompile;
-            set => _mdlDecompile = value;
+            get => _mdlDecompileCheckbox?.IsChecked ?? false;
+            set
+            {
+                _mdlDecompile = value;
+                if (_mdlDecompileCheckbox != null)
+                {
+                    _mdlDecompileCheckbox.IsChecked = value;
+                }
+            }
         }
 
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/extract_options.py:37-40
+        // Original: @property def mdl_extract_textures(self) -> bool: return self.ui.mdlTexturesCheckbox.isChecked()
         public bool MdlExtractTextures
         {
-            get => _mdlExtractTextures;
-            set => _mdlExtractTextures = value;
+            get => _mdlTexturesCheckbox?.IsChecked ?? false;
+            set
+            {
+                _mdlExtractTextures = value;
+                if (_mdlTexturesCheckbox != null)
+                {
+                    _mdlTexturesCheckbox.IsChecked = value;
+                }
+            }
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/extract_options.py:14-15
+        // Original: self.ui = Ui_ExtractOptionsDialog()
+        // UI wrapper class for testing access
+        public class ExtractOptionsDialogUi
+        {
+            public CheckBox TpcDecompileCheckbox { get; set; }
+            public CheckBox TpcTxiCheckbox { get; set; }
+            public CheckBox MdlDecompileCheckbox { get; set; }
+            public CheckBox MdlTexturesCheckbox { get; set; }
         }
     }
 }

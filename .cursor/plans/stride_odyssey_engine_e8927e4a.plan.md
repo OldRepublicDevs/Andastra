@@ -1,10 +1,12 @@
 ---
 name: Stride Odyssey Engine
-overview: ""
+overview: Comprehensive one-shot implementation plan for a clean-room Odyssey engine reimplementation
 todos: []
 ---
 
-# Stride-based Odyssey Engine (K1/K2) — Clean-Room One‑Shot Plan
+# Stride-based Odyssey Engine (K1/K2) — Clean-Room One‑Shot Implementation Plan
+
+> **Purpose**: This document serves as a comprehensive, self-contained specification for an AI agent to implement a faithful KOTOR 1/2 engine reimplementation using Stride Game Engine and C#. All implementation details are derived from behavioral observation, documented specifications, and in-game testing—never from existing codebases.
 
 ## Constraints (must not break)
 
@@ -81,73 +83,351 @@ Optional but recommended tooling (kept separate from runtime):
 
 - `src/OdysseyRuntime/Odyssey.Tooling/` — headless import/validation commands (CI-friendly).
 
-### Data flow diagram
+### Data flow diagram (comprehensive)
 
 ```mermaid
 flowchart TD
-  %% Resource Layer
-  userInstall[UserProvidedInstallPath] --> installScan[CSharpKOTOR.Installation]
-  installScan --> resProvider[IGameResourceProvider<br/>Virtual File System]
-  resProvider --> resCache[Resource Cache<br/>Async Streaming]
+  subgraph Installation["Installation & Resource Layer"]
+    userInstall[User Install Path] --> gameProbe[Game Probe<br/>Detect K1/K2/Steam/GOG]
+    gameProbe --> installScan[CSharpKOTOR.Installation]
+    installScan --> resDirector[Resource Director<br/>Precedence Manager]
+    
+    resDirector --> keyBif[KEY/BIF Provider<br/>Chitin.key → *.bif]
+    resDirector --> erfRim[ERF/RIM Provider<br/>Module Archives]
+    resDirector --> overrideDir[Override Provider<br/>Loose Files]
+    resDirector --> saveOverlay[Save Overlay<br/>SAV Resources]
+    resDirector --> texturePacks[Texture Pack Provider<br/>swpc_tex_*.erf]
+    
+    keyBif & erfRim & overrideDir & saveOverlay & texturePacks --> resProvider[IGameResourceProvider<br/>Unified Async VFS]
+  end
   
-  %% Module Loading
-  resProvider --> moduleLoad[CSharpKOTOR.Common.Module]
-  moduleLoad --> moduleData[IFO/ARE/GIT/LYT/VIS]
+  subgraph ModuleLoading["Module Loading Pipeline"]
+    resProvider --> moduleLoad[Module Loader]
+    moduleLoad --> ifoParser[IFO Parser<br/>Module Metadata]
+    moduleLoad --> areParser[ARE Parser<br/>Area Properties]
+    moduleLoad --> gitParser[GIT Parser<br/>Instance Spawning]
+    moduleLoad --> lytParser[LYT Parser<br/>Room Layout]
+    moduleLoad --> visParser[VIS Parser<br/>Room Visibility]
+    moduleLoad --> pthParser[PTH Parser<br/>Path Points]
+  end
   
-  %% Content Pipeline
-  resCache --> contentCache[Odyssey.Content.Cache<br/>Hash-keyed Storage]
-  contentCache --> textureConv[TPC/TGA → Stride.Texture]
-  contentCache --> modelConv[MDL/MDX → Stride.Model]
-  contentCache --> walkmeshConv[BWM → Nav/Collision Mesh]
-  contentCache --> audioConv[WAV → Stride.Audio]
+  subgraph ContentPipeline["Content Pipeline (Background Threads)"]
+    resProvider --> contentCache[Content Cache<br/>Hash-Keyed Storage]
+    
+    contentCache --> textureConv[Texture Converter]
+    textureConv --> tpcDecode[TPC Decode<br/>DXT/Mipmap/Cube]
+    textureConv --> tgaDecode[TGA Decode<br/>RGBA/Palette]
+    textureConv --> txiMaterial[TXI Parser<br/>Material Flags]
+    tpcDecode & tgaDecode & txiMaterial --> strideTexture[Stride.Texture]
+    
+    contentCache --> modelConv[Model Converter]
+    modelConv --> mdlDecode[MDL Decode<br/>Nodes/Meshes]
+    modelConv --> mdxDecode[MDX Decode<br/>Vertex Data]
+    modelConv --> skinDecode[Skin/Skeleton<br/>Bone Hierarchy]
+    modelConv --> animDecode[Animation Decode<br/>Keyframes]
+    mdlDecode & mdxDecode & skinDecode & animDecode --> strideModel[Stride.Model]
+    
+    contentCache --> walkmeshConv[Walkmesh Converter]
+    walkmeshConv --> bwmDecode[BWM Decode<br/>Triangles/Adjacency]
+    walkmeshConv --> aabbBuild[AABB Tree Build<br/>Spatial Queries]
+    walkmeshConv --> surfaceMat[Surface Materials<br/>Walkability]
+    bwmDecode & aabbBuild & surfaceMat --> navMesh[Navigation Mesh]
+    
+    contentCache --> audioConv[Audio Converter]
+    audioConv --> wavDecode[WAV Decode]
+    audioConv --> mp3Decode[MP3 Decode<br/>Optional]
+    wavDecode & mp3Decode --> strideAudioClip[Stride.AudioClip]
+  end
   
-  %% World Construction
-  moduleData --> worldBuilder[Odyssey.Kotor.WorldBuilder]
-  worldBuilder --> entitySpawn[Entity Spawning<br/>GIT → Runtime Entities]
-  entitySpawn --> runtimeWorld[Odyssey.Core.World<br/>Entity Container]
+  subgraph WorldConstruction["World Construction"]
+    ifoParser & areParser --> areaBuilder[Area Builder]
+    gitParser --> entityFactory[Entity Factory]
+    lytParser --> roomBuilder[Room Builder]
+    visParser --> visibilityMgr[Visibility Manager]
+    pthParser --> pathNetwork[Path Network]
+    
+    areaBuilder --> runtimeArea[Runtime Area]
+    roomBuilder --> roomEntities[Room Entities]
+    entityFactory --> objectSpawner[Object Spawner]
+    
+    objectSpawner --> utcLoader[UTC → Creature]
+    objectSpawner --> utpLoader[UTP → Placeable]
+    objectSpawner --> utdLoader[UTD → Door]
+    objectSpawner --> uttLoader[UTT → Trigger]
+    objectSpawner --> utwLoader[UTW → Waypoint]
+    objectSpawner --> utsLoader[UTS → Sound]
+    objectSpawner --> uteLoader[UTE → Encounter]
+    
+    utcLoader & utpLoader & utdLoader & uttLoader & utwLoader & utsLoader & uteLoader --> entityRegistry[Entity Registry<br/>ID ↔ Entity Map]
+    roomEntities --> entityRegistry
+    runtimeArea --> runtimeWorld[Odyssey.Core.World]
+    entityRegistry --> runtimeWorld
+  end
   
-  %% Scene Graph
-  runtimeWorld --> sceneGraph[Scene Graph Manager<br/>Hierarchy + Transforms]
-  sceneGraph --> entityRegistry[Entity Registry<br/>ID → Entity Mapping]
+  subgraph SceneGraph["Scene Graph & Rendering"]
+    runtimeWorld --> sceneGraphMgr[Scene Graph Manager]
+    sceneGraphMgr --> modelNodes[Model Scene Nodes]
+    sceneGraphMgr --> walkmeshNodes[Walkmesh Scene Nodes]
+    sceneGraphMgr --> triggerNodes[Trigger Scene Nodes]
+    sceneGraphMgr --> lightNodes[Light Scene Nodes]
+    sceneGraphMgr --> emitterNodes[Emitter Scene Nodes]
+    sceneGraphMgr --> soundNodes[Sound Scene Nodes]
+    
+    strideTexture --> materialFactory[Material Factory]
+    strideModel --> modelNodes
+    navMesh --> walkmeshNodes
+    
+    materialFactory --> opaquePass[Opaque Pass]
+    materialFactory --> alphaPass[Alpha Pass<br/>Transparency Sort]
+    materialFactory --> additivePass[Additive Pass]
+    materialFactory --> lightmapPass[Lightmap Pass]
+    
+    opaquePass & alphaPass & additivePass & lightmapPass --> renderQueue[Render Queue]
+    visibilityMgr --> renderQueue
+    renderQueue --> gpu[GPU Rendering]
+  end
   
-  %% Rendering Pipeline
-  sceneGraph --> renderBridge[Odyssey.Stride.SceneBridge]
-  textureConv --> renderBridge
-  modelConv --> renderBridge
-  renderBridge --> strideScene[Stride Scene Graph]
-  strideScene --> renderQueue[Render Queue<br/>VIS Culling + Batching]
-  renderQueue --> gpu[GPU Rendering]
+  subgraph Scripting["NCS Scripting System"]
+    runtimeWorld --> scriptScheduler[Script Scheduler]
+    scriptScheduler --> eventDispatch[Event Dispatcher<br/>OnSpawn/OnHeartbeat/etc]
+    scriptScheduler --> delayWheel[Delay Wheel<br/>DelayCommand Queue]
+    
+    eventDispatch --> ncsLoader[NCS Loader]
+    ncsLoader --> ncsVm[NCS Virtual Machine]
+    
+    ncsVm --> vmStack[VM Stack<br/>4-byte Aligned]
+    ncsVm --> vmCallStack[Call Stack<br/>Return Addresses]
+    ncsVm --> vmGlobals[Global Variables]
+    ncsVm --> vmLocals[Local Variables]
+    ncsVm --> instrDispatch[Instruction Dispatch<br/>Opcode → Handler]
+    
+    instrDispatch --> engineApi[Engine API<br/>ACTION Dispatch]
+    engineApi --> k1Profile[K1 Profile<br/>~850 Functions]
+    engineApi --> k2Profile[K2 Profile<br/>~950 Functions]
+    
+    engineApi --> actionQueue[Action Queue System]
+    actionQueue --> moveAction[MoveToLocation]
+    actionQueue --> attackAction[AttackObject]
+    actionQueue --> useAction[UseObject]
+    actionQueue --> speakAction[SpeakString]
+    actionQueue --> animAction[PlayAnimation]
+    actionQueue --> waitAction[Wait]
+    actionQueue --> doAction[DoCommand]
+    
+    moveAction & attackAction & useAction & speakAction & animAction & waitAction & doAction --> runtimeWorld
+  end
   
-  %% Scripting System
-  runtimeWorld --> scriptScheduler[Odyssey.Scripting.Scheduler<br/>Per-Entity Queues]
-  scriptScheduler --> ncsVm[Odyssey.Scripting.NcsVm<br/>Stack-Based Execution]
-  ncsVm --> engineApi[Odyssey.Scripting.IEngineApi<br/>NWScript Dispatch]
-  engineApi --> runtimeWorld
-  engineApi --> actionQueue[Action Queue System<br/>AssignCommand/DelayCommand]
-  actionQueue --> runtimeWorld
+  subgraph GameSystems["Game Systems"]
+    runtimeWorld --> partyController[Party Controller<br/>Leader Selection]
+    partyController --> followerAI[Follower AI<br/>Formation/Following]
+    
+    runtimeWorld --> perceptionSys[Perception System<br/>Sight/Sound Ranges]
+    perceptionSys --> factionSys[Faction System<br/>Hostility Check]
+    factionSys --> combatSys[Combat System]
+    
+    combatSys --> combatRound[Combat Round<br/>~3 Second Cycles]
+    combatRound --> attackCalc[Attack Calculator<br/>D20 Resolution]
+    combatRound --> damageCalc[Damage Calculator<br/>Effects/Resistance]
+    combatRound --> animTiming[Animation Timing<br/>Projectiles/Hits]
+    attackCalc & damageCalc & animTiming --> effectSys[Effect System<br/>Buffs/Debuffs]
+    
+    runtimeWorld --> dialogueSys[Dialogue System]
+    dialogueSys --> dlgTraverse[DLG Traversal]
+    dialogueSys --> condEval[Conditional Eval<br/>Script Checks]
+    dialogueSys --> tlkLookup[TLK Lookup<br/>Localization]
+    dialogueSys --> voPlayback[VO Playback]
+    dialogueSys --> lipSync[LIP Sync<br/>Facial Animation]
+    
+    runtimeWorld --> saveSys[Save System]
+    saveSys --> stateSerialize[State Serializer<br/>Globals/Party/Inventory]
+    saveSys --> moduleState[Module State<br/>Object Positions]
+    stateSerialize & moduleState --> saveFiles[SAV Files]
+  end
   
-  %% Game Systems
-  runtimeWorld --> dialogueSys[Odyssey.Kotor.DialogueSystem<br/>DLG/TLK/VO/LIP]
-  runtimeWorld --> combatSys[Odyssey.Kotor.CombatSystem<br/>D20 Rules + AI]
-  runtimeWorld --> saveSys[Odyssey.Kotor.SaveSystem<br/>State Serialization]
-  saveSys --> saveFiles[SaveGameFiles<br/>ERF/SAV Format]
+  subgraph InputUI["Input & UI"]
+    inputSys[Input System] --> clickHandler[Click Handler<br/>Object Selection]
+    inputSys --> moveInput[Movement Input<br/>Click-to-Move]
+    inputSys --> cameraInput[Camera Input<br/>Chase/Free/Dialog]
+    inputSys --> menuInput[Menu Input<br/>Pause/Inventory]
+    
+    clickHandler --> raycastWalkmesh[Raycast Walkmesh]
+    raycastWalkmesh --> pathfinder[Pathfinder<br/>A* on Adjacency]
+    
+    clickHandler --> raycastEntities[Raycast Entities]
+    raycastEntities --> selectionMgr[Selection Manager]
+    
+    cameraInput --> cameraModes[Camera Modes]
+    cameraModes --> chaseCamera[Chase Camera]
+    cameraModes --> freeCamera[Free Camera]
+    cameraModes --> dialogCamera[Dialog Camera]
+    
+    runtimeWorld --> uiSys[UI System]
+    uiSys --> dialogueUI[Dialogue UI<br/>Text/Replies]
+    uiSys --> hudUI[HUD<br/>Health/Party]
+    uiSys --> menuUI[Menus<br/>Pause/Options]
+    uiSys --> loadingUI[Loading Screen]
+  end
   
-  %% Input & UI
-  inputSys[Input System] --> runtimeWorld
-  inputSys --> uiSys[Odyssey.Stride.UI<br/>Dialogue + HUD + Menus]
-  uiSys --> strideScene
-  
-  %% Audio
-  audioConv --> audioBridge[Odyssey.Stride.AudioBridge<br/>Spatial Audio]
-  dialogueSys --> audioBridge
-  combatSys --> audioBridge
-  audioBridge --> strideAudio[Stride Audio System]
-  
-  %% Feedback Loops
-  renderQueue -.-> sceneGraph
-  actionQueue -.-> sceneGraph
-  combatSys -.-> scriptScheduler
-  dialogueSys -.-> scriptScheduler
+  subgraph Audio["Audio System"]
+    strideAudioClip --> audioMixer[Audio Mixer]
+    audioMixer --> voChannel[VO Channel]
+    audioMixer --> sfxChannel[SFX Channel]
+    audioMixer --> musicChannel[Music Channel]
+    audioMixer --> ambientChannel[Ambient Channel]
+    
+    soundNodes --> spatialAudio[Spatial Audio<br/>3D Positioning]
+    spatialAudio --> audioMixer
+    
+    voPlayback --> voChannel
+    combatSys --> sfxChannel
+    runtimeArea --> ambientChannel
+  end
+```
+
+### Detailed subsystem interaction patterns
+
+The engine operates on a **fixed-timestep game loop** with the following per-frame phases:
+
+1. **Input Phase**: collect input events, update camera, handle click-to-move
+2. **Script Phase**: process delay wheel, fire heartbeats, execute action queues (budget-limited)
+3. **Simulation Phase**: update entity positions, perception checks, combat rounds
+4. **Animation Phase**: advance skeletal animations, particle emitters, lip sync
+5. **Scene Sync Phase**: sync runtime transforms → Stride scene graph
+6. **Render Phase**: cull by VIS groups, sort transparency, submit draw calls
+7. **Audio Phase**: update spatial audio positions, trigger one-shots
+
+## Core interface definitions (implement exactly as specified)
+
+These interfaces define the contracts between subsystems. Implement them precisely.
+
+### Resource system interfaces
+
+```csharp
+// Unified resource access - wraps all precedence logic
+public interface IGameResourceProvider
+{
+    Task<Stream> OpenResourceAsync(ResourceIdentifier id, CancellationToken ct);
+    Task<bool> ExistsAsync(ResourceIdentifier id, CancellationToken ct);
+    Task<IReadOnlyList<LocationResult>> LocateAsync(ResourceIdentifier id, SearchLocation[] order, CancellationToken ct);
+    IEnumerable<ResourceIdentifier> EnumerateResources(ResourceType type);
+}
+
+// Resource precedence chain element
+public interface IResourceProvider
+{
+    int Priority { get; }
+    bool TryOpen(ResourceIdentifier id, out Stream stream);
+    bool Exists(ResourceIdentifier id);
+}
+```
+
+### Entity system interfaces
+
+```csharp
+// Core entity container
+public interface IWorld
+{
+    IEntity CreateEntity(EntityTemplate template, Vector3 position, float facing);
+    void DestroyEntity(uint objectId);
+    IEntity GetEntity(uint objectId);
+    IEntity GetEntityByTag(string tag, int nth = 0);
+    IEnumerable<IEntity> GetEntitiesInRadius(Vector3 center, float radius, ObjectType typeMask);
+    IArea CurrentArea { get; }
+    IModule CurrentModule { get; }
+}
+
+// Runtime entity with components
+public interface IEntity
+{
+    uint ObjectId { get; }
+    string Tag { get; set; }
+    ObjectType ObjectType { get; }
+    T GetComponent<T>() where T : IComponent;
+    void AddComponent<T>(T component) where T : IComponent;
+    bool HasComponent<T>() where T : IComponent;
+}
+
+// Component types (not exhaustive)
+public interface ITransformComponent : IComponent { Vector3 Position { get; set; } float Facing { get; set; } }
+public interface IRenderableComponent : IComponent { string ModelResRef { get; } bool Visible { get; set; } }
+public interface IActionQueueComponent : IComponent { void Add(IAction action); void Clear(); IAction Current { get; } }
+public interface IStatsComponent : IComponent { int CurrentHP { get; set; } int MaxHP { get; } int GetAbility(Ability ability); }
+public interface IScriptHooksComponent : IComponent { ResRef GetScript(ScriptEvent evt); }
+public interface IPerceptionComponent : IComponent { float SightRange { get; } float HearingRange { get; } }
+public interface IFactionComponent : IComponent { int FactionId { get; set; } bool IsHostile(IEntity other); }
+```
+
+### Script VM interfaces
+
+```csharp
+// Script execution VM
+public interface INcsVm
+{
+    int Execute(NCS script, IExecutionContext ctx);
+    void Abort();
+    bool IsRunning { get; }
+}
+
+// Execution context for a script run
+public interface IExecutionContext
+{
+    IEntity Caller { get; }      // OBJECT_SELF
+    IEntity Triggerer { get; }   // GetEnteringObject, etc.
+    IWorld World { get; }
+    IEngineApi EngineApi { get; }
+    IScriptGlobals Globals { get; }
+}
+
+// Engine function dispatch
+public interface IEngineApi
+{
+    Variable CallEngineFunction(int routineId, IReadOnlyList<Variable> args, IExecutionContext ctx);
+}
+
+// Persistent script state
+public interface IScriptGlobals
+{
+    int GetGlobalInt(string name);
+    void SetGlobalInt(string name, int value);
+    bool GetGlobalBool(string name);
+    void SetGlobalBool(string name, bool value);
+    string GetGlobalString(string name);
+    void SetGlobalString(string name, string value);
+    // Local vars per object
+    int GetLocalInt(IEntity entity, string name);
+    void SetLocalInt(IEntity entity, string name, int value);
+}
+```
+
+### Action system interfaces
+
+```csharp
+public interface IAction
+{
+    ActionType Type { get; }
+    int GroupId { get; set; }
+    ActionStatus Update(IEntity actor, float deltaTime);
+    void Dispose();
+}
+
+public enum ActionStatus { InProgress, Complete, Failed }
+
+public interface IActionQueue
+{
+    void Add(IAction action);
+    void AddFront(IAction action);
+    void Clear();
+    void ClearByGroupId(int groupId);
+    IAction Current { get; }
+    void Process(float deltaTime);
+}
+
+// Delay command wheel
+public interface IDelayScheduler
+{
+    void ScheduleDelay(float delaySeconds, IAction action, IEntity target);
+    void Update(float deltaTime);
+}
 ```
 
 ## Clean-room process (industry standard)
@@ -304,11 +584,190 @@ Click-to-move depends on these primitives:
 
 - raycast from camera into walkmesh using the AABB tree
 - compute intersection point and clamp/project onto walkable triangle set
-- pathfind over walkable adjacency graph (phase 2), but phase 1 can do “direct projected move” for minimal viability.
+- pathfind over walkable adjacency graph (phase 2), but phase 1 can do "direct projected move" for minimal viability.
 - Camera modes:
   - KOTOR-style chase camera + free camera for debugging.
 
-**Acceptance**: controllable PC can move within a module without falling through or walking through blocked walkmesh.
+**Pathfinding implementation** (A* over walkmesh adjacency):
+
+```csharp
+public class WalkmeshPathfinder
+{
+    private readonly NavigationMesh _navMesh;
+    
+    public List<Vector3> FindPath(Vector3 start, Vector3 goal)
+    {
+        int startFace = _navMesh.FindFaceAt(start);
+        int goalFace = _navMesh.FindFaceAt(goal);
+        
+        if (startFace < 0 || goalFace < 0)
+            return null;  // Not on walkable surface
+        
+        // A* over face adjacency graph
+        var openSet = new PriorityQueue<int, float>();
+        var cameFrom = new Dictionary<int, int>();
+        var gScore = new Dictionary<int, float> { [startFace] = 0 };
+        var fScore = new Dictionary<int, float> { [startFace] = Heuristic(startFace, goalFace) };
+        
+        openSet.Enqueue(startFace, fScore[startFace]);
+        
+        while (openSet.Count > 0)
+        {
+            int current = openSet.Dequeue();
+            
+            if (current == goalFace)
+                return ReconstructPath(cameFrom, current, start, goal);
+            
+            foreach (int neighbor in _navMesh.GetAdjacentFaces(current))
+            {
+                if (neighbor < 0) continue;  // Edge of mesh
+                if (!_navMesh.IsWalkable(neighbor)) continue;
+                
+                float tentativeG = gScore[current] + EdgeCost(current, neighbor);
+                
+                if (!gScore.ContainsKey(neighbor) || tentativeG < gScore[neighbor])
+                {
+                    cameFrom[neighbor] = current;
+                    gScore[neighbor] = tentativeG;
+                    fScore[neighbor] = tentativeG + Heuristic(neighbor, goalFace);
+                    
+                    if (!openSet.Contains(neighbor))
+                        openSet.Enqueue(neighbor, fScore[neighbor]);
+                }
+            }
+        }
+        
+        return null;  // No path found
+    }
+    
+    private float Heuristic(int from, int to)
+    {
+        return Vector3.Distance(_navMesh.GetFaceCenter(from), _navMesh.GetFaceCenter(to));
+    }
+    
+    private float EdgeCost(int from, int to)
+    {
+        // Base cost is distance, modified by surface material
+        float dist = Vector3.Distance(_navMesh.GetFaceCenter(from), _navMesh.GetFaceCenter(to));
+        float surfaceMod = _navMesh.GetSurfaceCost(to);  // e.g., 1.0 normal, 1.5 rough, 999 unwalkable
+        return dist * surfaceMod;
+    }
+    
+    private List<Vector3> ReconstructPath(Dictionary<int, int> cameFrom, int current, Vector3 start, Vector3 goal)
+    {
+        var path = new List<Vector3> { goal };
+        while (cameFrom.ContainsKey(current))
+        {
+            current = cameFrom[current];
+            path.Add(_navMesh.GetFaceCenter(current));
+        }
+        path.Add(start);
+        path.Reverse();
+        return SmoothPath(path);  // Optional: funnel algorithm for smooth paths
+    }
+}
+
+public class NavigationMesh
+{
+    private readonly Vector3[] _vertices;
+    private readonly int[] _indices;           // Triangle indices (3 per face)
+    private readonly int[] _adjacency;          // 3 adjacency entries per face
+    private readonly int[] _surfaceMaterials;   // Material per face
+    private readonly AABBNode _aabbRoot;
+    
+    public int FindFaceAt(Vector3 point)
+    {
+        // Use AABB tree to narrow candidates, then test point-in-triangle
+        return _aabbRoot.FindFaceContaining(point, _vertices, _indices);
+    }
+    
+    public IEnumerable<int> GetAdjacentFaces(int faceIndex)
+    {
+        int baseIdx = faceIndex * 3;
+        yield return DecodeAdjacency(_adjacency[baseIdx + 0]);
+        yield return DecodeAdjacency(_adjacency[baseIdx + 1]);
+        yield return DecodeAdjacency(_adjacency[baseIdx + 2]);
+    }
+    
+    private int DecodeAdjacency(int encoded)
+    {
+        if (encoded < 0) return -1;  // No neighbor
+        return encoded / 3;  // Face index (edge = encoded % 3)
+    }
+    
+    public bool IsWalkable(int faceIndex)
+    {
+        int material = _surfaceMaterials[faceIndex];
+        return _surfaceTable.IsWalkable(material);  // From surfacemat.2da
+    }
+}
+```
+
+**Camera controller**:
+
+```csharp
+public class CameraController
+{
+    public CameraMode Mode { get; set; } = CameraMode.Chase;
+    
+    // Chase camera parameters (KOTOR-style)
+    public float Distance { get; set; } = 5.0f;
+    public float Height { get; set; } = 2.0f;
+    public float Pitch { get; set; } = 25.0f;  // Degrees down from horizontal
+    public float Yaw { get; set; }              // Follows player facing by default
+    public float LagFactor { get; set; } = 5.0f;
+    
+    private Vector3 _currentPosition;
+    private Vector3 _targetPosition;
+    
+    public void Update(IEntity followTarget, float deltaTime)
+    {
+        switch (Mode)
+        {
+            case CameraMode.Chase:
+                UpdateChaseCamera(followTarget, deltaTime);
+                break;
+            case CameraMode.Dialog:
+                UpdateDialogCamera(deltaTime);
+                break;
+            case CameraMode.Free:
+                UpdateFreeCamera(deltaTime);
+                break;
+        }
+    }
+    
+    private void UpdateChaseCamera(IEntity target, float dt)
+    {
+        // Calculate ideal camera position behind player
+        float yawRad = MathF.PI * Yaw / 180f;
+        float pitchRad = MathF.PI * Pitch / 180f;
+        
+        Vector3 offset = new Vector3(
+            -MathF.Sin(yawRad) * MathF.Cos(pitchRad) * Distance,
+            MathF.Sin(pitchRad) * Distance + Height,
+            -MathF.Cos(yawRad) * MathF.Cos(pitchRad) * Distance
+        );
+        
+        _targetPosition = target.Position + offset;
+        
+        // Smooth follow
+        _currentPosition = Vector3.Lerp(_currentPosition, _targetPosition, LagFactor * dt);
+        
+        // Collision with walls/ceiling (raycast from target to camera)
+        if (World.Walkmesh.Raycast(target.Position + Vector3.UnitY * Height, _currentPosition, out Vector3 hit))
+        {
+            _currentPosition = hit - Vector3.Normalize(_currentPosition - target.Position) * 0.5f;
+        }
+        
+        Camera.Position = _currentPosition;
+        Camera.LookAt(target.Position + Vector3.UnitY * 1.5f);
+    }
+}
+
+public enum CameraMode { Chase, Dialog, Free, Cinematic }
+```
+
+**Acceptance**: controllable PC can move within a module without falling through or walking through blocked walkmesh. Pathfinding produces smooth routes around obstacles. Camera follows player smoothly with collision avoidance.
 
 ### 5) Entity model: creatures/doors/placeables + basic interaction
 
@@ -463,22 +922,235 @@ Implement dialogue playback using existing formats:
   - simple conversation camera: focus speaker/listener, cut/shot transitions.
   - run node scripts: OnStart/OnEnd actions, node scripts.
 
-System responsibilities:
+**Dialogue system implementation**:
 
-- `Odyssey.Kotor.DialogueSystem`:
-  - resolves the speaker and listener objects,
-  - evaluates conditionals by invoking VM / engine API,
-  - triggers node entry/exit scripts,
-  - sends UI events.
-- `Odyssey.Stride.DialoguePresentation`:
-  - renders UI,
-  - plays VO audio,
-  - drives lipsync on speaker.
+```csharp
+public class DialogueSystem
+{
+    private DLGFile _currentDialogue;
+    private DLGNode _currentNode;
+    private IEntity _owner;       // NPC being talked to
+    private IEntity _pc;          // Player character
+    private List<DLGReply> _availableReplies;
+    private float _nodeTimer;
+    private bool _waitingForVO;
+    
+    public DialogueState State { get; private set; }
+    
+    public void StartConversation(IEntity owner, IEntity initiator, string dlgResRef)
+    {
+        _currentDialogue = ResourceLoader.LoadDLG(dlgResRef);
+        _owner = owner;
+        _pc = initiator;
+        
+        // Find first valid entry point
+        foreach (var entryIndex in _currentDialogue.StartingList)
+        {
+            var entry = _currentDialogue.Entries[entryIndex];
+            if (EvaluateCondition(entry.Active))
+            {
+                EnterNode(entry);
+                return;
+            }
+        }
+        
+        // No valid entries - conversation fails to start
+        EndConversation();
+    }
+    
+    private void EnterNode(DLGEntry entry)
+    {
+        _currentNode = entry;
+        State = DialogueState.Speaking;
+        
+        // Execute entry script
+        if (!string.IsNullOrEmpty(entry.Script))
+            ExecuteScript(entry.Script, _owner, _pc);
+        
+        // Get text from TLK
+        string text = TLKManager.GetString(entry.Text);
+        
+        // Play voice-over if available
+        string voResRef = entry.VO; // or derive from Sound field
+        if (!string.IsNullOrEmpty(voResRef))
+        {
+            _waitingForVO = true;
+            AudioSystem.PlayVO(voResRef, _owner, OnVOComplete);
+            
+            // Start lipsync
+            if (TryLoadLIP(voResRef, out var lip))
+                StartLipSync(_owner, lip);
+        }
+        
+        // Notify UI
+        OnDialogueText?.Invoke(_owner, text);
+        
+        // Set camera for speaker
+        CameraController.SetDialogueFocus(_owner, _pc);
+        
+        // Gather available replies
+        _availableReplies = new List<DLGReply>();
+        foreach (var replyIndex in entry.RepliesList)
+        {
+            var reply = _currentDialogue.Replies[replyIndex];
+            if (EvaluateCondition(reply.Active))
+                _availableReplies.Add(reply);
+        }
+    }
+    
+    public void SelectReply(int index)
+    {
+        if (State != DialogueState.WaitingForReply || index >= _availableReplies.Count)
+            return;
+        
+        var reply = _availableReplies[index];
+        
+        // Execute reply script
+        if (!string.IsNullOrEmpty(reply.Script))
+            ExecuteScript(reply.Script, _pc, _owner);
+        
+        // Find next entry
+        foreach (var entryIndex in reply.EntriesList)
+        {
+            var entry = _currentDialogue.Entries[entryIndex];
+            if (EvaluateCondition(entry.Active))
+            {
+                EnterNode(entry);
+                return;
+            }
+        }
+        
+        // No more entries - conversation ends
+        EndConversation();
+    }
+    
+    private bool EvaluateCondition(string scriptResRef)
+    {
+        if (string.IsNullOrEmpty(scriptResRef))
+            return true;
+        
+        var result = ScriptVM.Execute(scriptResRef, new ExecutionContext
+        {
+            Caller = _owner,
+            Triggerer = _pc
+        });
+        
+        return result != 0;  // Script returns TRUE (1) if condition passes
+    }
+    
+    public void Update(float dt)
+    {
+        if (State == DialogueState.Speaking)
+        {
+            if (!_waitingForVO)
+            {
+                // Text-only node - wait brief time then show replies
+                _nodeTimer -= dt;
+                if (_nodeTimer <= 0)
+                    TransitionToReplies();
+            }
+        }
+    }
+    
+    private void TransitionToReplies()
+    {
+        if (_availableReplies.Count == 0)
+        {
+            EndConversation();
+            return;
+        }
+        
+        // Single "[Continue]" reply - auto-proceed (common pattern)
+        if (_availableReplies.Count == 1 && IsAutoAdvance(_availableReplies[0]))
+        {
+            SelectReply(0);
+            return;
+        }
+        
+        State = DialogueState.WaitingForReply;
+        OnRepliesAvailable?.Invoke(_availableReplies);
+    }
+}
+
+public enum DialogueState
+{
+    Inactive,
+    Speaking,      // NPC is talking (VO playing or text displayed)
+    WaitingForReply,  // Player must choose
+    Paused         // ActionPauseConversation called
+}
+```
+
+**LIP sync implementation**:
+
+```csharp
+public class LipSyncController
+{
+    private LIPFile _lip;
+    private float _time;
+    private IEntity _speaker;
+    private SkeletonComponent _skeleton;
+    
+    // KOTOR uses ~10 phoneme shapes
+    private static readonly string[] PhonemeShapes = 
+    {
+        "jaw_open", "lip_pucker", "lip_wide", "lip_round",
+        "tongue_up", "tongue_out", "brow_up", "brow_down",
+        "blink", "smile"
+    };
+    
+    public void Start(IEntity speaker, LIPFile lip)
+    {
+        _speaker = speaker;
+        _lip = lip;
+        _time = 0;
+        _skeleton = speaker.GetComponent<SkeletonComponent>();
+    }
+    
+    public void Update(float dt)
+    {
+        if (_lip == null) return;
+        
+        _time += dt;
+        
+        // Find current keyframe
+        for (int i = 0; i < _lip.Keyframes.Count - 1; i++)
+        {
+            if (_time >= _lip.Keyframes[i].Time && _time < _lip.Keyframes[i + 1].Time)
+            {
+                // Interpolate between keyframes
+                float t = (_time - _lip.Keyframes[i].Time) / 
+                          (_lip.Keyframes[i + 1].Time - _lip.Keyframes[i].Time);
+                
+                byte shapeA = _lip.Keyframes[i].Shape;
+                byte shapeB = _lip.Keyframes[i + 1].Shape;
+                
+                ApplyPhoneme(shapeA, 1 - t);
+                ApplyPhoneme(shapeB, t);
+                return;
+            }
+        }
+    }
+    
+    private void ApplyPhoneme(byte shape, float weight)
+    {
+        // Map shape index to blend shape or bone rotation
+        // Exact mapping depends on model rig
+        if (shape < PhonemeShapes.Length)
+        {
+            string boneName = PhonemeShapes[shape];
+            _skeleton.SetBlendShape(boneName, weight);
+        }
+    }
+}
+```
 
 **Acceptance**:
 
 - Start a DLG with an NPC in an area; choose a reply; branch correctly; end conversation.
 - Correct TLK text displayed; VO plays when available; lipsync animates at least one facial channel.
+- Conditional scripts correctly gate dialogue branches.
+- Camera switches between speaker and listener appropriately.
 
 ### 8) UI (in-game) + Input + UX baseline
 
@@ -526,7 +1198,7 @@ Technical:
 
 ### 10) World simulation: objects, stats, AI, combat (vertical slice first)
 
-Build in layers so the game becomes playable early:
+Build in layers so the game becomes playable early.
 
 #### 10.1 Entity/Component model (runtime)
 
@@ -541,37 +1213,348 @@ Core components in `Odyssey.Core`:
 - Conversation (state)
 - ScriptHooks (event resrefs)
 
+**Object type hierarchy** (must implement all):
+
+```
+Object (abstract base)
+├── Creature
+│   ├── PC (player-controlled)
+│   └── NPC (AI-controlled)
+├── Door
+├── Placeable
+├── Trigger (invisible volume)
+├── Waypoint (invisible marker)
+├── Sound (ambient emitter)
+├── Store (merchant)
+├── Encounter (spawn point)
+├── Item (world-dropped or inventory)
+└── AreaOfEffect (spell zones)
+```
+
+**Situated object base** (shared by Door, Placeable):
+
+- Static position + facing
+- Optional walkmesh (PWK/DWK)
+- Usable/locked state
+- Appearance from 2DA
+- Script hooks (OnUsed, OnOpen, OnClose, OnDeath, OnHeartbeat)
+
+**Creature-specific components**:
+
+- Action queue (FIFO with interruption)
+- Combat round state
+- Perception list (seen/heard objects)
+- Equipped items (slots: head, body, hands, weapons, etc.)
+- Class levels + feat list + force powers
+
 #### 10.2 Data-driven rules (KOTOR 1/2)
 
-`Odyssey.Kotor` interprets:
+`Odyssey.Kotor` interprets these 2DA tables (partial list):
 
-- 2DA tables (appearance, baseitems, feat, spells, classes, skills, weapons, etc.)
-- GFF templates (UTC/UTI/UTP/UTD/UTS/UTT/UTW)
-- IFO/ARE/GIT for module/area composition.
+| Table | Purpose |
 
-Start with the minimum rules needed:
+|-------|---------|
 
-- select player, move, interact, trigger scripts, start dialogue.
+| `appearance.2da` | Model resref, walk/run speed, body type |
 
-#### 10.3 AI + combat (incremental)
+| `heads.2da` | Head model by race/gender |
 
-Phase 1 (vertical slice):
+| `baseitems.2da` | Item categories, damage, properties |
 
-- Simple AI:
-  - perception radius, hostility check, follow target.
-- Combat “stub”:
-  - play attack animations and apply basic hit/miss with deterministic RNG.
+| `feat.2da` | Feat definitions, prerequisites |
 
-Phase 2 (fidelity):
+| `spells.2da` | Force powers, ranges, effects |
 
-- D20-like roll resolution matching KOTOR (as observed):
-  - attack bonus, defense, damage types, crit, feats/powers.
-- Action economy and animation timing.
-- Force powers system (FX later).
+| `classes.2da` | Class progression, hit dice, saves |
+
+| `skills.2da` | Skill definitions |
+
+| `surfacemat.2da` | Surface walkability, footstep sounds |
+
+| `portraits.2da` | Portrait images |
+
+| `placeables.2da` | Placeable appearance |
+
+| `genericdoors.2da` | Door models |
+
+| `ambientmusic.2da` | Music tracks |
+
+| `ambientsound.2da` | Ambient sounds |
+
+**GFF template types**:
+
+| Extension | Object Type | Key Fields |
+
+|-----------|-------------|------------|
+
+| UTC | Creature | Appearance_Type, Faction, HP, Attributes, Feats, Scripts |
+
+| UTP | Placeable | Appearance, Useable, Locked, OnUsed |
+
+| UTD | Door | GenericType, Locked, OnOpen, OnClose |
+
+| UTT | Trigger | Geometry (polygon), OnEnter, OnExit |
+
+| UTW | Waypoint | Tag, position only |
+
+| UTS | Sound | Active, Looping, Positional, ResRef |
+
+| UTE | Encounter | Creature list, spawn conditions |
+
+| UTI | Item | BaseItem, Properties, Charges |
+
+#### 10.3 Perception system
+
+Perception drives AI awareness and script events:
+
+```csharp
+public class PerceptionSystem
+{
+    const float UpdateInterval = 0.5f; // seconds between perception checks
+    
+    void UpdatePerception(ICreature subject)
+    {
+        float sightRange = subject.GetPerceptionRange(PerceptionType.Sight);
+        float hearRange = subject.GetPerceptionRange(PerceptionType.Hearing);
+        
+        foreach (var other in world.GetCreaturesInRadius(subject.Position, Math.Max(sightRange, hearRange)))
+        {
+            if (other == subject) continue;
+            
+            bool wasSeen = subject.PerceptionList.WasSeen(other);
+            bool wasHeard = subject.PerceptionList.WasHeard(other);
+            
+            bool canSee = CanSee(subject, other, sightRange);
+            bool canHear = CanHear(subject, other, hearRange);
+            
+            // Fire perception events
+            if (canSee && !wasSeen)
+                FireEvent(subject, ScriptEvent.OnPerception, other, PerceptionType.Seen);
+            if (!canSee && wasSeen)
+                FireEvent(subject, ScriptEvent.OnPerception, other, PerceptionType.NotSeen);
+            if (canHear && !wasHeard)
+                FireEvent(subject, ScriptEvent.OnPerception, other, PerceptionType.Heard);
+            
+            subject.PerceptionList.Update(other, canSee, canHear);
+        }
+    }
+    
+    bool CanSee(ICreature subject, ICreature target, float range)
+    {
+        float dist = Vector3.Distance(subject.Position, target.Position);
+        if (dist > range) return false;
+        if (!target.Visible) return false;
+        // Line-of-sight check through walkmesh
+        return !world.Walkmesh.TestLineOfSight(subject.Position + eyeHeight, target.Position + eyeHeight);
+    }
+}
+```
+
+#### 10.4 Combat system (detailed)
+
+Combat follows a **round-based** model with approximately 3-second rounds:
+
+**Combat round structure**:
+
+```csharp
+public class CombatRound
+{
+    public ICreature Attacker;
+    public IEntity Target;
+    public RoundState State;
+    public float TimeInState;
+    public Attack Attack1;  // Primary attack
+    public Attack Attack2;  // Offhand or counterattack (if duel)
+    public bool IsDuel;     // Both combatants are hostile creatures
+}
+
+public enum RoundState
+{
+    Starting,      // 0.0s - init animations
+    FirstAttack,   // ~0.5s - primary attack
+    SecondAttack,  // ~1.5s - offhand/counter (if duel)
+    Cooldown,      // ~2.5s - return to ready
+    Finished       // 3.0s - complete
+}
+
+public struct Attack
+{
+    public ICreature Attacker;
+    public IEntity Target;
+    public IAction SourceAction;
+    public AttackResult Result;
+    public int Damage;
+    public DamageType DamageType;
+    public bool IsCritical;
+    public bool IsOffhand;
+}
+
+public enum AttackResult
+{
+    Invalid,
+    Hit,
+    CriticalHit,
+    Miss,
+    Parried,
+    Deflected,
+    AutomaticHit
+}
+```
+
+**Attack resolution** (D20-based):
+
+```csharp
+AttackResult ResolveAttack(Attack attack, bool offhand)
+{
+    int roll = Random(1, 20);
+    
+    // Natural 20 = always hit (check for crit)
+    if (roll == 20)
+    {
+        int critConfirm = Random(1, 20);
+        int critAC = GetDefense(attack.Target);
+        if (critConfirm + GetAttackBonus(attack.Attacker, offhand) >= critAC)
+            return AttackResult.CriticalHit;
+        return AttackResult.Hit;
+    }
+    
+    // Natural 1 = always miss
+    if (roll == 1)
+        return AttackResult.Miss;
+    
+    int attackBonus = GetAttackBonus(attack.Attacker, offhand);
+    int targetAC = GetDefense(attack.Target);
+    
+    if (roll + attackBonus >= targetAC)
+        return AttackResult.Hit;
+    
+    return AttackResult.Miss;
+}
+
+int GetAttackBonus(ICreature attacker, bool offhand)
+{
+    int bonus = attacker.BaseAttackBonus;
+    bonus += GetAbilityModifier(attacker, offhand ? Ability.Dexterity : GetAttackAbility(attacker));
+    bonus += GetEquipmentBonus(attacker.GetEquippedWeapon(offhand));
+    bonus += GetFeatBonuses(attacker);
+    bonus += GetEffectBonuses(attacker, EffectType.AttackBonus);
+    if (offhand) bonus -= GetTwoWeaponPenalty(attacker);
+    return bonus;
+}
+
+int CalculateDamage(Attack attack, bool offhand)
+{
+    var weapon = attack.Attacker.GetEquippedWeapon(offhand);
+    int baseDamage = RollDamage(weapon.DamageDice, weapon.DamageCount);
+    int abilityMod = GetAbilityModifier(attack.Attacker, Ability.Strength);
+    if (offhand) abilityMod /= 2;
+    int total = baseDamage + abilityMod + weapon.DamageBonus;
+    if (attack.Result == AttackResult.CriticalHit)
+        total *= weapon.CritMultiplier;
+    return Math.Max(1, total);
+}
+```
+
+**Combat animations** (weapon-dependent):
+
+- Melee: swing/thrust variants (1-3)
+- Ranged: shoot/rapid fire
+- Dual wield: alternate attacks
+- Unarmed: punch/kick
+
+#### 10.5 Effect system
+
+Effects are temporary or permanent modifiers applied to entities:
+
+```csharp
+public abstract class GameEffect
+{
+    public EffectType Type { get; }
+    public EffectDuration Duration { get; }
+    public float RemainingTime { get; set; }
+    public IEntity Creator { get; }
+    public int SpellId { get; }
+    
+    public abstract void Apply(IEntity target);
+    public abstract void Remove(IEntity target);
+    public virtual void Update(IEntity target, float dt) { }
+}
+
+// ~60+ effect types to implement (core subset):
+public enum EffectType
+{
+    Damage, Heal,
+    AbilityIncrease, AbilityDecrease,
+    AttackIncrease, AttackDecrease,
+    ACIncrease, ACDecrease,
+    DamageResistance, DamageImmunity,
+    MovementSpeedIncrease, MovementSpeedDecrease,
+    Haste, Slow,
+    Stunned, Paralyzed, Confused, Frightened,
+    Charmed, Dominated,
+    Invisible, TrueSeeing,
+    Knockdown, Choke,
+    ForcePush, ForceDrain,
+    Regenerate, Poison,
+    TemporaryHitpoints,
+    VisualEffect, Beam,
+    // ... many more
+}
+```
+
+#### 10.6 AI behavior
+
+AI operates through action queue population based on perception and scripts:
+
+```csharp
+public class AIController
+{
+    void UpdateAI(ICreature creature, float dt)
+    {
+        if (creature.IsPC) return;  // PC controlled by player
+        if (creature.InConversation) return;
+        
+        // Process action queue first
+        creature.ActionQueue.Process(dt);
+        if (creature.ActionQueue.HasActions) return;
+        
+        // Heartbeat script (every 6 seconds)
+        if (creature.TimeSinceHeartbeat >= 6.0f)
+        {
+            creature.TimeSinceHeartbeat = 0;
+            ExecuteScript(creature.GetScript(ScriptEvent.OnHeartbeat), creature);
+        }
+        
+        // Default combat behavior
+        if (creature.InCombat)
+        {
+            var nearestEnemy = FindNearestEnemy(creature);
+            if (nearestEnemy != null)
+            {
+                creature.ActionQueue.Add(new AttackAction(nearestEnemy));
+            }
+        }
+    }
+    
+    ICreature FindNearestEnemy(ICreature creature)
+    {
+        return creature.PerceptionList
+            .GetSeenObjects()
+            .OfType<ICreature>()
+            .Where(c => creature.IsHostile(c) && !c.IsDead)
+            .OrderBy(c => Vector3.Distance(creature.Position, c.Position))
+            .FirstOrDefault();
+    }
+}
+```
 
 **Acceptance**:
 
-- Spawn hostile creature; it detects player; combat begins; HP changes; death triggers scripts/loot.
+- Spawn hostile creature; it detects player via perception system
+- Combat round begins with correct timing (~3 seconds)
+- Attack rolls use D20 + modifiers vs AC
+- HP changes on hit; death triggers OnDeath script
+- Combat ends when one party is dead or disengaged
 
 ### 11) Transitions: doors, triggers, module changes
 
@@ -584,9 +1567,440 @@ Implement:
 - Module transition:
   - unload current area, load new module/area, preserve party state, show loading screen.
 
+**Action type implementations** (all concrete action classes):
+
+```csharp
+// Base action with common patterns
+public abstract class ActionBase : IAction
+{
+    public ActionType Type { get; }
+    public int GroupId { get; set; } = -1;
+    public IEntity Owner { get; set; }
+    protected float ElapsedTime { get; private set; }
+    
+    public ActionStatus Update(IEntity actor, float dt)
+    {
+        ElapsedTime += dt;
+        return ExecuteInternal(actor, dt);
+    }
+    
+    protected abstract ActionStatus ExecuteInternal(IEntity actor, float dt);
+    public virtual void Dispose() { }
+}
+
+// Movement action - pathfind to location
+public class ActionMoveToLocation : ActionBase
+{
+    private readonly Vector3 _destination;
+    private readonly bool _run;
+    private List<Vector3> _path;
+    private int _pathIndex;
+    
+    protected override ActionStatus ExecuteInternal(IEntity actor, float dt)
+    {
+        if (_path == null)
+        {
+            _path = Pathfinder.FindPath(actor.Position, _destination);
+            if (_path == null) return ActionStatus.Failed;
+        }
+        
+        Vector3 target = _path[_pathIndex];
+        Vector3 dir = Vector3.Normalize(target - actor.Position);
+        float speed = _run ? actor.RunSpeed : actor.WalkSpeed;
+        
+        actor.Position += dir * speed * dt;
+        actor.Facing = MathF.Atan2(dir.X, dir.Z);
+        
+        if (Vector3.Distance(actor.Position, target) < 0.5f)
+        {
+            _pathIndex++;
+            if (_pathIndex >= _path.Count)
+                return ActionStatus.Complete;
+        }
+        
+        return ActionStatus.InProgress;
+    }
+}
+
+// Move to object (follows moving target)
+public class ActionMoveToObject : ActionBase
+{
+    private readonly IEntity _target;
+    private readonly float _range;
+    private readonly bool _run;
+    
+    protected override ActionStatus ExecuteInternal(IEntity actor, float dt)
+    {
+        float dist = Vector3.Distance(actor.Position, _target.Position);
+        if (dist <= _range)
+            return ActionStatus.Complete;
+        
+        Vector3 dir = Vector3.Normalize(_target.Position - actor.Position);
+        float speed = _run ? actor.RunSpeed : actor.WalkSpeed;
+        
+        // TODO: Full pathfinding, for now direct move
+        actor.Position += dir * speed * dt;
+        actor.Facing = MathF.Atan2(dir.X, dir.Z);
+        
+        return ActionStatus.InProgress;
+    }
+}
+
+// Attack action - engages combat
+public class ActionAttackObject : ActionBase
+{
+    private readonly IEntity _target;
+    private bool _combatStarted;
+    
+    protected override ActionStatus ExecuteInternal(IEntity actor, float dt)
+    {
+        if (_target.IsDead)
+            return ActionStatus.Complete;
+        
+        // Move into range first
+        float attackRange = GetAttackRange(actor);
+        float dist = Vector3.Distance(actor.Position, _target.Position);
+        
+        if (dist > attackRange)
+        {
+            // Move toward target
+            Vector3 dir = Vector3.Normalize(_target.Position - actor.Position);
+            actor.Position += dir * actor.RunSpeed * dt;
+            actor.Facing = MathF.Atan2(dir.X, dir.Z);
+            return ActionStatus.InProgress;
+        }
+        
+        if (!_combatStarted)
+        {
+            CombatSystem.StartCombat(actor, _target);
+            _combatStarted = true;
+        }
+        
+        // Combat system handles the actual attacks
+        return CombatSystem.IsInCombat(actor) ? ActionStatus.InProgress : ActionStatus.Complete;
+    }
+}
+
+// Use object (door, placeable, etc.)
+public class ActionUseObject : ActionBase
+{
+    private readonly IEntity _target;
+    private bool _reachedTarget;
+    
+    protected override ActionStatus ExecuteInternal(IEntity actor, float dt)
+    {
+        // Move to use point first
+        Vector3 usePoint = GetUsePoint(_target);
+        float dist = Vector3.Distance(actor.Position, usePoint);
+        
+        if (dist > 2.0f)
+        {
+            Vector3 dir = Vector3.Normalize(usePoint - actor.Position);
+            actor.Position += dir * actor.RunSpeed * dt;
+            return ActionStatus.InProgress;
+        }
+        
+        if (!_reachedTarget)
+        {
+            _reachedTarget = true;
+            
+            // Face the object
+            Vector3 toTarget = _target.Position - actor.Position;
+            actor.Facing = MathF.Atan2(toTarget.X, toTarget.Z);
+            
+            // Execute OnUsed script
+            ExecuteScript(_target.GetScript(ScriptEvent.OnUsed), _target, actor);
+            
+            // Play use animation
+            actor.PlayAnimation("use");
+        }
+        
+        return ActionStatus.Complete;
+    }
+}
+
+// Open/close door
+public class ActionOpenDoor : ActionBase
+{
+    private readonly IDoor _door;
+    
+    protected override ActionStatus ExecuteInternal(IEntity actor, float dt)
+    {
+        if (_door.IsOpen)
+            return ActionStatus.Complete;
+        
+        if (_door.IsLocked)
+        {
+            // Check if actor can unlock
+            if (!CanUnlock(actor, _door))
+            {
+                // Play "locked" bark
+                actor.PlaySound("gui_door_locked");
+                return ActionStatus.Failed;
+            }
+        }
+        
+        _door.Open();
+        ExecuteScript(_door.GetScript(ScriptEvent.OnOpen), _door, actor);
+        return ActionStatus.Complete;
+    }
+}
+
+// DoCommand - executes stored script state
+public class ActionDoCommand : ActionBase
+{
+    private readonly StoredScriptState _storedState;
+    
+    protected override ActionStatus ExecuteInternal(IEntity actor, float dt)
+    {
+        // Resume script execution from stored state
+        ScriptVM.ResumeFromStoredState(_storedState, actor);
+        return ActionStatus.Complete;
+    }
+}
+
+// PlayAnimation
+public class ActionPlayAnimation : ActionBase
+{
+    private readonly AnimationType _animation;
+    private readonly float _duration;
+    private readonly float _speed;
+    
+    protected override ActionStatus ExecuteInternal(IEntity actor, float dt)
+    {
+        if (ElapsedTime == 0)
+        {
+            actor.PlayAnimation(_animation, _speed);
+        }
+        
+        if (ElapsedTime >= _duration)
+            return ActionStatus.Complete;
+        
+        return ActionStatus.InProgress;
+    }
+}
+
+// Wait (do nothing for a duration)
+public class ActionWait : ActionBase
+{
+    private readonly float _duration;
+    
+    protected override ActionStatus ExecuteInternal(IEntity actor, float dt)
+    {
+        return ElapsedTime >= _duration ? ActionStatus.Complete : ActionStatus.InProgress;
+    }
+}
+
+// Speak string (bark bubble)
+public class ActionSpeakString : ActionBase
+{
+    private readonly string _text;
+    private readonly TalkVolume _volume;
+    
+    protected override ActionStatus ExecuteInternal(IEntity actor, float dt)
+    {
+        UI.ShowBarkBubble(actor, _text, _volume);
+        return ActionStatus.Complete;
+    }
+}
+
+// Jump to location (instant teleport)
+public class ActionJumpToLocation : ActionBase
+{
+    private readonly Vector3 _location;
+    private readonly float _facing;
+    
+    protected override ActionStatus ExecuteInternal(IEntity actor, float dt)
+    {
+        actor.Position = _location;
+        actor.Facing = _facing;
+        return ActionStatus.Complete;
+    }
+}
+```
+
+**Module transition system**:
+
+```csharp
+public class ModuleTransitionSystem
+{
+    public async Task TransitionToModule(string moduleResRef, string waypointTag)
+    {
+        // 1. Show loading screen
+        UI.ShowLoadingScreen(GetLoadscreenForModule(moduleResRef));
+        
+        // 2. Save current module state
+        var moduleState = SaveCurrentModuleState();
+        SaveSystem.StoreModuleState(CurrentModule.ResRef, moduleState);
+        
+        // 3. Fire OnModuleLeave script
+        ExecuteScript(CurrentModule.GetScript(ScriptEvent.OnModuleLeave), CurrentModule);
+        
+        // 4. Unload current module
+        await UnloadCurrentModule();
+        
+        // 5. Load new module
+        var newModule = await LoadModule(moduleResRef);
+        
+        // 6. Check if we've been here before
+        if (SaveSystem.HasModuleState(moduleResRef))
+        {
+            var savedState = SaveSystem.GetModuleState(moduleResRef);
+            RestoreModuleState(newModule, savedState);
+        }
+        
+        // 7. Position party at waypoint
+        var waypoint = newModule.Area.GetObjectByTag(waypointTag);
+        if (waypoint != null)
+        {
+            PositionPartyAt(waypoint.Position, waypoint.Facing);
+        }
+        
+        // 8. Fire OnModuleLoad script
+        ExecuteScript(newModule.GetScript(ScriptEvent.OnModuleLoad), newModule);
+        
+        // 9. Fire OnEnter for area
+        foreach (var member in Party.Members)
+        {
+            ExecuteScript(newModule.Area.GetScript(ScriptEvent.OnEnter), newModule.Area, member);
+        }
+        
+        // 10. Fire OnSpawn for any new creatures
+        foreach (var creature in newModule.Area.Creatures)
+        {
+            if (!creature.HasSpawned)
+            {
+                creature.HasSpawned = true;
+                ExecuteScript(creature.GetScript(ScriptEvent.OnSpawn), creature);
+            }
+        }
+        
+        // 11. Hide loading screen
+        UI.HideLoadingScreen();
+    }
+    
+    private ModuleState SaveCurrentModuleState()
+    {
+        return new ModuleState
+        {
+            // Creature positions and states
+            Creatures = CurrentModule.Area.Creatures.Select(c => new CreatureState
+            {
+                Tag = c.Tag,
+                Position = c.Position,
+                Facing = c.Facing,
+                CurrentHP = c.CurrentHP,
+                IsDead = c.IsDead,
+                LocalVars = c.LocalVars.ToDictionary()
+            }).ToList(),
+            
+            // Placeable states (open, destroyed, etc.)
+            Placeables = CurrentModule.Area.Placeables.Select(p => new PlaceableState
+            {
+                Tag = p.Tag,
+                IsOpen = p.IsOpen,
+                HasInventory = p.HasInventory,
+                Inventory = p.Inventory?.ToList(),
+                LocalVars = p.LocalVars.ToDictionary()
+            }).ToList(),
+            
+            // Door states
+            Doors = CurrentModule.Area.Doors.Select(d => new DoorState
+            {
+                Tag = d.Tag,
+                IsOpen = d.IsOpen,
+                IsLocked = d.IsLocked,
+                LocalVars = d.LocalVars.ToDictionary()
+            }).ToList(),
+            
+            // Triggered triggers
+            TriggeredTriggers = CurrentModule.Area.Triggers
+                .Where(t => t.HasFired && t.FireOnce)
+                .Select(t => t.Tag).ToList()
+        };
+    }
+}
+```
+
+**Trigger volume system**:
+
+```csharp
+public class TriggerSystem
+{
+    private readonly Dictionary<ITrigger, HashSet<IEntity>> _occupants = new();
+    
+    public void Update()
+    {
+        foreach (var trigger in CurrentArea.Triggers)
+        {
+            if (!_occupants.ContainsKey(trigger))
+                _occupants[trigger] = new HashSet<IEntity>();
+            
+            var currentOccupants = GetEntitiesInTrigger(trigger);
+            var previousOccupants = _occupants[trigger];
+            
+            // Check for enters
+            foreach (var entity in currentOccupants.Except(previousOccupants))
+            {
+                if (ShouldFireForEntity(trigger, entity))
+                {
+                    ExecuteScript(trigger.GetScript(ScriptEvent.OnEnter), trigger, entity);
+                    
+                    if (trigger.FireOnce)
+                        trigger.HasFired = true;
+                }
+            }
+            
+            // Check for exits
+            foreach (var entity in previousOccupants.Except(currentOccupants))
+            {
+                ExecuteScript(trigger.GetScript(ScriptEvent.OnExit), trigger, entity);
+            }
+            
+            _occupants[trigger] = currentOccupants;
+        }
+    }
+    
+    private HashSet<IEntity> GetEntitiesInTrigger(ITrigger trigger)
+    {
+        var result = new HashSet<IEntity>();
+        
+        foreach (var creature in CurrentArea.Creatures)
+        {
+            if (IsPointInPolygon(creature.Position, trigger.Geometry))
+                result.Add(creature);
+        }
+        
+        return result;
+    }
+    
+    private bool IsPointInPolygon(Vector3 point, Vector3[] polygon)
+    {
+        // 2D point-in-polygon test (ignore Y)
+        bool inside = false;
+        int j = polygon.Length - 1;
+        
+        for (int i = 0; i < polygon.Length; j = i++)
+        {
+            if (((polygon[i].Z > point.Z) != (polygon[j].Z > point.Z)) &&
+                (point.X < (polygon[j].X - polygon[i].X) * (point.Z - polygon[i].Z) / 
+                           (polygon[j].Z - polygon[i].Z) + polygon[i].X))
+            {
+                inside = !inside;
+            }
+        }
+        
+        return inside;
+    }
+}
+```
+
 **Acceptance**:
 
 - Walk through a door that transitions to another module; state persists (player HP/inventory at minimum).
+- Module state is saved and restored correctly (creature positions, door states, triggered triggers).
+- Trigger OnEnter/OnExit events fire at correct times.
+- Loading screen shows during transitions with appropriate load screen image.
 
 ### 12) Save/Load (core first, then parity)
 
@@ -994,10 +2408,378 @@ This plan intentionally reuses existing libraries and avoids duplicating tool st
 - Full cross-game support beyond K1/K2 (only placeholder profiles until KOTOR parity is achieved).
 - Perfect visual parity before functional parity (functionality and correctness win first).
 
-### 29) Immediate next steps (first “week” checklist)
+### 29) Game loop specification (fixed timestep)
+
+The engine runs a fixed-timestep game loop to ensure deterministic behavior:
+
+```csharp
+public class GameLoop
+{
+    private const float FixedTimestep = 1f / 60f;  // 60 Hz simulation
+    private const float MaxFrameTime = 0.25f;      // Cap to prevent spiral of death
+    private const int MaxScriptBudget = 1000;      // Max instructions per frame
+    
+    private float _accumulator = 0f;
+    private float _simulationTime = 0f;
+    
+    public void Run()
+    {
+        float previousTime = GetTime();
+        
+        while (!ShouldQuit)
+        {
+            float currentTime = GetTime();
+            float frameTime = Math.Min(currentTime - previousTime, MaxFrameTime);
+            previousTime = currentTime;
+            
+            _accumulator += frameTime;
+            
+            // Input phase (variable rate)
+            InputSystem.Poll();
+            
+            // Fixed-timestep simulation
+            while (_accumulator >= FixedTimestep)
+            {
+                FixedUpdate(FixedTimestep);
+                _simulationTime += FixedTimestep;
+                _accumulator -= FixedTimestep;
+            }
+            
+            // Interpolation factor for smooth rendering
+            float alpha = _accumulator / FixedTimestep;
+            
+            // Render phase (variable rate)
+            Render(alpha);
+        }
+    }
+    
+    private void FixedUpdate(float dt)
+    {
+        // 1. Process delayed commands (DelayCommand wheel)
+        DelayScheduler.Update(dt);
+        
+        // 2. Process heartbeats (every 6 seconds)
+        HeartbeatSystem.Update(dt);
+        
+        // 3. Process action queues (budget-limited)
+        int instructionsUsed = 0;
+        foreach (var entity in World.GetEntitiesWithComponent<ActionQueueComponent>())
+        {
+            if (instructionsUsed >= MaxScriptBudget) break;
+            instructionsUsed += entity.ActionQueue.Process(dt);
+        }
+        
+        // 4. Update perception (every 0.5 seconds, staggered)
+        PerceptionSystem.Update(dt);
+        
+        // 5. Update combat rounds
+        CombatSystem.Update(dt);
+        
+        // 6. Update AI
+        AISystem.Update(dt);
+        
+        // 7. Update triggers
+        TriggerSystem.Update();
+        
+        // 8. Update physics/movement
+        foreach (var entity in World.GetEntitiesWithComponent<TransformComponent>())
+        {
+            // Project onto walkmesh, check collisions
+            MovementSystem.Update(entity, dt);
+        }
+        
+        // 9. Update animations
+        AnimationSystem.Update(dt);
+        
+        // 10. Update dialogue
+        DialogueSystem.Update(dt);
+    }
+    
+    private void Render(float alpha)
+    {
+        // 1. Sync runtime transforms to Stride scene graph (interpolated)
+        SceneBridge.SyncTransforms(alpha);
+        
+        // 2. Update camera
+        CameraController.Update();
+        
+        // 3. Cull by VIS groups
+        VisibilitySystem.UpdateVisibility(CameraController.CurrentRoom);
+        
+        // 4. Update audio positions
+        AudioBridge.SyncPositions();
+        
+        // 5. Submit to Stride for rendering
+        StrideGame.UpdateAndDraw();
+        
+        // 6. Draw UI overlay
+        UISystem.Draw();
+    }
+}
+```
+
+### 30) NCS VM instruction set (complete)
+
+The VM must implement all these opcodes with correct semantics:
+
+| Opcode | Hex | Description | Args |
+
+|--------|-----|-------------|------|
+
+| CPDOWNSP | 0x01 | Copy stack to stack | int16 offset, int16 size |
+
+| RSADDI | 0x02 | Reserve int on stack | - |
+
+| RSADDF | 0x03 | Reserve float on stack | - |
+
+| RSADDS | 0x04 | Reserve string on stack | - |
+
+| RSADDO | 0x05 | Reserve object on stack | - |
+
+| RSADDEFF | 0x06 | Reserve effect on stack | - |
+
+| RSADDEVT | 0x07 | Reserve event on stack | - |
+
+| RSADDLOC | 0x08 | Reserve location on stack | - |
+
+| RSADDTAL | 0x09 | Reserve talent on stack | - |
+
+| CPTOPSP | 0x0A | Copy from stack to stack | int16 offset, int16 size |
+
+| CONSTI | 0x0B | Push int constant | int32 value |
+
+| CONSTF | 0x0C | Push float constant | float32 value |
+
+| CONSTS | 0x0D | Push string constant | int16 len, char[] data |
+
+| CONSTO | 0x0E | Push object constant | uint32 objectId |
+
+| ACTION | 0x0F | Call engine function | uint16 routineId, uint8 argCount |
+
+| LOGANDII | 0x10 | Logical AND (int, int) | - |
+
+| LOGORII | 0x11 | Logical OR (int, int) | - |
+
+| INCORII | 0x12 | Bitwise OR (int, int) | - |
+
+| EXCORII | 0x13 | Bitwise XOR (int, int) | - |
+
+| BOOLANDII | 0x14 | Bitwise AND (int, int) | - |
+
+| EQUALII | 0x15 | Equal (int, int) | - |
+
+| EQUALFF | 0x16 | Equal (float, float) | - |
+
+| EQUALSS | 0x17 | Equal (string, string) | - |
+
+| EQUALOO | 0x18 | Equal (object, object) | - |
+
+| EQUALTT | 0x19 | Equal (struct, struct) | int16 size |
+
+| EQUALEFFEFF | 0x1A | Equal (effect, effect) | - |
+
+| EQUALEVTEVT | 0x1B | Equal (event, event) | - |
+
+| EQUALLOCLOC | 0x1C | Equal (location, location) | - |
+
+| EQUALTALTAL | 0x1D | Equal (talent, talent) | - |
+
+| NEQUALII | 0x1E | Not equal (int, int) | - |
+
+| NEQUALFF | 0x1F | Not equal (float, float) | - |
+
+| NEQUALSS | 0x20 | Not equal (string, string) | - |
+
+| NEQUALOO | 0x21 | Not equal (object, object) | - |
+
+| NEQUALTT | 0x22 | Not equal (struct, struct) | int16 size |
+
+| NEQUALEFFEFF | 0x23 | Not equal (effect, effect) | - |
+
+| NEQUALEVTEVT | 0x24 | Not equal (event, event) | - |
+
+| NEQUALLOCLOC | 0x25 | Not equal (location, location) | - |
+
+| NEQUALTALTAL | 0x26 | Not equal (talent, talent) | - |
+
+| GEQII | 0x27 | Greater or equal (int, int) | - |
+
+| GEQFF | 0x28 | Greater or equal (float, float) | - |
+
+| GTII | 0x29 | Greater than (int, int) | - |
+
+| GTFF | 0x2A | Greater than (float, float) | - |
+
+| LTII | 0x2B | Less than (int, int) | - |
+
+| LTFF | 0x2C | Less than (float, float) | - |
+
+| LEQII | 0x2D | Less or equal (int, int) | - |
+
+| LEQFF | 0x2E | Less or equal (float, float) | - |
+
+| SHLEFTII | 0x2F | Shift left (int, int) | - |
+
+| SHRIGHTII | 0x30 | Shift right signed (int, int) | - |
+
+| USHRIGHTII | 0x31 | Shift right unsigned (int, int) | - |
+
+| ADDII | 0x32 | Add (int, int) | - |
+
+| ADDIF | 0x33 | Add (int, float) | - |
+
+| ADDFI | 0x34 | Add (float, int) | - |
+
+| ADDFF | 0x35 | Add (float, float) | - |
+
+| ADDSS | 0x36 | Concatenate (string, string) | - |
+
+| ADDVV | 0x37 | Add (vector, vector) | - |
+
+| SUBII | 0x38 | Subtract (int, int) | - |
+
+| SUBIF | 0x39 | Subtract (int, float) | - |
+
+| SUBFI | 0x3A | Subtract (float, int) | - |
+
+| SUBFF | 0x3B | Subtract (float, float) | - |
+
+| SUBVV | 0x3C | Subtract (vector, vector) | - |
+
+| MULII | 0x3D | Multiply (int, int) | - |
+
+| MULIF | 0x3E | Multiply (int, float) | - |
+
+| MULFI | 0x3F | Multiply (float, int) | - |
+
+| MULFF | 0x40 | Multiply (float, float) | - |
+
+| MULVF | 0x41 | Multiply (vector, float) | - |
+
+| MULFV | 0x42 | Multiply (float, vector) | - |
+
+| DIVII | 0x43 | Divide (int, int) | - |
+
+| DIVIF | 0x44 | Divide (int, float) | - |
+
+| DIVFI | 0x45 | Divide (float, int) | - |
+
+| DIVFF | 0x46 | Divide (float, float) | - |
+
+| DIVVF | 0x47 | Divide (vector, float) | - |
+
+| DIVFV | 0x48 | Divide (float, vector) | - |
+
+| MODII | 0x49 | Modulo (int, int) | - |
+
+| NEGI | 0x4A | Negate int | - |
+
+| NEGF | 0x4B | Negate float | - |
+
+| MOVSP | 0x4C | Move stack pointer | int32 offset |
+
+| JMP | 0x4D | Unconditional jump | int32 offset |
+
+| JSR | 0x4E | Jump to subroutine | int32 offset |
+
+| JZ | 0x4F | Jump if zero | int32 offset |
+
+| RETN | 0x50 | Return from subroutine | - |
+
+| DESTRUCT | 0x51 | Stack cleanup | int16 sizeToRemove, int16 offsetToKeep, int16 sizeToKeep |
+
+| NOTI | 0x52 | Logical NOT int | - |
+
+| DECISP | 0x53 | Decrement int at SP offset | int32 offset |
+
+| INCISP | 0x54 | Increment int at SP offset | int32 offset |
+
+| JNZ | 0x55 | Jump if not zero | int32 offset |
+
+| CPDOWNBP | 0x56 | Copy from BP to stack | int32 offset, int16 size |
+
+| CPTOPBP | 0x57 | Copy to BP from stack | int32 offset, int16 size |
+
+| DECIBP | 0x58 | Decrement int at BP offset | int32 offset |
+
+| INCIBP | 0x59 | Increment int at BP offset | int32 offset |
+
+| SAVEBP | 0x5A | Save base pointer | - |
+
+| RESTOREBP | 0x5B | Restore base pointer | - |
+
+| STORE_STATE | 0x5C | Store script state for deferred action | int32 stackBytes, int32 localsBytes |
+
+| NOP | 0x5D | No operation | - |
+
+### 31) Engine function categories (minimum for vertical slice)
+
+Group engine functions by subsystem for incremental implementation:
+
+**Tier 0 - Boot/Basic** (~50 functions):
+
+- `PrintString`, `PrintInteger`, `PrintFloat`, `PrintVector`, `PrintObject`
+- `Random`, `IntToString`, `FloatToString`, `StringToInt`, `StringToFloat`
+- `GetTag`, `GetLocalInt`, `SetLocalInt`, `GetLocalFloat`, `SetLocalFloat`, `GetLocalString`, `SetLocalString`
+- `GetGlobalNumber`, `SetGlobalNumber`, `GetGlobalBoolean`, `SetGlobalBoolean`, `GetGlobalString`, `SetGlobalString`
+- `GetModule`, `GetArea`, `GetPosition`, `GetFacing`, `SetFacing`
+- `GetObjectByTag`, `GetNearestObjectByTag`, `GetNearestCreature`
+- `ObjectToString`, `StringToObject`, `GetObjectType`
+
+**Tier 1 - Movement/Actions** (~80 functions):
+
+- `ActionMoveToLocation`, `ActionMoveToObject`, `ActionJumpToLocation`, `ActionJumpToObject`
+- `AssignCommand`, `DelayCommand`, `ClearAllActions`, `GetCurrentAction`
+- `ActionDoCommand`, `ActionWait`, `ActionSpeakString`, `ActionPlayAnimation`
+- `ActionOpenDoor`, `ActionCloseDoor`, `ActionUsePlaceable`
+- `ActionStartConversation`, `ActionPauseConversation`, `ActionResumeConversation`
+- `SetCommandable`, `GetCommandable`, `GetIsObjectValid`
+
+**Tier 2 - Creatures/Stats** (~100 functions):
+
+- `GetAbilityScore`, `GetSkillRank`, `GetHitDice`, `GetClassByPosition`
+- `GetCurrentHitPoints`, `GetMaxHitPoints`, `SetCurrentHitPoints`
+- `GetIsPC`, `GetIsEnemy`, `GetIsFriend`, `GetIsNeutral`
+- `GetFaction`, `SetFaction`, `ChangeFaction`
+- `GetPerceptionSeen`, `GetPerceptionHeard`
+- `GetEnteringObject`, `GetExitingObject`, `GetLastSpeaker`
+
+**Tier 3 - Combat** (~80 functions):
+
+- `ActionAttack`, `EffectDamage`, `EffectHeal`
+- `GetAttackTarget`, `GetAttemptedAttackTarget`, `GetLastAttacker`
+- `ApplyEffectToObject`, `RemoveEffect`, `GetFirstEffect`, `GetNextEffect`
+- `GetEffectType`, `GetEffectDuration`, `GetEffectCreator`
+- `GetIsInCombat`, `SetIsTemporaryEnemy`
+
+**Tier 4 - Dialogue** (~40 functions):
+
+- `SpeakString`, `SpeakStringByStrRef`, `ActionSpeakStringByStrRef`
+- `GetPCSpeaker`, `GetLastSpeaker`, `GetListenPatternNumber`
+- `BeginConversation`, `EndConversation`
+- `SetCustomToken`, `SetListenPattern`
+
+**Tier 5 - Inventory/Items** (~60 functions):
+
+- `GetItemInSlot`, `GetFirstItemInInventory`, `GetNextItemInInventory`
+- `CreateItemOnObject`, `DestroyObject`, `GiveItem`, `TakeItem`
+- `ActionEquipItem`, `ActionUnequipItem`
+- `GetItemPossessor`, `GetItemPropertyType`
+
+**Tier 6 - Force Powers/Spells** (~50 functions):
+
+- `ActionCastSpellAtObject`, `ActionCastSpellAtLocation`
+- `GetHasSpell`, `GetHasSpellEffect`, `GetLastSpell`, `GetLastSpellCaster`
+- Effect creators: `EffectStunned`, `EffectParalyze`, `EffectConfused`, etc.
+
+### 32) Immediate next steps (first "week" checklist)
 
 - Lock Stride version and baseline platform targets.
 - Create `OdysseyRuntime` projects and solution wiring.
 - Implement installation selection and `CSharpKOTOR.Installation` validation path.
 - Build content cache skeleton and decode a single TPC/TGA into a Stride texture.
 - Load one room model and render it in a Stride scene.
+- Implement NCS VM skeleton with basic opcodes (arithmetic, comparisons, jumps).
+- Implement first 10 engine functions (PrintString, Random, GetTag, GetLocalInt, SetLocalInt).
+- Load a simple module (danm13 - Endar Spire) and spawn room meshes.
+- Implement walkmesh loading and basic click-to-move (no pathfinding).

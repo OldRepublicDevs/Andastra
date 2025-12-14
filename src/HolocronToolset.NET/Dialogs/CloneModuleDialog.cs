@@ -99,22 +99,52 @@ namespace HolocronToolset.NET.Dialogs
         private Button _createButton;
         private Button _cancelButton;
 
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/clone_module.py:66-68
+        // Original: self.ui = Ui_Dialog()
+        // Expose UI widgets for testing
+        public CloneModuleDialogUi Ui { get; private set; }
+
         private void SetupUI()
         {
-            // Find controls from XAML
-            _moduleSelect = this.FindControl<ComboBox>("moduleSelect");
-            _moduleRootEdit = this.FindControl<TextBox>("moduleRootEdit");
-            _nameEdit = this.FindControl<TextBox>("nameEdit");
-            _filenameEdit = this.FindControl<TextBox>("filenameEdit");
-            _prefixEdit = this.FindControl<TextBox>("prefixEdit");
-            _keepDoorsCheckbox = this.FindControl<CheckBox>("keepDoorsCheckbox");
-            _keepPlaceablesCheckbox = this.FindControl<CheckBox>("keepPlaceablesCheckbox");
-            _keepSoundsCheckbox = this.FindControl<CheckBox>("keepSoundsCheckbox");
-            _keepPathingCheckbox = this.FindControl<CheckBox>("keepPathingCheckbox");
-            _copyTexturesCheckbox = this.FindControl<CheckBox>("copyTexturesCheckbox");
-            _copyLightmapsCheckbox = this.FindControl<CheckBox>("copyLightmapsCheckbox");
-            _createButton = this.FindControl<Button>("createButton");
-            _cancelButton = this.FindControl<Button>("cancelButton");
+            // Find controls from XAML - use Get() method which throws if not found, or FindControl which returns null
+            try
+            {
+                _moduleSelect = this.FindControl<ComboBox>("moduleSelect");
+                _moduleRootEdit = this.FindControl<TextBox>("moduleRootEdit");
+                _nameEdit = this.FindControl<TextBox>("nameEdit");
+                _filenameEdit = this.FindControl<TextBox>("filenameEdit");
+                _prefixEdit = this.FindControl<TextBox>("prefixEdit");
+                _keepDoorsCheckbox = this.FindControl<CheckBox>("keepDoorsCheckbox");
+                _keepPlaceablesCheckbox = this.FindControl<CheckBox>("keepPlaceablesCheckbox");
+                _keepSoundsCheckbox = this.FindControl<CheckBox>("keepSoundsCheckbox");
+                _keepPathingCheckbox = this.FindControl<CheckBox>("keepPathingCheckbox");
+                _copyTexturesCheckbox = this.FindControl<CheckBox>("copyTexturesCheckbox");
+                _copyLightmapsCheckbox = this.FindControl<CheckBox>("copyLightmapsCheckbox");
+                _createButton = this.FindControl<Button>("createButton");
+                _cancelButton = this.FindControl<Button>("cancelButton");
+            }
+            catch
+            {
+                // Controls not found - will be null, tests will handle this
+            }
+
+            // Create UI wrapper for testing
+            Ui = new CloneModuleDialogUi
+            {
+                ModuleSelect = _moduleSelect,
+                ModuleRootEdit = _moduleRootEdit,
+                NameEdit = _nameEdit,
+                FilenameEdit = _filenameEdit,
+                PrefixEdit = _prefixEdit,
+                KeepDoorsCheckbox = _keepDoorsCheckbox,
+                KeepPlaceablesCheckbox = _keepPlaceablesCheckbox,
+                KeepSoundsCheckbox = _keepSoundsCheckbox,
+                KeepPathingCheckbox = _keepPathingCheckbox,
+                CopyTexturesCheckbox = _copyTexturesCheckbox,
+                CopyLightmapsCheckbox = _copyLightmapsCheckbox,
+                CreateButton = _createButton,
+                CancelButton = _cancelButton
+            };
 
             if (_createButton != null)
             {
@@ -128,21 +158,64 @@ namespace HolocronToolset.NET.Dialogs
             {
                 _moduleSelect.SelectionChanged += (s, e) => OnModuleSelectionChanged();
             }
+            if (_filenameEdit != null && _prefixEdit != null)
+            {
+                _filenameEdit.TextChanged += (s, e) => SetPrefixFromFilename();
+                // Set initial prefix if filename already has text
+                if (!string.IsNullOrEmpty(_filenameEdit.Text))
+                {
+                    SetPrefixFromFilename();
+                }
+            }
         }
 
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/clone_module.py:176-181
+        // Original: def changed_module(self, index: int):
         private void OnModuleSelectionChanged()
         {
-            if (_moduleSelect?.SelectedItem != null)
+            if (_moduleSelect?.SelectedItem is ModuleOption option)
             {
-                // Update module root edit when selection changes
-                // This will be implemented when module data is available
+                _moduleRootEdit.Text = option.Root;
             }
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/clone_module.py:183-184
+        // Original: def set_prefix_from_filename(self): self.ui.prefixEdit.setText(self.ui.filenameEdit.text().upper()[:3])
+        private void SetPrefixFromFilename()
+        {
+            if (_filenameEdit == null || _prefixEdit == null)
+            {
+                return;
+            }
+
+            string filename = _filenameEdit.Text ?? "";
+            // Generate prefix: take first 3 characters, convert to uppercase
+            // Matching Python: filename.upper()[:3]
+            string prefix = "";
+            if (filename.Length > 0)
+            {
+                // Take up to 3 characters, convert to uppercase
+                int length = Math.Min(3, filename.Length);
+                prefix = filename.Substring(0, length).ToUpperInvariant();
+            }
+            _prefixEdit.Text = prefix;
+        }
+
+        // Public method for testing to manually trigger prefix update
+        public void UpdatePrefixFromFilename()
+        {
+            SetPrefixFromFilename();
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/clone_module.py:150-174
         // Original: def load_modules(self):
         private void LoadModules()
         {
+            if (_moduleSelect == null)
+            {
+                return;
+            }
+
             var options = new Dictionary<string, ModuleOption>();
             foreach (var installation in _installations.Values)
             {
@@ -150,14 +223,27 @@ namespace HolocronToolset.NET.Dialogs
                 foreach (var kvp in moduleNames)
                 {
                     string filename = kvp.Key;
-                    string name = kvp.Value;
-                    string root = System.IO.Path.GetFileNameWithoutExtension(filename);
+                    string name = kvp.Value ?? "";
+                    // Matching PyKotor: Module.filepath_to_root(filename)
+                    string root = CSharpKOTOR.Installation.Installation.GetModuleRoot(filename);
                     if (!options.ContainsKey(root))
                     {
                         options[root] = new ModuleOption(name, root, new List<string>(), installation);
                     }
                     options[root].Files.Add(filename);
                 }
+            }
+
+            // Add options to ComboBox
+            foreach (var option in options.Values)
+            {
+                _moduleSelect.Items.Add(option);
+            }
+
+            // Set first item as selected if available
+            if (_moduleSelect.Items.Count > 0)
+            {
+                _moduleSelect.SelectedIndex = 0;
             }
         }
 
@@ -183,9 +269,34 @@ namespace HolocronToolset.NET.Dialogs
             {
                 Name = name;
                 Root = root;
-                Files = files;
+                Files = files ?? new List<string>();
                 Installation = installation;
             }
+
+            public override string ToString()
+            {
+                return Name;
+            }
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/clone_module.py:66-68
+        // Original: self.ui = Ui_Dialog()
+        // UI wrapper class for testing access
+        public class CloneModuleDialogUi
+        {
+            public ComboBox ModuleSelect { get; set; }
+            public TextBox ModuleRootEdit { get; set; }
+            public TextBox NameEdit { get; set; }
+            public TextBox FilenameEdit { get; set; }
+            public TextBox PrefixEdit { get; set; }
+            public CheckBox KeepDoorsCheckbox { get; set; }
+            public CheckBox KeepPlaceablesCheckbox { get; set; }
+            public CheckBox KeepSoundsCheckbox { get; set; }
+            public CheckBox KeepPathingCheckbox { get; set; }
+            public CheckBox CopyTexturesCheckbox { get; set; }
+            public CheckBox CopyLightmapsCheckbox { get; set; }
+            public Button CreateButton { get; set; }
+            public Button CancelButton { get; set; }
         }
     }
 }
