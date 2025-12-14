@@ -129,52 +129,6 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             int mainStart = 0;
             int mainEnd = instructions.Count;
             
-            // Calculate where main should start based on globals and entry stub
-            if (savebpIndex >= 0)
-            {
-                // Globals end at savebpIndex+1 (SAVEBP is at savebpIndex)
-                int globalsEnd = savebpIndex + 1;
-                // Entry stub starts at globalsEnd (savebpIndex+1)
-                int entryStubEnd = globalsEnd;
-                
-                // Check for entry stub pattern at savebpIndex+1
-                // Pattern 1: JSR (at savebpIndex+1) + RETN (at savebpIndex+2)
-                if (instructions.Count > entryStubEnd + 1 && 
-                    instructions[entryStubEnd].InsType == NCSInstructionType.JSR &&
-                    instructions[entryStubEnd + 1].InsType == NCSInstructionType.RETN)
-                {
-                    entryStubEnd = entryStubEnd + 2; // JSR + RETN
-                }
-                // Pattern 2: JSR (at savebpIndex+1) + RESTOREBP (at savebpIndex+2)
-                else if (instructions.Count > entryStubEnd + 1 &&
-                         instructions[entryStubEnd].InsType == NCSInstructionType.JSR &&
-                         instructions[entryStubEnd + 1].InsType == NCSInstructionType.RESTOREBP)
-                {
-                    entryStubEnd = entryStubEnd + 2; // JSR + RESTOREBP
-                }
-                
-                // Main starts after entry stub
-                // If entryJsrTarget is valid and after entry stub, use it; otherwise use entryStubEnd
-                if (entryJsrTarget >= 0 && entryJsrTarget > entryStubEnd)
-                {
-                    mainStart = entryJsrTarget;
-                    JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Main starts at entryJsrTarget {entryJsrTarget} (after entry stub at {entryStubEnd})");
-                }
-                else
-                {
-                    mainStart = entryStubEnd;
-                    JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Main starts at entryStubEnd {entryStubEnd} (entryJsrTarget {entryJsrTarget} invalid or in globals range)");
-                }
-            }
-            else
-            {
-                // No SAVEBP - no globals, main starts at 0 or entryJsrTarget
-                if (entryJsrTarget >= 0 && entryJsrTarget > 0)
-                {
-                    mainStart = entryJsrTarget;
-                }
-            }
-            
             if (subroutineStarts.Count > 0)
             {
                 int min = int.MaxValue;
@@ -190,6 +144,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             }
 
             // If SAVEBP is found, create globals subroutine (0 to SAVEBP+1)
+            // Then calculate where main should start (after globals and entry stub)
             if (savebpIndex >= 0)
             {
                 ASubroutine globalsSub = ConvertInstructionRangeToSubroutine(ncs, instructions, 0, savebpIndex + 1, 0);
@@ -233,6 +188,14 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
                     // entryJsrTarget is invalid or points to globals - use entryStubEnd
                     mainStart = entryStubEnd;
                     JavaSystem.@out.Println($"DEBUG NcsToAstConverter: entryJsrTarget {entryJsrTarget} invalid or in globals range, using entryStubEnd {entryStubEnd} as mainStart");
+                }
+            }
+            else
+            {
+                // No SAVEBP - no globals, main starts at 0 or entryJsrTarget
+                if (entryJsrTarget >= 0 && entryJsrTarget > 0)
+                {
+                    mainStart = entryJsrTarget;
                 }
             }
 
