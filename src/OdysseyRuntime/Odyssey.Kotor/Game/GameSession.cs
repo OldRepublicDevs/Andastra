@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using Odyssey.Core.Entities;
 using Odyssey.Core.Interfaces;
@@ -441,9 +442,12 @@ namespace Odyssey.Kotor.Game
         /// </summary>
         public void LoadSaveGame(string saveName)
         {
-            // TODO: Implement save loading
-            Console.WriteLine("[GameSession] FIXME: Save loading not implemented - " + saveName);
-            throw new NotImplementedException("Save loading not yet implemented");
+            // Use the existing LoadGame method
+            bool success = LoadGame(saveName);
+            if (!success)
+            {
+                throw new InvalidOperationException("Failed to load save game: " + saveName);
+            }
         }
 
         /// <summary>
@@ -501,10 +505,35 @@ namespace Odyssey.Kotor.Game
         {
             Console.WriteLine("[GameSession] Unloading module: " + _currentModuleName);
 
-            // TODO: Fire OnModuleLeave scripts
-            // TODO: Save persistent state
-            // TODO: Clear entities
+            if (_currentRuntimeModule != null)
+            {
+                // Fire OnModuleLeave scripts
+                ExecuteModuleScript(Odyssey.Core.Enums.ScriptEvent.OnModuleLeave, _currentRuntimeModule);
+            }
 
+            // Save persistent state (area states, etc.)
+            // This would be handled by the save system when saving
+
+            // Clear entities
+            if (_world != null)
+            {
+                // Remove all entities except the player
+                var entitiesToRemove = new List<IEntity>();
+                foreach (IEntity entity in _world.GetAllEntities())
+                {
+                    if (entity != _playerEntity && entity != null)
+                    {
+                        entitiesToRemove.Add(entity);
+                    }
+                }
+
+                foreach (IEntity entity in entitiesToRemove)
+                {
+                    _world.DestroyEntity(entity.ObjectId);
+                }
+            }
+
+            _currentRuntimeModule = null;
             _currentModuleName = null;
         }
 
@@ -585,10 +614,21 @@ namespace Odyssey.Kotor.Game
             }
 
             // Update action queues for all entities
-            // TODO: Process action queues
+            foreach (IEntity entity in _world.GetAllEntities())
+            {
+                if (entity == null || !entity.IsValid)
+                {
+                    continue;
+                }
 
-            // Process delayed commands
-            // TODO: Process delay scheduler
+                IActionQueueComponent actionQueue = entity.GetComponent<IActionQueueComponent>();
+                if (actionQueue != null)
+                {
+                    actionQueue.Update(entity, deltaTime);
+                }
+            }
+
+            // Process delayed commands (handled by World.Update)
 
             // Fire heartbeat scripts every 6 seconds
             _heartbeatTimer += deltaTime;
