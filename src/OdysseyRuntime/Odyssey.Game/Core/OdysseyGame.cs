@@ -1,19 +1,9 @@
 using System;
 using System.IO;
 using System.Linq;
-using StrideEngine = Stride.Engine;
-using Stride.Games;
-using Stride.Graphics;
-using Stride.Input;
-using Stride.Core.Mathematics;
-using Stride.Engine;
-using Stride.Rendering;
-using Stride.Rendering.Compositing;
-using Stride.Rendering.UI;
-using Stride.UI;
-using Stride.UI.Panels;
-using Stride.UI.Controls;
-using Stride.UI.Events;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
 using Odyssey.Core.Entities;
 using Odyssey.Core.Interfaces;
 using Odyssey.Core.Interfaces.Components;
@@ -23,11 +13,11 @@ using Odyssey.Scripting.VM;
 using Odyssey.Kotor.Game;
 using Odyssey.Kotor.Systems;
 using Odyssey.Kotor.Dialogue;
-using Odyssey.Stride.Camera;
-using Odyssey.Stride.Scene;
-using Odyssey.Stride.UI;
+using Odyssey.MonoGame.Camera;
+using Odyssey.MonoGame.Scene;
+using Odyssey.MonoGame.UI;
 using Odyssey.Content.Interfaces;
-using Odyssey.Stride.GUI;
+using Odyssey.MonoGame.GUI;
 using CSharpKOTOR.Formats.LYT;
 using CSharpKOTOR.Formats.VIS;
 using CSharpKOTOR.Resources;
@@ -36,7 +26,7 @@ using Myra.Graphics2D.UI;
 
 namespace Odyssey.Game.Core
 {
-    public class OdysseyGame : StrideEngine.Game
+    public class OdysseyGame : Game
     {
         // #region agent log
         private static readonly string DebugLogPath = @"g:\GitHub\HoloPatcher.NET\.cursor\debug.log";
@@ -67,8 +57,9 @@ namespace Odyssey.Game.Core
 
         // Scene rendering
         private SceneBuilder _sceneBuilder;
-        private StrideEngine.Entity _cameraEntity;
-        private CameraComponent _cameraComponent;
+        private GraphicsDeviceManager _graphicsDeviceManager;
+        private Matrix _viewMatrix;
+        private Matrix _projectionMatrix;
 
         [CanBeNull]
         private readonly ChaseCamera _chaseCamera = null;
@@ -83,7 +74,7 @@ namespace Odyssey.Game.Core
         private PauseMenu _pauseMenu;
         private LoadingScreen _loadingScreen;
         private DialoguePanel _dialoguePanel;
-        private UIComponent _uiComponent;
+        private SpriteBatch _spriteBatch;
         private SpriteFont _font;
         private bool _uiAvailable;
 
@@ -96,13 +87,15 @@ namespace Odyssey.Game.Core
         private bool _showDebugInfo = true; // Default to debug mode for demo
         private bool _isPaused = false;
         private bool _inDialogue = false;
-
-        // Debug text overlay
-        private readonly TextBlock _debugTextBlock;
+        private KeyboardState _lastKeyboardState;
+        private MouseState _lastMouseState;
 
         public OdysseyGame(GameSettings settings)
         {
             _settings = settings;
+            _graphicsDeviceManager = new GraphicsDeviceManager(this);
+            Content.RootDirectory = "Content";
+            IsMouseVisible = true;
         }
 
         protected override void Initialize()
@@ -112,27 +105,18 @@ namespace Odyssey.Game.Core
             // #endregion
 
             // Call base initialization to set up Game base class
-            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Games.Game.html
+            // Based on MonoGame API: https://docs.monogame.net/api/Microsoft.Xna.Framework.Game.html
             // Game.Initialize() initializes the game and sets up core systems
             // Method signature: protected virtual void Initialize()
-            // Must be called before using Game services and systems
-            // Source: https://doc.stride3d.net/latest/en/manual/game-loop/index.html
+            // Must be called before using Game services
+            // Source: https://docs.monogame.net/articles/getting_started/5_adding_basic_code.html
             base.Initialize();
 
-            // #region agent log
-            // Check GraphicsCompositor availability
-            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Engine.SceneSystem.html
-            // SceneSystem.GraphicsCompositor property gets the graphics compositor for rendering
-            // Method signature: GraphicsCompositor GraphicsCompositor { get; }
-            // Source: https://doc.stride3d.net/latest/en/manual/graphics/graphics-compositor/index.html
-            DebugLog("C", "OdysseyGame.Initialize:compositor_check", "Checking GraphicsCompositor", SceneSystem?.GraphicsCompositor != null ? "compositor_exists" : "compositor_null");
-            // #endregion
-
             // Set window title
-            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Games.GameWindow.html
+            // Based on MonoGame API: https://docs.monogame.net/api/Microsoft.Xna.Framework.Game.html
             // Window.Title property sets the window title bar text
             // Method signature: string Title { get; set; }
-            // Source: https://doc.stride3d.net/latest/en/manual/graphics/window-management.html
+            // Source: https://docs.monogame.net/articles/getting_to_know/howto/graphics/HowTo_FullScreen.html
             Window.Title = "Odyssey Engine - " + (_settings.Game == KotorGame.K1 ? "Knights of the Old Republic" : "The Sith Lords");
 
             _world = new World();
@@ -152,60 +136,33 @@ namespace Odyssey.Game.Core
             Console.WriteLine("[Odyssey] Core systems initialized");
         }
 
+        protected override void LoadContent()
+        {
+            // Create sprite batch for 2D rendering
+            // Based on MonoGame API: https://docs.monogame.net/api/Microsoft.Xna.Framework.Graphics.SpriteBatch.html
+            // SpriteBatch(GraphicsDevice) constructor creates a sprite batch for drawing 2D sprites
+            // Method signature: SpriteBatch(GraphicsDevice graphicsDevice)
+            // Source: https://docs.monogame.net/articles/getting_started/5_adding_basic_code.html
+            _spriteBatch = new SpriteBatch(GraphicsDevice);
+
+            // TODO: Load content assets here
+            // _font = Content.Load<SpriteFont>("Fonts/DefaultFont");
+
+            base.LoadContent();
+        }
+
         private void InitializeCamera()
         {
-            // #region agent log
-            DebugLog("B", "OdysseyGame.InitializeCamera:start", "Creating camera entity");
-            // #endregion
+            // Initialize camera view and projection matrices
+            // Based on MonoGame API: https://docs.monogame.net/api/Microsoft.Xna.Framework.Matrix.html
+            // Matrix.CreateLookAt creates a view matrix for camera positioning
+            // Matrix.CreatePerspectiveFieldOfView creates a perspective projection matrix
+            // Source: https://docs.monogame.net/articles/getting_to_know/howto/graphics/HowTo_RotateMoveCamera.html
+            _viewMatrix = Matrix.CreateLookAt(new Vector3(0, 0, 10), Vector3.Zero, Vector3.Up);
+            float aspectRatio = (float)GraphicsDevice.Viewport.Width / GraphicsDevice.Viewport.Height;
+            _projectionMatrix = Matrix.CreatePerspectiveFieldOfView(MathHelper.ToRadians(45), aspectRatio, 0.1f, 1000f);
 
-            // Create main camera entity
-            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Engine.Entity.html
-            // Entity(string) constructor creates a new entity with the specified name
-            // Source: https://doc.stride3d.net/latest/en/manual/entities/index.html
-            _cameraEntity = new StrideEngine.Entity("MainCamera");
-            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Engine.CameraComponent.html
-            // CameraComponent defines camera properties for rendering
-            // NearClipPlane/FarClipPlane set the clipping planes, UseCustomAspectRatio controls aspect ratio calculation
-            // Slot property assigns camera to a GraphicsCompositor camera slot
-            // Source: https://doc.stride3d.net/latest/en/manual/graphics/cameras/index.html
-            _cameraComponent = new CameraComponent
-            {
-                NearClipPlane = 0.1f,
-                FarClipPlane = 1000f,
-                UseCustomAspectRatio = false,
-                Slot = new SceneCameraSlotId() // Assign to the default camera slot - will be updated in CreateDefaultGraphicsCompositor
-            };
-            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Engine.Entity.html
-            // Entity.Add(EntityComponent) adds a component to the entity
-            // Method signature: void Add<T>(T component) where T : EntityComponent
-            // Source: https://doc.stride3d.net/latest/en/manual/entities/index.html
-            _cameraEntity.Add(_cameraComponent);
-
-            // Position camera at origin - UI is rendered in screen space, camera position doesn't matter for UI
-            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Engine.TransformComponent.html
-            // TransformComponent.Position sets the entity's world position
-            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.Vector3.html
-            // Vector3(float x, float y, float z) constructor creates a 3D position vector
-            // Method signature: Vector3(float x, float y, float z)
-            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.Quaternion.html
-            // Quaternion.Identity is a static property representing no rotation (0, 0, 0, 1)
-            // TransformComponent.Rotation sets the entity's rotation
-            // Source: https://doc.stride3d.net/latest/en/manual/entities/transforms/index.html
-            _cameraEntity.Transform.Position = new Vector3(0, 0, 10);
-            _cameraEntity.Transform.Rotation = Quaternion.Identity;
-
-            // #region agent log
-            // Access camera slot ID for logging
-            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Engine.CameraComponent.html
-            // CameraComponent.Slot property gets the camera slot ID assigned to this camera
-            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Rendering.Compositing.SceneCameraSlotId.html
-            // SceneCameraSlotId.Id property gets the unique identifier for the camera slot
-            // Method signature: uint Id { get; }
-            // Source: https://doc.stride3d.net/latest/en/manual/graphics/graphics-compositor/index.html
-            DebugLog("B", "OdysseyGame.InitializeCamera:end", "Camera entity created", "slot=" + _cameraComponent.Slot.Id);
-            // #endregion
-
-            Console.WriteLine("[Odyssey] Camera entity created (will be added to scene in BeginRun)");
+            Console.WriteLine("[Odyssey] Camera matrices initialized");
         }
 
         private void SetGameState(GameState newState)
@@ -1286,17 +1243,21 @@ namespace Odyssey.Game.Core
 
             UpdateCamera(deltaTime);
             UpdateDebugDisplay();
+
+            // Update input states for next frame
+            _lastKeyboardState = Keyboard.GetState();
+            _lastMouseState = Mouse.GetState();
         }
 
         private void ProcessInput(float deltaTime)
         {
             // Check keyboard input
-            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Input.InputManager.html
-            // IsKeyPressed(Keys) checks if a key was just pressed this frame (returns true once per press)
-            // Method signature: bool IsKeyPressed(Keys key)
-            // Keys enum defines keyboard key codes (F1, Escape, Space, etc.)
-            // Source: https://doc.stride3d.net/latest/en/manual/input/keyboard.html
-            if (Input.IsKeyPressed(Keys.F1))
+            // Based on MonoGame API: https://docs.monogame.net/api/Microsoft.Xna.Framework.Input.Keyboard.html
+            // Keyboard.GetState() gets current keyboard state, IsKeyDown(Keys) checks if key is currently pressed
+            // Method signature: static KeyboardState GetState(), bool IsKeyDown(Keys key)
+            // Source: https://docs.monogame.net/articles/getting_started/5_adding_basic_code.html
+            var keyboardState = Keyboard.GetState();
+            if (keyboardState.IsKeyDown(Keys.F1) && !_lastKeyboardState.IsKeyDown(Keys.F1))
             {
                 _showDebugInfo = !_showDebugInfo;
                 if (_hud != null)
@@ -1334,30 +1295,39 @@ namespace Odyssey.Game.Core
             if (_isPaused && _pauseMenu != null)
             {
                 _pauseMenu.HandleInput(
-                    Input.IsKeyPressed(Keys.Up) || Input.IsKeyPressed(Keys.W),
-                    Input.IsKeyPressed(Keys.Down) || Input.IsKeyPressed(Keys.S),
-                    Input.IsKeyPressed(Keys.Enter) || Input.IsKeyPressed(Keys.Space),
-                    Input.IsKeyPressed(Keys.Escape)
+                    (keyboardState.IsKeyDown(Keys.Up) && !_lastKeyboardState.IsKeyDown(Keys.Up)) || 
+                    (keyboardState.IsKeyDown(Keys.W) && !_lastKeyboardState.IsKeyDown(Keys.W)),
+                    (keyboardState.IsKeyDown(Keys.Down) && !_lastKeyboardState.IsKeyDown(Keys.Down)) || 
+                    (keyboardState.IsKeyDown(Keys.S) && !_lastKeyboardState.IsKeyDown(Keys.S)),
+                    (keyboardState.IsKeyDown(Keys.Enter) && !_lastKeyboardState.IsKeyDown(Keys.Enter)) || 
+                    (keyboardState.IsKeyDown(Keys.Space) && !_lastKeyboardState.IsKeyDown(Keys.Space)),
+                    keyboardState.IsKeyDown(Keys.Escape) && !_lastKeyboardState.IsKeyDown(Keys.Escape)
                 );
+                _lastKeyboardState = keyboardState;
                 return;
             }
 
             if (_inDialogue && _dialoguePanel != null)
             {
                 _dialoguePanel.HandleInput(
-                    Input.IsKeyPressed(Keys.Up) || Input.IsKeyPressed(Keys.W),
-                    Input.IsKeyPressed(Keys.Down) || Input.IsKeyPressed(Keys.S),
-                    Input.IsKeyPressed(Keys.Enter) || Input.IsKeyPressed(Keys.Space),
-                    Input.IsKeyPressed(Keys.Escape)
+                    (keyboardState.IsKeyDown(Keys.Up) && !_lastKeyboardState.IsKeyDown(Keys.Up)) || 
+                    (keyboardState.IsKeyDown(Keys.W) && !_lastKeyboardState.IsKeyDown(Keys.W)),
+                    (keyboardState.IsKeyDown(Keys.Down) && !_lastKeyboardState.IsKeyDown(Keys.Down)) || 
+                    (keyboardState.IsKeyDown(Keys.S) && !_lastKeyboardState.IsKeyDown(Keys.S)),
+                    (keyboardState.IsKeyDown(Keys.Enter) && !_lastKeyboardState.IsKeyDown(Keys.Enter)) || 
+                    (keyboardState.IsKeyDown(Keys.Space) && !_lastKeyboardState.IsKeyDown(Keys.Space)),
+                    keyboardState.IsKeyDown(Keys.Escape) && !_lastKeyboardState.IsKeyDown(Keys.Escape)
                 );
 
                 for (int i = 1; i <= 9; i++)
                 {
-                    if (Input.IsKeyPressed((Keys)((int)Keys.D1 + i - 1)))
+                    var key = (Keys)((int)Keys.D1 + i - 1);
+                    if (keyboardState.IsKeyDown(key) && !_lastKeyboardState.IsKeyDown(key))
                     {
                         _dialoguePanel.HandleNumberKey(i);
                     }
                 }
+                _lastKeyboardState = keyboardState;
                 return;
             }
 
@@ -1376,29 +1346,27 @@ namespace Odyssey.Game.Core
             // Method signature: bool IsMouseButtonPressed(MouseButton button)
             // MouseButton.Left represents the left mouse button
             // Source: https://doc.stride3d.net/latest/en/manual/input/mouse.html
-            if (Input.IsMouseButtonPressed(MouseButton.Left) && _playerController != null)
+            var mouseState = Mouse.GetState();
+            if (mouseState.LeftButton == ButtonState.Pressed && _lastMouseState.LeftButton == ButtonState.Released && _playerController != null)
             {
                 System.Numerics.Vector3 worldPos;
                 // Convert mouse screen position to normalized coordinates (0-1 range)
-                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Input.InputManager.html
-                // MousePosition property gets the current mouse position in screen coordinates (X, Y)
-                // Method signature: Vector2 MousePosition { get; }
-                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Games.GameWindow.html
-                // Window.ClientBounds.Width/Height get the client area dimensions in pixels
-                // Dividing MousePosition by ClientBounds dimensions converts to normalized coordinates
-                // Source: https://doc.stride3d.net/latest/en/manual/input/mouse.html
+                // Based on MonoGame API: https://docs.monogame.net/api/Microsoft.Xna.Framework.Input.Mouse.html
+                // Mouse.GetState() gets current mouse state, X/Y properties get screen position
+                // Method signature: static MouseState GetState(), int X { get; }, int Y { get; }
+                // Source: https://docs.monogame.net/articles/getting_started/5_adding_basic_code.html
                 if (_playerController.ScreenToWorld(
-                    Input.MousePosition.X / Window.ClientBounds.Width,
-                    Input.MousePosition.Y / Window.ClientBounds.Height,
+                    (float)mouseState.X / GraphicsDevice.Viewport.Width,
+                    (float)mouseState.Y / GraphicsDevice.Viewport.Height,
                     System.Numerics.Matrix4x4.Identity,
                     System.Numerics.Matrix4x4.Identity,
                     out worldPos))
                 {
-                    _playerController.MoveToPosition(worldPos, !Input.IsKeyDown(Keys.LeftShift));
+                    _playerController.MoveToPosition(worldPos, !keyboardState.IsKeyDown(Keys.LeftShift));
                 }
             }
 
-            if (Input.IsKeyPressed(Keys.Space))
+            if (keyboardState.IsKeyDown(Keys.Space) && !_lastKeyboardState.IsKeyDown(Keys.Space))
             {
                 TryInteractWithNearestObject();
             }
@@ -1407,7 +1375,8 @@ namespace Odyssey.Game.Core
         private void ProcessMainMenuInput()
         {
             // Allow escape to exit from main menu
-            if (Input.IsKeyPressed(Keys.Escape))
+            var keyboardState = Keyboard.GetState();
+            if (keyboardState.IsKeyDown(Keys.Escape) && !_lastKeyboardState.IsKeyDown(Keys.Escape))
             {
                 Exit();
             }
@@ -1417,10 +1386,8 @@ namespace Odyssey.Game.Core
 
         private void ProcessCameraInput(float deltaTime)
         {
-            if (_cameraEntity == null)
-            {
-                return;
-            }
+            // TODO: Implement camera input processing for MonoGame
+            // Camera control will be implemented based on MonoGame input APIs
 
             float moveSpeed = 20f * deltaTime;
             float rotateSpeed = 2f * deltaTime;
