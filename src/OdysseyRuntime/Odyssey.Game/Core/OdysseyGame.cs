@@ -142,7 +142,15 @@ namespace Odyssey.Game.Core
             // #endregion
 
             // Create main camera entity
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Engine.Entity.html
+            // Entity(string) constructor creates a new entity with the specified name
+            // Source: https://doc.stride3d.net/latest/en/manual/entities/index.html
             _cameraEntity = new StrideEngine.Entity("MainCamera");
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Engine.CameraComponent.html
+            // CameraComponent defines camera properties for rendering
+            // NearClipPlane/FarClipPlane set the clipping planes, UseCustomAspectRatio controls aspect ratio calculation
+            // Slot property assigns camera to a GraphicsCompositor camera slot
+            // Source: https://doc.stride3d.net/latest/en/manual/graphics/cameras/index.html
             _cameraComponent = new CameraComponent
             {
                 NearClipPlane = 0.1f,
@@ -150,9 +158,17 @@ namespace Odyssey.Game.Core
                 UseCustomAspectRatio = false,
                 Slot = new SceneCameraSlotId() // Assign to the default camera slot - will be updated in CreateDefaultGraphicsCompositor
             };
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Engine.Entity.html
+            // Entity.Add(EntityComponent) adds a component to the entity
+            // Method signature: void Add<T>(T component) where T : EntityComponent
+            // Source: https://doc.stride3d.net/latest/en/manual/entities/index.html
             _cameraEntity.Add(_cameraComponent);
 
             // Position camera at origin - UI is rendered in screen space, camera position doesn't matter for UI
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Engine.TransformComponent.html
+            // TransformComponent.Position sets the entity's world position
+            // TransformComponent.Rotation sets the entity's rotation (Quaternion.Identity = no rotation)
+            // Source: https://doc.stride3d.net/latest/en/manual/entities/transforms/index.html
             _cameraEntity.Transform.Position = new Vector3(0, 0, 10);
             _cameraEntity.Transform.Rotation = Quaternion.Identity;
 
@@ -407,25 +423,47 @@ namespace Odyssey.Game.Core
             DebugLog("D", "OdysseyGame.InitializeUI:start", "InitializeUI starting");
             // #endregion
 
+            // Create UI entity
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Engine.Entity.html
+            // Entity(string) constructor creates a new entity
             var uiEntity = new StrideEngine.Entity("UI");
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Engine.UIComponent.html
+            // UIComponent enables UI rendering on an entity
+            // Source: https://doc.stride3d.net/latest/en/manual/user-interface/index.html
             _uiComponent = new UIComponent();
 
             // CRITICAL FIX: Set resolution for UI rendering
             // Without this, UI elements won't render at all
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Engine.UIComponent.html
+            // Resolution property sets the UI resolution (width, height, depth)
+            // ResolutionStretch controls how UI scales to match screen size
+            // IsBillboard controls if UI faces camera, IsFullScreen makes UI fill entire screen
+            // RenderGroup sets which render group the UI belongs to
+            // Source: https://doc.stride3d.net/latest/en/manual/user-interface/index.html
             _uiComponent.Resolution = new Vector3(Window.ClientBounds.Width, Window.ClientBounds.Height, 1000);
             _uiComponent.ResolutionStretch = ResolutionStretch.FixedWidthAdaptableHeight;
             _uiComponent.IsBillboard = false;
             _uiComponent.IsFullScreen = true;
             _uiComponent.RenderGroup = RenderGroup.Group0;
 
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Engine.Entity.html
+            // Entity.Add(EntityComponent) adds component to entity
             uiEntity.Add(_uiComponent);
 
             // Add UI entity to scene FIRST
             try
             {
+                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Engine.Game.html
+                // Game.Services.GetService<T>() retrieves a service from the service registry
+                // SceneSystem manages scene rendering and entity management
+                // Source: https://doc.stride3d.net/latest/en/manual/entities/scenes/index.html
                 SceneSystem sceneSystem = Services.GetService<SceneSystem>();
                 if (sceneSystem != null && sceneSystem.SceneInstance != null)
                 {
+                    // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Engine.SceneInstance.html
+                    // SceneInstance.RootScene.Entities collection contains all entities in the scene
+                    // Add(Entity) adds an entity to the scene
+                    // Source: https://doc.stride3d.net/latest/en/manual/entities/scenes/index.html
                     sceneSystem.SceneInstance.RootScene.Entities.Add(uiEntity);
                     // #region agent log
                     DebugLog("D", "OdysseyGame.InitializeUI:ui_added", "UI entity added to scene");
@@ -914,9 +952,17 @@ namespace Odyssey.Game.Core
             try
             {
                 // Create a basic graphics compositor
+                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Rendering.Compositing.GraphicsCompositor.html
+                // GraphicsCompositor defines the rendering pipeline and camera slots
+                // Source: https://doc.stride3d.net/latest/en/manual/graphics/graphics-compositor/index.html
                 var compositor = new GraphicsCompositor();
 
                 // Create a camera slot
+                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Rendering.Compositing.SceneCameraSlot.html
+                // SceneCameraSlot defines a camera slot in the compositor
+                // GraphicsCompositor.Cameras collection contains all camera slots
+                // Add(SceneCameraSlot) adds a camera slot to the compositor
+                // Source: https://doc.stride3d.net/latest/en/manual/graphics/graphics-compositor/index.html
                 var cameraSlot = new SceneCameraSlot();
                 compositor.Cameras.Add(cameraSlot);
 
@@ -925,14 +971,25 @@ namespace Odyssey.Game.Core
                 // #endregion
 
                 // Create a simple game with just a scene renderer for UI
+                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Rendering.Compositing.SceneRendererCollection.html
+                // SceneRendererCollection is a container for multiple renderers
+                // Children collection contains child renderers executed in order
+                // Source: https://doc.stride3d.net/latest/en/manual/graphics/graphics-compositor/index.html
                 var sceneRenderer = new SceneRendererCollection();
 
                 // Add a clear renderer to clear the background - THIS IS CRITICAL
+                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Rendering.Compositing.ClearRenderer.html
+                // ClearRenderer clears the render target with a specified color
+                // Color property sets the clear color (Color4: R, G, B, A)
+                // ClearFlags specifies what to clear (ColorAndDepth clears both color and depth buffers)
+                // Source: https://doc.stride3d.net/latest/en/manual/graphics/graphics-compositor/index.html
                 var clearRenderer = new ClearRenderer
                 {
                     Color = new Color4(0.04f, 0.04f, 0.12f, 1f), // Dark blue
                     ClearFlags = ClearRendererFlags.ColorAndDepth
                 };
+                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Rendering.Compositing.SceneRendererCollection.html
+                // Children.Add(ISceneRenderer) adds a renderer to the collection
                 sceneRenderer.Children.Add(clearRenderer);
 
                 // #region agent log
@@ -940,6 +997,9 @@ namespace Odyssey.Game.Core
                 // #endregion
 
                 // Add the single render stage for 3D content and UI
+                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Rendering.Compositing.SingleStageRenderer.html
+                // SingleStageRenderer renders the scene in a single render stage
+                // Source: https://doc.stride3d.net/latest/en/manual/graphics/graphics-compositor/index.html
                 var singleStageRenderer = new SingleStageRenderer();
                 sceneRenderer.Children.Add(singleStageRenderer);
 
@@ -949,11 +1009,19 @@ namespace Odyssey.Game.Core
                 sceneRenderer.Children.Add(_fallbackMenuRenderer);
 
                 // Create game entry point
+                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Rendering.Compositing.GraphicsCompositor.html
+                // GraphicsCompositor.Game property sets the root renderer for game rendering
+                // Method signature: ISceneRenderer Game { get; set; }
+                // Source: https://doc.stride3d.net/latest/en/manual/graphics/graphics-compositor/index.html
                 var game = new SceneRendererCollection();
                 game.Children.Add(sceneRenderer);
                 compositor.Game = game;
 
                 // Update our camera component to use this slot
+                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Engine.CameraComponent.html
+                // CameraComponent.Slot property assigns camera to a specific camera slot
+                // SceneCameraSlotId wraps the slot identifier
+                // Source: https://doc.stride3d.net/latest/en/manual/graphics/cameras/index.html
                 if (_cameraComponent != null)
                 {
                     _cameraComponent.Slot = new SceneCameraSlotId(cameraSlot.Id);
@@ -963,6 +1031,10 @@ namespace Odyssey.Game.Core
                 }
 
                 // Set the compositor - ALWAYS replace the default one
+                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Engine.SceneSystem.html
+                // SceneSystem.GraphicsCompositor property sets the active graphics compositor
+                // Method signature: GraphicsCompositor GraphicsCompositor { get; set; }
+                // Source: https://doc.stride3d.net/latest/en/manual/graphics/graphics-compositor/index.html
                 sceneSystem.GraphicsCompositor = compositor;
 
                 // #region agent log
@@ -1633,14 +1705,27 @@ namespace Odyssey.Game.Core
 
             // CRITICAL: First set the render target to the back buffer
             // Without this, rendering may go to the wrong target (black screen)
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Graphics.GraphicsDevice.html
+            // GraphicsDevice.Presenter provides access to the presentation surface
+            // Presenter.BackBuffer is the main render target, Presenter.DepthStencilBuffer is the depth buffer
+            // Source: https://doc.stride3d.net/latest/en/manual/graphics/low-level-api/index.html
             if (GraphicsDevice?.Presenter?.BackBuffer != null && GraphicsDevice?.Presenter?.DepthStencilBuffer != null)
             {
+                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Graphics.CommandList.html
+                // CommandList.SetRenderTargetAndViewport(Texture, Texture) sets render target and viewport
+                // Method signature: void SetRenderTargetAndViewport(Texture depthStencilBuffer, Texture renderTarget)
+                // Source: https://doc.stride3d.net/latest/en/manual/graphics/low-level-api/index.html
                 GraphicsContext.CommandList.SetRenderTargetAndViewport(
                     GraphicsDevice.Presenter.DepthStencilBuffer,
                     GraphicsDevice.Presenter.BackBuffer);
 
                 // Clear with a solid dark blue background
                 // This ensures we ALWAYS have a visible background, not transparent/black
+                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Graphics.CommandList.html
+                // CommandList.Clear(Texture, Color4) clears a render target with a color
+                // CommandList.Clear(Texture, DepthStencilClearOptions) clears depth/stencil buffer
+                // Method signatures: void Clear(Texture renderTarget, Color4 color), void Clear(Texture depthStencilBuffer, DepthStencilClearOptions options)
+                // Source: https://doc.stride3d.net/latest/en/manual/graphics/low-level-api/index.html
                 GraphicsContext.CommandList.Clear(GraphicsDevice.Presenter.BackBuffer, new Color4(0.04f, 0.04f, 0.12f, 1f));
                 GraphicsContext.CommandList.Clear(GraphicsDevice.Presenter.DepthStencilBuffer, DepthStencilClearOptions.DepthBuffer);
             }
