@@ -34,7 +34,7 @@ namespace CSharpKOTOR.Formats.TwoDA
             {
                 _twoda = new TwoDA();
 
-                Reader.BaseStream.Seek(0, SeekOrigin.Begin);
+                Reader.Seek(0);
 
                 // Read header
                 string fileType = Encoding.ASCII.GetString(Reader.ReadBytes(4));

@@ -61,12 +61,12 @@ namespace CSharpKOTOR.Formats.ERF
 
                 _erf = new ERF(erfType.Value);
 
-                Reader.BaseStream.Seek(8, SeekOrigin.Current); // Skip 8 bytes
+                Reader.SeekRelative(8); // Skip 8 bytes
                 uint entryCount = Reader.ReadUInt32();
                 Reader.SeekRelative(4); // Skip 4 bytes
                 uint offsetToKeys = Reader.ReadUInt32();
                 uint offsetToResources = Reader.ReadUInt32();
-                Reader.BaseStream.Seek(8, SeekOrigin.Current); // Skip 8 bytes
+                Reader.SeekRelative(8); // Skip 8 bytes
                 uint descriptionStrref = Reader.ReadUInt32();
 
                 if (descriptionStrref == 0 && fileType == ERFTypeExtensions.ToFourCC(ERFType.MOD))
