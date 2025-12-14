@@ -580,7 +580,7 @@ namespace Odyssey.Game.Core
                         int padding = 10;
                         int thickness = 4;
                         // Top-left to bottom-right
-                        DrawDiagonalLine(_spriteBatch, 
+                        DrawDiagonalLine(_spriteBatch,
                             iconRect.X + padding, iconRect.Y + padding,
                             iconRect.X + iconSize - padding, iconRect.Y + iconSize - padding,
                             thickness, iconColor);
@@ -1209,7 +1209,7 @@ namespace Odyssey.Game.Core
             for (int i = 0; i < area.Rooms.Count; i++)
             {
                 var room = area.Rooms[i];
-            {
+                
                 if (string.IsNullOrEmpty(room.ModelName))
                 {
                     continue;
