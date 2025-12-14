@@ -188,17 +188,27 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
 
                 // CRITICAL: Ensure mainStart is ALWAYS after globals and entry stub
                 // If entryJsrTarget points to globals range (0 to entryStubEnd), ignore it
-                if (entryJsrTarget >= 0 && entryJsrTarget > entryStubEnd)
+                // Also ignore if entryJsrTarget points to the last RETN (likely wrong target)
+                // The last RETN is typically at instructions.Count - 1
+                bool entryJsrTargetIsLastRetn = (entryJsrTarget >= 0 && entryJsrTarget == instructions.Count - 1);
+                if (entryJsrTarget >= 0 && entryJsrTarget > entryStubEnd && !entryJsrTargetIsLastRetn)
                 {
-                    // entryJsrTarget is valid and after entry stub - use it
+                    // entryJsrTarget is valid and after entry stub and not the last RETN - use it
                     mainStart = entryJsrTarget;
                     JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Using entryJsrTarget {entryJsrTarget} as mainStart (after entry stub at {entryStubEnd})");
                 }
                 else
                 {
-                    // entryJsrTarget is invalid or points to globals - use entryStubEnd
+                    // entryJsrTarget is invalid, points to globals, or points to last RETN - use entryStubEnd
                     mainStart = entryStubEnd;
-                    JavaSystem.@out.Println($"DEBUG NcsToAstConverter: entryJsrTarget {entryJsrTarget} invalid or in globals range, using entryStubEnd {entryStubEnd} as mainStart");
+                    if (entryJsrTargetIsLastRetn)
+                    {
+                        JavaSystem.@out.Println($"DEBUG NcsToAstConverter: entryJsrTarget {entryJsrTarget} points to last RETN, using entryStubEnd {entryStubEnd} as mainStart");
+                    }
+                    else
+                    {
+                        JavaSystem.@out.Println($"DEBUG NcsToAstConverter: entryJsrTarget {entryJsrTarget} invalid or in globals range, using entryStubEnd {entryStubEnd} as mainStart");
+                    }
                 }
             }
             else
