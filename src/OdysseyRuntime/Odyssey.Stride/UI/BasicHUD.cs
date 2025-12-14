@@ -302,6 +302,10 @@ namespace Odyssey.Stride.UI
             _healthText.Text = ((int)_currentHealth).ToString() + "/" + ((int)_maxHealth).ToString();
 
             // Change color based on health
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.Color.html
+            // Color.DarkRed is a static property representing dark red color
+            // Color.Orange is a static property representing orange color
+            // Source: https://doc.stride3d.net/latest/en/manual/graphics/colors.html
             if (ratio < 0.25f)
             {
                 _healthBar.BackgroundColor = Color.DarkRed;
