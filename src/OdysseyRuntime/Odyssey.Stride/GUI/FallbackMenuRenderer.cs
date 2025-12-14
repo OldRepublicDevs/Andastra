@@ -251,38 +251,72 @@ namespace Odyssey.Stride.GUI
             // Draw panel border (thick white border)
             float borderThickness = 6;
             // Top border
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Graphics.SpriteBatch.html
+            // Draw(Texture, RectangleF, Color) - same method as documented above, drawing top border
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.RectangleF.html
+            // RectangleF(float x, float y, float width, float height) - same constructor as above
             _spriteBatch.Draw(_whiteTexture,
                 new RectangleF(_mainPanelRect.X, _mainPanelRect.Y, _mainPanelRect.Width, borderThickness),
                 _borderColor);
             // Bottom border
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Graphics.SpriteBatch.html
+            // Draw(Texture, RectangleF, Color) - same method as above, drawing bottom border
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.RectangleF.html
+            // RectangleF(float x, float y, float width, float height) - same constructor as above
             _spriteBatch.Draw(_whiteTexture,
                 new RectangleF(_mainPanelRect.X, _mainPanelRect.Y + _mainPanelRect.Height - borderThickness,
                     _mainPanelRect.Width, borderThickness),
                 _borderColor);
             // Left border
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Graphics.SpriteBatch.html
+            // Draw(Texture, RectangleF, Color) - same method as above, drawing left border
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.RectangleF.html
+            // RectangleF(float x, float y, float width, float height) - same constructor as above
             _spriteBatch.Draw(_whiteTexture,
                 new RectangleF(_mainPanelRect.X, _mainPanelRect.Y, borderThickness, _mainPanelRect.Height),
                 _borderColor);
             // Right border
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Graphics.SpriteBatch.html
+            // Draw(Texture, RectangleF, Color) - same method as above, drawing right border
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.RectangleF.html
+            // RectangleF(float x, float y, float width, float height) - same constructor as above
             _spriteBatch.Draw(_whiteTexture,
                 new RectangleF(_mainPanelRect.X + _mainPanelRect.Width - borderThickness, _mainPanelRect.Y,
                     borderThickness, _mainPanelRect.Height),
                 _borderColor);
 
             // Draw header (golden bar)
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Graphics.SpriteBatch.html
+            // Draw(Texture, RectangleF, Color) - same method as above, drawing header rectangle
             _spriteBatch.Draw(_whiteTexture, _headerRect, _headerColor);
             // Header border
             float headerBorderThickness = 4;
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Graphics.SpriteBatch.html
+            // Draw(Texture, RectangleF, Color) - same method as above, drawing header top border
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.RectangleF.html
+            // RectangleF(float x, float y, float width, float height) - same constructor as above
             _spriteBatch.Draw(_whiteTexture,
                 new RectangleF(_headerRect.X, _headerRect.Y, _headerRect.Width, headerBorderThickness),
                 _borderColor);
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Graphics.SpriteBatch.html
+            // Draw(Texture, RectangleF, Color) - same method as above, drawing header bottom border
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.RectangleF.html
+            // RectangleF(float x, float y, float width, float height) - same constructor as above
             _spriteBatch.Draw(_whiteTexture,
                 new RectangleF(_headerRect.X, _headerRect.Y + _headerRect.Height - headerBorderThickness,
                     _headerRect.Width, headerBorderThickness),
                 _borderColor);
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Graphics.SpriteBatch.html
+            // Draw(Texture, RectangleF, Color) - same method as above, drawing header left border
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.RectangleF.html
+            // RectangleF(float x, float y, float width, float height) - same constructor as above
             _spriteBatch.Draw(_whiteTexture,
                 new RectangleF(_headerRect.X, _headerRect.Y, headerBorderThickness, _headerRect.Height),
                 _borderColor);
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Graphics.SpriteBatch.html
+            // Draw(Texture, RectangleF, Color) - same method as above, drawing header right border
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.RectangleF.html
+            // RectangleF(float x, float y, float width, float height) - same constructor as above
             _spriteBatch.Draw(_whiteTexture,
                 new RectangleF(_headerRect.X + _headerRect.Width - headerBorderThickness, _headerRect.Y,
                     headerBorderThickness, _headerRect.Height),
@@ -302,19 +336,35 @@ namespace Odyssey.Stride.GUI
                 // Button border (white, thicker when selected)
                 float btnBorderThickness = (i == _selectedIndex) ? 6 : 4;
                 // Top
+                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Graphics.SpriteBatch.html
+                // Draw(Texture, RectangleF, Color) - same method as above, drawing button top border
+                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.RectangleF.html
+                // RectangleF(float x, float y, float width, float height) - same constructor as above
                 _spriteBatch.Draw(_whiteTexture,
                     new RectangleF(button.Rect.X, button.Rect.Y, button.Rect.Width, btnBorderThickness),
                     _borderColor);
                 // Bottom
+                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Graphics.SpriteBatch.html
+                // Draw(Texture, RectangleF, Color) - same method as above, drawing button bottom border
+                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.RectangleF.html
+                // RectangleF(float x, float y, float width, float height) - same constructor as above
                 _spriteBatch.Draw(_whiteTexture,
                     new RectangleF(button.Rect.X, button.Rect.Y + button.Rect.Height - btnBorderThickness,
                         button.Rect.Width, btnBorderThickness),
                     _borderColor);
                 // Left
+                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Graphics.SpriteBatch.html
+                // Draw(Texture, RectangleF, Color) - same method as above, drawing button left border
+                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.RectangleF.html
+                // RectangleF(float x, float y, float width, float height) - same constructor as above
                 _spriteBatch.Draw(_whiteTexture,
                     new RectangleF(button.Rect.X, button.Rect.Y, btnBorderThickness, button.Rect.Height),
                     _borderColor);
                 // Right
+                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Graphics.SpriteBatch.html
+                // Draw(Texture, RectangleF, Color) - same method as above, drawing button right border
+                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.RectangleF.html
+                // RectangleF(float x, float y, float width, float height) - same constructor as above
                 _spriteBatch.Draw(_whiteTexture,
                     new RectangleF(button.Rect.X + button.Rect.Width - btnBorderThickness, button.Rect.Y,
                         btnBorderThickness, button.Rect.Height),
