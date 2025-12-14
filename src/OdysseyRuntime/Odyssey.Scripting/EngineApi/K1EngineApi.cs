@@ -3588,7 +3588,7 @@ namespace Odyssey.Scripting.EngineApi
             // For now, just remove from world immediately
             if (ctx.World != null)
             {
-                ctx.World.DestroyEntity(entity);
+                ctx.World.DestroyEntity(entity.ObjectId);
             }
             
             return Variable.Void();
