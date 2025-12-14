@@ -274,6 +274,11 @@ namespace Odyssey.Game.Core
                     // CRITICAL FIX: Camera must ALWAYS be in scene for rendering to work
                     // Removing the camera causes the purple screen because Stride needs an active camera
                     // to render anything, including UI. Keep camera in scene for all states.
+                    // Check if camera is already in scene
+                    // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Engine.SceneInstance.html
+                    // SceneInstance.RootScene.Entities collection contains all entities in the scene
+                    // Contains(Entity) checks if entity is in the collection, Add(Entity) adds entity to scene
+                    // Source: https://doc.stride3d.net/latest/en/manual/entities/scenes/index.html
                     if (!sceneSystem.SceneInstance.RootScene.Entities.Contains(_cameraEntity))
                     {
                         sceneSystem.SceneInstance.RootScene.Entities.Add(_cameraEntity);
