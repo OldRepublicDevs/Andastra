@@ -468,7 +468,8 @@ namespace Odyssey.Stride.GUI
                 BorderColor = new Color(255, 255, 255, 255), // Bright white border
                 BorderThickness = new Thickness(6, 6, 6, 6),
                 HorizontalAlignment = HorizontalAlignment.Left,
-                VerticalAlignment = VerticalAlignment.Top
+                VerticalAlignment = VerticalAlignment.Top,
+                IsHitTestVisible = true
             };
             mainPanel.SetCanvasRelativePosition(new Vector3(panelX, panelY, 0));
             _rootCanvas.Children.Add(mainPanel);
