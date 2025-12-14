@@ -1013,6 +1013,9 @@ namespace Odyssey.Game.Core
                 // Source: https://doc.stride3d.net/latest/en/manual/graphics/graphics-compositor/index.html
                 var clearRenderer = new ClearRenderer
                 {
+                    // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.Color4.html
+                    // Color4(float r, float g, float b, float a) creates a color from RGBA float values (0.0-1.0)
+                    // Source: https://doc.stride3d.net/latest/en/manual/graphics/colors.html
                     Color = new Color4(0.04f, 0.04f, 0.12f, 1f), // Dark blue
                     ClearFlags = ClearRendererFlags.ColorAndDepth
                 };
@@ -1265,6 +1268,9 @@ namespace Odyssey.Game.Core
             // IsKeyDown(Keys) checks if a key is currently held down (returns true while key is pressed)
             // Method signature: bool IsKeyDown(Keys key)
             // Source: https://doc.stride3d.net/latest/en/manual/input/keyboard.html
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.Vector3.html
+            // Vector3.Zero is a static property representing the zero vector (0, 0, 0)
+            // Source: https://doc.stride3d.net/latest/en/manual/mathematics/index.html
             Vector3 movement = Vector3.Zero;
             if (Input.IsKeyDown(Keys.W))
             {
@@ -1800,7 +1806,12 @@ namespace Odyssey.Game.Core
                 // CommandList.Clear(Texture, DepthStencilClearOptions) clears depth/stencil buffer
                 // Method signatures: void Clear(Texture renderTarget, Color4 color), void Clear(Texture depthStencilBuffer, DepthStencilClearOptions options)
                 // Source: https://doc.stride3d.net/latest/en/manual/graphics/low-level-api/index.html
+                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.Color4.html
+                // Color4(float r, float g, float b, float a) creates a color from RGBA float values
                 GraphicsContext.CommandList.Clear(GraphicsDevice.Presenter.BackBuffer, new Color4(0.04f, 0.04f, 0.12f, 1f));
+                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Graphics.DepthStencilClearOptions.html
+                // DepthStencilClearOptions.DepthBuffer clears only the depth buffer
+                // Source: https://doc.stride3d.net/latest/en/manual/graphics/low-level-api/index.html
                 GraphicsContext.CommandList.Clear(GraphicsDevice.Presenter.DepthStencilBuffer, DepthStencilClearOptions.DepthBuffer);
             }
 
