@@ -2408,9 +2408,11 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
             }
 
             // Parameters are removed from the AST children list using removeLastExp, which removes from the end
-            // The order in which they're removed depends on how they were added to the AST
-            // Based on testing, they appear to be in the correct order already, so no reversal needed
-            JavaSystem.@out.Println("DEBUG removeActionParams: returning " + @params.Count + " params, remaining children=" + (this.current.HasChildren() ? this.current.Size() : 0));
+            // Since parameters are pushed onto the stack in function signature order (first param pushed last),
+            // and we remove from the end, we get them in reverse order (last param first).
+            // We need to reverse them to match the function signature order.
+            @params.Reverse();
+            JavaSystem.@out.Println("DEBUG removeActionParams: returning " + @params.Count + " params (reversed), remaining children=" + (this.current.HasChildren() ? this.current.Size() : 0));
             return @params;
         }
 
