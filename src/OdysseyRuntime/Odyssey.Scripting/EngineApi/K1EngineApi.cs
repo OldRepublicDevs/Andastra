@@ -254,10 +254,7 @@ namespace Odyssey.Scripting.EngineApi
                 case 200: return Func_GetObjectByTag(args, ctx);
                 case 226: return Func_GetNearestCreatureToLocation(args, ctx);
                 case 227: return Func_GetNearestObject(args, ctx);
-                case 228: return Func_GetNearestObjectToLocation(args, ctx);
                 case 229: return Func_GetNearestObjectByTag(args, ctx);
-                case 230: return Func_IntToFloat(args, ctx);
-                case 231: return Func_FloatToInt(args, ctx);
                 case 239: return Func_GetStringByStrRef(args, ctx);
                 case 240: return Func_ActionSpeakStringByStrRef(args, ctx);
                 case 241: return Func_DestroyObject(args, ctx);
@@ -2355,9 +2352,21 @@ namespace Odyssey.Scripting.EngineApi
         }
 
         // Effect placeholders
+        /// <summary>
+        /// EffectAssuredHit() - Creates an effect that guarantees the next attack will hit
+        /// </summary>
         private Variable Func_EffectAssuredHit(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
-            return Variable.FromEffect(new object());
+            // EffectAssuredHit creates an effect that makes the next attack automatically hit
+            // This is typically used for special abilities or Force powers
+            // In KOTOR, this might be represented as an attack bonus effect or a special flag
+            var effect = new Combat.Effect(Combat.EffectType.AttackIncrease)
+            {
+                Amount = 1000, // Very high bonus to guarantee hit
+                DurationType = Combat.EffectDurationType.Temporary,
+                Duration = 1 // Lasts for 1 round (next attack only)
+            };
+            return Variable.FromEffect(effect);
         }
 
         private Variable Func_GetLastItemEquipped(IReadOnlyList<Variable> args, IExecutionContext ctx)
@@ -2452,9 +2461,31 @@ namespace Odyssey.Scripting.EngineApi
             return Variable.FromInt(0);
         }
 
+        /// <summary>
+        /// GetCasterLevel(object oCreature=OBJECT_SELF) - Returns the caster level of a creature
+        /// </summary>
         private Variable Func_GetCasterLevel(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
-            return Variable.FromInt(1);
+            uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
+            IEntity entity = ResolveObject(objectId, ctx);
+            
+            if (entity != null)
+            {
+                Core.Interfaces.Components.IStatsComponent stats = entity.GetComponent<Core.Interfaces.Components.IStatsComponent>();
+                if (stats != null)
+                {
+                    // Caster level in KOTOR is typically based on character level or Force user level
+                    // For now, return a default value - this would need to be calculated based on:
+                    // - Character level
+                    // - Force user class levels (Jedi Consular, Jedi Guardian, Jedi Sentinel)
+                    // - Prestige class levels (Jedi Master, Sith Lord, etc.)
+                    // TODO: Implement proper caster level calculation based on class levels
+                    // For now, return 1 as a placeholder
+                    return Variable.FromInt(1);
+                }
+            }
+            
+            return Variable.FromInt(0);
         }
 
         /// <summary>
