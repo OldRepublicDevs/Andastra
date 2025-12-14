@@ -95,8 +95,16 @@ namespace Odyssey.Stride.UI
 
             // Center panel
             // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.Controls.Border.html
+            // Border() constructor creates a new border control
             // Border draws a border around content, BackgroundColor/BorderColor/BorderThickness set appearance
+            // Method signature: Border()
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.Color.html
+            // Color(byte r, byte g, byte b, byte a) constructor creates background color
+            // Method signature: Color(byte r, byte g, byte b, byte a)
             // HorizontalAlignment/VerticalAlignment.Center centers the border
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.Thickness.html
+            // Thickness(float, float, float, float) constructor creates border thickness
+            // Method signature: Thickness(float left, float top, float right, float bottom)
             // Source: https://doc.stride3d.net/latest/en/manual/user-interface/controls.html
             var centerPanel = new Border
             {
@@ -113,7 +121,12 @@ namespace Odyssey.Stride.UI
             };
 
             // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.Panels.StackPanel.html
+            // StackPanel() constructor creates a new stack panel
             // StackPanel arranges children vertically, Margin sets spacing
+            // Method signature: StackPanel()
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.Thickness.html
+            // Thickness(float, float, float, float) - same constructor as above
+            // Source: https://doc.stride3d.net/latest/en/manual/user-interface/layout-and-panels.html
             var contentPanel = new StackPanel
             {
                 Orientation = Orientation.Vertical,
@@ -121,12 +134,18 @@ namespace Odyssey.Stride.UI
             };
 
             // Title
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.Controls.TextBlock.html
+            // TextBlock() constructor creates a new text block element
+            // Method signature: TextBlock()
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.Color.html
+            // Color.Gold static property - same as documented above
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.Thickness.html
+            // Thickness(float, float, float, float) - same constructor as above
+            // Source: https://doc.stride3d.net/latest/en/manual/user-interface/controls.html
             var title = new TextBlock
             {
                 Font = _font,
                 TextSize = 28,
-                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.Color.html
-                // Color.Gold static property - same as above
                 TextColor = Color.Gold,
                 Text = "PAUSED",
                 HorizontalAlignment = HorizontalAlignment.Center,
@@ -163,15 +182,28 @@ namespace Odyssey.Stride.UI
 
         private Button CreateMenuButton(string text, EventHandler<RoutedEventArgs> clickHandler)
         {
+            // Create menu button
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.Controls.Button.html
+            // Button() constructor creates a new button control
+            // Method signature: Button()
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.Controls.TextBlock.html
+            // TextBlock() constructor creates text content for button
+            // Method signature: TextBlock()
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.Color.html
+            // Color.White is a static property representing white color (R=255, G=255, B=255, A=255)
+            // Source: https://doc.stride3d.net/latest/en/manual/graphics/colors.html
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.Color.html
+            // Color(byte r, byte g, byte b, byte a) constructor creates button background color
+            // Method signature: Color(byte r, byte g, byte b, byte a)
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.Thickness.html
+            // Thickness(float, float, float, float) - same constructor as above
+            // Source: https://doc.stride3d.net/latest/en/manual/user-interface/controls.html
             var button = new Button
             {
                 Content = new TextBlock
                 {
                     Font = _font,
                     TextSize = 20,
-                    // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.Color.html
-                    // Color.White is a static property representing white color (R=255, G=255, B=255, A=255)
-                    // Source: https://doc.stride3d.net/latest/en/manual/graphics/colors.html
                     TextColor = Color.White,
                     Text = text,
                     HorizontalAlignment = HorizontalAlignment.Center

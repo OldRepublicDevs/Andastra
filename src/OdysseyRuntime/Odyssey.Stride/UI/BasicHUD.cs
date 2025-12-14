@@ -186,17 +186,38 @@ namespace Odyssey.Stride.UI
             out Border bar,
             out TextBlock text)
         {
+            // Create grid for stat bar layout
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.Panels.Grid.html
+            // Grid() constructor creates a new grid panel
+            // Method signature: Grid()
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.Thickness.html
+            // Thickness(float left, float top, float right, float bottom) constructor creates spacing
+            // Method signature: Thickness(float left, float top, float right, float bottom)
+            // Source: https://doc.stride3d.net/latest/en/manual/user-interface/layout-and-panels.html
             var grid = new Grid
             {
                 Margin = new Thickness(10, 5, 10, 5),
                 Height = 25
             };
 
+            // Define grid columns
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.Panels.StripDefinition.html
+            // StripDefinition(StripType.Fixed, float) - Fixed type sets fixed pixel width
             grid.ColumnDefinitions.Add(new StripDefinition(StripType.Fixed, 30));  // Label
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.Panels.StripDefinition.html
+            // StripDefinition(StripType.Star, float) - Star type fills remaining space proportionally
             grid.ColumnDefinitions.Add(new StripDefinition(StripType.Star, 1));    // Bar
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.Panels.StripDefinition.html
+            // StripDefinition(StripType.Fixed, float) - same constructor as above
             grid.ColumnDefinitions.Add(new StripDefinition(StripType.Fixed, 60));  // Text
 
             // Label
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.Controls.TextBlock.html
+            // TextBlock() constructor creates a new text block element
+            // Method signature: TextBlock()
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.Color.html
+            // Color.White static property - same as documented above
+            // Source: https://doc.stride3d.net/latest/en/manual/user-interface/controls.html
             var labelText = new TextBlock
             {
                 Font = _font,
@@ -210,8 +231,16 @@ namespace Odyssey.Stride.UI
 
             // Bar background
             // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.Controls.Border.html
+            // Border() constructor creates a new border control
             // Border is a control that draws a border around content
+            // Method signature: Border()
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.Color.html
+            // Color(byte r, byte g, byte b, byte a) constructor creates background color
+            // Method signature: Color(byte r, byte g, byte b, byte a)
             // BackgroundColor sets background, BorderColor sets border color, BorderThickness sets border width
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.Thickness.html
+            // Thickness(float, float, float, float) constructor creates border thickness
+            // Method signature: Thickness(float left, float top, float right, float bottom)
             // Source: https://doc.stride3d.net/latest/en/manual/user-interface/controls.html
             background = new Border
             {
@@ -228,7 +257,13 @@ namespace Odyssey.Stride.UI
             grid.Children.Add(background);
 
             // Bar fill
-            // Border used as progress bar fill, HorizontalAlignment.Left aligns to left edge
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.Controls.Border.html
+            // Border() constructor creates a new border control used as progress bar fill
+            // Method signature: Border()
+            // HorizontalAlignment.Left aligns to left edge
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.Thickness.html
+            // Thickness(float, float, float, float) - same constructor as above
+            // Source: https://doc.stride3d.net/latest/en/manual/user-interface/controls.html
             bar = new Border
             {
                 BackgroundColor = barColor,
@@ -241,6 +276,14 @@ namespace Odyssey.Stride.UI
             grid.Children.Add(bar);
 
             // Text value
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.Controls.TextBlock.html
+            // TextBlock() constructor creates a new text block element
+            // Method signature: TextBlock()
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.Color.html
+            // Color.White static property - same as documented above
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.Thickness.html
+            // Thickness(float, float, float, float) - same constructor as above
+            // Source: https://doc.stride3d.net/latest/en/manual/user-interface/controls.html
             text = new TextBlock
             {
                 Font = _font,
