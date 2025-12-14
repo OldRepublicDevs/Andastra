@@ -1,10 +1,10 @@
 # Odyssey Engine Roadmap
 
-A clean-room Odyssey engine reimplementation using Stride Game Engine and C#. This document outlines the implementation roadmap for a 100% faithful recreation of the KOTOR 1/2 engine with extensibility for other Aurora/Eclipse family games.
+A clean-room Odyssey engine reimplementation using MonoGame and C#. This document outlines the implementation roadmap for a 100% faithful recreation of the KOTOR 1/2 engine with extensibility for other Aurora/Eclipse family games.
 
 ## Overview
 
-**Goal**: A playable, faithful KOTOR1/KOTOR2 runtime built on **Stride**, with modular libraries reusable by tooling and future "Odyssey-family" games.
+**Goal**: A playable, faithful KOTOR1/KOTOR2 runtime built on **MonoGame**, with modular libraries reusable by tooling and future "Odyssey-family" games.
 
 **Core Deliverables**:
 
@@ -22,12 +22,12 @@ A clean-room Odyssey engine reimplementation using Stride Game Engine and C#. Th
 
 ```
 src/OdysseyRuntime/
-├── Odyssey.Core/       - Pure domain, no Stride dependency
+├── Odyssey.Core/       - Pure domain, no MonoGame dependency
 ├── Odyssey.Content/    - Asset conversion/caching pipeline
 ├── Odyssey.Scripting/  - NCS VM + NWScript host surface
 ├── Odyssey.Kotor/      - K1/K2 rule modules, data tables
-├── Odyssey.Stride/     - Stride adapters: rendering, physics, audio, UI
-├── Odyssey.Game/       - Stride executable/launcher
+├── Odyssey.MonoGame/   - MonoGame adapters: rendering, audio, UI
+├── Odyssey.Game/       - MonoGame executable/launcher
 ├── Odyssey.Tests/      - Deterministic tests
 └── Odyssey.Tooling/    - Headless import/validation commands
 ```
@@ -36,7 +36,7 @@ src/OdysseyRuntime/
 
 1. **Data/Formats layer (existing)**: `CSharpKOTOR` - Installation lookup, precedence, all file formats
 2. **Runtime domain layer**: Game-agnostic runtime concepts (entity, components, world state, time, events)
-3. **Stride integration layer**: Mapping runtime entities → Stride entities/components
+3. **MonoGame integration layer**: Mapping runtime entities → MonoGame rendering structures
 4. **Game rules layer**: K1/K2-specific rulesets and data-driven interpretation
 
 ## Phase 1: Foundation (Current)
@@ -67,19 +67,19 @@ src/OdysseyRuntime/
 
 ## Phase 2: Content Pipeline
 
-### 2.1 Asset Pipeline (KOTOR → Stride)
+### 2.1 Asset Pipeline (KOTOR → MonoGame)
 
-- [ ] **Textures**: TPC/TGA → Stride.Texture
+- [ ] **Textures**: TPC/TGA → Texture2D
   - [ ] Alpha handling, normal maps, mipmaps
   - [ ] sRGB/linear rules from TXI
-- [ ] **Models**: MDL/MDX → Stride.Model
+- [ ] **Models**: MDL/MDX → Model
   - [ ] Geometry, skinning, animations
   - [ ] Attachment nodes
 - [x] **Walkmesh**: BWM → NavigationMesh (`BwmToNavigationMeshConverter`)
   - [x] Triangle adjacency decoding
   - [x] AABB tree for spatial queries
   - [x] Surface materials from surfacemat.2da
-- [ ] **Audio**: WAV decode → Stride.AudioClip
+- [ ] **Audio**: WAV decode → SoundEffect
 
 ### 2.2 Content Cache
 
@@ -487,6 +487,6 @@ ActionCastSpellAtObject, GetHasSpell, Effect creators, etc.
 
 ## References
 
-- **Specifications**: `.cursor/plans/stride_odyssey_engine_e8927e4a.plan.md`
+- **Specifications**: `.cursor/plans/monogame_odyssey_engine_e8927e4a.plan.md`
 - **Format Documentation**: CSharpKOTOR format parsers
 - **Clean-Room Process**: Derived from behavioral observation and specifications only

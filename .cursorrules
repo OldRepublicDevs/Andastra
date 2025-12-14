@@ -262,11 +262,11 @@ When working on Odyssey Engine code (anything in `src/OdysseyRuntime/`), AI agen
 2. **Reference Documentation**:
    - Primary: `vendor/PyKotor/wiki/` for file format documentation
    - Secondary: `vendor/PyKotor/vendor/xoreos-docs/` for official BioWare specs
-   - Implementation plan: `.cursor/plans/stride_odyssey_engine_e8927e4a.plan.md`
+   - Implementation plan: `.cursor/plans/monogame_odyssey_engine_e8927e4a.plan.md`
    - Roadmap: `docs/engine_roadmap.md`
 
 3. **CRITICAL: External API Documentation Research**:
-   When implementing ANY external API usage (Stride, .NET Framework, third-party libraries) in `src/OdysseyRuntime/`, AI agents MUST:
+   When implementing ANY external API usage (MonoGame, .NET Framework, third-party libraries) in `src/OdysseyRuntime/`, AI agents MUST:
 
    **Required Workflow**:
    1. **Search**: Use `mcp_context7_get-library-docs`, `mcp_firecrawl_firecrawl_search`, `mcp_tavily_tavily-search`, or `web_search` to find official API documentation
@@ -291,14 +291,14 @@ When working on Odyssey Engine code (anything in `src/OdysseyRuntime/`), AI agen
 
    ```csharp
    // Begin sprite batch
-   // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Graphics.SpriteBatch.html
-   // Begin(GraphicsContext, SpriteSortMode, BlendStateDescription?, ...)
-   // Passing null for blendState uses default (BlendState.AlphaBlend equivalent)
-   _spriteBatch.Begin(drawContext.GraphicsContext, SpriteSortMode.Deferred, null);
+   // Based on MonoGame API: https://docs.monogame.net/api/Microsoft.Xna.Framework.Graphics.SpriteBatch.html
+   // Begin(SpriteSortMode, BlendState, SamplerState, DepthStencilState, RasterizerState, Effect, Matrix?)
+   // SpriteSortMode.Deferred batches all draw calls for efficiency
+   _spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend);
 
-   // Access viewport from GraphicsDevice.Presenter.BackBuffer.Viewport
-   // Based on Stride documentation: https://doc.stride3d.net/4.0/en/Manual/graphics/low-level-api/textures-and-render-textures.html
-   var viewport = GraphicsDevice.Presenter.BackBuffer.Viewport;
+   // Access viewport from GraphicsDevice.Viewport
+   // Based on MonoGame documentation: https://docs.monogame.net/api/Microsoft.Xna.Framework.Graphics.Viewport.html
+   var viewport = GraphicsDevice.Viewport;
    ```
 
    **Requirements**:
@@ -313,11 +313,11 @@ When working on Odyssey Engine code (anything in `src/OdysseyRuntime/`), AI agen
    - Document any deviations or improvements
 
 5. **Code Organization**:
-   - `Odyssey.Core` - Pure domain, no Stride dependency
+   - `Odyssey.Core` - Pure domain, no MonoGame dependency
    - `Odyssey.Content` - Asset conversion/caching
    - `Odyssey.Scripting` - NCS VM + NWScript API
    - `Odyssey.Kotor` - K1/K2 specific rules
-   - `Odyssey.Stride` - Stride rendering adapters
+   - `Odyssey.MonoGame` - MonoGame rendering adapters
    - `Odyssey.Game` - Executable launcher
 
 6. **Maintain C# 7.3 Compatibility**: Even in OdysseyRuntime projects
@@ -330,7 +330,7 @@ When working on Odyssey Engine code (anything in `src/OdysseyRuntime/`), AI agen
 ┌─────────────────────────────────────────────────────────────┐
 │                    Odyssey.Game (Executable)                │
 ├─────────────────────────────────────────────────────────────┤
-│  Odyssey.Stride     │  Odyssey.Kotor      │  Odyssey.Content│
+│  Odyssey.MonoGame   │  Odyssey.Kotor      │  Odyssey.Content│
 │  (Rendering)        │  (Game Rules)       │  (Asset Pipeline)│
 ├─────────────────────────────────────────────────────────────┤
 │                    Odyssey.Scripting (NCS VM)               │
@@ -343,10 +343,10 @@ When working on Odyssey Engine code (anything in `src/OdysseyRuntime/`), AI agen
 
 **Dependency Rules**:
 
-- `Odyssey.Core` MUST NOT reference Stride, CSharpKOTOR.Formats, or game-specific code
-- `Odyssey.Scripting` MUST NOT reference Stride
+- `Odyssey.Core` MUST NOT reference MonoGame, CSharpKOTOR.Formats, or game-specific code
+- `Odyssey.Scripting` MUST NOT reference MonoGame
 - `Odyssey.Content` may reference CSharpKOTOR for format parsing
-- `Odyssey.Stride` may reference Stride and Odyssey.Core
+- `Odyssey.MonoGame` may reference MonoGame and Odyssey.Core
 - `Odyssey.Kotor` may reference all Odyssey.* except Odyssey.Game
 
 **Dependency Direction**:
@@ -355,7 +355,7 @@ When working on Odyssey Engine code (anything in `src/OdysseyRuntime/`), AI agen
 - Content → Core, CSharpKOTOR
 - Scripting → Core
 - Kotor → Core, Content, Scripting
-- Stride → Core, Content, Kotor (adapter layer)
+- MonoGame → Core, Content, Kotor (adapter layer)
 - Game → All
 
 **No Game Assets**: The runtime must load from user-provided KOTOR/TSL installation. Never ship game assets.
@@ -364,7 +364,7 @@ When working on Odyssey Engine code (anything in `src/OdysseyRuntime/`), AI agen
 
 When implementing features, follow this order to avoid rework:
 
-1. Foundation: projects, config, Stride window
+1. Foundation: projects, config, MonoGame window
 2. Resource provider: wrap CSharpKOTOR.Installation
 3. Content cache: texture/model decode
 4. Area rendering: LYT + VIS + room meshes
@@ -387,7 +387,7 @@ Follow this fixed-timestep game loop pattern (60 Hz simulation):
 2. Script Phase     // Process delay wheel, heartbeats, action queues
 3. Simulation Phase // Entity positions, perception, combat rounds
 4. Animation Phase  // Skeletal animations, particles, lip sync
-5. Scene Sync Phase // Runtime transforms → Stride scene graph
+5. Scene Sync Phase // Runtime transforms → MonoGame rendering structures
 6. Render Phase     // VIS culling, transparency sort, draw calls
 7. Audio Phase      // Spatial audio positions, trigger one-shots
 ```
@@ -500,7 +500,7 @@ Design for extensibility to other engines:
 
 - Keep `IGameProfile` interface for game-specific behavior
 - Game rules in `Odyssey.Kotor`, not `Odyssey.Core`
-- Stride-only logic/code is allowed in OdysseyRunner. Keep ANY AND ALL other code in a shared library named CSharpKOTOR.
+- MonoGame-only logic/code is allowed in OdysseyRunner. Keep ANY AND ALL other code in a shared library named CSharpKOTOR.
 
 ### Clean-Room Process
 
