@@ -1446,10 +1446,15 @@ namespace Odyssey.Scripting.EngineApi
             {
                 effect = directEffect;
             }
+            else if (effectObj != null)
+            {
+                // Try to extract Effect from Variable wrapper or other container
+                // For now, if it's not an Effect, we can't process it
+                Console.WriteLine($"[K1EngineApi] ApplyEffectToObject: Invalid effect type: {effectObj.GetType().Name}");
+                return Variable.Void();
+            }
             else
             {
-                // TODO: Convert from script effect type to Effect
-                // For now, return void
                 return Variable.Void();
             }
 
@@ -1684,7 +1689,14 @@ namespace Odyssey.Scripting.EngineApi
 
         private Variable Func_EffectACIncrease(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
-            return Variable.FromEffect(new object());
+            // EffectACIncrease(int nBonus)
+            int bonus = args.Count > 0 ? args[0].AsInt() : 0;
+            var effect = new Effect(EffectType.ACIncrease)
+            {
+                Amount = bonus,
+                DurationType = EffectDurationType.Permanent
+            };
+            return Variable.FromEffect(effect);
         }
 
         private Variable Func_GetAC(IReadOnlyList<Variable> args, IExecutionContext ctx)
