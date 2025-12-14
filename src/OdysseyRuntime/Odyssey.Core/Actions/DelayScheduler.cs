@@ -6,6 +6,16 @@ namespace Odyssey.Core.Actions
     /// <summary>
     /// Scheduler for delayed actions using a priority queue.
     /// </summary>
+    /// <remarks>
+    /// Delay Scheduler:
+    /// - Based on swkotor2.exe DelayCommand system
+    /// - Located via string references: DelayCommand implementation schedules actions for future execution
+    /// - Original implementation: DelayCommand NWScript function schedules actions to execute after specified delay
+    /// - Uses priority queue sorted by execution time to efficiently process delayed actions
+    /// - Delayed actions execute in order based on schedule time
+    /// - STORE_STATE opcode in NCS VM stores stack/local state for DelayCommand semantics
+    /// - Actions are queued to target entity's action queue when delay expires
+    /// </remarks>
     public class DelayScheduler : IDelayScheduler
     {
         private readonly List<DelayedAction> _delayedActions;
@@ -50,12 +60,12 @@ namespace Odyssey.Core.Actions
             // Process all actions that are due
             while (_delayedActions.Count > 0 && _delayedActions[0].ExecuteTime <= _currentTime)
             {
-                var delayed = _delayedActions[0];
+                DelayedAction delayed = _delayedActions[0];
                 _delayedActions.RemoveAt(0);
 
                 if (delayed.Target.IsValid)
                 {
-                    var actionQueue = delayed.Target.GetComponent<IActionQueue>();
+                    IActionQueue actionQueue = delayed.Target.GetComponent<IActionQueue>();
                     if (actionQueue != null)
                     {
                         actionQueue.Add(delayed.Action);
@@ -95,7 +105,7 @@ namespace Odyssey.Core.Actions
 
         public void ClearAll()
         {
-            foreach (var delayed in _delayedActions)
+            foreach (DelayedAction delayed in _delayedActions)
             {
                 delayed.Action.Dispose();
             }
