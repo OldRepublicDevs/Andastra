@@ -36,7 +36,7 @@ namespace CSharpKOTOR.Formats.RIM
             {
                 _rim = new RIM();
 
-                Reader.BaseStream.Seek(0, SeekOrigin.Begin);
+                Reader.Seek(0);
 
                 string fileType = Encoding.ASCII.GetString(Reader.ReadBytes(4));
                 string fileVersion = Encoding.ASCII.GetString(Reader.ReadBytes(4));
@@ -51,7 +51,7 @@ namespace CSharpKOTOR.Formats.RIM
                     throw new InvalidDataException("The RIM version that was loaded is not supported.");
                 }
 
-                Reader.BaseStream.Seek(4, SeekOrigin.Current); // Skip 4 bytes
+                Reader.SeekRelative(4); // Skip 4 bytes
                 uint entryCount = Reader.ReadUInt32();
                 uint offsetToKeys = Reader.ReadUInt32();
 
@@ -61,7 +61,7 @@ namespace CSharpKOTOR.Formats.RIM
                 var resoffsets = new List<uint>();
                 var ressizes = new List<uint>();
 
-                Reader.BaseStream.Seek(offsetToKeys, SeekOrigin.Begin);
+                Reader.Seek((int)offsetToKeys);
                 for (uint i = 0; i < entryCount; i++)
                 {
                     string resrefStr = Encoding.ASCII.GetString(Reader.ReadBytes(16)).TrimEnd('\0');
@@ -74,7 +74,7 @@ namespace CSharpKOTOR.Formats.RIM
 
                 for (int i = 0; i < entryCount; i++)
                 {
-                    Reader.BaseStream.Seek((int)resoffsets[i], SeekOrigin.Begin);
+                    Reader.Seek((int)resoffsets[i]);
                     byte[] resdata = Reader.ReadBytes((int)ressizes[i]);
                     ResourceType resType = ResourceType.FromId((int)restypes[i]);
                     _rim.SetData(resrefs[i], resType, resdata);

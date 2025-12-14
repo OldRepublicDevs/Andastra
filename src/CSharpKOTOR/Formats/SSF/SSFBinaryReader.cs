@@ -45,7 +45,7 @@ namespace CSharpKOTOR.Formats.SSF
                 }
 
                 uint soundsOffset = Reader.ReadUInt32();
-                Reader.BaseStream.Seek(soundsOffset, SeekOrigin.Begin);
+                Reader.Seek((int)soundsOffset);
 
                 // Read all 28 sound references in order
                 ssf.SetData(SSFSound.BATTLE_CRY_1, ReadInt32MaxNeg1());

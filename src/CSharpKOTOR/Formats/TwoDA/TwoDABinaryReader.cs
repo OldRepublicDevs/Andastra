@@ -50,7 +50,7 @@ namespace CSharpKOTOR.Formats.TwoDA
                     throw new InvalidDataException("The 2DA version that was loaded is not supported.");
                 }
 
-                Reader.ReadByte(); // \n
+                Reader.ReadUInt8(); // \n
 
                 // Read column headers
                 var columns = new List<string>();
@@ -61,7 +61,7 @@ namespace CSharpKOTOR.Formats.TwoDA
                     columns.Add(columnHeader);
                 }
 
-                Reader.ReadByte(); // \0
+                Reader.ReadUInt8(); // \0
 
                 // Read row count and row labels
                 uint rowCount = Reader.ReadUInt32();
@@ -82,7 +82,7 @@ namespace CSharpKOTOR.Formats.TwoDA
                 }
 
                 Reader.ReadUInt16(); // data size (not used during reading)
-                long cellDataOffset = Reader.BaseStream.Position;
+                int cellDataOffset = Reader.Position;
 
                 // Read cell values
                 for (int i = 0; i < cellCount; i++)
@@ -91,7 +91,7 @@ namespace CSharpKOTOR.Formats.TwoDA
                     int rowId = i / columnCount;
                     string columnHeader = columns[columnId];
 
-                    Reader.BaseStream.Seek(cellDataOffset + cellOffsets[i], SeekOrigin.Begin);
+                    Reader.Seek(cellDataOffset + cellOffsets[i]);
                     string cellValue = ReadTerminatedString('\0');
                     _twoda.SetCellString(rowId, columnHeader, cellValue);
                 }
@@ -106,9 +106,9 @@ namespace CSharpKOTOR.Formats.TwoDA
 
         private byte Peek()
         {
-            long pos = Reader.BaseStream.Position;
-            byte b = Reader.ReadByte();
-            Reader.BaseStream.Seek(pos, SeekOrigin.Begin);
+            int pos = Reader.Position;
+            byte b = Reader.ReadUInt8();
+            Reader.Seek(pos);
             return b;
         }
 
@@ -117,7 +117,7 @@ namespace CSharpKOTOR.Formats.TwoDA
             var sb = new StringBuilder();
             while (true)
             {
-                byte b = Reader.ReadByte();
+                byte b = Reader.ReadUInt8();
                 if (b == terminator)
                 {
                     break;

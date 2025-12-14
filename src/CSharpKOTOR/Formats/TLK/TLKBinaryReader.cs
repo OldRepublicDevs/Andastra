@@ -54,7 +54,7 @@ namespace CSharpKOTOR.Formats.TLK
                 _textsOffset = 0;
                 _textHeaders.Clear();
 
-                Reader.BaseStream.Seek(0, SeekOrigin.Begin);
+                Reader.Seek(0);
 
                 LoadFileHeader();
 
@@ -128,7 +128,7 @@ namespace CSharpKOTOR.Formats.TLK
             (int offset, int length) textHeader = _textHeaders[stringref];
             TLKEntry entry = _tlk.Entries[stringref];
 
-            Reader.BaseStream.Seek(textHeader.offset + _textsOffset, SeekOrigin.Begin);
+            Reader.Seek(textHeader.offset + _textsOffset);
 
             // Get encoding for the language
             Encoding encoding = GetEncodingForLanguage(_tlk.Language);

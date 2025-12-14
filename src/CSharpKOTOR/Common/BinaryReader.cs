@@ -168,16 +168,6 @@ namespace CSharpKOTOR.Common
         {
             Seek(_position + offset);
         }
-        {
-            // Check if the absolute position is valid
-            if (position < 0)
-            {
-                throw new IOException($"Cannot seek to a negative position: {position}");
-            }
-            if (position > _size)
-            {
-                throw new IOException($"Cannot seek to position {position}, file size is {_size}");
-            }
             _stream.Seek(position + _offset, SeekOrigin.Begin);
             _position = position;
         }

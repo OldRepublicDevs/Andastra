@@ -34,7 +34,7 @@ namespace CSharpKOTOR.Formats.ERF
         {
             try
             {
-                Reader.BaseStream.Seek(0, SeekOrigin.Begin);
+                Reader.Seek(0);
 
                 string fileType = Encoding.ASCII.GetString(Reader.ReadBytes(4));
                 string fileVersion = Encoding.ASCII.GetString(Reader.ReadBytes(4));
@@ -63,7 +63,7 @@ namespace CSharpKOTOR.Formats.ERF
 
                 Reader.BaseStream.Seek(8, SeekOrigin.Current); // Skip 8 bytes
                 uint entryCount = Reader.ReadUInt32();
-                Reader.BaseStream.Seek(4, SeekOrigin.Current); // Skip 4 bytes
+                Reader.SeekRelative(4); // Skip 4 bytes
                 uint offsetToKeys = Reader.ReadUInt32();
                 uint offsetToResources = Reader.ReadUInt32();
                 Reader.BaseStream.Seek(8, SeekOrigin.Current); // Skip 8 bytes
@@ -78,20 +78,20 @@ namespace CSharpKOTOR.Formats.ERF
                 var resids = new List<uint>();
                 var restypes = new List<ushort>();
 
-                Reader.BaseStream.Seek(offsetToKeys, SeekOrigin.Begin);
+                Reader.Seek((int)offsetToKeys);
                 for (uint i = 0; i < entryCount; i++)
                 {
                     string resrefStr = Encoding.ASCII.GetString(Reader.ReadBytes(16)).TrimEnd('\0');
                     resrefs.Add(resrefStr.ToLowerInvariant());
                     resids.Add(Reader.ReadUInt32());
                     restypes.Add(Reader.ReadUInt16());
-                    Reader.BaseStream.Seek(2, SeekOrigin.Current); // Skip 2 bytes
+                    Reader.SeekRelative(2); // Skip 2 bytes
                 }
 
                 var resoffsets = new List<uint>();
                 var ressizes = new List<uint>();
 
-                Reader.BaseStream.Seek(offsetToResources, SeekOrigin.Begin);
+                Reader.Seek((int)offsetToResources);
                 for (uint i = 0; i < entryCount; i++)
                 {
                     resoffsets.Add(Reader.ReadUInt32());
@@ -100,7 +100,7 @@ namespace CSharpKOTOR.Formats.ERF
 
                 for (int i = 0; i < entryCount; i++)
                 {
-                    Reader.BaseStream.Seek(resoffsets[i], SeekOrigin.Begin);
+                    Reader.Seek((int)resoffsets[i]);
                     byte[] resdata = Reader.ReadBytes((int)ressizes[i]);
                     ResourceType resType = ResourceType.FromId(restypes[i]);
                     _erf.SetData(resrefs[i], resType, resdata);
