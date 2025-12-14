@@ -10,7 +10,7 @@ def get_pykotor_modules():
     """Get all Python modules from PyKotor."""
     pykotor_root = Path(__file__).parent.parent / "vendor" / "PyKotor" / "Libraries" / "PyKotor" / "src"
     modules = {}
-    
+
     for py_file in pykotor_root.rglob("*.py"):
         if "__pycache__" in str(py_file) or py_file.name == "__init__.py":
             continue
@@ -23,7 +23,7 @@ def get_csharp_files():
     """Get all C# files from CSharpKOTOR."""
     csharp_root = Path(__file__).parent.parent / "src" / "CSharpKOTOR"
     files = {}
-    
+
     for cs_file in csharp_root.rglob("*.cs"):
         rel_path = cs_file.relative_to(csharp_root)
         file_path = str(rel_path.with_suffix("")).replace(os.sep, ".")
@@ -38,10 +38,10 @@ def map_python_to_csharp(python_path):
     elif python_path.startswith("utility."):
         python_path = python_path[8:]
         return f"Utility.{python_path}"
-    
+
     # Map common patterns
     parts = python_path.split(".")
-    
+
     # Format specific mappings
     if len(parts) > 1 and parts[0] == "resource" and parts[1] == "formats":
         # pykotor.resource.formats.gff -> CSharpKOTOR.Formats.GFF
@@ -49,24 +49,24 @@ def map_python_to_csharp(python_path):
         if len(parts) > 3:
             return f"Formats.{format_name}.{'.'.join(parts[3:])}"
         return f"Formats.{format_name}"
-    
+
     # Generic mapping: pykotor.module.submodule -> CSharpKOTOR.Module.Submodule
     return ".".join(p.title() for p in parts)
 
 def main():
     pykotor_modules = get_pykotor_modules()
     csharp_files = get_csharp_files()
-    
+
     print(f"Found {len(pykotor_modules)} Python modules")
     print(f"Found {len(csharp_files)} C# files")
     print("\n=== Module Analysis ===\n")
-    
+
     # Group by top-level module
     by_module = defaultdict(list)
     for module_path in sorted(pykotor_modules.keys()):
         top_level = module_path.split(".")[0]
         by_module[top_level].append(module_path)
-    
+
     for top_level in sorted(by_module.keys()):
         modules = by_module[top_level]
         print(f"\n{top_level} ({len(modules)} modules):")
