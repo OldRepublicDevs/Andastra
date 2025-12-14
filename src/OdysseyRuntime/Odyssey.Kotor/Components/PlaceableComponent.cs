@@ -7,7 +7,13 @@ namespace Odyssey.Kotor.Components
     /// Component for placeable entities (containers, furniture, etc.).
     /// </summary>
     /// <remarks>
-    /// Based on UTP file format documentation.
+    /// Placeable Component:
+    /// - Based on swkotor2.exe placeable system
+    /// - Located via string references: "Placeable" @ 0x007bc530, "Placeable List" @ 0x007bd260
+    /// - "Placeables" @ 0x007c4bd0, "placeableobjsnds" @ 0x007c4bf0
+    /// - Original implementation: Placeables have appearance, useability, locks, inventory, HP
+    /// - Based on UTP file format (GFF with "UTP " signature)
+    /// - Script events: OnUsed, OnOpen, OnClose, OnLock, OnUnlock, OnDamaged, OnDeath
     /// </remarks>
     public class PlaceableComponent : IPlaceableComponent
     {
