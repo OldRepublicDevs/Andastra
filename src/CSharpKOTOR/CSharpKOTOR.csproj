@@ -136,6 +136,7 @@
 
   <ItemGroup>
     <EmbeddedResource Include="Formats\NCS\NCSDecomp\lexer.dat" />
+    <EmbeddedResource Include="Formats\NCS\NCSDecomp\parser.dat" />
   </ItemGroup>
 
 </Project>
