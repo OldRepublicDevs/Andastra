@@ -633,7 +633,7 @@ namespace Odyssey.Content.MDL
             }
             else
             {
-                mesh.Indices = new ushort[0];
+                mesh.Indices = Array.Empty<ushort>();
             }
 
             // Read vertex data from MDX
