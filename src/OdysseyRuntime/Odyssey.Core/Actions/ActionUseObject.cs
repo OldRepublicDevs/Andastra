@@ -25,6 +25,14 @@ namespace Odyssey.Core.Actions
     /// Action to use/interact with an object (door, placeable, etc.).
     /// Based on NWScript ActionUseObject semantics.
     /// </summary>
+    /// <remarks>
+    /// Use Object Action:
+    /// - Based on swkotor2.exe object interaction system
+    /// - Original implementation: Moves actor to use point (BWM hook vector), faces target, triggers OnUsed script
+    /// - Use distance: ~2.0 units (configurable per object type)
+    /// - Objects can specify use point via BWM hook vectors (for doors, placeables)
+    /// - Script events: OnUsed (placeables), OnOpen/OnClose (doors), OnClick (triggers)
+    /// </remarks>
     public class ActionUseObject : ActionBase
     {
         private readonly uint _targetObjectId;

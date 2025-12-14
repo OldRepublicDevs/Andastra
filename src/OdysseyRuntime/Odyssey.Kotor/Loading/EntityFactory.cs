@@ -15,6 +15,13 @@ namespace Odyssey.Kotor.Loading
     /// Factory for creating runtime entities from GFF templates.
     /// </summary>
     /// <remarks>
+    /// Entity Factory System:
+    /// - Based on swkotor2.exe entity creation system
+    /// - Located via string references: "TemplateResRef" @ 0x007bd00c, "ScriptHeartbeat" @ 0x007beeb0
+    /// - "tmpgit" @ 0x007be618 (temporary GIT structure references)
+    /// - Original implementation: Creates runtime entities from GIT instance data and GFF templates
+    /// - Entities created from GIT instances override template values with instance-specific data
+    ///
     /// GFF Template Types:
     /// - UTC → Creature (Appearance_Type, Faction, HP, Attributes, Feats, Scripts)
     /// - UTP → Placeable (Appearance, Useable, Locked, OnUsed)
