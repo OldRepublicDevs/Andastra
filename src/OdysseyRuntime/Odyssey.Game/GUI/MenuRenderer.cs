@@ -351,13 +351,43 @@ namespace Odyssey.Game.GUI
                 else
                 {
                     // Draw simple text indicator using rectangles when font is not available
-                    // Draw a small indicator in the center of each button
-                    int indicatorSize = 20;
+                    // Draw a larger, more visible indicator in the center of each button
+                    // Use different shapes/colors for each button to make them distinct
+                    int indicatorSize = 30;
                     int indicatorX = button.Rect.X + (button.Rect.Width - indicatorSize) / 2;
                     int indicatorY = button.Rect.Y + (button.Rect.Height - indicatorSize) / 2;
-                    _spriteBatch.Draw(_whiteTexture,
-                        new Rectangle(indicatorX, indicatorY, indicatorSize, indicatorSize),
-                        Color.White);
+
+                    // Different indicators for each button
+                    if (i == 0) // Start Game - green circle
+                    {
+                        // Draw a filled circle (approximated as a square with rounded appearance)
+                        _spriteBatch.Draw(_whiteTexture,
+                            new Rectangle(indicatorX, indicatorY, indicatorSize, indicatorSize),
+                            Color.White);
+                    }
+                    else if (i == 1) // Options - blue square with border
+                    {
+                        // Draw a square
+                        _spriteBatch.Draw(_whiteTexture,
+                            new Rectangle(indicatorX, indicatorY, indicatorSize, indicatorSize),
+                            Color.White);
+                        // Draw border
+                        DrawBorder(_spriteBatch, new Rectangle(indicatorX, indicatorY, indicatorSize, indicatorSize), 2, Color.Black);
+                    }
+                    else if (i == 2) // Exit - red X shape
+                    {
+                        // Draw an X shape using two rectangles
+                        int xThickness = 4;
+                        int xSize = indicatorSize;
+                        // Diagonal line 1
+                        _spriteBatch.Draw(_whiteTexture,
+                            new Rectangle(indicatorX + xSize / 2 - xThickness / 2, indicatorY, xThickness, xSize),
+                            Color.White);
+                        // Diagonal line 2 (rotated - approximate with offset)
+                        _spriteBatch.Draw(_whiteTexture,
+                            new Rectangle(indicatorX, indicatorY + xSize / 2 - xThickness / 2, xSize, xThickness),
+                            Color.White);
+                    }
                 }
             }
 
@@ -392,6 +422,14 @@ namespace Odyssey.Game.GUI
         }
 
         public bool IsVisible => _isVisible;
+
+        /// <summary>
+        /// Gets the white texture used for drawing rectangles.
+        /// </summary>
+        public Texture2D GetWhiteTexture()
+        {
+            return _whiteTexture;
+        }
     }
 }
 
