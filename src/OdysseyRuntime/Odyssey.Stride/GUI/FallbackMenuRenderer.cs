@@ -3,8 +3,6 @@ using Stride.Core;
 using Stride.Core.Mathematics;
 using Stride.Engine;
 using Stride.Graphics;
-using Stride.Graphics; // For GraphicsDevice
-using Stride.Graphics; // Explicit import for GraphicsDevice (not already provided)
 using Stride.Input;
 using Stride.Rendering;
 using Stride.Rendering.Compositing;
@@ -80,34 +78,18 @@ namespace Odyssey.Stride.GUI
 
             // Initialize sprite batch
             _spriteBatch = new SpriteBatch(GraphicsDevice);
-            
-            // Create 1x1 white texture for drawing rectangles
-            // Note: We'll initialize the texture data lazily in DrawCore if needed
-            _whiteTexture = Texture.New2D(GraphicsDevice, 1, 1, PixelFormat.R8G8B8A8_UNorm, TextureFlags.ShaderResource, 1);
-            
-            // Initialize texture data - set white color
-            try
-            {
-                var colorData = new Color[1] { Color.White };
-                GraphicsDevice.ImmediateContext.UpdateSubresource(colorData, _whiteTexture);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"[FallbackMenuRenderer] WARNING: Could not initialize white texture data: {ex.Message}");
-                // This is okay - we can still use the texture, it will just be uninitialized
-            }
-            
-            Console.WriteLine("[FallbackMenuRenderer] SpriteBatch and white texture created successfully");
 
-            // Calculate menu layout
-            CalculateLayout();
+            // Create 1x1 white texture for drawing rectangles
+            // Based on Stride documentation: https://doc.stride3d.net/latest/en/manual/graphics/low-level-api/textures-and-render-textures.html
+            // Texture.New2D creates the texture, no need to set data - SpriteBatch.Draw will handle color tinting
+            _whiteTexture = Texture.New2D(GraphicsDevice, 1, 1, PixelFormat.R8G8B8A8_UNorm, TextureFlags.ShaderResource);
+
+            Console.WriteLine("[FallbackMenuRenderer] SpriteBatch and white texture created successfully");
         }
 
-        private void CalculateLayout()
+        private void CalculateLayout(float screenWidth, float screenHeight)
         {
-            var viewport = GraphicsDevice.Presenter.BackBuffer.Viewport;
-            float screenWidth = viewport.Width;
-            float screenHeight = viewport.Height;
+            // Calculate layout based on screen dimensions
 
             _screenCenter = new Vector2(screenWidth * 0.5f, screenHeight * 0.5f);
 
@@ -162,9 +144,17 @@ namespace Odyssey.Stride.GUI
                 return;
 
             // Begin sprite batch
-            _spriteBatch.Begin(drawContext.GraphicsContext, BlendState.AlphaBlend, null, null, null);
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Graphics.SpriteBatch.html
+            // Begin(GraphicsContext, SpriteSortMode, BlendStateDescription?, ...)
+            // Passing null for blendState uses default (BlendState.AlphaBlend equivalent)
+            _spriteBatch.Begin(drawContext.GraphicsContext, SpriteSortMode.Deferred, null);
 
+            // Access viewport from GraphicsDevice.Presenter.BackBuffer.Viewport
+            // Based on Stride documentation: https://doc.stride3d.net/4.0/en/Manual/graphics/low-level-api/textures-and-render-textures.html
             var viewport = GraphicsDevice.Presenter.BackBuffer.Viewport;
+            
+            // Calculate layout based on current viewport (may change on window resize)
+            CalculateLayout(viewport.Width, viewport.Height);
 
             // Draw background (full screen dark blue)
             _spriteBatch.Draw(_whiteTexture,
