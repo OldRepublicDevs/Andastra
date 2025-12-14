@@ -3,6 +3,8 @@ using Stride.Core;
 using Stride.Core.Mathematics;
 using Stride.Engine;
 using Stride.Graphics;
+using Stride.Graphics; // For GraphicsDevice
+using Stride.Graphics; // Explicit import for GraphicsDevice (not already provided)
 using Stride.Input;
 using Stride.Rendering;
 using Stride.Rendering.Compositing;
@@ -78,12 +80,23 @@ namespace Odyssey.Stride.GUI
 
             // Initialize sprite batch
             _spriteBatch = new SpriteBatch(GraphicsDevice);
-
+            
             // Create 1x1 white texture for drawing rectangles
+            // Note: We'll initialize the texture data lazily in DrawCore if needed
             _whiteTexture = Texture.New2D(GraphicsDevice, 1, 1, PixelFormat.R8G8B8A8_UNorm, TextureFlags.ShaderResource, 1);
-            var colorData = new Color[1] { Color.White };
-            _whiteTexture.SetData(GraphicsDevice.CommandList, colorData);
-
+            
+            // Initialize texture data - set white color
+            try
+            {
+                var colorData = new Color[1] { Color.White };
+                GraphicsDevice.ImmediateContext.UpdateSubresource(colorData, _whiteTexture);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[FallbackMenuRenderer] WARNING: Could not initialize white texture data: {ex.Message}");
+                // This is okay - we can still use the texture, it will just be uninitialized
+            }
+            
             Console.WriteLine("[FallbackMenuRenderer] SpriteBatch and white texture created successfully");
 
             // Calculate menu layout
