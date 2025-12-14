@@ -6,6 +6,7 @@ using CSharpKOTOR.Formats.GFF;
 using CSharpKOTOR.Logger;
 using CSharpKOTOR.Resources;
 using static CSharpKOTOR.Common.GameExtensions;
+using GFFAuto = CSharpKOTOR.Formats.GFF.GFFAuto;
 
 namespace CSharpKOTOR.Resource.Generics
 {
@@ -387,6 +388,32 @@ namespace CSharpKOTOR.Resource.Generics
             }
 
             return gff;
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/utc.py:957-976
+        // Original: def read_utc(source: SOURCE_TYPES, offset: int = 0, size: int | None = None) -> UTC:
+        public static UTC ReadUtc(byte[] data, int offset = 0, int size = -1)
+        {
+            byte[] dataToRead = data;
+            if (size > 0 && offset + size <= data.Length)
+            {
+                dataToRead = new byte[size];
+                System.Array.Copy(data, offset, dataToRead, 0, size);
+            }
+            GFF gff = GFF.FromBytes(dataToRead);
+            return ConstructUtc(gff);
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/utc.py:978-993
+        // Original: def bytes_utc(utc: UTC, game: Game = Game.K2, file_format: ResourceType = ResourceType.GFF) -> bytes:
+        public static byte[] BytesUtc(UTC utc, Game game = Game.K2, ResourceType fileFormat = null)
+        {
+            if (fileFormat == null)
+            {
+                fileFormat = ResourceType.UTC;
+            }
+            GFF gff = DismantleUtc(utc, game);
+            return GFFAuto.BytesGff(gff, fileFormat);
         }
     }
 }
