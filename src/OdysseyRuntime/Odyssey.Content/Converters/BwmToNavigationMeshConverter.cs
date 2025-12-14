@@ -11,9 +11,13 @@ namespace Odyssey.Content.Converters
     /// Converts CSharpKOTOR BWM walkmesh data to Odyssey NavigationMesh.
     /// </summary>
     /// <remarks>
-    /// Based on BWM file format documentation.
+    /// BWM to NavigationMesh Converter:
+    /// - Based on swkotor2.exe walkmesh/navigation system
+    /// - Located via string references: "walkmesh" pathfinding functions, "nwsareapathfind.cpp"
+    /// - Original implementation: Converts BWM walkmesh data into navigation mesh for pathfinding
     /// - WOK files (area walkmesh) include AABB trees and walkable adjacency
     /// - PWK/DWK files (placeable/door walkmesh) are collision-only, no AABB tree
+    /// - Based on BWM file format documentation in vendor/PyKotor/wiki/BWM-File-Format.md
     /// </remarks>
     public static class BwmToNavigationMeshConverter
     {
@@ -46,7 +50,7 @@ namespace Odyssey.Content.Converters
             var faceIndices = new List<int>();
             var surfaceMaterials = new List<int>();
 
-            foreach (var face in bwm.Faces)
+            foreach (BWMFace face in bwm.Faces)
             {
                 // Get or add each vertex
                 int v1Idx = GetOrAddVertex(vertexList, vertexMap, face.V1);
@@ -104,7 +108,7 @@ namespace Odyssey.Content.Converters
             var faceIndices = new List<int>();
             var surfaceMaterials = new List<int>();
 
-            foreach (var face in bwm.Faces)
+            foreach (BWMFace face in bwm.Faces)
             {
                 // Apply offset when converting vertices
                 int v1Idx = GetOrAddVertexWithOffset(vertexList, vertexMap, face.V1, offset);
@@ -216,7 +220,7 @@ namespace Odyssey.Content.Converters
             }
 
             // Get walkable faces for adjacency computation
-            var walkable = bwm.WalkableFaces();
+            List<BWMFace> walkable = bwm.WalkableFaces();
             if (walkable.Count == 0)
             {
                 return adjacency;
@@ -230,7 +234,7 @@ namespace Odyssey.Content.Converters
             }
 
             // Compute adjacencies for each walkable face
-            foreach (var face in walkable)
+            foreach (BWMFace face in walkable)
             {
                 int faceIdx;
                 if (!faceToIndex.TryGetValue(face, out faceIdx))
@@ -238,7 +242,7 @@ namespace Odyssey.Content.Converters
                     continue;
                 }
 
-                var adj = bwm.Adjacencies(face);
+                Tuple<BWMAdjacency, BWMAdjacency, BWMAdjacency> adj = bwm.Adjacencies(face);
 
                 // Edge 0 adjacency
                 if (adj.Item1 != null && faceToIndex.ContainsKey(adj.Item1.Face))
@@ -271,7 +275,7 @@ namespace Odyssey.Content.Converters
         private static NavigationMesh.AabbNode BuildAabbTree(BWM bwm, Vector3[] vertices, int[] faces)
         {
             // Use CSharpKOTOR's AABB generation
-            var aabbs = bwm.Aabbs();
+            List<BWMNodeAABB> aabbs = bwm.Aabbs();
             if (aabbs.Count == 0)
             {
                 return null;
@@ -287,7 +291,7 @@ namespace Odyssey.Content.Converters
             // Convert AABB nodes
             var nodeMap = new Dictionary<BWMNodeAABB, NavigationMesh.AabbNode>();
 
-            foreach (var aabb in aabbs)
+            foreach (BWMNodeAABB aabb in aabbs)
             {
                 int faceIndex = -1;
                 if (aabb.Face != null && faceToIndex.ContainsKey(aabb.Face))
@@ -305,9 +309,9 @@ namespace Odyssey.Content.Converters
             }
 
             // Link children
-            foreach (var aabb in aabbs)
+            foreach (BWMNodeAABB aabb in aabbs)
             {
-                var node = nodeMap[aabb];
+                NavigationMesh.AabbNode node = nodeMap[aabb];
                 if (aabb.Left != null && nodeMap.ContainsKey(aabb.Left))
                 {
                     node.Left = nodeMap[aabb.Left];
