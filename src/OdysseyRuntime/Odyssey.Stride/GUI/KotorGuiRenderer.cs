@@ -451,16 +451,28 @@ namespace Odyssey.Stride.GUI
                 {
                     alpha = (float)control.Properties["ALPHA"];
                 }
+                // Set element opacity
+                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.UIElement.html
+                // Opacity property controls element transparency (0.0 = fully transparent, 1.0 = fully opaque)
+                // Source: https://doc.stride3d.net/latest/en/manual/user-interface/index.html
                 element.Opacity = alpha;
             }
 
             // Set name for identification
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.UIElement.html
+            // Name property sets the element's name for identification and event handling
+            // Source: https://doc.stride3d.net/latest/en/manual/user-interface/index.html
             element.Name = control.Tag ?? $"Control_{control.Id}";
         }
 
         /// <summary>
         /// Converts CSharpKOTOR Color to Stride Color.
         /// </summary>
+        // Convert CSharpKOTOR color to Stride Color
+        // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.Color.html
+        // Color represents RGBA color values, Color.White is a static property for white color
+        // Color constructor: Color(byte r, byte g, byte b, byte a) creates a color from RGBA components
+        // Source: https://doc.stride3d.net/latest/en/manual/graphics/colors.html
         private Color ConvertColor(CSharpKOTOR.Common.Color color)
         {
             if (color == null) return Color.White;
@@ -470,6 +482,10 @@ namespace Odyssey.Stride.GUI
         /// <summary>
         /// Gets background color from border properties.
         /// </summary>
+        // Get background color from border, defaulting to transparent
+        // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.Color.html
+        // Color.Transparent is a static property for fully transparent color (alpha = 0)
+        // Color constructor creates a color from RGBA byte values (0-255)
         private Color GetBackgroundColorFromBorder(GUIBorder border)
         {
             if (border == null) return Color.Transparent;
@@ -491,6 +507,10 @@ namespace Odyssey.Stride.GUI
         /// <summary>
         /// Converts KOTOR alignment value to Stride TextAlignment.
         /// </summary>
+        // Convert KOTOR alignment to Stride TextAlignment enum
+        // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.TextAlignment.html
+        // TextAlignment enum defines horizontal text alignment: Left, Center, Right
+        // Source: https://doc.stride3d.net/latest/en/manual/user-interface/controls.html
         private TextAlignment ConvertAlignment(int alignment)
         {
             // KOTOR alignment values:
@@ -647,10 +667,19 @@ namespace Odyssey.Stride.GUI
             };
             contentGrid.Children.Add(exitButton);
 
+            // Set border content
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.Controls.ContentControl.html
+            // ContentControl.Content property sets the content of the control (Border in this case)
+            // Method signature: UIElement Content { get; set; }
             mainPanel.Content = contentGrid;
 
             // Set the page
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.UIPage.html
+            // UIPage represents a complete UI page, RootElement property sets the root UI element
+            // Source: https://doc.stride3d.net/latest/en/manual/user-interface/index.html
             var page = new UIPage { RootElement = _rootCanvas };
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Engine.UIComponent.html
+            // UIComponent.Page property sets the active UI page to render
             _uiComponent.Page = page;
 
             Console.WriteLine("[KotorGuiRenderer] ========================================");
@@ -690,6 +719,9 @@ namespace Odyssey.Stride.GUI
                 HorizontalAlignment = HorizontalAlignment.Stretch,
                 VerticalAlignment = VerticalAlignment.Stretch
             };
+            // Set button content to inner border
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.Controls.ContentControl.html
+            // ContentControl.Content property sets the content of the button
             button.Content = innerBorder;
 
             return button;
