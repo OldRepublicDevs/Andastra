@@ -63,16 +63,11 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
         {
             if (!this.freezeStack)
             {
-                try
-                {
-                    this.state.TransformCopyDownSp(node);
-                }
-                catch (Exception ex)
-                {
-                    // Log the error but continue - this helps diagnose why assignments aren't being created
-                    JavaSystem.@out.Println("ERROR DoGlobalVars.OutACopyDownSpCommand: Exception in TransformCopyDownSp: " + ex.Message);
-                    JavaSystem.@out.Println("ERROR DoGlobalVars.OutACopyDownSpCommand: Stack trace: " + ex.StackTrace);
-                }
+                this.state.TransformCopyDownSp(node);
+            }
+            else
+            {
+                JavaSystem.@out.Println("DEBUG DoGlobalVars.OutACopyDownSpCommand: freezeStack is true, skipping CPDOWNSP");
             }
         }
 

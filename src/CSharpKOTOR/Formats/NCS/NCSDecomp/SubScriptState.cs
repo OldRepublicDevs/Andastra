@@ -969,7 +969,11 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
                 // Original: AVarRef varref = this.getVarToAssignTo(node); AModifyExp modexp = new AModifyExp(varref, exp); this.updateName(varref, exp); this.current.addChild(modexp); this.state = 1;
                 // Java version casts directly to AVarRef, so GetVarToAssignTo should always return AVarRef for assignments
                 AExpression target = this.GetVarToAssignTo(node);
-                if (typeof(ScriptNode.AVarRef).IsInstanceOfType(target))
+                if (target == null)
+                {
+                    JavaSystem.@out.Println("ERROR TransformCopyDownSp: GetVarToAssignTo returned null for node at position " + (this.nodedata != null ? this.nodedata.GetPos(node).ToString() : "unknown"));
+                }
+                else if (typeof(ScriptNode.AVarRef).IsInstanceOfType(target))
                 {
                     ScriptNode.AVarRef varref = (ScriptNode.AVarRef)target;
                     AModifyExp modexp = new AModifyExp(varref, exp);
@@ -989,7 +993,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
                     }
                     else
                     {
-                        JavaSystem.@out.Println("WARNING TransformCopyDownSp: target is not AVarRef, type=" + (target != null ? target.GetType().Name : "null") + ", skipping assignment");
+                        JavaSystem.@out.Println("ERROR TransformCopyDownSp: target is not AVarRef, type=" + (target != null ? target.GetType().Name : "null") + ", skipping assignment. Node position: " + (this.nodedata != null ? this.nodedata.GetPos(node).ToString() : "unknown"));
                     }
                 }
             }
