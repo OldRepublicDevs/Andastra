@@ -9,6 +9,14 @@ namespace Odyssey.Core.Actions
     /// <summary>
     /// Action to attack a target entity.
     /// </summary>
+    /// <remarks>
+    /// Attack Action:
+    /// - Based on swkotor2.exe attack action system
+    /// - Located via string reference: "EVENT_ON_MELEE_ATTACKED" @ 0x007bccf4
+    /// - Original implementation: Attack actions trigger combat rounds, fire script events
+    /// - Attack resolution uses d20 roll + attack bonus vs target AC
+    /// - Natural 20 = automatic hit, natural 1 = automatic miss
+    /// </remarks>
     public class ActionAttack : ActionBase
     {
         private readonly uint _targetObjectId;
@@ -27,8 +35,8 @@ namespace Odyssey.Core.Actions
 
         protected override ActionStatus ExecuteInternal(IEntity actor, float deltaTime)
         {
-            var transform = actor.GetComponent<ITransformComponent>();
-            var stats = actor.GetComponent<IStatsComponent>();
+            ITransformComponent transform = actor.GetComponent<ITransformComponent>();
+            IStatsComponent stats = actor.GetComponent<IStatsComponent>();
 
             if (transform == null || stats == null)
             {
@@ -36,14 +44,14 @@ namespace Odyssey.Core.Actions
             }
 
             // Get target entity
-            var target = actor.World.GetEntity(_targetObjectId);
+            IEntity target = actor.World.GetEntity(_targetObjectId);
             if (target == null || !target.IsValid)
             {
                 return ActionStatus.Complete; // Target gone
             }
 
-            var targetTransform = target.GetComponent<ITransformComponent>();
-            var targetStats = target.GetComponent<IStatsComponent>();
+            ITransformComponent targetTransform = target.GetComponent<ITransformComponent>();
+            IStatsComponent targetStats = target.GetComponent<IStatsComponent>();
 
             if (targetTransform == null)
             {
@@ -116,7 +124,7 @@ namespace Odyssey.Core.Actions
                 targetStats.CurrentHP -= damage;
 
                 // Fire damage event
-                var eventBus = attacker.World.EventBus;
+                IEventBus eventBus = attacker.World.EventBus;
                 if (eventBus != null)
                 {
                     eventBus.Publish(new DamageEvent
