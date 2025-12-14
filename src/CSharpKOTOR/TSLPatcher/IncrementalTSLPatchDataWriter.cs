@@ -21,11 +21,11 @@ using CSharpKOTOR.Mods.SSF;
 using CSharpKOTOR.Mods.TLK;
 using CSharpKOTOR.Mods.TwoDA;
 using CSharpKOTOR.Memory;
-using CSharpKOTOR.Installation;
 using CSharpKOTOR.Tools;
 using CSharpKOTOR.Utility;
 using SystemTextEncoding = System.Text.Encoding;
 using JetBrains.Annotations;
+using InstallationClass = CSharpKOTOR.Installation.Installation;
 namespace CSharpKOTOR.TSLPatcher
 {
     // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/writer.py:1166-1212
@@ -298,7 +298,7 @@ namespace CSharpKOTOR.TSLPatcher
         /// </summary>
         public void RegisterTlkModificationWithSource(ModificationsTLK tlkMod, object sourcePath, int sourceIndex)
         {
-            bool isInstallation = sourcePath is Installation;
+            bool isInstallation = sourcePath is InstallationClass;
 
             var wrapped = new TLKModificationWithSource
             {
@@ -538,7 +538,7 @@ namespace CSharpKOTOR.TSLPatcher
                 }
 
                 // Check if paths match exactly
-                if (pendingRef.SourcePath is Installation pendingInstall && sourcePath is Installation sourceInstall)
+                if (pendingRef.SourcePath is InstallationClass pendingInstall && sourcePath is InstallationClass sourceInstall)
                 {
                     shouldApply = pendingInstall.Path == sourceInstall.Path;
                 }
@@ -632,7 +632,7 @@ namespace CSharpKOTOR.TSLPatcher
                 }
 
                 // Check if paths match exactly
-                if (pendingRef.SourcePath is Installation pendingInstall && sourcePath is Installation sourceInstall)
+                if (pendingRef.SourcePath is InstallationClass pendingInstall && sourcePath is InstallationClass sourceInstall)
                 {
                     shouldApply = pendingInstall.Path == sourceInstall.Path;
                 }
@@ -1150,7 +1150,7 @@ namespace CSharpKOTOR.TSLPatcher
                 }
 
                 // If it's a loose file, just read it
-                if (!DiffEngineUtils.IsCapsuleFile(Path.GetFileName(sourcePath)))
+                if (!FileHelpers.IsCapsuleFile(Path.GetFileName(sourcePath)))
                 {
                     return File.ReadAllBytes(sourcePath);
                 }

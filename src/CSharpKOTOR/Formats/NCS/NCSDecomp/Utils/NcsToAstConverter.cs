@@ -49,6 +49,24 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Converting {instructions.Count} instructions to AST");
 
             HashSet<int> subroutineStarts = new HashSet<int>();
+            // Identify entry stub pattern: JSR at position 0 followed by RETN
+            // The entry JSR target is main, not a separate subroutine
+            int entryJsrTarget = -1;
+            if (instructions.Count >= 2 && 
+                instructions[0].InsType == NCSInstructionType.JSR && 
+                instructions[0].Jump != null &&
+                instructions[1].InsType == NCSInstructionType.RETN)
+            {
+                try
+                {
+                    entryJsrTarget = ncs.GetInstructionIndex(instructions[0].Jump);
+                    JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Detected entry stub pattern - JSR at 0 targets {entryJsrTarget} (main)");
+                }
+                catch (Exception)
+                {
+                }
+            }
+            
             for (int i = 0; i < instructions.Count; i++)
             {
                 NCSInstruction inst = instructions[i];
@@ -57,8 +75,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
                     try
                     {
                         int jumpIdx = ncs.GetInstructionIndex(inst.Jump);
-                        // Matching NCSDecomp implementation: exclude position 0 (main) from subroutine starts
-                        if (jumpIdx > 0)
+                        // Exclude entry JSR target (main) and position 0 from subroutine starts
+                        if (jumpIdx > 0 && jumpIdx != entryJsrTarget)
                         {
                             subroutineStarts.Add(jumpIdx);
                         }
@@ -88,6 +106,14 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
 
             int mainStart = 0;
             int mainEnd = instructions.Count;
+            
+            // If entry stub detected, main starts at the entry JSR target
+            if (entryJsrTarget >= 0)
+            {
+                mainStart = entryJsrTarget;
+                JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Main starts at entry JSR target: {mainStart}");
+            }
+            
             if (subroutineStarts.Count > 0)
             {
                 int min = int.MaxValue;
