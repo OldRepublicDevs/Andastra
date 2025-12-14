@@ -18,8 +18,8 @@ namespace CSharpKOTOR.Tools
         public static void ConvertGffToXml(string inputPath, string outputPath)
         {
             byte[] data = File.ReadAllBytes(inputPath);
-            var reader = new GFFBinaryReader(data);
-            var gff = reader.Load();
+            GFFBinaryReader reader = new GFFBinaryReader(data);
+            GFF gff = reader.Load();
             GFFAuto.WriteGff(gff, outputPath, ResourceType.GFF_XML);
         }
 
@@ -36,8 +36,8 @@ namespace CSharpKOTOR.Tools
         public static void ConvertTlkToXml(string inputPath, string outputPath)
         {
             byte[] data = File.ReadAllBytes(inputPath);
-            var reader = new TLKBinaryReader(data);
-            var tlk = reader.Load();
+            TLKBinaryReader reader = new TLKBinaryReader(data);
+            TLK tlk = reader.Load();
             TLKAuto.WriteTlk(tlk, outputPath, ResourceType.TLK_XML);
         }
 
@@ -54,8 +54,8 @@ namespace CSharpKOTOR.Tools
         public static void ConvertSsfToXml(string inputPath, string outputPath)
         {
             byte[] data = File.ReadAllBytes(inputPath);
-            var reader = new SSFBinaryReader(data);
-            var ssf = reader.Load();
+            SSFBinaryReader reader = new SSFBinaryReader(data);
+            SSF ssf = reader.Load();
             SSFAuto.WriteSsf(ssf, outputPath, ResourceType.SSF_XML);
         }
 
@@ -72,8 +72,8 @@ namespace CSharpKOTOR.Tools
         public static void Convert2daToCsv(string inputPath, string outputPath, string delimiter = ",")
         {
             byte[] data = File.ReadAllBytes(inputPath);
-            var reader = new TwoDABinaryReader(data);
-            var twoda = reader.Load();
+            TwoDABinaryReader reader = new TwoDABinaryReader(data);
+            TwoDA twoda = reader.Load();
             TwoDAAuto.WriteTwoDA(twoda, outputPath, ResourceType.TwoDA_CSV);
         }
 
@@ -90,8 +90,8 @@ namespace CSharpKOTOR.Tools
         public static void ConvertGffToJson(string inputPath, string outputPath)
         {
             byte[] data = File.ReadAllBytes(inputPath);
-            var reader = new GFFBinaryReader(data);
-            var gff = reader.Load();
+            GFFBinaryReader reader = new GFFBinaryReader(data);
+            GFF gff = reader.Load();
             GFFAuto.WriteGff(gff, outputPath, ResourceType.GFF_JSON);
         }
 
@@ -108,8 +108,8 @@ namespace CSharpKOTOR.Tools
         public static void ConvertTlkToJson(string inputPath, string outputPath)
         {
             byte[] data = File.ReadAllBytes(inputPath);
-            var reader = new TLKBinaryReader(data);
-            var tlk = reader.Load();
+            TLKBinaryReader reader = new TLKBinaryReader(data);
+            TLK tlk = reader.Load();
             TLKAuto.WriteTlk(tlk, outputPath, ResourceType.TLK_JSON);
         }
 
