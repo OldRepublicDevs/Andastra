@@ -145,7 +145,7 @@ namespace CSharpKOTOR.Merge
             }
 
             // Extract dependencies from GFF files
-            if (restype == ResourceType.GFF || restype == ResourceType.ARE || 
+            if (restype == ResourceType.GFF || restype == ResourceType.ARE ||
                 restype == ResourceType.IFO || restype == ResourceType.DLG)
             {
                 if (modRes is ModuleResource<object> typedRes)

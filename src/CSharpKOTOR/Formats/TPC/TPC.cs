@@ -163,13 +163,12 @@ namespace CSharpKOTOR.Formats.TPC
                 var layerCopy = new TPCLayer();
                 foreach (var mipmap in layer.Mipmaps)
                 {
-                    var mipmapCopy = new TPCMipmap
-                    {
-                        Width = mipmap.Width,
-                        Height = mipmap.Height,
-                        TpcFormat = mipmap.TpcFormat,
-                        Data = mipmap.Data != null ? (byte[])mipmap.Data.Clone() : null
-                    };
+                    var mipmapCopy = new TPCMipmap(
+                        mipmap.Width,
+                        mipmap.Height,
+                        mipmap.TpcFormat,
+                        mipmap.Data != null ? (byte[])mipmap.Data.Clone() : null
+                    );
                     layerCopy.Mipmaps.Add(mipmapCopy);
                 }
                 copy.Layers.Add(layerCopy);

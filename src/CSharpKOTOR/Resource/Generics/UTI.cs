@@ -46,10 +46,6 @@ namespace CSharpKOTOR.Resource.Generics
         public int PaletteId { get; set; }
         public string Comment { get; set; } = string.Empty;
         public string Tag { get; set; } = string.Empty;
-        public ResRef TemplateResRef { get; set; } = ResRef.FromBlank();
-        public ResRef LocalizedName { get; set; } = ResRef.FromBlank();
-        public ResRef DescriptionId { get; set; } = ResRef.FromBlank();
-        public ResRef DescriptionUnidentifiedId { get; set; } = ResRef.FromBlank();
 
         // Properties
         public List<UTIProperty> Properties { get; set; } = new List<UTIProperty>();
@@ -75,9 +71,11 @@ namespace CSharpKOTOR.Resource.Generics
         public int Param1 { get; set; }
         public int Param1Value { get; set; }
         public int ChanceAppear { get; set; }
+        public int? UpgradeType { get; set; }
 
         public UTIProperty()
         {
+            ChanceAppear = 100;
         }
     }
 

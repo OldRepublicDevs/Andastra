@@ -1,22 +1,21 @@
 using System;
 using Avalonia.Controls;
-using Avalonia.Markup.Xaml;
 
 namespace HolocronToolset.NET.Editors
 {
-    // Helper class for editor initialization
+    // Helper methods for editors
     public static class EditorHelpers
     {
-        public static void SafeInitializeComponent(Window window, Action fallbackSetup)
+        // Safe FindControl that handles missing name scope
+        public static T FindControlSafe<T>(Control control, string name) where T : Control
         {
             try
             {
-                AvaloniaXamlLoader.Load(window);
+                return control.FindControl<T>(name);
             }
             catch
             {
-                // XAML not available - use fallback setup
-                fallbackSetup?.Invoke();
+                return null;
             }
         }
     }

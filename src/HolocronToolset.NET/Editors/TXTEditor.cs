@@ -35,7 +35,7 @@ namespace HolocronToolset.NET.Editors
             {
                 AvaloniaXamlLoader.Load(this);
                 xamlLoaded = true;
-                _textEdit = this.FindControl<TextBox>("TextEdit");
+                _textEdit = EditorHelpers.FindControlSafe<TextBox>(this, "TextEdit");
             }
             catch
             {

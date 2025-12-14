@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using CSharpKOTOR.Common;
 using CSharpKOTOR.Formats.GFF;
 using CSharpKOTOR.Resources;
+using static CSharpKOTOR.Common.GameExtensions;
 
 namespace CSharpKOTOR.Resource.Generics
 {
@@ -25,6 +26,7 @@ namespace CSharpKOTOR.Resource.Generics
             uts.Positional = root.Acquire<int>("Positional", 0) != 0;
             uts.RandomPosition = root.Acquire<int>("RandomPosition", 0) != 0;
             uts.Random = root.Acquire<int>("Random", 0) != 0;
+            uts.Name = root.Acquire<LocalizedString>("LocName", LocalizedString.FromInvalid());
             uts.Volume = root.Acquire<int>("Volume", 0);
             uts.VolumeVariance = root.Acquire<int>("VolumeVrtn", 0);
             uts.PitchVariance = root.Acquire<float>("PitchVariation", 0.0f);
@@ -35,15 +37,24 @@ namespace CSharpKOTOR.Resource.Generics
             uts.Priority = root.Acquire<int>("Priority", 0);
             uts.Hours = root.Acquire<int>("Hours", 0);
             uts.Times = root.Acquire<int>("Times", 0);
-            uts.Interval = root.Acquire<int>("Interval", 0);
-            uts.IntervalVariance = root.Acquire<int>("IntervalVrtn", 0);
+            uts.Interval = (int)root.GetUInt32("Interval");
+            uts.IntervalVariance = (int)root.GetUInt32("IntervalVrtn");
             uts.Sound = root.Acquire<ResRef>("Sound", ResRef.FromBlank());
             uts.Comment = root.Acquire<string>("Comment", "");
+            uts.RandomRangeX = root.Acquire<float>("RandomRangeX", 0.0f);
+            uts.RandomRangeY = root.Acquire<float>("RandomRangeY", 0.0f);
 
             // Extract sounds list
             var soundsList = root.Acquire<GFFList>("Sounds", new GFFList());
-            // uts.Sounds would need to be a List<ResRef> property
-            // foreach (var soundStruct in soundsList) { ... }
+            uts.Sounds.Clear();
+            foreach (var soundStruct in soundsList)
+            {
+                var sound = soundStruct.Acquire<ResRef>("Sound", ResRef.FromBlank());
+                if (sound != null && !string.IsNullOrEmpty(sound.ToString()))
+                {
+                    uts.Sounds.Add(sound);
+                }
+            }
 
             return uts;
         }
@@ -72,17 +83,36 @@ namespace CSharpKOTOR.Resource.Generics
             root.SetSingle("MaxDistance", uts.MaxDistance);
             root.SetSingle("DistanceCutoff", uts.DistanceCutoff);
             root.SetUInt8("Priority", (byte)uts.Priority);
-            root.SetUInt8("Hours", (byte)uts.Hours);
-            root.SetUInt8("Times", (byte)uts.Times);
-            root.SetUInt8("Interval", (byte)uts.Interval);
-            root.SetUInt8("IntervalVrtn", (byte)uts.IntervalVariance);
+            root.SetUInt32("Interval", (uint)uts.Interval);
+            root.SetUInt32("IntervalVrtn", (uint)uts.IntervalVariance);
             root.SetResRef("Sound", uts.Sound);
             root.SetString("Comment", uts.Comment);
+            root.SetSingle("RandomRangeX", uts.RandomRangeX);
+            root.SetSingle("RandomRangeY", uts.RandomRangeY);
+            root.SetUInt8("PaletteID", 0);
+            if (useDeprecated)
+            {
+                root.SetLocString("LocName", uts.Name);
+                root.SetUInt32("Hours", (uint)uts.Hours);
+                root.SetUInt8("Times", (byte)uts.Times);
+            }
+            else
+            {
+                // Always set LocName even if not deprecated
+                root.SetLocString("LocName", uts.Name);
+            }
 
             // Set sounds list
             var soundsList = new GFFList();
             root.SetList("Sounds", soundsList);
-            // if (uts.Sounds != null) { foreach (var sound in uts.Sounds) { ... } }
+            if (uts.Sounds != null)
+            {
+                foreach (var sound in uts.Sounds)
+                {
+                    var soundStruct = soundsList.Add(2);
+                    soundStruct.SetResRef("Sound", sound);
+                }
+            }
 
             return gff;
         }

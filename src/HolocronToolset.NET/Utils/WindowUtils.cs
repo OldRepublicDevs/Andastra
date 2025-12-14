@@ -8,6 +8,7 @@ using HolocronToolset.NET.Editors;
 using CSharpKOTOR.Resources;
 using FileResource = CSharpKOTOR.Resources.FileResource;
 using JetBrains.Annotations;
+using NSSEditor = HolocronToolset.NET.Editors.NSSEditor;
 
 namespace HolocronToolset.NET.Utils
 {
@@ -164,9 +165,7 @@ namespace HolocronToolset.NET.Utils
                     // TODO: Show MessageBox when MessageBox.Avalonia is available
                     return null;
                 }
-                // TODO: Port NSSEditor when available
-                // editor = new NSSEditor(parentWindow, installation);
-                return null;
+                editor = new NSSEditor(parentWindow, installation);
             }
             else if (targetType == CSharpKOTOR.Resources.ResourceType.DLG)
             {

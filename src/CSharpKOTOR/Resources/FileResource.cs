@@ -44,8 +44,8 @@ namespace CSharpKOTOR.Resources
             // Original: self.inside_capsule: bool = filepath_str.endswith(_CAPSULE_EXTENSIONS)
             // Original: self.inside_bif: bool = filepath_str.endswith(".bif")
             string filepathStr = filepath.ToLowerInvariant();
-            _insideCapsule = filepathStr.EndsWith(".erf") || filepathStr.EndsWith(".mod") || 
-                           filepathStr.EndsWith(".rim") || filepathStr.EndsWith(".sav") || 
+            _insideCapsule = filepathStr.EndsWith(".erf") || filepathStr.EndsWith(".mod") ||
+                           filepathStr.EndsWith(".rim") || filepathStr.EndsWith(".sav") ||
                            filepathStr.EndsWith(".hak");
             _insideBif = filepathStr.EndsWith(".bif");
 
@@ -130,7 +130,7 @@ namespace CSharpKOTOR.Resources
 
             // Slow path: handle nested capsule paths
             var (realPath, nestedParts) = FileResourceHelpers.FindRealFilesystemPath(_filepath);
-            
+
             if (realPath == null)
             {
                 throw new FileNotFoundException($"Cannot find file or capsule to index: {_filepath}", _filepath);
@@ -168,7 +168,7 @@ namespace CSharpKOTOR.Resources
 
                 // Check for nested capsule path
                 var (realPath, nestedParts) = FileResourceHelpers.FindRealFilesystemPath(_filepath);
-                
+
                 if (realPath == null)
                 {
                     return false;

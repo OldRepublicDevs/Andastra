@@ -183,6 +183,22 @@ namespace CSharpKOTOR.Formats.LTR
             _singles.SetEnd(char_, chance);
         }
 
+        // Public getters for editor access
+        public float GetSinglesStart(string char_)
+        {
+            return _singles.GetStart(char_);
+        }
+
+        public float GetSinglesMiddle(string char_)
+        {
+            return _singles.GetMiddle(char_);
+        }
+
+        public float GetSinglesEnd(string char_)
+        {
+            return _singles.GetEnd(char_);
+        }
+
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/ltr/ltr_data.py:305-327
         // Original: def set_doubles_start/middle/end
         public void SetDoublesStart(string previous1, string char_, float chance)
@@ -200,6 +216,22 @@ namespace CSharpKOTOR.Formats.LTR
             _doubles[CharacterSet.IndexOf(previous1)].SetEnd(char_, chance);
         }
 
+        // Public getters for editor access
+        public float GetDoublesStart(string previous1, string char_)
+        {
+            return _doubles[CharacterSet.IndexOf(previous1)].GetStart(char_);
+        }
+
+        public float GetDoublesMiddle(string previous1, string char_)
+        {
+            return _doubles[CharacterSet.IndexOf(previous1)].GetMiddle(char_);
+        }
+
+        public float GetDoublesEnd(string previous1, string char_)
+        {
+            return _doubles[CharacterSet.IndexOf(previous1)].GetEnd(char_);
+        }
+
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/ltr/ltr_data.py:329-354
         // Original: def set_triples_start/middle/end
         public void SetTriplesStart(string previous2, string previous1, string char_, float chance)
@@ -215,6 +247,22 @@ namespace CSharpKOTOR.Formats.LTR
         public void SetTriplesEnd(string previous2, string previous1, string char_, float chance)
         {
             _triples[CharacterSet.IndexOf(previous2)][CharacterSet.IndexOf(previous1)].SetEnd(char_, chance);
+        }
+
+        // Public getters for editor access
+        public float GetTriplesStart(string previous2, string previous1, string char_)
+        {
+            return _triples[CharacterSet.IndexOf(previous2)][CharacterSet.IndexOf(previous1)].GetStart(char_);
+        }
+
+        public float GetTriplesMiddle(string previous2, string previous1, string char_)
+        {
+            return _triples[CharacterSet.IndexOf(previous2)][CharacterSet.IndexOf(previous1)].GetMiddle(char_);
+        }
+
+        public float GetTriplesEnd(string previous2, string previous1, string char_)
+        {
+            return _triples[CharacterSet.IndexOf(previous2)][CharacterSet.IndexOf(previous1)].GetEnd(char_);
         }
 
         // Internal access for reader/writer

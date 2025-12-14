@@ -41,11 +41,11 @@ namespace HolocronToolset.NET
                 // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/main_app.py:278
                 // Original: tool_window = ToolWindow()
                 desktop.MainWindow = new MainWindow();
-                
+
                 // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/main_app.py:281
                 // Original: tool_window.show()
                 desktop.MainWindow.Show();
-                
+
                 // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/main_app.py:284
                 // Original: tool_window.update_manager.check_for_updates(silent=True)
                 if (desktop.MainWindow is MainWindow mainWindow)

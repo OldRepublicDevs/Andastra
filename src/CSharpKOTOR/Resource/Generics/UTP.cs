@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using CSharpKOTOR.Common;
 using CSharpKOTOR.Formats.GFF;
 using CSharpKOTOR.Resources;
@@ -42,36 +43,88 @@ namespace CSharpKOTOR.Resource.Generics
             AppearanceId = 0;
         }
 
-        // Additional basic properties that would be implemented in full version
-        public LocalizedString Description { get; set; } = LocalizedString.FromInvalid();
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/utp.py:110-183
+        // Additional properties
+        public ResRef Conversation { get; set; } = ResRef.FromBlank();
+        public string Comment { get; set; } = string.Empty;
+        public int FactionId { get; set; }
+        public int AnimationState { get; set; }
+        public bool AutoRemoveKey { get; set; }
+        public string KeyName { get; set; } = string.Empty;
+        public bool KeyRequired { get; set; }
+        public bool Lockable { get; set; }
+        public bool Locked { get; set; }
+        public int UnlockDc { get; set; }
+        public int UnlockDiff { get; set; } // KotOR 2 Only
+        public int UnlockDiffMod { get; set; } // KotOR 2 Only
+        public bool Min1Hp { get; set; } // KotOR 2 Only
+        public bool NotBlastable { get; set; } // KotOR 2 Only
+        public bool Plot { get; set; }
         public bool Static { get; set; }
         public bool Useable { get; set; }
-        public bool Locked { get; set; }
-        public bool Plot { get; set; }
-        public bool HasInventory { get; set; }
         public bool PartyInteract { get; set; }
-        public bool BodyBag { get; set; }
-        public bool DeadSelectable { get; set; }
-        public int HP { get; set; }
-        public int CurrentHP { get; set; }
+        public int MaximumHp { get; set; }
+        public int CurrentHp { get; set; }
         public int Hardness { get; set; }
         public int Fortitude { get; set; }
         public int Reflex { get; set; }
         public int Will { get; set; }
-        public ResRef KeyRequired { get; set; } = ResRef.FromBlank();
-        public ResRef KeyName { get; set; } = ResRef.FromBlank();
+        public bool HasInventory { get; set; }
+        public List<InventoryItem> Inventory { get; set; } = new List<InventoryItem>();
+        public LocalizedString Description { get; set; } = LocalizedString.FromInvalid();
 
-        // Script hooks (simplified)
-        public ResRef OnOpen { get; set; } = ResRef.FromBlank();
+        // Script hooks
+        public ResRef OnClick { get; set; } = ResRef.FromBlank();
         public ResRef OnClosed { get; set; } = ResRef.FromBlank();
         public ResRef OnDamaged { get; set; } = ResRef.FromBlank();
         public ResRef OnDeath { get; set; } = ResRef.FromBlank();
+        public ResRef OnEndDialog { get; set; } = ResRef.FromBlank();
+        public ResRef OnOpenFailed { get; set; } = ResRef.FromBlank();
         public ResRef OnHeartbeat { get; set; } = ResRef.FromBlank();
-        public ResRef OnMeleeAttacked { get; set; } = ResRef.FromBlank();
-        public ResRef OnSpellCastAt { get; set; } = ResRef.FromBlank();
+        public ResRef OnInventory { get; set; } = ResRef.FromBlank();
+        public ResRef OnMelee { get; set; } = ResRef.FromBlank();
+        public ResRef OnOpen { get; set; } = ResRef.FromBlank();
+        public ResRef OnUnlock { get; set; } = ResRef.FromBlank();
+        public ResRef OnUsed { get; set; } = ResRef.FromBlank();
         public ResRef OnUserDefined { get; set; } = ResRef.FromBlank();
         public ResRef OnLock { get; set; } = ResRef.FromBlank();
-        public ResRef OnUnlock { get; set; } = ResRef.FromBlank();
-        public ResRef OnFailToOpen { get; set; } = ResRef.FromBlank();
+        public ResRef OnPower { get; set; } = ResRef.FromBlank(); // OnForcePower
+
+        // Legacy/backward compatibility properties
+        public int HP
+        {
+            get { return MaximumHp; }
+            set { MaximumHp = value; }
+        }
+
+        public int CurrentHP
+        {
+            get { return CurrentHp; }
+            set { CurrentHp = value; }
+        }
+
+        public ResRef KeyRequiredResRef
+        {
+            get { return new ResRef(KeyName); }
+            set { KeyName = value.ToString(); }
+        }
+
+        public ResRef OnMeleeAttacked
+        {
+            get { return OnMelee; }
+            set { OnMelee = value; }
+        }
+
+        public ResRef OnSpellCastAt
+        {
+            get { return OnPower; }
+            set { OnPower = value; }
+        }
+
+        public ResRef OnFailToOpen
+        {
+            get { return OnOpenFailed; }
+            set { OnOpenFailed = value; }
+        }
     }
 }

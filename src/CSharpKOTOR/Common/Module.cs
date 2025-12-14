@@ -1382,6 +1382,20 @@ namespace CSharpKOTOR.Common
             ModuleRoot = moduleRoot;
         }
 
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:1787-1794
+        // Original: def resname(self) -> str:
+        public virtual string GetResName()
+        {
+            return ResName;
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:1796-1803
+        // Original: def restype(self) -> ResourceType:
+        public virtual ResourceType GetResType()
+        {
+            return ResType;
+        }
+
         public abstract void AddLocations(IEnumerable<string> filepaths);
         public abstract List<string> Locations();
         public abstract string Activate(string filepath = null);

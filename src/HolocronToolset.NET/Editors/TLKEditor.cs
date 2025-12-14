@@ -1,26 +1,59 @@
 using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
+using Avalonia.Data;
+using Avalonia.Input;
+using Avalonia.Interactivity;
+using Avalonia.Layout;
 using Avalonia.Markup.Xaml;
+using CSharpKOTOR.Common;
 using CSharpKOTOR.Formats.TLK;
 using CSharpKOTOR.Resources;
+using HolocronToolset.NET.Common;
 using HolocronToolset.NET.Data;
+using HolocronToolset.NET.Dialogs;
 
 namespace HolocronToolset.NET.Editors
 {
     // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/tlk.py:56
     // Original: class TLKEditor(Editor):
-    public class TLKEditor : Editor
+    public partial class TLKEditor : Editor
     {
-        private TLK _tlk;
+        private ObservableCollection<TLKEntryViewModel> _sourceEntries;
+        private CollectionViewSource _filteredEntries;
+        private Language _language;
+        private TextBox _textEdit;
+        private TextBox _soundEdit;
+        private TextBox _searchEdit;
+        private Button _searchButton;
+        private NumericUpDown _jumpSpinbox;
+        private Button _jumpButton;
+        private DataGrid _talkTable;
+        private Panel _searchBox;
+        private Panel _jumpBox;
+        private TLKEntryViewModel _selectedEntry;
 
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/tlk.py:57-95
+        // Original: def __init__(self, parent, installation):
         public TLKEditor(Window parent = null, HTInstallation installation = null)
             : base(parent, "TLK Editor", "none",
                 new[] { ResourceType.TLK, ResourceType.TLK_XML, ResourceType.TLK_JSON },
                 new[] { ResourceType.TLK, ResourceType.TLK_XML, ResourceType.TLK_JSON },
                 installation)
         {
+            _sourceEntries = new ObservableCollection<TLKEntryViewModel>();
+            _filteredEntries = new CollectionViewSource { Source = _sourceEntries };
+            _language = Language.English;
+
             InitializeComponent();
             SetupUI();
+            SetupSignals();
             New();
         }
 
@@ -45,57 +78,380 @@ namespace HolocronToolset.NET.Editors
 
         private void SetupProgrammaticUI()
         {
-            var panel = new StackPanel();
-            Content = panel;
+            var mainPanel = new StackPanel { Orientation = Orientation.Vertical };
+
+            // Search box
+            _searchBox = new StackPanel { Orientation = Orientation.Horizontal, IsVisible = false };
+            _searchEdit = new TextBox { Watermark = "Search..." };
+            _searchButton = new Button { Content = "Search" };
+            _searchBox.Children.Add(_searchEdit);
+            _searchBox.Children.Add(_searchButton);
+            mainPanel.Children.Add(_searchBox);
+
+            // Jump box
+            _jumpBox = new StackPanel { Orientation = Orientation.Horizontal, IsVisible = false };
+            _jumpSpinbox = new NumericUpDown { Minimum = 0, Maximum = 0 };
+            _jumpButton = new Button { Content = "Go" };
+            _jumpBox.Children.Add(_jumpSpinbox);
+            _jumpBox.Children.Add(_jumpButton);
+            mainPanel.Children.Add(_jumpBox);
+
+            // Table
+            _talkTable = new DataGrid
+            {
+                AutoGenerateColumns = false,
+                CanUserReorderColumns = false,
+                CanUserResizeColumns = true,
+                SelectionMode = DataGridSelectionMode.Single
+            };
+            _talkTable.Columns.Add(new DataGridTextColumn
+            {
+                Header = "Text",
+                Binding = new Binding("Text"),
+                IsReadOnly = false
+            });
+            _talkTable.Columns.Add(new DataGridTextColumn
+            {
+                Header = "Sound",
+                Binding = new Binding("Sound"),
+                IsReadOnly = false
+            });
+            mainPanel.Children.Add(_talkTable);
+
+            // Bottom panel
+            var bottomPanel = new StackPanel { Orientation = Orientation.Vertical };
+            _textEdit = new TextBox { AcceptsReturn = true, Watermark = "Text" };
+            _soundEdit = new TextBox { MaxLength = 16, Watermark = "Sound ResRef" };
+            bottomPanel.Children.Add(new TextBlock { Text = "Text:" });
+            bottomPanel.Children.Add(_textEdit);
+            bottomPanel.Children.Add(new TextBlock { Text = "Sound:" });
+            bottomPanel.Children.Add(_soundEdit);
+            mainPanel.Children.Add(bottomPanel);
+
+            Content = mainPanel;
         }
 
         private void SetupUI()
         {
-            // UI setup - will be done in SetupProgrammaticUI or via XAML
+            // Try to find controls from XAML if available
+            _talkTable = EditorHelpers.FindControlSafe<DataGrid>(this, "TalkTable");
+            _textEdit = EditorHelpers.FindControlSafe<TextBox>(this, "TextEdit");
+            _soundEdit = EditorHelpers.FindControlSafe<TextBox>(this, "SoundEdit");
+            _searchEdit = EditorHelpers.FindControlSafe<TextBox>(this, "SearchEdit");
+            _searchButton = EditorHelpers.FindControlSafe<Button>(this, "SearchButton");
+            _jumpSpinbox = EditorHelpers.FindControlSafe<NumericUpDown>(this, "JumpSpinbox");
+            _jumpButton = EditorHelpers.FindControlSafe<Button>(this, "JumpButton");
+            _searchBox = EditorHelpers.FindControlSafe<Panel>(this, "SearchBox");
+            _jumpBox = EditorHelpers.FindControlSafe<Panel>(this, "JumpBox");
+
+            if (_talkTable != null)
+            {
+                _talkTable.ItemsSource = _filteredEntries.View;
+            }
+            else if (_talkTable == null && Content is StackPanel panel)
+            {
+                // Ensure table is set up if created programmatically
+                foreach (var child in panel.Children)
+                {
+                    if (child is DataGrid dg)
+                    {
+                        _talkTable = dg;
+                        _talkTable.ItemsSource = _filteredEntries.View;
+                        break;
+                    }
+                }
+            }
         }
 
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/tlk.py:97-166
+        // Original: def _setup_signals(self):
+        private void SetupSignals()
+        {
+            if (_jumpButton != null)
+            {
+                _jumpButton.Click += (s, e) => OnJumpSpinboxGoto();
+            }
+
+            if (_jumpSpinbox != null)
+            {
+                _jumpSpinbox.ValueChanged += (s, e) => OnJumpSpinboxGoto();
+                _jumpSpinbox.KeyDown += (s, e) =>
+                {
+                    if (e.Key == Key.Enter || e.Key == Key.Return)
+                    {
+                        OnJumpSpinboxGoto();
+                        e.Handled = true;
+                    }
+                };
+            }
+
+            if (_searchButton != null)
+            {
+                _searchButton.Click += (s, e) => DoFilter(_searchEdit?.Text ?? "");
+            }
+
+            if (_talkTable != null)
+            {
+                _talkTable.SelectionChanged += (s, e) => SelectionChanged();
+            }
+
+            if (_textEdit != null)
+            {
+                _textEdit.TextChanged += (s, e) => UpdateEntry();
+            }
+
+            if (_soundEdit != null)
+            {
+                _soundEdit.TextChanged += (s, e) => UpdateEntry();
+            }
+        }
+
+        private void OnJumpSpinboxGoto()
+        {
+            if (_jumpSpinbox == null || _talkTable == null)
+            {
+                return;
+            }
+
+            int sourceRow = (int)(_jumpSpinbox.Value ?? 0);
+            if (sourceRow < 0 || sourceRow >= _sourceEntries.Count)
+            {
+                return;
+            }
+
+            var entry = _sourceEntries[sourceRow];
+            if (entry != null)
+            {
+                _talkTable.SelectedItem = entry;
+                _talkTable.ScrollIntoView(entry, null);
+            }
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/tlk.py:223-239
+        // Original: def change_language(self, language):
+        public void ChangeLanguage(Language language)
+        {
+            _language = language;
+
+            // Only reload if we have revert data (file was loaded)
+            if (_revert == null || _revert.Length == 0)
+            {
+                return;
+            }
+
+            var tlk = TLKAuto.ReadTlk(_revert);
+            tlk.Language = language;
+            LoadTLK(tlk);
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/tlk.py:241-255
+        // Original: def load(self, filepath, resref, restype, data):
         public override void Load(string filepath, string resref, ResourceType restype, byte[] data)
         {
             base.Load(filepath, resref, restype, data);
             if (data == null || data.Length == 0)
             {
-                _tlk = new TLK();
+                _sourceEntries.Clear();
                 return;
             }
+
+            // Load TLK synchronously for now (can be made async later)
             try
             {
-                var reader = new TLKBinaryReader(data);
-                _tlk = reader.Load();
-                LoadTLK(_tlk);
+                var tlk = TLKAuto.ReadTlk(data);
+                _language = tlk.Language;
+                LoadTLK(tlk);
             }
-            catch
+            catch (Exception ex)
             {
-                // If loading fails, create empty TLK
-                _tlk = new TLK();
+                System.Console.WriteLine($"Error loading TLK: {ex}");
             }
         }
 
         private void LoadTLK(TLK tlk)
         {
-            // Load TLK data into UI table
+            _sourceEntries.Clear();
+            _language = tlk.Language;
+
+            // Load entries in batches for performance
+            int batchSize = 200;
+            for (int i = 0; i < tlk.Entries.Count; i++)
+            {
+                var entry = tlk.Entries[i];
+                _sourceEntries.Add(new TLKEntryViewModel(i, entry.Text, entry.Voiceover.ToString()));
+
+                // Yield to UI thread periodically
+                if (i % batchSize == 0 && i > 0)
+                {
+                    Thread.Sleep(1);
+                }
+            }
+
+            if (_jumpSpinbox != null)
+            {
+                _jumpSpinbox.Maximum = _sourceEntries.Count;
+            }
         }
 
-        public override Tuple<byte[], byte[]> Build()
-        {
-            ResourceType tlkType = _restype ?? ResourceType.TLK;
-            byte[] data = TLKAuto.BytesTlk(_tlk, tlkType);
-            return Tuple.Create(data, new byte[0]);
-        }
-
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/tlk.py:352-376
+        // Original: def new(self):
         public override void New()
         {
             base.New();
-            _tlk = new TLK();
+            _sourceEntries.Clear();
+            if (_textEdit != null)
+            {
+                _textEdit.IsEnabled = false;
+            }
+            if (_soundEdit != null)
+            {
+                _soundEdit.IsEnabled = false;
+            }
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/tlk.py:361-376
+        // Original: def build(self) -> tuple[bytes, bytes]:
+        public override Tuple<byte[], byte[]> Build()
+        {
+            var tlk = new TLK(_language);
+
+            foreach (var entry in _sourceEntries)
+            {
+                tlk.Entries.Add(entry.ToTLKEntry());
+            }
+
+            ResourceType tlkType = _restype ?? ResourceType.TLK;
+            byte[] data = TLKAuto.BytesTlk(tlk, tlkType);
+            return Tuple.Create(data, new byte[0]);
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/tlk.py:378-379
+        // Original: def insert(self):
+        public void Insert()
+        {
+            int newIndex = _sourceEntries.Count;
+            _sourceEntries.Add(new TLKEntryViewModel(newIndex, "", ""));
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/tlk.py:381-385
+        // Original: def do_filter(self, text):
+        public void DoFilter(string text)
+        {
+            if (_filteredEntries.View == null)
+            {
+                return;
+            }
+
+            if (string.IsNullOrEmpty(text))
+            {
+                _filteredEntries.View.Filter = null;
+            }
+            else
+            {
+                string filterText = text.ToLowerInvariant();
+                _filteredEntries.View.Filter = item =>
+                {
+                    if (item is TLKEntryViewModel entry)
+                    {
+                        return entry.Text.ToLowerInvariant().Contains(filterText) ||
+                               entry.Sound.ToLowerInvariant().Contains(filterText);
+                    }
+                    return false;
+                };
+            }
+
+            _filteredEntries.View.Refresh();
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/tlk.py:387-392
+        // Original: def toggle_filter_box(self):
+        public void ToggleFilterBox()
+        {
+            if (_searchBox != null)
+            {
+                _searchBox.IsVisible = !_searchBox.IsVisible;
+                if (_searchBox.IsVisible && _searchEdit != null)
+                {
+                    _searchEdit.Focus();
+                    _searchEdit.SelectAll();
+                }
+            }
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/tlk.py:394-399
+        // Original: def toggle_goto_box(self):
+        public void ToggleGotoBox()
+        {
+            if (_jumpBox != null)
+            {
+                _jumpBox.IsVisible = !_jumpBox.IsVisible;
+                if (_jumpBox.IsVisible && _jumpSpinbox != null)
+                {
+                    _jumpSpinbox.Focus();
+                }
+            }
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/tlk.py:401-427
+        // Original: def selection_changed(self):
+        private void SelectionChanged()
+        {
+            if (_talkTable == null)
+            {
+                return;
+            }
+
+            _selectedEntry = _talkTable.SelectedItem as TLKEntryViewModel;
+
+            if (_selectedEntry == null)
+            {
+                if (_textEdit != null)
+                {
+                    _textEdit.IsEnabled = false;
+                }
+                if (_soundEdit != null)
+                {
+                    _soundEdit.IsEnabled = false;
+                }
+                return;
+            }
+
+            if (_textEdit != null)
+            {
+                _textEdit.IsEnabled = true;
+                _textEdit.Text = _selectedEntry.Text;
+            }
+            if (_soundEdit != null)
+            {
+                _soundEdit.IsEnabled = true;
+                _soundEdit.Text = _selectedEntry.Sound;
+            }
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/tlk.py:429-444
+        // Original: def update_entry(self):
+        private void UpdateEntry()
+        {
+            if (_selectedEntry == null)
+            {
+                return;
+            }
+
+            if (_textEdit != null)
+            {
+                _selectedEntry.Text = _textEdit.Text;
+            }
+            if (_soundEdit != null)
+            {
+                _selectedEntry.Sound = _soundEdit.Text;
+            }
         }
 
         public override void SaveAs()
         {
             Save();
         }
+
+        public Language Language => _language;
     }
 }

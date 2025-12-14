@@ -1,5 +1,5 @@
 using System;
-using System.Text;
+using CSharpKOTOR.Formats.LTR;
 using CSharpKOTOR.Resources;
 using FluentAssertions;
 using HolocronToolset.NET.Data;
@@ -24,11 +24,16 @@ namespace HolocronToolset.NET.Tests.Editors
         [Fact]
         public void TestLtrEditorNewFileCreation()
         {
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_ltr_editor.py
+            // Original: def test_ltr_editor_new_file_creation(qtbot, installation):
             var editor = new LTREditor(null, null);
+
             editor.New();
 
+            // Verify editor is ready
             var (data, _) = editor.Build();
             data.Should().NotBeNull();
+            data.Length.Should().BeGreaterThan(0);
         }
 
         [Fact]
@@ -36,11 +41,45 @@ namespace HolocronToolset.NET.Tests.Editors
         {
             var editor = new LTREditor(null, null);
 
-            // Create minimal LTR data (simplified for testing)
-            byte[] testData = new byte[0]; // Will be implemented when LTR format is fully supported
+            // Create minimal LTR data
+            var ltr = new LTR();
+            ltr.SetSinglesStart("a", 0.1f);
+            ltr.SetSinglesMiddle("a", 0.2f);
+            ltr.SetSinglesEnd("a", 0.3f);
+            byte[] testData = LTRAuto.BytesLtr(ltr);
 
             editor.Load("test.ltr", "test", ResourceType.LTR, testData);
 
+            // Verify content loaded
+            var (data, _) = editor.Build();
+            data.Should().NotBeNull();
+            data.Length.Should().BeGreaterThan(0);
+        }
+
+        [Fact]
+        public void TestLtrEditorSaveLoadRoundtrip()
+        {
+            var editor = new LTREditor(null, null);
+            editor.New();
+
+            // Test save/load roundtrip
+            var (data, _) = editor.Build();
+            data.Should().NotBeNull();
+
+            var editor2 = new LTREditor(null, null);
+            editor2.Load("test.ltr", "test", ResourceType.LTR, data);
+            var (data2, _) = editor2.Build();
+            data2.Should().Equal(data);
+        }
+
+        [Fact]
+        public void TestLtrEditorGenerateName()
+        {
+            var editor = new LTREditor(null, null);
+            editor.New();
+
+            // Generate name should work
+            // This will be tested when UI is fully connected
             var (data, _) = editor.Build();
             data.Should().NotBeNull();
         }

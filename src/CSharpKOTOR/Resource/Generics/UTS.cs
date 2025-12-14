@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using CSharpKOTOR.Common;
 using CSharpKOTOR.Resources;
 using JetBrains.Annotations;
@@ -17,7 +18,9 @@ namespace CSharpKOTOR.Resource.Generics
         // Original: BINARY_TYPE = ResourceType.UTS
         public static readonly ResourceType BinaryType = ResourceType.UTS;
 
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/uts.py:16-137
         // Basic UTS properties
+        public LocalizedString Name { get; set; } = LocalizedString.FromInvalid();
         public ResRef ResRef { get; set; } = ResRef.FromBlank();
         public string Tag { get; set; } = string.Empty;
         public bool Active { get; set; }
@@ -28,7 +31,7 @@ namespace CSharpKOTOR.Resource.Generics
         public bool Random { get; set; }
         public int Volume { get; set; }
         public int VolumeVariance { get; set; }
-        public int PitchVariance { get; set; }
+        public float PitchVariance { get; set; }
         public float Elevation { get; set; }
         public float MinDistance { get; set; }
         public float MaxDistance { get; set; }
@@ -40,6 +43,9 @@ namespace CSharpKOTOR.Resource.Generics
         public int IntervalVariance { get; set; }
         public ResRef Sound { get; set; } = ResRef.FromBlank();
         public string Comment { get; set; } = string.Empty;
+        public List<ResRef> Sounds { get; set; } = new List<ResRef>();
+        public float RandomRangeX { get; set; }
+        public float RandomRangeY { get; set; }
 
         public UTS()
         {

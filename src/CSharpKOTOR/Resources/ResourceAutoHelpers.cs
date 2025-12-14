@@ -63,5 +63,12 @@ namespace CSharpKOTOR.Resources
             GFF gff = reader.Load();
             return UTSHelpers.ConstructUts(gff);
         }
+
+        public static UTI ReadUti(byte[] data)
+        {
+            var reader = new GFFBinaryReader(data);
+            GFF gff = reader.Load();
+            return UTIHelpers.ConstructUti(gff);
+        }
     }
 }

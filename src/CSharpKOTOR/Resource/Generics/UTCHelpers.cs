@@ -5,6 +5,7 @@ using CSharpKOTOR.Common;
 using CSharpKOTOR.Formats.GFF;
 using CSharpKOTOR.Logger;
 using CSharpKOTOR.Resources;
+using static CSharpKOTOR.Common.GameExtensions;
 
 namespace CSharpKOTOR.Resource.Generics
 {

@@ -49,7 +49,11 @@ namespace HolocronToolset.NET.Widgets
         public void SetSections(List<string> sections)
         {
             // Set sections when UI controls are available
+            // For now, store sections for later use
+            _sections = sections ?? new List<string>();
         }
+
+        private List<string> _sections = new List<string>();
 
         public List<FileResource> SelectedResources()
         {

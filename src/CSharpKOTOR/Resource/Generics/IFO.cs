@@ -107,7 +107,6 @@ namespace CSharpKOTOR.Resource.Generics
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/ifo.py:123-124
         // Original: Additional script hooks
-        public ResRef OnPlayerRest { get; set; } = ResRef.FromBlank();
         public ResRef StartMovie { get; set; } = ResRef.FromBlank();
 
         // Additional script hooks from Python
