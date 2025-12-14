@@ -166,7 +166,11 @@ namespace Odyssey.Content.MDL
 
         /// <summary>
         /// Helper method to get resource data from provider.
+        /// Reads the entire resource stream into a byte array.
         /// </summary>
+        /// <param name="resRef">Resource reference (case-sensitive)</param>
+        /// <param name="resType">Resource type (MDL or MDX)</param>
+        /// <returns>Resource data as byte array, or null if resource not found</returns>
         private byte[] GetResourceData(string resRef, ResourceType resType)
         {
             var id = new ResourceIdentifier(resRef, resType);
@@ -192,11 +196,17 @@ namespace Odyssey.Content.MDL
         }
 
         /// <summary>
-        /// Loads an MDL model from file paths using the optimized bulk reader.
+        /// Loads an MDL model from file paths using the optimized unsafe reader (fastest).
         /// </summary>
         /// <param name="mdlPath">Path to the MDL file</param>
         /// <param name="mdxPath">Path to the MDX file</param>
         /// <returns>Loaded MDL model</returns>
+        /// <exception cref="ArgumentNullException">Thrown when mdlPath or mdxPath is null or empty.</exception>
+        /// <exception cref="FileNotFoundException">Thrown when the specified file does not exist.</exception>
+        /// <exception cref="DirectoryNotFoundException">Thrown when the specified path is invalid.</exception>
+        /// <exception cref="UnauthorizedAccessException">Thrown when access to the file is denied.</exception>
+        /// <exception cref="IOException">Thrown when an I/O error occurs while reading the file.</exception>
+        /// <exception cref="InvalidDataException">Thrown when the MDL or MDX file is corrupted or has invalid data.</exception>
         public static MDLModel LoadFromFiles(string mdlPath, string mdxPath)
         {
             if (string.IsNullOrEmpty(mdlPath))
@@ -208,18 +218,22 @@ namespace Odyssey.Content.MDL
                 throw new ArgumentNullException(nameof(mdxPath));
             }
 
-            using (var reader = new MDLBulkReader(mdlPath, mdxPath))
+            using (var reader = new MDLOptimizedReader(mdlPath, mdxPath))
             {
                 return reader.Load();
             }
         }
 
         /// <summary>
-        /// Loads an MDL model from byte arrays using the optimized bulk reader.
+        /// Loads an MDL model from byte arrays using the optimized unsafe reader (fastest).
+        /// This is the most efficient method when you already have the file data in memory.
         /// </summary>
         /// <param name="mdlData">MDL file data</param>
         /// <param name="mdxData">MDX file data</param>
         /// <returns>Loaded MDL model</returns>
+        /// <exception cref="ArgumentNullException">Thrown when mdlData or mdxData is null.</exception>
+        /// <exception cref="InvalidDataException">Thrown when the MDL or MDX file is corrupted or has invalid data.</exception>
+        /// <exception cref="InvalidOperationException">Thrown when data size calculations overflow or array bounds are exceeded.</exception>
         public static MDLModel LoadFromBytes(byte[] mdlData, byte[] mdxData)
         {
             if (mdlData == null)
@@ -231,20 +245,24 @@ namespace Odyssey.Content.MDL
                 throw new ArgumentNullException(nameof(mdxData));
             }
 
-            using (var reader = new MDLBulkReader(mdlData, mdxData))
+            using (var reader = new MDLOptimizedReader(mdlData, mdxData))
             {
                 return reader.Load();
             }
         }
 
         /// <summary>
-        /// Loads an MDL model from streams.
+        /// Loads an MDL model from streams using the optimized unsafe reader (fastest).
         /// Note: This method reads streams into memory first for bulk processing.
         /// </summary>
         /// <param name="mdlStream">MDL stream</param>
         /// <param name="mdxStream">MDX stream</param>
         /// <param name="ownsStreams">If true, streams will be disposed after loading</param>
         /// <returns>Loaded MDL model</returns>
+        /// <exception cref="ArgumentNullException">Thrown when mdlStream or mdxStream is null.</exception>
+        /// <exception cref="IOException">Thrown when an I/O error occurs while reading the stream.</exception>
+        /// <exception cref="InvalidDataException">Thrown when the MDL or MDX file is corrupted or has invalid data.</exception>
+        /// <exception cref="InvalidOperationException">Thrown when data size calculations overflow or array bounds are exceeded.</exception>
         public static MDLModel LoadFromStreams(Stream mdlStream, Stream mdxStream, bool ownsStreams = true)
         {
             if (mdlStream == null)
@@ -274,7 +292,7 @@ namespace Odyssey.Content.MDL
                     mdxData = ms.ToArray();
                 }
 
-                using (var reader = new MDLBulkReader(mdlData, mdxData))
+                using (var reader = new MDLOptimizedReader(mdlData, mdxData))
                 {
                     return reader.Load();
                 }
@@ -291,6 +309,7 @@ namespace Odyssey.Content.MDL
 
         /// <summary>
         /// Clears the model cache.
+        /// This removes all cached models from memory.
         /// </summary>
         public static void ClearCache()
         {
@@ -299,8 +318,10 @@ namespace Odyssey.Content.MDL
 
         /// <summary>
         /// Sets the maximum number of models to cache.
+        /// When the cache exceeds this limit, least recently used models are evicted.
         /// </summary>
-        /// <param name="maxEntries">Maximum number of cached models</param>
+        /// <param name="maxEntries">Maximum number of cached models (must be at least 1)</param>
+        /// <exception cref="ArgumentException">Thrown when maxEntries is less than 1 (handled internally, value is clamped to 1)</exception>
         public static void SetCacheSize(int maxEntries)
         {
             MDLCache.Instance.MaxEntries = maxEntries;
