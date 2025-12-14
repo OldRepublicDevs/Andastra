@@ -147,7 +147,17 @@ namespace Odyssey.Stride.GUI
             // Main panel - 600x400, centered
             float panelWidth = 600;
             float panelHeight = 400;
+            // Access Vector2 X component for horizontal position calculation
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.Vector2.html
+            // Vector2.X property gets the X component of the vector
+            // Method signature: float X { get; set; }
+            // Source: https://doc.stride3d.net/latest/en/manual/mathematics/index.html
             float panelX = _screenCenter.X - panelWidth * 0.5f;
+            // Access Vector2 Y component for vertical position calculation
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.Vector2.html
+            // Vector2.Y property gets the Y component of the vector
+            // Method signature: float Y { get; set; }
+            // Source: https://doc.stride3d.net/latest/en/manual/mathematics/index.html
             float panelY = _screenCenter.Y - panelHeight * 0.5f;
             // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.RectangleF.html
             // RectangleF(float x, float y, float width, float height) constructor creates a rectangle
