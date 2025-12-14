@@ -2359,7 +2359,7 @@ namespace Odyssey.Scripting.EngineApi
             if (area != null)
             {
                 IEntity waypoint = area.GetObjectByTag(waypointTag, 0);
-                if (waypoint != null && waypoint.ObjectType == ObjectType.Waypoint)
+                if (waypoint != null && waypoint.ObjectType == Core.Enums.ObjectType.Waypoint)
                 {
                     return Variable.FromObject(waypoint.ObjectId);
                 }
@@ -2367,7 +2367,7 @@ namespace Odyssey.Scripting.EngineApi
 
             // Fallback to world search
             IEntity found = ctx.World.GetEntityByTag(waypointTag, 0);
-            if (found != null && found.ObjectType == ObjectType.Waypoint)
+            if (found != null && found.ObjectType == Core.Enums.ObjectType.Waypoint)
             {
                 return Variable.FromObject(found.ObjectId);
             }
