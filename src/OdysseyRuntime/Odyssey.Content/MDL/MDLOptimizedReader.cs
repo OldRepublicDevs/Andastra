@@ -1450,48 +1450,146 @@ namespace Odyssey.Content.MDL
 
         #region Unsafe Primitive Reading (Zero-Copy Operations)
 
-        private static byte ReadByte(byte* ptr, ref int pos)
+        /// <summary>
+        /// Reads a single byte from the MDL data with bounds checking.
+        /// </summary>
+        /// <param name="ptr">Pointer to MDL data</param>
+        /// <param name="pos">Current position (will be incremented by 1)</param>
+        /// <returns>The byte value</returns>
+        /// <exception cref="InvalidDataException">Thrown when reading would exceed buffer bounds</exception>
+        private byte ReadByte(byte* ptr, ref int pos)
         {
+            if (pos < 0 || pos >= _mdlData.Length)
+            {
+                throw new InvalidDataException(
+                    $"Attempted to read byte at position {pos}, but MDL data length is {_mdlData.Length}. " +
+                    "File may be corrupted or truncated."
+                );
+            }
             return ptr[pos++];
         }
 
-        private static short ReadInt16(byte* ptr, ref int pos)
+        /// <summary>
+        /// Reads a 16-bit signed integer from the MDL data with bounds checking.
+        /// </summary>
+        /// <param name="ptr">Pointer to MDL data</param>
+        /// <param name="pos">Current position (will be incremented by 2)</param>
+        /// <returns>The int16 value</returns>
+        /// <exception cref="InvalidDataException">Thrown when reading would exceed buffer bounds</exception>
+        private short ReadInt16(byte* ptr, ref int pos)
         {
+            if (pos < 0 || pos + 2 > _mdlData.Length)
+            {
+                throw new InvalidDataException(
+                    $"Attempted to read int16 at position {pos}, but MDL data length is {_mdlData.Length}. " +
+                    "File may be corrupted or truncated."
+                );
+            }
             short val = *(short*)(ptr + pos);
             pos += 2;
             return val;
         }
 
-        private static ushort ReadUInt16(byte* ptr, ref int pos)
+        /// <summary>
+        /// Reads a 16-bit unsigned integer from the MDL data with bounds checking.
+        /// </summary>
+        /// <param name="ptr">Pointer to MDL data</param>
+        /// <param name="pos">Current position (will be incremented by 2)</param>
+        /// <returns>The uint16 value</returns>
+        /// <exception cref="InvalidDataException">Thrown when reading would exceed buffer bounds</exception>
+        private ushort ReadUInt16(byte* ptr, ref int pos)
         {
+            if (pos < 0 || pos + 2 > _mdlData.Length)
+            {
+                throw new InvalidDataException(
+                    $"Attempted to read uint16 at position {pos}, but MDL data length is {_mdlData.Length}. " +
+                    "File may be corrupted or truncated."
+                );
+            }
             ushort val = *(ushort*)(ptr + pos);
             pos += 2;
             return val;
         }
 
-        private static int ReadInt32(byte* ptr, ref int pos)
+        /// <summary>
+        /// Reads a 32-bit signed integer from the MDL data with bounds checking.
+        /// </summary>
+        /// <param name="ptr">Pointer to MDL data</param>
+        /// <param name="pos">Current position (will be incremented by 4)</param>
+        /// <returns>The int32 value</returns>
+        /// <exception cref="InvalidDataException">Thrown when reading would exceed buffer bounds</exception>
+        private int ReadInt32(byte* ptr, ref int pos)
         {
+            if (pos < 0 || pos + 4 > _mdlData.Length)
+            {
+                throw new InvalidDataException(
+                    $"Attempted to read int32 at position {pos}, but MDL data length is {_mdlData.Length}. " +
+                    "File may be corrupted or truncated."
+                );
+            }
             int val = *(int*)(ptr + pos);
             pos += 4;
             return val;
         }
 
-        private static uint ReadUInt32(byte* ptr, ref int pos)
+        /// <summary>
+        /// Reads a 32-bit unsigned integer from the MDL data with bounds checking.
+        /// </summary>
+        /// <param name="ptr">Pointer to MDL data</param>
+        /// <param name="pos">Current position (will be incremented by 4)</param>
+        /// <returns>The uint32 value</returns>
+        /// <exception cref="InvalidDataException">Thrown when reading would exceed buffer bounds</exception>
+        private uint ReadUInt32(byte* ptr, ref int pos)
         {
+            if (pos < 0 || pos + 4 > _mdlData.Length)
+            {
+                throw new InvalidDataException(
+                    $"Attempted to read uint32 at position {pos}, but MDL data length is {_mdlData.Length}. " +
+                    "File may be corrupted or truncated."
+                );
+            }
             uint val = *(uint*)(ptr + pos);
             pos += 4;
             return val;
         }
 
-        private static float ReadFloat(byte* ptr, ref int pos)
+        /// <summary>
+        /// Reads a 32-bit float from the MDL data with bounds checking.
+        /// </summary>
+        /// <param name="ptr">Pointer to MDL data</param>
+        /// <param name="pos">Current position (will be incremented by 4)</param>
+        /// <returns>The float value</returns>
+        /// <exception cref="InvalidDataException">Thrown when reading would exceed buffer bounds</exception>
+        private float ReadFloat(byte* ptr, ref int pos)
         {
+            if (pos < 0 || pos + 4 > _mdlData.Length)
+            {
+                throw new InvalidDataException(
+                    $"Attempted to read float at position {pos}, but MDL data length is {_mdlData.Length}. " +
+                    "File may be corrupted or truncated."
+                );
+            }
             float val = *(float*)(ptr + pos);
             pos += 4;
             return val;
         }
 
-        private static Vector3Data ReadVector3(byte* ptr, ref int pos)
+        /// <summary>
+        /// Reads a Vector3 (3 floats = 12 bytes) from the MDL data with bounds checking.
+        /// </summary>
+        /// <param name="ptr">Pointer to MDL data</param>
+        /// <param name="pos">Current position (will be incremented by 12)</param>
+        /// <returns>The Vector3Data value</returns>
+        /// <exception cref="InvalidDataException">Thrown when reading would exceed buffer bounds</exception>
+        private Vector3Data ReadVector3(byte* ptr, ref int pos)
         {
+            if (pos < 0 || pos + 12 > _mdlData.Length)
+            {
+                throw new InvalidDataException(
+                    $"Attempted to read Vector3 at position {pos}, but MDL data length is {_mdlData.Length}. " +
+                    "File may be corrupted or truncated."
+                );
+            }
             float x = *(float*)(ptr + pos);
             float y = *(float*)(ptr + pos + 4);
             float z = *(float*)(ptr + pos + 8);
@@ -1499,8 +1597,22 @@ namespace Odyssey.Content.MDL
             return new Vector3Data(x, y, z);
         }
 
-        private static Vector4Data ReadQuaternion(byte* ptr, ref int pos)
+        /// <summary>
+        /// Reads a Quaternion (4 floats = 16 bytes) from the MDL data with bounds checking.
+        /// </summary>
+        /// <param name="ptr">Pointer to MDL data</param>
+        /// <param name="pos">Current position (will be incremented by 16)</param>
+        /// <returns>The Vector4Data value</returns>
+        /// <exception cref="InvalidDataException">Thrown when reading would exceed buffer bounds</exception>
+        private Vector4Data ReadQuaternion(byte* ptr, ref int pos)
         {
+            if (pos < 0 || pos + 16 > _mdlData.Length)
+            {
+                throw new InvalidDataException(
+                    $"Attempted to read Quaternion at position {pos}, but MDL data length is {_mdlData.Length}. " +
+                    "File may be corrupted or truncated."
+                );
+            }
             float w = *(float*)(ptr + pos);
             float x = *(float*)(ptr + pos + 4);
             float y = *(float*)(ptr + pos + 8);
@@ -1509,13 +1621,29 @@ namespace Odyssey.Content.MDL
             return new Vector4Data(x, y, z, w);
         }
 
-        private static string ReadFixedString(byte* ptr, ref int pos, int length)
+        /// <summary>
+        /// Reads a fixed-length ASCII string from the MDL data with bounds checking.
+        /// </summary>
+        /// <param name="ptr">Pointer to MDL data</param>
+        /// <param name="pos">Current position (will be incremented by length)</param>
+        /// <param name="length">Number of bytes to read</param>
+        /// <returns>The string value (null-terminated if found)</returns>
+        /// <exception cref="InvalidDataException">Thrown when reading would exceed buffer bounds</exception>
+        private string ReadFixedString(byte* ptr, ref int pos, int length)
         {
+            if (pos < 0 || pos + length > _mdlData.Length)
+            {
+                throw new InvalidDataException(
+                    $"Attempted to read fixed string of length {length} at position {pos}, " +
+                    $"but MDL data length is {_mdlData.Length}. File may be corrupted or truncated."
+                );
+            }
             int start = pos;
             int end = start;
+            int maxEnd = start + length;
 
-            // Find null terminator
-            while (end < start + length && ptr[end] != 0)
+            // Find null terminator (with bounds check)
+            while (end < maxEnd && ptr[end] != 0)
             {
                 end++;
             }
