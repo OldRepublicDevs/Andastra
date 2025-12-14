@@ -493,7 +493,19 @@ namespace HolocronToolset.NET.Editors
                 {
                     if (item is PropertyListItem propItem && propItem.Property != null)
                     {
-                        uti.Properties.Add(propItem.Property);
+                        // Create a deep copy of the property to avoid reference issues
+                        var propCopy = new UTIProperty
+                        {
+                            PropertyName = propItem.Property.PropertyName,
+                            Subtype = propItem.Property.Subtype,
+                            CostTable = propItem.Property.CostTable,
+                            CostValue = propItem.Property.CostValue,
+                            Param1 = propItem.Property.Param1,
+                            Param1Value = propItem.Property.Param1Value,
+                            ChanceAppear = propItem.Property.ChanceAppear,
+                            UpgradeType = propItem.Property.UpgradeType
+                        };
+                        uti.Properties.Add(propCopy);
                     }
                 }
             }
