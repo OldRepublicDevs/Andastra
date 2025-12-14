@@ -130,3 +130,10 @@ temp_avrichtextbox
 .mypy_cache/
 temp_*/
 build_errors.txt
+test-output.txt
+csharpkotor_all_modules.txt
+csharpkotor_formats.txt
+pykotor_all_modules.txt
+pykotor_resource_formats.txt
+test-full-output.txt
+test-output.txt
