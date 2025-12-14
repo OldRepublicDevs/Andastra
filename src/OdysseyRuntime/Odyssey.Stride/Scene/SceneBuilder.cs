@@ -60,6 +60,14 @@ namespace Odyssey.Stride.Scene
         /// </summary>
         /// <param name="device">Graphics device.</param>
         /// <param name="resourceProvider">Resource provider for loading assets.</param>
+        // Initialize scene builder with graphics device and resource provider
+        // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Graphics.GraphicsDevice.html
+        // GraphicsDevice provides access to graphics hardware for creating resources
+        // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Graphics.Texture.html
+        // Texture represents image data, cached for reuse
+        // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Engine.Entity.html
+        // Entity(string) constructor creates root entity for the scene hierarchy
+        // Source: https://doc.stride3d.net/latest/en/manual/entities/index.html
         public SceneBuilder([NotNull] GraphicsDevice device, [NotNull] IGameResourceProvider resourceProvider)
         {
             _device = device ?? throw new ArgumentNullException("device");
@@ -70,6 +78,10 @@ namespace Odyssey.Stride.Scene
             _modelCache = new Dictionary<string, MdlToStrideModelConverter.ConversionResult>(StringComparer.OrdinalIgnoreCase);
             _roomEntities = new Dictionary<string, StrideEngine.Entity>(StringComparer.OrdinalIgnoreCase);
 
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Engine.Entity.html
+            // Entity(string) constructor creates root entity for scene hierarchy
+            // All scene entities will be children of this root entity
+            // Source: https://doc.stride3d.net/latest/en/manual/entities/index.html
             _rootEntity = new StrideEngine.Entity("AreaRoot");
         }
 
@@ -156,19 +168,32 @@ namespace Odyssey.Stride.Scene
                 return null;
             }
 
-            // Create entity
+            // Create entity for visual representation
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Engine.Entity.html
+            // Entity(string) constructor creates a new entity with the specified name
+            // Source: https://doc.stride3d.net/latest/en/manual/entities/index.html
             var strideEntity = new StrideEngine.Entity(entity.Tag ?? modelResRef);
 
             // Get position from transform component
             var transform = entity.GetComponent<Core.Interfaces.Components.ITransformComponent>();
             if (transform != null)
             {
+                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Engine.TransformComponent.html
+                // Transform.Position sets the world position of the entity
+                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.Vector3.html
+                // Vector3(float x, float y, float z) constructor creates position vector
+                // Source: https://doc.stride3d.net/latest/en/manual/entities/transforms/index.html
                 strideEntity.Transform.Position = new StrideMath.Vector3(
                     transform.Position.X,
                     transform.Position.Y,
                     transform.Position.Z);
 
                 // Convert facing (radians around Y) to quaternion
+                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.Quaternion.html
+                // Quaternion.RotationY(float) creates a quaternion representing rotation around Y axis
+                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Engine.TransformComponent.html
+                // Transform.Rotation sets the entity's rotation
+                // Source: https://doc.stride3d.net/latest/en/manual/entities/transforms/index.html
                 float facing = transform.Facing;
                 strideEntity.Transform.Rotation = global::Stride.Core.Mathematics.Quaternion.RotationY(facing);
             }
@@ -176,7 +201,11 @@ namespace Odyssey.Stride.Scene
             // Add mesh components
             AddMeshesToEntity(strideEntity, modelData);
 
-            // Add to scene
+            // Add to scene root entity hierarchy
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Engine.TransformComponent.html
+            // Transform.Children collection contains child transforms
+            // Add(TransformComponent) adds entity as child of root, creating scene hierarchy
+            // Source: https://doc.stride3d.net/latest/en/manual/entities/transforms/index.html
             _rootEntity.Transform.Children.Add(strideEntity.Transform);
 
             return strideEntity;
@@ -185,6 +214,10 @@ namespace Odyssey.Stride.Scene
         /// <summary>
         /// Updates entity visual position to match runtime entity.
         /// </summary>
+        // Synchronize Stride entity transform with runtime entity transform
+        // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Engine.TransformComponent.html
+        // Transform.Position and Transform.Rotation properties update entity world transform
+        // Source: https://doc.stride3d.net/latest/en/manual/entities/transforms/index.html
         public void SyncEntityPosition(StrideEngine.Entity strideEntity, IEntity runtimeEntity)
         {
             if (strideEntity == null || runtimeEntity == null)
@@ -195,11 +228,19 @@ namespace Odyssey.Stride.Scene
             var transform = runtimeEntity.GetComponent<Core.Interfaces.Components.ITransformComponent>();
             if (transform != null)
             {
+                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Engine.TransformComponent.html
+                // Transform.Position property sets the world position
+                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.Vector3.html
+                // Vector3 constructor creates position from runtime entity coordinates
                 strideEntity.Transform.Position = new StrideMath.Vector3(
                     transform.Position.X,
                     transform.Position.Y,
                     transform.Position.Z);
 
+                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.Quaternion.html
+                // Quaternion.RotationY(float) creates rotation quaternion from facing angle
+                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Engine.TransformComponent.html
+                // Transform.Rotation property sets the entity's rotation
                 strideEntity.Transform.Rotation = global::Stride.Core.Mathematics.Quaternion.RotationY(transform.Facing);
             }
         }
@@ -322,19 +363,36 @@ namespace Odyssey.Stride.Scene
         {
             // Create invisible marker for door position
             // Actual door model is added when door entity is created from GIT
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Engine.Entity.html
+            // Entity(string) constructor creates a marker entity for door hook position
+            // Source: https://doc.stride3d.net/latest/en/manual/entities/index.html
             var marker = new StrideEngine.Entity("doorhook_" + doorHook.Room + "_" + doorHook.Door);
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Engine.TransformComponent.html
+            // Transform.Position sets the world position of the door hook marker
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.Vector3.html
+            // Vector3 constructor creates position from LYT door hook coordinates
+            // Source: https://doc.stride3d.net/latest/en/manual/entities/transforms/index.html
             marker.Transform.Position = new StrideMath.Vector3(
                 doorHook.Position.X,
                 doorHook.Position.Y,
                 doorHook.Position.Z);
 
-            // Convert quaternion rotation
+            // Convert quaternion rotation from LYT to Stride
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.Quaternion.html
+            // Quaternion(float x, float y, float z, float w) constructor creates rotation from LYT orientation
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Engine.TransformComponent.html
+            // Transform.Rotation sets the entity's rotation
+            // Source: https://doc.stride3d.net/latest/en/manual/entities/transforms/index.html
             marker.Transform.Rotation = new global::Stride.Core.Mathematics.Quaternion(
                 doorHook.Orientation.X,
                 doorHook.Orientation.Y,
                 doorHook.Orientation.Z,
                 doorHook.Orientation.W);
 
+            // Add marker to scene root hierarchy
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Engine.TransformComponent.html
+            // Transform.Children.Add(TransformComponent) adds marker as child of root entity
+            // Source: https://doc.stride3d.net/latest/en/manual/entities/transforms/index.html
             _rootEntity.Transform.Children.Add(marker.Transform);
         }
 
@@ -514,14 +572,26 @@ namespace Odyssey.Stride.Scene
         /// <summary>
         /// Gets the room name at a given position based on room bounds.
         /// </summary>
+        // Get room name at given world position using distance check
+        // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Engine.TransformComponent.html
+        // Transform.Position property gets the world position of room entities
+        // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.Vector3.html
+        // Vector3.Distance(Vector3, Vector3) calculates distance between two 3D points
+        // Method signature: static float Distance(Vector3 value1, Vector3 value2)
+        // Source: https://doc.stride3d.net/latest/en/manual/mathematics/index.html
         public string GetRoomAtPosition(StrideMath.Vector3 position)
         {
             foreach (var kvp in _roomEntities)
             {
                 var roomEntity = kvp.Value;
+                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Engine.TransformComponent.html
+                // Transform.Position gets the world position of the room entity
                 var roomPos = roomEntity.Transform.Position;
 
                 // Simple distance check - could be improved with actual room bounds
+                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Core.Mathematics.Vector3.html
+                // Vector3.Distance calculates 2D distance (ignoring Z) for room detection
+                // Source: https://doc.stride3d.net/latest/en/manual/mathematics/index.html
                 float dist = StrideMath.Vector3.Distance(
                     new StrideMath.Vector3(position.X, position.Y, 0),
                     new StrideMath.Vector3(roomPos.X, roomPos.Y, 0));
