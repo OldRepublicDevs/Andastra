@@ -1,0 +1,175 @@
+using System;
+using System.Collections.Generic;
+using Microsoft.Xna.Framework;
+
+namespace Odyssey.MonoGame.LOD
+{
+    /// <summary>
+    /// LOD fade system for smooth transitions between LOD levels.
+    /// 
+    /// Provides smooth alpha-blended transitions between LOD levels to
+    /// eliminate visual popping when switching LODs.
+    /// 
+    /// Features:
+    /// - Smooth alpha blending between LODs
+    /// - Temporal coherence
+    /// - Configurable fade distance
+    /// - Per-object fade tracking
+    /// </summary>
+    public class LODFadeSystem
+    {
+        /// <summary>
+        /// LOD fade state for an object.
+        /// </summary>
+        private class LODFadeState
+        {
+            public int ObjectId;
+            public int CurrentLOD;
+            public int TargetLOD;
+            public float FadeAlpha;
+            public float FadeDirection; // 1.0 = fading in, -1.0 = fading out
+        }
+
+        private readonly Dictionary<int, LODFadeState> _fadeStates;
+        private float _fadeDistance;
+        private float _fadeSpeed;
+
+        /// <summary>
+        /// Gets or sets the fade distance (distance over which to fade).
+        /// </summary>
+        public float FadeDistance
+        {
+            get { return _fadeDistance; }
+            set { _fadeDistance = Math.Max(0.0f, value); }
+        }
+
+        /// <summary>
+        /// Gets or sets the fade speed (units per second).
+        /// </summary>
+        public float FadeSpeed
+        {
+            get { return _fadeSpeed; }
+            set { _fadeSpeed = Math.Max(0.0f, value); }
+        }
+
+        /// <summary>
+        /// Initializes a new LOD fade system.
+        /// </summary>
+        public LODFadeSystem()
+        {
+            _fadeStates = new Dictionary<int, LODFadeState>();
+            _fadeDistance = 5.0f;
+            _fadeSpeed = 10.0f;
+        }
+
+        /// <summary>
+        /// Updates fade states for all objects.
+        /// </summary>
+        public void Update(float deltaTime)
+        {
+            var keysToRemove = new List<int>();
+
+            foreach (var kvp in _fadeStates)
+            {
+                LODFadeState state = kvp.Value;
+
+                // Update fade alpha
+                state.FadeAlpha += state.FadeDirection * (_fadeSpeed * deltaTime);
+                state.FadeAlpha = Math.Max(0.0f, Math.Min(1.0f, state.FadeAlpha));
+
+                // Check if fade is complete
+                if (state.FadeAlpha <= 0.0f && state.FadeDirection < 0.0f)
+                {
+                    // Fade out complete, switch to target LOD
+                    state.CurrentLOD = state.TargetLOD;
+                    state.FadeAlpha = 0.0f;
+                    keysToRemove.Add(kvp.Key);
+                }
+                else if (state.FadeAlpha >= 1.0f && state.FadeDirection > 0.0f)
+                {
+                    // Fade in complete
+                    state.FadeAlpha = 1.0f;
+                    keysToRemove.Add(kvp.Key);
+                }
+            }
+
+            // Remove completed fades
+            foreach (int key in keysToRemove)
+            {
+                _fadeStates.Remove(key);
+            }
+        }
+
+        /// <summary>
+        /// Requests a LOD transition for an object.
+        /// </summary>
+        public void RequestLODTransition(int objectId, int currentLOD, int targetLOD)
+        {
+            if (currentLOD == targetLOD)
+            {
+                // No transition needed
+                _fadeStates.Remove(objectId);
+                return;
+            }
+
+            LODFadeState state;
+            if (!_fadeStates.TryGetValue(objectId, out state))
+            {
+                state = new LODFadeState
+                {
+                    ObjectId = objectId,
+                    CurrentLOD = currentLOD,
+                    TargetLOD = targetLOD,
+                    FadeAlpha = 1.0f,
+                    FadeDirection = -1.0f // Start fading out
+                };
+                _fadeStates[objectId] = state;
+            }
+            else
+            {
+                // Update existing fade
+                state.TargetLOD = targetLOD;
+            }
+        }
+
+        /// <summary>
+        /// Gets the fade alpha for an object.
+        /// </summary>
+        public float GetFadeAlpha(int objectId)
+        {
+            LODFadeState state;
+            if (_fadeStates.TryGetValue(objectId, out state))
+            {
+                return state.FadeAlpha;
+            }
+            return 1.0f; // Fully opaque if not fading
+        }
+
+        /// <summary>
+        /// Gets the current LOD for an object (may be transitioning).
+        /// </summary>
+        public int GetCurrentLOD(int objectId)
+        {
+            LODFadeState state;
+            if (_fadeStates.TryGetValue(objectId, out state))
+            {
+                return state.CurrentLOD;
+            }
+            return -1;
+        }
+
+        /// <summary>
+        /// Gets the target LOD for an object (may be transitioning).
+        /// </summary>
+        public int GetTargetLOD(int objectId)
+        {
+            LODFadeState state;
+            if (_fadeStates.TryGetValue(objectId, out state))
+            {
+                return state.TargetLOD;
+            }
+            return -1;
+        }
+    }
+}
+

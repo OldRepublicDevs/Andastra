@@ -103,7 +103,7 @@ namespace Odyssey.MonoGame.PostProcessing
             // Smoothly adapt exposure
             float speed = _targetExposure > _currentExposure ? _adaptationSpeedUp : _adaptationSpeedDown;
             float adaptationRate = 1.0f - (float)Math.Pow(0.98f, speed * deltaTime);
-            _currentExposure = _currentExposure + (_targetExposure - _currentExposure) * adaptationRate;
+            _currentExposure += (_targetExposure - _currentExposure) * adaptationRate;
         }
     }
 }
