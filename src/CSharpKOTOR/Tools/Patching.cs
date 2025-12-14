@@ -65,7 +65,7 @@ namespace CSharpKOTOR.Tools
 
             if (gffContent == GFFContent.DLG && config.SetUnskippable)
             {
-                object soundRaw = gffStruct.Acquire("Sound", null);
+                object soundRaw = gffStruct.Acquire<object>("Sound", null);
                 ResRef sound = soundRaw as ResRef;
                 string soundStr = sound == null ? "" : sound.ToString().Trim().ToLowerInvariant();
                 if (sound != null && !string.IsNullOrWhiteSpace(soundStr) && AlienSounds.All.Contains(soundStr))
@@ -154,9 +154,13 @@ namespace CSharpKOTOR.Tools
 
             bool madeChange = false;
             var newSubstrings = new Dictionary<int, string>();
-            foreach (var kvp in locstring.GetSubstrings())
+            foreach ((Language lang, Gender gender, string text) in locstring)
             {
-                newSubstrings[kvp.Key] = kvp.Value;
+                if (text != null && !string.IsNullOrWhiteSpace(text))
+                {
+                    int substringId = LocalizedString.SubstringId(lang, gender);
+                    newSubstrings[substringId] = text;
+                }
             }
 
             foreach ((Language lang, Gender gender, string text) in locstring)
@@ -171,7 +175,11 @@ namespace CSharpKOTOR.Tools
                     // madeChange = true;
                 }
             }
-            locstring.SetSubstrings(newSubstrings);
+            foreach (var kvp in newSubstrings)
+            {
+                LocalizedString.SubstringPair(kvp.Key, out Language lang, out Gender gender);
+                locstring.SetData(lang, gender, kvp.Value);
+            }
             return madeChange;
         }
 
@@ -202,7 +210,7 @@ namespace CSharpKOTOR.Tools
             if (!resource.InsideCapsule)
             {
                 newName = config.AlwaysBackup
-                    ? $"{resource.Resname()}_{toGame.Name}.{resource.Restype().Extension}"
+                    ? $"{resource.ResName}_{toGame}.{resource.ResType.Extension}"
                     : resource.Filename();
                 savepath = Path.Combine(Path.GetDirectoryName(resource.FilePath), newName);
                 convertedData = savepath;
@@ -212,12 +220,12 @@ namespace CSharpKOTOR.Tools
                 savepath = resource.FilePath;
             }
 
-            LogMessage(config, $"Converting {resource.PathIdent().Parent}/{resource.PathIdent().Name} to {toGame.Name}");
+            LogMessage(config, $"Converting {Path.GetDirectoryName(resource.PathIdent())}/{Path.GetFileName(resource.PathIdent())} to {toGame}");
             try
             {
                 // Generic resource conversion - these functions need to be ported
                 // For now, log that conversion is needed
-                LogMessage(config, $"GFF conversion for {resource.Restype().Name} not yet fully implemented - requires generic resource read/write functions");
+                LogMessage(config, $"GFF conversion for {resource.ResType.Name} not yet fully implemented - requires generic resource read/write functions");
             }
             catch (Exception ex) when (ex is IOException || ex is ArgumentException)
             {
@@ -256,7 +264,7 @@ namespace CSharpKOTOR.Tools
             }
 
             // Handle TLK translation
-            if (resource.Restype().Extension.ToLowerInvariant() == "tlk" && config.Translate && config.Translator != null)
+            if (resource.ResType.Extension.ToLowerInvariant() == "tlk" && config.Translate && config.Translator != null)
             {
                 TLK tlk = null;
                 LogMessage(config, $"Loading TLK '{resource.FilePath}'");
@@ -266,7 +274,7 @@ namespace CSharpKOTOR.Tools
                 }
                 catch
                 {
-                    LogMessage(config, $"[Error] loading TLK '{resource.Identifier()}' at '{resource.FilePath}'!");
+                    LogMessage(config, $"[Error] loading TLK '{resource.Identifier}' at '{resource.FilePath}'!");
                     return null;
                 }
 
@@ -282,7 +290,7 @@ namespace CSharpKOTOR.Tools
             }
 
             // Handle TGA to TPC conversion
-            if (resource.Restype().Extension.ToLowerInvariant() == "tga" && config.ConvertTga == "TGA to TPC")
+            if (resource.ResType.Extension.ToLowerInvariant() == "tga" && config.ConvertTga == "TGA to TPC")
             {
                 LogMessage(config, $"Converting TGA at {resource.PathIdent()} to TPC...");
                 try
@@ -291,13 +299,13 @@ namespace CSharpKOTOR.Tools
                 }
                 catch
                 {
-                    LogMessage(config, $"[Error] loading TGA '{resource.Identifier()}' at '{resource.FilePath}'!");
+                    LogMessage(config, $"[Error] loading TGA '{resource.Identifier}' at '{resource.FilePath}'!");
                     return null;
                 }
             }
 
             // Handle TPC to TGA conversion
-            if (resource.Restype().Extension.ToLowerInvariant() == "tpc" && config.ConvertTga == "TPC to TGA")
+            if (resource.ResType.Extension.ToLowerInvariant() == "tpc" && config.ConvertTga == "TPC to TGA")
             {
                 LogMessage(config, $"Converting TPC at {resource.PathIdent()} to TGA...");
                 try
@@ -306,13 +314,13 @@ namespace CSharpKOTOR.Tools
                 }
                 catch
                 {
-                    LogMessage(config, $"[Error] loading TPC '{resource.Identifier()}' at '{resource.FilePath}'!");
+                    LogMessage(config, $"[Error] loading TPC '{resource.Identifier}' at '{resource.FilePath}'!");
                     return null;
                 }
             }
 
             // Handle GFF files
-            if (Enum.GetNames(typeof(GFFContent)).Contains(resource.Restype().Name.ToUpperInvariant()))
+            if (Enum.GetNames(typeof(GFFContent)).Contains(resource.ResType.Name.ToUpperInvariant()))
             {
                 if (config.K1ConvertGffs && !resource.InsideCapsule)
                 {
@@ -331,13 +339,13 @@ namespace CSharpKOTOR.Tools
                     string alienOwner = null;
                     if (gff.Content == GFFContent.DLG && config.SetUnskippable)
                     {
-                        object skippable = gff.Root.Acquire("Skippable", null);
+                        object skippable = gff.Root.Acquire<object>("Skippable", null);
                         if (!Equals(skippable, 0) && !Equals(skippable, "0"))
                         {
-                            object conversationtype = gff.Root.Acquire("ConversationType", null);
+                            object conversationtype = gff.Root.Acquire<object>("ConversationType", null);
                             if (!Equals(conversationtype, "1") && !Equals(conversationtype, 1))
                             {
-                                alienOwner = gff.Root.Acquire("AlienRaceOwner", null) as string; // TSL only
+                                alienOwner = gff.Root.Acquire<string>("AlienRaceOwner", null); // TSL only
                             }
                         }
                     }
@@ -359,10 +367,10 @@ namespace CSharpKOTOR.Tools
                         && alienVoCount < 3
                         && gff.Content == GFFContent.DLG)
                     {
-                        object skippable = gff.Root.Acquire("Skippable", null);
+                        object skippable = gff.Root.Acquire<object>("Skippable", null);
                         if (!Equals(skippable, 0) && !Equals(skippable, "0"))
                         {
-                            object conversationtype = gff.Root.Acquire("ConversationType", null);
+                            object conversationtype = gff.Root.Acquire<object>("ConversationType", null);
                             if (!Equals(conversationtype, "1") && !Equals(conversationtype, 1))
                             {
                                 LogMessage(config, $"Setting dialog {resource.PathIdent()} as unskippable");
@@ -411,7 +419,7 @@ namespace CSharpKOTOR.Tools
                 if (config.Translate && config.Translator != null)
                 {
                     // Translator interface would need to be defined
-                    // newGffFilename = $"{resource.Resname()}_{config.Translator.ToLang.GetBcp47Code()}.{resource.Restype().Extension}";
+                    // newGffFilename = $"{resource.ResName}_{config.Translator.ToLang.GetBcp47Code()}.{resource.ResType.Extension}";
                 }
 
                 string newPath = savedir != null
@@ -442,7 +450,7 @@ namespace CSharpKOTOR.Tools
                 }
                 else
                 {
-                    byte[] txiData = capsule.GetResource(resource.Resname(), ResourceType.TXI);
+                    byte[] txiData = capsule.GetResource(resource.ResName, ResourceType.TXI);
                     if (txiData != null)
                     {
                         LogMessage(config, "Embedding TXI information from resource found in capsule...");
@@ -452,8 +460,8 @@ namespace CSharpKOTOR.Tools
                 }
 
                 string newPath = savedir != null
-                    ? Path.Combine(savedir, resource.Resname())
-                    : Path.Combine(Path.GetDirectoryName(resource.FilePath), resource.Resname());
+                    ? Path.Combine(savedir, resource.ResName)
+                    : Path.Combine(Path.GetDirectoryName(resource.FilePath), resource.ResName);
                 if (config.ConvertTga == "TGA to TPC")
                 {
                     newPath = Path.ChangeExtension(newPath, ".tpc");
@@ -508,27 +516,27 @@ namespace CSharpKOTOR.Tools
             {
                 if (config.IsPatching())
                 {
-                    object patchedData = PatchResource(new FileResource(resource.ResRef, resource.ResType, resource.Data), config, processedFiles);
+                    object patchedData = PatchResource(new FileResource(resource.ResName, resource.ResType, resource.Data.Length, 0, resource.FilePath), config, processedFiles);
                     if (patchedData is GFF gff)
                     {
                         byte[] newData = patchedData != null ? GFFAuto.BytesGff(gff, ResourceType.GFF) : resource.Data;
-                        LogMessage(config, $"Adding patched GFF resource '{resource.ResRef}.{resource.ResType.Extension}' to capsule {Path.GetFileName(newFilepath)}");
-                        newResources.Add(Tuple.Create(resource.ResRef, resource.ResType, newData));
-                        omittedResources.Add($"{resource.ResRef}.{resource.ResType.Extension}");
+                        LogMessage(config, $"Adding patched GFF resource '{resource.ResName}.{resource.ResType.Extension}' to capsule {Path.GetFileName(newFilepath)}");
+                        newResources.Add(Tuple.Create(resource.ResName, resource.ResType, newData));
+                        omittedResources.Add($"{resource.ResName}.{resource.ResType.Extension}");
                     }
                     else if (patchedData is TPC tpc)
                     {
-                        byte[] txiResource = fileCapsule.GetResource(resource.ResRef, ResourceType.TXI);
+                        byte[] txiResource = fileCapsule.GetResource(resource.ResName, ResourceType.TXI);
                         if (txiResource != null)
                         {
                             tpc.Txi = System.Text.Encoding.ASCII.GetString(txiResource);
-                            omittedResources.Add($"{resource.ResRef}.txi");
+                            omittedResources.Add($"{resource.ResName}.txi");
                         }
 
                         byte[] newData = TPCAuto.BytesTpc(tpc);
-                        LogMessage(config, $"Adding patched TPC resource '{resource.ResRef}.{resource.ResType.Extension}' to capsule {Path.GetFileName(newFilepath)}");
-                        newResources.Add(Tuple.Create(resource.ResRef, ResourceType.TPC, newData));
-                        omittedResources.Add($"{resource.ResRef}.{resource.ResType.Extension}");
+                        LogMessage(config, $"Adding patched TPC resource '{resource.ResName}.{resource.ResType.Extension}' to capsule {Path.GetFileName(newFilepath)}");
+                        newResources.Add(Tuple.Create(resource.ResName, ResourceType.TPC, newData));
+                        omittedResources.Add($"{resource.ResName}.{resource.ResType.Extension}");
                     }
                 }
             }
@@ -536,14 +544,14 @@ namespace CSharpKOTOR.Tools
             if (config.IsPatching())
             {
                 ERF erfOrRim = FileHelpers.IsAnyErfTypeFile(cFile)
-                    ? new ERF(ERFType.FromExtension(Path.GetExtension(cFile)))
+                    ? new ERF(ERFTypeExtensions.FromExtension(Path.GetExtension(cFile)))
                     : (ERF)(object)new RIM();
                 foreach (var resource in fileCapsule)
                 {
-                    string ident = $"{resource.ResRef}.{resource.ResType.Extension}";
+                    string ident = $"{resource.ResName}.{resource.ResType.Extension}";
                     if (!omittedResources.Contains(ident))
                     {
-                        erfOrRim.SetData(resource.ResRef, resource.ResType, resource.Data);
+                        erfOrRim.SetData(resource.ResName, resource.ResType, resource.Data);
                     }
                 }
                 foreach (var resinfo in newResources)
@@ -622,7 +630,7 @@ namespace CSharpKOTOR.Tools
 
             LogMessage(config, $"Using install dir for operations:\t{installPath}");
 
-            var kInstall = new Installation(installPath);
+            var kInstall = new CSharpKOTOR.Installation.Installation(installPath);
             if (config.IsPatching())
             {
                 LogMessage(config, "Patching modules...");
@@ -652,7 +660,7 @@ namespace CSharpKOTOR.Tools
             // Core resource patching would need Installation to expose core_resources
             LogMessage(config, "Core resource patching not yet fully implemented");
 
-            PatchFile(Path.Combine(kInstall.Path(), "dialog.tlk"), config, processedFiles);
+            PatchFile(Path.Combine(kInstall.Path, "dialog.tlk"), config, processedFiles);
         }
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/patching.py:833-860
