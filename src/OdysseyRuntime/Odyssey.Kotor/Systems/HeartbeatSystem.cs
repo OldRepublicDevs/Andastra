@@ -11,6 +11,16 @@ namespace Odyssey.Kotor.Systems
     /// System that fires OnHeartbeat script events at regular intervals.
     /// KOTOR uses a 6-second heartbeat interval.
     /// </summary>
+    /// <remarks>
+    /// Heartbeat System:
+    /// - Based on swkotor2.exe heartbeat system
+    /// - Located via string references: "ScriptHeartbeat" @ 0x007beeb0, "OnHeartbeat" @ 0x007bd720
+    /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_HEARTBEAT" @ 0x007bcb90, "HEARTBEAT" @ 0x007c1348
+    /// - "HeartbeatTime" @ 0x007c0c30, "HeartbeatDay" @ 0x007c0c40, "Mod_OnHeartbeat" @ 0x007be840
+    /// - Original implementation: Fires OnHeartbeat script events every 6 seconds for entities
+    /// - Each entity has its own heartbeat timer stored in GFF structure
+    /// - Module heartbeat script fires for area/module-level heartbeat events
+    /// </remarks>
     public class HeartbeatSystem
     {
         private readonly IWorld _world;
@@ -49,9 +59,9 @@ namespace Odyssey.Kotor.Systems
             var heartbeatsToFire = new List<IEntity>();
 
             // Update all tracked timers
-            foreach (var kvp in _timers)
+            foreach (KeyValuePair<IEntity, float> kvp in _timers)
             {
-                var entity = kvp.Key;
+                IEntity entity = kvp.Key;
                 float timer = kvp.Value;
 
                 // Check if entity still exists
@@ -75,14 +85,14 @@ namespace Odyssey.Kotor.Systems
             }
 
             // Remove invalid entities
-            foreach (var entity in entitiesToRemove)
+            foreach (IEntity entity in entitiesToRemove)
             {
                 _timers.Remove(entity);
             }
 
             // Fire heartbeats (limited per frame)
             int fired = 0;
-            foreach (var entity in heartbeatsToFire)
+            foreach (IEntity entity in heartbeatsToFire)
             {
                 if (fired >= MaxHeartbeatsPerFrame)
                 {
@@ -108,7 +118,7 @@ namespace Odyssey.Kotor.Systems
             }
 
             // Only register if entity has a heartbeat script
-            var scriptHooks = entity.GetComponent<IScriptHooksComponent>();
+            IScriptHooksComponent scriptHooks = entity.GetComponent<IScriptHooksComponent>();
             if (scriptHooks == null || string.IsNullOrEmpty(scriptHooks.GetScript(ScriptEvent.OnHeartbeat)))
             {
                 return;
@@ -178,25 +188,25 @@ namespace Odyssey.Kotor.Systems
         public void RegisterAllEntities()
         {
             // Register creatures
-            foreach (var entity in _world.GetEntitiesOfType(ObjectType.Creature) ?? Array.Empty<IEntity>())
+            foreach (IEntity entity in _world.GetEntitiesOfType(ObjectType.Creature) ?? Array.Empty<IEntity>())
             {
                 RegisterEntity(entity);
             }
 
             // Register placeables
-            foreach (var entity in _world.GetEntitiesOfType(ObjectType.Placeable) ?? Array.Empty<IEntity>())
+            foreach (IEntity entity in _world.GetEntitiesOfType(ObjectType.Placeable) ?? Array.Empty<IEntity>())
             {
                 RegisterEntity(entity);
             }
 
             // Register doors
-            foreach (var entity in _world.GetEntitiesOfType(ObjectType.Door) ?? Array.Empty<IEntity>())
+            foreach (IEntity entity in _world.GetEntitiesOfType(ObjectType.Door) ?? Array.Empty<IEntity>())
             {
                 RegisterEntity(entity);
             }
 
             // Register triggers
-            foreach (var entity in _world.GetEntitiesOfType(ObjectType.Trigger) ?? Array.Empty<IEntity>())
+            foreach (IEntity entity in _world.GetEntitiesOfType(ObjectType.Trigger) ?? Array.Empty<IEntity>())
             {
                 RegisterEntity(entity);
             }
@@ -207,7 +217,7 @@ namespace Odyssey.Kotor.Systems
         private bool IsEntityValid(IEntity entity)
         {
             // Check if entity is still in the world
-            var found = _world.GetEntity(entity.ObjectId);
+            IEntity found = _world.GetEntity(entity.ObjectId);
             return found != null;
         }
 
@@ -218,7 +228,7 @@ namespace Odyssey.Kotor.Systems
                 return;
             }
 
-            var scriptHooks = entity.GetComponent<IScriptHooksComponent>();
+            IScriptHooksComponent scriptHooks = entity.GetComponent<IScriptHooksComponent>();
             if (scriptHooks == null || string.IsNullOrEmpty(scriptHooks.GetScript(ScriptEvent.OnHeartbeat)))
             {
                 return;
