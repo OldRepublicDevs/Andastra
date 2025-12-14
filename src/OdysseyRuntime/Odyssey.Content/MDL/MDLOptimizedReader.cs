@@ -60,8 +60,14 @@ namespace Odyssey.Content.MDL
         /// </summary>
         public MDLOptimizedReader(byte[] mdlData, byte[] mdxData)
         {
-            if (mdlData == null) throw new ArgumentNullException("mdlData");
-            if (mdxData == null) throw new ArgumentNullException("mdxData");
+            if (mdlData == null)
+            {
+                throw new ArgumentNullException("mdlData");
+            }
+            if (mdxData == null)
+            {
+                throw new ArgumentNullException("mdxData");
+            }
 
             _mdlData = mdlData;
             _mdxData = mdxData;
@@ -72,8 +78,14 @@ namespace Odyssey.Content.MDL
         /// </summary>
         public MDLOptimizedReader(string mdlPath, string mdxPath)
         {
-            if (string.IsNullOrEmpty(mdlPath)) throw new ArgumentNullException("mdlPath");
-            if (string.IsNullOrEmpty(mdxPath)) throw new ArgumentNullException("mdxPath");
+            if (string.IsNullOrEmpty(mdlPath))
+            {
+                throw new ArgumentNullException("mdlPath");
+            }
+            if (string.IsNullOrEmpty(mdxPath))
+            {
+                throw new ArgumentNullException("mdxPath");
+            }
 
             _mdlData = File.ReadAllBytes(mdlPath);
             _mdxData = File.ReadAllBytes(mdxPath);
@@ -357,7 +369,10 @@ namespace Odyssey.Content.MDL
                 {
                     ctrl.TimeKeys = new float[ctrl.RowCount];
                     int valuesPerRow = ctrl.ColumnCount;
-                    if (ctrl.IsBezier) valuesPerRow *= 3;
+                    if (ctrl.IsBezier)
+                    {
+                        valuesPerRow *= 3;
+                    }
 
                     ctrl.Values = new float[ctrl.RowCount * (isCompressedQuat ? 4 : valuesPerRow)];
 
@@ -374,10 +389,13 @@ namespace Odyssey.Content.MDL
                         {
                             // Decompress quaternion from 32-bit packed value
                             // Reference: vendor/PyKotor/wiki/MDL-MDX-File-Format.md - Compressed Quaternion
+                            // Reference: src/CSharpKOTOR/Common/Vector4.cs:42-69 - FromCompressed implementation
                             int dataIdx = ctrl.DataIndex + r;
                             if (dataIdx < data.Length)
                             {
-                                uint packed = (uint)BitConverter.ToInt32(BitConverter.GetBytes(data[dataIdx]), 0);
+                                // Read the packed quaternion as uint32 (stored as float in the data array)
+                                // We need to reinterpret the float bits as uint32
+                                uint packed = BitConverter.ToUInt32(BitConverter.GetBytes(data[dataIdx]), 0);
                                 DecompressQuaternion(packed, out float qx, out float qy, out float qz, out float qw);
                                 ctrl.Values[r * 4 + 0] = qx;
                                 ctrl.Values[r * 4 + 1] = qy;
@@ -413,24 +431,38 @@ namespace Odyssey.Content.MDL
         /// <summary>
         /// Decompresses a packed quaternion from 32 bits.
         /// Reference: vendor/PyKotor/wiki/MDL-MDX-File-Format.md - Compressed Quaternion
+        /// Reference: src/CSharpKOTOR/Common/Vector4.cs:42-69 - FromCompressed implementation
         /// X: bits 0-10 (11 bits), Y: bits 11-21 (11 bits), Z: bits 22-31 (10 bits)
-        /// W: computed from unit constraint
+        /// W: computed from unit constraint (q.x² + q.y² + q.z² + q.w² = 1)
         /// </summary>
         private static void DecompressQuaternion(uint packed, out float x, out float y, out float z, out float w)
         {
-            // Extract components
-            int xi = (int)(packed & 0x7FF);          // 11 bits
-            int yi = (int)((packed >> 11) & 0x7FF); // 11 bits
-            int zi = (int)((packed >> 22) & 0x3FF); // 10 bits
+            // Extract components (unsigned integers)
+            uint xi = packed & 0x7FF;          // 11 bits (0-2047)
+            uint yi = (packed >> 11) & 0x7FF;  // 11 bits (0-2047)
+            uint zi = (packed >> 22) & 0x3FF;  // 10 bits (0-1023)
 
             // Map to [-1, 1] range
             x = (xi / 1023.0f) - 1.0f;
             y = (yi / 1023.0f) - 1.0f;
             z = (zi / 511.0f) - 1.0f;
 
-            // Compute W from unit quaternion constraint
-            float wSq = 1.0f - (x * x + y * y + z * z);
-            w = wSq > 0 ? (float)Math.Sqrt(wSq) : 0f;
+            // Compute W from unit quaternion constraint: x² + y² + z² + w² = 1
+            float temp = x * x + y * y + z * z;
+            if (temp < 1.0f)
+            {
+                w = (float)Math.Sqrt(1.0f - temp);
+            }
+            else
+            {
+                // Handle edge case where quaternion is not properly normalized
+                // Normalize x, y, z and set w = 0
+                float sqrtTemp = (float)Math.Sqrt(temp);
+                x /= sqrtTemp;
+                y /= sqrtTemp;
+                z /= sqrtTemp;
+                w = 0.0f;
+            }
         }
 
         #endregion
@@ -525,7 +557,7 @@ namespace Odyssey.Content.MDL
             }
             else if ((nodeType & MDLConstants.NODE_HAS_DANGLY) != 0)
             {
-                ReadDanglymeshData(mdlPtr, ref pos);
+                ReadDanglymeshData(mdlPtr, ref pos, mesh);
             }
             else if ((nodeType & MDLConstants.NODE_HAS_AABB) != 0)
             {
@@ -594,11 +626,50 @@ namespace Odyssey.Content.MDL
                 return;
             }
 
-            // Pre-allocate arrays
+            // Validate MDX data bounds
+            int totalVertexBytes = mesh.VertexCount * mesh.MDXVertexSize;
+            int maxOffset = mesh.MDXDataOffset + totalVertexBytes;
+            if (maxOffset > _mdxData.Length)
+            {
+                throw new InvalidOperationException(
+                    $"MDX vertex data extends beyond file bounds: " +
+                    $"offset={mesh.MDXDataOffset}, vertexCount={mesh.VertexCount}, " +
+                    $"vertexSize={mesh.MDXVertexSize}, totalBytes={totalVertexBytes}, " +
+                    $"fileLength={_mdxData.Length}"
+                );
+            }
+
+            // Pre-allocate arrays for all possible vertex attributes
             mesh.Positions = new Vector3Data[mesh.VertexCount];
             mesh.Normals = new Vector3Data[mesh.VertexCount];
-            mesh.TexCoords0 = new Vector2Data[mesh.VertexCount];
-            mesh.TexCoords1 = new Vector2Data[mesh.VertexCount];
+            
+            // Allocate texture coordinate arrays only if needed
+            uint flags = mesh.MDXDataFlags;
+            if ((flags & MDLConstants.MDX_TEX0_VERTICES) != 0)
+            {
+                mesh.TexCoords0 = new Vector2Data[mesh.VertexCount];
+            }
+            if ((flags & MDLConstants.MDX_TEX1_VERTICES) != 0)
+            {
+                mesh.TexCoords1 = new Vector2Data[mesh.VertexCount];
+            }
+            if ((flags & MDLConstants.MDX_TEX2_VERTICES) != 0)
+            {
+                mesh.TexCoords2 = new Vector2Data[mesh.VertexCount];
+            }
+            if ((flags & MDLConstants.MDX_TEX3_VERTICES) != 0)
+            {
+                mesh.TexCoords3 = new Vector2Data[mesh.VertexCount];
+            }
+            if ((flags & MDLConstants.MDX_VERTEX_COLORS) != 0)
+            {
+                mesh.Colors = new Vector3Data[mesh.VertexCount];
+            }
+            if ((flags & MDLConstants.MDX_TANGENT_SPACE) != 0)
+            {
+                mesh.Tangents = new Vector3Data[mesh.VertexCount];
+                mesh.Bitangents = new Vector3Data[mesh.VertexCount];
+            }
 
             // Pre-compute all vertex attribute offsets once
             VertexOffsets offsets;
@@ -617,39 +688,113 @@ namespace Odyssey.Content.MDL
             fixed (byte* mdxPtr = _mdxData)
             {
                 int baseOffset = mesh.MDXDataOffset;
-                uint flags = mesh.MDXDataFlags;
 
                 // Single-pass vertex reading with pre-computed offsets
                 for (int i = 0; i < mesh.VertexCount; i++)
                 {
                     int vertexBase = baseOffset + i * mesh.MDXVertexSize;
 
+                    // Validate vertex base offset is within bounds
+                    if (vertexBase + mesh.MDXVertexSize > _mdxData.Length)
+                    {
+                        throw new InvalidOperationException(
+                            $"Vertex {i} extends beyond MDX file bounds: " +
+                            $"vertexBase={vertexBase}, vertexSize={mesh.MDXVertexSize}, " +
+                            $"fileLength={_mdxData.Length}"
+                        );
+                    }
+
                     // Position (3 floats = 12 bytes)
                     if ((flags & MDLConstants.MDX_VERTICES) != 0 && offsets.Position >= 0)
                     {
-                        float* posPtr = (float*)(mdxPtr + vertexBase + offsets.Position);
-                        mesh.Positions[i] = new Vector3Data(posPtr[0], posPtr[1], posPtr[2]);
+                        int posOffset = vertexBase + offsets.Position;
+                        if (posOffset + 12 <= _mdxData.Length)
+                        {
+                            float* posPtr = (float*)(mdxPtr + posOffset);
+                            mesh.Positions[i] = new Vector3Data(posPtr[0], posPtr[1], posPtr[2]);
+                        }
                     }
 
                     // Normal (3 floats = 12 bytes)
                     if ((flags & MDLConstants.MDX_VERTEX_NORMALS) != 0 && offsets.Normal >= 0)
                     {
-                        float* normPtr = (float*)(mdxPtr + vertexBase + offsets.Normal);
-                        mesh.Normals[i] = new Vector3Data(normPtr[0], normPtr[1], normPtr[2]);
+                        int normOffset = vertexBase + offsets.Normal;
+                        if (normOffset + 12 <= _mdxData.Length)
+                        {
+                            float* normPtr = (float*)(mdxPtr + normOffset);
+                            mesh.Normals[i] = new Vector3Data(normPtr[0], normPtr[1], normPtr[2]);
+                        }
                     }
 
                     // Texture coordinates 0 (2 floats = 8 bytes)
                     if ((flags & MDLConstants.MDX_TEX0_VERTICES) != 0 && offsets.Tex0 >= 0)
                     {
-                        float* texPtr = (float*)(mdxPtr + vertexBase + offsets.Tex0);
-                        mesh.TexCoords0[i] = new Vector2Data(texPtr[0], texPtr[1]);
+                        int texOffset = vertexBase + offsets.Tex0;
+                        if (texOffset + 8 <= _mdxData.Length)
+                        {
+                            float* texPtr = (float*)(mdxPtr + texOffset);
+                            mesh.TexCoords0[i] = new Vector2Data(texPtr[0], texPtr[1]);
+                        }
                     }
 
                     // Texture coordinates 1 (lightmap) (2 floats = 8 bytes)
                     if ((flags & MDLConstants.MDX_TEX1_VERTICES) != 0 && offsets.Tex1 >= 0)
                     {
-                        float* texPtr = (float*)(mdxPtr + vertexBase + offsets.Tex1);
-                        mesh.TexCoords1[i] = new Vector2Data(texPtr[0], texPtr[1]);
+                        int texOffset = vertexBase + offsets.Tex1;
+                        if (texOffset + 8 <= _mdxData.Length)
+                        {
+                            float* texPtr = (float*)(mdxPtr + texOffset);
+                            mesh.TexCoords1[i] = new Vector2Data(texPtr[0], texPtr[1]);
+                        }
+                    }
+
+                    // Texture coordinates 2 (2 floats = 8 bytes)
+                    if ((flags & MDLConstants.MDX_TEX2_VERTICES) != 0 && offsets.Tex2 >= 0)
+                    {
+                        int texOffset = vertexBase + offsets.Tex2;
+                        if (texOffset + 8 <= _mdxData.Length)
+                        {
+                            float* texPtr = (float*)(mdxPtr + texOffset);
+                            mesh.TexCoords2[i] = new Vector2Data(texPtr[0], texPtr[1]);
+                        }
+                    }
+
+                    // Texture coordinates 3 (2 floats = 8 bytes)
+                    if ((flags & MDLConstants.MDX_TEX3_VERTICES) != 0 && offsets.Tex3 >= 0)
+                    {
+                        int texOffset = vertexBase + offsets.Tex3;
+                        if (texOffset + 8 <= _mdxData.Length)
+                        {
+                            float* texPtr = (float*)(mdxPtr + texOffset);
+                            mesh.TexCoords3[i] = new Vector2Data(texPtr[0], texPtr[1]);
+                        }
+                    }
+
+                    // Vertex colors (3 floats = 12 bytes)
+                    if ((flags & MDLConstants.MDX_VERTEX_COLORS) != 0 && offsets.Color >= 0)
+                    {
+                        int colorOffset = vertexBase + offsets.Color;
+                        if (colorOffset + 12 <= _mdxData.Length)
+                        {
+                            float* colorPtr = (float*)(mdxPtr + colorOffset);
+                            mesh.Colors[i] = new Vector3Data(colorPtr[0], colorPtr[1], colorPtr[2]);
+                        }
+                    }
+
+                    // Tangent space (9 floats = 36 bytes: tangent XYZ, bitangent XYZ, normal XYZ)
+                    // We only read tangent and bitangent since we already have normals separately
+                    if ((flags & MDLConstants.MDX_TANGENT_SPACE) != 0 && offsets.Tangent >= 0)
+                    {
+                        int tangentOffset = vertexBase + offsets.Tangent;
+                        if (tangentOffset + 36 <= _mdxData.Length)
+                        {
+                            float* tangentPtr = (float*)(mdxPtr + tangentOffset);
+                            // Tangent (first 3 floats)
+                            mesh.Tangents[i] = new Vector3Data(tangentPtr[0], tangentPtr[1], tangentPtr[2]);
+                            // Bitangent (floats 3-5)
+                            mesh.Bitangents[i] = new Vector3Data(tangentPtr[3], tangentPtr[4], tangentPtr[5]);
+                            // Normal (floats 6-8) - ignored, we use the separate normal attribute
+                        }
                     }
                 }
 
@@ -663,10 +808,14 @@ namespace Odyssey.Content.MDL
 
         /// <summary>
         /// Optimized skin data reading using unsafe pointers.
+        /// Reference: vendor/PyKotor/wiki/MDL-MDX-File-Format.md - Skin mesh Specific data
         /// </summary>
         private void ReadMdxSkinDataOptimized(byte* mdxPtr, MDLMeshData mesh, int baseOffset, VertexOffsets offsets)
         {
-            if (mesh.Skin == null) return;
+            if (mesh.Skin == null)
+            {
+                return;
+            }
 
             int vertexCount = mesh.VertexCount;
             mesh.Skin.BoneWeights = new float[vertexCount * 4];
@@ -676,24 +825,43 @@ namespace Odyssey.Content.MDL
             {
                 int vertexBase = baseOffset + i * mesh.MDXVertexSize;
 
+                // Validate vertex base offset is within bounds
+                if (vertexBase + mesh.MDXVertexSize > _mdxData.Length)
+                {
+                    throw new InvalidOperationException(
+                        $"Skin vertex {i} extends beyond MDX file bounds: " +
+                        $"vertexBase={vertexBase}, vertexSize={mesh.MDXVertexSize}, " +
+                        $"fileLength={_mdxData.Length}"
+                    );
+                }
+
                 // Bone weights (4 floats = 16 bytes)
                 if (offsets.BoneWeights >= 0)
                 {
-                    float* weightPtr = (float*)(mdxPtr + vertexBase + offsets.BoneWeights);
-                    mesh.Skin.BoneWeights[i * 4 + 0] = weightPtr[0];
-                    mesh.Skin.BoneWeights[i * 4 + 1] = weightPtr[1];
-                    mesh.Skin.BoneWeights[i * 4 + 2] = weightPtr[2];
-                    mesh.Skin.BoneWeights[i * 4 + 3] = weightPtr[3];
+                    int weightOffset = vertexBase + offsets.BoneWeights;
+                    if (weightOffset + 16 <= _mdxData.Length)
+                    {
+                        float* weightPtr = (float*)(mdxPtr + weightOffset);
+                        mesh.Skin.BoneWeights[i * 4 + 0] = weightPtr[0];
+                        mesh.Skin.BoneWeights[i * 4 + 1] = weightPtr[1];
+                        mesh.Skin.BoneWeights[i * 4 + 2] = weightPtr[2];
+                        mesh.Skin.BoneWeights[i * 4 + 3] = weightPtr[3];
+                    }
                 }
 
                 // Bone indices (4 floats cast to int = 16 bytes)
+                // Note: Stored as floats but represent uint16 indices
                 if (offsets.BoneIndices >= 0)
                 {
-                    float* indexPtr = (float*)(mdxPtr + vertexBase + offsets.BoneIndices);
-                    mesh.Skin.BoneIndices[i * 4 + 0] = (int)indexPtr[0];
-                    mesh.Skin.BoneIndices[i * 4 + 1] = (int)indexPtr[1];
-                    mesh.Skin.BoneIndices[i * 4 + 2] = (int)indexPtr[2];
-                    mesh.Skin.BoneIndices[i * 4 + 3] = (int)indexPtr[3];
+                    int indexOffset = vertexBase + offsets.BoneIndices;
+                    if (indexOffset + 16 <= _mdxData.Length)
+                    {
+                        float* indexPtr = (float*)(mdxPtr + indexOffset);
+                        mesh.Skin.BoneIndices[i * 4 + 0] = (int)indexPtr[0];
+                        mesh.Skin.BoneIndices[i * 4 + 1] = (int)indexPtr[1];
+                        mesh.Skin.BoneIndices[i * 4 + 2] = (int)indexPtr[2];
+                        mesh.Skin.BoneIndices[i * 4 + 3] = (int)indexPtr[3];
+                    }
                 }
             }
         }
@@ -779,7 +947,7 @@ namespace Odyssey.Content.MDL
             return skin;
         }
 
-        private void ReadDanglymeshData(byte* mdlPtr, ref int pos)
+        private void ReadDanglymeshData(byte* mdlPtr, ref int pos, MDLMeshData mesh)
         {
             int constraintArrayOffset = ReadInt32(mdlPtr, ref pos);
             int constraintCount = ReadInt32(mdlPtr, ref pos);
@@ -789,7 +957,25 @@ namespace Odyssey.Content.MDL
             float period = ReadFloat(mdlPtr, ref pos);
             int danglyVerticesOffset = ReadInt32(mdlPtr, ref pos);
 
-            // We could store danglymesh data if needed for physics simulation
+            // Store danglymesh data for physics simulation
+            var danglymesh = new MDLDanglymeshData
+            {
+                Displacement = displacement,
+                Tightness = tightness,
+                Period = period
+            };
+
+            // Read constraint array (one float per vertex)
+            if (constraintCount > 0 && constraintArrayOffset >= 0)
+            {
+                danglymesh.Constraints = ReadFloatArray(mdlPtr, MDLConstants.FILE_HEADER_SIZE + constraintArrayOffset, constraintCount);
+            }
+            else
+            {
+                danglymesh.Constraints = new float[0];
+            }
+
+            mesh.Danglymesh = danglymesh;
         }
 
         private void ReadSaberMeshData(byte* mdlPtr, ref int pos, MDLMeshData mesh)
@@ -932,6 +1118,14 @@ namespace Odyssey.Content.MDL
                         colorData[i * 3 + 2]
                     );
                 }
+            }
+            if (flareTextureNamesCount > 0)
+            {
+                light.FlareTextures = ReadStringArray(mdlPtr, MDLConstants.FILE_HEADER_SIZE + flareTextureNamesOffset, flareTextureNamesCount);
+            }
+            else
+            {
+                light.FlareTextures = new string[0];
             }
 
             return light;
@@ -1113,6 +1307,28 @@ namespace Odyssey.Content.MDL
                     dst[i] = src[i];
                 }
             }
+            return result;
+        }
+
+        /// <summary>
+        /// Reads an array of strings stored as offsets to null-terminated strings.
+        /// Reference: vendor/Kotor.NET/Kotor.NET/Formats/BinaryMDL/MDLBinaryLight.cs:44-54
+        /// </summary>
+        private static string[] ReadStringArray(byte* ptr, int offsetArrayOffset, int count)
+        {
+            string[] result = new string[count];
+            
+            // First read the array of offsets (int32 array)
+            int[] offsets = ReadInt32Array(ptr, offsetArrayOffset, count);
+            
+            // Then read each string at its offset
+            for (int i = 0; i < count; i++)
+            {
+                // Offset is relative to FILE_HEADER_SIZE (0x0C)
+                int stringOffset = MDLConstants.FILE_HEADER_SIZE + offsets[i];
+                result[i] = ReadNullTerminatedString(ptr, stringOffset);
+            }
+            
             return result;
         }
 

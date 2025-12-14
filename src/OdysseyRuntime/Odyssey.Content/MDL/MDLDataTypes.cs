@@ -190,11 +190,19 @@ namespace Odyssey.Content.MDL
         public Vector3Data[] Normals;
         public Vector2Data[] TexCoords0;
         public Vector2Data[] TexCoords1;
+        public Vector2Data[] TexCoords2;
+        public Vector2Data[] TexCoords3;
+        public Vector3Data[] Colors;
+        public Vector3Data[] Tangents;
+        public Vector3Data[] Bitangents;
         public ushort[] Indices;
         public MDLFaceData[] Faces;
 
         // Skinning data (if applicable)
         public MDLSkinData Skin;
+
+        // Danglymesh data (if applicable)
+        public MDLDanglymeshData Danglymesh;
     }
 
     /// <summary>
@@ -286,6 +294,18 @@ namespace Odyssey.Content.MDL
     {
         public string ModelResRef;
         public bool Reattachable;
+    }
+
+    /// <summary>
+    /// Danglymesh data for physics simulation (cloth/hair).
+    /// Reference: vendor/PyKotor/wiki/MDL-MDX-File-Format.md - Danglymesh Header
+    /// </summary>
+    public sealed class MDLDanglymeshData
+    {
+        public float[] Constraints;      // Per-vertex constraint values
+        public float Displacement;       // Maximum displacement distance
+        public float Tightness;          // Spring stiffness (0.0-1.0)
+        public float Period;             // Oscillation period in seconds
     }
 }
 
