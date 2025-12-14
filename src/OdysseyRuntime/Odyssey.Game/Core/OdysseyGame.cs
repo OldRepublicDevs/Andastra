@@ -467,7 +467,18 @@ namespace Odyssey.Game.Core
             // ClientBounds.Width/Height get dimensions in pixels
             // Source: https://doc.stride3d.net/latest/en/manual/user-interface/index.html
             _uiComponent.Resolution = new Vector3(Window.ClientBounds.Width, Window.ClientBounds.Height, 1000);
+            // Set UI resolution stretch mode
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Engine.UIComponent.html
+            // ResolutionStretch property controls how UI scales to match screen size
+            // ResolutionStretch.FixedWidthAdaptableHeight: UI width is fixed, height adapts to screen
+            // Method signature: ResolutionStretch ResolutionStretch { get; set; }
+            // Source: https://doc.stride3d.net/latest/en/manual/user-interface/index.html
             _uiComponent.ResolutionStretch = ResolutionStretch.FixedWidthAdaptableHeight;
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Engine.UIComponent.html
+            // IsBillboard property controls whether UI faces the camera (billboard mode)
+            // IsFullScreen property controls whether UI covers the entire screen
+            // RenderGroup property assigns UI to a specific render group
+            // Source: https://doc.stride3d.net/latest/en/manual/user-interface/index.html
             _uiComponent.IsBillboard = false;
             _uiComponent.IsFullScreen = true;
             _uiComponent.RenderGroup = RenderGroup.Group0;
@@ -752,8 +763,18 @@ namespace Odyssey.Game.Core
 
             canvas.Children.Add(outerFrame);
 
-            // Set the page - CRITICAL for rendering
+            // Create UI page with canvas as root element
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.UI.UIPage.html
+            // UIPage() constructor creates a new UI page
+            // RootElement property sets the root UI element for the page
+            // Method signature: UIPage(), UIElement RootElement { get; set; }
+            // Source: https://doc.stride3d.net/latest/en/manual/user-interface/index.html
             var page = new UIPage { RootElement = canvas };
+            // Assign UI page to UI component - CRITICAL for rendering
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Engine.UIComponent.html
+            // UIComponent.Page property sets the active UI page to render
+            // Method signature: UIPage Page { get; set; }
+            // Source: https://doc.stride3d.net/latest/en/manual/user-interface/index.html
             _uiComponent.Page = page;
 
             Console.WriteLine("[Odyssey] ====================================");
@@ -1118,6 +1139,15 @@ namespace Odyssey.Game.Core
                 // Source: https://doc.stride3d.net/latest/en/manual/graphics/cameras/index.html
                 if (_cameraComponent != null)
                 {
+                    // Assign camera to the camera slot
+                    // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Rendering.Compositing.SceneCameraSlotId.html
+                    // SceneCameraSlotId(uint) constructor creates a camera slot ID from a slot identifier
+                    // Method signature: SceneCameraSlotId(uint id)
+                    // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Rendering.Compositing.SceneCameraSlot.html
+                    // SceneCameraSlot.Id property gets the unique identifier for the camera slot
+                    // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Engine.CameraComponent.html
+                    // CameraComponent.Slot property assigns the camera to a specific camera slot in the compositor
+                    // Source: https://doc.stride3d.net/latest/en/manual/graphics/graphics-compositor/index.html
                     _cameraComponent.Slot = new SceneCameraSlotId(cameraSlot.Id);
                     // #region agent log
                     DebugLog("E", "SetupGraphicsCompositor:camera_assigned", "Camera slot assigned", cameraSlot.Id.ToString());
@@ -1427,13 +1457,24 @@ namespace Odyssey.Game.Core
             // MouseWheelDelta property gets the mouse wheel scroll delta since last frame
             // Method signature: float MouseWheelDelta { get; }
             // Source: https://doc.stride3d.net/latest/en/manual/input/mouse.html
+            // Handle mouse wheel zoom
+            // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Input.InputManager.html
+            // MouseWheelDelta property gets the mouse wheel scroll delta since last frame
+            // Method signature: float MouseWheelDelta { get; }
+            // Positive values scroll up, negative values scroll down
+            // Source: https://doc.stride3d.net/latest/en/manual/input/mouse.html
             if (Math.Abs(Input.MouseWheelDelta) > 0.01f)
             {
+                // Get camera forward direction for zoom movement
                 // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Engine.TransformComponent.html
                 // Transform.WorldMatrix property gets the world transformation matrix
                 // WorldMatrix.Forward property gets the forward vector from the matrix
                 // Source: https://doc.stride3d.net/latest/en/manual/entities/transforms.html
                 var forward = _cameraEntity.Transform.WorldMatrix.Forward;
+                // Move camera along forward direction based on wheel delta
+                // Based on Stride API: https://doc.stride3d.net/latest/en/api/Stride.Engine.TransformComponent.html
+                // Transform.Position property sets the entity's world position
+                // Vector3 addition moves camera along forward vector
                 _cameraEntity.Transform.Position += forward * Input.MouseWheelDelta * 2f;
             }
         }
