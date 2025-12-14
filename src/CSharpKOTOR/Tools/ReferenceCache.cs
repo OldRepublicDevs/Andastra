@@ -1,11 +1,12 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using CSharpKOTOR.Common;
 using CSharpKOTOR.Extract;
+using CSharpKOTOR.Formats.Capsule;
 using CSharpKOTOR.Formats.GFF;
 using CSharpKOTOR.Formats.SSF;
-using CSharpKOTOR.Formats;
 using CSharpKOTOR.Formats.TwoDA;
 using CSharpKOTOR.Installation;
 using CSharpKOTOR.Logger;
@@ -711,10 +712,508 @@ namespace CSharpKOTOR.Tools
         }
     }
 
-    // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/reference_cache.py:68
-    // Original: GFF_FIELD_TO_2DA_MAPPING: dict[str, ResourceIdentifier] = _get_gff_field_to_2da_mapping()
+    // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/reference_cache.py:758-903
+    // Original: def find_all_strref_references(...) -> tuple[dict[int, list[StrRefSearchResult]], StrRefReferenceCache]:
+    /// <summary>
+    /// Find all references to multiple StrRefs in an installation using batch processing.
+    /// This function scans resources once and finds references to all requested StrRefs,
+    /// providing significant performance improvement over calling FindStrRefReferences multiple times.
+    /// </summary>
     public static class ReferenceCacheHelpers
     {
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/reference_cache.py:758-903
+        // Original: def find_all_strref_references(...):
+        public static (Dictionary<int, List<StrRefSearchResult>> results, StrRefReferenceCache cache) FindAllStrRefReferences(
+            Installation.Installation installation,
+            List<int> strrefs,
+            StrRefReferenceCache cache = null,
+            Action<string> logger = null)
+        {
+            if (strrefs == null || strrefs.Count == 0)
+            {
+                return (new Dictionary<int, List<StrRefSearchResult>>(), cache ?? new StrRefReferenceCache(installation.Game));
+            }
+
+            // Build cache if not provided
+            if (cache == null)
+            {
+                logger?.Invoke($"Building StrRef cache for {strrefs.Count} StrRefs for installation {installation.Path}...");
+                cache = new StrRefReferenceCache(installation.Game);
+
+                // Scan all resources to build the cache
+                int resourceCount = 0;
+                int skippedCount = 0;
+                int lastLoggedCount = 0;
+                int logInterval = 500; // Log progress every 500 resources
+
+                var allResources = GetAllResources(installation);
+                foreach (var resource in allResources)
+                {
+                    try
+                    {
+                        // Skip RIM files - they're not used at runtime
+                        string filePath = resource.FilePath;
+                        if (filePath.IndexOf("rims", StringComparison.OrdinalIgnoreCase) >= 0)
+                        {
+                            skippedCount++;
+                            continue;
+                        }
+
+                        // Filter by resource type: Only scan types that can contain StrRefs
+                        ResourceType restype = resource.ResType;
+                        bool canContainStrref = restype.IsGff() || restype == ResourceType.TwoDA || restype == ResourceType.SSF || restype == ResourceType.NCS;
+                        if (!canContainStrref)
+                        {
+                            skippedCount++;
+                            continue;
+                        }
+
+                        byte[] data = resource.GetData();
+                        cache.ScanResource(resource, data);
+                        resourceCount++;
+
+                        // Log progress periodically
+                        if (logger != null && resourceCount - lastLoggedCount >= logInterval)
+                        {
+                            logger($"  Scanning for StrRefs... {resourceCount} resources processed for installation {installation.Path}");
+                            lastLoggedCount = resourceCount;
+                        }
+                    }
+                    catch
+                    {
+                        skippedCount++;
+                    }
+                }
+
+                logger?.Invoke($"Cache built: scanned {resourceCount} resources (skipped {skippedCount} files) for installation {installation.Path}");
+            }
+
+            // Convert cache entries to StrRefSearchResult format
+            var results = new Dictionary<int, List<StrRefSearchResult>>();
+
+            // Build a map of ResourceIdentifier -> FileResource by iterating installation ONCE
+            var identifierToResource = new Dictionary<ResourceIdentifier, FileResource>();
+            var allResourcesForMapping = GetAllResources(installation);
+            foreach (var res in allResourcesForMapping)
+            {
+                try
+                {
+                    identifierToResource[res.Identifier] = res;
+                }
+                catch
+                {
+                    // Skip invalid resources
+                }
+            }
+
+            foreach (int strref in strrefs)
+            {
+                var cacheEntries = cache.GetReferences(strref);
+                if (cacheEntries.Count == 0)
+                {
+                    results[strref] = new List<StrRefSearchResult>();
+                    continue;
+                }
+
+                // Convert cache format to StrRefSearchResult format
+                var strrefResults = new List<StrRefSearchResult>();
+
+                foreach (var (identifier, locationStrings) in cacheEntries)
+                {
+                    try
+                    {
+                        if (!identifierToResource.TryGetValue(identifier, out FileResource foundResource) || foundResource == null)
+                        {
+                            continue;
+                        }
+
+                        // Convert location strings to proper location objects
+                        var locations = new List<object>();
+
+                        foreach (string locStr in locationStrings)
+                        {
+                            // Parse location string format: "row_12.name", "sound_Battlecry 1", "field_path", or byte offset
+                            if (locStr.StartsWith("row_"))
+                            {
+                                // 2DA reference: "row_12.name"
+                                string[] parts = locStr.Replace("row_", "").Split(new[] { '.' }, 2);
+                                if (parts.Length == 2 && int.TryParse(parts[0], out int rowIdx))
+                                {
+                                    locations.Add(new TwoDARefLocation(rowIdx, parts[1]));
+                                }
+                            }
+                            else if (locStr.StartsWith("sound_"))
+                            {
+                                // SSF reference: "sound_Battlecry 1"
+                                string soundName = locStr.Replace("sound_", "");
+                                if (Enum.TryParse<SSFSound>(soundName, out SSFSound sound))
+                                {
+                                    locations.Add(new SSFRefLocation(sound));
+                                }
+                            }
+                            else if (locStr.StartsWith("offset_"))
+                            {
+                                // NCS reference: "offset_1234"
+                                if (int.TryParse(locStr.Replace("offset_", ""), out int byteOffset))
+                                {
+                                    locations.Add(new NCSRefLocation(byteOffset));
+                                }
+                            }
+                            else
+                            {
+                                // GFF reference: field path
+                                locations.Add(new GFFRefLocation(locStr));
+                            }
+                        }
+
+                        if (locations.Count > 0)
+                        {
+                            strrefResults.Add(new StrRefSearchResult(foundResource, locations));
+                        }
+                    }
+                    catch
+                    {
+                        // Skip invalid entries
+                    }
+                }
+
+                results[strref] = strrefResults;
+            }
+
+            return (results, cache);
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/reference_cache.py:906-1254
+        // Original: def find_strref_references(...) -> list[StrRefSearchResult]:
+        /// <summary>
+        /// Find all references to a specific StrRef in an installation.
+        /// This function scans 2DA, SSF, GFF, and NCS files for references to the given StrRef
+        /// and returns complete location information for each reference.
+        /// </summary>
+        public static List<StrRefSearchResult> FindStrRefReferences(
+            Installation.Installation installation,
+            int strref,
+            StrRefReferenceCache cache = null,
+            Action<string> logger = null)
+        {
+            // If cache is provided, use it for faster lookup
+            if (cache != null)
+            {
+                var cacheEntries = cache.GetReferences(strref);
+                if (cacheEntries.Count == 0)
+                {
+                    return new List<StrRefSearchResult>();
+                }
+
+                // Build a map of ResourceIdentifier -> FileResource
+                var identifierToResource = new Dictionary<ResourceIdentifier, FileResource>();
+                var allResourcesForMap = GetAllResources(installation);
+                foreach (var res in allResourcesForMap)
+                {
+                    try
+                    {
+                        identifierToResource[res.Identifier] = res;
+                    }
+                    catch
+                    {
+                        // Skip invalid resources
+                    }
+                }
+
+                // Convert cache format to StrRefSearchResult format
+                var results = new List<StrRefSearchResult>();
+                foreach (var (identifier, locationStrings) in cacheEntries)
+                {
+                    try
+                    {
+                        if (!identifierToResource.TryGetValue(identifier, out FileResource foundResource) || foundResource == null)
+                        {
+                            continue;
+                        }
+
+                        var locations = new List<object>();
+                        foreach (string locStr in locationStrings)
+                        {
+                            if (locStr.StartsWith("row_"))
+                            {
+                                string[] parts = locStr.Replace("row_", "").Split(new[] { '.' }, 2);
+                                if (parts.Length == 2 && int.TryParse(parts[0], out int rowIdx))
+                                {
+                                    locations.Add(new TwoDARefLocation(rowIdx, parts[1]));
+                                }
+                            }
+                            else if (locStr.StartsWith("sound_"))
+                            {
+                                string soundName = locStr.Replace("sound_", "");
+                                if (Enum.TryParse<SSFSound>(soundName, out SSFSound sound))
+                                {
+                                    locations.Add(new SSFRefLocation(sound));
+                                }
+                            }
+                            else if (locStr.StartsWith("offset_"))
+                            {
+                                if (int.TryParse(locStr.Replace("offset_", ""), out int byteOffset))
+                                {
+                                    locations.Add(new NCSRefLocation(byteOffset));
+                                }
+                            }
+                            else
+                            {
+                                locations.Add(new GFFRefLocation(locStr));
+                            }
+                        }
+
+                        if (locations.Count > 0)
+                        {
+                            results.Add(new StrRefSearchResult(foundResource, locations));
+                        }
+                    }
+                    catch
+                    {
+                        // Skip invalid entries
+                    }
+                }
+
+                return results;
+            }
+
+            // No cache available - scan all resources (slower path)
+            var scanResults = new List<StrRefSearchResult>();
+            var allResources = GetAllResources(installation);
+
+            foreach (var resource in allResources)
+            {
+                ResourceType restype = resource.ResType;
+
+                // Skip RIM files
+                if (resource.FilePath.IndexOf("rims", StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    continue;
+                }
+
+                // Check 2DA files
+                if (restype == ResourceType.TwoDA)
+                {
+                    var result = Scan2DAForStrRef(resource, installation, strref, logger);
+                    if (result != null)
+                    {
+                        scanResults.Add(result);
+                    }
+                }
+                // Check SSF files
+                else if (restype == ResourceType.SSF)
+                {
+                    var result = ScanSSFForStrRef(resource, installation, strref, logger);
+                    if (result != null)
+                    {
+                        scanResults.Add(result);
+                    }
+                }
+                // Check GFF files
+                else if (restype.IsGff())
+                {
+                    var result = ScanGFFForStrRef(resource, installation, strref, logger);
+                    if (result != null)
+                    {
+                        scanResults.Add(result);
+                    }
+                }
+            }
+
+            return scanResults;
+        }
+
+        // Helper method to get all resources from an installation
+        private static List<FileResource> GetAllResources(Installation.Installation installation)
+        {
+            var allResources = new List<FileResource>();
+
+            // Get chitin resources
+            allResources.AddRange(installation.ChitinResources());
+
+            // Get core resources (includes patch.erf for K1)
+            allResources.AddRange(installation.CoreResources());
+
+            // Get override resources
+            string overridePath = installation.OverridePath();
+            if (Directory.Exists(overridePath))
+            {
+                var overrideFiles = Directory.GetFiles(overridePath, "*.*", SearchOption.AllDirectories);
+                foreach (string file in overrideFiles)
+                {
+                    try
+                    {
+                        var identifier = ResourceIdentifier.FromPath(file);
+                        if (identifier.ResType != ResourceType.INVALID && !identifier.ResType.IsInvalid)
+                        {
+                            var fileInfo = new FileInfo(file);
+                            allResources.Add(new FileResource(identifier.ResName, identifier.ResType, (int)fileInfo.Length, 0, file));
+                        }
+                    }
+                    catch
+                    {
+                        // Skip invalid files
+                    }
+                }
+            }
+
+            // Get module resources
+            string modulesPath = CSharpKOTOR.Installation.Installation.GetModulesPath(installation.Path);
+            if (Directory.Exists(modulesPath))
+            {
+                var moduleFiles = Directory.GetFiles(modulesPath, "*.rim")
+                    .Concat(Directory.GetFiles(modulesPath, "*.mod"))
+                    .Concat(Directory.GetFiles(modulesPath, "*.erf"))
+                    .ToList();
+
+                foreach (string moduleFile in moduleFiles)
+                {
+                    try
+                    {
+                        var capsule = new LazyCapsule(moduleFile);
+                        allResources.AddRange(capsule.GetResources());
+                    }
+                    catch
+                    {
+                        // Skip invalid modules
+                    }
+                }
+            }
+
+            return allResources;
+        }
+
+        // Helper to scan 2DA file for StrRef
+        private static StrRefSearchResult Scan2DAForStrRef(FileResource resource, Installation.Installation installation, int strref, Action<string> logger)
+        {
+            try
+            {
+                var twoda = new TwoDABinaryReader(resource.GetData()).Load();
+                string filename = resource.Filename().ToLowerInvariant();
+
+                bool isK2 = installation.Game == Game.TSL;
+                var strref2daColumns = TwoDARegistry.ColumnsFor("strref", isK2);
+
+                if (!strref2daColumns.TryGetValue(filename, out HashSet<string> columns))
+                {
+                    return null;
+                }
+
+                var locations = new List<object>();
+                for (int rowIdx = 0; rowIdx < twoda.GetHeight(); rowIdx++)
+                {
+                    foreach (string columnName in columns)
+                    {
+                        if (columnName == ">>##HEADER##<<")
+                        {
+                            continue;
+                        }
+
+                        string cell = twoda.GetCellString(rowIdx, columnName);
+                        if (!string.IsNullOrEmpty(cell) && cell.Trim().All(char.IsDigit) && int.Parse(cell.Trim()) == strref)
+                        {
+                            locations.Add(new TwoDARefLocation(rowIdx, columnName));
+                            logger?.Invoke($"    Found at: row {rowIdx}, column '{columnName}' at {resource.FilePath}");
+                        }
+                    }
+                }
+
+                return locations.Count > 0 ? new StrRefSearchResult(resource, locations) : null;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        // Helper to scan SSF file for StrRef
+        private static StrRefSearchResult ScanSSFForStrRef(FileResource resource, Installation.Installation installation, int strref, Action<string> logger)
+        {
+            try
+            {
+                var ssf = new SSFBinaryReader(resource.GetData()).Load();
+                var locations = new List<object>();
+
+                foreach (SSFSound sound in Enum.GetValues(typeof(SSFSound)))
+                {
+                    int? soundStrref = ssf.Get(sound);
+                    if (soundStrref.HasValue && soundStrref.Value == strref)
+                    {
+                        locations.Add(new SSFRefLocation(sound));
+                        logger?.Invoke($"    Found at: sound slot '{sound}' at {resource.FilePath}");
+                    }
+                }
+
+                return locations.Count > 0 ? new StrRefSearchResult(resource, locations) : null;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        // Helper to scan GFF file for StrRef
+        private static StrRefSearchResult ScanGFFForStrRef(FileResource resource, Installation.Installation installation, int strref, Action<string> logger)
+        {
+            try
+            {
+                var gff = new GFFBinaryReader(resource.GetData()).Load();
+                var locations = new List<object>();
+
+                void RecurseGFF(GFFStruct gffStruct, string pathPrefix = "")
+                {
+                    foreach (var (label, fieldType, value) in gffStruct)
+                    {
+                        string fieldPath = string.IsNullOrEmpty(pathPrefix) ? label : $"{pathPrefix}.{label}";
+
+                        try
+                        {
+                            // Check LocalizedString fields
+                            if (fieldType == GFFFieldType.LocalizedString && value is LocalizedString locstring)
+                            {
+                                if (locstring.StringRef == strref)
+                                {
+                                    locations.Add(new GFFRefLocation(fieldPath));
+                                    logger?.Invoke($"    Found at: field path '{fieldPath}' at {resource.FilePath}");
+                                }
+                            }
+
+                            // Recurse into nested structs
+                            if (fieldType == GFFFieldType.Struct && value is GFFStruct nestedStruct)
+                            {
+                                RecurseGFF(nestedStruct, fieldPath);
+                            }
+
+                            // Recurse into list items
+                            if (fieldType == GFFFieldType.List && value is GFFList list)
+                            {
+                                for (int idx = 0; idx < list.Count; idx++)
+                                {
+                                    if (list[idx] is GFFStruct listStruct)
+                                    {
+                                        string listPath = $"{fieldPath}[{idx}]";
+                                        RecurseGFF(listStruct, listPath);
+                                    }
+                                }
+                            }
+                        }
+                        catch
+                        {
+                            // Individual field errors - continue processing other fields
+                        }
+                    }
+                }
+
+                RecurseGFF(gff.Root);
+
+                return locations.Count > 0 ? new StrRefSearchResult(resource, locations) : null;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
         // This will be populated from TwoDARegistry when gff_field_mapping() is implemented
         public static Dictionary<string, ResourceIdentifier> GffFieldTo2daMapping()
         {

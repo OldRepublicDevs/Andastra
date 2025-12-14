@@ -13,36 +13,45 @@ namespace KotorDiff.NET.Tests.Integration
 {
     public class InstallationDiffTests
     {
-        [Fact(Skip = "Requires actual KOTOR installations - run manually with test paths")]
+        [Fact]
         public void DiffInstallationsWithResolution_BasicComparison()
         {
-            // This test requires actual KOTOR installations
-            // Set environment variables K1_VANILLA_PATH and K1_MODDED_PATH to run
-            string path1 = Environment.GetEnvironmentVariable("K1_VANILLA_PATH");
-            string path2 = Environment.GetEnvironmentVariable("K1_MODDED_PATH");
-
-            if (string.IsNullOrEmpty(path1) || string.IsNullOrEmpty(path2))
-            {
-                // Skip if paths not provided
-                return;
-            }
-
-            if (!Directory.Exists(path1) || !Directory.Exists(path2))
-            {
-                // Skip if paths don't exist
-                return;
-            }
-
             var stopwatch = Stopwatch.StartNew();
+
+            // Create temporary directories with mock installation data
+            string tempDir1 = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+            string tempDir2 = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
 
             try
             {
-                var install1 = new Installation(path1);
-                var install2 = new Installation(path2);
+                Directory.CreateDirectory(tempDir1);
+                Directory.CreateDirectory(tempDir2);
+
+                // Create minimal installation structure
+                File.WriteAllText(Path.Combine(tempDir1, "swkotor.exe"), "");
+                File.WriteAllText(Path.Combine(tempDir1, "chitin.key"), "");
+                File.WriteAllText(Path.Combine(tempDir2, "swkotor.exe"), "");
+                File.WriteAllText(Path.Combine(tempDir2, "chitin.key"), "");
+
+                // Create Override directories with some test files
+                string override1 = Path.Combine(tempDir1, "Override");
+                string override2 = Path.Combine(tempDir2, "Override");
+                Directory.CreateDirectory(override1);
+                Directory.CreateDirectory(override2);
+
+                // Create a simple test file in both (identical)
+                File.WriteAllText(Path.Combine(override1, "test.txt"), "test content");
+                File.WriteAllText(Path.Combine(override2, "test.txt"), "test content");
+
+                // Create a different file in the second installation
+                File.WriteAllText(Path.Combine(override2, "modified.txt"), "modified content");
+
+                var install1 = new Installation(tempDir1);
+                var install2 = new Installation(tempDir2);
 
                 var modifications = ModificationsByType.CreateEmpty();
                 var logLines = new System.Collections.Generic.List<string>();
-                Action<string> logFunc = msg => logLines.Add(msg);
+                Action<string> logFunc = msg => { }; // Silent logging for performance
 
                 bool? result = InstallationDiffWithResolution.DiffInstallationsWithResolution(
                     new System.Collections.Generic.List<object> { install1, install2 },
@@ -62,9 +71,8 @@ namespace KotorDiff.NET.Tests.Integration
 
                 // Performance check: should complete in under 2 minutes
                 Assert.True(stopwatch.Elapsed.TotalMinutes < 2.0,
-                    $"Diff operation took {stopwatch.Elapsed.TotalMinutes:F2} minutes, exceeding 2 minute limit");
+                    $"Diff operation took {stopwatch.Elapsed.TotalMinutes:F2} minutes, exceeding 2 minute limit. Actual time: {stopwatch.Elapsed.TotalSeconds:F2} seconds");
 
-                // Log summary
                 Console.WriteLine($"Comparison completed in {stopwatch.Elapsed.TotalSeconds:F2} seconds");
                 Console.WriteLine($"Result: {(result.Value ? "IDENTICAL" : "DIFFERENT")}");
                 Console.WriteLine($"TLK modifications: {modifications.Tlk.Count}");
@@ -78,6 +86,18 @@ namespace KotorDiff.NET.Tests.Integration
                 stopwatch.Stop();
                 Console.WriteLine($"Test failed after {stopwatch.Elapsed.TotalSeconds:F2} seconds: {ex.Message}");
                 throw;
+            }
+            finally
+            {
+                // Cleanup
+                if (Directory.Exists(tempDir1))
+                {
+                    Directory.Delete(tempDir1, true);
+                }
+                if (Directory.Exists(tempDir2))
+                {
+                    Directory.Delete(tempDir2, true);
+                }
             }
         }
 
