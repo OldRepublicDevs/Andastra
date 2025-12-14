@@ -1,0 +1,92 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="HolocronToolset.NET.Dialogs.FileSearcherDialog"
+        Title="File Search"
+        Width="310" Height="391"
+        WindowStartupLocation="CenterOwner">
+    <Grid RowDefinitions="Auto,*,Auto,Auto" Margin="10">
+        <!-- Top: Search within and String to look for -->
+        <Grid Grid.Row="0" ColumnDefinitions="*,*" Margin="0,0,0,10">
+            <Border Grid.Column="0" BorderBrush="{DynamicResource ThemeBorderBrush}" BorderThickness="1" Margin="0,0,5,0" Padding="5">
+                <StackPanel>
+                    <TextBlock Text="Search within" FontWeight="Bold" Margin="0,0,0,5" />
+                    <ComboBox Name="installationSelect" />
+                </StackPanel>
+            </Border>
+            <Border Grid.Column="1" BorderBrush="{DynamicResource ThemeBorderBrush}" BorderThickness="1" Margin="5,0,0,0" Padding="5">
+                <StackPanel>
+                    <TextBlock Text="String to look for" FontWeight="Bold" Margin="0,0,0,5" />
+                    <TextBox Name="searchTextEdit" />
+                </StackPanel>
+            </Border>
+        </Grid>
+
+        <!-- Bottom: Search options -->
+        <Grid Grid.Row="1" ColumnDefinitions="*,*">
+            <!-- Left: Search in -->
+            <Border Grid.Column="0" BorderBrush="{DynamicResource ThemeBorderBrush}" BorderThickness="1" Margin="0,0,5,0" Padding="5">
+                <StackPanel>
+                    <TextBlock Text="Search in" FontWeight="Bold" Margin="0,0,0,5" />
+                    <CheckBox Name="coreCheck" Content="Core" IsChecked="True" />
+                    <CheckBox Name="modulesCheck" Content="Modules" IsChecked="True" />
+                    <CheckBox Name="overrideCheck" Content="Override" IsChecked="True" />
+                </StackPanel>
+            </Border>
+
+            <!-- Right: Case and Options -->
+            <StackPanel Grid.Column="1" Margin="5,0,0,0" Spacing="10">
+                <Border BorderBrush="{DynamicResource ThemeBorderBrush}" BorderThickness="1" Padding="5">
+                    <StackPanel>
+                        <TextBlock Text="Case" FontWeight="Bold" Margin="0,0,0,5" />
+                        <RadioButton Name="caseInsensitiveRadio" Content="Sensitive" GroupName="CaseGroup" />
+                        <RadioButton Name="caseSensitiveRadio" Content="Insensitive" GroupName="CaseGroup" IsChecked="True" />
+                    </StackPanel>
+                </Border>
+                <Border BorderBrush="{DynamicResource ThemeBorderBrush}" BorderThickness="1" Padding="5">
+                    <StackPanel>
+                        <TextBlock Text="Options" FontWeight="Bold" Margin="0,0,0,5" />
+                        <CheckBox Name="filenamesOnlyCheck" Content="Filenames only" />
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </Grid>
+
+        <!-- Resource Types -->
+        <Expander Grid.Row="2" IsExpanded="False" Margin="0,10,0,0">
+            <Expander.Header>
+                <TextBlock Text="Resource Types" />
+            </Expander.Header>
+            <ScrollViewer MaxHeight="200">
+                <StackPanel>
+                    <CheckBox Name="selectAllCheck" Content="Select All" />
+                    <Separator />
+                    <CheckBox Name="typeARECheck" Content="ARE" />
+                    <CheckBox Name="typeGITCheck" Content="GIT" />
+                    <CheckBox Name="typeIFOCheck" Content="IFO" />
+                    <CheckBox Name="typeVISCheck" Content="VIS" />
+                    <CheckBox Name="typeLYTCheck" Content="LYT" />
+                    <CheckBox Name="typeDLGCheck" Content="DLG" />
+                    <CheckBox Name="typeJRLCheck" Content="JRL" />
+                    <CheckBox Name="typeUTCCheck" Content="UTC" />
+                    <CheckBox Name="typeUTDCheck" Content="UTD" />
+                    <CheckBox Name="typeUTECheck" Content="UTE" />
+                    <CheckBox Name="typeUTICheck" Content="UTI" />
+                    <CheckBox Name="typeUTPCheck" Content="UTP" />
+                    <CheckBox Name="typeUTMCheck" Content="UTM" />
+                    <CheckBox Name="typeUTWCheck" Content="UTW" />
+                    <CheckBox Name="typeUTSCheck" Content="UTS" />
+                    <CheckBox Name="typeUTTCheck" Content="UTT" />
+                    <CheckBox Name="type2DACheck" Content="2DA" />
+                    <CheckBox Name="typeNSSCheck" Content="NSS" />
+                    <CheckBox Name="typeNCSCheck" Content="NCS" />
+                </StackPanel>
+            </ScrollViewer>
+        </Expander>
+
+        <!-- Buttons -->
+        <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
+            <Button Name="searchButton" Content="Search" Width="100" Margin="0,0,5,0" />
+            <Button Name="cancelButton" Content="Cancel" Width="100" />
+        </StackPanel>
+    </Grid>
+</Window>

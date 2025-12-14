@@ -11,7 +11,7 @@ namespace HolocronToolset.NET.Dialogs
 {
     // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/search.py:39
     // Original: class FileSearcher(QDialog):
-    public class FileSearcherDialog : Window
+    public partial class FileSearcherDialog : Window
     {
         private Dictionary<string, HTInstallation> _installations;
         private HTInstallation _selectedInstallation;
