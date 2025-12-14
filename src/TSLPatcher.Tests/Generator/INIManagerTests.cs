@@ -208,7 +208,7 @@ namespace CSharpKOTOR.Tests.Generator
             var section1 = manager.GetSection("Section1");
             section1.Should().NotBeNull();
             section1["key1"].Should().Be("value1");
-            
+
             var section2 = manager.GetSection("Section2");
             section2.Should().NotBeNull();
             section2["key2"].Should().Be("value2");

@@ -230,8 +230,10 @@ namespace CSharpKOTOR.Tests.Generator
             var generator = new TSLPatchDataGenerator(_tslpatchdataPath);
             var modifications = ModificationsByType.CreateEmpty();
             
-            // Create a test file to copy
-            var testFile = Path.Combine(_tempDir, "test_file.txt");
+            // Create a test file in Override folder to copy
+            var overrideDir = Path.Combine(_tempDir, "Override");
+            Directory.CreateDirectory(overrideDir);
+            var testFile = Path.Combine(overrideDir, "test_file.txt");
             File.WriteAllText(testFile, "Test content");
             
             var installFile = new InstallFile("test_file.txt", null, "Override");
