@@ -156,10 +156,27 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                 FileDecompiler decompiler = new FileDecompiler();
                 // Ensure actions are loaded before decompiling (required for decompilation)
                 decompiler.LoadActionsData("k2".Equals(gameFlag));
-                decompiler.DecompileToFile(ncsFile, nssOutputFile, charset, true);
+                try
+                {
+                    System.Console.Error.WriteLine("[RoundTripUtil] Decompiling " + ncsFile.GetAbsolutePath() + " to " + nssOutputFile.FullName);
+                    decompiler.DecompileToFile(ncsFile, nssOutputFile, charset, true);
+                    System.Console.Error.WriteLine("[RoundTripUtil] DecompileToFile completed, file exists: " + nssOutputFile.Exists());
+                }
+                catch (Exception e)
+                {
+                    System.Console.Error.WriteLine("[RoundTripUtil] Exception during DecompileToFile: " + e.GetType().Name + " - " + e.Message);
+                    if (e.InnerException != null)
+                    {
+                        System.Console.Error.WriteLine("[RoundTripUtil] Inner exception: " + e.InnerException.GetType().Name + " - " + e.InnerException.Message);
+                    }
+                    e.PrintStackTrace(JavaSystem.@err);
+                    throw new DecompilerException("Decompile failed for " + ncsFile.GetAbsolutePath() + ": " + e.Message, e);
+                }
 
                 if (!nssOutputFile.Exists())
                 {
+                    System.Console.Error.WriteLine("[RoundTripUtil] File does not exist after DecompileToFile: " + nssOutputFile.FullName);
+                    System.Console.Error.WriteLine("[RoundTripUtil] Directory exists: " + (nssOutputFile.Directory != null ? nssOutputFile.Directory.Exists.ToString() : "null"));
                     throw new DecompilerException("Decompile did not produce output file: " + nssOutputFile.FullName);
                 }
             }
