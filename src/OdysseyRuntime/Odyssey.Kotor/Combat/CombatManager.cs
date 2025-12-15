@@ -5,6 +5,7 @@ using Odyssey.Core.Interfaces;
 using Odyssey.Core.Interfaces.Components;
 using Odyssey.Kotor.Components;
 using Odyssey.Kotor.Systems;
+using Odyssey.Kotor.Data;
 
 namespace Odyssey.Kotor.Combat
 {
@@ -82,6 +83,7 @@ namespace Odyssey.Kotor.Combat
         private readonly IWorld _world;
         private readonly DamageCalculator _damageCalc;
         private readonly FactionManager _factionManager;
+        private readonly GameDataManager _gameDataManager;
 
         private readonly Dictionary<uint, CombatState> _combatStates;
         private readonly Dictionary<uint, CombatRound> _activeRounds;
@@ -108,10 +110,11 @@ namespace Odyssey.Kotor.Combat
         /// </summary>
         public event EventHandler<CombatEventArgs> OnRoundEnd;
 
-        public CombatManager(IWorld world, FactionManager factionManager)
+        public CombatManager(IWorld world, FactionManager factionManager, GameDataManager gameDataManager = null)
         {
             _world = world ?? throw new ArgumentNullException("world");
             _factionManager = factionManager;
+            _gameDataManager = gameDataManager;
             _damageCalc = new DamageCalculator();
             _combatStates = new Dictionary<uint, CombatState>();
             _activeRounds = new Dictionary<uint, CombatRound>();
@@ -280,14 +283,17 @@ namespace Odyssey.Kotor.Combat
                 bool isOffhand = isDualWielding && i == numAttacks - 1;
                 int attackBonus = _damageCalc.CalculateIterativeAttackBonus(bab, i, isOffhand, hasTWF);
 
+                // Get weapon stats from equipped weapon
+                WeaponStats weaponStats = GetWeaponStats(attacker, isOffhand);
+
                 var attack = new AttackAction(attacker, target)
                 {
                     AttackBonus = attackBonus,
                     IsOffhand = isOffhand,
-                    WeaponDamageRoll = "1d8", // TODO: Get from equipped weapon
+                    WeaponDamageRoll = weaponStats.DamageRoll,
                     DamageBonus = _damageCalc.CalculateMeleeDamageBonus(attacker, false, isOffhand),
-                    CriticalThreat = 20, // TODO: Get from weapon
-                    CriticalMultiplier = 2
+                    CriticalThreat = weaponStats.CriticalThreat,
+                    CriticalMultiplier = weaponStats.CriticalMultiplier
                 };
 
                 round.ScheduleAttack(attack);
@@ -534,6 +540,86 @@ namespace Odyssey.Kotor.Combat
         }
 
         /// <summary>
+        /// Gets weapon stats from an equipped weapon.
+        /// </summary>
+        /// <remarks>
+        /// Weapon Stats Retrieval:
+        /// - Based on swkotor2.exe weapon system
+        /// - Original implementation: Gets weapon damage, critical threat, and multiplier from baseitems.2da
+        /// - INVENTORY_SLOT_RIGHTWEAPON = 4, INVENTORY_SLOT_LEFTWEAPON = 5
+        /// - Falls back to unarmed damage (1d4) if no weapon equipped
+        /// </remarks>
+        private WeaponStats GetWeaponStats(IEntity creature, bool isOffhand)
+        {
+            if (creature == null)
+            {
+                return WeaponStats.Unarmed();
+            }
+
+            IInventoryComponent inventory = creature.GetComponent<IInventoryComponent>();
+            if (inventory == null)
+            {
+                return WeaponStats.Unarmed();
+            }
+
+            // Get weapon from appropriate slot
+            int weaponSlot = isOffhand ? 5 : 4; // INVENTORY_SLOT_LEFTWEAPON : INVENTORY_SLOT_RIGHTWEAPON
+            IEntity weapon = inventory.GetItemInSlot(weaponSlot);
+
+            if (weapon == null)
+            {
+                return WeaponStats.Unarmed();
+            }
+
+            IItemComponent itemComp = weapon.GetComponent<IItemComponent>();
+            if (itemComp == null || _gameDataManager == null)
+            {
+                return WeaponStats.Unarmed();
+            }
+
+            // Get base item data
+            BaseItemData baseItem = _gameDataManager.GetBaseItem(itemComp.BaseItem);
+            if (baseItem == null)
+            {
+                return WeaponStats.Unarmed();
+            }
+
+            // Build damage roll string (e.g., "1d8")
+            string damageRoll = baseItem.NumDice + "d" + baseItem.DieToRoll;
+            if (baseItem.NumDice <= 0 || baseItem.DieToRoll <= 0)
+            {
+                damageRoll = "1d4"; // Fallback to unarmed
+            }
+
+            return new WeaponStats
+            {
+                DamageRoll = damageRoll,
+                CriticalThreat = baseItem.CriticalThreat > 0 ? baseItem.CriticalThreat : 20,
+                CriticalMultiplier = baseItem.CriticalMultiplier > 0 ? baseItem.CriticalMultiplier : 2
+            };
+        }
+
+        /// <summary>
+        /// Weapon statistics for combat calculations.
+        /// </summary>
+        private class WeaponStats
+        {
+            public string DamageRoll { get; set; }
+            public int CriticalThreat { get; set; }
+            public int CriticalMultiplier { get; set; }
+
+            public static WeaponStats Unarmed()
+            {
+                return new WeaponStats
+                {
+                    DamageRoll = "1d4",
+                    CriticalThreat = 20,
+                    CriticalMultiplier = 2
+                };
+            }
+        }
+
+        /// <summary>
         /// Awards experience points to the killer based on victim's Challenge Rating.
         /// </summary>
         private void AwardExperience(IEntity killer, IEntity victim)
@@ -562,7 +648,7 @@ namespace Odyssey.Kotor.Combat
 
             // Apply party sharing (if killer is in a party, share XP)
             // For now, just award to the killer
-            IStatsComponent killerStats = killer.GetComponent<IStatsComponent>();
+            StatsComponent killerStats = killer.GetComponent<StatsComponent>();
             if (killerStats != null)
             {
                 // Award XP and check for level up

@@ -217,17 +217,41 @@ namespace Odyssey.Kotor.Game
             }
         }
 
+        /// <summary>
+        /// Handles clicking on a door.
+        /// </summary>
+        /// <remarks>
+        /// Door Click Handling:
+        /// - Based on swkotor2.exe door interaction system
+        /// - Original implementation: Check lock -> try key -> try lockpicking -> try bashing -> open
+        /// - Key check: HasItemByTag(KeyName)
+        /// - Lockpicking: Security skill check vs LockDC
+        /// - Bashing: Attack door until destroyed (damage - hardness)
+        /// </remarks>
         private void HandleDoorClick(IEntity door)
         {
+            if (door == null || _playerEntity == null)
+            {
+                return;
+            }
+
             IDoorComponent doorComponent = door.GetComponent<IDoorComponent>();
             if (doorComponent != null)
             {
                 if (doorComponent.IsLocked)
                 {
-                    // TODO: Try to unlock or bash
-                    Console.WriteLine("[PlayerController] Door is locked");
+                    // Try to unlock the door
+                    bool unlocked = TryUnlockDoor(doorComponent);
+                    if (!unlocked)
+                    {
+                        // Could not unlock - could try bashing or show message
+                        Console.WriteLine("[PlayerController] Door is locked and cannot be unlocked");
+                        return;
+                    }
                 }
-                else if (!doorComponent.IsOpen)
+
+                // Door is now unlocked (or was never locked), try to open it
+                if (!doorComponent.IsOpen)
                 {
                     // Queue open door action
                     IActionQueueComponent actionQueue = _playerEntity.GetComponent<IActionQueueComponent>();
@@ -243,6 +267,68 @@ namespace Odyssey.Kotor.Game
                 // No door component, just move to it
                 MoveToEntity(door);
             }
+        }
+
+        /// <summary>
+        /// Attempts to unlock a door using key, lockpicking, or bashing.
+        /// </summary>
+        /// <remarks>
+        /// Door Unlocking Logic:
+        /// - Based on swkotor2.exe door unlocking system
+        /// - Priority: 1) Key check, 2) Lockpicking (Security skill), 3) Bashing (if no key required)
+        /// - Key check: Inventory.HasItemByTag(KeyName)
+        /// - Lockpicking: Security skill + d20 vs LockDC
+        /// - Bashing: Attack door (damage - hardness) until destroyed
+        /// </remarks>
+        private bool TryUnlockDoor(IDoorComponent doorComponent)
+        {
+            if (doorComponent == null || !doorComponent.IsLocked)
+            {
+                return true; // Already unlocked
+            }
+
+            // 1. Try key first
+            if (doorComponent.KeyRequired && !string.IsNullOrEmpty(doorComponent.KeyName))
+            {
+                IInventoryComponent inventory = _playerEntity.GetComponent<IInventoryComponent>();
+                if (inventory != null && inventory.HasItemByTag(doorComponent.KeyName))
+                {
+                    doorComponent.Unlock();
+                    Console.WriteLine("[PlayerController] Door unlocked with key: " + doorComponent.KeyName);
+                    return true;
+                }
+            }
+
+            // 2. Try lockpicking (Security skill check)
+            if (doorComponent.LockableByScript && doorComponent.LockDC > 0)
+            {
+                // Get player's Security skill
+                IStatsComponent stats = _playerEntity.GetComponent<IStatsComponent>();
+                if (stats != null)
+                {
+                    // Simplified: Use Security skill + d20 roll vs LockDC
+                    // Full implementation would use proper skill system
+                    Random random = new Random();
+                    int roll = random.Next(1, 21);
+                    int securitySkill = 0; // TODO: Get actual Security skill from stats component
+                    int total = roll + securitySkill;
+
+                    if (total >= doorComponent.LockDC)
+                    {
+                        doorComponent.Unlock();
+                        Console.WriteLine("[PlayerController] Door lockpicked (roll: " + roll + " + skill: " + securitySkill + " >= DC: " + doorComponent.LockDC + ")");
+                        return true;
+                    }
+                    else
+                    {
+                        Console.WriteLine("[PlayerController] Lockpicking failed (roll: " + roll + " + skill: " + securitySkill + " < DC: " + doorComponent.LockDC + ")");
+                    }
+                }
+            }
+
+            // 3. If no key required and not lockable, could try bashing
+            // For now, return false - bashing would be a separate action
+            return false;
         }
 
         /// <summary>
