@@ -75,6 +75,7 @@ namespace Odyssey.Kotor.Game
         private RuntimeModule _currentModule;
         private IEntity _playerEntity;
         private string _currentModuleName;
+        private float _moduleHeartbeatTimer;
 
         /// <summary>
         /// Gets the current player entity.
@@ -261,6 +262,20 @@ namespace Odyssey.Kotor.Game
             if (_encounterSystem != null)
             {
                 _encounterSystem.Update(deltaTime);
+            }
+
+            // Update module heartbeat (fires every 6 seconds)
+            // Based on swkotor2.exe: Module heartbeat script execution
+            // Located via string references: "Mod_OnHeartbeat" @ 0x007be840
+            // Original implementation: Module heartbeat fires every 6 seconds for module-level scripts
+            if (_currentModule != null)
+            {
+                _moduleHeartbeatTimer += deltaTime;
+                if (_moduleHeartbeatTimer >= 6.0f)
+                {
+                    _moduleHeartbeatTimer -= 6.0f;
+                    FireModuleHeartbeat();
+                }
             }
 
             // Update all entities (action queues, transforms, etc.)
@@ -487,6 +502,37 @@ namespace Odyssey.Kotor.Game
         /// <summary>
         /// Fires a script event for an entity.
         /// </summary>
+        /// <summary>
+        /// Fires the module heartbeat script.
+        /// </summary>
+        private void FireModuleHeartbeat()
+        {
+            if (_currentModule == null || _world == null || _world.EventBus == null)
+            {
+                return;
+            }
+
+            // Get module heartbeat script
+            string heartbeatScript = _currentModule.GetScript(ScriptEvent.OnModuleHeartbeat);
+            if (string.IsNullOrEmpty(heartbeatScript))
+            {
+                return;
+            }
+
+            // Fire script event - module scripts use module entity as owner
+            // Based on swkotor2.exe: Module heartbeat script execution
+            // Located via string references: "Mod_OnHeartbeat" @ 0x007be840
+            // Original implementation: Module heartbeat fires every 6 seconds for module-level scripts
+            IEntity moduleEntity = _world.GetEntityByTag(_currentModule.ResRef, 0);
+            if (moduleEntity == null)
+            {
+                // Create a temporary entity for module script execution
+                moduleEntity = _world.CreateEntity(ObjectType.Invalid, Vector3.Zero, 0f);
+                moduleEntity.Tag = _currentModule.ResRef;
+            }
+            _world.EventBus.FireScriptEvent(moduleEntity, ScriptEvent.OnModuleHeartbeat, null);
+        }
+
         private void FireScriptEvent(IEntity entity, ScriptEvent scriptEvent, IEntity target)
         {
             if (entity == null || _scriptExecutor == null)
