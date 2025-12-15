@@ -14,11 +14,23 @@ namespace Odyssey.Core.Module
     /// Module System:
     /// - Based on swkotor2.exe module system
     /// - Located via string references: "Module" @ 0x007bc4e0, "ModuleName" @ 0x007bde2c, "ModuleLoaded" @ 0x007bdd70
+    /// - "MODULE" @ 0x007beab8, "ModuleList" @ 0x007bdd3c, "GetModuleList" @ 0x007bdd48
+    /// - "ModuleRunning" @ 0x007bdd58, "LinkedToModule" @ 0x007bd7bc
     /// - "Mod_Tag" @ 0x007be720, "Mod_Entry_Area" @ 0x007be9b4, "Mod_StartMovie" (module entry area and start movie)
     /// - "Mod_Entry_X" @ 0x007be998, "Mod_Entry_Y" @ 0x007be98c, "Mod_Entry_Z" @ 0x007be980, "Mod_Entry_Dir" @ 0x007be974 (entry position/direction)
     /// - "Mod_OnClientEntrance" @ 0x007be718, "Mod_OnHeartbeat" (module script hooks)
-    /// - "MODULES:" @ 0x007b58b4, ":MODULES" @ 0x007be258 (module directory paths)
+    /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_MODULE_LOAD" @ 0x007bc91c, "CSWSSCRIPTEVENT_EVENTTYPE_ON_MODULE_START" @ 0x007bc948
+    /// - "MODULES:" @ 0x007b58b4, ":MODULES" @ 0x007be258, "MODULES" @ 0x007c6bc4 (module directory paths)
+    /// - ".\modules" @ 0x007c6bcc, "d:\modules" @ 0x007c6bd8, ":modules" @ 0x007cc0d8 (module directory variants)
+    /// - "LIVE%d:MODULES\" @ 0x007be680 (live module directory format)
     /// - "LASTMODULE" @ 0x007be1d0 (last loaded module reference)
+    /// - "modulesave" @ 0x007bde20 (module save reference), "module000" @ 0x007cb9cc (default module name)
+    /// - "Module: %s" @ 0x007c79c8 (module debug message)
+    /// - GUI: "LB_MODULES" @ 0x007cbff4 (module list box), "PlayModuleCharacterList" @ 0x007c2428
+    /// - Server messages: "ServerStatus.ModuleList " @ 0x007c2fb8, ":: Module savegame list: %s.\n" @ 0x007cbbb4
+    /// - ":: Server module list: " @ 0x007cbc2c, ":: Server mode: Module Running.\n" @ 0x007cbc44
+    /// - ":: Server mode: Module Loaded.\n" @ 0x007cbc68
+    /// - Windows API: GetModuleHandleA, GetModuleFileNameA (module handle/file name functions)
     /// - IFO file format: GFF with "IFO " signature containing module metadata
     /// - Module loading: FUN_00708990 @ 0x00708990 (loads module, sets up areas, spawns entities)
     /// - FUN_00633270 @ 0x00633270 sets up all game directories including MODULES
