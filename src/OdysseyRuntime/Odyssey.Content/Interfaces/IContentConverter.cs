@@ -7,6 +7,21 @@ namespace Odyssey.Content.Interfaces
     /// <summary>
     /// Interface for content converters that transform KOTOR assets to runtime format.
     /// </summary>
+    /// <remarks>
+    /// Content Converter Interface:
+    /// - Based on swkotor2.exe asset loading and conversion system
+    /// - Located via string references: Asset loading functions convert KOTOR formats to runtime formats
+    /// - Original implementation: Converts KOTOR file formats (MDL, TPC, BWM, etc.) to runtime formats
+    /// - MDL conversion: Converts MDL/MDX (model/animation) to runtime model format
+    /// - TPC conversion: Converts TPC (texture) to runtime texture format
+    /// - BWM conversion: Converts BWM (walkmesh) to runtime navigation mesh format
+    /// - Async conversion: ConvertAsync allows non-blocking asset conversion (prevents frame drops)
+    /// - Conversion context: Provides resource provider, cache, game type, module name for dependency resolution
+    /// - Converter version: Tracks converter implementation version for cache invalidation
+    /// - CanConvert: Checks if converter can handle specific resource (by ResRef, type, etc.)
+    /// - Supported types: Lists resource types this converter handles (MDL, TPC, BWM, etc.)
+    /// - Note: Original engine loads formats directly, this adds conversion layer for modern rendering APIs
+    /// </remarks>
     public interface IContentConverter<TInput, TOutput>
     {
         /// <summary>
