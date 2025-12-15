@@ -9,8 +9,8 @@ namespace Odyssey.Core.Actions
     /// <remarks>
     /// Speak String Action:
     /// - Based on swkotor2.exe speech/bark system
-    /// - Located via string references: "SpeakString" NWScript function, "ActionSpeakString" action type
-    /// - Speech/bark system: "TalkString" @ 0x007c14f8, "SpeakString" action handling
+    /// - Located via string references: "TalkString" @ 0x007c14f8, "Speaker" @ 0x007c35f8
+    /// - "SpeakString" NWScript function, "ActionSpeakString" action type
     /// - Talk volume enumeration: 0=Normal, 1=Whisper, 2=Shout, 3=Party, 4=Silent
     /// - VO (voice over) references: "VO" folder, TLK (talk table) string references
     /// - Original implementation: Displays text bubble above entity, plays voice if available, lip sync animation
