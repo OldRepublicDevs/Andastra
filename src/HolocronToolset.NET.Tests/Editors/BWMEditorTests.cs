@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using CSharpKOTOR.Formats.BWM;
 using CSharpKOTOR.Resources;
 using FluentAssertions;
@@ -120,7 +121,7 @@ namespace HolocronToolset.NET.Tests.Editors
                 data.Length.Should().BeGreaterThan(0);
 
                 // Verify we can read it back
-                var loadedBwm = CSharpKOTOR.Formats.BWM.BWMAuto.ReadBwm(data);
+                BWM loadedBwm = CSharpKOTOR.Formats.BWM.BWMAuto.ReadBwm(data);
                 loadedBwm.Should().NotBeNull();
                 return;
             }
@@ -150,19 +151,72 @@ namespace HolocronToolset.NET.Tests.Editors
             data2.Length.Should().BeGreaterThan(0);
 
             // Verify we can read it back
-            var loadedBwm2 = CSharpKOTOR.Formats.BWM.BWMAuto.ReadBwm(data2);
+            BWM loadedBwm2 = CSharpKOTOR.Formats.BWM.BWMAuto.ReadBwm(data2);
             loadedBwm2.Should().NotBeNull();
         }
 
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_bwm_editor.py:87-111
+        // Original: def test_save_and_load(self):
         [Fact]
         public void TestBwmEditorSaveLoadRoundtrip()
         {
-            var editor = new BWMEditor(null, null);
-            editor.New();
+            // Get test files directory
+            string testFilesDir = System.IO.Path.Combine(
+                System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
 
-            // Test save/load roundtrip (will be implemented when BWM format is fully supported)
-            var (data, _) = editor.Build();
-            data.Should().NotBeNull();
+            string bwmFile = System.IO.Path.Combine(testFilesDir, "zio006j.wok");
+            if (!System.IO.File.Exists(bwmFile))
+            {
+                // Try alternative location
+                testFilesDir = System.IO.Path.Combine(
+                    System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                    "..", "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+                bwmFile = System.IO.Path.Combine(testFilesDir, "zio006j.wok");
+            }
+
+            if (!System.IO.File.Exists(bwmFile))
+            {
+                // Skip if test file not available (matching Python pytest.skip behavior)
+                return;
+            }
+
+            byte[] originalData = System.IO.File.ReadAllBytes(bwmFile);
+            BWM oldBwm = CSharpKOTOR.Formats.BWM.BWMAuto.ReadBwm(originalData);
+
+            // Get installation if available (K2 preferred for BWM files)
+            string k2Path = Environment.GetEnvironmentVariable("K2_PATH");
+            if (string.IsNullOrEmpty(k2Path))
+            {
+                k2Path = @"C:\Program Files (x86)\Steam\steamapps\common\Knights of the Old Republic II";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k2Path) && System.IO.File.Exists(System.IO.Path.Combine(k2Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k2Path, "Test Installation", tsl: true);
+            }
+
+            var editor = new BWMEditor(null, installation);
+            editor.Load(bwmFile, "zio006j", ResourceType.WOK, originalData);
+
+            var (newData, _) = editor.Build();
+            BWM newBwm = CSharpKOTOR.Formats.BWM.BWMAuto.ReadBwm(newData);
+
+            // Compare by content, not by index (faces may be reordered: walkable first, then unwalkable)
+            // Compare basic properties
+            newBwm.WalkmeshType.Should().Be(oldBwm.WalkmeshType, "Walkmesh type should match");
+            newBwm.Position.Should().Be(oldBwm.Position, "Position should match");
+            newBwm.RelativeHook1.Should().Be(oldBwm.RelativeHook1, "RelativeHook1 should match");
+            newBwm.RelativeHook2.Should().Be(oldBwm.RelativeHook2, "RelativeHook2 should match");
+            newBwm.AbsoluteHook1.Should().Be(oldBwm.AbsoluteHook1, "AbsoluteHook1 should match");
+            newBwm.AbsoluteHook2.Should().Be(oldBwm.AbsoluteHook2, "AbsoluteHook2 should match");
+
+            // Compare faces by content (set comparison since order may differ)
+            newBwm.Faces.Count.Should().Be(oldBwm.Faces.Count, "Face count should match");
+            var oldFacesSet = new HashSet<BWMFace>(oldBwm.Faces);
+            var newFacesSet = new HashSet<BWMFace>(newBwm.Faces);
+            newFacesSet.SetEquals(oldFacesSet).Should().BeTrue("Face content should match - faces may have been reordered or modified");
         }
     }
 }
