@@ -19,7 +19,10 @@ namespace Odyssey.Core.Triggers
     /// - Event types: "CSWSSCRIPTEVENT_EVENTTYPE_ON_OBJECT_ENTER" @ 0x007bc9b8 (0xc), "CSWSSCRIPTEVENT_EVENTTYPE_ON_OBJECT_EXIT" @ 0x007bc9cc (0xd)
     /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_CLICKED" @ 0x007bc9e0 (0x1e), "EVENT_ENTERED_TRIGGER" @ 0x007bce08 (event type 2)
     /// - "EVENT_LEFT_TRIGGER" @ 0x007bcdf4 (event type 3), "CSWSSCRIPTEVENT_EVENTTYPE_ON_MINE_TRIGGERED" @ 0x007bc7ac
-    /// - Event dispatching: FUN_004dcfb0 @ 0x004dcfb0 handles script event dispatching (case 2 = EVENT_ENTERED_TRIGGER, case 3 = EVENT_LEFT_TRIGGER)
+    /// - Event dispatching: FUN_004dcfb0 @ 0x004dcfb0 handles script event dispatching
+    ///   - Case 2 = EVENT_ENTERED_TRIGGER (fires OnEnter scripts)
+    ///   - Case 3 = EVENT_LEFT_TRIGGER (fires OnExit scripts)
+    ///   - Case 0x1e (30) = CSWSSCRIPTEVENT_EVENTTYPE_ON_CLICKED (fires OnClick scripts for doors/placeables/triggers)
     /// - Original implementation: FUN_005226d0 @ 0x005226d0 saves trigger data including polygon geometry
     /// - FUN_004e10b0 @ 0x004e10b0 loads trigger instances from GIT
     /// - Trigger geometry: Polygon defined by vertices in 2D (X/Z plane, Y is height) stored in UTT template Geometry field
