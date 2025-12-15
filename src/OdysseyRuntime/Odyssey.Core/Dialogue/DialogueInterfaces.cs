@@ -11,7 +11,11 @@ namespace Odyssey.Core.Dialogue
     /// - Based on swkotor2.exe dialogue system
     /// - Located via string references: "Conversation" @ 0x007c1abc, "ConversationType" @ 0x007c38b0, "EndConversation" @ 0x007c38e0
     /// - "Conversation File: " @ 0x007cb1ac
+    /// - Dialogue script hooks: "ScriptDialogue" @ 0x007bee40, "ScriptEndDialogue" @ 0x007bede0
+    /// - Dialogue events: "CSWSSCRIPTEVENT_EVENTTYPE_ON_DIALOGUE" @ 0x007bcac4, "OnEndDialogue" @ 0x007c1f60
+    /// - Example dialogue script: "k_hen_dialogue01" @ 0x007bf548
     /// - Error: "CONVERSATION ERROR: Last Conversation Node Contains Either an END NODE or CONTINUE NODE.  Please contact a Designer!" @ 0x007c3768
+    /// - Error: "Error: dialogue can't find object '%s'!" @ 0x007c3730 (dialogue object lookup failure)
     /// - Original implementation: Loads DLG (dialogue) files from resource system
     /// - DLG file format: GFF with "DLG " signature containing dialogue tree data
     /// - Dialogue files contain entries (NPC lines), replies (player options), and links between them
