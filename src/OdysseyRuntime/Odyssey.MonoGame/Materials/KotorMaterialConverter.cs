@@ -27,13 +27,15 @@ namespace Odyssey.MonoGame.Materials
     /// <remarks>
     /// KOTOR Material Converter:
     /// - Based on swkotor2.exe material/shader system (modern PBR enhancement)
-    /// - Located via string references: "glMaterialfv" @ 0x0080ad74, "glColorMaterial" @ 0x0080ad84
+    /// - Located via string references: "glMaterialfv" @ 0x0080ad74 (OpenGL material function), "glColorMaterial" @ 0x0080ad84 (OpenGL color material function)
+    /// - "glBindMaterialParameterEXT" @ 0x007b77b0 (OpenGL material parameter binding), "it_materialcloth" @ 0x007cab4c (material cloth item)
     /// - Original implementation: KOTOR uses Blinn-Phong shading model with OpenGL/DirectX fixed-function pipeline
     /// - Material properties: Diffuse, specular (color + power), self-illumination, environment maps, lightmaps
-    /// - Shader system: Original engine uses fixed-function pipeline with material parameters
+    /// - Shader system: Original engine uses fixed-function pipeline with material parameters (glMaterialfv sets material properties)
+    /// - Material loading: Materials loaded from MDL file format, stored in MDL node structures
     /// - This MonoGame implementation: Converts Blinn-Phong materials to modern PBR (Physically Based Rendering)
     /// - Conversion: Specular power → roughness, specular color → metallic estimation, emissive preserved
-    /// - Note: Original engine used fixed-function pipeline, PBR is a modern enhancement for better visuals
+    /// - Note: Original engine used fixed-function pipeline (glMaterialfv for material properties), PBR is a modern enhancement for better visuals
     /// </remarks>
     public static class KotorMaterialConverter
     {
