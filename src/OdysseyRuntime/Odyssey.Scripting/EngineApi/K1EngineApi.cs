@@ -63,6 +63,10 @@ namespace Odyssey.Scripting.EngineApi
         // Key: caster entity ID, Value: target entity ID
         private readonly Dictionary<uint, uint> _lastSpellTargets;
 
+        // Track last equipped item for GetLastItemEquipped
+        // Key: creature entity ID, Value: item entity ID
+        private readonly Dictionary<uint, uint> _lastEquippedItems;
+
         public K1EngineApi()
         {
             _vm = new NcsVm();
@@ -71,6 +75,7 @@ namespace Odyssey.Scripting.EngineApi
             _effectIterations = new Dictionary<uint, EffectIteration>();
             _persistentObjectIterations = new Dictionary<uint, PersistentObjectIteration>();
             _lastSpellTargets = new Dictionary<uint, uint>();
+            _lastEquippedItems = new Dictionary<uint, uint>();
         }
         
         private class FactionMemberIteration
@@ -1064,8 +1069,9 @@ namespace Odyssey.Scripting.EngineApi
             switch (criteriaType)
             {
                 case 0: // CREATURE_TYPE_RACIAL_TYPE
-                    // TODO: Check racial type from creature template
-                    return true; // Placeholder
+                    // Check racial type from creature data
+                    int raceId = creature.GetData<int>("RaceId", 0);
+                    return raceId == criteriaValue;
 
                 case 1: // CREATURE_TYPE_PLAYER_CHAR
                     // PLAYER_CHAR_IS_PC = 0, PLAYER_CHAR_NOT_PC = 1
@@ -1092,8 +1098,42 @@ namespace Odyssey.Scripting.EngineApi
                     return true; // Placeholder
 
                 case 3: // CREATURE_TYPE_REPUTATION
-                    // TODO: Check reputation type
-                    return true; // Placeholder
+                    // Check reputation between caller and creature
+                    // Reputation values: REPUTATION_TYPE_ENEMY = 0, REPUTATION_TYPE_NEUTRAL = 1, REPUTATION_TYPE_FRIEND = 2
+                    if (ctx.Caller == null)
+                    {
+                        return false;
+                    }
+                    
+                    // Get faction IDs
+                    int callerFactionId = ctx.Caller.GetData<int>("FactionID", 0);
+                    int creatureFactionId = creature.GetData<int>("FactionID", 0);
+                    
+                    if (callerFactionId == 0 || creatureFactionId == 0)
+                    {
+                        return false; // No faction data
+                    }
+                    
+                    // Use FactionManager to get reputation
+                    if (ctx is VM.ExecutionContext execCtx && execCtx.AdditionalContext is Odyssey.Kotor.Game.GameServicesContext services)
+                    {
+                        if (services.FactionManager != null)
+                        {
+                            // Get reputation between factions
+                            // Note: FactionManager.GetReputation returns reputation value
+                            // We need to check if it matches the criteria value
+                            int reputation = services.FactionManager.GetReputation(callerFactionId, creatureFactionId);
+                            return reputation == criteriaValue;
+                        }
+                    }
+                    
+                    // Fallback: If same faction, assume friendly (REPUTATION_TYPE_FRIEND = 2)
+                    if (callerFactionId == creatureFactionId)
+                    {
+                        return criteriaValue == 2; // REPUTATION_TYPE_FRIEND
+                    }
+                    
+                    return false;
 
                 case 4: // CREATURE_TYPE_IS_ALIVE
                     // TRUE = alive, FALSE = dead
@@ -2217,6 +2257,12 @@ namespace Odyssey.Scripting.EngineApi
             if (ctx.Caller == null)
             {
                 return Variable.Void();
+            }
+
+            // Track spell target for GetSpellTargetObject
+            if (targetId != ObjectInvalid)
+            {
+                _lastSpellTargets[ctx.Caller.ObjectId] = targetId;
             }
 
             var action = new ActionCastSpellAtObject(spellId, targetId);
