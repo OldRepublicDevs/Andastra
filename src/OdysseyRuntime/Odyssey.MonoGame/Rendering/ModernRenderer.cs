@@ -196,8 +196,16 @@ namespace Odyssey.MonoGame.Rendering
         /// <summary>
         /// Culls and processes render objects, returning visible objects.
         /// </summary>
+        /// <param name="objects">Enumerable collection of render objects to process.</param>
+        /// <returns>List of visible objects after culling.</returns>
+        /// <exception cref="ArgumentNullException">Thrown if objects is null.</exception>
         public List<RenderObject> CullAndProcessObjects(IEnumerable<RenderObject> objects)
         {
+            if (objects == null)
+            {
+                throw new ArgumentNullException("objects");
+            }
+
             List<RenderObject> visibleObjects = _renderListPool.Get();
 
             foreach (RenderObject obj in objects)
