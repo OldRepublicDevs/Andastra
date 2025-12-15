@@ -9,11 +9,13 @@ namespace Odyssey.Core.Actions
     /// <remarks>
     /// Destroy Object Action:
     /// - Based on swkotor2.exe DestroyObject NWScript function
-    /// - Located via string references: DestroyObject implementation with fade effects
+    /// - Located via string references: "DestroyObject" @ NWScript function dispatch table
     /// - Original implementation: Destroys object after delay, optionally with fade-out effect
-    /// - If noFade is FALSE, object fades out before destruction
+    /// - If noFade is FALSE, object fades out before destruction (alpha fade from 1.0 to 0.0)
     /// - delayUntilFade controls when fade starts (if delay > 0, fade starts after delayUntilFade)
     /// - Rendering system should check "DestroyFade" flag and fade out entity before destruction
+    /// - Fade duration: Typically 1-2 seconds for smooth visual transition
+    /// - After fade completes (or if noFade is TRUE), object is removed from world
     /// </remarks>
     public class ActionDestroyObject : ActionBase
     {
@@ -59,7 +61,7 @@ namespace Odyssey.Core.Actions
                     // Find target entity and set fade flag
                     if (actor != null && actor.World != null)
                     {
-                        IEntity target = actor.World.GetEntityById(_targetObjectId);
+                        IEntity target = actor.World.GetEntity(_targetObjectId);
                         if (target != null && target is Core.Entities.Entity targetEntity)
                         {
                             // Set flag for rendering system to fade out

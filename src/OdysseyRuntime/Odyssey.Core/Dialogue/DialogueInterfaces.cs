@@ -6,6 +6,18 @@ namespace Odyssey.Core.Dialogue
     /// <summary>
     /// Interface for loading dialogue files.
     /// </summary>
+    /// <remarks>
+    /// Dialogue Loader Interface:
+    /// - Based on swkotor2.exe dialogue system
+    /// - Located via string references: "Conversation" @ 0x007c1abc, "ConversationType" @ 0x007c38b0, "EndConversation" @ 0x007c38e0
+    /// - "Conversation File: " @ 0x007cb1ac
+    /// - Error: "CONVERSATION ERROR: Last Conversation Node Contains Either an END NODE or CONTINUE NODE.  Please contact a Designer!" @ 0x007c3768
+    /// - Original implementation: Loads DLG (dialogue) files from resource system
+    /// - DLG file format: GFF with "DLG " signature containing dialogue tree data
+    /// - Dialogue files contain entries (NPC lines), replies (player options), and links between them
+    /// - BeginConversation NWScript function starts dialogue with DLG ResRef
+    /// - Based on DLG file format documentation in vendor/PyKotor/wiki/
+    /// </remarks>
     public interface IDialogueLoader
     {
         /// <summary>
@@ -19,6 +31,15 @@ namespace Odyssey.Core.Dialogue
     /// <summary>
     /// Interface for executing NWScript scripts.
     /// </summary>
+    /// <remarks>
+    /// Script Executor Interface:
+    /// - Based on swkotor2.exe NCS VM system
+    /// - Located via string references: NCS VM execution functions
+    /// - Original implementation: Executes compiled NWScript (NCS) files via NCS VM
+    /// - Script execution: Loads NCS file, creates execution context, runs VM until completion
+    /// - Return value: 0 = FALSE, non-zero = TRUE (used for conditional checks in dialogue, etc.)
+    /// - Script context: OBJECT_SELF (owner), OBJECT_INVALID (triggerer), global/local variables
+    /// </remarks>
     public interface IScriptExecutor
     {
         /// <summary>
@@ -34,6 +55,15 @@ namespace Odyssey.Core.Dialogue
     /// <summary>
     /// Interface for playing voice-over audio.
     /// </summary>
+    /// <remarks>
+    /// Voice Player Interface:
+    /// - Based on swkotor2.exe voice-over system
+    /// - Located via string references: Voice-over playback functions
+    /// - Original implementation: Plays voice-over audio files (WAV format) during dialogue
+    /// - Voice-over files: Stored in VO folder, referenced by dialogue entries (VoiceOverId)
+    /// - Positional audio: Speaker entity position used for 3D audio positioning
+    /// - Playback completion: Callback fires when voice-over finishes (for dialogue progression)
+    /// </remarks>
     public interface IVoicePlayer
     {
         /// <summary>
