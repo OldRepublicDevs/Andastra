@@ -33,15 +33,32 @@ namespace Odyssey.Content.Loaders
     ///   - "CameraList" @ 0x007bd16c (camera instances, KOTOR-specific)
     /// - GIT file format: GFF with "GIT " signature containing area instance data
     /// - Original implementation: FUN_004dfbb0 @ 0x004dfbb0 loads creature instances from GIT
-    /// - FUN_004e08e0 @ 0x004e08e0 loads placeable/door instances from GIT
+    ///   - Located via string reference: "Creature List" @ 0x007bd01c
+    ///   - Original implementation (from decompiled FUN_004dfbb0):
+    ///     - Iterates through "Creature List" GFF list field
+    ///     - For each creature struct: Reads "ObjectId" (default 0x7F000000), "TemplateResRef" (ResRef), "XPosition", "YPosition", "ZPosition" (float)
+    ///     - Calls FUN_005261b0 to load creature template from UTC file
+    ///     - Calls FUN_005223a0 to load creature instance data from GIT struct
+    ///     - Reads orientation: "XOrientation", "YOrientation", "ZOrientation" (float, converted to quaternion via FUN_00506550)
+    ///     - Position validation: Calls FUN_004f7590 to validate position on walkmesh (20.0 unit radius check)
+    ///     - Spawns creature at validated position via FUN_0051bfc0
+    /// - FUN_004e08e0 @ 0x004e08e0 loads placeable/door/store instances from GIT
+    ///   - Located via string reference: "StoreList" (also handles "Door List" and "Placeable List")
+    ///   - Original implementation (from decompiled FUN_004e08e0):
+    ///     - Iterates through "StoreList" GFF list field (also handles doors/placeables)
+    ///     - For each struct: Reads "ObjectId" (default 0x7F000000), "ResRef" (template ResRef), "XPosition", "YPosition", "ZPosition" (float)
+    ///     - Calls FUN_005718f0 to load placeable/door template from UTP/UTD file
+    ///     - Calls FUN_00571310 to load instance data from GIT struct
+    ///     - Reads orientation: "XOrientation", "YOrientation", "ZOrientation" (float, normalized if magnitude > threshold, converted to quaternion)
+    ///     - Spawns placeable/door at position via FUN_00570fe0
     /// - FUN_004e01a0 @ 0x004e01a0 loads encounter instances from GIT
-    /// - FUN_004e0f60 @ 0x004e0f60 loads waypoint instances from GIT
-    /// - FUN_004e10b0 @ 0x004e10b0 loads trigger instances from GIT
     /// - Parses GIT GFF structure, spawns entities at specified positions
     /// - GIT files define all spawned instances in an area (creatures, doors, placeables, triggers, waypoints, sounds, encounters, stores, cameras)
     /// - Each instance contains: TemplateResRef, Tag, Position (X/Y/Z), Orientation, and type-specific fields
     /// - Instance position fields: "XPosition", "YPosition", "ZPosition" for most types, "X", "Y", "Z" for doors/placeables
-    /// - Instance orientation fields: "XOrientation", "YOrientation" for creatures/triggers, "Bearing" for doors/placeables
+    /// - Instance orientation fields: "XOrientation", "YOrientation", "ZOrientation" (float, converted to quaternion for creatures/placeables), "Bearing" (float) for doors/placeables
+    /// - Position validation: Creature positions validated on walkmesh (20.0 unit radius check) before spawning
+    /// - Orientation normalization: Orientation vectors normalized if magnitude > threshold (DAT_007bd08c), default to (0, 1, 0) if invalid
     /// - Area properties stored in "AreaProperties" struct (ambient sounds, music, environment audio)
     /// - Based on GIT file format documentation in vendor/PyKotor/wiki/GFF-GIT.md
     /// </remarks>
