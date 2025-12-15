@@ -575,7 +575,7 @@ namespace Odyssey.Kotor.Loading
                 {
                     foreach (GFFStruct storeStruct in storeList)
                     {
-                        IEntity entity = _entityFactory.CreateStoreFromGit(storeStruct);
+                        IEntity entity = _entityFactory.CreateStoreFromGit(storeStruct, module);
                         if (entity != null)
                         {
                             area.AddEntity(entity);
@@ -621,6 +621,11 @@ namespace Odyssey.Kotor.Loading
         /// Gets the currently loaded module.
         /// </summary>
         public RuntimeModule CurrentModule => _currentModule;
+
+        /// <summary>
+        /// Gets the entity factory for creating entities from templates.
+        /// </summary>
+        public EntityFactory EntityFactory => _entityFactory;
 
         /// <summary>
         /// Gets the CSharpKOTOR Module for the currently loaded runtime module.
