@@ -2892,6 +2892,17 @@ namespace Odyssey.Scripting.EngineApi
             return Variable.FromObject(ObjectInvalid);
         }
 
+        /// <summary>
+        /// GetItemStackSize(object oItem) - returns stack size of item
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: Item stack size system
+        /// Located via string references: "StackSize" @ 0x007c0a34, "EVENT_DECREMENT_STACKSIZE" @ 0x007bccd8
+        /// Original implementation: Items can stack (e.g., consumables, ammunition) with stack size stored in item data
+        /// Stack size: Default is 1 for non-stackable items, higher values for stackable items (potions, grenades, etc.)
+        /// Stack decrement: When item is used, stack size decrements, EVENT_DECREMENT_STACKSIZE fires when stack reaches 0
+        /// Returns: Stack size (1 or higher) or 0 if item is invalid
+        /// </remarks>
         private Variable Func_GetItemStackSize(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             // GetItemStackSize(object oItem)
