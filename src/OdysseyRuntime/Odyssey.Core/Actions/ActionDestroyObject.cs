@@ -109,6 +109,11 @@ namespace Odyssey.Core.Actions
                 return;
             }
 
+            // Based on swkotor2.exe: DestroyObject implementation
+            // Located via string references: "EVENT_DESTROY_OBJECT" @ 0x007bcd48
+            // Original implementation: FUN_004dcfb0 @ 0x004dcfb0 handles EVENT_DESTROY_OBJECT (case 0xb)
+            // Fires EVENT_DESTROY_OBJECT event, then removes object from world
+            // Object is removed from area's entity list, all references become invalid
             if (actor != null && actor.World != null)
             {
                 actor.World.DestroyEntity(_targetObjectId);

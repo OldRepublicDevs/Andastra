@@ -78,12 +78,17 @@ namespace Odyssey.Core.Actions
             _approached = true;
 
             // Close the door
+            // Based on swkotor2.exe: Door closing implementation
+            // Located via string references: "OnClosed" @ 0x007be1c8, "EVENT_CLOSE_OBJECT" @ 0x007bcdb4
+            // Original implementation: FUN_004dcfb0 @ 0x004dcfb0 handles EVENT_CLOSE_OBJECT (case 6)
+            // Door state: IsOpen flag set to false, fires OnClosed script event
             IDoorComponent doorState = door.GetComponent<IDoorComponent>();
             if (doorState != null)
             {
                 doorState.IsOpen = false;
 
                 // Fire closed event
+                // Original engine: Fires EVENT_CLOSE_OBJECT event, then executes OnClosed script
                 IEventBus eventBus = actor.World.EventBus;
                 if (eventBus != null)
                 {
