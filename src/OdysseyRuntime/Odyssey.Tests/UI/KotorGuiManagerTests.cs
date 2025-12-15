@@ -3,6 +3,7 @@ using System.IO;
 using System.Text;
 using Xunit;
 using Odyssey.Game.Core;
+using Odyssey.Core;
 
 namespace Odyssey.Tests.UI
 {
@@ -25,7 +26,7 @@ namespace Odyssey.Tests.UI
             try
             {
                 // Act
-                string detected = GamePathDetector.DetectKotorPath(KotorGame.K1);
+                string detected = GamePathDetector.DetectKotorPath(Odyssey.Core.KotorGame.K1);
 
                 // Assert
                 // Verify that environment variable is checked
@@ -49,7 +50,7 @@ namespace Odyssey.Tests.UI
                 File.WriteAllText(tempEnvPath, $"K1_PATH={testPath}\n");
 
                 // Act
-                string detected = GamePathDetector.DetectKotorPath(KotorGame.K1);
+                string detected = GamePathDetector.DetectKotorPath(Odyssey.Core.KotorGame.K1);
 
                 // Assert - Should load from .env file
             }
@@ -72,7 +73,7 @@ namespace Odyssey.Tests.UI
             try
             {
                 // Act
-                string detected = GamePathDetector.DetectKotorPath(KotorGame.K1);
+                string detected = GamePathDetector.DetectKotorPath(Odyssey.Core.KotorGame.K1);
 
                 // Assert - Environment variable should be checked first
                 // (Registry check happens after, so env var takes precedence)
@@ -93,7 +94,7 @@ namespace Odyssey.Tests.UI
             try
             {
                 // Act
-                string detected = GamePathDetector.DetectKotorPath(KotorGame.K1);
+                string detected = GamePathDetector.DetectKotorPath(Odyssey.Core.KotorGame.K1);
 
                 // Assert - Should handle paths with spaces
             }
@@ -115,7 +116,7 @@ namespace Odyssey.Tests.UI
                 File.WriteAllText(tempEnvPath, $"K1_PATH=\"{testPath}\"\n");
 
                 // Act
-                string detected = GamePathDetector.DetectKotorPath(KotorGame.K1);
+                string detected = GamePathDetector.DetectKotorPath(Odyssey.Core.KotorGame.K1);
 
                 // Assert - Quotes should be stripped from .env file
             }
@@ -141,7 +142,7 @@ namespace Odyssey.Tests.UI
             try
             {
                 // Act
-                string detected = GamePathDetector.DetectKotorPath(KotorGame.K1);
+                string detected = GamePathDetector.DetectKotorPath(Odyssey.Core.KotorGame.K1);
 
                 // Assert
                 Assert.NotNull(detected);
@@ -169,7 +170,7 @@ namespace Odyssey.Tests.UI
             try
             {
                 // Act
-                string detected = GamePathDetector.DetectKotorPath(KotorGame.K1);
+                string detected = GamePathDetector.DetectKotorPath(Odyssey.Core.KotorGame.K1);
 
                 // Assert - Should return null or fallback to other detection methods
                 // since invalid path doesn't exist
@@ -192,7 +193,7 @@ namespace Odyssey.Tests.UI
             try
             {
                 // Act
-                string detected = GamePathDetector.DetectKotorPath(KotorGame.K1);
+                string detected = GamePathDetector.DetectKotorPath(Odyssey.Core.KotorGame.K1);
 
                 // Assert - Should not return invalid path
                 Assert.Null(detected);
@@ -220,7 +221,7 @@ namespace Odyssey.Tests.UI
             try
             {
                 // Act
-                string detected = GamePathDetector.DetectKotorPath(KotorGame.K1);
+                string detected = GamePathDetector.DetectKotorPath(Odyssey.Core.KotorGame.K1);
 
                 // Assert - Should not return invalid path
                 Assert.Null(detected);
@@ -250,8 +251,8 @@ namespace Odyssey.Tests.UI
             try
             {
                 // Act
-                string detected = GamePathDetector.DetectKotorPath(KotorGame.K1);
-                bool isValid = GamePathDetector.IsValidInstallation(pathWithSlash, KotorGame.K1);
+                string detected = GamePathDetector.DetectKotorPath(Odyssey.Core.KotorGame.K1);
+                bool isValid = GamePathDetector.IsValidInstallation(pathWithSlash, Odyssey.Core.KotorGame.K1);
 
                 // Assert
                 Assert.True(isValid); // Should handle trailing slash
@@ -283,7 +284,7 @@ namespace Odyssey.Tests.UI
                 File.WriteAllText(tempEnvPath, envContent.ToString());
 
                 // Act
-                string detected = GamePathDetector.DetectKotorPath(KotorGame.K1);
+                string detected = GamePathDetector.DetectKotorPath(Odyssey.Core.KotorGame.K1);
 
                 // Assert - Should load from .env file format
             }
@@ -313,7 +314,7 @@ namespace Odyssey.Tests.UI
                 File.WriteAllText(tempEnvPath, envContent.ToString());
 
                 // Act
-                string detected = GamePathDetector.DetectKotorPath(KotorGame.K1);
+                string detected = GamePathDetector.DetectKotorPath(Odyssey.Core.KotorGame.K1);
 
                 // Assert - Should correctly extract K1_PATH from multiple entries
             }
@@ -342,7 +343,7 @@ namespace Odyssey.Tests.UI
             try
             {
                 // Act
-                bool isValid = GamePathDetector.IsValidInstallation(tempDir, KotorGame.K1);
+                bool isValid = GamePathDetector.IsValidInstallation(tempDir, Odyssey.Core.KotorGame.K1);
 
                 // Assert
                 Assert.True(isValid);
@@ -370,7 +371,7 @@ namespace Odyssey.Tests.UI
             try
             {
                 // Act
-                bool isValid = GamePathDetector.IsValidInstallation(tempDir, KotorGame.K2);
+                bool isValid = GamePathDetector.IsValidInstallation(tempDir, Odyssey.Core.KotorGame.K2);
 
                 // Assert
                 Assert.True(isValid);
@@ -393,7 +394,7 @@ namespace Odyssey.Tests.UI
             // This test verifies that path detection still works even when GUI resources are missing
 
             // Act & Assert - Path detection should not depend on GUI resource availability
-            string detected = GamePathDetector.DetectKotorPath(KotorGame.K1);
+            string detected = GamePathDetector.DetectKotorPath(Odyssey.Core.KotorGame.K1);
             // Should not throw even if GUI resources are unavailable
         }
 
@@ -403,7 +404,7 @@ namespace Odyssey.Tests.UI
             // Arrange - No environment variable set
 
             // Act
-            string detected = GamePathDetector.DetectKotorPath(KotorGame.K1);
+            string detected = GamePathDetector.DetectKotorPath(Odyssey.Core.KotorGame.K1);
 
             // Assert - Should attempt other detection methods (registry, Steam, etc.)
             // Result may be null, but should not throw
@@ -420,7 +421,7 @@ namespace Odyssey.Tests.UI
                 File.WriteAllText(tempEnvPath, "INVALID_FORMAT_NO_EQUALS\nMALFORMED");
 
                 // Act & Assert - Should handle gracefully
-                string detected = GamePathDetector.DetectKotorPath(KotorGame.K1);
+                string detected = GamePathDetector.DetectKotorPath(Odyssey.Core.KotorGame.K1);
                 // Should not throw on malformed .env file
             }
             finally
@@ -439,7 +440,7 @@ namespace Odyssey.Tests.UI
             // This tests error handling in LoadEnvFile
 
             // Act & Assert - Should handle file read errors gracefully
-            string detected = GamePathDetector.DetectKotorPath(KotorGame.K1);
+            string detected = GamePathDetector.DetectKotorPath(Odyssey.Core.KotorGame.K1);
             // Should not throw on file read errors
         }
 
@@ -460,7 +461,7 @@ namespace Odyssey.Tests.UI
             try
             {
                 // Act
-                string detected = GamePathDetector.DetectKotorPath(KotorGame.K1);
+                string detected = GamePathDetector.DetectKotorPath(Odyssey.Core.KotorGame.K1);
 
                 // Assert - Should handle case differences
                 // Path comparison should work regardless of case on Windows
@@ -502,8 +503,8 @@ namespace Odyssey.Tests.UI
                 Environment.SetEnvironmentVariable("K1_PATH", longPathStr, EnvironmentVariableTarget.Process);
 
                 // Act
-                string detected = GamePathDetector.DetectKotorPath(KotorGame.K1);
-                bool isValid = GamePathDetector.IsValidInstallation(longPathStr, KotorGame.K1);
+                string detected = GamePathDetector.DetectKotorPath(Odyssey.Core.KotorGame.K1);
+                bool isValid = GamePathDetector.IsValidInstallation(longPathStr, Odyssey.Core.KotorGame.K1);
 
                 // Assert
                 Assert.True(isValid);
@@ -529,7 +530,7 @@ namespace Odyssey.Tests.UI
             try
             {
                 // Act
-                string detected = GamePathDetector.DetectKotorPath(KotorGame.K1);
+                string detected = GamePathDetector.DetectKotorPath(Odyssey.Core.KotorGame.K1);
 
                 // Assert - Relative paths may or may not work depending on context
                 // This tests that the system handles them without crashing
@@ -550,7 +551,7 @@ namespace Odyssey.Tests.UI
             try
             {
                 // Act
-                string detected = GamePathDetector.DetectKotorPath(KotorGame.K1);
+                string detected = GamePathDetector.DetectKotorPath(Odyssey.Core.KotorGame.K1);
 
                 // Assert - Should handle network paths (validation will fail if path doesn't exist)
                 // This tests that network paths don't cause crashes
@@ -570,7 +571,7 @@ namespace Odyssey.Tests.UI
             try
             {
                 // Act
-                string detected = GamePathDetector.DetectKotorPath(KotorGame.K1);
+                string detected = GamePathDetector.DetectKotorPath(Odyssey.Core.KotorGame.K1);
 
                 // Assert - Should handle empty values gracefully
                 // Should fall back to other detection methods
@@ -590,7 +591,7 @@ namespace Odyssey.Tests.UI
             try
             {
                 // Act
-                string detected = GamePathDetector.DetectKotorPath(KotorGame.K1);
+                string detected = GamePathDetector.DetectKotorPath(Odyssey.Core.KotorGame.K1);
 
                 // Assert - Should handle whitespace-only values gracefully
                 // Should fall back to other detection methods
