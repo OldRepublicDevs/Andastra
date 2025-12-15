@@ -10,6 +10,19 @@ namespace Odyssey.Content.Interfaces
     /// <summary>
     /// Unified resource access - wraps all precedence logic for KOTOR resource lookup.
     /// </summary>
+    /// <remarks>
+    /// Game Resource Provider Interface:
+    /// - Based on swkotor2.exe resource loading system
+    /// - Located via string references: "Resource" @ 0x007c14d4, resource table management functions
+    /// - Resource precedence: OVERRIDE > MODULE > SAVE > TEXTUREPACKS > CHITIN > HARDCODED
+    /// - Original implementation: Unified interface for accessing game resources with automatic precedence resolution
+    /// - Resource lookup: Searches providers in precedence order until resource found
+    /// - Async operations: Resource loading is asynchronous to prevent blocking game loop
+    /// - Resource enumeration: Can enumerate all resources of a type (for modding tools, resource browsers)
+    /// - Location tracking: LocateAsync returns all locations where resource exists (useful for debugging mod conflicts)
+    /// - Based on CExoKeyTable and CExoResMan resource management in original engine
+    /// - FUN_00633270 @ 0x00633270 sets up all resource directories and precedence chains
+    /// </remarks>
     public interface IGameResourceProvider
     {
         /// <summary>

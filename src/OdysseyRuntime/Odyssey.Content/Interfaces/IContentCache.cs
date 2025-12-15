@@ -9,6 +9,20 @@ namespace Odyssey.Content.Interfaces
     /// <summary>
     /// Cache for converted content assets.
     /// </summary>
+    /// <remarks>
+    /// Content Cache Interface:
+    /// - Based on swkotor2.exe asset caching system
+    /// - Located via string references: Asset caching and memory management functions
+    /// - Original implementation: Caches converted assets (MDL→runtime model, TPC→runtime texture) to disk
+    /// - Cache key: Includes game type, ResRef, resource type, source hash, converter version
+    /// - Cache invalidation: Source hash changes when source file modified, converter version changes when converter updated
+    /// - Cache pruning: LRU eviction when cache exceeds size limits (prevents disk space issues)
+    /// - Cache directory: Stores converted assets in cache directory (typically .cache/ or user cache directory)
+    /// - Performance: Avoids redundant conversions, speeds up module loading after first load
+    /// - Cache safety: Converter version ensures cache invalidation when converter logic changes
+    /// - Source hash: MD5/SHA1 hash of source file ensures cache invalidation when source file changes
+    /// - Note: Original engine uses in-memory caching, this adds persistent disk cache for converted assets
+    /// </remarks>
     public interface IContentCache
     {
         /// <summary>
