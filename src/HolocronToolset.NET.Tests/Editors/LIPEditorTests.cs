@@ -319,6 +319,86 @@ namespace HolocronToolset.NET.Tests.Editors
             Math.Abs(editor.Lip.Frames[2].Time - 3.0f).Should().BeLessThan(0.001f);
         }
 
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_lip_editor.py:580-609
+        // Original: def test_lip_editor_complex_lip_file(qtbot: QtBot, installation: HTInstallation):
+        [Fact]
+        public void TestLipEditorComplexLipFile()
+        {
+            var editor = new LIPEditor(null, null);
+
+            editor.New();
+            editor.Duration = 10.0f;
+            // Ensure LIP exists and length is set
+            if (editor.Lip == null)
+            {
+                // This shouldn't happen after New(), but be safe
+            }
+            editor.Lip.Length = 10.0f;
+
+            // Add many keyframes
+            var shapes = new[] { LIPShape.AH, LIPShape.EE, LIPShape.OH, LIPShape.MPB, LIPShape.FV };
+            for (int i = 0; i < 10; i++)
+            {
+                editor.AddKeyframe((float)i, shapes[i % shapes.Length]);
+            }
+
+            // Verify all keyframes were added
+            editor.Lip.Should().NotBeNull();
+            editor.Lip.Frames.Count.Should().Be(10);
+
+            // Build and verify
+            var (data, _) = editor.Build();
+            data.Length.Should().BeGreaterThan(0);
+
+            // Load and verify
+            editor.Load("test.lip", "test", ResourceType.LIP, data);
+            editor.Lip.Should().NotBeNull();
+            editor.Lip.Frames.Count.Should().Be(10);
+            Math.Abs(editor.Lip.Length - 10.0f).Should().BeLessThan(0.001f);
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_lip_editor.py:611-639
+        // Original: def test_lip_editor_all_shapes_used(qtbot: QtBot, installation: HTInstallation):
+        [Fact]
+        public void TestLipEditorAllShapesUsed()
+        {
+            var editor = new LIPEditor(null, null);
+
+            editor.New();
+            editor.Duration = 20.0f;
+            // Ensure LIP exists and length is set
+            if (editor.Lip == null)
+            {
+                // This shouldn't happen after New(), but be safe
+            }
+            editor.Lip.Length = 20.0f;
+
+            // Use all LIP shapes
+            var allShapes = new[]
+            {
+                LIPShape.Neutral, LIPShape.EE, LIPShape.EH, LIPShape.AH, LIPShape.OH,
+                LIPShape.OOH, LIPShape.Y, LIPShape.STS, LIPShape.FV, LIPShape.NG,
+                LIPShape.TH, LIPShape.MPB, LIPShape.TD, LIPShape.SH, LIPShape.L, LIPShape.KG
+            };
+
+            for (int i = 0; i < allShapes.Length; i++)
+            {
+                editor.AddKeyframe((float)i, allShapes[i]);
+            }
+
+            // Verify all shapes were used
+            editor.Lip.Should().NotBeNull();
+            editor.Lip.Frames.Count.Should().Be(allShapes.Length);
+
+            // Verify each shape is present
+            var usedShapes = new System.Collections.Generic.HashSet<LIPShape>();
+            foreach (var frame in editor.Lip.Frames)
+            {
+                usedShapes.Add(frame.Shape);
+            }
+            usedShapes.Count.Should().Be(allShapes.Length);
+        }
+
         // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_lip_editor.py:669-705
         // Original: def test_lip_editor_headless_ui_load_build(qtbot: QtBot, installation: HTInstallation, test_files_dir: pathlib.Path):
         [Fact]
