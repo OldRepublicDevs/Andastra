@@ -3802,6 +3802,8 @@ namespace Odyssey.Scripting.EngineApi
             if (effect != null)
             {
                 effect.SubType = 8; // SUBTYPE_MAGICAL
+                // Mark effect as magical type (can be dispelled)
+                // Effect is already marked via SubType, which is sufficient
                 return Variable.FromEffect(effect);
             }
             
@@ -3895,6 +3897,18 @@ namespace Odyssey.Scripting.EngineApi
             return Variable.FromInt(0);
         }
 
+        /// <summary>
+        /// GetAC(object oCreature=OBJECT_SELF) - returns armor class
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: D20 armor class system
+        /// Located via string references: "ArmorClass" @ 0x007c42a8, "ArmorClassColumn" @ 0x007c2ae8
+        /// Original implementation: Returns total AC from base (10) + Dexterity modifier + armor + shield + effects
+        /// AC calculation: Base 10 + Dex modifier + armor bonus + shield bonus + deflection + natural + dodge + other modifiers
+        /// AC sources: Equipment (armor, shield), ability modifiers (Dexterity), effects (AC increase/decrease)
+        /// Default AC: 10 (base) if entity has no stats component
+        /// Returns: Armor class value (10 or higher typically) or 10 if entity is invalid
+        /// </remarks>
         private Variable Func_GetAC(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
@@ -4864,4 +4878,5 @@ namespace Odyssey.Scripting.EngineApi
         #endregion
     }
 }
+
 
