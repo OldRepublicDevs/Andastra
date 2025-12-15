@@ -245,8 +245,14 @@ namespace Odyssey.Core.Triggers
                 string script = scriptHooks.GetScript(ScriptEvent.OnExit);
                 if (!string.IsNullOrEmpty(script))
                 {
-                    // TODO: Execute script with trigger and exiting entity context
-                    // ScriptExecutor.ExecuteScript(script, triggerEntity, entity)
+                    // Execute script with trigger as owner and exiting entity as triggerer
+                    // Based on swkotor2.exe: Trigger OnExit script execution
+                    // Located via string references: "OnExit" @ 0x007bee70
+                    // Original implementation: FUN_005226d0 @ 0x005226d0 executes trigger scripts with entity context
+                    if (_world.EventBus != null)
+                    {
+                        _world.EventBus.FireScriptEvent(triggerEntity, ScriptEvent.OnExit, entity);
+                    }
                 }
             }
 
