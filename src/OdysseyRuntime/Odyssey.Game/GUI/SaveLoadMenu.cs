@@ -91,7 +91,7 @@ namespace Odyssey.Game.GUI
         /// Updates load menu state and handles input.
         /// </summary>
         public static void UpdateLoadMenu(
-            GameTime gameTime,
+            Microsoft.Xna.Framework.GameTime gameTime,
             KeyboardState currentKeyboard,
             KeyboardState previousKeyboard,
             MouseState currentMouse,
