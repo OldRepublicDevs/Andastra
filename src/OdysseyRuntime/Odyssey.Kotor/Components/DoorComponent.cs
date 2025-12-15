@@ -9,22 +9,27 @@ namespace Odyssey.Kotor.Components
     /// <remarks>
     /// Door Component:
     /// - Based on swkotor2.exe door system
-    /// - Located via string references: "Door List" @ 0x007bd248, "GenericDoors" @ 0x007c4ba8
-    /// - "DoorTypes" @ 0x007c4b9c, "SecretDoorDC" @ 0x007c1acc
-    /// - Transition fields: "LinkedTo" @ 0x007bd798, "LinkedToModule" @ 0x007bd7bc, "LinkedToFlags" @ 0x007bd788
-    /// - "TransitionDestination" @ 0x007bd7a4 (waypoint tag for positioning after transition)
+    /// - Located via string references: "Door List" @ 0x007bd248 (GIT door list), "GenericDoors" @ 0x007c4ba8 (generic doors 2DA table)
+    /// - "DoorTypes" @ 0x007c4b9c (door types field), "SecretDoorDC" @ 0x007c1acc (secret door DC field)
+    /// - Transition fields: "LinkedTo" @ 0x007bd798 (linked to waypoint/area), "LinkedToModule" @ 0x007bd7bc (linked to module)
+    /// - "LinkedToFlags" @ 0x007bd788 (transition flags), "TransitionDestination" @ 0x007bd7a4 (waypoint tag for positioning after transition)
     /// - Door animations: "i_opendoor" @ 0x007c86d4 (open door animation), "i_doorsaber" @ 0x007ccca0 (saber door animation)
-    /// - GUI references: "gui_mp_doordp" @ 0x007b5bdc, "gui_mp_doorup" @ 0x007b5bec, "gui_mp_doord" @ 0x007b5d24, "gui_mp_dooru" @ 0x007b5d34
+    /// - GUI references: "gui_mp_doordp" @ 0x007b5bdc, "gui_mp_doorup" @ 0x007b5bec, "gui_mp_doord" @ 0x007b5d24, "gui_mp_dooru" @ 0x007b5d34 (door GUI panels)
     /// - "gui_doorsaber" @ 0x007c2fe4 (saber door GUI)
-    /// - Error messages: "Cannot load door model '%s'." @ 0x007d2488
-    /// - "CSWCAnimBaseDoor::GetAnimationName(): No name for server animation %d" @ 0x007d24a8
-    /// - Original implementation: FUN_00584f40 @ 0x00584f40 (save door data to GFF)
-    /// - FUN_004e08e0 @ 0x004e08e0 (load door instances from GIT)
+    /// - Error messages:
+    ///   - "Cannot load door model '%s'." @ 0x007d2488 (door model loading error)
+    ///   - "CSWCAnimBaseDoor::GetAnimationName(): No name for server animation %d" @ 0x007d24a8 (door animation name error)
+    /// - Original implementation: FUN_00584f40 @ 0x00584f40 (save door data to GFF including state, HP, lock status)
+    /// - FUN_004e08e0 @ 0x004e08e0 (load door instances from GIT including position, linked transitions)
+    /// - FUN_00580ed0 @ 0x00580ed0 (door loading function), FUN_005838d0 @ 0x005838d0 (door initialization)
     /// - Doors have open/closed states, locks, traps, module transitions
-    /// - Based on UTD file format (GFF with "UTD " signature)
-    /// - Script events: OnOpen, OnClose, OnLock, OnUnlock, OnDamaged, OnDeath
-    /// - Module transitions: LinkedToModule + LinkedToFlags bit 1 = module transition
-    /// - Area transitions: LinkedToFlags bit 2 = area transition (linked to waypoint/trigger)
+    /// - Based on UTD file format (GFF with "UTD " signature) containing door template data
+    /// - Script events: OnOpen, OnClose, OnLock, OnUnlock, OnDamaged, OnDeath (fired via EventBus)
+    /// - Module transitions: LinkedToModule + LinkedToFlags bit 1 = module transition (loads new module)
+    /// - Area transitions: LinkedToFlags bit 2 = area transition (moves to waypoint/trigger in current module)
+    /// - Door locking: KeyName field (item ResRef) required to unlock, or LockDC set for lockpicking
+    /// - Door HP: Doors can be destroyed (CurrentHP <= 0), have Hardness (damage reduction), saves (Fort/Reflex/Will)
+    /// - Secret doors: SecretDoorDC determines detection difficulty for hidden doors
     /// </remarks>
     public class DoorComponent : IComponent
     {
