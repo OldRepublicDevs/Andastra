@@ -80,9 +80,23 @@ namespace Odyssey.Content.Save
         // Serialize save metadata to NFO GFF format
         // Based on swkotor2.exe: FUN_004eb750 @ 0x004eb750
         // Located via string reference: "savenfo" @ 0x007be1f0
-        // Original implementation: Creates GFF with "NFO " signature and "V2.0" version string
-        // Writes fields: AREANAME, LASTMODULE, TIMEPLAYED, CHEATUSED, SAVEGAMENAME, TIMESTAMP, PCNAME, SAVENUMBER,
-        // GAMEPLAYHINT, STORYHINT0-9, LIVECONTENT
+        // Original implementation (from decompiled FUN_004eb750):
+        // 1. Creates GFF with "NFO " signature (4 bytes) and "V2.0" version string
+        // 2. Writes fields in this exact order:
+        //    - AREANAME (string): Current area name from module state
+        //    - LASTMODULE (string): Last module ResRef
+        //    - TIMEPLAYED (int32): Total seconds played (uint32 from party system)
+        //    - CHEATUSED (byte): Cheat used flag (bool converted to byte)
+        //    - SAVEGAMENAME (string): Save game name
+        //    - TIMESTAMP (int64): FILETIME structure (GetLocalTime + SystemTimeToFileTime)
+        //    - PCNAME (string): Player character name from party system
+        //    - SAVENUMBER (int32): Save slot number
+        //    - GAMEPLAYHINT (byte): Gameplay hint flag
+        //    - STORYHINT0-9 (bytes): Story hint flags (10 boolean flags)
+        //    - LIVECONTENT (byte): Bitmask for live content (1 << (i-1) for each enabled entry)
+        //    - LIVE1-9 (strings): Live content entry strings (up to 9 entries)
+        // 3. Progress updates: 5% (0x5), 10% (0xa), 15% (0xf), 20% (0x14), 25% (0x19), 30% (0x1e)
+        // 4. File path: Constructs "SAVES:\{saveName}\savenfo" path
         // Note: GFF signature is "NFO " (4 bytes), version string is "V2.0"
         public byte[] SerializeSaveNfo(SaveGameData saveData)
         {
@@ -588,12 +602,65 @@ namespace Odyssey.Content.Save
         // Serialize party table to GFF format
         // Based on swkotor2.exe: FUN_0057bd70 @ 0x0057bd70
         // Located via string reference: "PARTYTABLE" @ 0x007c1910
-        // Original implementation: Creates GFF with "PT  " signature and "V2.0" version string
-        // Writes fields: PT_PCNAME, PT_GOLD, PT_ITEM_COMPONENT, PT_ITEM_CHEMICAL, PT_SWOOP1-3, PT_XP_POOL,
-        // PT_PLAYEDSECONDS, PT_CONTROLLED_NPC, PT_SOLOMODE, PT_CHEAT_USED, PT_NUM_MEMBERS, PT_MEMBERS (list),
-        // PT_NUM_PUPPETS, PT_PUPPETS (list), PT_AVAIL_PUPS (list), PT_AVAIL_NPCS (list), PT_INFLUENCE (list),
-        // PT_AISTATE, PT_FOLLOWSTATE, GlxyMap data, PT_PAZAAKCARDS, PT_PAZSIDELIST, PT_TUT_WND_SHOWN, PT_LAST_GUI_PNL,
-        // PT_FB_MSG_LIST, PT_DLG_MSG_LIST, PT_COM_MSG_LIST, PT_COST_MULT_LIST, PT_DISABLEMAP, PT_DISABLEREGEN
+        // Original implementation (from decompiled FUN_0057bd70):
+        // 1. Creates GFF with "PT  " signature (4 bytes) and "V2.0" version string
+        // 2. Writes fields in this exact order:
+        //    - PT_PCNAME (string): Player character name
+        //    - PT_GOLD (int32): Gold/credits
+        //    - PT_ITEM_COMPONENT (int32): Item component count
+        //    - PT_ITEM_CHEMICAL (int32): Item chemical count
+        //    - PT_SWOOP1, PT_SWOOP2, PT_SWOOP3 (int32): Swoop race times
+        //    - PT_XP_POOL (float): Experience point pool
+        //    - PT_PLAYEDSECONDS (int32): Total seconds played
+        //    - PT_CONTROLLED_NPC (float): Currently controlled NPC ID (-1 if none)
+        //    - PT_SOLOMODE (byte): Solo mode flag
+        //    - PT_CHEAT_USED (byte): Cheat used flag
+        //    - PT_NUM_MEMBERS (byte): Number of party members
+        //    - PT_MEMBERS (list): Party member list, each entry has:
+        //      - PT_MEMBER_ID (float): Member ID
+        //      - PT_IS_LEADER (byte): Whether this member is the leader
+        //    - PT_NUM_PUPPETS (byte): Number of puppets
+        //    - PT_PUPPETS (list): Puppet list, each entry has:
+        //      - PT_PUPPET_ID (float): Puppet ID
+        //    - PT_AVAIL_PUPS (list): Available puppets (3 entries), each has:
+        //      - PT_PUP_AVAIL (byte): Available flag
+        //      - PT_PUP_SELECT (byte): Selected flag
+        //    - PT_AVAIL_NPCS (list): Available NPCs (12 entries), each has:
+        //      - PT_NPC_AVAIL (byte): Available flag
+        //      - PT_NPC_SELECT (byte): Selected flag
+        //    - PT_INFLUENCE (list): NPC influence values (12 entries), each has:
+        //      - PT_NPC_INFLUENCE (float): Influence value
+        //    - PT_AISTATE (float): AI state
+        //    - PT_FOLLOWSTATE (float): Follow state
+        //    - GlxyMap (struct): Galaxy map data:
+        //      - GlxyMapNumPnts (int32): Number of points (16)
+        //      - GlxyMapPlntMsk (int32): Planet mask bitmask
+        //      - GlxyMapSelPnt (float): Selected point
+        //    - PT_PAZAAKCARDS (list): Pazaak cards (23 entries), each has:
+        //      - PT_PAZAAKCOUNT (float): Card count
+        //    - PT_PAZSIDELIST (list): Pazaak side list (10 entries), each has:
+        //      - PT_PAZSIDECARD (float): Side card value
+        //    - PT_TUT_WND_SHOWN (bitmask): Tutorial window shown flags (33 bits)
+        //    - PT_LAST_GUI_PNL (float): Last GUI panel ID
+        //    - FORFEITVIOL (float): Forfeit violation
+        //    - FORFEITCONDS (float): Forfeit conditions
+        //    - PT_FB_MSG_LIST (list): Feedback message list, each entry has:
+        //      - PT_FB_MSG_MSG (string): Message text
+        //      - PT_FB_MSG_TYPE (int32): Message type
+        //      - PT_FB_MSG_COLOR (byte): Message color
+        //    - PT_DLG_MSG_LIST (list): Dialogue message list, each entry has:
+        //      - PT_DLG_MSG_SPKR (string): Speaker name
+        //      - PT_DLG_MSG_MSG (string): Message text
+        //    - PT_COM_MSG_LIST (list): Combat message list, each entry has:
+        //      - PT_COM_MSG_MSG (string): Message text
+        //      - PT_COM_MSG_TYPE (int32): Message type
+        //      - PT_COM_MSG_COOR (byte): Message color
+        //    - PT_COST_MULT_LIST (list): Cost multiplier list, each entry has:
+        //      - PT_COST_MULT_VALUE (float): Multiplier value
+        //    - PT_DISABLEMAP (float): Disable map flag
+        //    - PT_DISABLEREGEN (float): Disable regen flag
+        // 3. File path: Constructs "PARTYTABLE" path in save directory
+        // Note: GFF signature is "PT  " (4 bytes), version string is "V2.0"
         private byte[] SerializePartyTable(PartyState state)
         {
             if (state == null)
