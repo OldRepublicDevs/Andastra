@@ -17,6 +17,13 @@ namespace Odyssey.Kotor.Profiles
     /// KOTOR 2 Game Profile:
     /// - Based on swkotor2.exe game profile system
     /// - Located via string references: Game version checking, resource path resolution
+    /// - Game identification: "swkotor2" @ 0x007b575c, "swKotor2.ini" @ 0x007b5740, ".\swkotor2.ini" @ 0x007b5644
+    /// - "KotOR2" @ 0x0080c210, "KotorCin" @ 0x007b5630
+    /// - Resource files: "chitin.key" @ 0x007c6bcc (keyfile), "dialog.tlk" @ 0x007c6bd0 (dialogue file)
+    /// - Directory paths: ".\modules" @ 0x007c6bcc, ".\override" @ 0x007c6bd4, ".\saves" @ 0x007c6b0c
+    /// - "MODULES:" @ 0x007b58b4, ":MODULES" @ 0x007be258, "MODULES" @ 0x007c6bc4 (module directory paths)
+    /// - "d:\modules" @ 0x007c6bd8, ":modules" @ 0x007cc0d8 (module directory variants)
+    /// - "LIVE%d:MODULES\" @ 0x007be680 (live module directory format)
     /// - Original implementation: Defines KOTOR 2 specific configuration (resource paths, 2DA tables, NWScript functions)
     /// - NWScript functions: K2 has ~950 engine functions (function IDs 0-949)
     /// - Resource paths: Uses K2-specific texture pack files (swpc_tex_gui.erf, swpc_tex_tpa.erf)
@@ -24,6 +31,7 @@ namespace Odyssey.Kotor.Profiles
     /// - K2-specific features: Workbench, Lab Station, Item Breakdown (crafting system)
     /// - K2 does not support Pazaak Den (replaced with Pazaak cards), supports Pazaak minigame
     /// - Based on swkotor2.exe game version detection and resource loading
+    /// - FUN_00633270 @ 0x00633270 sets up all game directories including MODULES, OVERRIDE, SAVES
     /// </remarks>
     public class K2GameProfile : IGameProfile
     {
