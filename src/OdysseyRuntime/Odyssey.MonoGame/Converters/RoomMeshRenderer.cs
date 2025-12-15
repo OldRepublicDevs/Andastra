@@ -12,6 +12,19 @@ namespace Odyssey.MonoGame.Converters
     /// Renders room meshes from MDL models.
     /// For a quick demo, extracts basic geometry and renders with MonoGame.
     /// </summary>
+    /// <remarks>
+    /// Room Mesh Renderer:
+    /// - Based on swkotor2.exe room rendering system
+    /// - Located via string references: "Rooms" @ 0x007bd490 (room list), "RoomName" @ 0x007bd484 (room name field)
+    /// - "roomcount" @ 0x007b96c0 (room count field), "gui3D_room" @ 0x007cc144 (room GUI)
+    /// - Original implementation: Renders room MDL models positioned according to LYT layout
+    /// - Room models: MDL files containing static geometry for area rooms
+    /// - Room positioning: Rooms positioned in 3D space according to LYT file room positions
+    /// - Room rendering: Original engine renders rooms with lighting, fog, and visibility culling
+    /// - MDL parsing: Extracts vertices, faces, and materials from MDL file format
+    /// - This implementation: Simplified geometry extraction for quick demo, full MDL parsing TODO
+    /// - Based on MDL file format documentation in vendor/PyKotor/wiki/MDL-File-Format.md
+    /// </remarks>
     public class RoomMeshRenderer
     {
         private readonly GraphicsDevice _graphicsDevice;
