@@ -733,7 +733,7 @@ namespace Odyssey.Scripting.EngineApi
                     return Variable.FromVector(transform.Position);
                 }
             }
-            return Variable.FromVector(Vector3.Zero);
+            return Variable.FromVector(System.Numerics.Vector3.Zero);
         }
 
         private Variable Func_GetDistanceToObject(IReadOnlyList<Variable> args, IExecutionContext ctx)
@@ -2945,24 +2945,118 @@ namespace Odyssey.Scripting.EngineApi
             return Variable.FromInt(0);
         }
 
+        /// <summary>
+        /// GetSpellSaveDC(object oCaster=OBJECT_SELF) - Returns the spell save DC (Difficulty Class) for a caster
+        /// </summary>
         private Variable Func_GetSpellSaveDC(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
+            uint casterId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
+            IEntity caster = ResolveObject(casterId, ctx);
+            
+            if (caster != null)
+            {
+                Core.Interfaces.Components.IStatsComponent stats = caster.GetComponent<Core.Interfaces.Components.IStatsComponent>();
+                if (stats != null)
+                {
+                    // Spell save DC = 10 + caster level + ability modifier (typically Wisdom or Charisma for Force powers)
+                    // Base DC is 10, plus caster level, plus relevant ability modifier
+                    // TODO: Get actual caster level and relevant ability modifier (Wisdom for Jedi, Charisma for Sith)
+                    int casterLevel = 1; // Placeholder - should use GetCasterLevel
+                    int abilityMod = stats.GetAbilityModifier(Odyssey.Core.Enums.Ability.Wisdom); // Default to Wisdom
+                    int saveDC = 10 + casterLevel + abilityMod;
+                    return Variable.FromInt(saveDC);
+                }
+            }
+            
+            // Default save DC if caster not found
             return Variable.FromInt(10);
         }
 
+        /// <summary>
+        /// MagicalEffect(effect eEffect) - Wraps an effect as a magical effect (can be dispelled)
+        /// </summary>
         private Variable Func_MagicalEffect(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
-            return Variable.FromEffect(args.Count > 0 ? args[0].ComplexValue : null);
+            if (args.Count == 0)
+            {
+                return Variable.FromEffect(null);
+            }
+            
+            object effectObj = args[0].ComplexValue;
+            if (effectObj == null)
+            {
+                return Variable.FromEffect(null);
+            }
+            
+            // Magical effects can be dispelled by DispelMagic
+            // The effect itself is unchanged, but marked as magical
+            // For now, just return the effect as-is
+            // TODO: Mark effect as magical type if Effect class supports it
+            Combat.Effect effect = effectObj as Combat.Effect;
+            if (effect != null)
+            {
+                return Variable.FromEffect(effect);
+            }
+            
+            return Variable.FromEffect(null);
         }
 
+        /// <summary>
+        /// SupernaturalEffect(effect eEffect) - Wraps an effect as a supernatural effect (cannot be dispelled)
+        /// </summary>
         private Variable Func_SupernaturalEffect(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
-            return Variable.FromEffect(args.Count > 0 ? args[0].ComplexValue : null);
+            if (args.Count == 0)
+            {
+                return Variable.FromEffect(null);
+            }
+            
+            object effectObj = args[0].ComplexValue;
+            if (effectObj == null)
+            {
+                return Variable.FromEffect(null);
+            }
+            
+            // Supernatural effects cannot be dispelled
+            // The effect itself is unchanged, but marked as supernatural
+            // For now, just return the effect as-is
+            // TODO: Mark effect as supernatural type if Effect class supports it
+            Combat.Effect effect = effectObj as Combat.Effect;
+            if (effect != null)
+            {
+                return Variable.FromEffect(effect);
+            }
+            
+            return Variable.FromEffect(null);
         }
 
+        /// <summary>
+        /// ExtraordinaryEffect(effect eEffect) - Wraps an effect as an extraordinary effect (cannot be dispelled, not affected by antimagic)
+        /// </summary>
         private Variable Func_ExtraordinaryEffect(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
-            return Variable.FromEffect(args.Count > 0 ? args[0].ComplexValue : null);
+            if (args.Count == 0)
+            {
+                return Variable.FromEffect(null);
+            }
+            
+            object effectObj = args[0].ComplexValue;
+            if (effectObj == null)
+            {
+                return Variable.FromEffect(null);
+            }
+            
+            // Extraordinary effects cannot be dispelled and are not affected by antimagic fields
+            // The effect itself is unchanged, but marked as extraordinary
+            // For now, just return the effect as-is
+            // TODO: Mark effect as extraordinary type if Effect class supports it
+            Combat.Effect effect = effectObj as Combat.Effect;
+            if (effect != null)
+            {
+                return Variable.FromEffect(effect);
+            }
+            
+            return Variable.FromEffect(null);
         }
 
         private Variable Func_EffectACIncrease(IReadOnlyList<Variable> args, IExecutionContext ctx)
