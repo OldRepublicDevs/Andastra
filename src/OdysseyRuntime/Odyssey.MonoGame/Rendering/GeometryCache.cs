@@ -17,6 +17,16 @@ namespace Odyssey.MonoGame.Rendering
     /// - Automatic cache invalidation
     /// - Per-mesh statistics
     /// </summary>
+    /// <remarks>
+    /// Geometry Cache System (Modern Enhancement):
+    /// - Based on swkotor2.exe rendering system architecture
+    /// - Located via string references: Original engine loads MDL models into vertex/index buffers
+    /// - Original implementation: KOTOR loads MDL models to DirectX vertex/index buffers, kept in memory during gameplay
+    /// - Original memory management: Models loaded per-area, unloaded on area transition
+    /// - This is a modernization feature: LRU cache with memory budget management improves memory efficiency
+    /// - Original behavior: All area models kept in memory, no automatic eviction
+    /// - Modern enhancement: LRU eviction allows more efficient memory usage across areas
+    /// </remarks>
     public class GeometryCache : IDisposable
     {
         /// <summary>

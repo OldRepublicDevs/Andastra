@@ -19,6 +19,18 @@ namespace Odyssey.MonoGame.Rendering
     /// - Frame pipelining
     /// - Worker thread management
     /// </summary>
+    /// <remarks>
+    /// Rendering System (Modern Enhancement):
+    /// - Based on swkotor2.exe rendering system architecture
+    /// - Located via string references: Original KOTOR engine uses single-threaded rendering
+    /// - Original implementation: KOTOR (2003-2004) used single-threaded DirectX 8/9 rendering pipeline
+    /// - This is a modernization feature: Multi-threaded rendering was not present in original engine
+    /// - Original engine: All rendering operations executed on main thread during frame update
+    /// - Frame structure: Original engine uses immediate-mode rendering (no command buffers)
+    /// - Modern enhancement: Command buffer generation allows parallel frame preparation
+    /// - Thread safety: Original engine did not require thread-safe rendering code
+    /// - Performance note: Modern multi-core CPUs benefit from parallel command generation
+    /// </remarks>
     public class MultiThreadedRendering : IDisposable
     {
         private readonly GraphicsDevice _graphicsDevice;
@@ -48,7 +60,7 @@ namespace Odyssey.MonoGame.Rendering
         {
             if (graphicsDevice == null)
             {
-                throw new ArgumentNullException("graphicsDevice");
+                throw new ArgumentNullException(nameof(graphicsDevice));
             }
 
             _graphicsDevice = graphicsDevice;
@@ -87,12 +99,16 @@ namespace Odyssey.MonoGame.Rendering
         }
 
         /// <summary>
-        /// Worker thread procedure.
+        /// Gets wait handles for worker thread synchronization.
         /// </summary>
-        private void WaitHandle[] GetWaitHandles()
+        private WaitHandle[] GetWaitHandles()
         {
             return new WaitHandle[] { _workAvailable, _shutdownEvent };
         }
+
+        /// <summary>
+        /// Worker thread procedure.
+        /// </summary>
 
         private void WorkerThreadProc()
         {
