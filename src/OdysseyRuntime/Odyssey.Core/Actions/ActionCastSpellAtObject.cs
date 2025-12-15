@@ -234,8 +234,13 @@ namespace Odyssey.Core.Actions
             // Execute impact script if present
             if (spell != null && !string.IsNullOrEmpty(spell.ImpactScript))
             {
-                // TODO: Execute impact script via script system
-                // This would require access to script execution context
+                // Fire impact script event via world event bus
+                IEventBus eventBus = actor.World?.EventBus;
+                if (eventBus != null)
+                {
+                    // Execute script with target as OBJECT_SELF, caster as triggerer
+                    eventBus.FireScriptEvent(target, ScriptEvent.OnSpellCastAt, actor);
+                }
             }
         }
     }
