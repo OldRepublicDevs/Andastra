@@ -21,6 +21,7 @@ namespace Odyssey.Core.Actions
     /// - Pathfinding uses A* algorithm on walkmesh adjacency graph
     /// - Action parameters stored as ActionId, GroupActionId, NumParams, Paramaters (Type/Value pairs)
     /// - FUN_00505bc0 @ 0x00505bc0 saves ActionList to GFF structure
+    /// - SchedActionList @ 0x007bf99c: Scheduled actions with timers for delayed execution
     /// </remarks>
     public class ActionMoveToLocation : ActionBase
     {
