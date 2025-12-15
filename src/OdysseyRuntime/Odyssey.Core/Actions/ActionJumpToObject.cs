@@ -11,9 +11,11 @@ namespace Odyssey.Core.Actions
     /// <remarks>
     /// Jump To Object Action:
     /// - Based on swkotor2.exe ActionJumpToObject NWScript function
+    /// - Located via string references: "JumpToObject" action type, "Position" @ 0x007bef70
     /// - Original implementation: Instantly teleports entity to target object's position and facing
     /// - Used for scripted movement, cutscenes, following behavior
-    /// - Position and facing set immediately without animation
+    /// - Position and facing set immediately without animation or movement path
+    /// - Action completes immediately if target is valid, fails if target is invalid
     /// - Based on NWScript ActionJumpToObject semantics
     /// </remarks>
     public class ActionJumpToObject : ActionBase

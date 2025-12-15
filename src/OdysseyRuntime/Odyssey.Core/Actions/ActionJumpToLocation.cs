@@ -11,10 +11,12 @@ namespace Odyssey.Core.Actions
     /// <remarks>
     /// Jump To Location Action:
     /// - Based on swkotor2.exe ActionJumpToLocation NWScript function
+    /// - Located via string references: "JumpToLocation" action type, "Position" @ 0x007bef70
     /// - Original implementation: Instantly teleports entity to specified location and facing
     /// - Used for scripted movement, cutscenes, area transitions
-    /// - Can jump between areas if location specifies different area
-    /// - Position and facing set immediately without animation
+    /// - Can jump between areas if location specifies different area (requires area transition handling)
+    /// - Position and facing set immediately without animation or movement path
+    /// - Action completes immediately after position is set
     /// </remarks>
     public class ActionJumpToLocation : ActionBase
     {
