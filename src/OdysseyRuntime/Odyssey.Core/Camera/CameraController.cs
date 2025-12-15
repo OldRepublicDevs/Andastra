@@ -10,13 +10,19 @@ namespace Odyssey.Core.Camera
     /// <remarks>
     /// KOTOR Camera System:
     /// - Based on swkotor2.exe camera system
-    /// - Located via string references: Camera functions handle view matrix, chase camera, cinematic camera
+    /// - Located via string references: "camera" @ 0x007b63fc, "CameraID" @ 0x007bd160, "CameraList" @ 0x007bd16c
+    /// - "CameraStyle" @ 0x007bd6e0, "CameraAnimation" @ 0x007c3460, "CameraAngle" @ 0x007c3490
+    /// - "CameraModel" @ 0x007c3908, "CAMERASPACE" @ 0x007c5108, "CameraHeightOffset" @ 0x007c5114
+    /// - "camerahook" @ 0x007c7dac, "camerahookt" @ 0x007c7da0, "camerahookz" @ 0x007c7db8, "camerahookh" @ 0x007c7dc4
+    /// - "CAMERAHOOK" @ 0x007c7f10, "3CCameraHook" @ 0x007ca5ae, "CameraRotate" @ 0x007cb910
+    /// - "Keyboard Camera Deceleration" @ 0x007c834c, "Keyboard Camera Acceleration" @ 0x007c836c, "Keyboard Camera DPS" @ 0x007c838c
     /// - Original implementation: Chase camera follows player, controllable pitch/yaw/zoom, collision detection
-    /// - Chase camera follows player from behind
-    /// - Controllable pitch and yaw (rotation around target)
-    /// - Zoom in/out (distance from target)
-    /// - Camera collision to avoid seeing through walls
-    /// - Cinematic camera for dialogues/cutscenes
+    /// - Chase camera follows player from behind with configurable distance and height offset
+    /// - Controllable pitch and yaw (rotation around target) with keyboard/mouse input
+    /// - Zoom in/out (distance from target) with min/max distance limits
+    /// - Camera collision to avoid seeing through walls (raycast from target to camera position)
+    /// - Cinematic camera for dialogues/cutscenes (CameraAnimation, CameraAngle)
+    /// - Camera hooks: Attachment points on models for cinematic camera positioning
     /// - Free camera for debug/editor mode
     /// </remarks>
     public class CameraController
