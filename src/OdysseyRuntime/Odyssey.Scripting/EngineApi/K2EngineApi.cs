@@ -766,16 +766,9 @@ namespace Odyssey.Scripting.EngineApi
             }
             
             // Add NPC to available party members
-            if (ctx.AdditionalContext is GameSession.GameServicesContext services && services.PartyManager != null)
+            if (ctx.AdditionalContext is GameSession.GameServicesContext services && services.PartyManager != null && services.ModuleLoader != null)
             {
-                // TODO: Create entity from template ResRef using ModuleLoader/EntityFactory
-                // For now, check if entity already exists by tag/template
-                // Full implementation would:
-                // 1. Load UTC template from template ResRef
-                // 2. Create entity from template using EntityFactory
-                // 3. Add to PartyManager with npcIndex
-                
-                // Try to find existing entity by template tag
+                // Try to find existing entity by template tag first
                 IEntity existingEntity = ctx.World.GetEntityByTag(template, 0);
                 if (existingEntity != null)
                 {
@@ -790,8 +783,47 @@ namespace Odyssey.Scripting.EngineApi
                     }
                 }
                 
-                // Entity doesn't exist - would need to create from template
-                // This requires ModuleLoader/EntityFactory integration
+                // Create entity from template using EntityFactory
+                // Get current module from ModuleLoader
+                CSharpKOTOR.Common.Module module = services.ModuleLoader.CurrentModule;
+                if (module != null)
+                {
+                    // Get spawn position (use player position or default)
+                    System.Numerics.Vector3 spawnPosition = System.Numerics.Vector3.Zero;
+                    float spawnFacing = 0.0f;
+                    
+                    if (services.PlayerEntity != null)
+                    {
+                        Core.Interfaces.Components.ITransformComponent playerTransform = services.PlayerEntity.GetComponent<Core.Interfaces.Components.ITransformComponent>();
+                        if (playerTransform != null)
+                        {
+                            spawnPosition = playerTransform.Position;
+                            spawnFacing = playerTransform.Facing;
+                        }
+                    }
+                    
+                    // Create entity from template
+                    IEntity newEntity = services.ModuleLoader.EntityFactory.CreateCreatureFromTemplate(module, template, spawnPosition, spawnFacing);
+                    if (newEntity != null)
+                    {
+                        // Register entity with world if not already registered
+                        if (ctx.World.GetEntity(newEntity.ObjectId) == null)
+                        {
+                            ctx.World.RegisterEntity(newEntity);
+                        }
+                        
+                        // Add to PartyManager
+                        try
+                        {
+                            services.PartyManager.AddAvailableMember(npcIndex, newEntity);
+                            return Variable.FromInt(1); // Success
+                        }
+                        catch
+                        {
+                            return Variable.FromInt(0); // Failed
+                        }
+                    }
+                }
             }
             
             return Variable.FromInt(0); // Failed
