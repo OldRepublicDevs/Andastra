@@ -534,11 +534,40 @@ namespace Odyssey.Core.Camera
 
         private Vector3 ApplyCollision(Vector3 target, Vector3 idealPosition)
         {
-            // Simple raycast from target to ideal position
-            // If blocked, move camera closer
+            // Camera collision using walkmesh
+            // Based on swkotor2.exe camera collision system
+            // Located via string references: Camera collision checks
+            // Original implementation: Raycasts from target to camera position, moves camera closer if blocked
+            if (_world.CurrentArea != null)
+            {
+                INavigationMesh navMesh = _world.CurrentArea.NavigationMesh;
+                if (navMesh != null)
+                {
+                    Vector3 direction = idealPosition - target;
+                    float distance = direction.Length();
+                    if (distance > 0.1f)
+                    {
+                        direction = Vector3.Normalize(direction);
+                        
+                        Vector3 hitPoint;
+                        if (navMesh.Raycast(target, direction, distance, out hitPoint))
+                        {
+                            // Collision detected - move camera closer to target
+                            float safeDistance = (hitPoint - target).Length() - 0.5f; // 0.5m buffer
+                            if (safeDistance > 0.1f)
+                            {
+                                return target + direction * safeDistance;
+                            }
+                            else
+                            {
+                                // Too close, use minimum distance
+                                return target + direction * 0.1f;
+                            }
+                        }
+                    }
+                }
+            }
             
-            // TODO: Integrate with physics/walkmesh system
-            // For now, return ideal position
             return idealPosition;
         }
 
