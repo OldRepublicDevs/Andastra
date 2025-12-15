@@ -10,6 +10,19 @@ namespace Odyssey.Core.Templates
     /// <summary>
     /// Trigger template implementation for spawning triggers from UTT data.
     /// </summary>
+    /// <remarks>
+    /// Trigger Template:
+    /// - Based on swkotor2.exe trigger system
+    /// - Located via string references: "Trigger" @ 0x007bc548, "Trigger List" @ 0x007bd280
+    /// - Template loading: FUN_005226d0 @ 0x005226d0 (entity serialization references trigger templates)
+    /// - Original implementation: UTT (Trigger) GFF templates define trigger properties
+    /// - UTT file format: GFF with "UTT " signature containing trigger data
+    /// - Triggers are invisible volumes defined by polygon geometry
+    /// - Triggers fire events (OnEnter, OnExit) when entities enter/exit trigger volume
+    /// - Triggers can link to other areas/modules for transitions (LinkedTo, LinkedToModule)
+    /// - Triggers can have trap properties (TrapDetectable, TrapDisarmable, TrapType)
+    /// - Based on UTT file format documentation in vendor/PyKotor/wiki/
+    /// </remarks>
     public class TriggerTemplate : ITriggerTemplate
     {
         #region Properties
