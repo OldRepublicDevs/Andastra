@@ -23,8 +23,30 @@ namespace Odyssey.MonoGame.Audio
     /// Sound Player (MonoGame Implementation):
     /// - Based on swkotor2.exe sound effect playback system
     /// - Located via string references: "SoundResRef" @ 0x007b5f70, "SoundList" @ 0x007bd080, "Sounds" @ 0x007c1038
-    /// - "PlaySound" NWScript function, "SoundOptions" @ 0x007b5720, "DisableSound" @ 0x007b5730
-    /// - "AmbientSound" @ 0x007c4c68, "FootstepSounds" @ 0x007c4c8c, "WeaponSounds" @ 0x007c4c9c
+    /// - "Sound" @ 0x007bc500, "SoundOptions" @ 0x007b5720, "Disable Sound" @ 0x007b5730
+    /// - "guisounds" @ 0x007b5f7c (GUI sound effects), "PartSounds" @ 0x007bd440 (party sounds)
+    /// - Sound types: "AmbientSound" @ 0x007c4c68, "FootstepSounds" @ 0x007c4c8c, "WeaponSounds" @ 0x007c4c9c
+    /// - "InventorySound" @ 0x007c7164, "ExplosionSound" @ 0x007cada0
+    /// - Sound properties: "SoundAppType" @ 0x007c3028, "SoundSetFile" @ 0x007c41f4, "SoundSetType" @ 0x007cbd40
+    /// - "SoundSet" @ 0x007cbd50, "SoundExists" @ 0x007c3568, "SoundImpact" @ 0x007c49b4
+    /// - "SoundDuration" @ 0x007c49c0, "SoundOneShot" @ 0x007c4aa4, "SoundOneShotPercentage" @ 0x007c4a8c
+    /// - "SoundCessation" @ 0x007cd5f0, "ProjSound" @ 0x007c312c, "CastSound" @ 0x007c3250
+    /// - "ConjSoundVFX" @ 0x007c3324, "ConjSoundFemale" @ 0x007c3334, "ConjSoundMale" @ 0x007c3344
+    /// - "InvSoundType" @ 0x007c446c, "SoundProvider" @ 0x007c6154
+    /// - Sound events: "LIGHTALIGNSOUND" @ 0x007bdea8, "DARKALIGNSOUND" @ 0x007bdeb8
+    /// - "COMPLETESOUND" @ 0x007bdec8, "NEWQUESTSOUND" @ 0x007bded8, "LEVELUPSOUND" @ 0x007bdee8
+    /// - "SOUNDPENDING" @ 0x007bdef8 (sound pending flag)
+    /// - Sound format: "ShotSound%d" @ 0x007cadb0, "ImpactSound%d" @ 0x007cadf0 (sound format strings)
+    /// - "Fire_Sound" @ 0x007cb618, "Collision_Sound" @ 0x007cb624
+    /// - Error messages:
+    ///   - "CExoSoundSource %s not freed" @ 0x007c6090
+    /// - Sound directories: "HD0:STREAMSOUNDS\%s" @ 0x007c61d4 (streaming sound path format)
+    /// - "sounddummy" @ 0x007c78f0, "soundapptype" @ 0x007caf54
+    /// - GUI: "Sound Effects Volume" @ 0x007c83e0, "BTN_SOUND" @ 0x007d0d80, "SOUND" @ 0x007d1628
+    /// - "optsound_p" @ 0x007d2134, "optsoundadv_p" @ 0x007d1eb4 (sound options panels)
+    /// - "Sound Init" @ 0x007c7280 (sound initialization)
+    /// - Audio: "EnvAudio" @ 0x007bd478 (environmental audio)
+    /// - Video: "_BinkSetSoundSystem@8" (Bink video sound system)
     /// - Original implementation: KOTOR plays WAV files for sound effects (ambient, combat, UI, etc.)
     /// - Sound files: Stored as WAV resources, referenced by ResRef
     /// - Positional audio: Sounds can be played at entity positions (3D spatial audio)
