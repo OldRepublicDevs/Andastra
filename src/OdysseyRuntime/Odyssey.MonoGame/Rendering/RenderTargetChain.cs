@@ -70,11 +70,22 @@ namespace Odyssey.MonoGame.Rendering
         /// <summary>
         /// Initializes a new render target chain.
         /// </summary>
+        /// <summary>
+        /// Initializes a new render target chain.
+        /// </summary>
+        /// <param name="graphicsDevice">Graphics device for creating render targets.</param>
+        /// <param name="config">Chain configuration. Width and height must be greater than zero.</param>
+        /// <exception cref="ArgumentNullException">Thrown if graphicsDevice is null.</exception>
+        /// <exception cref="ArgumentException">Thrown if config width or height is invalid.</exception>
         public RenderTargetChain(GraphicsDevice graphicsDevice, ChainConfig config)
         {
             if (graphicsDevice == null)
             {
-                throw new ArgumentNullException("graphicsDevice");
+                throw new ArgumentNullException(nameof(graphicsDevice));
+            }
+            if (config.Width <= 0 || config.Height <= 0)
+            {
+                throw new ArgumentException("Chain config width and height must be greater than zero.", nameof(config));
             }
 
             _graphicsDevice = graphicsDevice;
@@ -131,6 +142,9 @@ namespace Odyssey.MonoGame.Rendering
             }
         }
 
+        /// <summary>
+        /// Disposes of all render targets in the chain.
+        /// </summary>
         public void Dispose()
         {
             foreach (RenderTarget2D rt in _chain)

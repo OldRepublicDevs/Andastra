@@ -65,11 +65,16 @@ namespace Odyssey.MonoGame.Rendering
         /// <summary>
         /// Initializes a new contact shadows system.
         /// </summary>
+        /// <summary>
+        /// Initializes a new contact shadows system.
+        /// </summary>
+        /// <param name="graphicsDevice">Graphics device for rendering operations.</param>
+        /// <exception cref="ArgumentNullException">Thrown if graphicsDevice is null.</exception>
         public ContactShadows(GraphicsDevice graphicsDevice)
         {
             if (graphicsDevice == null)
             {
-                throw new ArgumentNullException("graphicsDevice");
+                throw new ArgumentNullException(nameof(graphicsDevice));
             }
 
             _graphicsDevice = graphicsDevice;
@@ -88,11 +93,27 @@ namespace Odyssey.MonoGame.Rendering
         /// <param name="normalBuffer">Normal buffer for surface orientation.</param>
         /// <param name="effect">Effect/shader for contact shadow rendering.</param>
         /// <returns>Render target containing contact shadows, or null if disabled or invalid input.</returns>
+        /// <summary>
+        /// Renders contact shadows using screen-space depth.
+        /// </summary>
+        /// <param name="depthBuffer">Depth buffer for depth testing. Must not be null.</param>
+        /// <param name="normalBuffer">Normal buffer for surface orientation. Can be null.</param>
+        /// <param name="effect">Effect/shader for contact shadow rendering. Must not be null.</param>
+        /// <returns>Render target containing contact shadows, or null if disabled or invalid input.</returns>
+        /// <exception cref="ArgumentNullException">Thrown if depthBuffer or effect is null.</exception>
         public RenderTarget2D Render(RenderTarget2D depthBuffer, RenderTarget2D normalBuffer, Effect effect)
         {
-            if (!_enabled || depthBuffer == null || effect == null)
+            if (!_enabled)
             {
                 return null;
+            }
+            if (depthBuffer == null)
+            {
+                throw new ArgumentNullException(nameof(depthBuffer));
+            }
+            if (effect == null)
+            {
+                throw new ArgumentNullException(nameof(effect));
             }
 
             // Create or resize render target if needed

@@ -31,11 +31,16 @@ namespace Odyssey.MonoGame.Rendering
         /// <summary>
         /// Initializes a new state cache.
         /// </summary>
+        /// <summary>
+        /// Initializes a new state cache.
+        /// </summary>
+        /// <param name="graphicsDevice">Graphics device for state management.</param>
+        /// <exception cref="ArgumentNullException">Thrown if graphicsDevice is null.</exception>
         public StateCache(GraphicsDevice graphicsDevice)
         {
             if (graphicsDevice == null)
             {
-                throw new ArgumentNullException("graphicsDevice");
+                throw new ArgumentNullException(nameof(graphicsDevice));
             }
 
             _graphicsDevice = graphicsDevice;
@@ -102,7 +107,7 @@ namespace Odyssey.MonoGame.Rendering
         {
             if (index < 0 || index > 15)
             {
-                throw new ArgumentOutOfRangeException("index", "Sampler state index must be between 0 and 15.");
+                throw new ArgumentOutOfRangeException(nameof(index), "Sampler state index must be between 0 and 15.");
             }
 
             if (state != _currentSamplerState)

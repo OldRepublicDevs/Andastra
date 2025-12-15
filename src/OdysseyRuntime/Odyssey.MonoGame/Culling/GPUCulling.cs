@@ -46,11 +46,13 @@ namespace Odyssey.MonoGame.Culling
         /// <summary>
         /// Initializes a new GPU culling system.
         /// </summary>
+        /// <param name="graphicsDevice">Graphics device for rendering operations.</param>
+        /// <exception cref="ArgumentNullException">Thrown if graphicsDevice is null.</exception>
         public GPUCulling(GraphicsDevice graphicsDevice)
         {
             if (graphicsDevice == null)
             {
-                throw new ArgumentNullException("graphicsDevice");
+                throw new ArgumentNullException(nameof(graphicsDevice));
             }
 
             _graphicsDevice = graphicsDevice;
@@ -82,7 +84,7 @@ namespace Odyssey.MonoGame.Culling
 
             if (instanceCount < 0)
             {
-                throw new ArgumentException("Instance count must be non-negative.", "instanceCount");
+                throw new ArgumentException("Instance count must be non-negative.", nameof(instanceCount));
             }
 
             if (instanceCount == 0)
@@ -119,6 +121,9 @@ namespace Odyssey.MonoGame.Culling
             return _indirectDrawBuffer;
         }
 
+        /// <summary>
+        /// Disposes of all resources used by this GPU culling system.
+        /// </summary>
         public void Dispose()
         {
             // Dispose buffers if they implement IDisposable

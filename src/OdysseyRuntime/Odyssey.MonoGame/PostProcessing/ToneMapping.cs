@@ -82,15 +82,15 @@ namespace Odyssey.MonoGame.PostProcessing
         {
             if (device == null)
             {
-                throw new ArgumentNullException("device");
+                throw new ArgumentNullException(nameof(device));
             }
             if (hdrInput == null)
             {
-                throw new ArgumentNullException("hdrInput");
+                throw new ArgumentNullException(nameof(hdrInput));
             }
             if (ldrOutput == null)
             {
-                throw new ArgumentNullException("ldrOutput");
+                throw new ArgumentNullException(nameof(ldrOutput));
             }
 
             // Save previous render target

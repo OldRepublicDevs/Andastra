@@ -53,11 +53,16 @@ namespace Odyssey.MonoGame.Rendering
         /// <summary>
         /// Initializes a new subsurface scattering system.
         /// </summary>
+        /// <summary>
+        /// Initializes a new subsurface scattering system.
+        /// </summary>
+        /// <param name="graphicsDevice">Graphics device for rendering operations.</param>
+        /// <exception cref="ArgumentNullException">Thrown if graphicsDevice is null.</exception>
         public SubsurfaceScattering(GraphicsDevice graphicsDevice)
         {
             if (graphicsDevice == null)
             {
-                throw new ArgumentNullException("graphicsDevice");
+                throw new ArgumentNullException(nameof(graphicsDevice));
             }
 
             _graphicsDevice = graphicsDevice;
@@ -74,11 +79,24 @@ namespace Odyssey.MonoGame.Rendering
         /// <param name="normalBuffer">Normal buffer for surface orientation.</param>
         /// <param name="effect">Effect/shader for subsurface scattering.</param>
         /// <returns>Render target with subsurface scattering applied, or original buffer if disabled.</returns>
+        /// <summary>
+        /// Applies subsurface scattering to a rendered scene.
+        /// </summary>
+        /// <param name="colorBuffer">Color buffer containing the rendered scene. Must not be null.</param>
+        /// <param name="depthBuffer">Depth buffer for depth testing. Can be null.</param>
+        /// <param name="normalBuffer">Normal buffer for surface orientation. Can be null.</param>
+        /// <param name="effect">Effect/shader for subsurface scattering. Can be null.</param>
+        /// <returns>Render target with subsurface scattering applied, or original buffer if disabled.</returns>
+        /// <exception cref="ArgumentNullException">Thrown if colorBuffer is null.</exception>
         public RenderTarget2D Apply(RenderTarget2D colorBuffer, RenderTarget2D depthBuffer, RenderTarget2D normalBuffer, Effect effect)
         {
-            if (!_enabled || colorBuffer == null)
+            if (!_enabled)
             {
                 return colorBuffer;
+            }
+            if (colorBuffer == null)
+            {
+                throw new ArgumentNullException(nameof(colorBuffer));
             }
 
             // Create or resize scattering target if needed

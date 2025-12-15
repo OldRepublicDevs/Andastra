@@ -35,17 +35,20 @@ namespace Odyssey.MonoGame.Rendering
         /// <summary>
         /// Initializes a new render pipeline.
         /// </summary>
+        /// <param name="graphicsDevice">Graphics device for rendering operations.</param>
+        /// <param name="resourceProvider">Resource provider for asset loading.</param>
+        /// <exception cref="ArgumentNullException">Thrown if graphicsDevice or resourceProvider is null.</exception>
         public RenderPipeline(
             GraphicsDevice graphicsDevice,
             IGameResourceProvider resourceProvider)
         {
             if (graphicsDevice == null)
             {
-                throw new ArgumentNullException("graphicsDevice");
+                throw new ArgumentNullException(nameof(graphicsDevice));
             }
             if (resourceProvider == null)
             {
-                throw new ArgumentNullException("resourceProvider");
+                throw new ArgumentNullException(nameof(resourceProvider));
             }
 
             _graphicsDevice = graphicsDevice;
@@ -62,11 +65,21 @@ namespace Odyssey.MonoGame.Rendering
         /// <summary>
         /// Renders a frame with all optimizations applied.
         /// </summary>
+        /// <param name="viewMatrix">View matrix for camera transform.</param>
+        /// <param name="projectionMatrix">Projection matrix for camera perspective.</param>
+        /// <param name="cameraPosition">Camera position in world space.</param>
+        /// <param name="outputTarget">Output render target. Must not be null.</param>
+        /// <exception cref="ArgumentNullException">Thrown if outputTarget is null.</exception>
         public void RenderFrame(
             Matrix viewMatrix,
             Matrix projectionMatrix,
             Vector3 cameraPosition,
             RenderTarget2D outputTarget)
+        {
+            if (outputTarget == null)
+            {
+                throw new ArgumentNullException(nameof(outputTarget));
+            }
         {
             // Begin frame
             _modernRenderer.BeginFrame(viewMatrix, projectionMatrix, cameraPosition);
@@ -88,6 +101,9 @@ namespace Odyssey.MonoGame.Rendering
             UpdateStatistics();
         }
 
+        /// <summary>
+        /// Builds the frame graph from render queue commands.
+        /// </summary>
         private void BuildFrameGraph()
         {
             if (_renderGraph == null || _renderQueue == null)
@@ -105,12 +121,11 @@ namespace Odyssey.MonoGame.Rendering
             // For now, the framework is in place and ready for integration
         }
 
+        /// <summary>
+        /// Executes all rendering passes with optimizations.
+        /// </summary>
+        /// <param name="outputTarget">Output render target.</param>
         private void ExecuteRendering(RenderTarget2D outputTarget)
-        {
-            if (outputTarget == null)
-            {
-                throw new ArgumentNullException("outputTarget");
-            }
 
             // Execute all rendering passes with optimizations
             // This is the main rendering loop that coordinates all systems:
@@ -126,6 +141,9 @@ namespace Odyssey.MonoGame.Rendering
             // This method provides the high-level orchestration
         }
 
+        /// <summary>
+        /// Updates performance statistics and telemetry.
+        /// </summary>
         private void UpdateStatistics()
         {
             if (_modernRenderer == null || _telemetry == null)
@@ -147,6 +165,9 @@ namespace Odyssey.MonoGame.Rendering
             }
         }
 
+        /// <summary>
+        /// Disposes of all resources used by this render pipeline.
+        /// </summary>
         public void Dispose()
         {
             _modernRenderer?.Dispose();

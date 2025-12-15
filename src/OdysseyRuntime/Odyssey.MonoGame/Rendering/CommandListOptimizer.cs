@@ -20,6 +20,7 @@ namespace Odyssey.MonoGame.Rendering
         /// <summary>
         /// Optimizes a command buffer by merging and reordering commands.
         /// </summary>
+        /// <param name="buffer">Command buffer to optimize. Can be null (no-op).</param>
         public void Optimize(CommandBuffer buffer)
         {
             if (buffer == null)
