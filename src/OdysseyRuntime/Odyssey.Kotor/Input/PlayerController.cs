@@ -12,6 +12,17 @@ namespace Odyssey.Kotor.Input
     /// <summary>
     /// Handles player input and movement using click-to-move with pathfinding.
     /// </summary>
+    /// <remarks>
+    /// Player Controller (Input):
+    /// - Based on swkotor2.exe player input and movement system
+    /// - Located via string references: Click-to-move and player control functions
+    /// - Original implementation: Handles click-to-move with pathfinding on walkmesh
+    /// - Click-to-move: Left-click on walkmesh initiates pathfinding and movement
+    /// - Uses NavigationMesh pathfinding to find path from current position to destination
+    /// - Walk/run speed determined by entity stats (WalkSpeed/RunSpeed from appearance.2da)
+    /// - Movement follows path waypoints, facing movement direction (Y-up: Atan2(Y, X))
+    /// - Right-click context actions (interact, talk, attack) handled separately
+    /// </remarks>
     public class PlayerController
     {
         private readonly IEntity _player;
