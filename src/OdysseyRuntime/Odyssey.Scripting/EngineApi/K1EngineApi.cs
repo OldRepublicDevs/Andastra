@@ -73,7 +73,7 @@ namespace Odyssey.Scripting.EngineApi
         
         private class EffectIteration
         {
-            public List<Combat.ActiveEffect> Effects { get; set; }
+            public List<Odyssey.Core.Combat.ActiveEffect> Effects { get; set; }
             public int CurrentIndex { get; set; }
         }
 
@@ -900,14 +900,14 @@ namespace Odyssey.Scripting.EngineApi
             }
 
             // Get all creatures in radius
-            IEnumerable<IEntity> entities = ctx.World.GetEntitiesInRadius(locationPos, 100f, ObjectType.Creature);
+            IEnumerable<IEntity> entities = ctx.World.GetEntitiesInRadius(locationPos, 100f, Core.Enums.ObjectType.Creature);
             
             // Filter and sort by criteria
             List<IEntity> matchingCreatures = new List<IEntity>();
             
             foreach (IEntity entity in entities)
             {
-                if (entity.ObjectType != ObjectType.Creature) continue;
+                if (entity.ObjectType != Core.Enums.ObjectType.Creature) continue;
 
                 // Check first criteria
                 if (!MatchesCreatureCriteria(entity, firstCriteriaType, firstCriteriaValue, ctx))
