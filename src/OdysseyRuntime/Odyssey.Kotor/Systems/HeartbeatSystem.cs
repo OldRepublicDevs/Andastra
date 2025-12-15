@@ -14,12 +14,20 @@ namespace Odyssey.Kotor.Systems
     /// <remarks>
     /// Heartbeat System:
     /// - Based on swkotor2.exe heartbeat system
-    /// - Located via string references: "ScriptHeartbeat" @ 0x007beeb0, "OnHeartbeat" @ 0x007bd720
-    /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_HEARTBEAT" @ 0x007bcb90, "HEARTBEAT" @ 0x007c1348
-    /// - "HeartbeatTime" @ 0x007c0c30, "HeartbeatDay" @ 0x007c0c40, "Mod_OnHeartbeat" @ 0x007be840
-    /// - Original implementation: Fires OnHeartbeat script events every 6 seconds for entities
-    /// - Each entity has its own heartbeat timer stored in GFF structure
-    /// - Module heartbeat script fires for area/module-level heartbeat events
+    /// - Located via string references: "ScriptHeartbeat" @ 0x007beeb0 (heartbeat script field), "OnHeartbeat" @ 0x007bd720 (heartbeat script event)
+    /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_HEARTBEAT" @ 0x007bcb90 (heartbeat script event type, 0x0)
+    /// - "HEARTBEAT" @ 0x007c1348 (heartbeat constant), "HeartbeatTime" @ 0x007c0c30 (heartbeat timer field)
+    /// - "HeartbeatDay" @ 0x007c0c40 (heartbeat day field), "Mod_OnHeartbeat" @ 0x007be840 (module heartbeat script)
+    /// - "HeartbeatInterval" @ 0x007c38e8 (heartbeat interval field, default 6.0 seconds)
+    /// - Original implementation: FUN_005226d0 @ 0x005226d0 saves heartbeat timer and interval to GFF
+    /// - Fires OnHeartbeat script events every 6 seconds for entities with heartbeat scripts
+    /// - Each entity has its own heartbeat timer stored in GFF structure (HeartbeatTime field)
+    /// - Timer starts at 0 or random stagger (0-6 seconds) to prevent all heartbeats firing simultaneously
+    /// - Module heartbeat script (Mod_OnHeartbeat) fires for area/module-level heartbeat events
+    /// - Heartbeat script execution: ScriptExecutor executes ScriptHeartbeat script with entity as caller
+    /// - Registration: Entities are registered when they have a ScriptHeartbeat script (checked via IScriptHooksComponent)
+    /// - Performance: MaxHeartbeatsPerFrame limits heartbeats processed per frame (default 10) to prevent slowdowns
+    /// - Invalid entity cleanup: Removes entities that no longer exist in the world (checks IsValid flag)
     /// </remarks>
     public class HeartbeatSystem
     {
