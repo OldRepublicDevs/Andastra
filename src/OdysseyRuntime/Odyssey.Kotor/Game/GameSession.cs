@@ -84,6 +84,7 @@ namespace Odyssey.Kotor.Game
         private RuntimeModule _currentRuntimeModule;
         private bool _isRunning;
         private bool _isPaused;
+        private bool _isLoadingFromSave;
         private NavigationMesh _currentNavMesh;
         private TLK _baseTlk;
         private TLK _customTlk;
@@ -411,7 +412,7 @@ namespace Odyssey.Kotor.Game
                     ModuleLoader = _moduleLoader,
                     FactionManager = _factionManager,
                     PerceptionManager = _perceptionManager,
-                    IsLoadingFromSave = false // TODO: Set to true during save loading
+                    IsLoadingFromSave = _isLoadingFromSave
                 };
                 ctx.AdditionalContext = gameServices;
 
@@ -962,10 +963,11 @@ namespace Odyssey.Kotor.Game
             }
 
             // Set loading flag before loading
-            bool wasLoading = false;
+            bool wasLoading = _isLoadingFromSave;
+            _isLoadingFromSave = true;
+            
             if (_vm != null && _vm.CurrentContext != null && _vm.CurrentContext.AdditionalContext is GameServicesContext services)
             {
-                wasLoading = services.IsLoadingFromSave;
                 services.IsLoadingFromSave = true;
             }
 
@@ -1007,6 +1009,7 @@ namespace Odyssey.Kotor.Game
             finally
             {
                 // Restore loading flag
+                _isLoadingFromSave = wasLoading;
                 if (_vm != null && _vm.CurrentContext != null && _vm.CurrentContext.AdditionalContext is GameServicesContext services2)
                 {
                     services2.IsLoadingFromSave = wasLoading;
