@@ -11,6 +11,17 @@ namespace Odyssey.MonoGame.Scene
     /// <summary>
     /// Builds MonoGame rendering structures from KOTOR area data (LYT, VIS, GIT).
     /// </summary>
+    /// <remarks>
+    /// Scene Builder:
+    /// - Based on swkotor2.exe area/room loading system
+    /// - Located via string references: "Rooms" @ 0x007bd490, "RoomName" @ 0x007bd484, "roomcount" @ 0x007b96c0
+    /// - Original implementation: Builds rendering structures from LYT (layout) and VIS (visibility) files
+    /// - LYT file format: Binary format containing room layout, doorhooks, and room connections
+    /// - VIS file format: Binary format containing room visibility data ("%s/%s.VIS" @ 0x007b972c)
+    /// - Scene building: Parses LYT room data, creates renderable meshes, sets up visibility culling from VIS
+    /// - Rooms: Organized hierarchically for efficient culling and rendering
+    /// - Based on LYT/VIS file format documentation in vendor/PyKotor/wiki/
+    /// </remarks>
     public class SceneBuilder
     {
         private readonly GraphicsDevice _graphicsDevice;

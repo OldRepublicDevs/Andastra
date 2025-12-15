@@ -16,6 +16,16 @@ namespace Odyssey.MonoGame.Rendering
     /// - Efficient culling
     /// - Update batching
     /// </summary>
+    /// <remarks>
+    /// Scene Graph System:
+    /// - Based on swkotor2.exe rendering system (scene organization)
+    /// - Located via string references: Scene hierarchy used for room and object organization
+    /// - Original implementation: KOTOR organizes scenes hierarchically (rooms, objects, attached items)
+    /// - Hierarchical transforms: Parent-child relationships for attached objects (weapons, shields on creatures)
+    /// - Culling: Efficient hierarchical culling using bounding boxes and dirty flags
+    /// - Scene nodes: Contain local/world transforms, bounds, parent/child relationships
+    /// - Used for: Room hierarchy, entity attachment (equipped items), efficient transform updates
+    /// </remarks>
     public class SceneGraph
     {
         /// <summary>
