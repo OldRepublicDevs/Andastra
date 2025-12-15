@@ -122,6 +122,16 @@ namespace Odyssey.Core.Actions
                     return ActionStatus.Failed;
                 }
 
+                // Record entering/clicking object for GetEnteringObject() and GetClickingObject() functions
+                // Based on swkotor2.exe: GetEnteringObject/GetClickingObject track last entity that interacted with placeable
+                // Located via string references: "EVENT_ENTERED_TRIGGER" @ 0x007bce08, "OnClick" @ 0x007c1a20
+                // Original implementation: Stores last interacting entity ID for script queries
+                if (placeable is Entities.Entity placeableEntityImpl)
+                {
+                    placeableEntityImpl.SetData("LastEnteringObjectId", actor.ObjectId);
+                    placeableEntityImpl.SetData("LastClickingObjectId", actor.ObjectId);
+                }
+
                 // Handle containers (open/close instead of use)
                 // Based on swkotor2.exe: HasInventory flag determines if placeable is a container
                 // Original implementation: Containers toggle open/close state, non-containers fire OnUsed
