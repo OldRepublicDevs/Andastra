@@ -510,7 +510,7 @@ namespace Odyssey.Scripting.VM
                 {
                     ScriptParam param = functionDef.Params[i];
                     Variable arg;
-                    switch (param.Type)
+                    switch (param.DataType)
                     {
                         case DataType.Int:
                             arg = Variable.FromInt(PopInt());
