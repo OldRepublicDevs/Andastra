@@ -97,15 +97,6 @@ namespace Odyssey.Scripting.EngineApi
                 case 443: return Func_GetIsOpen(args, ctx);
                 case 537: return Func_GetLockKeyRequired(args, ctx);
 
-                // Trigger/Object Query Functions
-                case 25: return Func_GetEnteringObject(args, ctx);
-                case 26: return Func_GetExitingObject(args, ctx);
-                case 326: return Func_GetClickingObject(args, ctx);
-
-                // Item Functions
-                case 150: return Func_SetItemStackSize(args, ctx);
-                case 151: return Func_GetDistanceBetween(args, ctx);
-
                 default:
                     // For K1, we can share most implementations with BaseEngineApi
                     // Override here only for K1-specific differences if needed
@@ -223,7 +214,23 @@ namespace Odyssey.Scripting.EngineApi
                     }
                 }
             }
-            // TODO: Add placeable support when PlaceableComponent is implemented
+            // Placeable support
+            if (target.ObjectType == ObjectType.Placeable)
+            {
+                IPlaceableComponent placeableComponent = target.GetComponent<IPlaceableComponent>();
+                if (placeableComponent != null)
+                {
+                    bool shouldLock = bLocked != 0;
+                    if (shouldLock)
+                    {
+                        placeableComponent.Lock();
+                    }
+                    else
+                    {
+                        placeableComponent.Unlock();
+                    }
+                }
+            }
 
             return Variable.Void();
         }
@@ -260,7 +267,15 @@ namespace Odyssey.Scripting.EngineApi
                     return Variable.FromInt(doorComponent.IsLocked ? 1 : 0);
                 }
             }
-            // TODO: Add placeable support when PlaceableComponent is implemented
+            // Placeable support
+            if (target.ObjectType == ObjectType.Placeable)
+            {
+                IPlaceableComponent placeableComponent = target.GetComponent<IPlaceableComponent>();
+                if (placeableComponent != null)
+                {
+                    return Variable.FromInt(placeableComponent.IsLocked ? 1 : 0);
+                }
+            }
 
             return Variable.FromInt(0);
         }
@@ -269,7 +284,7 @@ namespace Odyssey.Scripting.EngineApi
         /// GetIsOpen(object oObject) - Returns TRUE if oObject (placeable or door) is currently open
         /// </summary>
         /// <remarks>
-        /// Based on swkotor.exe: GetIsOpen implementation
+        /// Based on swkotor2.exe: GetIsOpen implementation
         /// Located via string references: Door open state checking
         /// Original implementation: Returns IsOpen flag from door/placeable
         /// </remarks>
@@ -297,7 +312,15 @@ namespace Odyssey.Scripting.EngineApi
                     return Variable.FromInt(doorComponent.IsOpen ? 1 : 0);
                 }
             }
-            // TODO: Add placeable support when PlaceableComponent is implemented
+            // Placeable support
+            if (entity.ObjectType == ObjectType.Placeable)
+            {
+                IPlaceableComponent placeableComponent = entity.GetComponent<IPlaceableComponent>();
+                if (placeableComponent != null)
+                {
+                    return Variable.FromInt(placeableComponent.IsOpen ? 1 : 0);
+                }
+            }
 
             return Variable.FromInt(0);
         }
@@ -306,7 +329,7 @@ namespace Odyssey.Scripting.EngineApi
         /// GetLockKeyRequired(object oObject) - Returns TRUE if a specific key is required to open the lock on oObject
         /// </summary>
         /// <remarks>
-        /// Based on swkotor.exe: GetLockKeyRequired implementation
+        /// Based on swkotor2.exe: GetLockKeyRequired implementation
         /// Located via string references: "KeyRequired" field in door/placeable templates
         /// Original implementation: Returns KeyRequired flag from door/placeable
         /// </remarks>
@@ -334,7 +357,15 @@ namespace Odyssey.Scripting.EngineApi
                     return Variable.FromInt(doorComponent.KeyRequired ? 1 : 0);
                 }
             }
-            // TODO: Add placeable support when PlaceableComponent is implemented
+            // Placeable support
+            if (entity.ObjectType == ObjectType.Placeable)
+            {
+                IPlaceableComponent placeableComponent = entity.GetComponent<IPlaceableComponent>();
+                if (placeableComponent != null)
+                {
+                    return Variable.FromInt(placeableComponent.KeyRequired ? 1 : 0);
+                }
+            }
 
             return Variable.FromInt(0);
         }
