@@ -9,9 +9,15 @@ namespace Odyssey.Core.Interfaces
     /// <remarks>
     /// Area Interface:
     /// - Based on swkotor2.exe area system
-    /// - Located via string references: Area loading and management functions
+    /// - Located via string references: "Area" @ 0x007be340, "AreaName" @ 0x007be340, "AREANAME" @ 0x007be1dc
+    /// - "AreaId" @ 0x007bef48, "AreaMap" @ 0x007bd118, "AreaMapResX" @ 0x007bd10c, "AreaMapResY" @ 0x007bd100
+    /// - "AreaProperties" @ 0x007bd228, "AreaEffectList" @ 0x007bd0d4, "AreaList" @ 0x007c0b7c
+    /// - "EVENT_AREA_TRANSITION" @ 0x007bcbdc, "EVENT_REMOVE_FROM_AREA" @ 0x007bcddc
+    /// - Error messages: "Area %s is not a valid area." @ 0x007c22bc, "Area %s not valid." @ 0x007c22dc
+    /// - Coordinate validation: "X co-ordinate outside of area, should be in [%f, %f]" @ 0x007c224c
+    /// - "Y co-ordinate outside of area, should be in [%f, %f]" @ 0x007c2284
     /// - Original implementation: Areas loaded from ARE (area properties) and GIT (instances) files
-    /// - ARE file format: GFF with "ARE " signature containing area static properties
+    /// - ARE file format: GFF with "ARE " signature containing area static properties (lighting, fog, grass)
     /// - GIT file format: GFF with "GIT " signature containing dynamic object instances
     /// - Areas contain entities (creatures, doors, placeables, triggers, waypoints, sounds)
     /// - Navigation mesh (walkmesh) provides pathfinding and collision detection

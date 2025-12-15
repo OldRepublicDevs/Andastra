@@ -16,6 +16,11 @@ namespace Odyssey.Kotor.Game
     /// <remarks>
     /// Player Controller:
     /// - Based on swkotor2.exe player input/movement system
+    /// - Located via string references: "Player" @ 0x007be628, "PlayerList" @ 0x007bdcf4, "GetPlayerList" @ 0x007bdd00
+    /// - "Mod_PlayerList" @ 0x007be060, "SetByPlayerParty" @ 0x007c1d04
+    /// - Script events: "CSWSSCRIPTEVENT_EVENTTYPE_ON_PLAYER_LEVEL_UP" @ 0x007bc5bc
+    /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_PLAYER_REST" @ 0x007bc620, "CSWSSCRIPTEVENT_EVENTTYPE_ON_PLAYER_DYING" @ 0x007bc6ac
+    /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_PLAYER_EXIT" @ 0x007bc974, "CSWSSCRIPTEVENT_EVENTTYPE_ON_PLAYER_ENTER" @ 0x007bc9a0
     /// - Original implementation: Click-to-move with pathfinding, object selection, party control
     /// - Click-to-move: Click world position -> pathfind -> queue ActionMoveToLocation
     /// - Object interaction: Click entity -> queue ActionUseObject or ActionMoveToObject
@@ -196,12 +201,19 @@ namespace Odyssey.Kotor.Game
             else
             {
                 // Start dialogue if friendly
-                CreatureComponent creatureComp = creature.GetComponent<CreatureComponent>();
-                if (creatureComp != null && !string.IsNullOrEmpty(creatureComp.DialogueResRef))
+                // Check for Conversation property (loaded from UTC template ScriptDialogue field)
+                string conversation = creature.GetData<string>("Conversation", string.Empty);
+                if (string.IsNullOrEmpty(conversation))
+                {
+                    // Also check ScriptDialogue entity data
+                    conversation = creature.GetData<string>("ScriptDialogue", string.Empty);
+                }
+                
+                if (!string.IsNullOrEmpty(conversation))
                 {
                     if (_dialogueManager != null)
                     {
-                        _dialogueManager.StartConversation(creatureComp.DialogueResRef, creature, _playerEntity);
+                        _dialogueManager.StartConversation(conversation, creature, _playerEntity);
                     }
                     else
                     {
@@ -500,16 +512,15 @@ namespace Odyssey.Kotor.Game
                 return;
             }
 
-            // Get dialogue ResRef from NPC component
-            ICreatureComponent creatureComponent = npc.GetComponent<ICreatureComponent>();
-            if (creatureComponent == null)
+            // Get dialogue ResRef from NPC entity data (loaded from UTC template ScriptDialogue field)
+            string conversation = npc.GetData<string>("Conversation", string.Empty);
+            if (string.IsNullOrEmpty(conversation))
             {
-                Console.WriteLine("[PlayerController] NPC has no creature component: " + npc.Tag);
-                return;
+                // Also check ScriptDialogue entity data
+                conversation = npc.GetData<string>("ScriptDialogue", string.Empty);
             }
-
-            string dialogueResRef = creatureComponent.DialogueResRef;
-            if (string.IsNullOrEmpty(dialogueResRef))
+            
+            if (string.IsNullOrEmpty(conversation))
             {
                 Console.WriteLine("[PlayerController] NPC has no dialogue: " + npc.Tag);
                 return;
@@ -518,7 +529,7 @@ namespace Odyssey.Kotor.Game
             // Start dialogue via dialogue manager
             if (_dialogueManager != null)
             {
-                _dialogueManager.StartConversation(dialogueResRef, npc, _playerEntity);
+                _dialogueManager.StartConversation(conversation, npc, _playerEntity);
             }
             else
             {
