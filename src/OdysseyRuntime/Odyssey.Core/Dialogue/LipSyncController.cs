@@ -156,10 +156,15 @@ namespace Odyssey.Core.Dialogue
             else
             {
                 // Interpolate between keyframes
+                // Based on swkotor2.exe: Lip sync interpolation implementation
+                // Located via string references: "LIPS:localization" @ 0x007be654, ".\lips" @ 0x007c6838
+                // Original implementation: Linear interpolation between keyframes for smooth animation
+                // Phoneme shapes blended with weights based on time position between keyframes
                 float t = (_time - current.Time) / (next.Time - current.Time);
                 t = Math.Max(0f, Math.Min(1f, t));
 
                 // Apply both shapes with blend weights
+                // Original engine: Blends between current and next phoneme shapes
                 ApplyPhoneme(current.Shape, 1f - t);
                 ApplyPhoneme(next.Shape, t);
             }
