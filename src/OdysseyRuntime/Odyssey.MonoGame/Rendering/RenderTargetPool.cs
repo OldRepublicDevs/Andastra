@@ -19,11 +19,14 @@ namespace Odyssey.MonoGame.Rendering
     /// <remarks>
     /// Render Target Pool (Modern Enhancement):
     /// - Based on swkotor2.exe rendering system architecture
+    /// - Located via string references: "Frame Buffer" @ 0x007c8408, "CB_FRAMEBUFF" @ 0x007d1d84
+    /// - OpenGL render texture: "WGL_NV_render_texture_rectangle" @ 0x007b880c, "WGL_ARB_render_texture" @ 0x007b8890
     /// - Original implementation: KOTOR used minimal render targets (mainly for UI overlays)
     /// - Original engine: DirectX 8/9 era, limited use of render-to-texture features
     /// - This is a modernization feature: Render target pooling improves memory efficiency
     /// - Original behavior: Render targets allocated on-demand, released when done
     /// - Modern enhancement: Pooling reduces allocation overhead and GC pressure
+    /// - Render targets: Used for post-processing, shadows, reflections, and multi-pass rendering
     /// </remarks>
     public class RenderTargetPool : IDisposable
     {
