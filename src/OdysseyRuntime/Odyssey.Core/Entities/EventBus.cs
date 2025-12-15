@@ -129,6 +129,16 @@ namespace Odyssey.Core.Entities
     ///   "EVENT_REMOVE_EFFECT" @ 0x007bcd0c (case 0xe), "EVENT_ACQUIRE_ITEM" @ 0x007bcbf4 (case 0x19),
     ///   "EVENT_AREA_TRANSITION" @ 0x007bcbdc (case 0x1a), "EVENT_CONTROLLER_RUMBLE" @ 0x007bcbc4 (case 0x1b)
     /// - Original implementation: FUN_004dcfb0 @ 0x004dcfb0 dispatches events via switch statement based on event type
+    ///   - Original implementation (from decompiled FUN_004dcfb0):
+    ///     - Function signature: `void FUN_004dcfb0(uint param_1, uint param_2, undefined2 *param_3)`
+    ///     - param_1: Target entity ID (OBJECT_SELF)
+    ///     - param_2: Event type (1-27, maps to EVENT_* constants)
+    ///     - param_3: Script event type (for EVENT_SIGNAL_EVENT, maps to CSWSSCRIPTEVENT_EVENTTYPE_ON_*)
+    ///     - Calls FUN_004dcd90 to resolve entity IDs to entity names/strings
+    ///     - Switch on param_2 to map event type to EVENT_* string constant
+    ///     - If param_2 == 10 (EVENT_SIGNAL_EVENT), switch on *param_3 to map to CSWSSCRIPTEVENT_EVENTTYPE_ON_* string constant
+    ///     - Formats debug log: "DRF Event Added: %s(%s) %s(%s) %s %s\n" with event name, entity names, and event data
+    ///     - Routes event to script execution system for entities with matching event hooks
     /// - Events are queued ("EventQueue" @ 0x007bce74) and dispatched each frame
     /// - Event routing: Events fire for various game state changes (damage, death, perception, etc.)
     /// - Script execution: FireScriptEvent method triggers script execution on entities with matching event hooks
