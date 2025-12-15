@@ -6578,8 +6578,10 @@ namespace Odyssey.Kotor.EngineApi
             {
                 case 0: // PLACEABLE_ACTION_USE
                     // Can use if placeable is usable (Useable flag from UTP template)
-                    // For now, assume all placeables are usable unless explicitly disabled
-                    return Variable.FromInt(1); // TODO: Check Useable flag from placeable template
+                    // Based on swkotor2.exe: GetIsPlaceableObjectActionPossible implementation
+                    // Located via string references: Placeable action checking system
+                    // Original implementation: Checks IsUseable flag from placeable component
+                    return Variable.FromInt(placeableComponent.IsUseable ? 1 : 0);
 
                 case 1: // PLACEABLE_ACTION_UNLOCK
                     // Can unlock if placeable is locked (assume all placeables can be unlocked by script if they have a lock DC)
