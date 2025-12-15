@@ -6,6 +6,15 @@ namespace Odyssey.Core.Interfaces
     /// <summary>
     /// Runtime entity with components.
     /// </summary>
+    /// <remarks>
+    /// Entity Interface:
+    /// - Based on swkotor2.exe entity system
+    /// - Located via string references: "ObjectId" @ 0x007bce5c, "Tag" (various locations)
+    /// - Original engine: Entities have ObjectId (uint32), Tag (string), ObjectType (enum)
+    /// - Component system: Entities use component-based architecture for stats, transform, inventory, etc.
+    /// - Script hooks: Entities store script ResRefs for various events (OnHeartbeat, OnAttacked, etc.)
+    /// - Original entity structure includes: Position (Vector3), Orientation (Vector3), AreaId, etc.
+    /// </remarks>
     public interface IEntity
     {
         /// <summary>

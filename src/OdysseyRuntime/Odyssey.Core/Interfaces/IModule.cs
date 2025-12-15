@@ -5,6 +5,16 @@ namespace Odyssey.Core.Interfaces
     /// <summary>
     /// Represents a game module (collection of areas and global state).
     /// </summary>
+    /// <remarks>
+    /// Module Interface:
+    /// - Based on swkotor2.exe module system
+    /// - Located via string references: "Mod_" prefix for module fields (Mod_Tag, Mod_Entry_Area, etc.)
+    /// - IFO file format: GFF with "IFO " signature containing module metadata
+    /// - Module loading: FUN_00708990 @ 0x00708990 (loads module, sets up areas, spawns entities)
+    /// - Original implementation stores module data in IFO file, references areas by ResRef
+    /// - Module contains entry area, entry position, time settings, and script hooks
+    /// - Based on IFO file format documentation in vendor/PyKotor/wiki/GFF-IFO.md
+    /// </remarks>
     public interface IModule
     {
         /// <summary>
