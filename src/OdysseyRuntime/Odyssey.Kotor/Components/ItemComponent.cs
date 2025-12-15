@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Odyssey.Core.Interfaces;
 using Odyssey.Core.Interfaces.Components;
 
 namespace Odyssey.Kotor.Components

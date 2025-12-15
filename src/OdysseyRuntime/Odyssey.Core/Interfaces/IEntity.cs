@@ -73,6 +73,26 @@ namespace Odyssey.Core.Interfaces
         /// The world this entity belongs to.
         /// </summary>
         IWorld World { get; }
+
+        /// <summary>
+        /// Sets arbitrary data on this entity.
+        /// </summary>
+        void SetData(string key, object value);
+
+        /// <summary>
+        /// Gets arbitrary data from this entity.
+        /// </summary>
+        T GetData<T>(string key, T defaultValue = default(T));
+
+        /// <summary>
+        /// Gets arbitrary data from this entity.
+        /// </summary>
+        object GetData(string key);
+
+        /// <summary>
+        /// Checks if this entity has data for the specified key.
+        /// </summary>
+        bool HasData(string key);
     }
 }
 

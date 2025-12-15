@@ -112,7 +112,7 @@ namespace Odyssey.Core.Actions
                 }
 
                 doorState.IsOpen = true;
-                doorState.AnimationState = 1; // Open state
+                doorState.OpenState = 1; // Open state
 
                 // Fire OnOpen script event
                 // Based on swkotor2.exe: EVENT_OPEN_OBJECT fires OnOpen script event

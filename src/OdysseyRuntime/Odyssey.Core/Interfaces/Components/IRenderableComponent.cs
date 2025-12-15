@@ -8,6 +8,14 @@ namespace Odyssey.Core.Interfaces.Components
     /// - Based on swkotor2.exe rendering system
     /// - Located via string references: Model loading and rendering functions handle entity models
     /// - "ModelResRef" @ 0x007c2f6c (model resource reference field), "Appearance_Type" @ 0x007c40f0 (appearance type field)
+    /// - Model fields: "Model" @ 0x007c1ca8, "ModelName" @ 0x007c1c8c, "ModelA" @ 0x007bf4bc, "ModelB" (implied)
+    /// - "ModelType" @ 0x007c4568, "MODELTYPE" @ 0x007c036c, "ModelVariation" @ 0x007c0990
+    /// - "ModelPart" @ 0x007bd42c, "ModelPart1" @ 0x007c0acc, "DefaultModel" @ 0x007c4530
+    /// - "VisibleModel" @ 0x007c1c98, "refModel" @ 0x007babe8, "ProjModel" @ 0x007c31c0, "StuntModel" @ 0x007c37e0
+    /// - "CameraModel" @ 0x007c3908, "MODEL01" @ 0x007c4b48, "MODEL02" @ 0x007c4b34, "MODEL03" @ 0x007c4b20
+    /// - "MODELMIN02" @ 0x007c4b3c, "MODELMIN03" @ 0x007c4b28
+    /// - Visibility: "VISIBLEVALUE" @ 0x007b6a58, "VisibleModel" @ 0x007c1c98, "IsBodyBagVisible" @ 0x007c1ff0
+    /// - "sdr_invisible" @ 0x007cb1dc (invisibility shader/material)
     /// - Model loading: FUN_005261b0 @ 0x005261b0 loads creature model from appearance.2da row
     /// - "CSWCCreature::LoadModel(): Failed to load creature model '%s'." @ 0x007c82fc (model loading error)
     /// - Original implementation: Entities with models can be rendered in the game world

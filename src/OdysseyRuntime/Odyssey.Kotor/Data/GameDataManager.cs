@@ -449,16 +449,23 @@ namespace Odyssey.Kotor.Data
     public class AppearanceData
     {
         public int RowIndex { get; set; }
+        public int AppearanceId { get { return RowIndex; } set { RowIndex = value; } }
         public string Label { get; set; }
+        public string ModelType { get; set; }
         public string ModelA { get; set; }
         public string ModelB { get; set; }
         public string TexA { get; set; }
         public string TexB { get; set; }
         public string Race { get; set; }
+        public int RacialType { get; set; }
         public float WalkSpeed { get; set; }
+        public float WalkDist { get { return WalkSpeed; } set { WalkSpeed = value; } }
         public float RunSpeed { get; set; }
+        public float RunDist { get { return RunSpeed; } set { RunSpeed = value; } }
         public float PerceptionRange { get; set; }
+        public int PerceptionDist { get { return (int)PerceptionRange; } set { PerceptionRange = value; } }
         public float Height { get; set; }
+        public int SizeCategory { get; set; }
     }
 
     /// <summary>
@@ -485,18 +492,26 @@ namespace Odyssey.Kotor.Data
     public class BaseItemData
     {
         public int RowIndex { get; set; }
+        public int BaseItemId { get { return RowIndex; } set { RowIndex = value; } }
         public string Label { get; set; }
         public string Name { get; set; }
         public int EquipableSlots { get; set; }
+        public string DefaultIcon { get; set; }
         public string DefaultModel { get; set; }
         public int WeaponType { get; set; }
+        public int WeaponWield { get; set; }
         public int DamageType { get; set; }
+        public int DamageFlags { get; set; }
+        public int WeaponSize { get; set; }
         public int NumDice { get; set; }
         public int DieToRoll { get; set; }
         public int CriticalThreat { get; set; }
         public int CriticalMultiplier { get; set; }
         public int BaseCost { get; set; }
         public int MaxStack { get; set; }
+        public bool RangedWeapon { get; set; }
+        public int MaxRange { get; set; }
+        public int MinRange { get; set; }
     }
 
     /// <summary>
@@ -505,15 +520,20 @@ namespace Odyssey.Kotor.Data
     public class FeatData
     {
         public int RowIndex { get; set; }
+        public int FeatId { get { return RowIndex; } set { RowIndex = value; } }
         public string Label { get; set; }
         public string Name { get; set; }
         public string Description { get; set; }
+        public int DescriptionStrRef { get; set; }
         public string Icon { get; set; }
+        public int FeatCategory { get; set; }
+        public int MaxRanks { get; set; }
         public int PrereqFeat1 { get; set; }
         public int PrereqFeat2 { get; set; }
         public int MinLevel { get; set; }
         public int MinLevelClass { get; set; }
         public bool Selectable { get; set; }
+        public bool RequiresAction { get; set; }
     }
 
     /// <summary>
@@ -561,16 +581,21 @@ namespace Odyssey.Kotor.Data
     public class SpellData
     {
         public int RowIndex { get; set; }
+        public int SpellId { get { return RowIndex; } set { RowIndex = value; } }
         public string Label { get; set; }
+        public int Name { get; set; } // StrRef
         public int NameStrRef { get; set; }
         public int DescriptionStrRef { get; set; }
         public string Icon { get; set; }
+        public int School { get; set; }
         public float ConjTime { get; set; }
         public float CastTime { get; set; }
+        public float CastingTime { get { return CastTime; } set { CastTime = value; } }
         public int Range { get; set; }
         public int TargetType { get; set; }
         public int HostileSetting { get; set; }
         public string ImpactScript { get; set; }
+        public int SpellLevel { get; set; }
         public string Projectile { get; set; }
         public string ProjectileModel { get; set; }
         public int ConjHandVfx { get; set; }

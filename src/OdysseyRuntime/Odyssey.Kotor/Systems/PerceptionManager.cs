@@ -5,6 +5,7 @@ using Odyssey.Core.Combat;
 using Odyssey.Core.Enums;
 using Odyssey.Core.Interfaces;
 using Odyssey.Core.Interfaces.Components;
+using Odyssey.Kotor.Components;
 
 namespace Odyssey.Kotor.Systems
 {
@@ -300,8 +301,8 @@ namespace Odyssey.Kotor.Systems
                     IEntity seen = _world.GetEntity(seenId);
                     if (seen != null)
                     {
-                        bool wasHeard = data.HeardObjects.Contains(seenId);
-                        perception.UpdatePerception(seen, true, wasHeard);
+                        bool seenWasHeard = data.HeardObjects.Contains(seenId);
+                        perception.UpdatePerception(seen, true, seenWasHeard);
                     }
                 }
 

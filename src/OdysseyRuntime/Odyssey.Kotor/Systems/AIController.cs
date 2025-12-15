@@ -104,7 +104,7 @@ namespace Odyssey.Kotor.Systems
 
             // Process action queue first
             IActionQueueComponent actionQueue = creature.GetComponent<IActionQueueComponent>();
-            if (actionQueue != null && actionQueue.Current != null)
+            if (actionQueue != null && actionQueue.CurrentAction != null)
             {
                 // Action queue is processing, let it continue
                 return;
@@ -322,7 +322,7 @@ namespace Odyssey.Kotor.Systems
                 if (actionQueue != null)
                 {
                     // Check if we're already attacking this target
-                    IAction currentAction = actionQueue.Current;
+                    IAction currentAction = actionQueue.CurrentAction;
                     if (currentAction is ActionAttack attackAction)
                     {
                         // Already attacking, continue
@@ -330,7 +330,7 @@ namespace Odyssey.Kotor.Systems
                     }
 
                     // Queue new attack
-                    var attack = new ActionAttack(nearestEnemy);
+                    var attack = new ActionAttack(nearestEnemy.ObjectId);
                     actionQueue.Add(attack);
                 }
             }

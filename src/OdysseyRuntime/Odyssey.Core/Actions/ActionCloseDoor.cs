@@ -96,7 +96,7 @@ namespace Odyssey.Core.Actions
             if (doorState != null)
             {
                 doorState.IsOpen = false;
-                doorState.AnimationState = 0; // Closed state
+                doorState.OpenState = 0; // Closed state
 
                 // Fire OnClose script event
                 // Based on swkotor2.exe: EVENT_CLOSE_OBJECT fires OnClose script event
