@@ -11,8 +11,16 @@ namespace Odyssey.Content.MDL
     /// <remarks>
     /// MDL Model Loader:
     /// - Based on swkotor2.exe model loading system
-    /// - Located via string references: Model loading functions handle MDL/MDX file parsing
+    /// - Located via string references: "ModelName" @ 0x007c1c8c, "Model" @ 0x007c1ca8, "ModelResRef" @ 0x007c2f6c
+    /// - "CSWCCreature::LoadModel(): Failed to load creature model '%s'." @ 0x007c82fc (model loading error)
+    /// - "Model %s nor the default model %s could be loaded." @ 0x007cad14 (model loading fallback error)
+    /// - "Cannot load door model '%s'." @ 0x007d2488 (door model loading error)
+    /// - "CSWCVisualEffect::LoadModel: Failed to load visual effect model '%s'." @ 0x007cd5a8 (VFX model error)
+    /// - "CSWCCreatureAppearance::CreateBTypeBody(): Failed to load model '%s'." @ 0x007cdc40 (body model error)
+    /// - Model loading: FUN_005261b0 @ 0x005261b0 loads creature models from appearance.2da
     /// - Original implementation: Loads MDL (model definition) and MDX (geometry data) files
+    /// - Model resolution: Resolves model ResRefs from appearance.2da (ModelA, ModelB columns for variants)
+    /// - Fallback models: Uses default models when specified model cannot be loaded
     /// - MDL files contain: Model structure, nodes, animations, bounding boxes, classification
     /// - MDX files contain: Vertex data, texture coordinates, normals, face indices
     /// - Original engine uses binary file format with specific offsets and structures
