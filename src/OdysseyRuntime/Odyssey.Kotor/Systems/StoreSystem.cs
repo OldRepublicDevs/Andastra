@@ -1,0 +1,155 @@
+using System;
+using System.Collections.Generic;
+using Odyssey.Core.Enums;
+using Odyssey.Core.Interfaces;
+using Odyssey.Core.Interfaces.Components;
+using Odyssey.Kotor.Components;
+
+namespace Odyssey.Kotor.Systems
+{
+    /// <summary>
+    /// Manages merchant store interactions.
+    /// </summary>
+    /// <remarks>
+    /// Store System:
+    /// - Based on swkotor2.exe store/merchant system
+    /// - Located via string references: "Store" @ 0x007bc4f8, "StoreList" @ 0x007bd098 (GIT store list)
+    /// - "OnOpenStore" @ 0x007c1200 (store open script event), "Store template %s doesn't exist.\n" @ 0x007c1228
+    /// - "StorePanelSort" @ 0x007c440c, "StorePanel" @ 0x007c441c (store GUI panels)
+    /// - "store_p" @ 0x007d0190 (store panel GUI), "store" @ 0x007b6068 (store constant)
+    /// - Original implementation: FUN_004e08e0 @ 0x004e08e0 loads store instances from GIT
+    /// - Store templates: UTM (Store) GFF files with "UTM " signature containing merchant inventory
+    /// - Store inventory: List of items with prices, quantities, and restock flags
+    /// - Markup rates: Buy/sell price multipliers (buyPrice = basePrice * buyMarkup, sellPrice = basePrice * sellMarkup)
+    /// - Store types: Generic merchant, equipment vendor, item vendor, etc.
+    /// - Store interaction: Player opens store GUI, can buy/sell items, restock occurs on area transition
+    /// - Store state: Tracks which items have been purchased (for restock logic)
+    /// - Based on UTM file format documentation in vendor/PyKotor/wiki/
+    /// </remarks>
+    public class StoreSystem
+    {
+        private readonly IWorld _world;
+
+        public StoreSystem(IWorld world)
+        {
+            _world = world ?? throw new ArgumentNullException("world");
+        }
+
+        /// <summary>
+        /// Opens a store for interaction.
+        /// </summary>
+        /// <param name="storeEntity">The store entity to open.</param>
+        /// <param name="customer">The entity opening the store (typically player).</param>
+        public void OpenStore(IEntity storeEntity, IEntity customer)
+        {
+            if (storeEntity == null || customer == null)
+            {
+                return;
+            }
+
+            if (storeEntity.ObjectType != Core.Enums.ObjectType.Store)
+            {
+                return;
+            }
+
+            IStoreComponent storeComponent = storeEntity.GetComponent<IStoreComponent>();
+            if (storeComponent == null)
+            {
+                return;
+            }
+
+            // Fire OnOpenStore script event
+            // Based on swkotor2.exe: OnOpenStore script fires when store is opened
+            // Located via string reference: "OnOpenStore" @ 0x007c1200
+            // Original implementation: FUN_004dcfb0 @ 0x004dcfb0 dispatches OnOpenStore script event
+            IEventBus eventBus = _world.EventBus;
+            if (eventBus != null)
+            {
+                eventBus.FireScriptEvent(storeEntity, ScriptEvent.OnOpenStore, customer);
+            }
+
+            // Store GUI would be opened here (handled by UI layer)
+        }
+
+        /// <summary>
+        /// Closes a store.
+        /// </summary>
+        /// <param name="storeEntity">The store entity to close.</param>
+        public void CloseStore(IEntity storeEntity)
+        {
+            if (storeEntity == null)
+            {
+                return;
+            }
+
+            // Store GUI would be closed here (handled by UI layer)
+        }
+
+        /// <summary>
+        /// Gets the buy price for an item from a store.
+        /// </summary>
+        /// <param name="storeEntity">The store entity.</param>
+        /// <param name="item">The item to price.</param>
+        /// <returns>Buy price, or 0 if item not available.</returns>
+        public int GetBuyPrice(IEntity storeEntity, IEntity item)
+        {
+            if (storeEntity == null || item == null)
+            {
+                return 0;
+            }
+
+            IStoreComponent storeComponent = storeEntity.GetComponent<IStoreComponent>();
+            if (storeComponent == null)
+            {
+                return 0;
+            }
+
+            // Get base item price from item component
+            IItemComponent itemComponent = item.GetComponent<IItemComponent>();
+            if (itemComponent == null)
+            {
+                return 0;
+            }
+
+            int basePrice = itemComponent.BasePrice;
+            float buyMarkup = storeComponent.BuyMarkup;
+
+            // Buy price = base price * buy markup
+            return (int)(basePrice * buyMarkup);
+        }
+
+        /// <summary>
+        /// Gets the sell price for an item to a store.
+        /// </summary>
+        /// <param name="storeEntity">The store entity.</param>
+        /// <param name="item">The item to price.</param>
+        /// <returns>Sell price, or 0 if store doesn't buy this item type.</returns>
+        public int GetSellPrice(IEntity storeEntity, IEntity item)
+        {
+            if (storeEntity == null || item == null)
+            {
+                return 0;
+            }
+
+            IStoreComponent storeComponent = storeEntity.GetComponent<IStoreComponent>();
+            if (storeComponent == null)
+            {
+                return 0;
+            }
+
+            // Get base item price from item component
+            IItemComponent itemComponent = item.GetComponent<IItemComponent>();
+            if (itemComponent == null)
+            {
+                return 0;
+            }
+
+            int basePrice = itemComponent.BasePrice;
+            float sellMarkup = storeComponent.SellMarkup;
+
+            // Sell price = base price * sell markup (typically < 1.0 for profit margin)
+            return (int)(basePrice * sellMarkup);
+        }
+    }
+}
+
