@@ -219,10 +219,12 @@ namespace CSharpKOTOR.Formats.GFF
                         gffStruct.SetBinary(label, Reader.ReadBytes((int)binaryLength));
                         break;
                     case GFFFieldType.Vector3:
-                        gffStruct.SetVector3(label, Reader.ReadVector3());
+                        var v3 = Reader.ReadVector3();
+                        gffStruct.SetVector3(label, new System.Numerics.Vector3(v3.X, v3.Y, v3.Z));
                         break;
                     case GFFFieldType.Vector4:
-                        gffStruct.SetVector4(label, Reader.ReadVector4());
+                        var v4 = Reader.ReadVector4();
+                        gffStruct.SetVector4(label, new System.Numerics.Vector4(v4.X, v4.Y, v4.Z, v4.W));
                         break;
                 }
             }

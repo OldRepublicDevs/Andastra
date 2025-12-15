@@ -99,13 +99,13 @@ namespace CSharpKOTOR.Mods.GFF
                 case GFFFieldType.Vector3:
                     if (value is Vector3 v3)
                     {
-                        gffStruct.SetVector3(label, v3);
+                        gffStruct.SetVector3(label, new System.Numerics.Vector3(v3.X, v3.Y, v3.Z));
                     }
                     break;
                 case GFFFieldType.Vector4:
                     if (value is Vector4 v4)
                     {
-                        gffStruct.SetVector4(label, v4);
+                        gffStruct.SetVector4(label, new System.Numerics.Vector4(v4.X, v4.Y, v4.Z, v4.W));
                     }
                     break;
                 case GFFFieldType.List:

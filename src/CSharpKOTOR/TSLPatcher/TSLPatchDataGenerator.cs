@@ -625,11 +625,11 @@ namespace CSharpKOTOR.TSLPatcher
             }
             else if (value is Vector3 vector3Value)
             {
-                gffStruct.SetVector3(fieldLabel, vector3Value);
+                gffStruct.SetVector3(fieldLabel, new System.Numerics.Vector3(vector3Value.X, vector3Value.Y, vector3Value.Z));
             }
             else if (value is Vector4 vector4Value)
             {
-                gffStruct.SetVector4(fieldLabel, vector4Value);
+                gffStruct.SetVector4(fieldLabel, new System.Numerics.Vector4(vector4Value.X, vector4Value.Y, vector4Value.Z, vector4Value.W));
             }
             else
             {
@@ -804,7 +804,7 @@ namespace CSharpKOTOR.TSLPatcher
                     case GFFFieldType.Vector3:
                         if (value is Vector3 v3)
                         {
-                            gffStruct.SetVector3(label, v3);
+                            gffStruct.SetVector3(label, new System.Numerics.Vector3(v3.X, v3.Y, v3.Z));
                         }
                         break;
                     case GFFFieldType.Vector4:
