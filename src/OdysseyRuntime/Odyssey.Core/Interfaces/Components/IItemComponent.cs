@@ -9,11 +9,24 @@ namespace Odyssey.Core.Interfaces.Components
     /// <remarks>
     /// Item Component Interface:
     /// - Based on swkotor2.exe item system
-    /// - Located via string references: Item loading functions handle UTI templates
+    /// - Located via string references: "Item" @ 0x007bc550 (item object type), "Item List" @ 0x007bd028 (item list field)
+    /// - "BaseItem" @ 0x007c0a78 (base item ID field), "ItemType" @ 0x007c437c (item type field)
+    /// - "ItemPropertyIndex" @ 0x007beb58 (item property index), "ItemProperty" @ 0x007cb2f8 (item property field)
+    /// - "Item_Property" @ 0x007cb2f8 (item property structure), "ITEMPROPS" @ 0x007caec4 (item properties constant)
+    /// - "StackSize" @ 0x007c0a88 (stack size field), "Charges" @ 0x007c0a94 (charges field)
+    /// - "ItemValue" @ 0x007c4f24 (item value field), "Cost" @ 0x007c0aa0 (item cost field)
+    /// - "Identified" @ 0x007c0aac (identified flag), "ItemComponent" @ 0x007c41e4 (item component field)
+    /// - "ItemClass" @ 0x007c455c (item class field), "BaseItemStatRef" @ 0x007c4428 (base item stat reference)
+    /// - "PoweredItem" @ 0x007c43b0 (powered item flag), "AmmoItem" @ 0x007bf84c (ammo item field)
+    /// - "NewItem" @ 0x007c0930 (new item flag), "ItemCreate" @ 0x007c4f84 (item creation field)
+    /// - "PROTOITEM" @ 0x007b6c0c (prototype item constant), "BASEITEMS" @ 0x007c4594 (base items table)
+    /// - Item loading: FUN_005226d0 @ 0x005226d0 (load item from UTI template), FUN_005fb0f0 @ 0x005fb0f0 (item creation)
     /// - Original implementation: Items have base item ID, properties, upgrades, charges, stack size
     /// - UTI file format: GFF with "UTI " signature containing item data (BaseItem, Properties, Charges, Cost)
     /// - Item properties modify item behavior (damage bonuses, AC bonuses, effects, etc.)
     /// - Upgrades modify item stats (damage, AC, etc.) - crystals, modifications
+    /// - Stack size: Items can stack in inventory (StackSize field, max stack size from baseitems.2da)
+    /// - Charges: Items with charges (potions, grenades, etc.) have Charges field tracking remaining uses
     /// - Based on UTI file format documentation in vendor/PyKotor/wiki/
     /// </remarks>
     public interface IItemComponent : IComponent
