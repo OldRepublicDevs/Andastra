@@ -786,8 +786,21 @@ namespace CSharpKOTOR.TSLPatcher
                 // Get the field names that should reference this 2DA file
                 string twodaResname = pendingRef.TwodaFilename.ToLowerInvariant().Replace(".2da", "");
                 var relevantFieldNames = new List<string>();
-                // TODO: Get GFF_FIELD_TO_2DA_MAPPING from CSharpKOTOR if available
-                // For now, we'll check all field paths directly
+                
+                // Get GFF field to 2DA mapping to identify relevant field names
+                // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/writer.py:3363-3392
+                // Original: gff_field_to_2da_mapping = _get_gff_field_to_2da_mapping()
+                Dictionary<string, ResourceIdentifier> gffFieldTo2daMapping = ReferenceCacheHelpers.GffFieldTo2daMapping();
+                ResourceIdentifier target2daIdentifier = new ResourceIdentifier(twodaResname, ResourceType.TwoDA);
+                
+                // Find all GFF field names that reference this 2DA file
+                foreach (var kvp in gffFieldTo2daMapping)
+                {
+                    if (kvp.Value.Equals(target2daIdentifier))
+                    {
+                        relevantFieldNames.Add(kvp.Key);
+                    }
+                }
                 
                 // Verify all field paths in the pending reference still have the row index
                 foreach (string fieldPath in pendingRef.FieldPaths)
