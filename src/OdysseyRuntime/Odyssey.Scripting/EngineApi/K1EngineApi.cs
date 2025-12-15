@@ -369,6 +369,10 @@ namespace Odyssey.Scripting.EngineApi
                 
                 // Trigger/Object Query Functions
                 case 326: return Func_GetClickingObject(args, ctx);
+                
+                // Door/Placeable Action Functions
+                case 337: return Func_GetIsDoorActionPossible(args, ctx);
+                case 338: return Func_DoDoorAction(args, ctx);
 
                 // Dialogue functions
                 case 445: return Func_GetIsInConversation(args, ctx);
@@ -6307,10 +6311,16 @@ namespace Odyssey.Scripting.EngineApi
         /// GetIsDoorActionPossible(object oTargetDoor, int nDoorAction) - Check if a door action can be performed
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe: GetIsDoorActionPossible implementation
+        /// Based on swkotor2.exe: GetIsDoorActionPossible implementation (routine ID 337)
         /// Located via string references: Door action checking system
         /// Door actions: DOOR_ACTION_OPEN (0), DOOR_ACTION_UNLOCK (1), DOOR_ACTION_BASH (2), DOOR_ACTION_IGNORE (3), DOOR_ACTION_KNOCK (4)
         /// Original implementation: Checks if specified door action is valid for the door's current state
+        /// Door state checks: IsOpen, IsLocked, LockableByScript flags determine which actions are possible
+        /// DOOR_ACTION_OPEN: Requires door to be closed and either unlocked or lockable by script
+        /// DOOR_ACTION_UNLOCK: Requires door to be locked and lockable by script
+        /// DOOR_ACTION_BASH: Requires door to be locked (bash attempts to break lock via strength check)
+        /// DOOR_ACTION_IGNORE: Always possible (no-op action)
+        /// DOOR_ACTION_KNOCK: Requires door to be closed (knock on closed door)
         /// </remarks>
         private Variable Func_GetIsDoorActionPossible(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
@@ -6367,9 +6377,15 @@ namespace Odyssey.Scripting.EngineApi
         /// </summary>
         /// <remarks>
         /// Based on swkotor2.exe: GetIsPlaceableObjectActionPossible implementation
-        /// Located via string references: Placeable action checking system
+        /// Located via string references: Placeable action checking system (similar to door action system)
         /// Placeable actions: PLACEABLE_ACTION_USE (0), PLACEABLE_ACTION_UNLOCK (1), PLACEABLE_ACTION_BASH (2), PLACEABLE_ACTION_KNOCK (4)
         /// Original implementation: Checks if specified placeable action is valid for the placeable's current state
+        /// Placeable state checks: IsOpen, IsLocked, LockDC, Useable flag from UTP template determine which actions are possible
+        /// PLACEABLE_ACTION_USE: Requires placeable to be usable (Useable flag from UTP template)
+        /// PLACEABLE_ACTION_UNLOCK: Requires placeable to be locked and have LockDC > 0 (unlock via Security skill check)
+        /// PLACEABLE_ACTION_BASH: Requires placeable to be locked (bash attempts to break lock via strength check)
+        /// PLACEABLE_ACTION_KNOCK: Requires placeable to be closed (knock on closed placeable)
+        /// Note: This function may be K2-only, verify routine ID if used in K1
         /// </remarks>
         private Variable Func_GetIsPlaceableObjectActionPossible(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
@@ -6416,6 +6432,90 @@ namespace Odyssey.Scripting.EngineApi
                 default:
                     return Variable.FromInt(0);
             }
+        }
+
+        /// <summary>
+        /// DoDoorAction(object oTargetDoor, int nDoorAction) - Perform a door action on a door
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: DoDoorAction implementation (routine ID 338)
+        /// Located via string references: "CSWSSCRIPTEVENT_EVENTTYPE_ON_OPEN" @ 0x007bc844 (case 7 in FUN_004dcfb0), "CSWSSCRIPTEVENT_EVENTTYPE_ON_UNLOCKED" @ 0x007bc72c
+        /// Event dispatching: FUN_004dcfb0 @ 0x004dcfb0 handles door events (case 7 for EVENT_OPEN_OBJECT, case 0xd for EVENT_UNLOCK_OBJECT)
+        /// Door actions: DOOR_ACTION_OPEN (0), DOOR_ACTION_UNLOCK (1), DOOR_ACTION_BASH (2), DOOR_ACTION_IGNORE (3), DOOR_ACTION_KNOCK (4)
+        /// Original implementation: Performs the specified action on the door (opens, unlocks, bashes, ignores, or knocks)
+        /// DOOR_ACTION_OPEN: Opens door if closed and unlocked (or lockable by script), fires EVENT_OPEN_OBJECT, executes OnOpen script
+        /// DOOR_ACTION_UNLOCK: Unlocks door if locked and lockable by script, fires EVENT_UNLOCK_OBJECT, executes OnUnlock script
+        /// DOOR_ACTION_BASH: Attempts to break lock via strength check (d20 + STR modifier vs LockDC), opens door if successful
+        /// DOOR_ACTION_IGNORE: No-op action (does nothing)
+        /// DOOR_ACTION_KNOCK: Plays knock sound/animation (no state change)
+        /// </remarks>
+        private Variable Func_DoDoorAction(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            if (args.Count < 2)
+            {
+                return Variable.Void();
+            }
+
+            uint doorId = args[0].AsObjectId();
+            int doorAction = args[1].AsInt();
+            IEntity door = ResolveObject(doorId, ctx);
+
+            if (door == null || door.ObjectType != ObjectType.Door)
+            {
+                return Variable.Void();
+            }
+
+            IDoorComponent doorComponent = door.GetComponent<IDoorComponent>();
+            if (doorComponent == null)
+            {
+                return Variable.Void();
+            }
+
+            // Door action constants: DOOR_ACTION_OPEN (0), DOOR_ACTION_UNLOCK (1), DOOR_ACTION_BASH (2), DOOR_ACTION_IGNORE (3), DOOR_ACTION_KNOCK (4)
+            switch (doorAction)
+            {
+                case 0: // DOOR_ACTION_OPEN
+                    // Open door if closed and unlocked (or lockable by script)
+                    if (!doorComponent.IsOpen && (!doorComponent.IsLocked || doorComponent.LockableByScript))
+                    {
+                        doorComponent.Open();
+                        // Fire EVENT_OPEN_OBJECT and execute OnOpen script (handled by door component)
+                    }
+                    break;
+
+                case 1: // DOOR_ACTION_UNLOCK
+                    // Unlock door if locked and lockable by script
+                    if (doorComponent.IsLocked && doorComponent.LockableByScript)
+                    {
+                        doorComponent.Unlock();
+                        // Fire EVENT_UNLOCK_OBJECT and execute OnUnlock script (handled by door component)
+                    }
+                    break;
+
+                case 2: // DOOR_ACTION_BASH
+                    // Bash door: Attempt to break lock via strength check
+                    if (doorComponent.IsLocked && ctx.Caller != null)
+                    {
+                        // TODO: Implement strength check (d20 + STR modifier vs LockDC)
+                        // For now, just unlock if lockable by script
+                        if (doorComponent.LockableByScript)
+                        {
+                            doorComponent.Unlock();
+                        }
+                    }
+                    break;
+
+                case 3: // DOOR_ACTION_IGNORE
+                    // Ignore action: No-op (does nothing)
+                    break;
+
+                case 4: // DOOR_ACTION_KNOCK
+                    // Knock action: Play knock sound/animation (no state change)
+                    // TODO: Play knock sound/animation
+                    break;
+            }
+
+            return Variable.Void();
         }
 
         #endregion
