@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using CSharpKOTOR.Common;
 using CSharpKOTOR.Formats.TwoDA;
 using CSharpKOTOR.Installation;
@@ -100,31 +101,25 @@ namespace CSharpKOTOR.Tools
                     else
                     {
                         // Process armor-specific model and texture
-                        // TODO: Implement read_uti equivalent
-                        // var armorUti = ReadUTI(armorResLookup.Data);
-                        // log.Debug($"baseitems.2da: get body row {armorUti.BaseItem} for their armor");
-                        // 
-                        // var bodyRow = baseitems.GetRow(armorUti.BaseItem);
-                        // string bodyCell = bodyRow.GetString("bodyvar");
-                        // log.Debug($"baseitems.2da: 'bodyvar' cell: {bodyCell}");
-                        // 
-                        // // Determine model and texture columns
-                        // string armorVariation = bodyCell.ToLowerInvariant();
-                        // modelColumn = $"model{armorVariation}";
-                        // string evilTexColumn = $"tex{armorVariation}evil";
-                        // texColumn = (utc.Alignment <= 25 && appearance.GetHeaders().Contains(evilTexColumn))
-                        //     ? evilTexColumn
-                        //     : $"tex{armorVariation}";
-                        // texAppend = armorUti.TextureVariation.ToString().PadLeft(2, '0');
-                        // 
-                        // bodyModel = utcAppearanceRow.GetString(modelColumn);
-                        // overrideTexture = utcAppearanceRow.GetString(texColumn);
-                        
-                        // Temporary fallback until UTI reading is implemented
-                        modelColumn = "modela";
+                        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/creature.py:22-151
+                        // Original: armor_uti = read_uti(armor_res_lookup.data)
+                        var armorUti = ResourceAutoHelpers.ReadUti(armorResLookup.Data);
+                        log.Debug($"baseitems.2da: get body row {armorUti.BaseItem} for their armor");
+
+                        var bodyRow = baseitems.GetRow(armorUti.BaseItem);
+                        string bodyCell = bodyRow.GetString("bodyvar");
+                        log.Debug($"baseitems.2da: 'bodyvar' cell: {bodyCell}");
+
+                        // Determine model and texture columns
+                        string armorVariation = bodyCell.ToLowerInvariant();
+                        modelColumn = $"model{armorVariation}";
+                        string evilTexColumn = $"tex{armorVariation}evil";
+                        texColumn = (utc.Alignment <= 25 && appearance.GetHeaders().Contains(evilTexColumn))
+                            ? evilTexColumn
+                            : $"tex{armorVariation}";
+                        texAppend = armorUti.TextureVariation.ToString().PadLeft(2, '0');
+
                         bodyModel = utcAppearanceRow.GetString(modelColumn);
-                        texColumn = utc.Alignment <= 25 ? "texaevil" : "texa";
-                        texAppend = "01";
                         overrideTexture = utcAppearanceRow.GetString(texColumn);
                     }
                 }
@@ -136,12 +131,13 @@ namespace CSharpKOTOR.Tools
                 if (!string.IsNullOrWhiteSpace(overrideTexture) && overrideTexture != "****")
                 {
                     string fallbackOverrideTexture = overrideTexture + texAppend;
-                    // TODO: Implement installation.texture() equivalent
-                    // if (texAppend != "01" && installation.Texture(fallbackOverrideTexture) == null)
-                    // {
-                    //     fallbackOverrideTexture = $"{overrideTexture}01";
-                    //     log.Debug($"override texture '{fallbackOverrideTexture}' not found, appending '01' to the end like the game itself would do.");
-                    // }
+                    // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/creature.py:22-151
+                    // Original: if tex_append != "01" and installation.texture(fallback_override_texture) is None:
+                    if (texAppend != "01" && installation.Texture(fallbackOverrideTexture) == null)
+                    {
+                        fallbackOverrideTexture = $"{overrideTexture}01";
+                        log.Debug($"override texture '{fallbackOverrideTexture}' not found, appending '01' to the end like the game itself would do.");
+                    }
                     overrideTexture = fallbackOverrideTexture;
                 }
                 else
@@ -223,11 +219,11 @@ namespace CSharpKOTOR.Tools
                 new RobustLogger().Error($"{handResref}.uti missing from installation.");
                 return null;
             }
-            // TODO: Implement read_uti equivalent
-            // var handUti = ReadUTI(handLookup.Data);
-            // string defaultModel = baseitems.GetRow(handUti.BaseItem).GetString("defaultmodel");
-            // return defaultModel.Replace("001", handUti.ModelVariation.ToString().PadLeft(3, '0')).Trim();
-            return null;
+            // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/creature.py:153-212
+            // Original: hand_uti = read_uti(hand_lookup.data)
+            var handUti = ResourceAutoHelpers.ReadUti(handLookup.Data);
+            string defaultModel = baseitems.GetRow(handUti.BaseItem).GetString("defaultmodel");
+            return defaultModel.Replace("001", handUti.ModelVariation.ToString().PadLeft(3, '0')).Trim();
         }
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/creature.py:214-289
@@ -338,10 +334,11 @@ namespace CSharpKOTOR.Tools
                     var resource = installation.Resources.LookupResource(resref.ToString(), ResourceType.UTI);
                     if (resource != null)
                     {
-                        // TODO: Implement read_uti equivalent
-                        // var uti = ReadUTI(resource.Data);
-                        // model = "I_Mask_" + uti.ModelVariation.ToString().PadLeft(3, '0');
-                        return null;
+                        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/creature.py:291-352
+                        // Original: uti = read_uti(resource.data)
+                        var uti = ResourceAutoHelpers.ReadUti(resource.Data);
+                        model = "I_Mask_" + uti.ModelVariation.ToString().PadLeft(3, '0');
+                        return model;
                     }
                 }
             }

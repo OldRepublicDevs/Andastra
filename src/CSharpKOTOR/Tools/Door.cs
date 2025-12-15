@@ -52,29 +52,30 @@ namespace CSharpKOTOR.Tools
             // Try locations() first (more reliable, handles BIF files)
             try
             {
-                // TODO: Implement installation.locations() equivalent
-                // var locationResults = installation.Locations(
-                //     new[] { new ResourceIdentifier { ResName = "genericdoors", ResType = ResourceType.TwoDA } },
-                //     new[] { SearchLocation.OVERRIDE, SearchLocation.CHITIN });
-                // foreach (var kvp in locationResults)
-                // {
-                //     if (kvp.Value != null && kvp.Value.Count > 0)
-                //     {
-                //         var loc = kvp.Value[0];
-                //         if (loc.FilePath != null && File.Exists(loc.FilePath))
-                //         {
-                //             using (var f = File.OpenRead(loc.FilePath))
-                //             {
-                //                 f.Seek(loc.Offset, SeekOrigin.Begin);
-                //                 var data = new byte[loc.Size];
-                //                 f.Read(data, 0, loc.Size);
-                //                 var reader = new TwoDABinaryReader(data);
-                //                 genericdoors2DA = reader.Load();
-                //                 break;
-                //             }
-                //         }
-                //     }
-                // }
+                // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/door.py:67-118
+                // Original: locations_result = installation.locations([ResourceIdentifier("genericdoors", ResourceType.TwoDA)], [SearchLocation.OVERRIDE, SearchLocation.CHITIN])
+                var locationResults = installation.Locations(
+                    new List<ResourceIdentifier> { new ResourceIdentifier("genericdoors", ResourceType.TwoDA) },
+                    new[] { SearchLocation.OVERRIDE, SearchLocation.CHITIN });
+                foreach (var kvp in locationResults)
+                {
+                    if (kvp.Value != null && kvp.Value.Count > 0)
+                    {
+                        var loc = kvp.Value[0];
+                        if (loc.FilePath != null && File.Exists(loc.FilePath))
+                        {
+                            using (var f = File.OpenRead(loc.FilePath))
+                            {
+                                f.Seek(loc.Offset, SeekOrigin.Begin);
+                                var data = new byte[loc.Size];
+                                f.Read(data, 0, loc.Size);
+                                var reader = new TwoDABinaryReader(data);
+                                genericdoors2DA = reader.Load();
+                                break;
+                            }
+                        }
+                    }
+                }
             }
             catch (Exception ex)
             {
@@ -124,30 +125,31 @@ namespace CSharpKOTOR.Tools
 
             try
             {
-                // TODO: Implement read_utd equivalent
-                // var utd = ReadUTD(utdData);
-                // logger.Debug($"[DOOR DEBUG] Processing door {doorNameStr} (appearance_id={utd.AppearanceId})");
-                //
-                // // Get door model name from UTD using genericdoors.2da
-                // var genericdoors2DA = genericdoors ?? LoadGenericDoors2DA(installation, logger);
-                // if (genericdoors2DA == null)
-                // {
-                //     logger.Warning($"Could not load genericdoors.2da for door {doorNameStr}, using defaults");
-                //     return (doorWidth, doorHeight);
-                // }
-                //
-                // string modelName = GetModel(utd, installation, genericdoors: genericdoors2DA);
-                // if (string.IsNullOrEmpty(modelName))
-                // {
-                //     logger.Warning($"Could not get model name for door {doorNameStr} (appearance_id={utd.AppearanceId}), using defaults");
-                //     return (doorWidth, doorHeight);
-                // }
-                //
-                // // Try method 1: Get dimensions from model bounding box
-                // // TODO: Implement _load_mdl_with_variations and _get_door_dimensions_from_model
-                //
-                // // Fallback: Get dimensions from door texture if model-based extraction failed
-                // // TODO: Implement _get_door_dimensions_from_texture
+                // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/door.py:483-587
+                // Original: utd_data = read_utd(utd_data)
+                var utd = ResourceAutoHelpers.ReadUtd(utdData);
+                logger.Debug($"[DOOR DEBUG] Processing door {doorNameStr} (appearance_id={utd.AppearanceId})");
+
+                // Get door model name from UTD using genericdoors.2da
+                var genericdoors2DA = genericdoors ?? LoadGenericDoors2DA(installation, logger);
+                if (genericdoors2DA == null)
+                {
+                    logger.Warning($"Could not load genericdoors.2da for door {doorNameStr}, using defaults");
+                    return (doorWidth, doorHeight);
+                }
+
+                string modelName = GetModel(utd, installation, genericdoors: genericdoors2DA);
+                if (string.IsNullOrEmpty(modelName))
+                {
+                    logger.Warning($"Could not get model name for door {doorNameStr} (appearance_id={utd.AppearanceId}), using defaults");
+                    return (doorWidth, doorHeight);
+                }
+
+                // Try method 1: Get dimensions from model bounding box
+                // TODO: Implement _load_mdl_with_variations and _get_door_dimensions_from_model
+
+                // Fallback: Get dimensions from door texture if model-based extraction failed
+                // TODO: Implement _get_door_dimensions_from_texture
             }
             catch (Exception ex)
             {
