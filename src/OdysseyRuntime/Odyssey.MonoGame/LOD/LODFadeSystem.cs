@@ -65,7 +65,7 @@ namespace Odyssey.MonoGame.LOD
         /// <summary>
         /// Updates fade states for all objects.
         /// </summary>
-        /// <param name="deltaTime">Time elapsed since last update in seconds.</param>
+        /// <param name="deltaTime">Time elapsed since last update in seconds. Will be clamped to non-negative if negative.</param>
         public void Update(float deltaTime)
         {
             if (deltaTime < 0.0f)
@@ -109,6 +109,13 @@ namespace Odyssey.MonoGame.LOD
         /// <summary>
         /// Requests a LOD transition for an object.
         /// </summary>
+        /// <param name="objectId">Unique identifier for the object.</param>
+        /// <param name="currentLOD">Current LOD level (typically 0-3, where 0 is highest detail).</param>
+        /// <param name="targetLOD">Target LOD level to transition to.</param>
+        /// <remarks>
+        /// If currentLOD equals targetLOD, the fade state for this object is removed (no transition needed).
+        /// Otherwise, a fade transition is initiated that will smoothly blend between the two LOD levels.
+        /// </remarks>
         public void RequestLODTransition(int objectId, int currentLOD, int targetLOD)
         {
             if (currentLOD == targetLOD)
@@ -141,6 +148,8 @@ namespace Odyssey.MonoGame.LOD
         /// <summary>
         /// Gets the fade alpha for an object.
         /// </summary>
+        /// <param name="objectId">Unique identifier for the object.</param>
+        /// <returns>Fade alpha value (0.0 = fully transparent, 1.0 = fully opaque). Returns 1.0 if object is not fading.</returns>
         public float GetFadeAlpha(int objectId)
         {
             LODFadeState state;
@@ -154,6 +163,8 @@ namespace Odyssey.MonoGame.LOD
         /// <summary>
         /// Gets the current LOD for an object (may be transitioning).
         /// </summary>
+        /// <param name="objectId">Unique identifier for the object.</param>
+        /// <returns>Current LOD level, or -1 if object is not tracked.</returns>
         public int GetCurrentLOD(int objectId)
         {
             LODFadeState state;
@@ -167,6 +178,8 @@ namespace Odyssey.MonoGame.LOD
         /// <summary>
         /// Gets the target LOD for an object (may be transitioning).
         /// </summary>
+        /// <param name="objectId">Unique identifier for the object.</param>
+        /// <returns>Target LOD level, or -1 if object is not tracked.</returns>
         public int GetTargetLOD(int objectId)
         {
             LODFadeState state;

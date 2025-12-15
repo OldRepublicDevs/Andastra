@@ -28,10 +28,19 @@ namespace Odyssey.MonoGame.Rendering
             private readonly string _scopeName;
             private readonly Stopwatch _stopwatch;
 
+            /// <summary>
+            /// Initializes a new profiling scope.
+            /// </summary>
+            /// <param name="profiler">Parent profiler instance. Must not be null.</param>
+            /// <param name="scopeName">Scope name for identification. Can be null or empty.</param>
             public ProfileScope(RenderProfiler profiler, string scopeName)
             {
+                if (profiler == null)
+                {
+                    throw new ArgumentNullException(nameof(profiler));
+                }
                 _profiler = profiler;
-                _scopeName = scopeName;
+                _scopeName = scopeName ?? string.Empty;
                 _stopwatch = Stopwatch.StartNew();
             }
 
@@ -77,6 +86,8 @@ namespace Odyssey.MonoGame.Rendering
         /// <summary>
         /// Begins a profiling scope.
         /// </summary>
+        /// <param name="scopeName">Scope name for identification. Can be null or empty.</param>
+        /// <returns>ProfileScope instance that should be disposed when scope ends, or null if profiling is disabled.</returns>
         public ProfileScope BeginScope(string scopeName)
         {
             if (!Enabled)
@@ -132,8 +143,9 @@ namespace Odyssey.MonoGame.Rendering
         }
 
         /// <summary>
-        /// Gets profiling report.
+        /// Gets profiling report with all scope timing data.
         /// </summary>
+        /// <returns>Dictionary mapping scope names to their timing data. Returns a copy that is safe to modify.</returns>
         public Dictionary<string, ScopeData> GetReport()
         {
             lock (_lock)
