@@ -10,15 +10,18 @@ namespace Odyssey.Scripting.VM
     /// Script Execution Context:
     /// - Based on swkotor2.exe script execution context system
     /// - Located via string references: Script execution functions maintain context for each script run
-    /// - OBJECT_SELF: Set to caller entity ObjectId (constant 0x7F000001)
-    /// - OBJECT_INVALID: Invalid object reference constant (0x7F000000)
-    /// - Original implementation: Each script execution maintains:
-    ///   - Caller: The entity that owns the script (OBJECT_SELF)
-    ///   - Triggerer: The entity that triggered the script (for event scripts like OnEnter, OnClick)
+    /// - OBJECT_SELF: Set to caller entity ObjectId (constant 0x7F000001, used in NWScript GetObjectSelf function)
+    /// - OBJECT_INVALID: Invalid object reference constant (0x7F000000, used for null object checks)
+    /// - Original implementation: Each script execution maintains context for:
+    ///   - Caller: The entity that owns the script (OBJECT_SELF, used by GetObjectSelf NWScript function)
+    ///   - Triggerer: The entity that triggered the script (for event scripts like OnEnter, OnClick, OnPerception)
     ///   - World: Reference to game world for entity lookups and engine API calls
-    ///   - EngineApi: Reference to NWScript engine API implementation (K1EngineApi or K2EngineApi)
-    ///   - Globals: Reference to script globals system for global/local variable access
-    /// - Script context is passed to NCS VM for ACTION opcode execution (engine function calls)
+    ///   - EngineApi: Reference to NWScript engine API implementation (K1EngineApi or K2EngineApi based on game version)
+    ///   - Globals: Reference to script globals system for global/local variable access (GetGlobal*, SetGlobal* functions)
+    ///   - ResourceProvider: Reference to resource loading system (IGameResourceProvider or Installation) for loading scripts/assets
+    /// - Script context is passed to NCS VM for ACTION opcode execution (engine function calls via EngineApi.CallEngineFunction)
+    /// - Context cloning: WithCaller/WithTriggerer create new contexts with modified caller/triggerer (for nested script calls)
+    /// - Additional context: Stores extra context data (DialogueManager, GameSession, etc.) for system-specific access
     /// - Based on NCS VM execution model in vendor/PyKotor/wiki/NCS-File-Format.md
     /// </remarks>
     public class ExecutionContext : IExecutionContext
