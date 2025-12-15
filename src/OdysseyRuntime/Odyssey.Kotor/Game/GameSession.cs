@@ -45,6 +45,7 @@ namespace Odyssey.Kotor.Game
         public bool IsLoadingFromSave { get; set; }
         public GameSession GameSession { get; set; }
         public Core.Camera.CameraController CameraController { get; set; }
+        public Core.Audio.ISoundPlayer SoundPlayer { get; set; }
     }
 
     /// <summary>
