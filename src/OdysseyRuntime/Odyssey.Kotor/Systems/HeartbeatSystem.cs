@@ -19,7 +19,12 @@ namespace Odyssey.Kotor.Systems
     /// - "HEARTBEAT" @ 0x007c1348 (heartbeat constant), "HeartbeatTime" @ 0x007c0c30 (heartbeat timer field)
     /// - "HeartbeatDay" @ 0x007c0c40 (heartbeat day field), "Mod_OnHeartbeat" @ 0x007be840 (module heartbeat script)
     /// - "HeartbeatInterval" @ 0x007c38e8 (heartbeat interval field, default 6.0 seconds)
-    /// - Original implementation: FUN_005226d0 @ 0x005226d0 saves heartbeat timer and interval to GFF
+    /// - Original implementation: FUN_005226d0 @ 0x005226d0 (save creature data to GFF)
+    ///   - Saves ScriptHeartbeat script ResRef field to GFF structure (via FUN_004139e0)
+    ///   - ScriptHeartbeat stored at offset 0x270 in creature object structure
+    ///   - Also saves other script hooks: ScriptOnNotice, ScriptSpellAt, ScriptAttacked, ScriptDamaged, ScriptDisturbed, ScriptEndRound, ScriptDialogue, ScriptSpawn, ScriptRested, ScriptDeath, ScriptUserDefine, ScriptOnBlocked, ScriptEndDialogue
+    ///   - Saves creature position (XPosition, YPosition, ZPosition), orientation (XOrientation, YOrientation, ZOrientation)
+    ///   - Saves creature stats, inventory, perception list, combat round data, and other creature state
     /// - Fires OnHeartbeat script events every 6 seconds for entities with heartbeat scripts
     /// - Each entity has its own heartbeat timer stored in GFF structure (HeartbeatTime field)
     /// - Timer starts at 0 or random stagger (0-6 seconds) to prevent all heartbeats firing simultaneously
