@@ -193,7 +193,7 @@ namespace Odyssey.Kotor.Input
             // Move toward waypoint
             if (distance > 0.001f)
             {
-                Vector3 direction = Vector3.Normalize(toTarget);
+                var direction = Vector3.Normalize(toTarget);
                 float speed = _isRunning ? _runSpeed : _walkSpeed;
                 float moveDistance = speed * deltaTime;
 
