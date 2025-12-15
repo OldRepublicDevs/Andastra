@@ -86,6 +86,7 @@ namespace Odyssey.Kotor.Combat
         private readonly Dictionary<uint, CombatState> _combatStates;
         private readonly Dictionary<uint, CombatRound> _activeRounds;
         private readonly Dictionary<uint, IEntity> _currentTargets;
+        private readonly Dictionary<uint, IEntity> _lastAttackers; // Tracks last attacker for each entity
 
         /// <summary>
         /// Event fired when an attack is made.
@@ -115,6 +116,7 @@ namespace Odyssey.Kotor.Combat
             _combatStates = new Dictionary<uint, CombatState>();
             _activeRounds = new Dictionary<uint, CombatRound>();
             _currentTargets = new Dictionary<uint, IEntity>();
+            _lastAttackers = new Dictionary<uint, IEntity>();
         }
 
         #region State Access
@@ -159,6 +161,24 @@ namespace Odyssey.Kotor.Combat
             if (_currentTargets.TryGetValue(entity.ObjectId, out target))
             {
                 return target;
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// Gets the last attacker of an entity.
+        /// </summary>
+        public IEntity GetLastAttacker(IEntity entity)
+        {
+            if (entity == null)
+            {
+                return null;
+            }
+
+            IEntity attacker;
+            if (_lastAttackers.TryGetValue(entity.ObjectId, out attacker))
+            {
+                return attacker;
             }
             return null;
         }
@@ -352,6 +372,9 @@ namespace Odyssey.Kotor.Combat
 
             // Resolve attack roll
             AttackRollResult result = _damageCalc.ResolveAttack(attack);
+
+            // Track last attacker
+            _lastAttackers[attack.Target.ObjectId] = attack.Attacker;
 
             // Fire attack event
             OnAttack?.Invoke(this, new CombatEventArgs
