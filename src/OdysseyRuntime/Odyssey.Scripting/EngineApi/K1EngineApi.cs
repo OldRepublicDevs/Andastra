@@ -4563,49 +4563,16 @@ namespace Odyssey.Scripting.EngineApi
         }
 
         /// <summary>
-        /// GetIsNeutral(object oTarget, object oSource=OBJECT_SELF) - Returns TRUE if oTarget is neutral to oSource
-        /// Based on swkotor2.exe: Faction relationship check for neutral status
-        /// </summary>
-        private Variable Func_GetIsNeutral(IReadOnlyList<Variable> args, IExecutionContext ctx)
-        {
-            uint targetId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
-            uint sourceId = args.Count > 1 ? args[1].AsObjectId() : ObjectSelf;
-            
-            IEntity source = ResolveObject(sourceId, ctx);
-            IEntity target = ResolveObject(targetId, ctx);
-            
-            if (source != null && target != null)
-            {
-                // Get FactionManager from GameServicesContext
-                if (ctx is VM.ExecutionContext execCtx && execCtx.AdditionalContext is Odyssey.Kotor.Game.GameServicesContext services)
-                {
-                    if (services.FactionManager != null)
-                    {
-                        bool isNeutral = services.FactionManager.IsNeutral(source, target);
-                        return Variable.FromInt(isNeutral ? 1 : 0);
-                    }
-                }
-                
-                // Fallback: Simple faction check if FactionManager not available
-                IFactionComponent sourceFaction = source.GetComponent<IFactionComponent>();
-                IFactionComponent targetFaction = target.GetComponent<IFactionComponent>();
-                
-                if (sourceFaction != null && targetFaction != null)
-                {
-                    // If different factions and not explicitly friendly/hostile, consider neutral
-                    if (sourceFaction.FactionId != targetFaction.FactionId)
-                    {
-                        // This is a simplified check - full implementation would use FactionManager
-                        return Variable.FromInt(1);
-                    }
-                }
-            }
-            return Variable.FromInt(0);
-        }
-
-        /// <summary>
         /// GetWaypointByTag(string sWaypointTag) - returns waypoint with specified tag
         /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: Waypoint lookup system
+        /// Original implementation: Searches for waypoint entity with matching tag string
+        /// Search order: First searches current area's waypoints, then world-wide search
+        /// Waypoint type: Only returns entities with ObjectType.Waypoint
+        /// Tag matching: Case-insensitive string comparison
+        /// Returns: Waypoint ObjectId or OBJECT_INVALID if not found
+        /// </remarks>
         private Variable Func_GetWaypointByTag(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             string waypointTag = args.Count > 0 ? args[0].AsString() : string.Empty;
