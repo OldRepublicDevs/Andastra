@@ -9,10 +9,17 @@ namespace Odyssey.Core.Enums
     /// Object Type Enum:
     /// - Based on swkotor2.exe object type system
     /// - Located via string references: ObjectType used throughout entity system for type checking
+    /// - Object type strings: "Creature" @ 0x007bc4e0, "Door" @ 0x007bc4f4, "Placeable" @ 0x007bc508
+    /// - "Trigger" @ 0x007bc51c, "Item" @ 0x007bc530, "Waypoint" @ 0x007bc544, "Sound" @ 0x007bc558
+    /// - "Store" @ 0x007bc56c, "Encounter" @ 0x007bc524, "Module" @ 0x007c1a70
+    /// - GFF template types: "UTC" (Creature), "UTD" (Door), "UTP" (Placeable), "UTT" (Trigger), "UTW" (Waypoint)
+    /// - "UTS" (Sound), "UTE" (Encounter), "UTI" (Item), "UTM" (Store)
     /// - Original implementation: Objects have type flags (Creature, Item, Door, Placeable, etc.)
     /// - Flags enum allows combination (e.g., ObjectType.All = all types)
     /// - Used for: Entity filtering, type checking, GFF template loading (UTC, UTD, UTP, etc.)
     /// - Object types correspond to GFF template types: UTC (Creature), UTD (Door), UTP (Placeable), etc.
+    /// - Object type checking: FUN_005226d0 @ 0x005226d0 uses object type for entity serialization
+    /// - Entity creation: FUN_004e10b0 @ 0x004e10b0 creates entities by type from GIT instances
     /// </remarks>
     [Flags]
     public enum ObjectType
