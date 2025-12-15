@@ -20,7 +20,19 @@ namespace Odyssey.MonoGame.Rendering
     /// <remarks>
     /// Geometry Cache System (Modern Enhancement):
     /// - Based on swkotor2.exe rendering system architecture
-    /// - Located via string references: Original engine loads MDL models into vertex/index buffers
+    /// - Located via string references: "Geometry" @ 0x007bd044, "m_bIsBackgroundGeometry" @ 0x007baebc
+    /// - "vertexindices" @ 0x007baee0, "vertexindicescount" @ 0x007baf00 (vertex index data)
+    /// - "Disable Vertex Buffer Objects" @ 0x007b56bc (VBO disable option)
+    /// - OpenGL vertex buffer extensions: "GL_ARB_vertex_buffer_object" @ 0x007b882c
+    /// - "GL_ARB_vertex_program" @ 0x007b8860, "GL_NV_vertex_program" @ 0x007b8998
+    /// - "GL_EXT_compiled_vertex_array" @ 0x007b88a8, "GL_NV_vertex_array_range" @ 0x007b8940
+    /// - "GL_NV_vertex_array_range2" @ 0x007b8924
+    /// - OpenGL vertex functions: glVertexPointer, glVertex3f, glVertex3fv, glVertex4f
+    /// - OpenGL vertex attribute functions: glVertexAttribPointerARB, glEnableVertexAttribArrayARB, glDisableVertexAttribArrayARB
+    /// - glVertexAttrib1-4fARB, glVertexAttrib1-4dARB, glVertexAttrib1-4sARB (various attribute setters)
+    /// - glGetVertexAttribfvARB, glGetVertexAttribivARB, glGetVertexAttribdvARB, glGetVertexAttribPointervARB
+    /// - NV vertex array: glVertexArrayRangeNV, glVertexAttribPointerNV, glVertexAttrib1-4fvNV
+    /// - Error message: "Problem loading encounter with tag '%s'.  It has geometry, but no vertices.  Skipping." @ 0x007c0ae0
     /// - Original implementation: KOTOR loads MDL models to DirectX vertex/index buffers, kept in memory during gameplay
     /// - Original memory management: Models loaded per-area, unloaded on area transition
     /// - This is a modernization feature: LRU cache with memory budget management improves memory efficiency
