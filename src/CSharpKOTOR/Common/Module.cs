@@ -1429,11 +1429,24 @@ namespace CSharpKOTOR.Common
                 object loadedResource = resourceWrapper.Resource();
 
                 // Only GIT/LYT have resource identifiers to collect
+                // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:688-690
+                // Original: if not isinstance(loaded_resource, VIS): search_set.update(loaded_resource.iter_resource_identifiers())
                 if (query.ResType != ResourceType.VIS)
                 {
-                    // TODO: Implement iter_resource_identifiers() on loaded resource
-                    // This requires the actual GIT/LYT classes to have this method
-                    // For now, we'll skip this part
+                    if (loadedResource is Resource.Generics.GIT git)
+                    {
+                        foreach (ResourceIdentifier ident in git.IterResourceIdentifiers())
+                        {
+                            searchSet.Add(ident);
+                        }
+                    }
+                    else if (loadedResource is Resource.Formats.LYT.LYT lyt)
+                    {
+                        foreach (ResourceIdentifier ident in lyt.IterResourceIdentifiers())
+                        {
+                            searchSet.Add(ident);
+                        }
+                    }
                 }
             }
 
@@ -1477,30 +1490,28 @@ namespace CSharpKOTOR.Common
             HashSet<string> lookupTextureQueries = new HashSet<string>();
             HashSet<string> lookupLightmapQueries = new HashSet<string>();
 
-            // TODO: Implement models() method and iterate through models
-            // For now, this is a placeholder
-            /*
-            foreach (var model in Models())
+            // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:760-763
+            // Original: for model in self.models(): ... lookup_texture_queries.update(iterate_textures(model_data))
+            foreach (ModuleResource model in Models())
             {
                 new RobustLogger().Info(string.Format("Finding textures/lightmaps for model '{0}'...", model.GetIdentifier()));
                 try
                 {
-                    byte[] modelData = (byte[])model.Resource();
+                    byte[] modelData = model.Resource() as byte[];
                     if (modelData == null)
                     {
                         new RobustLogger().Warning(string.Format("Missing model '{0}', needed by module '{1}'", model.GetIdentifier(), displayName));
                         continue;
                     }
 
-                    lookupTextureQueries.UnionWith(ModelTools.IterateTextures(modelData));
-                    lookupLightmapQueries.UnionWith(ModelTools.IterateLightmaps(modelData));
+                    lookupTextureQueries.UnionWith(CSharpKOTOR.Tools.ModelTools.IterateTextures(modelData));
+                    lookupLightmapQueries.UnionWith(CSharpKOTOR.Tools.ModelTools.IterateLightmaps(modelData));
                 }
                 catch (Exception ex)
                 {
                     new RobustLogger().Warning(string.Format("Suppressed exception while getting model data '{0}': {1}", model.GetIdentifier(), ex.Message));
                 }
             }
-            */
 
             // Process texture queries
             HashSet<string> texlmQueries = new HashSet<string>();
