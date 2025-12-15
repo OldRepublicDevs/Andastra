@@ -451,9 +451,12 @@ namespace Odyssey.Kotor.EngineApi
 
         private new Variable Func_PrintString(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
-            // PrintString(string sString) - outputs to console/log
+            // PrintString(string sString) - outputs string to console/log
             // Based on swkotor2.exe: FUN_005c4ff0 @ 0x005c4ff0
             // Located via string reference: "PRINTSTRING: %s\n" @ 0x007c29f8
+            // Original implementation: Retrieves string argument from stack, formats with "PRINTSTRING: %s\n",
+            // outputs to console/log system via FUN_006306c0 (string formatting) and FUN_00635680 (output)
+            // Returns 0 on success, -1 on error (invalid stack or missing argument)
             string message = args.Count > 0 ? args[0].AsString() : "";
             Console.WriteLine("PRINTSTRING: {0}\n", message);
             return Variable.Void();
@@ -535,13 +538,19 @@ namespace Odyssey.Kotor.EngineApi
 
         private Variable Func_DelayCommand(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
-            // DelayCommand(float fSeconds, action aActionToDelay)
+            // DelayCommand(float fSeconds, action aActionToDelay) - schedules an action to execute after delay
+            // Based on swkotor2.exe: DelayCommand implementation in NCS VM
+            // Original implementation: NCS VM uses STORE_STATE opcode to save stack/local state, then schedules
+            // action execution after delay. Delay wheel processes delayed commands each frame.
+            // Delay precision: Actions execute after specified seconds have elapsed (not frame-based)
+            // Action context: Delayed actions execute with original caller's context (stack, locals preserved)
             float delay = args.Count > 0 ? args[0].AsFloat() : 0f;
             IAction action = args.Count > 1 ? args[1].ComplexValue as IAction : null;
 
             if (action != null && ctx.Caller != null && ctx.World != null)
             {
                 // Schedule the action in the world's delay scheduler
+                // Original engine uses delay wheel (circular buffer) indexed by frame time
                 ctx.World.DelayScheduler.ScheduleDelay(delay, action, ctx.Caller);
             }
 
@@ -620,7 +629,12 @@ namespace Odyssey.Kotor.EngineApi
 
         private Variable Func_ActionMoveToLocation(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
-            // ActionMoveToLocation(location lDestination, int bRun=FALSE)
+            // ActionMoveToLocation(location lDestination, int bRun=FALSE) - queues move action to location
+            // Based on swkotor2.exe: Action system and movement implementation
+            // Original implementation: Creates ActionMoveToLocation action, queues in entity's action queue
+            // Movement: Uses walkmesh pathfinding (BWM format) to find path from current position to destination
+            // Run flag: If TRUE, uses run animation speed; if FALSE, uses walk animation speed
+            // Pathfinding: Engine uses A* pathfinding on walkmesh triangles, respects surface materials
             object locationObj = args.Count > 0 ? args[0].ComplexValue : null;
             bool run = args.Count > 1 && args[1].AsInt() != 0;
 
@@ -5116,6 +5130,45 @@ namespace Odyssey.Kotor.EngineApi
                     if (sourceFaction.FactionId == targetFaction.FactionId)
                     {
                         // Same faction are friends by default
+                        return Variable.FromInt(1);
+                    }
+                }
+            }
+            return Variable.FromInt(0);
+        }
+
+        /// <summary>
+        /// GetIsNeutral(object oTarget, object oSource=OBJECT_SELF) - Returns TRUE if oTarget is neutral to oSource
+        /// </summary>
+        private Variable Func_GetIsNeutral(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            uint targetId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
+            uint sourceId = args.Count > 1 ? args[1].AsObjectId() : ObjectSelf;
+            
+            IEntity source = ResolveObject(sourceId, ctx);
+            IEntity target = ResolveObject(targetId, ctx);
+            
+            if (source != null && target != null)
+            {
+                // Get FactionManager from GameServicesContext
+                if (ctx is VM.ExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
+                {
+                    if (services.FactionManager is FactionManager factionManager)
+                    {
+                        bool isNeutral = !factionManager.IsHostile(source, target) && !factionManager.IsFriendly(source, target);
+                        return Variable.FromInt(isNeutral ? 1 : 0);
+                    }
+                }
+                
+                // Fallback: If not enemy and not friend, then neutral
+                IFactionComponent sourceFaction = source.GetComponent<IFactionComponent>();
+                IFactionComponent targetFaction = target.GetComponent<IFactionComponent>();
+                
+                if (sourceFaction != null && targetFaction != null)
+                {
+                    // Different factions are neutral by default (unless explicitly hostile)
+                    if (sourceFaction.FactionId != targetFaction.FactionId)
+                    {
                         return Variable.FromInt(1);
                     }
                 }

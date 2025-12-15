@@ -7,7 +7,9 @@ using Odyssey.Core.Interfaces;
 using Odyssey.Core.Module;
 using Odyssey.Core.Navigation;
 using Odyssey.Core.Party;
+using Odyssey.Core.Actions;
 using Odyssey.Core.Combat;
+using Odyssey.Kotor.Combat;
 using Odyssey.Kotor.Systems;
 using Odyssey.Kotor.Dialogue;
 using Odyssey.Kotor.Loading;
@@ -42,7 +44,7 @@ namespace Odyssey.Kotor.Game
     ///   6. Engine API (K1EngineApi or K2EngineApi based on game version)
     ///   7. ScriptExecutor (NCS VM execution)
     ///   8. TriggerSystem, AIController, DialogueManager, EncounterSystem
-    /// - Original implementation: FUN_005226d0 @ 0x005226d0 manages game session state, module loading, entity updates
+    /// - Entity serialization: FUN_005226d0 @ 0x005226d0 saves creature entity data to GFF (script hooks, inventory, perception, combat, position/orientation)
     /// - Based on game loop specification in monogame_odyssey_engine_e8927e4a.plan.md
     /// </remarks>
     public class GameSession
@@ -120,7 +122,7 @@ namespace Odyssey.Kotor.Game
                 {
                     return null;
                 }
-                IArea currentArea = _currentModule.CurrentArea;
+                IArea currentArea = _world.CurrentArea;
                 return currentArea?.NavigationMesh;
             }
         }
@@ -147,8 +149,8 @@ namespace Odyssey.Kotor.Game
             // Initialize installation and module loader
             try
             {
-                _installation = new Installation(_settings.GamePath, _settings.Game);
-                _moduleLoader = new ModuleLoader(_installation);
+                _installation = new Installation(_settings.GamePath);
+                _moduleLoader = new ModuleLoader(_settings.GamePath, _world);
             }
             catch (Exception ex)
             {
