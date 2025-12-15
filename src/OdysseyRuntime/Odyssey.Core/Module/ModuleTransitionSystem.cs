@@ -90,7 +90,29 @@ namespace Odyssey.Core.Module
                     ModuleState moduleState = SaveCurrentModuleState();
                     _saveSystem.StoreModuleState(_world.CurrentModule.ResRef, moduleState);
 
-                    // 3. Fire OnModuleLeave script
+                    // 3. Fire OnClientLeave script (before OnModuleLeave)
+                    // Based on swkotor2.exe: Client leave script execution
+                    // Located via string references: "Mod_OnClientLeav" @ 0x007be718
+                    // Original implementation: OnClientLeave fires when player/client leaves the module (before OnModuleLeave)
+                    // This is a module-level script that fires once when the player leaves the module
+                    string clientLeaveScript = _world.CurrentModule.GetScript(ScriptEvent.OnClientLeave);
+                    if (!string.IsNullOrEmpty(clientLeaveScript) && _world.EventBus != null)
+                    {
+                        // Fire script event - module scripts use module entity as owner
+                        IEntity moduleEntity = _world.GetEntityByTag(_world.CurrentModule.ResRef, 0);
+                        if (moduleEntity == null)
+                        {
+                            // Create a temporary entity for module script execution
+                            moduleEntity = _world.CreateEntity(ObjectType.Invalid, Vector3.Zero, 0f);
+                            moduleEntity.Tag = _world.CurrentModule.ResRef;
+                        }
+                        // OnClientLeave fires with the player character as the triggerer
+                        IEntity player = _world.GetEntitiesOfType(ObjectType.Creature)
+                            .FirstOrDefault(e => e.GetData<bool>("IsPC", false));
+                        _world.EventBus.FireScriptEvent(moduleEntity, ScriptEvent.OnClientLeave, player);
+                    }
+
+                    // 3.5. Fire OnModuleLeave script
                     // Based on swkotor2.exe: Module leave script execution
                     // Located via string references: "OnModuleLeave" @ 0x007bee50, "CSWSSCRIPTEVENT_EVENTTYPE_ON_MODULE_LOAD" @ 0x007bc91c
                     // Original implementation: FUN_005226d0 @ 0x005226d0 executes module leave scripts before unloading
@@ -192,6 +214,28 @@ namespace Odyssey.Core.Module
                         moduleEntity.Tag = newModule.ResRef;
                     }
                     _world.EventBus.FireScriptEvent(moduleEntity, ScriptEvent.OnModuleStart, null);
+                }
+
+                // 9.5. Fire OnClientEnter script
+                // Based on swkotor2.exe: Client enter script execution
+                // Located via string references: "Mod_OnClientEntr" @ 0x007be718, "Mod_OnClientEntrance" @ 0x007be718
+                // Original implementation: OnClientEnter fires when player/client enters the module (after OnModuleStart)
+                // This is a module-level script that fires once when the player enters the module
+                string clientEnterScript = newModule.GetScript(ScriptEvent.OnClientEnter);
+                if (!string.IsNullOrEmpty(clientEnterScript) && _world.EventBus != null)
+                {
+                    // Fire script event - module scripts use module entity as owner
+                    IEntity moduleEntity = _world.GetEntityByTag(newModule.ResRef, 0);
+                    if (moduleEntity == null)
+                    {
+                        // Create a temporary entity for module script execution
+                        moduleEntity = _world.CreateEntity(ObjectType.Invalid, Vector3.Zero, 0f);
+                        moduleEntity.Tag = newModule.ResRef;
+                    }
+                    // OnClientEnter fires with the player character as the triggerer
+                    IEntity player = _world.GetEntitiesOfType(ObjectType.Creature)
+                        .FirstOrDefault(e => e.GetData<bool>("IsPC", false));
+                    _world.EventBus.FireScriptEvent(moduleEntity, ScriptEvent.OnClientEnter, player);
                 }
 
                 // 10. Fire OnEnter for area
