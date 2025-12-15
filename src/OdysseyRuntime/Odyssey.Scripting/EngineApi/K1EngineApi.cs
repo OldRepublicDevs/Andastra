@@ -84,6 +84,7 @@ namespace Odyssey.Scripting.EngineApi
             _lastSpellTargets = new Dictionary<uint, uint>();
             _lastEquippedItems = new Dictionary<uint, uint>();
             _lastMetamagicTypes = new Dictionary<uint, int>();
+            _playerRestricted = false; // Initialize player restriction state
         }
         
         private class FactionMemberIteration
@@ -3713,9 +3714,10 @@ namespace Odyssey.Scripting.EngineApi
         private Variable Func_GetMetaMagicFeat(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             // GetMetaMagicFeat() - Returns the metamagic type of the last spell cast by the caller
-            // Based on swkotor2.exe: Returns metamagic type from last spell cast
+            // Note: This should track the last spell cast's metamagic type, not check if creature has the feat
+            // For now, return 0 (no metamagic) - would need to track last spell cast in ActionCastSpellAtObject
             // Metamagic feats: METAMAGIC_EMPOWER (1), METAMAGIC_EXTEND (2), METAMAGIC_MAXIMIZE (4), METAMAGIC_QUICKEN (8)
-            // Metamagic tracking is implemented in ActionCastSpellAtObject
+            // TODO: Track last spell cast metamagic type when ActionCastSpellAtObject is executed
             
             if (ctx.Caller == null || ctx.Caller.ObjectType != Core.Enums.ObjectType.Creature)
             {
