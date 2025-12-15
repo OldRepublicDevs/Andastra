@@ -30,6 +30,17 @@ namespace Odyssey.Content.Save
     /// </remarks>
     public class SaveSerializer : ISaveSerializer
     {
+        private readonly Odyssey.Kotor.Data.GameDataManager _gameDataManager;
+
+        /// <summary>
+        /// Creates a new save serializer.
+        /// </summary>
+        /// <param name="gameDataManager">Optional game data manager for party.2da lookups.</param>
+        public SaveSerializer(Odyssey.Kotor.Data.GameDataManager gameDataManager = null)
+        {
+            _gameDataManager = gameDataManager;
+        }
+
         // GFF field labels for save NFO
         // Based on swkotor2.exe: FUN_004eb750 @ 0x004eb750
         // Located via string reference: "savenfo" @ 0x007be1f0
@@ -756,10 +767,40 @@ namespace Odyssey.Content.Save
                 }
             }
 
+            // Try to load from party.2da if GameDataManager is available
+            // Based on swkotor2.exe party.2da system
+            // Located via string references: "party.2da" @ 0x007c1910, "PARTYTABLE" @ 0x007c1910
+            // Original implementation: party.2da maps NPC ResRefs to member IDs (row index = member ID)
+            // party.2da columns: Label (ResRef), Name (display name), PortraitId, etc.
+            if (_gameDataManager != null)
+            {
+                CSharpKOTOR.Formats.TwoDA.TwoDA partyTable = _gameDataManager.GetTable("party");
+                if (partyTable != null)
+                {
+                    // Search party.2da for matching ResRef
+                    // Row index in party.2da corresponds to member ID
+                    for (int i = 0; i < partyTable.GetHeight(); i++)
+                    {
+                        CSharpKOTOR.Formats.TwoDA.TwoDARow row = partyTable.GetRow(i);
+                        string rowLabel = row.Label();
+                        
+                        // Check exact match
+                        if (string.Equals(rowLabel, resRefLower, StringComparison.OrdinalIgnoreCase))
+                        {
+                            return (float)i;
+                        }
+                        
+                        // Check partial match (e.g., "bastila" matches "bastila_001")
+                        if (!string.IsNullOrEmpty(rowLabel) && resRefLower.Contains(rowLabel.ToLowerInvariant()))
+                        {
+                            return (float)i;
+                        }
+                    }
+                }
+            }
+
             // If no mapping found, return 0.0f as default
-            // Note: Full implementation would load party.2da from installation and map ResRefs to member IDs
-            // This would require access to Installation/TwoDA system, which SaveSerializer may not have
-            // The hardcoded mapping above covers common NPCs and is sufficient for save/load functionality
+            // Fallback to hardcoded mapping if party.2da not available
             return 0.0f;
         }
 
