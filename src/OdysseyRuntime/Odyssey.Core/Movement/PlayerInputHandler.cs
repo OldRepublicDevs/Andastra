@@ -458,9 +458,10 @@ namespace Odyssey.Core.Movement
             }
 
             // Get equipped weapon from main hand (slot 4)
-            // Note: IInventoryComponent may not be available in Odyssey.Core
-            // For now, return default melee range
-            // TODO: Implement weapon range lookup when inventory system is available
+            // Based on swkotor2.exe inventory system
+            // Located via string references: "INVENTORY_SLOT_RIGHTWEAPON" = 4
+            // Original implementation: Gets equipped weapon from right hand slot
+            Interfaces.Components.IInventoryComponent inventory = leader.GetComponent<Interfaces.Components.IInventoryComponent>();
             if (inventory == null)
             {
                 return 2.0f; // Default melee range
