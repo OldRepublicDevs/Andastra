@@ -14,11 +14,19 @@ namespace Odyssey.MonoGame.UI
     /// <remarks>
     /// Dialogue Panel Rendering:
     /// - Based on swkotor2.exe dialogue UI system
-    /// - Located via string references: Dialogue UI rendering functions
+    /// - Located via string references: "CSWSSCRIPTEVENT_EVENTTYPE_ON_DIALOGUE" @ 0x007bcac4
+    /// - "ScriptDialogue" @ 0x007bee40, "ScriptEndDialogue" @ 0x007bede0
+    /// - "OnEndDialogue" @ 0x007c1f60 (end dialogue script event)
+    /// - Dialogue message fields: "PT_DLG_MSG_MSG" @ 0x007c1630, "PT_DLG_MSG_SPKR" @ 0x007c1640
+    /// - "PT_DLG_MSG_LIST" @ 0x007c1650 (dialogue message list in PARTYTABLE)
+    /// - Script hooks: "k_level_dlg" @ 0x007c3f88, "000_Level_Dlg_Fired" @ 0x007c3f94 (level dialogue script)
+    /// - "k_hen_dialogue01" @ 0x007bf548 (dialogue script example)
+    /// - Error message: "Error: dialogue can't find object '%s'!" @ 0x007c3730
     /// - Original implementation: Renders dialogue text box at bottom of screen with speaker name and replies
     /// - Dialogue text: NPC/PC lines displayed in main text area
     /// - Reply options: Numbered list of player choices (1-9 keys for quick selection)
     /// - Speaker name: Displayed above dialogue text (NPC name or "Player")
+    /// - Dialogue system: Uses DLG (dialogue) file format, tracks conversation state
     /// - Based on KOTOR dialogue UI conventions from vendor/PyKotor/wiki/
     /// </remarks>
     public class DialoguePanel
