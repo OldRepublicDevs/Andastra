@@ -20,8 +20,18 @@ namespace Odyssey.Core.Entities
     /// - Script hooks: Entities store script ResRefs for various events (OnHeartbeat, OnAttacked, etc.)
     /// - Original entity structure includes: Position (Vector3), Orientation (Vector3), AreaId, ObjectId, Tag
     /// - Entity serialization: FUN_005226d0 @ 0x005226d0 saves entity state including ObjectId, AreaId, Position, Orientation
-    /// - Entity deserialization: FUN_005223a0 @ 0x005223a0 loads AreaId from GFF at offset 0x90
-    /// - Creature list serialization: FUN_004e28c0 @ 0x004e28c0 saves Creature List with ObjectId fields (offset +4 in object structure)
+    /// - Entity deserialization: FUN_005223a0 @ 0x005223a0 (load creature data from GFF)
+    ///   - Loads AreaId from GFF at offset 0x90 (via FUN_00412d40 with "AreaId" field name)
+    ///   - Loads creature template data via FUN_005fb0f0 (creature template loading)
+    ///   - Loads DetectMode, StealthMode, CreatureSize, IsDestroyable, IsRaiseable, DeadSelectable
+    ///   - Loads BonusForcePoints, AssignedPup, PlayerCreated, AmbientAnimState, Animation, CreatnScrptFird
+    ///   - Loads PM_IsDisguised, PM_Appearance, Listening, ForceAlwaysUpdate
+    ///   - Calls FUN_0050c510 (load creature stats/scripts), FUN_00521d40 (load creature equipment), FUN_005f9e00 (load creature inventory)
+    ///   - Calls FUN_00509bf0, FUN_00513440, FUN_0051d4d0, FUN_0050b650 for additional creature data loading
+    /// - Creature list serialization: FUN_004e28c0 @ 0x004e28c0 (save creature list to GFF)
+    ///   - Iterates through creature list (Creature List GFF field), saves each creature's ObjectId and full creature data
+    ///   - For each creature: Creates GFF struct, writes ObjectId (via FUN_00413880 with "ObjectId" field name), calls FUN_005226d0 to save full creature data
+    ///   - Only saves creatures that are not player-controlled (checks IsPC flag) and not destroyed
     /// - Creature deserialization: FUN_005fb0f0 @ 0x005fb0f0 loads creature data from GFF format, reads ObjectId at offset +4 in structure
     /// - Object logging format: "OID: %08x, Tag: %s, %s" @ 0x007c76b8 used for debug/error logging
     /// - Object events: "EVENT_DESTROY_OBJECT" @ 0x007bcd48, "EVENT_OPEN_OBJECT" @ 0x007bcda0, "EVENT_CLOSE_OBJECT" @ 0x007bcdb4
