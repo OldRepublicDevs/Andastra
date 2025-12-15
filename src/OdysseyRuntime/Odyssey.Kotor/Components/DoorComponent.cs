@@ -215,6 +215,17 @@ namespace Odyssey.Kotor.Components
         /// <summary>
         /// Whether this door is a module transition.
         /// </summary>
+        /// <remarks>
+        /// Module Transition Check:
+        /// - Based on swkotor2.exe door transition system
+        /// - Located via string references: "LinkedToModule" @ 0x007bd7bc, "LinkedToFlags" @ 0x007bd788
+        /// - Door loading: FUN_005838d0 @ 0x005838d0 reads LinkedToModule and LinkedToFlags from UTD template
+        /// - FUN_00580ed0 @ 0x00580ed0 loads door properties including transition data
+        /// - FUN_004e5920 @ 0x004e5920 loads door instances from GIT with transition fields
+        /// - Original implementation: LinkedToFlags bit 1 (0x1) = module transition flag
+        /// - Module transition: If LinkedToFlags & 1 != 0 and LinkedToModule is non-empty, door triggers module transition
+        /// - Transition destination: TransitionDestination waypoint tag specifies where party spawns in new module
+        /// </remarks>
         public bool IsModuleTransition
         {
             get { return (LinkedToFlags & 1) != 0 && !string.IsNullOrEmpty(LinkedToModule); }
@@ -223,6 +234,18 @@ namespace Odyssey.Kotor.Components
         /// <summary>
         /// Whether this door is an area transition.
         /// </summary>
+        /// <remarks>
+        /// Area Transition Check:
+        /// - Based on swkotor2.exe door transition system
+        /// - Located via string references: "LinkedTo" @ 0x007bd798, "LinkedToFlags" @ 0x007bd788, "TransitionDestination" @ 0x007bd7a4
+        /// - Door loading: FUN_005838d0 @ 0x005838d0 reads LinkedTo and LinkedToFlags from UTD template
+        /// - FUN_00580ed0 @ 0x00580ed0 loads door properties including transition data
+        /// - FUN_004e5920 @ 0x004e5920 loads door instances from GIT with transition fields
+        /// - Original implementation: LinkedToFlags bit 2 (0x2) = area transition flag
+        /// - Area transition: If LinkedToFlags & 2 != 0 and LinkedTo is non-empty, door triggers area transition within module
+        /// - LinkedTo: Waypoint or trigger tag to transition to (within current module)
+        /// - Transition destination: TransitionDestination waypoint tag specifies where party spawns after transition
+        /// </remarks>
         public bool IsAreaTransition
         {
             get { return (LinkedToFlags & 2) != 0 && !string.IsNullOrEmpty(LinkedTo); }
@@ -253,7 +276,13 @@ namespace Odyssey.Kotor.Components
         /// <remarks>
         /// Door Opening:
         /// - Based on swkotor2.exe door opening system
-        /// - Original implementation: Sets IsOpen flag, plays open animation, fires OnOpen script
+        /// - Located via string references: "OnOpen" @ 0x007c1a54, "EVENT_OPEN_OBJECT" @ 0x007bcda0 (case 7 in FUN_004dcfb0)
+        /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_OPEN" @ 0x007bc844 (0x16), "i_opendoor" @ 0x007c86d4 (open door animation)
+        /// - Event dispatching: FUN_004dcfb0 @ 0x004dcfb0 handles EVENT_OPEN_OBJECT (case 7, fires before script execution)
+        /// - Original implementation: Sets IsOpen flag, plays open animation ("i_opendoor"), fires OnOpen script event
+        /// - Door state: AnimationState set to 1 (open), IsOpen flag set to true
+        /// - Script execution: OnOpen script (ScriptOnOpen field in UTD template) executes after door opens
+        /// - Transition doors: If IsModuleTransition or IsAreaTransition, door opening triggers transition event
         /// </remarks>
         public void Open()
         {
@@ -274,7 +303,12 @@ namespace Odyssey.Kotor.Components
         /// <remarks>
         /// Door Closing:
         /// - Based on swkotor2.exe door closing system
-        /// - Original implementation: Sets IsOpen flag, plays close animation, fires OnClose script
+        /// - Located via string references: "OnClosed" @ 0x007be1c8, "EVENT_CLOSE_OBJECT" @ 0x007bcdb4 (case 6 in FUN_004dcfb0)
+        /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_CLOSE" @ 0x007bc820 (0x17)
+        /// - Event dispatching: FUN_004dcfb0 @ 0x004dcfb0 handles EVENT_CLOSE_OBJECT (case 6, fires before script execution)
+        /// - Original implementation: Sets IsOpen flag to false, plays close animation, fires OnClose script event
+        /// - Door state: AnimationState set to 0 (closed), IsOpen flag set to false
+        /// - Script execution: OnClose script (ScriptOnClose field in UTD template) executes after door closes
         /// </remarks>
         public void Close()
         {
@@ -295,7 +329,12 @@ namespace Odyssey.Kotor.Components
         /// <remarks>
         /// Door Locking:
         /// - Based on swkotor2.exe door locking system
-        /// - Original implementation: Sets IsLocked flag, fires OnLock script
+        /// - Located via string references: "OnLock" @ 0x007c1a28, "EVENT_LOCK_OBJECT" @ 0x007bcd20 (case 0xd in FUN_004dcfb0)
+        /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_LOCKED" @ 0x007bc754 (0x1c)
+        /// - Event dispatching: FUN_004dcfb0 @ 0x004dcfb0 handles EVENT_LOCK_OBJECT (case 0xd, fires before script execution)
+        /// - Original implementation: Sets IsLocked flag to true, fires OnLock script event
+        /// - Lock validation: Only locks if Lockable flag is true (from UTD template)
+        /// - Script execution: OnLock script (ScriptOnLock field in UTD template) executes after door is locked
         /// </remarks>
         public void Lock()
         {
@@ -315,8 +354,12 @@ namespace Odyssey.Kotor.Components
         /// <remarks>
         /// Door Unlocking:
         /// - Based on swkotor2.exe door unlocking system
-        /// - Original implementation: Clears IsLocked flag, fires OnUnlock script
-        /// - Can be unlocked via key, lockpicking (Security skill), or bashing
+        /// - Located via string references: "OnUnlock" @ 0x007c1a28, "EVENT_UNLOCK_OBJECT" @ 0x007bcd34 (case 0xc in FUN_004dcfb0)
+        /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_UNLOCKED" @ 0x007bc72c (0x1d)
+        /// - Event dispatching: FUN_004dcfb0 @ 0x004dcfb0 handles EVENT_UNLOCK_OBJECT (case 0xc, fires before script execution)
+        /// - Original implementation: Clears IsLocked flag (sets to false), fires OnUnlock script event
+        /// - Unlock methods: Can be unlocked via key (KeyName match), lockpicking (Security skill check vs LockDC), or bashing (strength check)
+        /// - Script execution: OnUnlock script (ScriptOnUnlock field in UTD template) executes after door is unlocked
         /// </remarks>
         public void Unlock()
         {
@@ -336,8 +379,13 @@ namespace Odyssey.Kotor.Components
         /// <remarks>
         /// Door Bashing:
         /// - Based on swkotor2.exe door bashing system
+        /// - Located via string references: "gui_mp_bashdp" @ 0x007b5e04, "gui_mp_bashup" @ 0x007b5e14 (door bash GUI panels)
+        /// - "gui_mp_bashd" @ 0x007b5e24, "gui_mp_bashu" @ 0x007b5e34 (door bash GUI elements)
         /// - Original implementation: Applies damage minus hardness, destroys door when HP reaches 0
-        /// - Hardness reduces damage taken (minimum 1 damage per hit)
+        /// - Hardness reduces damage taken (minimum 1 damage per hit, even if hardness exceeds damage)
+        /// - Bash damage: Strength modifier + weapon damage (if weapon equipped) vs door Hardness
+        /// - Door destruction: When CurrentHP <= 0, door is marked as bashed (IsBashed=true), unlocked, and opened
+        /// - Animation state: Set to 2 (destroyed state) when door is bashed open
         /// </remarks>
         public void ApplyDamage(int damage)
         {
