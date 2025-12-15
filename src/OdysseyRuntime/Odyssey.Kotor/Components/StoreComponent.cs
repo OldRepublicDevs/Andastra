@@ -7,8 +7,14 @@ namespace Odyssey.Kotor.Components
     /// Component for merchant store entities.
     /// </summary>
     /// <remarks>
-    /// Based on UTM file format documentation.
-    /// Stores are merchants that sell items.
+    /// Store Component:
+    /// - Based on swkotor2.exe store/merchant system
+    /// - Located via string references: Store functions handle merchant interactions
+    /// - Original implementation: Stores are merchants that sell items, buy items from player
+    /// - UTM file format: GFF with "UTM " signature containing store data
+    /// - Stores have mark-up/mark-down percentages for pricing, gold limits, item lists
+    /// - Can identify items for a fee, buy items from player based on allowed item types
+    /// - Based on UTM file format documentation in vendor/PyKotor/wiki/
     /// </remarks>
     public class StoreComponent : IComponent
     {
