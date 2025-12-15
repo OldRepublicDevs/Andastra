@@ -13,17 +13,34 @@ namespace Odyssey.Core.Party
     /// KOTOR Party System:
     /// - Based on swkotor2.exe party system
     /// - Located via string references: "PARTYTABLE" @ 0x007c1910, "Party" @ 0x007c24dc
-    /// - Party state stored in PARTYTABLE.res GFF file (see SaveSerializer FUN_0057dcd0 @ 0x0057dcd0)
-    /// - PC is always party slot 0
-    /// - Max 3 active party members in field
-    /// - Max 9-10 available party members
-    /// - Party NPCs stored in PARTYTABLE.res
+    /// - Original implementation: FUN_0057bd70 @ 0x0057bd70 (save PARTYTABLE.res to GFF)
+    /// - FUN_0057dcd0 @ 0x0057dcd0 (load PARTYTABLE.res from GFF)
+    /// - FUN_005a8220 @ 0x005a8220 (handle Party network message)
+    /// - Party state stored in PARTYTABLE.res GFF file with "PT " signature
+    /// - GFF structure fields:
+    ///   - PT_PCNAME: Player character name
+    ///   - PT_GOLD: Party gold
+    ///   - PT_MEMBERS: List of active party members (PT_MEMBER_ID, PT_IS_LEADER)
+    ///   - PT_NUM_MEMBERS: Number of active members (max 3)
+    ///   - PT_PUPPETS: List of puppets (PT_PUPPET_ID) - controlled NPCs
+    ///   - PT_NUM_PUPPETS: Number of puppets
+    ///   - PT_AVAIL_PUPS: Available puppets list (PT_PUP_AVAIL, PT_PUP_SELECT) - max 3
+    ///   - PT_AVAIL_NPCS: Available NPCs list (PT_NPC_AVAIL, PT_NPC_SELECT) - max 12 (0xc)
+    ///   - PT_INFLUENCE: Influence levels (PT_NPC_INFLUENCE) - K2 only, 12 NPCs
+    ///   - PT_SOLOMODE: Solo mode flag (K2)
+    ///   - PT_CONTROLLED_NPC: Currently controlled NPC (-1 = none)
+    ///   - PT_XP_POOL: Experience point pool
+    ///   - PT_AISTATE: AI state
+    ///   - PT_FOLLOWSTATE: Follow state
+    /// - PC is always party slot 0 in PT_MEMBERS
+    /// - Max 3 active party members in field (PT_NUM_MEMBERS)
+    /// - Max 12 available NPCs (PT_AVAIL_NPCS list size)
     /// - NPCs persist state when not in active party
     /// 
     /// K2 additions:
-    /// - Influence system
-    /// - Remote party member control
-    /// - Solo mode
+    /// - Influence system (PT_INFLUENCE)
+    /// - Remote party member control (PT_PUPPETS)
+    /// - Solo mode (PT_SOLOMODE)
     /// </remarks>
     public class PartySystem
     {

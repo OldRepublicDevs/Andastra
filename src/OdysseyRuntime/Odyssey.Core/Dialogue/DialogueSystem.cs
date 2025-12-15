@@ -45,6 +45,8 @@ namespace Odyssey.Core.Dialogue
     /// - Based on swkotor2.exe dialogue system
     /// - Located via string references: "ScriptDialogue" @ 0x007bee40, "ScriptEndDialogue" @ 0x007bede0
     /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_DIALOGUE" @ 0x007bcac4, "OnEndDialogue" @ 0x007c1f60
+    /// - Original implementation: FUN_005226d0 @ 0x005226d0 (save creature data including ScriptDialogue/ScriptEndDialogue),
+    ///   FUN_0050c510 @ 0x0050c510 (load creature data and read ScriptDialogue/ScriptEndDialogue fields)
     /// - DLG file format: GFF with "DLG " signature containing dialogue tree
     /// - Original implementation: Parses DLG GFF structure, evaluates condition scripts, executes entry/reply scripts
     /// 
