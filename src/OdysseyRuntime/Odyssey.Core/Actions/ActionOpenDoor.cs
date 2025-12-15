@@ -99,13 +99,13 @@ namespace Odyssey.Core.Actions
             {
                 if (doorState.IsLocked)
                 {
-                    // Fire OnLocked script event
-                    // Based on swkotor2.exe: EVENT_LOCK_OBJECT fires OnLocked script event
+                    // Fire OnLock script event
+                    // Based on swkotor2.exe: EVENT_LOCK_OBJECT fires OnLock script event
                     // Located via string references: "EVENT_LOCK_OBJECT" @ 0x007bcd20 (case 0xd), "CSWSSCRIPTEVENT_EVENTTYPE_ON_LOCKED" @ 0x007bc754 (0x1c)
                     IEventBus eventBus = actor.World.EventBus;
                     if (eventBus != null)
                     {
-                        eventBus.FireScriptEvent(door, ScriptEvent.OnLocked, actor);
+                        eventBus.FireScriptEvent(door, ScriptEvent.OnLock, actor);
                         eventBus.Publish(new DoorLockedEvent { Actor = actor, Door = door });
                     }
                     return ActionStatus.Failed;
