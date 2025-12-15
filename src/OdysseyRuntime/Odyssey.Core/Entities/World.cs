@@ -80,6 +80,8 @@ namespace Odyssey.Core.Entities
         public IEntity CreateEntity(ObjectType objectType, Vector3 position, float facing)
         {
             var entity = new Entity(objectType, this);
+            entity.Position = position;
+            entity.Facing = facing;
             RegisterEntity(entity);
             return entity;
         }
