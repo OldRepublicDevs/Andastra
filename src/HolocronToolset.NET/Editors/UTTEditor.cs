@@ -255,10 +255,10 @@ namespace HolocronToolset.NET.Editors
             _trapSelect = new ComboBox2DA();
             _detectableCheckbox = new CheckBox { Content = "Detectable" };
             var detectDcLabel = new TextBlock { Text = "Detect DC:" };
-            _detectDcSpin = new NumericUpDown { Minimum = int.MinValue, Maximum = int.MaxValue };
+            _detectDcSpin = new NumericUpDown { Minimum = decimal.MinValue, Maximum = decimal.MaxValue };
             _disarmableCheckbox = new CheckBox { Content = "Disarmable" };
             var disarmDcLabel = new TextBlock { Text = "Disarm DC:" };
-            _disarmDcSpin = new NumericUpDown { Minimum = int.MinValue, Maximum = int.MaxValue };
+            _disarmDcSpin = new NumericUpDown { Minimum = decimal.MinValue, Maximum = decimal.MaxValue };
 
             trapPanel.Children.Add(_isTrapCheckbox);
             trapPanel.Children.Add(_activateOnceCheckbox);
@@ -531,10 +531,11 @@ namespace HolocronToolset.NET.Editors
                 _utt.TrapDetectable = _detectableCheckbox.IsChecked == true;
             }
             // Matching Python: utt.trap_detect_dc = self.ui.detectDcSpin.value()
-            if (_detectDcSpin != null)
+            // Use the public property to ensure we're reading from the same instance the test sets
+            // Match HighlightHeight pattern exactly - direct cast
+            if (DetectDcSpin != null)
             {
-                // Use same pattern as HighlightHeight which works correctly - direct cast
-                _utt.TrapDetectDc = (int)_detectDcSpin.Value;
+                _utt.TrapDetectDc = DetectDcSpin.Value.HasValue ? (int)Math.Round(DetectDcSpin.Value.Value) : 0;
             }
             // Matching Python: utt.trap_disarmable = self.ui.disarmableCheckbox.isChecked()
             if (_disarmableCheckbox != null)
@@ -542,10 +543,10 @@ namespace HolocronToolset.NET.Editors
                 _utt.TrapDisarmable = _disarmableCheckbox.IsChecked == true;
             }
             // Matching Python: utt.trap_disarm_dc = self.ui.disarmDcSpin.value()
-            if (_disarmDcSpin != null)
+            // Use the public property to ensure we're reading from the same instance the test sets
+            if (DisarmDcSpin != null && DisarmDcSpin.Value.HasValue)
             {
-                // Use same pattern as HighlightHeight which works correctly - direct cast
-                _utt.TrapDisarmDc = (int)_disarmDcSpin.Value;
+                _utt.TrapDisarmDc = (int)Math.Round(DisarmDcSpin.Value.Value);
             }
             // Matching Python: utt.trap_type = self.ui.trapSelect.currentIndex()
             if (_trapSelect != null)
@@ -727,6 +728,7 @@ namespace HolocronToolset.NET.Editors
         public Avalonia.Controls.CheckBox IsTrapCheckbox => _isTrapCheckbox;
         public Avalonia.Controls.CheckBox ActivateOnceCheckbox => _activateOnceCheckbox;
         public Avalonia.Controls.NumericUpDown DetectDcSpin => _detectDcSpin;
+        public Avalonia.Controls.NumericUpDown DisarmDcSpin => _disarmDcSpin;
         public UTT Utt => _utt;
     }
 }
