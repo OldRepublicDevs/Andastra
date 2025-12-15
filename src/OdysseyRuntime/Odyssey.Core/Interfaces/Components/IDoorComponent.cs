@@ -114,6 +114,13 @@ namespace Odyssey.Core.Interfaces.Components
         /// Unlocks the door.
         /// </summary>
         void Unlock();
+
+        /// <summary>
+        /// Applies damage to the door (for bashing).
+        /// Reduces HP by damage amount (minus hardness), destroys door if HP reaches 0.
+        /// Based on swkotor2.exe: Door bashing damage application
+        /// </summary>
+        void ApplyDamage(int damage);
     }
 }
 
