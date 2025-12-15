@@ -45,13 +45,13 @@ namespace Odyssey.Content.Save
     /// </remarks>
     public class SaveSerializer : ISaveSerializer
     {
-        private readonly Odyssey.Kotor.Data.GameDataManager _gameDataManager;
+        private readonly object _gameDataManager;
 
         /// <summary>
         /// Creates a new save serializer.
         /// </summary>
         /// <param name="gameDataManager">Optional game data manager for party.2da lookups.</param>
-        public SaveSerializer(Odyssey.Kotor.Data.GameDataManager gameDataManager = null)
+        public SaveSerializer(object gameDataManager = null)
         {
             _gameDataManager = gameDataManager;
         }
@@ -789,7 +789,9 @@ namespace Odyssey.Content.Save
             // party.2da columns: Label (ResRef), Name (display name), PortraitId, etc.
             if (_gameDataManager != null)
             {
-                CSharpKOTOR.Formats.TwoDA.TwoDA partyTable = _gameDataManager.GetTable("party");
+                // Use dynamic to call GetTable without referencing Odyssey.Kotor
+                dynamic gameDataManager = _gameDataManager;
+                CSharpKOTOR.Formats.TwoDA.TwoDA partyTable = gameDataManager.GetTable("party");
                 if (partyTable != null)
                 {
                     // Search party.2da for matching ResRef
