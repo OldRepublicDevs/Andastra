@@ -33,6 +33,7 @@ namespace Odyssey.Kotor.Components
         {
             TemplateResRef = string.Empty;
             Tag = string.Empty;
+            Conversation = string.Empty;
             FeatList = new List<int>();
             ClassList = new List<CreatureClass>();
             EquippedItems = new Dictionary<int, string>();
@@ -137,6 +138,16 @@ namespace Odyssey.Kotor.Components
         /// Faction ID (for hostility checks).
         /// </summary>
         public int FactionId { get; set; }
+
+        /// <summary>
+        /// Conversation file (dialogue ResRef).
+        /// Stored in UTC template as "ScriptDialogue" field.
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: FUN_0050c510 @ 0x0050c510 loads creature data including ScriptDialogue field
+        /// Located via string reference: "ScriptDialogue" @ 0x007bee40, "Conversation" @ 0x007c1abc
+        /// </remarks>
+        public string Conversation { get; set; }
 
         /// <summary>
         /// Perception range for sight.
