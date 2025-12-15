@@ -7,6 +7,24 @@ namespace Odyssey.Core.Navigation
     /// <summary>
     /// Factory for creating NavigationMesh instances from CSharpKOTOR BWM data.
     /// </summary>
+    /// <remarks>
+    /// Navigation Mesh Factory:
+    /// - Based on swkotor2.exe walkmesh/navigation system
+    /// - Located via string references: "walkmesh" pathfinding functions, "nwsareapathfind.cpp" @ 0x007be3ff
+    /// - BWM file format: "BWM V1.0" @ 0x007c061c (BWM file signature)
+    /// - Error messages:
+    ///   - "failed to grid based pathfind from the creatures position to the starting path point." @ 0x007be510
+    ///   - "failed to grid based pathfind from the ending path point ot the destiantion." @ 0x007be4b8
+    ///   - "ERROR: opening a Binary walkmesh file for writeing that already exists (File: %s)" @ 0x007c0630
+    /// - Original implementation: Creates navigation mesh from BWM (BioWare Walkmesh) data
+    /// - BWM file structure: Header with "BWM V1.0" signature, vertex data, face data, adjacency data, AABB tree
+    /// - Adjacency encoding: adjacency_index = face_index * 3 + edge_index, -1 = no neighbor
+    /// - Surface materials determine walkability (0-30 range, lookup via surfacemat.2da)
+    /// - AABB tree: Spatial acceleration structure for efficient face queries (FindFaceAt, Raycast)
+    /// - Pathfinding uses A* algorithm on walkmesh adjacency graph
+    /// - Grid-based pathfinding used for initial/terminal path segments when direct walkmesh path fails
+    /// - Based on BWM file format documentation in vendor/PyKotor/wiki/BWM-File-Format.md
+    /// </remarks>
     public static class NavigationMeshFactory
     {
         /// <summary>
