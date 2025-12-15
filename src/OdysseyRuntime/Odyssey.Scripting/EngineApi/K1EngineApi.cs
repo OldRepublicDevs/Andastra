@@ -1118,12 +1118,48 @@ namespace Odyssey.Scripting.EngineApi
                     return false;
 
                 case 2: // CREATURE_TYPE_CLASS
-                    // TODO: Check class type from creature template
-                    return true; // Placeholder
+                    // Check if creature has the specified class
+                    CreatureComponent creatureComp = creature.GetComponent<CreatureComponent>();
+                    if (creatureComp != null && creatureComp.ClassList != null)
+                    {
+                        // Check if any class in ClassList matches the criteria value
+                        foreach (var creatureClass in creatureComp.ClassList)
+                        {
+                            if (creatureClass != null && creatureClass.ClassId == criteriaValue)
+                            {
+                                return true;
+                            }
+                        }
+                    }
+                    return false;
 
                 case 3: // CREATURE_TYPE_REPUTATION
-                    // TODO: Check reputation type
-                    return true; // Placeholder
+                    // Check reputation between caller and creature
+                    // criteriaValue: 0 = hostile, 1 = neutral, 2 = friendly
+                    if (ctx.Caller != null && ctx.World != null)
+                    {
+                        // Get FactionManager from GameServicesContext
+                        if (ctx is VM.ExecutionContext execCtx && execCtx.AdditionalContext is Odyssey.Kotor.Game.GameServicesContext services)
+                        {
+                            if (services.FactionManager != null)
+                            {
+                                int reputation = services.FactionManager.GetReputation(ctx.Caller, creature);
+                                if (criteriaValue == 0) // Hostile
+                                {
+                                    return reputation <= FactionManager.HostileThreshold;
+                                }
+                                else if (criteriaValue == 1) // Neutral
+                                {
+                                    return reputation > FactionManager.HostileThreshold && reputation < FactionManager.FriendlyThreshold;
+                                }
+                                else if (criteriaValue == 2) // Friendly
+                                {
+                                    return reputation >= FactionManager.FriendlyThreshold;
+                                }
+                            }
+                        }
+                    }
+                    return false;
 
                 case 4: // CREATURE_TYPE_IS_ALIVE
                     // TRUE = alive, FALSE = dead
@@ -3714,17 +3750,20 @@ namespace Odyssey.Scripting.EngineApi
         private Variable Func_GetMetaMagicFeat(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             // GetMetaMagicFeat() - Returns the metamagic type of the last spell cast by the caller
-            // Note: This should track the last spell cast's metamagic type, not check if creature has the feat
-            // For now, return 0 (no metamagic) - would need to track last spell cast in ActionCastSpellAtObject
             // Metamagic feats: METAMAGIC_EMPOWER (1), METAMAGIC_EXTEND (2), METAMAGIC_MAXIMIZE (4), METAMAGIC_QUICKEN (8)
-            // TODO: Track last spell cast metamagic type when ActionCastSpellAtObject is executed
             
             if (ctx.Caller == null || ctx.Caller.ObjectType != Core.Enums.ObjectType.Creature)
             {
                 return Variable.FromInt(-1);
             }
             
-            // For now, return 0 (no metamagic) until spell casting tracking is implemented
+            // Retrieve last metamagic type for this caster
+            if (_lastMetamagicTypes.TryGetValue(ctx.Caller.ObjectId, out int metamagicType))
+            {
+                return Variable.FromInt(metamagicType);
+            }
+            
+            // No metamagic tracked, return 0 (no metamagic)
             return Variable.FromInt(0);
         }
 
@@ -4675,11 +4714,45 @@ namespace Odyssey.Scripting.EngineApi
                 return Variable.Void();
             }
             
-            // TODO: Implement delayed destruction with fade effects
-            // For now, just remove from world immediately
-            if (ctx.World != null)
+            // If no delay and no fade, destroy immediately
+            if (delay <= 0f && noFade != 0)
             {
-                ctx.World.DestroyEntity(entity.ObjectId);
+                if (ctx.World != null)
+                {
+                    ctx.World.DestroyEntity(entity.ObjectId);
+                }
+                return Variable.Void();
+            }
+            
+            // Create destroy action with delay and fade support
+            var destroyAction = new Odyssey.Core.Actions.ActionDestroyObject(entity.ObjectId, delay, noFade != 0, delayUntilFade);
+            
+            // If delay > 0, schedule via DelayCommand
+            if (delay > 0f)
+            {
+                // Schedule the destroy action after delay
+                if (ctx.World != null && ctx.World.DelayScheduler != null)
+                {
+                    ctx.World.DelayScheduler.ScheduleDelay(delay, destroyAction, ctx.Caller ?? entity);
+                }
+            }
+            else
+            {
+                // No delay, execute immediately via action queue
+                // Add to entity's action queue so it can handle fade timing
+                IActionQueue queue = entity.GetComponent<IActionQueue>();
+                if (queue != null)
+                {
+                    queue.Add(destroyAction);
+                }
+                else
+                {
+                    // Fallback: destroy immediately if no action queue
+                    if (ctx.World != null)
+                    {
+                        ctx.World.DestroyEntity(entity.ObjectId);
+                    }
+                }
             }
             
             return Variable.Void();
