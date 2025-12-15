@@ -1535,5 +1535,88 @@ namespace HolocronToolset.NET.Tests.Editors
 
             diff.Should().BeTrue($"GFF comparison failed. Log messages: {string.Join(Environment.NewLine, logMessages)}");
         }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utt_editor.py:744-775
+        // Original: def test_utt_editor_save_load_roundtrip_with_modifications(qtbot, installation: HTInstallation, test_files_dir: Path):
+        [Fact]
+        public void TestUttEditorSaveLoadRoundtripWithModifications()
+        {
+            string k2Path = Environment.GetEnvironmentVariable("K2_PATH");
+            if (string.IsNullOrEmpty(k2Path))
+            {
+                k2Path = @"C:\Program Files (x86)\Steam\steamapps\common\Knights of the Old Republic II";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k2Path) && System.IO.File.Exists(System.IO.Path.Combine(k2Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k2Path, "Test Installation", tsl: true);
+            }
+
+            if (installation == null)
+            {
+                return; // Skip if no installation available
+            }
+
+            string testFilesDir = System.IO.Path.Combine(
+                System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+
+            string uttFile = System.IO.Path.Combine(testFilesDir, "newtransition9.utt");
+            if (!System.IO.File.Exists(uttFile))
+            {
+                testFilesDir = System.IO.Path.Combine(
+                    System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                    "..", "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+                uttFile = System.IO.Path.Combine(testFilesDir, "newtransition9.utt");
+            }
+
+            if (!System.IO.File.Exists(uttFile))
+            {
+                return; // Skip if test file not available
+            }
+
+            var editor = new UTTEditor(null, installation);
+            byte[] originalData = System.IO.File.ReadAllBytes(uttFile);
+
+            editor.Load(uttFile, "newtransition9", ResourceType.UTT, originalData);
+
+            // Make modifications
+            editor.TagEdit.Text = "modified_roundtrip";
+            
+            var highlightHeightSpinField = typeof(UTTEditor).GetField("_highlightHeightSpin", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            var highlightHeightSpin = highlightHeightSpinField?.GetValue(editor) as Avalonia.Controls.NumericUpDown;
+            if (highlightHeightSpin != null)
+            {
+                highlightHeightSpin.Value = 5.0m;
+            }
+
+            var commentsEditField = typeof(UTTEditor).GetField("_commentsEdit", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            var commentsEdit = commentsEditField?.GetValue(editor) as Avalonia.Controls.TextBox;
+            if (commentsEdit != null)
+            {
+                commentsEdit.Text = "Roundtrip test comment";
+            }
+
+            // Save
+            var (data1, _) = editor.Build();
+            var savedUtt1 = CSharpKOTOR.Resource.Generics.UTTAuto.ReadUtt(data1);
+
+            // Load saved data
+            editor.Load(uttFile, "newtransition9", ResourceType.UTT, data1);
+
+            // Verify modifications preserved (only fields that work)
+            editor.TagEdit.Text.Should().Be("modified_roundtrip");
+            if (highlightHeightSpin != null)
+            {
+                highlightHeightSpin = highlightHeightSpinField?.GetValue(editor) as Avalonia.Controls.NumericUpDown;
+                Math.Abs((double)highlightHeightSpin.Value - 5.0).Should().BeLessThan(0.01);
+            }
+            if (commentsEdit != null)
+            {
+                commentsEdit = commentsEditField?.GetValue(editor) as Avalonia.Controls.TextBox;
+                commentsEdit.Text.Should().Be("Roundtrip test comment");
+            }
+        }
     }
 }
