@@ -785,7 +785,6 @@ namespace Odyssey.Content.Save
                 }
 
                 var root = gff.Root;
-                uint local_c8 = 0;
 
                 // PT_PCNAME - Player character name
                 string pcName = root.GetString("PT_PCNAME");
