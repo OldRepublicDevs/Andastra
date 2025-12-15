@@ -3819,32 +3819,13 @@ namespace Odyssey.Scripting.EngineApi
             
             if (source != null && target != null)
             {
-                // Get FactionManager from GameServicesContext or GameSession
+                // Get FactionManager from GameServicesContext
                 if (ctx is VM.ExecutionContext execCtx && execCtx.AdditionalContext is Odyssey.Kotor.Game.GameServicesContext services)
                 {
-                    // Try to get FactionManager from CombatManager
-                    if (services.CombatManager != null)
+                    if (services.FactionManager != null)
                     {
-                        // TODO: Expose FactionManager.IsFriendly through CombatManager or GameServicesContext
-                    }
-                }
-                
-                // Alternative: Get from GameSession directly if available
-                if (ctx.AdditionalContext is Odyssey.Kotor.Game.GameSession gameSession)
-                {
-                    // Access FactionManager through reflection or add to GameServicesContext
-                    // For now, use a simple faction check
-                    IFactionComponent sourceFaction = source.GetComponent<IFactionComponent>();
-                    IFactionComponent targetFaction = target.GetComponent<IFactionComponent>();
-                    
-                    if (sourceFaction != null && targetFaction != null)
-                    {
-                        // Check if same faction (simplified - would need FactionManager for proper friendliness)
-                        if (sourceFaction.FactionId == targetFaction.FactionId)
-                        {
-                            // Same faction are friends by default
-                            return Variable.FromInt(1);
-                        }
+                        bool isFriendly = services.FactionManager.IsFriendly(source, target);
+                        return Variable.FromInt(isFriendly ? 1 : 0);
                     }
                 }
             }
