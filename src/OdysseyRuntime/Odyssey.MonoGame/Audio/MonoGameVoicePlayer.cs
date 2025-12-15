@@ -1,0 +1,322 @@
+using System;
+using System.IO;
+using System.Threading.Tasks;
+using Microsoft.Xna.Framework.Audio;
+using Odyssey.Core.Dialogue;
+using Odyssey.Core.Interfaces;
+using Odyssey.Content.Interfaces;
+using CSharpKOTOR.Resources;
+using CSharpKOTOR.Formats.WAV;
+
+namespace Odyssey.MonoGame.Audio
+{
+    /// <summary>
+    /// MonoGame implementation of IVoicePlayer for playing voice-over audio.
+    /// 
+    /// Loads WAV files from KOTOR installation and plays them using MonoGame's SoundEffect API.
+    /// Supports positional audio for speaker entities.
+    /// 
+    /// Based on MonoGame API: https://docs.monogame.net/api/Microsoft.Xna.Framework.Audio.SoundEffect.html
+    /// SoundEffect.LoadFromStream() loads WAV data from a stream
+    /// SoundEffectInstance provides playback control (Play, Stop, Volume, Pan, Pitch)
+    /// </summary>
+    public class MonoGameVoicePlayer : IVoicePlayer
+    {
+        private readonly IGameResourceProvider _resourceProvider;
+        private readonly SpatialAudio _spatialAudio;
+        private SoundEffectInstance _currentInstance;
+        private SoundEffect _currentSoundEffect;
+        private IEntity _currentSpeaker;
+        private uint _currentEmitterId;
+        private bool _isPlaying;
+        private float _currentTime;
+        private Action _onCompleteCallback;
+
+        /// <summary>
+        /// Gets whether voice-over is currently playing.
+        /// </summary>
+        public bool IsPlaying
+        {
+            get { return _isPlaying && _currentInstance != null && _currentInstance.State == SoundState.Playing; }
+        }
+
+        /// <summary>
+        /// Gets the current playback position in seconds.
+        /// </summary>
+        public float CurrentTime
+        {
+            get
+            {
+                if (_currentInstance != null && _currentInstance.State == SoundState.Playing)
+                {
+                    // MonoGame doesn't expose playback position directly
+                    // This is an approximation based on elapsed time
+                    return _currentTime;
+                }
+                return 0f;
+            }
+        }
+
+        /// <summary>
+        /// Initializes a new MonoGame voice player.
+        /// </summary>
+        /// <param name="resourceProvider">Resource provider for loading WAV files.</param>
+        /// <param name="spatialAudio">Optional spatial audio system for 3D positioning.</param>
+        public MonoGameVoicePlayer(IGameResourceProvider resourceProvider, SpatialAudio spatialAudio = null)
+        {
+            _resourceProvider = resourceProvider ?? throw new ArgumentNullException("resourceProvider");
+            _spatialAudio = spatialAudio;
+            _currentEmitterId = 0;
+        }
+
+        /// <summary>
+        /// Plays a voice-over.
+        /// </summary>
+        /// <param name="voResRef">The voice-over resource reference.</param>
+        /// <param name="speaker">The speaking entity (for positional audio).</param>
+        /// <param name="onComplete">Callback when playback completes.</param>
+        public void Play(string voResRef, IEntity speaker, Action onComplete)
+        {
+            if (string.IsNullOrEmpty(voResRef))
+            {
+                onComplete?.Invoke();
+                return;
+            }
+
+            // Stop any currently playing voice-over
+            Stop();
+
+            _currentSpeaker = speaker;
+            _onCompleteCallback = onComplete;
+            _isPlaying = false;
+            _currentTime = 0f;
+
+            // Load and play WAV file asynchronously
+            Task.Run(async () =>
+            {
+                try
+                {
+                    // Load WAV resource
+                    using (var resourceId = new ResourceIdentifier(voResRef, ResourceType.WAV))
+                    {
+                        byte[] wavData = await _resourceProvider.GetResourceBytesAsync(resourceId, System.Threading.CancellationToken.None);
+                        if (wavData == null || wavData.Length == 0)
+                        {
+                            Console.WriteLine($"[MonoGameVoicePlayer] Failed to load WAV resource: {voResRef}");
+                            _onCompleteCallback?.Invoke();
+                            return;
+                        }
+
+                        // Parse WAV file
+                        WAV wav = WAVAuto.Read(wavData);
+                        if (wav == null || wav.Data == null || wav.Data.Length == 0)
+                        {
+                            Console.WriteLine($"[MonoGameVoicePlayer] Failed to parse WAV data: {voResRef}");
+                            _onCompleteCallback?.Invoke();
+                            return;
+                        }
+
+                        // Create WAV stream for MonoGame
+                        // MonoGame expects standard RIFF/WAVE format
+                        byte[] monoGameWavData = CreateMonoGameWavStream(wav);
+                        if (monoGameWavData == null)
+                        {
+                            Console.WriteLine($"[MonoGameVoicePlayer] Failed to create MonoGame WAV stream: {voResRef}");
+                            _onCompleteCallback?.Invoke();
+                            return;
+                        }
+
+                        // Load SoundEffect from stream
+                        using (MemoryStream stream = new MemoryStream(monoGameWavData))
+                        {
+                            _currentSoundEffect = SoundEffect.FromStream(stream);
+                            if (_currentSoundEffect == null)
+                            {
+                                Console.WriteLine($"[MonoGameVoicePlayer] Failed to load SoundEffect: {voResRef}");
+                                _onCompleteCallback?.Invoke();
+                                return;
+                            }
+
+                            // Create instance for playback control
+                            _currentInstance = _currentSoundEffect.CreateInstance();
+                            if (_currentInstance == null)
+                            {
+                                Console.WriteLine($"[MonoGameVoicePlayer] Failed to create SoundEffectInstance: {voResRef}");
+                                _currentSoundEffect.Dispose();
+                                _currentSoundEffect = null;
+                                _onCompleteCallback?.Invoke();
+                                return;
+                            }
+
+                            // Configure playback
+                            _currentInstance.Volume = 1.0f;
+                            _currentInstance.IsLooped = false;
+
+                            // Register with spatial audio if available
+                            if (_spatialAudio != null && speaker != null)
+                            {
+                                ITransformComponent transform = speaker.GetComponent<ITransformComponent>();
+                                if (transform != null)
+                                {
+                                    _currentEmitterId++;
+                                    _spatialAudio.UpdateEmitter(
+                                        _currentEmitterId,
+                                        new Microsoft.Xna.Framework.Vector3(transform.Position.X, transform.Position.Y, transform.Position.Z),
+                                        Microsoft.Xna.Framework.Vector3.Zero,
+                                        1.0f,
+                                        5.0f, // min distance
+                                        50.0f // max distance
+                                    );
+                                }
+                            }
+
+                            // Start playback
+                            _currentInstance.Play();
+                            _isPlaying = true;
+
+                            // Monitor playback completion
+                            MonitorPlayback();
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[MonoGameVoicePlayer] Error playing voice-over {voResRef}: {ex.Message}");
+                    Stop();
+                    _onCompleteCallback?.Invoke();
+                }
+            });
+        }
+
+        /// <summary>
+        /// Stops the currently playing voice-over.
+        /// </summary>
+        public void Stop()
+        {
+            if (_currentInstance != null)
+            {
+                _currentInstance.Stop();
+                _currentInstance.Dispose();
+                _currentInstance = null;
+            }
+
+            if (_currentSoundEffect != null)
+            {
+                _currentSoundEffect.Dispose();
+                _currentSoundEffect = null;
+            }
+
+            if (_spatialAudio != null && _currentEmitterId > 0)
+            {
+                _spatialAudio.RemoveEmitter(_currentEmitterId);
+            }
+
+            _isPlaying = false;
+            _currentTime = 0f;
+            _currentSpeaker = null;
+            _onCompleteCallback = null;
+        }
+
+        /// <summary>
+        /// Updates voice player state (should be called each frame).
+        /// </summary>
+        public void Update(float deltaTime)
+        {
+            if (_isPlaying && _currentInstance != null)
+            {
+                // Update playback time
+                if (_currentInstance.State == SoundState.Playing)
+                {
+                    _currentTime += deltaTime;
+                }
+
+                // Update spatial audio if available
+                if (_spatialAudio != null && _currentSpeaker != null && _currentEmitterId > 0)
+                {
+                    ITransformComponent transform = _currentSpeaker.GetComponent<ITransformComponent>();
+                    if (transform != null)
+                    {
+                        Audio3DParameters audioParams = _spatialAudio.Calculate3DParameters(_currentEmitterId);
+                        if (_currentInstance != null)
+                        {
+                            _currentInstance.Volume = audioParams.Volume;
+                            _currentInstance.Pan = audioParams.Pan;
+                            _currentInstance.Pitch = audioParams.DopplerShift - 1.0f; // Convert to pitch range
+                        }
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Creates a MonoGame-compatible WAV stream from a WAV object.
+        /// </summary>
+        private byte[] CreateMonoGameWavStream(WAV wav)
+        {
+            try
+            {
+                using (MemoryStream stream = new MemoryStream())
+                using (BinaryWriter writer = new BinaryWriter(stream))
+                {
+                    // Write RIFF header
+                    writer.Write(System.Text.Encoding.ASCII.GetBytes("RIFF"));
+                    uint fileSize = (uint)(36 + wav.Data.Length); // Will update later
+                    writer.Write(fileSize);
+                    writer.Write(System.Text.Encoding.ASCII.GetBytes("WAVE"));
+
+                    // Write fmt chunk
+                    writer.Write(System.Text.Encoding.ASCII.GetBytes("fmt "));
+                    writer.Write((uint)16); // fmt chunk size
+                    writer.Write((ushort)wav.Encoding); // audio format (PCM = 1)
+                    writer.Write((ushort)wav.Channels);
+                    writer.Write((uint)wav.SampleRate);
+                    writer.Write((uint)wav.BytesPerSec);
+                    writer.Write((ushort)wav.BlockAlign);
+                    writer.Write((ushort)wav.BitsPerSample);
+
+                    // Write data chunk
+                    writer.Write(System.Text.Encoding.ASCII.GetBytes("data"));
+                    writer.Write((uint)wav.Data.Length);
+                    writer.Write(wav.Data);
+
+                    // Update file size
+                    long currentPos = stream.Position;
+                    stream.Position = 4;
+                    writer.Write((uint)(currentPos - 8));
+                    stream.Position = currentPos;
+
+                    return stream.ToArray();
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[MonoGameVoicePlayer] Error creating WAV stream: {ex.Message}");
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Monitors playback completion.
+        /// </summary>
+        private void MonitorPlayback()
+        {
+            Task.Run(async () =>
+            {
+                while (_isPlaying && _currentInstance != null)
+                {
+                    await Task.Delay(100); // Check every 100ms
+
+                    if (_currentInstance.State == SoundState.Stopped)
+                    {
+                        _isPlaying = false;
+                        Action callback = _onCompleteCallback;
+                        Stop();
+                        callback?.Invoke();
+                        break;
+                    }
+                }
+            });
+        }
+    }
+}
+
