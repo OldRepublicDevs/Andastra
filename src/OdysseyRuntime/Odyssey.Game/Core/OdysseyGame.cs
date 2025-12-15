@@ -2141,8 +2141,15 @@ namespace Odyssey.Game.Core
                 {
                     // Door can be lockpicked (Security skill check)
                     // Based on swkotor2.exe lockpicking system
+                    // Located via string references: "OpenLockDC" @ 0x007c1b08 (door lock DC field), "gui_lockpick" @ 0x007c2ff4 (lockpick GUI)
+                    // "setsecurity" @ 0x007c7a30 (set security skill command), "SECURITY_LBL" @ 0x007d33b8 (security label)
+                    // "SECURITY_POINTS_BTN" @ 0x007d33c8 (security points button)
                     // Security skill check: d20 + Security skill rank vs LockDC
-                    // Skill constant: SKILL_SECURITY = 6
+                    // Skill constant: SKILL_SECURITY = 6 (from skills.2da table, Security skill index)
+                    // Original implementation: Roll d20 (1-20), add Security skill rank, compare to door's OpenLockDC
+                    // Lockpicking success: If (d20 + Security skill rank) >= OpenLockDC, door unlocks
+                    // Lockpicking failure: If (d20 + Security skill rank) < OpenLockDC, door remains locked
+                    // Security skill rank: Retrieved from creature's skill ranks (stored in UTC template or calculated from class/level)
                     Odyssey.Core.Interfaces.Components.IStatsComponent playerStats = 
                         _session.PlayerEntity?.GetComponent<Odyssey.Core.Interfaces.Components.IStatsComponent>();
                     
