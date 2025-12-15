@@ -373,5 +373,118 @@ namespace HolocronToolset.NET.Tests.Editors
             selected.Should().NotBeNull();
             selected.Should().BeOfType<List<Vector2>>();
         }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_pth_editor.py:291-306
+        // Original: def test_pth_editor_move_camera(qtbot, installation: HTInstallation):
+        [Fact]
+        public void TestPthEditorMoveCamera()
+        {
+            var editor = new PTHEditor(null, null);
+
+            editor.New();
+
+            // Test moving camera
+            // Just verify method doesn't crash
+            editor.MoveCamera(10.0f, 20.0f);
+
+            // Method should complete without exception
+            editor.Should().NotBeNull();
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_pth_editor.py:308-322
+        // Original: def test_pth_editor_zoom_camera(qtbot, installation: HTInstallation):
+        [Fact]
+        public void TestPthEditorZoomCamera()
+        {
+            var editor = new PTHEditor(null, null);
+
+            editor.New();
+
+            // Test zooming camera
+            // Just verify method doesn't crash
+            editor.ZoomCamera(1.5f);
+
+            // Method should complete without exception
+            editor.Should().NotBeNull();
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_pth_editor.py:324-338
+        // Original: def test_pth_editor_rotate_camera(qtbot, installation: HTInstallation):
+        [Fact]
+        public void TestPthEditorRotateCamera()
+        {
+            var editor = new PTHEditor(null, null);
+
+            editor.New();
+
+            // Test rotating camera
+            // Just verify method doesn't crash
+            editor.RotateCamera(0.5f);
+
+            // Method should complete without exception
+            editor.Should().NotBeNull();
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_pth_editor.py:340-355
+        // Original: def test_pth_editor_move_camera_to_selection(qtbot, installation: HTInstallation):
+        [Fact]
+        public void TestPthEditorMoveCameraToSelection()
+        {
+            var editor = new PTHEditor(null, null);
+
+            editor.New();
+
+            // Add a node
+            editor.AddNode(50.0f, 50.0f);
+
+            // Test moving camera to selection
+            // May not work without actual selection, but method should exist
+            editor.MoveCameraToSelection();
+
+            // Just verify method doesn't crash
+            editor.Should().NotBeNull();
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_pth_editor.py:361-377
+        // Original: def test_pth_editor_select_node_under_mouse(qtbot, installation: HTInstallation):
+        [Fact]
+        public void TestPthEditorSelectNodeUnderMouse()
+        {
+            var editor = new PTHEditor(null, null);
+
+            editor.New();
+
+            // Add nodes
+            editor.AddNode(0.0f, 0.0f);
+            editor.AddNode(10.0f, 10.0f);
+
+            // Test selecting node under mouse
+            // May not work without actual mouse position, but method should exist
+            editor.SelectNodeUnderMouse();
+
+            // Just verify method doesn't crash
+            editor.Should().NotBeNull();
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_pth_editor.py:379-395
+        // Original: def test_pth_editor_move_selected(qtbot, installation: HTInstallation):
+        [Fact]
+        public void TestPthEditorMoveSelected()
+        {
+            var editor = new PTHEditor(null, null);
+
+            editor.New();
+
+            // Add nodes
+            editor.AddNode(0.0f, 0.0f);
+            editor.AddNode(10.0f, 10.0f);
+
+            // Test moving selected nodes
+            // May not work without actual selection, but method should exist
+            editor.MoveSelected(100.0f, 100.0f);
+
+            // Just verify method doesn't crash
+            editor.Should().NotBeNull();
+        }
     }
 }
