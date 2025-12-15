@@ -98,6 +98,24 @@ namespace Odyssey.Core.Combat
     /// - "EffectChance" @ 0x007c07e0, "Mod_Effect_NxtId" @ 0x007bea0c (effect ID tracking)
     /// - "AreaEffectId" @ 0x007c13f8, "DEffectType" @ 0x007c016b (effect type identifier)
     /// - "VisualEffectDef" @ 0x007c0230, "CamVidEffect" @ 0x007c3450 (visual effect definitions)
+    /// - "VisualEffect" @ 0x007c4624, "RangedEffect" @ 0x007c4634, "EffectIcon" @ 0x007c4f48
+    /// - "GameEffects" @ 0x007c4e70, "VideoEffects" @ 0x007c4f30, "visualeffects" @ 0x007c4a7c
+    /// - "visualeffect" @ 0x007d25e8, "FreeLookEffect" @ 0x007c7df0
+    /// - Effect bonus messages:
+    ///   - " + %d (Effect Attack Bonus)" @ 0x007c39d0
+    ///   - " + %d (Effect Damage Bonus)" @ 0x007c3cd8
+    ///   - " + %d (Effect Damage Bonus) (Critical x%d)" @ 0x007c3cf4
+    ///   - " + %d (Effect AC Deflection Bonus)" @ 0x007c3d9c
+    ///   - " + %d (Effect AC Shield Bonus)" @ 0x007c3dc0
+    ///   - " + %d (Effect AC Armor Bonus)" @ 0x007c3de0
+    ///   - " + %d (Effect AC Natural Bonus)" @ 0x007c3e00
+    ///   - " + %d (Effect AC Dodge Bonus)" @ 0x007c3e20
+    /// - Effect directories: "HD0:effects" @ 0x007cc01c (effects directory)
+    /// - "Environment Effects Streaming" @ 0x007c7204, "Environment Effects Nonstreaming" @ 0x007c7224
+    /// - GUI: "BTN_EFFECTS" @ 0x007c9038, "LBL_EFFECTS_BAD" @ 0x007c90c0, "LBL_EFFECTS_GOOD" @ 0x007c90d0
+    /// - "LB_EFFECTS_BAD" @ 0x007c90e4, "LB_EFFECTS_GOOD" @ 0x007c90f4 (effect list boxes)
+    /// - Error messages:
+    ///   - "CSWCVisualEffect::LoadModel: Failed to load visual effect model '%s'." @ 0x007cd5a8
     /// - "VisualEffect" @ 0x007c4624, "RangedEffect" @ 0x007c4634 (effect categories)
     /// - "GameEffects" @ 0x007c4e70, "VideoEffects" @ 0x007c4f30, "EffectIcon" @ 0x007c4f48
     /// - Original implementation: FUN_0050b540 @ 0x0050b540 (EffectList operations), FUN_00505db0 @ 0x00505db0 (effect management)
