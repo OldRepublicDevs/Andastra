@@ -26,15 +26,53 @@ namespace HolocronToolset.NET.Tests.Editors
         [Fact]
         public void TestUttEditorNewFileCreation()
         {
-            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utt_editor.py
-            // Original: def test_utt_editor_new_file_creation(qtbot, installation):
-            var editor = new UTTEditor(null, null);
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utt_editor.py:1040-1067
+            // Original: def test_utt_editor_new_file_creation(qtbot, installation: HTInstallation):
+            string k2Path = Environment.GetEnvironmentVariable("K2_PATH");
+            if (string.IsNullOrEmpty(k2Path))
+            {
+                k2Path = @"C:\Program Files (x86)\Steam\steamapps\common\Knights of the Old Republic II";
+            }
 
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k2Path) && System.IO.File.Exists(System.IO.Path.Combine(k2Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k2Path, "Test Installation", tsl: true);
+            }
+
+            var editor = new UTTEditor(null, installation);
+
+            // Create new
             editor.New();
 
-            // Verify UTT object exists
+            // Set all fields
+            editor.NameEdit.SetLocString(LocalizedString.FromEnglish("New Trigger"));
+            editor.TagEdit.Text = "new_trigger";
+            editor.ResrefEdit.Text = "new_trigger";
+            
+            var highlightHeightSpinField = typeof(UTTEditor).GetField("_highlightHeightSpin", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            var highlightHeightSpin = highlightHeightSpinField?.GetValue(editor) as Avalonia.Controls.NumericUpDown;
+            if (highlightHeightSpin != null)
+            {
+                highlightHeightSpin.Value = 2.0m;
+            }
+            
+            var commentsEditField = typeof(UTTEditor).GetField("_commentsEdit", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            var commentsEdit = commentsEditField?.GetValue(editor) as Avalonia.Controls.TextBox;
+            if (commentsEdit != null)
+            {
+                commentsEdit.Text = "New trigger comment";
+            }
+
+            // Build and verify
             var (data, _) = editor.Build();
-            data.Should().NotBeNull();
+            var newUtt = CSharpKOTOR.Resource.Generics.UTTAuto.ReadUtt(data);
+
+            newUtt.Name.Get(CSharpKOTOR.Common.Language.English, CSharpKOTOR.Common.Gender.Male).Should().Be("New Trigger");
+            newUtt.Tag.Should().Be("new_trigger");
+            // Use approximate comparison for float due to GFF single-precision serialization
+            Math.Abs(newUtt.HighlightHeight - 2.0f).Should().BeLessThan(0.01f);
+            newUtt.Comment.Should().Be("New trigger comment");
         }
 
         [Fact]
@@ -2491,6 +2529,40 @@ namespace HolocronToolset.NET.Tests.Editors
             modifiedUtt.Tag.Should().Be("modified_gff_test");
             // Use approximate comparison for float due to GFF single-precision serialization
             Math.Abs(modifiedUtt.HighlightHeight - 5.0f).Should().BeLessThan(0.01f);
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utt_editor.py:1069-1085
+        // Original: def test_utt_editor_new_file_all_defaults(qtbot, installation: HTInstallation):
+        [Fact]
+        public void TestUttEditorNewFileAllDefaults()
+        {
+            string k2Path = Environment.GetEnvironmentVariable("K2_PATH");
+            if (string.IsNullOrEmpty(k2Path))
+            {
+                k2Path = @"C:\Program Files (x86)\Steam\steamapps\common\Knights of the Old Republic II";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k2Path) && System.IO.File.Exists(System.IO.Path.Combine(k2Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k2Path, "Test Installation", tsl: true);
+            }
+
+            var editor = new UTTEditor(null, installation);
+
+            // Create new
+            editor.New();
+
+            // Build and verify defaults
+            var (data, _) = editor.Build();
+            var newUtt = CSharpKOTOR.Resource.Generics.UTTAuto.ReadUtt(data);
+
+            // Verify defaults (may vary, but should be consistent)
+            // Just verify the UTT object was created successfully with valid types
+            newUtt.Should().NotBeNull("New UTT should not be null");
+            newUtt.Tag.Should().NotBeNull("Tag should not be null");
+            // Cursor, TypeId, and HighlightHeight are value types, so they always have values
+            // The test just verifies the object was created successfully
         }
     }
 }
