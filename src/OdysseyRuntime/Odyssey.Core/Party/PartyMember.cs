@@ -8,12 +8,18 @@ namespace Odyssey.Core.Party
     /// Represents a party member (PC or NPC).
     /// </summary>
     /// <remarks>
-    /// Party members persist their state when not in active party.
-    /// State includes:
-    /// - Entity data (stats, equipment, inventory)
-    /// - XP progression
-    /// - Influence (K2)
-    /// - AI behavior settings
+    /// Party Member:
+    /// - Based on swkotor2.exe party system
+    /// - Located via string references: "PARTYTABLE" @ 0x007c1910, "Party" @ 0x007c24dc
+    /// - Party state stored in PARTYTABLE.res GFF file (see SaveSerializer FUN_0057dcd0 @ 0x0057dcd0)
+    /// - Party members persist their state when not in active party
+    /// - State includes:
+    ///   - Entity data (stats, equipment, inventory)
+    ///   - XP progression
+    ///   - Influence (K2, stored in PT_INFLUENCE list)
+    ///   - AI behavior settings (PT_AISTATE, PT_FOLLOWSTATE)
+    /// - PC is always slot 0, NPCs are slots 1-9/10
+    /// - Members can be available, selectable, and in active party independently
     /// </remarks>
     public class PartyMember
     {
@@ -133,10 +139,7 @@ namespace Odyssey.Core.Party
             int oldXP = XP;
             XP += amount;
 
-            if (OnXPChanged != null)
-            {
-                OnXPChanged(oldXP, XP);
-            }
+            OnXPChanged?.Invoke(oldXP, XP);
 
             // Check for level up
             if (CanLevelUp())

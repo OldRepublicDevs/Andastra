@@ -8,13 +8,18 @@ namespace Odyssey.Core.Save
     /// Saved state for an area.
     /// </summary>
     /// <remarks>
-    /// In KOTOR saves, area state is stored in [module]_s.rim files.
-    /// This tracks changes from the base GIT data:
-    /// - Entity positions
-    /// - Door open/locked states
-    /// - Placeable open/locked states
-    /// - Destroyed/removed entities
-    /// - Spawned entities (not in original GIT)
+    /// Area State:
+    /// - Based on swkotor2.exe area save system
+    /// - Located via string references: Area state serialization in save system
+    /// - Original implementation: Area state stored in [module]_s.rim files within savegame.sav ERF archive
+    /// - FUN_005226d0 @ 0x005226d0 saves entity states to GFF format
+    /// - This tracks changes from the base GIT data:
+    ///   - Entity positions (XPosition, YPosition, ZPosition, XOrientation, YOrientation, ZOrientation)
+    ///   - Door open/locked states (OpenState, IsLocked)
+    ///   - Placeable open/locked states
+    ///   - Destroyed/removed entities (marked for removal)
+    ///   - Spawned entities (not in original GIT, dynamically created)
+    /// - Area states stored per-area in save file, loaded when area is entered
     /// </remarks>
     public class AreaState
     {

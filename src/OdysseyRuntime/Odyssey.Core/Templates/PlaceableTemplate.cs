@@ -9,6 +9,18 @@ namespace Odyssey.Core.Templates
     /// <summary>
     /// Placeable template implementation for spawning placeables from UTP data.
     /// </summary>
+    /// <remarks>
+    /// Placeable Template:
+    /// - Based on swkotor2.exe placeable system
+    /// - Located via string references: "Placeable" @ 0x007bc530, "Placeable List" @ 0x007bd260
+    /// - "Placeables" @ 0x007c4bd0, "placeableobjsnds" @ 0x007c4bf0
+    /// - Template loading: FUN_005226d0 @ 0x005226d0 (entity serialization references placeable templates)
+    /// - Original implementation: UTP (Placeable) GFF templates define placeable properties
+    /// - UTP file format: GFF with "UTP " signature containing placeable data
+    /// - Placeables have appearance, useability, locks, inventory, HP, saves
+    /// - Script events: OnUsed, OnOpen, OnClose, OnLock, OnUnlock, OnDamaged, OnDeath
+    /// - Based on UTP file format documentation in vendor/PyKotor/wiki/
+    /// </remarks>
     public class PlaceableTemplate : IPlaceableTemplate
     {
         #region Properties

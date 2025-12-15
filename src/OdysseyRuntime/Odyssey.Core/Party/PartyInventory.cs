@@ -8,8 +8,14 @@ namespace Odyssey.Core.Party
     /// Manages shared party inventory.
     /// </summary>
     /// <remarks>
-    /// In KOTOR, inventory is shared across all party members.
-    /// Items can be equipped to individual party members.
+    /// Party Inventory:
+    /// - Based on swkotor2.exe inventory system
+    /// - Located via string references: Inventory management functions handle item storage
+    /// - Original implementation: Inventory is shared across all party members
+    /// - Maximum inventory slots: 100 (MaxSlots)
+    /// - Items can be equipped to individual party members via equipment slots
+    /// - Inventory items stored in creature/item entities, managed per-party-member
+    /// - Items persist across saves as part of creature/party state
     /// </remarks>
     public class PartyInventory
     {
