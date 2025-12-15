@@ -311,6 +311,7 @@ namespace Odyssey.Kotor.EngineApi
                 
                 // ApplyEffectToObject (routine 220)
                 case 220: return Func_ApplyEffectToObject(args, ctx);
+                case 222: return Func_GetSpellTargetLocation(args, ctx);
 
                 // Global string (restricted functions)
                 case 160: return Func_SetGlobalString(args, ctx);
@@ -404,6 +405,7 @@ namespace Odyssey.Kotor.EngineApi
                 case 172: return Func_GetFactionEqual(args, ctx);
                 case 181: return Func_GetFactionWeakestMember(args, ctx);
                 case 182: return Func_GetFactionStrongestMember(args, ctx);
+                case 234: return Func_ActionCastSpellAtLocation(args, ctx);
                 case 235: return Func_GetIsEnemy(args, ctx);
                 case 236: return Func_GetIsFriend(args, ctx);
                 case 237: return Func_GetIsNeutral(args, ctx);
@@ -2946,6 +2948,75 @@ namespace Odyssey.Kotor.EngineApi
             }
 
             var action = new ActionCastSpellAtObject(spellId, targetId);
+            IActionQueue queue = ctx.Caller.GetComponent<IActionQueue>();
+            if (queue != null)
+            {
+                queue.Add(action);
+            }
+
+            return Variable.Void();
+        }
+
+        /// <summary>
+        /// GetSpellTargetLocation() - Returns the location of the last spell target
+        /// Based on swkotor2.exe: GetSpellTargetLocation implementation (routine ID 222)
+        /// </summary>
+        private Variable Func_GetSpellTargetLocation(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            if (ctx.Caller == null)
+            {
+                return Variable.FromLocation((object)ObjectInvalid);
+            }
+
+            // Retrieve last spell target location for this caster
+            if (_lastSpellTargetLocations.TryGetValue(ctx.Caller.ObjectId, out Location targetLocation))
+            {
+                // Return location as object reference (engine-managed Location object)
+                // Location objects are managed by the engine, so we pass the Location object itself
+                return Variable.FromLocation(targetLocation);
+            }
+
+            return Variable.FromLocation((object)ObjectInvalid);
+        }
+
+        /// <summary>
+        /// ActionCastSpellAtLocation(int nSpell, location lTargetLocation, int nMetaMagic=0, ...) - Casts a spell at a target location
+        /// Based on swkotor2.exe: Queues spell casting action at location, tracks location and metamagic type
+        /// </summary>
+        private Variable Func_ActionCastSpellAtLocation(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            int spellId = args.Count > 0 ? args[0].AsInt() : 0;
+            Location targetLocation = args.Count > 1 ? (Location)args[1].ComplexValue : null;
+            int metamagic = args.Count > 2 ? args[2].AsInt() : 0; // nMetaMagic parameter
+
+            if (ctx.Caller == null || targetLocation == null)
+            {
+                return Variable.Void();
+            }
+
+            // Extract position from Location object
+            Vector3 targetPosition = targetLocation.Position;
+
+            // Track spell target location for GetSpellTargetLocation
+            // Based on swkotor2.exe: GetSpellTargetLocation returns last location of spell cast by caller
+            // Original implementation: Stores target location when spell is cast at location
+            _lastSpellTargetLocations[ctx.Caller.ObjectId] = targetLocation;
+
+            // Track spell ID for GetSpellId
+            _lastSpellIds[ctx.Caller.ObjectId] = spellId;
+
+            // Track metamagic type for GetMetaMagicFeat
+            if (metamagic != 0)
+            {
+                _lastMetamagicTypes[ctx.Caller.ObjectId] = metamagic;
+            }
+            else
+            {
+                // Clear metamagic tracking if no metamagic is used
+                _lastMetamagicTypes.Remove(ctx.Caller.ObjectId);
+            }
+
+            var action = new ActionCastSpellAtLocation(spellId, targetPosition);
             IActionQueue queue = ctx.Caller.GetComponent<IActionQueue>();
             if (queue != null)
             {
