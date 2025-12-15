@@ -4696,11 +4696,45 @@ namespace Odyssey.Scripting.EngineApi
                 return Variable.Void();
             }
             
-            // TODO: Implement delayed destruction with fade effects
-            // For now, just remove from world immediately
-            if (ctx.World != null)
+            // If no delay and no fade, destroy immediately
+            if (delay <= 0f && noFade != 0)
             {
-                ctx.World.DestroyEntity(entity.ObjectId);
+                if (ctx.World != null)
+                {
+                    ctx.World.DestroyEntity(entity.ObjectId);
+                }
+                return Variable.Void();
+            }
+            
+            // Create destroy action with delay and fade support
+            var destroyAction = new Odyssey.Core.Actions.ActionDestroyObject(entity.ObjectId, delay, noFade != 0, delayUntilFade);
+            
+            // If delay > 0, schedule via DelayCommand
+            if (delay > 0f)
+            {
+                // Schedule the destroy action after delay
+                if (ctx.World != null && ctx.World.DelayScheduler != null)
+                {
+                    ctx.World.DelayScheduler.ScheduleDelay(delay, destroyAction, ctx.Caller ?? entity);
+                }
+            }
+            else
+            {
+                // No delay, execute immediately via action queue
+                // Add to entity's action queue so it can handle fade timing
+                IActionQueue queue = entity.GetComponent<IActionQueue>();
+                if (queue != null)
+                {
+                    queue.Add(destroyAction);
+                }
+                else
+                {
+                    // Fallback: destroy immediately if no action queue
+                    if (ctx.World != null)
+                    {
+                        ctx.World.DestroyEntity(entity.ObjectId);
+                    }
+                }
             }
             
             return Variable.Void();
