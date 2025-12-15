@@ -42,7 +42,7 @@ namespace HoloPatcher.UI.Update
 
             try
             {
-                var tempRoot = CreateTempDirectory();
+                string tempRoot = CreateTempDirectory();
                 string archivePath = await DownloadUpdateAsync(tempRoot, progressWindow.ViewModel, cancellationToken);
                 string payloadRoot = await ExtractArchiveAsync(archivePath, progressWindow.ViewModel, cancellationToken);
                 await ApplyUpdateAsync(payloadRoot, progressWindow.ViewModel, cancellationToken);
@@ -59,7 +59,7 @@ namespace HoloPatcher.UI.Update
             string version = _info.GetChannelVersion(_useBetaChannel);
             progress.ReportStatus($"Downloading HoloPatcher {version}...");
 
-            var mirrors = _info.GetPlatformMirrors(_useBetaChannel);
+            System.Collections.Generic.IReadOnlyList<string> mirrors = _info.GetPlatformMirrors(_useBetaChannel);
             Exception lastError = null;
 
             using (HttpClient client = CreateHttpClient())
@@ -88,7 +88,7 @@ namespace HoloPatcher.UI.Update
 #endif
                             using (FileStream fileStream = File.Create(destination))
                             {
-                                var buffer = new byte[81920];
+                                byte[] buffer = new byte[81920];
                                 long downloaded = 0;
                                 var sw = Stopwatch.StartNew();
 

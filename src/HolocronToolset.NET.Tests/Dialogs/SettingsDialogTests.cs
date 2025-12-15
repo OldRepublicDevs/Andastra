@@ -56,7 +56,7 @@ namespace HolocronToolset.NET.Tests.Dialogs
                 { "Application", dialog.Ui.ApplicationSettingsPage },
             };
 
-            foreach (var kvp in pages)
+            foreach (KeyValuePair<string, Control> kvp in pages)
             {
                 string pageName = kvp.Key;
                 Control pageWidget = kvp.Value;

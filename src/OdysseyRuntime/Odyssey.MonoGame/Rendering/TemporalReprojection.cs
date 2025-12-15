@@ -139,34 +139,44 @@ namespace Odyssey.MonoGame.Rendering
             RenderTarget2D previousTarget = _graphicsDevice.GetRenderTargets().Length > 0
                 ? _graphicsDevice.GetRenderTargets()[0].RenderTarget as RenderTarget2D
                 : null;
-            _graphicsDevice.SetRenderTarget(_historyBuffer);
 
-            // Reproject using motion vectors and combine with history
-            // Full implementation would:
-            // 1. Sample history buffer using reprojected coordinates from motion vectors
-            // 2. Clip and reject history samples that don't match current frame
-            // 3. Blend current frame with valid history samples
-            // 4. Store result in history buffer for next frame
-            // For now, this provides the framework and resource management
-
-            if (effect != null && _velocityBuffer != null)
+            try
             {
-                // effect.Parameters["CurrentFrame"].SetValue(currentFrame);
-                // effect.Parameters["HistoryBuffer"].SetValue(_historyBuffer);
-                // effect.Parameters["VelocityBuffer"].SetValue(_velocityBuffer);
-                // effect.Parameters["PreviousViewProjection"].SetValue(_previousViewProjection);
-                // Render full-screen quad with temporal reprojection shader
-            }
+                _graphicsDevice.SetRenderTarget(_historyBuffer);
 
-            // Restore previous render target
-            _graphicsDevice.SetRenderTarget(previousTarget);
+                // Reproject using motion vectors and combine with history
+                // Full implementation would:
+                // 1. Sample history buffer using reprojected coordinates from motion vectors
+                // 2. Clip and reject history samples that don't match current frame
+                // 3. Blend current frame with valid history samples
+                // 4. Store result in history buffer for next frame
+                // For now, this provides the framework and resource management
+
+                if (effect != null && _velocityBuffer != null)
+                {
+                    // effect.Parameters["CurrentFrame"].SetValue(currentFrame);
+                    // effect.Parameters["HistoryBuffer"].SetValue(_historyBuffer);
+                    // effect.Parameters["VelocityBuffer"].SetValue(_velocityBuffer);
+                    // effect.Parameters["PreviousViewProjection"].SetValue(_previousViewProjection);
+                    // Render full-screen quad with temporal reprojection shader
+                }
+            }
+            finally
+            {
+                // Always restore previous render target
+                _graphicsDevice.SetRenderTarget(previousTarget);
+            }
 
             return _historyBuffer;
         }
 
+        /// <summary>
+        /// Disposes of all resources used by this temporal reprojection system.
+        /// </summary>
         public void Dispose()
         {
             _historyBuffer?.Dispose();
+            _historyBuffer = null;
             _velocityBuffer = null; // Not owned, just referenced
         }
     }

@@ -362,7 +362,7 @@ namespace HolocronToolset.NET.Tests.Dialogs
                 { "UTWEditor", "GFF-UTW.md" }
             };
 
-            foreach (var kvp in specificGffEditors)
+            foreach (KeyValuePair<string, string> kvp in specificGffEditors)
             {
                 if (EditorWikiMapping.EditorWikiMap.ContainsKey(kvp.Key))
                 {
@@ -385,7 +385,7 @@ namespace HolocronToolset.NET.Tests.Dialogs
                 { "MetadataEditor", "GFF-File-Format.md" }
             };
 
-            foreach (var kvp in genericGffEditors)
+            foreach (KeyValuePair<string, string> kvp in genericGffEditors)
             {
                 if (EditorWikiMapping.EditorWikiMap.ContainsKey(kvp.Key))
                 {

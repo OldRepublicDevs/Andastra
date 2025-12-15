@@ -142,7 +142,7 @@ namespace HolocronToolset.NET.Tests.Editors
                 }
 
                 // Matching PyKotor implementation: tpc_resource: ResourceResult | None = tpc_resources[0]
-                var tpcResource = tpcResources[0];
+                CSharpKOTOR.Installation.ResourceResult tpcResource = tpcResources[0];
                 // Matching PyKotor implementation: tpc_data: bytes | None = installation.resource(resname=tpc_resource.resname, restype=tpc_resource.restype)
                 var resourceResult = installation.Resource(tpcResource.ResName, tpcResource.ResType);
                 if (resourceResult == null || resourceResult.Data == null || resourceResult.Data.Length == 0)
@@ -171,7 +171,7 @@ namespace HolocronToolset.NET.Tests.Editors
                 data.Length.Should().BeGreaterThan(0);
 
                 // Matching PyKotor implementation: Verify we can read it back
-                var loadedTpc = CSharpKOTOR.Formats.TPC.TPCAuto.ReadTpc(data);
+                CSharpKOTOR.Formats.TPC.TPC loadedTpc = CSharpKOTOR.Formats.TPC.TPCAuto.ReadTpc(data);
                 loadedTpc.Should().NotBeNull();
             }
             else
@@ -195,7 +195,7 @@ namespace HolocronToolset.NET.Tests.Editors
                 data.Length.Should().BeGreaterThan(0);
 
                 // Matching PyKotor implementation: Verify we can read it back
-                var loadedTpc = CSharpKOTOR.Formats.TPC.TPCAuto.ReadTpc(data);
+                CSharpKOTOR.Formats.TPC.TPC loadedTpc = CSharpKOTOR.Formats.TPC.TPCAuto.ReadTpc(data);
                 loadedTpc.Should().NotBeNull();
             }
         }

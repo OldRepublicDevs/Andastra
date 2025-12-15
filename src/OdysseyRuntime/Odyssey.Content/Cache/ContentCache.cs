@@ -216,7 +216,7 @@ namespace Odyssey.Content.Cache
 
                 long currentSize = _totalSize;
 
-                foreach (var metaFile in files)
+                foreach (FileInfo metaFile in files)
                 {
                     if (currentSize <= maxSizeBytes)
                     {

@@ -25,7 +25,7 @@ namespace HoloPatcher.UI.Rte
             };
 
             var tagLookup = new Dictionary<string, string>(StringComparer.Ordinal);
-            var paragraphPositions = CalculateParagraphPositions(document, normalizedContent);
+            Dictionary<Paragraph, int> paragraphPositions = CalculateParagraphPositions(document, normalizedContent);
 
             foreach (Paragraph paragraph in document.Blocks.OfType<Paragraph>())
             {
@@ -33,9 +33,9 @@ namespace HoloPatcher.UI.Rte
                 int paragraphTextLength = GetParagraphTextLength(paragraph);
                 int paragraphEnd = paragraphStart + paragraphTextLength;
 
-                foreach (var inline in paragraph.Inlines.OfType<EditableRun>())
+                foreach (EditableRun inline in paragraph.Inlines.OfType<EditableRun>())
                 {
-                    var config = BuildInlineConfig(paragraph, inline);
+                    Dictionary<string, string> config = BuildInlineConfig(paragraph, inline);
                     if (config.Count == 0 || inline.InlineLength == 0)
                     {
                         continue;
@@ -62,7 +62,7 @@ namespace HoloPatcher.UI.Rte
                     });
                 }
 
-                var paragraphConfig = BuildParagraphConfig(paragraph);
+                Dictionary<string, string> paragraphConfig = BuildParagraphConfig(paragraph);
                 if (paragraphConfig.Count > 0)
                 {
                     string configKey = string.Join("|", paragraphConfig.OrderBy(kvp => kvp.Key).Select(kvp => $"{kvp.Key}={kvp.Value}"));
@@ -91,7 +91,7 @@ namespace HoloPatcher.UI.Rte
             var positions = new Dictionary<Paragraph, int>();
             int currentOffset = 0;
 
-            foreach (var block in document.Blocks)
+            foreach (Block block in document.Blocks)
             {
                 if (block is Paragraph paragraph)
                 {
@@ -106,7 +106,7 @@ namespace HoloPatcher.UI.Rte
         private static int GetParagraphTextLength(Paragraph paragraph)
         {
             int length = 0;
-            foreach (var inline in paragraph.Inlines)
+            foreach (IEditable inline in paragraph.Inlines)
             {
                 if (inline is EditableRun run)
                 {
@@ -123,7 +123,7 @@ namespace HoloPatcher.UI.Rte
         private static int GetInlineOffsetInParagraph(Paragraph paragraph, EditableRun targetInline)
         {
             int offset = 0;
-            foreach (var inline in paragraph.Inlines)
+            foreach (IEditable inline in paragraph.Inlines)
             {
                 if (inline == targetInline)
                 {
@@ -164,16 +164,16 @@ namespace HoloPatcher.UI.Rte
                 return;
             }
 
-            foreach (var kvp in document.Tags)
+            foreach (KeyValuePair<string, List<RteRange>> kvp in document.Tags)
             {
-                var ranges = kvp.Value;
+                List<RteRange> ranges = kvp.Value;
                 Dictionary<string, string> config;
                 if (!document.TagConfigs.TryGetValue(kvp.Key, out config) || config.Count == 0)
                 {
                     continue;
                 }
 
-                foreach (var rteRange in ranges)
+                foreach (RteRange rteRange in ranges)
                 {
                     int start = TkIndexToOffset(rteRange.Start, document.Content);
                     int end = TkIndexToOffset(rteRange.End, document.Content);
@@ -194,7 +194,7 @@ namespace HoloPatcher.UI.Rte
             string fontDescriptor;
             if (config.TryGetValue("font", out fontDescriptor) && !string.IsNullOrWhiteSpace(fontDescriptor))
             {
-                var descriptor = ParseFontDescriptor(fontDescriptor);
+                (FontFamily Family, double? Size, FontWeight? Weight, FontStyle? Style) descriptor = ParseFontDescriptor(fontDescriptor);
                 if (descriptor.Family != null)
                 {
                     range.ApplyFormatting(AvaloniaTextElement.FontFamilyProperty, descriptor.Family);
@@ -216,7 +216,7 @@ namespace HoloPatcher.UI.Rte
             string foreground;
             if (config.TryGetValue("foreground", out foreground))
             {
-                var brush = ParseBrush(foreground);
+                SolidColorBrush brush = ParseBrush(foreground);
                 if (brush != null)
                 {
                     range.ApplyFormatting(AvaloniaTextElement.ForegroundProperty, brush);
@@ -226,7 +226,7 @@ namespace HoloPatcher.UI.Rte
             string background;
             if (config.TryGetValue("background", out background))
             {
-                var brush = ParseBrush(background);
+                SolidColorBrush brush = ParseBrush(background);
                 if (brush != null)
                 {
                     range.ApplyFormatting(AvaloniaTextElement.BackgroundProperty, brush);
@@ -255,8 +255,8 @@ namespace HoloPatcher.UI.Rte
                 // Try to get it via reflection
                 try
                 {
-                    var textElementType = typeof(AvaloniaTextElement);
-                    var prop = textElementType.GetProperty("TextDecorationsProperty", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
+                    Type textElementType = typeof(AvaloniaTextElement);
+                    System.Reflection.PropertyInfo prop = textElementType.GetProperty("TextDecorationsProperty", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
                     if (prop != null)
                     {
                         var textDecorationsProp = prop.GetValue(null) as Avalonia.AvaloniaProperty;
@@ -278,10 +278,10 @@ namespace HoloPatcher.UI.Rte
         {
             // Calculate paragraph positions to find which paragraphs intersect with the range
             string normalizedContent = NormalizeToTkContent(document.Text);
-            var paragraphPositions = CalculateParagraphPositions(document, normalizedContent);
+            Dictionary<Paragraph, int> paragraphPositions = CalculateParagraphPositions(document, normalizedContent);
             var paragraphs = new List<Paragraph>();
 
-            foreach (var block in document.Blocks)
+            foreach (Block block in document.Blocks)
             {
                 if (block is Paragraph paragraph && paragraphPositions.ContainsKey(paragraph))
                 {
@@ -313,7 +313,7 @@ namespace HoloPatcher.UI.Rte
                     default: alignment = TextAlignment.Left; break;
                 }
 
-                foreach (var paragraph in paragraphs)
+                foreach (Paragraph paragraph in paragraphs)
                 {
                     paragraph.TextAlignment = alignment;
                 }
@@ -323,9 +323,9 @@ namespace HoloPatcher.UI.Rte
             double spacingBeforeValue;
             if (config.TryGetValue("spacing1", out spacingBefore) && double.TryParse(spacingBefore, NumberStyles.Float, CultureInfo.InvariantCulture, out spacingBeforeValue))
             {
-                foreach (var paragraph in paragraphs)
+                foreach (Paragraph paragraph in paragraphs)
                 {
-                    var margin = paragraph.Margin;
+                    Thickness margin = paragraph.Margin;
                     paragraph.Margin = new Thickness(margin.Left, spacingBeforeValue, margin.Right, margin.Bottom);
                 }
             }
@@ -334,9 +334,9 @@ namespace HoloPatcher.UI.Rte
             double spacingAfterValue;
             if (config.TryGetValue("spacing3", out spacingAfter) && double.TryParse(spacingAfter, NumberStyles.Float, CultureInfo.InvariantCulture, out spacingAfterValue))
             {
-                foreach (var paragraph in paragraphs)
+                foreach (Paragraph paragraph in paragraphs)
                 {
-                    var margin = paragraph.Margin;
+                    Thickness margin = paragraph.Margin;
                     paragraph.Margin = new Thickness(margin.Left, margin.Top, margin.Right, spacingAfterValue);
                 }
             }
@@ -345,9 +345,9 @@ namespace HoloPatcher.UI.Rte
             double firstMarginValue;
             if (config.TryGetValue("lmargin1", out firstMargin) && double.TryParse(firstMargin, NumberStyles.Float, CultureInfo.InvariantCulture, out firstMarginValue))
             {
-                foreach (var paragraph in paragraphs)
+                foreach (Paragraph paragraph in paragraphs)
                 {
-                    var margin = paragraph.Margin;
+                    Thickness margin = paragraph.Margin;
                     paragraph.Margin = new Thickness(firstMarginValue, margin.Top, margin.Right, margin.Bottom);
                 }
             }
@@ -527,7 +527,7 @@ namespace HoloPatcher.UI.Rte
                 return 0;
             }
 
-            var parts = index.Split(new[] { '.' }, StringSplitOptions.RemoveEmptyEntries);
+            string[] parts = index.Split(new[] { '.' }, StringSplitOptions.RemoveEmptyEntries);
             int line, column;
             if (parts.Length != 2 ||
                 !int.TryParse(parts[0], NumberStyles.Integer, CultureInfo.InvariantCulture, out line) ||

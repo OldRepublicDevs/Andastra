@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Reflection;
 using CSharpKOTOR.Common;
 using CSharpKOTOR.Resources;
 
@@ -131,10 +132,37 @@ namespace CSharpKOTOR.Formats.LIP
         public static byte[] BytesLip(LIP lip, ResourceType fileFormat = null)
         {
             ResourceType format = fileFormat ?? ResourceType.LIP;
-            using (var ms = new MemoryStream())
+            if (format == ResourceType.LIP)
             {
-                WriteLip(lip, ms, format);
-                return ms.ToArray();
+                var ms = new MemoryStream();
+                try
+                {
+                    var writer = new LIPBinaryWriter(lip, ms);
+                    writer.Write(autoClose: false); // Don't auto-close in Write()
+                    // Ensure stream is flushed and get data
+                    // ToArray() returns all data written regardless of current position
+                    ms.Flush();
+                    byte[] result = ms.ToArray();
+                    writer.Dispose(); // Dispose after we have the data (this will close the stream)
+                    return result;
+                }
+                finally
+                {
+                    // Stream may already be closed by writer.Dispose(), but Dispose is idempotent
+                    ms.Dispose();
+                }
+            }
+            else if (format == ResourceType.LIP_XML)
+            {
+                throw new NotImplementedException("LIP XML format not yet implemented");
+            }
+            else if (format == ResourceType.LIP_JSON)
+            {
+                throw new NotImplementedException("LIP JSON format not yet implemented");
+            }
+            else
+            {
+                throw new ArgumentException("Unsupported format specified; use LIP or LIP_XML or LIP_JSON.");
             }
         }
     }

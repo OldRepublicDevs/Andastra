@@ -77,7 +77,7 @@ namespace HolocronToolset.NET.Tests.Editors
         [Fact]
         public void TestUtdEditorManipulateTag()
         {
-            var (utdFile, installation) = GetTestFileAndInstallation();
+            (string utdFile, HTInstallation installation) = GetTestFileAndInstallation();
 
             if (!System.IO.File.Exists(utdFile))
             {
@@ -97,9 +97,9 @@ namespace HolocronToolset.NET.Tests.Editors
 
             // Matching PyKotor implementation: editor.load(utd_file, "naldoor001", ResourceType.UTD, original_data)
             editor.Load(utdFile, "naldoor001", ResourceType.UTD, originalData);
-            
+
             // Matching PyKotor implementation: original_utd = read_utd(original_data)
-            var originalUtd = UTDHelpers.ConstructUtd(CSharpKOTOR.Formats.GFF.GFF.FromBytes(originalData));
+            UTD originalUtd = UTDHelpers.ConstructUtd(CSharpKOTOR.Formats.GFF.GFF.FromBytes(originalData));
 
             // Modify tag
             // Matching PyKotor implementation: editor.ui.tagEdit.setText("modified_tag")
@@ -108,10 +108,10 @@ namespace HolocronToolset.NET.Tests.Editors
             // Save and verify
             // Matching PyKotor implementation: data, _ = editor.build()
             var (data, _) = editor.Build();
-            
+
             // Matching PyKotor implementation: modified_utd = read_utd(data)
-            var modifiedUtd = UTDHelpers.ConstructUtd(CSharpKOTOR.Formats.GFF.GFF.FromBytes(data));
-            
+            UTD modifiedUtd = UTDHelpers.ConstructUtd(CSharpKOTOR.Formats.GFF.GFF.FromBytes(data));
+
             // Matching PyKotor implementation: assert modified_utd.tag == "modified_tag"
             // Matching PyKotor implementation: assert modified_utd.tag != original_utd.tag
             modifiedUtd.Tag.Should().Be("modified_tag");
@@ -208,7 +208,7 @@ namespace HolocronToolset.NET.Tests.Editors
             data.Length.Should().BeGreaterThan(0);
 
             // Verify we can read it back
-            var gff = CSharpKOTOR.Formats.GFF.GFF.FromBytes(data);
+            GFF gff = CSharpKOTOR.Formats.GFF.GFF.FromBytes(data);
             gff.Should().NotBeNull();
         }
 
@@ -293,7 +293,7 @@ namespace HolocronToolset.NET.Tests.Editors
 
             // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utd_editor.py:1146
             // Original: new_gff = read_gff(data)
-            var newGff = CSharpKOTOR.Formats.GFF.GFF.FromBytes(newData);
+            GFF newGff = CSharpKOTOR.Formats.GFF.GFF.FromBytes(newData);
 
             // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utd_editor.py:1153
             // Original: diff = original_gff.compare(new_gff, log_func, ignore_default_changes=True)

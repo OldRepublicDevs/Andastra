@@ -45,14 +45,14 @@ namespace HoloPatcher.UI.Update
         /// </summary>
         public IReadOnlyList<string> GetPlatformMirrors(bool useBetaChannel)
         {
-            var platformKey = DetectPlatformKey();
-            var archKey = DetectArchitectureKey();
-            var table = useBetaChannel ? BetaDirectLinks : ReleaseDirectLinks;
+            string platformKey = DetectPlatformKey();
+            string archKey = DetectArchitectureKey();
+            Dictionary<string, Dictionary<string, List<string>>> table = useBetaChannel ? BetaDirectLinks : ReleaseDirectLinks;
 
             if (table is null ||
-                !table.TryGetValue(platformKey, out var architectures) ||
+                !table.TryGetValue(platformKey, out Dictionary<string, List<string>> architectures) ||
                 architectures is null ||
-                !architectures.TryGetValue(archKey, out var mirrors) ||
+                !architectures.TryGetValue(archKey, out List<string> mirrors) ||
                 mirrors is null ||
                 mirrors.Count == 0)
             {
@@ -150,7 +150,7 @@ namespace HoloPatcher.UI.Update
             }
 
             // If the dictionary already contains the typed payload we can shortcut.
-            if (raw.TryGetValue("__typed", out var typed) && typed is RemoteUpdateInfo cached)
+            if (raw.TryGetValue("__typed", out object typed) && typed is RemoteUpdateInfo cached)
             {
                 return cached;
             }
@@ -158,7 +158,7 @@ namespace HoloPatcher.UI.Update
             // Serialize and rehydrate into the strongly typed model to ensure consistent parsing
             // regardless of whether the dictionary contains JsonElements or CLR objects.
             string json = JsonSerializer.Serialize(raw, SerializerOptions);
-            var info = JsonSerializer.Deserialize<RemoteUpdateInfo>(json, SerializerOptions);
+            RemoteUpdateInfo info = JsonSerializer.Deserialize<RemoteUpdateInfo>(json, SerializerOptions);
             if (info is null)
             {
                 throw new InvalidOperationException("Failed to parse remote update payload.");

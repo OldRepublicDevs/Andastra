@@ -100,7 +100,7 @@ namespace Odyssey.Core.Templates
             entity.TemplateResRef = ResRef;
 
             // Apply position and facing
-            var transform = entity.GetComponent<Interfaces.Components.ITransformComponent>();
+            Interfaces.Components.ITransformComponent transform = entity.GetComponent<Interfaces.Components.ITransformComponent>();
             if (transform != null)
             {
                 transform.Position = position;
@@ -108,7 +108,7 @@ namespace Odyssey.Core.Templates
             }
 
             // Apply door-specific components
-            var door = entity.GetComponent<Interfaces.Components.IDoorComponent>();
+            Interfaces.Components.IDoorComponent door = entity.GetComponent<Interfaces.Components.IDoorComponent>();
             if (door != null)
             {
                 door.IsLocked = IsLocked;
@@ -119,7 +119,7 @@ namespace Odyssey.Core.Templates
             }
 
             // Apply script hooks
-            var scripts = entity.GetComponent<Interfaces.Components.IScriptHooksComponent>();
+            Interfaces.Components.IScriptHooksComponent scripts = entity.GetComponent<Interfaces.Components.IScriptHooksComponent>();
             if (scripts != null)
             {
                 if (!string.IsNullOrEmpty(OnOpen))

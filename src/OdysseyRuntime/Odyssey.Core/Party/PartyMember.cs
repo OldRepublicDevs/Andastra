@@ -171,7 +171,7 @@ namespace Odyssey.Core.Party
         /// </summary>
         public int GetLevel()
         {
-            var stats = Entity.GetComponent<Interfaces.Components.IStatsComponent>();
+            Interfaces.Components.IStatsComponent stats = Entity.GetComponent<Interfaces.Components.IStatsComponent>();
             if (stats != null)
             {
                 // Would need class levels tracking
@@ -220,7 +220,7 @@ namespace Odyssey.Core.Party
         /// </summary>
         public bool IsAlive()
         {
-            var stats = Entity.GetComponent<Interfaces.Components.IStatsComponent>();
+            Interfaces.Components.IStatsComponent stats = Entity.GetComponent<Interfaces.Components.IStatsComponent>();
             if (stats != null)
             {
                 return stats.CurrentHP > 0;
@@ -233,7 +233,7 @@ namespace Odyssey.Core.Party
         /// </summary>
         public int GetCurrentHP()
         {
-            var stats = Entity.GetComponent<Interfaces.Components.IStatsComponent>();
+            Interfaces.Components.IStatsComponent stats = Entity.GetComponent<Interfaces.Components.IStatsComponent>();
             if (stats != null)
             {
                 return stats.CurrentHP;
@@ -246,7 +246,7 @@ namespace Odyssey.Core.Party
         /// </summary>
         public int GetMaxHP()
         {
-            var stats = Entity.GetComponent<Interfaces.Components.IStatsComponent>();
+            Interfaces.Components.IStatsComponent stats = Entity.GetComponent<Interfaces.Components.IStatsComponent>();
             if (stats != null)
             {
                 return stats.MaxHP;
@@ -259,7 +259,7 @@ namespace Odyssey.Core.Party
         /// </summary>
         public int GetCurrentFP()
         {
-            var stats = Entity.GetComponent<Interfaces.Components.IStatsComponent>();
+            Interfaces.Components.IStatsComponent stats = Entity.GetComponent<Interfaces.Components.IStatsComponent>();
             if (stats != null)
             {
                 return stats.CurrentFP;
@@ -272,7 +272,7 @@ namespace Odyssey.Core.Party
         /// </summary>
         public int GetMaxFP()
         {
-            var stats = Entity.GetComponent<Interfaces.Components.IStatsComponent>();
+            Interfaces.Components.IStatsComponent stats = Entity.GetComponent<Interfaces.Components.IStatsComponent>();
             if (stats != null)
             {
                 return stats.MaxFP;

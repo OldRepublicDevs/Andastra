@@ -108,7 +108,7 @@ namespace HolocronToolset.NET.Tests.Editors
             data.Length.Should().BeGreaterThan(0);
 
             // Verify we can read it back
-            var gff = CSharpKOTOR.Formats.GFF.GFF.FromBytes(data);
+            GFF gff = CSharpKOTOR.Formats.GFF.GFF.FromBytes(data);
             gff.Should().NotBeNull();
         }
 
@@ -181,7 +181,7 @@ namespace HolocronToolset.NET.Tests.Editors
             // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utp_editor.py:1211
             // Original: original_utp = read_utp(original_data)
             var originalGff = CSharpKOTOR.Formats.GFF.GFF.FromBytes(data);
-            var originalUtp = UTPHelpers.ConstructUtp(originalGff);
+            UTP originalUtp = UTPHelpers.ConstructUtp(originalGff);
 
             // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utp_editor.py:1212
             // Original: editor.load(utp_file, "ebcont001", ResourceType.UTP, original_data)
@@ -193,8 +193,8 @@ namespace HolocronToolset.NET.Tests.Editors
 
             // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utp_editor.py:1216
             // Original: new_utp = read_utp(data)
-            var newGff = CSharpKOTOR.Formats.GFF.GFF.FromBytes(newData);
-            var newUtp = UTPHelpers.ConstructUtp(newGff);
+            GFF newGff = CSharpKOTOR.Formats.GFF.GFF.FromBytes(newData);
+            UTP newUtp = UTPHelpers.ConstructUtp(newGff);
 
             // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utp_editor.py:1221-1264
             // Original: assert new_utp.tag == original_utp.tag ... (many field comparisons)

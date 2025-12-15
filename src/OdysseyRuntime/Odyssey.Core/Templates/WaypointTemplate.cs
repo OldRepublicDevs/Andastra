@@ -50,7 +50,7 @@ namespace Odyssey.Core.Templates
             entity.TemplateResRef = ResRef;
 
             // Apply position and facing
-            var transform = entity.GetComponent<Interfaces.Components.ITransformComponent>();
+            Interfaces.Components.ITransformComponent transform = entity.GetComponent<Interfaces.Components.ITransformComponent>();
             if (transform != null)
             {
                 transform.Position = position;

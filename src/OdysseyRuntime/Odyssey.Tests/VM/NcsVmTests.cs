@@ -24,8 +24,8 @@ namespace Odyssey.Tests.VM
             _world = new World();
             _globals = new ScriptGlobals();
             _engineApi = new TestEngineApi();
-            
-            var caller = _world.CreateEntity(ObjectType.Creature, System.Numerics.Vector3.Zero, 0f);
+
+            IEntity caller = _world.CreateEntity(ObjectType.Creature, System.Numerics.Vector3.Zero, 0f);
             _context = new ExecutionContext(caller, _world, _engineApi, _globals);
         }
 
@@ -34,7 +34,7 @@ namespace Odyssey.Tests.VM
         {
             // Create a minimal valid NCS with just header and a NOP
             byte[] ncs = CreateNcsWithInstructions(new byte[] { 0x5D, 0x00 }); // NOP
-            
+
             // Should not throw
             _vm.Execute(ncs, _context);
         }
@@ -269,7 +269,7 @@ namespace Odyssey.Tests.VM
         [Fact]
         public void ScriptGlobals_SetAndGetLocalInt()
         {
-            var entity = _world.CreateEntity(ObjectType.Creature, System.Numerics.Vector3.Zero, 0f);
+            IEntity entity = _world.CreateEntity(ObjectType.Creature, System.Numerics.Vector3.Zero, 0f);
             _globals.SetLocalInt(entity, "local_var", 100);
             int value = _globals.GetLocalInt(entity, "local_var");
             Assert.Equal(100, value);
@@ -284,7 +284,7 @@ namespace Odyssey.Tests.VM
         {
             int totalSize = 13 + instructions.Length;
             byte[] ncs = new byte[totalSize];
-            
+
             // Header
             ncs[0] = (byte)'N';
             ncs[1] = (byte)'C';
@@ -295,16 +295,16 @@ namespace Odyssey.Tests.VM
             ncs[6] = (byte)'.';
             ncs[7] = (byte)'0';
             ncs[8] = 0x42;
-            
+
             // Size (big-endian)
             ncs[9] = (byte)(totalSize >> 24);
             ncs[10] = (byte)(totalSize >> 16);
             ncs[11] = (byte)(totalSize >> 8);
             ncs[12] = (byte)totalSize;
-            
+
             // Instructions
             Array.Copy(instructions, 0, ncs, 13, instructions.Length);
-            
+
             return ncs;
         }
 

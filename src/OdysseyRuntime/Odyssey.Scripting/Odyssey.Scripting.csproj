@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net9.0</TargetFramework>
     <LangVersion>7.3</LangVersion>
     <Nullable>disable</Nullable>
     <ImplicitUsings>disable</ImplicitUsings>
@@ -13,6 +13,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Odyssey.Core\Odyssey.Core.csproj" />
     <ProjectReference Include="..\Odyssey.Content\Odyssey.Content.csproj" />
+    <ProjectReference Include="..\Odyssey.Kotor\Odyssey.Kotor.csproj" />
     <ProjectReference Include="..\..\CSharpKOTOR\CSharpKOTOR.csproj" />
   </ItemGroup>
 

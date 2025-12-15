@@ -94,7 +94,7 @@ namespace HolocronToolset.NET.Tests.Editors
             data.Length.Should().BeGreaterThan(0);
 
             // Verify we can read it back
-            var gff = CSharpKOTOR.Formats.GFF.GFF.FromBytes(data);
+            GFF gff = CSharpKOTOR.Formats.GFF.GFF.FromBytes(data);
             gff.Should().NotBeNull();
         }
 
@@ -167,7 +167,7 @@ namespace HolocronToolset.NET.Tests.Editors
             // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:1379
             // Original: original_utc = read_utc(original_data)
             var originalGff = CSharpKOTOR.Formats.GFF.GFF.FromBytes(data);
-            var originalUtc = UTCHelpers.ConstructUtc(originalGff);
+            UTC originalUtc = UTCHelpers.ConstructUtc(originalGff);
 
             // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:1380
             // Original: editor.load(utc_file, "p_hk47", ResourceType.UTC, original_data)
@@ -179,8 +179,8 @@ namespace HolocronToolset.NET.Tests.Editors
 
             // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:1384
             // Original: new_utc = read_utc(data)
-            var newGff = CSharpKOTOR.Formats.GFF.GFF.FromBytes(newData);
-            var newUtc = UTCHelpers.ConstructUtc(newGff);
+            GFF newGff = CSharpKOTOR.Formats.GFF.GFF.FromBytes(newData);
+            UTC newUtc = UTCHelpers.ConstructUtc(newGff);
 
             // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:1389-1465
             // Original: assert str(new_utc.resref) == str(original_utc.resref) ... (many field comparisons)

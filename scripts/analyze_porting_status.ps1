@@ -52,3 +52,5 @@ $missingFiles | Select-Object -First 50 | ForEach-Object { Write-Host "  $_" -Fo
 # Export to JSON for further analysis
 $portingMap | ConvertTo-Json -Depth 3 | Out-File "porting_analysis.json" -Encoding UTF8
 Write-Host "`nFull analysis exported to porting_analysis.json" -ForegroundColor Green
+
+

@@ -32,7 +32,7 @@ namespace Odyssey.Core.Navigation
                 var nodeMap = new Dictionary<int, NavigationMesh.AabbNode>();
                 for (int i = 0; i < aabbNodes.Length; i++)
                 {
-                    var data = aabbNodes[i];
+                    AabbNodeData data = aabbNodes[i];
                     var node = new NavigationMesh.AabbNode
                     {
                         BoundsMin = data.BoundsMin,
@@ -45,8 +45,8 @@ namespace Odyssey.Core.Navigation
                 // Link children
                 for (int i = 0; i < aabbNodes.Length; i++)
                 {
-                    var data = aabbNodes[i];
-                    var node = nodeMap[i];
+                    AabbNodeData data = aabbNodes[i];
+                    NavigationMesh.AabbNode node = nodeMap[i];
 
                     if (data.LeftChildIndex >= 0 && data.LeftChildIndex < aabbNodes.Length)
                     {

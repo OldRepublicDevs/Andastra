@@ -38,7 +38,7 @@ namespace HoloPatcher.UI.Views
 
         private void PopulateFontSelector()
         {
-            var fonts = FontManager.Current.SystemFonts
+            System.Collections.Generic.IEnumerable<string> fonts = FontManager.Current.SystemFonts
                 .Select(f => f.Name)
                 .OrderBy(name => name, StringComparer.CurrentCultureIgnoreCase)
                 .Take(30); // keep list manageable
@@ -87,7 +87,7 @@ namespace HoloPatcher.UI.Views
                 }
             };
 
-            var files = await StorageProvider.OpenFilePickerAsync(options);
+            System.Collections.Generic.IReadOnlyList<IStorageFile> files = await StorageProvider.OpenFilePickerAsync(options);
             if (files.Count == 0)
             {
                 return;
@@ -133,7 +133,7 @@ namespace HoloPatcher.UI.Views
                     }
                 };
 
-                var file = await StorageProvider.SaveFilePickerAsync(options);
+                IStorageFile file = await StorageProvider.SaveFilePickerAsync(options);
                 if (file is null)
                 {
                     return;
@@ -141,7 +141,7 @@ namespace HoloPatcher.UI.Views
                 _currentFilePath = file.Path.LocalPath;
             }
 
-            var rte = RteDocumentConverter.FromFlowDocument(Editor.FlowDocument);
+            RteDocument rte = RteDocumentConverter.FromFlowDocument(Editor.FlowDocument);
             await File.WriteAllTextAsync(_currentFilePath, rte.ToJson());
             _isDirty = false;
             UpdateTitle();
@@ -169,7 +169,7 @@ namespace HoloPatcher.UI.Views
                 return true;
             }
 
-            var messageBox = MessageBoxManager.GetMessageBoxStandard(
+            MsBox.Avalonia.Base.IMsBox<ButtonResult> messageBox = MessageBoxManager.GetMessageBoxStandard(
                 "Unsaved changes",
                 "You have unsaved changes. Do you want to discard them?",
                 ButtonEnum.YesNo,
@@ -231,31 +231,31 @@ namespace HoloPatcher.UI.Views
 
         private void ToggleFontWeight(FontWeight weight)
         {
-            var selection = Editor.FlowDocument.Selection;
-            var current = selection.GetFormatting(AvaloniaTextElement.FontWeightProperty) as FontWeight? ?? FontWeight.Normal;
-            var newValue = current == weight ? FontWeight.Normal : weight;
+            TextRange selection = Editor.FlowDocument.Selection;
+            FontWeight current = selection.GetFormatting(AvaloniaTextElement.FontWeightProperty) as FontWeight? ?? FontWeight.Normal;
+            FontWeight newValue = current == weight ? FontWeight.Normal : weight;
             selection.ApplyFormatting(AvaloniaTextElement.FontWeightProperty, newValue);
             MarkDirty();
         }
 
         private void ToggleFontStyle(FontStyle style)
         {
-            var selection = Editor.FlowDocument.Selection;
-            var current = selection.GetFormatting(AvaloniaTextElement.FontStyleProperty) as FontStyle? ?? FontStyle.Normal;
-            var newValue = current == style ? FontStyle.Normal : style;
+            TextRange selection = Editor.FlowDocument.Selection;
+            FontStyle current = selection.GetFormatting(AvaloniaTextElement.FontStyleProperty) as FontStyle? ?? FontStyle.Normal;
+            FontStyle newValue = current == style ? FontStyle.Normal : style;
             selection.ApplyFormatting(AvaloniaTextElement.FontStyleProperty, newValue);
             MarkDirty();
         }
 
         private void ToggleTextDecoration(TextDecorationLocation location)
         {
-            var selection = Editor.FlowDocument.Selection;
+            TextRange selection = Editor.FlowDocument.Selection;
             // Try to get TextDecorationsProperty via reflection since it may not be directly accessible
             Avalonia.AvaloniaProperty textDecorationsProp = null;
             try
             {
-                var textElementType = typeof(AvaloniaTextElement);
-                var prop = textElementType.GetProperty("TextDecorationsProperty", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
+                Type textElementType = typeof(AvaloniaTextElement);
+                System.Reflection.PropertyInfo prop = textElementType.GetProperty("TextDecorationsProperty", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
                 if (prop != null)
                 {
                     textDecorationsProp = prop.GetValue(null) as Avalonia.AvaloniaProperty;
@@ -306,7 +306,7 @@ namespace HoloPatcher.UI.Views
         private void OnFontFamilyChanged(object sender, SelectionChangedEventArgs e)
         {
             var item = FontFamilyComboBox.SelectedItem as ComboBoxItem;
-            var familyName = item?.Content as string;
+            string familyName = item?.Content as string;
             if (item != null && familyName != null)
             {
                 Editor.FlowDocument.Selection.ApplyFormatting(AvaloniaTextElement.FontFamilyProperty, new FontFamily(familyName));
@@ -317,7 +317,7 @@ namespace HoloPatcher.UI.Views
         private void OnForegroundChanged(object sender, SelectionChangedEventArgs e)
         {
             var item = ForegroundComboBox.SelectedItem as ComboBoxItem;
-            var name = item?.Content as string;
+            string name = item?.Content as string;
             if (item != null && name != null)
             {
                 var brush = new SolidColorBrush(ColorFromName(name));
@@ -329,7 +329,7 @@ namespace HoloPatcher.UI.Views
         private void OnBackgroundChanged(object sender, SelectionChangedEventArgs e)
         {
             var item = BackgroundComboBox.SelectedItem as ComboBoxItem;
-            var name = item?.Content as string;
+            string name = item?.Content as string;
             if (item != null && name != null)
             {
                 IBrush brush = name.Equals("Transparent", StringComparison.OrdinalIgnoreCase)
@@ -363,7 +363,7 @@ namespace HoloPatcher.UI.Views
 
         private void ApplyAlignment(TextAlignment alignment)
         {
-            foreach (var paragraph in Editor.FlowDocument.GetSelectedParagraphs)
+            foreach (Paragraph paragraph in Editor.FlowDocument.GetSelectedParagraphs)
             {
                 paragraph.TextAlignment = alignment;
             }
@@ -384,8 +384,8 @@ namespace HoloPatcher.UI.Views
             TextDecorationCollection decorations = null;
             try
             {
-                var textElementType = typeof(AvaloniaTextElement);
-                var prop = textElementType.GetProperty("TextDecorationsProperty", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
+                Type textElementType = typeof(AvaloniaTextElement);
+                System.Reflection.PropertyInfo prop = textElementType.GetProperty("TextDecorationsProperty", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
                 if (prop != null)
                 {
                     var textDecorationsProp = prop.GetValue(null) as Avalonia.AvaloniaProperty;

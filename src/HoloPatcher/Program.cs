@@ -28,8 +28,8 @@ namespace HoloPatcher
                 try
                 {
                     // Try to find the DLL in multiple locations
-                    var baseDir = AppDomain.CurrentDomain.BaseDirectory;
-                    var dllPath = Path.Combine(baseDir, "RtfDomParserAv.dll");
+                    string baseDir = AppDomain.CurrentDomain.BaseDirectory;
+                    string dllPath = Path.Combine(baseDir, "RtfDomParserAv.dll");
 
                     if (File.Exists(dllPath))
                     {
@@ -37,10 +37,10 @@ namespace HoloPatcher
                     }
 
                     // Try to find it next to AvRichTextBox.dll (same directory)
-                    var avRichTextBoxPath = Path.Combine(baseDir, "AvRichTextBox.dll");
+                    string avRichTextBoxPath = Path.Combine(baseDir, "AvRichTextBox.dll");
                     if (File.Exists(avRichTextBoxPath))
                     {
-                        var candidateNextToAvRich = Path.Combine(Path.GetDirectoryName(avRichTextBoxPath), "RtfDomParserAv.dll");
+                        string candidateNextToAvRich = Path.Combine(Path.GetDirectoryName(avRichTextBoxPath), "RtfDomParserAv.dll");
                         if (File.Exists(candidateNextToAvRich))
                         {
                             return System.Reflection.Assembly.LoadFrom(candidateNextToAvRich);
@@ -49,13 +49,13 @@ namespace HoloPatcher
 
                     // Try to find it in the cloned repository (if available)
                     // Search multiple possible repository locations
-                    var possibleRepoPaths = new[]
+                    string[] possibleRepoPaths = new[]
                     {
                         Path.Combine(baseDir, "..", "..", "..", "temp_avrichtextbox", "AvRichTextBox", "RtfDomParserAv.dll"),
                         Path.Combine(Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location) ?? baseDir, "..", "..", "..", "temp_avrichtextbox", "AvRichTextBox", "RtfDomParserAv.dll"),
                     };
 
-                    foreach (var repoPath in possibleRepoPaths)
+                    foreach (string repoPath in possibleRepoPaths)
                     {
                         if (File.Exists(repoPath))
                         {
@@ -78,20 +78,20 @@ namespace HoloPatcher
                     }
 
                     // Try to find it in NuGet package cache
-                    var userProfile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-                    var nugetPackages = Path.Combine(userProfile, ".nuget", "packages");
+                    string userProfile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+                    string nugetPackages = Path.Combine(userProfile, ".nuget", "packages");
 
                     if (Directory.Exists(nugetPackages))
                     {
                         // Search in Simplecto package folder
-                        var simplectoFolders = Directory.GetDirectories(nugetPackages, "simplecto.avalon*", SearchOption.TopDirectoryOnly);
-                        foreach (var folder in simplectoFolders)
+                        string[] simplectoFolders = Directory.GetDirectories(nugetPackages, "simplecto.avalon*", SearchOption.TopDirectoryOnly);
+                        foreach (string folder in simplectoFolders)
                         {
                             // Search in lib folders
-                            var libDirs = Directory.GetDirectories(folder, "lib", SearchOption.AllDirectories);
-                            foreach (var libDir in libDirs)
+                            string[] libDirs = Directory.GetDirectories(folder, "lib", SearchOption.AllDirectories);
+                            foreach (string libDir in libDirs)
                             {
-                                var candidatePath = Path.Combine(libDir, "RtfDomParserAv.dll");
+                                string candidatePath = Path.Combine(libDir, "RtfDomParserAv.dll");
                                 if (File.Exists(candidatePath))
                                 {
                                     // Copy to output directory for future use
@@ -110,8 +110,8 @@ namespace HoloPatcher
                             }
 
                             // Also search directly in the package folder (sometimes DLLs are at the root)
-                            var allDlls = Directory.GetFiles(folder, "RtfDomParserAv.dll", SearchOption.AllDirectories);
-                            foreach (var dllFile in allDlls)
+                            string[] allDlls = Directory.GetFiles(folder, "RtfDomParserAv.dll", SearchOption.AllDirectories);
+                            foreach (string dllFile in allDlls)
                             {
                                 if (File.Exists(dllFile))
                                 {
@@ -129,7 +129,7 @@ namespace HoloPatcher
                     }
 
                     // Last resort: Try using RtfDomParser.dll as fallback (not ideal but might work)
-                    var fallbackPath = Path.Combine(baseDir, "RtfDomParser.dll");
+                    string fallbackPath = Path.Combine(baseDir, "RtfDomParser.dll");
                     if (File.Exists(fallbackPath))
                     {
                         Console.WriteLine($"[AssemblyResolve] Attempting to use RtfDomParser.dll as fallback for RtfDomParserAv");

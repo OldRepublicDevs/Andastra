@@ -131,7 +131,7 @@ namespace HoloPatcher.UI
                         // Pop state
                         if (stack.Count > 0)
                         {
-                            var state = stack.Pop();
+                            (int ucskip, bool ignorable) state = stack.Pop();
                             ucskip = state.ucskip;
                             ignorable = state.ignorable;
                         }

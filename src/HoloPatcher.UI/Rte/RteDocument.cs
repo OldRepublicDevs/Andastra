@@ -22,7 +22,7 @@ namespace HoloPatcher.UI.Rte
                 return new RteDocument();
             }
 
-            var document = JsonSerializer.Deserialize<RteDocument>(json, SerializerOptions);
+            RteDocument document = JsonSerializer.Deserialize<RteDocument>(json, SerializerOptions);
             return document ?? new RteDocument();
         }
 

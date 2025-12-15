@@ -71,7 +71,7 @@ namespace HolocronToolset.NET.Tests.Editors
                     // If directory access fails, try alternative location
                 }
             }
-            
+
             if (lipFiles.Length == 0)
             {
                 // Try alternative location
@@ -165,7 +165,7 @@ namespace HolocronToolset.NET.Tests.Editors
             {
                 try
                 {
-                    var loadedLip = LIPAuto.ReadLip(data);
+                    LIP loadedLip = LIPAuto.ReadLip(data);
                     loadedLip.Should().NotBeNull();
                 }
                 catch
@@ -173,6 +173,68 @@ namespace HolocronToolset.NET.Tests.Editors
                     // If reading fails, that's okay - the test still verified build works
                 }
             }
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_lip_editor.py:299-329
+        // Original: def test_lip_editor_save_load_roundtrip(qtbot: QtBot, installation: HTInstallation):
+        [Fact]
+        public void TestLipEditorSaveLoadRoundtrip()
+        {
+            // Get installation if available
+            string k1Path = Environment.GetEnvironmentVariable("K1_PATH");
+            if (string.IsNullOrEmpty(k1Path))
+            {
+                k1Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k1Path) && System.IO.File.Exists(System.IO.Path.Combine(k1Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k1Path, "Test Installation", tsl: false);
+            }
+
+            var editor = new LIPEditor(null, installation);
+
+            editor.New();
+            editor.Duration = 10.0f;
+
+            // Ensure LIP exists and length is set before adding keyframes
+            // This matches Python behavior where duration is set first
+            if (editor.Lip == null)
+            {
+                // This shouldn't happen after New(), but be safe
+            }
+            editor.Lip.Length = 10.0f;
+
+            // Add keyframes
+            editor.AddKeyframe(1.0f, LIPShape.AH);
+            editor.AddKeyframe(2.0f, LIPShape.EE);
+
+            // Build
+            var (data, _) = editor.Build();
+            data.Should().NotBeNull();
+            data.Length.Should().BeGreaterThan(0, "Built LIP data should not be empty");
+            
+            // Verify the data can be read back as LIP before loading into editor
+            try
+            {
+                LIP testLip = LIPAuto.ReadLip(data);
+                testLip.Should().NotBeNull();
+                testLip.Frames.Count.Should().Be(2);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Built LIP data is invalid and cannot be read: {ex.Message}", ex);
+            }
+
+            // Load it back
+            editor.Load("test.lip", "test", ResourceType.LIP, data);
+
+            // Verify data was loaded
+            editor.Lip.Should().NotBeNull("LIP should be loaded");
+            editor.Lip.Frames.Count.Should().Be(2, "Should have 2 keyframes");
+            Math.Abs(editor.Lip.Length - 10.0f).Should().BeLessThan(0.001f, "LIP length should be 10.0");
+            Math.Abs(editor.Duration - 10.0f).Should().BeLessThan(0.001f, "Editor duration should be 10.0");
         }
     }
 }
