@@ -84,19 +84,26 @@ namespace Odyssey.Core.Actions
             _approached = true;
 
             // Use the placeable
+            // Based on swkotor2.exe: Placeable interaction implementation
+            // Located via string references: "OnUsed" @ 0x007be1c4, "EVENT_OPEN_OBJECT" @ 0x007bcda0
+            // Original implementation: FUN_004dcfb0 @ 0x004dcfb0 handles object events
+            // Checks Useable flag, Locked state, HasInventory flag to determine behavior
             IPlaceableComponent placeableState = placeable.GetComponent<IPlaceableComponent>();
             if (placeableState != null)
             {
                 // Check if placeable is useable
+                // Original engine: Useable field in UTP template must be TRUE
                 if (!placeableState.IsUseable)
                 {
                     return ActionStatus.Failed;
                 }
 
                 // Check if placeable is locked
+                // Original engine: Locked field in UTP template, requires key or lockpick
                 if (placeableState.IsLocked)
                 {
                     // Fire locked placeable event
+                    // Original engine: Fires EVENT_LOCK_OBJECT, then executes OnLocked script
                     IEventBus eventBus = actor.World.EventBus;
                     if (eventBus != null)
                     {
@@ -106,11 +113,14 @@ namespace Odyssey.Core.Actions
                 }
 
                 // Handle containers (open/close instead of use)
+                // Based on swkotor2.exe: HasInventory flag determines if placeable is a container
+                // Original implementation: Containers toggle open/close state, non-containers fire OnUsed
                 if (placeableState.HasInventory)
                 {
                     placeableState.IsOpen = !placeableState.IsOpen;
 
                     // Fire container opened/closed event
+                    // Original engine: Fires EVENT_OPEN_OBJECT or EVENT_CLOSE_OBJECT, then executes OnOpen/OnClosed script
                     IEventBus eventBus2 = actor.World.EventBus;
                     if (eventBus2 != null)
                     {
@@ -127,6 +137,7 @@ namespace Odyssey.Core.Actions
                 else
                 {
                     // Fire used event for non-container placeables
+                    // Original engine: Fires EVENT_OPEN_OBJECT, then executes OnUsed script
                     IEventBus eventBus3 = actor.World.EventBus;
                     if (eventBus3 != null)
                     {
