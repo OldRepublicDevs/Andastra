@@ -89,8 +89,23 @@ namespace Odyssey.MonoGame.Rendering
         /// <summary>
         /// Allocates GPU memory.
         /// </summary>
+        /// <param name="resourceName">Name of the resource. Must not be null or empty.</param>
+        /// <param name="category">Memory category for this allocation.</param>
+        /// <param name="size">Size in bytes. Must be greater than zero.</param>
+        /// <param name="priority">Priority for eviction (lower = evicted first). Default is 0.</param>
+        /// <returns>True if allocation succeeded, false if insufficient memory.</returns>
+        /// <exception cref="ArgumentException">Thrown if resourceName is null or empty, or if size is less than or equal to zero.</exception>
         public bool Allocate(string resourceName, MemoryCategory category, long size, int priority = 0)
         {
+            if (string.IsNullOrEmpty(resourceName))
+            {
+                throw new ArgumentException("Resource name cannot be null or empty.", nameof(resourceName));
+            }
+            if (size <= 0)
+            {
+                throw new ArgumentException("Size must be greater than zero.", nameof(size));
+            }
+
             // Check total budget
             if (_totalUsage + size > _totalBudget)
             {
@@ -132,6 +147,7 @@ namespace Odyssey.MonoGame.Rendering
         /// <summary>
         /// Deallocates GPU memory.
         /// </summary>
+        /// <param name="resourceName">Name of the resource to deallocate. Can be null or empty (no-op).</param>
         public void Deallocate(string resourceName)
         {
             MemoryAllocation alloc;
@@ -146,6 +162,7 @@ namespace Odyssey.MonoGame.Rendering
         /// <summary>
         /// Updates resource access time.
         /// </summary>
+        /// <param name="resourceName">Name of the resource that was accessed. Can be null or empty (no-op).</param>
         public void UpdateAccess(string resourceName)
         {
             MemoryAllocation alloc;

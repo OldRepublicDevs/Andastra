@@ -54,11 +54,16 @@ namespace Odyssey.MonoGame.PostProcessing
         /// <summary>
         /// Initializes a new bloom effect.
         /// </summary>
+        /// <summary>
+        /// Initializes a new bloom effect.
+        /// </summary>
+        /// <param name="graphicsDevice">Graphics device for rendering operations.</param>
+        /// <exception cref="ArgumentNullException">Thrown if graphicsDevice is null.</exception>
         public Bloom(GraphicsDevice graphicsDevice)
         {
             if (graphicsDevice == null)
             {
-                throw new ArgumentNullException("graphicsDevice");
+                throw new ArgumentNullException(nameof(graphicsDevice));
             }
 
             _graphicsDevice = graphicsDevice;
@@ -73,11 +78,18 @@ namespace Odyssey.MonoGame.PostProcessing
         /// <param name="hdrInput">HDR input render target.</param>
         /// <param name="effect">Effect/shader for bloom processing.</param>
         /// <returns>Bloom output render target, or input if disabled.</returns>
+        /// <summary>
+        /// Applies bloom to an HDR render target.
+        /// </summary>
+        /// <param name="hdrInput">HDR input render target. Must not be null.</param>
+        /// <param name="effect">Effect/shader for bloom processing. Can be null.</param>
+        /// <returns>Bloom output render target, or input if disabled.</returns>
+        /// <exception cref="ArgumentNullException">Thrown if hdrInput is null.</exception>
         public RenderTarget2D Apply(RenderTarget2D hdrInput, Effect effect)
         {
             if (hdrInput == null)
             {
-                throw new ArgumentNullException("hdrInput");
+                throw new ArgumentNullException(nameof(hdrInput));
             }
 
             // Create or resize render targets if needed
@@ -171,6 +183,9 @@ namespace Odyssey.MonoGame.PostProcessing
             return _blurTargets[_blurPasses - 1] ?? hdrInput;
         }
 
+        /// <summary>
+        /// Disposes of all resources used by this bloom effect.
+        /// </summary>
         public void Dispose()
         {
             _brightPassTarget?.Dispose();

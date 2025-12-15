@@ -40,11 +40,16 @@ namespace Odyssey.MonoGame.Rendering
         /// <summary>
         /// Initializes a new HDR pipeline.
         /// </summary>
+        /// <summary>
+        /// Initializes a new HDR pipeline.
+        /// </summary>
+        /// <param name="graphicsDevice">Graphics device for rendering operations.</param>
+        /// <exception cref="ArgumentNullException">Thrown if graphicsDevice is null.</exception>
         public HDRPipeline(GraphicsDevice graphicsDevice)
         {
             if (graphicsDevice == null)
             {
-                throw new ArgumentNullException("graphicsDevice");
+                throw new ArgumentNullException(nameof(graphicsDevice));
             }
 
             _graphicsDevice = graphicsDevice;
@@ -61,11 +66,22 @@ namespace Odyssey.MonoGame.Rendering
         /// <param name="width">Target width in pixels.</param>
         /// <param name="height">Target height in pixels.</param>
         /// <returns>HDR render target.</returns>
+        /// <summary>
+        /// Gets the HDR render target for scene rendering.
+        /// </summary>
+        /// <param name="width">Target width in pixels. Must be greater than zero.</param>
+        /// <param name="height">Target height in pixels. Must be greater than zero.</param>
+        /// <returns>HDR render target.</returns>
+        /// <exception cref="ArgumentException">Thrown if width or height is less than or equal to zero.</exception>
         public RenderTarget2D GetHDRTarget(int width, int height)
         {
-            if (width <= 0 || height <= 0)
+            if (width <= 0)
             {
-                throw new ArgumentException("Width and height must be greater than zero.");
+                throw new ArgumentException("Width must be greater than zero.", nameof(width));
+            }
+            if (height <= 0)
+            {
+                throw new ArgumentException("Height must be greater than zero.", nameof(height));
             }
 
             // Create or resize HDR target
@@ -91,11 +107,23 @@ namespace Odyssey.MonoGame.Rendering
         /// <param name="deltaTime">Time since last frame in seconds.</param>
         /// <param name="effect">Effect/shader for HDR processing.</param>
         /// <returns>Processed LDR output render target.</returns>
+        /// <summary>
+        /// Processes HDR image through the pipeline.
+        /// </summary>
+        /// <param name="hdrInput">HDR input render target. Must not be null.</param>
+        /// <param name="deltaTime">Time since last frame in seconds. Will be clamped to non-negative.</param>
+        /// <param name="effect">Effect/shader for HDR processing. Can be null.</param>
+        /// <returns>Processed LDR output render target.</returns>
+        /// <exception cref="ArgumentNullException">Thrown if hdrInput is null.</exception>
         public RenderTarget2D Process(RenderTarget2D hdrInput, float deltaTime, Effect effect)
         {
-            if (!_enabled || hdrInput == null)
+            if (!_enabled)
             {
                 return hdrInput;
+            }
+            if (hdrInput == null)
+            {
+                throw new ArgumentNullException(nameof(hdrInput));
             }
 
             if (deltaTime < 0.0f)

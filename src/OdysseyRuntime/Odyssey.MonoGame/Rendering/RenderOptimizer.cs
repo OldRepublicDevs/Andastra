@@ -59,23 +59,29 @@ namespace Odyssey.MonoGame.Rendering
         /// <summary>
         /// Registers an optimization parameter.
         /// </summary>
+        /// <param name="name">Parameter name. Must not be null or empty.</param>
+        /// <param name="minValue">Minimum parameter value. Must be less than maxValue.</param>
+        /// <param name="maxValue">Maximum parameter value. Must be greater than minValue.</param>
+        /// <param name="initialValue">Initial parameter value. Must be between minValue and maxValue.</param>
+        /// <param name="stepSize">Step size for parameter adjustments. Must be greater than zero.</param>
+        /// <exception cref="ArgumentException">Thrown if any parameter validation fails.</exception>
         public void RegisterParameter(string name, float minValue, float maxValue, float initialValue, float stepSize)
         {
             if (string.IsNullOrEmpty(name))
             {
-                throw new ArgumentException("Parameter name cannot be null or empty.", "name");
+                throw new ArgumentException("Parameter name cannot be null or empty.", nameof(name));
             }
             if (minValue >= maxValue)
             {
-                throw new ArgumentException("MinValue must be less than MaxValue.", "minValue");
+                throw new ArgumentException("MinValue must be less than MaxValue.", nameof(minValue));
             }
             if (initialValue < minValue || initialValue > maxValue)
             {
-                throw new ArgumentException("InitialValue must be between MinValue and MaxValue.", "initialValue");
+                throw new ArgumentException("InitialValue must be between MinValue and MaxValue.", nameof(initialValue));
             }
             if (stepSize <= 0.0f)
             {
-                throw new ArgumentException("StepSize must be greater than zero.", "stepSize");
+                throw new ArgumentException("StepSize must be greater than zero.", nameof(stepSize));
             }
 
             int index = _parameters.Count;
@@ -93,6 +99,7 @@ namespace Odyssey.MonoGame.Rendering
         /// <summary>
         /// Updates optimization based on current performance.
         /// </summary>
+        /// <param name="frameTime">Current frame time in milliseconds. Should be positive.</param>
         public void Update(float frameTime)
         {
             _currentFrameTime = frameTime;
@@ -116,6 +123,7 @@ namespace Odyssey.MonoGame.Rendering
         /// <summary>
         /// Gets current parameter values.
         /// </summary>
+        /// <returns>Dictionary mapping parameter names to their current values.</returns>
         public Dictionary<string, float> GetParameterValues()
         {
             var values = new Dictionary<string, float>();
@@ -172,6 +180,8 @@ namespace Odyssey.MonoGame.Rendering
         /// <summary>
         /// Gets a parameter value by name.
         /// </summary>
+        /// <param name="name">Parameter name. Can be null or empty (returns null).</param>
+        /// <returns>Parameter value if found, null otherwise.</returns>
         public float? GetParameterValue(string name)
         {
             int index;
@@ -185,6 +195,9 @@ namespace Odyssey.MonoGame.Rendering
         /// <summary>
         /// Sets a parameter value by name.
         /// </summary>
+        /// <param name="name">Parameter name. Can be null or empty (returns false).</param>
+        /// <param name="value">New parameter value. Must be within min/max range.</param>
+        /// <returns>True if parameter was set successfully, false if parameter not found or value out of range.</returns>
         public bool SetParameterValue(string name, float value)
         {
             int index;

@@ -46,11 +46,16 @@ namespace Odyssey.MonoGame.Rendering
         /// <summary>
         /// Initializes a new temporal reprojection system.
         /// </summary>
+        /// <summary>
+        /// Initializes a new temporal reprojection system.
+        /// </summary>
+        /// <param name="graphicsDevice">Graphics device for rendering operations.</param>
+        /// <exception cref="ArgumentNullException">Thrown if graphicsDevice is null.</exception>
         public TemporalReprojection(GraphicsDevice graphicsDevice)
         {
             if (graphicsDevice == null)
             {
-                throw new ArgumentNullException("graphicsDevice");
+                throw new ArgumentNullException(nameof(graphicsDevice));
             }
 
             _graphicsDevice = graphicsDevice;

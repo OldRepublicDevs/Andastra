@@ -44,11 +44,22 @@ namespace Odyssey.MonoGame.Rendering
         /// <summary>
         /// Initializes a new render target cache.
         /// </summary>
+        /// <summary>
+        /// Initializes a new render target cache.
+        /// </summary>
+        /// <param name="graphicsDevice">Graphics device for creating render targets.</param>
+        /// <param name="maxCacheSize">Maximum number of cached render targets. Must be greater than zero.</param>
+        /// <exception cref="ArgumentNullException">Thrown if graphicsDevice is null.</exception>
+        /// <exception cref="ArgumentException">Thrown if maxCacheSize is less than or equal to zero.</exception>
         public RenderTargetCache(GraphicsDevice graphicsDevice, int maxCacheSize = 32)
         {
             if (graphicsDevice == null)
             {
-                throw new ArgumentNullException("graphicsDevice");
+                throw new ArgumentNullException(nameof(graphicsDevice));
+            }
+            if (maxCacheSize <= 0)
+            {
+                throw new ArgumentException("Max cache size must be greater than zero.", nameof(maxCacheSize));
             }
 
             _graphicsDevice = graphicsDevice;
@@ -59,8 +70,29 @@ namespace Odyssey.MonoGame.Rendering
         /// <summary>
         /// Gets a render target from cache or creates a new one.
         /// </summary>
+        /// <param name="width">Render target width in pixels. Must be greater than zero.</param>
+        /// <param name="height">Render target height in pixels. Must be greater than zero.</param>
+        /// <param name="format">Surface format for the render target.</param>
+        /// <param name="depthFormat">Depth format for the render target.</param>
+        /// <param name="multiSampleCount">Multi-sample count. Must be non-negative.</param>
+        /// <returns>Cached or newly created render target.</returns>
+        /// <exception cref="ArgumentException">Thrown if width, height, or multiSampleCount is invalid.</exception>
         public RenderTarget2D Get(int width, int height, SurfaceFormat format, DepthFormat depthFormat, int multiSampleCount = 0)
         {
+            if (width <= 0)
+            {
+                throw new ArgumentException("Width must be greater than zero.", nameof(width));
+            }
+            if (height <= 0)
+            {
+                throw new ArgumentException("Height must be greater than zero.", nameof(height));
+            }
+            if (multiSampleCount < 0)
+            {
+                throw new ArgumentException("Multi-sample count must be non-negative.", nameof(multiSampleCount));
+            }
+        {
+
             string key = CreateKey(width, height, format, depthFormat, multiSampleCount);
 
             CacheEntry entry;
@@ -100,6 +132,7 @@ namespace Odyssey.MonoGame.Rendering
         /// <summary>
         /// Returns a render target to the cache.
         /// </summary>
+        /// <param name="rt">Render target to return. Can be null (no-op).</param>
         public void Return(RenderTarget2D rt)
         {
             if (rt == null)
@@ -161,6 +194,9 @@ namespace Odyssey.MonoGame.Rendering
             return $"{width}x{height}_{format}_{depthFormat}_{multiSampleCount}";
         }
 
+        /// <summary>
+        /// Disposes of all cached render targets.
+        /// </summary>
         public void Dispose()
         {
             foreach (CacheEntry entry in _cache.Values)

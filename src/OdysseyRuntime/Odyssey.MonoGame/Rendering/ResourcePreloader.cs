@@ -51,11 +51,22 @@ namespace Odyssey.MonoGame.Rendering
         /// <summary>
         /// Initializes a new resource preloader.
         /// </summary>
+        /// <summary>
+        /// Initializes a new resource preloader.
+        /// </summary>
+        /// <param name="resourceProvider">Resource provider for loading resources. Must not be null.</param>
+        /// <param name="maxConcurrentLoads">Maximum concurrent preloads. Must be greater than zero. Default is 4.</param>
+        /// <exception cref="ArgumentNullException">Thrown if resourceProvider is null.</exception>
+        /// <exception cref="ArgumentException">Thrown if maxConcurrentLoads is less than or equal to zero.</exception>
         public ResourcePreloader(IGameResourceProvider resourceProvider, int maxConcurrentLoads = 4)
         {
             if (resourceProvider == null)
             {
-                throw new ArgumentNullException("resourceProvider");
+                throw new ArgumentNullException(nameof(resourceProvider));
+            }
+            if (maxConcurrentLoads <= 0)
+            {
+                throw new ArgumentException("Max concurrent loads must be greater than zero.", nameof(maxConcurrentLoads));
             }
 
             _resourceProvider = resourceProvider;
@@ -68,6 +79,9 @@ namespace Odyssey.MonoGame.Rendering
         /// <summary>
         /// Queues a resource for preloading.
         /// </summary>
+        /// <param name="resourceName">Resource name to preload. Can be null or empty (no-op).</param>
+        /// <param name="resourceType">Type of resource to preload.</param>
+        /// <param name="priority">Preload priority (higher = loaded first). Default is 0.</param>
         public void Preload(string resourceName, ResourceType resourceType, int priority = 0)
         {
             if (string.IsNullOrEmpty(resourceName))
