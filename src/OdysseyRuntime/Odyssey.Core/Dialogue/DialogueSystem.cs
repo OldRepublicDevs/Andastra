@@ -45,10 +45,16 @@ namespace Odyssey.Core.Dialogue
     /// - Based on swkotor2.exe dialogue system
     /// - Located via string references: "ScriptDialogue" @ 0x007bee40, "ScriptEndDialogue" @ 0x007bede0
     /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_DIALOGUE" @ 0x007bcac4, "OnEndDialogue" @ 0x007c1f60
+    /// - Dialogue script hooks: "k_level_dlg" @ 0x007c3f88, "000_Level_Dlg_Fired" @ 0x007c3f94 (level-up dialogue)
+    /// - Dialogue examples: "k_hen_dialogue01" @ 0x007bf548 (example dialogue ResRef)
+    /// - Error message: "Error: dialogue can't find object '%s'!" @ 0x007c3730 (dialogue object lookup failure)
     /// - Original implementation: FUN_005226d0 @ 0x005226d0 (save creature data including ScriptDialogue/ScriptEndDialogue),
     ///   FUN_0050c510 @ 0x0050c510 (load creature data and read ScriptDialogue/ScriptEndDialogue fields)
     /// - DLG file format: GFF with "DLG " signature containing dialogue tree
     /// - Original implementation: Parses DLG GFF structure, evaluates condition scripts, executes entry/reply scripts
+    /// - Dialogue messages stored in PARTYTABLE: PT_DLG_MSG_LIST @ 0x007c1650 (dialogue message history)
+    ///   - PT_DLG_MSG_SPKR @ 0x007c1640: Speaker name
+    ///   - PT_DLG_MSG_MSG @ 0x007c1630: Message text
     /// 
     /// Dialogue Flow:
     /// 1. StartConversation - Load DLG, find first valid entry (StartingList)
