@@ -242,5 +242,50 @@ namespace HolocronToolset.NET.Tests.Editors
             Math.Abs(editor.Lip.Length - 10.0f).Should().BeLessThan(0.001f, "LIP length should be 10.0");
             Math.Abs(editor.Duration - 10.0f).Should().BeLessThan(0.001f, "Editor duration should be 10.0");
         }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_lip_editor.py:331-361
+        // Original: def test_lip_editor_multiple_save_load_cycles(qtbot: QtBot, installation: HTInstallation):
+        [Fact]
+        public void TestLipEditorMultipleSaveLoadCycles()
+        {
+            // Get installation if available
+            string k1Path = Environment.GetEnvironmentVariable("K1_PATH");
+            if (string.IsNullOrEmpty(k1Path))
+            {
+                k1Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k1Path) && System.IO.File.Exists(System.IO.Path.Combine(k1Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k1Path, "Test Installation", tsl: false);
+            }
+
+            var editor = new LIPEditor(null, installation);
+
+            editor.New();
+            editor.Duration = 10.0f;
+
+            // Perform multiple cycles
+            for (int cycle = 0; cycle < 3; cycle++)
+            {
+                // Clear and add keyframe
+                editor.New();
+                editor.Duration = 10.0f;
+
+                // Add keyframe at cycle time
+                editor.AddKeyframe((float)cycle, LIPShape.AH);
+
+                // Save
+                var (data, _) = editor.Build();
+
+                // Load back
+                editor.Load("test.lip", "test", ResourceType.LIP, data);
+
+                // Verify keyframe was preserved
+                editor.Lip.Should().NotBeNull("LIP should be loaded");
+                editor.Lip.Frames.Count.Should().Be(1, $"Should have 1 keyframe after cycle {cycle}");
+            }
+        }
     }
 }
