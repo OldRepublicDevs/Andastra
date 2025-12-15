@@ -131,17 +131,15 @@ namespace CSharpKOTOR.Tools
             Func<ArchiveResource, bool> resourceFilter = null)
         {
             BIF bifData;
+            var reader = new BIFBinaryReader(bifPath);
+            bifData = reader.Load();
+
+            // Merge KEY data for resource names if KEY file is provided
+            // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/archives.py:171-174
+            // Original: bif_data = read_bif(bif_file, key_source=key_source)
             if (!string.IsNullOrEmpty(keyPath) && File.Exists(keyPath))
             {
-                // Read BIF with KEY for resource names
-                var reader = new BIFBinaryReader(bifPath);
-                bifData = reader.Load();
-                // TODO: Merge KEY data for resource names
-            }
-            else
-            {
-                var reader = new BIFBinaryReader(bifPath);
-                bifData = reader.Load();
+                MergeKeyDataIntoBif(bifData, keyPath, bifPath);
             }
 
             int i = 0;
@@ -232,7 +230,8 @@ namespace CSharpKOTOR.Tools
 
                 var reader = new BIFBinaryReader(bifPath);
                 BIF bifData = reader.Load();
-                // TODO: Merge KEY data for resource names
+                // Merge KEY data for resource names
+                MergeKeyDataIntoBif(bifData, keyPath, bifPath);
 
                 int i = 0;
                 foreach (var bifResource in bifData)
@@ -302,7 +301,11 @@ namespace CSharpKOTOR.Tools
         {
             var reader = new BIFBinaryReader(bifPath);
             BIF bifData = reader.Load();
-            // TODO: Merge KEY data for resource names if keyPath provided
+            // Merge KEY data for resource names if keyPath provided
+            if (!string.IsNullOrEmpty(keyPath) && File.Exists(keyPath))
+            {
+                MergeKeyDataIntoBif(bifData, keyPath, bifPath);
+            }
             foreach (var bifResource in bifData)
             {
                 yield return new ArchiveResource(bifResource.ResRef, bifResource.ResType, bifResource.Data);
@@ -795,6 +798,78 @@ namespace CSharpKOTOR.Tools
             key.BuildLookupTables();
             Directory.CreateDirectory(Path.GetDirectoryName(outputPath));
             KEYAuto.WriteKey(key, outputPath);
+        }
+
+        /// <summary>
+        /// Merges KEY file data into BIF resources to populate ResRef names.
+        /// </summary>
+        /// <param name="bifData">The BIF data to merge KEY data into</param>
+        /// <param name="keyPath">Path to the KEY file</param>
+        /// <param name="bifPath">Path to the BIF file (used to determine BIF index)</param>
+        /// <remarks>
+        /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/bif/io_bif.py
+        /// Original: read_bif accepts key_source parameter and merges resource names
+        /// BIF resources have ResnameKeyIndex which matches KEY entries' ResourceId
+        /// </remarks>
+        private static void MergeKeyDataIntoBif(BIF bifData, string keyPath, string bifPath)
+        {
+            if (bifData == null || string.IsNullOrEmpty(keyPath) || !File.Exists(keyPath))
+            {
+                return;
+            }
+
+            // Load KEY file
+            KEY keyData = KEYAuto.ReadKey(keyPath);
+            if (keyData == null)
+            {
+                return;
+            }
+
+            // Find the BIF index for this BIF file
+            string bifFileName = Path.GetFileName(bifPath);
+            int bifIndex = -1;
+            for (int i = 0; i < keyData.BifEntries.Count; i++)
+            {
+                if (string.Equals(keyData.BifEntries[i].Filename, bifFileName, StringComparison.OrdinalIgnoreCase))
+                {
+                    bifIndex = i;
+                    break;
+                }
+            }
+
+            if (bifIndex < 0)
+            {
+                // BIF not found in KEY file, cannot merge
+                return;
+            }
+
+            // Create lookup dictionary: ResourceId -> KeyEntry for this BIF
+            var keyEntryLookup = new Dictionary<uint, KeyEntry>();
+            foreach (KeyEntry keyEntry in keyData.KeyEntries)
+            {
+                if (keyEntry.BifIndex == bifIndex)
+                {
+                    keyEntryLookup[keyEntry.ResourceId] = keyEntry;
+                }
+            }
+
+            // Merge KEY data into BIF resources
+            foreach (BIFResource bifResource in bifData.Resources)
+            {
+                uint resourceId = (uint)bifResource.ResnameKeyIndex;
+                if (keyEntryLookup.TryGetValue(resourceId, out KeyEntry keyEntry))
+                {
+                    // Set ResRef from KEY entry
+                    bifResource.ResRef = keyEntry.ResRef;
+                    // Note: ResType should already match, but we verify it
+                    if (bifResource.ResType != keyEntry.ResType)
+                    {
+                        // Log mismatch but don't change - BIF data is authoritative for type
+                        System.Diagnostics.Debug.WriteLine(
+                            $"KEY and BIF disagree on type for resource ID {resourceId}: KEY={keyEntry.ResType}, BIF={bifResource.ResType}");
+                    }
+                }
+            }
         }
     }
 }
