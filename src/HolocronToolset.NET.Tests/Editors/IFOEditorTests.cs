@@ -140,6 +140,47 @@ namespace HolocronToolset.NET.Tests.Editors
             }
         }
 
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_ifo_editor.py:89-108
+        // Original: def test_ifo_editor_manipulate_entry_resref(qtbot, installation: HTInstallation):
+        [Fact]
+        public void TestIfoEditorManipulateEntryResref()
+        {
+            // Get installation if available (needed for some operations)
+            string k1Path = Environment.GetEnvironmentVariable("K1_PATH");
+            if (string.IsNullOrEmpty(k1Path))
+            {
+                k1Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k1Path) && System.IO.File.Exists(System.IO.Path.Combine(k1Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k1Path, "Test Installation", tsl: false);
+            }
+
+            var editor = new IFOEditor(null, installation);
+
+            editor.New();
+
+            // Modify entry ResRef
+            var testResrefs = new[] { "area001", "test_area", "", "entry_point" };
+            foreach (var resref in testResrefs)
+            {
+                editor.EntryResrefEdit.Text = resref;
+                editor.OnValueChanged();
+
+                // Build and verify
+                var (data, _) = editor.Build();
+                var modifiedGff = GFF.FromBytes(data);
+                var modifiedIfo = CSharpKOTOR.Resource.Generics.IFOHelpers.ConstructIfo(modifiedGff);
+                modifiedIfo.ResRef.ToString().Should().Be(resref);
+
+                // Load back and verify
+                editor.Load("test.ifo", "test", ResourceType.IFO, data);
+                editor.EntryResrefEdit.Text.Should().Be(resref);
+            }
+        }
+
         // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_ifo_editor.py:783-815
         // Original: def test_ifo_editor_load_from_test_files(qtbot, installation: HTInstallation, test_files_dir: Path):
         [Fact]
