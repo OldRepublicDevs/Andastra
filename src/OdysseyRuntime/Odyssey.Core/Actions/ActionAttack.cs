@@ -12,10 +12,24 @@ namespace Odyssey.Core.Actions
     /// <remarks>
     /// Attack Action:
     /// - Based on swkotor2.exe attack action system
-    /// - Located via string reference: "EVENT_ON_MELEE_ATTACKED" @ 0x007bccf4
+    /// - Located via string references: "EVENT_ON_MELEE_ATTACKED" @ 0x007bccf4, "OnMeleeAttacked" @ 0x007c1a5c
+    /// - "ScriptAttacked" @ 0x007bee80 (script hook for attack events)
+    /// - Attack-related fields: "AttackList" @ 0x007bf9f0, "AttackID" @ 0x007bfa88, "CurrentAttack" @ 0x007bfa94
+    /// - "NumAttacks" @ 0x007bf804, "AttackType" @ 0x007bf914, "AttackResult" @ 0x007bf964
+    /// - "RangedAttack" @ 0x007bf8f8, "SneakAttack" @ 0x007bf8ec, "WeaponAttackType" @ 0x007bf8d8
+    /// - "AttackMode" @ 0x007bf908, "AttackGroup" @ 0x007bf990, "NewAttackTarget" @ 0x007bfb28
+    /// - Attack bonuses: "AttackBonusTable" @ 0x007c2b54, "Base Attack Bonus" @ 0x007c3b44
+    /// - "MinAttackBonus" @ 0x007c2f70, "OnHandAttackMod" @ 0x007c2e50, "OffHandAttackMod" @ 0x007c2e2c
+    /// - Attack range: "MaxAttackRange" @ 0x007c44e0, "PrefAttackDist" @ 0x007c44d0
+    /// - Special attacks: "SpecialAttack" @ 0x007bf9d0, "SpecialAttackId" @ 0x007bf9ac, "SpecAttackList" @ 0x007bf9e0
+    /// - Attack animations: "i_attack" @ 0x007c8230, "doneattack01" @ 0x007c8280, "doneattack02" @ 0x007c8270
+    /// - "i_attackm" @ 0x007cce0c, "specialattack" @ 0x007cab60
+    /// - Error: "CSWClass::LoadAttackBonusTable: Can't load" @ 0x007c4680
     /// - Original implementation: Attack actions trigger combat rounds, fire script events
     /// - Attack resolution uses d20 roll + attack bonus vs target AC
     /// - Natural 20 = automatic hit, natural 1 = automatic miss
+    /// - Attack bonuses displayed: " + %d (Base Attack Bonus)" @ 0x007c3b44, " + %d (Effect Attack Bonus)" @ 0x007c39d0
+    /// - " + %d (PC Charisma Attack Bonus)" @ 0x007c39ac, " + %d (Offhand Attack Penalty)" @ 0x007c3b24
     /// </remarks>
     public class ActionAttack : ActionBase
     {
