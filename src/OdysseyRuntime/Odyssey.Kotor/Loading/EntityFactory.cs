@@ -95,6 +95,26 @@ namespace Odyssey.Kotor.Loading
         }
 
         /// <summary>
+        /// Creates an item from a template ResRef at a specific position.
+        /// </summary>
+        [CanBeNull]
+        public IEntity CreateItemFromTemplate(Module module, string templateResRef, System.Numerics.Vector3 position, float facing)
+        {
+            if (module == null || string.IsNullOrEmpty(templateResRef))
+            {
+                return null;
+            }
+
+            var entity = new Entity(GetNextObjectId(), ObjectType.Item);
+            entity.Position = position;
+            entity.Facing = facing;
+
+            LoadItemTemplate(entity, module, templateResRef);
+
+            return entity;
+        }
+
+        /// <summary>
         /// Creates a placeable from a template ResRef at a specific position.
         /// </summary>
         [CanBeNull]
@@ -438,6 +458,87 @@ namespace Odyssey.Kotor.Loading
         }
 
         /// <summary>
+        /// Loads item template from UTI.
+        /// </summary>
+        private void LoadItemTemplate(Entity entity, Module module, string templateResRef)
+        {
+            ModuleResource utiResource = module.Resource(templateResRef, ResourceType.UTI);
+            if (utiResource == null)
+            {
+                return;
+            }
+
+            object utiData = utiResource.Resource();
+            if (utiData == null)
+            {
+                return;
+            }
+
+            GFF utiGff = utiData as GFF;
+            if (utiGff == null)
+            {
+                return;
+            }
+
+            GFFStruct root = utiGff.Root;
+
+            if (string.IsNullOrEmpty(entity.Tag))
+            {
+                entity.Tag = GetStringField(root, "Tag");
+            }
+
+            entity.SetData("TemplateResRef", templateResRef);
+            entity.SetData("BaseItem", GetIntField(root, "BaseItem", 0));
+            entity.SetData("LocalizedName", GetLocStringField(root, "LocalizedName"));
+            entity.SetData("Description", GetLocStringField(root, "Description"));
+            entity.SetData("Cost", GetIntField(root, "Cost", 0));
+            entity.SetData("StackSize", GetIntField(root, "StackSize", 1));
+            entity.SetData("Charges", GetIntField(root, "Charges", 0));
+            entity.SetData("MaxCharges", GetIntField(root, "MaxCharges", 0));
+            entity.SetData("Stolen", GetIntField(root, "Stolen", 0) != 0);
+            entity.SetData("Plot", GetIntField(root, "Plot", 0) != 0);
+            entity.SetData("Cursed", GetIntField(root, "Cursed", 0) != 0);
+
+            // Item properties
+            if (root.Exists("PropertiesList"))
+            {
+                GFFList propertiesList = root.GetList("PropertiesList");
+                if (propertiesList != null)
+                {
+                    var properties = new List<object>();
+                    foreach (GFFStruct propStruct in propertiesList)
+                    {
+                        int propertyName = GetIntField(propStruct, "PropertyName", 0);
+                        int subType = GetIntField(propStruct, "Subtype", 0);
+                        int costTable = GetIntField(propStruct, "CostTable", 0);
+                        int costValue = GetIntField(propStruct, "CostValue", 0);
+                        int param1 = GetIntField(propStruct, "Param1", 0);
+                        int param1Value = GetIntField(propStruct, "Param1Value", 0);
+                        int chanceAppear = GetIntField(propStruct, "ChanceAppear", 100);
+                        
+                        properties.Add(new
+                        {
+                            PropertyName = propertyName,
+                            Subtype = subType,
+                            CostTable = costTable,
+                            CostValue = costValue,
+                            Param1 = param1,
+                            Param1Value = param1Value,
+                            ChanceAppear = chanceAppear
+                        });
+                    }
+                    entity.SetData("PropertiesList", properties);
+                }
+            }
+
+            SetEntityScripts(entity, root, new Dictionary<string, ScriptEvent>
+            {
+                { "OnUsed", ScriptEvent.OnUsed },
+                { "OnUserDefined", ScriptEvent.OnUserDefined }
+            });
+        }
+
+        /// <summary>
         /// Creates a trigger from GIT instance struct.
         /// </summary>
         [CanBeNull]
@@ -479,6 +580,25 @@ namespace Odyssey.Kotor.Loading
                 { "ScriptOnExit", ScriptEvent.OnExit },
                 { "ScriptUserDefine", ScriptEvent.OnUserDefined }
             });
+
+            return entity;
+        }
+
+        /// <summary>
+        /// Creates a waypoint from a template ResRef at a specific position.
+        /// </summary>
+        [CanBeNull]
+        public IEntity CreateWaypointFromTemplate(string templateResRef, System.Numerics.Vector3 position, float facing)
+        {
+            if (string.IsNullOrEmpty(templateResRef))
+            {
+                return null;
+            }
+
+            var entity = new Entity(GetNextObjectId(), ObjectType.Waypoint);
+            entity.Position = position;
+            entity.Facing = facing;
+            entity.Tag = templateResRef; // For waypoints, template is typically the tag
 
             return entity;
         }
