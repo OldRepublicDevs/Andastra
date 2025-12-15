@@ -59,7 +59,7 @@ namespace CSharpKOTOR.Resource.Generics
                 float rotY = creatureStruct.Acquire<float>("YOrientation", 0.0f);
                 // Calculate bearing from orientation
                 var vec2 = new Vector2(rotX, rotY);
-                creature.Bearing = vec2.Angle() - (float)(Math.PI / 2);
+                creature.Bearing = (float)Math.Atan2(vec2.Y, vec2.X) - (float)(Math.PI / 2);
                 git.Creatures.Add(creature);
             }
 
