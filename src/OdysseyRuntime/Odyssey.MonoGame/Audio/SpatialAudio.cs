@@ -21,12 +21,27 @@ namespace Odyssey.MonoGame.Audio
     /// Spatial Audio System:
     /// - Based on swkotor2.exe audio system (modern 3D enhancement)
     /// - Located via string references: "SoundList" @ 0x007bd080, "SoundResRef" @ 0x007b5f70, "Sound" @ 0x007bc500
-    /// - Original implementation: KOTOR uses EAX audio for 3D spatial positioning ("EAX2 room", "EAX3 room LF" @ 0x007c6010)
+    /// - 3D audio settings: "2D3DBias" @ 0x007c612c, "2D3D Bias" @ 0x007c71f8 (2D/3D audio bias)
+    /// - "3D Provider Filter" @ 0x007c6164, "Number 3D Voices" @ 0x007c7258
+    /// - GUI: "LBL_3DVIEW" @ 0x007cbfdc, "gui3D_room" @ 0x007cc144, "LBL_3D" @ 0x007cfe50
+    /// - "BTN_3DCHAR" @ 0x007cfac0, "LBL_3DCHAR" @ 0x007cfb38, "3D_MODEL" @ 0x007d0954
+    /// - "3D_MODEL_LS" @ 0x007d0948, "3D_MODEL%d" @ 0x007d1924 (3D model format string)
+    /// - "3D_PlanetDisplay" @ 0x007cd9f0, "3D_PlanetModel" @ 0x007cda04
+    /// - Miles Sound System 3D API functions:
+    ///   - _AIL_open_3D_listener@4, _AIL_close_3D_listener@4 (3D listener management)
+    ///   - _AIL_open_3D_provider@4, _AIL_close_3D_provider@4 (3D audio provider)
+    ///   - _AIL_set_3D_position@16, _AIL_set_3D_orientation@28 (3D position/orientation)
+    ///   - _AIL_set_3D_rolloff_factor@8, _AIL_set_3D_sample_distances@12 (distance attenuation)
+    ///   - _AIL_set_3D_room_type@8, _AIL_3D_room_type@4 (EAX room types)
+    ///   - _AIL_allocate_3D_sample_handle@4, _AIL_set_3D_sample_file@8 (3D sample management)
+    ///   - _AIL_set_3D_sample_volume@8, _AIL_set_3D_sample_obstruction@8 (3D sample properties)
+    ///   - _AIL_set_3D_provider_preference@12, _AIL_enumerate_3D_providers@12 (3D provider management)
+    /// - Original implementation: KOTOR uses EAX audio for 3D spatial positioning
     /// - Sound entities: UTS templates define sound emitters with position and properties
     /// - Distance attenuation: Sounds fade with distance (MinDistance, MaxDistance)
     /// - Doppler effect: Frequency shift based on relative velocity (this MonoGame implementation)
     /// - Reverb zones: Room-based audio effects (original uses EAX room types)
-    /// - Note: Original engine used EAX audio API, this MonoGame implementation provides modern 3D audio
+    /// - Note: Original engine used EAX audio API via Miles Sound System, this MonoGame implementation provides modern 3D audio
     /// </remarks>
     public class SpatialAudio
     {
