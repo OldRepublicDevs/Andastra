@@ -97,6 +97,9 @@ namespace Odyssey.Core.Templates
             }
 
             // Apply script hooks
+            // Based on swkotor2.exe: Encounter script hooks from UTE template
+            // Located via string references: "ScriptOnEnter" @ 0x007c1a10, "ScriptOnExit" @ 0x007c1a0c, "OnExhausted" @ 0x007c1a28
+            // Original implementation: FUN_005226d0 @ 0x005226d0 loads encounter script hooks from UTE template
             Interfaces.Components.IScriptHooksComponent scripts = entity.GetComponent<Interfaces.Components.IScriptHooksComponent>();
             if (scripts != null)
             {
@@ -104,6 +107,8 @@ namespace Odyssey.Core.Templates
                     scripts.SetScript(ScriptEvent.OnEnter, OnEntered);
                 if (!string.IsNullOrEmpty(OnExit))
                     scripts.SetScript(ScriptEvent.OnExit, OnExit);
+                if (!string.IsNullOrEmpty(OnExhausted))
+                    scripts.SetScript(ScriptEvent.OnExhausted, OnExhausted);
                 if (!string.IsNullOrEmpty(OnHeartbeat))
                     scripts.SetScript(ScriptEvent.OnHeartbeat, OnHeartbeat);
                 if (!string.IsNullOrEmpty(OnUserDefined))
