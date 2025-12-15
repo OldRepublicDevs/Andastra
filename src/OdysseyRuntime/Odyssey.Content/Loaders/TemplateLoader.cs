@@ -32,9 +32,21 @@ namespace Odyssey.Content.Loaders
     ///   - "Item template %s doesn't exist.\n" @ 0x007c2028
     /// - Original implementation: FUN_005261b0 @ 0x005261b0 loads creature templates from UTC GFF files
     /// - FUN_004e08e0 @ 0x004e08e0 loads placeable/door templates from UTP/UTD GFF files
+    /// - FUN_0050c510 @ 0x0050c510 loads creature data from UTC template including appearance, stats, scripts
+    /// - FUN_00580ed0 @ 0x00580ed0 loads door properties from UTD template
+    /// - FUN_005838d0 @ 0x005838d0 loads door template and transition data
     /// - Loads GFF template files, parses entity data, creates template objects
     /// - Templates define base properties for entities (stats, appearance, scripts, etc.)
-    /// - UTC = Creature template, UTP = Placeable, UTD = Door, UTT = Trigger, UTW = Waypoint, UTS = Sound, UTE = Encounter, UTM = Store
+    /// - Template GFF fields: Tag, TemplateResRef, Appearance_Type, ScriptHeartbeat, ScriptOnNotice, etc.
+    /// - UTC = Creature template (creature stats, appearance, classes, feats, scripts)
+    /// - UTP = Placeable template (placeable appearance, scripts, inventory flag, lock state)
+    /// - UTD = Door template (door appearance, lock state, transition data, scripts)
+    /// - UTT = Trigger template (trigger geometry, trap flags, scripts)
+    /// - UTW = Waypoint template (waypoint appearance, map note data)
+    /// - UTS = Sound template (sound properties, volume, distance, looping)
+    /// - UTE = Encounter template (spawn points, creature lists, difficulty)
+    /// - UTM = Store template (merchant markup rates, item lists)
+    /// - Script fields in templates: ScriptHeartbeat, ScriptOnNotice, ScriptDamaged, ScriptDeath, etc. (mapped to ScriptEvent enum)
     /// - Based on template file format documentation in vendor/PyKotor/wiki/
     /// </remarks>
     public class TemplateLoader

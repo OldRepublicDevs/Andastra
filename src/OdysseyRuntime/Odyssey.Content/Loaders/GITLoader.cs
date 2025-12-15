@@ -20,17 +20,29 @@ namespace Odyssey.Content.Loaders
     /// GIT Loader:
     /// - Based on swkotor2.exe GIT file loading
     /// - Located via string references: "GIT " signature (GFF file format) in GFF file header
-    /// - "tmpgit" @ 0x007be618 (temporary GIT file reference)
-    /// - "Creature List" @ 0x007bd01c (GFF list field name for creature instances)
-    /// - "Door List" @ 0x007bd248, "Placeable List" @ 0x007bd260, "TriggerList" @ 0x007bd254
-    /// - "WaypointList", "SoundList", "Encounter List" @ 0x007bd050, "StoreList", "CameraList" (GFF list field names)
+    /// - "tmpgit" @ 0x007be618 (temporary GIT file reference during loading)
+    /// - GFF list field names for instance lists:
+    ///   - "Creature List" @ 0x007bd01c (creature instances)
+    ///   - "Door List" @ 0x007bd248 (door instances)
+    ///   - "Placeable List" @ 0x007bd260 (placeable instances)
+    ///   - "TriggerList" @ 0x007bd254 (trigger instances)
+    ///   - "WaypointList" (waypoint instances)
+    ///   - "SoundList" (sound instances)
+    ///   - "Encounter List" @ 0x007bd050 (encounter instances)
+    ///   - "StoreList" (store instances)
+    ///   - "CameraList" @ 0x007bd16c (camera instances, KOTOR-specific)
     /// - GIT file format: GFF with "GIT " signature containing area instance data
     /// - Original implementation: FUN_004dfbb0 @ 0x004dfbb0 loads creature instances from GIT
     /// - FUN_004e08e0 @ 0x004e08e0 loads placeable/door instances from GIT
     /// - FUN_004e01a0 @ 0x004e01a0 loads encounter instances from GIT
+    /// - FUN_004e0f60 @ 0x004e0f60 loads waypoint instances from GIT
+    /// - FUN_004e10b0 @ 0x004e10b0 loads trigger instances from GIT
     /// - Parses GIT GFF structure, spawns entities at specified positions
     /// - GIT files define all spawned instances in an area (creatures, doors, placeables, triggers, waypoints, sounds, encounters, stores, cameras)
     /// - Each instance contains: TemplateResRef, Tag, Position (X/Y/Z), Orientation, and type-specific fields
+    /// - Instance position fields: "XPosition", "YPosition", "ZPosition" for most types, "X", "Y", "Z" for doors/placeables
+    /// - Instance orientation fields: "XOrientation", "YOrientation" for creatures/triggers, "Bearing" for doors/placeables
+    /// - Area properties stored in "AreaProperties" struct (ambient sounds, music, environment audio)
     /// - Based on GIT file format documentation in vendor/PyKotor/wiki/GFF-GIT.md
     /// </remarks>
     public class GITLoader
