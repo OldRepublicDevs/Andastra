@@ -88,6 +88,7 @@ namespace Odyssey.Kotor.Game
         private bool _isRunning;
         private bool _isPaused;
         private bool _isLoadingFromSave;
+        private bool _isPlayerRestricted;
         private NavigationMesh _currentNavMesh;
         private TLK _baseTlk;
         private TLK _customTlk;
@@ -836,6 +837,23 @@ namespace Odyssey.Kotor.Game
         public void Resume()
         {
             _isPaused = false;
+        }
+
+        /// <summary>
+        /// Sets player restriction mode. When restricted, player cannot move, interact, or perform actions.
+        /// Used during cutscenes, dialogues, etc.
+        /// </summary>
+        public void SetPlayerRestrictMode(bool restrict)
+        {
+            _isPlayerRestricted = restrict;
+        }
+
+        /// <summary>
+        /// Gets whether player is in restrict mode.
+        /// </summary>
+        public bool IsPlayerRestricted
+        {
+            get { return _isPlayerRestricted; }
         }
 
         /// <summary>

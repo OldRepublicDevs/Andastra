@@ -1069,11 +1069,11 @@ namespace Odyssey.Scripting.EngineApi
             switch (criteriaType)
             {
                 case 0: // CREATURE_TYPE_RACIAL_TYPE
-                    // Check racial type from creature data
-                    if (creature is Core.Entities.Entity entity)
+                    // Check racial type from creature component
+                    CreatureComponent creatureComp = creature.GetComponent<CreatureComponent>();
+                    if (creatureComp != null)
                     {
-                        int raceId = entity.GetData<int>("RaceId", 0);
-                        return raceId == criteriaValue;
+                        return creatureComp.RaceId == criteriaValue;
                     }
                     return false;
 
@@ -1098,68 +1098,40 @@ namespace Odyssey.Scripting.EngineApi
                     return false;
 
                 case 2: // CREATURE_TYPE_CLASS
-                    // Check if creature has the specified class type
-                    // ClassList is stored as List<CreatureClass> with ClassId and Level
-                    if (creature is Core.Entities.Entity entity2)
+                    // Check class type from creature component
+                    CreatureComponent creatureComp2 = creature.GetComponent<CreatureComponent>();
+                    if (creatureComp2 != null && creatureComp2.ClassList != null)
                     {
-                        var classList = entity2.GetData<List<Odyssey.Kotor.Components.CreatureClass>>("ClassList");
-                        if (classList != null)
+                        // Check if any class in the class list matches the criteria value
+                        foreach (CreatureClass cls in creatureComp2.ClassList)
                         {
-                            foreach (var creatureClass in classList)
+                            if (cls.ClassId == criteriaValue)
                             {
-                                if (creatureClass.ClassId == criteriaValue)
-                                {
-                                    return true; // Creature has this class
-                                }
+                                return true;
                             }
                         }
                     }
-                    return false; // Creature doesn't have this class
+                    return false;
 
                 case 3: // CREATURE_TYPE_REPUTATION
-                    // Check reputation between caller and creature
-                    // Reputation values: REPUTATION_TYPE_ENEMY = 0, REPUTATION_TYPE_NEUTRAL = 1, REPUTATION_TYPE_FRIEND = 2
-                    if (ctx.Caller == null)
+                    // REPUTATION_TYPE_FRIEND = 0, REPUTATION_TYPE_ENEMY = 1, REPUTATION_TYPE_NEUTRAL = 2
+                    if (ctx is VM.ExecutionContext execCtxRep && execCtxRep.AdditionalContext is Odyssey.Kotor.Game.GameServicesContext servicesRep)
                     {
-                        return false;
-                    }
-                    
-                    // Get faction IDs
-                    int callerFactionId = 0;
-                    int creatureFactionId = 0;
-                    if (ctx.Caller is Core.Entities.Entity callerEntity)
-                    {
-                        callerFactionId = callerEntity.GetData<int>("FactionID", 0);
-                    }
-                    if (creature is Core.Entities.Entity creatureEntity)
-                    {
-                        creatureFactionId = creatureEntity.GetData<int>("FactionID", 0);
-                    }
-                    
-                    if (callerFactionId == 0 || creatureFactionId == 0)
-                    {
-                        return false; // No faction data
-                    }
-                    
-                    // Use FactionManager to get reputation
-                    if (ctx is VM.ExecutionContext execCtx && execCtx.AdditionalContext is Odyssey.Kotor.Game.GameServicesContext services)
-                    {
-                        if (services.FactionManager != null)
+                        if (servicesRep.FactionManager != null && servicesRep.PlayerEntity != null)
                         {
-                            // Get reputation between factions
-                            // Note: FactionManager.GetReputation returns reputation value
-                            // We need to check if it matches the criteria value
-                            int reputation = services.FactionManager.GetReputation(callerFactionId, creatureFactionId);
-                            return reputation == criteriaValue;
+                            switch (criteriaValue)
+                            {
+                                case 0: // FRIEND
+                                    return servicesRep.FactionManager.IsFriendly(servicesRep.PlayerEntity, creature);
+                                case 1: // ENEMY
+                                    return servicesRep.FactionManager.IsHostile(servicesRep.PlayerEntity, creature);
+                                case 2: // NEUTRAL
+                                    return servicesRep.FactionManager.IsNeutral(servicesRep.PlayerEntity, creature);
+                                default:
+                                    return false;
+                            }
                         }
                     }
-                    
-                    // Fallback: If same faction, assume friendly (REPUTATION_TYPE_FRIEND = 2)
-                    if (callerFactionId == creatureFactionId)
-                    {
-                        return criteriaValue == 2; // REPUTATION_TYPE_FRIEND
-                    }
-                    
                     return false;
 
                 case 4: // CREATURE_TYPE_IS_ALIVE
@@ -2902,6 +2874,17 @@ namespace Odyssey.Scripting.EngineApi
             return Variable.FromInt(0);
         }
 
+        /// <summary>
+        /// GetItemInSlot(int nInventorySlot, object oCreature=OBJECT_SELF) - returns item in specified inventory slot
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: Inventory slot system
+        /// Located via string references: "InventorySlot" @ 0x007bf7d0
+        /// Original implementation: KOTOR uses numbered inventory slots (0-17 for equipment, higher for inventory)
+        /// Inventory slots: Equipment slots (0-17) for armor, weapons, etc., inventory slots (18+) for items
+        /// Returns: Item object ID in specified slot or OBJECT_INVALID if slot is empty
+        /// Slot validation: Invalid slot numbers return OBJECT_INVALID
+        /// </remarks>
         private Variable Func_GetItemInSlot(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             // GetItemInSlot(int nInventorySlot, object oCreature=OBJECT_SELF)
