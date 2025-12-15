@@ -20,9 +20,9 @@ using Odyssey.Kotor.Game;
 using Odyssey.Scripting.Interfaces;
 using Odyssey.Scripting.Types;
 using Odyssey.Scripting.VM;
-using Vector3 = CSharpKOTOR.Common.Vector3;
-using Vector2 = CSharpKOTOR.Common.Vector2;
-using Vector4 = CSharpKOTOR.Common.Vector4;
+using Vector3 = System.Numerics.Vector3;
+using Vector2 = System.Numerics.Vector2;
+using Vector4 = System.Numerics.Vector4;
 
 namespace Odyssey.Scripting.EngineApi
 {
@@ -84,7 +84,6 @@ namespace Odyssey.Scripting.EngineApi
             _lastSpellTargets = new Dictionary<uint, uint>();
             _lastEquippedItems = new Dictionary<uint, uint>();
             _lastMetamagicTypes = new Dictionary<uint, int>();
-            _playerRestricted = false; // Initialize player restriction state
         }
         
         private class FactionMemberIteration
@@ -1118,48 +1117,12 @@ namespace Odyssey.Scripting.EngineApi
                     return false;
 
                 case 2: // CREATURE_TYPE_CLASS
-                    // Check if creature has the specified class
-                    CreatureComponent creatureComp = creature.GetComponent<CreatureComponent>();
-                    if (creatureComp != null && creatureComp.ClassList != null)
-                    {
-                        // Check if any class in ClassList matches the criteria value
-                        foreach (var creatureClass in creatureComp.ClassList)
-                        {
-                            if (creatureClass != null && creatureClass.ClassId == criteriaValue)
-                            {
-                                return true;
-                            }
-                        }
-                    }
-                    return false;
+                    // TODO: Check class type from creature template
+                    return true; // Placeholder
 
                 case 3: // CREATURE_TYPE_REPUTATION
-                    // Check reputation between caller and creature
-                    // criteriaValue: 0 = hostile, 1 = neutral, 2 = friendly
-                    if (ctx.Caller != null && ctx.World != null)
-                    {
-                        // Get FactionManager from GameServicesContext
-                        if (ctx is VM.ExecutionContext execCtx && execCtx.AdditionalContext is Odyssey.Kotor.Game.GameServicesContext services)
-                        {
-                            if (services.FactionManager != null)
-                            {
-                                int reputation = services.FactionManager.GetReputation(ctx.Caller, creature);
-                                if (criteriaValue == 0) // Hostile
-                                {
-                                    return reputation <= FactionManager.HostileThreshold;
-                                }
-                                else if (criteriaValue == 1) // Neutral
-                                {
-                                    return reputation > FactionManager.HostileThreshold && reputation < FactionManager.FriendlyThreshold;
-                                }
-                                else if (criteriaValue == 2) // Friendly
-                                {
-                                    return reputation >= FactionManager.FriendlyThreshold;
-                                }
-                            }
-                        }
-                    }
-                    return false;
+                    // TODO: Check reputation type
+                    return true; // Placeholder
 
                 case 4: // CREATURE_TYPE_IS_ALIVE
                     // TRUE = alive, FALSE = dead
@@ -1172,58 +1135,16 @@ namespace Odyssey.Scripting.EngineApi
                     return false;
 
                 case 5: // CREATURE_TYPE_HAS_SPELL_EFFECT
-                    // Check if creature has specific spell effect
-                    if (ctx.World != null && ctx.World.EffectSystem != null)
-                    {
-                        // criteriaValue is the effect type ID to check for
-                        var effects = ctx.World.EffectSystem.GetEffects(creature);
-                        if (effects != null)
-                        {
-                            foreach (var effect in effects)
-                            {
-                                if (effect != null && (int)effect.Type == criteriaValue)
-                                {
-                                    return true;
-                                }
-                            }
-                        }
-                    }
-                    return false;
+                    // TODO: Check if creature has specific spell effect
+                    return true; // Placeholder
 
                 case 6: // CREATURE_TYPE_DOES_NOT_HAVE_SPELL_EFFECT
-                    // Check if creature does not have specific spell effect
-                    if (ctx.World != null && ctx.World.EffectSystem != null)
-                    {
-                        // criteriaValue is the effect type ID to check for
-                        var effects = ctx.World.EffectSystem.GetEffects(creature);
-                        if (effects != null)
-                        {
-                            foreach (var effect in effects)
-                            {
-                                if (effect != null && (int)effect.Type == criteriaValue)
-                                {
-                                    return false; // Has the effect, so doesn't match "does not have"
-                                }
-                            }
-                        }
-                        return true; // Doesn't have the effect
-                    }
-                    return true; // If no effect system, assume doesn't have it
+                    // TODO: Check if creature does not have specific spell effect
+                    return true; // Placeholder
 
                 case 7: // CREATURE_TYPE_PERCEPTION
-                    // Check perception type
-                    // Perception types are typically handled by PerceptionManager
-                    if (ctx is VM.ExecutionContext execCtxPer && execCtxPer.AdditionalContext is Odyssey.Kotor.Game.GameServicesContext servicesPer)
-                    {
-                        if (servicesPer.PerceptionManager != null && servicesPer.PlayerEntity != null)
-                        {
-                            // criteriaValue is the perception type to check
-                            // This would need PerceptionManager to check if creature matches perception type
-                            // For now, return true as a placeholder - full implementation would check perception flags
-                            return true;
-                        }
-                    }
-                    return false;
+                    // TODO: Check perception type
+                    return true; // Placeholder
 
                 default:
                     return true; // Unknown criteria type, accept all
@@ -3276,20 +3197,13 @@ namespace Odyssey.Scripting.EngineApi
         /// <summary>
         /// GetPlayerRestrictMode() - Returns TRUE if player is in restrict mode
         /// </summary>
-        /// <summary>
-        /// GetPlayerRestrictMode() - returns current player restriction state
-        /// </summary>
-        /// <remarks>
-        /// Based on swkotor2.exe: Player restriction system
-        /// Original implementation: Tracks whether player input/actions are restricted (e.g., during cutscenes, dialogues)
-        /// Restriction state: When restricted (1), player cannot move, interact, or perform actions
-        /// Usage: Set during cutscenes, dialogues, scripted sequences to prevent player interference
-        /// Returns: 1 if player is restricted, 0 if not restricted
-        /// </remarks>
         private Variable Func_GetPlayerRestrictMode(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
-            // Return tracked player restriction state
-            return Variable.FromInt(_playerRestricted ? 1 : 0);
+            // Player restriction state would typically be tracked by GameSession
+            // For now, return 0 (not restricted) - player restriction system integration needed
+            // TODO: Implement player restriction state tracking
+            
+            return Variable.FromInt(0);
         }
 
         /// <summary>
@@ -3750,20 +3664,17 @@ namespace Odyssey.Scripting.EngineApi
         private Variable Func_GetMetaMagicFeat(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             // GetMetaMagicFeat() - Returns the metamagic type of the last spell cast by the caller
+            // Note: This should track the last spell cast's metamagic type, not check if creature has the feat
+            // For now, return 0 (no metamagic) - would need to track last spell cast in ActionCastSpellAtObject
             // Metamagic feats: METAMAGIC_EMPOWER (1), METAMAGIC_EXTEND (2), METAMAGIC_MAXIMIZE (4), METAMAGIC_QUICKEN (8)
+            // TODO: Track last spell cast metamagic type when ActionCastSpellAtObject is executed
             
             if (ctx.Caller == null || ctx.Caller.ObjectType != Core.Enums.ObjectType.Creature)
             {
                 return Variable.FromInt(-1);
             }
             
-            // Retrieve last metamagic type for this caster
-            if (_lastMetamagicTypes.TryGetValue(ctx.Caller.ObjectId, out int metamagicType))
-            {
-                return Variable.FromInt(metamagicType);
-            }
-            
-            // No metamagic tracked, return 0 (no metamagic)
+            // For now, return 0 (no metamagic) until spell casting tracking is implemented
             return Variable.FromInt(0);
         }
 
@@ -3946,15 +3857,12 @@ namespace Odyssey.Scripting.EngineApi
             }
             
             // Extraordinary effects cannot be dispelled and are not affected by antimagic fields
-            // Based on swkotor2.exe: Sets effect subtype to SUBTYPE_EXTRAORDINARY (32)
-            // Extraordinary effects are not magical or supernatural, cannot be dispelled
+            // The effect itself is unchanged, but marked as extraordinary
+            // For now, just return the effect as-is
+            // TODO: Mark effect as extraordinary type if Effect class supports it
             Combat.Effect effect = effectObj as Combat.Effect;
             if (effect != null)
             {
-                // Mark effect as extraordinary by setting subtype
-                // SUBTYPE_EXTRAORDINARY = 32 (based on NWScript effect subtype constants)
-                effect.SubType = 32; // SUBTYPE_EXTRAORDINARY
-                effect.IsSupernatural = false; // Extraordinary effects are not supernatural
                 return Variable.FromEffect(effect);
             }
             
@@ -4412,18 +4320,11 @@ namespace Odyssey.Scripting.EngineApi
         }
 
         /// <summary>
+        /// GetIsFriend(object oTarget, object oSource=OBJECT_SELF) - returns TRUE if oSource considers oTarget as friend
+        /// </summary>
+        /// <summary>
         /// GetIsFriend(object oTarget, object oSource=OBJECT_SELF) - Returns TRUE if oTarget is a friend of oSource
         /// </summary>
-        /// <remarks>
-        /// Based on swkotor2.exe: Faction relationship system
-        /// Located via string references: "FactionRep" @ 0x007c290c, "FACTIONREP" @ 0x007bcec8
-        /// Original implementation: Checks faction reputation between source and target entities
-        /// Friend check: Uses FactionManager to determine if source faction is friendly to target faction
-        /// Reputation thresholds: Friendly if reputation >= 90 (FactionManager.FriendlyThreshold)
-        /// Personal reputation: Checks personal reputation overrides before faction-based reputation
-        /// Same faction: Entities with same faction ID are considered friendly
-        /// Returns: 1 (TRUE) if friendly, 0 (FALSE) if not friendly or entities invalid
-        /// </remarks>
         private Variable Func_GetIsFriend(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             uint targetId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
@@ -4714,45 +4615,11 @@ namespace Odyssey.Scripting.EngineApi
                 return Variable.Void();
             }
             
-            // If no delay and no fade, destroy immediately
-            if (delay <= 0f && noFade != 0)
+            // TODO: Implement delayed destruction with fade effects
+            // For now, just remove from world immediately
+            if (ctx.World != null)
             {
-                if (ctx.World != null)
-                {
-                    ctx.World.DestroyEntity(entity.ObjectId);
-                }
-                return Variable.Void();
-            }
-            
-            // Create destroy action with delay and fade support
-            var destroyAction = new Odyssey.Core.Actions.ActionDestroyObject(entity.ObjectId, delay, noFade != 0, delayUntilFade);
-            
-            // If delay > 0, schedule via DelayCommand
-            if (delay > 0f)
-            {
-                // Schedule the destroy action after delay
-                if (ctx.World != null && ctx.World.DelayScheduler != null)
-                {
-                    ctx.World.DelayScheduler.ScheduleDelay(delay, destroyAction, ctx.Caller ?? entity);
-                }
-            }
-            else
-            {
-                // No delay, execute immediately via action queue
-                // Add to entity's action queue so it can handle fade timing
-                IActionQueue queue = entity.GetComponent<IActionQueue>();
-                if (queue != null)
-                {
-                    queue.Add(destroyAction);
-                }
-                else
-                {
-                    // Fallback: destroy immediately if no action queue
-                    if (ctx.World != null)
-                    {
-                        ctx.World.DestroyEntity(entity.ObjectId);
-                    }
-                }
+                ctx.World.DestroyEntity(entity.ObjectId);
             }
             
             return Variable.Void();
@@ -4871,45 +4738,104 @@ namespace Odyssey.Scripting.EngineApi
                     return Variable.FromObject(ObjectInvalid);
             }
             
-            // Create entity
-            IEntity entity = ctx.World.CreateEntity(odyObjectType, position, facing);
-            if (entity == null)
-            {
-                return Variable.FromObject(ObjectInvalid);
-            }
+            // Create entity using EntityFactory
+            IEntity entity = null;
             
-            // Set tag from template (for waypoints, template is the tag)
-            if (objectType == 6) // Waypoint
+            // Access ModuleLoader via GameServicesContext to get EntityFactory
+            if (ctx is Odyssey.Scripting.VM.ExecutionContext execCtx && execCtx.AdditionalContext is Odyssey.Kotor.Game.GameServicesContext services)
             {
-                entity.Tag = template;
-            }
-            else if (!string.IsNullOrEmpty(template))
-            {
-                // Load template from installation
-                // Access ModuleLoader via GameServicesContext
-                if (ctx is Odyssey.Scripting.VM.ExecutionContext execCtx && execCtx.AdditionalContext is Odyssey.Kotor.Game.GameServicesContext services)
+                if (services.ModuleLoader != null && services.ModuleLoader.EntityFactory != null)
                 {
-                    if (services.ModuleLoader != null)
+                    CSharpKOTOR.Common.Module csharpKotorModule = services.ModuleLoader.GetCurrentModule();
+                    if (csharpKotorModule == null)
                     {
-                        // Use ModuleLoader to load template
-                        // This is a simplified version - full implementation would need to call the appropriate Load*Template method
-                        entity.Tag = template;
-                        
-                        // TODO: Actually load template data (UTC, UTI, UTP, UTM) based on resourceType
-                        // For now, just set the tag and create the entity
-                        // Full template loading would require access to Installation and ModuleLoader methods
+                        return Variable.FromObject(ObjectInvalid);
+                    }
+
+                    // Convert position to System.Numerics.Vector3
+                    System.Numerics.Vector3 entityPosition = new System.Numerics.Vector3(position.X, position.Y, position.Z);
+
+                    // Create entity from template using EntityFactory
+                    switch (odyObjectType)
+                    {
+                        case Core.Enums.ObjectType.Creature:
+                            if (!string.IsNullOrEmpty(template))
+                            {
+                                entity = services.ModuleLoader.EntityFactory.CreateCreatureFromTemplate(csharpKotorModule, template, entityPosition, facing);
+                            }
+                            break;
+                        case Core.Enums.ObjectType.Item:
+                            if (!string.IsNullOrEmpty(template))
+                            {
+                                entity = services.ModuleLoader.EntityFactory.CreateItemFromTemplate(csharpKotorModule, template, entityPosition, facing);
+                            }
+                            break;
+                        case Core.Enums.ObjectType.Placeable:
+                            if (!string.IsNullOrEmpty(template))
+                            {
+                                entity = services.ModuleLoader.EntityFactory.CreatePlaceableFromTemplate(csharpKotorModule, template, entityPosition, facing);
+                            }
+                            break;
+                        case Core.Enums.ObjectType.Store:
+                            if (!string.IsNullOrEmpty(template))
+                            {
+                                entity = services.ModuleLoader.EntityFactory.CreateStoreFromTemplate(csharpKotorModule, template, entityPosition, facing);
+                            }
+                            break;
+                        case Core.Enums.ObjectType.Waypoint:
+                            // Waypoints don't have templates in the same way, their "template" is often just their tag
+                            entity = services.ModuleLoader.EntityFactory.CreateWaypointFromTemplate(template, entityPosition, facing);
+                            break;
                     }
                 }
-                else
+            }
+            
+            // Fallback: Create basic entity if EntityFactory not available or template creation failed
+            if (entity == null)
+            {
+                // Convert System.Numerics.Vector3 to CSharpKOTOR Vector3 for World.CreateEntity
+                Vector3 worldPosition = new Vector3(position.X, position.Y, position.Z);
+                entity = ctx.World.CreateEntity(odyObjectType, worldPosition, facing);
+                if (entity == null)
+                {
+                    return Variable.FromObject(ObjectInvalid);
+                }
+                
+                // Set tag from template (for waypoints, template is the tag)
+                if (objectType == 6) // Waypoint
+                {
+                    entity.Tag = template;
+                }
+                else if (!string.IsNullOrEmpty(template))
                 {
                     entity.Tag = template;
                 }
             }
             
-            // Add to current area
-            ctx.World.CurrentArea.AddEntity(entity);
+            // Register entity with world
+            ctx.World.RegisterEntity(entity);
             
-            // TODO: Implement appear animation if bUseAppearAnimation is TRUE
+            // Add to current area (RuntimeArea has AddEntity method)
+            if (ctx.World.CurrentArea is Core.Module.RuntimeArea runtimeArea)
+            {
+                runtimeArea.AddEntity(entity);
+            }
+            
+            // Implement appear animation if bUseAppearAnimation is TRUE
+            // Based on swkotor2.exe: Objects created with appear animation play a fade-in effect
+            // This is typically handled by setting a flag that the rendering system uses to fade in the object
+            if (useAppearAnimation != 0)
+            {
+                // Set flag on entity to indicate it should fade in
+                if (entity is Core.Entities.Entity entityImpl)
+                {
+                    entityImpl.SetData("AppearAnimation", true);
+                    
+                    // Optionally, queue an animation action for entities that support it
+                    // Most objects in KOTOR just fade in visually rather than playing a specific animation
+                    // The rendering system should handle the fade-in based on the AppearAnimation flag
+                }
+            }
             
             return Variable.FromObject(entity.ObjectId);
         }
