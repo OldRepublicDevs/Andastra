@@ -16,6 +16,21 @@ namespace Odyssey.Content.ResourceProviders
     /// <summary>
     /// Resource provider that wraps CSharpKOTOR.Installation for unified resource access.
     /// </summary>
+    /// <remarks>
+    /// Game Resource Provider:
+    /// - Based on swkotor2.exe resource loading system
+    /// - Located via string references: "Resource" @ 0x007c14d4 (resource field)
+    /// - Resource table errors: "CExoKeyTable::DestroyTable: Resource %s still in demand during table deletion" @ 0x007b6078
+    /// - "CExoKeyTable::AddKey: Duplicate Resource " @ 0x007b6124 (duplicate resource key error)
+    /// - Original implementation: Wraps CSharpKOTOR.Installation for resource access
+    /// - Resource lookup: Uses installation resource system to locate files in archives (RIM, ERF, BIF, MOD)
+    /// - Module context: Sets current module for module-specific resource lookups (module RIMs loaded first)
+    /// - Search order: Module RIMs → Override directory → Main game archives (chitin.key/BIF files)
+    /// - Resource types: Supports all KOTOR resource types (MDL, MDX, TPC, WAV, NCS, DLG, etc.)
+    /// - Async loading: Provides async resource access for streaming and background loading
+    /// - Resource enumeration: Can enumerate resources by type from installation archives
+    /// - Based on CSharpKOTOR resource system which mirrors original engine's CExoKeyTable/ResourceManager
+    /// </remarks>
     public class GameResourceProvider : IGameResourceProvider
     {
         private readonly Installation _installation;
