@@ -22,7 +22,74 @@ namespace Odyssey.Core.Party
     /// - "Party Killed" @ 0x007c8470 (party killed message)
     /// - Error message: "While creating the party select screen, NPC %d's ID is Out of Synch with what's in the Client Side Party Table." @ 0x007cff20
     /// - Original implementation: FUN_0057bd70 @ 0x0057bd70 (save PARTYTABLE.res to GFF)
+    ///   - Original implementation (from decompiled FUN_0057bd70):
+    ///     - Creates GFF with "PT " signature (4 bytes) and "V2.0" version string
+    ///     - Constructs file path: "PARTYTABLE\SAVEGAME\{saveName}" using format string "%06d - %s"
+    ///     - Writes fields in this exact order:
+    ///       - PT_PCNAME (string): Player character name from party system
+    ///       - PT_GOLD (int32): Party gold amount
+    ///       - PT_ITEM_COMPONENT (int32): Item component count
+    ///       - PT_ITEM_CHEMICAL (int32): Item chemical count
+    ///       - PT_SWOOP1, PT_SWOOP2, PT_SWOOP3 (int32): Swoop race times
+    ///       - PT_XP_POOL (float): Experience point pool
+    ///       - PT_PLAYEDSECONDS (int32): Total seconds played (calculated via FUN_0057a300)
+    ///       - PT_CONTROLLED_NPC (float): Currently controlled NPC (-1 = none)
+    ///       - PT_SOLOMODE (byte): Solo mode flag (K2)
+    ///       - PT_CHEAT_USED (byte): Cheat used flag
+    ///       - PT_NUM_MEMBERS (byte): Number of active members (max 3)
+    ///       - PT_MEMBERS (list): Active party members
+    ///         - PT_MEMBER_ID (float): Member ID (-1 = PC, 0-11 = NPC slots)
+    ///         - PT_IS_LEADER (byte): Whether member is leader (1 = leader, 0 = not)
+    ///       - PT_NUM_PUPPETS (byte): Number of puppets
+    ///       - PT_PUPPETS (list): Puppet object IDs
+    ///         - PT_PUPPET_ID (float): Puppet object ID
+    ///       - PT_AVAIL_PUPS (list, max 3): Available puppets
+    ///         - PT_PUP_AVAIL (byte): Puppet available flag
+    ///         - PT_PUP_SELECT (byte): Puppet selectable flag
+    ///       - PT_AVAIL_NPCS (list, max 12): Available NPCs
+    ///         - PT_NPC_AVAIL (byte): NPC available flag
+    ///         - PT_NPC_SELECT (byte): NPC selectable flag
+    ///       - PT_INFLUENCE (list, max 12, K2): Influence levels
+    ///         - PT_NPC_INFLUENCE (float): Influence value (0-100)
+    ///       - PT_AISTATE (float): AI state
+    ///       - PT_FOLLOWSTATE (float): Follow state
+    ///       - GlxyMap (struct): Galaxy map data
+    ///         - GlxyMapNumPnts (int32): Number of points (16)
+    ///         - GlxyMapPlntMsk (int32): Planet mask bitfield
+    ///         - GlxyMapSelPnt (float): Selected point
+    ///       - PT_PAZAAKCARDS (list, 23 entries): Pazaak cards
+    ///         - PT_PAZAAKCOUNT (float): Card count
+    ///       - PT_PAZSIDELIST (list, 10 entries): Pazaak side cards
+    ///         - PT_PAZSIDECARD (float): Side card value
+    ///       - PT_TUT_WND_SHOWN (byte array, 33 bytes): Tutorial windows shown flags
+    ///       - PT_LAST_GUI_PNL (float): Last GUI panel
+    ///       - FORFEITVIOL (float): Forfeit violation flag
+    ///       - FORFEITCONDS (float): Forfeit conditions flag
+    ///       - PT_FB_MSG_LIST (list): Feedback message list
+    ///         - PT_FB_MSG_MSG (string): Message text
+    ///         - PT_FB_MSG_TYPE (int32): Message type
+    ///         - PT_FB_MSG_COLOR (byte): Message color
+    ///       - PT_DLG_MSG_LIST (list): Dialogue message list
+    ///         - PT_DLG_MSG_SPKR (string): Speaker name
+    ///         - PT_DLG_MSG_MSG (string): Message text
+    ///       - PT_COM_MSG_LIST (list): Combat message list
+    ///         - PT_COM_MSG_MSG (string): Message text
+    ///         - PT_COM_MSG_TYPE (int32): Message type
+    ///         - PT_COM_MSG_COOR (byte): Message color
+    ///       - PT_COST_MULT_LIST (list): Cost multiplier list
+    ///         - PT_COST_MULT_VALUE (float): Multiplier value
+    ///       - PT_DISABLEMAP (float): Disable map flag
+    ///       - PT_DISABLEREGEN (float): Disable regen flag
+    ///     - Saves GFF to file path via FUN_0057a730
     /// - FUN_0057dcd0 @ 0x0057dcd0 (load PARTYTABLE.res from GFF)
+    ///   - Original implementation (from decompiled FUN_0057dcd0):
+    ///     - Loads GFF with "PT " signature from "PARTYTABLE" path
+    ///     - Reads all fields in same order as save function
+    ///     - Validates list sizes (PT_MEMBERS, PT_PUPPETS, PT_AVAIL_PUPS, PT_AVAIL_NPCS, PT_INFLUENCE)
+    ///     - Falls back to PT_PLAYEDMINUTES if PT_PLAYEDSECONDS not found (converts to seconds)
+    ///     - Restores party member states, available NPCs, puppets, influence levels
+    ///     - Restores message lists (feedback, dialogue, combat), Pazaak cards, tutorial flags
+    ///     - Calls FUN_00579660 to initialize party system, FUN_005798f0 to restore party state
     /// - FUN_005a8220 @ 0x005a8220 (handle Party network message)
     /// - Party state stored in PARTYTABLE.res GFF file with "PT " signature
     /// - GFF structure fields (all located via string references):
