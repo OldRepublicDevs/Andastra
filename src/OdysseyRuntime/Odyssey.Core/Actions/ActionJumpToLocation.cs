@@ -11,12 +11,17 @@ namespace Odyssey.Core.Actions
     /// <remarks>
     /// Jump To Location Action:
     /// - Based on swkotor2.exe ActionJumpToLocation NWScript function
-    /// - Located via string references: "JumpToLocation" action type, "Position" @ 0x007bef70
-    /// - Original implementation: Instantly teleports entity to specified location and facing
-    /// - Used for scripted movement, cutscenes, area transitions
-    /// - Can jump between areas if location specifies different area (requires area transition handling)
-    /// - Position and facing set immediately without animation or movement path
-    /// - Action completes immediately after position is set
+    /// - Located via string references: "JumpToLocation" action type (ACTION_TYPE_JUMP_TO_LOCATION constant), "Position" @ 0x007bef70 (position field)
+    /// - Original implementation: Instantly teleports entity to specified location and facing without movement animation
+    /// - Used for scripted movement (cutscenes, scripted sequences), area transitions, teleportation effects
+    /// - Teleportation: Position and facing set immediately - bypasses pathfinding, walkmesh validation, and movement interpolation
+    /// - Area transitions: Can jump between areas if location specifies different area (requires area transition system handling)
+    /// - No validation: Jump does not check if destination is valid (can teleport outside walkmesh, into walls, etc.)
+    /// - Animation: No movement animation plays (entity appears at new location instantly)
+    /// - Action completes immediately after position is set (single frame execution)
+    /// - Usage: Cutscenes, scripted sequences, area loading positioning, teleportation spells/effects
+    /// - Contrast with ActionMoveToLocation: MoveToLocation uses pathfinding and movement animation, JumpToLocation is instant teleport
+    /// - Based on NWScript function ActionJumpToLocation (routine ID varies by game version)
     /// </remarks>
     public class ActionJumpToLocation : ActionBase
     {
