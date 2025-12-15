@@ -12,11 +12,14 @@ namespace Odyssey.Core.Entities
     /// <remarks>
     /// Entity System:
     /// - Based on swkotor2.exe entity system
-    /// - Located via string references: "ObjectId" @ 0x007bce5c, "Tag" (various locations)
-    /// - Original engine: Entities have ObjectId (uint32), Tag (string), ObjectType (enum)
+    /// - Located via string references: "ObjectId" @ 0x007bce5c, "ObjectIDList" @ 0x007bfd7c
+    /// - "AreaId" @ 0x007bef48 (entity area association)
+    /// - Original engine: Entities have ObjectId (uint32), Tag (string), ObjectType (enum), AreaId (uint32)
+    /// - ObjectId assignment: Sequential uint32 starting from 1 (OBJECT_INVALID = 0x7F000000, OBJECT_SELF = 0x7F000001)
     /// - Component system: Entities use component-based architecture for stats, transform, inventory, etc.
     /// - Script hooks: Entities store script ResRefs for various events (OnHeartbeat, OnAttacked, etc.)
-    /// - Original entity structure includes: Position (Vector3), Orientation (Vector3), AreaId, etc.
+    /// - Original entity structure includes: Position (Vector3), Orientation (Vector3), AreaId, ObjectId, Tag
+    /// - Entity serialization: FUN_005226d0 @ 0x005226d0 saves entity state including ObjectId, AreaId, Position, Orientation
     /// </remarks>
     public class Entity : IEntity
     {
