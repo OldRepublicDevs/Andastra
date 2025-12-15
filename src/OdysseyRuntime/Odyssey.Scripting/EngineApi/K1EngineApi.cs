@@ -3876,6 +3876,85 @@ namespace Odyssey.Scripting.EngineApi
         }
 
         #endregion
+
+        #region Type Conversion Functions
+
+        /// <summary>
+        /// IntToFloat(int nInteger) - Convert nInteger into a floating point number
+        /// </summary>
+        private Variable Func_IntToFloat(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            int value = args.Count > 0 ? args[0].AsInt() : 0;
+            return Variable.FromFloat((float)value);
+        }
+
+        /// <summary>
+        /// FloatToInt(float fFloat) - Convert fFloat into the nearest integer
+        /// </summary>
+        private Variable Func_FloatToInt(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            float value = args.Count > 0 ? args[0].AsFloat() : 0f;
+            return Variable.FromInt((int)Math.Round(value));
+        }
+
+        #endregion
+
+        #region Nearest Object To Location
+
+        /// <summary>
+        /// GetNearestObjectToLocation(int nObjectType, location lLocation, int nNth=1) - Get the nNth object nearest to lLocation that is of the specified type
+        /// </summary>
+        private Variable Func_GetNearestObjectToLocation(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            if (args.Count < 2 || ctx.World == null)
+            {
+                return Variable.FromObject(ObjectInvalid);
+            }
+            
+            int objectType = args[0].AsInt();
+            object locObj = args[1].AsLocation();
+            int nth = args.Count > 2 ? args[2].AsInt() : 1;
+            
+            // Extract position from location
+            Vector3 locationPos = Vector3.Zero;
+            if (locObj != null && locObj is Location location)
+            {
+                locationPos = location.Position;
+            }
+            
+            // Convert object type constant to ObjectType enum
+            Core.Enums.ObjectType typeMask = Core.Enums.ObjectType.All;
+            if (objectType != 32767) // Not OBJECT_TYPE_ALL
+            {
+                // Map NWScript object type constants
+                typeMask = (Core.Enums.ObjectType)objectType;
+            }
+            
+            // Get all entities of the specified type
+            var candidates = new List<(IEntity entity, float distance)>();
+            foreach (IEntity entity in ctx.World.GetEntitiesOfType(typeMask))
+            {
+                ITransformComponent entityTransform = entity.GetComponent<ITransformComponent>();
+                if (entityTransform != null)
+                {
+                    float distance = Vector3.DistanceSquared(locationPos, entityTransform.Position);
+                    candidates.Add((entity, distance));
+                }
+            }
+            
+            // Sort by distance
+            candidates.Sort((a, b) => a.distance.CompareTo(b.distance));
+            
+            // Return Nth nearest (1-indexed)
+            if (nth > 0 && nth <= candidates.Count)
+            {
+                return Variable.FromObject(candidates[nth - 1].entity.ObjectId);
+            }
+            
+            return Variable.FromObject(ObjectInvalid);
+        }
+
+        #endregion
     }
 }
 
