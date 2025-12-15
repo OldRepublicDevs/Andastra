@@ -43,6 +43,7 @@ namespace Odyssey.Kotor.Game
         public FactionManager FactionManager { get; set; }
         public PerceptionManager PerceptionManager { get; set; }
         public bool IsLoadingFromSave { get; set; }
+        public GameSession GameSession { get; set; }
     }
 
     /// <summary>
@@ -412,7 +413,8 @@ namespace Odyssey.Kotor.Game
                     ModuleLoader = _moduleLoader,
                     FactionManager = _factionManager,
                     PerceptionManager = _perceptionManager,
-                    IsLoadingFromSave = _isLoadingFromSave
+                    IsLoadingFromSave = _isLoadingFromSave,
+                    GameSession = this
                 };
                 ctx.AdditionalContext = gameServices;
 
