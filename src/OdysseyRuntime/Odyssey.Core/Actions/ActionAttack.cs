@@ -21,9 +21,20 @@ namespace Odyssey.Core.Actions
     /// - Attack bonuses: "AttackBonusTable" @ 0x007c2b54, "Base Attack Bonus" @ 0x007c3b44
     /// - "MinAttackBonus" @ 0x007c2f70, "OnHandAttackMod" @ 0x007c2e50, "OffHandAttackMod" @ 0x007c2e2c
     /// - Attack range: "MaxAttackRange" @ 0x007c44e0, "PrefAttackDist" @ 0x007c44d0
+    /// - Attack counts: "OnHandAttacks" @ 0x007bfa58, "OffHandAttacks" @ 0x007bfa48, "AdditAttacks" @ 0x007bfa38
+    /// - "EffectAttacks" @ 0x007bfa28, "AttackDeflected" @ 0x007bf858, "AttackDebugText" @ 0x007bf83c
     /// - Special attacks: "SpecialAttack" @ 0x007bf9d0, "SpecialAttackId" @ 0x007bf9ac, "SpecAttackList" @ 0x007bf9e0
+    /// - "SpecAttackIdList" @ 0x007bf9bc
     /// - Attack animations: "i_attack" @ 0x007c8230, "doneattack01" @ 0x007c8280, "doneattack02" @ 0x007c8270
-    /// - "i_attackm" @ 0x007cce0c, "specialattack" @ 0x007cab60
+    /// - "i_attackm" @ 0x007cce0c, "specialattack" @ 0x007cab60, "b_attacked" @ 0x007c2184
+    /// - Attack bonus messages:
+    ///   - " + %d (Special Attack To Hit Modifier)" @ 0x007c3afc
+    ///   - " + %d (Special Attack Damage Bonus)" @ 0x007c3b60
+    ///   - " + %d (Special Attack Damage Bonus) (Critical x%d)" @ 0x007c3b84
+    ///   - " + %d (Power/Improved Power Attack Damage Bonus)" @ 0x007c3c10
+    ///   - " + %d (Power/Improved Power Attack Damage Bonus) (Critical x%d)" @ 0x007c3c48
+    ///   - " + %d (Sneak Attack Damage)" @ 0x007c3d20
+    /// - GUI: "LBL_ATTACKMOD" @ 0x007cf868, "LBL_ATTACK_INFO" @ 0x007cf8e8
     /// - Error: "CSWClass::LoadAttackBonusTable: Can't load" @ 0x007c4680
     /// - Original implementation: Attack actions trigger combat rounds, fire script events
     /// - Attack resolution uses d20 roll + attack bonus vs target AC
