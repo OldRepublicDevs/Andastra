@@ -8,13 +8,19 @@ namespace Odyssey.Core.Movement
     /// Handles player input for character control.
     /// </summary>
     /// <remarks>
-    /// KOTOR Input Model:
-    /// - Left-click: Move to point / Attack target
-    /// - Right-click: Context action (open, talk, etc.)
-    /// - Tab: Cycle party leader
-    /// - Space: Pause combat
-    /// - Number keys: Quick slot abilities
-    /// - Mouse wheel: Zoom camera
+    /// Player Input Handler:
+    /// - Based on swkotor2.exe input system
+    /// - Located via string references: Input handling functions process mouse/keyboard events
+    /// - Original implementation: Click-to-move, object interaction, party control, pause
+    /// - KOTOR Input Model:
+    ///   - Left-click: Move to point / Attack target
+    ///   - Right-click: Context action (open, talk, etc.)
+    ///   - Tab: Cycle party leader
+    ///   - Space: Pause combat
+    ///   - Number keys: Quick slot abilities
+    ///   - Mouse wheel: Zoom camera
+    /// - Click-to-move uses pathfinding to navigate to clicked position
+    /// - Object selection uses raycasting to determine clicked entity
     /// </remarks>
     public class PlayerInputHandler
     {
@@ -180,7 +186,7 @@ namespace Odyssey.Core.Movement
             if (HoveredEntity != null)
             {
                 // Context action - typically talk or examine
-                var objectType = HoveredEntity.ObjectType;
+                Enums.ObjectType objectType = HoveredEntity.ObjectType;
 
                 switch (objectType)
                 {
@@ -346,7 +352,7 @@ namespace Odyssey.Core.Movement
                 return IsValidMoveTarget ? CursorMode.Walk : CursorMode.NoWalk;
             }
 
-            var objectType = hoveredEntity.ObjectType;
+            Enums.ObjectType objectType = hoveredEntity.ObjectType;
 
             switch (objectType)
             {
@@ -365,7 +371,7 @@ namespace Odyssey.Core.Movement
                     }
 
                 case Enums.ObjectType.Door:
-                    var door = hoveredEntity.GetComponent<Interfaces.Components.IDoorComponent>();
+                    Interfaces.Components.IDoorComponent door = hoveredEntity.GetComponent<Interfaces.Components.IDoorComponent>();
                     if (door != null)
                     {
                         if (!string.IsNullOrEmpty(door.LinkedToModule))
@@ -376,7 +382,7 @@ namespace Odyssey.Core.Movement
                     return CursorMode.Door;
 
                 case Enums.ObjectType.Placeable:
-                    var placeable = hoveredEntity.GetComponent<Interfaces.Components.IPlaceableComponent>();
+                    Interfaces.Components.IPlaceableComponent placeable = hoveredEntity.GetComponent<Interfaces.Components.IPlaceableComponent>();
                     if (placeable != null)
                     {
                         if (placeable.HasInventory)
@@ -387,7 +393,7 @@ namespace Odyssey.Core.Movement
                     return CursorMode.Use;
 
                 case Enums.ObjectType.Trigger:
-                    var trigger = hoveredEntity.GetComponent<Interfaces.Components.ITriggerComponent>();
+                    Interfaces.Components.ITriggerComponent trigger = hoveredEntity.GetComponent<Interfaces.Components.ITriggerComponent>();
                     if (trigger != null)
                     {
                         if (!string.IsNullOrEmpty(trigger.LinkedToModule))
