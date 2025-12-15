@@ -53,8 +53,17 @@ namespace Odyssey.Kotor.Combat
     /// - Based on swkotor2.exe combat system
     /// - Located via string references: "CombatRoundData" @ 0x007bf6b4, "CombatInfo" @ 0x007c2e60
     /// - "InCombatHPBase" @ 0x007bf224, "OutOfCombatHPBase" @ 0x007bf210, "InCombatFPBase" @ 0x007bf4fc
+    /// - "?OutOfCombatFPBase" @ 0x007bf50f (out-of-combat force points base)
     /// - "CombatAnimations" @ 0x007c4ea4, "Combat Movement" @ 0x007c8670, "Combat_Round" @ 0x007cb318
-    /// - "End Of Combat Round" @ 0x007c843c, "CSWSCombatRound" debug strings (timer management, slave/master tracking)
+    /// - "End Of Combat Round" @ 0x007c843c, "HD0:combat" @ 0x007cbed8 (combat debug header)
+    /// - CSWSCombatRound error messages:
+    ///   - "CSWSCombatRound::EndCombatRound - %x Combat Slave (%x) not found!" @ 0x007bfb80
+    ///   - "CSWSCombatRound::IncrementTimer - %s Timer is negative at %d; Ending combat round and resetting" @ 0x007bfbc8
+    ///   - "CSWSCombatRound::IncrementTimer - %s Master IS found (%x) and round has expired (%d %d); Resetting" @ 0x007bfc28
+    ///   - "CSWSCombatRound::IncrementTimer - %s Master cannot be found and round has expired; Resetting" @ 0x007bfc90
+    ///   - "CSWSCombatRound::DecrementPauseTimer - %s Master cannot be found expire the round; Resetting" @ 0x007bfcf0
+    /// - GUI references: "BTN_COMBAT" @ 0x007c9044, "LB_COMBAT" @ 0x007c9104
+    /// - "combatreticle" @ 0x007ccfb0, "LBL_COMBATBG3" @ 0x007cd2c0, "LBL_COMBATBG2" @ 0x007cd2d0
     /// - Combat round functions: FUN_005226d0 @ 0x005226d0 (combat round management)
     /// - Combat info functions: FUN_005d9670 @ 0x005d9670, FUN_005d7fc0 @ 0x005d7fc0
     /// - Attack event: "EVENT_ON_MELEE_ATTACKED" @ 0x007bccf4, "ScriptAttacked" @ 0x007bee80
