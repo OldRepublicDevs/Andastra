@@ -114,6 +114,16 @@ namespace Odyssey.Core.Actions
                 doorState.IsOpen = true;
                 doorState.OpenState = 1; // Open state
 
+                // Record entering/clicking object for GetEnteringObject() and GetClickingObject() functions
+                // Based on swkotor2.exe: GetEnteringObject/GetClickingObject track last entity that interacted with door
+                // Located via string references: "EVENT_ENTERED_TRIGGER" @ 0x007bce08, "OnClick" @ 0x007c1a20
+                // Original implementation: Stores last interacting entity ID for script queries
+                if (door is Entities.Entity doorEntityImpl)
+                {
+                    doorEntityImpl.SetData("LastEnteringObjectId", actor.ObjectId);
+                    doorEntityImpl.SetData("LastClickingObjectId", actor.ObjectId);
+                }
+
                 // Fire OnOpen script event
                 // Based on swkotor2.exe: EVENT_OPEN_OBJECT fires OnOpen script event
                 // Located via string references: "EVENT_OPEN_OBJECT" @ 0x007bcda0 (case 7), "CSWSSCRIPTEVENT_EVENTTYPE_ON_OPEN" @ 0x007bc844 (0x16)
