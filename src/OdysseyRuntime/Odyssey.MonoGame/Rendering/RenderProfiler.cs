@@ -17,6 +17,21 @@ namespace Odyssey.MonoGame.Rendering
     /// - GPU/CPU time breakdown
     /// - Historical data
     /// </summary>
+    /// <remarks>
+    /// Render Profiler:
+    /// - Based on swkotor2.exe frame timing system (modern profiling enhancement)
+    /// - Located via string references: "frameStart" @ 0x007ba698, "frameEnd" @ 0x007ba668
+    /// - "frameStartkey" @ 0x007ba688, "frameEndkey" @ 0x007ba65c (keyframe timing)
+    /// - "frameStartbezierkey" @ 0x007ba674, "frameEndbezierkey" @ 0x007ba648 (bezier keyframe timing)
+    /// - "m_bFrameBlending" @ 0x007baabc (frame blending flag)
+    /// - Frame rate: "Fixed frame rate off." @ 0x007c707c, "Frame rate set." @ 0x007c7094
+    /// - "Frame Buffer" @ 0x007c8408, "CB_FRAMEBUFF" @ 0x007d1d84 (frame buffer checkbox)
+    /// - Video: "_BinkNextFrame@4", "_BinkDoFrame@4" (Bink video frame functions)
+    /// - Original implementation: KOTOR tracks frame timing for animation and rendering
+    /// - Frame timing: Original engine uses fixed timestep for game logic, variable for rendering
+    /// - This MonoGame implementation: Modern render profiler for detailed performance analysis
+    /// - Profiling: Tracks per-pass timing, draw calls, memory usage, GPU/CPU time breakdown
+    /// </remarks>
     public class RenderProfiler
     {
         /// <summary>
