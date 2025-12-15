@@ -13,8 +13,9 @@ namespace Odyssey.Core.Movement
     /// Character Movement System:
     /// - Based on swkotor2.exe character movement system
     /// - Located via string references: "MovementRate" @ 0x007c400c, "MovementPerSec" @ 0x007cb9a8
-    /// - "Combat Movement" @ 0x007c8670
+    /// - "Combat Movement" @ 0x007c8670, "MOVETO" @ 0x007b6b24 (ActionMoveToLocation action)
     /// - Original implementation: Point-and-click movement with walkmesh pathfinding
+    /// - Movement uses pathfinding system referenced in "nwsareapathfind.cpp" @ 0x007be3ff
     /// - KOTOR Character Movement:
     ///   - Point-and-click movement (click destination, character walks/runs)
     ///   - Walkmesh-constrained movement
