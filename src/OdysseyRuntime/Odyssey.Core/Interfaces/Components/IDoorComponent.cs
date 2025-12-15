@@ -7,6 +7,10 @@ namespace Odyssey.Core.Interfaces.Components
     /// Door Component Interface:
     /// - Based on swkotor2.exe door system
     /// - Located via string references: "Door" @ 0x007bc538, "Door List" @ 0x007bd270
+    /// - "LinkedTo" @ 0x007c13a0, "LinkedToModule" @ 0x007bd7bc (door transition links)
+    /// - Object events: "EVENT_OPEN_OBJECT" @ 0x007bcda0, "EVENT_CLOSE_OBJECT" @ 0x007bcdb4
+    /// - "EVENT_LOCK_OBJECT" @ 0x007bcd20, "EVENT_UNLOCK_OBJECT" @ 0x007bcd34
+    /// - Event dispatching: FUN_004dcfb0 @ 0x004dcfb0 handles object events (EVENT_OPEN_OBJECT case 7, EVENT_CLOSE_OBJECT case 6, EVENT_LOCK_OBJECT case 0xd, EVENT_UNLOCK_OBJECT case 0xc)
     /// - Original implementation: Doors have open/locked states, transitions, HP for bashing
     /// - OpenState: 0=closed, 1=open, 2=destroyed
     /// - Doors can be locked (IsLocked), require keys (KeyRequired, KeyTag), have lock DC (LockDC)

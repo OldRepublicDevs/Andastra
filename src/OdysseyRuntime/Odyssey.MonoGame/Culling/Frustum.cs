@@ -103,7 +103,7 @@ namespace Odyssey.MonoGame.Culling
             ));
 
             // Bottom plane: row3 + row1
-            _planes[(int)PlaneIndex.Bottom] = NormalizePlane(new Vector4(
+            _planes[(int)PlaneIndex.Bottom] = NormalizePlane(new System.Numerics.Vector4(
                 viewProjection.M14 + viewProjection.M12,
                 viewProjection.M24 + viewProjection.M22,
                 viewProjection.M34 + viewProjection.M32,
@@ -111,7 +111,7 @@ namespace Odyssey.MonoGame.Culling
             ));
 
             // Top plane: row3 - row1
-            _planes[(int)PlaneIndex.Top] = NormalizePlane(new Vector4(
+            _planes[(int)PlaneIndex.Top] = NormalizePlane(new System.Numerics.Vector4(
                 viewProjection.M14 - viewProjection.M12,
                 viewProjection.M24 - viewProjection.M22,
                 viewProjection.M34 - viewProjection.M32,
@@ -119,7 +119,7 @@ namespace Odyssey.MonoGame.Culling
             ));
 
             // Near plane: row3 + row2
-            _planes[(int)PlaneIndex.Near] = NormalizePlane(new Vector4(
+            _planes[(int)PlaneIndex.Near] = NormalizePlane(new System.Numerics.Vector4(
                 viewProjection.M14 + viewProjection.M13,
                 viewProjection.M24 + viewProjection.M23,
                 viewProjection.M34 + viewProjection.M33,
@@ -127,7 +127,7 @@ namespace Odyssey.MonoGame.Culling
             ));
 
             // Far plane: row3 - row2
-            _planes[(int)PlaneIndex.Far] = NormalizePlane(new Vector4(
+            _planes[(int)PlaneIndex.Far] = NormalizePlane(new System.Numerics.Vector4(
                 viewProjection.M14 - viewProjection.M13,
                 viewProjection.M24 - viewProjection.M23,
                 viewProjection.M34 - viewProjection.M33,
@@ -138,13 +138,13 @@ namespace Odyssey.MonoGame.Culling
         /// <summary>
         /// Normalizes a plane equation.
         /// </summary>
-        private Vector4 NormalizePlane(Vector4 plane)
+        private System.Numerics.Vector4 NormalizePlane(System.Numerics.Vector4 plane)
         {
             float length = (float)Math.Sqrt(plane.X * plane.X + plane.Y * plane.Y + plane.Z * plane.Z);
             if (length > 1e-10f)
             {
                 float invLength = 1.0f / length;
-                return new Vector4(
+                return new System.Numerics.Vector4(
                     plane.X * invLength,
                     plane.Y * invLength,
                     plane.Z * invLength,
@@ -152,14 +152,14 @@ namespace Odyssey.MonoGame.Culling
                 );
             }
             // Degenerate plane - set to default that won't cull anything
-            return new Vector4(0.0f, 0.0f, 1.0f, 1e10f);
+            return new System.Numerics.Vector4(0.0f, 0.0f, 1.0f, 1e10f);
         }
 
         /// <summary>
         /// Tests if a point is inside the frustum.
         /// Based on PyKotor frustum.py:152 point_in_frustum method
         /// </summary>
-        public bool PointInFrustum(Vector3 point)
+        public bool PointInFrustum(System.Numerics.Vector3 point)
         {
             if (!_planesValid)
             {
@@ -168,7 +168,7 @@ namespace Odyssey.MonoGame.Culling
 
             for (int i = 0; i < 6; i++)
             {
-                Vector4 plane = _planes[i];
+                System.Numerics.Vector4 plane = _planes[i];
                 float distance = plane.X * point.X + plane.Y * point.Y + plane.Z * point.Z + plane.W;
                 if (distance < 0)
                 {

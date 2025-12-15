@@ -7,6 +7,10 @@ namespace Odyssey.Core.Interfaces.Components
     /// Placeable Component Interface:
     /// - Based on swkotor2.exe placeable system
     /// - Located via string references: "Placeable" @ 0x007bc530, "Placeable List" @ 0x007bd260
+    /// - Script hooks: "OnUsed" @ 0x007be1c4, "ScriptOnUsed" @ 0x007beeb8
+    /// - Object events: "EVENT_OPEN_OBJECT" @ 0x007bcda0, "EVENT_CLOSE_OBJECT" @ 0x007bcdb4
+    /// - "EVENT_LOCK_OBJECT" @ 0x007bcd20, "EVENT_UNLOCK_OBJECT" @ 0x007bcd34
+    /// - Event dispatching: FUN_004dcfb0 @ 0x004dcfb0 handles object events (EVENT_OPEN_OBJECT case 7, EVENT_CLOSE_OBJECT case 6, EVENT_LOCK_OBJECT case 0xd, EVENT_UNLOCK_OBJECT case 0xc)
     /// - Original implementation: Placeables have appearance, useability, locks, inventory, HP
     /// - Placeables can be useable (IsUseable), have inventory (HasInventory), be static (IsStatic)
     /// - Containers can be opened/closed (IsOpen), locked (IsLocked) with lock DC (LockDC)

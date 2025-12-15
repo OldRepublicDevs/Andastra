@@ -13,6 +13,9 @@ namespace Odyssey.Core.Actions
     /// Open Door Action:
     /// - Based on swkotor2.exe door interaction system
     /// - Located via string references: "OnOpen" @ 0x007be1b0 (door script event), "ScriptOnOpen" @ 0x007beeb8
+    /// - Object events: "EVENT_OPEN_OBJECT" @ 0x007bcda0, "EVENT_CLOSE_OBJECT" @ 0x007bcdb4
+    /// - "EVENT_LOCK_OBJECT" @ 0x007bcd20, "EVENT_UNLOCK_OBJECT" @ 0x007bcd34
+    /// - Event dispatching: FUN_004dcfb0 @ 0x004dcfb0 handles object events (EVENT_OPEN_OBJECT case 7, EVENT_CLOSE_OBJECT case 6, EVENT_LOCK_OBJECT case 0xd, EVENT_UNLOCK_OBJECT case 0xc)
     /// - Original implementation: Moves actor to door, checks lock state, opens door if unlocked
     /// - Fires OnOpen script event when door opens (ScriptOnOpen field in UTD template)
     /// - Use distance: ~2.0 units (InteractRange)
