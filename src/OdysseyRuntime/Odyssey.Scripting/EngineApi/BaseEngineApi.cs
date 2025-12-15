@@ -308,14 +308,14 @@ namespace Odyssey.Scripting.EngineApi
         protected Variable Func_GetGlobalBoolean(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             string name = args.Count > 0 ? args[0].AsString() : string.Empty;
-            return Variable.FromInt(ctx.Globals.GetGlobalInt(name));
+            return Variable.FromInt(ctx.Globals.GetGlobalBool(name) ? 1 : 0);
         }
 
         protected Variable Func_SetGlobalBoolean(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             string name = args.Count > 0 ? args[0].AsString() : string.Empty;
-            int value = args.Count > 1 ? args[1].AsInt() : 0;
-            ctx.Globals.SetGlobalInt(name, value);
+            bool value = args.Count > 1 && args[1].AsInt() != 0;
+            ctx.Globals.SetGlobalBool(name, value);
             return Variable.Void();
         }
 
