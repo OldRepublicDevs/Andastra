@@ -9,6 +9,9 @@ namespace Odyssey.Core.Interfaces.Components
     /// Trigger Component Interface:
     /// - Based on swkotor2.exe trigger system
     /// - Located via string references: "Trigger" @ 0x007bc548, "Trigger List" @ 0x007bd280
+    /// - "LinkedTo" @ 0x007c13a0, "LinkedToModule" @ 0x007bd7bc (trigger transition links)
+    /// - Trigger events: "EVENT_ENTERED_TRIGGER" @ 0x007bcbcc, "EVENT_LEFT_TRIGGER" @ 0x007bcc00
+    /// - Event dispatching: FUN_004dcfb0 @ 0x004dcfb0 handles trigger events (EVENT_ENTERED_TRIGGER case 2, EVENT_LEFT_TRIGGER case 3)
     /// - Original implementation: Triggers are invisible volumes defined by polygon geometry
     /// - Triggers fire events (OnEnter, OnExit) when entities enter/exit trigger volume
     /// - TriggerType: 0=generic, 1=transition, 2=trap
