@@ -2247,16 +2247,35 @@ namespace Odyssey.Scripting.EngineApi
         }
 
         /// <summary>
-        /// ActionCastSpellAtObject(int nSpell, object oTarget) - Casts a spell at a target object
+        /// ActionCastSpellAtObject(int nSpell, object oTarget, int nMetaMagic=0, ...) - Casts a spell at a target object
+        /// Based on swkotor2.exe: Queues spell casting action, tracks target and metamagic type
         /// </summary>
         private Variable Func_ActionCastSpellAtObject(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             int spellId = args.Count > 0 ? args[0].AsInt() : 0;
             uint targetId = args.Count > 1 ? args[1].AsObjectId() : ObjectInvalid;
+            int metamagic = args.Count > 2 ? args[2].AsInt() : 0; // nMetaMagic parameter
 
             if (ctx.Caller == null)
             {
                 return Variable.Void();
+            }
+
+            // Track spell target for GetSpellTargetObject
+            if (targetId != ObjectInvalid)
+            {
+                _lastSpellTargets[ctx.Caller.ObjectId] = targetId;
+            }
+
+            // Track metamagic type for GetMetaMagicFeat
+            if (metamagic != 0)
+            {
+                _lastMetamagicTypes[ctx.Caller.ObjectId] = metamagic;
+            }
+            else
+            {
+                // Clear metamagic tracking if no metamagic is used
+                _lastMetamagicTypes.Remove(ctx.Caller.ObjectId);
             }
 
             var action = new ActionCastSpellAtObject(spellId, targetId);
