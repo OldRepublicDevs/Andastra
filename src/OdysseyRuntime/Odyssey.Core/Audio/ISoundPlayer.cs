@@ -9,12 +9,15 @@ namespace Odyssey.Core.Audio
     /// <remarks>
     /// Sound Player Interface:
     /// - Based on swkotor2.exe sound playback system
-    /// - Located via string references: "PlaySound" @ 0x007c5f70, sound effect playback
+    /// - Located via string references: "PlaySound" @ 0x007c5f70, "Sound" @ 0x007bc558 (sound entity type)
+    /// - "Sound List" @ 0x007bd290 (sound entity list in area), "AmbientSound" @ 0x007c0e98 (ambient sound field)
+    /// - "SoundVolume" @ 0x007c0eb0 (sound volume), "SoundDistance" @ 0x007c0ec8 (sound distance/range)
     /// - Original implementation: KOTOR plays WAV files for sound effects (ambient, combat, UI, etc.)
-    /// - Sound files: Stored as WAV resources, referenced by ResRef
-    /// - Positional audio: Sounds can be played at entity positions (3D spatial audio)
+    /// - Sound files: Stored as WAV resources, referenced by ResRef (e.g., "sound01.wav")
+    /// - Positional audio: Sounds can be played at entity positions (3D spatial audio with distance attenuation)
     /// - Playback control: Play, Stop, volume, pan, pitch
-    /// - Sound types: Ambient, combat, UI, voice-over, music
+    /// - Sound types: Ambient (area background), combat (weapon hits), UI (button clicks), voice-over (dialogue), music (BGM)
+    /// - Original engine: DirectSound/DirectSound3D for 3D spatial audio, WAV file format support
     /// </remarks>
     public interface ISoundPlayer
     {
