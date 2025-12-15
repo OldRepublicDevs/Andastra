@@ -16,15 +16,19 @@ namespace Odyssey.Kotor.Systems
     /// Encounter System:
     /// - Based on swkotor2.exe encounter system
     /// - Located via string references: "Encounter" @ 0x007bc524, "Encounter List" @ 0x007bd050
-    /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_ENCOUNTER_EXHAUSTED" @ 0x007bc868
-    /// - Error messages: "Problem loading encounter with tag '%s'. It has geometry, but no vertices." @ 0x007c0ae0
-    /// - "Encounter template %s doesn't exist." @ 0x007c0df0
-    /// - Original implementation: Encounters spawn creatures when hostile creatures enter the encounter polygon area
+    /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_ENCOUNTER_EXHAUSTED" @ 0x007bc868 (encounter exhausted event)
+    /// - Encounter creature management: "CreatureList" @ 0x007c0c80, "RecCreatures" @ 0x007c0cb4, "MaxCreatures" @ 0x007c0cc4
+    /// - Error messages:
+    ///   - "Problem loading encounter with tag '%s'. It has geometry, but no vertices." @ 0x007c0ae0
+    ///   - "Encounter template %s doesn't exist." @ 0x007c0df0
+    /// - Original implementation: FUN_004e01a0 @ 0x004e01a0 (load encounter instances from GIT)
+    /// - Encounters spawn creatures when hostile creatures enter the encounter polygon area
     /// - SpawnOption 0 = continuous spawn (spawns as creatures die)
     /// - SpawnOption 1 = single-shot spawn (fires once when entered)
     /// - PlayerOnly: if true, only player characters can trigger spawns
     /// - Faction: encounter only spawns for creatures hostile to this faction
     /// - Encounter geometry must have at least 3 vertices (polygon check)
+    /// - SpawnPointList defines spawn positions within encounter area
     /// </remarks>
     public class EncounterSystem
     {
