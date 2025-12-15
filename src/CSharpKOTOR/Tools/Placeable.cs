@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.IO;
 using CSharpKOTOR.Formats.TwoDA;
 using CSharpKOTOR.Installation;
 using CSharpKOTOR.Logger;
@@ -53,7 +55,30 @@ namespace CSharpKOTOR.Tools
             // Try locations() first (more reliable, handles BIF files)
             try
             {
-                // TODO: Implement installation.locations() equivalent
+                // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/placeable.py:53-104
+                // Original: locations_result = installation.locations([ResourceIdentifier("placeables", ResourceType.TwoDA)], [SearchLocation.OVERRIDE, SearchLocation.CHITIN])
+                var locationResults = installation.Locations(
+                    new List<ResourceIdentifier> { new ResourceIdentifier("placeables", ResourceType.TwoDA) },
+                    new[] { SearchLocation.OVERRIDE, SearchLocation.CHITIN });
+                foreach (var kvp in locationResults)
+                {
+                    if (kvp.Value != null && kvp.Value.Count > 0)
+                    {
+                        var loc = kvp.Value[0];
+                        if (loc.FilePath != null && System.IO.File.Exists(loc.FilePath))
+                        {
+                            using (var f = System.IO.File.OpenRead(loc.FilePath))
+                            {
+                                f.Seek(loc.Offset, System.IO.SeekOrigin.Begin);
+                                var data = new byte[loc.Size];
+                                f.Read(data, 0, loc.Size);
+                                var reader = new TwoDABinaryReader(data);
+                                placeables2DA = reader.Load();
+                                break;
+                            }
+                        }
+                    }
+                }
             }
             catch (Exception ex)
             {
