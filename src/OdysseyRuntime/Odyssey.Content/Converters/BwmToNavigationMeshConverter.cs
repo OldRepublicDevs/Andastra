@@ -12,10 +12,14 @@ namespace Odyssey.Content.Converters
     /// <remarks>
     /// BWM to NavigationMesh Converter:
     /// - Based on swkotor2.exe walkmesh/navigation system
-    /// - Located via string references: "walkmesh" pathfinding functions, "nwsareapathfind.cpp"
+    /// - Located via string references: "nwsareapathfind.cpp" @ 0x007be3ff (pathfinding implementation file reference)
+    /// - Pathfinding errors: "failed to grid based pathfind from the creatures position to the starting path point." @ 0x007be510
+    /// - "aborted walking, Bumped into this creature at this position already." @ 0x007c03c0
+    /// - "aborted walking, we are totaly blocked. can't get around this creature at all." @ 0x007c0408
     /// - Original implementation: Converts BWM walkmesh data into navigation mesh for pathfinding
     /// - WOK files (area walkmesh) include AABB trees and walkable adjacency
     /// - PWK/DWK files (placeable/door walkmesh) are collision-only, no AABB tree
+    /// - Walkmesh adjacency encoding: faceIndex * 3 + edgeIndex, -1 = no neighbor
     /// - Based on BWM file format documentation in vendor/PyKotor/wiki/BWM-File-Format.md
     /// </remarks>
     public static class BwmToNavigationMeshConverter
