@@ -105,9 +105,26 @@ namespace Odyssey.Core.Save
         /// <remarks>
         /// Based on swkotor2.exe: FUN_004eb750 @ 0x004eb750
         /// Located via string reference: "savenfo" @ 0x007be1f0
-        /// Original implementation: Creates save directory "SAVES:\{saveName}", writes savenfo.res (GFF with "NFO " signature),
-        /// creates savegame.sav (ERF with "MOD V1.0" signature) containing GLOBALVARS.res, PARTYTABLE.res, and module state files.
-        /// Progress updates at 5%, 10%, 15%, 20%, 25%, 30% completion milestones.
+        /// Original implementation:
+        /// 1. Creates save directory "SAVES:\{saveName}"
+        /// 2. Writes savenfo.res (GFF with "NFO " signature) containing:
+        ///    - AREANAME: Current area name
+        ///    - LASTMODULE: Last module ResRef
+        ///    - TIMEPLAYED: Seconds played (uint32)
+        ///    - CHEATUSED: Cheat used flag (bool)
+        ///    - SAVEGAMENAME: Save game name string
+        ///    - TIMESTAMP: System time (FILETIME structure)
+        ///    - PCNAME: Player character name
+        ///    - SAVENUMBER: Save slot number (uint32)
+        ///    - GAMEPLAYHINT: Gameplay hint flag (bool)
+        ///    - STORYHINT0-9: Story hint flags (bool array)
+        ///    - LIVECONTENT: Live content flags (bitmask)
+        ///    - LIVE1-9: Live content entries (string array)
+        /// 3. Creates savegame.sav (ERF with "MOD V1.0" signature) containing:
+        ///    - GLOBALVARS.res (global variable state)
+        ///    - PARTYTABLE.res (party state)
+        ///    - Module state files (entity positions, door/placeable states)
+        /// 4. Progress updates at 5%, 10%, 15%, 20%, 25%, 30% completion milestones
         /// </remarks>
         public bool Save(string saveName, SaveType saveType = SaveType.Manual)
         {
@@ -352,9 +369,14 @@ namespace Odyssey.Core.Save
         /// <returns>True if load succeeded.</returns>
         /// <remarks>
         /// Based on swkotor2.exe: FUN_00708990 @ 0x00708990
-        /// Located via string reference: "LoadSavegame" @ 0x007bdc90
-        /// Original implementation: Reads savegame.sav ERF archive, extracts GLOBALVARS.res and PARTYTABLE.res,
-        /// loads module state files, restores global variables and party state. Progress updates at 5%, 10%, 15%, 20%, 25%, 30%, 50% completion.
+        /// Located via string reference: "LoadSavegame" @ 0x007bdc90 (also "savenfo" @ 0x007be1f0)
+        /// Original implementation:
+        /// 1. Reads savegame.sav ERF archive (signature "MOD V1.0")
+        /// 2. Extracts and loads savenfo.res (GFF with "NFO " signature) for metadata
+        /// 3. Extracts GLOBALVARS.res (see FUN_005ac740 @ 0x005ac740) and restores global variables
+        /// 4. Extracts PARTYTABLE.res (see FUN_0057dcd0 @ 0x0057dcd0) and restores party state
+        /// 5. Loads module state files (entity positions, door/placeable states)
+        /// 6. Progress updates at 5%, 10%, 15%, 20%, 25%, 30%, 50% completion
         /// </remarks>
         public bool Load(string saveName)
         {
