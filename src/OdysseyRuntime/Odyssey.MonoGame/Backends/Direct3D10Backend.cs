@@ -67,8 +67,19 @@ namespace Odyssey.MonoGame.Backends
             _nextResourceHandle = 1;
         }
 
+        /// <summary>
+        /// Initializes the DirectX 10 backend.
+        /// </summary>
+        /// <param name="settings">Render settings. Must not be null.</param>
+        /// <returns>True if initialization succeeded, false otherwise.</returns>
+        /// <exception cref="ArgumentNullException">Thrown if settings is null.</exception>
         public bool Initialize(RenderSettings settings)
         {
+            if (settings == null)
+            {
+                throw new ArgumentNullException(nameof(settings));
+            }
+
             if (_initialized)
             {
                 return true;

@@ -51,10 +51,16 @@ namespace Odyssey.MonoGame.Backends
         /// <summary>
         /// Creates and initializes the best available graphics backend.
         /// </summary>
-        /// <param name="settings">Render settings including preferred backend.</param>
+        /// <param name="settings">Render settings including preferred backend. Must not be null.</param>
         /// <returns>Initialized graphics backend, or null if all backends failed.</returns>
+        /// <exception cref="ArgumentNullException">Thrown if settings is null.</exception>
         public static IGraphicsBackend CreateBackend(RenderSettings settings)
         {
+            if (settings == null)
+            {
+                throw new ArgumentNullException(nameof(settings));
+            }
+
             lock (_lock)
             {
                 // If we already have an initialized backend, return it

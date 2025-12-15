@@ -47,11 +47,17 @@ namespace Odyssey.MonoGame.Culling
         /// <summary>
         /// Tests if an object should be culled based on distance.
         /// </summary>
-        /// <param name="objectType">Type identifier of the object.</param>
-        /// <param name="distance">Distance from camera to object.</param>
+        /// <param name="objectType">Type identifier of the object. Can be null (uses default distance).</param>
+        /// <param name="distance">Distance from camera to object. Must be non-negative.</param>
         /// <returns>True if object should be culled (too far away).</returns>
         public bool ShouldCull(string objectType, float distance)
         {
+            // Clamp distance to non-negative (handle invalid input gracefully)
+            if (distance < 0.0f)
+            {
+                distance = 0.0f;
+            }
+
             float maxDistance = GetMaxDistance(objectType);
             return distance > maxDistance;
         }
@@ -59,8 +65,15 @@ namespace Odyssey.MonoGame.Culling
         /// <summary>
         /// Gets the maximum render distance for an object type.
         /// </summary>
+        /// <param name="objectType">Type identifier of the object. Can be null (returns default distance).</param>
+        /// <returns>Maximum render distance for the object type, or default if not specified.</returns>
         public float GetMaxDistance(string objectType)
         {
+            if (string.IsNullOrEmpty(objectType))
+            {
+                return _defaultMaxDistance;
+            }
+
             float maxDistance;
             if (_objectMaxDistances.TryGetValue(objectType, out maxDistance))
             {
@@ -72,8 +85,16 @@ namespace Odyssey.MonoGame.Culling
         /// <summary>
         /// Sets the maximum render distance for an object type.
         /// </summary>
+        /// <param name="objectType">Type identifier of the object. Must not be null or empty.</param>
+        /// <param name="maxDistance">Maximum render distance. Must be non-negative.</param>
+        /// <exception cref="ArgumentException">Thrown if objectType is null or empty.</exception>
         public void SetMaxDistance(string objectType, float maxDistance)
         {
+            if (string.IsNullOrEmpty(objectType))
+            {
+                throw new ArgumentException("Object type must not be null or empty.", nameof(objectType));
+            }
+
             _objectMaxDistances[objectType] = Math.Max(0.0f, maxDistance);
         }
     }
