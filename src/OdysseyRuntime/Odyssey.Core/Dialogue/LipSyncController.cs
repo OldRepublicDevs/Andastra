@@ -9,9 +9,15 @@ namespace Odyssey.Core.Dialogue
     /// Interpolates between LIP keyframes to drive facial animation.
     /// </summary>
     /// <remarks>
-    /// LIP files contain keyframes with time and phoneme shape index.
-    /// KOTOR uses approximately 10 phoneme shapes for mouth/face animation.
-    /// The controller interpolates between keyframes to produce smooth animation.
+    /// Lip Sync Controller:
+    /// - Based on swkotor2.exe lip sync system
+    /// - Located via string references: LIP file loading and phoneme animation system
+    /// - Original implementation: LIP files contain keyframes with time and phoneme shape index
+    /// - KOTOR uses approximately 10 phoneme shapes for mouth/face animation
+    /// - The controller interpolates between keyframes to produce smooth animation
+    /// - LIP files are loaded by ResRef matching dialogue VO files
+    /// - Phoneme shapes drive blend shapes or bone rotations on character models
+    /// - Based on LIP file format documentation in vendor/PyKotor/wiki/
     /// </remarks>
     public class LipSyncController : ILipSyncController
     {
@@ -137,8 +143,8 @@ namespace Odyssey.Core.Dialogue
                 return;
             }
 
-            var current = _currentLip.GetKeyframe(keyframeIndex);
-            var next = _currentLip.GetKeyframe(keyframeIndex + 1);
+            LipKeyframe current = _currentLip.GetKeyframe(keyframeIndex);
+            LipKeyframe next = _currentLip.GetKeyframe(keyframeIndex + 1);
 
             if (next == null)
             {
@@ -169,8 +175,8 @@ namespace Odyssey.Core.Dialogue
 
             for (int i = 0; i < _currentLip.KeyframeCount - 1; i++)
             {
-                var current = _currentLip.GetKeyframe(i);
-                var next = _currentLip.GetKeyframe(i + 1);
+                LipKeyframe current = _currentLip.GetKeyframe(i);
+                LipKeyframe next = _currentLip.GetKeyframe(i + 1);
 
                 if (time >= current.Time && time < next.Time)
                 {

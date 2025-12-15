@@ -6,6 +6,16 @@ namespace Odyssey.Core.Actions
     /// <summary>
     /// Action to play an animation.
     /// </summary>
+    /// <remarks>
+    /// Play Animation Action:
+    /// - Based on swkotor2.exe animation system
+    /// - Located via string references: ActionPlayAnimation NWScript function implementation
+    /// - Original implementation: Plays animation on entity, supports speed and duration parameters
+    /// - Animation IDs reference animation indices in MDL animation arrays
+    /// - Speed parameter controls playback rate (1.0 = normal, 2.0 = double speed, 0.5 = half speed)
+    /// - Duration parameter controls how long animation plays (0 = play once, >0 = loop for duration)
+    /// - Action completes when animation finishes or duration expires
+    /// </remarks>
     public class ActionPlayAnimation : ActionBase
     {
         private readonly int _animation;
