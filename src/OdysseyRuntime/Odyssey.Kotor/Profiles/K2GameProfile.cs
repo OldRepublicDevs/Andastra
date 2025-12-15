@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using CSharpKOTOR.Common;
 using Odyssey.Content.Interfaces;
+using Odyssey.Kotor.EngineApi;
 using Odyssey.Kotor.Profiles;
 using Odyssey.Scripting.EngineApi;
 using Odyssey.Scripting.Interfaces;
