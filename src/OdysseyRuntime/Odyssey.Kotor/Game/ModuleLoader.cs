@@ -132,7 +132,7 @@ namespace Odyssey.Kotor.Game
             try
             {
                 // Create a Module instance from the current module root
-                return _installation.Module(_currentModuleRoot);
+                return new CSharpKOTOR.Common.Module(_currentModuleRoot, _installation);
             }
             catch (Exception ex)
             {
@@ -545,19 +545,19 @@ namespace Odyssey.Kotor.Game
                     // Convert Color to RGBA uint (ARGB format)
                     if (are.FogColor != null)
                     {
-                        area.FogColor = (uint)((are.FogColor.A << 24) | (are.FogColor.R << 16) | (are.FogColor.G << 8) | are.FogColor.B);
+                        area.FogColor = (uint)(((byte)are.FogColor.A << 24) | ((byte)are.FogColor.R << 16) | ((byte)are.FogColor.G << 8) | (byte)are.FogColor.B);
                     }
                     if (are.SunFogColor != null)
                     {
-                        area.SunFogColor = (uint)((are.SunFogColor.A << 24) | (are.SunFogColor.R << 16) | (are.SunFogColor.G << 8) | are.SunFogColor.B);
+                        area.SunFogColor = (uint)(((byte)are.SunFogColor.A << 24) | ((byte)are.SunFogColor.R << 16) | ((byte)are.SunFogColor.G << 8) | (byte)are.SunFogColor.B);
                     }
                     if (are.DawnColor1 != null)
                     {
-                        area.SunAmbientColor = (uint)((are.DawnColor1.A << 24) | (are.DawnColor1.R << 16) | (are.DawnColor1.G << 8) | are.DawnColor1.B);
+                        area.SunAmbientColor = (uint)(((byte)are.DawnColor1.A << 24) | ((byte)are.DawnColor1.R << 16) | ((byte)are.DawnColor1.G << 8) | (byte)are.DawnColor1.B);
                     }
                     if (are.DayColor1 != null)
                     {
-                        area.SunDiffuseColor = (uint)((are.DayColor1.A << 24) | (are.DayColor1.R << 16) | (are.DayColor1.G << 8) | are.DayColor1.B);
+                        area.SunDiffuseColor = (uint)(((byte)are.DayColor1.A << 24) | ((byte)are.DayColor1.R << 16) | ((byte)are.DayColor1.G << 8) | (byte)are.DayColor1.B);
                     }
 
                     // Grass properties
@@ -754,9 +754,9 @@ namespace Odyssey.Kotor.Game
             IEntity entity = _world.CreateEntity(OdyObjectType.Sound, ToSysVector3(sound.Position), 0);
 
             // Load sound template (UTS)
-            if (!string.IsNullOrEmpty(sound.TemplateResRef))
+            if (sound.ResRef != null && !string.IsNullOrEmpty(sound.ResRef.ToString()))
             {
-                LoadSoundTemplate(entity, sound.TemplateResRef);
+                LoadSoundTemplate(entity, sound.ResRef.ToString());
             }
 
             area.AddEntity(entity);
@@ -772,11 +772,7 @@ namespace Odyssey.Kotor.Game
                 LoadStoreTemplate(entity, store.ResRef.ToString());
             }
 
-            // Set store tag
-            if (!string.IsNullOrEmpty(store.Tag))
-            {
-                entity.Tag = store.Tag;
-            }
+            // GITStore doesn't have a Tag property, so we skip setting it
 
             area.AddEntity(entity);
         }

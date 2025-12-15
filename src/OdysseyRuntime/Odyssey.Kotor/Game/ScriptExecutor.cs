@@ -1,5 +1,6 @@
 using System;
 using JetBrains.Annotations;
+using Odyssey.Core.Dialogue;
 using Odyssey.Core.Interfaces;
 using Odyssey.Scripting.VM;
 using Odyssey.Scripting.Interfaces;
@@ -62,7 +63,7 @@ namespace Odyssey.Kotor.Game
             try
             {
                 // Load NCS file from installation
-                ResourceResult resource = _installation.Resources.LookupResource(scriptResRef, ResourceType.NCS);
+                CSharpKOTOR.Installation.ResourceResult resource = _installation.Resources.LookupResource(scriptResRef, ResourceType.NCS);
                 if (resource == null || resource.Data == null)
                 {
                     Console.WriteLine("[ScriptExecutor] Script not found: " + scriptResRef);
@@ -70,10 +71,10 @@ namespace Odyssey.Kotor.Game
                 }
 
                 // Create execution context
-                var context = new VM.ExecutionContext(owner, _world, _engineApi, _globals);
+                var context = new Odyssey.Scripting.VM.ExecutionContext(owner, _world, _engineApi, _globals);
                 if (triggerer != null)
                 {
-                    context = context.WithTriggerer(triggerer);
+                    context.SetTriggerer(triggerer);
                 }
 
                 // Execute script via VM

@@ -81,7 +81,7 @@ namespace Odyssey.Core.Actions
                 IEventBus eventBus = actor.World.EventBus;
                 if (eventBus != null)
                 {
-                    eventBus.FireScriptEvent(actor, ScriptEvent.OnLoseItem, item);
+                    eventBus.FireScriptEvent(actor, ScriptEvent.OnUnacquireItem, item);
                 }
 
                 // Place item in world at drop location

@@ -116,6 +116,7 @@ namespace Odyssey.Core.Enums
 
         // Store events
         OnStoreOpen,
+        OnOpenStore,
         OnStoreClose
     }
 }

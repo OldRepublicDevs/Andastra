@@ -1,9 +1,11 @@
 using System;
+using System.Numerics;
 using Odyssey.Core.Enums;
 using Odyssey.Core.Interfaces;
 using Odyssey.Core.Interfaces.Components;
 using Odyssey.Kotor.Components;
 using JetBrains.Annotations;
+using Vector3 = System.Numerics.Vector3;
 
 namespace Odyssey.Kotor.Systems
 {
@@ -39,8 +41,10 @@ namespace Odyssey.Kotor.Systems
             if (!entity.HasComponent<ITransformComponent>())
             {
                 var transform = new TransformComponent();
-                transform.Position = entity.Position;
-                transform.Facing = entity.Facing;
+                // Position and Facing will be set from template data during entity creation
+                // Default to zero if not set from template
+                transform.Position = System.Numerics.Vector3.Zero;
+                transform.Facing = 0.0f;
                 entity.AddComponent(transform);
             }
 

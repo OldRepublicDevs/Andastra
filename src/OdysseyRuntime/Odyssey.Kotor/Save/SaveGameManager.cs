@@ -200,6 +200,7 @@ namespace Odyssey.Kotor.Save
                     continue;
                 }
 
+                SaveGameInfo info = null;
                 try
                 {
                     // Load basic info from save file
@@ -211,11 +212,11 @@ namespace Odyssey.Kotor.Save
                     {
                         GFF nfoGff = DeserializeGFF(nfoData);
                         
-                        var info = new SaveGameInfo
+                        info = new SaveGameInfo
                         {
                             Name = saveName,
                             SaveTime = File.GetLastWriteTime(saveFilePath),
-                            FilePath = saveFilePath
+                            SavePath = saveFilePath
                         };
 
                         // Extract metadata from NFO GFF
@@ -223,17 +224,20 @@ namespace Odyssey.Kotor.Save
                         if (root != null)
                         {
                             info.PlayerName = GetStringField(root, "SAVEGAMENAME", "");
-                            info.AreaName = GetStringField(root, "AREANAME", "");
+                            info.ModuleName = GetStringField(root, "AREANAME", ""); // AREANAME is actually the module name
                             info.PlayTime = TimeSpan.FromSeconds(GetFloatField(root, "TIMEPLAYED", 0f));
                         }
-
-                        yield return info;
                     }
                 }
                 catch
                 {
                     // Skip corrupted saves
                     continue;
+                }
+
+                if (info != null)
+                {
+                    yield return info;
                 }
             }
         }
@@ -340,8 +344,9 @@ namespace Odyssey.Kotor.Save
 
         private ERF CreateModuleStateERF(SaveGameData saveData)
         {
-            var erf = new ERF();
-            erf.Type = ERFType.RIM;
+            // Module state files are RIM format, but ERF class uses ERF type
+            // The actual format will be written as RIM when serialized
+            var erf = new ERF(ERFType.ERF);
 
             // Save area states
             if (saveData.AreaStates != null)
@@ -354,7 +359,7 @@ namespace Odyssey.Kotor.Save
                     // Create ARE GFF for area state
                     GFF areaGff = CreateAreaStateGFF(areaState);
                     byte[] areaData = SerializeGFF(areaGff);
-                    erf.AddResource(areaResRef, ResourceType.ARE, areaData);
+                    erf.SetData(areaResRef, ResourceType.ARE, areaData);
                 }
             }
 
@@ -372,15 +377,16 @@ namespace Odyssey.Kotor.Save
                 SetStringField(root, "AreaResRef", areaState.AreaResRef ?? "");
                 
                 // Save entity states
-                // Note: AreaState.Entities would contain entity positions and states
+                // Note: AreaState has separate lists for different entity types
                 // For now, this is a placeholder - full implementation would serialize all entity data
-                if (areaState != null && areaState.Entities != null)
+                // Save creature states
+                if (areaState.CreatureStates != null && areaState.CreatureStates.Count > 0)
                 {
-                    var entityList = new GFFList();
-                    root.SetList("EntityList", entityList);
-                    foreach (EntityState entityState in areaState.Entities)
+                    var creatureList = new GFFList();
+                    root.SetList("CreatureList", creatureList);
+                    foreach (EntityState entityState in areaState.CreatureStates)
                     {
-                        var entityStruct = entityList.Add();
+                        var entityStruct = creatureList.Add();
                         SetIntField(entityStruct, "ObjectId", (int)entityState.ObjectId);
                         SetFloatField(entityStruct, "X", entityState.Position.X);
                         SetFloatField(entityStruct, "Y", entityState.Position.Y);

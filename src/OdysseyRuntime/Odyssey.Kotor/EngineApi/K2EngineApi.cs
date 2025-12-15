@@ -2,8 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Numerics;
 using CSharpKOTOR.Common.Script;
+using Odyssey.Core.Combat;
 using Odyssey.Core.Enums;
 using Odyssey.Core.Interfaces;
+using Odyssey.Kotor.Game;
+using Odyssey.Kotor.Systems;
 using Odyssey.Scripting.EngineApi;
 using Odyssey.Scripting.Interfaces;
 using Odyssey.Scripting.VM;
@@ -681,9 +684,9 @@ namespace Odyssey.Kotor.EngineApi
             int npcIndex = args.Count > 0 ? args[0].AsInt() : 0;
             
             // Get NPC entity from PartyManager
-            if (ctx.AdditionalContext is GameSession.GameServicesContext services && services.PartyManager != null)
+            if (ctx is Odyssey.Scripting.VM.ExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services && services.PartyManager is PartyManager partyManager)
             {
-                IEntity member = services.PartyManager.GetAvailableMember(npcIndex);
+                IEntity member = partyManager.GetAvailableMember(npcIndex);
                 if (member != null)
                 {
                     // Get influence from entity data (stored as "Influence")
@@ -721,9 +724,9 @@ namespace Odyssey.Kotor.EngineApi
             influence = Math.Max(0, Math.Min(100, influence));
             
             // Get NPC entity from PartyManager and set influence
-            if (ctx.AdditionalContext is GameSession.GameServicesContext services && services.PartyManager != null)
+            if (ctx is Odyssey.Scripting.VM.ExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services && services.PartyManager is PartyManager partyManager)
             {
-                IEntity member = services.PartyManager.GetAvailableMember(npcIndex);
+                IEntity member = partyManager.GetAvailableMember(npcIndex);
                 if (member != null)
                 {
                     // Store influence in entity data
@@ -752,9 +755,9 @@ namespace Odyssey.Kotor.EngineApi
             int modifier = args.Count > 1 ? args[1].AsInt() : 0;
             
             // Get NPC entity from PartyManager and modify influence
-            if (ctx.AdditionalContext is GameSession.GameServicesContext services && services.PartyManager != null)
+            if (ctx is Odyssey.Scripting.VM.ExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services && services.PartyManager is PartyManager partyManager)
             {
-                IEntity member = services.PartyManager.GetAvailableMember(npcIndex);
+                IEntity member = partyManager.GetAvailableMember(npcIndex);
                 if (member != null)
                 {
                     // Get current influence (default to 50 if not set)
@@ -772,9 +775,9 @@ namespace Odyssey.Kotor.EngineApi
             int index = args.Count > 0 ? args[0].AsInt() : 0;
             
             // Get party member at index (0 = leader, 1-2 = members)
-            if (ctx.AdditionalContext is GameSession.GameServicesContext services && services.PartyManager != null)
+            if (ctx is Odyssey.Scripting.VM.ExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services && services.PartyManager is PartyManager partyManager)
             {
-                IEntity member = services.PartyManager.GetMemberAtSlot(index);
+                IEntity member = partyManager.GetMemberAtSlot(index);
                 if (member != null)
                 {
                     return Variable.FromObject(member.ObjectId);
@@ -788,9 +791,9 @@ namespace Odyssey.Kotor.EngineApi
             int npcIndex = args.Count > 0 ? args[0].AsInt() : 0;
             
             // Check if NPC is available for party selection
-            if (ctx.AdditionalContext is GameSession.GameServicesContext services && services.PartyManager != null)
+            if (ctx is Odyssey.Scripting.VM.ExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services && services.PartyManager is PartyManager partyManager)
             {
-                IEntity member = services.PartyManager.GetAvailableMember(npcIndex);
+                IEntity member = partyManager.GetAvailableMember(npcIndex);
                 if (member != null)
                 {
                     return Variable.FromInt(1); // Available
@@ -810,7 +813,7 @@ namespace Odyssey.Kotor.EngineApi
             }
             
             // Add NPC to available party members
-            if (ctx.AdditionalContext is GameSession.GameServicesContext services && services.PartyManager != null && services.ModuleLoader != null)
+            if (ctx is Odyssey.Scripting.VM.ExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services && services.PartyManager is PartyManager partyManager && services.ModuleLoader is ModuleLoader moduleLoader)
             {
                 // Try to find existing entity by template tag first
                 IEntity existingEntity = ctx.World.GetEntityByTag(template, 0);
@@ -818,7 +821,7 @@ namespace Odyssey.Kotor.EngineApi
                 {
                     try
                     {
-                        services.PartyManager.AddAvailableMember(npcIndex, existingEntity);
+                        partyManager.AddAvailableMember(npcIndex, existingEntity);
                         return Variable.FromInt(1); // Success
                     }
                     catch
@@ -829,7 +832,7 @@ namespace Odyssey.Kotor.EngineApi
                 
                 // Create entity from template using EntityFactory
                 // Get current module from ModuleLoader
-                CSharpKOTOR.Common.Module module = services.ModuleLoader.CurrentModule;
+                CSharpKOTOR.Common.Module module = moduleLoader.GetCSharpKotorModule();
                 if (module != null)
                 {
                     // Get spawn position (use player position or default)
@@ -846,8 +849,9 @@ namespace Odyssey.Kotor.EngineApi
                         }
                     }
                     
-                    // Create entity from template
-                    IEntity newEntity = services.ModuleLoader.EntityFactory.CreateCreatureFromTemplate(module, template, spawnPosition, spawnFacing);
+                    // TODO: EntityFactory not yet implemented - return failure for now
+                    // IEntity newEntity = moduleLoader.EntityFactory.CreateCreatureFromTemplate(module, template, spawnPosition, spawnFacing);
+                    IEntity newEntity = null;
                     if (newEntity != null)
                     {
                         // Register entity with world if not already registered
@@ -859,7 +863,7 @@ namespace Odyssey.Kotor.EngineApi
                         // Add to PartyManager
                         try
                         {
-                            services.PartyManager.AddAvailableMember(npcIndex, newEntity);
+                            partyManager.AddAvailableMember(npcIndex, newEntity);
                             return Variable.FromInt(1); // Success
                         }
                         catch
@@ -878,9 +882,9 @@ namespace Odyssey.Kotor.EngineApi
             int npcIndex = args.Count > 0 ? args[0].AsInt() : 0;
             
             // Get NPC entity from PartyManager
-            if (ctx.AdditionalContext is GameSession.GameServicesContext services && services.PartyManager != null)
+            if (ctx is Odyssey.Scripting.VM.ExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services && services.PartyManager is PartyManager partyManager)
             {
-                IEntity member = services.PartyManager.GetAvailableMember(npcIndex);
+                IEntity member = partyManager.GetAvailableMember(npcIndex);
                 if (member != null)
                 {
                     // Get selectability from entity data (stored as "IsSelectable")
@@ -903,9 +907,9 @@ namespace Odyssey.Kotor.EngineApi
             int selectable = args.Count > 1 ? args[1].AsInt() : 1;
             
             // Get NPC entity from PartyManager and set selectability
-            if (ctx.AdditionalContext is GameSession.GameServicesContext services && services.PartyManager != null)
+            if (ctx is Odyssey.Scripting.VM.ExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services && services.PartyManager is PartyManager partyManager)
             {
-                IEntity member = services.PartyManager.GetAvailableMember(npcIndex);
+                IEntity member = partyManager.GetAvailableMember(npcIndex);
                 if (member != null)
                 {
                     // Store selectability in entity data
@@ -950,9 +954,10 @@ namespace Odyssey.Kotor.EngineApi
         private Variable Func_GetStealthXPEnabled(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             // Get stealth XP enabled state from GameSession
-            if (ctx is VM.ExecutionContext execCtx && execCtx.AdditionalContext is GameSession.GameServicesContext services && services.GameSession != null)
+            if (ctx is Odyssey.Scripting.VM.ExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services && services.GameSession is GameSession gameSession)
             {
-                return Variable.FromInt(services.GameSession.StealthXPEnabled ? 1 : 0);
+                // StealthXPEnabled is not yet implemented - default to enabled
+                return Variable.FromInt(1);
             }
             return Variable.FromInt(1); // Default: enabled
         }
@@ -962,9 +967,9 @@ namespace Odyssey.Kotor.EngineApi
             int enabled = args.Count > 0 ? args[0].AsInt() : 1;
             
             // Set stealth XP enabled state in GameSession
-            if (ctx is VM.ExecutionContext execCtx && execCtx.AdditionalContext is GameSession.GameServicesContext services && services.GameSession != null)
+            if (ctx is Odyssey.Scripting.VM.ExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services && services.GameSession is GameSession gameSession)
             {
-                services.GameSession.StealthXPEnabled = (enabled != 0);
+                // StealthXPEnabled is not yet implemented - no-op for now
             }
             return Variable.Void();
         }
@@ -1033,7 +1038,7 @@ namespace Odyssey.Kotor.EngineApi
         private Variable Func_SWMG_GetPlayerInvincibility(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             // Get swoop minigame invincibility state from player entity
-            if (ctx.AdditionalContext is GameSession.GameServicesContext services && services.PlayerEntity != null)
+            if (ctx is Odyssey.Scripting.VM.ExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services && services.PlayerEntity != null)
             {
                 bool invincible = services.PlayerEntity.GetData<bool>("SwoopMinigameInvincible", false);
                 return Variable.FromInt(invincible ? 1 : 0);
@@ -1047,7 +1052,7 @@ namespace Odyssey.Kotor.EngineApi
             int invincible = args.Count > 0 ? args[0].AsInt() : 0;
             
             // Store swoop minigame invincibility state in player entity
-            if (ctx.AdditionalContext is GameSession.GameServicesContext services && services.PlayerEntity != null)
+            if (ctx is Odyssey.Scripting.VM.ExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services && services.PlayerEntity != null)
             {
                 // Store invincibility state in player entity data
                 services.PlayerEntity.SetData("SwoopMinigameInvincible", invincible != 0);

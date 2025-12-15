@@ -16,6 +16,7 @@ using Odyssey.Core.Enums;
 using Odyssey.Core.Interfaces;
 using Odyssey.Core.Interfaces.Components;
 using Odyssey.Kotor.Combat;
+using CoreCombat = Odyssey.Core.Combat;
 using Odyssey.Kotor.Components;
 using Odyssey.Kotor.Dialogue;
 using Odyssey.Kotor.Game;
@@ -25,6 +26,7 @@ using Odyssey.Scripting.EngineApi;
 using Odyssey.Scripting.Interfaces;
 using Odyssey.Scripting.Types;
 using Odyssey.Scripting.VM;
+using VMExecutionContext = Odyssey.Scripting.VM.ExecutionContext;
 
 namespace Odyssey.Kotor.EngineApi
 {
@@ -131,7 +133,7 @@ namespace Odyssey.Kotor.EngineApi
         
         private class EffectIteration
         {
-            public List<Odyssey.Core.Combat.ActiveEffect> Effects { get; set; }
+            public List<CoreCombat.ActiveEffect> Effects { get; set; }
             public int CurrentIndex { get; set; }
         }
 
@@ -933,7 +935,7 @@ namespace Odyssey.Kotor.EngineApi
             }
 
             // Get from entity's custom data (stored by TriggerSystem)
-            if (ctx.Caller is Entities.Entity callerEntity)
+            if (ctx.Caller is Odyssey.Core.Entities.Entity callerEntity)
             {
                 uint enteringId = callerEntity.GetData<uint>("LastEnteringObjectId", 0);
                 if (enteringId != 0)
@@ -967,7 +969,7 @@ namespace Odyssey.Kotor.EngineApi
             }
 
             // Get from entity's custom data (stored by TriggerSystem)
-            if (ctx.Caller is Entities.Entity callerEntity)
+            if (ctx.Caller is Odyssey.Core.Entities.Entity callerEntity)
             {
                 uint exitingId = callerEntity.GetData<uint>("LastExitingObjectId", 0);
                 if (exitingId != 0)
@@ -1258,7 +1260,7 @@ namespace Odyssey.Kotor.EngineApi
                     if (criteriaValue == 0)
                     {
                         // Is PC
-                        if (ctx is VM.ExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
+                        if (ctx is VMExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
                         {
                             return services.PlayerEntity != null && services.PlayerEntity.ObjectId == creature.ObjectId;
                         }
@@ -1266,7 +1268,7 @@ namespace Odyssey.Kotor.EngineApi
                     else if (criteriaValue == 1)
                     {
                         // Not PC
-                        if (ctx is VM.ExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
+                        if (ctx is VMExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
                         {
                             return services.PlayerEntity == null || services.PlayerEntity.ObjectId != creature.ObjectId;
                         }
@@ -1275,19 +1277,24 @@ namespace Odyssey.Kotor.EngineApi
 
                 case 2: // CREATURE_TYPE_CLASS
                     // Check class type from creature component
-                    // Using dynamic to avoid dependency on Odyssey.Kotor.Components
-                    dynamic creatureComp = creature.GetComponent<object>();
+                    // Using IComponent and reflection to avoid dependency on Odyssey.Kotor.Components
+                    IComponent creatureComp = creature.GetComponent<IComponent>();
                     if (creatureComp != null)
                     {
-                        var classList = creatureComp.ClassList as System.Collections.IEnumerable;
-                        if (classList != null)
+                        // Use reflection to access ClassList property
+                        var classListProp = creatureComp.GetType().GetProperty("ClassList");
+                        if (classListProp != null)
                         {
-                            // Check if any class in the class list matches the criteria value
-                            foreach (dynamic cls in classList)
+                            var classList = classListProp.GetValue(creatureComp) as System.Collections.IEnumerable;
+                            if (classList != null)
                             {
-                                if (cls.ClassId == criteriaValue)
+                                // Check if any class in the class list matches the criteria value
+                                foreach (dynamic cls in classList)
                                 {
-                                    return true;
+                                    if (cls.ClassId == criteriaValue)
+                                    {
+                                        return true;
+                                    }
                                 }
                             }
                         }
@@ -1296,7 +1303,7 @@ namespace Odyssey.Kotor.EngineApi
 
                 case 3: // CREATURE_TYPE_REPUTATION
                     // REPUTATION_TYPE_FRIEND = 0, REPUTATION_TYPE_ENEMY = 1, REPUTATION_TYPE_NEUTRAL = 2
-                    if (ctx is VM.ExecutionContext execCtxRep && execCtxRep.AdditionalContext is IGameServicesContext servicesRep)
+                    if (ctx is VMExecutionContext execCtxRep && execCtxRep.AdditionalContext is IGameServicesContext servicesRep)
                     {
                         if (servicesRep.FactionManager != null && servicesRep.PlayerEntity != null)
                         {
@@ -1367,7 +1374,7 @@ namespace Odyssey.Kotor.EngineApi
                 case 7: // CREATURE_TYPE_PERCEPTION
                     // Check perception type
                     // Perception types are typically handled by PerceptionManager
-                    if (ctx is VM.ExecutionContext execCtxPer && execCtxPer.AdditionalContext is IGameServicesContext servicesPer)
+                    if (ctx is ExecutionContext execCtxPer && execCtxPer.AdditionalContext is IGameServicesContext servicesPer)
                     {
                         if (servicesPer.PerceptionManager != null && servicesPer.PlayerEntity != null)
                         {
@@ -1856,7 +1863,7 @@ namespace Odyssey.Kotor.EngineApi
             int second = args.Count > 2 ? args[2].AsInt() : 0;
             int millisecond = args.Count > 3 ? args[3].AsInt() : 0;
             
-            if (ctx is VM.ExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
+            if (ctx is VMExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
             {
                 if (services.GameSession != null)
                 {
@@ -1870,9 +1877,9 @@ namespace Odyssey.Kotor.EngineApi
         {
             // GetPartyMemberCount()
             // Returns a count of how many members are in the party including the player character
-            if (ctx.AdditionalContext is IGameServicesContext services && services.PartyManager != null)
+            if (ctx is VMExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services && services.PartyManager is PartyManager partyManager)
             {
-                return Variable.FromInt(services.PartyManager.ActiveMemberCount);
+                return Variable.FromInt(partyManager.ActiveMemberCount);
             }
             return Variable.FromInt(0);
         }
@@ -2038,7 +2045,7 @@ namespace Odyssey.Kotor.EngineApi
         /// </summary>
         private Variable Func_GetTimeHour(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
-            if (ctx is VM.ExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
+            if (ctx is VMExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
             {
                 if (services.GameSession is Odyssey.Kotor.Game.GameSession gameSession)
                 {
@@ -2053,7 +2060,7 @@ namespace Odyssey.Kotor.EngineApi
         /// </summary>
         private Variable Func_GetTimeMinute(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
-            if (ctx is VM.ExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
+            if (ctx is VMExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
             {
                 if (services.GameSession is Odyssey.Kotor.Game.GameSession gameSession)
                 {
@@ -2068,7 +2075,7 @@ namespace Odyssey.Kotor.EngineApi
         /// </summary>
         private Variable Func_GetTimeSecond(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
-            if (ctx is VM.ExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
+            if (ctx is VMExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
             {
                 if (services.GameSession is Odyssey.Kotor.Game.GameSession gameSession)
                 {
@@ -2083,7 +2090,7 @@ namespace Odyssey.Kotor.EngineApi
         /// </summary>
         private Variable Func_GetTimeMillisecond(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
-            if (ctx is VM.ExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
+            if (ctx is VMExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
             {
                 if (services.GameSession is Odyssey.Kotor.Game.GameSession gameSession)
                 {
@@ -2690,7 +2697,7 @@ namespace Odyssey.Kotor.EngineApi
             }
 
             // Get CombatManager from GameServicesContext
-            if (ctx is VM.ExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services && services.CombatManager is CombatManager combatManager)
+            if (ctx is ExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services && services.CombatManager is CombatManager combatManager)
             {
                 IEntity lastAttacker = combatManager.GetLastAttacker(target);
                 if (lastAttacker != null)
@@ -2796,7 +2803,7 @@ namespace Odyssey.Kotor.EngineApi
             float direction = args.Count > 0 ? args[0].AsFloat() : 0f;
             
             // Access CameraController through GameServicesContext
-            if (ctx is Odyssey.Scripting.VM.ExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
+            if (ctx is VMExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
             {
                 if (services.CameraController is Core.Camera.CameraController cameraController)
                 {
@@ -2826,7 +2833,7 @@ namespace Odyssey.Kotor.EngineApi
             }
 
             // Access SoundPlayer through GameServicesContext
-            if (ctx is Odyssey.Scripting.VM.ExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
+            if (ctx is VMExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
             {
                 if (services.SoundPlayer != null)
                 {
@@ -2997,7 +3004,7 @@ namespace Odyssey.Kotor.EngineApi
             if (entity != null)
             {
                 // Check if entity is the player entity via GameServicesContext
-                if (ctx is Odyssey.Scripting.VM.ExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
+                if (ctx is VMExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
                 {
                     if (services.PlayerEntity != null && services.PlayerEntity.ObjectId == entity.ObjectId)
                     {
@@ -3016,7 +3023,7 @@ namespace Odyssey.Kotor.EngineApi
             if (entity != null && entity.ObjectType == ObjectType.Creature)
             {
                 // Check if entity is NOT the player entity
-                if (ctx is Odyssey.Scripting.VM.ExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
+                if (ctx is VMExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
                 {
                     if (services.PlayerEntity == null || services.PlayerEntity.ObjectId != entity.ObjectId)
                     {
@@ -3051,7 +3058,7 @@ namespace Odyssey.Kotor.EngineApi
             int strRef = args.Count > 0 ? args[0].AsInt() : 0;
             
             // Access DialogueManager from GameServicesContext to get TLK
-            if (ctx is Odyssey.Scripting.VM.ExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
+            if (ctx is VMExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
             {
                 if (services.DialogueManager is DialogueManager dialogueManager)
                 {
@@ -3072,7 +3079,7 @@ namespace Odyssey.Kotor.EngineApi
             // Returns OBJECT_INVALID if the caller is not a valid creature or not in conversation
             
             // Access DialogueManager from GameServicesContext
-            if (ctx is Odyssey.Scripting.VM.ExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
+            if (ctx is VMExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
             {
                 if (services.DialogueManager is DialogueManager dialogueManager && dialogueManager.IsConversationActive)
                 {
@@ -3106,7 +3113,7 @@ namespace Odyssey.Kotor.EngineApi
             }
             
             // Access DialogueManager from GameServicesContext
-            if (ctx is Odyssey.Scripting.VM.ExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
+            if (ctx is VMExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
             {
                 if (services.DialogueManager is DialogueManager dialogueManager && dialogueManager.IsConversationActive)
                 {
@@ -3138,7 +3145,7 @@ namespace Odyssey.Kotor.EngineApi
         /// </summary>
         private Variable Func_GetIsConversationActive(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
-            if (ctx is Odyssey.Scripting.VM.ExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
+            if (ctx is VMExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
             {
                 if (services.DialogueManager is DialogueManager dialogueManager)
                 {
@@ -3154,7 +3161,7 @@ namespace Odyssey.Kotor.EngineApi
         /// </summary>
         private Variable Func_GetLastConversation(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
-            if (ctx is VM.ExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
+            if (ctx is VMExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
             {
                 if (services.DialogueManager is DialogueManager dialogueManager && dialogueManager.IsConversationActive)
                 {
@@ -3179,7 +3186,7 @@ namespace Odyssey.Kotor.EngineApi
             // GetPCSpeaker() - Get the PC that is involved in the conversation
             // Returns OBJECT_INVALID on error
             // This should return the player entity participating in dialogue
-            if (ctx is Odyssey.Scripting.VM.ExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
+            if (ctx is VMExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
             {
                 // Try to get PC speaker from active conversation
                 if (services.DialogueManager is DialogueManager dialogueManager && dialogueManager.IsConversationActive)
@@ -3252,7 +3259,7 @@ namespace Odyssey.Kotor.EngineApi
             }
 
             // Access DialogueManager from GameServicesContext
-            if (ctx is Odyssey.Scripting.VM.ExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
+            if (ctx is VMExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
             {
                 if (services.DialogueManager is DialogueManager dialogueManager && services.PlayerEntity != null)
                 {
@@ -3305,7 +3312,7 @@ namespace Odyssey.Kotor.EngineApi
                 }
 
                 // Access DialogueManager from GameServicesContext
-                if (ctx is Odyssey.Scripting.VM.ExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
+                if (ctx is VMExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
                 {
                     if (services.DialogueManager is DialogueManager dialogueManager && services.PlayerEntity != null)
                     {
@@ -3346,7 +3353,7 @@ namespace Odyssey.Kotor.EngineApi
         private Variable Func_ActionPauseConversation(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             // ActionPauseConversation() - Pause the current conversation
-            if (ctx is Odyssey.Scripting.VM.ExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
+            if (ctx is VMExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
             {
                 if (services.DialogueManager is DialogueManager dialogueManager)
                 {
@@ -3368,7 +3375,7 @@ namespace Odyssey.Kotor.EngineApi
         private Variable Func_ActionResumeConversation(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             // ActionResumeConversation() - Resume a conversation after it has been paused
-            if (ctx is Odyssey.Scripting.VM.ExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
+            if (ctx is VMExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
             {
                 if (services.DialogueManager is DialogueManager dialogueManager)
                 {
@@ -3388,7 +3395,7 @@ namespace Odyssey.Kotor.EngineApi
                 return Variable.FromObject(ObjectInvalid);
             }
 
-            if (ctx is Odyssey.Scripting.VM.ExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
+            if (ctx is VMExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
             {
                 if (services.PerceptionManager is PerceptionManager perceptionManager)
                 {
@@ -3412,7 +3419,7 @@ namespace Odyssey.Kotor.EngineApi
                 return Variable.FromInt(0);
             }
 
-            if (ctx is Odyssey.Scripting.VM.ExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
+            if (ctx is VMExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
             {
                 if (services.PerceptionManager is PerceptionManager perceptionManager)
                 {
@@ -3433,7 +3440,7 @@ namespace Odyssey.Kotor.EngineApi
                 return Variable.FromInt(0);
             }
 
-            if (ctx is Odyssey.Scripting.VM.ExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
+            if (ctx is VMExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
             {
                 if (services.PerceptionManager is PerceptionManager perceptionManager)
                 {
@@ -3454,7 +3461,7 @@ namespace Odyssey.Kotor.EngineApi
                 return Variable.FromInt(0);
             }
 
-            if (ctx is Odyssey.Scripting.VM.ExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
+            if (ctx is VMExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
             {
                 if (services.PerceptionManager is PerceptionManager perceptionManager)
                 {
@@ -3475,7 +3482,7 @@ namespace Odyssey.Kotor.EngineApi
                 return Variable.FromInt(0);
             }
 
-            if (ctx is Odyssey.Scripting.VM.ExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
+            if (ctx is VMExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
             {
                 if (services.PerceptionManager is PerceptionManager perceptionManager)
                 {
@@ -3587,7 +3594,7 @@ namespace Odyssey.Kotor.EngineApi
         {
             // GetLoadFromSaveGame() - Returns whether this script is being run while a load game is in progress
             // Returns 1 if loading from save, 0 otherwise
-            if (ctx is Odyssey.Scripting.VM.ExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
+            if (ctx is VMExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
             {
                 return Variable.FromInt(services.IsLoadingFromSave ? 1 : 0);
             }
@@ -3816,10 +3823,10 @@ namespace Odyssey.Kotor.EngineApi
             // EffectAssuredHit creates an effect that makes the next attack automatically hit
             // This is typically used for special abilities or Force powers
             // In KOTOR, this might be represented as an attack bonus effect or a special flag
-            var effect = new Combat.Effect(Combat.EffectType.AttackIncrease)
+            var effect = new CoreCoreCombat.Effect(CoreCoreCoreCombat.EffectType.AttackIncrease)
             {
                 Amount = 1000, // Very high bonus to guarantee hit
-                DurationType = Combat.EffectDurationType.Temporary,
+                DurationType = CoreCoreCoreCombat.EffectDurationType.Temporary,
                 Duration = 1 // Lasts for 1 round (next attack only)
             };
             return Variable.FromEffect(effect);
@@ -3912,7 +3919,7 @@ namespace Odyssey.Kotor.EngineApi
             bool shouldPause = pause != 0;
             
             // Access GameSession through GameServicesContext
-            if (ctx is Odyssey.Scripting.VM.ExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
+            if (ctx is VMExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
             {
                 if (services.GameSession != null)
                 {
@@ -3944,7 +3951,7 @@ namespace Odyssey.Kotor.EngineApi
             _playerRestricted = shouldRestrict;
             
             // Notify GameSession if available to enforce restriction
-            if (ctx is VM.ExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
+            if (ctx is VMExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
             {
                 if (services.GameSession != null && services.PlayerEntity != null)
                 {
@@ -4016,8 +4023,8 @@ namespace Odyssey.Kotor.EngineApi
             }
 
             // Get all effects from EffectSystem
-            List<Combat.ActiveEffect> effects = new List<Combat.ActiveEffect>();
-            foreach (Combat.ActiveEffect effect in ctx.World.EffectSystem.GetEffects(entity))
+            List<CoreCombat.ActiveEffect> effects = new List<CoreCombat.ActiveEffect>();
+            foreach (CoreCombat.ActiveEffect effect in ctx.World.EffectSystem.GetEffects(entity))
             {
                 effects.Add(effect);
             }
@@ -4090,8 +4097,8 @@ namespace Odyssey.Kotor.EngineApi
             }
 
             // Convert effect object to Effect
-            Combat.Effect effect = null;
-            if (effectObj is Combat.Effect directEffect)
+            CoreCombat.Effect effect = null;
+            if (effectObj is CoreCombat.Effect directEffect)
             {
                 effect = directEffect;
             }
@@ -4107,7 +4114,7 @@ namespace Odyssey.Kotor.EngineApi
             }
 
             // Find and remove matching effect from entity
-            foreach (Combat.ActiveEffect activeEffect in ctx.World.EffectSystem.GetEffects(entity))
+            foreach (CoreCombat.ActiveEffect activeEffect in ctx.World.EffectSystem.GetEffects(entity))
             {
                 if (activeEffect.Effect == effect)
                 {
@@ -4132,7 +4139,7 @@ namespace Odyssey.Kotor.EngineApi
         }
 
             // Check if effect is a valid Effect object
-            if (effectObj is Combat.Effect)
+            if (effectObj is CoreCombat.Effect)
             {
                 return Variable.FromInt(1);
             }
@@ -4154,17 +4161,17 @@ namespace Odyssey.Kotor.EngineApi
         {
             object effectObj = args.Count > 0 ? args[0].ComplexValue : null;
             
-            if (effectObj is Combat.Effect effect)
+            if (effectObj is CoreCombat.Effect effect)
             {
                 // Map EffectDurationType to NWScript constants
                 // DURATION_TYPE_INSTANT = 0, DURATION_TYPE_TEMPORARY = 1, DURATION_TYPE_PERMANENT = 2
                 switch (effect.DurationType)
                 {
-                    case Combat.EffectDurationType.Instant:
+                    case CoreCoreCombat.EffectDurationType.Instant:
                         return Variable.FromInt(0);
-                    case Combat.EffectDurationType.Temporary:
+                    case CoreCoreCombat.EffectDurationType.Temporary:
                         return Variable.FromInt(1);
-                    case Combat.EffectDurationType.Permanent:
+                    case CoreCoreCombat.EffectDurationType.Permanent:
                         return Variable.FromInt(2);
                 }
             }
@@ -4179,7 +4186,7 @@ namespace Odyssey.Kotor.EngineApi
         {
             object effectObj = args.Count > 0 ? args[0].ComplexValue : null;
             
-            if (effectObj is Combat.Effect effect)
+            if (effectObj is CoreCombat.Effect effect)
             {
                 return Variable.FromInt(effect.SubType);
             }
@@ -4214,9 +4221,9 @@ namespace Odyssey.Kotor.EngineApi
             }
 
             // Find matching effect and return creator
-            if (effectObj is Combat.Effect effect)
+            if (effectObj is CoreCombat.Effect effect)
             {
-                foreach (Combat.ActiveEffect activeEffect in ctx.World.EffectSystem.GetEffects(entity))
+                foreach (CoreCombat.ActiveEffect activeEffect in ctx.World.EffectSystem.GetEffects(entity))
                 {
                     if (activeEffect.Effect == effect)
                     {
@@ -4561,7 +4568,7 @@ namespace Odyssey.Kotor.EngineApi
             }
             
             // Set subtype to MAGICAL (8)
-            Combat.Effect effect = effectObj as Combat.Effect;
+            CoreCombat.Effect effect = effectObj as CoreCombat.Effect;
             if (effect != null)
             {
                 effect.SubType = 8; // SUBTYPE_MAGICAL
@@ -4592,7 +4599,7 @@ namespace Odyssey.Kotor.EngineApi
             }
             
             // Set subtype to SUPERNATURAL (16)
-            Combat.Effect effect = effectObj as Combat.Effect;
+            CoreCombat.Effect effect = effectObj as CoreCombat.Effect;
             if (effect != null)
             {
                 effect.SubType = 16; // SUBTYPE_SUPERNATURAL
@@ -4621,7 +4628,7 @@ namespace Odyssey.Kotor.EngineApi
             
             // Extraordinary effects cannot be dispelled and are not affected by antimagic fields
             // Set subtype to EXTRAORDINARY (32)
-            Combat.Effect effect = effectObj as Combat.Effect;
+            CoreCombat.Effect effect = effectObj as CoreCombat.Effect;
             if (effect != null)
             {
                 effect.SubType = 32; // SUBTYPE_EXTRAORDINARY
@@ -5082,7 +5089,7 @@ namespace Odyssey.Kotor.EngineApi
             if (source != null && target != null)
             {
                 // Get FactionManager from GameServicesContext
-                if (ctx is VM.ExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
+                if (ctx is VMExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
                 {
                     if (services.FactionManager is FactionManager factionManager)
                     {
@@ -5111,7 +5118,7 @@ namespace Odyssey.Kotor.EngineApi
             if (source != null && target != null)
             {
                 // Get FactionManager from GameServicesContext
-                if (ctx is VM.ExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
+                if (ctx is VMExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
                 {
                     if (services.FactionManager is FactionManager factionManager)
                     {
@@ -5165,7 +5172,7 @@ namespace Odyssey.Kotor.EngineApi
             if (source != null && target != null)
             {
                 // Get FactionManager from GameServicesContext
-                if (ctx is VM.ExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
+                if (ctx is VMExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
                 {
                     if (services.FactionManager is FactionManager factionManager)
                     {
@@ -5577,7 +5584,7 @@ namespace Odyssey.Kotor.EngineApi
             
             // Look up string from TLK
             string text = "";
-            if (ctx is Odyssey.Scripting.VM.ExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
+            if (ctx is VMExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
             {
                 if (services.DialogueManager is DialogueManager dialogueManager)
                 {
@@ -5778,7 +5785,7 @@ namespace Odyssey.Kotor.EngineApi
             IEntity entity = null;
             
             // Access ModuleLoader via GameServicesContext to get EntityFactory
-            if (ctx is Odyssey.Scripting.VM.ExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
+            if (ctx is VMExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
             {
                 if (services.ModuleLoader is ModuleLoader moduleLoader && moduleLoader.EntityFactory != null)
                 {

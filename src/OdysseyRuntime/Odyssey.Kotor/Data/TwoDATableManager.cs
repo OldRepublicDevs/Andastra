@@ -260,7 +260,7 @@ namespace Odyssey.Kotor.Data
             {
                 FeatId = featId,
                 Label = row.GetString("label", ""),
-                Description = row.GetInteger("description", 0) ?? 0, // StrRef
+                DescriptionStrRef = row.GetInteger("description", 0) ?? 0, // StrRef
                 Icon = row.GetString("icon", ""),
                 FeatCategory = row.GetInteger("featcategory", 0) ?? 0,
                 MaxRanks = row.GetInteger("maxranks", 0) ?? 0,

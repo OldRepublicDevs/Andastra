@@ -332,7 +332,7 @@ namespace Odyssey.Kotor.Game
 
                 // Load module (LoadModule sets _world.CurrentModule)
                 _moduleLoader.LoadModule(moduleName);
-                RuntimeModule module = _world.CurrentModule;
+                RuntimeModule module = _world.CurrentModule as RuntimeModule;
                 if (module == null)
                 {
                     Console.WriteLine("[GameSession] Module loader returned null for: " + moduleName);
@@ -355,11 +355,15 @@ namespace Odyssey.Kotor.Game
                         // Register all encounters in the area
                         if (_encounterSystem != null)
                         {
-                            foreach (IEntity entity in entryArea.GetAllEntities())
+                            // IArea doesn't have GetAllEntities, but RuntimeArea does
+                            if (entryArea is RuntimeArea runtimeArea)
                             {
-                                if (entity != null && entity.ObjectType == Odyssey.Core.Enums.ObjectType.Encounter)
+                                foreach (IEntity entity in runtimeArea.GetAllEntities())
                                 {
-                                    _encounterSystem.RegisterEncounter(entity);
+                                    if (entity != null && entity.ObjectType == Odyssey.Core.Enums.ObjectType.Encounter)
+                                    {
+                                        _encounterSystem.RegisterEncounter(entity);
+                                    }
                                 }
                             }
                         }
@@ -515,7 +519,7 @@ namespace Odyssey.Kotor.Game
 
             try
             {
-                ResourceResult resource = _installation.Resources.LookupResource(resRef, ResourceType.DLG);
+                CSharpKOTOR.Installation.ResourceResult resource = _installation.Resources.LookupResource(resRef, ResourceType.DLG);
                 if (resource == null || resource.Data == null)
                 {
                     return null;
@@ -542,7 +546,7 @@ namespace Odyssey.Kotor.Game
 
             try
             {
-                ResourceResult resource = _installation.Resources.LookupResource(resRef, ResourceType.NCS);
+                CSharpKOTOR.Installation.ResourceResult resource = _installation.Resources.LookupResource(resRef, ResourceType.NCS);
                 if (resource == null || resource.Data == null)
                 {
                     return null;
