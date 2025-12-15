@@ -18,26 +18,36 @@ namespace Odyssey.Kotor.Game
     /// <remarks>
     /// Player Controller:
     /// - Based on swkotor2.exe player input/movement system
-    /// - Located via string references: "Player" @ 0x007be628, "PlayerList" @ 0x007bdcf4, "GetPlayerList" @ 0x007bdd00
-    /// - "Mod_PlayerList" @ 0x007be060, "SetByPlayerParty" @ 0x007c1d04, "MaxPlayers" @ 0x007bdb48
-    /// - "OnPlayerChange" @ 0x007bd9bc, "PlayerCreated" @ 0x007bf624, "PlayerOnly" @ 0x007c0ca8
-    /// - Player data: "PCNAME" @ 0x007be194, "PT_PCNAME" @ 0x007c1904, "GAMEINPROGRESS:PC" @ 0x007c1948
-    /// - "PCAUTOSAVE" @ 0x007be320, "PCLevelAtSpawn" @ 0x007c1968
-    /// - Player stats: "G_PC_LEVEL" @ 0x007bf150, "G_PC_Light_Total" @ 0x007c2944, "G_PC_Dark_Total" @ 0x007c2958
-    /// - "PCGender" @ 0x007c84d8, "PlayerClass" @ 0x007c2adc, "PlayerRace" @ 0x007c2c04
-    /// - "PLAYER" @ 0x007c36f0, " [Player]" @ 0x007be200, "Players: " @ 0x007be20c
-    /// - Script events: "CSWSSCRIPTEVENT_EVENTTYPE_ON_PLAYER_LEVEL_UP" @ 0x007bc5bc
-    /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_PLAYER_REST" @ 0x007bc620, "CSWSSCRIPTEVENT_EVENTTYPE_ON_PLAYER_DYING" @ 0x007bc6ac
-    /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_PLAYER_EXIT" @ 0x007bc974, "CSWSSCRIPTEVENT_EVENTTYPE_ON_PLAYER_ENTER" @ 0x007bc9a0
-    /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_DESTROYPLAYERCREATURE" @ 0x007bc5ec
-    /// - Player animations: "DriveAnimRun_PC" @ 0x007c50cc
-    /// - Player audio: "Volume_PC" @ 0x007c6110, "MinVolumeDist_PC" @ 0x007c60c4, "MaxVolumeDist_PC" @ 0x007c60d8
+    /// - Located via string references: "Player" @ 0x007be628 (player entity type), "PlayerList" @ 0x007bdcf4 (player list field)
+    /// - "GetPlayerList" @ 0x007bdd00 (get player list function), "Mod_PlayerList" @ 0x007be060 (module player list)
+    /// - "SetByPlayerParty" @ 0x007c1d04 (set by player party flag), "MaxPlayers" @ 0x007bdb48 (max players constant)
+    /// - "OnPlayerChange" @ 0x007bd9bc (player change event), "PlayerCreated" @ 0x007bf624 (player created flag)
+    /// - "PlayerOnly" @ 0x007c0ca8 (player only flag), "HD0:players" @ 0x007be674 (player directory path)
+    /// - "player" @ 0x007c28d8 (player constant), "PLAYER" @ 0x007c36f0 (player constant uppercase)
+    /// - Player data: "PCNAME" @ 0x007be194 (PC name field), "PT_PCNAME" @ 0x007c1904 (party table PC name)
+    /// - "GAMEINPROGRESS:PC" @ 0x007c1948 (game in progress PC flag), "PCAUTOSAVE" @ 0x007be320 (PC auto-save)
+    /// - "PCLevelAtSpawn" @ 0x007c1968 (PC level at spawn field), " [Player]" @ 0x007be200 (player suffix)
+    /// - "Players: " @ 0x007be20c (players prefix), ":: Server player list ::\n%s\n" @ 0x007cbbd4 (player list debug)
+    /// - Player stats: "G_PC_LEVEL" @ 0x007bf150 (global PC level), "G_PC_Light_Total" @ 0x007c2944 (global PC light side points)
+    /// - "G_PC_Dark_Total" @ 0x007c2958 (global PC dark side points), "PCGender" @ 0x007c84d8 (PC gender field)
+    /// - "PlayerClass" @ 0x007c2adc (player class field), "PlayerRace" @ 0x007c2c04 (player race field)
+    /// - Script events: "CSWSSCRIPTEVENT_EVENTTYPE_ON_PLAYER_LEVEL_UP" @ 0x007bc5bc (player level up event, 0x6)
+    /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_PLAYER_REST" @ 0x007bc620 (player rest event, 0x8)
+    /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_PLAYER_DYING" @ 0x007bc6ac (player dying event, 0x9)
+    /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_PLAYER_EXIT" @ 0x007bc974 (player exit event, 0x19)
+    /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_PLAYER_ENTER" @ 0x007bc9a0 (player enter event, 0x1a)
+    /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_DESTROYPLAYERCREATURE" @ 0x007bc5ec (destroy player creature event, 0x5)
+    /// - Player animations: "DriveAnimRun_PC" @ 0x007c50cc (PC run animation)
+    /// - Player audio: "Volume_PC" @ 0x007c6110 (PC volume field), "MinVolumeDist_PC" @ 0x007c60c4, "MaxVolumeDist_PC" @ 0x007c60d8
+    /// - Player visual: "pz_playerliteoff" @ 0x007cc6ac, "PZ_PLAYERLITEOFF" @ 0x007cc6c0, "pz_playerliteon" @ 0x007cc6d4 (player lighting effects)
+    /// - "HEAL_PLAYER" @ 0x007cbd20 (heal player constant), "CSWMiniPlayer: Recreating gun bank %d" @ 0x007cb5c0 (player weapon bank error)
     /// - Original implementation: Click-to-move with pathfinding, object selection, party control
-    /// - Click-to-move: Click world position -> pathfind -> queue ActionMoveToLocation
-    /// - Object interaction: Click entity -> queue ActionUseObject or ActionMoveToObject
-    /// - Right-click: Context menu or alternative action
-    /// - Party members follow leader, respond to same commands
-    /// - Based on swkotor2.exe: FUN_005226d0 @ 0x005226d0 (player input handling)
+    /// - Click-to-move: Click world position -> project onto walkmesh -> pathfind -> queue ActionMoveToLocation
+    /// - Object interaction: Click entity -> queue ActionUseObject or ActionMoveToObject (based on entity type)
+    /// - Right-click: Context menu or alternative action (examine, attack, etc.)
+    /// - Party members follow leader, respond to same commands (party control system)
+    /// - Movement speeds: Walk speed (default 2.5 units/sec), run speed (default 5.0 units/sec, can be modified by effects)
+    /// - Based on swkotor2.exe: FUN_005226d0 @ 0x005226d0 (player input handling and movement)
     /// </remarks>
     public class PlayerController
     {
