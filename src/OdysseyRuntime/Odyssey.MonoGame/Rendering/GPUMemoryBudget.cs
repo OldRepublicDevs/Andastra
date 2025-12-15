@@ -15,6 +15,18 @@ namespace Odyssey.MonoGame.Rendering
     /// - Automatic resource eviction
     /// - Per-category budgets
     /// </summary>
+    /// <remarks>
+    /// GPU Memory Budget:
+    /// - Based on swkotor2.exe memory management system (modern GPU memory enhancement)
+    /// - Located via string references: Memory management functions handle resource allocation
+    /// - "GlobalMemoryStatus" @ 0x0080afa4 (Windows memory status API)
+    /// - OpenGL memory: wglAllocateMemoryNV, wglFreeMemoryNV (OpenGL memory management)
+    /// - Original implementation: KOTOR manages memory for textures, models, and render targets
+    /// - Memory tracking: Original engine tracks resource usage for efficient memory management
+    /// - This MonoGame implementation: Modern GPU memory budget system for VRAM management
+    /// - Budget enforcement: Prevents out-of-memory errors by evicting least-recently-used resources
+    /// - Per-category budgets: Separate budgets for textures, buffers, render targets, shaders
+    /// </remarks>
     public class GPUMemoryBudget
     {
         /// <summary>
