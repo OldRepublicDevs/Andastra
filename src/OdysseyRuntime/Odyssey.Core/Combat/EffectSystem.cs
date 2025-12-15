@@ -119,7 +119,16 @@ namespace Odyssey.Core.Combat
     ///   - "CSWCVisualEffect::LoadModel: Failed to load visual effect model '%s'." @ 0x007cd5a8
     /// - "VisualEffect" @ 0x007c4624, "RangedEffect" @ 0x007c4634 (effect categories)
     /// - "GameEffects" @ 0x007c4e70, "VideoEffects" @ 0x007c4f30, "EffectIcon" @ 0x007c4f48
-    /// - Original implementation: FUN_0050b540 @ 0x0050b540 (EffectList operations), FUN_00505db0 @ 0x00505db0 (effect management)
+    /// - Original implementation: FUN_0050b540 @ 0x0050b540 (load EffectList from GFF)
+    ///   - Loads "EffectList" GFF list field, iterates through each effect struct
+    ///   - Creates effect object (0x8c bytes) via FUN_00541600, loads effect data via FUN_00541b60
+    ///   - Filters effects: Only adds effects where effect type matches or effect subtype matches (DAT_007c02ec)
+    ///   - Calls FUN_0050ae30 to add effect to entity's effect list
+    ///   - Effect filtering: Effects with type 1 (instant) or matching subtype are added
+    /// - FUN_00505db0 @ 0x00505db0 (save EffectList to GFF)
+    ///   - Saves "EffectList" GFF list field, iterates through entity's effect list
+    ///   - Calls FUN_00540f10 to serialize each effect to GFF struct
+    ///   - Effect count stored at offset 0x14c, effect list pointer at offset 0x148
     /// - Effects applied to entities with duration tracking, stacking rules, removal on expiration
     /// - Effect types: Attribute modifiers (ability, attack, damage, AC, saves), status effects (paralysis, stun, etc.),
     ///   damage effects (resistance, immunity, reduction), Force effects, visual effects
