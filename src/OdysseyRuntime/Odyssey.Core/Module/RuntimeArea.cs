@@ -34,6 +34,8 @@ namespace Odyssey.Core.Module
     /// - Debug display: "    Area Tag: " @ 0x007cb12c, "Area Name: " @ 0x007cb13c
     /// - GUI: "LBL_Area" @ 0x007cdac0, "LBL_AREANAME" @ 0x007cedb8, "areatrans_p" @ 0x007d0bdc
     /// - Pathfinding module: "?nwsareapathfind.cpp" @ 0x007be3ff indicates area pathfinding implementation
+    /// - Pathfinding error: "we can not return a closest result if points are reversed." @ 0x007be478
+    /// - Movement error: "aborted walking, we are totaly blocked. can't get around this creature at all." @ 0x007c0408
     /// - Save game integration: FUN_004eb750 @ 0x004eb750 saves AREANAME to save game NFO file (local_78 variable holds area name)
     /// - Original implementation: Areas contain entities, rooms, walkmesh, visibility data
     /// - Based on ARE/GIT/LYT/VIS file formats documented in vendor/PyKotor/wiki/
