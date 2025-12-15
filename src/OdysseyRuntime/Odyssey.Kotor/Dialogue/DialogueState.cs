@@ -9,11 +9,17 @@ namespace Odyssey.Kotor.Dialogue
     /// Tracks the current state of a dialogue conversation.
     /// </summary>
     /// <remarks>
-    /// Dialogue state progresses through:
-    /// 1. StartingList - Initial entry selection
-    /// 2. DLGEntry (NPC speaks) -> DLGReply options shown
-    /// 3. Player selects DLGReply -> DLGEntry (next NPC line)
-    /// 4. Repeat until no more links or aborted
+    /// Dialogue State:
+    /// - Based on swkotor2.exe dialogue system
+    /// - Located via string references: Dialogue state machine and traversal functions
+    /// - Original implementation: Tracks current conversation state and node traversal
+    /// - Dialogue state progresses through:
+    ///   1. StartingList - Initial entry selection
+    ///   2. DLGEntry (NPC speaks) -> DLGReply options shown
+    ///   3. Player selects DLGReply -> DLGEntry (next NPC line)
+    ///   4. Repeat until no more links or aborted
+    /// - State tracks current node, available replies, voice-over playback status
+    /// - Dialogue history maintained for conditional checks and script evaluation
     /// </remarks>
     public class DialogueState
     {

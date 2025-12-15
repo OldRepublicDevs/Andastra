@@ -9,11 +9,17 @@ namespace Odyssey.Kotor.Dialogue
     /// Provides context for a dialogue conversation.
     /// </summary>
     /// <remarks>
-    /// Conversation participants:
-    /// - Owner: The object that owns the dialogue (NPC, placeable, etc.)
-    /// - PC: The player character
-    /// - PCSpeaker: The specific party member speaking (may differ from PC)
-    /// - Additional participants identified by tag
+    /// Conversation Context:
+    /// - Based on swkotor2.exe dialogue system
+    /// - Located via string references: Dialogue conversation functions handle participant management
+    /// - Original implementation: Manages conversation participants and speaker lookup
+    /// - Conversation participants:
+    ///   - Owner: The object that owns the dialogue (NPC, placeable, etc.)
+    ///   - PC: The player character
+    ///   - PCSpeaker: The specific party member speaking (may differ from PC)
+    ///   - Additional participants identified by tag
+    /// - Speaker lookup by tag used for dialogue scripts and conditional checks
+    /// - GetPCSpeaker NWScript function returns current PC speaker entity
     /// </remarks>
     public class ConversationContext
     {
