@@ -94,6 +94,66 @@ namespace Odyssey.Kotor.Loading
         }
 
         /// <summary>
+        /// Creates a placeable from a template ResRef at a specific position.
+        /// </summary>
+        [CanBeNull]
+        public IEntity CreatePlaceableFromTemplate(Module module, string templateResRef, System.Numerics.Vector3 position, float facing)
+        {
+            if (module == null || string.IsNullOrEmpty(templateResRef))
+            {
+                return null;
+            }
+
+            var entity = new Entity(GetNextObjectId(), ObjectType.Placeable);
+            entity.Position = position;
+            entity.Facing = facing;
+
+            LoadPlaceableTemplate(entity, module, templateResRef);
+
+            return entity;
+        }
+
+        /// <summary>
+        /// Creates a door from a template ResRef at a specific position.
+        /// </summary>
+        [CanBeNull]
+        public IEntity CreateDoorFromTemplate(Module module, string templateResRef, System.Numerics.Vector3 position, float facing)
+        {
+            if (module == null || string.IsNullOrEmpty(templateResRef))
+            {
+                return null;
+            }
+
+            var entity = new Entity(GetNextObjectId(), ObjectType.Door);
+            entity.Position = position;
+            entity.Facing = facing;
+
+            LoadDoorTemplate(entity, module, templateResRef);
+
+            return entity;
+        }
+
+        /// <summary>
+        /// Creates a store from a template ResRef at a specific position.
+        /// </summary>
+        [CanBeNull]
+        public IEntity CreateStoreFromTemplate(Module module, string templateResRef, System.Numerics.Vector3 position, float facing)
+        {
+            if (module == null || string.IsNullOrEmpty(templateResRef))
+            {
+                return null;
+            }
+
+            var entity = new Entity(GetNextObjectId(), ObjectType.Store);
+            entity.Position = position;
+            entity.Facing = facing;
+
+            LoadStoreTemplate(entity, module, templateResRef);
+
+            return entity;
+        }
+
+        /// <summary>
         /// Loads creature template from UTC.
         /// </summary>
         private void LoadCreatureTemplate(Entity entity, Module module, string templateResRef)
@@ -145,7 +205,7 @@ namespace Odyssey.Kotor.Loading
                     var classes = new List<Components.CreatureClass>();
                     for (int i = 0; i < classList.Count; i++)
                     {
-                        GFFStruct classStruct = classList.GetStruct(i);
+                        GFFStruct classStruct = classList[i];
                         if (classStruct != null)
                         {
                             int classId = GetIntField(classStruct, "Class", 0);
@@ -486,7 +546,7 @@ namespace Odyssey.Kotor.Loading
         /// Creates a store from GIT instance struct.
         /// </summary>
         [CanBeNull]
-        public IEntity CreateStoreFromGit(GFFStruct gitStruct)
+        public IEntity CreateStoreFromGit(GFFStruct gitStruct, Module module)
         {
             var entity = new Entity(GetNextObjectId(), ObjectType.Store);
 
@@ -495,9 +555,64 @@ namespace Odyssey.Kotor.Loading
             entity.Tag = GetResRefField(gitStruct, "Tag");
             entity.Position = position;
 
-            entity.SetData("ResRef", GetResRefField(gitStruct, "ResRef"));
+            // Load template if specified
+            string templateResRef = GetResRefField(gitStruct, "TemplateResRef");
+            if (!string.IsNullOrEmpty(templateResRef) && module != null)
+            {
+                LoadStoreTemplate(entity, module, templateResRef);
+            }
+            else
+            {
+                entity.SetData("ResRef", GetResRefField(gitStruct, "ResRef"));
+            }
 
             return entity;
+        }
+
+        /// <summary>
+        /// Loads store template from UTM.
+        /// </summary>
+        private void LoadStoreTemplate(Entity entity, Module module, string templateResRef)
+        {
+            ModuleResource utmResource = module.Store(templateResRef);
+            if (utmResource == null)
+            {
+                return;
+            }
+
+            object utmData = utmResource.Resource();
+            if (utmData == null)
+            {
+                return;
+            }
+
+            GFF utmGff = utmData as GFF;
+            if (utmGff == null)
+            {
+                return;
+            }
+
+            GFFStruct root = utmGff.Root;
+
+            if (string.IsNullOrEmpty(entity.Tag))
+            {
+                entity.Tag = GetStringField(root, "Tag");
+            }
+
+            entity.SetData("TemplateResRef", templateResRef);
+            entity.SetData("ResRef", GetStringField(root, "ResRef"));
+            entity.SetData("ID", GetIntField(root, "ID", 0));
+            entity.SetData("MarkUp", GetIntField(root, "MarkUp", 0));
+            entity.SetData("MarkUpRate", GetIntField(root, "MarkUpRate", 0));
+            entity.SetData("MarkDown", GetIntField(root, "MarkDown", 0));
+            entity.SetData("MarkDownRate", GetIntField(root, "MarkDownRate", 0));
+
+            SetEntityScripts(entity, root, new Dictionary<string, ScriptEvent>
+            {
+                { "OnOpenStore", ScriptEvent.OnStoreOpen },
+                { "OnStoreClosed", ScriptEvent.OnStoreClose },
+                { "OnUserDefined", ScriptEvent.OnUserDefined }
+            });
         }
 
         /// <summary>
