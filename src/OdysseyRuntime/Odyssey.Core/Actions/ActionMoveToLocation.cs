@@ -57,14 +57,28 @@ namespace Odyssey.Core.Actions
             //   - "aborted walking, we are totaly blocked. can't get around this creature at all." @ 0x007c0408
             //   - "aborted walking, Maximum number of bumps happened" @ 0x007c0458
             // Original implementation (from decompiled FUN_0054be70):
-            // 1. Path following: Iterates through path waypoints, checks distance to each waypoint
-            // 2. Creature collision: Checks for collisions with other creatures along path
-            // 3. Bump counter: Tracks number of creature bumps (stored at offset 0x268 in entity structure)
-            // 4. Maximum bumps: If bump count exceeds 5, aborts movement and clears path
-            // 5. Total blocking: If same creature blocks repeatedly, aborts movement
-            // 6. Position projection: Projects position to walkmesh surface using FUN_004f5070
-            // 7. Distance calculation: Uses 2D distance (X/Z plane, ignores Y) for movement calculations
-            // 8. Pathfinding searches walkmesh adjacency graph for valid path
+            //   - Function signature: `undefined4 FUN_0054be70(int *param_1, float *param_2, float *param_3, float *param_4, int *param_5)`
+            //   - param_1: Entity pointer (this pointer for creature object)
+            //   - param_2: Output position (final position after movement)
+            //   - param_3: Output position (intermediate position)
+            //   - param_4: Output direction vector (normalized movement direction)
+            //   - param_5: Output parameter (unused in this context)
+            //   - Path following: Iterates through path waypoints stored at offset 0x90 in entity structure
+            //   - Path indices: Current waypoint index at offset 0x9c, path length at offset 0x8c
+            //   - Position tracking: Current position at offsets 0x25 (X), 0x26 (Y), 0x27 (Z) in entity structure
+            //   - Orientation: Facing stored at offsets 0x28 (X), 0x29 (Y), 0x2a (Z) as direction vector
+            //   - Distance calculation: Uses 2D distance (X/Z plane, ignores Y) for movement calculations
+            //   - Walkmesh projection: Projects position to walkmesh surface using FUN_004f5070 (walkmesh height lookup)
+            //   - Direction normalization: Uses FUN_004d8390 to normalize direction vectors
+            //   - Creature collision: Checks for collisions with other creatures along path using FUN_005479f0
+            //   - Bump counter: Tracks number of creature bumps (stored at offset 0x268 in entity structure)
+            //   - Maximum bumps: If bump count exceeds 5, aborts movement and clears path (frees path array, sets path length to 0)
+            //   - Total blocking: If same creature blocks repeatedly (local_c0 == entity ID at offset 0x254), aborts movement
+            //   - Path completion: Returns 1 when path is complete (local_d0 flag), 0 if still in progress
+            //   - Path waypoint iteration: Advances through path waypoints, projects each position to walkmesh
+            //   - Movement distance: Calculates movement distance based on speed and remaining distance to waypoint
+            //   - Final position: Updates entity position to final projected position on walkmesh
+            // Pathfinding searches walkmesh adjacency graph for valid path
             // If no path found, original engine attempts direct movement (may fail if blocked)
             if (_path == null)
             {
