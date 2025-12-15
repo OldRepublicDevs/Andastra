@@ -32,10 +32,13 @@ namespace Odyssey.Kotor.Systems
     /// - Original implementation: FUN_004eb750 @ 0x004eb750 (creature AI update loop)
     /// - FUN_005226d0 @ 0x005226d0 (process heartbeat scripts), FUN_004dfbb0 @ 0x004dfbb0 (perception checks)
     /// - AI operates through action queue population based on perception and scripts
-    /// - Heartbeat scripts: Fire every 6 seconds, can queue actions, check conditions
+    /// - Heartbeat scripts: Fire every 6 seconds (HeartbeatInterval), can queue actions, check conditions
     /// - Perception system: Detects enemies via sight/hearing, fires OnPerception events
+    /// - Perception update: Checks every 0.5 seconds (PerceptionUpdateInterval) for efficiency
     /// - Combat behavior: Default combat AI engages nearest enemy, uses combat rounds
     /// - Action queue: FIFO queue per entity, current action executes until complete or interrupted
+    /// - AI levels: 0=Passive, 1=Defensive, 2=Normal, 3=Aggressive (stored in PT_AISTATE for party members)
+    /// - Party AI: Party members use AI controller when not player-controlled (PT_AISTATE from PARTYTABLE)
     /// - Based on KOTOR AI behavior from vendor/PyKotor/wiki/ and plan documentation
     /// </remarks>
     public class AIController
