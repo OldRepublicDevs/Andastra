@@ -20,9 +20,13 @@ namespace Odyssey.Content.Loaders
     /// Template Loader:
     /// - Based on swkotor2.exe template loading system
     /// - Template formats: GFF files with signatures "UTC ", "UTP ", "UTD ", "UTT ", "UTW ", "UTS ", "UTE ", "UTM "
-    /// - Located via string references: Template loading errors reference template types
-    /// - Original implementation: Loads GFF template files, parses entity data, creates template objects
+    /// - Located via string references: "TemplateResRef" @ 0x007bd00c (template reference field in GIT instances)
+    /// - Template loading errors: "Creature template '%s' doesn't exist.\n" @ 0x007bf78c
+    /// - Original implementation: FUN_005261b0 @ 0x005261b0 loads creature templates from UTC GFF files
+    /// - FUN_004e08e0 @ 0x004e08e0 loads placeable/door templates from UTP/UTD GFF files
+    /// - Loads GFF template files, parses entity data, creates template objects
     /// - Templates define base properties for entities (stats, appearance, scripts, etc.)
+    /// - UTC = Creature template, UTP = Placeable, UTD = Door, UTT = Trigger, UTW = Waypoint, UTS = Sound, UTE = Encounter, UTM = Store
     /// - Based on template file format documentation in vendor/PyKotor/wiki/
     /// </remarks>
     public class TemplateLoader

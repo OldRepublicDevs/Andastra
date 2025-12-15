@@ -19,14 +19,18 @@ namespace Odyssey.Content.Loaders
     /// <remarks>
     /// GIT Loader:
     /// - Based on swkotor2.exe GIT file loading
-    /// - Located via string references: "GIT " signature (GFF file format)
+    /// - Located via string references: "GIT " signature (GFF file format) in GFF file header
     /// - "Creature List" @ 0x007bd01c (GFF list field name for creature instances)
+    /// - "Door List" @ 0x007bd248, "Placeable List" @ 0x007bd260, "TriggerList" @ 0x007bd254
+    /// - "WaypointList", "SoundList", "Encounter List" @ 0x007bd050, "StoreList", "CameraList" (GFF list field names)
     /// - GIT file format: GFF with "GIT " signature containing area instance data
-    /// - Lists: "Creature List", "Door List", "Placeable List", "TriggerList", "WaypointList", "SoundList", "Encounter List", "StoreList", "CameraList"
-    /// - Original implementation: Parses GIT GFF structure, spawns entities at specified positions
-    /// - Based on GIT file format documentation in vendor/PyKotor/wiki/GFF-GIT.md
+    /// - Original implementation: FUN_004dfbb0 @ 0x004dfbb0 loads creature instances from GIT
+    /// - FUN_004e08e0 @ 0x004e08e0 loads placeable/door instances from GIT
+    /// - FUN_004e01a0 @ 0x004e01a0 loads encounter instances from GIT
+    /// - Parses GIT GFF structure, spawns entities at specified positions
     /// - GIT files define all spawned instances in an area (creatures, doors, placeables, triggers, waypoints, sounds, encounters, stores, cameras)
     /// - Each instance contains: TemplateResRef, Tag, Position (X/Y/Z), Orientation, and type-specific fields
+    /// - Based on GIT file format documentation in vendor/PyKotor/wiki/GFF-GIT.md
     /// </remarks>
     public class GITLoader
     {
