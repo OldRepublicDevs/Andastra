@@ -451,6 +451,16 @@ namespace Odyssey.Kotor.Combat
         {
             SetCombatState(victim, CombatState.Dead);
 
+            // Fire OnDeath script event
+            // Based on swkotor2.exe: CSWSSCRIPTEVENT_EVENTTYPE_ON_DEATH fires when entity dies
+            // Located via string references: "OnDeath" script field, death event handling
+            // Original implementation: OnDeath script fires on victim entity with killer as triggerer
+            IEventBus eventBus = _world.EventBus;
+            if (eventBus != null)
+            {
+                eventBus.FireScriptEvent(victim, ScriptEvent.OnDeath, killer);
+            }
+
             // Fire death event
             OnDeath?.Invoke(this, new CombatEventArgs
             {
