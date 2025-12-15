@@ -8,8 +8,14 @@ namespace Odyssey.Kotor.Components
     /// Component for encounter spawner entities.
     /// </summary>
     /// <remarks>
-    /// Based on UTE file format documentation.
-    /// Encounters spawn creatures when the player enters the area.
+    /// Encounter Component:
+    /// - Based on swkotor2.exe encounter system
+    /// - Located via string references: "Encounter" @ 0x007bc524, "Encounter List" @ 0x007bd050
+    /// - Original implementation: Encounters spawn creatures when hostile creatures enter encounter polygon area
+    /// - UTE file format: GFF with "UTE " signature containing encounter data
+    /// - Encounters have polygon geometry defining spawn area, creature templates, spawn options
+    /// - SpawnOption 0 = continuous spawn, 1 = single-shot spawn
+    /// - Based on UTE file format documentation in vendor/PyKotor/wiki/
     /// </remarks>
     public class EncounterComponent : IComponent
     {
