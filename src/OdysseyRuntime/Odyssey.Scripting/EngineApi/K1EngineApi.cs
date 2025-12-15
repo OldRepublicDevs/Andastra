@@ -304,6 +304,8 @@ namespace Odyssey.Scripting.EngineApi
                 
                 // GetItemStackSize (routine 138)
                 case 138: return Func_GetItemStackSize(args, ctx);
+                case 150: return Func_SetItemStackSize(args, ctx);
+                case 151: return Func_GetDistanceBetween(args, ctx);
                 
                 // PrintVector
                 case 141: return Func_PrintVector(args, ctx);
@@ -3653,6 +3655,80 @@ namespace Odyssey.Scripting.EngineApi
             }
 
             return Variable.FromInt(1); // Default stack size
+        }
+
+        /// <summary>
+        /// SetItemStackSize(object oItem, int nStackSize) - Set the stack size of an item
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: SetItemStackSize implementation
+        /// Located via string references: "StackSize" @ 0x007c2f5c
+        /// Original implementation: Clamps stack size between 1 and max stack size from baseitems.2da
+        /// </remarks>
+        private Variable Func_SetItemStackSize(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            if (args.Count < 2)
+            {
+                return Variable.Void();
+            }
+
+            uint itemId = args[0].AsObjectId();
+            int stackSize = args[1].AsInt();
+            IEntity item = ResolveObject(itemId, ctx);
+
+            if (item == null || item.ObjectType != Core.Enums.ObjectType.Item)
+            {
+                return Variable.Void();
+            }
+
+            Core.Interfaces.Components.IItemComponent itemComponent = item.GetComponent<Core.Interfaces.Components.IItemComponent>();
+            if (itemComponent != null)
+            {
+                // Clamp stack size between 1 and max (from baseitems.2da)
+                // For now, use a reasonable max (100) until we have proper 2DA table access
+                // TODO: Lookup max stack size from baseitems.2da using BaseItem ID
+                int maxStackSize = 100; // Default max, should come from baseitems.2da "stacking" column
+                int clampedSize = Math.Max(1, Math.Min(maxStackSize, stackSize));
+                itemComponent.StackSize = clampedSize;
+            }
+
+            return Variable.Void();
+        }
+
+        /// <summary>
+        /// GetDistanceBetween(object oObjectA, object oObjectB) - Get the distance in metres between two objects
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: GetDistanceBetween implementation
+        /// Original implementation: Calculates 3D distance between object positions
+        /// </remarks>
+        private Variable Func_GetDistanceBetween(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            if (args.Count < 2)
+            {
+                return Variable.FromFloat(0f);
+            }
+
+            uint objectAId = args[0].AsObjectId();
+            uint objectBId = args[1].AsObjectId();
+            IEntity objectA = ResolveObject(objectAId, ctx);
+            IEntity objectB = ResolveObject(objectBId, ctx);
+
+            if (objectA == null || objectB == null)
+            {
+                return Variable.FromFloat(0f);
+            }
+
+            Core.Interfaces.Components.ITransformComponent transformA = objectA.GetComponent<Core.Interfaces.Components.ITransformComponent>();
+            Core.Interfaces.Components.ITransformComponent transformB = objectB.GetComponent<Core.Interfaces.Components.ITransformComponent>();
+
+            if (transformA != null && transformB != null)
+            {
+                float distance = Vector3.Distance(transformA.Position, transformB.Position);
+                return Variable.FromFloat(distance);
+            }
+
+            return Variable.FromFloat(0f);
         }
 
         private Variable Func_ApplyEffectToObject(IReadOnlyList<Variable> args, IExecutionContext ctx)
