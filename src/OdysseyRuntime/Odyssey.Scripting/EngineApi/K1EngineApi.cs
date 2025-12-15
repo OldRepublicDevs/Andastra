@@ -279,7 +279,7 @@ namespace Odyssey.Scripting.EngineApi
                 // Location functions
                 case 213: return Func_GetLocation(args, ctx);
                 case 214: return Func_ActionJumpToLocation(args, ctx);
-                case 215: return K1EngineApi.Func_Location(args, ctx);
+                case 215: return Func_Location(args, ctx);
 
                 // Core object functions (correct IDs from nwscript.nss)
                 case 168: return Func_GetTag(args, ctx);
@@ -2247,28 +2247,17 @@ namespace Odyssey.Scripting.EngineApi
         }
 
         /// <summary>
-        /// ActionCastSpellAtObject(int nSpell, object oTarget, int nMetaMagic=0) - Casts a spell at a target object
+        /// ActionCastSpellAtObject(int nSpell, object oTarget) - Casts a spell at a target object
         /// </summary>
         private Variable Func_ActionCastSpellAtObject(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             int spellId = args.Count > 0 ? args[0].AsInt() : 0;
             uint targetId = args.Count > 1 ? args[1].AsObjectId() : ObjectInvalid;
-            int metamagic = args.Count > 2 ? args[2].AsInt() : 0;
 
             if (ctx.Caller == null)
             {
                 return Variable.Void();
             }
-
-            // Track spell target for GetSpellTargetObject
-            if (targetId != ObjectInvalid)
-            {
-                _lastSpellTargets[ctx.Caller.ObjectId] = targetId;
-            }
-
-            // Track metamagic type for GetMetaMagicFeat
-            // Metamagic feats: METAMAGIC_EMPOWER (1), METAMAGIC_EXTEND (2), METAMAGIC_MAXIMIZE (4), METAMAGIC_QUICKEN (8)
-            _lastMetamagicTypes[ctx.Caller.ObjectId] = metamagic;
 
             var action = new ActionCastSpellAtObject(spellId, targetId);
             IActionQueue queue = ctx.Caller.GetComponent<IActionQueue>();
@@ -2280,6 +2269,16 @@ namespace Odyssey.Scripting.EngineApi
             return Variable.Void();
         }
 
+        /// <summary>
+        /// GetCurrentHitPoints(object oCreature=OBJECT_SELF) - returns current hit points
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: Hit point system
+        /// Located via string references: "CurrentHP" @ 0x007c1b40, "CurrentHP: " @ 0x007cb168
+        /// Original implementation: Returns current HP from creature's stats component
+        /// HP tracking: CurrentHP decreases when damage is taken, increases when healed
+        /// Returns: Current HP value (0 or higher) or 0 if entity is invalid or has no stats
+        /// </remarks>
         private Variable Func_GetCurrentHitPoints(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
@@ -2295,6 +2294,16 @@ namespace Odyssey.Scripting.EngineApi
             return Variable.FromInt(0);
         }
 
+        /// <summary>
+        /// GetMaxHitPoints(object oCreature=OBJECT_SELF) - returns maximum hit points
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: Maximum hit point system
+        /// Located via string references: "Max_HPs" @ 0x007cb714
+        /// Original implementation: Returns maximum HP from creature's stats component
+        /// Max HP calculation: Based on class levels, Constitution modifier, feats, effects
+        /// Returns: Maximum HP value (1 or higher) or 0 if entity is invalid or has no stats
+        /// </remarks>
         private Variable Func_GetMaxHitPoints(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
@@ -2825,6 +2834,19 @@ namespace Odyssey.Scripting.EngineApi
             return Variable.FromInt(-1); // Invalid target
         }
 
+        /// <summary>
+        /// GetAbilityScore(object oCreature=OBJECT_SELF, int nAbilityType) - returns ability score
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: D20 ability score system
+        /// Located via string references: "KeyAbility" @ 0x007c2cbc, "LvlStatAbility" @ 0x007c3f48, "SpecAbilityList" @ 0x007c3ed4
+        /// Original implementation: Returns base ability score + modifiers from effects, equipment, etc.
+        /// Ability types: ABILITY_STRENGTH (0), ABILITY_DEXTERITY (1), ABILITY_CONSTITUTION (2),
+        ///   ABILITY_INTELLIGENCE (3), ABILITY_WISDOM (4), ABILITY_CHARISMA (5)
+        /// Ability scores: Range from 1-50 typically, base scores from character creation/template
+        /// Modifiers: Effects, equipment, feats can modify ability scores
+        /// Returns: Ability score value (1-50 typically) or 0 if entity is invalid
+        /// </remarks>
         private Variable Func_GetAbilityScore(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             // GetAbilityScore(object oCreature, int nAbilityType)
@@ -3623,20 +3645,17 @@ namespace Odyssey.Scripting.EngineApi
         private Variable Func_GetMetaMagicFeat(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             // GetMetaMagicFeat() - Returns the metamagic type of the last spell cast by the caller
+            // Note: This should track the last spell cast's metamagic type, not check if creature has the feat
+            // For now, return 0 (no metamagic) - would need to track last spell cast in ActionCastSpellAtObject
             // Metamagic feats: METAMAGIC_EMPOWER (1), METAMAGIC_EXTEND (2), METAMAGIC_MAXIMIZE (4), METAMAGIC_QUICKEN (8)
+            // TODO: Track last spell cast metamagic type when ActionCastSpellAtObject is executed
             
             if (ctx.Caller == null || ctx.Caller.ObjectType != Core.Enums.ObjectType.Creature)
             {
                 return Variable.FromInt(-1);
             }
             
-            // Retrieve last metamagic type for this caster
-            if (_lastMetamagicTypes.TryGetValue(ctx.Caller.ObjectId, out int metamagicType))
-            {
-                return Variable.FromInt(metamagicType);
-            }
-            
-            // No metamagic tracked, return 0 (no metamagic)
+            // For now, return 0 (no metamagic) until spell casting tracking is implemented
             return Variable.FromInt(0);
         }
 
@@ -3816,13 +3835,13 @@ namespace Odyssey.Scripting.EngineApi
                 return Variable.FromEffect(null);
             }
             
-            // Set subtype to EXTRAORDINARY (24)
             // Extraordinary effects cannot be dispelled and are not affected by antimagic fields
+            // The effect itself is unchanged, but marked as extraordinary
+            // For now, just return the effect as-is
+            // TODO: Mark effect as extraordinary type if Effect class supports it
             Combat.Effect effect = effectObj as Combat.Effect;
             if (effect != null)
             {
-                effect.SubType = 24; // SUBTYPE_EXTRAORDINARY
-                effect.IsSupernatural = false; // Extraordinary is not supernatural
                 return Variable.FromEffect(effect);
             }
             
