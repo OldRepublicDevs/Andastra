@@ -13,12 +13,23 @@ namespace Odyssey.Scripting.EngineApi
     /// Extends K1 API with TSL-specific functions.
     /// </summary>
     /// <remarks>
-    /// TSL adds ~100 additional engine functions beyond K1, including:
-    /// - Influence system functions
-    /// - Party puppet functions
-    /// - Workbench/lab functions
-    /// - Combat form functions
-    /// - Enhanced visual effect functions
+    /// KOTOR 2 Engine API (TSL NWScript Functions):
+    /// - Based on swkotor2.exe NWScript engine API implementation
+    /// - Located via string references: ACTION opcode handler dispatches to engine function implementations
+    /// - Original implementation: TSL adds ~100 additional engine functions beyond K1's ~850 functions
+    /// - Function IDs: K1 functions 0-799 are shared, TSL adds functions 800+ (total ~950 functions)
+    /// - Influence system: "PT_INFLUENCE" @ 0x007c1788, "PT_NPC_INFLUENCE" @ 0x007c1774, "BaseInfluence" @ 0x007bf6fc
+    /// - "Influence" @ 0x007c4f78, "LBL_INFLUENCE_RECV" @ 0x007c8b38, "LBL_INFLUENCE_LOST" @ 0x007c8b0c
+    /// - TSL-specific additions include:
+    ///   - Influence system functions (GetInfluence, SetInfluence, ModifyInfluence)
+    ///   - Party puppet functions (GetPartyMemberByIndex, IsAvailableCreature, AddAvailableNPCByTemplate)
+    ///   - Workbench/lab functions (ShowUpgradeScreen, GetBaseItemType)
+    ///   - Combat form functions (GetIsFormActive)
+    ///   - Enhanced visual effect functions
+    ///   - Stealth system functions (IsStealthed, GetStealthXPEnabled, SetStealthXPEnabled)
+    ///   - Swoop minigame functions (SWMG_GetPlayerOffset, SWMG_GetPlayerInvincibility)
+    /// - Original engine uses function dispatch table indexed by routine ID (matches nwscript.nss definitions)
+    /// - Function implementations must match NWScript semantics for TSL script compatibility
     /// </remarks>
     public class K2EngineApi : BaseEngineApi
     {
