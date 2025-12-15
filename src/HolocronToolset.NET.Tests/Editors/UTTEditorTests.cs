@@ -1679,5 +1679,196 @@ namespace HolocronToolset.NET.Tests.Editors
             var modifiedUtt2 = CSharpKOTOR.Resource.Generics.UTTAuto.ReadUtt(data2);
             modifiedUtt2.TrapOnce.Should().BeFalse("TrapOnce should be false after setting checkbox to false");
         }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utt_editor.py:305-326
+        // Original: def test_utt_editor_manipulate_detectable_checkbox(qtbot, installation: HTInstallation, test_files_dir: Path):
+        [Fact]
+        public void TestUttEditorManipulateDetectableCheckbox()
+        {
+            string k2Path = Environment.GetEnvironmentVariable("K2_PATH");
+            if (string.IsNullOrEmpty(k2Path))
+            {
+                k2Path = @"C:\Program Files (x86)\Steam\steamapps\common\Knights of the Old Republic II";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k2Path) && System.IO.File.Exists(System.IO.Path.Combine(k2Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k2Path, "Test Installation", tsl: true);
+            }
+
+            if (installation == null)
+            {
+                return; // Skip if no installation available
+            }
+
+            string testFilesDir = System.IO.Path.Combine(
+                System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+
+            string uttFile = System.IO.Path.Combine(testFilesDir, "newtransition9.utt");
+            if (!System.IO.File.Exists(uttFile))
+            {
+                testFilesDir = System.IO.Path.Combine(
+                    System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                    "..", "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+                uttFile = System.IO.Path.Combine(testFilesDir, "newtransition9.utt");
+            }
+
+            if (!System.IO.File.Exists(uttFile))
+            {
+                return; // Skip if test file not available
+            }
+
+            var editor = new UTTEditor(null, installation);
+            byte[] originalData = System.IO.File.ReadAllBytes(uttFile);
+
+            editor.Load(uttFile, "newtransition9", ResourceType.UTT, originalData);
+
+            // Toggle checkbox
+            var detectableCheckboxField = typeof(UTTEditor).GetField("_detectableCheckbox", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            var detectableCheckbox = detectableCheckboxField?.GetValue(editor) as Avalonia.Controls.CheckBox;
+            detectableCheckbox.Should().NotBeNull("DetectableCheckbox should be initialized");
+
+            detectableCheckbox.IsChecked = true;
+            var (data1, _) = editor.Build();
+            var modifiedUtt1 = CSharpKOTOR.Resource.Generics.UTTAuto.ReadUtt(data1);
+            modifiedUtt1.TrapDetectable.Should().BeTrue();
+
+            detectableCheckbox.IsChecked = false;
+            var (data2, _) = editor.Build();
+            var modifiedUtt2 = CSharpKOTOR.Resource.Generics.UTTAuto.ReadUtt(data2);
+            modifiedUtt2.TrapDetectable.Should().BeFalse();
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utt_editor.py:354-375
+        // Original: def test_utt_editor_manipulate_disarmable_checkbox(qtbot, installation: HTInstallation, test_files_dir: Path):
+        [Fact]
+        public void TestUttEditorManipulateDisarmableCheckbox()
+        {
+            string k2Path = Environment.GetEnvironmentVariable("K2_PATH");
+            if (string.IsNullOrEmpty(k2Path))
+            {
+                k2Path = @"C:\Program Files (x86)\Steam\steamapps\common\Knights of the Old Republic II";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k2Path) && System.IO.File.Exists(System.IO.Path.Combine(k2Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k2Path, "Test Installation", tsl: true);
+            }
+
+            if (installation == null)
+            {
+                return; // Skip if no installation available
+            }
+
+            string testFilesDir = System.IO.Path.Combine(
+                System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+
+            string uttFile = System.IO.Path.Combine(testFilesDir, "newtransition9.utt");
+            if (!System.IO.File.Exists(uttFile))
+            {
+                testFilesDir = System.IO.Path.Combine(
+                    System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                    "..", "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+                uttFile = System.IO.Path.Combine(testFilesDir, "newtransition9.utt");
+            }
+
+            if (!System.IO.File.Exists(uttFile))
+            {
+                return; // Skip if test file not available
+            }
+
+            var editor = new UTTEditor(null, installation);
+            byte[] originalData = System.IO.File.ReadAllBytes(uttFile);
+
+            editor.Load(uttFile, "newtransition9", ResourceType.UTT, originalData);
+
+            // Toggle checkbox
+            var disarmableCheckboxField = typeof(UTTEditor).GetField("_disarmableCheckbox", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            var disarmableCheckbox = disarmableCheckboxField?.GetValue(editor) as Avalonia.Controls.CheckBox;
+            disarmableCheckbox.Should().NotBeNull("DisarmableCheckbox should be initialized");
+
+            disarmableCheckbox.IsChecked = true;
+            var (data1, _) = editor.Build();
+            var modifiedUtt1 = CSharpKOTOR.Resource.Generics.UTTAuto.ReadUtt(data1);
+            modifiedUtt1.TrapDisarmable.Should().BeTrue();
+
+            disarmableCheckbox.IsChecked = false;
+            var (data2, _) = editor.Build();
+            var modifiedUtt2 = CSharpKOTOR.Resource.Generics.UTTAuto.ReadUtt(data2);
+            modifiedUtt2.TrapDisarmable.Should().BeFalse();
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utt_editor.py:377-401
+        // Original: def test_utt_editor_manipulate_disarm_dc_spin(qtbot, installation: HTInstallation, test_files_dir: Path):
+        [Fact]
+        public void TestUttEditorManipulateDisarmDcSpin()
+        {
+            string k2Path = Environment.GetEnvironmentVariable("K2_PATH");
+            if (string.IsNullOrEmpty(k2Path))
+            {
+                k2Path = @"C:\Program Files (x86)\Steam\steamapps\common\Knights of the Old Republic II";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k2Path) && System.IO.File.Exists(System.IO.Path.Combine(k2Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k2Path, "Test Installation", tsl: true);
+            }
+
+            if (installation == null)
+            {
+                return; // Skip if no installation available
+            }
+
+            string testFilesDir = System.IO.Path.Combine(
+                System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+
+            string uttFile = System.IO.Path.Combine(testFilesDir, "newtransition9.utt");
+            if (!System.IO.File.Exists(uttFile))
+            {
+                testFilesDir = System.IO.Path.Combine(
+                    System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                    "..", "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+                uttFile = System.IO.Path.Combine(testFilesDir, "newtransition9.utt");
+            }
+
+            if (!System.IO.File.Exists(uttFile))
+            {
+                return; // Skip if test file not available
+            }
+
+            var editor = new UTTEditor(null, installation);
+            byte[] originalData = System.IO.File.ReadAllBytes(uttFile);
+
+            editor.Load(uttFile, "newtransition9", ResourceType.UTT, originalData);
+
+            // Test various disarm DC values
+            int[] testValues = { 0, 10, 20, 30, 40 };
+            foreach (int val in testValues)
+            {
+                editor.DetectDcSpin.Should().NotBeNull("DisarmDcSpin should be initialized");
+                var disarmDcSpinField = typeof(UTTEditor).GetField("_disarmDcSpin", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                var disarmDcSpin = disarmDcSpinField?.GetValue(editor) as Avalonia.Controls.NumericUpDown;
+                disarmDcSpin.Should().NotBeNull("DisarmDcSpin should be initialized");
+                disarmDcSpin.Value = val;
+                disarmDcSpin.Value.Should().Be(val, "DisarmDcSpin value should be set correctly");
+
+                // Save and verify
+                var (data, _) = editor.Build();
+                var modifiedUtt = CSharpKOTOR.Resource.Generics.UTTAuto.ReadUtt(data);
+                modifiedUtt.TrapDisarmDc.Should().Be(val, $"TrapDisarmDc should be {val} after setting DisarmDcSpin to {val}");
+
+                // Load back and verify
+                editor.Load(uttFile, "newtransition9", ResourceType.UTT, data);
+                disarmDcSpin = disarmDcSpinField?.GetValue(editor) as Avalonia.Controls.NumericUpDown;
+                disarmDcSpin.Should().NotBeNull();
+                disarmDcSpin.Value.Should().Be(val);
+            }
+        }
     }
 }
