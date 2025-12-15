@@ -212,13 +212,7 @@ namespace Odyssey.Kotor.Components
         /// </summary>
         public bool Plot { get; set; }
 
-        /// <summary>
-        /// Open state (0=closed, 1=open, 2=destroyed).
-        /// Based on swkotor2.exe: OpenState field from UTD template (FUN_00580ed0 @ 0x00580ed0)
-        /// Located via string references: "OpenState" field in door GFF structure
-        /// Original implementation: 0=closed, 1=open, 2=destroyed, 3=locked (but locked is separate IsLocked flag)
-        /// </summary>
-        public int OpenState { get; set; }
+        // OpenState property is defined above (line 103)
 
         /// <summary>
         /// Whether this door is a module transition.
