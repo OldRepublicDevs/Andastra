@@ -526,14 +526,20 @@ namespace HolocronToolset.NET.Editors
                 _utt.TrapOnce = _activateOnceCheckbox.IsChecked == true;
             }
             // Matching Python: utt.trap_detectable = self.ui.detectableCheckbox.isChecked()
-            _utt.TrapDetectable = _detectableCheckbox?.IsChecked ?? false;
+            if (_detectableCheckbox != null)
+            {
+                _utt.TrapDetectable = _detectableCheckbox.IsChecked == true;
+            }
             // Matching Python: utt.trap_detect_dc = self.ui.detectDcSpin.value()
             if (_detectDcSpin != null)
             {
                 _utt.TrapDetectDc = (int)_detectDcSpin.Value;
             }
             // Matching Python: utt.trap_disarmable = self.ui.disarmableCheckbox.isChecked()
-            _utt.TrapDisarmable = _disarmableCheckbox?.IsChecked ?? false;
+            if (_disarmableCheckbox != null)
+            {
+                _utt.TrapDisarmable = _disarmableCheckbox.IsChecked == true;
+            }
             // Matching Python: utt.trap_disarm_dc = self.ui.disarmDcSpin.value()
             if (_disarmDcSpin != null)
             {
