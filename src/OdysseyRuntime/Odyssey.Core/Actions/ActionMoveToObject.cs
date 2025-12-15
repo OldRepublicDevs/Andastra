@@ -13,10 +13,13 @@ namespace Odyssey.Core.Actions
     /// <remarks>
     /// Move To Object Action:
     /// - Based on swkotor2.exe movement action system
-    /// - Original implementation: Moves actor towards target object within specified range
+    /// - Original implementation: FUN_00508260 @ 0x00508260 (load ActionList from GFF)
+    /// - Located via string reference: "ActionList" @ 0x007bebdc, "MOVETO" @ 0x007b6b24
+    /// - Moves actor towards target object within specified range
     /// - Uses direct movement (no pathfinding) - follows target if it moves
-    /// - Faces target when within range
-    /// - Walk/run speed determined by entity stats
+    /// - Faces target when within range (Y-up: Atan2(Y, X) for 2D plane facing)
+    /// - Walk/run speed determined by entity stats (WalkSpeed/RunSpeed from appearance.2da)
+    /// - Action parameters stored as ActionId, GroupActionId, NumParams, Paramaters (Type/Value pairs)
     /// </remarks>
     public class ActionMoveToObject : ActionBase
     {
