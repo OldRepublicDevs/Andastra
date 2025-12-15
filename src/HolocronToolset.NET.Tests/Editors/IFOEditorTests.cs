@@ -181,6 +181,105 @@ namespace HolocronToolset.NET.Tests.Editors
             }
         }
 
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_ifo_editor.py:111-143
+        // Original: def test_ifo_editor_manipulate_entry_position(qtbot, installation: HTInstallation):
+        [Fact]
+        public void TestIfoEditorManipulateEntryPosition()
+        {
+            // Get installation if available (needed for some operations)
+            string k1Path = Environment.GetEnvironmentVariable("K1_PATH");
+            if (string.IsNullOrEmpty(k1Path))
+            {
+                k1Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k1Path) && System.IO.File.Exists(System.IO.Path.Combine(k1Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k1Path, "Test Installation", tsl: false);
+            }
+
+            var editor = new IFOEditor(null, installation);
+
+            editor.New();
+
+            // Test various positions
+            var testPositions = new[]
+            {
+                (0.0, 0.0, 0.0),
+                (10.5, 20.3, 5.0),
+                (-5.0, -10.0, 0.5),
+                (100.0, 200.0, 50.0),
+            };
+
+            foreach (var (x, y, z) in testPositions)
+            {
+                editor.EntryXSpin.Value = (decimal)x;
+                editor.EntryYSpin.Value = (decimal)y;
+                editor.EntryZSpin.Value = (decimal)z;
+                editor.OnValueChanged();
+
+                // Build and verify
+                var (data, _) = editor.Build();
+                var modifiedGff = GFF.FromBytes(data);
+                var modifiedIfo = CSharpKOTOR.Resource.Generics.IFOHelpers.ConstructIfo(modifiedGff);
+                Math.Abs(modifiedIfo.EntryX - (float)x).Should().BeLessThan(0.001f);
+                Math.Abs(modifiedIfo.EntryY - (float)y).Should().BeLessThan(0.001f);
+                Math.Abs(modifiedIfo.EntryZ - (float)z).Should().BeLessThan(0.001f);
+
+                // Load back and verify
+                editor.Load("test.ifo", "test", ResourceType.IFO, data);
+                if (editor.EntryXSpin.Value.HasValue)
+                    Math.Abs((float)editor.EntryXSpin.Value.Value - (float)x).Should().BeLessThan(0.001f);
+                if (editor.EntryYSpin.Value.HasValue)
+                    Math.Abs((float)editor.EntryYSpin.Value.Value - (float)y).Should().BeLessThan(0.001f);
+                if (editor.EntryZSpin.Value.HasValue)
+                    Math.Abs((float)editor.EntryZSpin.Value.Value - (float)z).Should().BeLessThan(0.001f);
+            }
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_ifo_editor.py:145-167
+        // Original: def test_ifo_editor_manipulate_entry_direction(qtbot, installation: HTInstallation):
+        [Fact]
+        public void TestIfoEditorManipulateEntryDirection()
+        {
+            // Get installation if available (needed for some operations)
+            string k1Path = Environment.GetEnvironmentVariable("K1_PATH");
+            if (string.IsNullOrEmpty(k1Path))
+            {
+                k1Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k1Path) && System.IO.File.Exists(System.IO.Path.Combine(k1Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k1Path, "Test Installation", tsl: false);
+            }
+
+            var editor = new IFOEditor(null, installation);
+
+            editor.New();
+
+            // Test various directions (radians)
+            var testDirections = new[] { 0.0, 1.57, 3.14, -1.57, -3.14159 };
+            foreach (var direction in testDirections)
+            {
+                editor.EntryDirSpin.Value = (decimal)direction;
+                editor.OnValueChanged();
+
+                // Build and verify
+                var (data, _) = editor.Build();
+                var modifiedGff = GFF.FromBytes(data);
+                var modifiedIfo = CSharpKOTOR.Resource.Generics.IFOHelpers.ConstructIfo(modifiedGff);
+                Math.Abs(modifiedIfo.EntryDirection - (float)direction).Should().BeLessThan(0.001f);
+
+                // Load back and verify
+                editor.Load("test.ifo", "test", ResourceType.IFO, data);
+                if (editor.EntryDirSpin.Value.HasValue)
+                    Math.Abs((float)editor.EntryDirSpin.Value.Value - (float)direction).Should().BeLessThan(0.001f);
+            }
+        }
+
         // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_ifo_editor.py:783-815
         // Original: def test_ifo_editor_load_from_test_files(qtbot, installation: HTInstallation, test_files_dir: Path):
         [Fact]
