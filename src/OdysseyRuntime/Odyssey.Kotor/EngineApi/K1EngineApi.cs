@@ -297,8 +297,8 @@ namespace Odyssey.Kotor.EngineApi
                 case 120: return Func_EffectDamageIncrease(args, ctx);
                 // ... more functions
 
-                // GetAbilityScore (routine 139)
-                case 139: return Func_GetAbilityScore(args, ctx);
+                // GetAbility (routine 139)
+                case 139: return Func_GetAbility(args, ctx);
                 
                 // GetItemInSlot (routine 155)
                 case 155: return Func_GetItemInSlot(args, ctx);
@@ -3639,7 +3639,7 @@ namespace Odyssey.Kotor.EngineApi
         }
 
         /// <summary>
-        /// GetAbilityScore(object oCreature=OBJECT_SELF, int nAbilityType) - returns ability score
+        /// GetAbility(object oCreature=OBJECT_SELF, int nAbilityType) - returns ability score
         /// </summary>
         /// <remarks>
         /// Based on swkotor2.exe: D20 ability score system
@@ -3651,9 +3651,9 @@ namespace Odyssey.Kotor.EngineApi
         /// Modifiers: Effects, equipment, feats can modify ability scores
         /// Returns: Ability score value (1-50 typically) or 0 if entity is invalid
         /// </remarks>
-        private Variable Func_GetAbilityScore(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        private Variable Func_GetAbility(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
-            // GetAbilityScore(object oCreature, int nAbilityType)
+            // GetAbility(object oCreature, int nAbilityType)
             // nAbilityType: ABILITY_STRENGTH (0), ABILITY_DEXTERITY (1), ABILITY_CONSTITUTION (2),
             //              ABILITY_INTELLIGENCE (3), ABILITY_WISDOM (4), ABILITY_CHARISMA (5)
             uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
@@ -6662,7 +6662,7 @@ namespace Odyssey.Kotor.EngineApi
                             if (stats != null)
                             {
                                 // Get strength ability score (0=Strength in D20 system)
-                                strengthScore = stats.GetAbilityScore(0); // 0 = Strength
+                                strengthScore = stats.GetAbility(0); // 0 = Strength
                                 strengthModifier = (strengthScore - 10) / 2; // D20 ability modifier formula
                             }
                         }
@@ -6686,7 +6686,7 @@ namespace Odyssey.Kotor.EngineApi
 
                             // If door was destroyed (bashed open), it's already unlocked and opened by ApplyDamage
                             // Fire OnDamaged script event if door still exists
-                            if (doorComponent.CurrentHP > 0 && ctx.World != null && ctx.World.EventBus != null)
+                            if (doorComponent.HitPoints > 0 && ctx.World != null && ctx.World.EventBus != null)
                             {
                                 ctx.World.EventBus.FireScriptEvent(door, Core.Enums.ScriptEvent.OnDamaged, ctx.Caller);
                             }
