@@ -560,6 +560,19 @@ namespace Odyssey.Core.Party
         }
 
         /// <summary>
+        /// Sets influence with a party member (K2 only).
+        /// </summary>
+        public void SetInfluence(PartyMember member, int influence)
+        {
+            if (member == null || member.IsPlayerCharacter)
+            {
+                return;
+            }
+
+            member.Influence = Math.Max(0, Math.Min(100, influence));
+        }
+
+        /// <summary>
         /// Modifies influence with a party member (K2 only).
         /// </summary>
         public void ModifyInfluence(PartyMember member, int delta)

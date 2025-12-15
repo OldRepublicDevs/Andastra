@@ -660,12 +660,21 @@ namespace Odyssey.Scripting.EngineApi
             // Returns influence value for NPC (0-100)
             int npcIndex = args.Count > 0 ? args[0].AsInt() : 0;
             
-            // Access PartySystem through GameSession
-            if (ctx.AdditionalContext is GameSession.GameServicesContext services && services.GameSession != null)
+            // Get NPC entity from PartyManager
+            if (ctx.AdditionalContext is GameSession.GameServicesContext services && services.PartyManager != null)
             {
-                // TODO: Expose PartySystem through GameServicesContext for influence tracking
-                // For now, return default neutral influence
-                // Full implementation would use: services.GameSession.PartySystem.GetInfluence(member)
+                IEntity member = services.PartyManager.GetAvailableMember(npcIndex);
+                if (member != null)
+                {
+                    // Get influence from entity data (stored as "Influence")
+                    if (member.HasData("Influence"))
+                    {
+                        int influence = member.GetData<int>("Influence", 50);
+                        return Variable.FromInt(influence);
+                    }
+                    // Default to neutral if not set
+                    return Variable.FromInt(50);
+                }
             }
             return Variable.FromInt(50); // Default neutral influence
         }
@@ -679,11 +688,15 @@ namespace Odyssey.Scripting.EngineApi
             // Clamp influence to valid range (0-100)
             influence = Math.Max(0, Math.Min(100, influence));
             
-            // Access PartySystem through GameSession
-            if (ctx.AdditionalContext is GameSession.GameServicesContext services && services.GameSession != null)
+            // Get NPC entity from PartyManager and set influence
+            if (ctx.AdditionalContext is GameSession.GameServicesContext services && services.PartyManager != null)
             {
-                // TODO: Expose PartySystem through GameServicesContext for influence tracking
-                // Full implementation would use: services.GameSession.PartySystem.SetInfluence(member, influence)
+                IEntity member = services.PartyManager.GetAvailableMember(npcIndex);
+                if (member != null)
+                {
+                    // Store influence in entity data
+                    member.SetData("Influence", influence);
+                }
             }
             return Variable.Void();
         }
@@ -694,11 +707,17 @@ namespace Odyssey.Scripting.EngineApi
             int npcIndex = args.Count > 0 ? args[0].AsInt() : 0;
             int modifier = args.Count > 1 ? args[1].AsInt() : 0;
             
-            // Access PartySystem through GameSession
-            if (ctx.AdditionalContext is GameSession.GameServicesContext services && services.GameSession != null)
+            // Get NPC entity from PartyManager and modify influence
+            if (ctx.AdditionalContext is GameSession.GameServicesContext services && services.PartyManager != null)
             {
-                // TODO: Expose PartySystem through GameServicesContext for influence tracking
-                // Full implementation would use: services.GameSession.PartySystem.ModifyInfluence(member, modifier)
+                IEntity member = services.PartyManager.GetAvailableMember(npcIndex);
+                if (member != null)
+                {
+                    // Get current influence (default to 50 if not set)
+                    int currentInfluence = member.GetData<int>("Influence", 50);
+                    int newInfluence = Math.Max(0, Math.Min(100, currentInfluence + modifier));
+                    member.SetData("Influence", newInfluence);
+                }
             }
             return Variable.Void();
         }
