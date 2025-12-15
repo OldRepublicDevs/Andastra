@@ -398,9 +398,8 @@ namespace Odyssey.Kotor.Game
                 {
                     actionQueue.Clear();
                     // Use ActionUseObject to interact with placeable (moves to use point and triggers OnUsed script)
-                    // ActionUseObject doesn't exist yet - use ActionMoveToObject as placeholder
-                    // TODO: Implement ActionUseObject for placeable interaction
-                    actionQueue.Add(new ActionMoveToObject(placeable.ObjectId));
+                    // Use ActionUseObject to interact with placeable (moves to use point and triggers OnUsed script)
+                    actionQueue.Add(new ActionUseObject(placeable.ObjectId));
                 }
             }
             else
