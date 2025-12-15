@@ -28,6 +28,28 @@ namespace Odyssey.Kotor.Components
     /// - Original implementation: FUN_005226d0 @ 0x005226d0 (save creature data to GFF)
     /// - FUN_004dfbb0 @ 0x004dfbb0 (load creature instances from GIT)
     /// - FUN_005261b0 @ 0x005261b0 (load creature from UTC template)
+    /// - FUN_0050c510 @ 0x0050c510 (load creature script hooks from GFF)
+    ///   - Original implementation (from decompiled FUN_0050c510):
+    ///     - Function signature: `void FUN_0050c510(void *this, void *param_1, uint *param_2)`
+    ///     - param_1: GFF structure pointer
+    ///     - param_2: GFF field pointer
+    ///     - Reads script ResRef fields from GFF and stores at offsets in creature object:
+    ///       - "ScriptHeartbeat" @ this + 0x270 (OnHeartbeat script)
+    ///       - "ScriptOnNotice" @ this + 0x278 (OnPerception script)
+    ///       - "ScriptSpellAt" @ this + 0x280 (OnSpellCastAt script)
+    ///       - "ScriptAttacked" @ this + 0x288 (OnAttacked script)
+    ///       - "ScriptDamaged" @ this + 0x290 (OnDamaged script)
+    ///       - "ScriptDisturbed" @ this + 0x298 (OnDisturbed script)
+    ///       - "ScriptEndRound" @ this + 0x2a0 (OnEndRound script)
+    ///       - "ScriptDialogue" @ this + 0x2a8 (OnDialogue script)
+    ///       - "ScriptSpawn" @ this + 0x2b0 (OnSpawn script)
+    ///       - "ScriptRested" @ this + 0x2b8 (OnRested script)
+    ///       - "ScriptDeath" @ this + 0x2c0 (OnDeath script)
+    ///       - "ScriptUserDefine" @ this + 0x2c8 (OnUserDefined script)
+    ///       - "ScriptOnBlocked" @ this + 0x2d0 (OnBlocked script)
+    ///       - "ScriptEndDialogue" @ this + 0x2d8 (OnEndDialogue script)
+    ///     - Uses FUN_00412f30 to read GFF string fields, FUN_00630c50 to store strings
+    ///     - Script hooks stored as ResRef strings (16 bytes, null-terminated)
     /// - Creatures have appearance, stats, equipment, classes, feats, force powers
     /// - Based on UTC file format (GFF with "UTC " signature)
     /// - Script events: OnHeartbeat, OnPerception, OnAttacked, OnDamaged, OnDeath, etc.
