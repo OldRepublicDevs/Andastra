@@ -20,6 +20,15 @@ namespace Odyssey.Kotor.Systems
     /// - Based on swkotor2.exe AI system
     /// - Located via string references: "OnHeartbeat" @ 0x007c1f60, "OnPerception" @ 0x007c1f64
     /// - "OnCombatRoundEnd" @ 0x007c1f68, "OnDamaged" @ 0x007c1f6c, "OnDeath" @ 0x007c1f70
+    /// - AI state: "PT_AISTATE" @ 0x007c1768 (party AI state in PARTYTABLE), "AISTATE" @ 0x007c81f8, "AIState" @ 0x007c4090
+    /// - AI scripts: "aiscripts" @ 0x007c4fd0 (AI script directory/resource)
+    /// - Pathfinding errors:
+    ///   - "?The Path find has Failed... Why?" @ 0x007c055f
+    ///   - "Bailed the desired position is unsafe." @ 0x007c0584
+    ///   - "    failed to grid based pathfind from the creatures position to the starting path point." @ 0x007be510
+    ///   - "    failed to grid based pathfind from the ending path point ot the destiantion." @ 0x007be4b8
+    /// - Script hooks: "k_def_pathfail01" @ 0x007c52fc (pathfinding failure script example)
+    /// - Debug: "    AI Level: " @ 0x007cb174 (AI level debug display)
     /// - Original implementation: FUN_004eb750 @ 0x004eb750 (creature AI update loop)
     /// - FUN_005226d0 @ 0x005226d0 (process heartbeat scripts), FUN_004dfbb0 @ 0x004dfbb0 (perception checks)
     /// - AI operates through action queue population based on perception and scripts
