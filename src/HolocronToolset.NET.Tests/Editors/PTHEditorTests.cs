@@ -768,5 +768,34 @@ namespace HolocronToolset.NET.Tests.Editors
                 // but verify the method doesn't throw
             }
         }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_pth_editor.py:451-462
+        // Original: def test_pth_editor_signal_connections(qtbot, installation: HTInstallation):
+        [Fact]
+        public void TestPthEditorSignalConnections()
+        {
+            // Get installation if available
+            string k1Path = Environment.GetEnvironmentVariable("K1_PATH");
+            if (string.IsNullOrEmpty(k1Path))
+            {
+                k1Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k1Path) && System.IO.File.Exists(System.IO.Path.Combine(k1Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k1Path, "Test Installation", tsl: false);
+            }
+
+            var editor = new PTHEditor(null, installation);
+
+            // Verify renderArea signals exist
+            editor.RenderArea.Should().NotBeNull("RenderArea should be initialized");
+            editor.RenderArea.SigMousePressed.Should().NotBeNull("sig_mouse_pressed should exist");
+            editor.RenderArea.SigMouseMoved.Should().NotBeNull("sig_mouse_moved should exist");
+            editor.RenderArea.SigMouseScrolled.Should().NotBeNull("sig_mouse_scrolled should exist");
+            editor.RenderArea.SigMouseReleased.Should().NotBeNull("sig_mouse_released should exist");
+            editor.RenderArea.SigKeyPressed.Should().NotBeNull("sig_key_pressed should exist");
+        }
     }
 }
