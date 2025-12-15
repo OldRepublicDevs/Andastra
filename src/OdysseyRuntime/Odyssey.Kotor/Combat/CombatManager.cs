@@ -661,7 +661,11 @@ namespace Odyssey.Kotor.Combat
                 if (killerStats.CanLevelUp())
                 {
                     Console.WriteLine("[CombatManager] " + killer.Tag + " can level up! (Level " + oldLevel + " -> " + (oldLevel + 1) + ")");
-                    // TODO: Fire OnLevelUp script event or show level up UI
+                    // Fire OnPlayerLevelUp script event
+                    if (_world != null && _world.EventBus != null)
+                    {
+                        _world.EventBus.FireScriptEvent(killer, ScriptEvent.OnPlayerLevelUp, killer);
+                    }
                 }
             }
         }

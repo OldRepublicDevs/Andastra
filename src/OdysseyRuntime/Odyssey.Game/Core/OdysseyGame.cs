@@ -8,6 +8,7 @@ using Odyssey.Kotor.Game;
 using Odyssey.Scripting.EngineApi;
 using Odyssey.Scripting.VM;
 using Odyssey.Core.Entities;
+using Odyssey.Core.Enums;
 using JetBrains.Annotations;
 using CSharpKOTOR.Common;
 using CSharpKOTOR.Installation;
@@ -2102,8 +2103,30 @@ namespace Odyssey.Game.Core
                 }
             }
 
-            // TODO: Execute trigger scripts (OnEnter, OnExit, OnHeartbeat)
-            // TODO: Handle trap triggers
+            // Fire OnClick script event for trigger
+            if (_world != null && _world.EventBus != null)
+            {
+                IEntity playerEntity = _session != null ? _session.PlayerEntity : null;
+                _world.EventBus.FireScriptEvent(triggerEntity, ScriptEvent.OnClick, playerEntity);
+            }
+
+            // Handle trap triggers
+            if (triggerComponent.IsTrap && triggerComponent.TrapActive && !triggerComponent.TrapDisarmed)
+            {
+                // Check if trap should trigger (one-shot traps that already fired should not trigger again)
+                if (triggerComponent.TrapOneShot && triggerComponent.HasFired)
+                {
+                    return;
+                }
+
+                // Fire OnTrapTriggered script event
+                if (_world != null && _world.EventBus != null)
+                {
+                    IEntity playerEntity = _session != null ? _session.PlayerEntity : null;
+                    _world.EventBus.FireScriptEvent(triggerEntity, ScriptEvent.OnTrapTriggered, playerEntity);
+                    triggerComponent.HasFired = true;
+                }
+            }
         }
 
         /// <summary>
