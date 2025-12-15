@@ -12,13 +12,19 @@ namespace Odyssey.Kotor.Data
     /// <remarks>
     /// Game Data Manager:
     /// - Based on swkotor2.exe 2DA table loading system
-    /// - Located via string references: 2DA file loading functions handle game data tables
+    /// - Located via string references: "2DAName" @ 0x007c3980, " 2DA file" @ 0x007c4674
+    /// - Error messages: "CSWClass::LoadFeatGain: can't load featgain.2da" @ 0x007c46bc
+    /// - "CSWClass::LoadFeatTable: Can't load feat.2da" @ 0x007c4720
+    /// - "CSWClass::LoadSkillsTable: Can't load skills.2da" @ 0x007c47ac
+    /// - "CSWClass::LoadSpellsTable: Can't load spells.2da" @ 0x007c4918
+    /// - "CLASSES" @ 0x007c2ba4, "Appearance_Type" @ 0x007c40f0
     /// - Original implementation: Loads and caches 2DA (two-dimensional array) data files
     /// - Key 2DA tables:
-    ///   - appearance.2da: Creature appearance definitions
+    ///   - appearance.2da: Creature appearance definitions (Appearance_Type field)
     ///   - baseitems.2da: Item base types and properties
-    ///   - classes.2da: Character class definitions
+    ///   - classes.2da: Character class definitions (CLASSES)
     ///   - feat.2da: Feat definitions
+    ///   - featgain.2da: Feat gain progression
     ///   - spells.2da: Force power definitions
     ///   - skills.2da: Skill definitions
     ///   - surfacemat.2da: Walkmesh surface materials
