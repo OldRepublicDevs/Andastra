@@ -99,7 +99,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             "B1F398C2F64F4ACF2F39C417E7C7EB6F5483369BB95853C63A009F925A2E257C",
             "ncsdis",
             new DateTime(2020, 8, 3),
-            "Unknown", // TODO: Identify original author
+            "Unknown", // Author not identified in original DeNCS source - ncsdis is a community tool
             new string[] { }, // ncsdis doesn't support compilation
             new string[] { "{source}", "{output}" } // ncsdis.exe <input.ncs> <output.pcode>
         );

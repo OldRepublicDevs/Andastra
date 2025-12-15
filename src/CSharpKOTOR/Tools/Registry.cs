@@ -505,11 +505,20 @@ namespace CSharpKOTOR.Tools
         // Original: def __exit__(self, exc_type, exc_val, exc_tb):
         public void Dispose()
         {
-            if (_wasModified && _originalValue != null && _spoofedPath != _originalValue)
+            if (_wasModified)
             {
-                Registry.SetRegistryKeyValue(_registryPath, _key, _originalValue);
+                if (_originalValue != null && _spoofedPath != _originalValue)
+                {
+                    // Restore original value
+                    Registry.SetRegistryKeyValue(_registryPath, _key, _originalValue);
+                }
+                else if (_originalValue == null)
+                {
+                    // Registry key didn't exist originally - set to empty string to clean up
+                    // Note: Deleting registry keys is complex and risky, so we set to empty string instead
+                    Registry.SetRegistryKeyValue(_registryPath, _key, "");
+                }
             }
-            // TODO: Determine what to do if the regpath never existed, as deleting it isn't easy. Set it to ""?
         }
     }
 

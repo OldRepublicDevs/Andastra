@@ -2398,7 +2398,8 @@ namespace CSharpKOTOR.Formats.NCS.Compiler.NSS
                     if (strVal.Length >= 2 && strVal[0] == '"' && strVal[strVal.Length - 1] == '"')
                     {
                         strVal = strVal.Substring(1, strVal.Length - 2);
-                        // TODO: unescape string
+                        // Unescape string: handle common escape sequences (\n, \t, \r, \\, \", \', \0)
+                        strVal = UnescapeString(strVal);
                     }
                     return new StringExpression(strVal);
             }
@@ -2414,6 +2415,71 @@ namespace CSharpKOTOR.Formats.NCS.Compiler.NSS
                 return true;
             }
             return false;
+        }
+
+        /// <summary>
+        /// Unescapes a string literal by processing escape sequences.
+        /// Handles common C-style escape sequences: \n, \t, \r, \\, \", \', \0
+        /// </summary>
+        /// <param name="str">The string to unescape</param>
+        /// <returns>The unescaped string</returns>
+        private string UnescapeString(string str)
+        {
+            if (string.IsNullOrEmpty(str))
+            {
+                return str;
+            }
+
+            var result = new System.Text.StringBuilder(str.Length);
+            for (int i = 0; i < str.Length; i++)
+            {
+                if (str[i] == '\\' && i + 1 < str.Length)
+                {
+                    char next = str[i + 1];
+                    switch (next)
+                    {
+                        case 'n':
+                            result.Append('\n');
+                            i++; // Skip the 'n'
+                            break;
+                        case 't':
+                            result.Append('\t');
+                            i++; // Skip the 't'
+                            break;
+                        case 'r':
+                            result.Append('\r');
+                            i++; // Skip the 'r'
+                            break;
+                        case '\\':
+                            result.Append('\\');
+                            i++; // Skip the second '\'
+                            break;
+                        case '"':
+                            result.Append('"');
+                            i++; // Skip the '"'
+                            break;
+                        case '\'':
+                            result.Append('\'');
+                            i++; // Skip the '\''
+                            break;
+                        case '0':
+                            result.Append('\0');
+                            i++; // Skip the '0'
+                            break;
+                        default:
+                            // Unknown escape sequence, keep as-is
+                            result.Append('\\');
+                            result.Append(next);
+                            i++; // Skip the next character
+                            break;
+                    }
+                }
+                else
+                {
+                    result.Append(str[i]);
+                }
+            }
+            return result.ToString();
         }
 
         private bool CheckSeparator(NssSeparators sep)
