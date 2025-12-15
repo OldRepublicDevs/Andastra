@@ -52,6 +52,9 @@ namespace Odyssey.Kotor.Combat
     /// Combat System Overview:
     /// - Based on swkotor2.exe combat system
     /// - Located via string references: "CombatRoundData" @ 0x007bf6b4, "CombatInfo" @ 0x007c2e60
+    /// - "InCombatHPBase" @ 0x007bf224, "OutOfCombatHPBase" @ 0x007bf210, "InCombatFPBase" @ 0x007bf4fc
+    /// - "CombatAnimations" @ 0x007c4ea4, "Combat Movement" @ 0x007c8670, "Combat_Round" @ 0x007cb318
+    /// - "End Of Combat Round" @ 0x007c843c, "CSWSCombatRound" debug strings (timer management, slave/master tracking)
     /// - Combat round functions: FUN_005226d0 @ 0x005226d0 (combat round management)
     /// - Combat info functions: FUN_005d9670 @ 0x005d9670, FUN_005d7fc0 @ 0x005d7fc0
     /// - Attack event: "EVENT_ON_MELEE_ATTACKED" @ 0x007bccf4, "ScriptAttacked" @ 0x007bee80

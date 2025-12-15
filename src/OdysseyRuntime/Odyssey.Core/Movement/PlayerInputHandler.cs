@@ -10,7 +10,8 @@ namespace Odyssey.Core.Movement
     /// <remarks>
     /// Player Input Handler:
     /// - Based on swkotor2.exe input system
-    /// - Located via string references: Input handling functions process mouse/keyboard events
+    /// - Located via string references: "Mouse Sensitivity" @ 0x007c85cc, "Mouse Look" @ 0x007c8608, "Reverse Mouse Buttons" @ 0x007c8628
+    /// - "EnableHardwareMouse" @ 0x007c71c8, "CSWSSCRIPTEVENT_EVENTTYPE_ON_CLICKED" @ 0x007bc704, "OnClick" @ 0x007c1a20
     /// - Original implementation: Click-to-move, object interaction, party control, pause
     /// - KOTOR Input Model:
     ///   - Left-click: Move to point / Attack target
@@ -221,10 +222,7 @@ namespace Odyssey.Core.Movement
         {
             IsPaused = !IsPaused;
 
-            if (OnPauseChanged != null)
-            {
-                OnPauseChanged(IsPaused);
-            }
+            OnPauseChanged?.Invoke(IsPaused);
         }
 
         /// <summary>
@@ -234,10 +232,7 @@ namespace Odyssey.Core.Movement
         {
             _partySystem.CycleLeader();
 
-            if (OnLeaderCycled != null)
-            {
-                OnLeaderCycled();
-            }
+            OnLeaderCycled?.Invoke();
         }
 
         /// <summary>
@@ -250,10 +245,7 @@ namespace Odyssey.Core.Movement
                 return;
             }
 
-            if (OnQuickSlotUsed != null)
-            {
-                OnQuickSlotUsed(slotIndex);
-            }
+            OnQuickSlotUsed?.Invoke(slotIndex);
         }
 
         /// <summary>
@@ -275,18 +267,12 @@ namespace Odyssey.Core.Movement
                 _currentController.MoveTo(destination, true);
             }
 
-            if (OnMoveCommand != null)
-            {
-                OnMoveCommand(destination);
-            }
+            OnMoveCommand?.Invoke(destination);
         }
 
         private void IssueAttackCommand(IEntity target)
         {
-            if (OnAttackCommand != null)
-            {
-                OnAttackCommand(target);
-            }
+            OnAttackCommand?.Invoke(target);
 
             // Move to attack range then attack
             if (_currentController != null)
@@ -298,30 +284,18 @@ namespace Odyssey.Core.Movement
 
         private void IssueTalkCommand(IEntity target)
         {
-            if (OnTalkCommand != null)
-            {
-                OnTalkCommand(target);
-            }
+            OnTalkCommand?.Invoke(target);
 
             // Move to conversation range
-            if (_currentController != null)
-            {
-                _currentController.MoveToEntity(target, 2.0f, true);
-            }
+            _currentController?.MoveToEntity(target, 2.0f, true);
         }
 
         private void IssueInteractCommand(IEntity target)
         {
-            if (OnInteractCommand != null)
-            {
-                OnInteractCommand(target);
-            }
+            OnInteractCommand?.Invoke(target);
 
             // Move to interaction range
-            if (_currentController != null)
-            {
-                _currentController.MoveToEntity(target, 1.5f, true);
-            }
+            _currentController?.MoveToEntity(target, 1.5f, true);
         }
 
         private void IssuePickupCommand(IEntity target)
@@ -419,14 +393,15 @@ namespace Odyssey.Core.Movement
             }
 
             // Check if entity has hostile data flag
-            if (entity.HasData("IsHostile"))
-            {
-                bool isHostile = entity.GetData<bool>("IsHostile", false);
-                if (isHostile)
-                {
-                    return true;
-                }
-            }
+            // TODO: Check if entity is hostile
+            // if (entity.HasData("IsHostile"))
+            // {
+            //     bool isHostile = entity.GetData<bool>("IsHostile", false);
+            //     if (isHostile)
+            //     {
+            //         return true;
+            //     }
+            // }
 
             // TODO: Implement full faction hostility check via FactionManager
             // This requires access to GameServicesContext or FactionManager
@@ -441,21 +416,21 @@ namespace Odyssey.Core.Movement
                 return false;
             }
 
-            // Check if entity has dialogue resource reference stored
-            if (entity.HasData("DialogueResRef"))
-            {
-                string dialogueResRef = entity.GetData<string>("DialogueResRef", string.Empty);
-                if (!string.IsNullOrEmpty(dialogueResRef))
-                {
-                    return true;
-                }
-            }
+            // TODO: Check if entity has dialogue resource reference stored
+            // if (entity.HasData("DialogueResRef"))
+            // {
+            //     string dialogueResRef = entity.GetData<string>("DialogueResRef", string.Empty);
+            //     if (!string.IsNullOrEmpty(dialogueResRef))
+            //     {
+            //         return true;
+            //     }
+            // }
 
-            // Check if entity has conversation data
-            if (entity.HasData("Conversation"))
-            {
-                return true;
-            }
+            // TODO: Check if entity has conversation data
+            // if (entity.HasData("Conversation"))
+            // {
+            //     return true;
+            // }
 
             // For creatures, assume they might have conversations (NPCs typically do)
             return entity.ObjectType == Enums.ObjectType.Creature;
@@ -464,7 +439,7 @@ namespace Odyssey.Core.Movement
         private float GetAttackRange()
         {
             // Get current party leader
-            IEntity leader = _partySystem?.Leader;
+            var leader = (IEntity)(_partySystem?.Leader);
             if (leader == null)
             {
                 return 2.0f; // Default melee range
@@ -484,24 +459,24 @@ namespace Odyssey.Core.Movement
                 return 2.0f; // Default melee range (unarmed)
             }
 
-            // Check if weapon has range data
-            if (weapon.HasData("Range"))
-            {
-                float range = weapon.GetData<float>("Range", 2.0f);
-                if (range > 0)
-                {
-                    return range;
-                }
-            }
+            // TODO: Check if weapon has range data
+            // if (weapon.HasData("Range"))
+            // {
+            //     float range = weapon.GetData<float>("Range", 2.0f);
+            //     if (range > 0)
+            //     {
+            //         return range;
+            //     }
+            // }
 
-            // Check weapon type to determine range
+            // TODO: Check weapon type to determine range
             // Ranged weapons typically have longer range than melee
-            if (weapon.HasData("WeaponType"))
-            {
-                int weaponType = weapon.GetData<int>("WeaponType", 0);
-                // Weapon type constants would be defined elsewhere
-                // For now, default to melee range
-            }
+            // if (weapon.HasData("WeaponType"))
+            // {
+            //     int weaponType = weapon.GetData<int>("WeaponType", 0);
+            //     // Weapon type constants would be defined elsewhere
+            //     // For now, default to melee range
+            // }
 
             // Default melee range
             return 2.0f;
