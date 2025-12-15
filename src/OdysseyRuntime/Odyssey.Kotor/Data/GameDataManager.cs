@@ -19,6 +19,10 @@ namespace Odyssey.Kotor.Data
     /// - "CSWClass::LoadSpellsTable: Can't load spells.2da" @ 0x007c4918
     /// - "CLASSES" @ 0x007c2ba4, "Appearance_Type" @ 0x007c40f0
     /// - Original implementation: Loads and caches 2DA (two-dimensional array) data files
+    /// - 2DA file format: Tab-separated text file with row labels and column headers
+    /// - Table lookup: Uses row label (string) or row index (int) to access data
+    /// - Column access: Column names are case-insensitive (e.g., "ModelA", "modela" both work)
+    /// - Table caching: Caches loaded tables in memory to avoid redundant file reads
     /// - Key 2DA tables:
     ///   - appearance.2da: Creature appearance definitions (Appearance_Type field)
     ///   - baseitems.2da: Item base types and properties
