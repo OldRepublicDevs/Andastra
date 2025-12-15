@@ -96,12 +96,15 @@ namespace Odyssey.Core.Actions
             if (doorState != null)
             {
                 doorState.IsOpen = false;
+                doorState.AnimationState = 0; // Closed state
 
-                // Fire closed event
-                // Original engine: Fires EVENT_CLOSE_OBJECT event, then executes OnClosed script
+                // Fire OnClose script event
+                // Based on swkotor2.exe: EVENT_CLOSE_OBJECT fires OnClose script event
+                // Located via string references: "EVENT_CLOSE_OBJECT" @ 0x007bcdb4 (case 6), "CSWSSCRIPTEVENT_EVENTTYPE_ON_CLOSE" @ 0x007bc820 (0x17)
                 IEventBus eventBus = actor.World.EventBus;
                 if (eventBus != null)
                 {
+                    eventBus.FireScriptEvent(door, ScriptEvent.OnClose, actor);
                     eventBus.Publish(new DoorClosedEvent { Actor = actor, Door = door });
                 }
             }

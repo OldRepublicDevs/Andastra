@@ -99,21 +99,28 @@ namespace Odyssey.Core.Actions
             {
                 if (doorState.IsLocked)
                 {
-                    // Fire locked door event
+                    // Fire OnLocked script event
+                    // Based on swkotor2.exe: EVENT_LOCK_OBJECT fires OnLocked script event
+                    // Located via string references: "EVENT_LOCK_OBJECT" @ 0x007bcd20 (case 0xd), "CSWSSCRIPTEVENT_EVENTTYPE_ON_LOCKED" @ 0x007bc754 (0x1c)
                     IEventBus eventBus = actor.World.EventBus;
                     if (eventBus != null)
                     {
+                        eventBus.FireScriptEvent(door, ScriptEvent.OnLocked, actor);
                         eventBus.Publish(new DoorLockedEvent { Actor = actor, Door = door });
                     }
                     return ActionStatus.Failed;
                 }
 
                 doorState.IsOpen = true;
+                doorState.AnimationState = 1; // Open state
 
-                // Fire opened event
+                // Fire OnOpen script event
+                // Based on swkotor2.exe: EVENT_OPEN_OBJECT fires OnOpen script event
+                // Located via string references: "EVENT_OPEN_OBJECT" @ 0x007bcda0 (case 7), "CSWSSCRIPTEVENT_EVENTTYPE_ON_OPEN" @ 0x007bc844 (0x16)
                 IEventBus eventBus2 = actor.World.EventBus;
                 if (eventBus2 != null)
                 {
+                    eventBus2.FireScriptEvent(door, ScriptEvent.OnOpen, actor);
                     eventBus2.Publish(new DoorOpenedEvent { Actor = actor, Door = door });
                 }
 
