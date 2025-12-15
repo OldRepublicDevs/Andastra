@@ -2903,10 +2903,23 @@ namespace Odyssey.Kotor.EngineApi
             }
 
             // Track spell target for GetSpellTargetObject
+            // Based on swkotor2.exe: GetSpellTargetObject returns last target of spell cast by caller
+            // Located via string references: Spell target tracking for script queries
+            // Original implementation: Stores target entity ID when spell is cast
             if (targetId != ObjectInvalid)
             {
                 _lastSpellTargets[ctx.Caller.ObjectId] = targetId;
+                
+                // Track spell caster for GetLastSpellCaster (target can query who cast spell on them)
+                // Based on swkotor2.exe: GetLastSpellCaster returns caster entity that last cast spell on caller
+                // Original implementation: Stores caster entity ID on target when spell is cast
+                _lastSpellCasters[targetId] = ctx.Caller.ObjectId;
             }
+
+            // Track spell ID for GetSpellId
+            // Based on swkotor2.exe: GetSpellId returns last spell ID cast by caller
+            // Original implementation: Stores spell ID when spell is cast
+            _lastSpellIds[ctx.Caller.ObjectId] = spellId;
 
             // Track metamagic type for GetMetaMagicFeat
             if (metamagic != 0)
@@ -5787,11 +5800,9 @@ namespace Odyssey.Kotor.EngineApi
             // Access ModuleLoader via GameServicesContext to get EntityFactory
             if (ctx is VMExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
             {
-                // TODO: EntityFactory is not yet implemented in ModuleLoader
-                // if (services.ModuleLoader is Odyssey.Kotor.Loading.ModuleLoader moduleLoader)
-                if (false)
+                if (services.ModuleLoader is Odyssey.Kotor.Game.ModuleLoader moduleLoader)
                 {
-                    CSharpKOTOR.Common.Module csharpKotorModule = null; // moduleLoader.GetCSharpKotorModule();
+                    CSharpKOTOR.Common.Module csharpKotorModule = moduleLoader.GetCSharpKotorModule();
                     if (csharpKotorModule == null)
                     {
                         return Variable.FromObject(ObjectInvalid);
