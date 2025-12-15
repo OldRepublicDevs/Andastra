@@ -10,6 +10,18 @@ namespace Odyssey.Core.Interfaces
     /// <summary>
     /// Core entity container and world state.
     /// </summary>
+    /// <remarks>
+    /// World Interface:
+    /// - Based on swkotor2.exe world management system
+    /// - Located via string references: "ObjectId" @ 0x007bce5c, "ObjectIDList" @ 0x007bfd7c, "Tag" (various locations)
+    /// - Original engine maintains entity lists by ObjectId, Tag, and ObjectType
+    /// - Entity lookup: GetEntityByTag searches by tag string (case-insensitive), nth parameter for multiple entities with same tag
+    /// - ObjectId is unique 32-bit identifier assigned sequentially (see FUN_005226d0 @ 0x005226d0 for entity serialization)
+    /// - World manages current area/module, time (ITimeManager), events (IEventBus), delay scheduler (IDelayScheduler), and effect system
+    /// - CreateEntity: Creates new entity from template or ObjectType, assigns ObjectId automatically
+    /// - DestroyEntity: Removes entity from world and cleans up all components
+    /// - GetEntitiesInRadius: Spatial query with optional ObjectType filter mask
+    /// </remarks>
     public interface IWorld
     {
         /// <summary>

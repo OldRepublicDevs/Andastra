@@ -6,6 +6,17 @@ namespace Odyssey.Core.Interfaces
     /// <summary>
     /// Represents a game area (module area) with rooms and objects.
     /// </summary>
+    /// <remarks>
+    /// Area Interface:
+    /// - Based on swkotor2.exe area system
+    /// - Located via string references: Area loading and management functions
+    /// - Original implementation: Areas loaded from ARE (area properties) and GIT (instances) files
+    /// - ARE file format: GFF with "ARE " signature containing area static properties
+    /// - GIT file format: GFF with "GIT " signature containing dynamic object instances
+    /// - Areas contain entities (creatures, doors, placeables, triggers, waypoints, sounds)
+    /// - Navigation mesh (walkmesh) provides pathfinding and collision detection
+    /// - Based on ARE/GIT file format documentation in vendor/PyKotor/wiki/
+    /// </remarks>
     public interface IArea
     {
         /// <summary>
