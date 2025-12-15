@@ -10,18 +10,31 @@ namespace Odyssey.Content.Save
     /// </summary>
     /// <remarks>
     /// KOTOR Save Structure:
-    /// - Based on swkotor2.exe: FUN_004eb750 @ 0x004eb750, FUN_00708990 @ 0x00708990
-    /// - Located via string reference: "SAVES:" @ 0x007be284, "savenfo" @ 0x007be1f0
+    /// - Based on swkotor2.exe: FUN_004eb750 @ 0x004eb750 (save metadata serialization), FUN_00708990 @ 0x00708990 (save file operations)
+    /// - Located via string references: "SAVES:" @ 0x007be284 (save directory prefix), "savenfo" @ 0x007be1f0 (save metadata file name)
+    /// - "SAVEGAME" @ 0x007be28c (save game file name), "SAVENUMBER" @ 0x007be188 (save number field)
+    /// - "SAVEGAMENAME" @ 0x007be1a8 (save game name field), "SAVES:\{saveName}\" (save path format)
     /// - Save path format: "SAVES:\{saveName}\" (original uses "SAVES:" prefix)
-    /// - Save name format: "%06d - %s" (6-digit number - name) @ 0x007be298
-    /// - saves/[SaveName]/
-    ///   - savenfo.res      - Save metadata (GFF with "NFO " signature)
+    /// - Save name format: "%06d - %s" (6-digit number - name) @ 0x007be298 ("SAVES:%06d - %s" format string)
+    /// - ".\saves" @ 0x007c6b0c (save directory path), "modulesave" @ 0x007bde20 (module save directory)
+    /// - Auto-save: "AutoSave" @ 0x007bd9e8 (auto-save flag), "AutoSaveOnEnter" @ 0x007be248 (auto-save on enter flag)
+    /// - "QUICKSAVE" @ 0x007c7368 (quick save constant), "REBOOTAUTOSAVE" @ 0x007cea14 (reboot auto-save constant)
+    /// - "PCAUTOSAVE" @ 0x007be320 (PC auto-save), "AUTOSAVE" @ 0x007be34c (auto-save constant)
+    /// - "AUTOSAVEPARAMS" @ 0x007be304 (auto-save parameters), "AtSavePoints" @ 0x007bd9cc (at save points flag)
+    /// - Save enumeration: "LoadSavegame" @ 0x007bdc90 (load save game function), "GetSavegameList" @ 0x007bdcb0 (get save game list function)
+    /// - "SavegameList" @ 0x007bdca0 (save game list field), ":: Module savegame list: %s.\n" @ 0x007cbbb4 (module save list debug)
+    /// - GUI: "savename_p" @ 0x007cec48 (save name panel), "saveload_p" @ 0x007cede8 (save/load panel)
+    /// - "BTN_SAVELOAD" @ 0x007ced68 (save/load button), "BTN_SAVEGAME" @ 0x007d0dbc (save game button)
+    /// - "BTN_LASTSAVE" @ 0x007c8db0 (last save button), "SaveLoad" @ 0x007cb2ac (save/load constant)
+    /// - "CB_AUTOSAVE" @ 0x007d2918 (auto-save checkbox), "Old Save Game" @ 0x007cea24 (old save game message)
+    /// - Save structure: saves/[SaveName]/
+    ///   - savenfo.res      - Save metadata (GFF with "NFO " signature) - FUN_004eb750 writes this
     ///   - savegame.sav     - ERF archive with "MOD V1.0" signature containing:
-    ///     - GLOBALVARS.res - Global variables (GFF)
+    ///     - GLOBALVARS.res - Global variables (GFF with "VAR " signature)
     ///     - PARTYTABLE.res - Party state (GFF with "PT  " signature)
-    ///     - [module]_s.rim - Per-module state data
-    ///   - screen.tga       - Screenshot
-    ///   - SAVEGAME.xxx     - Platform-specific data
+    ///     - [module]_s.rim - Per-module state data (ERF archive per module)
+    ///   - screen.tga       - Screenshot (TGA format image)
+    ///   - SAVEGAME.xxx     - Platform-specific data (varies by platform)
     /// </remarks>
     public class SaveDataProvider : ISaveDataProvider
     {
