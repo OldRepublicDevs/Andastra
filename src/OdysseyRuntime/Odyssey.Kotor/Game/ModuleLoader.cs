@@ -696,6 +696,9 @@ namespace Odyssey.Kotor.Game
         {
             IEntity entity = _world.CreateEntity(OdyObjectType.Placeable, ToSysVector3(placeable.Position), placeable.Bearing);
 
+            // Initialize components
+            Systems.ComponentInitializer.InitializeComponents(entity);
+
             // Load placeable template
             if (!string.IsNullOrEmpty(placeable.ResRef?.ToString()))
             {
@@ -708,6 +711,9 @@ namespace Odyssey.Kotor.Game
         private void SpawnCreature(GITCreature creature, RuntimeArea area)
         {
             IEntity entity = _world.CreateEntity(OdyObjectType.Creature, ToSysVector3(creature.Position), creature.Bearing);
+
+            // Initialize components
+            Systems.ComponentInitializer.InitializeComponents(entity);
 
             // Load creature template
             if (!string.IsNullOrEmpty(creature.ResRef?.ToString()))
@@ -1006,13 +1012,21 @@ namespace Odyssey.Kotor.Game
                     entity.Tag = utd.Tag;
 
                     // Set door component properties
-                    IDoorComponent doorComponent = entity.GetComponent<IDoorComponent>();
+                    DoorComponent doorComponent = entity.GetComponent<DoorComponent>();
                     if (doorComponent != null)
                     {
+                        doorComponent.GenericType = utd.GenericType;
                         doorComponent.IsLocked = utd.Locked;
                         doorComponent.IsOpen = utd.OpenState > 0;
                         doorComponent.KeyRequired = utd.KeyRequired;
                         doorComponent.KeyTag = utd.KeyName;
+                    }
+
+                    // Set renderable component appearance row
+                    Core.Interfaces.Components.IRenderableComponent renderable = entity.GetComponent<Core.Interfaces.Components.IRenderableComponent>();
+                    if (renderable != null)
+                    {
+                        renderable.AppearanceRow = utd.GenericType;
                     }
 
                     // Set scripts
@@ -1045,6 +1059,22 @@ namespace Odyssey.Kotor.Game
 
                     entity.Tag = utp.Tag;
 
+                    // Set placeable component appearance
+                    IPlaceableComponent placeableComponent = entity.GetComponent<IPlaceableComponent>();
+                    if (placeableComponent != null)
+                    {
+                        placeableComponent.AppearanceType = utp.Appearance;
+                        placeableComponent.IsUseable = utp.Useable;
+                        placeableComponent.IsStatic = utp.Static;
+                    }
+
+                    // Set renderable component appearance row
+                    Core.Interfaces.Components.IRenderableComponent renderable = entity.GetComponent<Core.Interfaces.Components.IRenderableComponent>();
+                    if (renderable != null)
+                    {
+                        renderable.AppearanceRow = utp.Appearance;
+                    }
+
                     // Set scripts
                     IScriptHooksComponent scriptsComponent = entity.GetComponent<IScriptHooksComponent>();
                     if (scriptsComponent != null)
@@ -1053,14 +1083,6 @@ namespace Odyssey.Kotor.Game
                         scriptsComponent.SetScript(Core.Enums.ScriptEvent.OnHeartbeat, utp.OnHeartbeat?.ToString());
                         scriptsComponent.SetScript(Core.Enums.ScriptEvent.OnOpen, utp.OnOpen?.ToString());
                         scriptsComponent.SetScript(Core.Enums.ScriptEvent.OnClose, utp.OnClosed?.ToString());
-                    }
-
-                    // Store appearance for visual creation
-                    IPlaceableComponent placeableComponent = entity.GetComponent<IPlaceableComponent>();
-                    if (placeableComponent != null)
-                    {
-                        placeableComponent.IsUseable = utp.Useable;
-                        placeableComponent.IsStatic = utp.Static;
                     }
                 }
             }
@@ -1081,6 +1103,22 @@ namespace Odyssey.Kotor.Game
                     UTC utc = UTCHelpers.ConstructUtc(gff);
 
                     entity.Tag = utc.Tag;
+
+                    // Set creature component appearance
+                    CreatureComponent creatureComponent = entity.GetComponent<CreatureComponent>();
+                    if (creatureComponent != null)
+                    {
+                        creatureComponent.AppearanceType = utc.Appearance;
+                        creatureComponent.BodyVariation = utc.BodyVariation;
+                        creatureComponent.TextureVar = utc.TextureVariation;
+                    }
+
+                    // Set renderable component appearance row
+                    Core.Interfaces.Components.IRenderableComponent renderable = entity.GetComponent<Core.Interfaces.Components.IRenderableComponent>();
+                    if (renderable != null)
+                    {
+                        renderable.AppearanceRow = utc.Appearance;
+                    }
 
                     // Set stats
                     IStatsComponent statsComponent = entity.GetComponent<IStatsComponent>();
