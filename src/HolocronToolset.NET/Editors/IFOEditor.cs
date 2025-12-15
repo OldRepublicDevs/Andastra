@@ -21,6 +21,25 @@ namespace HolocronToolset.NET.Editors
         // Public property to access IFO for testing (matching Python's self.ifo)
         public IFO Ifo => _ifo;
 
+        // Public properties for testing (matching Python's public attributes)
+        public TextBox TagEdit => _tagEdit;
+        public TextBox VoIdEdit => _voIdEdit;
+        public TextBox HakEdit => _hakEdit;
+        public TextBox EntryResrefEdit => _entryResrefEdit;
+        public NumericUpDown EntryXSpin => _entryXSpin;
+        public NumericUpDown EntryYSpin => _entryYSpin;
+        public NumericUpDown EntryZSpin => _entryZSpin;
+        public NumericUpDown EntryDirSpin => _entryDirSpin;
+        public NumericUpDown DawnHourSpin => _dawnHourSpin;
+        public NumericUpDown DuskHourSpin => _duskHourSpin;
+        public NumericUpDown TimeScaleSpin => _timeScaleSpin;
+        public NumericUpDown StartMonthSpin => _startMonthSpin;
+        public NumericUpDown StartDaySpin => _startDaySpin;
+        public NumericUpDown StartHourSpin => _startHourSpin;
+        public NumericUpDown StartYearSpin => _startYearSpin;
+        public NumericUpDown XpScaleSpin => _xpScaleSpin;
+        public Dictionary<string, TextBox> ScriptFields => _scriptFields;
+
         // UI Controls - Basic Info
         private TextBox _nameEdit;
         private Button _nameEditBtn;
@@ -258,27 +277,27 @@ namespace HolocronToolset.NET.Editors
 
         private void SetupUI()
         {
-            // Try to find controls from XAML if available
-            _nameEdit = EditorHelpers.FindControlSafe<TextBox>(this, "NameEdit");
-            _nameEditBtn = EditorHelpers.FindControlSafe<Button>(this, "NameEditBtn");
-            _tagEdit = EditorHelpers.FindControlSafe<TextBox>(this, "TagEdit");
-            _voIdEdit = EditorHelpers.FindControlSafe<TextBox>(this, "VoIdEdit");
-            _hakEdit = EditorHelpers.FindControlSafe<TextBox>(this, "HakEdit");
-            _descEdit = EditorHelpers.FindControlSafe<TextBox>(this, "DescEdit");
-            _descEditBtn = EditorHelpers.FindControlSafe<Button>(this, "DescEditBtn");
-            _entryResrefEdit = EditorHelpers.FindControlSafe<TextBox>(this, "EntryResrefEdit");
-            _entryXSpin = EditorHelpers.FindControlSafe<NumericUpDown>(this, "EntryXSpin");
-            _entryYSpin = EditorHelpers.FindControlSafe<NumericUpDown>(this, "EntryYSpin");
-            _entryZSpin = EditorHelpers.FindControlSafe<NumericUpDown>(this, "EntryZSpin");
-            _entryDirSpin = EditorHelpers.FindControlSafe<NumericUpDown>(this, "EntryDirSpin");
-            _dawnHourSpin = EditorHelpers.FindControlSafe<NumericUpDown>(this, "DawnHourSpin");
-            _duskHourSpin = EditorHelpers.FindControlSafe<NumericUpDown>(this, "DuskHourSpin");
-            _timeScaleSpin = EditorHelpers.FindControlSafe<NumericUpDown>(this, "TimeScaleSpin");
-            _startMonthSpin = EditorHelpers.FindControlSafe<NumericUpDown>(this, "StartMonthSpin");
-            _startDaySpin = EditorHelpers.FindControlSafe<NumericUpDown>(this, "StartDaySpin");
-            _startHourSpin = EditorHelpers.FindControlSafe<NumericUpDown>(this, "StartHourSpin");
-            _startYearSpin = EditorHelpers.FindControlSafe<NumericUpDown>(this, "StartYearSpin");
-            _xpScaleSpin = EditorHelpers.FindControlSafe<NumericUpDown>(this, "XpScaleSpin");
+            // Try to find controls from XAML if available (only if not already set by programmatic UI)
+            if (_nameEdit == null) _nameEdit = EditorHelpers.FindControlSafe<TextBox>(this, "NameEdit");
+            if (_nameEditBtn == null) _nameEditBtn = EditorHelpers.FindControlSafe<Button>(this, "NameEditBtn");
+            if (_tagEdit == null) _tagEdit = EditorHelpers.FindControlSafe<TextBox>(this, "TagEdit");
+            if (_voIdEdit == null) _voIdEdit = EditorHelpers.FindControlSafe<TextBox>(this, "VoIdEdit");
+            if (_hakEdit == null) _hakEdit = EditorHelpers.FindControlSafe<TextBox>(this, "HakEdit");
+            if (_descEdit == null) _descEdit = EditorHelpers.FindControlSafe<TextBox>(this, "DescEdit");
+            if (_descEditBtn == null) _descEditBtn = EditorHelpers.FindControlSafe<Button>(this, "DescEditBtn");
+            if (_entryResrefEdit == null) _entryResrefEdit = EditorHelpers.FindControlSafe<TextBox>(this, "EntryResrefEdit");
+            if (_entryXSpin == null) _entryXSpin = EditorHelpers.FindControlSafe<NumericUpDown>(this, "EntryXSpin");
+            if (_entryYSpin == null) _entryYSpin = EditorHelpers.FindControlSafe<NumericUpDown>(this, "EntryYSpin");
+            if (_entryZSpin == null) _entryZSpin = EditorHelpers.FindControlSafe<NumericUpDown>(this, "EntryZSpin");
+            if (_entryDirSpin == null) _entryDirSpin = EditorHelpers.FindControlSafe<NumericUpDown>(this, "EntryDirSpin");
+            if (_dawnHourSpin == null) _dawnHourSpin = EditorHelpers.FindControlSafe<NumericUpDown>(this, "DawnHourSpin");
+            if (_duskHourSpin == null) _duskHourSpin = EditorHelpers.FindControlSafe<NumericUpDown>(this, "DuskHourSpin");
+            if (_timeScaleSpin == null) _timeScaleSpin = EditorHelpers.FindControlSafe<NumericUpDown>(this, "TimeScaleSpin");
+            if (_startMonthSpin == null) _startMonthSpin = EditorHelpers.FindControlSafe<NumericUpDown>(this, "StartMonthSpin");
+            if (_startDaySpin == null) _startDaySpin = EditorHelpers.FindControlSafe<NumericUpDown>(this, "StartDaySpin");
+            if (_startHourSpin == null) _startHourSpin = EditorHelpers.FindControlSafe<NumericUpDown>(this, "StartHourSpin");
+            if (_startYearSpin == null) _startYearSpin = EditorHelpers.FindControlSafe<NumericUpDown>(this, "StartYearSpin");
+            if (_xpScaleSpin == null) _xpScaleSpin = EditorHelpers.FindControlSafe<NumericUpDown>(this, "XpScaleSpin");
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/ifo.py:179-195
@@ -441,7 +460,7 @@ namespace HolocronToolset.NET.Editors
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/ifo.py:251-288
         // Original: def on_value_changed(self):
-        private void OnValueChanged()
+        public void OnValueChanged()
         {
             if (_ifo == null)
             {

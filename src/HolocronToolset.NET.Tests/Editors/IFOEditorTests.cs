@@ -24,18 +24,42 @@ namespace HolocronToolset.NET.Tests.Editors
             _fixture = fixture;
         }
 
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_ifo_editor.py:23-43
+        // Original: def test_ifo_editor_manipulate_tag(qtbot, installation: HTInstallation):
         [Fact]
-        public void TestIfoEditorNewFileCreation()
+        public void TestIfoEditorManipulateTag()
         {
-            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_ifo_editor.py:23
-            // Original: def test_ifo_editor_manipulate_tag(qtbot, installation: HTInstallation):
-            var editor = new IFOEditor(null, null);
+            // Get installation if available (needed for some operations)
+            string k1Path = Environment.GetEnvironmentVariable("K1_PATH");
+            if (string.IsNullOrEmpty(k1Path))
+            {
+                k1Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor";
+            }
 
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k1Path) && System.IO.File.Exists(System.IO.Path.Combine(k1Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k1Path, "Test Installation", tsl: false);
+            }
+
+            var editor = new IFOEditor(null, installation);
+
+            // Create new IFO
             editor.New();
 
-            // Verify editor is ready
-            var (data, _) = editor.Build();
-            data.Should().NotBeNull();
+            // Modify tag
+            editor.TagEdit.Text = "modified_tag";
+            editor.OnValueChanged();
+
+            // Build and verify
+            (byte[] data, byte[] _) = editor.Build();
+            data.Length.Should().BeGreaterThan(0);
+
+            // Load and verify
+            editor.Load("test.ifo", "test", ResourceType.IFO, data);
+            editor.TagEdit.Text.Should().Be("modified_tag");
+            editor.Ifo.Should().NotBeNull();
+            editor.Ifo.Tag.Should().Be("modified_tag");
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_ifo_editor.py:783-815
@@ -132,7 +156,7 @@ namespace HolocronToolset.NET.Tests.Editors
 
             // Load original IFO for comparison
             var originalGff = GFF.FromBytes(originalData);
-            var originalIfo = CSharpKOTOR.Resource.Generics.IFOHelpers.ConstructIfo(originalGff);
+            CSharpKOTOR.Resource.Generics.IFO originalIfo = CSharpKOTOR.Resource.Generics.IFOHelpers.ConstructIfo(originalGff);
 
             // Load the IFO file
             string resname = ifoFile != null ? System.IO.Path.GetFileNameWithoutExtension(ifoFile) : "module";
@@ -142,7 +166,7 @@ namespace HolocronToolset.NET.Tests.Editors
             editor.Ifo.Should().NotBeNull();
 
             // Build and verify it works
-            var (data, _) = editor.Build();
+            (byte[] data, byte[] _) = editor.Build();
             data.Should().NotBeNull();
             data.Length.Should().BeGreaterThan(0);
 
