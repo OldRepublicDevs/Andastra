@@ -1690,10 +1690,12 @@ namespace Odyssey.Scripting.EngineApi
             return Variable.Void();
         }
 
+        /// <summary>
+        /// GetLastAttacker(object oTarget=OBJECT_SELF) - Returns the last entity that attacked the target
+        /// This should only be used in OnAttacked events for creatures, placeables, and doors
+        /// </summary>
         private Variable Func_GetLastAttacker(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
-            // GetLastAttacker(object oTarget=OBJECT_SELF)
-            // Returns the last entity that attacked the target
             uint targetId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
             IEntity target = ResolveObject(targetId, ctx);
             
@@ -1702,13 +1704,14 @@ namespace Odyssey.Scripting.EngineApi
                 return Variable.FromObject(ObjectInvalid);
             }
 
-            // Try to get CombatManager from GameServicesContext
-            if (ctx.AdditionalContext is GameSession.GameServicesContext services && services.CombatManager != null)
+            // Get CombatManager from GameServicesContext
+            if (ctx is VM.ExecutionContext execCtx && execCtx.AdditionalContext is Odyssey.Kotor.Game.GameServicesContext services && services.CombatManager != null)
             {
-                // CombatManager doesn't currently track last attacker, so we'll need to add that
-                // For now, return invalid - this needs to be tracked during combat
-                // TODO: Add last attacker tracking to CombatManager
-                return Variable.FromObject(ObjectInvalid);
+                IEntity lastAttacker = services.CombatManager.GetLastAttacker(target);
+                if (lastAttacker != null)
+                {
+                    return Variable.FromObject(lastAttacker.ObjectId);
+                }
             }
 
             return Variable.FromObject(ObjectInvalid);
@@ -2887,13 +2890,45 @@ namespace Odyssey.Scripting.EngineApi
             return Variable.FromObject(ObjectInvalid);
         }
 
+        /// <summary>
+        /// GetMetaMagicFeat(object oCaster=OBJECT_SELF) - Returns the metamagic feat of the caster
+        /// </summary>
         private Variable Func_GetMetaMagicFeat(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
+            uint casterId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
+            IEntity caster = ResolveObject(casterId, ctx);
+            
+            if (caster == null || caster.ObjectType != Core.Enums.ObjectType.Creature)
+            {
+                return Variable.FromInt(0);
+            }
+            
+            // Metamagic feats are stored in creature templates or as feats
+            // For now, return 0 (no metamagic) - this would need to check creature template or feat list
+            // TODO: Access creature template via TemplateResRef and check Feats list for metamagic feats
+            // Metamagic feats: METAMAGIC_EMPOWER, METAMAGIC_EXTEND, METAMAGIC_MAXIMIZE, METAMAGIC_QUICKEN, etc.
+            
             return Variable.FromInt(0);
         }
 
+        /// <summary>
+        /// GetRacialType(object oCreature=OBJECT_SELF) - Returns the racial type of a creature
+        /// </summary>
         private Variable Func_GetRacialType(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
+            uint creatureId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
+            IEntity creature = ResolveObject(creatureId, ctx);
+            
+            if (creature == null || creature.ObjectType != Core.Enums.ObjectType.Creature)
+            {
+                return Variable.FromInt(0);
+            }
+            
+            // Racial type is stored in creature templates (RaceId property)
+            // For now, return 0 (RACIAL_TYPE_UNKNOWN) - this would need to access creature template
+            // TODO: Access creature template via TemplateResRef and return RaceId
+            // Racial types: RACIAL_TYPE_HUMAN, RACIAL_TYPE_BOTHAN, RACIAL_TYPE_DROID, etc.
+            
             return Variable.FromInt(0);
         }
 
@@ -3994,7 +4029,7 @@ namespace Odyssey.Scripting.EngineApi
         /// <summary>
         /// StringToInt(string sNumber) - Convert sNumber into an integer
         /// </summary>
-        private Variable Func_StringToInt(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        private new Variable Func_StringToInt(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             string numberStr = args.Count > 0 ? args[0].AsString() : "";
             if (int.TryParse(numberStr, out int result))
@@ -4007,7 +4042,7 @@ namespace Odyssey.Scripting.EngineApi
         /// <summary>
         /// StringToFloat(string sNumber) - Convert sNumber into a floating point number
         /// </summary>
-        private Variable Func_StringToFloat(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        private new Variable Func_StringToFloat(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             string numberStr = args.Count > 0 ? args[0].AsString() : "";
             if (float.TryParse(numberStr, out float result))
