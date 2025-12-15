@@ -13,9 +13,17 @@ namespace Odyssey.Kotor.Systems
     /// Model Resolver:
     /// - Based on swkotor2.exe model resolution system
     /// - Located via string references: Model loading from appearance.2da, placeables.2da, genericdoors.2da
-    /// - "Appearance_Type" @ 0x007c40f0 (appearance type field), "ModelResRef" @ 0x007c2f6c (model resource reference)
+    /// - "Appearance_Type" @ 0x007c40f0 (appearance type field), "AppearanceType" @ 0x007c84c8 (appearance type field variant)
+    /// - "ModelResRef" @ 0x007c2f6c (model resource reference), "ModelName" @ 0x007c1c8c (model name field)
+    /// - "ModelA" @ 0x007bf4bc (model A field), "ModelVariation" @ 0x007c0990 (model variation field)
+    /// - "Appearance" @ 0x007bf144 (appearance field), "Appearance_Head" @ 0x007c40e0 (appearance head field)
+    /// - "Appearance_01" @ 0x007c0220, "Appearance_02" @ 0x007c0200, "Appearance_03" @ 0x007c01e0, "Appearance_04" @ 0x007c01c0 (appearance slots)
+    /// - "MODELTYPE" @ 0x007c036c (model type field), "ModelType" @ 0x007c4568 (model type field variant)
+    /// - "MODEL01" @ 0x007c4b48, "MODEL02" @ 0x007c4b34, "MODEL03" @ 0x007c4b20 (model variation fields)
     /// - Model resolution: FUN_005261b0 @ 0x005261b0 resolves creature model from appearance.2da row
-    /// - "CSWCCreature::LoadModel(): Failed to load creature model '%s'." @ 0x007c82fc (model loading error)
+    /// - Model loading errors:
+    ///   - "CSWCCreature::LoadModel(): Failed to load creature model '%s'." @ 0x007c82fc
+    ///   - "CSWCCreatureAppearance::CreateBTypeBody(): Failed to load model '%s'." @ 0x007cdc40
     /// - Original implementation: Resolves model ResRefs from appearance IDs using 2DA tables
     /// - appearance.2da: modela/modelb columns for creatures (ModelA for variation 0, ModelB for variation 1)
     /// - placeables.2da: modelname column for placeables (placeable model ResRef)

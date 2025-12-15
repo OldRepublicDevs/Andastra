@@ -13,9 +13,15 @@ namespace Odyssey.Kotor.Systems
     /// <remarks>
     /// Component Initializer:
     /// - Based on swkotor2.exe component initialization system
-    /// - Automatically adds required components when entities are created
-    /// - Ensures entities have appropriate components for their type
-    /// - Based on swkotor2.exe: Components are added during entity creation
+    /// - Located via string references: Component system used throughout entity creation
+    /// - Original implementation: Components are added during entity creation from templates
+    /// - Entity creation: FUN_005fb0f0 @ 0x005fb0f0 (creature creation), FUN_004e08e0 @ 0x004e08e0 (door/placeable creation)
+    /// - Component initialization: Components initialized from GFF template data (UTC, UTD, UTP, etc.)
+    /// - Transform component: All entities have position/orientation (XPosition, YPosition, ZPosition, XOrientation, YOrientation)
+    /// - Renderable component: Entities with visual models (creatures, doors, placeables, items) have renderable components
+    /// - Type-specific components: Creatures have StatsComponent, Doors have DoorComponent, Placeables have PlaceableComponent, etc.
+    /// - Script hooks component: All entities can have script hooks (ScriptHeartbeat, ScriptOnNotice, etc.)
+    /// - Component attachment: Components attached during entity creation from GIT instances and templates
     /// </remarks>
     public static class ComponentInitializer
     {
