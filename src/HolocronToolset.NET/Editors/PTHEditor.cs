@@ -53,6 +53,7 @@ namespace HolocronToolset.NET.Editors
             SetupStatusBar();
             StatusOut = new PTHStatusOut(this);
             SetupUI();
+            AddHelpAction("GFF-PTH.md");
             New();
         }
 
