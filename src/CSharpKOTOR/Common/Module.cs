@@ -4,9 +4,12 @@ using System.IO;
 using System.Linq;
 using CSharpKOTOR.Formats.Capsule;
 using CSharpKOTOR.Formats.GFF;
+using CSharpKOTOR.Formats.MDLData;
 using CSharpKOTOR.Formats.TwoDA;
 using CSharpKOTOR.Installation;
 using CSharpKOTOR.Logger;
+using CSharpKOTOR.Resource.Generics;
+using CSharpKOTOR.Resource.Generics.DLG;
 using CSharpKOTOR.Resources;
 using CSharpKOTOR.Tools;
 using JetBrains.Annotations;
@@ -770,7 +773,7 @@ namespace CSharpKOTOR.Common
             // GFF-based resources use their specific types
             if (restype == ResourceType.ARE)
             {
-                return typeof(Formats.GFF.ARE);
+                return typeof(ARE);
             }
             if (restype == ResourceType.GIT)
             {
@@ -778,43 +781,43 @@ namespace CSharpKOTOR.Common
             }
             if (restype == ResourceType.IFO)
             {
-                return typeof(Formats.GFF.IFO);
+                return typeof(IFO);
             }
             if (restype == ResourceType.UTC)
             {
-                return typeof(Formats.GFF.UTC);
+                return typeof(UTC);
             }
             if (restype == ResourceType.UTD)
             {
-                return typeof(Formats.GFF.UTD);
+                return typeof(UTD);
             }
             if (restype == ResourceType.UTP)
             {
-                return typeof(Formats.GFF.UTP);
+                return typeof(UTP);
             }
             if (restype == ResourceType.UTS)
             {
-                return typeof(Formats.GFF.UTS);
+                return typeof(UTS);
             }
             if (restype == ResourceType.UTI)
             {
-                return typeof(Formats.GFF.UTI);
+                return typeof(UTI);
             }
             if (restype == ResourceType.UTE)
             {
-                return typeof(Formats.GFF.UTE);
+                return typeof(UTE);
             }
             if (restype == ResourceType.UTT)
             {
-                return typeof(Formats.GFF.UTT);
+                return typeof(UTT);
             }
             if (restype == ResourceType.UTW)
             {
-                return typeof(Formats.GFF.UTW);
+                return typeof(UTW);
             }
             if (restype == ResourceType.UTM)
             {
-                return typeof(Formats.GFF.UTM);
+                return typeof(UTM);
             }
             if (restype == ResourceType.LYT)
             {
@@ -826,11 +829,11 @@ namespace CSharpKOTOR.Common
             }
             if (restype == ResourceType.PTH)
             {
-                return typeof(Formats.PTH.PTH);
+                return typeof(PTH);
             }
             if (restype == ResourceType.MDL)
             {
-                return typeof(Formats.MDL.MDL);
+                return typeof(MDL);
             }
             if (restype == ResourceType.TPC)
             {
@@ -842,7 +845,7 @@ namespace CSharpKOTOR.Common
             }
             if (restype == ResourceType.DLG)
             {
-                return typeof(Formats.DLG.DLG);
+                return typeof(DLG);
             }
             
             // Fallback to object for unknown or unsupported resource types

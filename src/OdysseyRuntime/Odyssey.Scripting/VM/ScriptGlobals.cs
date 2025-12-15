@@ -11,15 +11,23 @@ namespace Odyssey.Scripting.VM
     /// <remarks>
     /// Script Globals System:
     /// - Based on swkotor2.exe script variable system
-    /// - Located via string references: "GLOBALVARS" @ 0x007c27bc (save file global variables GFF)
+    /// - Located via string references: "GLOBALVARS" @ 0x007c27bc (save file global variables GFF field name)
+    /// - "Global" @ 0x007c29b0 (global constant), "GLOBAL" @ 0x007c7550 (global constant uppercase)
+    /// - "RIMS:GLOBAL" @ 0x007c7544 (global RIM directory path), "globalcat" @ 0x007bddd0 (global catalog field)
+    /// - "FactionGlobal" @ 0x007c28e0 (faction global variable field), "useglobalalpha" @ 0x007b6f20 (use global alpha flag)
     /// - Global variable save/load: FUN_005ac670 @ 0x005ac670 saves GLOBALVARS to save game GFF file
     /// - Original implementation: Global variables persist across saves, local variables are per-entity
     /// - Global variables: Case-insensitive string keys, typed values (int, bool, string, location)
+    /// - Global variable storage: Stored in save file GFF structure with "GLOBALVARS" field name
     /// - Local variables: Stored per entity (by ObjectId), accessed via GetLocalInt/SetLocalInt NWScript functions
+    /// - Local variable storage: Stored in entity's ScriptHooksComponent or per-entity dictionary
     /// - Variable storage: Dictionary-based storage matching original engine's variable access patterns
-    /// - Save system uses reflection to access private dictionaries (_globalInts, _globalBools, _globalStrings) for serialization
+    /// - Save system uses reflection to access private dictionaries (_globalInts, _globalBools, _globalStrings, _globalLocations) for serialization
     /// - OBJECT_SELF = 0x7F000001 (constant object ID for current script owner)
     /// - OBJECT_INVALID = 0x7F000000 (constant object ID for invalid/empty object references)
+    /// - Variable types: int (32-bit signed), bool (32-bit, 0 = false, non-zero = true), string (null-terminated), location (struct with position/orientation)
+    /// - Variable access: Case-insensitive key lookup (original engine uses case-insensitive variable names)
+    /// - Default values: Unset variables return default values (0 for int, false for bool, empty string for string, null for location)
     /// </remarks>
     public class ScriptGlobals : IScriptGlobals
     {

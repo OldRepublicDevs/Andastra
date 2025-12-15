@@ -11,20 +11,30 @@ namespace Odyssey.Kotor.Components
     /// <remarks>
     /// Transform Component:
     /// - Based on swkotor2.exe entity transform system
-    /// - Located via string references: "XPosition" @ 0x007bd000, "YPosition" @ 0x007bcff4, "ZPosition" @ 0x007bcfe8
-    /// - "XOrientation" @ 0x007bcfb8, "YOrientation" @ 0x007bcfc8, "ZOrientation" @ 0x007bcfd8
-    /// - Original implementation: FUN_005226d0 @ 0x005226d0 (save), FUN_004e08e0 @ 0x004e08e0 (load placeable/door)
-    /// - Position stored at offsets 0x94 (X), 0x98 (Y), 0x9c (Z) in creature objects
-    /// - Orientation stored at offsets 0xa0 (X), 0xa4 (Y), 0xa8 (Z) as normalized direction vector
+    /// - Located via string references: "XPosition" @ 0x007bd000 (X position field), "YPosition" @ 0x007bcff4 (Y position field), "ZPosition" @ 0x007bcfe8 (Z position field)
+    /// - "PositionX" @ 0x007bc474 (position X field), "PositionY" @ 0x007bc468 (position Y field), "PositionZ" @ 0x007bc45c (position Z field)
+    /// - "Position" @ 0x007bd154 (position field), "position" @ 0x007ba168 (position constant)
+    /// - "positionkey" @ 0x007ba150 (position key field), "positionbezierkey" @ 0x007ba13c (position bezier key field)
+    /// - "UpdateDependentPosition" @ 0x007bb984 (update dependent position function), "flarepositions" @ 0x007bac94 (flare positions field)
+    /// - "XOrientation" @ 0x007bcfb8 (X orientation field), "YOrientation" @ 0x007bcfc8 (Y orientation field), "ZOrientation" @ 0x007bcfd8 (Z orientation field)
+    /// - Position debug: "Position: (%3.2f, %3.2f, %3.2f)" @ 0x007c79a8 (position debug format string)
+    /// - Pathfinding position errors:
+    ///   - "    failed to grid based pathfind from the creatures position to the starting path point." @ 0x007be510 (pathfinding error)
+    ///   - "aborted walking, Bumped into this creature at this position already." @ 0x007c03c0 (walking collision error)
+    ///   - "Bailed the desired position is unsafe." @ 0x007c0584 (unsafe position error)
+    ///   - "PathFollowData requesting bad data position %d" @ 0x007ca414 (path follow data error)
+    /// - Original implementation: FUN_005226d0 @ 0x005226d0 (save entity position/orientation to GFF), FUN_004e08e0 @ 0x004e08e0 (load placeable/door position from GIT)
+    /// - Position stored at offsets 0x94 (X), 0x98 (Y), 0x9c (Z) in creature objects (in-memory layout)
+    /// - Orientation stored at offsets 0xa0 (X), 0xa4 (Y), 0xa8 (Z) as normalized direction vector (in-memory layout)
     /// - FUN_00506550 @ 0x00506550 sets orientation from vector, FUN_004d8390 @ 0x004d8390 normalizes orientation vector
     /// - KOTOR coordinate system:
-    ///   - Y-up coordinate system (same as most game engines)
-    ///   - Positions in meters
-    ///   - Facing angle in radians (0 = +X axis, counter-clockwise) for 2D gameplay
-    ///   - Orientation vector (XOrientation, YOrientation, ZOrientation) used for 3D model rendering
-    ///   - Scale typically (1,1,1) but can be modified for effects
+    ///   - Y-up coordinate system (same as most game engines, Y is vertical)
+    ///   - Positions in meters (world-space coordinates)
+    ///   - Facing angle in radians (0 = +X axis, counter-clockwise positive) for 2D gameplay
+    ///   - Orientation vector (XOrientation, YOrientation, ZOrientation) used for 3D model rendering (normalized direction vector)
+    ///   - Scale typically (1,1,1) but can be modified for effects (visual scaling, not physics)
     /// - Transform stored in GFF structures as XPosition, YPosition, ZPosition, XOrientation, YOrientation, ZOrientation
-    /// - Forward/Right vectors calculated from facing angle for 2D movement (cos/sin pattern matches engine)
+    /// - Forward/Right vectors calculated from facing angle for 2D movement (cos/sin pattern matches engine: Forward = (cos(facing), sin(facing), 0))
     /// </remarks>
     public class TransformComponent : ITransformComponent
     {

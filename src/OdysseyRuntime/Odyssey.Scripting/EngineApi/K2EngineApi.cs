@@ -5,6 +5,7 @@ using CSharpKOTOR.Common.Script;
 using Odyssey.Core.Enums;
 using Odyssey.Core.Interfaces;
 using Odyssey.Scripting.Interfaces;
+using Odyssey.Scripting.VM;
 
 namespace Odyssey.Scripting.EngineApi
 {

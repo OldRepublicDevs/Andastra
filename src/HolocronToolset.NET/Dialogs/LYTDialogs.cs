@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Numerics;
 using Avalonia.Controls;
 using Avalonia.Layout;
@@ -106,12 +107,16 @@ namespace HolocronToolset.NET.Dialogs
                                 {
                                     Content = "OK",
                                     HorizontalAlignment = HorizontalAlignment.Right,
-                                    Width = 75,
-                                    Click = (s, e) => errorDialog.Close()
+                                    Width = 75
                                 }
                             }
                         }
                     };
+                    var okButton = (errorDialog.Content as StackPanel)?.Children.OfType<Button>().FirstOrDefault();
+                    if (okButton != null)
+                    {
+                        okButton.Click += (s, e) => errorDialog.Close();
+                    }
                     errorDialog.ShowDialog(this);
                     return;
                 }
