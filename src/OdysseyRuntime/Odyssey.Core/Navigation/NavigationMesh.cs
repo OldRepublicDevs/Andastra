@@ -98,6 +98,26 @@ namespace Odyssey.Core.Navigation
         public int WalkableFaceCount { get { return _walkableFaceCount; } }
 
         /// <summary>
+        /// Gets the vertex array (read-only).
+        /// </summary>
+        public IReadOnlyList<Vector3> Vertices { get { return _vertices; } }
+
+        /// <summary>
+        /// Gets the face indices array (read-only).
+        /// </summary>
+        public IReadOnlyList<int> FaceIndices { get { return _faceIndices; } }
+
+        /// <summary>
+        /// Gets the adjacency array (read-only).
+        /// </summary>
+        public IReadOnlyList<int> Adjacency { get { return _adjacency; } }
+
+        /// <summary>
+        /// Gets the surface materials array (read-only).
+        /// </summary>
+        public IReadOnlyList<int> SurfaceMaterials { get { return _surfaceMaterials; } }
+
+        /// <summary>
         /// Creates an empty navigation mesh (for placeholder use).
         /// </summary>
         public NavigationMesh()
