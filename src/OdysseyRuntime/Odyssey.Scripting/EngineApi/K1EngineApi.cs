@@ -340,6 +340,7 @@ namespace Odyssey.Scripting.EngineApi
                 case 182: return Func_GetFactionStrongestMember(args, ctx);
                 case 235: return Func_GetIsEnemy(args, ctx);
                 case 236: return Func_GetIsFriend(args, ctx);
+                case 237: return Func_GetIsNeutral(args, ctx);
                 case 380: return Func_GetFirstFactionMember(args, ctx);
                 case 381: return Func_GetNextFactionMember(args, ctx);
                 
@@ -3735,17 +3736,20 @@ namespace Odyssey.Scripting.EngineApi
         private Variable Func_GetMetaMagicFeat(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             // GetMetaMagicFeat() - Returns the metamagic type of the last spell cast by the caller
-            // Note: This should track the last spell cast's metamagic type, not check if creature has the feat
-            // For now, return 0 (no metamagic) - would need to track last spell cast in ActionCastSpellAtObject
             // Metamagic feats: METAMAGIC_EMPOWER (1), METAMAGIC_EXTEND (2), METAMAGIC_MAXIMIZE (4), METAMAGIC_QUICKEN (8)
-            // TODO: Track last spell cast metamagic type when ActionCastSpellAtObject is executed
             
             if (ctx.Caller == null || ctx.Caller.ObjectType != Core.Enums.ObjectType.Creature)
             {
                 return Variable.FromInt(-1);
             }
             
-            // For now, return 0 (no metamagic) until spell casting tracking is implemented
+            // Retrieve last metamagic type for this caster (tracked in ActionCastSpellAtObject)
+            if (_lastMetamagicTypes.TryGetValue(ctx.Caller.ObjectId, out int metamagicType))
+            {
+                return Variable.FromInt(metamagicType);
+            }
+            
+            // No metamagic tracked, return 0 (no metamagic)
             return Variable.FromInt(0);
         }
 
@@ -4270,6 +4274,18 @@ namespace Odyssey.Scripting.EngineApi
         /// <summary>
         /// GetFirstFactionMember(int nFactionId, int nPlayerOnly=0) - starts iteration over faction members
         /// </summary>
+        /// <summary>
+        /// GetFirstFactionMember(int nFactionId, int bPlayerOnly=FALSE) - starts iteration over faction members
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: Faction member iteration system
+        /// Located via string references: "FactionID" @ 0x007c40b4, "FactionID1" @ 0x007c2924, "FactionID2" @ 0x007c2918
+        /// Original implementation: Iterates over all entities with matching faction ID
+        /// Faction matching: Checks IFactionComponent.FactionId against provided faction ID
+        /// Player only: If bPlayerOnly = TRUE, only returns player-controlled entities
+        /// Iteration state: Stores member list in _factionMemberIterations dictionary keyed by caller ObjectId
+        /// Returns: First faction member ObjectId or OBJECT_INVALID if no members found
+        /// </remarks>
         private Variable Func_GetFirstFactionMember(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             int factionId = args.Count > 0 ? args[0].AsInt() : 0;
@@ -4889,6 +4905,139 @@ namespace Odyssey.Scripting.EngineApi
             // Add to current area (RuntimeArea has AddEntity method)
             if (ctx.World.CurrentArea is Core.Module.RuntimeArea runtimeArea)
             {
+                runtimeArea.AddEntity(entity);
+            }
+            
+            // Implement appear animation if bUseAppearAnimation is TRUE
+            // Based on swkotor2.exe: Objects created with appear animation play a fade-in effect
+            // This is typically handled by setting a flag that the rendering system uses to fade in the object
+            if (useAppearAnimation != 0)
+            {
+                // Set flag on entity to indicate it should fade in
+                if (entity is Core.Entities.Entity entityImpl)
+                {
+                    entityImpl.SetData("AppearAnimation", true);
+                    
+                    // Optionally, queue an animation action for entities that support it
+                    // Most objects in KOTOR just fade in visually rather than playing a specific animation
+                    // The rendering system should handle the fade-in based on the AppearAnimation flag
+                }
+            }
+            
+            return Variable.FromObject(entity.ObjectId);
+        }
+
+        #endregion
+
+        #region Type Conversion Functions
+
+        /// <summary>
+        /// IntToFloat(int nInteger) - Convert nInteger into a floating point number
+        /// </summary>
+        private Variable Func_IntToFloat(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            int value = args.Count > 0 ? args[0].AsInt() : 0;
+            return Variable.FromFloat((float)value);
+        }
+
+        /// <summary>
+        /// FloatToInt(float fFloat) - Convert fFloat into the nearest integer
+        /// </summary>
+        private Variable Func_FloatToInt(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            float value = args.Count > 0 ? args[0].AsFloat() : 0f;
+            return Variable.FromInt((int)Math.Round(value));
+        }
+
+        /// <summary>
+        /// StringToInt(string sNumber) - Convert sNumber into an integer
+        /// </summary>
+        private new Variable Func_StringToInt(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            string numberStr = args.Count > 0 ? args[0].AsString() : "";
+            if (int.TryParse(numberStr, out int result))
+            {
+                return Variable.FromInt(result);
+            }
+            return Variable.FromInt(0);
+        }
+
+        /// <summary>
+        /// StringToFloat(string sNumber) - Convert sNumber into a floating point number
+        /// </summary>
+        private new Variable Func_StringToFloat(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            string numberStr = args.Count > 0 ? args[0].AsString() : "";
+            if (float.TryParse(numberStr, out float result))
+            {
+                return Variable.FromFloat(result);
+            }
+            return Variable.FromFloat(0f);
+        }
+
+        #endregion
+
+        #region Nearest Object To Location
+
+        /// <summary>
+        /// GetNearestObjectToLocation(int nObjectType, location lLocation, int nNth=1) - Get the nNth object nearest to lLocation that is of the specified type
+        /// </summary>
+        private Variable Func_GetNearestObjectToLocation(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            if (args.Count < 2 || ctx.World == null)
+            {
+                return Variable.FromObject(ObjectInvalid);
+            }
+            
+            int objectType = args[0].AsInt();
+            object locObj = args[1].AsLocation();
+            int nth = args.Count > 2 ? args[2].AsInt() : 1;
+            
+            // Extract position from location
+            Vector3 locationPos = Vector3.Zero;
+            if (locObj != null && locObj is Location location)
+            {
+                locationPos = location.Position;
+            }
+            
+            // Convert object type constant to ObjectType enum
+            Core.Enums.ObjectType typeMask = Core.Enums.ObjectType.All;
+            if (objectType != 32767) // Not OBJECT_TYPE_ALL
+            {
+                // Map NWScript object type constants
+                typeMask = (Core.Enums.ObjectType)objectType;
+            }
+            
+            // Get all entities of the specified type
+            var candidates = new List<(IEntity entity, float distance)>();
+            foreach (IEntity entity in ctx.World.GetEntitiesOfType(typeMask))
+            {
+                ITransformComponent entityTransform = entity.GetComponent<ITransformComponent>();
+                if (entityTransform != null)
+                {
+                    float distance = Vector3.DistanceSquared(locationPos, entityTransform.Position);
+                    candidates.Add((entity, distance));
+                }
+            }
+            
+            // Sort by distance
+            candidates.Sort((a, b) => a.distance.CompareTo(b.distance));
+            
+            // Return Nth nearest (1-indexed)
+            if (nth > 0 && nth <= candidates.Count)
+            {
+                return Variable.FromObject(candidates[nth - 1].entity.ObjectId);
+            }
+            
+            return Variable.FromObject(ObjectInvalid);
+        }
+
+        #endregion
+    }
+}
+
+
+
                 runtimeArea.AddEntity(entity);
             }
             
