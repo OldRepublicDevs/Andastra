@@ -2020,8 +2020,46 @@ namespace Odyssey.Game.Core
             if (doorComponent.IsLocked)
             {
                 Console.WriteLine("[Odyssey] Door is locked");
-                // TODO: Check if player has key, attempt lockpicking, etc.
-                return;
+                
+                // Check if player has the required key
+                if (doorComponent.KeyRequired && !string.IsNullOrEmpty(doorComponent.KeyName))
+                {
+                    Odyssey.Core.Interfaces.Components.IInventoryComponent playerInventory = _session.PlayerEntity?.GetComponent<Odyssey.Core.Interfaces.Components.IInventoryComponent>();
+                    if (playerInventory != null && playerInventory.HasItemByTag(doorComponent.KeyName))
+                    {
+                        // Player has the key, unlock the door
+                        doorComponent.Unlock();
+                        Console.WriteLine($"[Odyssey] Door unlocked with key: {doorComponent.KeyName}");
+                        
+                        // Auto-remove key if configured
+                        if (doorComponent.AutoRemoveKey)
+                        {
+                            // TODO: Remove key from inventory (requires item removal implementation)
+                            Console.WriteLine($"[Odyssey] Key {doorComponent.KeyName} should be removed (auto-remove enabled)");
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine($"[Odyssey] Door requires key: {doorComponent.KeyName} (player does not have it)");
+                        return;
+                    }
+                }
+                else if (doorComponent.Lockable && doorComponent.LockDC > 0)
+                {
+                    // Door can be lockpicked (Security skill check)
+                    // TODO: Implement Security skill check vs LockDC
+                    // For now, allow lockpicking if door is not key-required
+                    Console.WriteLine($"[Odyssey] Door can be lockpicked (DC: {doorComponent.LockDC})");
+                    // Placeholder: In full implementation, would check player's Security skill
+                    // and roll d20 + Security modifier vs LockDC
+                    return;
+                }
+                else
+                {
+                    // Door is locked but cannot be unlocked (plot door, etc.)
+                    Console.WriteLine("[Odyssey] Door is locked and cannot be unlocked");
+                    return;
+                }
             }
 
             // Check if door has conversation (some doors have dialogue)

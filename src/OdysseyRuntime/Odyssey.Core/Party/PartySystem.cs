@@ -761,10 +761,14 @@ namespace Odyssey.Core.Party
             // Try to create from template if available
             if (!string.IsNullOrEmpty(member.TemplateResRef))
             {
-                // Note: PartySystem doesn't have direct access to EntityFactory/ModuleLoader
-                // For now, create basic creature entity
-                // Full implementation would use EntityFactory.CreateCreatureFromTemplate
-                // This requires access to ModuleLoader which is in Odyssey.Kotor
+                // Architectural note: PartySystem is in Odyssey.Core (core domain layer) and cannot
+                // depend on Odyssey.Kotor (game-specific layer) where EntityFactory/ModuleLoader reside.
+                // To properly load UTC templates, we would need:
+                // 1. A factory interface (IEntityTemplateFactory) in Odyssey.Core
+                // 2. Dependency injection of EntityFactory via interface
+                // 3. Or move PartySystem to Odyssey.Kotor (breaks layer separation)
+                // For now, create basic creature entity with member's tag
+                // The entity will be a placeholder until template loading is properly architected
                 entity = _world.CreateEntity(Enums.ObjectType.Creature, spawnPosition, spawnFacing);
                 
                 // Set tag from member data

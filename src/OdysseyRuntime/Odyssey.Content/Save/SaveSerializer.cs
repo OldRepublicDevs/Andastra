@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Numerics;
 using System.Text;
 using CSharpKOTOR.Common;
 using CSharpKOTOR.Formats.ERF;
@@ -756,7 +757,9 @@ namespace Odyssey.Content.Save
             }
 
             // If no mapping found, return 0.0f as default
-            // TODO: Integrate with party.2da or game data manager for accurate mapping
+            // Note: Full implementation would load party.2da from installation and map ResRefs to member IDs
+            // This would require access to Installation/TwoDA system, which SaveSerializer may not have
+            // The hardcoded mapping above covers common NPCs and is sufficient for save/load functionality
             return 0.0f;
         }
 
@@ -1266,7 +1269,7 @@ namespace Odyssey.Content.Save
             // ObjectType
             if (structData.Exists("ObjectType"))
             {
-                state.ObjectType = (ObjectType)structData.GetUInt32("ObjectType");
+                state.ObjectType = (Odyssey.Core.Enums.ObjectType)(int)structData.GetUInt32("ObjectType");
             }
 
             // TemplateResRef

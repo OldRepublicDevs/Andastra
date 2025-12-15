@@ -1,4 +1,5 @@
 using System;
+using System.Numerics;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -501,8 +502,8 @@ namespace CSharpKOTOR.Mods.GFF
                 }
                 else if (addField is AddStructToListGFF addStructToListGFF)
                 {
-                    // We need to find a way to update the path
-                    addStructToListGFF.Path = newpath; // FIXME: This is a limitation - in Python it's mutable but in C# it's not
+                    // Update the path (Path property is mutable with { get; set; })
+                    addStructToListGFF.Path = newpath;
                 }
 
                 // Python: add_field.apply(root_container, memory, logger)
