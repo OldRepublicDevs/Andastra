@@ -62,6 +62,84 @@ namespace HolocronToolset.NET.Tests.Editors
             editor.Ifo.Tag.Should().Be("modified_tag");
         }
 
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_ifo_editor.py:45-65
+        // Original: def test_ifo_editor_manipulate_vo_id(qtbot, installation: HTInstallation):
+        [Fact]
+        public void TestIfoEditorManipulateVoId()
+        {
+            // Get installation if available (needed for some operations)
+            string k1Path = Environment.GetEnvironmentVariable("K1_PATH");
+            if (string.IsNullOrEmpty(k1Path))
+            {
+                k1Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k1Path) && System.IO.File.Exists(System.IO.Path.Combine(k1Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k1Path, "Test Installation", tsl: false);
+            }
+
+            var editor = new IFOEditor(null, installation);
+
+            editor.New();
+
+            // Modify VO ID
+            var testVoIds = new[] { "vo_001", "test_vo", "", "vo_id_12345" };
+            foreach (var voId in testVoIds)
+            {
+                editor.VoIdEdit.Text = voId;
+                editor.OnValueChanged();
+
+                // Build and verify
+                var (data, _) = editor.Build();
+                var modifiedGff = GFF.FromBytes(data);
+                var modifiedIfo = CSharpKOTOR.Resource.Generics.IFOHelpers.ConstructIfo(modifiedGff);
+                modifiedIfo.VoId.Should().Be(voId);
+
+                // Load back and verify
+                editor.Load("test.ifo", "test", ResourceType.IFO, data);
+                editor.VoIdEdit.Text.Should().Be(voId);
+            }
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_ifo_editor.py:67-83
+        // Original: def test_ifo_editor_manipulate_hak(qtbot, installation: HTInstallation):
+        [Fact]
+        public void TestIfoEditorManipulateHak()
+        {
+            // Get installation if available (needed for some operations)
+            string k1Path = Environment.GetEnvironmentVariable("K1_PATH");
+            if (string.IsNullOrEmpty(k1Path))
+            {
+                k1Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k1Path) && System.IO.File.Exists(System.IO.Path.Combine(k1Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k1Path, "Test Installation", tsl: false);
+            }
+
+            var editor = new IFOEditor(null, installation);
+
+            editor.New();
+
+            // Modify Hak
+            var testHaks = new[] { "hak01", "test_hak", "", "custom_hak_file" };
+            foreach (var hak in testHaks)
+            {
+                editor.HakEdit.Text = hak;
+                editor.OnValueChanged();
+
+                // Build and verify
+                var (data, _) = editor.Build();
+                var modifiedGff = GFF.FromBytes(data);
+                var modifiedIfo = CSharpKOTOR.Resource.Generics.IFOHelpers.ConstructIfo(modifiedGff);
+                modifiedIfo.Hak.Should().Be(hak);
+            }
+        }
+
         // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_ifo_editor.py:783-815
         // Original: def test_ifo_editor_load_from_test_files(qtbot, installation: HTInstallation, test_files_dir: Path):
         [Fact]
