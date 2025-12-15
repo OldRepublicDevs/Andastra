@@ -324,16 +324,6 @@ namespace Odyssey.Scripting.EngineApi
                 // Object type checks
                 case 217: return Func_GetIsPC(args, ctx);
                 case 218: return Func_GetIsNPC(args, ctx);
-                
-                // Door and placeable functions
-                case 325: return Func_GetLocked(args, ctx);
-                case 337: return Func_GetIsDoorActionPossible(args, ctx);
-                case 443: return Func_GetIsOpen(args, ctx);
-                case 537: return Func_GetLockKeyRequired(args, ctx);
-                case 538: return Func_GetLockKeyTag(args, ctx);
-                case 539: return Func_GetLockLockable(args, ctx);
-                case 540: return Func_GetLockUnlockDC(args, ctx);
-                case 541: return Func_GetLockLockDC(args, ctx);
 
                 // GetAbilityModifier (routine 331)
                 case 331: return Func_GetAbilityModifier(args, ctx);
@@ -650,6 +640,16 @@ namespace Odyssey.Scripting.EngineApi
             return Variable.Void();
         }
 
+        /// <summary>
+        /// ActionSpeakString(string sStringToSpeak, int nTalkVolume=TALKVOLUME_TALK) - action to speak a string
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: Speak string action system
+        /// Original implementation: Creates ActionSpeakString action, adds to entity's action queue
+        /// Talk volume: TALKVOLUME_TALK (0) = normal, TALKVOLUME_WHISPER (1) = quiet, TALKVOLUME_SHOUT (2) = loud
+        /// Execution: Action executes when reached in action queue, plays voice-over if available
+        /// Returns: Void (no return value)
+        /// </remarks>
         private Variable Func_ActionSpeakString(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             string text = args.Count > 0 ? args[0].AsString() : string.Empty;
@@ -4569,16 +4569,16 @@ namespace Odyssey.Scripting.EngineApi
                 }
                 
                 // Fallback: Simple faction check if FactionManager not available
-                    IFactionComponent sourceFaction = source.GetComponent<IFactionComponent>();
-                    IFactionComponent targetFaction = target.GetComponent<IFactionComponent>();
-                    
-                    if (sourceFaction != null && targetFaction != null)
+                IFactionComponent sourceFaction = source.GetComponent<IFactionComponent>();
+                IFactionComponent targetFaction = target.GetComponent<IFactionComponent>();
+                
+                if (sourceFaction != null && targetFaction != null)
+                {
+                    // Check if same faction (simplified - would need FactionManager for proper friendliness)
+                    if (sourceFaction.FactionId == targetFaction.FactionId)
                     {
-                        // Check if same faction (simplified - would need FactionManager for proper friendliness)
-                        if (sourceFaction.FactionId == targetFaction.FactionId)
-                        {
-                            // Same faction are friends by default
-                            return Variable.FromInt(1);
+                        // Same faction are friends by default
+                        return Variable.FromInt(1);
                     }
                 }
             }
@@ -4789,6 +4789,18 @@ namespace Odyssey.Scripting.EngineApi
         /// <summary>
         /// ActionSpeakStringByStrRef(int nStrRef, int nTalkVolume=TALKVOLUME_TALK) - Causes the creature to speak a translated string
         /// </summary>
+        /// <summary>
+        /// ActionSpeakStringByStrRef(int nStrRef, int nTalkVolume=TALKVOLUME_TALK) - action to speak string from TLK
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: Speak string by StrRef action system
+        /// Located via string references: "STRREF" @ 0x007b6368, "StrRef" @ 0x007c1fe8
+        /// Original implementation: Looks up string from TLK using StrRef, creates ActionSpeakString action
+        /// TLK lookup: Uses DialogueManager.LookupString to get text from talk table
+        /// Talk volume: TALKVOLUME_TALK (0) = normal, TALKVOLUME_WHISPER (1) = quiet, TALKVOLUME_SHOUT (2) = loud
+        /// Execution: Action executes when reached in action queue, plays voice-over if available
+        /// Returns: Void (no return value)
+        /// </remarks>
         private Variable Func_ActionSpeakStringByStrRef(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             int strRef = args.Count > 0 ? args[0].AsInt() : 0;
@@ -4844,9 +4856,9 @@ namespace Odyssey.Scripting.EngineApi
             // If no delay and no fade, destroy immediately
             if (delay <= 0f && noFade != 0)
             {
-            if (ctx.World != null)
-            {
-                ctx.World.DestroyEntity(entity.ObjectId);
+                if (ctx.World != null)
+                {
+                    ctx.World.DestroyEntity(entity.ObjectId);
                 }
                 return Variable.Void();
             }
@@ -5056,18 +5068,18 @@ namespace Odyssey.Scripting.EngineApi
                 // Convert System.Numerics.Vector3 to CSharpKOTOR Vector3 for World.CreateEntity
                 Vector3 worldPosition = new Vector3(position.X, position.Y, position.Z);
                 entity = ctx.World.CreateEntity(odyObjectType, worldPosition, facing);
-            if (entity == null)
-            {
-                return Variable.FromObject(ObjectInvalid);
-            }
-            
-            // Set tag from template (for waypoints, template is the tag)
-            if (objectType == 6) // Waypoint
-            {
-                entity.Tag = template;
-            }
-            else if (!string.IsNullOrEmpty(template))
-            {
+                if (entity == null)
+                {
+                    return Variable.FromObject(ObjectInvalid);
+                }
+                
+                // Set tag from template (for waypoints, template is the tag)
+                if (objectType == 6) // Waypoint
+                {
+                    entity.Tag = template;
+                }
+                else if (!string.IsNullOrEmpty(template))
+                {
                     entity.Tag = template;
                 }
             }
@@ -5208,137 +5220,6 @@ namespace Odyssey.Scripting.EngineApi
         #endregion
     }
 }
-
-
-
-                runtimeArea.AddEntity(entity);
-            }
-            
-            // Implement appear animation if bUseAppearAnimation is TRUE
-            // Based on swkotor2.exe: Objects created with appear animation play a fade-in effect
-            // This is typically handled by setting a flag that the rendering system uses to fade in the object
-            if (useAppearAnimation != 0)
-            {
-                // Set flag on entity to indicate it should fade in
-                if (entity is Core.Entities.Entity entityImpl)
-                {
-                    entityImpl.SetData("AppearAnimation", true);
-                    
-                    // Optionally, queue an animation action for entities that support it
-                    // Most objects in KOTOR just fade in visually rather than playing a specific animation
-                    // The rendering system should handle the fade-in based on the AppearAnimation flag
-                }
-            }
-            
-            return Variable.FromObject(entity.ObjectId);
-        }
-
-        #endregion
-
-        #region Type Conversion Functions
-
-        /// <summary>
-        /// IntToFloat(int nInteger) - Convert nInteger into a floating point number
-        /// </summary>
-        private Variable Func_IntToFloat(IReadOnlyList<Variable> args, IExecutionContext ctx)
-        {
-            int value = args.Count > 0 ? args[0].AsInt() : 0;
-            return Variable.FromFloat((float)value);
-        }
-
-        /// <summary>
-        /// FloatToInt(float fFloat) - Convert fFloat into the nearest integer
-        /// </summary>
-        private Variable Func_FloatToInt(IReadOnlyList<Variable> args, IExecutionContext ctx)
-        {
-            float value = args.Count > 0 ? args[0].AsFloat() : 0f;
-            return Variable.FromInt((int)Math.Round(value));
-        }
-
-        /// <summary>
-        /// StringToInt(string sNumber) - Convert sNumber into an integer
-        /// </summary>
-        private new Variable Func_StringToInt(IReadOnlyList<Variable> args, IExecutionContext ctx)
-        {
-            string numberStr = args.Count > 0 ? args[0].AsString() : "";
-            if (int.TryParse(numberStr, out int result))
-            {
-                return Variable.FromInt(result);
-            }
-            return Variable.FromInt(0);
-        }
-
-        /// <summary>
-        /// StringToFloat(string sNumber) - Convert sNumber into a floating point number
-        /// </summary>
-        private new Variable Func_StringToFloat(IReadOnlyList<Variable> args, IExecutionContext ctx)
-        {
-            string numberStr = args.Count > 0 ? args[0].AsString() : "";
-            if (float.TryParse(numberStr, out float result))
-            {
-                return Variable.FromFloat(result);
-            }
-            return Variable.FromFloat(0f);
-        }
-
-        #endregion
-
-        #region Nearest Object To Location
-
-        /// <summary>
-        /// GetNearestObjectToLocation(int nObjectType, location lLocation, int nNth=1) - Get the nNth object nearest to lLocation that is of the specified type
-        /// </summary>
-        private Variable Func_GetNearestObjectToLocation(IReadOnlyList<Variable> args, IExecutionContext ctx)
-        {
-            if (args.Count < 2 || ctx.World == null)
-            {
-                return Variable.FromObject(ObjectInvalid);
-            }
-            
-            int objectType = args[0].AsInt();
-            object locObj = args[1].AsLocation();
-            int nth = args.Count > 2 ? args[2].AsInt() : 1;
-            
-            // Extract position from location
-            Vector3 locationPos = Vector3.Zero;
-            if (locObj != null && locObj is Location location)
-            {
-                locationPos = location.Position;
-            }
-            
-            // Convert object type constant to ObjectType enum
-            Core.Enums.ObjectType typeMask = Core.Enums.ObjectType.All;
-            if (objectType != 32767) // Not OBJECT_TYPE_ALL
-            {
-                // Map NWScript object type constants
-                typeMask = (Core.Enums.ObjectType)objectType;
-            }
-            
-            // Get all entities of the specified type
-            var candidates = new List<(IEntity entity, float distance)>();
-            foreach (IEntity entity in ctx.World.GetEntitiesOfType(typeMask))
-            {
-                ITransformComponent entityTransform = entity.GetComponent<ITransformComponent>();
-                if (entityTransform != null)
-                {
-                    float distance = Vector3.DistanceSquared(locationPos, entityTransform.Position);
-                    candidates.Add((entity, distance));
-                }
-            }
-            
-            // Sort by distance
-            candidates.Sort((a, b) => a.distance.CompareTo(b.distance));
-            
-            // Return Nth nearest (1-indexed)
-            if (nth > 0 && nth <= candidates.Count)
-            {
-                return Variable.FromObject(candidates[nth - 1].entity.ObjectId);
-            }
-            
-            return Variable.FromObject(ObjectInvalid);
-        }
-
-        #endregion
     }
 }
 
