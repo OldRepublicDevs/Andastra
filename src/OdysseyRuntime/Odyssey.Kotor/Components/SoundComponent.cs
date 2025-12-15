@@ -9,11 +9,19 @@ namespace Odyssey.Kotor.Components
     /// <remarks>
     /// Sound Component:
     /// - Based on swkotor2.exe sound system
-    /// - Located via string references: Sound entity functions handle ambient audio emission
+    /// - Located via string references: "SoundList" @ 0x007bd278 (GIT sound list), "Sound" @ 0x007bc548 (sound entity type)
+    /// - "PlaySound" @ 0x007c5f70 (sound playback function), "Volume" @ 0x007c6110 (sound volume field)
+    /// - "MinVolumeDist" @ 0x007c60c4, "MaxVolumeDist" @ 0x007c60d8 (sound distance falloff fields)
+    /// - Template loading: FUN_004e08e0 @ 0x004e08e0 loads sound instances from GIT
     /// - Original implementation: Sound entities emit positional audio in the game world
-    /// - UTS file format: GFF with "UTS " signature containing sound data
-    /// - Sound entities can be active/inactive, looping, positional, with volume and distance falloff
-    /// - Sounds can randomize position or play random sounds from a list
+    /// - UTS file format: GFF with "UTS " signature containing sound data (Active, Looping, Positional, ResRef, Volume, MaxDistance, MinDistance)
+    /// - Sound entities can be active/inactive (Active field), looping (Looping field), positional (Positional field for 3D audio)
+    /// - Volume: 0-127 range (Volume field), distance falloff: MinDistance (full volume) to MaxDistance (zero volume)
+    /// - Continuous sounds: Play continuously when active (Continuous field)
+    /// - Random sounds: Can play random sounds from SoundFiles list (Random field), randomize position (RandomPosition field)
+    /// - Interval: Time between plays for non-looping sounds (Interval field, IntervalVrtn for variation)
+    /// - Volume variation: VolumeVrtn field for random volume variation
+    /// - Hours: Bitmask for time-based activation (Hours field, 0-23 hour range)
     /// - Based on UTS file format documentation in vendor/PyKotor/wiki/
     /// </remarks>
     public class SoundComponent : IComponent

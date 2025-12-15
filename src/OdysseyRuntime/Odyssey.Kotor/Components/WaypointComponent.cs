@@ -8,11 +8,14 @@ namespace Odyssey.Kotor.Components
     /// <remarks>
     /// Waypoint Component:
     /// - Based on swkotor2.exe waypoint system
-    /// - Located via string references: Waypoint functions handle waypoint lookup and navigation
-    /// - Original implementation: Waypoints are invisible markers used for scripting and navigation
-    /// - UTW file format: GFF with "UTW " signature containing waypoint data
-    /// - Waypoints can have map notes for player reference
-    /// - GetWaypointByTag NWScript function finds waypoints by tag
+    /// - Located via string references: "WaypointList" @ 0x007bd288 (GIT waypoint list), "Waypoint" @ 0x007bc540 (waypoint entity type)
+    /// - "MapNote" @ 0x007bd10c (map note text field), "MapNoteEnabled" @ 0x007bd118 (map note enabled flag)
+    /// - Original implementation: FUN_004e08e0 @ 0x004e08e0 loads waypoint instances from GIT
+    /// - Waypoints are invisible markers used for scripting and navigation (GetWaypointByTag NWScript function)
+    /// - UTW file format: GFF with "UTW " signature containing waypoint data (Tag, XPosition, YPosition, ZPosition, MapNote, MapNoteEnabled)
+    /// - Waypoints can have map notes for player reference (displayed on minimap when MapNoteEnabled is true)
+    /// - GetWaypointByTag NWScript function finds waypoints by tag (searches all waypoints in current area)
+    /// - Waypoints used for: Module transitions (LinkedTo field), script positioning, area navigation
     /// - Based on UTW file format documentation in vendor/PyKotor/wiki/
     /// </remarks>
     public class WaypointComponent : IComponent
