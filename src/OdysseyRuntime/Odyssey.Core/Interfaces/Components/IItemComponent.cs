@@ -20,6 +20,17 @@ namespace Odyssey.Core.Interfaces.Components
     /// - "PoweredItem" @ 0x007c43b0 (powered item flag), "AmmoItem" @ 0x007bf84c (ammo item field)
     /// - "NewItem" @ 0x007c0930 (new item flag), "ItemCreate" @ 0x007c4f84 (item creation field)
     /// - "PROTOITEM" @ 0x007b6c0c (prototype item constant), "BASEITEMS" @ 0x007c4594 (base items table)
+    /// - Item fields: "ItemId" @ 0x007bef40 (item ID field), "ItemList" @ 0x007bf580 (item list field)
+    /// - "Equip_ItemList" @ 0x007bf5a4 (equipped item list), "MaxItemPoints" @ 0x007bdb2c (max item points field)
+    /// - "LoseItems" @ 0x007bdaa8 (lose items field), "LoseItemsNum" @ 0x007bda6c (lose items number field)
+    /// - "LoseStolenItems" @ 0x007bdab4 (lose stolen items field), "MAXSINGLEITEMVALUE" @ 0x007c0774 (max single item value constant)
+    /// - Item events: "CSWSSCRIPTEVENT_EVENTTYPE_ON_ACQUIRE_ITEM" @ 0x007bc8c4, "CSWSSCRIPTEVENT_EVENTTYPE_ON_LOSE_ITEM" @ 0x007bc89c
+    /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_ACTIVATE_ITEM" @ 0x007bc8f0, "CSWSSCRIPTEVENT_EVENTTYPE_ON_EQUIP_ITEM" @ 0x007bc594
+    /// - "EVENT_ACQUIRE_ITEM" @ 0x007bcbf4, "EVENT_ITEM_ON_HIT_SPELL_IMPACT" @ 0x007bcc8c
+    /// - "ITEMLOST" @ 0x007bdf4c, "ITEMRECEIVED" @ 0x007bdf58
+    /// - Module item events: "Mod_OnAcquirItem" @ 0x007be7e0, "Mod_OnUnAqreItem" @ 0x007be7cc, "Mod_OnActvtItem" @ 0x007be7f4, "Mod_OnEquipItem" @ 0x007beac8
+    /// - Item types: "PT_ITEM_CHEMICAL" @ 0x007c18d4, "PT_ITEM_COMPONENT" @ 0x007c18e8
+    /// - Error: "Item template %s doesn't exist.\n" @ 0x007c2028
     /// - Item loading: FUN_005226d0 @ 0x005226d0 (load item from UTI template), FUN_005fb0f0 @ 0x005fb0f0 (item creation)
     /// - Original implementation: Items have base item ID, properties, upgrades, charges, stack size
     /// - UTI file format: GFF with "UTI " signature containing item data (BaseItem, Properties, Charges, Cost)
