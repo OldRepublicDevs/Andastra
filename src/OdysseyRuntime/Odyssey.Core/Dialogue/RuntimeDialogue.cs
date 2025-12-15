@@ -241,6 +241,11 @@ namespace Odyssey.Core.Dialogue
 
         /// <summary>
         /// Delay before advancing (in milliseconds, -1 = auto).
+        /// Based on swkotor2.exe: FUN_005e6ac0 @ 0x005e6ac0 reads Delay field from DLG node
+        /// Located via string reference: "Delay" @ 0x007c35b0
+        /// Original implementation: If Delay == -1 and voiceover exists, uses voiceover duration
+        /// If Delay == -1 and no voiceover, uses default delay from WaitFlags
+        /// If Delay >= 0, uses Delay value directly
         /// </summary>
         public int Delay { get; set; }
 
