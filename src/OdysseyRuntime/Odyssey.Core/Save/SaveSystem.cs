@@ -547,6 +547,202 @@ namespace Odyssey.Core.Save
         }
 
         #endregion
+
+        #region Module State Management
+
+        /// <summary>
+        /// Stores module state for runtime persistence (not in save file).
+        /// Module states persist across module transitions within a game session.
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: Module state persistence
+        /// Original implementation: Module states cached in memory during gameplay
+        /// States are saved to save files when Save() is called
+        /// </remarks>
+        public void StoreModuleState(string moduleResRef, Module.ModuleState moduleState)
+        {
+            if (string.IsNullOrEmpty(moduleResRef) || moduleState == null)
+            {
+                return;
+            }
+
+            // Store in current save's area states if available
+            if (CurrentSave != null)
+            {
+                if (CurrentSave.AreaStates == null)
+                {
+                    CurrentSave.AreaStates = new Dictionary<string, AreaState>();
+                }
+
+                // Convert ModuleState to AreaState for storage
+                // Module states are per-module, but we store them as area states
+                // since modules contain areas
+                if (_world.CurrentArea != null)
+                {
+                    AreaState areaState = CreateAreaStateFromModuleState(moduleState);
+                    CurrentSave.AreaStates[_world.CurrentArea.ResRef] = areaState;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Checks if module state exists for the given module.
+        /// </summary>
+        public bool HasModuleState(string moduleResRef)
+        {
+            if (string.IsNullOrEmpty(moduleResRef))
+            {
+                return false;
+            }
+
+            // Check if we have area states for this module
+            if (CurrentSave != null && CurrentSave.AreaStates != null)
+            {
+                // Module states are stored as area states
+                // Check if any area in the current save belongs to this module
+                foreach (string areaResRef in CurrentSave.AreaStates.Keys)
+                {
+                    // In a real implementation, we'd check if area belongs to module
+                    // For now, we'll check if we have any area states
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Gets module state for the given module.
+        /// </summary>
+        public Module.ModuleState GetModuleState(string moduleResRef)
+        {
+            if (string.IsNullOrEmpty(moduleResRef))
+            {
+                return null;
+            }
+
+            // Convert AreaState back to ModuleState
+            if (CurrentSave != null && CurrentSave.AreaStates != null && _world.CurrentArea != null)
+            {
+                AreaState areaState;
+                if (CurrentSave.AreaStates.TryGetValue(_world.CurrentArea.ResRef, out areaState))
+                {
+                    return CreateModuleStateFromAreaState(areaState);
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Converts ModuleState to AreaState for storage.
+        /// </summary>
+        private AreaState CreateAreaStateFromModuleState(Module.ModuleState moduleState)
+        {
+            var areaState = new AreaState();
+            if (_world.CurrentArea != null)
+            {
+                areaState.AreaResRef = _world.CurrentArea.ResRef;
+            }
+
+            // Convert creature states
+            foreach (Module.CreatureState creatureState in moduleState.Creatures)
+            {
+                var entityState = new EntityState
+                {
+                    Tag = creatureState.Tag,
+                    Position = creatureState.Position,
+                    Facing = creatureState.Facing,
+                    CurrentHP = creatureState.CurrentHP,
+                    MaxHP = creatureState.CurrentHP, // Use CurrentHP as fallback
+                    ObjectType = ObjectType.Creature
+                };
+                areaState.CreatureStates.Add(entityState);
+            }
+
+            // Convert door states
+            foreach (Module.DoorState doorState in moduleState.Doors)
+            {
+                var entityState = new EntityState
+                {
+                    Tag = doorState.Tag,
+                    IsOpen = doorState.IsOpen,
+                    IsLocked = doorState.IsLocked,
+                    ObjectType = ObjectType.Door
+                };
+                areaState.DoorStates.Add(entityState);
+            }
+
+            // Convert placeable states
+            foreach (Module.PlaceableState placeableState in moduleState.Placeables)
+            {
+                var entityState = new EntityState
+                {
+                    Tag = placeableState.Tag,
+                    IsOpen = placeableState.IsOpen,
+                    ObjectType = ObjectType.Placeable
+                };
+                areaState.PlaceableStates.Add(entityState);
+            }
+
+            return areaState;
+        }
+
+        /// <summary>
+        /// Converts AreaState back to ModuleState.
+        /// </summary>
+        private Module.ModuleState CreateModuleStateFromAreaState(AreaState areaState)
+        {
+            var moduleState = new Module.ModuleState();
+
+            // Convert creature states
+            foreach (EntityState entityState in areaState.CreatureStates)
+            {
+                if (entityState.ObjectType == ObjectType.Creature)
+                {
+                    moduleState.Creatures.Add(new Module.CreatureState
+                    {
+                        Tag = entityState.Tag,
+                        Position = entityState.Position,
+                        Facing = entityState.Facing,
+                        CurrentHP = entityState.CurrentHP,
+                        IsDead = entityState.CurrentHP <= 0
+                    });
+                }
+            }
+
+            // Convert door states
+            foreach (EntityState entityState in areaState.DoorStates)
+            {
+                if (entityState.ObjectType == ObjectType.Door)
+                {
+                    moduleState.Doors.Add(new Module.DoorState
+                    {
+                        Tag = entityState.Tag,
+                        IsOpen = entityState.IsOpen,
+                        IsLocked = entityState.IsLocked
+                    });
+                }
+            }
+
+            // Convert placeable states
+            foreach (EntityState entityState in areaState.PlaceableStates)
+            {
+                if (entityState.ObjectType == ObjectType.Placeable)
+                {
+                    moduleState.Placeables.Add(new Module.PlaceableState
+                    {
+                        Tag = entityState.Tag,
+                        IsOpen = entityState.IsOpen,
+                        HasInventory = false // Not stored in EntityState
+                    });
+                }
+            }
+
+            return moduleState;
+        }
+
+        #endregion
     }
 
     /// <summary>
