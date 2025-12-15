@@ -62,6 +62,10 @@ namespace Odyssey.Core.Actions
             float distance = toTarget.Length();
 
             // If we're within range, we're done
+            // Based on swkotor2.exe: ActionMoveToObject implementation
+            // Located via string references: "MOVETO" @ 0x007b6b24, "ActionList" @ 0x007bebdc
+            // Original implementation: Moves directly to target (no pathfinding), follows if target moves
+            // Action completes when within specified range of target object
             if (distance <= _range)
             {
                 // Face target
