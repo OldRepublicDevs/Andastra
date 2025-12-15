@@ -5909,6 +5909,8 @@ namespace Odyssey.Scripting.EngineApi
             return Variable.FromObject(ObjectInvalid);
         }
 
+        #endregion
+
         #region Class and Level Functions
 
         /// <summary>

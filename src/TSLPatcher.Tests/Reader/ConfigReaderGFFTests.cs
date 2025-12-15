@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Numerics;
 using CSharpKOTOR.Common;
 using CSharpKOTOR.Config;
 using CSharpKOTOR.Formats.GFF;

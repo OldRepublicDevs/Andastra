@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Numerics;
 using CSharpKOTOR.Common;
 using CSharpKOTOR.Formats.GFF;
 using CSharpKOTOR.Logger;
