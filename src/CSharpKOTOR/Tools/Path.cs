@@ -18,7 +18,7 @@ namespace CSharpKOTOR.Tools
         // Original: def get_default_paths() -> dict[str, dict[Game, list[str]]]:
         /// <summary>
         /// Gets default hardcoded paths for KOTOR installations on different platforms.
-        /// TODO: Many of these paths are incomplete and need community input.
+        /// Note: Some paths (e.g., App Store versions) are incomplete and need community input.
         /// </summary>
         public static Dictionary<string, Dictionary<Game, List<string>>> GetDefaultPaths()
         {
@@ -63,7 +63,7 @@ namespace CSharpKOTOR.Tools
                             {
                                 "~/Library/Application Support/Steam/steamapps/common/swkotor/Knights of the Old Republic.app/Contents/Assets",
                                 "~/Library/Applications/Steam/steamapps/common/swkotor/Knights of the Old Republic.app/Contents/Assets/",
-                                // TODO: app store version of k1
+                                // App Store version path not yet determined - needs community input
                             }
                         },
                         {
@@ -75,7 +75,7 @@ namespace CSharpKOTOR.Tools
                                 "~/Library/Application Support/Steam/steamapps/common/Knights of the Old Republic II/KOTOR2.app/Contents/GameData/",
                                 "~/Applications/Knights of the Old Republic 2.app/Contents/Resources/transgaming/c_drive/Program Files/SWKotOR2/",
                                 "/Applications/Knights of the Old Republic 2.app/Contents/Resources/transgaming/c_drive/Program Files/SWKotOR2/",
-                                // TODO: app store version of k2
+                                // App Store version path not yet determined - needs community input
                             }
                         }
                     }

@@ -123,7 +123,8 @@ namespace CSharpKOTOR.Tools
                 Check("AppIcon50x50~ipad.png"),
             };
 
-            bool[] game1AndroidChecks = new bool[0]; // TODO: Implement
+            // Android checks not yet implemented - requires Android-specific file path knowledge
+            bool[] game1AndroidChecks = new bool[0];
 
             bool[] game2PcChecks = new[]
             {
@@ -205,7 +206,8 @@ namespace CSharpKOTOR.Tools
                 Check("GoogleService-Info.plist"),
             };
 
-            bool[] game2AndroidChecks = new bool[0]; // TODO: Implement
+            // Android checks not yet implemented - requires Android-specific file path knowledge
+            bool[] game2AndroidChecks = new bool[0];
 
             // Determine the game with the most checks passed
             int game1Score = game1PcChecks.Count(x => x);
