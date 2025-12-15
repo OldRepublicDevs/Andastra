@@ -9,7 +9,9 @@ namespace Odyssey.Core.Journal
     /// <remarks>
     /// KOTOR Journal System:
     /// - Based on swkotor2.exe journal/quest system
-    /// - Located via string references: Journal-related functions handle quest state
+    /// - Located via string references: "JOURNAL" @ 0x007bdf44, "NW_JOURNAL" @ 0x007c20e8, "Journal" @ 0x007c2490
+    /// - "journal_p" @ 0x007ca9c4, "LBL_JOURNAL" @ 0x007c8c60, "LBL_JOURNAL_DESC" @ 0x007c8c4c
+    /// - Error: "Journal Crash! Partial Update on non-existant entry; plot:%s flags:%i" @ 0x007cbca8
     /// - Original implementation: Journal entries stored in JRL files, quest states in global variables
     /// - Quests organized by planet/category
     /// - Multiple states per quest (progress stages: 0 = not started, 1+ = in progress, -1 = completed)
