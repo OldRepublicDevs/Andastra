@@ -9,7 +9,9 @@ namespace Odyssey.Core.Entities
     /// <remarks>
     /// Time Manager:
     /// - Based on swkotor2.exe time management system
-    /// - Located via string references: Time functions handle game time, day/night cycles, time-based events
+    /// - Located via string references: "TIME_PAUSETIME" @ 0x007bdf88, "TIME_SECOND" @ 0x007bdfbc, "TIME_MINUTE" @ 0x007bdfc8,
+    ///   "TIME_HOUR" @ 0x007bdfd4, "TIME_DAY" @ 0x007bdfe0, "TIME_MONTH" @ 0x007bdfec, "TIME_YEAR" @ 0x007bdff8,
+    ///   "TIMEPLAYED" @ 0x007be1c4, "TimeElapsed" @ 0x007bed5c, "Mod_PauseTime" @ 0x007be89c
     /// - Original implementation: Fixed timestep simulation for deterministic gameplay (60 Hz)
     /// - Game time tracking: Day, month, year, time of day (hours, minutes, seconds)
     /// - Fixed timestep ensures consistent simulation regardless of frame rate
