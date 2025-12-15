@@ -10,15 +10,26 @@ namespace Odyssey.Kotor.Components
     /// </summary>
     /// <remarks>
     /// Faction system in KOTOR:
-    /// - FactionId references repute.2da
-    /// - Personal reputation overrides faction-based
-    /// - Temporary hostility from combat
-    ///
-    /// Common factions:
-    /// - 1: Player
-    /// - 2: Hostile (always hostile to player)
-    /// - 3: Commoner
-    /// - 4: Merchant
+    /// - Based on swkotor2.exe faction system
+    /// - Located via string references: "FactionID" @ 0x007c40b4 (faction ID field), "Faction" @ 0x007c0ca0
+    /// - "FactionList" @ 0x007be604 (faction list field), "FactionRep" @ 0x007c290c (faction reputation field)
+    /// - "FACTIONREP" @ 0x007bcec8 (faction reputation constant), "FactionGlobal" @ 0x007c28e0 (faction global variable)
+    /// - "FactionName" @ 0x007c2900 (faction name field), "FactionParentID" @ 0x007c28f0 (faction parent ID)
+    /// - "FactionID1" @ 0x007c2924, "FactionID2" @ 0x007c2918 (faction ID fields in repute.2da)
+    /// - Error: "Cannot set creature %s to faction %d because faction does not exist! Setting to Hostile1." @ 0x007bf2a8
+    /// - Debug: "Faction: " @ 0x007caed0 (faction debug output)
+    /// - Original implementation: FactionId references repute.2da row (defines faction relationships)
+    /// - Faction relationships stored in repute.2da (FactionID1, FactionID2, FactionRep columns)
+    /// - FactionRep values: 0=friendly, 1=enemy, 2=neutral (defines relationship between two factions)
+    /// - Personal reputation overrides faction-based (temporary hostility from combat)
+    /// - Temporary hostility tracked per-entity (stored in _temporaryHostileTargets HashSet)
+    /// - Common factions (StandardFactions enum):
+    ///   - 1: Player (FACTION_PLAYER)
+    ///   - 2: Hostile (FACTION_HOSTILE, always hostile to player)
+    ///   - 3: Commoner (FACTION_COMMONER, neutral)
+    ///   - 4: Merchant (FACTION_MERCHANT, friendly)
+    /// - FactionManager handles complex faction relationships and reputation lookups
+    /// - Based on repute.2da file format documentation
     /// </remarks>
     public class FactionComponent : IFactionComponent
     {
