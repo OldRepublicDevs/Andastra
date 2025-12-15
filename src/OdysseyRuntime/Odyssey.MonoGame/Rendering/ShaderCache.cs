@@ -19,6 +19,13 @@ namespace Odyssey.MonoGame.Rendering
     /// <remarks>
     /// Shader Cache System (Modern Enhancement):
     /// - Based on swkotor2.exe rendering system architecture
+    /// - Located via string references: OpenGL shader extension functions
+    /// - Vertex shader extensions: glGenVertexShadersEXT, glBindVertexShaderEXT, glBeginVertexShaderEXT, glEndVertexShaderEXT
+    /// - glDeleteVertexShadersEXT, glShaderOp1EXT, glShaderOp2EXT, glShaderOp3EXT
+    /// - Fragment shader extensions: "GL_ATI_fragment_shader" @ 0x007b7454
+    /// - glGenFragmentShadersATI, glBindFragmentShaderATI, glBeginFragmentShaderATI, glEndFragmentShaderATI
+    /// - glDeleteFragmentShaderATI, glSetFragmentShaderConstantATI
+    /// - Texture shader: "GL_NV_texture_shader" @ 0x007b895c
     /// - Original implementation: KOTOR used fixed-function DirectX 8/9 pipeline with minimal programmable shaders
     /// - Original engine: Most rendering used fixed-function pipeline, shaders compiled at engine initialization
     /// - This is a modernization feature: Original engine did not have runtime shader compilation/caching
