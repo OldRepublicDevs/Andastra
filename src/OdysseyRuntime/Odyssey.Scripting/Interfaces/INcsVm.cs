@@ -3,6 +3,23 @@ namespace Odyssey.Scripting.Interfaces
     /// <summary>
     /// NWScript compiled script virtual machine.
     /// </summary>
+    /// <remarks>
+    /// NCS VM Interface:
+    /// - Based on swkotor2.exe NCS VM implementation
+    /// - Located via string references: NCS script execution engine handles bytecode interpretation
+    /// - NCS file format: "NCS " signature (bytes 0-3), "V1.0" version (bytes 4-7), 0x42 marker at offset 8
+    /// - Instructions start at offset 0x0D (13 decimal)
+    /// - Stack-based VM with 65536-byte stack, 4-byte aligned
+    /// - Opcodes: ACTION (0x2A) calls engine functions, others handle stack operations, jumps, conditionals
+    /// - ACTION opcode format: uint16 routineId (big-endian) + uint8 argCount (stack elements, not bytes)
+    /// - Original engine uses big-endian encoding for all multi-byte values
+    /// - Stack alignment: 4-byte aligned, vectors are 12 bytes (3 floats)
+    /// - Jump offsets: Relative to instruction start (current PC), not next instruction
+    /// - Object references: 0x7F000000 = OBJECT_INVALID, 0x7F000001 = OBJECT_SELF (caller entity)
+    /// - Instruction limit: MaxInstructions prevents infinite loops (default 100000 instructions per execution)
+    /// - String handling: Strings stored in string pool with integer handles (off-stack storage)
+    /// - Based on NCS file format documentation in vendor/PyKotor/wiki/NCS-File-Format.md
+    /// </remarks>
     public interface INcsVm
     {
         /// <summary>
