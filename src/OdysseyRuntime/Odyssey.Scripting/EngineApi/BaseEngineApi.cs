@@ -14,7 +14,20 @@ namespace Odyssey.Scripting.EngineApi
     /// - Located via string references: ACTION opcode handler dispatches to engine function implementations
     /// - Original implementation: Common NWScript functions shared between K1 and K2
     /// - Object constants: OBJECT_INVALID (0x7F000000), OBJECT_SELF (0x7F000001)
+    /// - ACTION opcode: Calls engine function by routine ID (uint16 routineId + uint8 argCount)
+    /// - Function dispatch: Original engine uses dispatch table indexed by routine ID to call function implementations
+    /// - Routine IDs: Match function indices from nwscript.nss compilation (0-based index into function table)
+    /// - Function signature: All functions receive variable arguments list and execution context (caller, triggerer, world, globals)
+    /// - Return value: Functions return Variable (can be int, float, string, object, location, void)
+    /// - Default return values: Missing arguments default to 0, empty string, OBJECT_INVALID, etc.
     /// - Function implementations must match original engine behavior for script compatibility
+    /// - Error handling: Functions should handle invalid arguments gracefully (return defaults, don't crash)
+    /// - Common functions: PrintString, Random, GetTag, GetObjectByTag, GetLocalInt, SetLocalInt, GetGlobalInt, SetGlobalInt
+    /// - Math functions: fabs, cos, sin, tan, acos, asin, atan, log, pow, sqrt, abs
+    /// - String functions: GetStringLength, GetStringUpperCase, GetStringLowerCase, GetStringRight, GetStringLeft, InsertString, GetSubString, FindSubString
+    /// - Dice functions: d2, d3, d4, d6, d8, d10, d12, d20, d100 (D20 system dice rolls)
+    /// - Object functions: GetPosition, GetFacing, GetDistanceToObject, GetIsObjectValid, GetObjectType
+    /// - Action functions: AssignCommand, DelayCommand, ExecuteScript, ClearAllActions, SetFacing
     /// </remarks>
     public abstract class BaseEngineApi : IEngineApi
     {
