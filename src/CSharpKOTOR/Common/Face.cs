@@ -32,7 +32,7 @@ namespace CSharpKOTOR.Common
                 (u.Z * v.X) - (u.X * v.Z),
                 (u.X * v.Y) - (u.Y * v.X)
             );
-            normal = Vector3.Normalize(normal);
+            normal = System.Numerics.Vector3.Normalize(normal);
 
             return normal;
         }
