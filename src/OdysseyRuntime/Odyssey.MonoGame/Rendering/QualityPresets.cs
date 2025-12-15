@@ -14,6 +14,18 @@ namespace Odyssey.MonoGame.Rendering
     /// - Customizable quality settings
     /// - Automatic quality selection
     /// </summary>
+    /// <remarks>
+    /// Quality Presets:
+    /// - Based on swkotor2.exe graphics options system (modern quality preset enhancement)
+    /// - Located via string references: "LowQuality" @ 0x007c4a0c (low quality flag)
+    /// - "Texture Quality" @ 0x007c7528 (texture quality setting)
+    /// - "Graphics Options" @ 0x007b56a8 (graphics options menu)
+    /// - GUI: "BTN_GRAPHICS" @ 0x007d0d8c, "optgraphics_p" @ 0x007d2064 (graphics options panel)
+    /// - Original implementation: KOTOR has graphics options for texture quality, resolution, etc.
+    /// - Quality levels: Low, Medium, High, Ultra presets for different hardware capabilities
+    /// - This MonoGame implementation: Modern quality preset system with comprehensive settings
+    /// - Settings include: Resolution scale, shadows, SSAO, SSR, TAA, motion blur, LOD distance
+    /// </remarks>
     public static class QualityPresets
     {
         /// <summary>
