@@ -324,6 +324,16 @@ namespace Odyssey.Scripting.EngineApi
                 // Object type checks
                 case 217: return Func_GetIsPC(args, ctx);
                 case 218: return Func_GetIsNPC(args, ctx);
+                
+                // Door and placeable functions
+                case 325: return Func_GetLocked(args, ctx);
+                case 337: return Func_GetIsDoorActionPossible(args, ctx);
+                case 443: return Func_GetIsOpen(args, ctx);
+                case 537: return Func_GetLockKeyRequired(args, ctx);
+                case 538: return Func_GetLockKeyTag(args, ctx);
+                case 539: return Func_GetLockLockable(args, ctx);
+                case 540: return Func_GetLockUnlockDC(args, ctx);
+                case 541: return Func_GetLockLockDC(args, ctx);
 
                 // GetAbilityModifier (routine 331)
                 case 331: return Func_GetAbilityModifier(args, ctx);
@@ -2584,6 +2594,19 @@ namespace Odyssey.Scripting.EngineApi
             return Variable.FromInt(0);
         }
 
+        /// <summary>
+        /// GetStringByStrRef(int nStrRef) - gets string from talk table (TLK) using string reference
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: TLK (talk table) string lookup system
+        /// Located via string references: "STRREF" @ 0x007b6368, "StrRef" @ 0x007c1fe8, "NameStrRef" @ 0x007c0274
+        /// - "KeyNameStrRef" @ 0x007b641c, "NAME_STRREF" @ 0x007c8200, "DescStrRef" @ 0x007d2e40
+        /// - Error: "Invalid STRREF %d passed to Fetch" @ 0x007b6ccc, "BAD STRREF" @ 0x007c2968
+        /// Original implementation: TLK files contain string tables indexed by StrRef (32-bit integer)
+        /// TLK format: Binary file with string table, each entry has text and sound ResRef
+        /// StrRef range: Valid StrRefs are positive integers, 0 = empty string, negative = invalid
+        /// Returns: String text from TLK or empty string if StrRef is invalid or not found
+        /// </remarks>
         private Variable Func_GetStringByStrRef(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             // GetStringByStrRef(int nStrRef) - Get a string from the talk table using nStrRef
@@ -4546,16 +4569,16 @@ namespace Odyssey.Scripting.EngineApi
                 }
                 
                 // Fallback: Simple faction check if FactionManager not available
-                IFactionComponent sourceFaction = source.GetComponent<IFactionComponent>();
-                IFactionComponent targetFaction = target.GetComponent<IFactionComponent>();
-                
-                if (sourceFaction != null && targetFaction != null)
-                {
-                    // Check if same faction (simplified - would need FactionManager for proper friendliness)
-                    if (sourceFaction.FactionId == targetFaction.FactionId)
+                    IFactionComponent sourceFaction = source.GetComponent<IFactionComponent>();
+                    IFactionComponent targetFaction = target.GetComponent<IFactionComponent>();
+                    
+                    if (sourceFaction != null && targetFaction != null)
                     {
-                        // Same faction are friends by default
-                        return Variable.FromInt(1);
+                        // Check if same faction (simplified - would need FactionManager for proper friendliness)
+                        if (sourceFaction.FactionId == targetFaction.FactionId)
+                        {
+                            // Same faction are friends by default
+                            return Variable.FromInt(1);
                     }
                 }
             }
@@ -4821,9 +4844,9 @@ namespace Odyssey.Scripting.EngineApi
             // If no delay and no fade, destroy immediately
             if (delay <= 0f && noFade != 0)
             {
-                if (ctx.World != null)
-                {
-                    ctx.World.DestroyEntity(entity.ObjectId);
+            if (ctx.World != null)
+            {
+                ctx.World.DestroyEntity(entity.ObjectId);
                 }
                 return Variable.Void();
             }
@@ -5033,18 +5056,18 @@ namespace Odyssey.Scripting.EngineApi
                 // Convert System.Numerics.Vector3 to CSharpKOTOR Vector3 for World.CreateEntity
                 Vector3 worldPosition = new Vector3(position.X, position.Y, position.Z);
                 entity = ctx.World.CreateEntity(odyObjectType, worldPosition, facing);
-                if (entity == null)
-                {
-                    return Variable.FromObject(ObjectInvalid);
-                }
-                
-                // Set tag from template (for waypoints, template is the tag)
-                if (objectType == 6) // Waypoint
-                {
-                    entity.Tag = template;
-                }
-                else if (!string.IsNullOrEmpty(template))
-                {
+            if (entity == null)
+            {
+                return Variable.FromObject(ObjectInvalid);
+            }
+            
+            // Set tag from template (for waypoints, template is the tag)
+            if (objectType == 6) // Waypoint
+            {
+                entity.Tag = template;
+            }
+            else if (!string.IsNullOrEmpty(template))
+            {
                     entity.Tag = template;
                 }
             }
