@@ -156,14 +156,81 @@ namespace Odyssey.Content.Converters
                 return meshes[0];
             }
 
-            // TODO: Implement mesh merging
-            // For now, return the first mesh
-            // Full implementation would:
-            // 1. Combine all vertices with offset tracking
-            // 2. Reindex all faces
-            // 3. Recompute adjacency across mesh boundaries
-            // 4. Build a new AABB tree
-            return meshes[0];
+            // Combine all vertices from all meshes
+            var combinedVertices = new List<Vector3>();
+            var combinedFaceIndices = new List<int>();
+            var combinedAdjacency = new List<int>();
+            var combinedMaterials = new List<int>();
+            
+            int vertexOffset = 0;
+            int faceOffset = 0;
+            
+            foreach (NavigationMesh mesh in meshes)
+            {
+                // Get mesh data using public accessors
+                IReadOnlyList<Vector3> vertices = mesh.Vertices;
+                IReadOnlyList<int> faceIndices = mesh.FaceIndices;
+                IReadOnlyList<int> adjacency = mesh.Adjacency;
+                IReadOnlyList<int> materials = mesh.SurfaceMaterials;
+                
+                // Add vertices to combined list
+                foreach (Vector3 vertex in vertices)
+                {
+                    combinedVertices.Add(vertex);
+                }
+                
+                // Reindex faces to use combined vertex array
+                for (int i = 0; i < faceIndices.Count; i++)
+                {
+                    combinedFaceIndices.Add(faceIndices[i] + vertexOffset);
+                }
+                
+                // Preserve internal adjacencies (reindex to new face indices)
+                for (int i = 0; i < adjacency.Count; i++)
+                {
+                    int adj = adjacency[i];
+                    if (adj >= 0)
+                    {
+                        // Adjacency is encoded as: faceIndex * 3 + edgeIndex
+                        // Reindex faceIndex to new combined face index
+                        int oldFaceIndex = adj / 3;
+                        int edgeIndex = adj % 3;
+                        int newFaceIndex = oldFaceIndex + faceOffset;
+                        combinedAdjacency.Add(newFaceIndex * 3 + edgeIndex);
+                    }
+                    else
+                    {
+                        // No neighbor - preserve as -1
+                        combinedAdjacency.Add(-1);
+                    }
+                }
+                
+                // Add materials
+                foreach (int material in materials)
+                {
+                    combinedMaterials.Add(material);
+                }
+                
+                // Update offsets for next mesh
+                vertexOffset += vertices.Count;
+                faceOffset += mesh.FaceCount;
+            }
+            
+            // Note: Cross-mesh adjacency detection is not implemented
+            // This would require finding matching edges between meshes and updating adjacency
+            // For now, meshes are combined but remain separate islands
+            
+            // Build a simple AABB tree from combined geometry
+            // For a full implementation, we would rebuild the AABB tree properly
+            // For now, we'll create a mesh without an AABB tree (it will use brute force)
+            NavigationMesh.AabbNode aabbRoot = null;
+            
+            return new NavigationMesh(
+                combinedVertices.ToArray(),
+                combinedFaceIndices.ToArray(),
+                combinedAdjacency.ToArray(),
+                combinedMaterials.ToArray(),
+                aabbRoot);
         }
 
         private static int GetOrAddVertex(
