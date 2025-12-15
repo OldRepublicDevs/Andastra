@@ -9,15 +9,18 @@ namespace Odyssey.Kotor.Components
     /// Concrete implementation of perception component for KOTOR.
     /// </summary>
     /// <remarks>
-    /// Perception in KOTOR:
-    /// - Creatures have sight and hearing ranges
-    /// - Perception updates periodically
-    /// - Scripts can query GetLastPerceived, GetObjectSeen, etc.
-    /// - Perception fires OnPerception event on creature
-    ///
-    /// Default ranges (from appearances.2da PERSPACE column):
-    /// - Standard creature: ~20m sight, ~15m hearing
-    /// - Can be modified by effects/feats
+    /// Perception Component:
+    /// - Based on swkotor2.exe perception system
+    /// - Located via string references: "PerceptionData" @ 0x007bf6c4, "PerceptionList" @ 0x007bf6d4
+    /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_PERCEPTION" @ 0x007bcb68, "PerceptionRange" @ 0x007c4080
+    /// - "PERCEPTIONDIST" @ 0x007c4070
+    /// - Original implementation: Creatures have sight and hearing perception ranges
+    /// - Perception updates periodically (checked during heartbeat/update loop)
+    /// - Scripts can query GetLastPerceived, GetObjectSeen, etc. (NWScript engine API)
+    /// - Perception fires OnPerception script event on creature when new entities are detected
+    /// - Default ranges: From appearances.2da PERSPACE column (~20m sight, ~15m hearing for standard creatures)
+    /// - Can be modified by effects/feats (perception bonuses)
+    /// - Based on swkotor2.exe: FUN_005fb0f0 @ 0x005fb0f0 (perception checking)
     /// </remarks>
     public class PerceptionComponent : IPerceptionComponent
     {
