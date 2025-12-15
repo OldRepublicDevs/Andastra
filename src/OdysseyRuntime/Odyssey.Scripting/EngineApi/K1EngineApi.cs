@@ -72,6 +72,24 @@ namespace Odyssey.Scripting.EngineApi
         // Key: caster entity ID, Value: metamagic feat type (METAMAGIC_* constants)
         private readonly Dictionary<uint, int> _lastMetamagicTypes;
 
+        // Track last spell ID for GetSpellId
+        // Key: caster entity ID, Value: spell ID
+        private readonly Dictionary<uint, int> _lastSpellIds;
+
+        // Track last spell caster for GetLastSpellCaster
+        // Key: target entity ID, Value: caster entity ID
+        private readonly Dictionary<uint, uint> _lastSpellCasters;
+
+        // Track last spell target location for GetSpellTargetLocation
+        // Key: caster entity ID, Value: target location
+        private readonly Dictionary<uint, Location> _lastSpellTargetLocations;
+
+        // Track user-defined event number for GetUserDefinedEventNumber
+        private int _userDefinedEventNumber;
+
+        // Track run script variable for GetRunScriptVar
+        private Variable _runScriptVar;
+
         public K1EngineApi()
         {
             _vm = new NcsVm();
@@ -82,6 +100,11 @@ namespace Odyssey.Scripting.EngineApi
             _lastSpellTargets = new Dictionary<uint, uint>();
             _lastEquippedItems = new Dictionary<uint, uint>();
             _lastMetamagicTypes = new Dictionary<uint, int>();
+            _lastSpellIds = new Dictionary<uint, int>();
+            _lastSpellCasters = new Dictionary<uint, uint>();
+            _lastSpellTargetLocations = new Dictionary<uint, Location>();
+            _userDefinedEventNumber = 0;
+            _runScriptVar = Variable.Void();
             _playerRestricted = false; // Initialize player restriction state
         }
         
@@ -317,6 +340,8 @@ namespace Odyssey.Scripting.EngineApi
 
                 // Dialogue functions
                 case 445: return Func_GetIsInConversation(args, ctx);
+                case 455: return Func_GetPlotFlag(args, ctx);
+                case 456: return Func_SetPlotFlag(args, ctx);
                 case 701: return Func_GetIsConversationActive(args, ctx);
                 case 711: return Func_GetLastConversation(args, ctx);
                 
@@ -1904,9 +1929,9 @@ namespace Odyssey.Scripting.EngineApi
         {
             if (ctx is VM.ExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
             {
-                if (services.GameSession != null)
+                if (services.GameSession is Odyssey.Kotor.Game.GameSession gameSession)
                 {
-                    return Variable.FromInt(services.GameSession.GetGameTimeHours());
+                    return Variable.FromInt(gameSession.GetGameTimeHours());
                 }
             }
             return Variable.FromInt(0);
@@ -1919,9 +1944,9 @@ namespace Odyssey.Scripting.EngineApi
         {
             if (ctx is VM.ExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
             {
-                if (services.GameSession != null)
+                if (services.GameSession is Odyssey.Kotor.Game.GameSession gameSession)
                 {
-                    return Variable.FromInt(services.GameSession.GetGameTimeMinutes());
+                    return Variable.FromInt(gameSession.GetGameTimeMinutes());
                 }
             }
             return Variable.FromInt(0);
@@ -3200,13 +3225,14 @@ namespace Odyssey.Scripting.EngineApi
         {
             if (ctx is VM.ExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
             {
-                if (services.DialogueManager != null && services.DialogueManager.IsConversationActive)
+                dynamic dialogueManager = services.DialogueManager;
+                if (dialogueManager != null && dialogueManager.IsConversationActive)
                 {
-                    Odyssey.Kotor.Dialogue.DialogueState state = services.DialogueManager.CurrentState;
+                    dynamic state = dialogueManager.CurrentState;
                     if (state != null && state.CurrentNode != null)
                     {
                         // Get text from current node using DialogueManager's GetNodeText method
-                        string text = services.DialogueManager.GetNodeText(state.CurrentNode);
+                        string text = dialogueManager.GetNodeText(state.CurrentNode);
                         if (!string.IsNullOrEmpty(text))
                         {
                             return Variable.FromString(text);
@@ -5700,8 +5726,188 @@ namespace Odyssey.Scripting.EngineApi
         }
 
         #endregion
+
+        #region Spell Tracking Functions
+
+        /// <summary>
+        /// GetSpellId() - Returns the ID of the last spell cast by the caller
+        /// Based on swkotor2.exe: Tracks last spell ID cast by entity
+        /// </summary>
+        private Variable Func_GetSpellId(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            if (ctx.Caller == null)
+            {
+                return Variable.FromInt(0);
+            }
+
+            // Get last spell ID for this caster
+            if (_lastSpellIds.TryGetValue(ctx.Caller.ObjectId, out int spellId))
+            {
+                return Variable.FromInt(spellId);
+            }
+
+            return Variable.FromInt(0);
+        }
+
+        /// <summary>
+        /// GetSpellTarget(object oCreature) - Returns the target of the last spell cast at oCreature
+        /// Based on swkotor2.exe: Returns target of last spell cast at the specified creature
+        /// </summary>
+        private Variable Func_GetSpellTarget(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            uint creatureId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
+            IEntity creature = ResolveObject(creatureId, ctx);
+            
+            if (creature != null)
+            {
+                // Get last spell caster for this creature
+                if (_lastSpellCasters.TryGetValue(creature.ObjectId, out uint casterId))
+                {
+                    // Get the target of the spell cast by that caster
+                    if (_lastSpellTargets.TryGetValue(casterId, out uint targetId))
+                    {
+                        return Variable.FromObject(targetId);
+                    }
+                }
+            }
+
+            return Variable.FromObject(ObjectInvalid);
+        }
+
+        /// <summary>
+        /// GetSpellTargetLocation() - Returns the target location of the last spell cast by the caller
+        /// Based on swkotor2.exe: Returns location target of last spell cast
+        /// </summary>
+        private Variable Func_GetSpellTargetLocation(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            if (ctx.Caller == null)
+            {
+                return Variable.FromLocation(null);
+            }
+
+            // Get last spell target location for this caster
+            if (_lastSpellTargetLocations.TryGetValue(ctx.Caller.ObjectId, out Location location))
+            {
+                return Variable.FromLocation(location);
+            }
+
+            return Variable.FromLocation(null);
+        }
+
+        /// <summary>
+        /// GetLastSpellCaster() - Returns the caster of the last spell that affected the caller
+        /// Based on swkotor2.exe: Tracks last spell caster for entity
+        /// </summary>
+        private Variable Func_GetLastSpellCaster(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            if (ctx.Caller == null)
+            {
+                return Variable.FromObject(ObjectInvalid);
+            }
+
+            // Get last spell caster for this entity
+            if (_lastSpellCasters.TryGetValue(ctx.Caller.ObjectId, out uint casterId))
+            {
+                // Verify caster still exists
+                if (ctx.World != null)
+                {
+                    IEntity caster = ctx.World.GetEntity(casterId);
+                    if (caster != null && caster.IsValid)
+                    {
+                        return Variable.FromObject(casterId);
+                    }
+                    else
+                    {
+                        // Caster no longer exists, remove from tracking
+                        _lastSpellCasters.Remove(ctx.Caller.ObjectId);
+                    }
+                }
+            }
+
+            return Variable.FromObject(ObjectInvalid);
+        }
+
+        /// <summary>
+        /// GetLastSpell() - Returns the ID of the last spell that affected the caller
+        /// Based on swkotor2.exe: Returns spell ID of last spell that affected entity
+        /// </summary>
+        private Variable Func_GetLastSpell(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            if (ctx.Caller == null)
+            {
+                return Variable.FromInt(0);
+            }
+
+            // Get last spell caster for this entity
+            if (_lastSpellCasters.TryGetValue(ctx.Caller.ObjectId, out uint casterId))
+            {
+                // Get the spell ID cast by that caster
+                if (_lastSpellIds.TryGetValue(casterId, out int spellId))
+                {
+                    return Variable.FromInt(spellId);
+                }
+            }
+
+            return Variable.FromInt(0);
+        }
+
+        /// <summary>
+        /// GetLastSpellHarmful() - Returns TRUE if the last spell that affected the caller was harmful
+        /// Based on swkotor2.exe: Checks if last spell was harmful (damage, negative effects)
+        /// </summary>
+        private Variable Func_GetLastSpellHarmful(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            if (ctx.Caller == null)
+            {
+                return Variable.FromInt(0);
+            }
+
+            // Get last spell ID
+            int spellId = Func_GetLastSpell(args, ctx).AsInt();
+            if (spellId == 0)
+            {
+                return Variable.FromInt(0);
+            }
+
+            // Check if spell is harmful (damage spells, negative effects)
+            // This would typically check spells.2da for spell type
+            // For now, assume damage spells (ID < 1000) are harmful
+            // TODO: Integrate with spells.2da for accurate spell type checking
+            bool isHarmful = spellId < 1000; // Placeholder logic
+            
+            return Variable.FromInt(isHarmful ? 1 : 0);
+        }
+
+        #endregion
+
+        #region Event and Script Variable Functions
+
+        /// <summary>
+        /// GetUserDefinedEventNumber() - Returns the user-defined event number
+        /// Based on swkotor2.exe: Returns last user-defined event number set
+        /// </summary>
+        private Variable Func_GetUserDefinedEventNumber(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            return Variable.FromInt(_userDefinedEventNumber);
+        }
+
+        /// <summary>
+        /// GetRunScriptVar() - Returns the run script variable
+        /// Based on swkotor2.exe: Returns variable set by RunScript/RunScriptVar
+        /// </summary>
+        private Variable Func_GetRunScriptVar(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            return _runScriptVar;
+        }
+
+        #endregion
     }
 }
+    }
+}
+
+
+
     }
 }
 
