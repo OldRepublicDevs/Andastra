@@ -52,10 +52,14 @@ namespace Odyssey.Kotor.Game
     /// Game Session Management:
     /// - Based on swkotor2.exe game session system
     /// - Located via string references: "GAMEINPROGRESS" @ 0x007c68f0, "GAMEINPROGRESS:" @ 0x007bde44
+    /// - "MODULES:" @ 0x007b58b4, "Module" @ 0x007bc4e0, "MODULE" @ 0x007beab8
+    /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_MODULE_LOAD" @ 0x007bc91c
+    /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_MODULE_START" @ 0x007bc948
+    /// - "ModuleName" @ 0x007bde2c, "LASTMODULE" @ 0x007be1d0, "ModuleLoaded" @ 0x007bdd70
     /// - Original engine uses "GAMEINPROGRESS:" prefix for game state directory (z:\gameinprogress, .\gameinprogress)
     /// - Game state stored in: GAMEINPROGRESS:PC, GAMEINPROGRESS:INVENTORY, GAMEINPROGRESS:REPUTE, etc.
     /// - Module loading triggers ON_MODULE_LOAD and ON_MODULE_START script events
-    /// - Directory setup: FUN_00633270 @ 0x00633270 (sets up all game directories including GAMEINPROGRESS)
+    /// - Directory setup: FUN_00633270 @ 0x00633270 (sets up all game directories including GAMEINPROGRESS, MODULES)
     /// </remarks>
     public class GameSession : IDisposable
     {
