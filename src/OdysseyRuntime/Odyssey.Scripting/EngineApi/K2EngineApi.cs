@@ -659,7 +659,14 @@ namespace Odyssey.Scripting.EngineApi
             // GetInfluence(int nNPC)
             // Returns influence value for NPC (0-100)
             int npcIndex = args.Count > 0 ? args[0].AsInt() : 0;
-            // TODO: Implement influence tracking
+            
+            // Access PartySystem through GameSession
+            if (ctx.AdditionalContext is GameSession.GameServicesContext services && services.GameSession != null)
+            {
+                // TODO: Expose PartySystem through GameServicesContext for influence tracking
+                // For now, return default neutral influence
+                // Full implementation would use: services.GameSession.PartySystem.GetInfluence(member)
+            }
             return Variable.FromInt(50); // Default neutral influence
         }
 
@@ -668,7 +675,16 @@ namespace Odyssey.Scripting.EngineApi
             // SetInfluence(int nNPC, int nInfluence)
             int npcIndex = args.Count > 0 ? args[0].AsInt() : 0;
             int influence = args.Count > 1 ? args[1].AsInt() : 50;
-            // TODO: Implement influence tracking
+            
+            // Clamp influence to valid range (0-100)
+            influence = Math.Max(0, Math.Min(100, influence));
+            
+            // Access PartySystem through GameSession
+            if (ctx.AdditionalContext is GameSession.GameServicesContext services && services.GameSession != null)
+            {
+                // TODO: Expose PartySystem through GameServicesContext for influence tracking
+                // Full implementation would use: services.GameSession.PartySystem.SetInfluence(member, influence)
+            }
             return Variable.Void();
         }
 
@@ -677,7 +693,13 @@ namespace Odyssey.Scripting.EngineApi
             // ModifyInfluence(int nNPC, int nModifier)
             int npcIndex = args.Count > 0 ? args[0].AsInt() : 0;
             int modifier = args.Count > 1 ? args[1].AsInt() : 0;
-            // TODO: Implement influence modification
+            
+            // Access PartySystem through GameSession
+            if (ctx.AdditionalContext is GameSession.GameServicesContext services && services.GameSession != null)
+            {
+                // TODO: Expose PartySystem through GameServicesContext for influence tracking
+                // Full implementation would use: services.GameSession.PartySystem.ModifyInfluence(member, modifier)
+            }
             return Variable.Void();
         }
 
@@ -685,15 +707,33 @@ namespace Odyssey.Scripting.EngineApi
         private Variable Func_GetPartyMemberByIndex(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             int index = args.Count > 0 ? args[0].AsInt() : 0;
-            // TODO: Implement party member lookup
+            
+            // Get party member at index (0 = leader, 1-2 = members)
+            if (ctx.AdditionalContext is GameSession.GameServicesContext services && services.PartyManager != null)
+            {
+                IEntity member = services.PartyManager.GetMemberAtSlot(index);
+                if (member != null)
+                {
+                    return Variable.FromObject(member.ObjectId);
+                }
+            }
             return Variable.FromObject(ObjectInvalid);
         }
 
         private Variable Func_IsAvailableCreature(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             int npcIndex = args.Count > 0 ? args[0].AsInt() : 0;
-            // TODO: Check if NPC is available for party selection
-            return Variable.FromInt(0);
+            
+            // Check if NPC is available for party selection
+            if (ctx.AdditionalContext is GameSession.GameServicesContext services && services.PartyManager != null)
+            {
+                IEntity member = services.PartyManager.GetAvailableMember(npcIndex);
+                if (member != null)
+                {
+                    return Variable.FromInt(1); // Available
+                }
+            }
+            return Variable.FromInt(0); // Not available
         }
 
         private Variable Func_AddAvailableNPCByTemplate(IReadOnlyList<Variable> args, IExecutionContext ctx)
