@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using CSharpKOTOR.Formats.GFF;
 using CSharpKOTOR.Resources;
 using FluentAssertions;
 using HolocronToolset.NET.Data;
@@ -47,33 +49,63 @@ namespace HolocronToolset.NET.Tests.Editors
             data.Should().NotBeNull();
         }
 
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utt_editor.py:713-742
+        // Original: def test_utt_editor_save_load_roundtrip_identity(qtbot, installation: HTInstallation, test_files_dir: Path):
         [Fact]
-        public void TestUttEditorLoadExistingFile()
+        public void TestUttEditorSaveLoadRoundtrip()
         {
-            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utt_editor.py:713-787
-            // Original: def test_utt_editor_save_load_roundtrip_identity(qtbot, installation: HTInstallation, test_files_dir: Path):
-            var editor = new UTTEditor(null, null);
+            string testFilesDir = System.IO.Path.Combine(
+                System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
 
-            // Create new UTT
-            editor.New();
+            string uttFile = System.IO.Path.Combine(testFilesDir, "newtransition9.utt");
+            if (!System.IO.File.Exists(uttFile))
+            {
+                // Try alternative location
+                testFilesDir = System.IO.Path.Combine(
+                    System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                    "..", "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+                uttFile = System.IO.Path.Combine(testFilesDir, "newtransition9.utt");
+            }
 
-            // Modify some basic fields
-            // Note: We can't directly access _utt or UI elements from the test,
-            // but we can test the save/load roundtrip by building and loading
-            var (data, _) = editor.Build();
-            data.Should().NotBeNull();
-            data.Length.Should().BeGreaterThan(0);
+            if (!System.IO.File.Exists(uttFile))
+            {
+                return; // Skip if test file not available
+            }
 
-            // Load it back
-            editor.Load("test.utt", "test", ResourceType.UTT, data);
+            string k2Path = Environment.GetEnvironmentVariable("K2_PATH");
+            if (string.IsNullOrEmpty(k2Path))
+            {
+                k2Path = @"C:\Program Files (x86)\Steam\steamapps\common\Knights of the Old Republic II";
+            }
 
-            // Verify elements were loaded by building again
-            var (loadedData, _) = editor.Build();
-            loadedData.Should().NotBeNull();
-            loadedData.Length.Should().BeGreaterThan(0);
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k2Path) && System.IO.File.Exists(System.IO.Path.Combine(k2Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k2Path, "Test Installation", tsl: true);
+            }
 
-            // Verify UTT object exists and can be loaded/saved
-            // The fact that Build() and Load() succeed means the UTT was loaded correctly
+            if (installation == null)
+            {
+                return; // Skip if no installation available
+            }
+
+            var editor = new UTTEditor(null, installation);
+            var logMessages = new List<string> { Environment.NewLine };
+
+            byte[] data = System.IO.File.ReadAllBytes(uttFile);
+            var oldGff = CSharpKOTOR.Formats.GFF.GFF.FromBytes(data);
+
+            editor.Load(uttFile, "newtransition9", ResourceType.UTT, data);
+
+            var (newData, _) = editor.Build();
+
+            GFF newGff = CSharpKOTOR.Formats.GFF.GFF.FromBytes(newData);
+
+            Action<string> logFunc = msg => logMessages.Add(msg);
+            bool diff = oldGff.Compare(newGff, logFunc, path: null, ignoreDefaultChanges: true);
+
+            diff.Should().BeTrue($"GFF comparison failed. Log messages: {string.Join(Environment.NewLine, logMessages)}");
         }
     }
 }
