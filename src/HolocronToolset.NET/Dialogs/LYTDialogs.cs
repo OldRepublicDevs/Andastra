@@ -1,4 +1,5 @@
 using System;
+using System.Numerics;
 using Avalonia.Controls;
 using Avalonia.Layout;
 using CSharpKOTOR.Common;
@@ -85,8 +86,33 @@ namespace HolocronToolset.NET.Dialogs
                 string model = _modelInput?.Text?.Trim() ?? "";
                 if (string.IsNullOrEmpty(model))
                 {
-                    // TODO: Show MessageBox when available
-                    System.Console.WriteLine("Model name cannot be empty.");
+                    // Show error message dialog
+                    // Matching PyKotor implementation: Shows error message when model name is empty
+                    // Located via string references: QMessageBox usage in PyKotor dialogs
+                    // Original implementation: Shows warning message box to user when validation fails
+                    var errorDialog = new Window
+                    {
+                        Title = "Validation Error",
+                        Width = 300,
+                        Height = 150,
+                        WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                        Content = new StackPanel
+                        {
+                            Margin = new Avalonia.Thickness(20),
+                            Children =
+                            {
+                                new TextBlock { Text = "Model name cannot be empty.", Margin = new Avalonia.Thickness(0, 0, 0, 20) },
+                                new Button
+                                {
+                                    Content = "OK",
+                                    HorizontalAlignment = HorizontalAlignment.Right,
+                                    Width = 75,
+                                    Click = (s, e) => errorDialog.Close()
+                                }
+                            }
+                        }
+                    };
+                    errorDialog.ShowDialog(this);
                     return;
                 }
 
