@@ -53,15 +53,19 @@ namespace Odyssey.Kotor.Game
     /// - Module resources loaded from: MODULES:\{moduleName}\module.ifo, MODULES:\{moduleName}\{moduleName}.lyt, etc.
     /// - Load savegame function: FUN_00708990 @ 0x00708990 (loads savegame ERF archive, extracts GLOBALVARS, PARTYTABLE, etc.)
     ///   - Original implementation (from decompiled FUN_00708990):
+    ///     - Function signature: `void FUN_00708990(void *this, int *param_1)`
+    ///     - param_1: Save game data structure pointer
     ///     - Constructs save path: "SAVES:\{saveName}\SAVEGAME" using format string "%06d - %s" (save number and name)
-    ///     - Creates GAMEINPROGRESS: directory if missing (checks existence, creates if not found)
-    ///     - Loads savegame.sav ERF archive from constructed path
-    ///     - Extracts savenfo.res (NFO GFF) to TEMP:pifo, reads NFO GFF with "NFO " signature
+    ///     - Creates GAMEINPROGRESS: directory if missing (checks existence via FUN_004069c0, creates via FUN_00409670 if not found)
+    ///     - Loads savegame.sav ERF archive from constructed path (via FUN_00629d60, FUN_0062a2b0)
+    ///     - Extracts savenfo.res (NFO GFF) to TEMP:pifo, reads NFO GFF with "NFO " signature (via FUN_00406aa0)
     ///     - Progress updates: 5% (0x5), 10% (0xa), 15% (0xf), 20% (0x14), 25% (0x19), 30% (0x1e), 35% (0x23), 40% (0x28), 45% (0x2d), 50% (0x32)
-    ///     - Loads PARTYTABLE via FUN_0057dcd0 @ 0x0057dcd0 (party table deserialization)
-    ///     - Loads GLOBALVARS via FUN_005ac740 @ 0x005ac740 (global variables deserialization)
-    ///     - Reads AUTOSAVEPARAMS from NFO GFF if present
-    ///     - Sets module state flags and initializes game session
+    ///     - Loads PARTYTABLE via FUN_0057dcd0 @ 0x0057dcd0 (party table deserialization, called at 30% progress)
+    ///     - Loads GLOBALVARS via FUN_005ac740 @ 0x005ac740 (global variables deserialization, called at 35% progress)
+    ///     - Reads AUTOSAVEPARAMS from NFO GFF if present (via FUN_00412b30, FUN_00708660)
+    ///     - Sets module state flags and initializes game session (via FUN_004dc470, FUN_004dc9e0, FUN_004dc9c0)
+    ///     - Module state: Sets flags at offset 0x48 in game session object (bit 0x200 = module loaded flag)
+    ///     - Final progress: 50% (0x32) when savegame load completes
     /// </remarks>
     public class ModuleLoader
     {
