@@ -220,8 +220,50 @@ namespace Odyssey.MonoGame.Camera
 
         private void ApplyCollisionAvoidance()
         {
-            // TODO: Implement raycast-based collision avoidance
-            // This would check if the camera position is blocked and adjust accordingly
+            // Raycast-based collision avoidance
+            // Check if there's a collision between target position and camera position
+            // If blocked, move camera closer to target along the line
+            if (_raycastCallback != null)
+            {
+                // Get the look-at position (target position)
+                Vector3 targetPos = _targetLookAt;
+                Vector3 cameraPos = _currentPosition;
+
+                // Check if there's a collision from target to camera
+                bool isBlocked = _raycastCallback(targetPos, cameraPos);
+
+                if (isBlocked)
+                {
+                    // If blocked, try to find a closer position that's not blocked
+                    // Use binary search to find the closest valid position
+                    Vector3 direction = cameraPos - targetPos;
+                    float maxDistance = direction.Length();
+                    direction.Normalize();
+
+                    float minDistance = 0.5f; // Minimum distance from target
+                    float currentDistance = maxDistance;
+                    int iterations = 8; // Binary search iterations
+
+                    for (int i = 0; i < iterations; i++)
+                    {
+                        float testDistance = (minDistance + currentDistance) * 0.5f;
+                        Vector3 testPosition = targetPos + direction * testDistance;
+
+                        bool testBlocked = _raycastCallback(targetPos, testPosition);
+                        if (testBlocked)
+                        {
+                            currentDistance = testDistance;
+                        }
+                        else
+                        {
+                            minDistance = testDistance;
+                        }
+                    }
+
+                    // Set camera to the closest valid position
+                    _currentPosition = targetPos + direction * minDistance;
+                }
+            }
         }
 
         /// <summary>

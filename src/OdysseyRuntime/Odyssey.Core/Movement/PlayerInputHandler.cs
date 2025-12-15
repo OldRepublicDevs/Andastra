@@ -461,38 +461,47 @@ namespace Odyssey.Core.Movement
             // Based on swkotor2.exe inventory system
             // Located via string references: "INVENTORY_SLOT_RIGHTWEAPON" = 4
             // Original implementation: Gets equipped weapon from right hand slot
-            // TODO: Re-enable when project references are fixed
-            // Interfaces.Components.IInventoryComponent inventory = leader.GetComponent<Interfaces.Components.IInventoryComponent>();
-            // if (inventory == null)
-            // {
-            //     return 2.0f; // Default melee range
-            // }
-            //
-            // // INVENTORY_SLOT_RIGHTWEAPON = 4
-            // IEntity weapon = inventory.GetItemInSlot(4);
-            // if (weapon == null)
-            // {
-            //     return 2.0f; // Default melee range (unarmed)
-            // }
+            Interfaces.Components.IInventoryComponent inventory = leader.GetComponent<Interfaces.Components.IInventoryComponent>();
+            if (inventory == null)
+            {
+                return 2.0f; // Default melee range
+            }
 
-            // TODO: Check if weapon has range data
-            // if (weapon.HasData("Range"))
-            // {
-            //     float range = weapon.GetData<float>("Range", 2.0f);
-            //     if (range > 0)
-            //     {
-            //         return range;
-            //     }
-            // }
+            // INVENTORY_SLOT_RIGHTWEAPON = 4
+            IEntity weapon = inventory.GetItemInSlot(4);
+            if (weapon == null)
+            {
+                return 2.0f; // Default melee range (unarmed)
+            }
 
-            // TODO: Check weapon type to determine range
+            // Check if weapon has range data stored in entity data
+            if (weapon is Entities.Entity weaponEntity && weaponEntity.HasData("Range"))
+            {
+                float range = weaponEntity.GetData<float>("Range", 2.0f);
+                if (range > 0)
+                {
+                    return range;
+                }
+            }
+
+            // Check weapon type to determine range
             // Ranged weapons typically have longer range than melee
-            // if (weapon.HasData("WeaponType"))
-            // {
-            //     int weaponType = weapon.GetData<int>("WeaponType", 0);
-            //     // Weapon type constants would be defined elsewhere
-            //     // For now, default to melee range
-            // }
+            // Based on swkotor2.exe weapon system
+            // Located via string references: "WeaponType" in baseitems.2da
+            // Original implementation: Weapon types determine attack range
+            // For melee weapons: 2.0f, for ranged weapons: 10.0f (approximate)
+            if (weapon is Entities.Entity weaponEntity2 && weaponEntity2.HasData("WeaponType"))
+            {
+                int weaponType = weaponEntity2.GetData<int>("WeaponType", 0);
+                // Weapon type constants: 0=melee, 1=ranged (simplified)
+                // Full implementation would check baseitems.2da for exact ranges
+                if (weaponType == 1) // Ranged weapon
+                {
+                    return 10.0f; // Approximate ranged weapon range
+                }
+            }
+
+            // Default to melee range
 
             // Default melee range
             return 2.0f;
