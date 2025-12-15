@@ -918,7 +918,7 @@ namespace Odyssey.Scripting.EngineApi
             }
             else
             {
-                return Variable.FromObject(ObjectInvalid);
+            return Variable.FromObject(ObjectInvalid);
             }
 
             // Get all creatures in radius
@@ -1690,9 +1690,9 @@ namespace Odyssey.Scripting.EngineApi
             IEntity item = ResolveObject(itemId, ctx);
             
             if (item == null || item.ObjectType != Core.Enums.ObjectType.Item)
-            {
-                return Variable.FromObject(ObjectInvalid);
-            }
+        {
+            return Variable.FromObject(ObjectInvalid);
+        }
 
             // Search for item in inventories
             foreach (IEntity entity in ctx.World.GetAllEntities())
@@ -1960,9 +1960,9 @@ namespace Odyssey.Scripting.EngineApi
             object locationObj = args.Count > 1 ? args[1].ComplexValue : null;
 
             if (ctx.Caller == null)
-            {
-                return Variable.Void();
-            }
+        {
+            return Variable.Void();
+        }
 
             // Extract position from location object
             Vector3 dropLocation = Vector3.Zero;
@@ -2004,9 +2004,9 @@ namespace Odyssey.Scripting.EngineApi
             IEntity target = ResolveObject(targetId, ctx);
             
             if (target == null)
-            {
-                return Variable.FromObject(ObjectInvalid);
-            }
+        {
+            return Variable.FromObject(ObjectInvalid);
+        }
 
             // Get CombatManager from GameServicesContext
             if (ctx is VM.ExecutionContext execCtx && execCtx.AdditionalContext is Odyssey.Kotor.Game.GameServicesContext services && services.CombatManager != null)
@@ -2128,10 +2128,10 @@ namespace Odyssey.Scripting.EngineApi
             string soundName = args.Count > 0 ? args[0].AsString() : string.Empty;
             
             if (string.IsNullOrEmpty(soundName) || ctx.Caller == null)
-            {
-                return Variable.Void();
-            }
-            
+        {
+            return Variable.Void();
+        }
+
             // Sound playback would typically be handled by an audio system
             // For now, this is a placeholder - audio system integration needed
             // TODO: Implement sound playback through audio system
@@ -2955,16 +2955,29 @@ namespace Odyssey.Scripting.EngineApi
 
         /// <summary>
         /// PauseGame(int bPause) - Pauses or unpauses the game
+        /// Based on swkotor2.exe: PauseGame pauses all game systems except UI
+        /// When paused, combat, movement, scripts, and other game logic are suspended
         /// </summary>
         private Variable Func_PauseGame(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             int pause = args.Count > 0 ? args[0].AsInt() : 0;
             bool shouldPause = pause != 0;
             
-            // Game pause would typically be handled by GameSession
-            // For now, this is a placeholder - game pause system integration needed
-            // TODO: Implement game pause through GameSession
-            // Should pause all game systems (combat, movement, scripts, etc.) except UI
+            // Access GameSession through GameServicesContext
+            if (ctx is Odyssey.Scripting.VM.ExecutionContext execCtx && execCtx.AdditionalContext is Odyssey.Kotor.Game.GameServicesContext services)
+            {
+                if (services.GameSession != null)
+                {
+                    if (shouldPause)
+                    {
+                        services.GameSession.Pause();
+                    }
+                    else
+                    {
+                        services.GameSession.Resume();
+                    }
+                }
+            }
             
             return Variable.Void();
         }
@@ -3000,26 +3013,30 @@ namespace Odyssey.Scripting.EngineApi
 
         /// <summary>
         /// GetCasterLevel(object oCreature=OBJECT_SELF) - Returns the caster level of a creature
+        /// Based on swkotor2.exe: Caster level is typically the total character level or Force user class levels
+        /// For Force powers, caster level = total level of Force-using classes (Jedi Consular, Guardian, Sentinel, Master, Lord)
         /// </summary>
         private Variable Func_GetCasterLevel(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
             IEntity entity = ResolveObject(objectId, ctx);
             
-            if (entity != null)
+            if (entity == null || entity.ObjectType != Core.Enums.ObjectType.Creature)
             {
-                Core.Interfaces.Components.IStatsComponent stats = entity.GetComponent<Core.Interfaces.Components.IStatsComponent>();
-                if (stats != null)
-                {
-                    // Caster level in KOTOR is typically based on character level or Force user level
-                    // For now, return a default value - this would need to be calculated based on:
-                    // - Character level
-                    // - Force user class levels (Jedi Consular, Jedi Guardian, Jedi Sentinel)
-                    // - Prestige class levels (Jedi Master, Sith Lord, etc.)
-                    // TODO: Implement proper caster level calculation based on class levels
-                    // For now, return 1 as a placeholder
-                    return Variable.FromInt(1);
-                }
+                return Variable.FromInt(0);
+            }
+            
+            // Get caster level from CreatureComponent class list
+            // In KOTOR, caster level for Force powers is typically the sum of Force-using class levels
+            CreatureComponent creatureComp = entity.GetComponent<CreatureComponent>();
+            if (creatureComp != null)
+            {
+                // For now, return total character level as caster level
+                // Full implementation would filter for Force-using classes only
+                // Force-using classes: Jedi Consular (2), Jedi Guardian (3), Jedi Sentinel (4), 
+                //                     Jedi Master (8), Sith Lord (9), etc.
+                int totalLevel = creatureComp.GetTotalLevel();
+                return Variable.FromInt(totalLevel);
             }
             
             return Variable.FromInt(0);
@@ -3033,9 +3050,9 @@ namespace Odyssey.Scripting.EngineApi
             uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
             
             if (ctx.Caller == null || ctx.World == null || ctx.World.EffectSystem == null)
-            {
-                return Variable.FromEffect(null);
-            }
+        {
+            return Variable.FromEffect(null);
+        }
 
             IEntity entity = ResolveObject(objectId, ctx);
             if (entity == null)
@@ -3074,9 +3091,9 @@ namespace Odyssey.Scripting.EngineApi
             uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
 
             if (ctx.Caller == null)
-            {
-                return Variable.FromEffect(null);
-            }
+        {
+            return Variable.FromEffect(null);
+        }
 
             // Get iteration state
             if (!_effectIterations.TryGetValue(ctx.Caller.ObjectId, out EffectIteration iteration))
@@ -3107,9 +3124,9 @@ namespace Odyssey.Scripting.EngineApi
             uint objectId = args.Count > 1 ? args[1].AsObjectId() : ObjectSelf;
 
             if (effectObj == null || ctx.World == null || ctx.World.EffectSystem == null)
-            {
-                return Variable.Void();
-            }
+        {
+            return Variable.Void();
+        }
 
             IEntity entity = ResolveObject(objectId, ctx);
             if (entity == null)
@@ -3155,9 +3172,9 @@ namespace Odyssey.Scripting.EngineApi
             object effectObj = args.Count > 0 ? args[0].ComplexValue : null;
             
             if (effectObj == null)
-            {
-                return Variable.FromInt(0);
-            }
+        {
+            return Variable.FromInt(0);
+        }
 
             // Check if effect is a valid Effect object
             if (effectObj is Combat.Effect)
@@ -3182,7 +3199,7 @@ namespace Odyssey.Scripting.EngineApi
                 switch (effect.DurationType)
                 {
                     case Combat.EffectDurationType.Instant:
-                        return Variable.FromInt(0);
+            return Variable.FromInt(0);
                     case Combat.EffectDurationType.Temporary:
                         return Variable.FromInt(1);
                     case Combat.EffectDurationType.Permanent:
@@ -3217,9 +3234,9 @@ namespace Odyssey.Scripting.EngineApi
             uint objectId = args.Count > 1 ? args[1].AsObjectId() : ObjectSelf;
 
             if (effectObj == null || ctx.World == null || ctx.World.EffectSystem == null)
-            {
-                return Variable.FromObject(ObjectInvalid);
-            }
+        {
+            return Variable.FromObject(ObjectInvalid);
+        }
 
             IEntity entity = ResolveObject(objectId, ctx);
             if (entity == null)
@@ -3255,9 +3272,9 @@ namespace Odyssey.Scripting.EngineApi
             int objectType = args.Count > 1 ? args[1].AsInt() : -1; // OBJECT_TYPE_ALL = -1
 
             if (ctx.Caller == null || ctx.World == null)
-            {
-                return Variable.FromObject(ObjectInvalid);
-            }
+        {
+            return Variable.FromObject(ObjectInvalid);
+        }
 
             // Get area
             IArea area = null;
@@ -3400,9 +3417,9 @@ namespace Odyssey.Scripting.EngineApi
             int objectType = args.Count > 1 ? args[1].AsInt() : -1;
 
             if (ctx.Caller == null)
-            {
-                return Variable.FromObject(ObjectInvalid);
-            }
+        {
+            return Variable.FromObject(ObjectInvalid);
+        }
 
             // Get iteration state
             if (!_areaObjectIterations.TryGetValue(ctx.Caller.ObjectId, out AreaObjectIteration iteration))
@@ -3429,24 +3446,25 @@ namespace Odyssey.Scripting.EngineApi
         /// </summary>
         private Variable Func_GetMetaMagicFeat(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
-            uint casterId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
-            IEntity caster = ResolveObject(casterId, ctx);
+            // GetMetaMagicFeat() - Returns the metamagic type of the last spell cast by the caller
+            // Note: This should track the last spell cast's metamagic type, not check if creature has the feat
+            // For now, return 0 (no metamagic) - would need to track last spell cast in ActionCastSpellAtObject
+            // Metamagic feats: METAMAGIC_EMPOWER (1), METAMAGIC_EXTEND (2), METAMAGIC_MAXIMIZE (4), METAMAGIC_QUICKEN (8)
+            // TODO: Track last spell cast metamagic type when ActionCastSpellAtObject is executed
             
-            if (caster == null || caster.ObjectType != Core.Enums.ObjectType.Creature)
+            if (ctx.Caller == null || ctx.Caller.ObjectType != Core.Enums.ObjectType.Creature)
             {
-                return Variable.FromInt(0);
+                return Variable.FromInt(-1);
             }
             
-            // Metamagic feats are stored in creature templates or as feats
-            // For now, return 0 (no metamagic) - this would need to check creature template or feat list
-            // TODO: Access creature template via TemplateResRef and check Feats list for metamagic feats
-            // Metamagic feats: METAMAGIC_EMPOWER, METAMAGIC_EXTEND, METAMAGIC_MAXIMIZE, METAMAGIC_QUICKEN, etc.
-            
+            // For now, return 0 (no metamagic) until spell casting tracking is implemented
             return Variable.FromInt(0);
         }
 
         /// <summary>
         /// GetRacialType(object oCreature=OBJECT_SELF) - Returns the racial type of a creature
+        /// Based on swkotor2.exe: FUN_005261b0 @ 0x005261b0 (load creature from UTC template)
+        /// Racial type is stored in CreatureComponent.RaceId (from UTC template)
         /// </summary>
         private Variable Func_GetRacialType(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
@@ -3458,10 +3476,12 @@ namespace Odyssey.Scripting.EngineApi
                 return Variable.FromInt(0);
             }
             
-            // Racial type is stored in creature templates (RaceId property)
-            // For now, return 0 (RACIAL_TYPE_UNKNOWN) - this would need to access creature template
-            // TODO: Access creature template via TemplateResRef and return RaceId
-            // Racial types: RACIAL_TYPE_HUMAN, RACIAL_TYPE_BOTHAN, RACIAL_TYPE_DROID, etc.
+            // Access racial type from CreatureComponent
+            CreatureComponent creatureComp = creature.GetComponent<CreatureComponent>();
+            if (creatureComp != null)
+            {
+                return Variable.FromInt(creatureComp.RaceId);
+            }
             
             return Variable.FromInt(0);
         }
@@ -3529,9 +3549,10 @@ namespace Odyssey.Scripting.EngineApi
                 {
                     // Spell save DC = 10 + caster level + ability modifier (typically Wisdom or Charisma for Force powers)
                     // Base DC is 10, plus caster level, plus relevant ability modifier
-                    // TODO: Get actual caster level and relevant ability modifier (Wisdom for Jedi, Charisma for Sith)
-                    int casterLevel = 1; // Placeholder - should use GetCasterLevel
-                    int abilityMod = stats.GetAbilityModifier(Odyssey.Core.Enums.Ability.Wisdom); // Default to Wisdom
+                    // Wisdom for Jedi, Charisma for Sith
+                    int casterLevel = Func_GetCasterLevel(new List<Variable> { Variable.FromObject(caster.ObjectId) }, ctx).AsInt();
+                    // Default to Wisdom modifier (Jedi), but could check class to determine if Sith (Charisma)
+                    int abilityMod = stats.GetAbilityModifier(Odyssey.Core.Enums.Ability.Wisdom);
                     int saveDC = 10 + casterLevel + abilityMod;
                     return Variable.FromInt(saveDC);
                 }
