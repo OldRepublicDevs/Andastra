@@ -10,12 +10,17 @@ namespace Odyssey.Core.Party
     /// <remarks>
     /// Party Inventory:
     /// - Based on swkotor2.exe inventory system
-    /// - Located via string references: Inventory management functions handle item storage
+    /// - Located via string references: "Inventory" @ 0x007c2504, "InventoryRes" @ 0x007bf570, "InventorySlot" @ 0x007bf7d0
+    /// - "GAMEINPROGRESS:INVENTORY" @ 0x007c1570, "=INVENTORY" @ 0x007c1927, "HasInventory" @ 0x007c1fb0
+    /// - "GuiInventory" @ 0x007c24f4, "InventorySound" @ 0x007c7164, "inventorysnds" @ 0x007c7174
+    /// - "inventory_p" @ 0x007d1094, "CSWSSCRIPTEVENT_EVENTTYPE_ON_INVENTORY_DISTURBED" @ 0x007bc778
     /// - Original implementation: Inventory is shared across all party members
-    /// - Maximum inventory slots: 100 (MaxSlots)
-    /// - Items can be equipped to individual party members via equipment slots
+    /// - Maximum inventory slots: 100 (MaxSlots) - hardcoded limit in original engine
+    /// - Items can be equipped to individual party members via equipment slots (0-17 for equipment, 18+ for inventory)
     /// - Inventory items stored in creature/item entities, managed per-party-member
-    /// - Items persist across saves as part of creature/party state
+    /// - Items persist across saves as part of creature/party state (saved in PARTYTABLE.res)
+    /// - Inventory disturbance: Script event fires when items added/removed/moved (ON_INVENTORY_DISTURBED)
+    /// - Inventory sounds: Play sound effects when items are moved or equipped
     /// </remarks>
     public class PartyInventory
     {
