@@ -11,13 +11,15 @@ namespace Odyssey.Game.Core
     /// <remarks>
     /// Game Path Detection:
     /// - Based on swkotor2.exe installation path detection system
-    /// - Original implementation: KOTOR reads installation path from Windows registry
+    /// - Located via string references: Original engine reads installation path from Windows registry
+    /// - Registry access: Uses Windows Registry API (RegOpenKeyEx, RegQueryValueEx) for path lookup
     /// - Registry keys: K1 uses "SOFTWARE\BioWare\SW\KOTOR" or "SOFTWARE\LucasArts\KotOR"
     /// - Registry keys: K2 uses "SOFTWARE\Obsidian\KOTOR2" or "SOFTWARE\LucasArts\KotOR2"
     /// - Registry value: "Path" entry contains installation directory path
     /// - Validation: Checks for chitin.key (keyfile) and game executable (swkotor.exe/swkotor2.exe)
+    /// - chitin.key: Keyfile containing resource file mappings and encryption keys
     /// - This implementation: Enhanced with Steam, GOG, and environment variable detection
-    /// - Note: Original engine primarily used registry lookup, this adds modern distribution platform support
+    /// - Note: Original engine primarily used registry lookup (HKEY_LOCAL_MACHINE), this adds modern distribution platform support
     /// </remarks>
     public static class GamePathDetector
     {

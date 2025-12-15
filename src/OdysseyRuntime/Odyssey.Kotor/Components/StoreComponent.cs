@@ -9,11 +9,17 @@ namespace Odyssey.Kotor.Components
     /// <remarks>
     /// Store Component:
     /// - Based on swkotor2.exe store/merchant system
-    /// - Located via string references: Store functions handle merchant interactions
+    /// - Located via string references: "Store" @ 0x007bc558 (store entity type), "StoreList" @ 0x007bd248 (GIT store list)
+    /// - Store script: "OnOpenStore" @ 0x007be1cc (store script event hook)
+    /// - Store fields: "MarkUp" @ 0x007c03f0, "MarkDown" @ 0x007c0400 (store pricing fields)
+    /// - "StoreGold" @ 0x007c040c (store gold amount), "CanBuy" @ 0x007c0418 (can buy flag)
+    /// - "ItemsForSale" @ 0x007c0420, "ItemsWillBuy" @ 0x007c0430 (store item lists)
     /// - Original implementation: Stores are merchants that sell items, buy items from player
     /// - UTM file format: GFF with "UTM " signature containing store data
-    /// - Stores have mark-up/mark-down percentages for pricing, gold limits, item lists
-    /// - Can identify items for a fee, buy items from player based on allowed item types
+    /// - Stores have mark-up/mark-down percentages for pricing (MarkUp/MarkDown), gold limits (StoreGold), item lists
+    /// - Can identify items for a fee (CanIdentify, IdentifyPrice), buy items from player based on allowed item types (ItemsWillBuy)
+    /// - Store opening: Fires OnOpenStore script when store GUI opens
+    /// - Pricing: Items sell for base_price * MarkDown / 100, buy for base_price * MarkUp / 100
     /// - Based on UTM file format documentation in vendor/PyKotor/wiki/
     /// </remarks>
     public class StoreComponent : IComponent
