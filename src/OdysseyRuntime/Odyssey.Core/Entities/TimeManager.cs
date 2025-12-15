@@ -9,11 +9,22 @@ namespace Odyssey.Core.Entities
     /// <remarks>
     /// Time Manager:
     /// - Based on swkotor2.exe time management system
-    /// - Located via string references: "TIME_PAUSETIME" @ 0x007bdf88, "TIME_SECOND" @ 0x007bdfbc, "TIME_MINUTE" @ 0x007bdfc8,
-    ///   "TIME_HOUR" @ 0x007bdfd4, "TIME_DAY" @ 0x007bdfe0, "TIME_MONTH" @ 0x007bdfec, "TIME_YEAR" @ 0x007bdff8,
-    ///   "TIMEPLAYED" @ 0x007be1c4, "TimeElapsed" @ 0x007bed5c, "Mod_PauseTime" @ 0x007be89c
+    /// - Located via string references: "TIME_PAUSETIME" @ 0x007bdf88, "TIME_PAUSEDAY" @ 0x007bdf98, "TIME_MILLISECOND" @ 0x007bdfa8
+    /// - "TIME_SECOND" @ 0x007bdfbc, "TIME_MINUTE" @ 0x007bdfc8, "TIME_HOUR" @ 0x007bdfd4
+    /// - "TIME_DAY" @ 0x007bdfe0, "TIME_MONTH" @ 0x007bdfec, "TIME_YEAR" @ 0x007bdff8
+    /// - "TIMEPLAYED" @ 0x007be1c4, "TIMESTAMP" @ 0x007be19c, "TimeElapsed" @ 0x007bed5c, "Mod_PauseTime" @ 0x007be89c
     /// - "GameTime" @ 0x007c1a78, "GameTimeScale" @ 0x007c1a80 (game time scaling)
     /// - "frameStart" @ 0x007ba698, "frameEnd" @ 0x007ba668 (frame timing)
+    /// - Timer fields: "Timer" @ 0x007bfacc, "PauseTimer" @ 0x007bfad4, "ActionTimer" @ 0x007bf820
+    /// - "BleedTimer" @ 0x007bfaa4, "ExpireTime" @ 0x007c032c, "HeartbeatTime" @ 0x007c0c30
+    /// - "LastHrtbtTime" @ 0x007c1370, "LastSpawnTime" @ 0x007c0c10, "ResetTime" @ 0x007c0cec
+    /// - "CastTime" @ 0x007c32e8, "ConjTime" @ 0x007c3354, "CatchTime" @ 0x007c3234
+    /// - "AnimationTime" @ 0x007bf810, "FadeTime" @ 0x007c60ec, "TimePerHP" @ 0x007bf234
+    /// - "FPRegenTime" @ 0x007bf524, "JNL_Time" @ 0x007bf254
+    /// - GUI: "BTN_FILTER_TIME" @ 0x007ca974, "LBL_TIMEPLAYED" @ 0x007ced78
+    /// - Windows API: timeGetTime, GetLocalTime, GetSystemTimeAsFileTime, SystemTimeToFileTime, FileTimeToSystemTime
+    /// - GetTimeZoneInformation, CompareFileTime, FileTimeToLocalFileTime
+    /// - Error: "Exceeded limits:Time limit" @ 0x007be438
     /// - Original implementation: Fixed timestep simulation for deterministic gameplay (60 Hz = 1/60s = 0.01667s per tick)
     /// - Game time tracking: Day, month, year, time of day (hours, minutes, seconds) stored in module (IFO) time fields
     /// - TIMEPLAYED: Total seconds played, stored in save game metadata (NFO.res)
