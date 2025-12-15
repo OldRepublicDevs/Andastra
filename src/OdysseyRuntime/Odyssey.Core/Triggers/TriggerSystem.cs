@@ -208,6 +208,16 @@ namespace Odyssey.Core.Triggers
         /// </summary>
         private void FireOnEnter(IEntity triggerEntity, IEntity entity)
         {
+            // Record entering object for GetEnteringObject() function
+            // Based on swkotor2.exe: GetEnteringObject tracks last entity that entered trigger/door/placeable
+            // Located via string references: "EVENT_ENTERED_TRIGGER" @ 0x007bce08, "OnEnter" @ 0x007bd708
+            // Original implementation: Stores last entering entity ID for script queries
+            // Store in entity's custom data to avoid circular dependencies
+            if (triggerEntity is Entities.Entity triggerEntityImpl)
+            {
+                triggerEntityImpl.SetData("LastEnteringObjectId", entity.ObjectId);
+            }
+
             IScriptHooksComponent scriptHooks = triggerEntity.GetComponent<IScriptHooksComponent>();
             if (scriptHooks != null)
             {
@@ -242,6 +252,16 @@ namespace Odyssey.Core.Triggers
         /// </summary>
         private void FireOnExit(IEntity triggerEntity, IEntity entity)
         {
+            // Record exiting object for GetExitingObject() function
+            // Based on swkotor2.exe: GetExitingObject tracks last entity that exited trigger/door/placeable
+            // Located via string references: "EVENT_LEFT_TRIGGER" @ 0x007bcdf4, "OnExit" @ 0x007bd700
+            // Original implementation: Stores last exiting entity ID for script queries
+            // Store in entity's custom data to avoid circular dependencies
+            if (triggerEntity is Entities.Entity triggerEntityImpl)
+            {
+                triggerEntityImpl.SetData("LastExitingObjectId", entity.ObjectId);
+            }
+
             IScriptHooksComponent scriptHooks = triggerEntity.GetComponent<IScriptHooksComponent>();
             if (scriptHooks != null)
             {
