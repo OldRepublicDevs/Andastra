@@ -11,28 +11,61 @@ namespace Odyssey.Core.Entities
     /// <remarks>
     /// Event Bus System:
     /// - Based on swkotor2.exe event system
-    /// - Located via string references: "OnHeartbeat" @ 0x007bd720, "Mod_OnHeartbeat" @ 0x007be840
-    /// - Script event types (CSWSSCRIPTEVENT_EVENTTYPE_ON_*): "CSWSSCRIPTEVENT_EVENTTYPE_ON_EQUIP_ITEM" @ 0x007bc594,
-    ///   "CSWSSCRIPTEVENT_EVENTTYPE_ON_PLAYER_LEVEL_UP" @ 0x007bc5bc, "CSWSSCRIPTEVENT_EVENTTYPE_ON_DESTROYPLAYERCREATURE" @ 0x007bc5ec,
-    ///   "CSWSSCRIPTEVENT_EVENTTYPE_ON_PLAYER_REST" @ 0x007bc620, "CSWSSCRIPTEVENT_EVENTTYPE_ON_FAIL_TO_OPEN" @ 0x007bc64c,
-    ///   "CSWSSCRIPTEVENT_EVENTTYPE_ON_RESPAWN_BUTTON_PRESSED" @ 0x007bc678, "CSWSSCRIPTEVENT_EVENTTYPE_ON_PLAYER_DYING" @ 0x007bc6ac,
-    ///   "CSWSSCRIPTEVENT_EVENTTYPE_ON_PATH_BLOCKED" @ 0x007bc6d8, "CSWSSCRIPTEVENT_EVENTTYPE_ON_CLICKED" @ 0x007bc704,
-    ///   "CSWSSCRIPTEVENT_EVENTTYPE_ON_UNLOCKED" @ 0x007bc72c, "CSWSSCRIPTEVENT_EVENTTYPE_ON_LOCKED" @ 0x007bc754,
-    ///   "CSWSSCRIPTEVENT_EVENTTYPE_ON_INVENTORY_DISTURBED" @ 0x007bc778, "CSWSSCRIPTEVENT_EVENTTYPE_ON_MINE_TRIGGERED" @ 0x007bc7ac,
-    ///   "CSWSSCRIPTEVENT_EVENTTYPE_ON_USED" @ 0x007bc7d8, "CSWSSCRIPTEVENT_EVENTTYPE_ON_DISARM" @ 0x007bc7fc,
-    ///   "CSWSSCRIPTEVENT_EVENTTYPE_ON_CLOSE" @ 0x007bc820, "CSWSSCRIPTEVENT_EVENTTYPE_ON_OPEN" @ 0x007bc844,
-    ///   "CSWSSCRIPTEVENT_EVENTTYPE_ON_ENCOUNTER_EXHAUSTED" @ 0x007bc868, "CSWSSCRIPTEVENT_EVENTTYPE_ON_LOSE_ITEM" @ 0x007bc89c,
-    ///   "CSWSSCRIPTEVENT_EVENTTYPE_ON_ACQUIRE_ITEM" @ 0x007bc8c4, "CSWSSCRIPTEVENT_EVENTTYPE_ON_ACTIVATE_ITEM" @ 0x007bc8f0,
-    ///   "CSWSSCRIPTEVENT_EVENTTYPE_ON_MODULE_LOAD" @ 0x007bc91c, "CSWSSCRIPTEVENT_EVENTTYPE_ON_MODULE_START" @ 0x007bc948,
-    ///   "CSWSSCRIPTEVENT_EVENTTYPE_ON_PLAYER_EXIT" @ 0x007bc974, "CSWSSCRIPTEVENT_EVENTTYPE_ON_PLAYER_ENTER" @ 0x007bc9a0,
-    ///   "CSWSSCRIPTEVENT_EVENTTYPE_ON_OBJECT_EXIT" @ 0x007bc9cc, "CSWSSCRIPTEVENT_EVENTTYPE_ON_OBJECT_ENTER" @ 0x007bc9f8,
-    ///   "CSWSSCRIPTEVENT_EVENTTYPE_ON_USER_DEFINED_EVENT" @ 0x007bca24, "CSWSSCRIPTEVENT_EVENTTYPE_ON_DEATH" @ 0x007bca54,
-    ///   "CSWSSCRIPTEVENT_EVENTTYPE_ON_RESTED" @ 0x007bca78
-    /// - Original implementation: Events fire for various game state changes (damage, death, perception, etc.)
-    /// - Script events: OnHeartbeat, OnPerception, OnAttacked, OnDamaged, OnDeath, OnModuleLoad, OnModuleStart, etc.
-    /// - Game events: Damage, death, door opened/closed, combat events, inventory changes, etc.
-    /// - Event routing: Events are queued and dispatched each frame, routed to subscribed handlers
+    /// - Event dispatching: FUN_004dcfb0 @ 0x004dcfb0 handles all object event dispatching
+    /// - Located via string references: "EventQueue" @ 0x007bce74, "EventId" @ 0x007bce48, "EventData" @ 0x007bce3c
+    /// - Debug output: "DRF Event Added: %s(%s) %s(%s) %s %s\n" @ 0x007bc55c (event logging format)
+    /// - Script event types (CSWSSCRIPTEVENT_EVENTTYPE_ON_*): 
+    ///   - "CSWSSCRIPTEVENT_EVENTTYPE_ON_EQUIP_ITEM" @ 0x007bc594 (0x26)
+    ///   - "CSWSSCRIPTEVENT_EVENTTYPE_ON_PLAYER_LEVEL_UP" @ 0x007bc5bc (0x25)
+    ///   - "CSWSSCRIPTEVENT_EVENTTYPE_ON_DESTROYPLAYERCREATURE" @ 0x007bc5ec (0x24)
+    ///   - "CSWSSCRIPTEVENT_EVENTTYPE_ON_PLAYER_REST" @ 0x007bc620 (0x23)
+    ///   - "CSWSSCRIPTEVENT_EVENTTYPE_ON_FAIL_TO_OPEN" @ 0x007bc64c (0x22)
+    ///   - "CSWSSCRIPTEVENT_EVENTTYPE_ON_RESPAWN_BUTTON_PRESSED" @ 0x007bc678 (0x21)
+    ///   - "CSWSSCRIPTEVENT_EVENTTYPE_ON_PLAYER_DYING" @ 0x007bc6ac (0x20)
+    ///   - "CSWSSCRIPTEVENT_EVENTTYPE_ON_PATH_BLOCKED" @ 0x007bc6d8 (0x1f)
+    ///   - "CSWSSCRIPTEVENT_EVENTTYPE_ON_CLICKED" @ 0x007bc704 (0x1e)
+    ///   - "CSWSSCRIPTEVENT_EVENTTYPE_ON_UNLOCKED" @ 0x007bc72c (0x1d)
+    ///   - "CSWSSCRIPTEVENT_EVENTTYPE_ON_LOCKED" @ 0x007bc754 (0x1c)
+    ///   - "CSWSSCRIPTEVENT_EVENTTYPE_ON_INVENTORY_DISTURBED" @ 0x007bc778 (0x1b)
+    ///   - "CSWSSCRIPTEVENT_EVENTTYPE_ON_USED" @ 0x007bc7d8 (0x19)
+    ///   - "CSWSSCRIPTEVENT_EVENTTYPE_ON_DISARM" @ 0x007bc7fc (0x18)
+    ///   - "CSWSSCRIPTEVENT_EVENTTYPE_ON_CLOSE" @ 0x007bc820 (0x17)
+    ///   - "CSWSSCRIPTEVENT_EVENTTYPE_ON_OPEN" @ 0x007bc844 (0x16)
+    ///   - "CSWSSCRIPTEVENT_EVENTTYPE_ON_ENCOUNTER_EXHAUSTED" @ 0x007bc868 (0x15)
+    ///   - "CSWSSCRIPTEVENT_EVENTTYPE_ON_LOSE_ITEM" @ 0x007bc89c (0x14)
+    ///   - "CSWSSCRIPTEVENT_EVENTTYPE_ON_ACQUIRE_ITEM" @ 0x007bc8c4 (0x13)
+    ///   - "CSWSSCRIPTEVENT_EVENTTYPE_ON_ACTIVATE_ITEM" @ 0x007bc8f0 (0x12)
+    ///   - "CSWSSCRIPTEVENT_EVENTTYPE_ON_MODULE_LOAD" @ 0x007bc91c (0x11)
+    ///   - "CSWSSCRIPTEVENT_EVENTTYPE_ON_MODULE_START" @ 0x007bc948 (0x10)
+    ///   - "CSWSSCRIPTEVENT_EVENTTYPE_ON_PLAYER_EXIT" @ 0x007bc974 (0xf)
+    ///   - "CSWSSCRIPTEVENT_EVENTTYPE_ON_PLAYER_ENTER" @ 0x007bc9a0 (0xe)
+    ///   - "CSWSSCRIPTEVENT_EVENTTYPE_ON_OBJECT_EXIT" @ 0x007bc9cc (0xd)
+    ///   - "CSWSSCRIPTEVENT_EVENTTYPE_ON_OBJECT_ENTER" @ 0x007bc9f8 (0xc)
+    ///   - "CSWSSCRIPTEVENT_EVENTTYPE_ON_USER_DEFINED_EVENT" @ 0x007bca24 (0xb)
+    ///   - "CSWSSCRIPTEVENT_EVENTTYPE_ON_DEATH" @ 0x007bca54 (0xa)
+    ///   - "CSWSSCRIPTEVENT_EVENTTYPE_ON_RESTED" @ 0x007bca78 (0x9)
+    ///   - "CSWSSCRIPTEVENT_EVENTTYPE_ON_SPAWN_IN" @ 0x007bca9c (0x8)
+    ///   - "CSWSSCRIPTEVENT_EVENTTYPE_ON_DIALOGUE" @ 0x007bcac4 (0x7)
+    ///   - "CSWSSCRIPTEVENT_EVENTTYPE_ON_DISTURBED" @ 0x007bcaec (0x5)
+    ///   - "CSWSSCRIPTEVENT_EVENTTYPE_ON_DAMAGED" @ 0x007bcb14 (0x4)
+    ///   - "CSWSSCRIPTEVENT_EVENTTYPE_ON_SPELLCASTAT" @ 0x007bcb3c (0x2)
+    ///   - "CSWSSCRIPTEVENT_EVENTTYPE_ON_PERCEPTION" @ 0x007bcb68 (0x1)
+    ///   - "CSWSSCRIPTEVENT_EVENTTYPE_ON_HEARTBEAT" @ 0x007bcb90 (0x0)
+    /// - Object events (EVENT_*): "EVENT_OPEN_OBJECT" @ 0x007bcda0 (case 7), "EVENT_CLOSE_OBJECT" @ 0x007bcdb4 (case 6),
+    ///   "EVENT_LOCK_OBJECT" @ 0x007bcd20 (case 0xd), "EVENT_UNLOCK_OBJECT" @ 0x007bcd34 (case 0xc),
+    ///   "EVENT_DESTROY_OBJECT" @ 0x007bcd48 (case 0xb), "EVENT_SPELL_IMPACT" @ 0x007bcd8c (case 8),
+    ///   "EVENT_PLAY_ANIMATION" @ 0x007bcd74 (case 9), "EVENT_SIGNAL_EVENT" @ 0x007bcd60 (case 10),
+    ///   "EVENT_REMOVE_FROM_AREA" @ 0x007bcddc (case 4), "EVENT_APPLY_EFFECT" @ 0x007bcdc8 (case 5),
+    ///   "EVENT_LEFT_TRIGGER" @ 0x007bcdf4 (case 3), "EVENT_ENTERED_TRIGGER" @ 0x007bce08 (case 2),
+    ///   "EVENT_TIMED_EVENT" @ 0x007bce20 (case 1), "EVENT_ON_MELEE_ATTACKED" @ 0x007bccf4 (case 0xf),
+    ///   "EVENT_REMOVE_EFFECT" @ 0x007bcd0c (case 0xe), "EVENT_ACQUIRE_ITEM" @ 0x007bcbf4 (case 0x19),
+    ///   "EVENT_AREA_TRANSITION" @ 0x007bcbdc (case 0x1a), "EVENT_CONTROLLER_RUMBLE" @ 0x007bcbc4 (case 0x1b)
+    /// - Original implementation: FUN_004dcfb0 @ 0x004dcfb0 dispatches events via switch statement based on event type
+    /// - Events are queued ("EventQueue" @ 0x007bce74) and dispatched each frame
+    /// - Event routing: Events fire for various game state changes (damage, death, perception, etc.)
     /// - Script execution: FireScriptEvent method triggers script execution on entities with matching event hooks
+    /// - Event structure: Events contain Entity (OBJECT_SELF), EventType, and Triggerer (entity that triggered event)
+    /// - FUN_004dcfb0 formats event name from type, constructs event data, and routes to script execution system
     /// </remarks>
     public class EventBus : IEventBus
     {
@@ -159,10 +192,14 @@ namespace Odyssey.Core.Entities
         public void FireScriptEvent(IEntity entity, ScriptEvent eventType, IEntity triggerer = null)
         {
             // Based on swkotor2.exe: Script event firing implementation
-            // Located via string references: "OnHeartbeat" @ 0x007bd720, "Mod_OnHeartbeat" @ 0x007be840
-            // Original implementation: FUN_004dcfb0 @ 0x004dcfb0 handles script event dispatching
-            // Script events fire on entities with matching event hooks (ScriptHeartbeat, ScriptOnNotice, etc.)
-            // Events are queued and dispatched each frame, routed to subscribed handlers
+            // Event dispatching: FUN_004dcfb0 @ 0x004dcfb0 handles all script event dispatching
+            // Located via string references: "EventQueue" @ 0x007bce74, "EventId" @ 0x007bce48, "EventData" @ 0x007bce3c
+            // Original implementation: FUN_004dcfb0 formats event name from type (e.g., "EVENT_OPEN_OBJECT" for case 7),
+            // constructs event data structure with source entity, target entity, event type, routes to script execution system
+            // Script events fire on entities with matching event hooks (ScriptHeartbeat, ScriptOnNotice, ScriptOnOpen, etc.)
+            // Events are queued ("EventQueue" @ 0x007bce74) and dispatched each frame
+            // Event structure contains: source entity ObjectId, target entity ObjectId, event type identifier
+            // Debug output: "DRF Event Added: %s(%s) %s(%s) %s %s\n" @ 0x007bc55c logs event firing
             var evt = new ScriptEventArgs(entity, eventType, triggerer);
             QueueEvent(evt);
         }
