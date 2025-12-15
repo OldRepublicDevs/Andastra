@@ -37,7 +37,11 @@ namespace Odyssey.MonoGame.UI
             _spriteBatch.Begin();
 
             // Draw semi-transparent overlay
-            // TODO: Draw pause menu UI
+            int viewportWidth = _spriteBatch.GraphicsDevice.Viewport.Width;
+            int viewportHeight = _spriteBatch.GraphicsDevice.Viewport.Height;
+            Texture2D overlay = new Texture2D(_spriteBatch.GraphicsDevice, 1, 1);
+            overlay.SetData(new[] { new Color(0, 0, 0, 180) }); // Semi-transparent black
+            _spriteBatch.Draw(overlay, new Rectangle(0, 0, viewportWidth, viewportHeight), Color.White);
 
             if (_font != null)
             {
