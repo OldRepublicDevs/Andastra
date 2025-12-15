@@ -264,6 +264,24 @@ namespace Odyssey.Kotor.Components
         public bool IsBashed { get; set; }
 
         /// <summary>
+        /// Hit points of the door (for bashing) - interface property mapping to CurrentHP.
+        /// </summary>
+        int IDoorComponent.HitPoints
+        {
+            get { return CurrentHP; }
+            set { CurrentHP = value; }
+        }
+
+        /// <summary>
+        /// Maximum hit points of the door - interface property mapping to MaxHP.
+        /// </summary>
+        int IDoorComponent.MaxHitPoints
+        {
+            get { return MaxHP; }
+            set { MaxHP = value; }
+        }
+
+        /// <summary>
         /// Key tag (alias for KeyName for interface compatibility).
         /// </summary>
         public string KeyTag
