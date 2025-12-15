@@ -35,13 +35,31 @@ namespace Odyssey.Content.Loaders
     /// - Original implementation: FUN_004dfbb0 @ 0x004dfbb0 loads creature instances from GIT
     ///   - Located via string reference: "Creature List" @ 0x007bd01c
     ///   - Original implementation (from decompiled FUN_004dfbb0):
-    ///     - Iterates through "Creature List" GFF list field
-    ///     - For each creature struct: Reads "ObjectId" (default 0x7F000000), "TemplateResRef" (ResRef), "XPosition", "YPosition", "ZPosition" (float)
-    ///     - Calls FUN_005261b0 to load creature template from UTC file
-    ///     - Calls FUN_005223a0 to load creature instance data from GIT struct
-    ///     - Reads orientation: "XOrientation", "YOrientation", "ZOrientation" (float, converted to quaternion via FUN_00506550)
-    ///     - Position validation: Calls FUN_004f7590 to validate position on walkmesh (20.0 unit radius check)
-    ///     - Spawns creature at validated position via FUN_0051bfc0
+    ///     - Function signature: `uint FUN_004dfbb0(void *this, undefined2 *param_1, uint *param_2, int param_3, int param_4)`
+    ///     - param_1: GFF structure pointer
+    ///     - param_2: GFF field pointer
+    ///     - param_3: Area/context parameter
+    ///     - param_4: Template loading flag (0 = load from saved state, non-zero = load from template)
+    ///     - Iterates through "Creature List" GFF list field using FUN_00412a60 to get list count
+    ///     - For each creature struct (indexed via FUN_00412ab0):
+    ///       - Checks struct type via FUN_004122d0 (must be type 4 = GFFStruct)
+    ///       - If param_4 == 0 (load from saved state):
+    ///         - Reads "ObjectId" (default 0x7F000000) via FUN_00412d40
+    ///         - Allocates creature object (0x1220 bytes) via operator_new
+    ///         - Initializes creature via FUN_005199e0 with ObjectId
+    ///         - Calls FUN_005223a0 to load creature instance data from GIT struct
+    ///       - If param_4 != 0 (load from template):
+    ///         - Allocates creature object (0x1220 bytes) with default ObjectId 0x7F000000
+    ///         - Reads "TemplateResRef" (ResRef) via FUN_00412f30
+    ///         - Calls FUN_005261b0 to load creature template from UTC file
+    ///         - Calls FUN_005223a0 to load creature instance data from GIT struct
+    ///       - Reads position: "XPosition", "YPosition", "ZPosition" (float, default 0.0) via FUN_00412e20
+    ///       - Position validation: Calls FUN_004f7590 to validate position on walkmesh (20.0 unit radius check)
+    ///         - If validation succeeds, updates position to validated coordinates (local_58, local_54, local_50)
+    ///       - Spawns creature at validated position via FUN_0051bfc0 with area context (param_3)
+    ///       - Reads orientation: "ZOrientation", "YOrientation", "XOrientation" (float, default 0.0) via FUN_00412e20
+    ///       - Converts orientation vector to quaternion via FUN_00506550
+    ///     - Returns 1 on success
     /// - FUN_004e08e0 @ 0x004e08e0 loads placeable/door/store instances from GIT
     ///   - Located via string reference: "StoreList" (also handles "Door List" and "Placeable List")
     ///   - Original implementation (from decompiled FUN_004e08e0):
