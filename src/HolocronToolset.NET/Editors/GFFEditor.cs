@@ -13,6 +13,8 @@ using CSharpKOTOR.Formats.GFF;
 using CSharpKOTOR.Resources;
 using HolocronToolset.NET.Common;
 using HolocronToolset.NET.Data;
+using Vector3 = System.Numerics.Vector3;
+using Vector4 = System.Numerics.Vector4;
 
 namespace HolocronToolset.NET.Editors
 {
@@ -470,11 +472,11 @@ namespace HolocronToolset.NET.Editors
                 }
                 else if (ftype == GFFFieldType.Vector3)
                 {
-                    gffStruct.SetVector3(label, value is Vector3 v3 ? v3 : System.Numerics.Vector3.Zero);
+                    gffStruct.SetVector3(label, value is Vector3 v3 ? v3 : new Vector3(0, 0, 0));
                 }
                 else if (ftype == GFFFieldType.Vector4)
                 {
-                    gffStruct.SetVector4(label, value is System.Numerics.Vector4 v4 ? v4 : System.Numerics.Vector4.Zero);
+                    gffStruct.SetVector4(label, value is Vector4 v4 ? v4 : new Vector4(0, 0, 0, 0));
                 }
                 else if (ftype == GFFFieldType.Struct && value is GFFStruct childStruct)
                 {

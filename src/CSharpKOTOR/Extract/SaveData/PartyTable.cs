@@ -333,8 +333,26 @@ namespace CSharpKOTOR.Extract.SaveData
                     case GFFFieldType.ResRef: root.SetResRef(label, value as ResRef ?? ResRef.FromBlank()); break;
                     case GFFFieldType.LocalizedString: root.SetLocString(label, value as LocalizedString ?? LocalizedString.FromInvalid()); break;
                     case GFFFieldType.Binary: root.SetBinary(label, value as byte[] ?? Array.Empty<byte>()); break;
-                    case GFFFieldType.Vector3: root.SetVector3(label, value is Vector3 v3 ? v3 : new Vector3()); break;
-                    case GFFFieldType.Vector4: root.SetVector4(label, value is Vector4 v4 ? v4 : new Vector4()); break;
+                    case GFFFieldType.Vector3: 
+                        if (value is Vector3 v3)
+                        {
+                            root.SetVector3(label, new System.Numerics.Vector3(v3.X, v3.Y, v3.Z));
+                        }
+                        else
+                        {
+                            root.SetVector3(label, System.Numerics.Vector3.Zero);
+                        }
+                        break;
+                    case GFFFieldType.Vector4: 
+                        if (value is Vector4 v4)
+                        {
+                            root.SetVector4(label, new System.Numerics.Vector4(v4.X, v4.Y, v4.Z, v4.W));
+                        }
+                        else
+                        {
+                            root.SetVector4(label, System.Numerics.Vector4.Zero);
+                        }
+                        break;
                     case GFFFieldType.Struct: root.SetStruct(label, value as GFFStruct ?? new GFFStruct()); break;
                     case GFFFieldType.List: root.SetList(label, value as GFFList ?? new GFFList()); break;
                     default: break;

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using CSharpKOTOR.Common;
 using Vector3 = CSharpKOTOR.Common.Vector3;
 
