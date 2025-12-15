@@ -19,12 +19,14 @@ namespace Odyssey.Kotor.Loading
     /// Entity Factory System:
     /// - Based on swkotor2.exe entity creation system
     /// - Located via string references: "TemplateResRef" @ 0x007bd00c, "ScriptHeartbeat" @ 0x007beeb0
-    /// - "tmpgit" @ 0x007be618 (temporary GIT structure references)
+    /// - "tmpgit" @ 0x007be618 (temporary GIT structure references during entity loading)
+    /// - Template loading: FUN_005fb0f0 @ 0x005fb0f0 loads creature templates from GFF, reads TemplateResRef field
     /// - Original implementation: Creates runtime entities from GIT instance data and GFF templates
     /// - Entities created from GIT instances override template values with instance-specific data
-    /// - ObjectId assignment: Sequential uint32 starting from 1 (OBJECT_INVALID = 0x7F000000)
+    /// - ObjectId assignment: Sequential uint32 starting from 1 (OBJECT_INVALID = 0x7F000000, OBJECT_SELF = 0x7F000001)
     /// - Position/Orientation: GIT instances specify XPosition, YPosition, ZPosition, XOrientation, YOrientation
-    /// - Tag: GIT instances can override template Tag field
+    /// - Tag: GIT instances can override template Tag field (GIT Struct → "Tag" ResRef field)
+    /// - Script hooks: Templates contain script ResRefs (ScriptHeartbeat, ScriptOnNotice, ScriptAttacked, etc.)
     ///
     /// GFF Template Types (GFF signatures):
     /// - UTC → Creature (Appearance_Type, Faction, HP, Attributes, Feats, Scripts)
