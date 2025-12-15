@@ -108,11 +108,20 @@ namespace Odyssey.Core.Actions
             // Add item to inventory
             if (inventory.AddItem(item))
             {
+                // Fire OnAcquireItem script event
+                // Based on swkotor2.exe: EVENT_ACQUIRE_ITEM fires OnAcquireItem script when item is acquired
+                // Located via string references: "EVENT_ACQUIRE_ITEM" @ 0x007bcbf4 (case 0x19), "CSWSSCRIPTEVENT_EVENTTYPE_ON_ACQUIRE_ITEM" @ 0x007bc8c4 (0x1d)
+                // Original implementation: EVENT_ACQUIRE_ITEM fires on actor entity when item is successfully picked up
+                IEventBus eventBus = actor.World.EventBus;
+                if (eventBus != null)
+                {
+                    eventBus.FireScriptEvent(actor, ScriptEvent.OnAcquireItem, item);
+                }
+
                 // Remove item from world (or just hide it)
                 // In KOTOR, items are typically removed from the area when picked up
                 // Original engine: Item removed from world after successful pickup
                 actor.World.DestroyEntity(item.ObjectId);
-                // Note: ON_ACQUIRE_ITEM event should be fired by inventory system
                 return ActionStatus.Complete;
             }
 
