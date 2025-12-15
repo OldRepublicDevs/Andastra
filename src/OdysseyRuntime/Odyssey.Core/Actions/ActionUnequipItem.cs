@@ -7,6 +7,14 @@ namespace Odyssey.Core.Actions
     /// <summary>
     /// Action to unequip an item from a specific inventory slot.
     /// </summary>
+    /// <remarks>
+    /// Unequip Item Action:
+    /// - Based on swkotor2.exe ActionUnequipItem NWScript function
+    /// - Original implementation: Removes item from specified equipment slot, returns it to inventory
+    /// - Unequipping item removes stat modifications (AC, damage, abilities, etc.)
+    /// - Item remains in entity's inventory after unequipping
+    /// - Equipment slots: Armor, Helmet, Implant, RightArm, LeftArm, etc. (see InventorySlot enum)
+    /// </remarks>
     public class ActionUnequipItem : ActionBase
     {
         private readonly int _inventorySlot;
