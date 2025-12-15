@@ -15,6 +15,17 @@ namespace Odyssey.MonoGame.PostProcessing
     /// - Configurable intensity
     /// - Performance optimized
     /// </summary>
+    /// <remarks>
+    /// Bloom Post-Processing:
+    /// - Based on swkotor2.exe rendering system (modern post-processing enhancement)
+    /// - Located via string references: "Frame Buffer" @ 0x007c8408 (frame buffer for post-processing)
+    /// - "CB_FRAMEBUFF" @ 0x007d1d84 (frame buffer checkbox in options)
+    /// - Original implementation: KOTOR uses frame buffers for rendering and effects
+    /// - Post-processing: Original engine applies visual effects during rendering pipeline
+    /// - This MonoGame implementation: Modern bloom effect for HDR rendering
+    /// - Bloom effect: Extracts bright areas, applies Gaussian blur, composites back for glow effect
+    /// - HDR rendering: Works with high dynamic range render targets for realistic lighting
+    /// </remarks>
     public class Bloom : IDisposable
     {
         private readonly GraphicsDevice _graphicsDevice;
