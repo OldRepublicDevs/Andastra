@@ -18,6 +18,10 @@ namespace Odyssey.Scripting.EngineApi
     /// KOTOR 1 Engine API (K1 NWScript Functions):
     /// - Based on swkotor.exe NWScript engine API implementation
     /// - Located via string references: ACTION opcode handler dispatches to engine function implementations
+    /// - "PRINTSTRING: %s\n" @ 0x007c29f8 (PrintString function debug output format)
+    /// - "ActionList" @ 0x007bebdc (action list GFF field), "ActionId" @ 0x007bebd0, "ActionType" @ 0x007bf7f8
+    /// - PrintString implementation: FUN_005c4ff0 @ 0x005c4ff0 (prints string with "PRINTSTRING: %s\n" format)
+    /// - ActionList loading: FUN_00508260 @ 0x00508260 (loads ActionList from GFF, parses ActionId, GroupActionId, NumParams, Paramaters)
     /// - Original implementation: K1 has ~850 engine functions (function IDs 0-849)
     /// - Function IDs: Match function indices from nwscript.nss compilation for K1
     /// - K1 functions are a subset of K2 functions (K2 adds ~100 TSL-specific functions at 800+)
@@ -35,6 +39,19 @@ namespace Odyssey.Scripting.EngineApi
     /// </remarks>
     public class K1EngineApi : BaseEngineApi
     {
+        // Track last entering/exiting/clicking objects for trigger/door/placeable scripts
+        // Key: entity ID (trigger/door/placeable), Value: last entity that entered/exited/clicked
+        private readonly Dictionary<uint, uint> _lastEnteringObjects;
+        private readonly Dictionary<uint, uint> _lastExitingObjects;
+        private readonly Dictionary<uint, uint> _lastClickingObjects;
+
+        public K1EngineApi()
+        {
+            _lastEnteringObjects = new Dictionary<uint, uint>();
+            _lastExitingObjects = new Dictionary<uint, uint>();
+            _lastClickingObjects = new Dictionary<uint, uint>();
+        }
+
         protected override void RegisterFunctions()
         {
             // Register function names from ScriptDefs for K1
@@ -80,6 +97,15 @@ namespace Odyssey.Scripting.EngineApi
                 case 443: return Func_GetIsOpen(args, ctx);
                 case 537: return Func_GetLockKeyRequired(args, ctx);
 
+                // Trigger/Object Query Functions
+                case 25: return Func_GetEnteringObject(args, ctx);
+                case 26: return Func_GetExitingObject(args, ctx);
+                case 326: return Func_GetClickingObject(args, ctx);
+
+                // Item Functions
+                case 150: return Func_SetItemStackSize(args, ctx);
+                case 151: return Func_GetDistanceBetween(args, ctx);
+
                 default:
                     // For K1, we can share most implementations with BaseEngineApi
                     // Override here only for K1-specific differences if needed
@@ -95,8 +121,9 @@ namespace Odyssey.Scripting.EngineApi
         /// ActionOpenDoor(object oDoor) - Cause the action subject to open oDoor
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe: ActionOpenDoor implementation
-        /// Located via string references: "OnOpen" @ 0x007be1b0, "EVENT_OPEN_OBJECT" @ 0x007bcda0
+        /// Based on swkotor.exe: ActionOpenDoor implementation
+        /// Located via string references: "OnOpen" @ 0x007be1b0, "EVENT_OPEN_OBJECT" @ 0x007bcda0 (case 7 in FUN_004dcfb0)
+        /// Event dispatching: FUN_004dcfb0 @ 0x004dcfb0 handles EVENT_OPEN_OBJECT (case 7)
         /// Original implementation: Queues ActionOpenDoor action to open door
         /// </remarks>
         private Variable Func_ActionOpenDoor(IReadOnlyList<Variable> args, IExecutionContext ctx)
@@ -242,7 +269,7 @@ namespace Odyssey.Scripting.EngineApi
         /// GetIsOpen(object oObject) - Returns TRUE if oObject (placeable or door) is currently open
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe: GetIsOpen implementation
+        /// Based on swkotor.exe: GetIsOpen implementation
         /// Located via string references: Door open state checking
         /// Original implementation: Returns IsOpen flag from door/placeable
         /// </remarks>
@@ -279,7 +306,7 @@ namespace Odyssey.Scripting.EngineApi
         /// GetLockKeyRequired(object oObject) - Returns TRUE if a specific key is required to open the lock on oObject
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe: GetLockKeyRequired implementation
+        /// Based on swkotor.exe: GetLockKeyRequired implementation
         /// Located via string references: "KeyRequired" field in door/placeable templates
         /// Original implementation: Returns KeyRequired flag from door/placeable
         /// </remarks>
