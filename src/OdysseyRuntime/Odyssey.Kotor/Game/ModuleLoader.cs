@@ -38,9 +38,16 @@ namespace Odyssey.Kotor.Game
     /// - Based on swkotor2.exe module loading system
     /// - Located via string references: "MODULES:" @ 0x007b58b4, "MODULES" @ 0x007c6bc4
     /// - Directory setup: FUN_00633270 @ 0x00633270 (sets up MODULES, OVERRIDE, SAVES, etc. directory aliases)
+    ///   - Original implementation: Sets up directory aliases for resource lookup (HD0, CD0, OVERRIDE, MODULES, SAVES, etc.)
+    ///   - MODULES alias: Maps to ".\modules" (relative) or "d:\modules" (absolute) directory
+    ///   - Directory aliases used throughout engine for resource path resolution
     /// - Module loading order: IFO (module info) -> LYT (layout) -> VIS (visibility) -> GIT (instances) -> ARE (area properties)
     /// - Original engine uses "MODULES:" prefix for module directory access
     /// - Module resources loaded from: MODULES:\{moduleName}\module.ifo, MODULES:\{moduleName}\{moduleName}.lyt, etc.
+    /// - Load savegame function: FUN_00708990 @ 0x00708990 (loads savegame ERF archive, extracts GLOBALVARS, PARTYTABLE, etc.)
+    ///   - Original implementation: Creates GAMEINPROGRESS: directory if missing, loads savegame.sav ERF archive
+    ///   - Extracts savenfo.res (NFO GFF), loads PARTYTABLE via FUN_0057dcd0, loads GLOBALVARS via FUN_005ac740
+    ///   - Progress updates at 5%, 10%, 15%, 20%, 25%, 30%, 35%, 40%, 45%, 50% completion milestones
     /// </remarks>
     public class ModuleLoader
     {

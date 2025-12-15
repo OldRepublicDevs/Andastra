@@ -21,6 +21,23 @@ namespace Odyssey.Kotor.Loading
     /// - Located via string references: "TemplateResRef" @ 0x007bd00c, "ScriptHeartbeat" @ 0x007beeb0
     /// - "tmpgit" @ 0x007be618 (temporary GIT structure references during entity loading)
     /// - Template loading: FUN_005fb0f0 @ 0x005fb0f0 loads creature templates from GFF, reads TemplateResRef field
+    ///   - Original implementation: Loads UTC GFF structure, reads fields in specific order:
+    ///     - FirstName, LastName, Description (localized strings)
+    ///     - IsPC, Tag, Conversation (ResRef)
+    ///     - Interruptable, Gender, StartingPackage, Race, Subrace, SubraceIndex, Deity
+    ///     - Str, Dex, Con, Int, Wis, Cha (ability scores, with modifier calculations)
+    ///     - NaturalAC, SoundSetFile, Gold, ItemComponent, Chemicals
+    ///     - Invulnerable/Plot, Min1HP, PartyInteract, NotReorienting, Hologram, IgnoreCrePath
+    ///     - MultiplierSet, PCLevelAtSpawn, WillNotRender, Confused, Disarmable
+    ///     - Experience, PortraitId/Portrait, GoodEvil, BaseCNPCAlignment, FuryDamageBonus, CurrentForm
+    ///     - Color_Skin, Color_Hair, Color_Tattoo1, Color_Tattoo2, Phenotype, Appearance_Type
+    ///     - Appearance_Head, DuplicatingHead, UseBackupHead, FactionID, BlindSpot, ChallengeRating
+    ///     - AIState, BodyBag, PerceptionRange (looks up PERCEPTIONDIST from appearance.2da)
+    ///     - ClassList (Class, ClassLevel, SpellsPerDayList), HitPoints, ForcePoints, CurrentHitPoints, CurrentForce
+    ///     - BonusForcePoints, PlayerCreated, AssignedPup, willbonus, fortbonus, refbonus
+    ///     - LvlStatList (for PCs), FeatList, PerceptionList, CombatRoundData, SkillPoints, SkillList
+    ///     - MovementRate/WalkRate, SpecAbilityList
+    ///   - Returns 0 on success, error codes 0x5f4-0x5f8 on failure (invalid race, perception range, class list, duplicate classes)
     /// - Original implementation: Creates runtime entities from GIT instance data and GFF templates
     /// - Entities created from GIT instances override template values with instance-specific data
     /// - ObjectId assignment: Sequential uint32 starting from 1 (OBJECT_INVALID = 0x7F000000, OBJECT_SELF = 0x7F000001)
