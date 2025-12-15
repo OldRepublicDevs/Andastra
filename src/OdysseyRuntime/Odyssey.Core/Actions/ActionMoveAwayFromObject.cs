@@ -13,12 +13,18 @@ namespace Odyssey.Core.Actions
     /// <remarks>
     /// Move Away From Object Action:
     /// - Based on swkotor2.exe ActionMoveAwayFromObject NWScript function
-    /// - Located via string references: "MoveAwayFromObject" action type, "MOVETO" @ 0x007b6b24
+    /// - Located via string references: "MoveAwayFromObject" action type (ACTION_TYPE_MOVE_AWAY_FROM_OBJECT constant), "MOVETO" @ 0x007b6b24 (movement action constant)
     /// - Original implementation: Moves entity away from target to maintain minimum distance
-    /// - Used for backing away from threats, maintaining personal space, retreat behavior
-    /// - Moves in opposite direction from target until distance threshold reached
-    /// - Can run if distance is large, walks if closer
-    /// - Action completes when entity is at least specified distance away from target
+    /// - Used for backing away from threats, maintaining personal space, retreat behavior, NPC avoidance
+    /// - Movement: Moves in opposite direction from target until distance threshold reached
+    /// - Uses direct movement (no pathfinding) - moves along line away from target
+    /// - Speed: Uses run speed if run flag is set, walk speed otherwise (from IStatsComponent)
+    /// - Overlap handling: If entities overlap (distance < 0.1), picks random direction to move away
+    /// - Action completes when entity is at least specified distance away from target (default 5.0 units)
+    /// - Action remains InProgress while moving away, completes when distance threshold reached or target becomes invalid
+    /// - No pathfinding: Direct movement only - does not avoid obstacles or use walkmesh
+    /// - Facing: Entity faces direction of movement while retreating
+    /// - Based on NWScript function ActionMoveAwayFromObject (routine ID varies by game version)
     /// </remarks>
     public class ActionMoveAwayFromObject : ActionBase
     {

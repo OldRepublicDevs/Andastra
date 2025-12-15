@@ -9,16 +9,22 @@ namespace Odyssey.Core.Actions
     /// <remarks>
     /// Destroy Object Action:
     /// - Based on swkotor2.exe DestroyObject NWScript function
-    /// - Located via string references: "EVENT_DESTROY_OBJECT" @ 0x007bcd48
-    /// - Event dispatching: FUN_004dcfb0 @ 0x004dcfb0 handles EVENT_DESTROY_OBJECT event (case 0xb)
-    /// - "DestroyObjectDelay" @ 0x007c0248, "IsDestroyable" @ 0x007bf670, "Destroyed" @ 0x007c4bdc
-    /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_DESTROYPLAYERCREATURE" @ 0x007bc5ec (player creature destruction event)
+    /// - Located via string references: "EVENT_DESTROY_OBJECT" @ 0x007bcd48 (destroy object event, case 0xb)
+    /// - Event dispatching: FUN_004dcfb0 @ 0x004dcfb0 handles EVENT_DESTROY_OBJECT event (case 0xb, fires before object removal)
+    /// - "DestroyObjectDelay" @ 0x007c0248 (destroy object delay field), "IsDestroyable" @ 0x007bf670 (is destroyable flag)
+    /// - "Destroyed" @ 0x007c4bdc (destroyed flag), "CSWSSCRIPTEVENT_EVENTTYPE_ON_DESTROYPLAYERCREATURE" @ 0x007bc5ec (player creature destruction event, 0x5)
     /// - Original implementation: Destroys object after delay, optionally with fade-out effect
-    /// - If noFade is FALSE, object fades out before destruction (alpha fade from 1.0 to 0.0)
-    /// - delayUntilFade controls when fade starts (if delay > 0, fade starts after delayUntilFade)
-    /// - Rendering system should check "DestroyFade" flag and fade out entity before destruction
-    /// - Fade duration: Typically 1-2 seconds for smooth visual transition
-    /// - After fade completes (or if noFade is TRUE), object is removed from world
+    /// - Delay: Initial delay before destruction starts (default 0 seconds, can be set via delay parameter)
+    /// - Fade behavior: If noFade is FALSE, object fades out before destruction (alpha fade from 1.0 to 0.0)
+    /// - delayUntilFade controls when fade starts (if delay > 0, fade starts after delayUntilFade seconds from action start)
+    /// - Rendering system: Should check "DestroyFade" flag and fade out entity before destruction (rendering system responsibility)
+    /// - Fade duration: Typically 1-2 seconds for smooth visual transition (implementation-dependent)
+    /// - After fade completes (or if noFade is TRUE), object is removed from world via World.DestroyEntity()
+    /// - Event firing: EVENT_DESTROY_OBJECT fires before object is removed from world (allows scripts to react)
+    /// - Object cleanup: Entity is removed from area's entity list, all references become invalid (OBJECT_INVALID)
+    /// - Script execution: OnDeath script may fire before destruction (if entity has OnDeath script)
+    /// - Usage: Temporary objects, scripted removals, death sequences, cutscenes
+    /// - Based on NWScript function DestroyObject (routine ID varies by game version)
     /// </remarks>
     public class ActionDestroyObject : ActionBase
     {
