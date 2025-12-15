@@ -7,6 +7,14 @@ namespace Odyssey.Core.Actions
     /// <summary>
     /// Action to equip an item to a specific inventory slot.
     /// </summary>
+    /// <remarks>
+    /// Equip Item Action:
+    /// - Based on swkotor2.exe ActionEquipItem NWScript function
+    /// - Original implementation: Equips item from inventory to specified equipment slot
+    /// - Items must be in entity's inventory before equipping
+    /// - Equipment slots: Armor, Helmet, Implant, RightArm, LeftArm, etc. (see InventorySlot enum)
+    /// - Equipping item modifies entity stats (AC, damage, abilities, etc.)
+    /// </remarks>
     public class ActionEquipItem : ActionBase
     {
         private readonly uint _itemObjectId;
