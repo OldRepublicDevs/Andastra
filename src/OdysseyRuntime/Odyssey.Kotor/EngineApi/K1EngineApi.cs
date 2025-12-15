@@ -2720,7 +2720,7 @@ namespace Odyssey.Kotor.EngineApi
             }
 
             // Try to get CombatManager from GameServicesContext
-            if (ctx.AdditionalContext is IGameServicesContext services && services.CombatManager is CombatManager combatManager)
+            if (ctx is VMExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services && services.CombatManager is CombatManager combatManager)
             {
                 IEntity target = combatManager.GetAttackTarget(creature);
                 if (target != null)
@@ -2780,7 +2780,7 @@ namespace Odyssey.Kotor.EngineApi
             }
 
             // Try to get CombatManager from GameServicesContext
-            if (ctx.AdditionalContext is IGameServicesContext services && services.CombatManager is CombatManager combatManager)
+            if (ctx is VMExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services && services.CombatManager is CombatManager combatManager)
             {
                 bool inCombat = combatManager.IsInCombat(creature);
                 // Note: bOnlyCountReal parameter is not yet implemented - would need to distinguish
@@ -3018,7 +3018,7 @@ namespace Odyssey.Kotor.EngineApi
             // GetIsNPC(object oCreature) - Returns TRUE if oCreature is an NPC (not a PC)
             uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
             IEntity entity = ResolveObject(objectId, ctx);
-            if (entity != null && entity.ObjectType == ObjectType.Creature)
+            if (entity != null && entity.ObjectType == Core.Enums.ObjectType.Creature)
             {
                 // Check if entity is NOT the player entity
                 if (ctx is VMExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
@@ -3230,10 +3230,10 @@ namespace Odyssey.Kotor.EngineApi
                     Core.Interfaces.Components.IScriptHooksComponent hooks = target.GetComponent<Core.Interfaces.Components.IScriptHooksComponent>();
                     if (hooks != null)
                     {
-                        CSharpKOTOR.Common.ResRef dialogueResRef = hooks.GetScript(Core.Enums.ScriptEvent.OnConversation);
-                        if (dialogueResRef != null && !dialogueResRef.IsBlank())
+                        string dialogueScript = hooks.GetScript(Core.Enums.ScriptEvent.OnConversation);
+                        if (!string.IsNullOrEmpty(dialogueScript))
                         {
-                            resRef = dialogueResRef.ToString();
+                            resRef = dialogueScript;
                         }
                     }
                 }
@@ -3320,10 +3320,10 @@ namespace Odyssey.Kotor.EngineApi
                             Core.Interfaces.Components.IScriptHooksComponent hooks = target.GetComponent<Core.Interfaces.Components.IScriptHooksComponent>();
                             if (hooks != null)
                             {
-                                CSharpKOTOR.Common.ResRef dialogueResRef = hooks.GetScript(Core.Enums.ScriptEvent.OnConversation);
-                                if (dialogueResRef != null && !dialogueResRef.IsBlank())
+                                string dialogueScript = hooks.GetScript(Core.Enums.ScriptEvent.OnConversation);
+                                if (!string.IsNullOrEmpty(dialogueScript))
                                 {
-                                    dialogResRef = dialogueResRef.ToString();
+                                    dialogResRef = dialogueScript;
                                 }
                             }
                         }
@@ -3821,10 +3821,10 @@ namespace Odyssey.Kotor.EngineApi
             // EffectAssuredHit creates an effect that makes the next attack automatically hit
             // This is typically used for special abilities or Force powers
             // In KOTOR, this might be represented as an attack bonus effect or a special flag
-            var effect = new CoreCoreCombat.Effect(CoreCoreCoreCombat.EffectType.AttackIncrease)
+            var effect = new CoreCombat.ActiveEffect(CoreCombat.EffectType.AttackIncrease)
             {
                 Amount = 1000, // Very high bonus to guarantee hit
-                DurationType = CoreCoreCoreCombat.EffectDurationType.Temporary,
+                DurationType = CoreCombat.EffectDurationType.Temporary,
                 Duration = 1 // Lasts for 1 round (next attack only)
             };
             return Variable.FromEffect(effect);
@@ -4165,11 +4165,11 @@ namespace Odyssey.Kotor.EngineApi
                 // DURATION_TYPE_INSTANT = 0, DURATION_TYPE_TEMPORARY = 1, DURATION_TYPE_PERMANENT = 2
                 switch (effect.DurationType)
                 {
-                    case CoreCoreCombat.EffectDurationType.Instant:
+                    case CoreCombat.EffectDurationType.Instant:
                         return Variable.FromInt(0);
-                    case CoreCoreCombat.EffectDurationType.Temporary:
+                    case CoreCombat.EffectDurationType.Temporary:
                         return Variable.FromInt(1);
-                    case CoreCoreCombat.EffectDurationType.Permanent:
+                    case CoreCombat.EffectDurationType.Permanent:
                         return Variable.FromInt(2);
                 }
             }
@@ -4865,7 +4865,7 @@ namespace Odyssey.Kotor.EngineApi
                 // Check if player only
                 if (playerOnly)
                 {
-                    if (ctx.AdditionalContext is IGameServicesContext services)
+                    if (ctx is VMExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
                     {
                         if (services.PlayerEntity == null || services.PlayerEntity.ObjectId != entity.ObjectId)
                         {
@@ -4928,7 +4928,7 @@ namespace Odyssey.Kotor.EngineApi
                 // Check if player only
                 if (playerOnly)
                 {
-                    if (ctx.AdditionalContext is IGameServicesContext services)
+                    if (ctx is VMExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
                     {
                         if (services.PlayerEntity == null || services.PlayerEntity.ObjectId != entity.ObjectId)
                         {
@@ -5001,7 +5001,7 @@ namespace Odyssey.Kotor.EngineApi
                 // Check if player only
                 if (playerOnly)
                 {
-                    if (ctx.AdditionalContext is IGameServicesContext services)
+                    if (ctx is VMExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
                     {
                         if (services.PlayerEntity == null || services.PlayerEntity.ObjectId != entity.ObjectId)
                         {

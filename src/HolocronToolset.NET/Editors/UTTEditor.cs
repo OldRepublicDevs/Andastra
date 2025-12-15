@@ -494,7 +494,7 @@ namespace HolocronToolset.NET.Editors
 
             // Advanced
             // Matching Python: utt.auto_remove_key = self.ui.autoRemoveKeyCheckbox.isChecked()
-            _utt.AutoRemoveKey = _autoRemoveKeyCheckbox?.IsChecked ?? false;
+            _utt.AutoRemoveKey = _autoRemoveKeyCheckbox?.IsChecked == true;
             // Matching Python: utt.key_name = self.ui.keyEdit.text()
             if (_keyEdit != null)
             {

@@ -8,6 +8,7 @@ using CSharpKOTOR.Installation;
 using CSharpKOTOR.Resources;
 using Odyssey.Content.Interfaces;
 using Odyssey.Scripting.Interfaces;
+using Odyssey.Scripting.Types;
 
 namespace Odyssey.Scripting.VM
 {
@@ -476,19 +477,19 @@ namespace Odyssey.Scripting.VM
             // Get function signature from ScriptDefs to determine argument types
             // Original engine: Function signatures stored in nwscript.nss definitions
             // Function signature lookup: Routine ID maps to function definition with parameter types
-            ScriptFunctionDef functionDef = null;
+            ScriptFunction functionDef = null;
             try
             {
                 // Try to get function definition from ScriptDefs
-                // K1 uses ScriptDefs.KOTOR_FUNCTIONS, K2 uses ScriptDefs.KOTOR2_FUNCTIONS
+                // K1 uses ScriptDefs.KOTOR_FUNCTIONS, K2 uses ScriptDefs.TSL_FUNCTIONS
                 // For now, we'll try both and use the first match
                 if (routineId < ScriptDefs.KOTOR_FUNCTIONS.Count)
                 {
                     functionDef = ScriptDefs.KOTOR_FUNCTIONS[routineId];
                 }
-                else if (routineId < ScriptDefs.KOTOR2_FUNCTIONS.Count)
+                else if (routineId < ScriptDefs.TSL_FUNCTIONS.Count)
                 {
-                    functionDef = ScriptDefs.KOTOR2_FUNCTIONS[routineId];
+                    functionDef = ScriptDefs.TSL_FUNCTIONS[routineId];
                 }
             }
             catch
@@ -501,29 +502,29 @@ namespace Odyssey.Scripting.VM
             // Original implementation: Arguments are popped in reverse order of function signature
             // Stack layout: Last argument is at top of stack, first argument is deeper
             var args = new List<Variable>();
-            if (functionDef != null && functionDef.Parameters != null && functionDef.Parameters.Count == argCount)
+            if (functionDef != null && functionDef.Params != null && functionDef.Params.Count == argCount)
             {
                 // Pop arguments in reverse order (last parameter first, first parameter last)
                 // Then reverse the list to get correct order
                 for (int i = argCount - 1; i >= 0; i--)
                 {
-                    ScriptParameterDef param = functionDef.Parameters[i];
+                    ScriptParam param = functionDef.Params[i];
                     Variable arg;
                     switch (param.Type)
                     {
-                        case ScriptParameterType.Int:
+                        case DataType.Int:
                             arg = Variable.FromInt(PopInt());
                             break;
-                        case ScriptParameterType.Float:
+                        case DataType.Float:
                             arg = Variable.FromFloat(PopFloat());
                             break;
-                        case ScriptParameterType.String:
+                        case DataType.String:
                             arg = Variable.FromString(PopString());
                             break;
-                        case ScriptParameterType.Object:
+                        case DataType.Object:
                             arg = Variable.FromObject((uint)PopInt());
                             break;
-                        case ScriptParameterType.Vector:
+                        case DataType.Vector:
                             float z = PopFloat();
                             float y = PopFloat();
                             float x = PopFloat();
