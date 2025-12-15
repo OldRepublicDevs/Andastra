@@ -691,10 +691,72 @@ namespace Odyssey.Content.Save
             return gff.ToBytes();
         }
         
-        // Helper to get member ID from ResRef (would need actual implementation)
+        // Helper to get member ID from ResRef
+        // Member IDs: -1 = Player, 0-8 = NPC slots (K1), 0-11 = NPC slots (K2)
+        // Based on nwscript.nss constants: NPC_PLAYER = -1, NPC_BASTILA = 0, etc.
         private float GetMemberId(string resRef)
         {
-            // TODO: Map ResRef to member ID
+            if (string.IsNullOrEmpty(resRef))
+            {
+                return -1.0f; // Default to player
+            }
+
+            // Player character is typically identified by specific ResRefs or -1
+            // Common player ResRefs: "player", "pc", etc.
+            string resRefLower = resRef.ToLowerInvariant();
+            if (resRefLower == "player" || resRefLower == "pc" || resRefLower.StartsWith("pc_"))
+            {
+                return -1.0f; // NPC_PLAYER
+            }
+
+            // Map common K1 NPC ResRefs to member IDs
+            // This mapping should ideally come from party.2da or game data
+            // For now, use common ResRef patterns
+            var npcMapping = new Dictionary<string, float>(StringComparer.OrdinalIgnoreCase)
+            {
+                // K1 NPCs (0-8)
+                { "bastila", 0.0f },      // NPC_BASTILA
+                { "canderous", 1.0f },    // NPC_CANDEROUS
+                { "carth", 2.0f },        // NPC_CARTH
+                { "hk47", 3.0f },         // NPC_HK_47
+                { "jolee", 4.0f },        // NPC_JOLEE
+                { "juhani", 5.0f },      // NPC_JUHANI
+                { "mission", 6.0f },     // NPC_MISSION
+                { "t3m4", 7.0f },        // NPC_T3_M4
+                { "zaalbar", 8.0f },     // NPC_ZAALBAR
+                
+                // K2 NPCs (0-11) - some overlap with K1
+                { "atton", 0.0f },       // K2 NPC_ATTON
+                { "bao-dur", 1.0f },     // K2 NPC_BAO_DUR
+                { "disciple", 2.0f },    // K2 NPC_DISCIPLE
+                { "handmaiden", 3.0f },  // K2 NPC_HANDMAIDEN
+                { "hanharr", 4.0f },     // K2 NPC_HANHARR
+                { "g0-t0", 5.0f },       // K2 NPC_G0_T0
+                { "kreia", 6.0f },       // K2 NPC_KREIA
+                { "mira", 7.0f },        // K2 NPC_MIRA
+                { "visas", 8.0f },       // K2 NPC_VISAS
+                { "mandalore", 9.0f },   // K2 NPC_MANDALORE
+                { "t3m4", 10.0f },       // K2 NPC_T3_M4 (different slot)
+                { "sion", 11.0f },       // K2 NPC_SION
+            };
+
+            // Try exact match first
+            if (npcMapping.TryGetValue(resRefLower, out float memberId))
+            {
+                return memberId;
+            }
+
+            // Try partial match (e.g., "bastila" matches "bastila_001")
+            foreach (var kvp in npcMapping)
+            {
+                if (resRefLower.Contains(kvp.Key))
+                {
+                    return kvp.Value;
+                }
+            }
+
+            // If no mapping found, return 0.0f as default
+            // TODO: Integrate with party.2da or game data manager for accurate mapping
             return 0.0f;
         }
 
