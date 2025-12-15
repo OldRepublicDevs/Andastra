@@ -163,6 +163,15 @@ namespace Odyssey.Kotor.Game
         {
             get { return _combatManager; }
         }
+
+        /// <summary>
+        /// Gets or sets whether stealth XP is enabled.
+        /// </summary>
+        public bool StealthXPEnabled
+        {
+            get { return _stealthXPEnabled; }
+            set { _stealthXPEnabled = value; }
+        }
         
         /// <summary>
         /// Gets the current game time hours (0-23).

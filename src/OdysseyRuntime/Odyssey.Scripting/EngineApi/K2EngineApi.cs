@@ -830,14 +830,23 @@ namespace Odyssey.Scripting.EngineApi
 
         private Variable Func_GetStealthXPEnabled(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
-            // TODO: Check if stealth XP is enabled
-            return Variable.FromInt(1);
+            // Get stealth XP enabled state from GameSession
+            if (ctx is VM.ExecutionContext execCtx && execCtx.AdditionalContext is GameSession.GameServicesContext services && services.GameSession != null)
+            {
+                return Variable.FromInt(services.GameSession.StealthXPEnabled ? 1 : 0);
+            }
+            return Variable.FromInt(1); // Default: enabled
         }
 
         private Variable Func_SetStealthXPEnabled(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             int enabled = args.Count > 0 ? args[0].AsInt() : 1;
-            // TODO: Enable/disable stealth XP
+            
+            // Set stealth XP enabled state in GameSession
+            if (ctx is VM.ExecutionContext execCtx && execCtx.AdditionalContext is GameSession.GameServicesContext services && services.GameSession != null)
+            {
+                services.GameSession.StealthXPEnabled = (enabled != 0);
+            }
             return Variable.Void();
         }
 
@@ -854,7 +863,21 @@ namespace Odyssey.Scripting.EngineApi
         private Variable Func_GetBaseItemType(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             uint itemId = args.Count > 0 ? args[0].AsObjectId() : ObjectInvalid;
-            // TODO: Get item base type from baseitems.2da
+            
+            IEntity item = ResolveObject(itemId, ctx);
+            if (item == null)
+            {
+                return Variable.FromInt(0);
+            }
+
+            // Get base item type from item component
+            Core.Interfaces.Components.IItemComponent itemComponent = item.GetComponent<Core.Interfaces.Components.IItemComponent>();
+            if (itemComponent != null)
+            {
+                // BaseItem is the base item type ID from baseitems.2da
+                return Variable.FromInt(itemComponent.BaseItem);
+            }
+
             return Variable.FromInt(0);
         }
 
