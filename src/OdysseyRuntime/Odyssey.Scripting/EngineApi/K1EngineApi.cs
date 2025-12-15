@@ -1058,15 +1058,29 @@ namespace Odyssey.Scripting.EngineApi
             switch (criteriaType)
             {
                 case 0: // CREATURE_TYPE_RACIAL_TYPE
-                    // TODO: Check racial type from creature template
-                    return true; // Placeholder
+                    // Check racial type from creature component
+                    Odyssey.Kotor.Components.CreatureComponent racialComp = creature.GetComponent<Odyssey.Kotor.Components.CreatureComponent>();
+                    if (racialComp != null)
+                    {
+                        return racialComp.RaceId == criteriaValue;
+                    }
+                    // Fallback: try entity data
+                    if (creature is Core.Entities.Entity racialEntity)
+                    {
+                        object raceIdObj = racialEntity.GetData("RaceId");
+                        if (raceIdObj is int raceId)
+                        {
+                            return raceId == criteriaValue;
+                        }
+                    }
+                    return false;
 
                 case 1: // CREATURE_TYPE_PLAYER_CHAR
                     // PLAYER_CHAR_IS_PC = 0, PLAYER_CHAR_NOT_PC = 1
                     if (criteriaValue == 0)
                     {
                         // Is PC
-                        if (ctx is VM.ExecutionContext execCtx && execCtx.AdditionalContext is Odyssey.Kotor.Game.GameServicesContext services)
+                        if (ctx is VM.ExecutionContext execCtx && execCtx.AdditionalContext is Game.GameServicesContext services)
                         {
                             return services.PlayerEntity != null && services.PlayerEntity.ObjectId == creature.ObjectId;
                         }
@@ -1074,20 +1088,47 @@ namespace Odyssey.Scripting.EngineApi
                     else if (criteriaValue == 1)
                     {
                         // Not PC
-                        if (ctx is VM.ExecutionContext execCtx && execCtx.AdditionalContext is Odyssey.Kotor.Game.GameServicesContext services)
+                        if (ctx is VM.ExecutionContext execCtx2 && execCtx2.AdditionalContext is Game.GameServicesContext services2)
                         {
-                            return services.PlayerEntity == null || services.PlayerEntity.ObjectId != creature.ObjectId;
+                            return services2.PlayerEntity == null || services2.PlayerEntity.ObjectId != creature.ObjectId;
                         }
                     }
                     return false;
 
                 case 2: // CREATURE_TYPE_CLASS
-                    // TODO: Check class type from creature template
-                    return true; // Placeholder
+                    // Check if creature has the specified class (any position)
+                    Odyssey.Kotor.Components.CreatureComponent classComp = creature.GetComponent<Odyssey.Kotor.Components.CreatureComponent>();
+                    if (classComp != null && classComp.ClassList != null)
+                    {
+                        foreach (Odyssey.Kotor.Components.CreatureClass cls in classComp.ClassList)
+                        {
+                            if (cls.ClassId == criteriaValue)
+                            {
+                                return true;
+                            }
+                        }
+                    }
+                    return false;
 
                 case 3: // CREATURE_TYPE_REPUTATION
-                    // TODO: Check reputation type
-                    return true; // Placeholder
+                    // Check reputation between caller and creature
+                    // REPUTATION_TYPE_ENEMY = 0, REPUTATION_TYPE_FRIEND = 1, REPUTATION_TYPE_NEUTRAL = 2
+                    if (ctx is VM.ExecutionContext execCtx3 && execCtx3.AdditionalContext is Game.GameServicesContext services3)
+                    {
+                        if (services3.FactionManager != null && ctx.Caller != null)
+                        {
+                            Odyssey.Kotor.Components.FactionComponent callerFaction = ctx.Caller.GetComponent<Odyssey.Kotor.Components.FactionComponent>();
+                            Odyssey.Kotor.Components.FactionComponent creatureFaction = creature.GetComponent<Odyssey.Kotor.Components.FactionComponent>();
+                            if (callerFaction != null && creatureFaction != null)
+                            {
+                                int reputation = services3.FactionManager.GetFactionReputation(callerFaction.FactionId, creatureFaction.FactionId);
+                                // Map reputation to type: <= -50 = enemy, >= 50 = friend, else neutral
+                                int repType = reputation <= -50 ? 0 : (reputation >= 50 ? 1 : 2);
+                                return repType == criteriaValue;
+                            }
+                        }
+                    }
+                    return false;
 
                 case 4: // CREATURE_TYPE_IS_ALIVE
                     // TRUE = alive, FALSE = dead
@@ -1100,16 +1141,42 @@ namespace Odyssey.Scripting.EngineApi
                     return false;
 
                 case 5: // CREATURE_TYPE_HAS_SPELL_EFFECT
-                    // TODO: Check if creature has specific spell effect
-                    return true; // Placeholder
+                    // Check if creature has specific spell effect (spell ID = criteriaValue)
+                    if (creature.World != null && creature.World.EffectSystem != null)
+                    {
+                        Odyssey.Core.Combat.EffectSystem effectSystem = creature.World.EffectSystem;
+                        // Check if any active effect has the spell ID
+                        foreach (Odyssey.Core.Combat.ActiveEffect effect in effectSystem.GetEffects(creature))
+                        {
+                            if (effect.Effect.VisualEffectId == criteriaValue)
+                            {
+                                return true;
+                            }
+                        }
+                    }
+                    return false;
 
                 case 6: // CREATURE_TYPE_DOES_NOT_HAVE_SPELL_EFFECT
-                    // TODO: Check if creature does not have specific spell effect
-                    return true; // Placeholder
+                    // Check if creature does NOT have specific spell effect
+                    if (creature.World != null && creature.World.EffectSystem != null)
+                    {
+                        Odyssey.Core.Combat.EffectSystem effectSystem = creature.World.EffectSystem;
+                        // Check if any active effect has the spell ID
+                        foreach (Odyssey.Core.Combat.ActiveEffect effect in effectSystem.GetEffects(creature))
+                        {
+                            if (effect.Effect.VisualEffectId == criteriaValue)
+                            {
+                                return false; // Has the effect
+                            }
+                        }
+                        return true; // Does not have the effect
+                    }
+                    return true; // No effect system, assume doesn't have it
 
                 case 7: // CREATURE_TYPE_PERCEPTION
-                    // TODO: Check perception type
-                    return true; // Placeholder
+                    // Perception type check (simplified - would need perception component)
+                    // For now, return true (accept all)
+                    return true;
 
                 default:
                     return true; // Unknown criteria type, accept all
@@ -2575,7 +2642,7 @@ namespace Odyssey.Scripting.EngineApi
         {
             // GetLastPerceptionVanished() - Check if the last perceived object has vanished
             // Returns 1 if vanished, 0 if not vanished or invalid
-            if (ctx.Caller == null || ctx.Caller.ObjectType != OdyObjectType.Creature)
+            if (ctx.Caller == null || ctx.Caller.ObjectType != Core.Enums.ObjectType.Creature)
             {
                 return Variable.FromInt(0);
             }
