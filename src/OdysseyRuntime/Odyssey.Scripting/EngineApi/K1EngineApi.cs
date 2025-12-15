@@ -1070,8 +1070,12 @@ namespace Odyssey.Scripting.EngineApi
             {
                 case 0: // CREATURE_TYPE_RACIAL_TYPE
                     // Check racial type from creature data
-                    int raceId = creature.GetData<int>("RaceId", 0);
-                    return raceId == criteriaValue;
+                    if (creature is Core.Entities.Entity entity)
+                    {
+                        int raceId = entity.GetData<int>("RaceId", 0);
+                        return raceId == criteriaValue;
+                    }
+                    return false;
 
                 case 1: // CREATURE_TYPE_PLAYER_CHAR
                     // PLAYER_CHAR_IS_PC = 0, PLAYER_CHAR_NOT_PC = 1
@@ -1094,8 +1098,23 @@ namespace Odyssey.Scripting.EngineApi
                     return false;
 
                 case 2: // CREATURE_TYPE_CLASS
-                    // TODO: Check class type from creature template
-                    return true; // Placeholder
+                    // Check if creature has the specified class type
+                    // ClassList is stored as List<CreatureClass> with ClassId and Level
+                    if (creature is Core.Entities.Entity entity2)
+                    {
+                        var classList = entity2.GetData<List<Odyssey.Kotor.Components.CreatureClass>>("ClassList");
+                        if (classList != null)
+                        {
+                            foreach (var creatureClass in classList)
+                            {
+                                if (creatureClass.ClassId == criteriaValue)
+                                {
+                                    return true; // Creature has this class
+                                }
+                            }
+                        }
+                    }
+                    return false; // Creature doesn't have this class
 
                 case 3: // CREATURE_TYPE_REPUTATION
                     // Check reputation between caller and creature
@@ -1106,8 +1125,16 @@ namespace Odyssey.Scripting.EngineApi
                     }
                     
                     // Get faction IDs
-                    int callerFactionId = ctx.Caller.GetData<int>("FactionID", 0);
-                    int creatureFactionId = creature.GetData<int>("FactionID", 0);
+                    int callerFactionId = 0;
+                    int creatureFactionId = 0;
+                    if (ctx.Caller is Core.Entities.Entity callerEntity)
+                    {
+                        callerFactionId = callerEntity.GetData<int>("FactionID", 0);
+                    }
+                    if (creature is Core.Entities.Entity creatureEntity)
+                    {
+                        creatureFactionId = creatureEntity.GetData<int>("FactionID", 0);
+                    }
                     
                     if (callerFactionId == 0 || creatureFactionId == 0)
                     {
@@ -1938,6 +1965,11 @@ namespace Odyssey.Scripting.EngineApi
             return Variable.FromObject(ObjectInvalid);
         }
 
+        /// <summary>
+        /// ActionEquipItem(object oItem, int nInventorySlot) - Queues action to equip an item
+        /// Based on swkotor2.exe: Equips item from inventory to specified equipment slot
+        /// Tracks equipped item for GetLastItemEquipped
+        /// </summary>
         private Variable Func_ActionEquipItem(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             // ActionEquipItem(object oItem, int nInventorySlot)
@@ -1947,6 +1979,12 @@ namespace Odyssey.Scripting.EngineApi
             if (ctx.Caller == null)
             {
                 return Variable.Void();
+            }
+
+            // Track equipped item for GetLastItemEquipped
+            if (itemId != ObjectInvalid)
+            {
+                _lastEquippedItems[ctx.Caller.ObjectId] = itemId;
             }
 
             var action = new ActionEquipItem(itemId, inventorySlot);
@@ -2257,12 +2295,6 @@ namespace Odyssey.Scripting.EngineApi
             if (ctx.Caller == null)
             {
                 return Variable.Void();
-            }
-
-            // Track spell target for GetSpellTargetObject
-            if (targetId != ObjectInvalid)
-            {
-                _lastSpellTargets[ctx.Caller.ObjectId] = targetId;
             }
 
             var action = new ActionCastSpellAtObject(spellId, targetId);
@@ -3006,8 +3038,37 @@ namespace Odyssey.Scripting.EngineApi
             return Variable.FromEffect(effect);
         }
 
+        /// <summary>
+        /// GetLastItemEquipped() - Returns the last item that was equipped by the caller
+        /// Based on swkotor2.exe: Tracks the last item equipped via ActionEquipItem
+        /// Returns OBJECT_INVALID if no item has been equipped or caller is invalid
+        /// </summary>
         private Variable Func_GetLastItemEquipped(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
+            if (ctx.Caller == null)
+            {
+                return Variable.FromObject(ObjectInvalid);
+            }
+
+            // Retrieve last equipped item for this creature
+            if (_lastEquippedItems.TryGetValue(ctx.Caller.ObjectId, out uint itemId))
+            {
+                // Verify item still exists and is valid
+                if (ctx.World != null)
+                {
+                    IEntity item = ctx.World.GetEntity(itemId);
+                    if (item != null && item.IsValid)
+                    {
+                        return Variable.FromObject(itemId);
+                    }
+                    else
+                    {
+                        // Item no longer exists, remove from tracking
+                        _lastEquippedItems.Remove(ctx.Caller.ObjectId);
+                    }
+                }
+            }
+
             return Variable.FromObject(ObjectInvalid);
         }
 
