@@ -93,6 +93,8 @@ namespace Odyssey.Core.Module
 
         public INavigationMesh NavigationMesh { get; set; }
 
+        public bool IsUnescapable { get; set; }
+
         public bool IsPointWalkable(Vector3 point)
         {
             if (NavigationMesh == null)
