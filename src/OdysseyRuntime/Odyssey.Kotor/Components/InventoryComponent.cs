@@ -14,10 +14,21 @@ namespace Odyssey.Kotor.Components
     /// <remarks>
     /// Inventory Component:
     /// - Based on swkotor2.exe inventory system
-    /// - Located via string references: "Inventory" @ various locations, "INVENTORY_SLOT_*" constants
-    /// - Inventory slots: Equipped items (weapon, armor, shield, etc.) and inventory bag (array of slots)
+    /// - Located via string references: "Inventory" @ 0x007c2504 (inventory field), "InventoryRes" @ 0x007bf570 (inventory resource)
+    /// - "InventorySlot" @ 0x007bf7d0 (inventory slot field), "=INVENTORY" @ 0x007c1927 (inventory GFF structure)
+    /// - "GAMEINPROGRESS:INVENTORY" @ 0x007c1570 (inventory game state), "HasInventory" @ 0x007c1fb0 (has inventory flag)
+    /// - "GuiInventory" @ 0x007c24f4 (inventory GUI), "inventory_p" @ 0x007d1094 (inventory panel)
+    /// - "InventorySound" @ 0x007c7164 (inventory sound), "inventorysnds" @ 0x007c7174 (inventory sounds directory)
+    /// - Script events: "CSWSSCRIPTEVENT_EVENTTYPE_ON_INVENTORY_DISTURBED" @ 0x007bc778 (inventory disturbed event, 0x1b)
     /// - Original implementation: Inventory stored in GFF format (UTC creature templates, save files)
+    /// - FUN_005226d0 @ 0x005226d0 saves inventory data including equipped items and inventory bag
+    /// - Inventory slots: Equipped items (weapon, armor, shield, etc.) and inventory bag (array of slots)
     /// - Slot indices: INVENTORY_SLOT_* constants from NWScript (0-17 for equipped, 18+ for inventory bag)
+    /// - Equipped slots: INVENTORY_SLOT_HEAD (0), INVENTORY_SLOT_ARMS (1), INVENTORY_SLOT_IMPLANT (2), INVENTORY_SLOT_LEFTWEAPON (4),
+    ///   INVENTORY_SLOT_BODY (6), INVENTORY_SLOT_LEFTHAND (7), INVENTORY_SLOT_RIGHTWEAPON (8), INVENTORY_SLOT_RIGHTHAND (9)
+    /// - Inventory bag starts at slot 18 (INVENTORY_SLOT_CARMOUR + 1), stores up to MaxInventorySlots items
+    /// - Items in inventory can be equipped to slots via ActionEquipItem, removed via ActionUnequipItem
+    /// - Inventory events: ON_INVENTORY_DISTURBED fires when items are added/removed/equipped/unequipped
     /// - Based on KOTOR inventory system from vendor/PyKotor/wiki/ and plan documentation
     /// </remarks>
     public class InventoryComponent : IInventoryComponent
