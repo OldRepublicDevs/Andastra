@@ -13,6 +13,12 @@ namespace Odyssey.Core.Actions
     /// Cast Spell At Location Action:
     /// - Based on swkotor2.exe spell casting system
     /// - Located via string references: "ActionCastSpellAtLocation" @ NWScript function
+    /// - Location references: "LOCATION" @ 0x007c2850, "ValLocation" @ 0x007c26ac, "CatLocation" @ 0x007c26dc
+    /// - "FollowLocation" @ 0x007beda8 (follow location action)
+    /// - Location error messages:
+    ///   - "Script var '%s' not a LOCATION!" @ 0x007c25e0
+    ///   - "Script var LOCATION '%s' not in catalogue!" @ 0x007c2600
+    ///   - "ReadTableWithCat(): LOCATION '%s' won't fit!" @ 0x007c2734
     /// - Original implementation: Caster moves to range, casts spell at target location
     /// - Spell effects: Projectile spells create projectiles, area spells create zones
     /// - Force point cost: Deducted from caster's Force points
