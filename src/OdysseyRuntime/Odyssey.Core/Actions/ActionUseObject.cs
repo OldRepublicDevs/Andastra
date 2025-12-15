@@ -12,14 +12,20 @@ namespace Odyssey.Core.Actions
     /// <remarks>
     /// Use Object Action:
     /// - Based on swkotor2.exe placeable interaction system
-    /// - Located via string references: "OnUsed" @ 0x007be1c4 (placeable script event), "ScriptOnUsed" @ 0x007beeb8
+    /// - Located via string references: "OnUsed" @ 0x007c1f70 (placeable script event)
     /// - Object events: "EVENT_OPEN_OBJECT" @ 0x007bcda0, "EVENT_CLOSE_OBJECT" @ 0x007bcdb4
     /// - "EVENT_LOCK_OBJECT" @ 0x007bcd20, "EVENT_UNLOCK_OBJECT" @ 0x007bcd34
-    /// - Event dispatching: FUN_004dcfb0 @ 0x004dcfb0 handles object events (EVENT_OPEN_OBJECT case 7, EVENT_CLOSE_OBJECT case 6, EVENT_LOCK_OBJECT case 0xd, EVENT_UNLOCK_OBJECT case 0xc)
-    /// - Original implementation: Moves actor to placeable use point, checks lock state, fires OnUsed script
-    /// - Use distance: ~2.0 units (InteractRange)
-    /// - Script events: OnUsed (placeable used), OnLocked (placeable locked), OnOpen (container opened), OnClose (container closed)
-    /// - Containers: If HasInventory=true, opens/closes container instead of using
+    /// - Event dispatching: FUN_004dcfb0 @ 0x004dcfb0 handles object events
+    ///   - EVENT_OPEN_OBJECT (case 7): Used for container opening and non-container placeable usage
+    ///   - EVENT_CLOSE_OBJECT (case 6): Used for container closing
+    ///   - EVENT_LOCK_OBJECT (case 0xd): Fires OnLocked script event (CSWSSCRIPTEVENT_EVENTTYPE_ON_LOCKED = 0x1c)
+    ///   - OnUsed script event: CSWSSCRIPTEVENT_EVENTTYPE_ON_USED = 0x19 (for non-container placeables)
+    /// - Original implementation: Moves actor to placeable use point within InteractRange (~2.0 units)
+    /// - Checks Useable flag from UTP template: If FALSE, action fails immediately
+    /// - Checks Locked state: If locked, fires EVENT_LOCK_OBJECT, executes OnLocked script, action fails
+    /// - Containers (HasInventory=true): Toggles IsOpen state, fires EVENT_OPEN_OBJECT/EVENT_CLOSE_OBJECT, executes OnOpen/OnClosed script
+    /// - Non-containers: Fires EVENT_OPEN_OBJECT, executes OnUsed script (CSWSSCRIPTEVENT_EVENTTYPE_ON_USED)
+    /// - Use distance: ~2.0 units (InteractRange) based on placeable interaction radius
     /// - Based on NWScript ActionUseObject semantics
     /// </remarks>
     public class ActionUseObject : ActionBase
@@ -85,9 +91,11 @@ namespace Odyssey.Core.Actions
 
             // Use the placeable
             // Based on swkotor2.exe: Placeable interaction implementation
-            // Located via string references: "OnUsed" @ 0x007be1c4, "EVENT_OPEN_OBJECT" @ 0x007bcda0
-            // Original implementation: FUN_004dcfb0 @ 0x004dcfb0 handles object events
-            // Checks Useable flag, Locked state, HasInventory flag to determine behavior
+            // Located via string references: "OnUsed" @ 0x007c1f70, "EVENT_OPEN_OBJECT" @ 0x007bcda0
+            // Event dispatching: FUN_004dcfb0 @ 0x004dcfb0 handles object events
+            // Original implementation: Checks Useable flag (from UTP template), Locked state, HasInventory flag to determine behavior
+            // Non-container placeables: Fires EVENT_OPEN_OBJECT, executes OnUsed script (CSWSSCRIPTEVENT_EVENTTYPE_ON_USED = 0x19)
+            // Container placeables: Toggles open/close, fires EVENT_OPEN_OBJECT or EVENT_CLOSE_OBJECT, executes OnOpen or OnClosed script
             IPlaceableComponent placeableState = placeable.GetComponent<IPlaceableComponent>();
             if (placeableState != null)
             {
