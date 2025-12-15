@@ -11,10 +11,13 @@ namespace Odyssey.Core.Actions
     /// <remarks>
     /// Put Down Item Action:
     /// - Based on swkotor2.exe ActionPutDownItem NWScript function
+    /// - Located via string references: "GiveItem" @ 0x007be4f8, "PutDownItem" action type
+    /// - Inventory system: "Inventory" @ 0x007bd658, "Item" @ 0x007bc54c
     /// - Original implementation: Removes item from inventory and places it in world at specified location
     /// - Item becomes a world-dropped item that can be picked up by other entities
     /// - Used for dropping items, giving items to other entities, placing items in containers
     /// - Item position set to drop location, item becomes visible in world
+    /// - Action completes immediately if item is in inventory and location is valid
     /// </remarks>
     public class ActionPutDownItem : ActionBase
     {

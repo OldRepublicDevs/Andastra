@@ -12,10 +12,13 @@ namespace Odyssey.Core.Actions
     /// <remarks>
     /// Pick Up Item Action:
     /// - Based on swkotor2.exe ActionPickUpItem NWScript function
+    /// - Located via string references: "TakeItem" @ 0x007be4f0, "PickUpItem" action type
+    /// - Inventory system: "Inventory" @ 0x007bd658, "Item" @ 0x007bc54c
     /// - Original implementation: Moves entity to item location, then picks up item into inventory
     /// - Pickup range: ~1.5 units (PickupRange)
-    /// - Item removed from world after being picked up
-    /// - Action fails if inventory is full
+    /// - Item removed from world after being picked up (or hidden if not destroyable)
+    /// - Action fails if inventory is full or item cannot be picked up
+    /// - Action queues movement to item, then pickup when in range
     /// </remarks>
     public class ActionPickUpItem : ActionBase
     {
