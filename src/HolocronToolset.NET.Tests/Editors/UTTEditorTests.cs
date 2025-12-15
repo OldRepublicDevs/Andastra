@@ -756,6 +756,10 @@ namespace HolocronToolset.NET.Tests.Editors
                 detectDcSpin.Should().NotBeNull("DetectDcSpin should be initialized");
                 detectDcSpin.Value = val;
                 detectDcSpin.Value.Should().Be(val, "DetectDcSpin value should be set correctly");
+                
+                // Verify the value is still set right before Build()
+                detectDcSpin = detectDcSpinField?.GetValue(editor) as Avalonia.Controls.NumericUpDown;
+                detectDcSpin.Value.Should().Be(val, "DetectDcSpin value should still be set before Build()");
 
                 // Save and verify
                 var (data, _) = editor.Build();
