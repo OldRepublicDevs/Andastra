@@ -14,13 +14,17 @@ namespace Odyssey.Core.Module
     /// <remarks>
     /// Runtime Area:
     /// - Based on swkotor2.exe area system
-    /// - Located via string references: Area loading functions handle ARE/GIT/LYT/VIS files
+    /// - Located via string references: "Area" @ 0x007be340, "AreaName" @ 0x007be340, "AREANAME" @ 0x007be1dc
+    /// - "AreaId" @ 0x007bef48, "AreaMap" @ 0x007bd118, "AreaMapResX" @ 0x007bd10c, "AreaMapResY" @ 0x007bd100
+    /// - "AreaProperties" @ 0x007bd228, "AreaEffectList" @ 0x007bd0d4
+    /// - "EVENT_AREA_TRANSITION" @ 0x007bcbdc, "EVENT_REMOVE_FROM_AREA" @ 0x007bcddc
     /// - Original implementation: Areas contain entities, rooms, walkmesh, visibility data
     /// - Based on ARE/GIT/LYT/VIS file formats documented in vendor/PyKotor/wiki/
     /// - ARE = Static area properties (lighting, fog, grass) - GFF with "ARE " signature
     /// - GIT = Dynamic object instances (creatures, doors, etc.) - GFF with "GIT " signature
     /// - LYT = Room layout and doorhooks - Binary format
     /// - VIS = Room visibility for culling - Binary format for frustum culling optimization
+    /// - Area serialization: FUN_005226d0 @ 0x005226d0 saves AreaId and area state
     /// </remarks>
     public class RuntimeArea : IArea
     {

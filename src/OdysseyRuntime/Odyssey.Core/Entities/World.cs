@@ -15,10 +15,13 @@ namespace Odyssey.Core.Entities
     /// <remarks>
     /// World/Entity Management:
     /// - Based on swkotor2.exe world management system
-    /// - Located via string references: "ObjectId" @ 0x007bce5c, "Tag" (various locations)
+    /// - Located via string references: "ObjectId" @ 0x007bce5c, "ObjectIDList" @ 0x007bfd7c
+    /// - "AreaId" @ 0x007bef48 (entity area association), "Area" @ 0x007be340 (area name)
     /// - Original engine maintains entity lists by ObjectId, Tag, and ObjectType
-    /// - Entity lookup: GetEntityByTag searches by tag string (case-insensitive)
-    /// - ObjectId is unique 32-bit identifier assigned sequentially
+    /// - Entity lookup: GetEntityByTag searches by tag string (case-insensitive), GetEntity by ObjectId (O(1) lookup)
+    /// - ObjectId is unique 32-bit identifier assigned sequentially (OBJECT_INVALID = 0x7F000000)
+    /// - Entity registration: Entities are registered in world with ObjectId, Tag, and ObjectType indices
+    /// - Area management: Entities belong to areas (AreaId field), areas contain entity lists by type
     /// </remarks>
     public class World : IWorld
     {
