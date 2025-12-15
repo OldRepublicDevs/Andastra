@@ -13,11 +13,18 @@ namespace Odyssey.MonoGame.UI
     /// <remarks>
     /// HUD Rendering:
     /// - Based on swkotor2.exe HUD system
-    /// - Located via string references: HUD rendering functions
+    /// - Located via string references: GUI panel references for HUD elements
+    /// - "GuiQuickbar" @ 0x007c2484 (quickbar GUI), "GuiCharacterSheet" @ 0x007c24ac (character sheet GUI)
+    /// - "GuiContainer" @ 0x007c24e4 (container GUI), "GuiInventory" @ 0x007c24f4 (inventory GUI)
+    /// - "PT_LAST_GUI_PNL" @ 0x007c16bc (last GUI panel in PARTYTABLE)
+    /// - GUI cursor references: "gui_mp_*" cursor elements for various actions (walk, talk, use, door, etc.)
+    /// - "guisounds" @ 0x007b5f7c (GUI sound effects), ";gui_mouse" @ 0x007b5f93 (GUI mouse reference)
+    /// - "PM_IsDisguised" @ 0x007bf5e4 (party member disguise flag)
     /// - Original implementation: Renders health/force bars, party portraits, minimap overlay
     /// - Health bar: Red bar showing current HP / max HP
     /// - Force bar: Blue bar showing current FP / max FP (KOTOR force points)
     /// - Party portraits: Small portraits of party members with status indicators
+    /// - GUI system: Uses GUI panel files (.gui) for HUD and menu rendering
     /// - Based on KOTOR HUD conventions from vendor/PyKotor/wiki/
     /// </remarks>
     public class BasicHUD
