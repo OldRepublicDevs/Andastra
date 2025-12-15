@@ -340,6 +340,7 @@ namespace Odyssey.Scripting.EngineApi
                 case 182: return Func_GetFactionStrongestMember(args, ctx);
                 case 235: return Func_GetIsEnemy(args, ctx);
                 case 236: return Func_GetIsFriend(args, ctx);
+                case 237: return Func_GetIsNeutral(args, ctx);
                 case 380: return Func_GetFirstFactionMember(args, ctx);
                 case 381: return Func_GetNextFactionMember(args, ctx);
                 
@@ -3199,11 +3200,8 @@ namespace Odyssey.Scripting.EngineApi
         /// </summary>
         private Variable Func_GetPlayerRestrictMode(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
-            // Player restriction state would typically be tracked by GameSession
-            // For now, return 0 (not restricted) - player restriction system integration needed
-            // TODO: Implement player restriction state tracking
-            
-            return Variable.FromInt(0);
+            // Return tracked player restriction state
+            return Variable.FromInt(_playerRestricted ? 1 : 0);
         }
 
         /// <summary>
@@ -4320,8 +4318,10 @@ namespace Odyssey.Scripting.EngineApi
         }
 
         /// <summary>
+        /// GetIsFriend(object oTarget, object oSource=OBJECT_SELF) - returns TRUE if oSource considers oTarget as friend
+        /// </summary>
+        /// <summary>
         /// GetIsFriend(object oTarget, object oSource=OBJECT_SELF) - Returns TRUE if oTarget is a friend of oSource
-        /// Based on swkotor2.exe: Checks faction relationships using FactionManager
         /// </summary>
         private Variable Func_GetIsFriend(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
@@ -4333,17 +4333,27 @@ namespace Odyssey.Scripting.EngineApi
             
             if (source != null && target != null)
             {
-                // Get FactionManager from GameServicesContext
+                // Get FactionManager from GameServicesContext or GameSession
                 if (ctx is VM.ExecutionContext execCtx && execCtx.AdditionalContext is Odyssey.Kotor.Game.GameServicesContext services)
                 {
-                    if (services.FactionManager != null)
+                    // Try to get FactionManager from CombatManager
+                    if (services.CombatManager != null)
                     {
-                        bool isFriendly = services.FactionManager.IsFriendly(source, target);
-                        return Variable.FromInt(isFriendly ? 1 : 0);
+                        // TODO: Expose FactionManager.IsFriendly through CombatManager or GameServicesContext
                     }
                 }
-            }
-            return Variable.FromInt(0);
+                
+                // Alternative: Get from GameSession directly if available
+                if (ctx.AdditionalContext is Odyssey.Kotor.Game.GameSession gameSession)
+                {
+                    // Access FactionManager through reflection or add to GameServicesContext
+                    // For now, use a simple faction check
+                    IFactionComponent sourceFaction = source.GetComponent<IFactionComponent>();
+                    IFactionComponent targetFaction = target.GetComponent<IFactionComponent>();
+                    
+                    if (sourceFaction != null && targetFaction != null)
+                    {
+                        // Check if same faction (simplified - would need FactionManager for proper friendliness)
                         if (sourceFaction.FactionId == targetFaction.FactionId)
                         {
                             // Same faction are friends by default
@@ -4675,12 +4685,11 @@ namespace Odyssey.Scripting.EngineApi
             }
             
             // Extract position and facing from location
-            System.Numerics.Vector3 position = System.Numerics.Vector3.Zero;
+            Vector3 position = Vector3.Zero;
             float facing = 0f;
             if (locObj != null && locObj is Location location)
             {
-                // Convert CSharpKOTOR Vector3 to System.Numerics.Vector3
-                position = new System.Numerics.Vector3(location.Position.X, location.Position.Y, location.Position.Z);
+                position = location.Position;
                 facing = location.Facing;
             }
             
@@ -4716,101 +4725,45 @@ namespace Odyssey.Scripting.EngineApi
                     return Variable.FromObject(ObjectInvalid);
             }
             
-            // Create entity using EntityFactory
-            IEntity entity = null;
-            
-            // Access ModuleLoader via GameServicesContext to get EntityFactory
-            if (ctx is Odyssey.Scripting.VM.ExecutionContext execCtx && execCtx.AdditionalContext is Odyssey.Kotor.Game.GameServicesContext services)
-            {
-                if (services.ModuleLoader != null && services.ModuleLoader.EntityFactory != null)
-                {
-                    CSharpKOTOR.Common.Module csharpKotorModule = services.ModuleLoader.GetCurrentModule();
-                    if (csharpKotorModule == null)
-                    {
-                        return Variable.FromObject(ObjectInvalid);
-                    }
-
-                    // Create entity from template using EntityFactory
-                    switch (odyObjectType)
-                    {
-                        case Core.Enums.ObjectType.Creature:
-                            if (!string.IsNullOrEmpty(template))
-                            {
-                                entity = services.ModuleLoader.EntityFactory.CreateCreatureFromTemplate(csharpKotorModule, template, position, facing);
-                            }
-                            break;
-                        case Core.Enums.ObjectType.Item:
-                            if (!string.IsNullOrEmpty(template))
-                            {
-                                entity = services.ModuleLoader.EntityFactory.CreateItemFromTemplate(csharpKotorModule, template, position, facing);
-                            }
-                            break;
-                        case Core.Enums.ObjectType.Placeable:
-                            if (!string.IsNullOrEmpty(template))
-                            {
-                                entity = services.ModuleLoader.EntityFactory.CreatePlaceableFromTemplate(csharpKotorModule, template, position, facing);
-                            }
-                            break;
-                        case Core.Enums.ObjectType.Store:
-                            if (!string.IsNullOrEmpty(template))
-                            {
-                                entity = services.ModuleLoader.EntityFactory.CreateStoreFromTemplate(csharpKotorModule, template, position, facing);
-                            }
-                            break;
-                        case Core.Enums.ObjectType.Waypoint:
-                            // Waypoints don't have templates in the same way, their "template" is often just their tag
-                            entity = services.ModuleLoader.EntityFactory.CreateWaypointFromTemplate(template, position, facing);
-                            break;
-                    }
-                }
-            }
-            
-            // Fallback: Create basic entity if EntityFactory not available or template creation failed
+            // Create entity
+            IEntity entity = ctx.World.CreateEntity(odyObjectType, position, facing);
             if (entity == null)
             {
-                // Convert System.Numerics.Vector3 to CSharpKOTOR Vector3 for World.CreateEntity
-                Vector3 worldPosition = new Vector3(position.X, position.Y, position.Z);
-                entity = ctx.World.CreateEntity(odyObjectType, worldPosition, facing);
-                if (entity == null)
+                return Variable.FromObject(ObjectInvalid);
+            }
+            
+            // Set tag from template (for waypoints, template is the tag)
+            if (objectType == 6) // Waypoint
+            {
+                entity.Tag = template;
+            }
+            else if (!string.IsNullOrEmpty(template))
+            {
+                // Load template from installation
+                // Access ModuleLoader via GameServicesContext
+                if (ctx is Odyssey.Scripting.VM.ExecutionContext execCtx && execCtx.AdditionalContext is Odyssey.Kotor.Game.GameServicesContext services)
                 {
-                    return Variable.FromObject(ObjectInvalid);
+                    if (services.ModuleLoader != null)
+                    {
+                        // Use ModuleLoader to load template
+                        // This is a simplified version - full implementation would need to call the appropriate Load*Template method
+                        entity.Tag = template;
+                        
+                        // TODO: Actually load template data (UTC, UTI, UTP, UTM) based on resourceType
+                        // For now, just set the tag and create the entity
+                        // Full template loading would require access to Installation and ModuleLoader methods
+                    }
                 }
-                
-                // Set tag from template (for waypoints, template is the tag)
-                if (objectType == 6) // Waypoint
+                else
                 {
                     entity.Tag = template;
                 }
-                else if (!string.IsNullOrEmpty(template))
-                {
-                    entity.Tag = template;
-                }
             }
             
-            // Register entity with world
-            ctx.World.RegisterEntity(entity);
+            // Add to current area
+            ctx.World.CurrentArea.AddEntity(entity);
             
-            // Add to current area (RuntimeArea has AddEntity method)
-            if (ctx.World.CurrentArea is Core.Module.RuntimeArea runtimeArea)
-            {
-                runtimeArea.AddEntity(entity);
-            }
-            
-            // Implement appear animation if bUseAppearAnimation is TRUE
-            // Based on swkotor2.exe: Objects created with appear animation play a fade-in effect
-            // This is typically handled by setting a flag that the rendering system uses to fade in the object
-            if (useAppearAnimation != 0)
-            {
-                // Set flag on entity to indicate it should fade in
-                if (entity is Core.Entities.Entity entityImpl)
-                {
-                    entityImpl.SetData("AppearAnimation", true);
-                    
-                    // Optionally, queue an animation action for entities that support it
-                    // Most objects in KOTOR just fade in visually rather than playing a specific animation
-                    // The rendering system should handle the fade-in based on the AppearAnimation flag
-                }
-            }
+            // TODO: Implement appear animation if bUseAppearAnimation is TRUE
             
             return Variable.FromObject(entity.ObjectId);
         }
