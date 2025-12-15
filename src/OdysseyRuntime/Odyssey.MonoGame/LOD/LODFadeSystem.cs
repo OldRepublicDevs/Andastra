@@ -65,8 +65,14 @@ namespace Odyssey.MonoGame.LOD
         /// <summary>
         /// Updates fade states for all objects.
         /// </summary>
+        /// <param name="deltaTime">Time elapsed since last update in seconds.</param>
         public void Update(float deltaTime)
         {
+            if (deltaTime < 0.0f)
+            {
+                deltaTime = 0.0f; // Clamp negative deltas
+            }
+
             var keysToRemove = new List<int>();
 
             foreach (var kvp in _fadeStates)

@@ -124,8 +124,15 @@ namespace Odyssey.MonoGame.Performance
         /// <summary>
         /// Records actual time spent in a category.
         /// </summary>
+        /// <param name="category">Budget category.</param>
+        /// <param name="timeMs">Time spent in milliseconds. Must be non-negative.</param>
         public void RecordTime(BudgetCategory category, double timeMs)
         {
+            if (timeMs < 0.0)
+            {
+                timeMs = 0.0; // Clamp negative values
+            }
+
             BudgetAllocation budget;
             if (_budgets.TryGetValue(category, out budget))
             {
@@ -136,8 +143,13 @@ namespace Odyssey.MonoGame.Performance
         /// <summary>
         /// Updates total frame time.
         /// </summary>
+        /// <param name="frameTimeMs">Frame time in milliseconds. Must be non-negative.</param>
         public void UpdateFrameTime(double frameTimeMs)
         {
+            if (frameTimeMs < 0.0)
+            {
+                frameTimeMs = 0.0; // Clamp negative values
+            }
             _actualFrameTimeMs = frameTimeMs;
         }
 
