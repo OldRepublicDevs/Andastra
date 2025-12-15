@@ -388,23 +388,29 @@ namespace Odyssey.Core.Movement
             var normalizedDir = Vector3.Normalize(direction);
             Vector3 newPosition = currentPos + normalizedDir * moveDistance;
 
-            // Validate position on navmesh
-            // Based on swkotor2.exe: Movement validation prevents entities from leaving walkmesh
+            // Project position to walkmesh surface (matches FUN_004f5070 in swkotor2.exe)
+            // Based on swkotor2.exe: FUN_0054be70 @ 0x0054be70 projects positions to walkmesh after movement
             // Located via string references: "WalkCheck" @ 0x007c1514, "Walking" @ 0x007c4dcc
             // Error messages: "aborted walking, Bumped into this creature at this position already." @ 0x007c03c0
             // "aborted walking, we are totaly blocked. can't get around this creature at all." @ 0x007c0408
             // "aborted walking, Maximum number of bumps happened" @ 0x007c0458
-            // Original implementation: Validates position is on walkmesh after movement, projects to surface if off-mesh
+            // Original implementation: Always projects position to walkmesh surface after movement (FUN_004f5070)
             // Bumping system: Detects creature collisions, attempts to navigate around blocked creatures
             if (_navMesh != null)
             {
-                if (!_navMesh.IsPointOnMesh(newPosition))
+                Vector3 projectedPos;
+                float height;
+                if (_navMesh.ProjectToSurface(newPosition, out projectedPos, out height))
                 {
-                    // Try to project onto mesh
-                    Vector3? projectedPoint = _navMesh.GetNearestPoint(newPosition);
-                    if (projectedPoint.HasValue)
+                    newPosition = projectedPos;
+                }
+                else
+                {
+                    // If projection fails, try to find nearest walkable point
+                    Vector3? nearestPoint = _navMesh.GetNearestPoint(newPosition);
+                    if (nearestPoint.HasValue)
                     {
-                        newPosition = projectedPoint.Value;
+                        newPosition = nearestPoint.Value;
                     }
                     else
                     {
