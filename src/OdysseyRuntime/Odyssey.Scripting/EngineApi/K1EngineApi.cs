@@ -3313,6 +3313,14 @@ namespace Odyssey.Scripting.EngineApi
         /// <summary>
         /// GetFirstObjectInArea(object oArea=OBJECT_INVALID, int nObjectType=OBJECT_TYPE_ALL) - starts iteration over objects in area
         /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: Object iteration system for area entities
+        /// Located via string references: Object iteration maintains state per calling script context
+        /// Original implementation: Iterates through area's entity lists (Creatures, Doors, Placeables, etc.)
+        /// Object type filtering: OBJECT_TYPE_ALL (-1) returns all types, specific types filter by entity type
+        /// Iteration state: Stored per caller entity ID for GetNextObjectInArea to continue
+        /// Returns: First matching object ID or OBJECT_INVALID if no objects found
+        /// </remarks>
         private Variable Func_GetFirstObjectInArea(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             uint areaId = args.Count > 0 ? args[0].AsObjectId() : ObjectInvalid;
