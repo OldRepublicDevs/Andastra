@@ -94,13 +94,29 @@ namespace Odyssey.MonoGame.PostProcessing
         /// <summary>
         /// Updates exposure based on scene luminance.
         /// </summary>
+        /// <param name="sceneLuminance">Average scene luminance. Must be greater than zero.</param>
+        /// <param name="deltaTime">Time elapsed since last update in seconds. Must be non-negative.</param>
         public void Update(float sceneLuminance, float deltaTime)
         {
+            // Validate inputs
+            if (sceneLuminance <= 0.0f)
+            {
+                sceneLuminance = 0.001f; // Avoid division by zero and log of non-positive
+            }
+
+            if (deltaTime < 0.0f)
+            {
+                deltaTime = 0.0f; // Clamp negative deltas
+            }
+
             // Calculate target exposure from scene luminance
+            // Formula: exposure = log2(keyValue / luminance)
+            // This ensures that objects at keyValue luminance map to middle gray
             _targetExposure = (float)Math.Log(_keyValue / sceneLuminance, 2.0);
             _targetExposure = Math.Max(_minExposure, Math.Min(_maxExposure, _targetExposure));
 
-            // Smoothly adapt exposure
+            // Smoothly adapt exposure with different speeds for brightening vs darkening
+            // (eyes adapt faster to darkness than to brightness)
             float speed = _targetExposure > _currentExposure ? _adaptationSpeedUp : _adaptationSpeedDown;
             float adaptationRate = 1.0f - (float)Math.Pow(0.98f, speed * deltaTime);
             _currentExposure += (_targetExposure - _currentExposure) * adaptationRate;

@@ -13,7 +13,9 @@ namespace Odyssey.Core.Templates
     /// <remarks>
     /// Trigger Template:
     /// - Based on swkotor2.exe trigger system
-    /// - Located via string references: "Trigger" @ 0x007bc548, "Trigger List" @ 0x007bd280
+    /// - Located via string references: "Trigger" @ 0x007bc51c, "TriggerList" @ 0x007bd254
+    /// - "EVENT_ENTERED_TRIGGER" @ 0x007bce08, "EVENT_LEFT_TRIGGER" @ 0x007bcdf4
+    /// - "OnTrapTriggered" @ 0x007c1a34, "CB_TRIGGERS" @ 0x007d29c8
     /// - Template loading: FUN_005226d0 @ 0x005226d0 (entity serialization references trigger templates)
     /// - Original implementation: UTT (Trigger) GFF templates define trigger properties
     /// - UTT file format: GFF with "UTT " signature containing trigger data
