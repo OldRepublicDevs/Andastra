@@ -15,7 +15,10 @@ using Odyssey.Core.Combat;
 using Odyssey.Core.Enums;
 using Odyssey.Core.Interfaces;
 using Odyssey.Core.Interfaces.Components;
+using Odyssey.Kotor.Combat;
+using Odyssey.Kotor.Components;
 using Odyssey.Kotor.Game;
+using Odyssey.Kotor.Systems;
 using Odyssey.Scripting.Interfaces;
 using Odyssey.Scripting.Types;
 using Odyssey.Scripting.VM;
@@ -2218,182 +2221,6 @@ namespace Odyssey.Scripting.EngineApi
         private new Variable Func_GetNearestObjectByTag(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             return base.Func_GetNearestObjectByTag(args, ctx);
-        }
-
-        #endregion
-
-        #region Last Event Tracking Functions
-
-        /// <summary>
-        /// GetLastUsedBy() - Returns the object that last used the object that called this function
-        /// Based on swkotor2.exe: Tracks last entity that used an object
-        /// </summary>
-        private Variable Func_GetLastUsedBy(IReadOnlyList<Variable> args, IExecutionContext ctx)
-        {
-            if (ctx.Caller == null)
-            {
-                return Variable.FromObject(ObjectInvalid);
-            }
-
-            // Get LastUsedBy from entity data
-            if (ctx.Caller is Core.Entities.Entity entity)
-            {
-                uint lastUsedById = entity.GetData<uint>("LastUsedBy", ObjectInvalid);
-                if (lastUsedById != ObjectInvalid)
-                {
-                    return Variable.FromObject(lastUsedById);
-                }
-            }
-
-            return Variable.FromObject(ObjectInvalid);
-        }
-
-        /// <summary>
-        /// GetLastOpenedBy() - Returns the object that last opened the object that called this function
-        /// Based on swkotor2.exe: Tracks last entity that opened a door/placeable
-        /// </summary>
-        private Variable Func_GetLastOpenedBy(IReadOnlyList<Variable> args, IExecutionContext ctx)
-        {
-            if (ctx.Caller == null)
-            {
-                return Variable.FromObject(ObjectInvalid);
-            }
-
-            // Get LastOpenedBy from entity data
-            if (ctx.Caller is Core.Entities.Entity entity)
-            {
-                uint lastOpenedById = entity.GetData<uint>("LastOpenedBy", ObjectInvalid);
-                if (lastOpenedById != ObjectInvalid)
-                {
-                    return Variable.FromObject(lastOpenedById);
-                }
-            }
-
-            return Variable.FromObject(ObjectInvalid);
-        }
-
-        /// <summary>
-        /// GetLastClosedBy() - Returns the object that last closed the object that called this function
-        /// Based on swkotor2.exe: Tracks last entity that closed a door/placeable
-        /// </summary>
-        private Variable Func_GetLastClosedBy(IReadOnlyList<Variable> args, IExecutionContext ctx)
-        {
-            if (ctx.Caller == null)
-            {
-                return Variable.FromObject(ObjectInvalid);
-            }
-
-            // Get LastClosedBy from entity data
-            if (ctx.Caller is Core.Entities.Entity entity)
-            {
-                uint lastClosedById = entity.GetData<uint>("LastClosedBy", ObjectInvalid);
-                if (lastClosedById != ObjectInvalid)
-                {
-                    return Variable.FromObject(lastClosedById);
-                }
-            }
-
-            return Variable.FromObject(ObjectInvalid);
-        }
-
-        /// <summary>
-        /// GetLastLocked() - Returns the object that last locked the object that called this function
-        /// Based on swkotor2.exe: Tracks last entity that locked a door/placeable
-        /// </summary>
-        private Variable Func_GetLastLocked(IReadOnlyList<Variable> args, IExecutionContext ctx)
-        {
-            if (ctx.Caller == null)
-            {
-                return Variable.FromObject(ObjectInvalid);
-            }
-
-            // Get LastLocked from entity data
-            if (ctx.Caller is Core.Entities.Entity entity)
-            {
-                uint lastLockedId = entity.GetData<uint>("LastLocked", ObjectInvalid);
-                if (lastLockedId != ObjectInvalid)
-                {
-                    return Variable.FromObject(lastLockedId);
-                }
-            }
-
-            return Variable.FromObject(ObjectInvalid);
-        }
-
-        /// <summary>
-        /// GetLastUnlocked() - Returns the object that last unlocked the object that called this function
-        /// Based on swkotor2.exe: Tracks last entity that unlocked a door/placeable
-        /// </summary>
-        private Variable Func_GetLastUnlocked(IReadOnlyList<Variable> args, IExecutionContext ctx)
-        {
-            if (ctx.Caller == null)
-            {
-                return Variable.FromObject(ObjectInvalid);
-            }
-
-            // Get LastUnlocked from entity data
-            if (ctx.Caller is Core.Entities.Entity entity)
-            {
-                uint lastUnlockedId = entity.GetData<uint>("LastUnlocked", ObjectInvalid);
-                if (lastUnlockedId != ObjectInvalid)
-                {
-                    return Variable.FromObject(lastUnlockedId);
-                }
-            }
-
-            return Variable.FromObject(ObjectInvalid);
-        }
-
-        #endregion
-
-        #region Plot Flag Functions
-
-        /// <summary>
-        /// GetPlotFlag(object oTarget) - Returns TRUE if oTarget has the plot flag set
-        /// Based on swkotor2.exe: Plot flag prevents objects from being removed or modified
-        /// </summary>
-        private Variable Func_GetPlotFlag(IReadOnlyList<Variable> args, IExecutionContext ctx)
-        {
-            uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
-            IEntity entity = ResolveObject(objectId, ctx);
-            
-            if (entity == null)
-            {
-                return Variable.FromInt(0);
-            }
-
-            // Get PlotFlag from entity data
-            if (entity is Core.Entities.Entity concreteEntity)
-            {
-                bool plotFlag = concreteEntity.GetData<bool>("PlotFlag", false);
-                return Variable.FromInt(plotFlag ? 1 : 0);
-            }
-
-            return Variable.FromInt(0);
-        }
-
-        /// <summary>
-        /// SetPlotFlag(object oTarget, int nPlotFlag) - Sets the plot flag on oTarget
-        /// Based on swkotor2.exe: Plot flag prevents objects from being removed or modified
-        /// </summary>
-        private Variable Func_SetPlotFlag(IReadOnlyList<Variable> args, IExecutionContext ctx)
-        {
-            uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
-            int plotFlag = args.Count > 1 ? args[1].AsInt() : 0;
-            
-            IEntity entity = ResolveObject(objectId, ctx);
-            if (entity == null)
-            {
-                return Variable.Void();
-            }
-
-            // Set PlotFlag on entity data
-            if (entity is Core.Entities.Entity concreteEntity)
-            {
-                concreteEntity.SetData("PlotFlag", plotFlag != 0);
-            }
-
-            return Variable.Void();
         }
 
         #endregion
@@ -5041,9 +4868,9 @@ namespace Odyssey.Scripting.EngineApi
                 // Get FactionManager from GameServicesContext
                 if (ctx is VM.ExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
                 {
-                    if (services.FactionManager != null)
+                    if (services.FactionManager is FactionManager factionManager)
                     {
-                        bool isHostile = services.FactionManager.IsHostile(source, target);
+                        bool isHostile = factionManager.IsHostile(source, target);
                         return Variable.FromInt(isHostile ? 1 : 0);
                     }
                 }
@@ -5070,9 +4897,9 @@ namespace Odyssey.Scripting.EngineApi
                 // Get FactionManager from GameServicesContext
                 if (ctx is VM.ExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
                 {
-                    if (services.FactionManager != null)
+                    if (services.FactionManager is FactionManager factionManager)
                     {
-                        bool isFriendly = services.FactionManager.IsFriendly(source, target);
+                        bool isFriendly = factionManager.IsFriendly(source, target);
                         return Variable.FromInt(isFriendly ? 1 : 0);
                     }
                 }
