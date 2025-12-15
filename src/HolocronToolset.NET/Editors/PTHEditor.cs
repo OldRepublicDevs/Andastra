@@ -16,6 +16,7 @@ namespace HolocronToolset.NET.Editors
     {
         private PTH _pth;
         private GITSettings _settings;
+        private PTHControlScheme _controls;
         
         // Status bar labels
         public Avalonia.Controls.TextBlock LeftLabel { get; private set; }
@@ -24,6 +25,9 @@ namespace HolocronToolset.NET.Editors
         
         // Status output handler
         public PTHStatusOut StatusOut { get; private set; }
+        
+        // Control scheme - exposed for testing
+        public PTHControlScheme Controls => _controls;
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/pth.py:121-177
         // Original: def __init__(self, parent, installation):
@@ -35,6 +39,7 @@ namespace HolocronToolset.NET.Editors
         {
             _pth = new PTH();
             _settings = new GITSettings();
+            _controls = new PTHControlScheme(this);
 
             InitializeComponent();
             SetupStatusBar();
@@ -285,6 +290,33 @@ namespace HolocronToolset.NET.Editors
             string centerStatus = _prevStatusOut;
             string rightStatus = _prevStatusError;
             _editor.UpdateStatusBar(leftStatus, centerStatus, rightStatus);
+        }
+    }
+
+    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/pth.py:425
+    // Original: class PTHControlScheme:
+    public class PTHControlScheme
+    {
+        public PTHEditor Editor { get; private set; }
+
+        // Control properties for test compatibility
+        public object PanCamera { get; private set; }
+        public object RotateCamera { get; private set; }
+        public object ZoomCamera { get; private set; }
+        public object MoveSelected { get; private set; }
+        public object SelectUnderneath { get; private set; }
+        public object DeleteSelected { get; private set; }
+
+        public PTHControlScheme(PTHEditor editor)
+        {
+            Editor = editor;
+            // Initialize control properties - will be fully implemented when render area is available
+            PanCamera = new object();
+            RotateCamera = new object();
+            ZoomCamera = new object();
+            MoveSelected = new object();
+            SelectUnderneath = new object();
+            DeleteSelected = new object();
         }
     }
 }

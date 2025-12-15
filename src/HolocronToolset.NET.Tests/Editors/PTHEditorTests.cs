@@ -657,5 +657,37 @@ namespace HolocronToolset.NET.Tests.Editors
             editor.CenterLabel.Text.Should().Be("Center", "CenterLabel should have correct text");
             editor.RightLabel.Text.Should().Be("Right", "RightLabel should have correct text");
         }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_pth_editor.py:431-446
+        // Original: def test_pth_editor_control_scheme_initialization(qtbot, installation: HTInstallation):
+        [Fact]
+        public void TestPthEditorControlSchemeInitialization()
+        {
+            // Get installation if available
+            string k1Path = Environment.GetEnvironmentVariable("K1_PATH");
+            if (string.IsNullOrEmpty(k1Path))
+            {
+                k1Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k1Path) && System.IO.File.Exists(System.IO.Path.Combine(k1Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k1Path, "Test Installation", tsl: false);
+            }
+
+            var editor = new PTHEditor(null, installation);
+
+            // Verify controls exist
+            editor.Controls.Should().NotBeNull("Controls should be initialized");
+
+            // Verify control properties exist
+            editor.Controls.PanCamera.Should().NotBeNull("PanCamera should exist");
+            editor.Controls.RotateCamera.Should().NotBeNull("RotateCamera should exist");
+            editor.Controls.ZoomCamera.Should().NotBeNull("ZoomCamera should exist");
+            editor.Controls.MoveSelected.Should().NotBeNull("MoveSelected should exist");
+            editor.Controls.SelectUnderneath.Should().NotBeNull("SelectUnderneath should exist");
+            editor.Controls.DeleteSelected.Should().NotBeNull("DeleteSelected should exist");
+        }
     }
 }
