@@ -20,7 +20,7 @@ namespace Odyssey.MonoGame.Rendering
         /// <summary>
         /// Resource allocation.
         /// </summary>
-        private class ResourceAllocation
+        public class ResourceAllocation
         {
             public string ResourceName;
             public long Offset;

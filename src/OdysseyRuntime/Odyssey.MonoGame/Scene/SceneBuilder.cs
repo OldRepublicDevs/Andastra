@@ -176,7 +176,9 @@ namespace Odyssey.MonoGame.Scene
         public string ModelResRef { get; set; }
         public Microsoft.Xna.Framework.Vector3 Position { get; set; }
         public bool IsVisible { get; set; }
-        public Converters.RoomMeshRenderer.RoomMeshData MeshData { get; set; }
+        // TODO: RoomMeshData type needs to be defined
+        // public Rendering.RoomMeshRenderer.RoomMeshData MeshData { get; set; }
+        public object MeshData { get; set; }
     }
 }
 

@@ -69,7 +69,7 @@ namespace Odyssey.MonoGame.Rendering
         /// <summary>
         /// Scope timing data.
         /// </summary>
-        private class ScopeData
+        public class ScopeData
         {
             public string Name;
             public double TotalTime;

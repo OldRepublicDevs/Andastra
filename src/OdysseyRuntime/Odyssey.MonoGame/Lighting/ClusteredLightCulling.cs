@@ -67,9 +67,10 @@ namespace Odyssey.MonoGame.Lighting
         private readonly GraphicsDevice _graphicsDevice;
         private readonly ClusterConfig _config;
         private readonly List<LightData> _lights;
-        private Buffer _lightBuffer;
-        private Buffer _lightIndexBuffer;
-        private Buffer _lightGridBuffer;
+        // TODO: Buffer is static in MonoGame - need to use GraphicsBuffer or VertexBuffer/IndexBuffer
+        // private Buffer _lightBuffer;
+        // private Buffer _lightIndexBuffer;
+        // private Buffer _lightGridBuffer;
         private int _maxLightsPerCluster;
 
         /// <summary>

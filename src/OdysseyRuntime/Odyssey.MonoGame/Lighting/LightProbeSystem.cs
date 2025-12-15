@@ -41,7 +41,8 @@ namespace Odyssey.MonoGame.Lighting
         }
 
         private readonly List<LightProbe> _probes;
-        private readonly Octree<LightProbe> _probeOctree;
+        // TODO: Octree implementation needed
+        // private readonly Octree<LightProbe> _probeOctree;
 
         /// <summary>
         /// Gets the number of light probes.
