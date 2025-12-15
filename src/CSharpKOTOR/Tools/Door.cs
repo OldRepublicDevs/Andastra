@@ -103,6 +103,318 @@ namespace CSharpKOTOR.Tools
             return genericdoors2DA;
         }
 
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/door.py:215-237
+        // Original: def _get_model_variations(model_name: str) -> list[str]:
+        private static List<string> GetModelVariations(string modelName)
+        {
+            var variations = new List<string>
+            {
+                modelName,  // Original case
+                modelName.ToLowerInvariant(),  // Lowercase
+                modelName.ToUpperInvariant(),  // Uppercase
+                modelName.ToLowerInvariant().Replace(".mdl", "").Replace(".mdx", "")  // Normalized lowercase
+            };
+            
+            // Remove duplicates while preserving order
+            var seen = new HashSet<string>();
+            var result = new List<string>();
+            foreach (var v in variations)
+            {
+                if (!seen.Contains(v))
+                {
+                    seen.Add(v);
+                    result.Add(v);
+                }
+            }
+            return result;
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/door.py:240-297
+        // Original: def _load_mdl_with_variations(model_name: str, installation: Installation, logger: RobustLogger | None = None) -> tuple[MDL | None, bytes | None]:
+        private static (Formats.MDL.MDL mdl, byte[] mdlData) LoadMdlWithVariations(
+            string modelName,
+            Installation.Installation installation,
+            RobustLogger logger = null)
+        {
+            if (logger == null)
+            {
+                logger = new RobustLogger();
+            }
+            
+            var modelVariations = GetModelVariations(modelName);
+            
+            // Try locations() first (more reliable, searches multiple locations)
+            foreach (string modelVar in modelVariations)
+            {
+                try
+                {
+                    var locationResults = installation.Locations(
+                        new List<ResourceIdentifier> { new ResourceIdentifier(modelVar, ResourceType.MDL) },
+                        new[] { SearchLocation.OVERRIDE, SearchLocation.MODULES, SearchLocation.CHITIN });
+                    foreach (var kvp in locationResults)
+                    {
+                        if (kvp.Value != null && kvp.Value.Count > 0)
+                        {
+                            var loc = kvp.Value[0];
+                            try
+                            {
+                                using (var f = File.OpenRead(loc.FilePath))
+                                {
+                                    f.Seek(loc.Offset, SeekOrigin.Begin);
+                                    var mdlData = new byte[loc.Size];
+                                    f.Read(mdlData, 0, loc.Size);
+                                    var reader = new Formats.MDL.MDLBinaryReader(mdlData);
+                                    var mdl = reader.Load();
+                                    return (mdl, mdlData);
+                                }
+                            }
+                            catch
+                            {
+                                continue;
+                            }
+                        }
+                    }
+                }
+                catch
+                {
+                    continue;
+                }
+            }
+            
+            // Fallback to resource() if locations() didn't work
+            foreach (string modelVar in modelVariations)
+            {
+                try
+                {
+                    var mdlResult = installation.Resources.LookupResource(modelVar, ResourceType.MDL);
+                    if (mdlResult != null && mdlResult.Data != null)
+                    {
+                        var reader = new Formats.MDL.MDLBinaryReader(mdlResult.Data);
+                        var mdl = reader.Load();
+                        return (mdl, mdlResult.Data);
+                    }
+                }
+                catch
+                {
+                    continue;
+                }
+            }
+            
+            return (null, null);
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/door.py:300-387
+        // Original: def _get_door_dimensions_from_model(mdl: MDL, model_name: str, door_name: str | None = None, logger: RobustLogger | None = None) -> tuple[float, float] | None:
+        private static (float width, float height)? GetDoorDimensionsFromModel(
+            Formats.MDL.MDL mdl,
+            string modelName,
+            string doorName = null,
+            RobustLogger logger = null)
+        {
+            if (logger == null)
+            {
+                logger = new RobustLogger();
+            }
+            
+            if (mdl == null || mdl.Root == null)
+            {
+                return null;
+            }
+            
+            var bbMin = new System.Numerics.Vector3(1000000, 1000000, 1000000);
+            var bbMax = new System.Numerics.Vector3(-1000000, -1000000, -1000000);
+            
+            // Iterate through all nodes and their meshes
+            var nodesToCheck = new List<Formats.MDL.MDLNode> { mdl.Root };
+            int meshCount = 0;
+            while (nodesToCheck.Count > 0)
+            {
+                var node = nodesToCheck[nodesToCheck.Count - 1];
+                nodesToCheck.RemoveAt(nodesToCheck.Count - 1);
+                if (node.Mesh != null)
+                {
+                    meshCount++;
+                    // Use mesh bounding box if available
+                    if (node.Mesh.BoundingBoxMin.HasValue && node.Mesh.BoundingBoxMax.HasValue)
+                    {
+                        var min = node.Mesh.BoundingBoxMin.Value;
+                        var max = node.Mesh.BoundingBoxMax.Value;
+                        bbMin.X = Math.Min(bbMin.X, min.X);
+                        bbMin.Y = Math.Min(bbMin.Y, min.Y);
+                        bbMin.Z = Math.Min(bbMin.Z, min.Z);
+                        bbMax.X = Math.Max(bbMax.X, max.X);
+                        bbMax.Y = Math.Max(bbMax.Y, max.Y);
+                        bbMax.Z = Math.Max(bbMax.Z, max.Z);
+                    }
+                    // Fallback: calculate from vertex positions if bounding box not set
+                    else if (node.Mesh.VertexPositions != null && node.Mesh.VertexPositions.Count > 0)
+                    {
+                        foreach (var vertex in node.Mesh.VertexPositions)
+                        {
+                            bbMin.X = Math.Min(bbMin.X, vertex.X);
+                            bbMin.Y = Math.Min(bbMin.Y, vertex.Y);
+                            bbMin.Z = Math.Min(bbMin.Z, vertex.Z);
+                            bbMax.X = Math.Max(bbMax.X, vertex.X);
+                            bbMax.Y = Math.Max(bbMax.Y, vertex.Y);
+                            bbMax.Z = Math.Max(bbMax.Z, vertex.Z);
+                        }
+                    }
+                }
+                
+                // Check child nodes
+                if (node.Children != null)
+                {
+                    nodesToCheck.AddRange(node.Children);
+                }
+            }
+            
+            // Calculate dimensions from bounding box
+            // Width is typically the Y dimension (horizontal when door is closed)
+            // Height is typically the Z dimension (vertical)
+            if (bbMin.X < 1000000)  // Valid bounding box calculated
+            {
+                float width = Math.Abs(bbMax.Y - bbMin.Y);
+                float height = Math.Abs(bbMax.Z - bbMin.Z);
+                
+                // Only use calculated values if they're reasonable (not zero or extremely large)
+                if (0.1f < width && width < 50.0f && 0.1f < height && height < 50.0f)
+                {
+                    string doorNameStr = !string.IsNullOrEmpty(doorName) ? $"'{doorName}'" : "";
+                    logger.Debug(
+                        $"[DOOR DEBUG] Extracted dimensions for door {doorNameStr}: " +
+                        $"{width:F2} x {height:F2} (from {meshCount} meshes, model='{modelName}')");
+                    return (width, height);
+                }
+                else
+                {
+                    string doorNameStr = !string.IsNullOrEmpty(doorName) ? $"'{doorName}'" : "";
+                    logger.Warning(
+                        $"Calculated dimensions for door {doorNameStr} out of range: " +
+                        $"{width:F2} x {height:F2}, using defaults");
+                }
+            }
+            else
+            {
+                string doorNameStr = !string.IsNullOrEmpty(doorName) ? $"'{doorName}'" : "";
+                logger.Warning(
+                    $"Could not calculate bounding box for door {doorNameStr} " +
+                    $"(processed {meshCount} meshes), using defaults");
+            }
+            
+            return null;
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/door.py:390-480
+        // Original: def _get_door_dimensions_from_texture(model_name: str, installation: Installation, door_name: str | None = None, logger: RobustLogger | None = None) -> tuple[float, float] | None:
+        private static (float width, float height)? GetDoorDimensionsFromTexture(
+            string modelName,
+            Installation.Installation installation,
+            string doorName = null,
+            RobustLogger logger = null)
+        {
+            if (logger == null)
+            {
+                logger = new RobustLogger();
+            }
+            
+            // Get textures from the model
+            var textureNames = new List<string>();
+            var modelVariations = GetModelVariations(modelName);
+            
+            foreach (string modelVar in modelVariations)
+            {
+                try
+                {
+                    var mdlResult = installation.Resources.LookupResource(modelVar, ResourceType.MDL);
+                    if (mdlResult != null && mdlResult.Data != null)
+                    {
+                        textureNames = CSharpKOTOR.Tools.Model.IterateTextures(mdlResult.Data).ToList();
+                        break;
+                    }
+                }
+                catch
+                {
+                    continue;
+                }
+            }
+            
+            if (textureNames.Count == 0)
+            {
+                return null;
+            }
+            
+            // Try to load the first texture
+            string textureName = textureNames[0];
+            var textureResult = installation.Resources.LookupResource(textureName, ResourceType.TPC);
+            if (textureResult == null)
+            {
+                // Try TGA as fallback
+                textureResult = installation.Resources.LookupResource(textureName, ResourceType.TGA);
+            }
+            
+            if (textureResult == null || textureResult.Data == null)
+            {
+                return null;
+            }
+            
+            // Read texture to get dimensions
+            int texWidth = 0;
+            int texHeight = 0;
+            
+            if (textureResult.ResType == ResourceType.TPC)
+            {
+                var reader = new Formats.TPC.TPCBinaryReader(textureResult.Data);
+                var tpc = reader.Load();
+                var dims = tpc.Dimensions();
+                texWidth = dims.width;
+                texHeight = dims.height;
+            }
+            else if (textureResult.ResType == ResourceType.TGA)
+            {
+                // TGA header: width at offset 12, height at offset 14 (little-endian)
+                if (textureResult.Data.Length >= 18)
+                {
+                    texWidth = BitConverter.ToInt16(textureResult.Data, 12);
+                    texHeight = BitConverter.ToInt16(textureResult.Data, 14);
+                }
+            }
+            
+            if (texWidth <= 0 || texHeight <= 0)
+            {
+                return null;
+            }
+            
+            // Convert texture pixels to world units
+            // Use aspect ratio to determine which dimension is width vs height
+            // Doors are typically taller than wide, so height > width
+            float doorWidth;
+            float doorHeight;
+            if (texHeight > texWidth)
+            {
+                // Portrait orientation - height is vertical, width is horizontal
+                // Typical: 256x512 = 2.0x4.0, 512x1024 = 4.0x8.0
+                // Scale factor: ~0.008-0.01 units per pixel
+                float scaleFactor = 0.008f;  // Conservative estimate
+                doorWidth = texWidth * scaleFactor;
+                doorHeight = texHeight * scaleFactor;
+            }
+            else
+            {
+                // Landscape or square - assume standard door proportions
+                // Use height as the primary dimension
+                float scaleFactor = 0.008f;
+                doorHeight = texHeight * scaleFactor;
+                // Width is typically 0.6-0.8x height for doors
+                doorWidth = doorHeight * 0.7f;
+            }
+            
+            // Clamp to reasonable values
+            doorWidth = Math.Max(1.0f, Math.Min(doorWidth, 10.0f));
+            doorHeight = Math.Max(1.5f, Math.Min(doorHeight, 10.0f));
+            
+            return (doorWidth, doorHeight);
+        }
+
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/door.py:483-587
         // Original: def get_door_dimensions(utd_data: bytes, installation: Installation, *, door_name: str | None = None, default_width: float = 2.0, default_height: float = 3.0, genericdoors: TwoDA | None = None, logger: RobustLogger | None = None) -> tuple[float, float]:
         public static (float width, float height) GetDoorDimensions(
@@ -146,10 +458,52 @@ namespace CSharpKOTOR.Tools
                 }
 
                 // Try method 1: Get dimensions from model bounding box
-                // TODO: Implement _load_mdl_with_variations and _get_door_dimensions_from_model
-
+                // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/door.py:547-565
+                // Original: mdl, mdl_data = _load_mdl_with_variations(model_name, installation, logger)
+                var (mdl, mdlData) = LoadMdlWithVariations(modelName, installation, logger);
+                if (mdl != null)
+                {
+                    // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/door.py:550-553
+                    // Original: dimensions = _get_door_dimensions_from_model(mdl, model_name, door_name, logger)
+                    var dimensions = GetDoorDimensionsFromModel(mdl, modelName, doorName, logger);
+                    if (dimensions.HasValue)
+                    {
+                        doorWidth = dimensions.Value.width;
+                        doorHeight = dimensions.Value.height;
+                        return (doorWidth, doorHeight);
+                    }
+                    else
+                    {
+                        logger.Warning(
+                            $"Could not extract dimensions from model '{modelName}' " +
+                            $"for door {doorNameStr}, trying texture fallback");
+                    }
+                }
+                else
+                {
+                    var modelVariations = GetModelVariations(modelName);
+                    logger.Warning(
+                        $"Could not load MDL '{modelName}' (tried variations: {string.Join(", ", modelVariations)}) " +
+                        $"for door {doorNameStr} " +
+                        $"(appearance_id={utd.AppearanceId}), trying texture fallback");
+                }
+                
                 // Fallback: Get dimensions from door texture if model-based extraction failed
-                // TODO: Implement _get_door_dimensions_from_texture
+                // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/door.py:567-576
+                // Original: dimensions = _get_door_dimensions_from_texture(model_name, installation, door_name, logger)
+                var textureDimensions = GetDoorDimensionsFromTexture(modelName, installation, doorName, logger);
+                if (textureDimensions.HasValue)
+                {
+                    doorWidth = textureDimensions.Value.width;
+                    doorHeight = textureDimensions.Value.height;
+                }
+                else
+                {
+                    logger.Debug(
+                        $"[DOOR DEBUG] Door {doorNameStr}: " +
+                        $"Using default dimensions ({defaultWidth} x {defaultHeight}) - " +
+                        $"model and texture extraction failed");
+                }
             }
             catch (Exception ex)
             {

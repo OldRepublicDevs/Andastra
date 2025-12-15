@@ -732,6 +732,123 @@ namespace CSharpKOTOR.Common
             return resource;
         }
 
+        /// <summary>
+        /// Creates a type-specific ModuleResource instance based on ResourceType.
+        /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:884
+        /// Original: module_resource = ModuleResource(resname, restype, self._installation, self._root)
+        /// Uses reflection to create ModuleResource<T> with the appropriate type parameter.
+        /// </summary>
+        private ModuleResource CreateModuleResource(string resname, ResourceType restype)
+        {
+            // Map ResourceType to C# type for strongly-typed ModuleResource<T>
+            // For GFF-based resources, we use the specific GFF type (ARE, GIT, UTC, etc.)
+            // For non-GFF resources, we use object as a fallback
+            Type resourceType = GetResourceTypeForRestype(restype);
+            
+            // Create ModuleResource<T> using reflection
+            Type genericModuleResourceType = typeof(ModuleResource<>);
+            Type specificModuleResourceType = genericModuleResourceType.MakeGenericType(resourceType);
+            
+            // Create instance with constructor: ModuleResource(string, ResourceType, Installation, string)
+            object instance = Activator.CreateInstance(
+                specificModuleResourceType,
+                resname,
+                restype,
+                _installation,
+                _root
+            );
+            
+            return (ModuleResource)instance;
+        }
+
+        /// <summary>
+        /// Maps ResourceType to the corresponding C# type for ModuleResource<T>.
+        /// </summary>
+        private Type GetResourceTypeForRestype(ResourceType restype)
+        {
+            // Map known resource types to their C# types
+            // GFF-based resources use their specific types
+            if (restype == ResourceType.ARE)
+            {
+                return typeof(Formats.GFF.ARE);
+            }
+            if (restype == ResourceType.GIT)
+            {
+                return typeof(Resource.Generics.GIT);
+            }
+            if (restype == ResourceType.IFO)
+            {
+                return typeof(Formats.GFF.IFO);
+            }
+            if (restype == ResourceType.UTC)
+            {
+                return typeof(Formats.GFF.UTC);
+            }
+            if (restype == ResourceType.UTD)
+            {
+                return typeof(Formats.GFF.UTD);
+            }
+            if (restype == ResourceType.UTP)
+            {
+                return typeof(Formats.GFF.UTP);
+            }
+            if (restype == ResourceType.UTS)
+            {
+                return typeof(Formats.GFF.UTS);
+            }
+            if (restype == ResourceType.UTI)
+            {
+                return typeof(Formats.GFF.UTI);
+            }
+            if (restype == ResourceType.UTE)
+            {
+                return typeof(Formats.GFF.UTE);
+            }
+            if (restype == ResourceType.UTT)
+            {
+                return typeof(Formats.GFF.UTT);
+            }
+            if (restype == ResourceType.UTW)
+            {
+                return typeof(Formats.GFF.UTW);
+            }
+            if (restype == ResourceType.UTM)
+            {
+                return typeof(Formats.GFF.UTM);
+            }
+            if (restype == ResourceType.LYT)
+            {
+                return typeof(Formats.LYT.LYT);
+            }
+            if (restype == ResourceType.VIS)
+            {
+                return typeof(Formats.VIS.VIS);
+            }
+            if (restype == ResourceType.PTH)
+            {
+                return typeof(Formats.PTH.PTH);
+            }
+            if (restype == ResourceType.MDL)
+            {
+                return typeof(Formats.MDL.MDL);
+            }
+            if (restype == ResourceType.TPC)
+            {
+                return typeof(Formats.TPC.TPC);
+            }
+            if (restype == ResourceType.NCS)
+            {
+                return typeof(Formats.NCS.NCS);
+            }
+            if (restype == ResourceType.DLG)
+            {
+                return typeof(Formats.DLG.DLG);
+            }
+            
+            // Fallback to object for unknown or unsupported resource types
+            return typeof(object);
+        }
+
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:852-887
         // Original: def add_locations(self, resname: str, restype: ResourceType, locations: Iterable[Path]) -> ModuleResource:
         /// <summary>
@@ -753,12 +870,10 @@ namespace CSharpKOTOR.Common
             ResourceIdentifier ident = new ResourceIdentifier(resname, restype);
             if (!_resources.TryGetValue(ident, out ModuleResource moduleResource))
             {
-                // Create a new ModuleResource - for now, we'll use a generic approach
-                // In a full implementation, this would need to create ModuleResource<T> with the correct T type
-                // For now, we'll create a basic ModuleResource<object> as a placeholder
-                // TODO: Implement proper type-specific ModuleResource creation based on restype
-                var genericResource = new ModuleResource<object>(resname, restype, _installation, _root);
-                moduleResource = genericResource;
+                // Create type-specific ModuleResource<T> based on ResourceType
+                // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:884
+                // Original: module_resource = ModuleResource(resname, restype, self._installation, self._root)
+                moduleResource = CreateModuleResource(resname, restype);
                 _resources[ident] = moduleResource;
             }
 
