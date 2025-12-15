@@ -32,7 +32,7 @@ namespace CSharpKOTOR.Common
                 (u.Z * v.X) - (u.X * v.Z),
                 (u.X * v.Y) - (u.Y * v.X)
             );
-            normal = normal.Normalize();
+            normal = Vector3.Normalize(normal);
 
             return normal;
         }
@@ -41,9 +41,9 @@ namespace CSharpKOTOR.Common
         // Original: def area(self) -> float
         public float Area()
         {
-            float a = V1.Distance(V2);
-            float b = V1.Distance(V3);
-            float c = V2.Distance(V3);
+            float a = Vector3.Distance(V1, V2);
+            float b = Vector3.Distance(V1, V3);
+            float c = Vector3.Distance(V2, V3);
             return 0.25f * (float)Math.Sqrt((a + b + c) * (-a + b + c) * (a - b + c) * (a + b - c));
         }
 
@@ -52,7 +52,7 @@ namespace CSharpKOTOR.Common
         public float PlanarDistance()
         {
             var normal = Normal();
-            return -1.0f * normal.Dot(V1);
+            return -1.0f * Vector3.Dot(normal, V1);
         }
 
         // Matching PyKotor implementation at vendor/HoloLSP/vendor/pykotor/common/geometry.py:1150-1153
