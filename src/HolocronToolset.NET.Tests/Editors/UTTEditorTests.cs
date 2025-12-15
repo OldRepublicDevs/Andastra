@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using CSharpKOTOR.Common;
 using CSharpKOTOR.Formats.GFF;
 using CSharpKOTOR.Resources;
 using FluentAssertions;
@@ -47,6 +48,68 @@ namespace HolocronToolset.NET.Tests.Editors
             editor.Should().NotBeNull();
             var (data, _) = editor.Build();
             data.Should().NotBeNull();
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utt_editor.py:24-49
+        // Original: def test_utt_editor_manipulate_name_locstring(qtbot, installation: HTInstallation, test_files_dir: Path):
+        [Fact]
+        public void TestUttEditorManipulateNameLocstring()
+        {
+            string k2Path = Environment.GetEnvironmentVariable("K2_PATH");
+            if (string.IsNullOrEmpty(k2Path))
+            {
+                k2Path = @"C:\Program Files (x86)\Steam\steamapps\common\Knights of the Old Republic II";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k2Path) && System.IO.File.Exists(System.IO.Path.Combine(k2Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k2Path, "Test Installation", tsl: true);
+            }
+
+            if (installation == null)
+            {
+                return; // Skip if no installation available
+            }
+
+            string testFilesDir = System.IO.Path.Combine(
+                System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+
+            string uttFile = System.IO.Path.Combine(testFilesDir, "newtransition9.utt");
+            if (!System.IO.File.Exists(uttFile))
+            {
+                testFilesDir = System.IO.Path.Combine(
+                    System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                    "..", "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+                uttFile = System.IO.Path.Combine(testFilesDir, "newtransition9.utt");
+            }
+
+            if (!System.IO.File.Exists(uttFile))
+            {
+                return; // Skip if test file not available
+            }
+
+            var editor = new UTTEditor(null, installation);
+            byte[] originalData = System.IO.File.ReadAllBytes(uttFile);
+            var originalUtt = CSharpKOTOR.Resource.Generics.UTTAuto.ReadUtt(originalData);
+
+            editor.Load(uttFile, "newtransition9", ResourceType.UTT, originalData);
+
+            // Modify name
+            var newName = LocalizedString.FromEnglish("Modified Trigger Name");
+            editor.NameEdit.Should().NotBeNull("NameEdit should be initialized");
+            editor.NameEdit.SetLocString(newName);
+
+            // Save and verify
+            var (data, _) = editor.Build();
+            var modifiedUtt = CSharpKOTOR.Resource.Generics.UTTAuto.ReadUtt(data);
+            modifiedUtt.Name.Get(CSharpKOTOR.Common.Language.English, CSharpKOTOR.Common.Gender.Male).Should().Be("Modified Trigger Name");
+            modifiedUtt.Name.Get(CSharpKOTOR.Common.Language.English, CSharpKOTOR.Common.Gender.Male).Should().NotBe(originalUtt.Name.Get(CSharpKOTOR.Common.Language.English, CSharpKOTOR.Common.Gender.Male));
+
+            // Load back and verify
+            editor.Load(uttFile, "newtransition9", ResourceType.UTT, data);
+            editor.NameEdit.GetLocString().Get(CSharpKOTOR.Common.Language.English, CSharpKOTOR.Common.Gender.Male).Should().Be("Modified Trigger Name");
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utt_editor.py:713-742

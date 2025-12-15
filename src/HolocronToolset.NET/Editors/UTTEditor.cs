@@ -1,11 +1,15 @@
 using System;
+using System.Collections.Generic;
 using Avalonia.Controls;
+using Avalonia.Layout;
 using Avalonia.Markup.Xaml;
 using CSharpKOTOR.Common;
 using CSharpKOTOR.Formats.GFF;
 using CSharpKOTOR.Resource.Generics;
 using CSharpKOTOR.Resources;
 using HolocronToolset.NET.Data;
+using HolocronToolset.NET.Widgets;
+using HolocronToolset.NET.Widgets.Edit;
 using GFFAuto = CSharpKOTOR.Formats.GFF.GFFAuto;
 
 namespace HolocronToolset.NET.Editors
@@ -17,29 +21,310 @@ namespace HolocronToolset.NET.Editors
         private UTT _utt;
         private GFF _originalGff;
 
+        // UI Controls - Basic
+        private LocalizedStringEdit _nameEdit;
+        private TextBox _tagEdit;
+        private Button _tagGenerateButton;
+        private TextBox _resrefEdit;
+        private Button _resrefGenerateButton;
+        private ComboBox _typeSelect;
+        private ComboBox2DA _cursorSelect;
+
+        // UI Controls - Advanced
+        private CheckBox _autoRemoveKeyCheckbox;
+        private TextBox _keyEdit;
+        private ComboBox2DA _factionSelect;
+        private NumericUpDown _highlightHeightSpin;
+
+        // UI Controls - Trap
+        private CheckBox _isTrapCheckbox;
+        private CheckBox _activateOnceCheckbox;
+        private CheckBox _detectableCheckbox;
+        private NumericUpDown _detectDcSpin;
+        private CheckBox _disarmableCheckbox;
+        private NumericUpDown _disarmDcSpin;
+        private ComboBox2DA _trapSelect;
+
+        // UI Controls - Scripts
+        private ComboBox _onClickEdit;
+        private ComboBox _onDisarmEdit;
+        private ComboBox _onEnterSelect;
+        private ComboBox _onExitSelect;
+        private ComboBox _onHeartbeatSelect;
+        private ComboBox _onTrapTriggeredEdit;
+        private ComboBox _onUserDefinedSelect;
+
+        // UI Controls - Comments
+        private TextBox _commentsEdit;
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utt.py:24-64
+        // Original: def __init__(self, parent, installation):
         public UTTEditor(Window parent = null, HTInstallation installation = null)
             : base(parent, "Trigger Editor", "trigger",
                 new[] { ResourceType.UTT, ResourceType.BTT },
                 new[] { ResourceType.UTT, ResourceType.BTT },
                 installation)
         {
+            _utt = new UTT();
             InitializeComponent();
-            SetupUI();
+            SetupSignals();
+            if (installation != null)
+            {
+                SetupInstallation(installation);
+            }
             New();
         }
 
         private void InitializeComponent()
         {
-            if (!TryLoadXaml())
+            bool xamlLoaded = false;
+            try
             {
-                SetupUI();
+                AvaloniaXamlLoader.Load(this);
+                xamlLoaded = true;
+            }
+            catch
+            {
+                // XAML not available - will use programmatic UI
+            }
+
+            if (!xamlLoaded)
+            {
+                SetupProgrammaticUI();
+            }
+            else
+            {
+                // Try to find controls from XAML
+                _nameEdit = EditorHelpers.FindControlSafe<LocalizedStringEdit>(this, "nameEdit");
+                _tagEdit = EditorHelpers.FindControlSafe<TextBox>(this, "tagEdit");
+                _tagGenerateButton = EditorHelpers.FindControlSafe<Button>(this, "tagGenerateButton");
+                _resrefEdit = EditorHelpers.FindControlSafe<TextBox>(this, "resrefEdit");
+                _resrefGenerateButton = EditorHelpers.FindControlSafe<Button>(this, "resrefGenerateButton");
+                _typeSelect = EditorHelpers.FindControlSafe<ComboBox>(this, "typeSelect");
+                _cursorSelect = EditorHelpers.FindControlSafe<ComboBox2DA>(this, "cursorSelect");
+                _autoRemoveKeyCheckbox = EditorHelpers.FindControlSafe<CheckBox>(this, "autoRemoveKeyCheckbox");
+                _keyEdit = EditorHelpers.FindControlSafe<TextBox>(this, "keyEdit");
+                _factionSelect = EditorHelpers.FindControlSafe<ComboBox2DA>(this, "factionSelect");
+                _highlightHeightSpin = EditorHelpers.FindControlSafe<NumericUpDown>(this, "highlightHeightSpin");
+                _isTrapCheckbox = EditorHelpers.FindControlSafe<CheckBox>(this, "isTrapCheckbox");
+                _activateOnceCheckbox = EditorHelpers.FindControlSafe<CheckBox>(this, "activateOnceCheckbox");
+                _detectableCheckbox = EditorHelpers.FindControlSafe<CheckBox>(this, "detectableCheckbox");
+                _detectDcSpin = EditorHelpers.FindControlSafe<NumericUpDown>(this, "detectDcSpin");
+                _disarmableCheckbox = EditorHelpers.FindControlSafe<CheckBox>(this, "disarmableCheckbox");
+                _disarmDcSpin = EditorHelpers.FindControlSafe<NumericUpDown>(this, "disarmDcSpin");
+                _trapSelect = EditorHelpers.FindControlSafe<ComboBox2DA>(this, "trapSelect");
+                _onClickEdit = EditorHelpers.FindControlSafe<ComboBox>(this, "onClickEdit");
+                _onDisarmEdit = EditorHelpers.FindControlSafe<ComboBox>(this, "onDisarmEdit");
+                _onEnterSelect = EditorHelpers.FindControlSafe<ComboBox>(this, "onEnterSelect");
+                _onExitSelect = EditorHelpers.FindControlSafe<ComboBox>(this, "onExitSelect");
+                _onHeartbeatSelect = EditorHelpers.FindControlSafe<ComboBox>(this, "onHeartbeatSelect");
+                _onTrapTriggeredEdit = EditorHelpers.FindControlSafe<ComboBox>(this, "onTrapTriggeredEdit");
+                _onUserDefinedSelect = EditorHelpers.FindControlSafe<ComboBox>(this, "onUserDefinedSelect");
+                _commentsEdit = EditorHelpers.FindControlSafe<TextBox>(this, "commentsEdit");
+
+                // If any critical controls are missing, fall back to programmatic UI
+                if (_nameEdit == null || _tagEdit == null || _resrefEdit == null || _commentsEdit == null)
+                {
+                    SetupProgrammaticUI();
+                }
             }
         }
 
-        private void SetupUI()
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utt.py:66-68
+        // Original: def _setup_signals(self):
+        private void SetupSignals()
         {
-            var panel = new StackPanel();
-            Content = panel;
+            if (_tagGenerateButton != null)
+            {
+                _tagGenerateButton.Click += (s, e) => GenerateTag();
+            }
+            if (_resrefGenerateButton != null)
+            {
+                _resrefGenerateButton.Click += (s, e) => GenerateResref();
+            }
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utt.py:70-119
+        // Original: def _setup_installation(self, installation: HTInstallation):
+        private void SetupInstallation(HTInstallation installation)
+        {
+            if (_nameEdit != null)
+            {
+                _nameEdit.SetInstallation(installation);
+            }
+
+            // TODO: Setup 2DA combos when TwoDA loading is available
+            // cursors: TwoDA | None = installation.ht_get_cache_2da(HTInstallation.TwoDA_CURSORS)
+            // factions: TwoDA | None = installation.ht_get_cache_2da(HTInstallation.TwoDA_FACTIONS)
+            // traps: TwoDA | None = installation.ht_get_cache_2da(HTInstallation.TwoDA_TRAPS)
+        }
+
+        private void SetupProgrammaticUI()
+        {
+            var scrollViewer = new ScrollViewer();
+            var mainPanel = new StackPanel { Orientation = Orientation.Vertical };
+
+            // Tab Control
+            var tabControl = new TabControl();
+
+            // Basic Tab
+            var basicTab = new TabItem { Header = "Basic" };
+            var basicPanel = new StackPanel { Orientation = Orientation.Vertical };
+
+            // Name
+            var nameLabel = new TextBlock { Text = "Name:" };
+            _nameEdit = new LocalizedStringEdit();
+            if (_installation != null)
+            {
+                _nameEdit.SetInstallation(_installation);
+            }
+            basicPanel.Children.Add(nameLabel);
+            basicPanel.Children.Add(_nameEdit);
+
+            // Tag
+            var tagLabel = new TextBlock { Text = "Tag:" };
+            var tagPanel = new StackPanel { Orientation = Orientation.Horizontal };
+            _tagEdit = new TextBox();
+            _tagGenerateButton = new Button { Content = "-", Width = 26 };
+            _tagGenerateButton.Click += (s, e) => GenerateTag();
+            tagPanel.Children.Add(_tagEdit);
+            tagPanel.Children.Add(_tagGenerateButton);
+            basicPanel.Children.Add(tagLabel);
+            basicPanel.Children.Add(tagPanel);
+
+            // ResRef
+            var resrefLabel = new TextBlock { Text = "ResRef:" };
+            var resrefPanel = new StackPanel { Orientation = Orientation.Horizontal };
+            _resrefEdit = new TextBox { MaxLength = 16 };
+            _resrefGenerateButton = new Button { Content = "-", Width = 26 };
+            _resrefGenerateButton.Click += (s, e) => GenerateResref();
+            resrefPanel.Children.Add(_resrefEdit);
+            resrefPanel.Children.Add(_resrefGenerateButton);
+            basicPanel.Children.Add(resrefLabel);
+            basicPanel.Children.Add(resrefPanel);
+
+            // Type
+            var typeLabel = new TextBlock { Text = "Type:" };
+            _typeSelect = new ComboBox();
+            _typeSelect.Items.Add("Generic");
+            _typeSelect.Items.Add("Transition");
+            _typeSelect.Items.Add("Trap");
+            _typeSelect.SelectedIndex = 0;
+            basicPanel.Children.Add(typeLabel);
+            basicPanel.Children.Add(_typeSelect);
+
+            // Cursor
+            var cursorLabel = new TextBlock { Text = "Cursor:" };
+            _cursorSelect = new ComboBox2DA();
+            basicPanel.Children.Add(cursorLabel);
+            basicPanel.Children.Add(_cursorSelect);
+
+            basicTab.Content = basicPanel;
+            tabControl.Items.Add(basicTab);
+
+            // Advanced Tab
+            var advancedTab = new TabItem { Header = "Advanced" };
+            var advancedPanel = new StackPanel { Orientation = Orientation.Vertical };
+
+            _autoRemoveKeyCheckbox = new CheckBox { Content = "Auto Remove Key" };
+            var keyLabel = new TextBlock { Text = "Key Name:" };
+            _keyEdit = new TextBox();
+            var factionLabel = new TextBlock { Text = "Faction:" };
+            _factionSelect = new ComboBox2DA();
+            var highlightHeightLabel = new TextBlock { Text = "Highlight Height:" };
+            _highlightHeightSpin = new NumericUpDown { Minimum = decimal.MinValue, Maximum = decimal.MaxValue };
+
+            advancedPanel.Children.Add(_autoRemoveKeyCheckbox);
+            advancedPanel.Children.Add(keyLabel);
+            advancedPanel.Children.Add(_keyEdit);
+            advancedPanel.Children.Add(factionLabel);
+            advancedPanel.Children.Add(_factionSelect);
+            advancedPanel.Children.Add(highlightHeightLabel);
+            advancedPanel.Children.Add(_highlightHeightSpin);
+
+            advancedTab.Content = advancedPanel;
+            tabControl.Items.Add(advancedTab);
+
+            // Trap Tab
+            var trapTab = new TabItem { Header = "Trap" };
+            var trapPanel = new StackPanel { Orientation = Orientation.Vertical };
+
+            _isTrapCheckbox = new CheckBox { Content = "Is a trap" };
+            _activateOnceCheckbox = new CheckBox { Content = "Activate Once" };
+            var trapTypeLabel = new TextBlock { Text = "Trap Type:" };
+            _trapSelect = new ComboBox2DA();
+            _detectableCheckbox = new CheckBox { Content = "Detectable" };
+            var detectDcLabel = new TextBlock { Text = "Detect DC:" };
+            _detectDcSpin = new NumericUpDown { Minimum = int.MinValue, Maximum = int.MaxValue };
+            _disarmableCheckbox = new CheckBox { Content = "Disarmable" };
+            var disarmDcLabel = new TextBlock { Text = "Disarm DC:" };
+            _disarmDcSpin = new NumericUpDown { Minimum = int.MinValue, Maximum = int.MaxValue };
+
+            trapPanel.Children.Add(_isTrapCheckbox);
+            trapPanel.Children.Add(_activateOnceCheckbox);
+            trapPanel.Children.Add(trapTypeLabel);
+            trapPanel.Children.Add(_trapSelect);
+            trapPanel.Children.Add(_detectableCheckbox);
+            trapPanel.Children.Add(detectDcLabel);
+            trapPanel.Children.Add(_detectDcSpin);
+            trapPanel.Children.Add(_disarmableCheckbox);
+            trapPanel.Children.Add(disarmDcLabel);
+            trapPanel.Children.Add(_disarmDcSpin);
+
+            trapTab.Content = trapPanel;
+            tabControl.Items.Add(trapTab);
+
+            // Scripts Tab
+            var scriptsTab = new TabItem { Header = "Scripts" };
+            var scriptsPanel = new StackPanel { Orientation = Orientation.Vertical };
+
+            var onClickLabel = new TextBlock { Text = "OnClick:" };
+            _onClickEdit = new ComboBox { IsEditable = true };
+            var onDisarmLabel = new TextBlock { Text = "OnDisarm:" };
+            _onDisarmEdit = new ComboBox { IsEditable = true };
+            var onEnterLabel = new TextBlock { Text = "OnEnter:" };
+            _onEnterSelect = new ComboBox { IsEditable = true };
+            var onExitLabel = new TextBlock { Text = "OnExit:" };
+            _onExitSelect = new ComboBox { IsEditable = true };
+            var onHeartbeatLabel = new TextBlock { Text = "OnHeartbeat:" };
+            _onHeartbeatSelect = new ComboBox { IsEditable = true };
+            var onTrapTriggeredLabel = new TextBlock { Text = "OnTrapTriggered:" };
+            _onTrapTriggeredEdit = new ComboBox { IsEditable = true };
+            var onUserDefinedLabel = new TextBlock { Text = "OnUserDefined:" };
+            _onUserDefinedSelect = new ComboBox { IsEditable = true };
+
+            scriptsPanel.Children.Add(onClickLabel);
+            scriptsPanel.Children.Add(_onClickEdit);
+            scriptsPanel.Children.Add(onDisarmLabel);
+            scriptsPanel.Children.Add(_onDisarmEdit);
+            scriptsPanel.Children.Add(onEnterLabel);
+            scriptsPanel.Children.Add(_onEnterSelect);
+            scriptsPanel.Children.Add(onExitLabel);
+            scriptsPanel.Children.Add(_onExitSelect);
+            scriptsPanel.Children.Add(onHeartbeatLabel);
+            scriptsPanel.Children.Add(_onHeartbeatSelect);
+            scriptsPanel.Children.Add(onTrapTriggeredLabel);
+            scriptsPanel.Children.Add(_onTrapTriggeredEdit);
+            scriptsPanel.Children.Add(onUserDefinedLabel);
+            scriptsPanel.Children.Add(_onUserDefinedSelect);
+
+            scriptsTab.Content = scriptsPanel;
+            tabControl.Items.Add(scriptsTab);
+
+            // Comments Tab
+            var commentsTab = new TabItem { Header = "Comments" };
+            _commentsEdit = new TextBox
+            {
+                AcceptsReturn = true,
+                AcceptsTab = true,
+                TextWrapping = Avalonia.Media.TextWrapping.Wrap
+            };
+            commentsTab.Content = _commentsEdit;
+            tabControl.Items.Add(commentsTab);
+
+            mainPanel.Children.Add(tabControl);
+            scrollViewer.Content = mainPanel;
+            Content = scrollViewer;
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utt.py:121-131
@@ -68,13 +353,233 @@ namespace HolocronToolset.NET.Editors
         private void LoadUTT(UTT utt)
         {
             _utt = utt;
-            // UI loading will be implemented when UI elements are available
+
+            // Basic
+            if (_nameEdit != null)
+            {
+                _nameEdit.SetLocString(utt.Name);
+            }
+            if (_tagEdit != null)
+            {
+                _tagEdit.Text = utt.Tag ?? "";
+            }
+            if (_resrefEdit != null)
+            {
+                _resrefEdit.Text = utt.ResRef?.ToString() ?? "";
+            }
+            if (_typeSelect != null)
+            {
+                _typeSelect.SelectedIndex = utt.TypeId;
+            }
+            if (_cursorSelect != null)
+            {
+                _cursorSelect.SetSelectedIndex(utt.Cursor);
+            }
+
+            // Advanced
+            if (_autoRemoveKeyCheckbox != null)
+            {
+                _autoRemoveKeyCheckbox.IsChecked = utt.AutoRemoveKey;
+            }
+            if (_keyEdit != null)
+            {
+                _keyEdit.Text = utt.KeyName ?? "";
+            }
+            if (_factionSelect != null)
+            {
+                _factionSelect.SetSelectedIndex(utt.FactionId);
+            }
+            if (_highlightHeightSpin != null)
+            {
+                _highlightHeightSpin.Value = (decimal)utt.HighlightHeight;
+            }
+
+            // Trap
+            if (_isTrapCheckbox != null)
+            {
+                _isTrapCheckbox.IsChecked = utt.IsTrap;
+            }
+            if (_activateOnceCheckbox != null)
+            {
+                _activateOnceCheckbox.IsChecked = utt.TrapOnce;
+            }
+            if (_detectableCheckbox != null)
+            {
+                _detectableCheckbox.IsChecked = utt.TrapDetectable;
+            }
+            if (_detectDcSpin != null)
+            {
+                _detectDcSpin.Value = utt.TrapDetectDc;
+            }
+            if (_disarmableCheckbox != null)
+            {
+                _disarmableCheckbox.IsChecked = utt.TrapDisarmable;
+            }
+            if (_disarmDcSpin != null)
+            {
+                _disarmDcSpin.Value = utt.TrapDisarmDc;
+            }
+            if (_trapSelect != null)
+            {
+                _trapSelect.SetSelectedIndex(utt.TrapType);
+            }
+
+            // Scripts
+            if (_onClickEdit != null)
+            {
+                _onClickEdit.Text = utt.OnClickScript?.ToString() ?? "";
+            }
+            if (_onDisarmEdit != null)
+            {
+                _onDisarmEdit.Text = utt.OnDisarmScript?.ToString() ?? "";
+            }
+            if (_onEnterSelect != null)
+            {
+                _onEnterSelect.Text = utt.OnEnterScript?.ToString() ?? "";
+            }
+            if (_onExitSelect != null)
+            {
+                _onExitSelect.Text = utt.OnExitScript?.ToString() ?? "";
+            }
+            if (_onHeartbeatSelect != null)
+            {
+                _onHeartbeatSelect.Text = utt.OnHeartbeatScript?.ToString() ?? "";
+            }
+            if (_onTrapTriggeredEdit != null)
+            {
+                _onTrapTriggeredEdit.Text = utt.OnTrapTriggeredScript?.ToString() ?? "";
+            }
+            if (_onUserDefinedSelect != null)
+            {
+                _onUserDefinedSelect.Text = utt.OnUserDefinedScript?.ToString() ?? "";
+            }
+
+            // Comments
+            if (_commentsEdit != null)
+            {
+                _commentsEdit.Text = utt.Comment ?? "";
+            }
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utt.py:187-240
         // Original: def build(self) -> tuple[bytes, bytes]:
         public override Tuple<byte[], byte[]> Build()
         {
+            // Update the existing UTT object from UI elements
+            // Matching Python: utt.name = self.ui.nameEdit.locstring()
+            if (_nameEdit != null)
+            {
+                _utt.Name = _nameEdit.GetLocString();
+            }
+            // Matching Python: utt.tag = self.ui.tagEdit.text()
+            if (_tagEdit != null)
+            {
+                _utt.Tag = _tagEdit.Text ?? "";
+            }
+            // Matching Python: utt.resref = ResRef(self.ui.resrefEdit.text())
+            if (_resrefEdit != null)
+            {
+                _utt.ResRef = !string.IsNullOrEmpty(_resrefEdit.Text) ? new ResRef(_resrefEdit.Text) : new ResRef("");
+            }
+            // Matching Python: utt.cursor_id = self.ui.cursorSelect.currentIndex()
+            if (_cursorSelect != null)
+            {
+                _utt.Cursor = _cursorSelect.SelectedIndex;
+            }
+            // Matching Python: utt.type_id = self.ui.typeSelect.currentIndex()
+            if (_typeSelect != null)
+            {
+                _utt.TypeId = _typeSelect.SelectedIndex;
+            }
+
+            // Advanced
+            // Matching Python: utt.auto_remove_key = self.ui.autoRemoveKeyCheckbox.isChecked()
+            _utt.AutoRemoveKey = _autoRemoveKeyCheckbox?.IsChecked ?? false;
+            // Matching Python: utt.key_name = self.ui.keyEdit.text()
+            if (_keyEdit != null)
+            {
+                _utt.KeyName = _keyEdit.Text ?? "";
+            }
+            // Matching Python: utt.faction_id = self.ui.factionSelect.currentIndex()
+            if (_factionSelect != null)
+            {
+                _utt.FactionId = _factionSelect.SelectedIndex;
+            }
+            // Matching Python: utt.highlight_height = self.ui.highlightHeightSpin.value()
+            if (_highlightHeightSpin != null)
+            {
+                _utt.HighlightHeight = (float)_highlightHeightSpin.Value;
+            }
+
+            // Trap
+            // Matching Python: utt.is_trap = self.ui.isTrapCheckbox.isChecked()
+            _utt.IsTrap = _isTrapCheckbox?.IsChecked ?? false;
+            // Matching Python: utt.trap_once = self.ui.activateOnceCheckbox.isChecked()
+            _utt.TrapOnce = _activateOnceCheckbox?.IsChecked ?? false;
+            // Matching Python: utt.trap_detectable = self.ui.detectableCheckbox.isChecked()
+            _utt.TrapDetectable = _detectableCheckbox?.IsChecked ?? false;
+            // Matching Python: utt.trap_detect_dc = self.ui.detectDcSpin.value()
+            if (_detectDcSpin != null)
+            {
+                _utt.TrapDetectDc = (int)_detectDcSpin.Value;
+            }
+            // Matching Python: utt.trap_disarmable = self.ui.disarmableCheckbox.isChecked()
+            _utt.TrapDisarmable = _disarmableCheckbox?.IsChecked ?? false;
+            // Matching Python: utt.trap_disarm_dc = self.ui.disarmDcSpin.value()
+            if (_disarmDcSpin != null)
+            {
+                _utt.TrapDisarmDc = (int)_disarmDcSpin.Value;
+            }
+            // Matching Python: utt.trap_type = self.ui.trapSelect.currentIndex()
+            if (_trapSelect != null)
+            {
+                _utt.TrapType = _trapSelect.SelectedIndex;
+            }
+
+            // Scripts
+            // Matching Python: utt.on_click = ResRef(self.ui.onClickEdit.currentText())
+            if (_onClickEdit != null)
+            {
+                _utt.OnClickScript = !string.IsNullOrEmpty(_onClickEdit.Text) ? new ResRef(_onClickEdit.Text) : new ResRef("");
+            }
+            // Matching Python: utt.on_disarm = ResRef(self.ui.onDisarmEdit.currentText())
+            if (_onDisarmEdit != null)
+            {
+                _utt.OnDisarmScript = !string.IsNullOrEmpty(_onDisarmEdit.Text) ? new ResRef(_onDisarmEdit.Text) : new ResRef("");
+            }
+            // Matching Python: utt.on_enter = ResRef(self.ui.onEnterSelect.currentText())
+            if (_onEnterSelect != null)
+            {
+                _utt.OnEnterScript = !string.IsNullOrEmpty(_onEnterSelect.Text) ? new ResRef(_onEnterSelect.Text) : new ResRef("");
+            }
+            // Matching Python: utt.on_exit = ResRef(self.ui.onExitSelect.currentText())
+            if (_onExitSelect != null)
+            {
+                _utt.OnExitScript = !string.IsNullOrEmpty(_onExitSelect.Text) ? new ResRef(_onExitSelect.Text) : new ResRef("");
+            }
+            // Matching Python: utt.on_heartbeat = ResRef(self.ui.onHeartbeatSelect.currentText())
+            if (_onHeartbeatSelect != null)
+            {
+                _utt.OnHeartbeatScript = !string.IsNullOrEmpty(_onHeartbeatSelect.Text) ? new ResRef(_onHeartbeatSelect.Text) : new ResRef("");
+            }
+            // Matching Python: utt.on_trap_triggered = ResRef(self.ui.onTrapTriggeredEdit.currentText())
+            if (_onTrapTriggeredEdit != null)
+            {
+                _utt.OnTrapTriggeredScript = !string.IsNullOrEmpty(_onTrapTriggeredEdit.Text) ? new ResRef(_onTrapTriggeredEdit.Text) : new ResRef("");
+            }
+            // Matching Python: utt.on_user_defined = ResRef(self.ui.onUserDefinedSelect.currentText())
+            if (_onUserDefinedSelect != null)
+            {
+                _utt.OnUserDefinedScript = !string.IsNullOrEmpty(_onUserDefinedSelect.Text) ? new ResRef(_onUserDefinedSelect.Text) : new ResRef("");
+            }
+
+            // Comments
+            // Matching Python: utt.comment = self.ui.commentsEdit.toPlainText()
+            if (_commentsEdit != null)
+            {
+                _utt.Comment = _commentsEdit.Text ?? "";
+            }
+
             Game game = _installation?.Game ?? Game.K2;
             var gff = UTTHelpers.DismantleUtt(_utt, game);
 
@@ -85,7 +590,6 @@ namespace HolocronToolset.NET.Editors
                 var newRoot = gff.Root;
 
                 // List of fields that UTTHelpers.DismantleUtt explicitly sets
-                // Note: Some fields that may have default value issues are handled specially below
                 var fieldsSetByDismantle = new System.Collections.Generic.HashSet<string>
                 {
                     "Tag", "ResRef", "Comment", "Type", "LinkedTo", "LinkedToFlags",
@@ -93,11 +597,9 @@ namespace HolocronToolset.NET.Editors
                     "TrapType", "IsTrap", "KeyRequired", "Lockable", "Locked", "Hardness",
                     "KeyName2", "ScriptHeartbeat", "ScriptOnEnter", "ScriptOnExit", "ScriptUserDefine",
                     "TransitionDestin"
-                    // Note: TrapOneShot, PaletteID, TrapDisarmable, Cursor, Faction are handled in fieldsToRestore
                 };
 
                 // Fields that may have default value mismatches - always restore from original
-                // These fields are set by DismantleUtt but may use default values instead of original values
                 var fieldsToRestore = new System.Collections.Generic.HashSet<string> { "PaletteID", "TrapDisarmable", "Cursor", "Faction", "TrapOneShot" };
                 foreach (var fieldName in fieldsToRestore)
                 {
@@ -106,8 +608,6 @@ namespace HolocronToolset.NET.Editors
                         var originalFieldType = originalRoot.GetFieldType(fieldName);
                         if (originalFieldType.HasValue)
                         {
-                            // Always restore these fields from original, overwriting whatever DismantleUtt set
-                            // Remove first to ensure clean copy
                             if (newRoot.Exists(fieldName))
                             {
                                 newRoot.Remove(fieldName);
@@ -116,9 +616,6 @@ namespace HolocronToolset.NET.Editors
                         }
                     }
                 }
-                
-                // Verify the restore worked by checking if field exists and matches
-                // (This is for debugging - can remove later)
 
                 // Copy all fields from original that aren't explicitly set by DismantleUtt
                 foreach (var (label, fieldType, value) in originalRoot)
@@ -157,20 +654,58 @@ namespace HolocronToolset.NET.Editors
                 case GFFFieldType.Struct: targetStruct.SetStruct(label, sourceStruct.GetStruct(label)); break;
                 case GFFFieldType.List: targetStruct.SetList(label, sourceStruct.GetList(label)); break;
                 default:
-                    // Log or handle unsupported types
                     break;
             }
         }
 
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utt.py:242-244
+        // Original: def new(self):
         public override void New()
         {
             base.New();
-            _utt = new UTT();
+            LoadUTT(new UTT());
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utt.py:252-255
+        // Original: def generate_tag(self):
+        private void GenerateTag()
+        {
+            if (_resrefEdit != null && string.IsNullOrEmpty(_resrefEdit.Text))
+            {
+                GenerateResref();
+            }
+            if (_tagEdit != null && _resrefEdit != null)
+            {
+                _tagEdit.Text = _resrefEdit.Text;
+            }
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utt.py:257-261
+        // Original: def generate_resref(self):
+        private void GenerateResref()
+        {
+            if (_resrefEdit != null)
+            {
+                if (!string.IsNullOrEmpty(_resname))
+                {
+                    _resrefEdit.Text = _resname;
+                }
+                else
+                {
+                    _resrefEdit.Text = "m00xx_trg_000";
+                }
+            }
         }
 
         public override void SaveAs()
         {
             Save();
         }
+
+        // Public properties for testing
+        public LocalizedStringEdit NameEdit => _nameEdit;
+        public TextBox TagEdit => _tagEdit;
+        public TextBox ResrefEdit => _resrefEdit;
+        public UTT Utt => _utt;
     }
 }
