@@ -138,7 +138,7 @@ namespace HolocronToolset.NET.Tests.Editors
                 }
 
                 // Matching PyKotor implementation: Use first UTE resource
-                var uteResource = uteResources[0];
+                CSharpKOTOR.Installation.ResourceResult uteResource = uteResources[0];
                 var resourceResult = installation.Resource(uteResource.ResName, uteResource.ResType);
                 if (resourceResult == null || resourceResult.Data == null || resourceResult.Data.Length == 0)
                 {
@@ -164,7 +164,7 @@ namespace HolocronToolset.NET.Tests.Editors
                 data.Length.Should().BeGreaterThan(0);
 
                 // Matching PyKotor implementation: Verify we can read it back
-                var gff = CSharpKOTOR.Formats.GFF.GFF.FromBytes(data);
+                CSharpKOTOR.Formats.GFF.GFF gff = CSharpKOTOR.Formats.GFF.GFF.FromBytes(data);
                 gff.Should().NotBeNull();
             }
             else
@@ -187,7 +187,7 @@ namespace HolocronToolset.NET.Tests.Editors
                 data.Length.Should().BeGreaterThan(0);
 
                 // Matching PyKotor implementation: Verify we can read it back
-                var gff = CSharpKOTOR.Formats.GFF.GFF.FromBytes(data);
+                CSharpKOTOR.Formats.GFF.GFF gff = CSharpKOTOR.Formats.GFF.GFF.FromBytes(data);
                 gff.Should().NotBeNull();
             }
         }

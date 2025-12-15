@@ -126,42 +126,47 @@ namespace Odyssey.MonoGame.PostProcessing
                 ? _graphicsDevice.GetRenderTargets()[0].RenderTarget as RenderTarget2D
                 : null;
 
-            // Bloom processing pipeline:
-            // 1. Extract bright areas (threshold pass) - pixels above threshold
-            // 2. Blur the bright areas (multiple passes) - separable Gaussian blur
-            // 3. Combine with original image - additive blending
-            // Full implementation would execute these passes with appropriate shaders
-
-            // Step 1: Bright pass extraction
-            _graphicsDevice.SetRenderTarget(_brightPassTarget);
-            _graphicsDevice.Clear(Microsoft.Xna.Framework.Color.Black);
-            if (effect != null)
+            try
             {
-                // effect.Parameters["SourceTexture"].SetValue(hdrInput);
-                // effect.Parameters["Threshold"].SetValue(_threshold);
-                // Render full-screen quad with bright pass shader
-            }
+                // Bloom processing pipeline:
+                // 1. Extract bright areas (threshold pass) - pixels above threshold
+                // 2. Blur the bright areas (multiple passes) - separable Gaussian blur
+                // 3. Combine with original image - additive blending
+                // Full implementation would execute these passes with appropriate shaders
 
-            // Step 2: Multi-pass blur (separable Gaussian)
-            RenderTarget2D blurSource = _brightPassTarget;
-            for (int i = 0; i < _blurPasses; i++)
-            {
-                _graphicsDevice.SetRenderTarget(_blurTargets[i]);
+                // Step 1: Bright pass extraction
+                _graphicsDevice.SetRenderTarget(_brightPassTarget);
+                _graphicsDevice.Clear(Microsoft.Xna.Framework.Color.Black);
                 if (effect != null)
                 {
-                    // effect.Parameters["SourceTexture"].SetValue(blurSource);
-                    // effect.Parameters["BlurDirection"].SetValue(i % 2 == 0 ? Vector2.UnitX : Vector2.UnitY);
-                    // effect.Parameters["BlurRadius"].SetValue(_intensity);
-                    // Render full-screen quad with blur shader
+                    // effect.Parameters["SourceTexture"].SetValue(hdrInput);
+                    // effect.Parameters["Threshold"].SetValue(_threshold);
+                    // Render full-screen quad with bright pass shader
                 }
-                blurSource = _blurTargets[i];
+
+                // Step 2: Multi-pass blur (separable Gaussian)
+                RenderTarget2D blurSource = _brightPassTarget;
+                for (int i = 0; i < _blurPasses; i++)
+                {
+                    _graphicsDevice.SetRenderTarget(_blurTargets[i]);
+                    if (effect != null)
+                    {
+                        // effect.Parameters["SourceTexture"].SetValue(blurSource);
+                        // effect.Parameters["BlurDirection"].SetValue(i % 2 == 0 ? Vector2.UnitX : Vector2.UnitY);
+                        // effect.Parameters["BlurRadius"].SetValue(_intensity);
+                        // Render full-screen quad with blur shader
+                    }
+                    blurSource = _blurTargets[i];
+                }
+
+                // Step 3: Combine with original (would be done in final compositing pass)
+                // For now, return the final blurred result as framework
             }
-
-            // Step 3: Combine with original (would be done in final compositing pass)
-            // For now, return the final blurred result as framework
-
-            // Restore previous render target
-            _graphicsDevice.SetRenderTarget(previousTarget);
+            finally
+            {
+                // Always restore previous render target
+                _graphicsDevice.SetRenderTarget(previousTarget);
+            }
 
             return _blurTargets[_blurPasses - 1] ?? hdrInput;
         }

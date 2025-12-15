@@ -71,17 +71,10 @@ namespace HolocronToolset.NET.Editors
             {
                 _lip = new LIP();
             }
+            // Ensure LIP length matches duration (matching Python behavior)
+            _lip.Length = _duration;
             ResourceType lipType = _restype ?? ResourceType.LIP;
-            byte[] data;
-            try
-            {
-                data = LIPAuto.BytesLip(_lip, lipType);
-            }
-            catch
-            {
-                // If LIP is empty or invalid, return empty data (matching Python behavior for empty LIPs)
-                data = new byte[0];
-            }
+            byte[] data = LIPAuto.BytesLip(_lip, lipType);
             return Tuple.Create(data, new byte[0]);
         }
 
@@ -104,7 +97,29 @@ namespace HolocronToolset.NET.Editors
         public float Duration
         {
             get => _duration;
-            set => _duration = value;
+            set
+            {
+                _duration = value;
+                if (_lip != null)
+                {
+                    _lip.Length = value;
+                }
+            }
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/lip/lip_editor.py:312-326
+        // Original: def add_keyframe(self):
+        // Helper method for tests to add keyframes
+        public void AddKeyframe(float time, LIPShape shape)
+        {
+            if (_lip == null)
+            {
+                _lip = new LIP();
+                _lip.Length = _duration;
+            }
+            _lip.Add(time, shape);
+            // Note: In Python, lip.length is set to duration when creating, not based on max keyframe time
+            // The duration property is separate from the max keyframe time
         }
     }
 }

@@ -29,7 +29,7 @@ namespace Odyssey.Kotor.Profiles
         /// <exception cref="NotSupportedException">Thrown when the game type is not supported.</exception>
         public static IGameProfile CreateProfile(GameType gameType)
         {
-            if (_profileFactories.TryGetValue(gameType, out var factory))
+            if (_profileFactories.TryGetValue(gameType, out Func<IGameProfile> factory))
             {
                 return factory();
             }
@@ -41,7 +41,7 @@ namespace Odyssey.Kotor.Profiles
         /// </summary>
         public static IEnumerable<IGameProfile> GetAllProfiles()
         {
-            foreach (var factory in _profileFactories.Values)
+            foreach (Func<IGameProfile> factory in _profileFactories.Values)
             {
                 yield return factory();
             }

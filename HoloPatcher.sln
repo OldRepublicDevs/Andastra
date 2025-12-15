@@ -29,7 +29,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Odyssey.Scripting", "src\Od
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Odyssey.Kotor", "src\OdysseyRuntime\Odyssey.Kotor\Odyssey.Kotor.csproj", "{827FE34C-1C5F-4F6E-8D68-917689C4EBA5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Odyssey.Stride", "src\OdysseyRuntime\Odyssey.Stride\Odyssey.Stride.csproj", "{432FF7BA-B171-49EC-BF32-7190BF9F2325}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Odyssey.MonoGame", "src\OdysseyRuntime\Odyssey.MonoGame\Odyssey.MonoGame.csproj", "{432FF7BA-B171-49EC-BF32-7190BF9F2325}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Odyssey.Game", "src\OdysseyRuntime\Odyssey.Game\Odyssey.Game.csproj", "{463A33EC-7903-447E-B2CC-992FD84722F3}"
 EndProject

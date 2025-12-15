@@ -224,19 +224,25 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
 
                 // Special case: If entry JSR targets last RETN, check if there's a JSR at position 0
                 // that might be the actual main entry point (common in some compiler outputs)
+                // CRITICAL: Only use this if JSR at 0 targets a position AFTER SAVEBP, otherwise it's just
+                // part of globals initialization (like in asd.nss where JSR 0->2 is globals, not main)
                 if (entryJsrTargetIsLastRetn2 && instructions.Count > 0 &&
                     instructions[0].InsType == NCSInstructionType.JSR && instructions[0].Jump != null)
                 {
                     try
                     {
                         int jsr0Target = ncs.GetInstructionIndex(instructions[0].Jump);
-                        // If JSR at 0 targets something after position 0 and before the entry stub,
-                        // it might be the main function (even if it's <= 20, as globals initialization
-                        // might be shorter in some files)
-                        if (jsr0Target > 0 && jsr0Target < entryStubEnd)
+                        // FIXED: Only consider this as alternative main start if it's AFTER SAVEBP
+                        // If it's before SAVEBP, it's part of globals initialization, not main
+                        // Main function should be empty in that case (entry JSR targets last RETN)
+                        if (jsr0Target > savebpIndex && jsr0Target < entryStubEnd)
                         {
                             alternativeMainStart = jsr0Target;
-                            JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Found alternative main start at {alternativeMainStart} (JSR at 0 targets {jsr0Target}, entry JSR targets last RETN)");
+                            JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Found alternative main start at {alternativeMainStart} (JSR at 0 targets {jsr0Target}, entry JSR targets last RETN, target is after SAVEBP)");
+                        }
+                        else if (jsr0Target <= savebpIndex)
+                        {
+                            JavaSystem.@out.Println($"DEBUG NcsToAstConverter: JSR at 0 targets {jsr0Target} which is before/at SAVEBP ({savebpIndex}) - this is globals initialization, not main function");
                         }
                     }
                     catch (Exception)
@@ -256,13 +262,20 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
                     mainStart = alternativeMainStart;
                     JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Using alternative mainStart {alternativeMainStart} (JSR at 0 target, entry JSR targets last RETN)");
                 }
+                else if (entryJsrTargetIsLastRetn2 && entryJsrTarget >= 0 && entryJsrTarget >= entryStubEnd)
+                {
+                    // FIXED: If entry JSR targets last RETN and it's after entry stub, use entryJsrTarget as mainStart
+                    // This handles cases like asd.nss where main is just a single RETN at the end
+                    mainStart = entryJsrTarget;
+                    JavaSystem.@out.Println($"DEBUG NcsToAstConverter: entryJsrTarget {entryJsrTarget} is last RETN and after entry stub, using it as mainStart (empty main function)");
+                }
                 else
                 {
-                    // entryJsrTarget is invalid, points to globals, or points to last RETN - use entryStubEnd
+                    // entryJsrTarget is invalid, points to globals, or points to last RETN before entry stub - use entryStubEnd
                     mainStart = entryStubEnd;
                     if (entryJsrTargetIsLastRetn)
                     {
-                        JavaSystem.@out.Println($"DEBUG NcsToAstConverter: entryJsrTarget {entryJsrTarget} points to last RETN, using entryStubEnd {entryStubEnd} as mainStart");
+                        JavaSystem.@out.Println($"DEBUG NcsToAstConverter: entryJsrTarget {entryJsrTarget} points to last RETN before entry stub, using entryStubEnd {entryStubEnd} as mainStart");
                     }
                     else
                     {
@@ -364,11 +377,26 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
                 else
                 {
                     // Main start is after globals - create normal globals subroutine
-                    ASubroutine globalsSub = ConvertInstructionRangeToSubroutine(ncs, instructions, 0, savebpIndex + 1, 0);
+                    // Globals subroutine ends at SAVEBP+1 (includes SAVEBP and entry stub up to but not including main)
+                    // For files like asd.nss where main is at the last RETN, globals includes everything up to entry stub end
+                    int globalsSubEnd = savebpIndex + 1;
+                    // If entry stub exists, extend globals to include it (but not main)
+                    int entryStubCheck = globalsSubEnd;
+                    if (instructions.Count > entryStubCheck + 1 &&
+                        instructions[entryStubCheck].InsType == NCSInstructionType.JSR &&
+                        (instructions[entryStubCheck + 1].InsType == NCSInstructionType.RETN ||
+                         instructions[entryStubCheck + 1].InsType == NCSInstructionType.RESTOREBP))
+                    {
+                        // Entry stub exists - extend globals to include SAVEBP + entry stub pattern
+                        // But NOT the cleanup code after entry stub (MOVSP+RETN before main)
+                        globalsSubEnd = entryStubCheck + 2; // SAVEBP + JSR + RETN/RESTOREBP
+                        JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Extended globals to include entry stub, globalsSubEnd={globalsSubEnd}");
+                    }
+                    ASubroutine globalsSub = ConvertInstructionRangeToSubroutine(ncs, instructions, 0, globalsSubEnd, 0);
                     if (globalsSub != null)
                     {
                         program.GetSubroutine().Add(globalsSub);
-                        JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Created globals subroutine (range 0-{savebpIndex + 1})");
+                        JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Created globals subroutine (range 0-{globalsSubEnd})");
                     }
                 }
             }

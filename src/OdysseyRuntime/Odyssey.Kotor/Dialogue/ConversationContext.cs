@@ -24,9 +24,9 @@ namespace Odyssey.Kotor.Dialogue
             Owner = owner ?? throw new ArgumentNullException("owner");
             PC = pc ?? throw new ArgumentNullException("pc");
             World = world ?? throw new ArgumentNullException("world");
-            
+
             _participants = new Dictionary<string, IEntity>(StringComparer.OrdinalIgnoreCase);
-            
+
             // Register owner and PC by their tags
             if (!string.IsNullOrEmpty(owner.Tag))
             {
@@ -93,12 +93,12 @@ namespace Odyssey.Kotor.Dialogue
             // Try to find in world by tag
             if (World != null)
             {
-                var module = World.CurrentModule;
+                IModule module = World.CurrentModule;
                 if (module != null)
                 {
-                    foreach (var area in module.Areas)
+                    foreach (IArea area in module.Areas)
                     {
-                        var found = area.GetObjectByTag(tag);
+                        IEntity found = area.GetObjectByTag(tag);
                         if (found != null)
                         {
                             // Cache for future lookups

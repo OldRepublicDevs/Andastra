@@ -49,7 +49,7 @@ namespace Odyssey.Content.ResourceProviders
             {
                 ct.ThrowIfCancellationRequested();
 
-                var result = _installation.Resources.LookupResource(
+                CSharpKOTOR.Installation.ResourceResult result = _installation.Resources.LookupResource(
                     id.ResName,
                     id.ResType,
                     null,
@@ -77,7 +77,7 @@ namespace Odyssey.Content.ResourceProviders
             {
                 ct.ThrowIfCancellationRequested();
 
-                var result = _installation.Resources.LookupResource(
+                CSharpKOTOR.Installation.ResourceResult result = _installation.Resources.LookupResource(
                     id.ResName,
                     id.ResType,
                     null,
@@ -101,7 +101,7 @@ namespace Odyssey.Content.ResourceProviders
                     ? order.Select(ConvertSearchLocation).Where(l => l.HasValue).Select(l => l.Value).ToArray()
                     : null;
 
-                var results = _installation.Resources.LocateResource(
+                List<CSharpKOTOR.Resources.LocationResult> results = _installation.Resources.LocateResource(
                     id.ResName,
                     id.ResType,
                     kotorOrder,
@@ -109,7 +109,7 @@ namespace Odyssey.Content.ResourceProviders
                 );
 
                 var converted = new List<Odyssey.Content.Interfaces.LocationResult>();
-                foreach (var r in results)
+                foreach (CSharpKOTOR.Resources.LocationResult r in results)
                 {
                     converted.Add(new Odyssey.Content.Interfaces.LocationResult
                     {
@@ -137,7 +137,7 @@ namespace Odyssey.Content.ResourceProviders
             {
                 ct.ThrowIfCancellationRequested();
 
-                var result = _installation.Resources.LookupResource(
+                CSharpKOTOR.Installation.ResourceResult result = _installation.Resources.LookupResource(
                     id.ResName,
                     id.ResType,
                     null,

@@ -471,7 +471,7 @@ namespace HoloPatcher.UI
             Dictionary<Game, List<string>> defaultPaths = GetDefaultPaths();
 
             // Check each default path for existence
-            foreach (var kvp in defaultPaths)
+            foreach (KeyValuePair<Game, List<string>> kvp in defaultPaths)
             {
                 Game game = kvp.Key;
                 foreach (string path in kvp.Value)

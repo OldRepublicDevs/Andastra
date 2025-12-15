@@ -107,7 +107,7 @@ namespace HolocronToolset.NET.Tests.Windows
             // Manually set active installation and enable tabs to mimic a successful load
             window.Installations[_installation.Name] = _installation;
             // Use reflection or internal method to set _active
-            var activeField = typeof(MainWindow).GetField("_active", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            System.Reflection.FieldInfo activeField = typeof(MainWindow).GetField("_active", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
             activeField?.SetValue(window, _installation);
 
             if (window.Ui.ResourceTabs != null)
@@ -142,7 +142,7 @@ namespace HolocronToolset.NET.Tests.Windows
             window.Ui.ActionNewDLG?.IsEnabled.Should().BeFalse();
 
             // Set installation
-            var activeField = typeof(MainWindow).GetField("_active", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            System.Reflection.FieldInfo activeField = typeof(MainWindow).GetField("_active", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
             activeField?.SetValue(window, _installation);
             window.UpdateMenus();
 
@@ -167,7 +167,7 @@ namespace HolocronToolset.NET.Tests.Windows
             window.Show();
 
             // Set installation to enable tabs
-            var activeField = typeof(MainWindow).GetField("_active", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            System.Reflection.FieldInfo activeField = typeof(MainWindow).GetField("_active", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
             activeField?.SetValue(window, _installation);
             if (window.Ui.ResourceTabs != null)
             {
@@ -203,7 +203,7 @@ namespace HolocronToolset.NET.Tests.Windows
 
             var window = new MainWindow();
             window.Show();
-            var activeField = typeof(MainWindow).GetField("_active", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            System.Reflection.FieldInfo activeField = typeof(MainWindow).GetField("_active", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
             activeField?.SetValue(window, _installation);
 
             // Mock some modules
@@ -519,7 +519,7 @@ namespace HolocronToolset.NET.Tests.Windows
             var window = new MainWindow();
             window.Show();
 
-            var activeField = typeof(MainWindow).GetField("_active", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            System.Reflection.FieldInfo activeField = typeof(MainWindow).GetField("_active", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
             activeField?.SetValue(window, _installation);
             window.UpdateMenus();
 
@@ -556,7 +556,7 @@ namespace HolocronToolset.NET.Tests.Windows
 
             var window = new MainWindow();
             window.Show();
-            var activeField = typeof(MainWindow).GetField("_active", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            System.Reflection.FieldInfo activeField = typeof(MainWindow).GetField("_active", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
             activeField?.SetValue(window, _installation);
 
             // Should not crash
@@ -591,7 +591,7 @@ namespace HolocronToolset.NET.Tests.Windows
 
             var window = new MainWindow();
             window.Show();
-            var activeField = typeof(MainWindow).GetField("_active", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            System.Reflection.FieldInfo activeField = typeof(MainWindow).GetField("_active", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
             activeField?.SetValue(window, _installation);
 
             // Should not crash
@@ -626,7 +626,7 @@ namespace HolocronToolset.NET.Tests.Windows
 
             var window = new MainWindow();
             window.Show();
-            var activeField = typeof(MainWindow).GetField("_active", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            System.Reflection.FieldInfo activeField = typeof(MainWindow).GetField("_active", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
             activeField?.SetValue(window, _installation);
 
             // Should not crash
@@ -647,7 +647,7 @@ namespace HolocronToolset.NET.Tests.Windows
 
             var window = new MainWindow();
             window.Show();
-            var activeField = typeof(MainWindow).GetField("_active", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            System.Reflection.FieldInfo activeField = typeof(MainWindow).GetField("_active", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
             activeField?.SetValue(window, _installation);
 
             // Should not crash
@@ -668,7 +668,7 @@ namespace HolocronToolset.NET.Tests.Windows
 
             var window = new MainWindow();
             window.Show();
-            var activeField = typeof(MainWindow).GetField("_active", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            System.Reflection.FieldInfo activeField = typeof(MainWindow).GetField("_active", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
             activeField?.SetValue(window, _installation);
 
             // Should not crash
@@ -689,7 +689,7 @@ namespace HolocronToolset.NET.Tests.Windows
 
             var window = new MainWindow();
             window.Show();
-            var activeField = typeof(MainWindow).GetField("_active", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            System.Reflection.FieldInfo activeField = typeof(MainWindow).GetField("_active", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
             activeField?.SetValue(window, _installation);
 
             // Get a real module file from the installation if available
@@ -724,7 +724,7 @@ namespace HolocronToolset.NET.Tests.Windows
 
             var window = new MainWindow();
             window.Show();
-            var activeField = typeof(MainWindow).GetField("_active", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            System.Reflection.FieldInfo activeField = typeof(MainWindow).GetField("_active", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
             activeField?.SetValue(window, _installation);
 
             // Should return early without crashing
@@ -746,7 +746,7 @@ namespace HolocronToolset.NET.Tests.Windows
 
             var window = new MainWindow();
             window.Show();
-            var activeField = typeof(MainWindow).GetField("_active", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            System.Reflection.FieldInfo activeField = typeof(MainWindow).GetField("_active", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
             activeField?.SetValue(window, _installation);
 
             // Should not crash
@@ -767,7 +767,7 @@ namespace HolocronToolset.NET.Tests.Windows
 
             var window = new MainWindow();
             window.Show();
-            var activeField = typeof(MainWindow).GetField("_active", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            System.Reflection.FieldInfo activeField = typeof(MainWindow).GetField("_active", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
             activeField?.SetValue(window, _installation);
 
             // Should not crash
@@ -788,7 +788,7 @@ namespace HolocronToolset.NET.Tests.Windows
 
             var window = new MainWindow();
             window.Show();
-            var activeField = typeof(MainWindow).GetField("_active", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            System.Reflection.FieldInfo activeField = typeof(MainWindow).GetField("_active", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
             activeField?.SetValue(window, _installation);
 
             // Should not crash
@@ -809,7 +809,7 @@ namespace HolocronToolset.NET.Tests.Windows
 
             var window = new MainWindow();
             window.Show();
-            var activeField = typeof(MainWindow).GetField("_active", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            System.Reflection.FieldInfo activeField = typeof(MainWindow).GetField("_active", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
             activeField?.SetValue(window, _installation);
 
             // Should not crash

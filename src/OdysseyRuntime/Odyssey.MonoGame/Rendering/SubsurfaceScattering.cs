@@ -101,36 +101,46 @@ namespace Odyssey.MonoGame.Rendering
             RenderTarget2D previousTarget = _graphicsDevice.GetRenderTargets().Length > 0
                 ? _graphicsDevice.GetRenderTargets()[0].RenderTarget as RenderTarget2D
                 : null;
-            _graphicsDevice.SetRenderTarget(_scatteringTarget);
-            _graphicsDevice.Clear(Microsoft.Xna.Framework.Color.Black);
 
-            // Apply separable Gaussian blur for subsurface scattering
-            // Full implementation would:
-            // 1. Extract subsurface scattering mask from material IDs in normal buffer
-            // 2. Apply separable Gaussian blur horizontally
-            // 3. Apply separable Gaussian blur vertically
-            // 4. Blend result with original color buffer
-            // For now, this provides the framework and resource management
-            
-            if (effect != null && depthBuffer != null && normalBuffer != null)
+            try
             {
-                // effect.Parameters["ColorTexture"].SetValue(colorBuffer);
-                // effect.Parameters["DepthTexture"].SetValue(depthBuffer);
-                // effect.Parameters["NormalTexture"].SetValue(normalBuffer);
-                // effect.Parameters["ScatteringRadius"].SetValue(_scatteringRadius);
-                // effect.Parameters["ScatteringStrength"].SetValue(_scatteringStrength);
-                // Render full-screen quad here with subsurface scattering shader
-            }
+                _graphicsDevice.SetRenderTarget(_scatteringTarget);
+                _graphicsDevice.Clear(Microsoft.Xna.Framework.Color.Black);
 
-            // Restore previous render target
-            _graphicsDevice.SetRenderTarget(previousTarget);
+                // Apply separable Gaussian blur for subsurface scattering
+                // Full implementation would:
+                // 1. Extract subsurface scattering mask from material IDs in normal buffer
+                // 2. Apply separable Gaussian blur horizontally
+                // 3. Apply separable Gaussian blur vertically
+                // 4. Blend result with original color buffer
+                // For now, this provides the framework and resource management
+                
+                if (effect != null && depthBuffer != null && normalBuffer != null)
+                {
+                    // effect.Parameters["ColorTexture"].SetValue(colorBuffer);
+                    // effect.Parameters["DepthTexture"].SetValue(depthBuffer);
+                    // effect.Parameters["NormalTexture"].SetValue(normalBuffer);
+                    // effect.Parameters["ScatteringRadius"].SetValue(_scatteringRadius);
+                    // effect.Parameters["ScatteringStrength"].SetValue(_scatteringStrength);
+                    // Render full-screen quad here with subsurface scattering shader
+                }
+            }
+            finally
+            {
+                // Always restore previous render target
+                _graphicsDevice.SetRenderTarget(previousTarget);
+            }
 
             return _scatteringTarget;
         }
 
+        /// <summary>
+        /// Disposes of all resources used by this subsurface scattering system.
+        /// </summary>
         public void Dispose()
         {
             _scatteringTarget?.Dispose();
+            _scatteringTarget = null;
         }
     }
 }

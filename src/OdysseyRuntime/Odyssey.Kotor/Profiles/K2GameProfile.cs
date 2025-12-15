@@ -16,43 +16,43 @@ namespace Odyssey.Kotor.Profiles
     {
         private readonly K2ResourceConfig _resourceConfig;
         private readonly K2TableConfig _tableConfig;
-        
+
         public K2GameProfile()
         {
             _resourceConfig = new K2ResourceConfig();
             _tableConfig = new K2TableConfig();
         }
-        
+
         public Odyssey.Content.Interfaces.GameType GameType
         {
             get { return Odyssey.Content.Interfaces.GameType.K2; }
         }
-        
+
         public string Name
         {
             get { return "Star Wars: Knights of the Old Republic II - The Sith Lords"; }
         }
-        
+
         public EngineFamily EngineFamily
         {
             get { return EngineFamily.Odyssey; }
         }
-        
+
         public IEngineApi CreateEngineApi()
         {
             return new K2EngineApi();
         }
-        
+
         public IResourceConfig ResourceConfig
         {
             get { return _resourceConfig; }
         }
-        
+
         public ITableConfig TableConfig
         {
             get { return _tableConfig; }
         }
-        
+
         public bool SupportsFeature(GameFeature feature)
         {
             switch (feature)
@@ -68,7 +68,7 @@ namespace Odyssey.Kotor.Profiles
                 case GameFeature.CraftingSystem:
                 case GameFeature.MiniGames:
                     return true;
-                    
+
                 // TSL-specific features
                 case GameFeature.InfluenceSystem:
                 case GameFeature.PrestigeClasses:
@@ -77,25 +77,25 @@ namespace Odyssey.Kotor.Profiles
                 case GameFeature.LabStation:
                 case GameFeature.ItemBreakdown:
                     return true;
-                    
+
                 // K1-only features
                 case GameFeature.PazaakDen:
                     return false;
-                    
+
                 default:
                     return false;
             }
         }
-        
+
         #region K2ResourceConfig
-        
+
         private class K2ResourceConfig : IResourceConfig
         {
             public string ChitinKeyFile
             {
                 get { return "chitin.key"; }
             }
-            
+
             public IReadOnlyList<string> TexturePackFiles
             {
                 get
@@ -107,56 +107,56 @@ namespace Odyssey.Kotor.Profiles
                     };
                 }
             }
-            
+
             public string DialogTlkFile
             {
                 get { return "dialog.tlk"; }
             }
-            
+
             public string ModulesDirectory
             {
                 get { return "modules"; }
             }
-            
+
             public string OverrideDirectory
             {
                 get { return "override"; }
             }
-            
+
             public string SavesDirectory
             {
                 get { return "saves"; }
             }
-            
+
             public IReadOnlyList<string> LipSyncPaths
             {
                 get { return new[] { "lips" }; }
             }
-            
+
             public IReadOnlyList<string> StreamMusicPaths
             {
                 get { return new[] { "streammusic" }; }
             }
-            
+
             public IReadOnlyList<string> StreamSoundPaths
             {
                 get { return new[] { "streamsounds" }; }
             }
-            
+
             public IReadOnlyList<string> StreamVoicePaths
             {
                 get { return new[] { "streamvoice", "streamwaves/vo" }; }
             }
         }
-        
+
         #endregion
-        
+
         #region K2TableConfig
-        
+
         private class K2TableConfig : ITableConfig
         {
             private readonly Dictionary<string, string[]> _tables;
-            
+
             public K2TableConfig()
             {
                 _tables = new Dictionary<string, string[]>(StringComparer.OrdinalIgnoreCase)
@@ -168,12 +168,12 @@ namespace Odyssey.Kotor.Profiles
                     { "feats", new[] { "label", "name", "description", "icon", "minattackbonus", "minstr", "mindex", "mincon", "minint", "minwis", "mincha", "minspelllvl", "prereqfeat1", "prereqfeat2", "allclassescanuse", "category" } },
                     { "skills", new[] { "label", "name", "description", "icon", "keyability", "armorcheckpenalty", "trainedonly", "untrained" } },
                     { "spells", new[] { "label", "name", "spelldesc", "iconresref", "school", "range", "vs", "impactscript", "conjontime", "itemcastsound", "usertype", "forcehostile" } },
-                    
+
                     // Combat and gameplay tables
                     { "weapontypes", new[] { "label", "damageflags", "preferredatk", "dieroll", "numdie" } },
                     { "damageflags", new[] { "label", "damagecap" } },
                     { "ranges", new[] { "label", "primary", "secondary" } },
-                    
+
                     // TSL-specific tables
                     { "influence", new[] { "label", "npcindex", "basevalue", "minvalue", "maxvalue" } },
                     { "combatfeat", new[] { "label", "prereq1", "prereq2", "forcepoints", "icon", "name", "description" } },
@@ -181,33 +181,33 @@ namespace Odyssey.Kotor.Profiles
                     { "upgrade", new[] { "label", "slot", "type", "cost", "item" } },
                     { "itemcreate", new[] { "label", "template", "cost", "category" } },
                     { "iprp_abilities", new[] { "label", "name", "costvalue", "costtable" } },
-                    
+
                     // Dialog and journal tables
                     { "dialog", new[] { "label", "listenerid", "speakerid", "text", "vo_resref", "script_listener", "script_speaker", "emotion", "facialanimation" } },
                     { "journal", new[] { "label", "tag", "name", "priority", "comment" } },
                     { "portraits", new[] { "label", "baseresref", "sex", "race" } },
-                    
+
                     // Area and module tables
                     { "modulesave", new[] { "label", "area", "moduleid", "name" } },
                     { "loadhints", new[] { "label", "hint", "gameversion" } },
                     { "placeables", new[] { "label", "modelname", "lightcolor", "soundapptype" } },
                     { "soundset", new[] { "label", "resref" } },
-                    
+
                     // Visual effect tables
                     { "visualeffects", new[] { "label", "progfx_impact", "type_fd", "model", "soundimpact", "progfx_duration", "progfx_emitter" } },
                     { "videofx", new[] { "label", "resref", "stretch" } },
-                    
+
                     // Creature AI tables
                     { "creaturespeed", new[] { "label", "walkrate", "runrate" } },
                     { "racialtypes", new[] { "label", "name", "description", "playable", "appearance", "str", "dex", "con", "int", "wis", "cha" } },
                     { "phenotypes", new[] { "label", "name" } },
-                    
+
                     // Party member tables (TSL specific)
                     { "partymapt", new[] { "label", "name", "portrait", "baseresref", "localstring", "voiceid" } },
                     { "partytable", new[] { "label", "npc", "resref", "canselect" } }
                 };
             }
-            
+
             public IReadOnlyList<string> RequiredTables
             {
                 get
@@ -234,7 +234,7 @@ namespace Odyssey.Kotor.Profiles
                     };
                 }
             }
-            
+
             public IReadOnlyList<string> GetRelevantColumns(string tableName)
             {
                 if (_tables.TryGetValue(tableName, out string[] columns))
@@ -243,7 +243,7 @@ namespace Odyssey.Kotor.Profiles
                 }
                 return new string[0];
             }
-            
+
             public IReadOnlyDictionary<string, string> AppearanceColumns
             {
                 get
@@ -251,7 +251,7 @@ namespace Odyssey.Kotor.Profiles
                     var dict = new Dictionary<string, string>();
                     if (_tables.TryGetValue("appearance", out string[] columns))
                     {
-                        foreach (var col in columns)
+                        foreach (string col in columns)
                         {
                             dict[col] = col;
                         }
@@ -259,7 +259,7 @@ namespace Odyssey.Kotor.Profiles
                     return dict;
                 }
             }
-            
+
             public IReadOnlyDictionary<string, string> BaseItemsColumns
             {
                 get
@@ -267,7 +267,7 @@ namespace Odyssey.Kotor.Profiles
                     var dict = new Dictionary<string, string>();
                     if (_tables.TryGetValue("baseitems", out string[] columns))
                     {
-                        foreach (var col in columns)
+                        foreach (string col in columns)
                         {
                             dict[col] = col;
                         }
@@ -276,7 +276,7 @@ namespace Odyssey.Kotor.Profiles
                 }
             }
         }
-        
+
         #endregion
     }
 }

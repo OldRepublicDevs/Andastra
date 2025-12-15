@@ -989,7 +989,7 @@ namespace HoloPatcher.UI.ViewModels
 
         private async Task ShowErrorAsync(string title, string message)
         {
-            var box = MessageBoxManager.GetMessageBoxStandard(
+            MsBox.Avalonia.Base.IMsBox<ButtonResult> box = MessageBoxManager.GetMessageBoxStandard(
                 title,
                 message,
                 ButtonEnum.Ok,

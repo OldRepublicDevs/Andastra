@@ -83,7 +83,7 @@ namespace Odyssey.Core.Templates
             entity.TemplateResRef = ResRef;
 
             // Apply position
-            var transform = entity.GetComponent<Interfaces.Components.ITransformComponent>();
+            Interfaces.Components.ITransformComponent transform = entity.GetComponent<Interfaces.Components.ITransformComponent>();
             if (transform != null)
             {
                 transform.Position = position;
@@ -91,7 +91,7 @@ namespace Odyssey.Core.Templates
             }
 
             // Apply trigger-specific components
-            var trigger = entity.GetComponent<Interfaces.Components.ITriggerComponent>();
+            Interfaces.Components.ITriggerComponent trigger = entity.GetComponent<Interfaces.Components.ITriggerComponent>();
             if (trigger != null)
             {
                 trigger.TriggerType = TriggerType;
@@ -102,7 +102,7 @@ namespace Odyssey.Core.Templates
             }
 
             // Apply script hooks
-            var scripts = entity.GetComponent<Interfaces.Components.IScriptHooksComponent>();
+            Interfaces.Components.IScriptHooksComponent scripts = entity.GetComponent<Interfaces.Components.IScriptHooksComponent>();
             if (scripts != null)
             {
                 if (!string.IsNullOrEmpty(OnEnter))

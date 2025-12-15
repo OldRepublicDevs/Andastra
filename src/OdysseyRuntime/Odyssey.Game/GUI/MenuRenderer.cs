@@ -155,7 +155,7 @@ namespace Odyssey.Game.GUI
             Console.WriteLine($"[MenuRenderer] Buttons initialized:");
             for (int i = 0; i < _menuButtons.Length; i++)
             {
-                var btn = _menuButtons[i];
+                MenuButton btn = _menuButtons[i];
                 Console.WriteLine($"  Button {i} ({btn.Label}): X={btn.Rect.X}, Y={btn.Rect.Y}, W={btn.Rect.Width}, H={btn.Rect.Height}");
             }
         }
@@ -233,7 +233,7 @@ namespace Odyssey.Game.GUI
                 bool clicked = false;
                 for (int i = 0; i < _menuButtons.Length; i++)
                 {
-                    var button = _menuButtons[i];
+                    MenuButton button = _menuButtons[i];
                     bool contains = button.Rect.Contains(mousePos);
                     Console.WriteLine($"[MenuRenderer] Button {i} ({button.Label}) rect: X={button.Rect.X}, Y={button.Rect.Y}, W={button.Rect.Width}, H={button.Rect.Height}, Contains={contains}");
 
@@ -328,8 +328,8 @@ namespace Odyssey.Game.GUI
             // Draw menu buttons
             for (int i = 0; i < _menuButtons.Length; i++)
             {
-                var button = _menuButtons[i];
-                var color = (i == _selectedIndex) ? button.SelectedColor : button.NormalColor;
+                MenuButton button = _menuButtons[i];
+                Color color = (i == _selectedIndex) ? button.SelectedColor : button.NormalColor;
 
                 // Button background
                 _spriteBatch.Draw(_whiteTexture, button.Rect, color);

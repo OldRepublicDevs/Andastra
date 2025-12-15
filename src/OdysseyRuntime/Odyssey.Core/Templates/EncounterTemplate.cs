@@ -77,7 +77,7 @@ namespace Odyssey.Core.Templates
             entity.TemplateResRef = ResRef;
 
             // Apply position
-            var transform = entity.GetComponent<Interfaces.Components.ITransformComponent>();
+            Interfaces.Components.ITransformComponent transform = entity.GetComponent<Interfaces.Components.ITransformComponent>();
             if (transform != null)
             {
                 transform.Position = position;
@@ -85,7 +85,7 @@ namespace Odyssey.Core.Templates
             }
 
             // Apply script hooks
-            var scripts = entity.GetComponent<Interfaces.Components.IScriptHooksComponent>();
+            Interfaces.Components.IScriptHooksComponent scripts = entity.GetComponent<Interfaces.Components.IScriptHooksComponent>();
             if (scripts != null)
             {
                 if (!string.IsNullOrEmpty(OnEntered))

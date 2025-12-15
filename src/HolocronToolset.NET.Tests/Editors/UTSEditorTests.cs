@@ -108,7 +108,7 @@ namespace HolocronToolset.NET.Tests.Editors
             data.Length.Should().BeGreaterThan(0);
 
             // Verify we can read it back
-            var gff = CSharpKOTOR.Formats.GFF.GFF.FromBytes(data);
+            GFF gff = CSharpKOTOR.Formats.GFF.GFF.FromBytes(data);
             gff.Should().NotBeNull();
         }
 
@@ -193,7 +193,7 @@ namespace HolocronToolset.NET.Tests.Editors
 
             // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_uts_editor.py:1069
             // Original: new_gff = read_gff(data)
-            var newGff = CSharpKOTOR.Formats.GFF.GFF.FromBytes(newData);
+            GFF newGff = CSharpKOTOR.Formats.GFF.GFF.FromBytes(newData);
 
             // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_uts_editor.py:1076
             // Original: diff = original_gff.compare(new_gff, log_func, ignore_default_changes=True)

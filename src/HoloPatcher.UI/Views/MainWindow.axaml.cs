@@ -41,7 +41,7 @@ namespace HoloPatcher.UI.Views
             // Center window on screen - matches Python's set_window behavior
             if (Screens.Primary != null)
             {
-                var screen = Screens.Primary.WorkingArea;
+                Avalonia.PixelRect screen = Screens.Primary.WorkingArea;
                 int x = (int)((screen.Width - Width) / 2);
                 int y = (int)((screen.Height - Height) / 2);
                 Position = new Avalonia.PixelPoint(x, y);
@@ -61,7 +61,7 @@ namespace HoloPatcher.UI.Views
                     return;
                 }
 
-                var messageBox = MsBox.Avalonia.MessageBoxManager.GetMessageBoxStandard(
+                MsBox.Avalonia.Base.IMsBox<MsBox.Avalonia.Enums.ButtonResult> messageBox = MsBox.Avalonia.MessageBoxManager.GetMessageBoxStandard(
                     "ALPHA VERSION WARNING",
                     $"⚠️ WARNING: This is an ALPHA version ({Core.VersionLabel}) of HoloPatcher.NET\n\n" +
                     "This version is for testing and demonstration purposes only.\n" +
@@ -212,10 +212,10 @@ namespace HoloPatcher.UI.Views
             // Additional check: ensure FlowDocument is initialized
             try
             {
-                var flowDocProperty = _rtfRichTextBox.GetType().GetProperty("FlowDoc");
+                PropertyInfo flowDocProperty = _rtfRichTextBox.GetType().GetProperty("FlowDoc");
                 if (flowDocProperty != null)
                 {
-                    var flowDoc = flowDocProperty.GetValue(_rtfRichTextBox);
+                    object flowDoc = flowDocProperty.GetValue(_rtfRichTextBox);
                     if (flowDoc is null)
                     {
                         Console.WriteLine("[RTF] WARNING: FlowDoc is null, waiting for initialization...");
@@ -252,8 +252,8 @@ namespace HoloPatcher.UI.Views
                 if (rtfDomParserType is null)
                 {
                     // Try loading from the executing directory
-                    var baseDir = AppDomain.CurrentDomain.BaseDirectory;
-                    var assemblyPath = Path.Combine(baseDir, "RtfDomParserAv.dll");
+                    string baseDir = AppDomain.CurrentDomain.BaseDirectory;
+                    string assemblyPath = Path.Combine(baseDir, "RtfDomParserAv.dll");
                     if (File.Exists(assemblyPath))
                     {
                         Console.WriteLine($"[RTF] Found RtfDomParserAv.dll at {assemblyPath}, loading...");
@@ -263,19 +263,19 @@ namespace HoloPatcher.UI.Views
                     else
                     {
                         // Try to find it in the NuGet packages cache
-                        var userProfile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-                        var nugetPackages = Path.Combine(userProfile, ".nuget", "packages");
+                        string userProfile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+                        string nugetPackages = Path.Combine(userProfile, ".nuget", "packages");
 
                         // Search for RtfDomParserAv in NuGet cache
                         if (Directory.Exists(nugetPackages))
                         {
-                            var rtfDomDirs = Directory.GetDirectories(nugetPackages, "*RtfDomParserAv*", SearchOption.TopDirectoryOnly);
-                            foreach (var dir in rtfDomDirs)
+                            string[] rtfDomDirs = Directory.GetDirectories(nugetPackages, "*RtfDomParserAv*", SearchOption.TopDirectoryOnly);
+                            foreach (string dir in rtfDomDirs)
                             {
-                                var libDirs = Directory.GetDirectories(dir, "lib", SearchOption.AllDirectories);
-                                foreach (var libDir in libDirs)
+                                string[] libDirs = Directory.GetDirectories(dir, "lib", SearchOption.AllDirectories);
+                                foreach (string libDir in libDirs)
                                 {
-                                    var dllPath = Path.Combine(libDir, "RtfDomParserAv.dll");
+                                    string dllPath = Path.Combine(libDir, "RtfDomParserAv.dll");
                                     if (File.Exists(dllPath))
                                     {
                                         Console.WriteLine($"[RTF] Found RtfDomParserAv.dll in NuGet cache at {dllPath}, loading...");
@@ -317,7 +317,7 @@ namespace HoloPatcher.UI.Views
                     using (var memoryStream = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(rtfContent)))
                     {
                         // Try to find a LoadRtf method that accepts Stream
-                        var loadRtfStreamMethod = _rtfRichTextBox.GetType().GetMethod("LoadRtf", new[] { typeof(Stream) });
+                        MethodInfo loadRtfStreamMethod = _rtfRichTextBox.GetType().GetMethod("LoadRtf", new[] { typeof(Stream) });
                         if (loadRtfStreamMethod != null)
                         {
                             Console.WriteLine("[RTF] Found LoadRtf(Stream) method, attempting to use it");
@@ -327,7 +327,7 @@ namespace HoloPatcher.UI.Views
                         }
 
                         // Try alternative: Load from TextReader
-                        var loadRtfTextReaderMethod = _rtfRichTextBox.GetType().GetMethod("LoadRtf", new[] { typeof(TextReader) });
+                        MethodInfo loadRtfTextReaderMethod = _rtfRichTextBox.GetType().GetMethod("LoadRtf", new[] { typeof(TextReader) });
                         if (loadRtfTextReaderMethod != null)
                         {
                             Console.WriteLine("[RTF] Found LoadRtf(TextReader) method, attempting to use it");
@@ -356,10 +356,10 @@ namespace HoloPatcher.UI.Views
                 try
                 {
                     // Ensure FlowDocument is initialized first
-                    var flowDocProperty = _rtfRichTextBox.GetType().GetProperty("FlowDoc");
+                    PropertyInfo flowDocProperty = _rtfRichTextBox.GetType().GetProperty("FlowDoc");
                     if (flowDocProperty != null)
                     {
-                        var flowDoc = flowDocProperty.GetValue(_rtfRichTextBox);
+                        object flowDoc = flowDocProperty.GetValue(_rtfRichTextBox);
                         if (flowDoc is null)
                         {
                             Console.WriteLine("[RTF] WARNING: FlowDoc is null, cannot load RTF");
@@ -368,10 +368,10 @@ namespace HoloPatcher.UI.Views
                         Console.WriteLine("[RTF] FlowDoc is available, proceeding with LoadRtf");
 
                         // Ensure the document has been properly initialized by checking if Selection exists
-                        var selectionProperty = flowDoc.GetType().GetProperty("Selection");
+                        PropertyInfo selectionProperty = flowDoc.GetType().GetProperty("Selection");
                         if (selectionProperty != null)
                         {
-                            var selection = selectionProperty.GetValue(flowDoc);
+                            object selection = selectionProperty.GetValue(flowDoc);
                             if (selection is null)
                             {
                                 Console.WriteLine("[RTF] WARNING: Selection is null, waiting a bit longer...");
@@ -385,22 +385,22 @@ namespace HoloPatcher.UI.Views
                     // Use LoadRtf(string) which takes RTF content directly
                     // The LoadRtf method will call InitializeDocument() which may throw if Selection is not initialized
                     // We need to ensure the FlowDocument has a valid Selection object before loading
-                    var flowDocProperty2 = _rtfRichTextBox.GetType().GetProperty("FlowDoc");
+                    PropertyInfo flowDocProperty2 = _rtfRichTextBox.GetType().GetProperty("FlowDoc");
                     if (flowDocProperty2 != null)
                     {
-                        var flowDoc = flowDocProperty2.GetValue(_rtfRichTextBox);
+                        object flowDoc = flowDocProperty2.GetValue(_rtfRichTextBox);
                         if (flowDoc != null)
                         {
                             // Ensure Selection is initialized - check if it exists and is not null
-                            var selectionProperty = flowDoc.GetType().GetProperty("Selection");
+                            PropertyInfo selectionProperty = flowDoc.GetType().GetProperty("Selection");
                             if (selectionProperty != null)
                             {
-                                var selection = selectionProperty.GetValue(flowDoc);
+                                object selection = selectionProperty.GetValue(flowDoc);
                                 if (selection is null)
                                 {
                                     Console.WriteLine("[RTF] WARNING: Selection is null, attempting to create new document first...");
                                     // Try to call NewDocument() to initialize the document properly
-                                    var newDocMethod = flowDoc.GetType().GetMethod("NewDocument");
+                                    MethodInfo newDocMethod = flowDoc.GetType().GetMethod("NewDocument");
                                     if (newDocMethod != null)
                                     {
                                         newDocMethod.Invoke(flowDoc, null);
@@ -412,14 +412,14 @@ namespace HoloPatcher.UI.Views
                     }
 
                     // Set minimal padding on FlowDocument for better fit in narrow window
-                    var flowDocPropertyForPadding = _rtfRichTextBox.GetType().GetProperty("FlowDoc");
+                    PropertyInfo flowDocPropertyForPadding = _rtfRichTextBox.GetType().GetProperty("FlowDoc");
                     if (flowDocPropertyForPadding != null)
                     {
-                        var flowDoc = flowDocPropertyForPadding.GetValue(_rtfRichTextBox);
+                        object flowDoc = flowDocPropertyForPadding.GetValue(_rtfRichTextBox);
                         if (flowDoc != null)
                         {
                             // Set minimal padding (left, top, right, bottom) - default is 0 but RTF might set it
-                            var pagePaddingProperty = flowDoc.GetType().GetProperty("PagePadding");
+                            PropertyInfo pagePaddingProperty = flowDoc.GetType().GetProperty("PagePadding");
                             if (pagePaddingProperty != null)
                             {
                                 // Use minimal padding: 2 pixels on all sides for better fit
@@ -437,10 +437,10 @@ namespace HoloPatcher.UI.Views
                     // After loading, ensure padding is still minimal (RTF might override it)
                     if (flowDocPropertyForPadding != null)
                     {
-                        var flowDoc = flowDocPropertyForPadding.GetValue(_rtfRichTextBox);
+                        object flowDoc = flowDocPropertyForPadding.GetValue(_rtfRichTextBox);
                         if (flowDoc != null)
                         {
-                            var pagePaddingProperty = flowDoc.GetType().GetProperty("PagePadding");
+                            PropertyInfo pagePaddingProperty = flowDoc.GetType().GetProperty("PagePadding");
                             if (pagePaddingProperty != null)
                             {
                                 var minimalPadding = new Avalonia.Thickness(2);
@@ -475,13 +475,13 @@ namespace HoloPatcher.UI.Views
                 Console.WriteLine($"[RTF] Temp file written, size: {new FileInfo(tempFile).Length} bytes");
 
                 // Set minimal padding on FlowDocument before loading
-                var flowDocPropertyForPadding3 = _rtfRichTextBox.GetType().GetProperty("FlowDoc");
+                PropertyInfo flowDocPropertyForPadding3 = _rtfRichTextBox.GetType().GetProperty("FlowDoc");
                 if (flowDocPropertyForPadding3 != null)
                 {
-                    var flowDoc = flowDocPropertyForPadding3.GetValue(_rtfRichTextBox);
+                    object flowDoc = flowDocPropertyForPadding3.GetValue(_rtfRichTextBox);
                     if (flowDoc != null)
                     {
-                        var pagePaddingProperty = flowDoc.GetType().GetProperty("PagePadding");
+                        PropertyInfo pagePaddingProperty = flowDoc.GetType().GetProperty("PagePadding");
                         if (pagePaddingProperty != null)
                         {
                             var minimalPadding = new Avalonia.Thickness(2);
@@ -497,10 +497,10 @@ namespace HoloPatcher.UI.Views
                 // Ensure padding stays minimal after loading
                 if (flowDocPropertyForPadding3 != null)
                 {
-                    var flowDoc = flowDocPropertyForPadding3.GetValue(_rtfRichTextBox);
+                    object flowDoc = flowDocPropertyForPadding3.GetValue(_rtfRichTextBox);
                     if (flowDoc != null)
                     {
-                        var pagePaddingProperty = flowDoc.GetType().GetProperty("PagePadding");
+                        PropertyInfo pagePaddingProperty = flowDoc.GetType().GetProperty("PagePadding");
                         if (pagePaddingProperty != null)
                         {
                             var minimalPadding = new Avalonia.Thickness(2);
@@ -510,10 +510,10 @@ namespace HoloPatcher.UI.Views
                 }
 
                 // Verify content was loaded
-                var flowDocPropertyCheck = _rtfRichTextBox.GetType().GetProperty("FlowDoc");
+                PropertyInfo flowDocPropertyCheck = _rtfRichTextBox.GetType().GetProperty("FlowDoc");
                 if (flowDocPropertyCheck != null)
                 {
-                    var flowDoc = flowDocPropertyCheck.GetValue(_rtfRichTextBox);
+                    object flowDoc = flowDocPropertyCheck.GetValue(_rtfRichTextBox);
                     Console.WriteLine($"[RTF] FlowDoc property value: {(flowDoc != null ? "not null" : "null")}");
                 }
 
@@ -596,7 +596,7 @@ namespace HoloPatcher.UI.Views
             // ERROR: #DC143C (Firebrick) with bold font
             // CRITICAL: #FFFFFF (White) on background #8B0000 (Dark Red) with bold font
 
-            foreach (var entry in viewModel.GetLogEntries())
+            foreach (FormattedLogEntry entry in viewModel.GetLogEntries())
             {
                 var run = new Run(entry.Message + Environment.NewLine);
 

@@ -88,7 +88,7 @@ namespace Odyssey.Core.Party
                 return null;
             }
 
-            foreach (var item in _items)
+            foreach (InventoryItem item in _items)
             {
                 if (string.Equals(item.ResRef, resRef, StringComparison.OrdinalIgnoreCase))
                 {
@@ -109,7 +109,7 @@ namespace Odyssey.Core.Party
                 return null;
             }
 
-            foreach (var item in _items)
+            foreach (InventoryItem item in _items)
             {
                 if (string.Equals(item.Tag, tag, StringComparison.OrdinalIgnoreCase))
                 {
@@ -131,7 +131,7 @@ namespace Odyssey.Core.Party
             }
 
             int count = 0;
-            foreach (var item in _items)
+            foreach (InventoryItem item in _items)
             {
                 if (string.Equals(item.ResRef, resRef, StringComparison.OrdinalIgnoreCase))
                 {
@@ -168,7 +168,7 @@ namespace Odyssey.Core.Party
             }
 
             // Check if stackable and already exists
-            var existing = FindByResRef(resRef);
+            InventoryItem existing = FindByResRef(resRef);
             if (existing != null && existing.IsStackable)
             {
                 int oldStack = existing.StackSize;
@@ -252,7 +252,7 @@ namespace Odyssey.Core.Party
 
             for (int i = 0; i < _items.Count; i++)
             {
-                var item = _items[i];
+                InventoryItem item = _items[i];
                 if (!string.Equals(item.ResRef, resRef, StringComparison.OrdinalIgnoreCase))
                 {
                     continue;
@@ -332,7 +332,7 @@ namespace Odyssey.Core.Party
                 return false;
             }
 
-            var item = _items[index];
+            InventoryItem item = _items[index];
             _items.RemoveAt(index);
 
             if (OnItemRemoved != null)

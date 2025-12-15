@@ -25,6 +25,9 @@ indent_style = space
 # IDE0040: Add accessibility modifiers
 dotnet_diagnostic.IDE0040.severity = none
 
+# IDE0044: Add readonly modifier
+dotnet_diagnostic.IDE0044.severity = none
+
 [*.{props,targets,ruleset,config,nuspec,resx,vsixmanifest,vsct}]
 indent_size = 2
 indent_style = space
@@ -306,10 +309,10 @@ dotnet_style_qualification_for_field = false:warning
 
 # IDE0010: Add missing cases
 # IDE0011: Add braces
-csharp_prefer_braces = true:warning
+csharp_prefer_braces = false:warning
 
 # IDE0016: Use 'throw' expression
-csharp_style_throw_expression = true:suggestion
+csharp_style_throw_expression = false:suggestion
 
 # IDE0017: Simplify object initialization
 dotnet_style_object_initializer = true:suggestion
@@ -383,10 +386,10 @@ dotnet_style_prefer_is_null_check_over_reference_equality_method = true:warning
 
 # IDE0042: Deconstruct variable declaration
 csharp_style_deconstruct_variable_declaration = true:suggestion
-
+dotnet_style_readonly_field = false:warning
 # IDE0043: Format string contains invalid placeholder
 # IDE0044: Add readonly modifier
-dotnet_style_readonly_field = true:warning
+dotnet_style_readonly_field = true:none
 
 # IDE0045: Convert to conditional expression
 dotnet_style_prefer_conditional_expression_over_assignment = true:silent
@@ -621,6 +624,16 @@ dotnet_diagnostic.S3878.severity = none
 #### Project-Specific Analyzer Rules ####
 
 # KOTORModSync.GUI: Disable all warnings
+
+# CA1510: Use ArgumentNullException throw helper
+dotnet_diagnostic.CA1510.severity = none
+
+# IDE0016: Use 'throw' expression
+dotnet_diagnostic.IDE0016.severity = none
+
+# IDE0011: Add braces
+dotnet_diagnostic.IDE0011.severity = none
+
 [KOTORModSync.GUI/**/*.cs]
 dotnet_diagnostic.S1481.severity = none
 dotnet_diagnostic.S4144.severity = none

@@ -143,9 +143,13 @@ namespace Odyssey.MonoGame.Rendering
             return _contactShadowTarget;
         }
 
+        /// <summary>
+        /// Disposes of all resources used by this contact shadows system.
+        /// </summary>
         public void Dispose()
         {
             _contactShadowTarget?.Dispose();
+            _contactShadowTarget = null;
         }
     }
 }

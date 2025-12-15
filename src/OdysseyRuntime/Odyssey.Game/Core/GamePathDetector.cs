@@ -331,7 +331,7 @@ namespace Odyssey.Game.Core
 
                 foreach (string keyPath in registryKeys)
                 {
-                    using (var key = Registry.LocalMachine.OpenSubKey(keyPath))
+                    using (RegistryKey key = Registry.LocalMachine.OpenSubKey(keyPath))
                     {
                         if (key != null)
                         {
@@ -359,7 +359,7 @@ namespace Odyssey.Game.Core
             // Try to find Steam installation
             try
             {
-                using (var key = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Valve\Steam"))
+                using (RegistryKey key = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Valve\Steam"))
                 {
                     if (key != null)
                     {
@@ -367,7 +367,7 @@ namespace Odyssey.Game.Core
                     }
                 }
 
-                using (var key = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Wow6432Node\Valve\Steam"))
+                using (RegistryKey key = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Wow6432Node\Valve\Steam"))
                 {
                     if (key != null)
                     {

@@ -100,7 +100,7 @@ namespace HolocronToolset.NET.Tests.Widgets
 
             // Initialize and populate the sorter
             var sorter = new ERFSortFilterProxyModel();
-            foreach (var (resref, restype, size) in data)
+            foreach ((string resref, string restype, int size) in data)
             {
                 sorter.AddData(resref, restype, size);
             }
@@ -111,7 +111,7 @@ namespace HolocronToolset.NET.Tests.Widgets
             sorter.Sort(0, "ascending");
 
             // Test the sorting
-            var sortedData = sorter.GetData();
+            List<Tuple<string, string, int>> sortedData = sorter.GetData();
 
             var test1 = Tuple.Create("001ebo", "GIT", (int)(43.24 * 1024));
             var test2 = Tuple.Create("001ebo", "PTH", (int)(19.32 * 1024));

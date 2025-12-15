@@ -160,10 +160,10 @@ namespace HolocronToolset.NET.Tests.Editors
                 // Original: editor._save_info = save_info; editor._party_table = party_table; etc.
                 var editor = new SaveGameEditor(null, installation);
                 // Use reflection to set private fields (matching Python's direct assignment)
-                var saveInfoField = typeof(SaveGameEditor).GetField("_saveInfo", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-                var partyTableField = typeof(SaveGameEditor).GetField("_partyTable", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-                var globalVarsField = typeof(SaveGameEditor).GetField("_globalVars", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-                var nestedCapsuleField = typeof(SaveGameEditor).GetField("_nestedCapsule", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                FieldInfo saveInfoField = typeof(SaveGameEditor).GetField("_saveInfo", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                FieldInfo partyTableField = typeof(SaveGameEditor).GetField("_partyTable", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                FieldInfo globalVarsField = typeof(SaveGameEditor).GetField("_globalVars", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                FieldInfo nestedCapsuleField = typeof(SaveGameEditor).GetField("_nestedCapsule", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
 
                 saveInfoField?.SetValue(editor, loadedSaveInfo);
                 partyTableField?.SetValue(editor, loadedPartyTable);

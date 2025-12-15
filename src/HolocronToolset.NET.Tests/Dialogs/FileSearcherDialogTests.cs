@@ -414,7 +414,7 @@ namespace HolocronToolset.NET.Tests.Dialogs
             dialog.Show();
 
             // Test various text inputs
-            var testTexts = new[]
+            string[] testTexts = new[]
             {
                 "",
                 "simple",
@@ -427,7 +427,7 @@ namespace HolocronToolset.NET.Tests.Dialogs
                 "special!@#$%^&*()chars",
             };
 
-            foreach (var text in testTexts)
+            foreach (string text in testTexts)
             {
                 dialog.Ui.SearchTextEdit.Text = text;
                 dialog.Ui.SearchTextEdit.Text.Should().Be(text);
