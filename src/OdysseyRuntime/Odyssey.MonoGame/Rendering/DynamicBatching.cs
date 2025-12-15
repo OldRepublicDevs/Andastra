@@ -18,6 +18,15 @@ namespace Odyssey.MonoGame.Rendering
     /// - Vertex buffer management
     /// - Efficient draw call merging
     /// </summary>
+    /// <remarks>
+    /// Dynamic Batching System (Modern Enhancement):
+    /// - Based on swkotor2.exe rendering system architecture
+    /// - Original implementation: KOTOR rendered each model with individual draw calls
+    /// - Original engine: No automatic batching, each entity/model rendered separately
+    /// - This is a modernization feature: Dynamic batching reduces draw calls for better performance
+    /// - Original behavior: Every object = one draw call (or multiple for multi-material objects)
+    /// - Modern enhancement: Batches small objects together to reduce GPU overhead
+    /// </remarks>
     public class DynamicBatching : IDisposable
     {
         /// <summary>

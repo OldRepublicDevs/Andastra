@@ -16,6 +16,15 @@ namespace Odyssey.MonoGame.Rendering
     /// - Shader variant management
     /// - Hot reload support
     /// </summary>
+    /// <remarks>
+    /// Shader Cache System (Modern Enhancement):
+    /// - Based on swkotor2.exe rendering system architecture
+    /// - Original implementation: KOTOR used fixed-function DirectX 8/9 pipeline with minimal programmable shaders
+    /// - Original engine: Most rendering used fixed-function pipeline, shaders compiled at engine initialization
+    /// - This is a modernization feature: Original engine did not have runtime shader compilation/caching
+    /// - Original shaders: Pre-compiled HLSL/FX shaders embedded in engine, loaded from .fx files
+    /// - Modern enhancement: Runtime shader compilation with caching improves flexibility and development workflow
+    /// </remarks>
     public class ShaderCache
     {
         /// <summary>
@@ -51,7 +60,7 @@ namespace Odyssey.MonoGame.Rendering
         {
             if (graphicsDevice == null)
             {
-                throw new ArgumentNullException("graphicsDevice");
+                throw new ArgumentNullException(nameof(graphicsDevice));
             }
 
             _graphicsDevice = graphicsDevice;
@@ -75,8 +84,7 @@ namespace Odyssey.MonoGame.Rendering
 
             lock (_lock)
             {
-                ShaderEntry entry;
-                if (_cache.TryGetValue(shaderName, out entry))
+                if (_cache.TryGetValue(shaderName, out ShaderEntry entry))
                 {
                     // Check if shader source changed
                     if (entry.ShaderSource == shaderSource)
