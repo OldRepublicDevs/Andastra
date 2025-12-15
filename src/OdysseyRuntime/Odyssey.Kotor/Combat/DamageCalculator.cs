@@ -44,9 +44,26 @@ namespace Odyssey.Kotor.Combat
     /// KOTOR D20 Combat System:
     /// - Based on swkotor2.exe combat system
     /// - Located via string references: "DamageValue" @ 0x007bf890, "DamageList" @ 0x007bf89c
-    /// - "ScriptDamaged" @ 0x007bee70, "OnDamaged" @ 0x007c1a80
+    /// - "ScriptDamaged" @ 0x007bee70, "OnDamaged" @ 0x007c1a80, "OnDamage" @ 0x007cb410
     /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_DAMAGED" @ 0x007bcb14
     /// - Damage types: "DAM_HP" @ 0x007bf130, "DAM_STR" @ 0x007bf120 (ability damage)
+    /// - Damage fields: "DamageDie" @ 0x007c2d30, "DamageDice" @ 0x007c2d3c, "DamageFlags" @ 0x007c01a4
+    /// - "DamageMult" @ 0x007c3974, "DamageDebugText" @ 0x007bf82c
+    /// - Damage modifiers: "OnHandDamageMod" @ 0x007c2e40, "OffHandDamageMod" @ 0x007c2e18
+    /// - "FuryDamageBonus" @ 0x007c4150 (Jedi Guardian Fury form damage bonus)
+    /// - Damage display strings:
+    ///   - "Damage Roll: %d" @ 0x007c3d3c, "Damage Roll: %d (Critical x%d)" @ 0x007c3d4c
+    ///   - " + %d (Effect Damage Bonus)" @ 0x007c3cd8
+    ///   - " + %d (Effect Damage Bonus) (Critical x%d)" @ 0x007c3cf4
+    ///   - " + %d (Special Attack Damage Bonus)" @ 0x007c3b60
+    ///   - " + %d (Special Attack Damage Bonus) (Critical x%d)" @ 0x007c3b84
+    ///   - " + %d (Power/Improved Power Attack Damage Bonus)" @ 0x007c3c10
+    ///   - " + %d (Power/Improved Power Attack Damage Bonus) (Critical x%d)" @ 0x007c3c48
+    ///   - " + %d (Sneak Attack Damage)" @ 0x007c3d20
+    /// - Poison/ability damage trace: "POISONTRACE: Applying HP damage: %d\n" @ 0x007bf088
+    ///   - Similar traces for STR, DEX, CON, INT, WIS, CHR, FP damage
+    /// - Visual effects: "DamageHitVisual" @ 0x007c4dbc, "IPRP_DAMAGECOST" @ 0x007c4c38
+    /// - Script hooks: "k_def_damage01" @ 0x007c7eb0 (damage defense script example)
     /// - Original implementation: D20 attack/damage resolution with critical hits, resistances
     /// - Damage calculation functions in combat system handle d20 rolls, modifiers, criticals
     ///
