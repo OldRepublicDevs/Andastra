@@ -39,8 +39,16 @@ namespace Odyssey.Core.Combat
     /// KOTOR Combat System Overview:
     /// - Based on swkotor2.exe combat system
     /// - Located via string references: "CombatRoundData" @ 0x007bf6b4, "CombatInfo" @ 0x007c2e60
+    /// - Combat round class: "CSWSCombatRound" with timer management functions
+    /// - Error messages: "CSWSCombatRound::EndCombatRound - %x Combat Slave (%x) not found!" @ 0x007bfb80
+    /// - "CSWSCombatRound::IncrementTimer - %s Timer is negative at %d; Ending combat round and resetting" @ 0x007bfbc8
+    /// - "CSWSCombatRound::IncrementTimer - %s Master IS found (%x) and round has expired (%d %d); Resetting" @ 0x007bfc28
+    /// - "CSWSCombatRound::IncrementTimer - %s Master cannot be found and round has expired; Resetting" @ 0x007bfc90
+    /// - "CSWSCombatRound::DecrementPauseTimer - %s Master cannot be found expire the round; Resetting" @ 0x007bfcf0
     /// - Combat round functions: FUN_005226d0 @ 0x005226d0 (combat round management)
     /// - Original implementation: 3-second combat rounds with timer-based attack scheduling
+    /// - Round timer: Increments each frame, expires after RoundDuration (3.0 seconds)
+    /// - Master/Slave: Combat encounters have master entity that controls round timing
     /// - D20 attack roll + attack bonus vs defense
     /// - Critical hits on natural 20 (threatened), confirm with second roll
     /// - Damage = weapon damage + modifiers - damage reduction
