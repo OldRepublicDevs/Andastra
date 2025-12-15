@@ -24,6 +24,21 @@ namespace Odyssey.Scripting.Interfaces
     /// <summary>
     /// NWScript variable - a tagged union of all possible script value types.
     /// </summary>
+    /// <remarks>
+    /// Variable Type System:
+    /// - Based on swkotor2.exe NWScript variable type system
+    /// - Located via string references: Variable type handling in NCS VM stack operations
+    /// - Variable types: Void (0), Int (1), Float (2), String (3), Object (4), Vector (5), Location (6), Effect (7), Event (8), Talent (9), Action (10)
+    /// - Stack storage: Variables stored on NCS VM stack as type/value pairs (4-byte aligned)
+    /// - Type encoding: VariableType enum matches original engine's type encoding (0-10 range)
+    /// - Object references: Object type uses uint32 ObjectId (0x7F000000 = OBJECT_INVALID, 0x7F000001 = OBJECT_SELF)
+    /// - Vector storage: Vector type stores 3 floats (X, Y, Z) = 12 bytes on stack
+    /// - Location storage: Location type stored as complex object reference (off-stack, similar to strings)
+    /// - String storage: Strings stored in string pool with integer handles (off-stack storage)
+    /// - Stack alignment: All stack values are 4-byte aligned (vectors are 12 bytes, padded if needed)
+    /// - Type checking: Original engine validates variable types during stack operations and function calls
+    /// - Based on NCS VM variable type system in vendor/PyKotor/wiki/NCS-File-Format.md
+    /// </remarks>
     public struct Variable
     {
         public VariableType Type;
