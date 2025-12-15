@@ -641,6 +641,67 @@ namespace HolocronToolset.NET.Tests.Editors
             }
         }
 
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utt_editor.py:259-280
+        // Original: def test_utt_editor_manipulate_is_trap_checkbox(qtbot, installation: HTInstallation, test_files_dir: Path):
+        [Fact]
+        public void TestUttEditorManipulateIsTrapCheckbox()
+        {
+            string k2Path = Environment.GetEnvironmentVariable("K2_PATH");
+            if (string.IsNullOrEmpty(k2Path))
+            {
+                k2Path = @"C:\Program Files (x86)\Steam\steamapps\common\Knights of the Old Republic II";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k2Path) && System.IO.File.Exists(System.IO.Path.Combine(k2Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k2Path, "Test Installation", tsl: true);
+            }
+
+            if (installation == null)
+            {
+                return; // Skip if no installation available
+            }
+
+            string testFilesDir = System.IO.Path.Combine(
+                System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+
+            string uttFile = System.IO.Path.Combine(testFilesDir, "newtransition9.utt");
+            if (!System.IO.File.Exists(uttFile))
+            {
+                testFilesDir = System.IO.Path.Combine(
+                    System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                    "..", "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+                uttFile = System.IO.Path.Combine(testFilesDir, "newtransition9.utt");
+            }
+
+            if (!System.IO.File.Exists(uttFile))
+            {
+                return; // Skip if test file not available
+            }
+
+            var editor = new UTTEditor(null, installation);
+            byte[] originalData = System.IO.File.ReadAllBytes(uttFile);
+
+            editor.Load(uttFile, "newtransition9", ResourceType.UTT, originalData);
+
+            // Toggle checkbox
+            editor.IsTrapCheckbox.Should().NotBeNull("IsTrapCheckbox should be initialized");
+
+            editor.IsTrapCheckbox.IsChecked = true;
+            editor.IsTrapCheckbox.IsChecked.Should().BeTrue("Checkbox should be true after setting");
+            var (data1, _) = editor.Build();
+            var modifiedUtt1 = CSharpKOTOR.Resource.Generics.UTTAuto.ReadUtt(data1);
+            modifiedUtt1.IsTrap.Should().BeTrue("IsTrap should be true after setting checkbox to true");
+
+            editor.IsTrapCheckbox.IsChecked = false;
+            editor.IsTrapCheckbox.IsChecked.Should().BeFalse("Checkbox should be false after unchecking");
+            var (data2, _) = editor.Build();
+            var modifiedUtt2 = CSharpKOTOR.Resource.Generics.UTTAuto.ReadUtt(data2);
+            modifiedUtt2.IsTrap.Should().BeFalse("IsTrap should be false after setting checkbox to false");
+        }
+
         // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utt_editor.py:713-742
         // Original: def test_utt_editor_save_load_roundtrip_identity(qtbot, installation: HTInstallation, test_files_dir: Path):
         [Fact]
