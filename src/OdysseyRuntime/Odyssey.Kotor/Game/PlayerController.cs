@@ -351,13 +351,8 @@ namespace Odyssey.Kotor.Game
                     Random random = new Random();
                     int roll = random.Next(1, 21);
                     int securitySkill = 0;
-                    // TODO: Get Security skill from stats component
-                    // Security skill would be calculated from DEX modifier + ranks + misc modifiers
-                    if (playerStats != null)
-                    {
-                        // SKILL_SECURITY = 6
-                        securitySkill = stats.GetSkillRank(6);
-                    }
+                    // SKILL_SECURITY = 6
+                    securitySkill = playerStats.GetSkillRank(6);
                     int total = roll + securitySkill;
 
                     if (total >= doorComponent.LockDC)
@@ -402,9 +397,8 @@ namespace Odyssey.Kotor.Game
                 if (actionQueue != null)
                 {
                     actionQueue.Clear();
-                    // ActionUseObject doesn't exist yet - use ActionMoveToObject as placeholder
-                    // TODO: Implement ActionUseObject for placeable interaction
-                    actionQueue.Add(new ActionMoveToObject(placeable.ObjectId));
+                    // Use ActionUseObject to interact with placeable (moves to use point and triggers OnUsed script)
+                    actionQueue.Add(new ActionUseObject(placeable.ObjectId));
                 }
             }
             else
