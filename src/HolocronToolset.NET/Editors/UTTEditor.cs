@@ -531,11 +531,14 @@ namespace HolocronToolset.NET.Editors
                 _utt.TrapDetectable = _detectableCheckbox.IsChecked == true;
             }
             // Matching Python: utt.trap_detect_dc = self.ui.detectDcSpin.value()
-            // Use the public property to ensure we're reading from the same instance the test sets
-            // Match HighlightHeight pattern exactly - direct cast
-            if (DetectDcSpin != null)
+            // Try both public property and private field to ensure we get the value
+            if (_detectDcSpin != null && _detectDcSpin.Value.HasValue)
             {
-                _utt.TrapDetectDc = DetectDcSpin.Value.HasValue ? (int)Math.Round(DetectDcSpin.Value.Value) : 0;
+                _utt.TrapDetectDc = (int)Math.Round(_detectDcSpin.Value.Value);
+            }
+            else if (DetectDcSpin != null && DetectDcSpin.Value.HasValue)
+            {
+                _utt.TrapDetectDc = (int)Math.Round(DetectDcSpin.Value.Value);
             }
             // Matching Python: utt.trap_disarmable = self.ui.disarmableCheckbox.isChecked()
             if (_disarmableCheckbox != null)
@@ -543,8 +546,12 @@ namespace HolocronToolset.NET.Editors
                 _utt.TrapDisarmable = _disarmableCheckbox.IsChecked == true;
             }
             // Matching Python: utt.trap_disarm_dc = self.ui.disarmDcSpin.value()
-            // Use the public property to ensure we're reading from the same instance the test sets
-            if (DisarmDcSpin != null && DisarmDcSpin.Value.HasValue)
+            // Try both public property and private field to ensure we get the value
+            if (_disarmDcSpin != null && _disarmDcSpin.Value.HasValue)
+            {
+                _utt.TrapDisarmDc = (int)Math.Round(_disarmDcSpin.Value.Value);
+            }
+            else if (DisarmDcSpin != null && DisarmDcSpin.Value.HasValue)
             {
                 _utt.TrapDisarmDc = (int)Math.Round(DisarmDcSpin.Value.Value);
             }

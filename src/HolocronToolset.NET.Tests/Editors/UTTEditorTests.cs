@@ -789,15 +789,13 @@ namespace HolocronToolset.NET.Tests.Editors
             int[] testValues = { 0, 10, 20, 30, 40 };
             foreach (int val in testValues)
             {
-                var detectDcSpinField = typeof(UTTEditor).GetField("_detectDcSpin", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-                var detectDcSpin = detectDcSpinField?.GetValue(editor) as Avalonia.Controls.NumericUpDown;
-                detectDcSpin.Should().NotBeNull("DetectDcSpin should be initialized");
-                detectDcSpin.Value = val;
-                detectDcSpin.Value.Should().Be(val, "DetectDcSpin value should be set correctly");
+                editor.DetectDcSpin.Should().NotBeNull("DetectDcSpin should be initialized");
+                // Explicitly cast to decimal like HighlightHeight test does
+                editor.DetectDcSpin.Value = (decimal)val;
+                editor.DetectDcSpin.Value.Should().Be((decimal)val, "DetectDcSpin value should be set correctly");
                 
                 // Verify the value is still set right before Build()
-                detectDcSpin = detectDcSpinField?.GetValue(editor) as Avalonia.Controls.NumericUpDown;
-                detectDcSpin.Value.Should().Be(val, "DetectDcSpin value should still be set before Build()");
+                editor.DetectDcSpin.Value.Should().Be((decimal)val, "DetectDcSpin value should still be set before Build()");
 
                 // Save and verify
                 var (data, _) = editor.Build();
@@ -806,9 +804,8 @@ namespace HolocronToolset.NET.Tests.Editors
 
                 // Load back and verify
                 editor.Load(uttFile, "newtransition9", ResourceType.UTT, data);
-                detectDcSpin = detectDcSpinField?.GetValue(editor) as Avalonia.Controls.NumericUpDown;
-                detectDcSpin.Should().NotBeNull();
-                detectDcSpin.Value.Should().Be(val);
+                editor.DetectDcSpin.Should().NotBeNull();
+                editor.DetectDcSpin.Value.Should().Be((decimal)val);
             }
         }
 
