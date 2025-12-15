@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Numerics;
 using CSharpKOTOR.Resource.Generics;
 using CSharpKOTOR.Resources;
 using FluentAssertions;
@@ -332,6 +334,44 @@ namespace HolocronToolset.NET.Tests.Editors
 
             // Verify all nodes exist
             pth.Count.Should().Be(4);
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_pth_editor.py:257-272
+        // Original: def test_pth_editor_points_under_mouse(qtbot, installation: HTInstallation):
+        [Fact]
+        public void TestPthEditorPointsUnderMouse()
+        {
+            var editor = new PTHEditor(null, null);
+
+            editor.New();
+
+            // Add nodes
+            editor.AddNode(0.0f, 0.0f);
+            editor.AddNode(10.0f, 10.0f);
+
+            // Test points_under_mouse (returns list of Vector2)
+            var points = editor.PointsUnderMouse();
+
+            // Should return a list (may be empty if no points under mouse)
+            points.Should().NotBeNull();
+            points.Should().BeOfType<List<Vector2>>();
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_pth_editor.py:274-285
+        // Original: def test_pth_editor_selected_nodes(qtbot, installation: HTInstallation):
+        [Fact]
+        public void TestPthEditorSelectedNodes()
+        {
+            var editor = new PTHEditor(null, null);
+
+            editor.New();
+
+            // Test selected_nodes (returns list of Vector2)
+            var selected = editor.SelectedNodes();
+
+            // Should return a list (may be empty if no selection)
+            selected.Should().NotBeNull();
+            selected.Should().BeOfType<List<Vector2>>();
         }
     }
 }
