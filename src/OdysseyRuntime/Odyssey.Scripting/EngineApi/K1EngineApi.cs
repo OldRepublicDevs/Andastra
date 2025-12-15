@@ -59,6 +59,10 @@ namespace Odyssey.Scripting.EngineApi
         // Key: caller entity ID, Value: list of persistent objects and current index
         private readonly Dictionary<uint, PersistentObjectIteration> _persistentObjectIterations;
 
+        // Track last spell target for GetSpellTargetObject
+        // Key: caster entity ID, Value: target entity ID
+        private readonly Dictionary<uint, uint> _lastSpellTargets;
+
         public K1EngineApi()
         {
             _vm = new NcsVm();
@@ -66,6 +70,7 @@ namespace Odyssey.Scripting.EngineApi
             _areaObjectIterations = new Dictionary<uint, AreaObjectIteration>();
             _effectIterations = new Dictionary<uint, EffectIteration>();
             _persistentObjectIterations = new Dictionary<uint, PersistentObjectIteration>();
+            _lastSpellTargets = new Dictionary<uint, uint>();
         }
         
         private class FactionMemberIteration
@@ -2163,12 +2168,34 @@ namespace Odyssey.Scripting.EngineApi
 
         /// <summary>
         /// GetSpellTargetObject() - Returns the target of the last spell cast
+        /// Based on swkotor2.exe: Returns the target object ID of the last spell cast by the caller
         /// </summary>
         private Variable Func_GetSpellTargetObject(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
-            // This would need to track the last spell target in the action system
-            // For now, return invalid as spell casting is not fully implemented
-            // TODO: Track spell target when ActionCastSpellAtObject is executed
+            if (ctx.Caller == null)
+            {
+                return Variable.FromObject(ObjectInvalid);
+            }
+
+            // Retrieve last spell target for this caster
+            if (_lastSpellTargets.TryGetValue(ctx.Caller.ObjectId, out uint targetId))
+            {
+                // Verify target still exists and is valid
+                if (ctx.World != null)
+                {
+                    IEntity target = ctx.World.GetEntity(targetId);
+                    if (target != null && target.IsValid)
+                    {
+                        return Variable.FromObject(targetId);
+                    }
+                    else
+                    {
+                        // Target no longer exists, remove from tracking
+                        _lastSpellTargets.Remove(ctx.Caller.ObjectId);
+                    }
+                }
+            }
+
             return Variable.FromObject(ObjectInvalid);
         }
 
