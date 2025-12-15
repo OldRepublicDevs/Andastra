@@ -44,6 +44,7 @@ namespace Odyssey.MonoGame.Rendering
         /// <summary>
         /// Sets blend state (only if changed).
         /// </summary>
+        /// <param name="state">Blend state to set. Can be null to use default.</param>
         public void SetBlendState(BlendState state)
         {
             if (state != _currentBlendState)
@@ -60,6 +61,7 @@ namespace Odyssey.MonoGame.Rendering
         /// <summary>
         /// Sets depth stencil state (only if changed).
         /// </summary>
+        /// <param name="state">Depth stencil state to set. Can be null to use default.</param>
         public void SetDepthStencilState(DepthStencilState state)
         {
             if (state != _currentDepthStencilState)
@@ -92,8 +94,16 @@ namespace Odyssey.MonoGame.Rendering
         /// <summary>
         /// Sets sampler state (only if changed).
         /// </summary>
+        /// <param name="index">Sampler state index (0-15).</param>
+        /// <param name="state">Sampler state to set.</param>
+        /// <exception cref="ArgumentOutOfRangeException">Thrown if index is out of valid range (0-15).</exception>
         public void SetSamplerState(int index, SamplerState state)
         {
+            if (index < 0 || index > 15)
+            {
+                throw new ArgumentOutOfRangeException("index", "Sampler state index must be between 0 and 15.");
+            }
+
             if (state != _currentSamplerState)
             {
                 _graphicsDevice.SamplerStates[index] = state;

@@ -333,7 +333,7 @@ csharp_style_expression_bodied_methods = false:silent
 csharp_style_expression_bodied_operators = false:silent
 
 # IDE0023-IDE0024-IDE0025: Expression body for properties/indexers/accessors
-csharp_style_expression_bodied_properties = true:suggestion
+csharp_style_expression_bodied_properties = true:nonen
 csharp_style_expression_bodied_indexers = true:suggestion
 csharp_style_expression_bodied_accessors = true:suggestion
 
@@ -633,6 +633,9 @@ dotnet_diagnostic.IDE0016.severity = none
 
 # IDE0011: Add braces
 dotnet_diagnostic.IDE0011.severity = none
+
+# IDE0025: Use expression body for property
+dotnet_diagnostic.IDE0025.severity = none
 
 [KOTORModSync.GUI/**/*.cs]
 dotnet_diagnostic.S1481.severity = none

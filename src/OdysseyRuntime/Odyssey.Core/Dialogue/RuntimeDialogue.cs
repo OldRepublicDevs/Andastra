@@ -7,6 +7,17 @@ namespace Odyssey.Core.Dialogue
     /// Runtime representation of a DLG dialogue file.
     /// Contains the dialogue graph structure with entries, replies, and links.
     /// </summary>
+    /// <remarks>
+    /// Runtime Dialogue:
+    /// - Based on swkotor2.exe dialogue system
+    /// - Located via string references: Dialogue loading and traversal functions
+    /// - Original implementation: Runtime representation of DLG file structure for conversation execution
+    /// - DLG file format: GFF with "DLG " signature containing dialogue tree data
+    /// - Dialogue entries (NPC lines) and replies (player options) linked by indices
+    /// - Starter entries define conversation entry points
+    /// - Dialogue nodes contain text (StrRef), scripts, conditions, and voice-over data
+    /// - Based on DLG file format documentation in vendor/PyKotor/wiki/
+    /// </remarks>
     public class RuntimeDialogue
     {
         private readonly List<int> _starterIndices;
