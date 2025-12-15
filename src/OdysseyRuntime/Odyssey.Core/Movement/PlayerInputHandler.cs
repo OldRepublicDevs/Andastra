@@ -421,30 +421,32 @@ namespace Odyssey.Core.Movement
                 return false;
             }
 
-            // Check DoorComponent for conversation
-            // Based on swkotor2.exe door system
-            // Located via string references: "Conversation" @ door components
-            // Original implementation: Doors can have conversation scripts
-            Interfaces.Components.IDoorComponent door = entity.GetComponent<Interfaces.Components.IDoorComponent>();
-            if (door != null)
+            // Check entity data for Conversation (loaded from template by EntityFactory)
+            // Based on swkotor2.exe: Conversation field stored in UTC/UTD/UTP templates
+            // Located via string reference: "Conversation" @ 0x007c1abc
+            // UTC templates: ScriptDialogue field → stored as "Conversation" entity data
+            // UTD/UTP templates: Conversation field → stored as "Conversation" entity data
+            if (entity.HasData("Conversation"))
             {
-                // Doors with OnUsed scripts typically have conversations
-                // This is a simplified check - full implementation would check Conversation property
-                // For now, assume doors might have conversations
-                return true;
+                string conversation = entity.GetData<string>("Conversation", string.Empty);
+                if (!string.IsNullOrEmpty(conversation))
+                {
+                    return true;
+                }
             }
 
-            // Check PlaceableComponent for conversation
-            Interfaces.Components.IPlaceableComponent placeable = entity.GetComponent<Interfaces.Components.IPlaceableComponent>();
-            if (placeable != null)
+            // Also check ScriptDialogue entity data (for creatures)
+            if (entity.HasData("ScriptDialogue"))
             {
-                // Placeables with OnUsed scripts typically have conversations
-                // This is a simplified check - full implementation would check Conversation property
-                return true;
+                string scriptDialogue = entity.GetData<string>("ScriptDialogue", string.Empty);
+                if (!string.IsNullOrEmpty(scriptDialogue))
+                {
+                    return true;
+                }
             }
 
             // For creatures, assume they might have conversations (NPCs typically do)
-            // This is a fallback - ideally conversation would be stored in CreatureComponent
+            // This is a fallback - ideally conversation would be stored and checked from entity data
             return entity.ObjectType == Enums.ObjectType.Creature;
         }
 
