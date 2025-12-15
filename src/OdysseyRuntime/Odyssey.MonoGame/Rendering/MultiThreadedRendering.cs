@@ -22,7 +22,12 @@ namespace Odyssey.MonoGame.Rendering
     /// <remarks>
     /// Rendering System (Modern Enhancement):
     /// - Based on swkotor2.exe rendering system architecture
-    /// - Located via string references: Original KOTOR engine uses single-threaded rendering
+    /// - Located via string references: Windows thread API functions
+    /// - Thread management: CreateThread, GetCurrentThread, GetCurrentThreadId, ExitThread
+    /// - Thread control: SetThreadPriority, ResumeThread, SuspendThread, GetExitCodeThread
+    /// - Error messages:
+    ///   - "R6016\r\n- not enough space for thread data\r\n" @ 0x007d4498
+    ///   - "R6017\r\n- unexpected multithread lock error\r\n" @ 0x007d4468
     /// - Original implementation: KOTOR (2003-2004) used single-threaded DirectX 8/9 rendering pipeline
     /// - This is a modernization feature: Multi-threaded rendering was not present in original engine
     /// - Original engine: All rendering operations executed on main thread during frame update
