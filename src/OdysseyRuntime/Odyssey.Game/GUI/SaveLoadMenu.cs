@@ -33,7 +33,7 @@ namespace Odyssey.Game.GUI
         /// Updates save menu state and handles input.
         /// </summary>
         public static void UpdateSaveMenu(
-            GameTime gameTime,
+            Microsoft.Xna.Framework.GameTime gameTime,
             KeyboardState currentKeyboard,
             KeyboardState previousKeyboard,
             MouseState currentMouse,
