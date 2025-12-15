@@ -262,8 +262,27 @@ namespace Odyssey.Kotor.Systems
                 return false;
             }
 
-            // TODO: Line-of-sight check through walkmesh
-            // For now, simplified check (no obstacles)
+            // Line-of-sight check through walkmesh
+            // Based on swkotor2.exe perception system
+            // Located via string references: Line-of-sight checks in perception functions
+            // Original implementation: Uses walkmesh raycast to check if target is visible
+            if (_world.CurrentArea != null)
+            {
+                INavigationMesh navMesh = _world.CurrentArea.NavigationMesh;
+                if (navMesh != null)
+                {
+                    // Check line-of-sight from subject eye position to target eye position
+                    Vector3 subjectEye = subjectTransform.Position + Vector3.UnitY * 1.5f; // Approximate eye height
+                    Vector3 targetEye = targetTransform.Position + Vector3.UnitY * 1.5f;
+                    
+                    // Test if line-of-sight is blocked by walkmesh
+                    if (!navMesh.TestLineOfSight(subjectEye, targetEye))
+                    {
+                        return false; // Line-of-sight blocked
+                    }
+                }
+            }
+            
             return true;
         }
 
