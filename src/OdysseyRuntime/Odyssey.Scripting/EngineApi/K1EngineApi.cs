@@ -15,6 +15,7 @@ using Odyssey.Core.Combat;
 using Odyssey.Core.Enums;
 using Odyssey.Core.Interfaces;
 using Odyssey.Core.Interfaces.Components;
+using Odyssey.Kotor.Game;
 using Odyssey.Scripting.Interfaces;
 using Odyssey.Scripting.Types;
 using Odyssey.Scripting.VM;
@@ -1959,9 +1960,9 @@ namespace Odyssey.Scripting.EngineApi
         {
             if (ctx is VM.ExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
             {
-                if (services.GameSession != null)
+                if (services.GameSession is Odyssey.Kotor.Game.GameSession gameSession)
                 {
-                    return Variable.FromInt(services.GameSession.GetGameTimeSeconds());
+                    return Variable.FromInt(gameSession.GetGameTimeSeconds());
                 }
             }
             return Variable.FromInt(0);
@@ -1974,9 +1975,9 @@ namespace Odyssey.Scripting.EngineApi
         {
             if (ctx is VM.ExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
             {
-                if (services.GameSession != null)
+                if (services.GameSession is Odyssey.Kotor.Game.GameSession gameSession)
                 {
-                    return Variable.FromInt(services.GameSession.GetGameTimeMilliseconds());
+                    return Variable.FromInt(gameSession.GetGameTimeMilliseconds());
                 }
             }
             return Variable.FromInt(0);
@@ -5723,181 +5724,6 @@ namespace Odyssey.Scripting.EngineApi
             }
             
             return Variable.FromObject(ObjectInvalid);
-        }
-
-        #endregion
-
-        #region Spell Tracking Functions
-
-        /// <summary>
-        /// GetSpellId() - Returns the ID of the last spell cast by the caller
-        /// Based on swkotor2.exe: Tracks last spell ID cast by entity
-        /// </summary>
-        private Variable Func_GetSpellId(IReadOnlyList<Variable> args, IExecutionContext ctx)
-        {
-            if (ctx.Caller == null)
-            {
-                return Variable.FromInt(0);
-            }
-
-            // Get last spell ID for this caster
-            if (_lastSpellIds.TryGetValue(ctx.Caller.ObjectId, out int spellId))
-            {
-                return Variable.FromInt(spellId);
-            }
-
-            return Variable.FromInt(0);
-        }
-
-        /// <summary>
-        /// GetSpellTarget(object oCreature) - Returns the target of the last spell cast at oCreature
-        /// Based on swkotor2.exe: Returns target of last spell cast at the specified creature
-        /// </summary>
-        private Variable Func_GetSpellTarget(IReadOnlyList<Variable> args, IExecutionContext ctx)
-        {
-            uint creatureId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
-            IEntity creature = ResolveObject(creatureId, ctx);
-            
-            if (creature != null)
-            {
-                // Get last spell caster for this creature
-                if (_lastSpellCasters.TryGetValue(creature.ObjectId, out uint casterId))
-                {
-                    // Get the target of the spell cast by that caster
-                    if (_lastSpellTargets.TryGetValue(casterId, out uint targetId))
-                    {
-                        return Variable.FromObject(targetId);
-                    }
-                }
-            }
-
-            return Variable.FromObject(ObjectInvalid);
-        }
-
-        /// <summary>
-        /// GetSpellTargetLocation() - Returns the target location of the last spell cast by the caller
-        /// Based on swkotor2.exe: Returns location target of last spell cast
-        /// </summary>
-        private Variable Func_GetSpellTargetLocation(IReadOnlyList<Variable> args, IExecutionContext ctx)
-        {
-            if (ctx.Caller == null)
-            {
-                return Variable.FromLocation(null);
-            }
-
-            // Get last spell target location for this caster
-            if (_lastSpellTargetLocations.TryGetValue(ctx.Caller.ObjectId, out Location location))
-            {
-                return Variable.FromLocation(location);
-            }
-
-            return Variable.FromLocation(null);
-        }
-
-        /// <summary>
-        /// GetLastSpellCaster() - Returns the caster of the last spell that affected the caller
-        /// Based on swkotor2.exe: Tracks last spell caster for entity
-        /// </summary>
-        private Variable Func_GetLastSpellCaster(IReadOnlyList<Variable> args, IExecutionContext ctx)
-        {
-            if (ctx.Caller == null)
-            {
-                return Variable.FromObject(ObjectInvalid);
-            }
-
-            // Get last spell caster for this entity
-            if (_lastSpellCasters.TryGetValue(ctx.Caller.ObjectId, out uint casterId))
-            {
-                // Verify caster still exists
-                if (ctx.World != null)
-                {
-                    IEntity caster = ctx.World.GetEntity(casterId);
-                    if (caster != null && caster.IsValid)
-                    {
-                        return Variable.FromObject(casterId);
-                    }
-                    else
-                    {
-                        // Caster no longer exists, remove from tracking
-                        _lastSpellCasters.Remove(ctx.Caller.ObjectId);
-                    }
-                }
-            }
-
-            return Variable.FromObject(ObjectInvalid);
-        }
-
-        /// <summary>
-        /// GetLastSpell() - Returns the ID of the last spell that affected the caller
-        /// Based on swkotor2.exe: Returns spell ID of last spell that affected entity
-        /// </summary>
-        private Variable Func_GetLastSpell(IReadOnlyList<Variable> args, IExecutionContext ctx)
-        {
-            if (ctx.Caller == null)
-            {
-                return Variable.FromInt(0);
-            }
-
-            // Get last spell caster for this entity
-            if (_lastSpellCasters.TryGetValue(ctx.Caller.ObjectId, out uint casterId))
-            {
-                // Get the spell ID cast by that caster
-                if (_lastSpellIds.TryGetValue(casterId, out int spellId))
-                {
-                    return Variable.FromInt(spellId);
-                }
-            }
-
-            return Variable.FromInt(0);
-        }
-
-        /// <summary>
-        /// GetLastSpellHarmful() - Returns TRUE if the last spell that affected the caller was harmful
-        /// Based on swkotor2.exe: Checks if last spell was harmful (damage, negative effects)
-        /// </summary>
-        private Variable Func_GetLastSpellHarmful(IReadOnlyList<Variable> args, IExecutionContext ctx)
-        {
-            if (ctx.Caller == null)
-            {
-                return Variable.FromInt(0);
-            }
-
-            // Get last spell ID
-            int spellId = Func_GetLastSpell(args, ctx).AsInt();
-            if (spellId == 0)
-            {
-                return Variable.FromInt(0);
-            }
-
-            // Check if spell is harmful (damage spells, negative effects)
-            // This would typically check spells.2da for spell type
-            // For now, assume damage spells (ID < 1000) are harmful
-            // TODO: Integrate with spells.2da for accurate spell type checking
-            bool isHarmful = spellId < 1000; // Placeholder logic
-            
-            return Variable.FromInt(isHarmful ? 1 : 0);
-        }
-
-        #endregion
-
-        #region Event and Script Variable Functions
-
-        /// <summary>
-        /// GetUserDefinedEventNumber() - Returns the user-defined event number
-        /// Based on swkotor2.exe: Returns last user-defined event number set
-        /// </summary>
-        private Variable Func_GetUserDefinedEventNumber(IReadOnlyList<Variable> args, IExecutionContext ctx)
-        {
-            return Variable.FromInt(_userDefinedEventNumber);
-        }
-
-        /// <summary>
-        /// GetRunScriptVar() - Returns the run script variable
-        /// Based on swkotor2.exe: Returns variable set by RunScript/RunScriptVar
-        /// </summary>
-        private Variable Func_GetRunScriptVar(IReadOnlyList<Variable> args, IExecutionContext ctx)
-        {
-            return _runScriptVar;
         }
 
         #endregion
