@@ -364,6 +364,10 @@ namespace Odyssey.Kotor.EngineApi
                 case 319: return Func_GetDistanceBetween2D(args, ctx);
                 case 320: return Func_GetIsInCombat(args, ctx);
                 
+                // Spell tracking functions
+                case 245: return Func_GetLastSpellCaster(args, ctx);
+                case 248: return Func_GetSpellId(args, ctx);
+                
                 // Item functions
                 case 150: return Func_SetItemStackSize(args, ctx);
                 case 151: return Func_GetDistanceBetween(args, ctx);
@@ -6309,6 +6313,65 @@ namespace Odyssey.Kotor.EngineApi
             }
 
             return Variable.FromObject(ObjectInvalid);
+        }
+
+        /// <summary>
+        /// GetLastSpellCaster() - Returns the entity that last cast a spell on the caller
+        /// Based on swkotor2.exe: GetLastSpellCaster implementation (routine ID 245)
+        /// Located via string references: "GetLastSpellCaster" NWScript function
+        /// Original implementation: Returns caster entity ID from _lastSpellCasters dictionary
+        /// Used in OnSpellCastAt scripts to determine who cast the spell
+        /// </summary>
+        private Variable Func_GetLastSpellCaster(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            if (ctx.Caller == null)
+            {
+                return Variable.FromObject(ObjectInvalid);
+            }
+
+            // Retrieve last spell caster for this target (stored in Func_ActionCastSpellAtObject)
+            if (_lastSpellCasters.TryGetValue(ctx.Caller.ObjectId, out uint casterId))
+            {
+                // Verify caster still exists and is valid
+                if (ctx.World != null)
+                {
+                    IEntity caster = ctx.World.GetEntity(casterId);
+                    if (caster != null && caster.IsValid)
+                    {
+                        return Variable.FromObject(casterId);
+                    }
+                    else
+                    {
+                        // Caster no longer exists, remove from tracking
+                        _lastSpellCasters.Remove(ctx.Caller.ObjectId);
+                    }
+                }
+            }
+
+            return Variable.FromObject(ObjectInvalid);
+        }
+
+        /// <summary>
+        /// GetSpellId() - Returns the ID of the last spell cast by the caller
+        /// Based on swkotor2.exe: GetSpellId implementation (routine ID 248)
+        /// Located via string references: "GetSpellId" NWScript function
+        /// Original implementation: Returns spell ID from _lastSpellIds dictionary
+        /// Used in spell scripts to determine which spell is being cast
+        /// </summary>
+        private Variable Func_GetSpellId(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            if (ctx.Caller == null)
+            {
+                return Variable.FromInt(-1);
+            }
+
+            // Retrieve last spell ID for this caster (stored in Func_ActionCastSpellAtObject)
+            if (_lastSpellIds.TryGetValue(ctx.Caller.ObjectId, out int spellId))
+            {
+                return Variable.FromInt(spellId);
+            }
+
+            return Variable.FromInt(-1);
         }
 
         #endregion
