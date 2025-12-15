@@ -18,6 +18,13 @@ namespace Odyssey.Kotor.Data
     /// - "CSWClass::LoadSkillsTable: Can't load skills.2da" @ 0x007c47ac
     /// - "CSWClass::LoadSpellsTable: Can't load spells.2da" @ 0x007c4918
     /// - "CLASSES" @ 0x007c2ba4, "Appearance_Type" @ 0x007c40f0
+    /// - Appearance fields: "Appearance" @ 0x007bf144, "Appearance_Type" @ 0x007c40f0, "Appearance_Head" @ 0x007c40e0
+    /// - "Appearance_01" @ 0x007c0220, "Appearance_02" @ 0x007c0200, "Appearance_03" @ 0x007c01e0, "Appearance_04" @ 0x007c01c0
+    /// - "Appearance_0%d" @ 0x007cadd4 (appearance format string), "AppearanceNumber" @ 0x007d1900
+    /// - "AppearanceSndSet" @ 0x007c498c, "AppearanceForceUpdate" @ 0x007c7e48, "AppearanceType" @ 0x007c84c8
+    /// - "Appearance_L" @ 0x007d18e0, "Appearance_S" @ 0x007d18f0, "PM_Appearance" @ 0x007bf5d4
+    /// - Debug: "    Appearance: " @ 0x007caf3c, "Appearance: " @ 0x007cb19c
+    /// - Error: "CSWCCreatureAppearance::CreateBTypeBody(): Failed to load model '%s'." @ 0x007cdc40
     /// - Original implementation: Loads and caches 2DA (two-dimensional array) data files
     /// - 2DA file format: Tab-separated text file with row labels and column headers
     /// - Table lookup: Uses row label (string) or row index (int) to access data
