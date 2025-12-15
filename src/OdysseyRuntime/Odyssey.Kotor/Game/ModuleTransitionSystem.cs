@@ -25,6 +25,8 @@ namespace Odyssey.Kotor.Game
     /// Module Transition System:
     /// - Based on swkotor2.exe module transition system
     /// - Located via string references: "TransitionDestination" @ 0x007bd7a4, "LinkedToModule" @ 0x007bd7bc
+    /// - "LinkedTo" @ 0x007bd798 (waypoint/door tag), "LinkedToFlags" @ 0x007bd788 (transition flags)
+    /// - "LinkedToObject" @ 0x007c13a0 (object reference for transitions)
     /// - "EVENT_AREA_TRANSITION" @ 0x007bcbdc, "Mod_Transition" @ 0x007be8f0, "NW_G0_Transition" @ 0x007c1cc4
     /// - "ModuleName" @ 0x007bde2c, "LASTMODULE" @ 0x007be1d0, "ModuleLoaded" @ 0x007bdd70, "ModuleRunning" @ 0x007bdd58
     /// - "MODULES:" @ 0x007b58b4, ":MODULES" @ 0x007be258, "CSWSSCRIPTEVENT_EVENTTYPE_ON_MODULE_LOAD" @ 0x007bc91c
@@ -34,6 +36,7 @@ namespace Odyssey.Kotor.Game
     /// - LinkedToFlags bit 1 = module transition, bit 2 = area transition within module
     /// - Area transitions within module use TransitionDestination waypoint tag
     /// - Module transitions load new module and position player at entry area/waypoint
+    /// - LinkedTo field contains waypoint tag for positioning player after transition
     /// </remarks>
     public class ModuleTransitionSystem
     {
