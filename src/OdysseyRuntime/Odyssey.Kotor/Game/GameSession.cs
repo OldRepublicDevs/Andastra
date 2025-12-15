@@ -89,6 +89,7 @@ namespace Odyssey.Kotor.Game
         private bool _isPaused;
         private bool _isLoadingFromSave;
         private bool _isPlayerRestricted;
+        private bool _stealthXPEnabled = true; // Default: stealth XP enabled
         private NavigationMesh _currentNavMesh;
         private TLK _baseTlk;
         private TLK _customTlk;
@@ -326,6 +327,13 @@ namespace Odyssey.Kotor.Game
 
             // Load talk tables
             LoadTalkTables();
+            
+            // Initialize game time to 12:00:00.000 (noon)
+            _gameTimeHours = 12;
+            _gameTimeMinutes = 0;
+            _gameTimeSeconds = 0;
+            _gameTimeMilliseconds = 0;
+            _timeAccumulator = 0f;
         }
 
         /// <summary>
