@@ -9,6 +9,18 @@ namespace Odyssey.Core.Templates
     /// <summary>
     /// Door template implementation for spawning doors from UTD data.
     /// </summary>
+    /// <remarks>
+    /// Door Template:
+    /// - Based on swkotor2.exe door system
+    /// - Located via string references: "Door" @ 0x007bc538, "Door List" @ 0x007bd270
+    /// - Template loading: FUN_005226d0 @ 0x005226d0 (entity serialization references door templates)
+    /// - Original implementation: UTD (Door) GFF templates define door properties
+    /// - UTD file format: GFF with "UTD " signature containing door data
+    /// - Doors have appearance, open/locked states, transitions, HP, saves
+    /// - Transitions link to other areas/modules (LinkedTo, LinkedToModule, TransitionDestination)
+    /// - Script events: OnOpen, OnClose, OnLock, OnUnlock, OnDamaged, OnDeath
+    /// - Based on UTD file format documentation in vendor/PyKotor/wiki/
+    /// </remarks>
     public class DoorTemplate : IDoorTemplate
     {
         #region Properties
