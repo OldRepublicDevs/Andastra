@@ -11,11 +11,12 @@ using Odyssey.Core.Combat;
 using Odyssey.Kotor.Systems;
 using Odyssey.Kotor.Dialogue;
 using Odyssey.Kotor.Loading;
+using Odyssey.Kotor.EngineApi;
 using Odyssey.Scripting.VM;
 using Odyssey.Scripting.Interfaces;
 using CSharpKOTOR.Common;
 using CSharpKOTOR.Installation;
-using Odyssey.Game.Core;
+using Odyssey.Core;
 
 namespace Odyssey.Kotor.Game
 {
@@ -27,6 +28,7 @@ namespace Odyssey.Kotor.Game
     /// - Based on swkotor2.exe game session management
     /// - Located via string references: "GAMEINPROGRESS" @ 0x007c15c8 (game in progress flag), "GameSession" @ 0x007be620
     /// - "ModuleLoaded" @ 0x007bdd70, "ModuleRunning" @ 0x007bdd58 (module state tracking)
+    /// - "GameState" @ 0x007c15d0 (game state field), "GameMode" @ 0x007c15e0 (game mode field)
     /// - Coordinates: Module loading, entity management, script execution, combat, AI, triggers, dialogue, party
     /// - Game loop integration: Update() called every frame to update all systems (60 Hz fixed timestep)
     /// - Module transitions: Handles loading new modules and positioning player at entry waypoint
@@ -40,6 +42,7 @@ namespace Odyssey.Kotor.Game
     ///   6. Engine API (K1EngineApi or K2EngineApi based on game version)
     ///   7. ScriptExecutor (NCS VM execution)
     ///   8. TriggerSystem, AIController, DialogueManager, EncounterSystem
+    /// - Original implementation: FUN_005226d0 @ 0x005226d0 manages game session state, module loading, entity updates
     /// - Based on game loop specification in monogame_odyssey_engine_e8927e4a.plan.md
     /// </remarks>
     public class GameSession
@@ -161,8 +164,8 @@ namespace Odyssey.Kotor.Game
 
             // Initialize engine API (K1 or K2 based on settings)
             _engineApi = _settings.Game == KotorGame.K1
-                ? (IEngineApi)new Odyssey.Scripting.EngineApi.K1EngineApi()
-                : (IEngineApi)new Odyssey.Scripting.EngineApi.K2EngineApi();
+                ? (IEngineApi)new Odyssey.Kotor.EngineApi.K1EngineApi()
+                : (IEngineApi)new Odyssey.Kotor.EngineApi.K2EngineApi();
 
             _scriptExecutor = new ScriptExecutor(_vm, _world, _globals, _installation, _engineApi);
 
