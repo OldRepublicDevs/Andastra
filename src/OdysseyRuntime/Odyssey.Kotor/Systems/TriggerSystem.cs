@@ -17,11 +17,16 @@ namespace Odyssey.Kotor.Systems
     /// Trigger System:
     /// - Based on swkotor2.exe trigger system
     /// - Located via string references: "Trigger" @ 0x007bc51c, "TriggerList" @ 0x007bd254
-    /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_MINE_TRIGGERED" @ 0x007bc7ac
-    /// - "EVENT_ENTERED_TRIGGER" @ 0x007bce08, "EVENT_LEFT_TRIGGER" @ 0x007bcdf4
+    /// - Script events: "OnEnter" @ 0x007be1bc, "OnExit" @ 0x007be1c0 (trigger script event hooks)
+    /// - "ScriptOnEnter" @ 0x007beebc, "ScriptOnExit" @ 0x007beec0 (trigger script ResRef fields)
+    /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_MINE_TRIGGERED" @ 0x007bc7ac, "EVENT_ENTERED_TRIGGER" @ 0x007bce08, "EVENT_LEFT_TRIGGER" @ 0x007bcdf4
+    /// - Event dispatching: FUN_004dcfb0 @ 0x004dcfb0 handles EVENT_ENTERED_TRIGGER (case 0x9) and EVENT_LEFT_TRIGGER (case 0xa)
     /// - Original implementation: Triggers have polygon geometry, detect creature entry/exit
-    /// - Script events: OnEnter, OnExit, OnClick, OnDisarm, OnTrapTriggered
-    /// - Trigger geometry stored as polygon vertices in GFF structure
+    /// - Trigger detection: Updates every frame, checks if creature position is inside trigger polygon
+    /// - Script events: OnEnter (entity enters), OnExit (entity exits), OnClick, OnDisarm, OnTrapTriggered
+    /// - Trigger geometry stored as polygon vertices in GFF structure (Geometry field in UTT template)
+    /// - Trigger types: 0=generic, 1=transition, 2=trap (TriggerType field)
+    /// - FireOnce triggers: Only fire once (HasFired flag prevents multiple firings)
     /// </remarks>
     public class TriggerSystem
     {

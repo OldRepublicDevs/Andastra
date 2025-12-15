@@ -13,9 +13,15 @@ namespace Odyssey.Core.Module
     /// <remarks>
     /// Module System:
     /// - Based on swkotor2.exe module system
-    /// - Located via string references: "Mod_" prefix for module fields (Mod_Tag, Mod_Entry_Area, Mod_StartMovie, etc.)
+    /// - Located via string references: "Module" @ 0x007bc4e0, "ModuleName" @ 0x007bde2c, "ModuleLoaded" @ 0x007bdd70
+    /// - "Mod_Tag" @ 0x007be720, "Mod_Entry_Area" @ 0x007be9b4, "Mod_StartMovie" (module entry area and start movie)
+    /// - "Mod_Entry_X" @ 0x007be998, "Mod_Entry_Y" @ 0x007be98c, "Mod_Entry_Z" @ 0x007be980, "Mod_Entry_Dir" @ 0x007be974 (entry position/direction)
+    /// - "Mod_OnClientEntrance" @ 0x007be718, "Mod_OnHeartbeat" (module script hooks)
+    /// - "MODULES:" @ 0x007b58b4, ":MODULES" @ 0x007be258 (module directory paths)
+    /// - "LASTMODULE" @ 0x007be1d0 (last loaded module reference)
     /// - IFO file format: GFF with "IFO " signature containing module metadata
     /// - Module loading: FUN_00708990 @ 0x00708990 (loads module, sets up areas, spawns entities)
+    /// - FUN_00633270 @ 0x00633270 sets up all game directories including MODULES
     /// - Original implementation stores module data in IFO file, references areas by ResRef
     /// 
     /// Module Loading Sequence:
