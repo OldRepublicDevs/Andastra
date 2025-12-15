@@ -65,13 +65,23 @@ namespace Odyssey.MonoGame.Culling
         /// Initializes a new occlusion culler.
         /// </summary>
         /// <param name="graphicsDevice">Graphics device.</param>
-        /// <param name="width">Buffer width.</param>
-        /// <param name="height">Buffer height.</param>
+        /// <param name="width">Buffer width. Must be greater than zero.</param>
+        /// <param name="height">Buffer height. Must be greater than zero.</param>
+        /// <exception cref="ArgumentNullException">Thrown if graphicsDevice is null.</exception>
+        /// <exception cref="ArgumentException">Thrown if width or height is less than or equal to zero.</exception>
         public OcclusionCuller(GraphicsDevice graphicsDevice, int width, int height)
         {
             if (graphicsDevice == null)
             {
                 throw new ArgumentNullException("graphicsDevice");
+            }
+            if (width <= 0)
+            {
+                throw new ArgumentException("Width must be greater than zero.", "width");
+            }
+            if (height <= 0)
+            {
+                throw new ArgumentException("Height must be greater than zero.", "height");
             }
 
             _graphicsDevice = graphicsDevice;
@@ -94,11 +104,25 @@ namespace Odyssey.MonoGame.Culling
         /// Must be called after depth pre-pass or main depth rendering.
         /// Based on MonoGame API: https://docs.monogame.net/api/Microsoft.Xna.Framework.Graphics.SpriteBatch.html
         /// Downsamples depth buffer into mipmap levels where each level stores maximum depth from previous level.
+        /// 
+        /// Note: This implementation uses point sampling for downsampling. For proper Hi-Z with maximum depth
+        /// operations, a custom shader that performs max operations on 2x2 regions would be required.
         /// </summary>
-        /// <param name="depthBuffer">Depth buffer to downsample.</param>
+        /// <param name="depthBuffer">Depth buffer to downsample. Must not be null.</param>
+        /// <exception cref="ArgumentNullException">Thrown if depthBuffer is null.</exception>
         public void GenerateHiZBuffer(Texture2D depthBuffer)
         {
-            if (!Enabled || depthBuffer == null || _hiZBuffer == null)
+            if (!Enabled)
+            {
+                return;
+            }
+
+            if (depthBuffer == null)
+            {
+                throw new ArgumentNullException("depthBuffer");
+            }
+
+            if (_hiZBuffer == null || _spriteBatch == null)
             {
                 return;
             }
@@ -109,57 +133,65 @@ namespace Odyssey.MonoGame.Culling
             RenderTarget2D previousTarget = previousTargets.Length > 0 ? 
                 previousTargets[0].RenderTarget as RenderTarget2D : null;
 
-            _graphicsDevice.SetRenderTarget(_hiZBuffer);
-            _spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Opaque, SamplerState.PointClamp, DepthStencilState.None, RasterizerState.CullNone);
-            _spriteBatch.Draw(depthBuffer, new Rectangle(0, 0, _width, _height), Color.White);
-            _spriteBatch.End();
-
-            // Generate mipmap levels by downsampling with max depth operation
-            // Each mip level stores the maximum depth from 2x2 region of previous level
-            for (int mip = 1; mip < _mipLevels; mip++)
+            try
             {
-                int mipWidth = Math.Max(1, _width >> mip);
-                int mipHeight = Math.Max(1, _height >> mip);
-                int prevMipWidth = Math.Max(1, _width >> (mip - 1));
-                int prevMipHeight = Math.Max(1, _height >> (mip - 1));
+                _graphicsDevice.SetRenderTarget(_hiZBuffer);
+                _spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Opaque, SamplerState.PointClamp, DepthStencilState.None, RasterizerState.CullNone);
+                _spriteBatch.Draw(depthBuffer, new Rectangle(0, 0, _width, _height), Color.White);
+                _spriteBatch.End();
 
-                // Create temporary render target for this mip level
-                using (RenderTarget2D mipTarget = new RenderTarget2D(
-                    _graphicsDevice,
-                    mipWidth,
-                    mipHeight,
-                    false,
-                    SurfaceFormat.Single,
-                    DepthFormat.None,
-                    0,
-                    RenderTargetUsage.DiscardContents))
+                // Generate mipmap levels by downsampling with max depth operation
+                // Each mip level stores the maximum depth from 2x2 region of previous level
+                // Note: Point sampling provides a simplified approximation. For accurate Hi-Z,
+                // a custom shader performing max operations on 2x2 regions would be required.
+                for (int mip = 1; mip < _mipLevels; mip++)
                 {
-                    _graphicsDevice.SetRenderTarget(mipTarget);
-                    _spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Opaque, SamplerState.PointClamp, DepthStencilState.None, RasterizerState.CullNone);
-                    // Draw previous mip level scaled down (point sampling ensures we get max values)
-                    _spriteBatch.Draw(_hiZBuffer, new Rectangle(0, 0, mipWidth, mipHeight), 
-                        new Rectangle(0, 0, prevMipWidth, prevMipHeight), Color.White);
-                    _spriteBatch.End();
+                    int mipWidth = Math.Max(1, _width >> mip);
+                    int mipHeight = Math.Max(1, _height >> mip);
+                    int prevMipWidth = Math.Max(1, _width >> (mip - 1));
+                    int prevMipHeight = Math.Max(1, _height >> (mip - 1));
 
-                    // Copy back to Hi-Z buffer mip level
-                    // Note: MonoGame doesn't directly support rendering to specific mip levels,
-                    // so we use a workaround by rendering to a temporary target and copying
-                    // In a full implementation, this would use compute shaders or custom effects
-                    _graphicsDevice.SetRenderTarget(_hiZBuffer);
-                    _spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Opaque, SamplerState.PointClamp, DepthStencilState.None, RasterizerState.CullNone);
-                    _spriteBatch.Draw(mipTarget, new Rectangle(0, 0, mipWidth, mipHeight), Color.White);
-                    _spriteBatch.End();
+                    // Create temporary render target for this mip level
+                    using (RenderTarget2D mipTarget = new RenderTarget2D(
+                        _graphicsDevice,
+                        mipWidth,
+                        mipHeight,
+                        false,
+                        SurfaceFormat.Single,
+                        DepthFormat.None,
+                        0,
+                        RenderTargetUsage.DiscardContents))
+                    {
+                        _graphicsDevice.SetRenderTarget(mipTarget);
+                        _spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Opaque, SamplerState.PointClamp, DepthStencilState.None, RasterizerState.CullNone);
+                        // Draw previous mip level scaled down (point sampling for approximation)
+                        _spriteBatch.Draw(_hiZBuffer, new Rectangle(0, 0, mipWidth, mipHeight), 
+                            new Rectangle(0, 0, prevMipWidth, prevMipHeight), Color.White);
+                        _spriteBatch.End();
+
+                        // Copy back to Hi-Z buffer mip level
+                        // Note: MonoGame doesn't directly support rendering to specific mip levels,
+                        // so we use a workaround by rendering to a temporary target and copying
+                        // In a full implementation, this would use compute shaders or custom effects
+                        // with proper max depth operations
+                        _graphicsDevice.SetRenderTarget(_hiZBuffer);
+                        _spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Opaque, SamplerState.PointClamp, DepthStencilState.None, RasterizerState.CullNone);
+                        _spriteBatch.Draw(mipTarget, new Rectangle(0, 0, mipWidth, mipHeight), Color.White);
+                        _spriteBatch.End();
+                    }
                 }
             }
-
-            // Restore previous render target
-            if (previousTarget != null)
+            finally
             {
-                _graphicsDevice.SetRenderTarget(previousTarget);
-            }
-            else
-            {
-                _graphicsDevice.SetRenderTarget(null);
+                // Always restore previous render target, even if an exception occurs
+                if (previousTarget != null)
+                {
+                    _graphicsDevice.SetRenderTarget(previousTarget);
+                }
+                else
+                {
+                    _graphicsDevice.SetRenderTarget(null);
+                }
             }
         }
 
