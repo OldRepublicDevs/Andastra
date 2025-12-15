@@ -50,6 +50,8 @@ namespace Odyssey.MonoGame.Rendering
         /// <summary>
         /// Gets quality settings for a specific level.
         /// </summary>
+        /// <param name="level">Quality level to get settings for.</param>
+        /// <returns>Quality settings for the specified level. Returns Medium quality if level is invalid.</returns>
         public static QualitySettings GetSettings(QualityLevel level)
         {
             switch (level)
@@ -134,6 +136,15 @@ namespace Odyssey.MonoGame.Rendering
         /// <summary>
         /// Automatically selects quality level based on GPU capabilities.
         /// </summary>
+        /// <param name="capabilities">GPU capabilities to evaluate. Should not have invalid values.</param>
+        /// <returns>Recommended quality level based on GPU capabilities.</returns>
+        /// <remarks>
+        /// Selection heuristics:
+        /// - Ultra: MaxTextureSize >= 8192 AND MaxAnisotropy >= 16
+        /// - High: MaxTextureSize >= 4096 AND MaxAnisotropy >= 8
+        /// - Medium: MaxTextureSize >= 2048
+        /// - Low: Otherwise
+        /// </remarks>
         public static QualityLevel SelectQualityLevel(GraphicsCapabilities capabilities)
         {
             // Simple heuristic based on GPU capabilities

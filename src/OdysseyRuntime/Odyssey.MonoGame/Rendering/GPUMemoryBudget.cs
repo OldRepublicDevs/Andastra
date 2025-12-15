@@ -68,8 +68,16 @@ namespace Odyssey.MonoGame.Rendering
         /// <summary>
         /// Initializes a new GPU memory budget system.
         /// </summary>
+        /// <param name="totalBudget">Total GPU memory budget in bytes. Must be greater than zero. Default is 2GB.</param>
+        /// <exception cref="ArgumentException">Thrown if totalBudget is less than or equal to zero.</exception>
         public GPUMemoryBudget(long totalBudget = 2L * 1024 * 1024 * 1024) // 2GB default
         {
+            if (totalBudget <= 0)
+            {
+                throw new ArgumentException("Total budget must be greater than zero.", nameof(totalBudget));
+            }
+        {
+
             _totalBudget = totalBudget;
             _totalUsage = 0;
             _categoryBudgets = new Dictionary<MemoryCategory, long>();
