@@ -117,6 +117,9 @@ namespace Odyssey.Core.Templates
             }
 
             // Apply script hooks
+            // Based on swkotor2.exe: Trigger script hooks from UTT template
+            // Located via string references: "ScriptOnEnter" @ 0x007c1a10, "ScriptOnExit" @ 0x007c1a0c, "OnTrapTriggered" @ 0x007c1a34
+            // Original implementation: FUN_005226d0 @ 0x005226d0 loads trigger script hooks from UTT template
             Interfaces.Components.IScriptHooksComponent scripts = entity.GetComponent<Interfaces.Components.IScriptHooksComponent>();
             if (scripts != null)
             {
@@ -127,7 +130,11 @@ namespace Odyssey.Core.Templates
                 if (!string.IsNullOrEmpty(OnHeartbeat))
                     scripts.SetScript(ScriptEvent.OnHeartbeat, OnHeartbeat);
                 if (!string.IsNullOrEmpty(OnClick))
-                    scripts.SetScript(ScriptEvent.OnUsed, OnClick);
+                    scripts.SetScript(ScriptEvent.OnClick, OnClick);
+                if (!string.IsNullOrEmpty(OnDisarm))
+                    scripts.SetScript(ScriptEvent.OnDisarm, OnDisarm);
+                if (!string.IsNullOrEmpty(OnTrapTriggered))
+                    scripts.SetScript(ScriptEvent.OnTrapTriggered, OnTrapTriggered);
                 if (!string.IsNullOrEmpty(OnUserDefined))
                     scripts.SetScript(ScriptEvent.OnUserDefined, OnUserDefined);
             }
