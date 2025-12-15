@@ -530,7 +530,7 @@ namespace Odyssey.Scripting.VM
                             float x = PopFloat();
                             arg = Variable.FromVector(new System.Numerics.Vector3(x, y, z));
                             break;
-                        case ScriptParameterType.Location:
+                        case DataType.Location:
                             // Location is stored as 3 floats (position) + 1 float (facing) + 1 object (area)
                             float facing = PopFloat();
                             float locZ = PopFloat();
