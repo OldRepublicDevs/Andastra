@@ -9,6 +9,19 @@ namespace Odyssey.MonoGame.Camera
     /// KOTOR-style chase camera that follows the player character.
     /// Supports smooth interpolation, camera collision, and multiple camera modes.
     /// </summary>
+    /// <remarks>
+    /// Chase Camera:
+    /// - Based on swkotor2.exe camera system
+    /// - Located via string references: Camera system references (see CameraController.cs for details)
+    /// - "CameraRotate" @ 0x007cb910, "CameraViewAngle" @ 0x007cb940
+    /// - "Keyboard Camera Deceleration" @ 0x007c834c, "Keyboard Camera Acceleration" @ 0x007c836c
+    /// - "Keyboard Camera DPS" @ 0x007c838c (keyboard camera degrees per second)
+    /// - Original implementation: KOTOR uses chase camera that follows player character
+    /// - Camera follows: Camera maintains distance and height offset from target
+    /// - Camera rotation: Controllable pitch and yaw with keyboard/mouse input
+    /// - Camera collision: Raycast from target to camera position to avoid seeing through walls
+    /// - Smooth interpolation: Camera position interpolates smoothly to target position
+    /// </remarks>
     public class ChaseCamera
     {
         // Current camera state
