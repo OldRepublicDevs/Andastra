@@ -676,7 +676,10 @@ namespace Odyssey.Content.Save
 
             // Use CSharpKOTOR GFF writer
             // Original creates GFF with "PT  " signature and "V2.0" version
-            var gff = new GFF(GFFContent.GFF);
+            // Based on swkotor2.exe: FUN_0057bd70 @ 0x0057bd70 creates GFF with "PT  " signature
+            // Located via string reference: "PARTYTABLE" @ 0x007c1910
+            // Note: CSharpKOTOR GFFBinaryWriter always writes "V3.2" version, but signature is correct
+            var gff = new GFF(GFFContent.PT);
             var root = gff.Root;
 
             // PT_PCNAME - Player character name
