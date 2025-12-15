@@ -2112,16 +2112,23 @@ namespace Odyssey.Scripting.EngineApi
         }
 
         /// <summary>
-        /// SetCameraFacing(float fDirection) - Sets the camera facing direction (in radians)
+        /// SetCameraFacing(float fDirection) - Sets the camera facing direction
+        /// Based on swkotor2.exe: Camera facing controls camera yaw rotation in chase mode
+        /// The direction is in radians (0 = east, PI/2 = north, PI = west, 3*PI/2 = south)
         /// </summary>
         private Variable Func_SetCameraFacing(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             float direction = args.Count > 0 ? args[0].AsFloat() : 0f;
             
-            // Camera control would typically be accessed through GameServicesContext
-            // For now, this is a placeholder - camera system integration needed
-            // TODO: Add CameraController to GameServicesContext and implement camera facing
-            // The direction is in radians and should set the camera's yaw rotation
+            // Access CameraController through GameServicesContext
+            if (ctx is Odyssey.Scripting.VM.ExecutionContext execCtx && execCtx.AdditionalContext is Odyssey.Kotor.Game.GameServicesContext services)
+            {
+                if (services.CameraController != null)
+                {
+                    // Set camera yaw rotation (direction is in radians)
+                    services.CameraController.Yaw = direction;
+                }
+            }
             
             return Variable.Void();
         }
@@ -3235,6 +3242,13 @@ namespace Odyssey.Scripting.EngineApi
         /// <summary>
         /// GetEffectDurationType(effect eEffect) - returns duration type of effect
         /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: Effect duration type system
+        /// Original implementation: Effects have duration types (Instant, Temporary, Permanent)
+        /// DURATION_TYPE_INSTANT = 0: Effect applies once and ends
+        /// DURATION_TYPE_TEMPORARY = 1: Effect has duration and expires after time
+        /// DURATION_TYPE_PERMANENT = 2: Effect persists until removed manually
+        /// </remarks>
         private Variable Func_GetEffectDurationType(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             object effectObj = args.Count > 0 ? args[0].ComplexValue : null;
