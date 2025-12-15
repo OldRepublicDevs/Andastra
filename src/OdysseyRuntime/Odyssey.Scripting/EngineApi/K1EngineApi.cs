@@ -3991,6 +3991,32 @@ namespace Odyssey.Scripting.EngineApi
             return Variable.FromInt((int)Math.Round(value));
         }
 
+        /// <summary>
+        /// StringToInt(string sNumber) - Convert sNumber into an integer
+        /// </summary>
+        private Variable Func_StringToInt(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            string numberStr = args.Count > 0 ? args[0].AsString() : "";
+            if (int.TryParse(numberStr, out int result))
+            {
+                return Variable.FromInt(result);
+            }
+            return Variable.FromInt(0);
+        }
+
+        /// <summary>
+        /// StringToFloat(string sNumber) - Convert sNumber into a floating point number
+        /// </summary>
+        private Variable Func_StringToFloat(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            string numberStr = args.Count > 0 ? args[0].AsString() : "";
+            if (float.TryParse(numberStr, out float result))
+            {
+                return Variable.FromFloat(result);
+            }
+            return Variable.FromFloat(0f);
+        }
+
         #endregion
 
         #region Nearest Object To Location
