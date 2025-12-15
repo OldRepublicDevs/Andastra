@@ -71,18 +71,25 @@ namespace Odyssey.Core.Actions
             // Located via string references: "GiveItem" @ 0x007be4f8, "PutDownItem" action type
             // Original implementation: Removes item from inventory, places in world at drop location
             // Item becomes world-dropped item that can be picked up by other entities
-            if (inventory.RemoveItem(actor.World.GetEntity(_itemObjectId)))
+            IEntity item = actor.World.GetEntity(_itemObjectId);
+            if (item != null && inventory.RemoveItem(item))
             {
+                // Fire OnLoseItem script event
+                // Based on swkotor2.exe: CSWSSCRIPTEVENT_EVENTTYPE_ON_LOSE_ITEM fires when item is removed from inventory
+                // Located via string references: "CSWSSCRIPTEVENT_EVENTTYPE_ON_LOSE_ITEM" @ 0x007bc89c (0x1c)
+                // Original implementation: OnLoseItem script fires on actor entity when item is removed from inventory
+                IEventBus eventBus = actor.World.EventBus;
+                if (eventBus != null)
+                {
+                    eventBus.FireScriptEvent(actor, ScriptEvent.OnLoseItem, item);
+                }
+
                 // Place item in world at drop location
                 // Original engine: Item position set to drop location, item becomes visible in world
-                IEntity item = actor.World.GetEntity(_itemObjectId);
-                if (item != null)
+                ITransformComponent itemTransform = item.GetComponent<ITransformComponent>();
+                if (itemTransform != null)
                 {
-                    ITransformComponent itemTransform = item.GetComponent<ITransformComponent>();
-                    if (itemTransform != null)
-                    {
-                        itemTransform.Position = _dropLocation;
-                    }
+                    itemTransform.Position = _dropLocation;
                 }
 
                 return ActionStatus.Complete;
