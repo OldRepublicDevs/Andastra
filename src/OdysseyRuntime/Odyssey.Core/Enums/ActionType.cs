@@ -39,7 +39,8 @@ namespace Odyssey.Core.Enums
         FollowLeader = 22,
         FollowOwner = 23,
         RandomWalk = 24,
-        InteractObject = 25
+        InteractObject = 25,
+        DestroyObject = 26
     }
 }
 
