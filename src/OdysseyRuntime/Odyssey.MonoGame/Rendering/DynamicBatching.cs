@@ -21,11 +21,15 @@ namespace Odyssey.MonoGame.Rendering
     /// <remarks>
     /// Dynamic Batching System (Modern Enhancement):
     /// - Based on swkotor2.exe rendering system architecture
+    /// - Located via string references: "renderorder" @ 0x007bab50 (render order sorting for batching)
+    /// - "Apropagaterender" @ 0x007bb10f (render propagation), "renderbmlmtype" @ 0x007bb26c
+    /// - OpenGL draw functions: glDrawArrays, glDrawElements (used for batched rendering)
     /// - Original implementation: KOTOR rendered each model with individual draw calls
     /// - Original engine: No automatic batching, each entity/model rendered separately
     /// - This is a modernization feature: Dynamic batching reduces draw calls for better performance
     /// - Original behavior: Every object = one draw call (or multiple for multi-material objects)
     /// - Modern enhancement: Batches small objects together to reduce GPU overhead
+    /// - Batching strategy: Groups objects by material/shader, combines vertex/index data into single buffers
     /// </remarks>
     public class DynamicBatching : IDisposable
     {
@@ -102,7 +106,7 @@ namespace Odyssey.MonoGame.Rendering
         {
             if (graphicsDevice == null)
             {
-                throw new ArgumentNullException("graphicsDevice");
+                throw new ArgumentNullException(nameof(graphicsDevice));
             }
 
             _graphicsDevice = graphicsDevice;
