@@ -477,7 +477,15 @@ namespace Odyssey.Kotor.Game
             Vector3 newPosition = transform.Position + movement;
 
             // TODO: Check walkmesh validity
-            // TODO: Update facing direction
+            
+            // Update facing direction to match movement direction
+            if (movement.LengthSquared() > 0.001f) // Only update if moving
+            {
+                // Calculate facing angle from movement direction
+                // Facing is stored as radians (0 = north, PI/2 = east, PI = south, 3*PI/2 = west)
+                float facing = (float)Math.Atan2(movement.X, movement.Z);
+                transform.Facing = facing;
+            }
 
             transform.Position = newPosition;
         }
