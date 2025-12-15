@@ -167,13 +167,34 @@ namespace Odyssey.Core.Module
                 {
                     // Fire script event - module scripts use module entity as owner
                     IEntity moduleEntity = _world.GetEntityByTag(newModule.ResRef, 0);
-                    if (moduleEntity != null)
+                    if (moduleEntity == null)
                     {
-                        _world.EventBus.FireScriptEvent(moduleEntity, ScriptEvent.OnModuleLoad, null);
+                        // Create a temporary entity for module script execution
+                        moduleEntity = _world.CreateEntity(ObjectType.Invalid, Vector3.Zero, 0f);
+                        moduleEntity.Tag = newModule.ResRef;
                     }
+                    _world.EventBus.FireScriptEvent(moduleEntity, ScriptEvent.OnModuleLoad, null);
                 }
 
-                // 9. Fire OnEnter for area
+                // 9. Fire OnModuleStart script
+                // Based on swkotor2.exe: Module start script execution
+                // Located via string references: "OnModuleStart" script, "CSWSSCRIPTEVENT_EVENTTYPE_ON_MODULE_START" @ 0x007bc948 (0x15)
+                // Original implementation: OnModuleStart fires after OnModuleLoad, before gameplay starts
+                string startScript = newModule.GetScript(ScriptEvent.OnModuleStart);
+                if (!string.IsNullOrEmpty(startScript) && _world.EventBus != null)
+                {
+                    // Fire script event - module scripts use module entity as owner
+                    IEntity moduleEntity = _world.GetEntityByTag(newModule.ResRef, 0);
+                    if (moduleEntity == null)
+                    {
+                        // Create a temporary entity for module script execution
+                        moduleEntity = _world.CreateEntity(ObjectType.Invalid, Vector3.Zero, 0f);
+                        moduleEntity.Tag = newModule.ResRef;
+                    }
+                    _world.EventBus.FireScriptEvent(moduleEntity, ScriptEvent.OnModuleStart, null);
+                }
+
+                // 10. Fire OnEnter for area
                 // Based on swkotor2.exe: Area enter script execution
                 // Located via string references: "OnEnter" @ 0x007bee60 (area enter script)
                 // Original implementation: FUN_005226d0 @ 0x005226d0 executes area enter scripts for each party member
@@ -214,7 +235,7 @@ namespace Odyssey.Core.Module
                     }
                 }
 
-                // 10. Fire OnSpawn for any new creatures
+                // 11. Fire OnSpawn for any new creatures
                 // Based on swkotor2.exe: Creature spawn script execution
                 // Located via string references: "OnSpawn" @ 0x007beec0 (spawn script field)
                 // Original implementation: FUN_005226d0 @ 0x005226d0 executes spawn scripts when creatures are created
