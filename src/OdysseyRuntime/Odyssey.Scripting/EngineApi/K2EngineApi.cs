@@ -740,22 +740,75 @@ namespace Odyssey.Scripting.EngineApi
         {
             int npcIndex = args.Count > 0 ? args[0].AsInt() : 0;
             string template = args.Count > 1 ? args[1].AsString() : string.Empty;
-            // TODO: Add NPC to available party members
-            return Variable.FromInt(1);
+            
+            if (string.IsNullOrEmpty(template) || ctx.World == null)
+            {
+                return Variable.FromInt(0); // Failed
+            }
+            
+            // Add NPC to available party members
+            if (ctx.AdditionalContext is GameSession.GameServicesContext services && services.PartyManager != null)
+            {
+                // TODO: Create entity from template ResRef using ModuleLoader/EntityFactory
+                // For now, check if entity already exists by tag/template
+                // Full implementation would:
+                // 1. Load UTC template from template ResRef
+                // 2. Create entity from template using EntityFactory
+                // 3. Add to PartyManager with npcIndex
+                
+                // Try to find existing entity by template tag
+                IEntity existingEntity = ctx.World.GetEntityByTag(template, 0);
+                if (existingEntity != null)
+                {
+                    try
+                    {
+                        services.PartyManager.AddAvailableMember(npcIndex, existingEntity);
+                        return Variable.FromInt(1); // Success
+                    }
+                    catch
+                    {
+                        return Variable.FromInt(0); // Failed
+                    }
+                }
+                
+                // Entity doesn't exist - would need to create from template
+                // This requires ModuleLoader/EntityFactory integration
+            }
+            
+            return Variable.FromInt(0); // Failed
         }
 
         private Variable Func_GetNPCSelectability(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             int npcIndex = args.Count > 0 ? args[0].AsInt() : 0;
+            
             // TODO: Return NPC selectability status
-            return Variable.FromInt(1);
+            // This requires PartySystem which has SetSelectability method
+            // PartyManager doesn't track selectability, only availability
+            // Full implementation would use: services.GameSession.PartySystem.GetMemberBySlot(npcIndex).IsSelectable
+            
+            // For now, if NPC is available, assume selectable
+            if (ctx.AdditionalContext is GameSession.GameServicesContext services && services.PartyManager != null)
+            {
+                if (services.PartyManager.IsAvailable(npcIndex))
+                {
+                    return Variable.FromInt(1); // Available and assumed selectable
+                }
+            }
+            return Variable.FromInt(0); // Not available/selectable
         }
 
         private Variable Func_SetNPCSelectability(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             int npcIndex = args.Count > 0 ? args[0].AsInt() : 0;
             int selectable = args.Count > 1 ? args[1].AsInt() : 1;
+            
             // TODO: Set NPC selectability
+            // This requires PartySystem which has SetSelectability method
+            // PartyManager doesn't track selectability, only availability
+            // Full implementation would use: services.GameSession.PartySystem.SetSelectability(entity, selectable != 0)
+            
+            // For now, this is a no-op as PartyManager doesn't support selectability
             return Variable.Void();
         }
 
