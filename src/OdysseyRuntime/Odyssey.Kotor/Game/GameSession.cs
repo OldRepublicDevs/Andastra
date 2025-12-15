@@ -401,7 +401,9 @@ namespace Odyssey.Kotor.Game
                     DialogueManager = _dialogueManager,
                     PlayerEntity = _playerEntity,
                     CombatManager = _combatManager,
-                    PartyManager = _partyManager
+                    PartyManager = _partyManager,
+                    ModuleLoader = _moduleLoader,
+                    FactionManager = _factionManager
                 };
                 ctx.AdditionalContext = gameServices;
 
