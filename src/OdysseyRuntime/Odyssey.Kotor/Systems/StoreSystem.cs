@@ -52,7 +52,7 @@ namespace Odyssey.Kotor.Systems
                 return;
             }
 
-            IStoreComponent storeComponent = storeEntity.GetComponent<IStoreComponent>();
+            StoreComponent storeComponent = storeEntity.GetComponent<StoreComponent>();
             if (storeComponent == null)
             {
                 return;
@@ -82,6 +82,16 @@ namespace Odyssey.Kotor.Systems
                 return;
             }
 
+            // Fire OnStoreClose script event
+            // Based on swkotor2.exe: OnStoreClose script fires when store is closed
+            // Located via string references: Store close event handling
+            // Original implementation: OnStoreClose script fires on store entity when store GUI is closed
+            IEventBus eventBus = _world.EventBus;
+            if (eventBus != null)
+            {
+                eventBus.FireScriptEvent(storeEntity, ScriptEvent.OnStoreClose, null);
+            }
+
             // Store GUI would be closed here (handled by UI layer)
         }
 
@@ -98,7 +108,7 @@ namespace Odyssey.Kotor.Systems
                 return 0;
             }
 
-            IStoreComponent storeComponent = storeEntity.GetComponent<IStoreComponent>();
+            StoreComponent storeComponent = storeEntity.GetComponent<StoreComponent>();
             if (storeComponent == null)
             {
                 return 0;
@@ -111,8 +121,8 @@ namespace Odyssey.Kotor.Systems
                 return 0;
             }
 
-            int basePrice = itemComponent.BasePrice;
-            float buyMarkup = storeComponent.BuyMarkup;
+            int basePrice = itemComponent.Cost;
+            float buyMarkup = storeComponent.MarkUp / 100.0f;
 
             // Buy price = base price * buy markup
             return (int)(basePrice * buyMarkup);
@@ -131,7 +141,7 @@ namespace Odyssey.Kotor.Systems
                 return 0;
             }
 
-            IStoreComponent storeComponent = storeEntity.GetComponent<IStoreComponent>();
+            StoreComponent storeComponent = storeEntity.GetComponent<StoreComponent>();
             if (storeComponent == null)
             {
                 return 0;
@@ -144,8 +154,8 @@ namespace Odyssey.Kotor.Systems
                 return 0;
             }
 
-            int basePrice = itemComponent.BasePrice;
-            float sellMarkup = storeComponent.SellMarkup;
+            int basePrice = itemComponent.Cost;
+            float sellMarkup = storeComponent.MarkDown / 100.0f;
 
             // Sell price = base price * sell markup (typically < 1.0 for profit margin)
             return (int)(basePrice * sellMarkup);
