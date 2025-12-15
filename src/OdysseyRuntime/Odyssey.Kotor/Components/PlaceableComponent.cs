@@ -9,17 +9,22 @@ namespace Odyssey.Kotor.Components
     /// <remarks>
     /// Placeable Component:
     /// - Based on swkotor2.exe placeable system
-    /// - Located via string references: "Placeable" @ 0x007bc530, "Placeable List" @ 0x007bd260
-    /// - "Placeables" @ 0x007c4bd0, "placeableobjsnds" @ 0x007c4bf0, "placeable" @ 0x007ba030
-    /// - Placeable effects: "fx_placeable01" @ 0x007c78b8, "placeablelight" @ 0x007c78c8
+    /// - Located via string references: "Placeable" @ 0x007bc530 (placeable object type), "Placeable List" @ 0x007bd260 (GFF list field in GIT)
+    /// - "Placeables" @ 0x007c4bd0 (placeable objects), "placeableobjsnds" @ 0x007c4bf0 (placeable object sounds directory)
+    /// - "placeable" @ 0x007ba030 (placeable tag prefix format)
+    /// - Placeable effects: "fx_placeable01" @ 0x007c78b8 (placeable visual effects), "placeablelight" @ 0x007c78c8 (placeable lighting)
     /// - Error message: "CSWCAnimBasePlaceable::ServerToClientAnimation(): Failed to map server anim %i to client anim." @ 0x007d2330
     /// - Original implementation: FUN_00585ec0 @ 0x00585ec0 (save placeable data to GFF)
     /// - FUN_004e08e0 @ 0x004e08e0 (load placeable instances from GIT)
-    /// - Placeables have appearance, useability, locks, inventory, HP
+    /// - FUN_00586e00 @ 0x00586e00 loads placeable properties from UTP template
+    /// - Placeables have appearance, useability, locks, inventory, HP, traps
     /// - Based on UTP file format (GFF with "UTP " signature)
-    /// - Script events: OnUsed, OnOpen, OnClose, OnLock, OnUnlock, OnDamaged, OnDeath
-    /// - Containers (HasInventory=true) can store items, open/close states
-    /// - Placeables can have visual effects and lighting attached
+    /// - Script events: OnUsed (CSWSSCRIPTEVENT_EVENTTYPE_ON_USED @ 0x007bc7d8, 0x19), OnOpen, OnClose, OnLock, OnUnlock, OnDamaged, OnDeath
+    /// - Script field names: "OnUsed" @ 0x007be1c4, "ScriptOnUsed" @ 0x007beeb8 (placeable script event fields)
+    /// - Containers (HasInventory=true) can store items, open/close states (AnimationState 0=closed, 1=open)
+    /// - Placeables can have visual effects and lighting attached (fx_placeable01, placeablelight)
+    /// - Lock system: KeyRequired flag, KeyName tag, LockDC difficulty class (checked via Security skill)
+    /// - Use distance: ~2.0 units (InteractRange), checked before OnUsed script fires
     /// </remarks>
     public class PlaceableComponent : IPlaceableComponent
     {
