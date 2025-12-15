@@ -297,6 +297,7 @@ namespace Odyssey.Scripting.EngineApi
                 case 257: return Func_GetLastPerceptionHeard(args, ctx);
                 case 258: return Func_GetLastPerceptionInaudible(args, ctx);
                 case 259: return Func_GetLastPerceptionSeen(args, ctx);
+                case 260: return Func_GetLastClosedBy(args, ctx);
                 case 261: return Func_GetLastPerceptionVanished(args, ctx);
                 case 262: return Func_GetFirstInPersistentObject(args, ctx);
                 case 263: return Func_GetNextInPersistentObject(args, ctx);
@@ -1139,14 +1140,18 @@ namespace Odyssey.Scripting.EngineApi
 
                 case 2: // CREATURE_TYPE_CLASS
                     // Check class type from creature component
-                    CreatureComponent creatureComp = creature.GetComponent<CreatureComponent>();
-                    if (creatureComp != null && creatureComp.ClassList != null)
+                    // Using dynamic to avoid dependency on Odyssey.Kotor.Components
+                    dynamic creatureComp = creature.GetComponent<object>();
+                    if (creatureComp != null)
                     {
-                        // Check if any class in the class list matches the criteria value
-                        foreach (CreatureClass cls in creatureComp.ClassList)
+                        var classList = creatureComp.ClassList as System.Collections.IEnumerable;
+                        if (classList != null)
                         {
-                            if (cls.ClassId == criteriaValue)
+                            // Check if any class in the class list matches the criteria value
+                            foreach (dynamic cls in classList)
                             {
+                                if (cls.ClassId == criteriaValue)
+                                {
                                 return true;
                             }
                         }
@@ -3111,9 +3116,10 @@ namespace Odyssey.Scripting.EngineApi
             // Access DialogueManager from GameServicesContext
             if (ctx is Odyssey.Scripting.VM.ExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
             {
-                if (services.DialogueManager != null && services.DialogueManager.IsConversationActive)
+                dynamic dialogueManager = services.DialogueManager;
+                if (dialogueManager != null && dialogueManager.IsConversationActive)
                 {
-                    Odyssey.Kotor.Dialogue.DialogueState state = services.DialogueManager.CurrentState;
+                    dynamic state = dialogueManager.CurrentState;
                     if (state != null)
                     {
                         // Get the speaker (owner of the dialogue)
@@ -3145,9 +3151,10 @@ namespace Odyssey.Scripting.EngineApi
             // Access DialogueManager from GameServicesContext
             if (ctx is Odyssey.Scripting.VM.ExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
             {
-                if (services.DialogueManager != null && services.DialogueManager.IsConversationActive)
+                dynamic dialogueManager = services.DialogueManager;
+                if (dialogueManager != null && dialogueManager.IsConversationActive)
                 {
-                    Odyssey.Kotor.Dialogue.DialogueState state = services.DialogueManager.CurrentState;
+                    dynamic state = dialogueManager.CurrentState;
                     if (state != null && state.Context != null)
                     {
                         // Check if entity is the owner, PC, or PC speaker in the conversation
