@@ -14,11 +14,14 @@ namespace Odyssey.Kotor.Components
     /// - Located via string references: "Trigger" @ 0x007bc51c, "TriggerList" @ 0x007bd254
     /// - "EVENT_ENTERED_TRIGGER" @ 0x007bce08, "EVENT_LEFT_TRIGGER" @ 0x007bcdf4
     /// - "OnTrapTriggered" @ 0x007c1a34, "CSWSSCRIPTEVENT_EVENTTYPE_ON_MINE_TRIGGERED" @ 0x007bc7ac
+    /// - Transition fields: "LinkedTo" @ 0x007bd798, "LinkedToModule" @ 0x007bd7bc, "LinkedToFlags" @ 0x007bd788
+    /// - "TransitionDestination" @ 0x007bd7a4 (waypoint tag for positioning after transition)
     /// - Original implementation: UTT (Trigger) GFF templates define trigger properties and geometry
     /// - Triggers are invisible polygonal volumes that fire scripts on enter/exit
     /// - Trigger types: Generic (0), Transition (1), Trap (2)
     /// - Transition triggers: LinkedTo, LinkedToModule, LinkedToFlags for area/module transitions
     /// - Trap triggers: OnTrapTriggered script fires when trap is activated
+    /// - Geometry: Triggers have polygon geometry (Geometry field in GIT) defining trigger volume
     /// - Based on UTT file format documentation in vendor/PyKotor/wiki/
     /// </remarks>
     public class TriggerComponent : ITriggerComponent
