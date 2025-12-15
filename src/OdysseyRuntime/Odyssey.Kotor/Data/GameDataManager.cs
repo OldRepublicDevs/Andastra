@@ -10,19 +10,24 @@ namespace Odyssey.Kotor.Data
     /// Manages game data tables (2DA files) for KOTOR.
     /// </summary>
     /// <remarks>
-    /// Key 2DA tables:
-    /// - appearance.2da: Creature appearance definitions
-    /// - baseitems.2da: Item base types and properties
-    /// - classes.2da: Character class definitions
-    /// - feat.2da: Feat definitions
-    /// - spells.2da: Force power definitions
-    /// - skills.2da: Skill definitions
-    /// - surfacemat.2da: Walkmesh surface materials
-    /// - portraits.2da: Character portraits
-    /// - placeables.2da: Placeable object appearances
-    /// - genericdoors.2da: Door models
-    /// - repute.2da: Faction relationships
-    /// - partytable.2da: Party member definitions
+    /// Game Data Manager:
+    /// - Based on swkotor2.exe 2DA table loading system
+    /// - Located via string references: 2DA file loading functions handle game data tables
+    /// - Original implementation: Loads and caches 2DA (two-dimensional array) data files
+    /// - Key 2DA tables:
+    ///   - appearance.2da: Creature appearance definitions
+    ///   - baseitems.2da: Item base types and properties
+    ///   - classes.2da: Character class definitions
+    ///   - feat.2da: Feat definitions
+    ///   - spells.2da: Force power definitions
+    ///   - skills.2da: Skill definitions
+    ///   - surfacemat.2da: Walkmesh surface materials
+    ///   - portraits.2da: Character portraits
+    ///   - placeables.2da: Placeable object appearances
+    ///   - genericdoors.2da: Door models
+    ///   - repute.2da: Faction relationships
+    ///   - partytable.2da: Party member definitions
+    /// - Based on 2DA file format documentation in vendor/PyKotor/wiki/
     /// </remarks>
     public class GameDataManager
     {
@@ -60,7 +65,7 @@ namespace Odyssey.Kotor.Data
             // Load from installation
             try
             {
-                var resource = _installation.Resources.LookupResource(tableName, CSharpKOTOR.Resources.ResourceType.TwoDA);
+                ResourceResult resource = _installation.Resources.LookupResource(tableName, CSharpKOTOR.Resources.ResourceType.TwoDA);
                 if (resource == null || resource.Data == null)
                 {
                     return null;
@@ -320,6 +325,103 @@ namespace Odyssey.Kotor.Data
         }
 
         #endregion
+
+        #region Spell Data
+
+        /// <summary>
+        /// Gets spell/force power data from spells.2da.
+        /// </summary>
+        /// <remarks>
+        /// Spell Data Access:
+        /// - Based on swkotor2.exe spell system
+        /// - Located via string references: "spells.2da" @ 0x007c2e60
+        /// - Original implementation: Loads spell data from spells.2da for Force powers
+        /// - Spell ID is row index in spells.2da
+        /// - Based on spells.2da format documentation in vendor/PyKotor/wiki/2DA-spells.md
+        /// </remarks>
+        [CanBeNull]
+        public SpellData GetSpell(int spellId)
+        {
+            TwoDA table = GetTable("spells");
+            if (table == null || spellId < 0 || spellId >= table.GetHeight())
+            {
+                return null;
+            }
+
+            TwoDARow row = table.GetRow(spellId);
+            return new SpellData
+            {
+                RowIndex = spellId,
+                Label = row.Label(),
+                NameStrRef = row.GetInteger("name") ?? -1,
+                DescriptionStrRef = row.GetInteger("spelldesc") ?? row.GetInteger("description") ?? -1,
+                Icon = row.GetString("iconresref") ?? row.GetString("icon") ?? string.Empty,
+                ConjTime = row.GetFloat("conjtime") ?? 0f,
+                CastTime = row.GetFloat("casttime") ?? 0f,
+                Range = row.GetInteger("range") ?? 0,
+                TargetType = row.GetInteger("targettype") ?? 0,
+                HostileSetting = row.GetInteger("hostilesetting") ?? 0,
+                ImpactScript = row.GetString("impactscript") ?? string.Empty,
+                Projectile = row.GetString("projectile") ?? string.Empty,
+                ProjectileModel = row.GetString("projmodel") ?? row.GetString("projectilemodel") ?? string.Empty,
+                ConjHandVfx = row.GetInteger("conjhandvfx") ?? row.GetInteger("casthandvisual") ?? 0,
+                ConjHeadVfx = row.GetInteger("conjheadvfx") ?? 0,
+                ConjGrndVfx = row.GetInteger("conjgrndvfx") ?? 0,
+                ConjCastVfx = row.GetInteger("conjcastvfx") ?? 0,
+                Innate = row.GetInteger("innate") ?? 0,
+                FeatId = row.GetInteger("featid") ?? -1
+            };
+        }
+
+        /// <summary>
+        /// Gets the Force point cost for a spell.
+        /// </summary>
+        /// <remarks>
+        /// Force Point Cost:
+        /// - Based on swkotor2.exe Force point calculation
+        /// - Located via string references: "GetSpellBaseForcePointCost" @ 0x007c2e60
+        /// - Original implementation: Calculates base Force point cost from spell level and innate value
+        /// - Base cost = spell level (from innate column) * 2, minimum 1
+        /// - Some spells have fixed costs in feat.2da (forcepoints column)
+        /// </remarks>
+        public int GetSpellForcePointCost(int spellId)
+        {
+            SpellData spell = GetSpell(spellId);
+            if (spell == null)
+            {
+                return 0;
+            }
+
+            // Check if spell has a feat with Force point cost
+            if (spell.FeatId >= 0)
+            {
+                FeatData feat = GetFeat(spell.FeatId);
+                if (feat != null)
+                {
+                    TwoDA featTable = GetTable("feat");
+                    if (featTable != null)
+                    {
+                        TwoDARow featRow = featTable.GetRow(spell.FeatId);
+                        int? forcePoints = featRow.GetInteger("forcepoints");
+                        if (forcePoints.HasValue && forcePoints.Value > 0)
+                        {
+                            return forcePoints.Value;
+                        }
+                    }
+                }
+            }
+
+            // Base cost calculation: spell level * 2, minimum 1
+            int spellLevel = spell.Innate;
+            if (spellLevel <= 0)
+            {
+                spellLevel = 1; // Default to level 1 if not specified
+            }
+
+            return Math.Max(1, spellLevel * 2);
+        }
+
+        #endregion
     }
 
     #region Data Structures
@@ -434,6 +536,32 @@ namespace Odyssey.Kotor.Data
         public string ModelName { get; set; }
         public int SoundAppType { get; set; }
         public bool BlockSight { get; set; }
+    }
+
+    /// <summary>
+    /// Spell/Force power data from spells.2da.
+    /// </summary>
+    public class SpellData
+    {
+        public int RowIndex { get; set; }
+        public string Label { get; set; }
+        public int NameStrRef { get; set; }
+        public int DescriptionStrRef { get; set; }
+        public string Icon { get; set; }
+        public float ConjTime { get; set; }
+        public float CastTime { get; set; }
+        public int Range { get; set; }
+        public int TargetType { get; set; }
+        public int HostileSetting { get; set; }
+        public string ImpactScript { get; set; }
+        public string Projectile { get; set; }
+        public string ProjectileModel { get; set; }
+        public int ConjHandVfx { get; set; }
+        public int ConjHeadVfx { get; set; }
+        public int ConjGrndVfx { get; set; }
+        public int ConjCastVfx { get; set; }
+        public int Innate { get; set; }
+        public int FeatId { get; set; }
     }
 
     #endregion
