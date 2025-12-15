@@ -38,16 +38,30 @@ namespace Odyssey.Kotor.Game
     /// - Based on swkotor2.exe module loading system
     /// - Located via string references: "MODULES:" @ 0x007b58b4, "MODULES" @ 0x007c6bc4
     /// - Directory setup: FUN_00633270 @ 0x00633270 (sets up MODULES, OVERRIDE, SAVES, etc. directory aliases)
-    ///   - Original implementation: Sets up directory aliases for resource lookup (HD0, CD0, OVERRIDE, MODULES, SAVES, etc.)
-    ///   - MODULES alias: Maps to ".\modules" (relative) or "d:\modules" (absolute) directory
-    ///   - Directory aliases used throughout engine for resource path resolution
+    ///   - Original implementation (from decompiled FUN_00633270):
+    ///     - Sets up directory aliases for resource lookup with both absolute ("d:\...") and relative (".\...") paths
+    ///     - Directory aliases registered: HD0 (d:\), CD0 (d:\), OVERRIDE (.\override or d:\override), MODULES (.\modules or d:\modules)
+    ///     - Additional aliases: ERRORTEX, TEMP, NWMFILES, LOGS, LOCALVAULT, DMVAULT, SERVERVAULT, SAVES (.\saves or u:\)
+    ///     - MUSIC, STREAMMUSIC, MOVIES, TEMPCLIENT, CURRENTGAME, HAK, TEXTUREPACKS, STREAMVOICE, SUPERMODELS
+    ///     - DOWNLOADS, OPTIONS, AMBIENT, PATCH, PORTRAITS, GAMEINPROGRESS (z:\gameinprogress or .\gameinprogress)
+    ///     - FUTUREGAME, RIMS, RIMSXBOX, REBOOTDATA, CACHE (z:\cache or .\), LIPS
+    ///     - Each alias maps to both absolute path (d:\...) and relative path (.\...) for cross-platform compatibility
+    ///     - MODULES alias: Maps to ".\modules" (relative) or "d:\modules" (absolute) directory
+    ///     - Directory aliases used throughout engine for resource path resolution
     /// - Module loading order: IFO (module info) -> LYT (layout) -> VIS (visibility) -> GIT (instances) -> ARE (area properties)
     /// - Original engine uses "MODULES:" prefix for module directory access
     /// - Module resources loaded from: MODULES:\{moduleName}\module.ifo, MODULES:\{moduleName}\{moduleName}.lyt, etc.
     /// - Load savegame function: FUN_00708990 @ 0x00708990 (loads savegame ERF archive, extracts GLOBALVARS, PARTYTABLE, etc.)
-    ///   - Original implementation: Creates GAMEINPROGRESS: directory if missing, loads savegame.sav ERF archive
-    ///   - Extracts savenfo.res (NFO GFF), loads PARTYTABLE via FUN_0057dcd0, loads GLOBALVARS via FUN_005ac740
-    ///   - Progress updates at 5%, 10%, 15%, 20%, 25%, 30%, 35%, 40%, 45%, 50% completion milestones
+    ///   - Original implementation (from decompiled FUN_00708990):
+    ///     - Constructs save path: "SAVES:\{saveName}\SAVEGAME" using format string "%06d - %s" (save number and name)
+    ///     - Creates GAMEINPROGRESS: directory if missing (checks existence, creates if not found)
+    ///     - Loads savegame.sav ERF archive from constructed path
+    ///     - Extracts savenfo.res (NFO GFF) to TEMP:pifo, reads NFO GFF with "NFO " signature
+    ///     - Progress updates: 5% (0x5), 10% (0xa), 15% (0xf), 20% (0x14), 25% (0x19), 30% (0x1e), 35% (0x23), 40% (0x28), 45% (0x2d), 50% (0x32)
+    ///     - Loads PARTYTABLE via FUN_0057dcd0 @ 0x0057dcd0 (party table deserialization)
+    ///     - Loads GLOBALVARS via FUN_005ac740 @ 0x005ac740 (global variables deserialization)
+    ///     - Reads AUTOSAVEPARAMS from NFO GFF if present
+    ///     - Sets module state flags and initializes game session
     /// </remarks>
     public class ModuleLoader
     {
