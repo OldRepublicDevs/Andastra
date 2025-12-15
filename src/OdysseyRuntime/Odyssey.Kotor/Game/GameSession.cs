@@ -507,7 +507,7 @@ namespace Odyssey.Kotor.Game
         /// </summary>
         private void FireModuleHeartbeat()
         {
-            if (_currentModule == null || _world == null || _world.EventBus == null)
+            if (_currentModule == null || _scriptExecutor == null)
             {
                 return;
             }
@@ -519,10 +519,11 @@ namespace Odyssey.Kotor.Game
                 return;
             }
 
-            // Fire script event - module scripts use module entity as owner
+            // Execute module heartbeat script
             // Based on swkotor2.exe: Module heartbeat script execution
             // Located via string references: "Mod_OnHeartbeat" @ 0x007be840
             // Original implementation: Module heartbeat fires every 6 seconds for module-level scripts
+            // Module scripts use module ResRef as context (no physical entity required)
             IEntity moduleEntity = _world.GetEntityByTag(_currentModule.ResRef, 0);
             if (moduleEntity == null)
             {
@@ -530,7 +531,7 @@ namespace Odyssey.Kotor.Game
                 moduleEntity = _world.CreateEntity(ObjectType.Invalid, Vector3.Zero, 0f);
                 moduleEntity.Tag = _currentModule.ResRef;
             }
-            _world.EventBus.FireScriptEvent(moduleEntity, ScriptEvent.OnModuleHeartbeat, null);
+            _scriptExecutor.ExecuteScript(heartbeatScript, moduleEntity, null);
         }
 
         private void FireScriptEvent(IEntity entity, ScriptEvent scriptEvent, IEntity target)
