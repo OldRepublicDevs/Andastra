@@ -11,10 +11,14 @@ namespace Odyssey.Core.Actions
     /// <remarks>
     /// Do Command Action:
     /// - Based on swkotor2.exe AssignCommand/DelayCommand system
+    /// - Located via string references: "DelayCommand" @ 0x007be900, "AssignCommand" NWScript function
     /// - Original implementation: Executes a stored action/script command on entity
     /// - Used by AssignCommand (execute on different entity) and DelayCommand (execute after delay)
     /// - Stores command as closure/action delegate, executes when action runs
     /// - STORE_STATE opcode in NCS VM stores stack/local state for DelayCommand semantics
+    /// - Action execution: Command executes immediately when action runs (no delay in ActionDoCommand itself)
+    /// - DelayCommand: Uses DelayScheduler to queue action for later execution
+    /// - AssignCommand: Executes command on different entity immediately (via action queue)
     /// </remarks>
     public class ActionDoCommand : ActionBase
     {
@@ -29,11 +33,13 @@ namespace Odyssey.Core.Actions
         protected override ActionStatus ExecuteInternal(IEntity actor, float deltaTime)
         {
             // Based on swkotor2.exe: AssignCommand/DelayCommand implementation
-            // Located via string references: "AssignCommand" NWScript function, "DelayCommand" NWScript function
+            // Located via string references: "DelayCommand" @ 0x007be900, "AssignCommand" NWScript function
             // Original implementation: Executes stored action/script command on entity
             // Used by AssignCommand (execute on different entity) and DelayCommand (execute after delay)
             // STORE_STATE opcode in NCS VM stores stack/local state for DelayCommand semantics
             // Command executes immediately when action runs (no delay in ActionDoCommand itself)
+            // DelayCommand: Uses DelayScheduler to queue action for later execution
+            // AssignCommand: Executes command on different entity immediately (via action queue)
             if (_command != null)
             {
                 try
