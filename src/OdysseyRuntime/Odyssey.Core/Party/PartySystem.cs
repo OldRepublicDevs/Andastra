@@ -11,6 +11,9 @@ namespace Odyssey.Core.Party
     /// </summary>
     /// <remarks>
     /// KOTOR Party System:
+    /// - Based on swkotor2.exe party system
+    /// - Located via string references: "PARTYTABLE" @ 0x007c1910, "Party" @ 0x007c24dc
+    /// - Party state stored in PARTYTABLE.res GFF file (see SaveSerializer FUN_0057dcd0 @ 0x0057dcd0)
     /// - PC is always party slot 0
     /// - Max 3 active party members in field
     /// - Max 9-10 available party members
@@ -138,7 +141,7 @@ namespace Odyssey.Core.Party
             }
 
             // Check if already available
-            foreach (var member in _availableMembers)
+            foreach (PartyMember member in _availableMembers)
             {
                 if (member.Entity.ObjectId == entity.ObjectId)
                 {
@@ -178,7 +181,7 @@ namespace Odyssey.Core.Party
             {
                 if (_availableMembers[i].Entity.ObjectId == entity.ObjectId)
                 {
-                    var member = _availableMembers[i];
+                    PartyMember member = _availableMembers[i];
 
                     // Remove from active party if present
                     RemoveFromActiveParty(member);
@@ -202,7 +205,7 @@ namespace Odyssey.Core.Party
         /// </summary>
         public PartyMember GetAvailableMemberBySlot(int npcSlot)
         {
-            foreach (var member in _availableMembers)
+            foreach (PartyMember member in _availableMembers)
             {
                 if (member.NPCSlot == npcSlot)
                 {
@@ -222,7 +225,7 @@ namespace Odyssey.Core.Party
                 return null;
             }
 
-            foreach (var member in _availableMembers)
+            foreach (PartyMember member in _availableMembers)
             {
                 if (string.Equals(member.Entity.Tag, tag, StringComparison.OrdinalIgnoreCase))
                 {
@@ -237,7 +240,7 @@ namespace Odyssey.Core.Party
         /// </summary>
         public void SetAvailability(IEntity entity, bool available)
         {
-            var member = GetMemberByEntity(entity);
+            PartyMember member = GetMemberByEntity(entity);
             if (member != null)
             {
                 member.IsAvailable = available;
@@ -249,7 +252,7 @@ namespace Odyssey.Core.Party
         /// </summary>
         public void SetSelectability(IEntity entity, bool selectable)
         {
-            var member = GetMemberByEntity(entity);
+            PartyMember member = GetMemberByEntity(entity);
             if (member != null)
             {
                 member.IsSelectable = selectable;
@@ -364,7 +367,7 @@ namespace Odyssey.Core.Party
             {
                 if (!_activeParty[i].IsPlayerCharacter)
                 {
-                    var member = _activeParty[i];
+                    PartyMember member = _activeParty[i];
                     _activeParty.RemoveAt(i);
                     member.IsInActiveParty = false;
                     DespawnMemberFromWorld(member);
@@ -374,7 +377,7 @@ namespace Odyssey.Core.Party
             // Add new selections
             if (npcSlot1 >= 0)
             {
-                var member1 = GetAvailableMemberBySlot(npcSlot1);
+                PartyMember member1 = GetAvailableMemberBySlot(npcSlot1);
                 if (member1 != null)
                 {
                     AddToActiveParty(member1);
@@ -383,7 +386,7 @@ namespace Odyssey.Core.Party
 
             if (npcSlot2 >= 0)
             {
-                var member2 = GetAvailableMemberBySlot(npcSlot2);
+                PartyMember member2 = GetAvailableMemberBySlot(npcSlot2);
                 if (member2 != null)
                 {
                     AddToActiveParty(member2);
@@ -441,7 +444,7 @@ namespace Odyssey.Core.Party
                 return false;
             }
 
-            foreach (var member in _activeParty)
+            foreach (PartyMember member in _activeParty)
             {
                 if (member.Entity.ObjectId == entity.ObjectId)
                 {
@@ -517,7 +520,7 @@ namespace Odyssey.Core.Party
             // Distribute to party members
             // In KOTOR, XP is shared equally among active party
             int xpPerMember = amount / _activeParty.Count;
-            foreach (var member in _activeParty)
+            foreach (PartyMember member in _activeParty)
             {
                 member.AwardXP(xpPerMember);
             }
@@ -568,7 +571,7 @@ namespace Odyssey.Core.Party
                 return positions;
             }
 
-            var leaderPos = GetLeaderPosition();
+            Vector3 leaderPos = GetLeaderPosition();
             positions[_leaderIndex] = leaderPos;
 
             // Calculate follower positions
@@ -601,13 +604,13 @@ namespace Odyssey.Core.Party
 
         private Vector3 GetLeaderPosition()
         {
-            var leader = Leader;
+            PartyMember leader = Leader;
             if (leader == null || leader.Entity == null)
             {
                 return Vector3.Zero;
             }
 
-            var transform = leader.Entity.GetComponent<Interfaces.Components.ITransformComponent>();
+            Interfaces.Components.ITransformComponent transform = leader.Entity.GetComponent<Interfaces.Components.ITransformComponent>();
             if (transform != null)
             {
                 return transform.Position;
@@ -632,7 +635,7 @@ namespace Odyssey.Core.Party
                 return _playerCharacter;
             }
 
-            foreach (var member in _availableMembers)
+            foreach (PartyMember member in _availableMembers)
             {
                 if (member.Entity.ObjectId == entity.ObjectId)
                 {
