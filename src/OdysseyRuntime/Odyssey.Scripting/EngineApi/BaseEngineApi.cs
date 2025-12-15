@@ -16,6 +16,17 @@ namespace Odyssey.Scripting.EngineApi
     /// - "ActionList" @ 0x007bebdc (action list GFF field), "ActionId" @ 0x007bebd0, "ActionType" @ 0x007bf7f8
     /// - PrintString implementation: FUN_005c4ff0 @ 0x005c4ff0 (prints string with "PRINTSTRING: %s\n" format)
     /// - ActionList loading: FUN_00508260 @ 0x00508260 (loads ActionList from GFF, parses ActionId, GroupActionId, NumParams, Paramaters)
+    ///   - Original implementation (from decompiled FUN_00508260):
+    ///     - Reads "ActionList" list from GFF structure
+    ///     - For each action entry, reads:
+    ///       - ActionId (int32): Action type identifier
+    ///       - GroupActionId (int16): Group action identifier
+    ///       - NumParams (int16): Number of parameters (0-13 max)
+    ///       - Paramaters (list): Parameter list with Type and Value fields
+    ///     - Parameter types: 1 = int, 2 = float, 3 = int (signed), 4 = string, 5 = object
+    ///     - Parameter values: Stored as Type-specific values (int, float, string, object)
+    ///     - Calls FUN_00507fd0 to create action from parsed parameters
+    ///     - Cleans up allocated parameter memory after action creation
     /// - Original implementation: Common NWScript functions shared between K1 and K2
     /// - Object constants: OBJECT_INVALID (0x7F000000), OBJECT_SELF (0x7F000001)
     /// - ACTION opcode: Calls engine function by routine ID (uint16 routineId + uint8 argCount)
@@ -102,11 +113,18 @@ namespace Odyssey.Scripting.EngineApi
         /// Based on swkotor2.exe: PrintString implementation
         /// Located via string references: "PRINTSTRING: %s\n" @ 0x007c29f8 (PrintString debug output format)
         /// Original implementation: FUN_005c4ff0 @ 0x005c4ff0 (prints string with "PRINTSTRING: %s\n" format to console/log)
+        ///   - Original implementation (from decompiled FUN_005c4ff0):
+        ///     - Checks parameter count (param_2), requires at least 2 parameters
+        ///     - Reads parameter value from stack/context
+        ///     - Formats string with "PRINTSTRING: %s\n" format string
+        ///     - Outputs to console/log via engine logging system
+        ///     - Returns 0 on success, 0xfffff82f on failure
         /// </remarks>
         protected Variable Func_PrintString(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             // Based on swkotor2.exe: FUN_005c4ff0 @ 0x005c4ff0
             // Located via string reference: "PRINTSTRING: %s\n" @ 0x007c29f8
+            // Original implementation: Checks parameter count, formats with "PRINTSTRING: %s\n", outputs to console/log
             string msg = args.Count > 0 ? args[0].AsString() : string.Empty;
             Console.WriteLine("PRINTSTRING: {0}\n", msg);
             return Variable.Void();
