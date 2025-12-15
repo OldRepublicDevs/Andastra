@@ -6,6 +6,19 @@ namespace Odyssey.MonoGame.UI
     /// <summary>
     /// Loading screen UI component using MonoGame SpriteBatch rendering.
     /// </summary>
+    /// <remarks>
+    /// Loading Screen:
+    /// - Based on swkotor2.exe loading screen system
+    /// - Located via string references: "LoadScreenID" @ 0x007bd54c (loading screen ID)
+    /// - "Loadscreens" @ 0x007c4c04 (loading screens resource), "loadscreenhints" @ 0x007c7350
+    /// - "loadscreen_p" @ 0x007cbe40 (loading screen panel GUI)
+    /// - "LBL_LOADING" @ 0x007cbe10 (loading label), "Load Bar = %d" @ 0x007c760c (load progress)
+    /// - "LoadBar" @ 0x007cb33c (load progress bar)
+    /// - Original implementation: KOTOR displays loading screen during module/area transitions
+    /// - Loading screens: Defined in loadscreens.2da, displayed based on LoadScreenID
+    /// - Loading hints: Text hints displayed during loading (loadscreenhints.2da)
+    /// - Progress bar: Shows loading progress during resource loading
+    /// </remarks>
     public class LoadingScreen
     {
         private SpriteBatch _spriteBatch;
