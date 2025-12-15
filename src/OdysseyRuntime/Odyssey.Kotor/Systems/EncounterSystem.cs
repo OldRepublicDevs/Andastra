@@ -15,20 +15,26 @@ namespace Odyssey.Kotor.Systems
     /// <remarks>
     /// Encounter System:
     /// - Based on swkotor2.exe encounter system
-    /// - Located via string references: "Encounter" @ 0x007bc524, "Encounter List" @ 0x007bd050
-    /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_ENCOUNTER_EXHAUSTED" @ 0x007bc868 (encounter exhausted event)
-    /// - Encounter creature management: "CreatureList" @ 0x007c0c80, "RecCreatures" @ 0x007c0cb4, "MaxCreatures" @ 0x007c0cc4
+    /// - Located via string references: "Encounter" @ 0x007bc524 (encounter object type), "Encounter List" @ 0x007bd050 (GFF list field in GIT)
+    /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_ENCOUNTER_EXHAUSTED" @ 0x007bc868 (encounter exhausted event, 0x10)
+    /// - Encounter creature management: "CreatureList" @ 0x007c0c80 (creature template list), "RecCreatures" @ 0x007c0cb4 (recommended creatures count)
+    /// - "MaxCreatures" @ 0x007c0cc4 (maximum creatures count), "LastSpawnTime" @ 0x007c0c10 (last spawn timestamp)
+    /// - "ResetTime" @ 0x007c0cec (encounter reset time), "DifficultyIndex" @ 0x007c0c58 (encounter difficulty)
     /// - Error messages:
-    ///   - "Problem loading encounter with tag '%s'. It has geometry, but no vertices." @ 0x007c0ae0
-    ///   - "Encounter template %s doesn't exist." @ 0x007c0df0
+    ///   - "Problem loading encounter with tag '%s'. It has geometry, but no vertices. Skipping." @ 0x007c0ae0
+    ///   - "Encounter template %s doesn't exist.\n" @ 0x007c0df0
     /// - Original implementation: FUN_004e01a0 @ 0x004e01a0 (load encounter instances from GIT)
     /// - Encounters spawn creatures when hostile creatures enter the encounter polygon area
-    /// - SpawnOption 0 = continuous spawn (spawns as creatures die)
-    /// - SpawnOption 1 = single-shot spawn (fires once when entered)
-    /// - PlayerOnly: if true, only player characters can trigger spawns
-    /// - Faction: encounter only spawns for creatures hostile to this faction
-    /// - Encounter geometry must have at least 3 vertices (polygon check)
-    /// - SpawnPointList defines spawn positions within encounter area
+    /// - SpawnOption 0 = continuous spawn (spawns as creatures die, maintains RecCreatures count)
+    /// - SpawnOption 1 = single-shot spawn (fires once when entered, spawns RecCreatures up to MaxCreatures)
+    /// - PlayerOnly: if true, only player characters can trigger spawns (checks isPlayerCheck callback)
+    /// - Faction: encounter only spawns for creatures hostile to this faction (checks faction reputation)
+    /// - Encounter geometry must have at least 3 vertices (polygon check for ContainsPoint)
+    /// - SpawnPointList defines spawn positions within encounter area (spawns creatures at random spawn points)
+    /// - Reset logic: If Reset flag is true, encounter resets after ResetTime seconds (allows respawning)
+    /// - Exhausted state: Encounter becomes exhausted when MaxCreatures reached (fires OnExhausted script)
+    /// - Single spawn: Creature templates with SingleSpawn flag can only spawn once per encounter
+    /// - Based on UTE file format (GFF with "UTE " signature) documentation
     /// </remarks>
     public class EncounterSystem
     {
