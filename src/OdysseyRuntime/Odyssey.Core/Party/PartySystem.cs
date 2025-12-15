@@ -13,9 +13,14 @@ namespace Odyssey.Core.Party
     /// KOTOR Party System:
     /// - Based on swkotor2.exe party system
     /// - Located via string references: "PARTYTABLE" @ 0x007c1910, "Party" @ 0x007c24dc
-    /// - "OnPartyDeath" @ 0x007bd9f4 (party member death event)
+    /// - "party" @ 0x007bda4c, "OnPartyDeath" @ 0x007bd9f4 (party member death event)
     /// - "PartyInteract" @ 0x007c1fc0 (party interaction system)
     /// - "SetByPlayerParty" @ 0x007c1d04 (party selection flag)
+    /// - "NonPartyKillable" @ 0x007bdad8 (non-party killable flag)
+    /// - GUI: "partyselect_p" @ 0x007cfe9c (party selection panel)
+    /// - "CB_PARTYKILLED" @ 0x007d29e4 (party killed checkbox)
+    /// - "Party Killed" @ 0x007c8470 (party killed message)
+    /// - Error message: "While creating the party select screen, NPC %d's ID is Out of Synch with what's in the Client Side Party Table." @ 0x007cff20
     /// - Original implementation: FUN_0057bd70 @ 0x0057bd70 (save PARTYTABLE.res to GFF)
     /// - FUN_0057dcd0 @ 0x0057dcd0 (load PARTYTABLE.res from GFF)
     /// - FUN_005a8220 @ 0x005a8220 (handle Party network message)
