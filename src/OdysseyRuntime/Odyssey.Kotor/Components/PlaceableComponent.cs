@@ -10,13 +10,16 @@ namespace Odyssey.Kotor.Components
     /// Placeable Component:
     /// - Based on swkotor2.exe placeable system
     /// - Located via string references: "Placeable" @ 0x007bc530, "Placeable List" @ 0x007bd260
-    /// - "Placeables" @ 0x007c4bd0, "placeableobjsnds" @ 0x007c4bf0
+    /// - "Placeables" @ 0x007c4bd0, "placeableobjsnds" @ 0x007c4bf0, "placeable" @ 0x007ba030
+    /// - Placeable effects: "fx_placeable01" @ 0x007c78b8, "placeablelight" @ 0x007c78c8
+    /// - Error message: "CSWCAnimBasePlaceable::ServerToClientAnimation(): Failed to map server anim %i to client anim." @ 0x007d2330
     /// - Original implementation: FUN_00585ec0 @ 0x00585ec0 (save placeable data to GFF)
     /// - FUN_004e08e0 @ 0x004e08e0 (load placeable instances from GIT)
     /// - Placeables have appearance, useability, locks, inventory, HP
     /// - Based on UTP file format (GFF with "UTP " signature)
     /// - Script events: OnUsed, OnOpen, OnClose, OnLock, OnUnlock, OnDamaged, OnDeath
     /// - Containers (HasInventory=true) can store items, open/close states
+    /// - Placeables can have visual effects and lighting attached
     /// </remarks>
     public class PlaceableComponent : IPlaceableComponent
     {
