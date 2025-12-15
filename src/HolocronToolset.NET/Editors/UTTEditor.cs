@@ -714,6 +714,7 @@ namespace HolocronToolset.NET.Editors
         public TextBox ResrefEdit => _resrefEdit;
         public Avalonia.Controls.CheckBox AutoRemoveKeyCheckbox => _autoRemoveKeyCheckbox;
         public Avalonia.Controls.CheckBox IsTrapCheckbox => _isTrapCheckbox;
+        public Avalonia.Controls.NumericUpDown DetectDcSpin => _detectDcSpin;
         public UTT Utt => _utt;
     }
 }
