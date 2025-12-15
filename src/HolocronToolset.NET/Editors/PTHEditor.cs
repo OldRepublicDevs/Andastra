@@ -111,6 +111,48 @@ namespace HolocronToolset.NET.Editors
             return new List<Vector2>();
         }
 
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/pth.py:307-310
+        // Original: def moveCameraToSelection(self):
+        public void MoveCameraToSelection()
+        {
+            // Will be implemented when render area is available
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/pth.py:313-314
+        // Original: def move_camera(self, x: float, y: float):
+        public void MoveCamera(float x, float y)
+        {
+            // Will be implemented when render area is available
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/pth.py:317-318
+        // Original: def zoom_camera(self, amount: float):
+        public void ZoomCamera(float amount)
+        {
+            // Will be implemented when render area is available
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/pth.py:321-322
+        // Original: def rotate_camera(self, angle: float):
+        public void RotateCamera(float angle)
+        {
+            // Will be implemented when render area is available
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/pth.py:325-326
+        // Original: def move_selected(self, x: float, y: float):
+        public void MoveSelected(float x, float y)
+        {
+            // Will be implemented when render area is available
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/pth.py:373-374
+        // Original: def select_node_under_mouse(self):
+        public void SelectNodeUnderMouse()
+        {
+            // Will be implemented when render area is available
+        }
+
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/pth.py:249-269
         // Original: def load(self, filepath, resref, restype, data):
         public override void Load(string filepath, string resref, ResourceType restype, byte[] data)
