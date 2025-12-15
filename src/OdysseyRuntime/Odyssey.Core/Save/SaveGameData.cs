@@ -9,12 +9,19 @@ namespace Odyssey.Core.Save
     /// Complete save game data.
     /// </summary>
     /// <remarks>
-    /// Maps to KOTOR save structure:
-    /// - NFO.res (save metadata)
-    /// - GLOBALVARS.res (global variables)
-    /// - PARTYTABLE.res (party state)
-    /// - [module]_s.rim (per-module states)
-    /// - Various GFF resources for entity states
+    /// Save Game Data Structure:
+    /// - Based on swkotor2.exe save game format
+    /// - Located via string references: "savenfo" @ 0x007be1f0, "SAVEGAME" @ 0x007be28c, "SAVES:" @ 0x007be284
+    /// - Save function: FUN_004eb750 @ 0x004eb750 creates save game ERF archive
+    /// - Maps to KOTOR save structure:
+    ///   - NFO.res (save metadata): GFF with "NFO " signature, contains AREANAME, TIMEPLAYED, SAVEGAMENAME, etc.
+    ///   - GLOBALVARS.res (global variables): GFF with "GLOB" signature, saved by FUN_005ac670 @ 0x005ac670
+    ///   - PARTYTABLE.res (party state): GFF with "PT  " signature, saved by FUN_0057bd70 @ 0x0057bd70
+    ///   - [module]_s.rim (per-module states): ERF archive containing area state GFF files for visited areas
+    ///   - Various GFF resources for entity states (creature positions, door states, etc.)
+    /// - Save file location: "SAVES:\{saveName}\savegame.sav" (ERF archive)
+    /// - Save metadata location: "SAVES:\{saveName}\savenfo.res" (GFF file)
+    /// - Original implementation: Save files are ERF archives (ERF with "MOD V1.0" signature @ 0x007be0d4)
     /// </remarks>
     public class SaveGameData
     {

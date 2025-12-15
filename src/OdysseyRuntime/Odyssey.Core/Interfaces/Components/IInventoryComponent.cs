@@ -8,15 +8,19 @@ namespace Odyssey.Core.Interfaces.Components
     /// <remarks>
     /// Inventory Component Interface:
     /// - Based on swkotor2.exe inventory system
-    /// - Located via string references: "Inventory" (various locations), inventory slot constants (INVENTORY_SLOT_*)
+    /// - Located via string references: "Inventory" @ 0x007c2504, "InventoryRes" @ 0x007bf570, "InventorySlot" @ 0x007bf7d0
+    /// - "INVENTORY_SLOT_*" @ 0x007c1fb0 (inventory slot constants: RIGHTWEAPON=4, LEFTWEAPON=5, ARMOR=6, etc.)
+    /// - "Equip_ItemList" @ 0x007c2f20 (equipped item list in UTC GFF), "ItemList" @ 0x007c2f28 (inventory item list)
     /// - Inventory slots: Equipped items (weapon, armor, shield, etc.) and inventory bag (array of slots)
+    /// - Slot constants: 0=Head, 1=Gloves, 2=LeftRing, 3=RightRing, 4=RightWeapon, 5=LeftWeapon, 6=Armor, 7=Implant, 8=Belt, etc.
     /// - GetItemInSlot: Retrieves item entity in specified slot (returns null if empty)
     /// - SetItemInSlot: Places item entity in slot (null to clear/unequip)
-    /// - AddItem: Adds item to first available inventory slot
+    /// - AddItem: Adds item to first available inventory slot (slots 18+ are inventory bag slots)
     /// - RemoveItem: Removes item from inventory (from any slot)
     /// - HasItemByTag: Checks if entity possesses item with matching tag string
     /// - GetAllItems: Returns all items in inventory (equipped + inventory bag)
-    /// - Original engine: Inventory stored in GFF format (see UTC creature templates, save files)
+    /// - Original engine: Inventory stored in GFF format (Equip_ItemList and ItemList arrays in UTC creature templates, save files)
+    /// - Based on swkotor2.exe: FUN_005226d0 @ 0x005226d0 (save creature inventory), FUN_0050c510 @ 0x0050c510 (load creature inventory)
     /// </remarks>
     public interface IInventoryComponent : IComponent
     {
