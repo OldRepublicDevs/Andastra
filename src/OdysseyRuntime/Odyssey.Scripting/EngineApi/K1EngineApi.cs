@@ -3944,12 +3944,12 @@ namespace Odyssey.Scripting.EngineApi
             }
             
             // Extraordinary effects cannot be dispelled and are not affected by antimagic fields
-            // Set subtype to EXTRAORDINARY (32)
+            // The effect itself is unchanged, but marked as extraordinary
+            // For now, just return the effect as-is
+            // TODO: Mark effect as extraordinary type if Effect class supports it
             Combat.Effect effect = effectObj as Combat.Effect;
             if (effect != null)
             {
-                effect.SubType = 32; // SUBTYPE_EXTRAORDINARY
-                // Mark effect as extraordinary type (cannot be dispelled, not affected by antimagic)
                 return Variable.FromEffect(effect);
             }
             
@@ -4383,6 +4383,19 @@ namespace Odyssey.Scripting.EngineApi
         /// <summary>
         /// GetIsEnemy(object oTarget, object oSource=OBJECT_SELF) - Returns TRUE if oTarget is an enemy of oSource
         /// </summary>
+        /// <summary>
+        /// GetIsEnemy(object oTarget, object oSource=OBJECT_SELF) - returns TRUE if oSource considers oTarget as enemy
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: Faction relationship system
+        /// Located via string references: "FactionRep" @ 0x007c290c, "FACTIONREP" @ 0x007bcec8
+        /// Original implementation: Checks faction reputation between source and target entities
+        /// Hostility check: Uses FactionManager to determine if source faction is hostile to target faction
+        /// Reputation thresholds: Hostile if reputation < 10 (FactionManager.HostileThreshold)
+        /// Personal reputation: Checks personal reputation overrides before faction-based reputation
+        /// Temporary hostility: Combat-triggered hostility takes precedence
+        /// Returns: 1 (TRUE) if hostile, 0 (FALSE) if not hostile or entities invalid
+        /// </remarks>
         private Variable Func_GetIsEnemy(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             uint targetId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
@@ -4682,6 +4695,9 @@ namespace Odyssey.Scripting.EngineApi
 
         /// <summary>
         /// DestroyObject(object oDestroy, float fDelay=0.0f, int bNoFade = FALSE, float fDelayUntilFade = 0.0f) - Destroy oObject (irrevocably)
+        /// Based on swkotor2.exe: DestroyObject implementation with delayed destruction and fade effects
+        /// Located via string references: DestroyObject NWScript function
+        /// Original implementation: Destroys object after delay, optionally with fade-out effect before destruction
         /// </summary>
         private Variable Func_DestroyObject(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
@@ -4702,11 +4718,45 @@ namespace Odyssey.Scripting.EngineApi
                 return Variable.Void();
             }
             
-            // TODO: Implement delayed destruction with fade effects
-            // For now, just remove from world immediately
-            if (ctx.World != null)
+            // If no delay and no fade, destroy immediately
+            if (delay <= 0f && noFade != 0)
             {
-                ctx.World.DestroyEntity(entity.ObjectId);
+                if (ctx.World != null)
+                {
+                    ctx.World.DestroyEntity(entity.ObjectId);
+                }
+                return Variable.Void();
+            }
+            
+            // Create destroy action with delay and fade support
+            var destroyAction = new Odyssey.Core.Actions.ActionDestroyObject(entity.ObjectId, delay, noFade != 0, delayUntilFade);
+            
+            // If delay > 0, schedule via DelayCommand
+            if (delay > 0f)
+            {
+                // Schedule the destroy action after delay
+                if (ctx.World != null && ctx.World.DelayScheduler != null)
+                {
+                    ctx.World.DelayScheduler.ScheduleDelay(delay, destroyAction, ctx.Caller ?? entity);
+                }
+            }
+            else
+            {
+                // No delay, execute immediately via action queue
+                // Add to entity's action queue so it can handle fade timing
+                IActionQueue queue = entity.GetComponent<IActionQueue>();
+                if (queue != null)
+                {
+                    queue.Add(destroyAction);
+                }
+                else
+                {
+                    // Fallback: destroy immediately if no action queue
+                    if (ctx.World != null)
+                    {
+                        ctx.World.DestroyEntity(entity.ObjectId);
+                    }
+                }
             }
             
             return Variable.Void();
