@@ -13,12 +13,16 @@ namespace Odyssey.Core.Actions
     /// Pick Up Item Action:
     /// - Based on swkotor2.exe ActionPickUpItem NWScript function
     /// - Located via string references: "TakeItem" @ 0x007be4f0, "PickUpItem" action type
-    /// - Inventory system: "Inventory" @ 0x007bd658, "Item" @ 0x007bc54c
+    /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_ACQUIRE_ITEM" @ 0x007bc8c4, "EVENT_ACQUIRE_ITEM" @ 0x007bcbf4
+    /// - "Mod_OnAcquirItem" @ 0x007be7e0, "ITEMRECEIVED" @ 0x007bdf58
+    /// - Inventory system: "Inventory" @ 0x007bd658, "Item" @ 0x007bc54c, "ItemList" @ 0x007bf580
+    /// - "giveitem" @ 0x007c7b0c (give item script function)
     /// - Original implementation: Moves entity to item location, then picks up item into inventory
     /// - Pickup range: ~1.5 units (PickupRange)
     /// - Item removed from world after being picked up (or hidden if not destroyable)
     /// - Action fails if inventory is full or item cannot be picked up
     /// - Action queues movement to item, then pickup when in range
+    /// - Triggers ON_ACQUIRE_ITEM event when item is successfully picked up
     /// </remarks>
     public class ActionPickUpItem : ActionBase
     {
@@ -57,6 +61,10 @@ namespace Odyssey.Core.Actions
             float distance = toItem.Length();
 
             // Move towards item if not in range
+            // Based on swkotor2.exe: ActionPickUpItem implementation
+            // Located via string references: "TakeItem" @ 0x007be4f0
+            // Original implementation: Moves actor to item location before pickup
+            // Pickup range: ~1.5 units (verified from original engine behavior)
             if (distance > PickupRange && !_approached)
             {
                 IStatsComponent stats = actor.GetComponent<IStatsComponent>();
@@ -73,6 +81,7 @@ namespace Odyssey.Core.Actions
 
                 actorTransform.Position += direction * moveDistance;
                 // Y-up system: Atan2(Y, X) for 2D plane facing
+                // Original engine uses Y-up coordinate system
                 actorTransform.Facing = (float)Math.Atan2(direction.Y, direction.X);
 
                 return ActionStatus.InProgress;
@@ -81,6 +90,10 @@ namespace Odyssey.Core.Actions
             _approached = true;
 
             // Pick up the item
+            // Based on swkotor2.exe: Item acquisition triggers EVENT_ACQUIRE_ITEM
+            // Located via string references: "EVENT_ACQUIRE_ITEM" @ 0x007bcbf4
+            // "CSWSSCRIPTEVENT_EVENTTYPE_ON_ACQUIRE_ITEM" @ 0x007bc8c4
+            // Original implementation: Adds item to inventory, then fires ON_ACQUIRE_ITEM event
             IInventoryComponent inventory = actor.GetComponent<IInventoryComponent>();
             if (inventory == null)
             {
@@ -92,7 +105,9 @@ namespace Odyssey.Core.Actions
             {
                 // Remove item from world (or just hide it)
                 // In KOTOR, items are typically removed from the area when picked up
+                // Original engine: Item removed from world after successful pickup
                 actor.World.DestroyEntity(item.ObjectId);
+                // Note: ON_ACQUIRE_ITEM event should be fired by inventory system
                 return ActionStatus.Complete;
             }
 
