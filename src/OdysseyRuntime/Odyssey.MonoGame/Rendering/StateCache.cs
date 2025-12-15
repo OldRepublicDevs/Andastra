@@ -78,6 +78,7 @@ namespace Odyssey.MonoGame.Rendering
         /// <summary>
         /// Sets rasterizer state (only if changed).
         /// </summary>
+        /// <param name="state">Rasterizer state to set. Can be null to use default.</param>
         public void SetRasterizerState(RasterizerState state)
         {
             if (state != _currentRasterizerState)
