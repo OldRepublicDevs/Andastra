@@ -82,10 +82,16 @@ namespace Odyssey.Kotor.Systems
     /// </summary>
     /// <remarks>
     /// Perception System:
+    /// - Based on swkotor2.exe perception system
+    /// - Located via string references: "CSWSSCRIPTEVENT_EVENTTYPE_ON_PERCEPTION" @ 0x007bcb68
+    /// - "PerceptionData" @ 0x007bf6c4, "PerceptionList" @ 0x007bf6d4 (perception state storage)
+    /// - "PERCEPTIONDIST" @ 0x007c4070, "PerceptionRange" @ 0x007c4080 (perception range fields)
+    /// - "ScriptOnNotice" @ 0x007beea0 (script hook for perception events)
+    /// - Original implementation: FUN_005226d0 @ 0x005226d0 saves PerceptionList to GFF (creature serialization)
     /// - Each creature has sight and hearing ranges
     /// - Perception is updated periodically (not every frame)
     /// - Events fire when perception state changes:
-    ///   - OnPerceive: New object seen/heard
+    ///   - OnPerceive: New object seen/heard (fires ScriptOnNotice)
     ///   - OnVanish: Object no longer seen
     ///   - OnInaudible: Object no longer heard
     ///
