@@ -45,6 +45,47 @@ namespace Odyssey.Kotor.Combat
     /// - Original implementation: FUN_00529470 @ 0x00529470 (save CombatRoundData to GFF)
     /// - FUN_005226d0 @ 0x005226d0 (load CombatRoundData from creature save)
     /// - FUN_005fb0f0 @ 0x005fb0f0 (reference to CombatRoundData usage)
+    /// - CombatRoundData GFF fields (from FUN_00529470):
+    ///   - "RoundStarted" (byte): Whether round has started
+    ///   - "SpellCastRound" (byte): Spell cast during round flag
+    ///   - "DeflectArrow" (byte): Deflect arrow ability flag
+    ///   - "WeaponSucks" (byte): Weapon sucks flag
+    ///   - "DodgeTarget" (int32): Target being dodged
+    ///   - "NewAttackTarget" (int32): New attack target ID
+    ///   - "Engaged" (float): Engaged flag
+    ///   - "Master" (float): Master entity ID
+    ///   - "MasterID" (int32): Master ID
+    ///   - "RoundPaused" (byte): Round paused flag
+    ///   - "RoundPausedBy" (int32): Entity that paused the round
+    ///   - "InfinitePause" (byte): Infinite pause flag
+    ///   - "PauseTimer" (float): Pause timer value
+    ///   - "Timer" (float): Round timer
+    ///   - "RoundLength" (float): Round length (3.0 seconds)
+    ///   - "OverlapAmount" (float): Overlap amount
+    ///   - "BleedTimer" (float): Bleed timer
+    ///   - "CurrentAttack" (byte): Current attack index
+    ///   - "AttackID" (uint16): Attack ID
+    ///   - "AttackGroup" (byte): Attack group
+    ///   - "ParryIndex" (float): Parry index
+    ///   - "NumAOOs" (float): Number of attacks of opportunity
+    ///   - "NumCleaves" (float): Number of cleaves
+    ///   - "OnHandAttacks" (float): Main hand attacks count
+    ///   - "OffHandAttacks" (float): Offhand attacks count
+    ///   - "AdditAttacks" (float): Additional attacks count
+    ///   - "EffectAttacks" (float): Effect-based attacks count
+    ///   - "ParryActions" (byte): Parry actions flag
+    ///   - "OffHandTaken" (float): Offhand attack taken flag
+    ///   - "ExtraTaken" (float): Extra attack taken flag
+    ///   - "AttackList" (list): List of 5 attack entries
+    ///   - "SpecAttackList" (list): Special attack list
+    ///   - "SpecAttackIdList" (list): Special attack ID list
+    ///   - "SchedActionList" (list): Scheduled action list
+    /// - Error messages:
+    ///   - "CSWSCombatRound::EndCombatRound - %x Combat Slave (%x) not found!" @ 0x007bfb80
+    ///   - "CSWSCombatRound::IncrementTimer - %s Timer is negative at %d; Ending combat round and resetting" @ 0x007bfbc8
+    ///   - "CSWSCombatRound::IncrementTimer - %s Master IS found (%x) and round has expired (%d %d); Resetting" @ 0x007bfc28
+    ///   - "CSWSCombatRound::IncrementTimer - %s Master cannot be found and round has expired; Resetting" @ 0x007bfc90
+    ///   - "CSWSCombatRound::DecrementPauseTimer - %s Master cannot be found expire the round; Resetting" @ 0x007bfcf0
     /// - 3-second rounds with timer-based attack scheduling
     /// - Round timing: Timer checks at 0.5s, 1.5s, 2.5s, 3.0s
     /// - Starting (0.0s): Initialize animations
