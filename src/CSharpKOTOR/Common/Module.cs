@@ -1688,12 +1688,11 @@ namespace CSharpKOTOR.Common
             Resource(); // Trigger reload
         }
 
-        // Placeholder methods - will be fully implemented as dependencies are ported
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:1840-1874
         // Original: def data(self) -> bytes | None:
         public byte[] Data()
         {
-            // TODO: Implement full data() method once helper functions are ported
+            string fileName = $"{ResName}.{ResType.Extension}";
             string activePath = Active();
             if (activePath == null)
             {
@@ -1701,20 +1700,37 @@ namespace CSharpKOTOR.Common
             }
 
             // Check if capsule file
+            // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:1856-1860
+            // Original: if is_capsule_file(active_path): data = Capsule(active_path).resource(self._resname, self._restype); if data is None: RobustLogger().error(...); return data
             if (FileHelpers.IsCapsuleFile(activePath))
             {
                 var capsule = new Capsule(activePath);
-                return capsule.GetResource(ResName, ResType);
+                byte[] data = capsule.GetResource(ResName, ResType);
+                if (data == null)
+                {
+                    new Logger.RobustLogger().Error($"Resource '{fileName}' not found in '{activePath}'");
+                }
+                return data;
             }
 
             // Check if BIF file
+            // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:1862-1872
+            // Original: if is_bif_file(active_path): resource = self._installation.resource(...); if resource is None: RobustLogger().error(...); return resource.data
             if (FileHelpers.IsBifFile(activePath))
             {
                 var resource = _installation.Resource(ResName, ResType, new[] { SearchLocation.CHITIN });
-                return resource?.Data;
+                if (resource == null)
+                {
+                    string msg = $"Resource '{fileName}' not found in BIF '{activePath}' somehow?";
+                    new Logger.RobustLogger().Error(msg);
+                    return null;
+                }
+                return resource.Data;
             }
 
             // Regular file
+            // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:1874
+            // Original: return active_path.read_bytes()
             if (File.Exists(activePath))
             {
                 return File.ReadAllBytes(activePath);
