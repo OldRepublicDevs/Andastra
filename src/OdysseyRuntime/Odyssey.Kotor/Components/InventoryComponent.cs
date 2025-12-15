@@ -34,7 +34,7 @@ namespace Odyssey.Kotor.Components
     public class InventoryComponent : IInventoryComponent
     {
         private readonly Dictionary<int, IEntity> _slots;
-        private readonly IEntity _owner;
+        private IEntity _owner;
         private const int MaxInventorySlots = 100; // Maximum inventory bag size
 
         public InventoryComponent([NotNull] IEntity owner)
@@ -46,7 +46,12 @@ namespace Odyssey.Kotor.Components
         public IEntity Owner
         {
             get { return _owner; }
+            set { _owner = value; }
         }
+
+        public void OnAttach() { }
+
+        public void OnDetach() { }
 
         /// <summary>
         /// Gets the item in the specified inventory slot.
