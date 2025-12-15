@@ -17,19 +17,26 @@ namespace Odyssey.Scripting.VM
     /// NCS Virtual Machine:
     /// - Based on swkotor2.exe NCS VM implementation
     /// - Located via string references: NCS script execution engine handles bytecode interpretation
-    /// - Action system: "ActionList" @ 0x007bebdc, "ActionId" @ 0x007bebd0, "ActionType" @ 0x007bf7f8
-    /// - "ActionTimer" @ 0x007bf820, "SchedActionList" @ 0x007bf99c, "ParryActions" @ 0x007bfa18
-    /// - "GroupActionId" @ 0x007bebc0, "EVENT_FORCED_ACTION" @ 0x007bccac
+    /// - Action system: "ActionList" @ 0x007bebdc (action list field), "ActionId" @ 0x007bebd0 (action ID field)
+    /// - "ActionType" @ 0x007bf7f8 (action type field), "ActionTimer" @ 0x007bf820 (action timer field)
+    /// - "SchedActionList" @ 0x007bf99c (scheduled action list), "ParryActions" @ 0x007bfa18 (parry action queue)
+    /// - "GroupActionId" @ 0x007bebc0 (group action ID), "EVENT_FORCED_ACTION" @ 0x007bccac (forced action event, case 0x15)
+    /// - STORE_STATE opcode: "DelayCommand" @ 0x007be900 (stores stack/local state for delayed execution)
     /// - Original implementation: Executes NCS (NWScript Compiled Script) bytecode files
-    /// - NCS file format: "NCS " signature, "V1.0" version, 0x42 marker at offset 8, big-endian file size
-    /// - Instructions start at offset 0x0D (13 decimal)
-    /// - Stack-based VM with 65536-byte stack, 4-byte aligned
+    /// - NCS file format: "NCS " signature (bytes 0-3), "V1.0" version (bytes 4-7), 0x42 marker at offset 8 (byte 8)
+    /// - File size: Big-endian uint32 at offset 9-12 (bytes 9-12)
+    /// - Instructions start at offset 0x0D (13 decimal, byte 13)
+    /// - Stack-based VM with 65536-byte stack (StackSize constant), 4-byte aligned
     /// - Opcodes: ACTION (0x2A) calls engine functions, others handle stack operations, jumps, conditionals
-    /// - ACTION opcode: uint16 routineId + uint8 argCount (stack elements, not bytes)
-    /// - Original engine uses big-endian encoding for multi-byte values
-    /// - Stack alignment: 4-byte aligned, vectors are 12 bytes (3 floats)
-    /// - Jump offsets: Relative to instruction start, not next instruction
-    /// - Action scheduling: Actions can be scheduled with timers, grouped, or forced via events
+    /// - ACTION opcode format: uint16 routineId (big-endian, bytes 2-3) + uint8 argCount (byte 4, stack elements, not bytes)
+    /// - Original engine uses big-endian encoding for all multi-byte values (instructions, operands, jumps)
+    /// - Stack alignment: 4-byte aligned, vectors are 12 bytes (3 floats, X/Y/Z components)
+    /// - Jump offsets: Relative to instruction start (current PC), not next instruction
+    /// - Object references: 0x7F000000 = OBJECT_INVALID, 0x7F000001 = OBJECT_SELF (caller entity)
+    /// - Action scheduling: Actions can be scheduled with timers (DelayCommand), grouped (GroupActionId), or forced via events
+    /// - Instruction limit: MaxInstructions prevents infinite loops (default 100000 instructions per execution)
+    /// - String handling: Strings stored in string pool with integer handles (off-stack storage)
+    /// - Based on NCS file format documentation in vendor/PyKotor/wiki/NCS-File-Format.md
     /// </remarks>
     public class NcsVm : INcsVm
     {
