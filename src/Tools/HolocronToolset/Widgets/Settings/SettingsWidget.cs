@@ -5,7 +5,7 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using HolocronToolset.Data;
 using HolocronToolset.Widgets.Edit;
-using Andastra.Parsing;
+using Andastra.Parsing.Common;
 using SettingsBase = HolocronToolset.Data.Settings;
 
 namespace HolocronToolset.Widgets.Settings
@@ -84,7 +84,7 @@ namespace HolocronToolset.Widgets.Settings
         protected void RegisterColour(ColorEdit widget, string colourName)
         {
             int colorValue = ValidateColour(colourName, _settings.GetValue<int>(colourName, 0));
-            widget.SetColor(Color.FromRgbaInteger(colorValue));
+            widget.SetColor(Andastra.Parsing.Common.Color.FromRgbaInteger(colorValue));
             _colours[colourName] = widget;
         }
 

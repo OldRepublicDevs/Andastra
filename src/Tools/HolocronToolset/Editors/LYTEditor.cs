@@ -6,7 +6,7 @@ using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using Andastra.Parsing;
 using Andastra.Parsing.Formats.LYT;
-using Andastra.Parsing.Resources;
+using Andastra.Parsing.Resource;
 using HolocronToolset.Data;
 
 namespace HolocronToolset.Editors
@@ -146,7 +146,7 @@ namespace HolocronToolset.Editors
 
                     visited.Add(nextRoom);
                     var newPath = new List<LYTRoom>(path) { nextRoom };
-                    var priority = newPath.Count + (nextRoom.Position - end.Position).Magnitude();
+                    var priority = newPath.Count + (nextRoom.Position - end.Position).Length();
                     queue.Add(Tuple.Create(priority, nextRoom, newPath));
                 }
             }
