@@ -120,15 +120,21 @@ namespace Odyssey.Core.Combat
     /// - "VisualEffect" @ 0x007c4624, "RangedEffect" @ 0x007c4634 (effect categories)
     /// - "GameEffects" @ 0x007c4e70, "VideoEffects" @ 0x007c4f30, "EffectIcon" @ 0x007c4f48
     /// - Original implementation: FUN_0050b540 @ 0x0050b540 (load EffectList from GFF)
-    ///   - Loads "EffectList" GFF list field, iterates through each effect struct
+    ///   - Function signature: `void FUN_0050b540(void *this, void *param_1, uint *param_2)`
+    ///   - param_1: GFF structure pointer
+    ///   - param_2: GFF field pointer
+    ///   - Loads "EffectList" GFF list field (via FUN_004129e0), iterates through each effect struct
     ///   - Creates effect object (0x8c bytes) via FUN_00541600, loads effect data via FUN_00541b60
     ///   - Filters effects: Only adds effects where effect type matches or effect subtype matches (DAT_007c02ec)
     ///   - Calls FUN_0050ae30 to add effect to entity's effect list
     ///   - Effect filtering: Effects with type 1 (instant) or matching subtype are added
+    ///   - Effect structure: Contains effect type, subtype, duration, parameters, visual effect ID, etc.
     /// - FUN_00505db0 @ 0x00505db0 (save EffectList to GFF)
-    ///   - Saves "EffectList" GFF list field, iterates through entity's effect list
+    ///   - Function signature: `void FUN_00505db0(void *this, void *param_1, uint *param_2)`
+    ///   - Saves "EffectList" GFF list field (via FUN_00413570), iterates through entity's effect list
     ///   - Calls FUN_00540f10 to serialize each effect to GFF struct
     ///   - Effect count stored at offset 0x14c, effect list pointer at offset 0x148
+    ///   - Each effect struct saved with effect type, subtype, duration, parameters, visual effect ID
     /// - Effects applied to entities with duration tracking, stacking rules, removal on expiration
     /// - Effect types: Attribute modifiers (ability, attack, damage, AC, saves), status effects (paralysis, stun, etc.),
     ///   damage effects (resistance, immunity, reduction), Force effects, visual effects
