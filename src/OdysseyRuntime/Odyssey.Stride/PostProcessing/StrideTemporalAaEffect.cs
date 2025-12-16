@@ -10,7 +10,7 @@ namespace Odyssey.Stride.PostProcessing
     /// <summary>
     /// Stride implementation of temporal anti-aliasing effect.
     /// Inherits shared TAA logic from BaseTemporalAaEffect.
-    /// 
+    ///
     /// Features:
     /// - Sub-pixel jittering for temporal sampling
     /// - Motion vector reprojection
