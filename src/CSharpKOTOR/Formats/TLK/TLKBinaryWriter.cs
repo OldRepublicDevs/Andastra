@@ -63,7 +63,7 @@ namespace AuroraEngine.Common.Formats.TLK
             }
         }
 
-        private void WriteFileHeader(BinaryWriter writer)
+        private void WriteFileHeader(System.IO.BinaryWriter writer)
         {
             uint languageId = (uint)_tlk.Language;
             uint stringCount = (uint)_tlk.Count;
@@ -81,7 +81,7 @@ namespace AuroraEngine.Common.Formats.TLK
             return FileHeaderSize + _tlk.Count * EntrySize;
         }
 
-        private static void WriteEntry(BinaryWriter writer, TLKEntry entry, int textOffset, int textByteLength)
+        private static void WriteEntry(System.IO.BinaryWriter writer, TLKEntry entry, int textOffset, int textByteLength)
         {
             string soundResref = entry.Voiceover.ToString();
             uint currentTextOffset = (uint)textOffset;
