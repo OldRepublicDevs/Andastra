@@ -396,26 +396,4 @@ namespace HolocronToolset.NET.Editors
             DeleteSelected = new object();
         }
     }
-
-    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/pth.py
-    // Stub for renderArea UI component - will be fully implemented when UI is available
-    public class PTHRenderArea
-    {
-        // Signal properties for test compatibility
-        public object SigMousePressed { get; private set; }
-        public object SigMouseMoved { get; private set; }
-        public object SigMouseScrolled { get; private set; }
-        public object SigMouseReleased { get; private set; }
-        public object SigKeyPressed { get; private set; }
-
-        public PTHRenderArea()
-        {
-            // Initialize signal properties - will be fully implemented when UI is available
-            SigMousePressed = new object();
-            SigMouseMoved = new object();
-            SigMouseScrolled = new object();
-            SigMouseReleased = new object();
-            SigKeyPressed = new object();
-        }
-    }
 }
