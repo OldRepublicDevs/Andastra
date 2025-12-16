@@ -395,6 +395,7 @@ namespace HolocronToolset.Editors
             {
                 // Check cache first (updated by SetNoteEnabledCheckbox or PropertyChanged handler)
                 // Cache is the source of truth for headless tests
+                // IMPORTANT: Always use cache if it has a value (it's the authoritative source)
                 bool? checkboxValue = _cachedMapNoteEnabled;
                 
                 // If cache is null, try to read from checkbox directly
@@ -427,6 +428,7 @@ namespace HolocronToolset.Editors
                     // Always use checkbox/cache value to update UTW
                     // The cache is the source of truth (updated by SetNoteEnabledCheckbox or PropertyChanged)
                     // Force update UTW even if it's already set (ensures consistency)
+                    // This ensures the UTW value matches the cache value exactly
                     _utw.MapNoteEnabled = checkboxValue.Value;
                 }
                 else
@@ -582,10 +584,19 @@ namespace HolocronToolset.Editors
             }
         }
 
+        private bool _isSettingNoteEnabledCheckbox = false; // Flag to prevent handler from overwriting cache during SetNoteEnabledCheckbox
+        
         private void OnNoteEnabledCheckboxPropertyChanged(object sender, Avalonia.AvaloniaPropertyChangedEventArgs e)
         {
             if (e.Property == CheckBox.IsCheckedProperty && _noteEnabledCheckbox != null)
             {
+                // Don't update cache if we're in the middle of SetNoteEnabledCheckbox
+                // (SetNoteEnabledCheckbox is the authoritative source for test scenarios)
+                if (_isSettingNoteEnabledCheckbox)
+                {
+                    return;
+                }
+                
                 // Update cache from checkbox value
                 // Note: SetNoteEnabledCheckbox sets cache first, then checkbox, so this should match
                 // But we still update cache here to handle direct checkbox changes
@@ -665,12 +676,22 @@ namespace HolocronToolset.Editors
                 // Set cache first, then set checkbox (cache takes precedence in Build())
                 // The cache is the source of truth for headless tests
                 _cachedMapNoteEnabled = value;
-                // Temporarily detach PropertyChanged handler to prevent it from overwriting cache
-                // (SetNoteEnabledCheckbox is the authoritative source for test scenarios)
-                _noteEnabledCheckbox.PropertyChanged -= OnNoteEnabledCheckboxPropertyChanged;
-                _noteEnabledCheckbox.IsChecked = value;
-                // Reattach handler after setting value
-                _noteEnabledCheckbox.PropertyChanged += OnNoteEnabledCheckboxPropertyChanged;
+                // Set flag to prevent PropertyChanged handler from overwriting cache
+                _isSettingNoteEnabledCheckbox = true;
+                try
+                {
+                    // Temporarily detach PropertyChanged handler to prevent it from overwriting cache
+                    // (SetNoteEnabledCheckbox is the authoritative source for test scenarios)
+                    _noteEnabledCheckbox.PropertyChanged -= OnNoteEnabledCheckboxPropertyChanged;
+                    _noteEnabledCheckbox.IsChecked = value;
+                    // Reattach handler after setting value
+                    _noteEnabledCheckbox.PropertyChanged += OnNoteEnabledCheckboxPropertyChanged;
+                }
+                finally
+                {
+                    // Always clear flag, even if exception occurs
+                    _isSettingNoteEnabledCheckbox = false;
+                }
                 // Also update UTW immediately if it exists (for real-time updates)
                 if (_utw != null)
                 {

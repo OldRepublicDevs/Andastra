@@ -513,6 +513,10 @@ namespace HolocronToolset.Tests.Editors
             // Verify UTW is set correctly
             editor.Utw.MapNoteEnabled.Should().BeTrue("UTW.MapNoteEnabled should be true after SetNoteEnabledCheckbox(true)");
             
+            // Verify cache is still set correctly before Build()
+            editor.CachedMapNoteEnabled.Should().BeTrue("Cache should still be true before Build()");
+            editor.Utw.MapNoteEnabled.Should().BeTrue("UTW.MapNoteEnabled should still be true before Build()");
+            
             // Build and verify
             var (data1, _) = editor.Build();
             var modifiedUtw1 = UTWAuto.ReadUtw(data1);
