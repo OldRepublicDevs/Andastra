@@ -2202,6 +2202,12 @@ namespace AuroraEngine.Common.Formats.NCS.NCSDecomp
                 int subCount = 0;
                 foreach (ASubroutine iterSub in this.SubIterable(subdata))
                 {
+                    // Skip main subroutine - it's processed separately below
+                    if (iterSub == mainsub)
+                    {
+                        JavaSystem.@out.Println("DEBUG decompileNcs: skipping main subroutine in loop (will be processed separately)");
+                        continue;
+                    }
                     subCount++;
                     int subPos = nodedata.TryGetPos(iterSub);
                     JavaSystem.@out.Println("DEBUG decompileNcs: processing subroutine " + subCount + " at pos=" + (subPos >= 0 ? subPos.ToString() : "unknown"));
