@@ -70,7 +70,7 @@ List available backups without restoring.
 .EXAMPLE
 .\EngineNamespaceRenamer.ps1 -ListBackups
 #>
-[CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High', DefaultParameterSetName = 'Rename')]
+[CmdletBinding(DefaultParameterSetName = 'Rename')]
 param(
     [Parameter(Mandatory = $false, ParameterSetName = 'Rename')]
     [Parameter(Mandatory = $false, ParameterSetName = 'Undo')]
@@ -118,7 +118,10 @@ param(
     [switch]$Undo,
 
     [Parameter(Mandatory = $true, ParameterSetName = 'ListBackups')]
-    [switch]$ListBackups
+    [switch]$ListBackups,
+
+    [Parameter(Mandatory = $false, ParameterSetName = 'Rename')]
+    [int]$Timeout = 120
 )
 
 #region Helper Functions
@@ -179,7 +182,7 @@ function New-Backup {
     .SYNOPSIS
     Creates a timestamped backup of the root directory.
     #>
-    [CmdletBinding(SupportsShouldProcess = $true)]
+    [CmdletBinding()]
     param(
         [Parameter(Mandatory = $true)]
         [string]$RootPath,
@@ -241,57 +244,53 @@ function New-Backup {
         }
     } | Where-Object { $null -ne $_ }
 
-    if ($PSCmdlet.ShouldProcess($backupPath, "Create backup with $($manifest.Files.Count) files")) {
-        Write-Host "Creating backup: $backupPath ($($manifest.Files.Count) files)..."
+    Write-Host "Creating backup: $backupPath ($($manifest.Files.Count) files)..."
 
-        # Save manifest
-        $manifest | ConvertTo-Json -Depth 10 | Set-Content -Path $backupManifestPath
+    # Save manifest
+    $manifest | ConvertTo-Json -Depth 10 | Set-Content -Path $backupManifestPath
 
-        # Copy files to backup (use robocopy for speed on Windows)
-        if ($IsWindows -or $env:OS -like "*Windows*") {
-            # Use robocopy for fast backup
-            $excludeArgs = @(".backups", ".staging", "bin", "obj", ".git", ".vs", "packages", "node_modules", "dist", "vendor") | ForEach-Object { "/XD"; $_ }
-            $null = & robocopy $RootPath $backupPath /E /NFL /NDL /NP /NJH /NJS /XF "*.dll" "*.pdb" "*.exe" $excludeArgs 2>&1
-        }
-        else {
-            # Fallback: copy files
-            foreach ($fileInfo in $manifest.Files) {
-                try {
-                    $sourcePath = $fileInfo.FullPath
-                    $destPath = Join-Path $backupPath $fileInfo.RelativePath
-                    $destDir = Split-Path -Path $destPath -Parent
+    # Copy files to backup (use robocopy for speed on Windows)
+    if ($IsWindows -or $env:OS -like "*Windows*") {
+        # Use robocopy for fast backup
+        $excludeArgs = @(".backups", ".staging", "bin", "obj", ".git", ".vs", "packages", "node_modules", "dist", "vendor") | ForEach-Object { "/XD"; $_ }
+        $null = & robocopy $RootPath $backupPath /E /NFL /NDL /NP /NJH /NJS /XF "*.dll" "*.pdb" "*.exe" $excludeArgs 2>&1
+    }
+    else {
+        # Fallback: copy files
+        foreach ($fileInfo in $manifest.Files) {
+            try {
+                $sourcePath = $fileInfo.FullPath
+                $destPath = Join-Path $backupPath $fileInfo.RelativePath
+                $destDir = Split-Path -Path $destPath -Parent
 
-                    if (-not (Test-Path -Path $destDir)) {
-                        $null = New-Item -Path $destDir -ItemType Directory -Force -ErrorAction SilentlyContinue
-                    }
-
-                    Copy-Item -Path $sourcePath -Destination $destPath -Force -ErrorAction SilentlyContinue
+                if (-not (Test-Path -Path $destDir)) {
+                    $null = New-Item -Path $destDir -ItemType Directory -Force -ErrorAction SilentlyContinue
                 }
-                catch {
-                    # Silently continue
-                }
+
+                Copy-Item -Path $sourcePath -Destination $destPath -Force -ErrorAction SilentlyContinue
+            }
+            catch {
+                # Silently continue
             }
         }
+    }
 
-        Write-Host "Backup created: $backupPath"
-        Write-Host "Manifest: $backupManifestPath"
+    Write-Host "Backup created: $backupPath"
+    Write-Host "Manifest: $backupManifestPath"
 
-        # Rotate backups
-        $backups = Get-ChildItem -Path $BackupBaseDir -Directory -Filter "backup-*" -ErrorAction SilentlyContinue |
-            Sort-Object -Property Name -Descending
+    # Rotate backups
+    $backups = Get-ChildItem -Path $BackupBaseDir -Directory -Filter "backup-*" -ErrorAction SilentlyContinue |
+        Sort-Object -Property Name -Descending
 
-        if ($backups.Count -gt $BackupCount) {
-            $toRemove = $backups | Select-Object -Skip $BackupCount
-            foreach ($oldBackup in $toRemove) {
-                $oldManifest = Join-Path $BackupBaseDir "$($oldBackup.Name)-manifest.json"
-                if ($PSCmdlet.ShouldProcess($oldBackup.FullName, "Remove old backup")) {
-                    Remove-Item -Path $oldBackup.FullName -Recurse -Force -ErrorAction SilentlyContinue
-                    if (Test-Path -Path $oldManifest) {
-                        Remove-Item -Path $oldManifest -Force -ErrorAction SilentlyContinue
-                    }
-                    Write-Verbose "Removed old backup: $($oldBackup.FullName)"
-                }
+    if ($backups.Count -gt $BackupCount) {
+        $toRemove = $backups | Select-Object -Skip $BackupCount
+        foreach ($oldBackup in $toRemove) {
+            $oldManifest = Join-Path $BackupBaseDir "$($oldBackup.Name)-manifest.json"
+            Remove-Item -Path $oldBackup.FullName -Recurse -Force -ErrorAction SilentlyContinue
+            if (Test-Path -Path $oldManifest) {
+                Remove-Item -Path $oldManifest -Force -ErrorAction SilentlyContinue
             }
+            Write-Verbose "Removed old backup: $($oldBackup.FullName)"
         }
     }
 
@@ -303,7 +302,7 @@ function Restore-Backup {
     .SYNOPSIS
     Restores from the most recent backup.
     #>
-    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
+    [CmdletBinding()]
     param(
         [Parameter(Mandatory = $true)]
         [string]$RootPath,
@@ -330,29 +329,27 @@ function Restore-Backup {
 
     $manifest = Get-Content -Path $manifestPath | ConvertFrom-Json
 
-    if ($PSCmdlet.ShouldProcess($RootPath, "Restore from backup $($latestBackup.Name)")) {
-        Write-Host "Restoring from backup: $($latestBackup.FullName)"
+    Write-Host "Restoring from backup: $($latestBackup.FullName)"
 
-        foreach ($fileInfo in $manifest.Files) {
-            $sourcePath = Join-Path $latestBackup.FullName $fileInfo.RelativePath
-            $destPath = Join-Path $RootPath $fileInfo.RelativePath
-            $destDir = Split-Path -Path $destPath -Parent
+    foreach ($fileInfo in $manifest.Files) {
+        $sourcePath = Join-Path $latestBackup.FullName $fileInfo.RelativePath
+        $destPath = Join-Path $RootPath $fileInfo.RelativePath
+        $destDir = Split-Path -Path $destPath -Parent
 
-            if (-not (Test-Path -Path $destDir)) {
-                $null = New-Item -Path $destDir -ItemType Directory -Force
-            }
-
-            if (Test-Path -Path $sourcePath) {
-                Copy-Item -Path $sourcePath -Destination $destPath -Force -ErrorAction SilentlyContinue
-                Write-Verbose "Restored: $($fileInfo.RelativePath)"
-            }
-            else {
-                Write-Warning "Source file not found in backup: $sourcePath"
-            }
+        if (-not (Test-Path -Path $destDir)) {
+            $null = New-Item -Path $destDir -ItemType Directory -Force
         }
 
-        Write-Host "Restore completed from: $($latestBackup.Name)"
+        if (Test-Path -Path $sourcePath) {
+            Copy-Item -Path $sourcePath -Destination $destPath -Force -ErrorAction SilentlyContinue
+            Write-Verbose "Restored: $($fileInfo.RelativePath)"
+        }
+        else {
+            Write-Warning "Source file not found in backup: $sourcePath"
+        }
     }
+
+    Write-Host "Restore completed from: $($latestBackup.Name)"
 }
 
 function Get-BackupList {
@@ -712,7 +709,7 @@ function Copy-DirectoryFast {
         # Fallback: copy only source files
         $null = New-Item -Path $Destination -ItemType Directory -Force -ErrorAction SilentlyContinue
         Get-ChildItem -Path $Source -Recurse -File -ErrorAction SilentlyContinue |
-            Where-Object { 
+            Where-Object {
                 -not (Test-IsExcludedDirectory -Path $_.FullName -ExcludedNames $ExcludeDirectories) -and
                 $_.Extension -in @(".cs", ".csproj", ".sln", ".axaml", ".axaml.cs", ".props", ".targets", ".config", ".json", ".xml", ".md", ".txt", ".ps1", ".sh", ".bat", ".cmd", ".gitignore", ".editorconfig")
             } |
@@ -791,11 +788,88 @@ function Test-DotNetValidation {
 
 #endregion
 
+#region Profiling Functions
+
+# Initialize profile data (will be reset in main logic)
+$script:ProfileData = $null
+
+function Add-ProfileCheckpoint {
+    param([string]$Name)
+    $elapsed = (Get-Date) - $script:ProfileData.StartTime
+    $script:ProfileData.Checkpoints += @{
+        Name = $Name
+        Time = $elapsed.TotalSeconds
+        Timestamp = Get-Date
+    }
+}
+
+function Add-ProfileOperation {
+    param(
+        [string]$Operation,
+        [double]$Duration,
+        [int]$Count = 1
+    )
+    $script:ProfileData.Operations += @{
+        Operation = $Operation
+        Duration = $Duration
+        Count = $Count
+    }
+}
+
+function Get-ProfileReport {
+    if ($null -eq $script:ProfileData) {
+        return "Profile data not initialized"
+    }
+    $totalTime = (Get-Date) - $script:ProfileData.StartTime
+    $report = @"
+=== PERFORMANCE PROFILE REPORT ===
+Total Execution Time: $($totalTime.TotalSeconds.ToString('F2'))s
+
+Checkpoints:
+"@
+    foreach ($checkpoint in $script:ProfileData.Checkpoints) {
+        $report += "`n  [$($checkpoint.Time.ToString('F2'))s] $($checkpoint.Name)"
+    }
+
+    $report += "`n`nOperations:"
+    if ($script:ProfileData.Operations.Count -gt 0) {
+        $ops = $script:ProfileData.Operations | Group-Object -Property Operation | ForEach-Object {
+            $total = ($_.Group | ForEach-Object { $_.Duration } | Measure-Object -Sum).Sum
+            $count = ($_.Group | ForEach-Object { $_.Count } | Measure-Object -Sum).Sum
+            [PSCustomObject]@{
+                Operation = $_.Name
+                TotalTime = $total
+                Count = $count
+                AvgTime = if ($count -gt 0) { $total / $count } else { 0 }
+            }
+        } | Sort-Object -Property TotalTime -Descending
+        
+        foreach ($op in $ops) {
+            $report += "`n  $($op.Operation): $($op.TotalTime.ToString('F2'))s total, $($op.Count) calls, $($op.AvgTime.ToString('F3'))s avg"
+        }
+    } else {
+        $report += "`n  (No operations recorded)"
+    }
+
+    $report += "`n`n=== END PROFILE REPORT ==="
+    return $report
+}
+
+#endregion
+
 #region Main Logic
 
 $ErrorActionPreference = 'Stop'
 
 try {
+    # Initialize profile data
+    $script:ProfileData = @{
+        StartTime = Get-Date
+        Checkpoints = @()
+        Operations = @()
+    }
+    Add-ProfileCheckpoint "Script Start"
+
     $resolvedRoot = Resolve-Path -Path $RootPath -ErrorAction Stop
 
     # Handle undo
@@ -825,11 +899,27 @@ try {
     Write-Host "RootPath: $resolvedRoot"
     Write-Host "OldFolderName: $OldFolderName -> NewFolderName: $NewFolderName"
     Write-Host "OldNamespace: $OldNamespace -> NewNamespace: $NewNamespace"
+    Write-Host "Timeout: $Timeout seconds"
     Write-Host ""
 
+    # Setup timeout monitoring
+    $timeoutJob = $null
+    if ($Timeout -gt 0) {
+        $timeoutJob = Start-Job -ScriptBlock {
+            param($TimeoutSeconds)
+            Start-Sleep -Seconds $TimeoutSeconds
+            return $true
+        } -ArgumentList $Timeout
+    }
+
     # Create backup before changes
+    Add-ProfileCheckpoint "Before Backup"
+    $backupStart = Get-Date
     $backupDir = Get-BackupDirectory -RootPath $resolvedRoot -CustomBackupDir $BackupDirectory
     $backupPath = New-Backup -RootPath $resolvedRoot -BackupBaseDir $backupDir -BackupCount $BackupCount
+    $backupDuration = ((Get-Date) - $backupStart).TotalSeconds
+    Add-ProfileOperation "Backup Creation" $backupDuration
+    Add-ProfileCheckpoint "After Backup"
 
     # Create staging directory
     $stagingPath = Join-Path $resolvedRoot ".staging"
@@ -843,25 +933,78 @@ try {
 
     # Copy entire directory to staging (fast copy)
     Write-Host "Copying files to staging (this may take a moment)..."
+    Add-ProfileCheckpoint "Before Staging Copy"
+    $copyStart = Get-Date
     $copySuccess = Copy-DirectoryFast -Source $resolvedRoot -Destination $stagingPath -ExcludeDirectories $ExcludeDirectories
+    $copyDuration = ((Get-Date) - $copyStart).TotalSeconds
+    Add-ProfileOperation "Staging Copy" $copyDuration
+    Add-ProfileCheckpoint "After Staging Copy"
+
+    # Check timeout
+    if ($null -ne $timeoutJob -and $timeoutJob.State -eq 'Completed') {
+        $profileReport = Get-ProfileReport
+        Write-Error "TIMEOUT: Operation exceeded $Timeout seconds"
+        Write-Host $profileReport
+        Remove-Item -Path $stagingPath -Recurse -Force -ErrorAction SilentlyContinue
+        exit 1
+    }
 
     if (-not $copySuccess) {
         Write-Warning "Fast copy failed, using standard copy..."
+        $fallbackStart = Get-Date
         # Fallback to standard copy
-        Get-ChildItem -Path $resolvedRoot -Recurse -ErrorAction SilentlyContinue |
-            Where-Object { -not (Test-IsExcludedDirectory -Path $_.FullName -ExcludedNames $ExcludeDirectories) } |
-            ForEach-Object {
-                $destPath = $_.FullName.Replace($resolvedRoot, $stagingPath)
-                if (-not $_.PSIsContainer) {
-                    $destDir = Split-Path -Path $destPath -Parent
-                    if (-not (Test-Path -Path $destDir)) {
-                        $null = New-Item -Path $destDir -ItemType Directory -Force -ErrorAction SilentlyContinue
+        $fallbackSuccess = $false
+        try {
+            Get-ChildItem -Path $resolvedRoot -Recurse -ErrorAction SilentlyContinue |
+                Where-Object { -not (Test-IsExcludedDirectory -Path $_.FullName -ExcludedNames $ExcludeDirectories) } |
+                ForEach-Object {
+                    $destPath = $_.FullName.Replace($resolvedRoot, $stagingPath)
+                    if (-not $_.PSIsContainer) {
+                        $destDir = Split-Path -Path $destPath -Parent
+                        if (-not (Test-Path -Path $destDir)) {
+                            $null = New-Item -Path $destDir -ItemType Directory -Force -ErrorAction SilentlyContinue
+                        }
+                        Copy-Item -Path $_.FullName -Destination $destPath -Force -ErrorAction SilentlyContinue
                     }
-                    Copy-Item -Path $_.FullName -Destination $destPath -Force -ErrorAction SilentlyContinue
                 }
-            }
+            $fallbackSuccess = $true
+        }
+        catch {
+            Write-Error "Fallback copy also failed: $_"
+            $fallbackSuccess = $false
+        }
+
+        $fallbackDuration = ((Get-Date) - $fallbackStart).TotalSeconds
+        Add-ProfileOperation "Fallback Copy" $fallbackDuration
+
+        if (-not $fallbackSuccess) {
+            Write-Error "CRITICAL: Staging copy failed completely. Original files will NOT be modified."
+            $profileReport = Get-ProfileReport
+            Write-Host $profileReport
+            Remove-Item -Path $stagingPath -Recurse -Force -ErrorAction SilentlyContinue
+            exit 1
+        }
     }
 
+    # CRITICAL SAFETY CHECK: Verify staging copy exists and has files before proceeding
+    # If this fails, we exit immediately without touching originals (automatic dry-run protection)
+    if (-not (Test-Path -Path $stagingPath)) {
+        Write-Error "CRITICAL: Staging directory does not exist after copy. Original files will NOT be modified."
+        $profileReport = Get-ProfileReport
+        Write-Host $profileReport
+        exit 1
+    }
+
+    $stagingFileCount = (Get-ChildItem -Path $stagingPath -Recurse -File -ErrorAction SilentlyContinue | Measure-Object).Count
+    if ($stagingFileCount -eq 0) {
+        Write-Error "CRITICAL: Staging copy is empty. Original files will NOT be modified."
+        $profileReport = Get-ProfileReport
+        Write-Host $profileReport
+        Remove-Item -Path $stagingPath -Recurse -Force -ErrorAction SilentlyContinue
+        exit 1
+    }
+
+    Write-Host "Staging copy verified: $stagingFileCount files copied (originals protected until validation passes)"
     $stagingResolved = Resolve-Path -Path $stagingPath
 
     # Perform operations on staging copy
@@ -895,22 +1038,51 @@ try {
         }
     }
 
-    # Text replacements in staging
-    if (-not $NoTextReplace) {
-        Write-Host "Performing text replacements in staging..."
+        # Text replacements in staging
+        if (-not $NoTextReplace) {
+            Write-Host "Performing text replacements in staging..."
 
-        $searchRoot = $stagingResolved
-        if (-not $NoFolderRename -and (Test-Path -Path (Join-Path $stagingResolved $NewFolderName))) {
+            # Always search in staging root (files are in staging, not in renamed folders)
             $searchRoot = $stagingResolved
-        }
 
-        # Get files to process (only source files for speed)
-        $allFiles = Get-ChildItem -Path $searchRoot -Recurse -File -ErrorAction SilentlyContinue |
-            Where-Object {
-                -not (Test-IsExcludedDirectory -Path $_.FullName -ExcludedNames $ExcludeDirectories) -and
-                $_.Extension -in @(".cs", ".csproj", ".sln", ".axaml", ".axaml.cs", ".props", ".targets", ".config", ".json", ".xml", ".md", ".txt", ".ps1", ".sh", ".bat", ".cmd")
-            } |
-            Sort-Object -Property FullName -Unique
+            # Get files to process
+            # Note: We're searching INSIDE staging, so we must NOT exclude .staging itself
+            # Remove .staging from exclusions since we're already inside it
+            $excludeForSearch = ($ExcludeDirectories | Where-Object { $_ -ne ".staging" }) + @(".backups")
+            $allowedExtensions = @(".cs", ".csproj", ".sln", ".axaml", ".axaml.cs", ".props", ".targets", ".config", ".json", ".xml", ".md", ".txt", ".ps1", ".sh", ".bat", ".cmd")
+            
+            # Get all files first, then filter
+            $allFilesRaw = Get-ChildItem -Path $searchRoot -Recurse -File -ErrorAction SilentlyContinue
+            Write-Host "Found $($allFilesRaw.Count) total files in staging" -Verbose
+            
+            $allFiles = $allFilesRaw |
+                Where-Object {
+                    # Check extension first (faster)
+                    if ($_.Extension -notin $allowedExtensions) {
+                        Write-Host "  Excluding $($_.Name): extension $($_.Extension) not in allowed list" -Verbose
+                        return $false
+                    }
+                    # Check if path contains excluded directory names (but not .staging since we're inside it)
+                    $filePath = $_.FullName
+                    $isExcluded = Test-IsExcludedDirectory -Path $filePath -ExcludedNames $excludeForSearch
+                    if ($isExcluded) {
+                        # Debug: find which directory matched
+                        $matchedDir = $null
+                        foreach ($excluded in $excludeForSearch) {
+                            if ($filePath -like "*\${excluded}\*" -or $filePath -like "*\${excluded}") {
+                                $matchedDir = $excluded
+                                break
+                            }
+                        }
+                        Write-Host "  Excluding $($_.Name): path contains excluded directory '$matchedDir'" -Verbose
+                        return $false
+                    }
+                    Write-Host "  Including $($_.Name)" -Verbose
+                    return $true
+                } |
+                Sort-Object -Property FullName -Unique
+            
+            Write-Host "Found $($allFiles.Count) files to process after filtering" -Verbose
 
         Write-Host "Processing $($allFiles.Count) files..."
 
@@ -923,8 +1095,25 @@ try {
         $pathUpdatedCount = 0
         $sortedCount = 0
 
-        # Process files in parallel for speed
-        $results = $allFiles | ForEach-Object -Parallel {
+        # Check timeout before processing
+        if ($null -ne $timeoutJob -and $timeoutJob.State -eq 'Completed') {
+            $profileReport = Get-ProfileReport
+            Write-Error "TIMEOUT: Operation exceeded $Timeout seconds before file processing"
+            Write-Host $profileReport
+            Remove-Item -Path $stagingPath -Recurse -Force -ErrorAction SilentlyContinue
+            exit 1
+        }
+
+        # Process files in parallel for speed (if PowerShell 7+), otherwise sequential
+        Add-ProfileCheckpoint "Before File Processing"
+        $processStart = Get-Date
+        
+        # Check if parallel processing is available (PowerShell 7+)
+        $useParallel = $PSVersionTable.PSVersion.Major -ge 7
+        
+        if ($useParallel) {
+            # Note: Functions are inlined in parallel block for reliability
+            $results = $allFiles | ForEach-Object -Parallel {
             $file = $_
             $oldNamespace = $using:OldNamespace
             $newNamespace = $using:NewNamespace
@@ -939,22 +1128,144 @@ try {
             }
 
             try {
+                if (-not (Test-Path -Path $file.FullName)) {
+                    return $result
+                }
+
+                # Read file once for all operations
+                $content = Get-Content -Path $file.FullName -Raw -ErrorAction SilentlyContinue
+                if ($null -eq $content -or [string]::IsNullOrWhiteSpace($content)) {
+                    return $result
+                }
+
+                # Initialize result tracking
+                $fileChanged = $false
+                $updated = $content
+
                 # Namespace replacement
-                $nsReplacements = @{ $oldNamespace = $newNamespace }
-                if (Invoke-ReplaceInFile -FilePath $file.FullName -Replacements $nsReplacements) {
+                if ($updated.Contains($oldNamespace)) {
+                    $updated = $updated.Replace($oldNamespace, $newNamespace)
                     $result.NamespaceChanged = $true
+                    $fileChanged = $true
                 }
 
-                # Path references
-                if (Update-PathReferences -FilePath $file.FullName -OldFolderName $oldFolderName -NewFolderName $newFolderName) {
+                # Path reference update
+                $escapedOld = [regex]::Escape($oldFolderName)
+                $escapedNew = $newFolderName
+                $hasPathChanges = $false
+
+                # Pattern 1: Folder name in path with separators
+                $pattern1 = "([`"`']?)([\\/])$escapedOld([\\/]|`"|`'|`$)"
+                if ($updated -match $pattern1) {
+                    $updated = $updated -replace $pattern1, "`$1`$2$escapedNew`$3"
+                    $hasPathChanges = $true
+                }
+
+                # Pattern 2: Standalone folder name in path context
+                $pattern2 = "([`"`'\\/]|^)$escapedOld([`"`'\\/]|`$)"
+                if ($updated -match $pattern2) {
+                    $updated = $updated -replace $pattern2, "`$1$escapedNew`$2"
+                    $hasPathChanges = $true
+                }
+
+                if ($hasPathChanges) {
                     $result.PathChanged = $true
+                    $fileChanged = $true
                 }
 
-                # Using sort
+                # Using sort (only if .cs file and not disabled)
                 if (-not $noUsingSort -and $file.Extension -eq ".cs") {
-                    if (Sort-UsingStatements -FilePath $file.FullName) {
-                        $result.UsingSorted = $true
+                    try {
+                        $lines = $updated -split "`r?`n"
+                        if ($null -ne $lines -and $lines.Count -gt 0) {
+                            $lineEnding = "`r`n"
+                            if ($updated -notmatch "`r`n") {
+                                $lineEnding = "`n"
+                            }
+
+                            $usingStart = -1
+                            $usingEnd = -1
+                            $usingLineIndices = @()
+
+                            for ($i = 0; $i -lt $lines.Count; $i++) {
+                                $line = $lines[$i]
+                                $trimmed = $line.Trim()
+                                if ($trimmed -match '^\s*using\s+') {
+                                    if ($usingStart -eq -1) {
+                                        $usingStart = $i
+                                    }
+                                    $usingEnd = $i
+                                    $usingLineIndices += $i
+                                }
+                                elseif ($usingStart -ne -1) {
+                                    break
+                                }
+                            }
+
+                            if ($usingStart -ne -1 -and $usingLineIndices.Count -gt 1) {
+                                $usingStatements = @()
+                                foreach ($idx in $usingLineIndices) {
+                                    $usingStatements += $lines[$idx].Trim()
+                                }
+
+                                $systemUsings = @()
+                                $otherUsings = @()
+                                foreach ($using in $usingStatements) {
+                                    if ($using -match '^\s*using\s+System\.') {
+                                        $systemUsings += $using
+                                    }
+                                    else {
+                                        $otherUsings += $using
+                                    }
+                                }
+
+                                $systemUsings = $systemUsings | Sort-Object
+                                $otherUsings = $otherUsings | Sort-Object
+                                $sortedUsings = $systemUsings + $otherUsings
+
+                                $isAlreadySorted = $true
+                                for ($i = 0; $i -lt $usingStatements.Count; $i++) {
+                                    if ($usingStatements[$i] -ne $sortedUsings[$i]) {
+                                        $isAlreadySorted = $false
+                                        break
+                                    }
+                                }
+
+                                if (-not $isAlreadySorted) {
+                                    $firstUsingLine = $lines[$usingStart]
+                                    $indentMatch = $firstUsingLine -match '^(\s*)'
+                                    $indent = if ($indentMatch) { $matches[1] } else { "" }
+
+                                    $newLines = New-Object System.Collections.ArrayList
+                                    for ($i = 0; $i -lt $usingStart; $i++) {
+                                        [void]$newLines.Add($lines[$i])
+                                    }
+                                    foreach ($using in $sortedUsings) {
+                                        [void]$newLines.Add($indent + $using.TrimStart())
+                                    }
+                                    for ($i = $usingEnd + 1; $i -lt $lines.Count; $i++) {
+                                        [void]$newLines.Add($lines[$i])
+                                    }
+
+                                    $updated = $newLines -join $lineEnding
+                                    if ($content.EndsWith($lineEnding)) {
+                                        $updated += $lineEnding
+                                    }
+
+                                    $result.UsingSorted = $true
+                                    $fileChanged = $true
+                                }
+                            }
+                        }
                     }
+                    catch {
+                        # Silently continue
+                    }
+                }
+
+                # Write file once if any changes were made
+                if ($fileChanged) {
+                    Set-Content -Path $file.FullName -Value $updated -NoNewline -ErrorAction SilentlyContinue
                 }
             }
             catch {
@@ -963,6 +1274,139 @@ try {
 
             return $result
         } -ThrottleLimit 50
+        } else {
+            # Sequential processing for PowerShell 5.1
+            Write-Host "Using sequential processing (PowerShell $($PSVersionTable.PSVersion.Major))" -Verbose
+            $results = $allFiles | ForEach-Object {
+                $file = $_
+                $result = @{
+                    NamespaceChanged = $false
+                    PathChanged = $false
+                    UsingSorted = $false
+                }
+
+                try {
+                    if (-not (Test-Path -Path $file.FullName)) {
+                        return $result
+                    }
+
+                    $content = Get-Content -Path $file.FullName -Raw -ErrorAction SilentlyContinue
+                    if ($null -eq $content -or [string]::IsNullOrWhiteSpace($content)) {
+                        return $result
+                    }
+                    
+                    $fileChanged = $false
+                    $updated = $content
+
+                    # Namespace replacement
+                    if ($updated.Contains($OldNamespace)) {
+                        $updated = $updated.Replace($OldNamespace, $NewNamespace)
+                        $result.NamespaceChanged = $true
+                        $fileChanged = $true
+                    }
+
+                    # Path reference update
+                    $escapedOld = [regex]::Escape($OldFolderName)
+                    $escapedNew = $NewFolderName
+                    $hasPathChanges = $false
+
+                    $pattern1 = "([`"`']?)([\\/])$escapedOld([\\/]|`"|`'|`$)"
+                    if ($updated -match $pattern1) {
+                        $updated = $updated -replace $pattern1, "`$1`$2$escapedNew`$3"
+                        $hasPathChanges = $true
+                    }
+
+                    $pattern2 = "([`"`'\\/]|^)$escapedOld([`"`'\\/]|`$)"
+                    if ($updated -match $pattern2) {
+                        $updated = $updated -replace $pattern2, "`$1$escapedNew`$2"
+                        $hasPathChanges = $true
+                    }
+
+                    if ($hasPathChanges) {
+                        $result.PathChanged = $true
+                        $fileChanged = $true
+                    }
+
+                    # Using sort (simplified for sequential)
+                    if (-not $NoUsingSort -and $file.Extension -eq ".cs") {
+                        try {
+                            $lines = $updated -split "`r?`n"
+                            if ($null -ne $lines -and $lines.Count -gt 0) {
+                                $usingStart = -1
+                                $usingEnd = -1
+                                $usings = New-Object System.Collections.ArrayList
+
+                                for ($i = 0; $i -lt $lines.Count; $i++) {
+                                    $line = $lines[$i].Trim()
+                                    if ($line.StartsWith("using ") -and $line.EndsWith(";")) {
+                                        if ($usingStart -eq -1) {
+                                            $usingStart = $i
+                                        }
+                                        $usingEnd = $i
+                                        [void]$usings.Add($line)
+                                    }
+                                    elseif ($usingStart -ge 0 -and -not [string]::IsNullOrWhiteSpace($line)) {
+                                        break
+                                    }
+                                }
+
+                                if ($usings.Count -gt 0) {
+                                    $systemUsings = $usings | Where-Object { $_.StartsWith("using System") } | Sort-Object
+                                    $otherUsings = $usings | Where-Object { -not $_.StartsWith("using System") } | Sort-Object
+                                    $sortedUsings = $systemUsings + $otherUsings
+
+                                    $isAlreadySorted = $true
+                                    for ($i = 0; $i -lt $usings.Count; $i++) {
+                                        if ($usings[$i] -ne $sortedUsings[$i]) {
+                                            $isAlreadySorted = $false
+                                            break
+                                        }
+                                    }
+
+                                    if (-not $isAlreadySorted) {
+                                        $firstUsingLine = $lines[$usingStart]
+                                        $indentMatch = $firstUsingLine -match '^(\s*)'
+                                        $indent = if ($indentMatch) { $matches[1] } else { "" }
+
+                                        $newLines = New-Object System.Collections.ArrayList
+                                        for ($i = 0; $i -lt $usingStart; $i++) {
+                                            [void]$newLines.Add($lines[$i])
+                                        }
+                                        foreach ($using in $sortedUsings) {
+                                            [void]$newLines.Add($indent + $using.TrimStart())
+                                        }
+                                        for ($i = $usingEnd + 1; $i -lt $lines.Count; $i++) {
+                                            [void]$newLines.Add($lines[$i])
+                                        }
+
+                                        $lineEnding = if ($content.Contains("`r`n")) { "`r`n" } elseif ($content.Contains("`n")) { "`n" } else { "`r`n" }
+                                        $updated = $newLines -join $lineEnding
+                                        if ($content.EndsWith($lineEnding)) {
+                                            $updated += $lineEnding
+                                        }
+
+                                        $result.UsingSorted = $true
+                                        $fileChanged = $true
+                                    }
+                                }
+                            }
+                        }
+                        catch {
+                            # Silently continue
+                        }
+                    }
+
+                    if ($fileChanged) {
+                        Set-Content -Path $file.FullName -Value $updated -NoNewline -ErrorAction SilentlyContinue
+                    }
+                }
+                catch {
+                    # Silently continue on errors
+                }
+
+                return $result
+            }
+        }
 
         foreach ($result in $results) {
             if ($result.NamespaceChanged) { $changedCount++ }
@@ -970,16 +1414,43 @@ try {
             if ($result.UsingSorted) { $sortedCount++ }
         }
 
+        $processDuration = ((Get-Date) - $processStart).TotalSeconds
+        Add-ProfileOperation "File Processing" $processDuration $allFiles.Count
+        Add-ProfileCheckpoint "After File Processing"
+
         Write-Host "Files with namespace updates: $changedCount"
         Write-Host "Files with path updates: $pathUpdatedCount"
         if (-not $NoUsingSort) {
             Write-Host "Files with sorted usings: $sortedCount"
         }
+
+        # Check timeout
+        if ($null -ne $timeoutJob -and $timeoutJob.State -eq 'Completed') {
+            $profileReport = Get-ProfileReport
+            Write-Error "TIMEOUT: Operation exceeded $Timeout seconds during file processing"
+            Write-Host $profileReport
+            Remove-Item -Path $stagingPath -Recurse -Force -ErrorAction SilentlyContinue
+            exit 1
+        }
     }
 
     # Validate staging copy
     if (-not $NoValidation) {
+        Add-ProfileCheckpoint "Before Validation"
+        $validationStart = Get-Date
         $validationSuccess = Test-DotNetValidation -StagingPath $stagingResolved
+        $validationDuration = ((Get-Date) - $validationStart).TotalSeconds
+        Add-ProfileOperation "DotNet Validation" $validationDuration
+        Add-ProfileCheckpoint "After Validation"
+
+        # Check timeout
+        if ($null -ne $timeoutJob -and $timeoutJob.State -eq 'Completed') {
+            $profileReport = Get-ProfileReport
+            Write-Error "TIMEOUT: Operation exceeded $Timeout seconds during validation"
+            Write-Host $profileReport
+            Remove-Item -Path $stagingPath -Recurse -Force -ErrorAction SilentlyContinue
+            exit 1
+        }
         if (-not $validationSuccess) {
             Write-Error "Validation failed! Staging copy will not replace originals."
             Write-Host "Staging directory: $stagingPath"
@@ -993,12 +1464,15 @@ try {
     Write-Host ""
     Write-Host "Validation successful! Replacing originals with staging copy..."
 
+    Add-ProfileCheckpoint "Before Replacement"
+    $replaceStart = Get-Date
+
     # Use robocopy for fast replacement on Windows
     if ($IsWindows -or $env:OS -like "*Windows*") {
         # Copy staging files back to original location (excluding staging and backups)
         $excludeArgs = @(".staging", ".backups", ".git") | ForEach-Object { "/XD"; $_ }
         $null = & robocopy $stagingResolved $resolvedRoot /E /NFL /NDL /NP /NJH /NJS /IS /IT $excludeArgs 2>&1
-        
+
         # Handle folder rename if needed
         if (-not $NoFolderRename) {
             $oldFolder = Join-Path $resolvedRoot $OldFolderName
@@ -1049,18 +1523,53 @@ try {
         }
     }
 
+    $replaceDuration = ((Get-Date) - $replaceStart).TotalSeconds
+    Add-ProfileOperation "File Replacement" $replaceDuration
+    Add-ProfileCheckpoint "After Replacement"
+
     # Cleanup staging
     Write-Host "Cleaning up staging directory..."
     Remove-Item -Path $stagingPath -Recurse -Force -ErrorAction SilentlyContinue
 
+    # Stop timeout job
+    if ($null -ne $timeoutJob) {
+        Stop-Job -Job $timeoutJob -ErrorAction SilentlyContinue
+        Remove-Job -Job $timeoutJob -ErrorAction SilentlyContinue
+    }
+
+    Add-ProfileCheckpoint "Script Complete"
+    $totalTime = (Get-Date) - $script:ProfileData.StartTime
+
     Write-Host ""
-    Write-Host "Completed successfully!"
+    Write-Host "Completed successfully in $($totalTime.TotalSeconds.ToString('F2')) seconds!"
     Write-Host "Backup location: $backupPath"
     Write-Host "Use -Undo to restore from backup, or -ListBackups to see available backups."
+
+    # Show profile report if verbose
+    if ($PSCmdlet.MyInvocation.BoundParameters["Verbose"].IsPresent) {
+        Write-Host ""
+        Write-Host (Get-ProfileReport)
+    }
 }
 catch {
-    Write-Error "Error: $_"
-    Write-Error $_.ScriptStackTrace
+    # Stop timeout job
+    if ($null -ne $timeoutJob) {
+        Stop-Job -Job $timeoutJob -ErrorAction SilentlyContinue
+        Remove-Job -Job $timeoutJob -ErrorAction SilentlyContinue
+    }
+    
+    $errorMessage = "Error: $_"
+    Write-Host $errorMessage -ForegroundColor Red
+    if ($_.ScriptStackTrace) {
+        Write-Host $_.ScriptStackTrace -ForegroundColor Red
+    }
+
+    # Show profile report on error
+    if ($null -ne $script:ProfileData) {
+        $profileReport = Get-ProfileReport
+        Write-Host ""
+        Write-Host $profileReport
+    }
 
     # Cleanup staging on error
     $stagingPath = Join-Path $resolvedRoot ".staging"
@@ -1070,6 +1579,13 @@ catch {
     }
 
     exit 1
+}
+finally {
+    # Ensure timeout job is cleaned up
+    if ($null -ne $timeoutJob) {
+        Stop-Job -Job $timeoutJob -ErrorAction SilentlyContinue
+        Remove-Job -Job $timeoutJob -ErrorAction SilentlyContinue
+    }
 }
 
 #endregion
