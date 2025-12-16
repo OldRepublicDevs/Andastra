@@ -375,6 +375,23 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             // Split globals if mainStart is in the globals range
             if (shouldDeferGlobals && savebpIndex >= 0)
             {
+                // Calculate entryStubEnd (same logic as earlier in the function)
+                int globalsEnd = savebpIndex + 1;
+                int entryStubEnd = globalsEnd;
+                // Check for entry stub pattern at savebpIndex+1
+                if (instructions.Count > entryStubEnd + 1 &&
+                    instructions[entryStubEnd].InsType == NCSInstructionType.JSR &&
+                    instructions[entryStubEnd + 1].InsType == NCSInstructionType.RETN)
+                {
+                    entryStubEnd = entryStubEnd + 2; // JSR + RETN
+                }
+                else if (instructions.Count > entryStubEnd + 1 &&
+                         instructions[entryStubEnd].InsType == NCSInstructionType.JSR &&
+                         instructions[entryStubEnd + 1].InsType == NCSInstructionType.RESTOREBP)
+                {
+                    entryStubEnd = entryStubEnd + 2; // JSR + RESTOREBP
+                }
+                
                 if (mainStart < savebpIndex + 1 && mainStart > 0)
                 {
                     // Split globals:
