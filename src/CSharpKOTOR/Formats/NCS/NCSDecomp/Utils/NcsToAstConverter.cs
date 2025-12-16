@@ -168,6 +168,9 @@ namespace AuroraEngine.Common.Formats.NCS.NCSDecomp.Utils
             HashSet<int> subroutineStarts = new HashSet<int>();
             // Matching NCSDecomp implementation: detect SAVEBP to split globals from main
             // Globals subroutine ends at SAVEBP, main starts after SAVEBP
+            // CRITICAL: Find the LAST SAVEBP before the main function, not the first one
+            // Some files have multiple SAVEBP instructions (e.g., in globals initialization),
+            // but we need the one that marks the boundary between globals and main
             int savebpIndex = -1;
             for (int i = 0; i < instructions.Count; i++)
             {
@@ -175,12 +178,16 @@ namespace AuroraEngine.Common.Formats.NCS.NCSDecomp.Utils
                 {
                     savebpIndex = i;
                     JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Found SAVEBP at instruction index {i}");
-                    break;
+                    // Continue searching to find the LAST SAVEBP (don't break on first match)
                 }
             }
             if (savebpIndex == -1)
             {
                 JavaSystem.@out.Println("DEBUG NcsToAstConverter: No SAVEBP instruction found - no globals subroutine will be created");
+            }
+            else
+            {
+                JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Using LAST SAVEBP at instruction index {savebpIndex} as globals boundary");
             }
 
             // Identify entry stub pattern: JSR followed by RETN (or JSR, RESTOREBP, RETN)
@@ -618,15 +625,17 @@ namespace AuroraEngine.Common.Formats.NCS.NCSDecomp.Utils
                 if (shouldDeferGlobals && mainStart < savebpIndex + 1 && mainStart > 0)
                 {
                     // Split globals:
-                    // - Globals: 0 to mainStart (globals initialization only, no overlap)
-                    // - Main: mainStart to savebpIndex+1 (includes main code and SAVEBP)
-                    // This ensures no overlap: globals is 0-mainStart, main is mainStart-SAVEBP+1
-                    // SAVEBP is included in main function (it's the boundary instruction)
-                    ASubroutine globalsSub = ConvertInstructionRangeToSubroutine(ncs, instructions, 0, mainStart, 0);
+                    // CRITICAL: Globals must include ALL instructions up to SAVEBP, not just up to mainStart
+                    // This ensures RSADDI and other instructions before SAVEBP are included in globals
+                    // - Globals: 0 to savebpIndex+1 (includes all variable initialization up to SAVEBP)
+                    // - Main: mainStart to last RETN (includes main code and everything after)
+                    // NOTE: There will be overlap (mainStart to SAVEBP), but that's handled by the main function
+                    int globalsInitEnd = savebpIndex + 1; // Always include all instructions up to SAVEBP
+                    ASubroutine globalsSub = ConvertInstructionRangeToSubroutine(ncs, instructions, 0, globalsInitEnd, 0);
                     if (globalsSub != null)
                     {
                         program.GetSubroutine().Add(globalsSub);
-                        JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Created split globals subroutine (range 0-{mainStart}, globals initialization only)");
+                        JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Created split globals subroutine (range 0-{globalsInitEnd}, includes all instructions up to SAVEBP, mainStart={mainStart})");
                     }
                     // Update mainEnd to include all instructions up to the last RETN
                     // CRITICAL: mainEnd must be instructions.Count to include ALL instructions, not just up to SAVEBP+1
