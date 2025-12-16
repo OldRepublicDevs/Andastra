@@ -187,8 +187,14 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
 
         public SubroutineState GetState(Node sub)
         {
-            SubroutineState state = (SubroutineState)this.substates[sub];
-            return state;
+            // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SubroutineAnalysisData.java:188-192
+            // Original: public SubroutineState getState(Node sub) { return this.substates.get(sub); }
+            // Use TryGetValue to avoid KeyNotFoundException if state wasn't added
+            if (this.substates.TryGetValue(sub, out object stateObj))
+            {
+                return (SubroutineState)stateObj;
+            }
+            return null;
         }
 
         public bool IsPrototyped(int pos, bool nullok)

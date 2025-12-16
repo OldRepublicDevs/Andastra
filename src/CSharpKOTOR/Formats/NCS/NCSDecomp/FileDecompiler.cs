@@ -2975,7 +2975,12 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                 {
                     try
                     {
-                        mainpass = new MainPass(subdata.GetState(mainsub), nodedata, subdata, this.actions);
+                        SubroutineState mainState = subdata.GetState(mainsub);
+                        if (mainState == null)
+                        {
+                            throw new InvalidOperationException("Main subroutine state was not found. This indicates AddSubState failed during SplitOffSubroutines.");
+                        }
+                        mainpass = new MainPass(mainState, nodedata, subdata, this.actions);
                         mainsub.Apply(mainpass);
                         try
                         {
@@ -2998,24 +3003,31 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                         // Try to create a minimal main function stub using MainPass
                         try
                         {
-                            mainpass = new MainPass(subdata.GetState(mainsub), nodedata, subdata, this.actions);
-                            // Even if apply fails, try to get the state
-                            try
+                            SubroutineState mainState = subdata.GetState(mainsub);
+                            if (mainState == null)
                             {
-                                mainsub.Apply(mainpass);
+                                JavaSystem.@out.Println("ERROR: Main subroutine state is null - this indicates AddSubState failed during SplitOffSubroutines.");
+                                throw new InvalidOperationException("Main subroutine state is null. This should not happen - AddSubState should have been called in AddMain.");
                             }
-                            catch (Exception e2)
-                            {
-                                JavaSystem.@out.Println("Could not apply mainpass, but attempting to use partial state: " + e2.Message);
+                            mainpass = new MainPass(mainState, nodedata, subdata, this.actions);
+                                // Even if apply fails, try to get the state
+                                try
+                                {
+                                    mainsub.Apply(mainpass);
+                                }
+                                catch (Exception e2)
+                                {
+                                    JavaSystem.@out.Println("Could not apply mainpass, but attempting to use partial state: " + e2.Message);
+                                }
+                                SubScriptState minimalMain = mainpass.GetState();
+                                if (minimalMain != null)
+                                {
+                                    minimalMain.IsMain(true);
+                                    data.AddSub(minimalMain);
+                                    JavaSystem.@out.Println("Created minimal main subroutine stub.");
+                                }
+                                mainpass.Done();
                             }
-                            SubScriptState minimalMain = mainpass.GetState();
-                            if (minimalMain != null)
-                            {
-                                minimalMain.IsMain(true);
-                                data.AddSub(minimalMain);
-                                JavaSystem.@out.Println("Created minimal main subroutine stub.");
-                            }
-                            mainpass.Done();
                         }
                         catch (Exception e2)
                         {
