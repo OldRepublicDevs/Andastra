@@ -70,6 +70,14 @@ namespace Odyssey.Kotor.Systems
                     {
                         entity.AddComponent(new StatsComponent());
                     }
+                    if (!entity.HasComponent<IInventoryComponent>())
+                    {
+                        entity.AddComponent(new InventoryComponent(entity));
+                    }
+                    if (!entity.HasComponent<IQuickSlotComponent>())
+                    {
+                        entity.AddComponent(new QuickSlotComponent(entity));
+                    }
                     break;
 
                 case ObjectType.Door:

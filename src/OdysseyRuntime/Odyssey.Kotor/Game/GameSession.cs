@@ -795,17 +795,9 @@ namespace Odyssey.Kotor.Game
                     Core.Actions.IActionQueueComponent actionQueue = _playerEntity.GetComponent<Core.Actions.IActionQueueComponent>();
                     if (actionQueue != null)
                     {
-                        // For now, we'll use ActionCastSpellAtObject with item's spell ID if it has one
-                        // Full implementation would create ActionUseItem that handles item consumption, effects, etc.
-                        // TODO: Create ActionUseItem action class for proper item usage
-                        Core.Interfaces.Components.IItemComponent itemComponent = item.GetComponent<Core.Interfaces.Components.IItemComponent>();
-                        if (itemComponent != null)
-                        {
-                            // Check if item has a useable spell/ability
-                            // Items can have UseableSpell or UseableFeat properties
-                            // For now, skip item usage - would need ActionUseItem implementation
-                            Console.WriteLine($"[GameSession] Quick slot {slotIndex} item usage not yet fully implemented");
-                        }
+                        // Queue ActionUseItem action
+                        var useItemAction = new Core.Actions.ActionUseItem(item.ObjectId, _playerEntity.ObjectId);
+                        actionQueue.Add(useItemAction);
                     }
                 }
             }
