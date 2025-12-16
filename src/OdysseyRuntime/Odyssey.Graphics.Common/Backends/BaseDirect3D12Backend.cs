@@ -31,7 +31,8 @@ namespace Odyssey.Graphics.Common.Backends
     /// - Raytracing: Original game did not support raytracing; this is a modern enhancement
     /// - This abstraction: Provides DirectX 12 backend for modern Windows systems, not directly mapped to swkotor2.exe functions
     /// </remarks>
-    public abstract class BaseDirect3D12Backend : BaseGraphicsBackend, IComputeBackend, IRaytracingBackend
+    public abstract class BaseDirect3D12Backend : BaseGraphicsBackend, IComputeBackend, IRaytracingBackend,
+        IMeshShaderBackend, IVariableRateShadingBackend
     {
         protected IntPtr _factory;
         protected IntPtr _adapter;
@@ -267,6 +268,83 @@ namespace Odyssey.Graphics.Common.Backends
         protected abstract ResourceInfo CreateBlasInternal(MeshGeometry geometry, IntPtr handle);
         protected abstract ResourceInfo CreateTlasInternal(int maxInstances, IntPtr handle);
         protected abstract ResourceInfo CreateRaytracingPsoInternal(RaytracingPipelineDesc desc, IntPtr handle);
+
+        #endregion
+
+        #region IMeshShaderBackend Implementation
+
+        public virtual bool MeshShadersAvailable => _capabilities.SupportsMeshShaders;
+
+        public virtual IntPtr CreateMeshShaderPipeline(byte[] amplificationShader, byte[] meshShader,
+            byte[] pixelShader, MeshPipelineDescription desc)
+        {
+            if (!MeshShadersAvailable || meshShader == null || pixelShader == null)
+            {
+                return IntPtr.Zero;
+            }
+
+            var handle = AllocateHandle();
+            var resource = CreateMeshShaderPipelineInternal(amplificationShader, meshShader, pixelShader, desc, handle);
+            if (resource.Handle != IntPtr.Zero)
+            {
+                _resources[handle] = resource;
+            }
+            return handle;
+        }
+
+        public virtual void DispatchMesh(int threadGroupCountX, int threadGroupCountY, int threadGroupCountZ)
+        {
+            if (!MeshShadersAvailable || !_initialized) return;
+            OnDispatchMesh(threadGroupCountX, threadGroupCountY, threadGroupCountZ);
+        }
+
+        public virtual void DispatchMeshIndirect(IntPtr indirectBuffer, int offset)
+        {
+            if (!MeshShadersAvailable || !_initialized) return;
+            OnDispatchMeshIndirect(indirectBuffer, offset);
+        }
+
+        protected abstract ResourceInfo CreateMeshShaderPipelineInternal(byte[] amplificationShader, byte[] meshShader,
+            byte[] pixelShader, MeshPipelineDescription desc, IntPtr handle);
+        protected abstract void OnDispatchMesh(int x, int y, int z);
+        protected abstract void OnDispatchMeshIndirect(IntPtr indirectBuffer, int offset);
+
+        #endregion
+
+        #region IVariableRateShadingBackend Implementation
+
+        public virtual bool VariableRateShadingAvailable => _capabilities.SupportsVariableRateShading;
+        public virtual int VrsTier => QueryVrsTier();
+
+        public virtual void SetShadingRate(VrsShadingRate rate)
+        {
+            if (!VariableRateShadingAvailable || !_initialized) return;
+            OnSetShadingRate(rate);
+        }
+
+        public virtual void SetShadingRateCombiner(VrsCombiner combiner0, VrsCombiner combiner1, VrsShadingRate rate)
+        {
+            if (!VariableRateShadingAvailable || VrsTier < 1 || !_initialized) return;
+            OnSetShadingRateCombiner(combiner0, combiner1, rate);
+        }
+
+        public virtual void SetPerPrimitiveShadingRate(bool enable)
+        {
+            if (!VariableRateShadingAvailable || VrsTier < 1 || !_initialized) return;
+            OnSetPerPrimitiveShadingRate(enable);
+        }
+
+        public virtual void SetShadingRateImage(IntPtr shadingRateImage, int width, int height)
+        {
+            if (!VariableRateShadingAvailable || VrsTier < 2 || !_initialized) return;
+            OnSetShadingRateImage(shadingRateImage, width, height);
+        }
+
+        protected abstract void OnSetShadingRate(VrsShadingRate rate);
+        protected abstract void OnSetShadingRateCombiner(VrsCombiner combiner0, VrsCombiner combiner1, VrsShadingRate rate);
+        protected abstract void OnSetPerPrimitiveShadingRate(bool enable);
+        protected abstract void OnSetShadingRateImage(IntPtr shadingRateImage, int width, int height);
+        protected virtual int QueryVrsTier() => VariableRateShadingAvailable ? 2 : 0;
 
         #endregion
 
