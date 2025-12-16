@@ -520,11 +520,26 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
             Start rootStart = ast as Start;
             if (rootStart == null)
             {
+                JavaSystem.@out.Println("WARNING SplitOffSubroutines: AST is not a Start node, type=" + (ast != null ? ast.GetType().Name : "null"));
+                return;
+            }
+
+            PProgram pProgram = rootStart.GetPProgram();
+            if (pProgram == null)
+            {
+                JavaSystem.@out.Println("WARNING SplitOffSubroutines: GetPProgram() returned null");
+                return;
+            }
+
+            AProgram aProgram = pProgram as AProgram;
+            if (aProgram == null)
+            {
+                JavaSystem.@out.Println("WARNING SplitOffSubroutines: PProgram is not an AProgram, type=" + pProgram.GetType().Name);
                 return;
             }
 
             bool conditional = NodeUtils.IsConditionalProgram(rootStart);
-            var subList = ((AProgram)rootStart.GetPProgram()).GetSubroutine();
+            var subList = aProgram.GetSubroutine();
             JavaSystem.@out.Println($"DEBUG SplitOffSubroutines: AST program has {subList.Count} subroutines");
             TypedLinkedList subroutines = new TypedLinkedList();
             foreach (var sub in subList)
