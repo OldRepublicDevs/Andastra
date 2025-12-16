@@ -275,14 +275,74 @@ namespace Odyssey.Kotor.Save
             var root = gff.Root;
 
             // Based on swkotor2.exe: FUN_004eb750 @ 0x004eb750
-            // NFO GFF fields: SAVEGAMENAME, AREANAME, TIMEPLAYED, etc.
-            SetStringField(root, "SAVEGAMENAME", saveData.Name ?? "");
+            // Located via string reference: "savenfo" @ 0x007be1f0
+            // Original implementation (from decompiled FUN_004eb750):
+            // Creates GFF with "NFO " signature and "V2.0" version
+            // Writes fields in this exact order (matching original):
+            // 1. AREANAME (string): Current area name from module state
+            // 2. LASTMODULE (string): Last module ResRef
+            // 3. TIMEPLAYED (int32): Total seconds played (uint32 from party system)
+            // 4. CHEATUSED (byte): Cheat used flag (bool converted to byte)
+            // 5. SAVEGAMENAME (string): Save game name
+            // 6. TIMESTAMP (int64): FILETIME structure (GetLocalTime + SystemTimeToFileTime)
+            // 7. PCNAME (string): Player character name from party system
+            // 8. SAVENUMBER (int32): Save slot number
+            // 9. GAMEPLAYHINT (byte): Gameplay hint flag
+            // 10. STORYHINT0-9 (bytes): Story hint flags (10 boolean flags)
+            // 11. LIVECONTENT (byte): Bitmask for live content (1 << (i-1) for each enabled entry)
+            // 12. LIVE1-9 (strings): Live content entry strings (up to 9 entries)
+            
+            // Field order must match FUN_004eb750 exactly
             SetStringField(root, "AREANAME", saveData.CurrentAreaName ?? "");
-            SetFloatField(root, "TIMEPLAYED", (float)saveData.PlayTime.TotalSeconds);
-            SetStringField(root, "MODULENAME", saveData.CurrentModule ?? "");
-            SetIntField(root, "SAVENUMBER", saveData.SaveNumber);
+            SetStringField(root, "LASTMODULE", saveData.CurrentModule ?? "");
+            SetIntField(root, "TIMEPLAYED", (int)saveData.PlayTime.TotalSeconds);
             SetIntField(root, "CHEATUSED", saveData.CheatUsed ? 1 : 0);
+            SetStringField(root, "SAVEGAMENAME", saveData.Name ?? "");
+            
+            // TIMESTAMP - FileTime (64-bit integer: dwLowDateTime, dwHighDateTime)
+            // Original uses GetLocalTime + SystemTimeToFileTime to create FILETIME
+            DateTime saveTime = saveData.SaveTime != default(DateTime) ? saveData.SaveTime : DateTime.Now;
+            long fileTime = saveTime.ToFileTime();
+            SetInt64Field(root, "TIMESTAMP", fileTime);
+            
+            // PCNAME - Player character name
+            string playerName = "";
+            if (saveData.PartyState != null && saveData.PartyState.PlayerCharacter != null)
+            {
+                playerName = saveData.PartyState.PlayerCharacter.Tag ?? "";
+            }
+            SetStringField(root, "PCNAME", playerName);
+            
+            SetIntField(root, "SAVENUMBER", saveData.SaveNumber);
             SetIntField(root, "GAMEPLAYHINT", saveData.GameplayHint ? 1 : 0);
+            
+            // STORYHINT0-9 - Story hint flags (bytes)
+            for (int i = 0; i < 10; i++)
+            {
+                string hintField = "STORYHINT" + i.ToString();
+                bool hintValue = saveData.StoryHints != null && i < saveData.StoryHints.Count && saveData.StoryHints[i];
+                SetIntField(root, hintField, hintValue ? 1 : 0);
+            }
+            
+            // LIVECONTENT - Bitmask for live content flags (byte)
+            // Original uses bitmask: 1 << (i-1) for each enabled live content
+            byte liveContent = 0;
+            if (saveData.LiveContent != null)
+            {
+                for (int i = 0; i < saveData.LiveContent.Count && i < 32; i++)
+                {
+                    if (saveData.LiveContent[i])
+                    {
+                        liveContent |= (byte)(1 << (i & 0x1F));
+                    }
+                }
+            }
+            SetIntField(root, "LIVECONTENT", liveContent);
+            
+            // LIVE1-9 - Live content entry strings (up to 9 entries)
+            // Note: SaveGameData doesn't currently have LiveContentStrings property
+            // This would need to be added if live content strings need to be saved
+            // For now, we skip this as it's not in the current SaveGameData structure
 
             return gff;
         }
@@ -983,6 +1043,16 @@ namespace Odyssey.Kotor.Save
             }
 
             gffStruct.SetInt32(fieldName, value);
+        }
+
+        private void SetInt64Field(GFFStruct gffStruct, string fieldName, long value)
+        {
+            if (gffStruct == null || string.IsNullOrEmpty(fieldName))
+            {
+                return;
+            }
+
+            gffStruct.SetInt64(fieldName, value);
         }
 
         private void SetFloatField(GFFStruct gffStruct, string fieldName, float value)
