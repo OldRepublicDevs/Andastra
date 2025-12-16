@@ -7,6 +7,7 @@ using AuroraEngine.Common;
 using AuroraEngine.Common.Script;
 using AuroraEngine.Common.Formats.GFF;
 using AuroraEngine.Common.Resource.Generics;
+using Odyssey.Engines.Odyssey.Templates;
 using AuroraEngine.Common.Resources;
 using AuroraEngine.Common.Formats.TwoDA;
 using Odyssey.Content.Interfaces;
