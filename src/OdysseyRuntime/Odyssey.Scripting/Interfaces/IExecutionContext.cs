@@ -9,6 +9,7 @@ namespace Odyssey.Scripting.Interfaces
     /// Script Execution Context Interface:
     /// - Based on swkotor2.exe script execution context system
     /// - Located via string references: Script execution functions maintain context for each script run
+    /// - NCS VM: NCS file format "NCS " signature @ offset 0, "V1.0" version @ offset 4, 0x42 marker @ offset 8, instructions start @ offset 0x0D
     /// - OBJECT_SELF: Set to caller entity ObjectId (constant 0x7F000001, used in NWScript GetObjectSelf function)
     /// - OBJECT_INVALID: Invalid object reference constant (0x7F000000, used for null object checks)
     /// - Original implementation: Each script execution maintains:
