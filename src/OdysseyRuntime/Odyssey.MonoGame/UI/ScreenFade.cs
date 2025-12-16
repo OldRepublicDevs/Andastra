@@ -10,10 +10,15 @@ namespace Odyssey.MonoGame.UI
     /// <remarks>
     /// Screen Fade System:
     /// - Based on swkotor2.exe screen fade system
-    /// - Located via string references: Screen fade effects for module transitions
-    /// - Original implementation: Fades screen to black for module transitions, loading screens
-    /// - Fade duration: Typically 0.5-1.0 seconds for smooth transitions
-    /// - Used for: Module transitions, area transitions, loading screens, cutscenes
+    /// - Located via string references: "FadeDelayOnDeath" @ 0x007bf55c, "FadeLength" @ 0x007c3580, "FadeDelay" @ 0x007c358c
+    /// - "FadeColor" @ 0x007c3598, "FadeType" @ 0x007c35a4, "FadeTime" @ 0x007c60ec
+    /// - "fade_p" @ 0x007c8790 (fade panel GUI), "donefade" @ 0x007cdb94 (fade completion)
+    /// - Original implementation: Fades screen to black for module transitions, loading screens, death sequences
+    /// - Fade duration: Typically 0.5-1.0 seconds for smooth transitions (FadeLength parameter)
+    /// - Fade delay: Delay before fade starts (FadeDelay parameter)
+    /// - Fade color: Can be black, white, or custom color (FadeColor parameter)
+    /// - Fade type: Fade in (from black) or fade out (to black) (FadeType parameter)
+    /// - Used for: Module transitions, area transitions, loading screens, cutscenes, death sequences
     /// </remarks>
     public class ScreenFade
     {
