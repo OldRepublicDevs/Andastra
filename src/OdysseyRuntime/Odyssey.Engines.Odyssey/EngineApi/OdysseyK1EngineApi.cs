@@ -438,6 +438,9 @@ namespace Odyssey.Engines.Odyssey.EngineApi
                 case 342: return Func_GetLevelByPosition(args, ctx);
                 case 343: return Func_GetLevelByClass(args, ctx);
 
+                // Item property functions
+                case 398: return Func_GetItemHasItemProperty(args, ctx);
+
                 default:
                     // Return default value for unimplemented functions
                     string funcName = GetFunctionName(routineId);
@@ -6448,6 +6451,53 @@ namespace Odyssey.Engines.Odyssey.EngineApi
             // No more items - clear iteration state
             _inventoryItemIterations.Remove(callerId);
             return Variable.FromObject(ObjectInvalid);
+        }
+
+        #endregion
+
+        #region Item Property Functions
+
+        /// <summary>
+        /// GetItemHasItemProperty(object oItem, int nProperty) - Determines whether oItem has nProperty
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: GetItemHasItemProperty implementation (routine ID 398)
+        /// Located via string references: "ItemProperty" @ 0x007beb58, "PropertiesList" @ 0x007c2f3c
+        /// Original implementation: Checks if item has the specified property type in its PropertiesList
+        /// Returns: TRUE (1) if item has the property, FALSE (0) if not or if item is invalid
+        /// Property type: ITEM_PROPERTY_* constants (0 = ITEM_PROPERTY_ABILITY_BONUS, etc.)
+        /// </remarks>
+        private Variable Func_GetItemHasItemProperty(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            // GetItemHasItemProperty(object oItem, int nProperty)
+            uint itemId = args.Count > 0 ? args[0].AsObjectId() : ObjectInvalid;
+            int propertyType = args.Count > 1 ? args[1].AsInt() : 0;
+
+            IEntity item = ResolveObject(itemId, ctx);
+            if (item == null || item.ObjectType != Core.Enums.ObjectType.Item)
+            {
+                return Variable.FromInt(0); // FALSE
+            }
+
+            IItemComponent itemComponent = item.GetComponent<IItemComponent>();
+            if (itemComponent == null)
+            {
+                return Variable.FromInt(0); // FALSE
+            }
+
+            // Check if item has the specified property type
+            // Based on swkotor2.exe: Property type matching
+            // Located via string references: Item properties stored in PropertiesList array
+            // Original implementation: Iterates through PropertiesList, checks PropertyName field against nProperty
+            foreach (ItemProperty property in itemComponent.Properties)
+            {
+                if (property != null && property.PropertyType == propertyType)
+                {
+                    return Variable.FromInt(1); // TRUE
+                }
+            }
+
+            return Variable.FromInt(0); // FALSE
         }
 
         #endregion
