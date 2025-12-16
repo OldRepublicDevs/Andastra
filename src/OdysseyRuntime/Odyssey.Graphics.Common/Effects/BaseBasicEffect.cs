@@ -12,6 +12,16 @@ namespace Odyssey.Graphics.Common.Effects
     /// 
     /// Based on MonoGame BasicEffect API: https://docs.monogame.net/api/Microsoft.Xna.Framework.Graphics.BasicEffect.html
     /// </summary>
+    /// <remarks>
+    /// Basic Effect:
+    /// - This is an abstraction layer for modern graphics effect systems
+    /// - Original game graphics system: Primarily DirectX 9 (d3d9.dll @ 0x0080a6c0) or OpenGL (OPENGL32.dll @ 0x00809ce2)
+    /// - Located via string references: "Render Window" @ 0x007b5680, "Graphics Options" @ 0x007b56a8
+    /// - Original game effects: VisualEffect_01 @ 0x007c0210, VisualEffect_02 @ 0x007c01f0, VisualEffect_03 @ 0x007c01d0, VisualEffect_04 @ 0x007c01b0
+    /// - Effect types: DEffectType @ 0x007c016b
+    /// - Original game used fixed-function pipeline and programmable shaders (vertex/pixel shaders)
+    /// - This abstraction: Provides modern effect system for different graphics backends, not directly mapped to swkotor2.exe functions
+    /// </remarks>
     public abstract class BaseBasicEffect : IBasicEffect
     {
         protected Matrix4x4 _world;

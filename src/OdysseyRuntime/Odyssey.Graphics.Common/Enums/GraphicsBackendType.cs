@@ -5,6 +5,14 @@ namespace Odyssey.Graphics.Common.Enums
     /// <summary>
     /// Supported graphics API backends.
     /// </summary>
+    /// <remarks>
+    /// Graphics Backend Type Enumeration:
+    /// - This enum represents modern graphics API abstractions
+    /// - Original game graphics system: Primarily DirectX 9 (d3d9.dll @ 0x0080a6c0) or OpenGL (OPENGL32.dll @ 0x00809ce2)
+    /// - Located via string references: "Render Window" @ 0x007b5680, "Graphics Options" @ 0x007b56a8
+    /// - Original game did not support DirectX 11/12, Vulkan, or Metal; these are modern enhancements
+    /// - DirectX 9 Remix: Special mode for NVIDIA RTX Remix path tracing injection (wraps DX9 calls)
+    /// </remarks>
     [Flags]
     public enum GraphicsBackendType
     {

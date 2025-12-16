@@ -7,6 +7,14 @@ namespace Odyssey.Graphics.Common.Structs
     /// <summary>
     /// Graphics backend capability information.
     /// </summary>
+    /// <remarks>
+    /// Graphics Capabilities Struct:
+    /// - This struct represents modern graphics hardware capabilities
+    /// - Original game graphics system: Primarily DirectX 9 (d3d9.dll @ 0x0080a6c0) or OpenGL (OPENGL32.dll @ 0x00809ce2)
+    /// - Located via string references: "Render Window" @ 0x007b5680, "Graphics Options" @ 0x007b56a8
+    /// - Original game capabilities: Limited to DirectX 9/OpenGL features (no raytracing, compute shaders, mesh shaders, etc.)
+    /// - This struct: Represents modern graphics capabilities for advanced APIs, not directly mapped to swkotor2.exe functions
+    /// </remarks>
     public struct GraphicsCapabilities
     {
         /// <summary>

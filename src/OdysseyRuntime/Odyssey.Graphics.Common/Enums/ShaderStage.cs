@@ -6,6 +6,15 @@ namespace Odyssey.Graphics.Common.Enums
     /// Shader stages in the graphics pipeline.
     /// Based on D3D12_SHADER_STAGE and Vulkan VkShaderStageFlagBits.
     /// </summary>
+    /// <remarks>
+    /// Shader Stage Enumeration:
+    /// - This enum represents modern shader pipeline stages
+    /// - Original game graphics system: Primarily DirectX 9 (d3d9.dll @ 0x0080a6c0) or OpenGL (OPENGL32.dll @ 0x00809ce2)
+    /// - Located via string references: "Render Window" @ 0x007b5680, "Graphics Options" @ 0x007b56a8
+    /// - Original game shaders: Vertex shaders (!!VP1.0 @ 0x0081c228), pixel shaders (fixed-function and programmable)
+    /// - Original game did not support geometry shaders, tessellation, compute shaders, or raytracing shaders
+    /// - This enum: Represents modern shader stages for advanced graphics APIs, not directly mapped to swkotor2.exe functions
+    /// </remarks>
     [Flags]
     public enum ShaderStage
     {
