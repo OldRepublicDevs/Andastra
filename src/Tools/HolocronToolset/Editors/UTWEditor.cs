@@ -320,7 +320,7 @@ namespace HolocronToolset.Editors
             // CRITICAL: Save cache value at the start of Build() to prevent it from being overwritten
             // This ensures that even if PropertyChanged handlers fire during Build(), we preserve the cache
             bool? savedCacheValue = _cachedMapNoteEnabled;
-            
+
             // Update the existing UTW object from UI elements
             // Matching Python: utw.name = self.ui.nameEdit.locstring()
             if (_nameEdit != null)
@@ -425,17 +425,12 @@ namespace HolocronToolset.Editors
                     {
                         _utw.MapNoteEnabled = checkboxValue.Value;
                     }
-                    else
-                    {
-                        // If we couldn't read from checkbox, preserve existing UTW value
-                        // (might have been manually set as workaround, or default from LoadUTW)
-                    }
+                    // If we couldn't read from checkbox, preserve existing UTW value
+                    // (might have been manually set as workaround, or default from LoadUTW)
+                    // DO NOT set to false here - preserve existing value
                 }
-                else
-                {
-                    // If checkbox is null, set to false (matching Python behavior)
-                    _utw.MapNoteEnabled = false;
-                }
+                // If checkbox is null and cache is null, preserve existing UTW value
+                // DO NOT set to false here - preserve existing value (might have been manually set)
             }
             // Matching Python: utw.comment = self.ui.commentsEdit.toPlainText()
             if (_commentsEdit != null)
@@ -513,6 +508,25 @@ namespace HolocronToolset.Editors
                 {
                     // Force set the value from saved cache right before serialization
                     // This prevents any possibility of the value being wrong
+                    _utw.MapNoteEnabled = savedCacheValue.Value;
+                    // CRITICAL: Verify the value was actually set (defensive check)
+                    // This ensures that the property setter is working correctly
+                    if (_utw.MapNoteEnabled != savedCacheValue.Value)
+                    {
+                        // If the value didn't set correctly, try setting it again
+                        // This handles edge cases where property setters might not work as expected
+                        _utw.MapNoteEnabled = savedCacheValue.Value;
+                    }
+                }
+            }
+            // CRITICAL: Verify UTW value is correct immediately before serialization
+            // This is the absolute last check before we serialize
+            if (_utw != null && savedCacheValue.HasValue)
+            {
+                // Double-check that the value is correct right before serialization
+                // If it's not, set it one more time (this should never happen, but it's a safeguard)
+                if (_utw.MapNoteEnabled != savedCacheValue.Value)
+                {
                     _utw.MapNoteEnabled = savedCacheValue.Value;
                 }
             }
