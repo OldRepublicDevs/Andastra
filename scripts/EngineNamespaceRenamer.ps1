@@ -1,50 +1,135 @@
 <#
 .SYNOPSIS
-Utility to rename engine folders and namespaces (e.g., OdysseyRuntime -> BioWareEngines) with dry-run support.
+Canonical utility to rename engine folders and namespaces with backup/restore, undo, and using statement sorting.
 
 .DESCRIPTION
 Renames a root folder and performs text replacements for namespaces/usings/project references across solution files.
-Designed to be flexible for future engine renames by parameterizing names, file globs, and exclusions.
+Includes backup/restore functionality with rotation, undo capability, and automatic using statement sorting
+following .editorconfig conventions (System directives first, no separation between groups).
+
+Features:
+- Backup/restore with rotation (keeps N backups)
+- Undo functionality to restore from backups
+- Using statement sorting (System.* first, then alphabetical)
+- Dry-run support with -WhatIf
+- C# 7.3 compatible processing
+- Canonical PowerShell workflows
+
+.PARAMETER RootPath
+Root directory path. Defaults to current location.
+
+.PARAMETER OldFolderName
+Name of folder to rename (e.g., "OdysseyRuntime").
+
+.PARAMETER NewFolderName
+New folder name (e.g., "BioWareEngines").
+
+.PARAMETER OldNamespace
+Old namespace prefix to replace (e.g., "Odyssey").
+
+.PARAMETER NewNamespace
+New namespace prefix (e.g., "BioWareEngines").
+
+.PARAMETER IncludeFiles
+File patterns to process. Default: *.cs, *.csproj, *.sln, *.axaml, *.axaml.cs
+
+.PARAMETER ExcludeDirectories
+Directory names to exclude. Default: bin, obj, .git, .vs, packages, node_modules, dist, vendor
+
+.PARAMETER NoFolderRename
+Skip folder renaming, only perform text replacements.
+
+.PARAMETER NoTextReplace
+Skip text replacements, only rename folder.
+
+.PARAMETER NoUsingSort
+Skip using statement sorting.
+
+.PARAMETER BackupCount
+Number of backups to keep (rotation). Default: 5
+
+.PARAMETER BackupDirectory
+Directory to store backups. Default: .backups in root path
+
+.PARAMETER Undo
+Restore from most recent backup.
+
+.PARAMETER ListBackups
+List available backups without restoring.
 
 .EXAMPLE
-.\EngineNamespaceRenamer.ps1 -RootPath "g:\GitHub\HoloPatcher.NET" -OldFolderName "OdysseyRuntime" -NewFolderName "BioWareEngines" -OldNamespace "Odyssey" -NewNamespace "BioWareEngines" -WhatIf
+.\EngineNamespaceRenamer.ps1 -OldFolderName "OdysseyRuntime" -NewFolderName "BioWareEngines" -OldNamespace "Odyssey" -NewNamespace "BioWareEngines" -WhatIf
 
 .EXAMPLE
-.\EngineNamespaceRenamer.ps1 -OldFolderName "OldEngine" -NewFolderName "NewEngine" -OldNamespace "OldEngine" -NewNamespace "NewEngine" -IncludeFiles "*.cs","*.csproj","*.sln" -Verbose
+.\EngineNamespaceRenamer.ps1 -OldFolderName "OldEngine" -NewFolderName "NewEngine" -OldNamespace "OldEngine" -NewNamespace "NewEngine" -Verbose
+
+.EXAMPLE
+.\EngineNamespaceRenamer.ps1 -Undo
+
+.EXAMPLE
+.\EngineNamespaceRenamer.ps1 -ListBackups
 #>
-[CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
+[CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High', DefaultParameterSetName = 'Rename')]
 param(
-    [Parameter(Mandatory = $false)]
+    [Parameter(Mandatory = $false, ParameterSetName = 'Rename')]
+    [Parameter(Mandatory = $false, ParameterSetName = 'Undo')]
+    [Parameter(Mandatory = $false, ParameterSetName = 'ListBackups')]
     [string]$RootPath = (Get-Location).Path,
 
-    [Parameter(Mandatory = $true)]
+    [Parameter(Mandatory = $true, ParameterSetName = 'Rename')]
     [string]$OldFolderName,
 
-    [Parameter(Mandatory = $true)]
+    [Parameter(Mandatory = $true, ParameterSetName = 'Rename')]
     [string]$NewFolderName,
 
-    [Parameter(Mandatory = $true)]
+    [Parameter(Mandatory = $true, ParameterSetName = 'Rename')]
     [string]$OldNamespace,
 
-    [Parameter(Mandatory = $true)]
+    [Parameter(Mandatory = $true, ParameterSetName = 'Rename')]
     [string]$NewNamespace,
 
-    [Parameter(Mandatory = $false)]
-    [string[]]$IncludeFiles = @("*.cs", "*.csproj", "*.sln"),
+    [Parameter(Mandatory = $false, ParameterSetName = 'Rename')]
+    [string[]]$IncludeFiles = @("*.cs", "*.csproj", "*.sln", "*.axaml", "*.axaml.cs"),
 
-    [Parameter(Mandatory = $false)]
-    [string[]]$ExcludeDirectories = @("bin", "obj", ".git", ".vs", "packages", "node_modules", "dist", "vendor"),
+    [Parameter(Mandatory = $false, ParameterSetName = 'Rename')]
+    [string[]]$ExcludeDirectories = @("bin", "obj", ".git", ".vs", "packages", "node_modules", "dist", "vendor", ".backups"),
 
-    [Parameter(Mandatory = $false)]
+    [Parameter(Mandatory = $false, ParameterSetName = 'Rename')]
     [switch]$NoFolderRename,
 
-    [Parameter(Mandatory = $false)]
-    [switch]$NoTextReplace
+    [Parameter(Mandatory = $false, ParameterSetName = 'Rename')]
+    [switch]$NoTextReplace,
+
+    [Parameter(Mandatory = $false, ParameterSetName = 'Rename')]
+    [switch]$NoUsingSort,
+
+    [Parameter(Mandatory = $false, ParameterSetName = 'Rename')]
+    [int]$BackupCount = 5,
+
+    [Parameter(Mandatory = $false, ParameterSetName = 'Rename')]
+    [Parameter(Mandatory = $false, ParameterSetName = 'Undo')]
+    [string]$BackupDirectory,
+
+    [Parameter(Mandatory = $true, ParameterSetName = 'Undo')]
+    [switch]$Undo,
+
+    [Parameter(Mandatory = $true, ParameterSetName = 'ListBackups')]
+    [switch]$ListBackups
 )
 
+#region Helper Functions
+
 function Test-IsExcludedDirectory {
+    <#
+    .SYNOPSIS
+    Tests if a path contains any excluded directory names.
+    #>
+    [CmdletBinding()]
     param(
+        [Parameter(Mandatory = $true)]
         [string]$Path,
+
+        [Parameter(Mandatory = $true)]
         [string[]]$ExcludedNames
     )
 
@@ -57,10 +142,391 @@ function Test-IsExcludedDirectory {
     return $false
 }
 
-function Invoke-ReplaceInFile {
+function Get-BackupDirectory {
+    <#
+    .SYNOPSIS
+    Gets or creates the backup directory.
+    #>
+    [CmdletBinding()]
     param(
+        [Parameter(Mandatory = $true)]
+        [string]$RootPath,
+
+        [Parameter(Mandatory = $false)]
+        [string]$CustomBackupDir
+    )
+
+    if ($CustomBackupDir) {
+        $backupDir = $CustomBackupDir
+    }
+    else {
+        $backupDir = Join-Path $RootPath ".backups"
+    }
+
+    if (-not (Test-Path -Path $backupDir)) {
+        if ($PSCmdlet.ShouldProcess($backupDir, "Create backup directory")) {
+            $null = New-Item -Path $backupDir -ItemType Directory -Force
+        }
+    }
+
+    return $backupDir
+}
+
+function New-Backup {
+    <#
+    .SYNOPSIS
+    Creates a timestamped backup of the root directory.
+    #>
+    [CmdletBinding(SupportsShouldProcess = $true)]
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$RootPath,
+
+        [Parameter(Mandatory = $true)]
+        [string]$BackupBaseDir,
+
+        [Parameter(Mandatory = $true)]
+        [int]$BackupCount
+    )
+
+    $timestamp = Get-Date -Format "yyyyMMdd-HHmmss"
+    $backupName = "backup-$timestamp"
+    $backupPath = Join-Path $BackupBaseDir $backupName
+
+    Write-Verbose "Preparing backup: $backupPath"
+
+    # Create backup manifest
+    $manifest = @{
+        Timestamp = $timestamp
+        RootPath = $RootPath
+        BackupPath = $backupPath
+        Files = @()
+    }
+
+    # Copy files that match include patterns
+    $files = Get-ChildItem -Path $RootPath -Recurse -File |
+        Where-Object { -not (Test-IsExcludedDirectory -Path $_.FullName -ExcludedNames @("bin", "obj", ".git", ".vs", "packages", "node_modules", "dist", "vendor", ".backups")) }
+
+    $backupManifestPath = Join-Path $BackupBaseDir "$backupName-manifest.json"
+
+    # Store relative paths and hashes for verification
+    foreach ($file in $files) {
+        $relativePath = $file.FullName.Substring($RootPath.Length + 1)
+        $hash = (Get-FileHash -Path $file.FullName -Algorithm SHA256).Hash
+        $manifest.Files += @{
+            RelativePath = $relativePath
+            Hash = $hash
+            FullPath = $file.FullName
+        }
+    }
+
+    if ($PSCmdlet.ShouldProcess($backupPath, "Create backup with $($manifest.Files.Count) files")) {
+        Write-Verbose "Creating backup: $backupPath"
+
+        # Save manifest
+        $manifest | ConvertTo-Json -Depth 10 | Set-Content -Path $backupManifestPath
+
+        # Copy files to backup
+        foreach ($fileInfo in $manifest.Files) {
+            $sourcePath = $fileInfo.FullPath
+            $destPath = Join-Path $backupPath $fileInfo.RelativePath
+            $destDir = Split-Path -Path $destPath -Parent
+
+            if (-not (Test-Path -Path $destDir)) {
+                New-Item -Path $destDir -ItemType Directory -Force | Out-Null
+            }
+
+            Copy-Item -Path $sourcePath -Destination $destPath -Force
+        }
+
+        Write-Host "Backup created: $backupPath"
+        Write-Host "Manifest: $backupManifestPath"
+
+        # Rotate backups
+        $backups = Get-ChildItem -Path $BackupBaseDir -Directory -Filter "backup-*" |
+            Sort-Object -Property Name -Descending
+
+        if ($backups.Count -gt $BackupCount) {
+            $toRemove = $backups | Select-Object -Skip $BackupCount
+            foreach ($oldBackup in $toRemove) {
+                $oldManifest = Join-Path $BackupBaseDir "$($oldBackup.Name)-manifest.json"
+                if ($PSCmdlet.ShouldProcess($oldBackup.FullName, "Remove old backup")) {
+                    Remove-Item -Path $oldBackup.FullName -Recurse -Force
+                    if (Test-Path -Path $oldManifest) {
+                        Remove-Item -Path $oldManifest -Force
+                    }
+                    Write-Verbose "Removed old backup: $($oldBackup.FullName)"
+                }
+            }
+        }
+    }
+    else {
+        Write-Verbose "WhatIf: Would create backup with $($manifest.Files.Count) files"
+    }
+
+    return $backupPath
+}
+
+function Restore-Backup {
+    <#
+    .SYNOPSIS
+    Restores from the most recent backup.
+    #>
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$RootPath,
+
+        [Parameter(Mandatory = $true)]
+        [string]$BackupBaseDir
+    )
+
+    $backups = Get-ChildItem -Path $BackupBaseDir -Directory -Filter "backup-*" |
+        Sort-Object -Property Name -Descending
+
+    if ($backups.Count -eq 0) {
+        Write-Error "No backups found in $BackupBaseDir"
+        return
+    }
+
+    $latestBackup = $backups[0]
+    $manifestPath = Join-Path $BackupBaseDir "$($latestBackup.Name)-manifest.json"
+
+    if (-not (Test-Path -Path $manifestPath)) {
+        Write-Error "Manifest not found: $manifestPath"
+        return
+    }
+
+    $manifest = Get-Content -Path $manifestPath | ConvertFrom-Json
+
+    if ($PSCmdlet.ShouldProcess($RootPath, "Restore from backup $($latestBackup.Name)")) {
+        Write-Host "Restoring from backup: $($latestBackup.FullName)"
+
+        foreach ($fileInfo in $manifest.Files) {
+            $sourcePath = Join-Path $latestBackup.FullName $fileInfo.RelativePath
+            $destPath = Join-Path $RootPath $fileInfo.RelativePath
+            $destDir = Split-Path -Path $destPath -Parent
+
+            if (-not (Test-Path -Path $destDir)) {
+                New-Item -Path $destDir -ItemType Directory -Force | Out-Null
+            }
+
+            if (Test-Path -Path $sourcePath) {
+                Copy-Item -Path $sourcePath -Destination $destPath -Force
+                Write-Verbose "Restored: $($fileInfo.RelativePath)"
+            }
+            else {
+                Write-Warning "Source file not found in backup: $sourcePath"
+            }
+        }
+
+        Write-Host "Restore completed from: $($latestBackup.Name)"
+    }
+}
+
+function Get-BackupList {
+    <#
+    .SYNOPSIS
+    Lists available backups.
+    #>
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$BackupBaseDir
+    )
+
+    if (-not (Test-Path -Path $BackupBaseDir)) {
+        Write-Host "No backup directory found: $BackupBaseDir"
+        return
+    }
+
+    $backups = Get-ChildItem -Path $BackupBaseDir -Directory -Filter "backup-*" |
+        Sort-Object -Property Name -Descending
+
+    if ($backups.Count -eq 0) {
+        Write-Host "No backups found."
+        return
+    }
+
+    Write-Host "Available backups:"
+    Write-Host ""
+
+    foreach ($backup in $backups) {
+        $manifestPath = Join-Path $BackupBaseDir "$($backup.Name)-manifest.json"
+        if (Test-Path -Path $manifestPath) {
+            $manifest = Get-Content -Path $manifestPath | ConvertFrom-Json
+            $fileCount = $manifest.Files.Count
+            Write-Host "  $($backup.Name) - $fileCount files - $($manifest.Timestamp)"
+        }
+        else {
+            Write-Host "  $($backup.Name) - (manifest missing)"
+        }
+    }
+}
+
+function Sort-UsingStatements {
+    <#
+    .SYNOPSIS
+    Sorts using statements in C# files following .editorconfig conventions:
+    - System.* directives first
+    - Then other namespaces alphabetically
+    - No separation between groups (dotnet_separate_import_directive_groups = false)
+    #>
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$FilePath
+    )
+
+    try {
+        $content = Get-Content -Path $FilePath -Raw
+        if ([string]::IsNullOrWhiteSpace($content)) {
+            return $false
+        }
+
+        $lines = Get-Content -Path $FilePath
+        if ($lines.Count -eq 0) {
+            return $false
+        }
+
+        # Detect line ending
+        $lineEnding = "`r`n"
+        if ($content -notmatch "`r`n") {
+            $lineEnding = "`n"
+        }
+
+        # Find using block (from first "using" to first non-using/non-empty line or namespace)
+        $usingStart = -1
+        $usingEnd = -1
+        $usingLineIndices = @()
+
+        for ($i = 0; $i -lt $lines.Count; $i++) {
+            $line = $lines[$i]
+            $trimmed = $line.Trim()
+
+            # Skip file header comments
+            if ($trimmed -match '^/\*' -or $trimmed -match '^//' -or $trimmed -eq '') {
+                continue
+            }
+
+            if ($trimmed -match '^\s*using\s+') {
+                if ($usingStart -eq -1) {
+                    $usingStart = $i
+                }
+                $usingEnd = $i
+                $usingLineIndices += $i
+            }
+            elseif ($usingStart -ne -1) {
+                # Found end of using block
+                break
+            }
+        }
+
+        if ($usingStart -eq -1 -or $usingLineIndices.Count -le 1) {
+            return $false
+        }
+
+        # Extract using statements with their original indentation
+        $usingStatements = @()
+        foreach ($idx in $usingLineIndices) {
+            $line = $lines[$idx]
+            $trimmed = $line.Trim()
+            if ($trimmed -match '^\s*using\s+') {
+                $usingStatements += $trimmed
+            }
+        }
+
+        if ($usingStatements.Count -le 1) {
+            return $false
+        }
+
+        # Sort: System.* first, then alphabetical
+        $systemUsings = @()
+        $otherUsings = @()
+
+        foreach ($using in $usingStatements) {
+            if ($using -match '^\s*using\s+System\.') {
+                $systemUsings += $using
+            }
+            else {
+                $otherUsings += $using
+            }
+        }
+
+        # Sort each group alphabetically
+        $systemUsings = $systemUsings | Sort-Object
+        $otherUsings = $otherUsings | Sort-Object
+
+        # Combine (no blank line between groups per .editorconfig)
+        $sortedUsings = $systemUsings + $otherUsings
+
+        # Check if already sorted
+        $isAlreadySorted = $true
+        for ($i = 0; $i -lt $usingStatements.Count; $i++) {
+            if ($usingStatements[$i] -ne $sortedUsings[$i]) {
+                $isAlreadySorted = $false
+                break
+            }
+        }
+
+        if ($isAlreadySorted) {
+            return $false
+        }
+
+        # Get indentation from first using statement
+        $firstUsingLine = $lines[$usingStart]
+        $indentMatch = $firstUsingLine -match '^(\s*)'
+        $indent = if ($indentMatch) { $matches[1] } else { "" }
+
+        # Rebuild file content
+        $newLines = New-Object System.Collections.ArrayList
+
+        # Lines before using block
+        for ($i = 0; $i -lt $usingStart; $i++) {
+            [void]$newLines.Add($lines[$i])
+        }
+
+        # Sorted using statements (preserve indentation)
+        foreach ($using in $sortedUsings) {
+            [void]$newLines.Add($indent + $using.TrimStart())
+        }
+
+        # Lines after using block
+        for ($i = $usingEnd + 1; $i -lt $lines.Count; $i++) {
+            [void]$newLines.Add($lines[$i])
+        }
+
+        # Write back with original line endings
+        $newContent = $newLines -join $lineEnding
+        
+        # Preserve trailing newline if original had one
+        if ($content.EndsWith($lineEnding)) {
+            $newContent += $lineEnding
+        }
+
+        Set-Content -Path $FilePath -Value $newContent -NoNewline
+        return $true
+    }
+    catch {
+        Write-Warning "Failed to sort using statements in $FilePath : $_"
+        return $false
+    }
+}
+
+function Invoke-ReplaceInFile {
+    <#
+    .SYNOPSIS
+    Performs text replacement in a file with ShouldProcess support.
+    #>
+    [CmdletBinding(SupportsShouldProcess = $true)]
+    param(
+        [Parameter(Mandatory = $true)]
         [string]$FilePath,
+
+        [Parameter(Mandatory = $true)]
         [string]$OldValue,
+
+        [Parameter(Mandatory = $true)]
         [string]$NewValue
     )
 
@@ -69,7 +535,7 @@ function Invoke-ReplaceInFile {
 
     if ($updated -ne $original) {
         if ($PSCmdlet.ShouldProcess($FilePath, "Replace '$OldValue' with '$NewValue'")) {
-            Set-Content -Path $FilePath -Value $updated
+            Set-Content -Path $FilePath -Value $updated -NoNewline
         }
         return $true
     }
@@ -77,49 +543,112 @@ function Invoke-ReplaceInFile {
     return $false
 }
 
-Write-Verbose "RootPath: $RootPath"
-Write-Verbose "OldFolderName: $OldFolderName"
-Write-Verbose "NewFolderName: $NewFolderName"
-Write-Verbose "OldNamespace: $OldNamespace"
-Write-Verbose "NewNamespace: $NewNamespace"
-Write-Verbose "Includes: $($IncludeFiles -join ', ')"
-Write-Verbose "Excludes: $($ExcludeDirectories -join ', ')"
+#endregion
 
-$resolvedRoot = Resolve-Path -Path $RootPath
+#region Main Logic
 
-if (-not $NoFolderRename) {
-    $oldFolder = Join-Path $resolvedRoot $OldFolderName
-    $newFolder = Join-Path $resolvedRoot $NewFolderName
+$ErrorActionPreference = 'Stop'
 
-    if (Test-Path -Path $oldFolder) {
-        if (Test-Path -Path $newFolder) {
-            throw "Target folder already exists: $newFolder"
+try {
+    $resolvedRoot = Resolve-Path -Path $RootPath -ErrorAction Stop
+
+    # Handle undo
+    if ($Undo) {
+        $backupDir = Get-BackupDirectory -RootPath $resolvedRoot -CustomBackupDir $BackupDirectory
+        Restore-Backup -RootPath $resolvedRoot -BackupBaseDir $backupDir
+        exit 0
+    }
+
+    # Handle list backups
+    if ($ListBackups) {
+        $backupDir = Get-BackupDirectory -RootPath $resolvedRoot -CustomBackupDir $BackupDirectory
+        Get-BackupList -BackupBaseDir $backupDir
+        exit 0
+    }
+
+    # Validate parameters
+    if ([string]::IsNullOrWhiteSpace($OldFolderName) -or [string]::IsNullOrWhiteSpace($NewFolderName)) {
+        throw "OldFolderName and NewFolderName are required"
+    }
+
+    if ([string]::IsNullOrWhiteSpace($OldNamespace) -or [string]::IsNullOrWhiteSpace($NewNamespace)) {
+        throw "OldNamespace and NewNamespace are required"
+    }
+
+    Write-Verbose "RootPath: $resolvedRoot"
+    Write-Verbose "OldFolderName: $OldFolderName"
+    Write-Verbose "NewFolderName: $NewFolderName"
+    Write-Verbose "OldNamespace: $OldNamespace"
+    Write-Verbose "NewNamespace: $NewNamespace"
+    Write-Verbose "Includes: $($IncludeFiles -join ', ')"
+    Write-Verbose "Excludes: $($ExcludeDirectories -join ', ')"
+
+    # Create backup before changes
+    $backupDir = Get-BackupDirectory -RootPath $resolvedRoot -CustomBackupDir $BackupDirectory
+    $backupPath = New-Backup -RootPath $resolvedRoot -BackupBaseDir $backupDir -BackupCount $BackupCount
+
+    # Rename folder
+    if (-not $NoFolderRename) {
+        $oldFolder = Join-Path $resolvedRoot $OldFolderName
+        $newFolder = Join-Path $resolvedRoot $NewFolderName
+
+        if (Test-Path -Path $oldFolder) {
+            if (Test-Path -Path $newFolder) {
+                throw "Target folder already exists: $newFolder"
+            }
+
+            if ($PSCmdlet.ShouldProcess($oldFolder, "Rename to $newFolder")) {
+                Move-Item -Path $oldFolder -Destination $newFolder -Force
+                Write-Host "Renamed folder: $OldFolderName -> $NewFolderName"
+            }
         }
-
-        if ($PSCmdlet.ShouldProcess($oldFolder, "Rename to $newFolder")) {
-            Move-Item -Path $oldFolder -Destination $newFolder
+        else {
+            Write-Warning "Old folder not found: $oldFolder"
         }
     }
-    else {
-        Write-Warning "Old folder not found: $oldFolder"
+
+    # Text replacements
+    if (-not $NoTextReplace) {
+        $files = Get-ChildItem -Path $resolvedRoot -Recurse -File -Include $IncludeFiles |
+            Where-Object { -not (Test-IsExcludedDirectory -Path $_.FullName -ExcludedNames $ExcludeDirectories) }
+
+        $changedCount = 0
+        $sortedCount = 0
+
+        foreach ($file in $files) {
+            $didChange = $false
+
+            # Perform namespace replacement
+            $didChange = Invoke-ReplaceInFile -FilePath $file.FullName -OldValue $OldNamespace -NewValue $NewNamespace
+            if ($didChange) {
+                $changedCount++
+                Write-Verbose "Updated: $($file.FullName)"
+            }
+
+            # Sort using statements for .cs files
+            if (-not $NoUsingSort -and $file.Extension -eq ".cs") {
+                if (Sort-UsingStatements -FilePath $file.FullName) {
+                    $sortedCount++
+                    Write-Verbose "Sorted usings: $($file.FullName)"
+                }
+            }
+        }
+
+        Write-Host "Files updated: $changedCount"
+        if (-not $NoUsingSort) {
+            Write-Host "Files with sorted usings: $sortedCount"
+        }
     }
+
+    Write-Host ""
+    Write-Host "Completed successfully."
+    Write-Host "Backup location: $backupPath"
+    Write-Host "Use -Undo to restore from backup, or -ListBackups to see available backups."
+}
+catch {
+    Write-Error "Error: $_"
+    Write-Error $_.ScriptStackTrace
+    exit 1
 }
 
-if (-not $NoTextReplace) {
-    $files = Get-ChildItem -Path $resolvedRoot -Recurse -File -Include $IncludeFiles |
-        Where-Object { -not (Test-IsExcludedDirectory -Path $_.FullName -ExcludedNames $ExcludeDirectories) }
-
-    $changedCount = 0
-    foreach ($file in $files) {
-        $didChange = Invoke-ReplaceInFile -FilePath $file.FullName -OldValue $OldNamespace -NewValue $NewNamespace
-        if ($didChange) {
-            $changedCount++
-            Write-Verbose "Updated: $($file.FullName)"
-        }
-    }
-
-    Write-Host "Files updated: $changedCount"
-}
-
-Write-Host "Completed. Use -WhatIf for dry-run and -Verbose for detailed logging."
-
+#endregion
