@@ -400,7 +400,8 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
                     // Check if there's actual code between entryStubEnd and the last RETN
                     // If not (just MOVSP/RSADDI/RETN), the main code is in globals and we need to split
                     bool mainCodeInGlobals = false;
-                    if (entryJsrTargetIsLastRetn && mainStart == entryStubEnd)
+                    bool entryJsrTargetIsLastRetnCheck = (entryJsrTarget >= 0 && entryJsrTarget == instructions.Count - 1);
+                    if (entryJsrTargetIsLastRetnCheck && mainStart == entryStubEnd)
                     {
                         // Check if there are ACTION instructions between entryStubEnd and last RETN
                         // If not, the main function code is in the globals range
