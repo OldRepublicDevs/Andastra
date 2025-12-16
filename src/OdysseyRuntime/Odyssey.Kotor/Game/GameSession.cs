@@ -155,7 +155,7 @@ namespace Odyssey.Kotor.Game
             try
             {
                 _installation = new Installation(_settings.GamePath);
-                _moduleLoader = new ModuleLoader(_settings.GamePath, _world);
+                _moduleLoader = new ModuleLoader(_installation);
             }
             catch (Exception ex)
             {
@@ -347,9 +347,8 @@ namespace Odyssey.Kotor.Game
             {
                 Console.WriteLine("[GameSession] Loading module: " + moduleName);
 
-                // Load module (LoadModule sets _world.CurrentModule)
-                _moduleLoader.LoadModule(moduleName);
-                RuntimeModule module = _world.CurrentModule as RuntimeModule;
+                // Load module
+                RuntimeModule module = _moduleLoader.LoadModule(moduleName);
                 if (module == null)
                 {
                     Console.WriteLine("[GameSession] Module loader returned null for: " + moduleName);
@@ -359,6 +358,7 @@ namespace Odyssey.Kotor.Game
                 // Set current module
                 _currentModule = module;
                 _currentModuleName = moduleName;
+                _world.SetCurrentModule(module);
                 _moduleTransitionSystem?.SetCurrentModule(moduleName);
 
                 // Set world's current area
