@@ -203,5 +203,132 @@ namespace HolocronToolset.NET.Tests.Editors
             // Original: assert result == ".wav"
             result.Should().Be(".wav");
         }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_wav_editor.py:119-122
+        // Original: def test_detect_mp3_format_id3(self, wav_editor, sample_mp3_data: bytes):
+        [Fact]
+        public void TestWavEditorDetectMp3FormatId3()
+        {
+            // Create minimal MP3-like data with ID3 header for testing (matching Python fixture)
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_wav_editor.py:89-92
+            // Original: @pytest.fixture def sample_mp3_data() -> bytes:
+            byte[] sampleMp3Data = new byte[107];
+            System.Text.Encoding.ASCII.GetBytes("ID3").CopyTo(sampleMp3Data, 0);
+            sampleMp3Data[3] = 0x03;
+            sampleMp3Data[4] = 0x00;
+            sampleMp3Data[5] = 0x00;
+            sampleMp3Data[6] = 0x00;
+            sampleMp3Data[7] = 0x00;
+            sampleMp3Data[8] = 0x00;
+            sampleMp3Data[9] = 0x00;
+            sampleMp3Data[10] = 0xFF;
+            sampleMp3Data[11] = 0xFB;
+            sampleMp3Data[12] = 0x90;
+            sampleMp3Data[13] = 0x00;
+            // Rest is zeros (already initialized)
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_wav_editor.py:121
+            // Original: result = wav_editor.detect_audio_format(sample_mp3_data)
+            string result = WAVEditor.DetectAudioFormat(sampleMp3Data);
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_wav_editor.py:122
+            // Original: assert result == ".mp3"
+            result.Should().Be(".mp3");
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_wav_editor.py:124-129
+        // Original: def test_detect_mp3_format_frame_sync(self, wav_editor):
+        [Fact]
+        public void TestWavEditorDetectMp3FormatFrameSync()
+        {
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_wav_editor.py:126-127
+            // Original: data = b'\xff\xfb\x90\x00' + b'\x00' * 100
+            byte[] data = new byte[104];
+            data[0] = 0xFF;
+            data[1] = 0xFB;
+            data[2] = 0x90;
+            data[3] = 0x00;
+            // Rest is zeros (already initialized)
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_wav_editor.py:128
+            // Original: result = wav_editor.detect_audio_format(data)
+            string result = WAVEditor.DetectAudioFormat(data);
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_wav_editor.py:129
+            // Original: assert result == ".mp3"
+            result.Should().Be(".mp3");
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_wav_editor.py:131-136
+        // Original: def test_detect_mp3_format_lame(self, wav_editor):
+        [Fact]
+        public void TestWavEditorDetectMp3FormatLame()
+        {
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_wav_editor.py:133-134
+            // Original: data = b"LAME" + b'\x00' * 100
+            byte[] data = new byte[104];
+            System.Text.Encoding.ASCII.GetBytes("LAME").CopyTo(data, 0);
+            // Rest is zeros (already initialized)
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_wav_editor.py:135
+            // Original: result = wav_editor.detect_audio_format(data)
+            string result = WAVEditor.DetectAudioFormat(data);
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_wav_editor.py:136
+            // Original: assert result == ".mp3"
+            result.Should().Be(".mp3");
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_wav_editor.py:137-140
+        // Original: def test_detect_ogg_format(self, wav_editor, sample_ogg_data: bytes):
+        [Fact]
+        public void TestWavEditorDetectOggFormat()
+        {
+            // Create minimal OGG-like data for testing (matching Python fixture)
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_wav_editor.py:96-98
+            // Original: @pytest.fixture def sample_ogg_data() -> bytes:
+            byte[] sampleOggData = new byte[110];
+            System.Text.Encoding.ASCII.GetBytes("OggS").CopyTo(sampleOggData, 0);
+            sampleOggData[4] = 0x00;
+            sampleOggData[5] = 0x02;
+            sampleOggData[6] = 0x00;
+            sampleOggData[7] = 0x00;
+            sampleOggData[8] = 0x00;
+            sampleOggData[9] = 0x00;
+            sampleOggData[10] = 0x00;
+            sampleOggData[11] = 0x00;
+            sampleOggData[12] = 0x00;
+            sampleOggData[13] = 0x00;
+            // Rest is zeros (already initialized)
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_wav_editor.py:139
+            // Original: result = wav_editor.detect_audio_format(sample_ogg_data)
+            string result = WAVEditor.DetectAudioFormat(sampleOggData);
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_wav_editor.py:140
+            // Original: assert result == ".ogg"
+            result.Should().Be(".ogg");
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_wav_editor.py:142-145
+        // Original: def test_detect_flac_format(self, wav_editor, sample_flac_data: bytes):
+        [Fact]
+        public void TestWavEditorDetectFlacFormat()
+        {
+            // Create minimal FLAC-like data for testing (matching Python fixture)
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_wav_editor.py:100-102
+            // Original: @pytest.fixture def sample_flac_data() -> bytes:
+            byte[] sampleFlacData = new byte[104];
+            System.Text.Encoding.ASCII.GetBytes("fLaC").CopyTo(sampleFlacData, 0);
+            // Rest is zeros (already initialized)
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_wav_editor.py:144
+            // Original: result = wav_editor.detect_audio_format(sample_flac_data)
+            string result = WAVEditor.DetectAudioFormat(sampleFlacData);
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_wav_editor.py:145
+            // Original: assert result == ".flac"
+            result.Should().Be(".flac");
+        }
     }
 }
