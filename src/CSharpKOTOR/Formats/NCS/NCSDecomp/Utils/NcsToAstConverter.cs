@@ -446,47 +446,24 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
                     if (mainCodeInGlobals)
                     {
                         // Main function code is in globals range - split globals
-                        // Find where the main function code actually starts (after globals initialization)
-                        // Typically, globals initialization ends at SAVEBP, and main code starts after SAVEBP
-                        // But we need to find the actual boundary
-                        int globalsInitEnd = savebpIndex + 1;
-                        // Check for entry stub and adjust
-                        if (instructions.Count > globalsInitEnd + 1 &&
-                            instructions[globalsInitEnd].InsType == NCSInstructionType.JSR &&
-                            (instructions[globalsInitEnd + 1].InsType == NCSInstructionType.RETN ||
-                             instructions[globalsInitEnd + 1].InsType == NCSInstructionType.RESTOREBP))
-                        {
-                            globalsInitEnd += 2; // Skip entry stub
-                        }
-                        // For now, use a heuristic: if entryStubEnd is close to SAVEBP+1, 
-                        // the main code might start right after SAVEBP
-                        // Actually, if mainStart = entryStubEnd and there's no code after it,
-                        // the main code must be before entryStubEnd
-                        // Use entryStubEnd as the split point: globals = 0 to entryStubEnd, main = entryStubEnd to last RETN
-                        // But wait - if mainStart = entryStubEnd, and we want main to include code before entryStubEnd,
-                        // we need to set mainStart to where the main code actually starts
-                        // This is complex - for now, let's try using savebpIndex+1 as the split point
-                        int splitPoint = savebpIndex + 1;
-                        // Check if there's an entry stub
-                        if (instructions.Count > splitPoint + 1 &&
-                            instructions[splitPoint].InsType == NCSInstructionType.JSR &&
-                            (instructions[splitPoint + 1].InsType == NCSInstructionType.RETN ||
-                             instructions[splitPoint + 1].InsType == NCSInstructionType.RESTOREBP))
-                        {
-                            // Entry stub exists - main code is after entry stub
-                            splitPoint += 2;
-                        }
-                        // Create globals subroutine (globals initialization only)
-                        ASubroutine globalsSub = ConvertInstructionRangeToSubroutine(ncs, instructions, 0, splitPoint, 0);
+                        // The main code is between SAVEBP and entryStubEnd
+                        // Globals should only include variable initialization (0 to SAVEBP+1)
+                        // Main should include everything from SAVEBP+1 to the last RETN (includes entry stub and main code)
+                        int globalsInitEnd = savebpIndex + 1; // Globals end at SAVEBP+1 (includes SAVEBP)
+                        int mainCodeStart = savebpIndex + 1; // Main code starts right after SAVEBP
+                        
+                        // Create globals subroutine (globals initialization only, up to SAVEBP+1)
+                        ASubroutine globalsSub = ConvertInstructionRangeToSubroutine(ncs, instructions, 0, globalsInitEnd, 0);
                         if (globalsSub != null)
                         {
                             program.GetSubroutine().Add(globalsSub);
-                            JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Created split globals subroutine (range 0-{splitPoint}, globals initialization only)");
+                            JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Created split globals subroutine (range 0-{globalsInitEnd}, globals initialization only)");
                         }
-                        // Update mainStart to include the main function code
-                        mainStart = splitPoint;
-                        mainEnd = instructions.Count; // Include all instructions from splitPoint to last RETN
-                        JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Updated mainStart to {mainStart} and mainEnd to {mainEnd} (main includes all code from {mainStart} to last RETN)");
+                        
+                        // Update mainStart to include the main function code (from SAVEBP+1 to last RETN)
+                        mainStart = mainCodeStart;
+                        mainEnd = instructions.Count; // Include all instructions from SAVEBP+1 to last RETN
+                        JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Updated mainStart to {mainStart} and mainEnd to {mainEnd} (main includes all code from {mainStart} to last RETN, including entry stub and main function code)");
                     }
                     else
                     {
