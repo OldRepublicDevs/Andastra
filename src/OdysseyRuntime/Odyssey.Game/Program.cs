@@ -71,7 +71,7 @@ namespace Odyssey.Game
                 Console.WriteLine();
 
                 // Create graphics backend
-                IGraphicsBackend graphicsBackend = GraphicsBackendFactory.CreateBackend(backendType);
+                IGraphicsBackend graphicsBackend = Core.GraphicsBackendFactory.CreateBackend(backendType);
 
                 // Create and run the game using abstraction layer
                 using (var game = new OdysseyGame(settings, graphicsBackend))
