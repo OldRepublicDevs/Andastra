@@ -5,6 +5,20 @@ namespace Odyssey.Graphics
     /// <summary>
     /// Rasterizer state abstraction for controlling how primitives are rasterized.
     /// </summary>
+    /// <remarks>
+    /// Render State Interfaces:
+    /// - Based on swkotor2.exe DirectX render state system
+    /// - Located via string references: Original game uses DirectX 8/9 render states (D3DRS_* constants)
+    /// - Depth-stencil: "GL_ARB_depth_texture" @ 0x007b8848, "glDepthMask" @ 0x0080aa38, "glDepthFunc" @ 0x0080ad96
+    /// - Stencil: "glStencilOp" @ 0x0080a9f0, "glStencilMask" @ 0x0080aa0c, "glStencilFunc" @ 0x0080aa68
+    /// - "glClearStencil" @ 0x0080ada4, "GL_EXT_stencil_two_side" @ 0x007b8a68
+    /// - Original implementation: DirectX 8/9 render states control rasterization, depth testing, blending, texture sampling
+    /// - Render states: Cull mode, fill mode, depth bias, scissor test, multisampling
+    /// - Depth-stencil states: Depth buffer enable/write, depth function, stencil operations
+    /// - Blend states: Alpha/color blend functions, blend factors, color write channels
+    /// - Sampler states: Texture addressing modes, filtering, anisotropy, mipmap bias
+    /// - This interface: Abstraction layer for modern graphics APIs (DirectX 11/12, OpenGL, Vulkan)
+    /// </remarks>
     public interface IRasterizerState : IDisposable
     {
         CullMode CullMode { get; set; }

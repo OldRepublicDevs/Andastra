@@ -6,6 +6,20 @@ namespace Odyssey.Graphics
     /// <summary>
     /// Spatial audio abstraction for 3D sound positioning.
     /// </summary>
+    /// <remarks>
+    /// Spatial Audio Interface:
+    /// - Based on swkotor2.exe 3D audio system
+    /// - Located via string references: "EnvAudio" @ 0x007bd478 (environmental audio)
+    /// - "EAX2 room rolloff" @ 0x007c5f24, "EAX3 room LF" @ 0x007c6010, "EAX3 room LF " @ 0x007c6030
+    /// - "EAX2 room HF" @ 0x007c6040, "EAX2 room" @ 0x007c6050 (EAX audio environment)
+    /// - "EAX3 modulation depth" @ 0x007c5f74, "EAX3 echo depth" @ 0x007c5fa4 (EAX effects)
+    /// - "_AIL_set_digital_master_room_type@8" @ 0x0080a0f6, "_AIL_set_3D_room_type@8" @ 0x0080a11c
+    /// - "_AIL_3D_room_type@4" @ 0x0080a1ec (Miles Sound System 3D audio functions)
+    /// - Original implementation: Uses Miles Sound System (MSS) for 3D positional audio with EAX environmental effects
+    /// - 3D audio: Calculates volume, pan, Doppler shift based on listener and emitter positions
+    /// - EAX: Environmental Audio Extensions for reverb and environmental effects
+    /// - This interface: Abstraction layer for modern spatial audio systems (XAudio2, OpenAL, etc.)
+    /// </remarks>
     public interface ISpatialAudio
     {
         /// <summary>

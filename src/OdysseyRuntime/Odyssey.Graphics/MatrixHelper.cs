@@ -7,6 +7,17 @@ namespace Odyssey.Graphics
     /// Matrix helper class for common matrix operations.
     /// Provides unified matrix operations across MonoGame and Stride.
     /// </summary>
+    /// <remarks>
+    /// Matrix Helper:
+    /// - Based on swkotor2.exe matrix transformation system
+    /// - Located via string references: Original game uses DirectX 8/9 matrix operations (D3DXMatrix* functions)
+    /// - Matrix operations: World, view, projection matrices for 3D rendering
+    /// - World matrix: Transforms objects from model space to world space (position, rotation, scale)
+    /// - View matrix: Transforms from world space to camera space (camera position and orientation)
+    /// - Projection matrix: Transforms from camera space to screen space (perspective/orthographic projection)
+    /// - Original implementation: Uses D3DXMatrixLookAtLH, D3DXMatrixPerspectiveFovLH, D3DXMatrixTranslation, etc.
+    /// - This helper: Abstraction layer for modern matrix operations (System.Numerics.Matrix4x4)
+    /// </remarks>
     public static class MatrixHelper
     {
         /// <summary>

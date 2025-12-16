@@ -3,6 +3,17 @@ namespace Odyssey.Graphics
     /// <summary>
     /// Sprite batch interface for 2D rendering.
     /// </summary>
+    /// <remarks>
+    /// Sprite Batch Interface:
+    /// - Based on swkotor2.exe 2D rendering system
+    /// - Located via string references: Original game uses DirectX 8/9 for 2D sprite rendering
+    /// - GUI rendering: "gui3D_room" @ 0x007cc144 (3D GUI room), "Render Window" @ 0x007b5680
+    /// - Original implementation: Renders 2D sprites (GUI elements, text, HUD) using DirectX immediate mode
+    /// - Sprite rendering: Uses textured quads for 2D rendering (GUI panels, buttons, text, etc.)
+    /// - Text rendering: Uses bitmap fonts (dialogfont16x16.tga) rendered as sprites
+    /// - This interface: Abstraction layer for modern sprite batching (MonoGame SpriteBatch, Stride SpriteBatch)
+    /// - Note: Modern sprite batching optimizes draw calls by batching sprites, original game uses immediate mode
+    /// </remarks>
     public interface ISpriteBatch : System.IDisposable
     {
         /// <summary>
