@@ -155,6 +155,13 @@ namespace AuroraEngine.Common.Formats.NCS
             while (_reader.Position < safeEndPosition && _reader.Remaining > 0)
             {
                 int offset = _reader.Position;
+                
+                // DEBUG: Log when we're at or near known ACTION bytecode offsets
+                if (offset == 138 || offset == 514 || (offset >= 135 && offset <= 145) || (offset >= 511 && offset <= 521))
+                {
+                    Console.WriteLine($"DEBUG NCSBinaryReader: Reading instruction at offset {offset} (near known ACTION locations: 138, 514)");
+                    Console.Error.WriteLine($"DEBUG NCSBinaryReader: Reading instruction at offset {offset} (near known ACTION locations: 138, 514)");
+                }
 
                 try
                 {
