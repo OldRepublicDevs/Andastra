@@ -7,6 +7,17 @@ namespace Odyssey.Graphics
     /// Effect (shader) abstraction for 3D rendering.
     /// Provides unified access to shader effects across MonoGame and Stride.
     /// </summary>
+    /// <remarks>
+    /// Effect (Shader) Interface:
+    /// - Based on swkotor2.exe rendering system
+    /// - Located via string references: Original game uses DirectX 8/9 fixed-function pipeline (no shaders)
+    /// - Vertex program for skinned animations @ 0x0081c228, 0x0081fe20 (GPU skinning shader)
+    /// - Original implementation: DirectX 8/9 fixed-function pipeline, no programmable shaders
+    /// - Fixed-function: Uses DirectX fixed-function states (lighting, materials, textures) instead of shaders
+    /// - Skinned animation: Uses vertex program (shader) for GPU skinning of animated models
+    /// - This interface: Abstraction layer for modern programmable shader pipelines (HLSL, GLSL)
+    /// - Note: Modern graphics APIs use programmable shaders, original game primarily used fixed-function
+    /// </remarks>
     public interface IEffect : IDisposable
     {
         /// <summary>

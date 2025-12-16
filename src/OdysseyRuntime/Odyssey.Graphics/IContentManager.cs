@@ -5,6 +5,16 @@ namespace Odyssey.Graphics
     /// <summary>
     /// Content manager interface for loading game assets.
     /// </summary>
+    /// <remarks>
+    /// Content Manager Interface:
+    /// - Based on swkotor2.exe resource loading system
+    /// - Located via string references: "Resource" @ 0x007c14d4, "Loading" @ 0x007c7e40
+    /// - CExoKeyTable @ 0x007b6078, FUN_00633270 @ 0x00633270 (resource path resolution)
+    /// - Original implementation: Loads game assets (textures, models, sounds) from ERF/BIF files via CExoKeyTable
+    /// - Resource loading: Original game uses CExoKeyTable to resolve resource paths and load from ERF/BIF archives
+    /// - This interface: Abstraction layer for modern content management (MonoGame ContentManager, Stride AssetManager)
+    /// - Note: Modern content managers use different asset pipeline than original game's ERF/BIF system
+    /// </remarks>
     public interface IContentManager : IDisposable
     {
         /// <summary>
