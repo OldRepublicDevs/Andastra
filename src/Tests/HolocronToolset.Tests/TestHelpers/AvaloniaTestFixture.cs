@@ -42,7 +42,7 @@ namespace HolocronToolset.Tests.TestHelpers
 
         private static AppBuilder BuildAvaloniaApp()
         {
-            return AppBuilder.Configure<HolocronToolset.App>()
+            return AppBuilder.Configure<HolocronToolset.NET.App>()
                 .UsePlatformDetect()
                 .LogToTrace();
         }

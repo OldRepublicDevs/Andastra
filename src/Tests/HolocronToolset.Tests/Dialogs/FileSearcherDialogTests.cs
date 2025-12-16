@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Avalonia.Controls;
-using Andastra.Parsing.Resources;
+using Andastra.Parsing.Resource;
 using FluentAssertions;
 using HolocronToolset.Data;
 using HolocronToolset.Dialogs;

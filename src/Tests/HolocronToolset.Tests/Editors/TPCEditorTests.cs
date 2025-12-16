@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Andastra.Parsing.Installation;
-using Andastra.Parsing.Resources;
+using Andastra.Parsing.Resource;
 using FluentAssertions;
 using HolocronToolset.Data;
 using HolocronToolset.Editors;
@@ -120,10 +120,10 @@ namespace HolocronToolset.Tests.Editors
 
                 // Try to get a TPC resource from installation
                 // Matching PyKotor implementation: installation.resources([ResourceIdentifier(resname="", restype=ResourceType.TPC), ResourceIdentifier(resname="", restype=ResourceType.TGA)])
-                var queries = new List<Andastra.Parsing.Resources.ResourceIdentifier>
+                var queries = new List<Andastra.Parsing.Resource.ResourceIdentifier>
                 {
-                    new Andastra.Parsing.Resources.ResourceIdentifier("", ResourceType.TPC),
-                    new Andastra.Parsing.Resources.ResourceIdentifier("", ResourceType.TGA)
+                    new Andastra.Parsing.Resource.ResourceIdentifier("", ResourceType.TPC),
+                    new Andastra.Parsing.Resource.ResourceIdentifier("", ResourceType.TGA)
                 };
                 var tpcResourcesDict = installation.Resources(queries);
                 var tpcResources = new List<Andastra.Parsing.Installation.ResourceResult>();

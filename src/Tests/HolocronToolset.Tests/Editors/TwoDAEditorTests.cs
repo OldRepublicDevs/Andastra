@@ -5,7 +5,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using Andastra.Parsing.Formats.TwoDA;
-using Andastra.Parsing.Resources;
+using Andastra.Parsing.Resource;
 using FluentAssertions;
 using HolocronToolset.Data;
 using HolocronToolset.Editors;

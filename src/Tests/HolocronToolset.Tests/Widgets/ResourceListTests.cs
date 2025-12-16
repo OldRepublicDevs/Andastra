@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Andastra.Parsing.Resources;
+using Andastra.Parsing.Extract;
+using Andastra.Parsing.Extract;
+using Andastra.Parsing.Resource;
 using FluentAssertions;
 using HolocronToolset.Tests.TestHelpers;
 using HolocronToolset.Widgets;

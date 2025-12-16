@@ -2,12 +2,13 @@ using System;
 using System.Collections.Generic;
 using Andastra.Parsing;
 using Andastra.Parsing.Formats.GFF;
-using Andastra.Parsing.Resources;
+using Andastra.Parsing.Resource;
 using FluentAssertions;
 using HolocronToolset.Data;
 using HolocronToolset.Editors;
 using HolocronToolset.Tests.TestHelpers;
 using Xunit;
+using Andastra.Parsing.Common;
 
 namespace HolocronToolset.Tests.Editors
 {
@@ -68,7 +69,7 @@ namespace HolocronToolset.Tests.Editors
             var (data, _) = editor.Build();
             var newUtt = Andastra.Parsing.Resource.Generics.UTTAuto.ReadUtt(data);
 
-            newUtt.Name.Get(Andastra.Parsing.Language.English, Andastra.Parsing.Gender.Male).Should().Be("New Trigger");
+            newUtt.Name.Get(Andastra.Parsing.Common.Language.English, Andastra.Parsing.Common.Gender.Male).Should().Be("New Trigger");
             newUtt.Tag.Should().Be("new_trigger");
             // Use approximate comparison for float due to GFF single-precision serialization
             Math.Abs(newUtt.HighlightHeight - 2.0f).Should().BeLessThan(0.01f);
@@ -142,12 +143,12 @@ namespace HolocronToolset.Tests.Editors
             // Save and verify
             var (data, _) = editor.Build();
             var modifiedUtt = Andastra.Parsing.Resource.Generics.UTTAuto.ReadUtt(data);
-            modifiedUtt.Name.Get(Andastra.Parsing.Language.English, Andastra.Parsing.Gender.Male).Should().Be("Modified Trigger Name");
-            modifiedUtt.Name.Get(Andastra.Parsing.Language.English, Andastra.Parsing.Gender.Male).Should().NotBe(originalUtt.Name.Get(Andastra.Parsing.Language.English, Andastra.Parsing.Gender.Male));
+            modifiedUtt.Name.Get(Andastra.Parsing.Common.Language.English, Andastra.Parsing.Common.Gender.Male).Should().Be("Modified Trigger Name");
+            modifiedUtt.Name.Get(Andastra.Parsing.Common.Language.English, Andastra.Parsing.Common.Gender.Male).Should().NotBe(originalUtt.Name.Get(Andastra.Parsing.Common.Language.English, Andastra.Parsing.Common.Gender.Male));
 
             // Load back and verify
             editor.Load(uttFile, "newtransition9", ResourceType.UTT, data);
-            editor.NameEdit.GetLocString().Get(Andastra.Parsing.Language.English, Andastra.Parsing.Gender.Male).Should().Be("Modified Trigger Name");
+            editor.NameEdit.GetLocString().Get(Andastra.Parsing.Common.Language.English, Andastra.Parsing.Common.Gender.Male).Should().Be("Modified Trigger Name");
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utt_editor.py:51-75
@@ -1515,7 +1516,7 @@ namespace HolocronToolset.Tests.Editors
             var (data, _) = editor.Build();
             var modifiedUtt = Andastra.Parsing.Resource.Generics.UTTAuto.ReadUtt(data);
 
-            modifiedUtt.Name.Get(Andastra.Parsing.Language.English, Andastra.Parsing.Gender.Male).Should().Be("Combined Test Trigger");
+            modifiedUtt.Name.Get(Andastra.Parsing.Common.Language.English, Andastra.Parsing.Common.Gender.Male).Should().Be("Combined Test Trigger");
             modifiedUtt.Tag.Should().Be("combined_test");
             modifiedUtt.ResRef.ToString().Should().Be("combined_resref");
         }

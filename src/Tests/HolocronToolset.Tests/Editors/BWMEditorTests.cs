@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Andastra.Parsing.Formats.BWM;
-using Andastra.Parsing.Resources;
+using Andastra.Parsing.Resource;
 using FluentAssertions;
 using HolocronToolset.Data;
 using HolocronToolset.Editors;

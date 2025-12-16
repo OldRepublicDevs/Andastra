@@ -2,12 +2,13 @@ using System;
 using System.Linq;
 using Andastra.Parsing;
 using Andastra.Parsing.Resource.Generics;
-using Andastra.Parsing.Resources;
+using Andastra.Parsing.Resource;
 using FluentAssertions;
 using HolocronToolset.Data;
 using HolocronToolset.Editors;
 using HolocronToolset.Tests.TestHelpers;
 using Xunit;
+using Andastra.Parsing.Common;
 
 namespace HolocronToolset.Tests.Editors
 {
@@ -171,9 +172,9 @@ namespace HolocronToolset.Tests.Editors
                 }
 
                 // Try to get a UTM resource from installation
-                var queries = new System.Collections.Generic.List<Andastra.Parsing.Resources.ResourceIdentifier>
+                var queries = new System.Collections.Generic.List<Andastra.Parsing.Resource.ResourceIdentifier>
                 {
-                    new Andastra.Parsing.Resources.ResourceIdentifier("", ResourceType.UTM)
+                    new Andastra.Parsing.Resource.ResourceIdentifier("", ResourceType.UTM)
                 };
                 var utmResourcesDict = installation.Resources(queries);
                 var utmResources = new System.Collections.Generic.List<Andastra.Parsing.Installation.ResourceResult>();

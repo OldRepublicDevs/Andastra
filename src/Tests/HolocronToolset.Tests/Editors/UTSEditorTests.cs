@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using Andastra.Parsing;
 using Andastra.Parsing.Formats.GFF;
 using Andastra.Parsing.Resource.Generics;
-using Andastra.Parsing.Resources;
+using Andastra.Parsing.Resource;
 using FluentAssertions;
 using HolocronToolset.Data;
 using HolocronToolset.Editors;

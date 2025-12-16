@@ -2,7 +2,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Text;
-using Andastra.Parsing.Resources;
+using Andastra.Parsing.Resource;
 using FluentAssertions;
 using HolocronToolset.Data;
 using HolocronToolset.Editors;
