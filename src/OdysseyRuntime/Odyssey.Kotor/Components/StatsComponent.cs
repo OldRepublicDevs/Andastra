@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Odyssey.Core.Enums;
 using Odyssey.Core.Interfaces;
 using Odyssey.Core.Interfaces.Components;
+using Odyssey.Core.Combat;
 
 namespace Odyssey.Kotor.Components
 {
@@ -165,7 +166,25 @@ namespace Odyssey.Kotor.Components
             get
             {
                 // BAB + STR modifier for melee (or DEX for ranged/finesse) + effect bonuses
-                return _baseAttackBonus + GetAbilityModifier(Ability.Strength) + _effectAttackBonus;
+                int effectBonus = _effectAttackBonus;
+                
+                // Query EffectSystem for additional attack bonuses if available
+                if (Owner != null && Owner.World != null && Owner.World.EffectSystem != null)
+                {
+                    foreach (Combat.ActiveEffect activeEffect in Owner.World.EffectSystem.GetEffects(Owner))
+                    {
+                        if (activeEffect.Effect.Type == Combat.EffectType.AttackIncrease)
+                        {
+                            effectBonus += activeEffect.Effect.Amount;
+                        }
+                        else if (activeEffect.Effect.Type == Combat.EffectType.AttackDecrease)
+                        {
+                            effectBonus -= activeEffect.Effect.Amount;
+                        }
+                    }
+                }
+                
+                return _baseAttackBonus + GetAbilityModifier(Ability.Strength) + effectBonus;
             }
         }
 
@@ -174,12 +193,30 @@ namespace Odyssey.Kotor.Components
             get
             {
                 // Defense = 10 + DEX mod + Armor + Natural + Deflection + Effect bonuses
+                int effectBonus = _effectACBonus;
+                
+                // Query EffectSystem for additional AC bonuses if available
+                if (Owner != null && Owner.World != null && Owner.World.EffectSystem != null)
+                {
+                    foreach (Combat.ActiveEffect activeEffect in Owner.World.EffectSystem.GetEffects(Owner))
+                    {
+                        if (activeEffect.Effect.Type == Combat.EffectType.ACIncrease)
+                        {
+                            effectBonus += activeEffect.Effect.Amount;
+                        }
+                        else if (activeEffect.Effect.Type == Combat.EffectType.ACDecrease)
+                        {
+                            effectBonus -= activeEffect.Effect.Amount;
+                        }
+                    }
+                }
+                
                 return 10 
                     + GetAbilityModifier(Ability.Dexterity)
                     + _armorBonus
                     + _naturalArmor
                     + _deflectionBonus
-                    + _effectACBonus;
+                    + effectBonus;
             }
         }
 
