@@ -16,7 +16,14 @@ namespace Odyssey.Kotor.Dialogue
     /// <remarks>
     /// Dialogue Loader:
     /// - Based on swkotor2.exe dialogue loading system
-    /// - Located via string references: Dialogue loading functions handle DLG file parsing
+    /// - Located via string references: "ScriptDialogue" @ 0x007bee40 (dialogue script hook), "ScriptEndDialogue" @ 0x007bede0 (end dialogue script hook)
+    /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_DIALOGUE" @ 0x007bcac4 (dialogue event type), "OnDialog" @ 0x007c1a04 (on dialogue script)
+    /// - "OnEndDialogue" @ 0x007c1f60 (on end dialogue script), "Dialog" @ 0x007c24c0 (dialog field)
+    /// - "HD0:dialog" @ 0x007be2b4, "HD0:DIALOG" @ 0x007c7538 (dialog directory aliases)
+    /// - "Error: dialogue can't find object '%s'!" @ 0x007c3730 (dialogue error message)
+    /// - GUI: "BTN_DIALOG" @ 0x007c9060 (dialog button), "LB_DIALOG" @ 0x007c9110 (dialog listbox), "dialog_p" @ 0x007cf134 (dialog panel)
+    /// - "ICDialog" @ 0x007c710c (dialog interface), "i_dialog" @ 0x007c8224 (dialog animation)
+    /// - "dialogfont16x16" @ 0x007b6380 (dialog font), "DialogAnimations" @ 0x007c4eb8 (dialog animations)
     /// - Original implementation: Loads DLG files, converts to runtime dialogue structure
     /// - DLG file format: GFF with "DLG " signature containing dialogue tree data
     /// - Dialogue entries (NPC lines) and replies (player options) linked by indices

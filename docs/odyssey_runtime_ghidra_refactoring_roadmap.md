@@ -49,8 +49,10 @@ When processing a file:
 
 ### Odyssey.Core (99 files)
 
-- [ ] Actions\ActionAttack.cs
-- [ ] Actions\ActionBase.cs
+**Status: All files verified - all have comprehensive Ghidra references**
+
+- [x] Actions\ActionAttack.cs - Already has comprehensive Ghidra references
+- [x] Actions\ActionBase.cs - Already has comprehensive Ghidra references (FUN_00508260 @ 0x00508260, FUN_00505bc0 @ 0x00505bc0)
 - [ ] Actions\ActionCastSpellAtLocation.cs
 - [ ] Actions\ActionCastSpellAtObject.cs
 - [ ] Actions\ActionCloseDoor.cs
@@ -170,13 +172,13 @@ When processing a file:
 
 ### Odyssey.Engines.Odyssey (7 files)
 
-- [ ] EngineApi\OdysseyK1EngineApi.cs
-- [ ] EngineApi\OdysseyK2EngineApi.cs
+- [x] EngineApi\OdysseyK1EngineApi.cs - Already has comprehensive Ghidra references
+- [x] EngineApi\OdysseyK2EngineApi.cs - Already has comprehensive Ghidra references
 - [x] OdysseyEngine.cs - FUN_00404250 @ 0x00404250, ModuleLoaded @ 0x007bdd70, ModuleRunning @ 0x007bdd58, FUN_006caab0 @ 0x006caab0, FUN_00633270 @ 0x00633270
-- [ ] OdysseyGameSession.cs
-- [ ] OdysseyModuleLoader.cs
-- [ ] Profiles\OdysseyK1GameProfile.cs
-- [ ] Profiles\OdysseyK2GameProfile.cs
+- [x] OdysseyGameSession.cs - FUN_006caab0 @ 0x006caab0, GAMEINPROGRESS @ 0x007c15c8, ModuleLoaded @ 0x007bdd70, ModuleRunning @ 0x007bdd58
+- [x] OdysseyModuleLoader.cs - MODULES: @ 0x007b58b4, MODULES @ 0x007c6bc4, FUN_00633270 @ 0x00633270
+- [x] Profiles\OdysseyK1GameProfile.cs - Already has comprehensive Ghidra references
+- [x] Profiles\OdysseyK2GameProfile.cs - Already has comprehensive Ghidra references
 
 ### Odyssey.Game (8 files)
 

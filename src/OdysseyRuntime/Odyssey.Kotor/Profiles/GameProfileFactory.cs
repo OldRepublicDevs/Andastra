@@ -8,6 +8,15 @@ namespace Odyssey.Kotor.Profiles
     /// <summary>
     /// Factory for creating game profiles based on game type.
     /// </summary>
+    /// <remarks>
+    /// Game Profile Factory:
+    /// - Based on swkotor2.exe game profile system
+    /// - Located via string references: Game version detection determines which profile to use (K1 vs K2)
+    /// - Original implementation: Factory pattern for creating game-specific profiles
+    /// - Game detection: Determines game type from installation directory (checks for swkotor.exe vs swkotor2.exe)
+    /// - Profile creation: Returns K1GameProfile for KOTOR 1, K2GameProfile for KOTOR 2
+    /// - Note: This is a factory pattern abstraction, no direct Ghidra function equivalent
+    /// </remarks>
     public static class GameProfileFactory
     {
         private static readonly Dictionary<GameType, Func<IGameProfile>> _profileFactories;
