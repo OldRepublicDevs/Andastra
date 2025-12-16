@@ -2617,5 +2617,61 @@ namespace HolocronToolset.NET.Tests.Editors
             string generatedTag = editor.TagEdit.Text;
             generatedTag.Should().NotBeNullOrEmpty("Tag should be generated");
         }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utt_editor.py:1142-1161
+        // Original: def test_utt_editor_resref_generation_button(qtbot, installation: HTInstallation, test_files_dir: Path):
+        [Fact]
+        public void TestUttEditorResrefGenerationButton()
+        {
+            string k2Path = Environment.GetEnvironmentVariable("K2_PATH");
+            if (string.IsNullOrEmpty(k2Path))
+            {
+                k2Path = @"C:\Program Files (x86)\Steam\steamapps\common\Knights of the Old Republic II";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k2Path) && System.IO.File.Exists(System.IO.Path.Combine(k2Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k2Path, "Test Installation", tsl: true);
+            }
+
+            if (installation == null)
+            {
+                return; // Skip if no installation available
+            }
+
+            string testFilesDir = System.IO.Path.Combine(
+                System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+
+            string uttFile = System.IO.Path.Combine(testFilesDir, "newtransition9.utt");
+            if (!System.IO.File.Exists(uttFile))
+            {
+                testFilesDir = System.IO.Path.Combine(
+                    System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                    "..", "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+                uttFile = System.IO.Path.Combine(testFilesDir, "newtransition9.utt");
+            }
+
+            if (!System.IO.File.Exists(uttFile))
+            {
+                return; // Skip if test file not available
+            }
+
+            var editor = new UTTEditor(null, installation);
+            editor.Load(uttFile, "newtransition9", ResourceType.UTT, System.IO.File.ReadAllBytes(uttFile));
+
+            // Clear resref
+            editor.ResrefEdit.Text = "";
+
+            // Call generate resref method via reflection (simulating button click)
+            var generateResrefMethod = typeof(UTTEditor).GetMethod("GenerateResref", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            generateResrefMethod.Should().NotBeNull("GenerateResref method should exist");
+            generateResrefMethod.Invoke(editor, null);
+
+            // ResRef should be generated
+            string generatedResref = editor.ResrefEdit.Text;
+            generatedResref.Should().NotBeNullOrEmpty("ResRef should be generated");
+        }
     }
 }
