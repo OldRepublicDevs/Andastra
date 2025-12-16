@@ -1,4 +1,4 @@
-# OdysseyRuntime Ghidra Refactoring Roadmap
+﻿# OdysseyRuntime Ghidra Refactoring Roadmap
 
 Internal tracking document for AI agents. Not public-facing. Do not commit to repository.
 
@@ -492,28 +492,40 @@ When processing a file:
 
 **Status**: IN PROGRESS  
 **Started**: 2025-01-15  
-**Current Phase**: Identifying KOTOR-specific code in AuroraEngine.Common  
-**Goal**: Move all KOTOR/Odyssey-specific code from AuroraEngine.Common to Odyssey.Engines.Odyssey
+**Current Phase**: Identifying and moving KOTOR-specific code from AuroraEngine.Common to Odyssey.Engines.Odyssey  
+**Goal**: Move all KOTOR/Odyssey-specific code from AuroraEngine.Common to Odyssey.Engines.Odyssey following xoreos pattern
 
 ### Strategy
 
 1. Identify KOTOR-specific code in AuroraEngine.Common
-2. Move to Odyssey.Engines.Odyssey (shared KOTOR code)
+2. Move to Odyssey.Engines.Odyssey (shared KOTOR code, like xoreos's kotorbase)
 3. Create engine-specific projects following xoreos pattern
 4. Maximize code in base classes, minimize duplication
 5. Ensure 1:1 parity with original KOTOR 2 engine (Ghidra verification)
+6. Maintain compatibility with patcher tools (HoloPatcher.NET, HolocronToolset, NCSDecomp, KotorDiff)
+
+### Architecture Pattern (Following xoreos)
+
+- **AuroraEngine.Common** (src/CSharpKOTOR/): File format parsers (engine-agnostic), installation detection (currently KOTOR-specific but structure allows expansion)
+- **Odyssey.Engines.Common**: Base engine interfaces and classes
+- **Odyssey.Engines.Odyssey**: KOTOR 1/2 shared runtime code (like xoreos's kotorbase)
+- **Odyssey.Engines.Aurora** (future): NWN/NWN2 shared code
+- **Odyssey.Engines.Eclipse** (future): Dragon Age/Mass Effect shared code
 
 ### Files to Move from AuroraEngine.Common
 
+**Total Files**: 671
+
 #### Common/ (KOTOR-Specific)
 
-- [ ] Common\Game.cs - Game enum (K1, K2, etc.) and extensions
-  - Target: Odyssey.Engines.Odyssey.Common\Game.cs
-  - Status: [ ] Identify all usages, [ ] Move, [ ] Update references
+- [x] Common\Game.cs - Game enum (K1, K2, etc.) and extensions
+  - Status: Kept in AuroraEngine.Common for patcher tools compatibility (documented as KOTOR-specific)
+  - Note: Used by HoloPatcher.NET, HolocronToolset, NCSDecomp, KotorDiff
 
-- [ ] Common\Module.cs - KModuleType enum and Module class
+- [ ] Common\Module.cs - KModuleType enum and Module class (1963 lines)
   - Target: Odyssey.Engines.Odyssey.Module\Module.cs
   - Status: [ ] Identify all usages, [ ] Move, [ ] Update references
+  - Note: Used by patcher tools - may need abstraction layer
 
 - [ ] Common\ModuleDataLoader.cs - KOTOR-specific module data loading
   - Target: Odyssey.Engines.Odyssey.Module\ModuleDataLoader.cs
@@ -523,243 +535,2040 @@ When processing a file:
 
 **Entity Templates (KOTOR-specific - Move to Odyssey.Engines.Odyssey.Templates\):**
 
-- [ ] Resource\Generics\UTC.cs - Creature template
-  - Target: Odyssey.Engines.Odyssey.Templates\UTC.cs
+- [ ] Common\AlienSounds.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Common\ArrayHead.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Common\BinaryExtensions.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Common\BinaryReader.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Common\BinaryWriter.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Common\CaseAwarePath.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Common\Face.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Common\Game.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Common\GameObject.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Common\GeometryUtils.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Common\KeyError.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Common\Language.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Common\LocalizedString.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Common\LZMA\LzmaHelper.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Common\Misc.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Common\Module.cs
+  - Target: Odyssey.Engines.Odyssey.Module\Module.cs
   - Status: [ ] Move, [ ] Update references
-
-- [ ] Resource\Generics\UTCHelpers.cs - Creature template helpers
-  - Target: Odyssey.Engines.Odyssey.Templates\UTCHelpers.cs
+- [ ] Common\ModuleDataLoader.cs
+  - Target: Odyssey.Engines.Odyssey.Module\ModuleDataLoader.cs
   - Status: [ ] Move, [ ] Update references
-
-- [ ] Resource\Generics\UTD.cs - Door template
-  - Target: Odyssey.Engines.Odyssey.Templates\UTD.cs
-  - Status: [ ] Move, [ ] Update references
-
-- [ ] Resource\Generics\UTDHelpers.cs - Door template helpers
-  - Target: Odyssey.Engines.Odyssey.Templates\UTDHelpers.cs
-  - Status: [ ] Move, [ ] Update references
-
-- [ ] Resource\Generics\UTE.cs - Encounter template
-  - Target: Odyssey.Engines.Odyssey.Templates\UTE.cs
-  - Status: [ ] Move, [ ] Update references
-
-- [ ] Resource\Generics\UTEHelpers.cs - Encounter template helpers
-  - Target: Odyssey.Engines.Odyssey.Templates\UTEHelpers.cs
-  - Status: [ ] Move, [ ] Update references
-
-- [ ] Resource\Generics\UTI.cs - Item template
-  - Target: Odyssey.Engines.Odyssey.Templates\UTI.cs
-  - Status: [ ] Move, [ ] Update references
-
-- [ ] Resource\Generics\UTIHelpers.cs - Item template helpers
-  - Target: Odyssey.Engines.Odyssey.Templates\UTIHelpers.cs
-  - Status: [ ] Move, [ ] Update references
-
-- [ ] Resource\Generics\UTM.cs - Merchant template
-  - Target: Odyssey.Engines.Odyssey.Templates\UTM.cs
-  - Status: [ ] Move, [ ] Update references
-
-- [ ] Resource\Generics\UTMHelpers.cs - Merchant template helpers
-  - Target: Odyssey.Engines.Odyssey.Templates\UTMHelpers.cs
-  - Status: [ ] Move, [ ] Update references
-
-- [ ] Resource\Generics\UTP.cs - Placeable template
-  - Target: Odyssey.Engines.Odyssey.Templates\UTP.cs
-  - Status: [ ] Move, [ ] Update references
-
-- [ ] Resource\Generics\UTPHelpers.cs - Placeable template helpers
-  - Target: Odyssey.Engines.Odyssey.Templates\UTPHelpers.cs
-  - Status: [ ] Move, [ ] Update references
-
-- [ ] Resource\Generics\UTS.cs - Sound template
-  - Target: Odyssey.Engines.Odyssey.Templates\UTS.cs
-  - Status: [ ] Move, [ ] Update references
-
-- [ ] Resource\Generics\UTSHelpers.cs - Sound template helpers
-  - Target: Odyssey.Engines.Odyssey.Templates\UTSHelpers.cs
-  - Status: [ ] Move, [ ] Update references
-
-- [ ] Resource\Generics\UTT.cs - Trigger template
-  - Target: Odyssey.Engines.Odyssey.Templates\UTT.cs
-  - Status: [ ] Move, [ ] Update references
-
-- [ ] Resource\Generics\UTTAuto.cs - Trigger template auto-generated code
-  - Target: Odyssey.Engines.Odyssey.Templates\UTTAuto.cs
-  - Status: [ ] Move, [ ] Update references
-
-- [ ] Resource\Generics\UTTHelpers.cs - Trigger template helpers
-  - Target: Odyssey.Engines.Odyssey.Templates\UTTHelpers.cs
-  - Status: [ ] Move, [ ] Update references
-
-- [ ] Resource\Generics\UTW.cs - Waypoint template
-  - Target: Odyssey.Engines.Odyssey.Templates\UTW.cs
-  - Status: [ ] Move, [ ] Update references
-
-- [ ] Resource\Generics\UTWAuto.cs - Waypoint template auto-generated code
-  - Target: Odyssey.Engines.Odyssey.Templates\UTWAuto.cs
-  - Status: [ ] Move, [ ] Update references
-
-- [ ] Resource\Generics\UTWHelpers.cs - Waypoint template helpers
-  - Target: Odyssey.Engines.Odyssey.Templates\UTWHelpers.cs
-  - Status: [ ] Move, [ ] Update references
-
-**Module/Area Structures (Review - May be KOTOR-specific):**
-
-- [ ] Resource\Generics\IFO.cs - Module info (review if KOTOR-specific)
-  - Target: Odyssey.Engines.Odyssey.Module\IFO.cs (if KOTOR-specific)
-  - Status: [ ] Review, [ ] Move if needed
-
-- [ ] Resource\Generics\IFOHelpers.cs - Module info helpers
-  - Target: Odyssey.Engines.Odyssey.Module\IFOHelpers.cs (if KOTOR-specific)
-  - Status: [ ] Review, [ ] Move if needed
-
-- [ ] Resource\Generics\ARE.cs - Area (review if KOTOR-specific)
+- [ ] Common\Pathfinding.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Common\Polygon2.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Common\Polygon3.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Common\Quaternion.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Common\ResRef.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Common\Script\DataType.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Common\Script\DataTypeExtensions.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Common\Script\NwscriptParser.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Common\Script\ScriptConstant.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Common\Script\ScriptDefs.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Common\Script\ScriptFunction.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Common\Script\ScriptLib.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Common\Script\ScriptParam.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Common\SurfaceMaterial.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Common\SystemHelpers.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Config\LogLevel.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Config\PatcherConfig.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Diff\DiffAnalyzerFactory.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Diff\DiffEngine.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Diff\DiffHelpers.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Diff\GffDiff.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Diff\GffDiffAnalyzer.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Diff\Resolution.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Diff\SsfDiff.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Diff\TlkDiff.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Diff\TwoDaDiff.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Diff\TwoDaDiffAnalyzer.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Extract\BZF.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Extract\ChitinWrapper.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Extract\FileResourceHelpers.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Extract\InstallationWrapper.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Extract\KeyFileWrapper.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Extract\KeyWriterWrapper.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Extract\LazyCapsule.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Extract\SaveData\GlobalVars.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Extract\SaveData\PartyTable.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Extract\SaveData\SaveFolderEntry.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Extract\SaveData\SaveInfo.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Extract\SaveData\SaveNestedCapsule.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Extract\TalkTable.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Extract\TwoDAManager.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Extract\TwoDARegistry.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\BinaryFormatReaderBase.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\BWM\BWM.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\BWM\BWMAdjacency.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\BWM\BWMAuto.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\BWM\BWMBinaryReader.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\BWM\BWMBinaryWriter.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\BWM\BWMEdge.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\BWM\BWMFace.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\BWM\BWMMostSignificantPlane.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\BWM\BWMNodeAABB.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\BWM\BWMType.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\Capsule\Capsule.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\Capsule\LazyCapsule.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\Chitin\Chitin.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\ERF\ERF.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\ERF\ERFAuto.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\ERF\ERFBinaryReader.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\ERF\ERFBinaryWriter.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\ERF\ERFType.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\GFF\GFF.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\GFF\GFFAuto.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\GFF\GFFBinaryReader.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\GFF\GFFBinaryWriter.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\GFF\GFFContent.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\GFF\GFFFieldType.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\GFF\GFFList.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\GFF\GFFStruct.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\KEY\BifEntry.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\KEY\KEY.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\KEY\KEYAuto.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\KEY\KEYBinaryReader.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\KEY\KEYBinaryWriter.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\KEY\KeyEntry.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\LIP\LIP.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\LIP\LIPAuto.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\LIP\LIPBinaryReader.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\LIP\LIPBinaryWriter.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\LIP\LIPKeyFrame.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\LIP\LIPShape.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\LTR\LTR.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\LTR\LTRAuto.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\LTR\LTRBinaryReader.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\LTR\LTRBinaryWriter.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\LTR\LTRBlock.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\LYT\LYT.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\LYT\LYTAsciiReader.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\LYT\LYTAsciiWriter.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\LYT\LYTAuto.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\LYT\LYTDoorHook.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\LYT\LYTObstacle.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\LYT\LYTRoom.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\LYT\LYTTrack.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\MDL\MDLAsciiReader.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\MDL\MDLAsciiWriter.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\MDL\MDLAuto.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\MDL\MDLBinaryReader.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\MDL\MDLBinaryWriter.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\MDL\MDLData.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\MDL\MDLTypes.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\Compiler\Classes.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\Compiler\Interpreter.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\Compiler\NCSCompiler.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\Compiler\NSS\AST\CodeBlock.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\Compiler\NSS\AST\CodeRoot.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\Compiler\NSS\AST\ControlKeyword.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\Compiler\NSS\AST\DynamicDataType.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\Compiler\NSS\AST\Expression.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\Compiler\NSS\AST\Expressions\AdditionAssignmentExpression.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\Compiler\NSS\AST\Expressions\AssignmentExpression.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\Compiler\NSS\AST\Expressions\BinaryOperatorExpression.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\Compiler\NSS\AST\Expressions\BitwiseAndAssignmentExpression.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\Compiler\NSS\AST\Expressions\BitwiseLeftAssignmentExpression.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\Compiler\NSS\AST\Expressions\BitwiseNotExpression.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\Compiler\NSS\AST\Expressions\BitwiseOrAssignmentExpression.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\Compiler\NSS\AST\Expressions\BitwiseRightAssignmentExpression.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\Compiler\NSS\AST\Expressions\BitwiseUnsignedRightAssignmentExpression.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\Compiler\NSS\AST\Expressions\BitwiseXorAssignmentExpression.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\Compiler\NSS\AST\Expressions\DivisionAssignmentExpression.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\Compiler\NSS\AST\Expressions\EngineCallExpression.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\Compiler\NSS\AST\Expressions\FloatExpression.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\Compiler\NSS\AST\Expressions\FunctionCallExpression.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\Compiler\NSS\AST\Expressions\IdentifierExpression.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\Compiler\NSS\AST\Expressions\IntExpression.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\Compiler\NSS\AST\Expressions\LogicalNotExpression.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\Compiler\NSS\AST\Expressions\ModuloAssignmentExpression.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\Compiler\NSS\AST\Expressions\MultiplicationAssignmentExpression.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\Compiler\NSS\AST\Expressions\ObjectExpression.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\Compiler\NSS\AST\Expressions\PostDecrementExpression.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\Compiler\NSS\AST\Expressions\PostIncrementExpression.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\Compiler\NSS\AST\Expressions\PreDecrementExpression.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\Compiler\NSS\AST\Expressions\PreIncrementExpression.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\Compiler\NSS\AST\Expressions\StringExpression.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\Compiler\NSS\AST\Expressions\SubtractionAssignmentExpression.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\Compiler\NSS\AST\Expressions\TernaryConditionalExpression.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\Compiler\NSS\AST\Expressions\UnaryOperatorExpression.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\Compiler\NSS\AST\Expressions\VectorExpression.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\Compiler\NSS\AST\FieldAccess.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\Compiler\NSS\AST\Identifier.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\Compiler\NSS\AST\Operator.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\Compiler\NSS\AST\OperatorMapping.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\Compiler\NSS\AST\OperatorMappings.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\Compiler\NSS\AST\Statement.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\Compiler\NSS\AST\Statements\BreakStatement.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\Compiler\NSS\AST\Statements\ContinueStatement.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\Compiler\NSS\AST\Statements\DeclarationStatement.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\Compiler\NSS\AST\Statements\DoWhileStatement.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\Compiler\NSS\AST\Statements\EmptyStatement.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\Compiler\NSS\AST\Statements\ExpressionStatement.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\Compiler\NSS\AST\Statements\ForStatement.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\Compiler\NSS\AST\Statements\IfStatement.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\Compiler\NSS\AST\Statements\NopStatement.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\Compiler\NSS\AST\Statements\ReturnStatement.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\Compiler\NSS\AST\Statements\ScopedBlockStatement.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\Compiler\NSS\AST\Statements\SwitchStatement.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\Compiler\NSS\AST\Statements\WhileStatement.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\Compiler\NSS\AST\TopLevelObject.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\Compiler\NSS\AST\TopLevelObjects.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\Compiler\NSS\CompilerExceptions.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\Compiler\NSS\NssLanguage.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\Compiler\NSS\NssLexer.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\Compiler\NSS\NssParser.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\Compiler\NSS\NssToken.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\Compiler\NssCompiler.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\Compiler\Stack.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\Compiler\StackObject.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\Compiler\Statements.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\Compilers.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\INCSOptimizer.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCS.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSAuto.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSBinaryReader.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSBinaryWriter.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSByteCode.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\AActionJumpCmd.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\AAddVarCmd.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\ABitAndLogiiOp.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\ActionsData.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\ADecibpStackOp.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\ADecispStackOp.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\AExpression.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\AIncibpStackOp.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\AIncispStackOp.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Analysis.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Analysis\CallGraphBuilder.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Analysis\CallSiteAnalyzer.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Analysis\PrototypeEngine.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Analysis\SCCUtil.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\AnalysisAdapter.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\AStackCommand.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\AStackOpCmd.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Cast.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\CheckIsGlobals.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\CleanupPass.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Cloneable.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Collection.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\CompilerExecutionWrapper.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\CompilerUtil.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Const.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Decoder.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Decompiler.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\DecompilerException.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\DestroyParseTree.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\DoGlobalVars.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\DoTypes.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\FileDecompiler.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\FlattenSub.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\FloatConst.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\HashUtil.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\IEnumerator.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\IntConst.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\JavaStubs.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\KnownExternalCompilers.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Lexer.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\LexerException.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\LinkedList.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\LinkedListExtensions.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\ListIterator.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\LocalStack.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\LocalTypeStack.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\LocalVarStack.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\MainPass.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\NameGenerator.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\NoCast.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\AActionCmd.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\AActionCommand.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\AAddBinaryOp.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\AAndLogiiOp.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\ABinaryCmd.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\ABinaryCommand.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\ABoolandLogiiOp.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\ABpCmd.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\ABpCommand.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\ACommandBlock.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\ACompUnaryOp.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\AConditionalJumpCommand.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\ACondJumpCmd.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\AConstCmd.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\AConstCommand.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\ACopydownbpCmd.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\ACopyDownBpCommand.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\ACopydownspCmd.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\ACopyDownSpCommand.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\ACopytopbpCmd.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\ACopyTopBpCommand.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\ACopytopspCmd.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\ACopyTopSpCommand.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\ADestructCmd.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\ADestructCommand.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\ADivBinaryOp.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\AEqualBinaryOp.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\AExclOrLogiiOp.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\AFloatConstant.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\AGeqBinaryOp.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\AGtBinaryOp.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\AInclOrLogiiOp.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\AIntConstant.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\AJumpCmd.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\AJumpCommand.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\AJumpSubCmd.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\AJumpToSubroutine.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\ALeqBinaryOp.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\ALogiiCmd.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\ALogiiCommand.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\ALtBinaryOp.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\AModBinaryOp.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\AMovespCmd.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\AMoveSpCommand.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\AMulBinaryOp.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\ANegUnaryOp.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\ANequalBinaryOp.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\ANonzeroJumpIf.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\ANotUnaryOp.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\AOrLogiiOp.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\AProgram.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\ARestorebpBpOp.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\AReturn.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\AReturnCmd.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\ARsaddCmd.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\ARsaddCommand.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\ASavebpBpOp.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\AShleftBinaryOp.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\AShrightBinaryOp.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\ASize.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\AStoreStateCmd.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\AStoreStateCommand.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\AStringConstant.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\ASubBinaryOp.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\ASubroutine.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\AUnaryCmd.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\AUnaryCommand.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\AUnrightBinaryOp.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\AZeroJumpIf.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\EOF.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\PActionCommand.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\PBinaryCommand.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\PBinaryOp.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\PBpCommand.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\PBpOp.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\PCmd.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\PCommandBlock.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\PConditionalJumpCommand.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\PConstant.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\PConstCommand.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\PCopyDownBpCommand.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\PCopyDownSpCommand.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\PCopyTopBpCommand.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\PCopyTopSpCommand.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\PDestructCommand.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\PJumpCommand.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\PJumpIf.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\PJumpToSubroutine.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\PLogiiCommand.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\PLogiiOp.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\PMoveSpCommand.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\PProgram.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\PReturn.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\PRsaddCommand.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\PSize.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\PStoreStateCommand.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\PSubroutine.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\PUnaryCommand.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\PUnaryOp.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\Start.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\TAction.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\TAdd.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\TBoolandii.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\TComp.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\TConst.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\TCpdownbp.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\TCpdownsp.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\TCptopbp.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\TCptopsp.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\TDestruct.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\TDiv.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\TEqual.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\TExcorii.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\TFloatConstant.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\TGeq.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\TGt.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\TIncorii.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\TIntegerConstant.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\TJmp.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\TJnz.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\TJsr.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\TJz.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\TLeq.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\TLogandii.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\TLogorii.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\TLt.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\TMod.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\TMovsp.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\TMul.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\TNeg.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\TNequal.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\TNot.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\Token.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\TRestorebp.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\TRetn.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\TRsadd.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\TSavebp.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\TSemi.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\TShleft.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\TShright.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\TStorestate.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\TStringLiteral.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\TSub.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\TT.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Node\TUnright.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\NodeAnalysisData.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\NodeCast.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\NodeUtils.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\NoOpRegistrySpoofer.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\NwnnsscompConfig.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\NWScriptLocator.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\ObjectConst.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Parser.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\ParserException.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\PcodeReader.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\PcodeReaderTest.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\PrunedDepthFirstAdapter.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\PrunedReversedDepthFirstAdapter.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\PStackCommand.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\PStackOp.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\PushbackReader.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\RegistrySpoofer.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\RoundTripUtil.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\ScriptNode.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\ScriptNode\AActionArgExp.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\ScriptNode\AActionExp.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\ScriptNode\ABinaryExp.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\ScriptNode\ABreakStatement.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\ScriptNode\ACodeBlock.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\ScriptNode\AConditionalExp.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\ScriptNode\AConst.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\ScriptNode\AContinueStatement.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\ScriptNode\AControlLoop.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\ScriptNode\ADoLoop.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\ScriptNode\AElse.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\ScriptNode\AErrorComment.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\ScriptNode\AExpressionStatement.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\ScriptNode\AFcnCallExp.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\ScriptNode\AFor.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\ScriptNode\AIf.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\ScriptNode\AModifyExp.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\ScriptNode\AReturnStatement.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\ScriptNode\ASub.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\ScriptNode\ASwitch.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\ScriptNode\ASwitchCase.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\ScriptNode\AUnaryExp.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\ScriptNode\AUnaryModExp.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\ScriptNode\AUnkLoopControl.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\ScriptNode\AVarDecl.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\ScriptNode\AVarRef.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\ScriptNode\AVectorConstExp.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\ScriptNode\AWhileLoop.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\ScriptNode\ExpressionFormatter.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\ScriptNode\ScriptNode.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\ScriptRootNode.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\SetDeadCode.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\SetDestinations.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\SetPositions.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Settings.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\StackEntry.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\State.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\StringConst.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\StructType.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\SubroutinePathFinder.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\SubroutineState.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\SubScriptState.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Switch.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Switchable.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\SyntaxHighlighting\BytecodeSyntaxHighlighter.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\SyntaxHighlighting\NWScriptSyntaxHighlighter.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\TBlank.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\TDecibp.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\TDecisp.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\TDot.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\TIncibp.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\TIncisp.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\TLPar.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\TNop.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\TokenIndex.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\TreeModelFactory.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\TRPar.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Type.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\TypedLinkedList.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Utils\FileScriptData.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Utils\NcsToAstConverter.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Utils\SubroutineAnalysisData.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Utils\SubroutineIterator.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\Variable.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\VarStruct.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\X1PCmd.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\X1PSubroutine.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\X2PCmd.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\X2PSubroutine.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\XPCmd.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSDecomp\XPSubroutine.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSInstruction.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSInstructionQualifier.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSInstructionType.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSType.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\NCSTypeCode.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\Optimizers\MergeAdjacentMoveSPOptimizer.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\Optimizers\RemoveJMPToAdjacentOptimizer.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\Optimizers\RemoveMoveSPEqualsZeroOptimizer.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\Optimizers\RemoveNopOptimizer.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\Optimizers\RemoveUnusedBlocksOptimizer.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\NCS\Optimizers\RemoveUnusedGlobalsInStackOptimizer.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\RIM\RIM.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\RIM\RIMAuto.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\RIM\RIMBinaryReader.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\RIM\RIMBinaryWriter.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\SSF\SSF.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\SSF\SSFAuto.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\SSF\SSFBinaryReader.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\SSF\SSFBinaryWriter.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\SSF\SSFSound.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\TLK\TalkTable.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\TLK\TLK.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\TLK\TLKAuto.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\TLK\TLKBinaryReader.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\TLK\TLKBinaryWriter.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\TLK\TLKEntry.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\TPC\TGA.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\TPC\TPC.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\TPC\TPCAuto.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\TPC\TPCBinaryReader.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\TPC\TPCBinaryWriter.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\TPC\TPCDDSReader.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\TPC\TPCDDSWriter.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\TPC\TPCLayer.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\TPC\TPCMipmap.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\TPC\TPCTextureFormat.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\TPC\TPCTGAReader.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\TPC\TPCTGAWriter.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\TwoDA\TwoDA.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\TwoDA\TwoDAAuto.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\TwoDA\TwoDABinaryReader.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\TwoDA\TwoDABinaryWriter.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\TwoDA\TwoDARow.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\TXI\TXI.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\TXI\TXIAuto.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\TXI\TXIBinaryReader.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\TXI\TXIBinaryWriter.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\TXI\TXICommand.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\TXI\TXIFeatures.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\TXI\TXIReaderMode.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\VIS\VIS.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\VIS\VISAsciiReader.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\VIS\VISAsciiWriter.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\VIS\VISAuto.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\WAV\AudioFormat.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\WAV\DeobfuscationResult.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\WAV\WAV.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\WAV\WAVAuto.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\WAV\WAVBinaryReader.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\WAV\WAVBinaryWriter.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\WAV\WaveEncoding.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\WAV\WAVObfuscation.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\WAV\WAVStandardWriter.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Formats\WAV\WAVType.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Installation\Installation.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Installation\InstallationResourceManager.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Installation\ResourceResult.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Installation\SearchLocation.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Logger\InstallLogWriter.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Logger\LogType.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Logger\PatchLog.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Logger\PatchLogger.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Logger\RobustLogger.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Memory\PatcherMemory.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Memory\TokenUsage.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Merge\ModuleManager.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Mods\GFF\FieldValue.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Mods\GFF\ModificationsGFF.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Mods\GFF\ModifyGFF.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Mods\InstallFile.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Mods\ModificationsByType.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Mods\NCS\ModificationsNCS.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Mods\NSS\ModificationsNSS.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Mods\PatcherModifications.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Mods\SSF\ModificationsSSF.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Mods\TLK\ModificationsTLK.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Mods\TSLPatcherINISerializer.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Mods\TwoDA\Modifications2DA.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Mods\TwoDA\Modify2DA.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Mods\TwoDA\RowValue.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Mods\TwoDA\Target.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Namespaces\PatcherNamespace.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Patcher\ModInstaller.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Reader\ConfigReader.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Reader\NamespaceReader.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Resource\Formats\BIF\BIF.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Resource\Formats\BIF\BIFBinaryReader.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Resource\Formats\BIF\BIFBinaryWriter.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Resource\Formats\BIF\BIFResource.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Resource\Formats\BIF\BIFType.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Resource\Formats\LYT\LYT.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Resource\Formats\VIS\VIS.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Resource\Generics\ARE.cs
   - Target: Odyssey.Engines.Odyssey.Module\ARE.cs (if KOTOR-specific)
   - Status: [ ] Review, [ ] Move if needed
-
-- [ ] Resource\Generics\AREHelpers.cs - Area helpers
+- [ ] Resource\Generics\AREHelpers.cs
   - Target: Odyssey.Engines.Odyssey.Module\AREHelpers.cs (if KOTOR-specific)
   - Status: [ ] Review, [ ] Move if needed
-
-- [ ] Resource\Generics\GIT.cs - Game instance template (review if KOTOR-specific)
-  - Target: Odyssey.Engines.Odyssey.Module\GIT.cs (if KOTOR-specific)
-  - Status: [ ] Review, [ ] Move if needed
-
-- [ ] Resource\Generics\GITHelpers.cs - Game instance template helpers
-  - Target: Odyssey.Engines.Odyssey.Module\GITHelpers.cs (if KOTOR-specific)
-  - Status: [ ] Review, [ ] Move if needed
-
-- [ ] Resource\Generics\JRL.cs - Journal (review if KOTOR-specific)
-  - Target: Odyssey.Engines.Odyssey.Module\JRL.cs (if KOTOR-specific)
-  - Status: [ ] Review, [ ] Move if needed
-
-- [ ] Resource\Generics\PTH.cs - Path (review if KOTOR-specific)
-  - Target: Odyssey.Engines.Odyssey.Module\PTH.cs (if KOTOR-specific)
-  - Status: [ ] Review, [ ] Move if needed
-
-- [ ] Resource\Generics\PTHAuto.cs - Path auto-generated code
-  - Target: Odyssey.Engines.Odyssey.Module\PTHAuto.cs (if KOTOR-specific)
-  - Status: [ ] Review, [ ] Move if needed
-
-- [ ] Resource\Generics\PTHHelpers.cs - Path helpers
-  - Target: Odyssey.Engines.Odyssey.Module\PTHHelpers.cs (if KOTOR-specific)
-  - Status: [ ] Review, [ ] Move if needed
-
-**Dialogue (Review - May be KOTOR-specific):**
-
-- [ ] Resource\Generics\DLG\DLG.cs - Dialogue structure
+- [ ] Resource\Generics\DLG\DLG.cs
   - Target: Odyssey.Engines.Odyssey.Dialogue\DLG.cs (if KOTOR-specific)
   - Status: [ ] Review, [ ] Move if needed
-
-- [ ] Resource\Generics\DLG\DLGAnimation.cs - Dialogue animation
+- [ ] Resource\Generics\DLG\DLGAnimation.cs
   - Target: Odyssey.Engines.Odyssey.Dialogue\DLGAnimation.cs (if KOTOR-specific)
   - Status: [ ] Review, [ ] Move if needed
-
-- [ ] Resource\Generics\DLG\DLGHelper.cs - Dialogue helpers
+- [ ] Resource\Generics\DLG\DLGHelper.cs
   - Target: Odyssey.Engines.Odyssey.Dialogue\DLGHelper.cs (if KOTOR-specific)
   - Status: [ ] Review, [ ] Move if needed
-
-- [ ] Resource\Generics\DLG\DLGLink.cs - Dialogue link
+- [ ] Resource\Generics\DLG\DLGLink.cs
   - Target: Odyssey.Engines.Odyssey.Dialogue\DLGLink.cs (if KOTOR-specific)
   - Status: [ ] Review, [ ] Move if needed
-
-- [ ] Resource\Generics\DLG\DLGNode.cs - Dialogue node
+- [ ] Resource\Generics\DLG\DLGNode.cs
   - Target: Odyssey.Engines.Odyssey.Dialogue\DLGNode.cs (if KOTOR-specific)
   - Status: [ ] Review, [ ] Move if needed
-
-- [ ] Resource\Generics\DLG\DLGStunt.cs - Dialogue stunt
+- [ ] Resource\Generics\DLG\DLGStunt.cs
   - Target: Odyssey.Engines.Odyssey.Dialogue\DLGStunt.cs (if KOTOR-specific)
   - Status: [ ] Review, [ ] Move if needed
-
-**GUI (Review - May be KOTOR-specific):**
-
-- [ ] Resource\Generics\GUI\GUI.cs - GUI structure
+- [ ] Resource\Generics\GIT.cs
+  - Target: Odyssey.Engines.Odyssey.Module\GIT.cs (if KOTOR-specific)
+  - Status: [ ] Review, [ ] Move if needed
+- [ ] Resource\Generics\GITHelpers.cs
+  - Target: Odyssey.Engines.Odyssey.Module\GITHelpers.cs (if KOTOR-specific)
+  - Status: [ ] Review, [ ] Move if needed
+- [ ] Resource\Generics\GUI\GUI.cs
   - Target: Odyssey.Engines.Odyssey.GUI\GUI.cs (if KOTOR-specific)
   - Status: [ ] Review, [ ] Move if needed
-
-- [ ] Resource\Generics\GUI\GUIBorder.cs - GUI border
+- [ ] Resource\Generics\GUI\GUIBorder.cs
   - Target: Odyssey.Engines.Odyssey.GUI\GUIBorder.cs (if KOTOR-specific)
   - Status: [ ] Review, [ ] Move if needed
-
-- [ ] Resource\Generics\GUI\GUIControl.cs - GUI control
+- [ ] Resource\Generics\GUI\GUIControl.cs
   - Target: Odyssey.Engines.Odyssey.GUI\GUIControl.cs (if KOTOR-specific)
   - Status: [ ] Review, [ ] Move if needed
-
-- [ ] Resource\Generics\GUI\GUIEnums.cs - GUI enums
+- [ ] Resource\Generics\GUI\GUIEnums.cs
   - Target: Odyssey.Engines.Odyssey.GUI\GUIEnums.cs (if KOTOR-specific)
   - Status: [ ] Review, [ ] Move if needed
-
-- [ ] Resource\Generics\GUI\GUIMoveTo.cs - GUI move to
+- [ ] Resource\Generics\GUI\GUIMoveTo.cs
   - Target: Odyssey.Engines.Odyssey.GUI\GUIMoveTo.cs (if KOTOR-specific)
   - Status: [ ] Review, [ ] Move if needed
-
-- [ ] Resource\Generics\GUI\GUIProgress.cs - GUI progress
+- [ ] Resource\Generics\GUI\GUIProgress.cs
   - Target: Odyssey.Engines.Odyssey.GUI\GUIProgress.cs (if KOTOR-specific)
   - Status: [ ] Review, [ ] Move if needed
-
-- [ ] Resource\Generics\GUI\GUIReader.cs - GUI reader
+- [ ] Resource\Generics\GUI\GUIReader.cs
   - Target: Odyssey.Engines.Odyssey.GUI\GUIReader.cs (if KOTOR-specific)
   - Status: [ ] Review, [ ] Move if needed
-
-- [ ] Resource\Generics\GUI\GUIScrollbar.cs - GUI scrollbar
+- [ ] Resource\Generics\GUI\GUIScrollbar.cs
   - Target: Odyssey.Engines.Odyssey.GUI\GUIScrollbar.cs (if KOTOR-specific)
   - Status: [ ] Review, [ ] Move if needed
-
-- [ ] Resource\Generics\GUI\GUIText.cs - GUI text
+- [ ] Resource\Generics\GUI\GUIText.cs
   - Target: Odyssey.Engines.Odyssey.GUI\GUIText.cs (if KOTOR-specific)
   - Status: [ ] Review, [ ] Move if needed
+- [ ] Resource\Generics\IFO.cs
+  - Target: Odyssey.Engines.Odyssey.Module\IFO.cs (if KOTOR-specific)
+  - Status: [ ] Review, [ ] Move if needed
+- [ ] Resource\Generics\IFOHelpers.cs
+  - Target: Odyssey.Engines.Odyssey.Module\IFOHelpers.cs (if KOTOR-specific)
+  - Status: [ ] Review, [ ] Move if needed
+- [ ] Resource\Generics\JRL.cs
+  - Target: Odyssey.Engines.Odyssey.Module\JRL.cs (if KOTOR-specific)
+  - Status: [ ] Review, [ ] Move if needed
+- [ ] Resource\Generics\PTH.cs
+  - Target: Odyssey.Engines.Odyssey.Module\PTH.cs (if KOTOR-specific)
+  - Status: [ ] Review, [ ] Move if needed
+- [ ] Resource\Generics\PTHAuto.cs
+  - Target: Odyssey.Engines.Odyssey.Module\PTHAuto.cs (if KOTOR-specific)
+  - Status: [ ] Review, [ ] Move if needed
+- [ ] Resource\Generics\PTHHelpers.cs
+  - Target: Odyssey.Engines.Odyssey.Module\PTHHelpers.cs (if KOTOR-specific)
+  - Status: [ ] Review, [ ] Move if needed
+- [ ] Resource\Generics\UTC.cs
+  - Target: Odyssey.Engines.Odyssey.Templates\UTC.cs
+  - Status: [ ] Move, [ ] Update references
+- [ ] Resource\Generics\UTCHelpers.cs
+  - Target: Odyssey.Engines.Odyssey.Templates\UTCHelpers.cs
+  - Status: [ ] Move, [ ] Update references
+- [ ] Resource\Generics\UTD.cs
+  - Target: Odyssey.Engines.Odyssey.Templates\UTD.cs
+  - Status: [ ] Move, [ ] Update references
+- [ ] Resource\Generics\UTDHelpers.cs
+  - Target: Odyssey.Engines.Odyssey.Templates\UTDHelpers.cs
+  - Status: [ ] Move, [ ] Update references
+- [ ] Resource\Generics\UTE.cs
+  - Target: Odyssey.Engines.Odyssey.Templates\UTE.cs
+  - Status: [ ] Move, [ ] Update references
+- [ ] Resource\Generics\UTEHelpers.cs
+  - Target: Odyssey.Engines.Odyssey.Templates\UTEHelpers.cs
+  - Status: [ ] Move, [ ] Update references
+- [ ] Resource\Generics\UTI.cs
+  - Target: Odyssey.Engines.Odyssey.Templates\UTI.cs
+  - Status: [ ] Move, [ ] Update references
+- [ ] Resource\Generics\UTIHelpers.cs
+  - Target: Odyssey.Engines.Odyssey.Templates\UTIHelpers.cs
+  - Status: [ ] Move, [ ] Update references
+- [ ] Resource\Generics\UTM.cs
+  - Target: Odyssey.Engines.Odyssey.Templates\UTM.cs
+  - Status: [ ] Move, [ ] Update references
+- [ ] Resource\Generics\UTMHelpers.cs
+  - Target: Odyssey.Engines.Odyssey.Templates\UTMHelpers.cs
+  - Status: [ ] Move, [ ] Update references
+- [ ] Resource\Generics\UTP.cs
+  - Target: Odyssey.Engines.Odyssey.Templates\UTP.cs
+  - Status: [ ] Move, [ ] Update references
+- [ ] Resource\Generics\UTPHelpers.cs
+  - Target: Odyssey.Engines.Odyssey.Templates\UTPHelpers.cs
+  - Status: [ ] Move, [ ] Update references
+- [ ] Resource\Generics\UTS.cs
+  - Target: Odyssey.Engines.Odyssey.Templates\UTS.cs
+  - Status: [ ] Move, [ ] Update references
+- [ ] Resource\Generics\UTSHelpers.cs
+  - Target: Odyssey.Engines.Odyssey.Templates\UTSHelpers.cs
+  - Status: [ ] Move, [ ] Update references
+- [ ] Resource\Generics\UTT.cs
+  - Target: Odyssey.Engines.Odyssey.Templates\UTT.cs
+  - Status: [ ] Move, [ ] Update references
+- [ ] Resource\Generics\UTTAuto.cs
+  - Target: Odyssey.Engines.Odyssey.Templates\UTTAuto.cs
+  - Status: [ ] Move, [ ] Update references
+- [ ] Resource\Generics\UTTHelpers.cs
+  - Target: Odyssey.Engines.Odyssey.Templates\UTTHelpers.cs
+  - Status: [ ] Move, [ ] Update references
+- [ ] Resource\Generics\UTW.cs
+  - Target: Odyssey.Engines.Odyssey.Templates\UTW.cs
+  - Status: [ ] Move, [ ] Update references
+- [ ] Resource\Generics\UTWAuto.cs
+  - Target: Odyssey.Engines.Odyssey.Templates\UTWAuto.cs
+  - Status: [ ] Move, [ ] Update references
+- [ ] Resource\Generics\UTWHelpers.cs
+  - Target: Odyssey.Engines.Odyssey.Templates\UTWHelpers.cs
+  - Status: [ ] Move, [ ] Update references
+- [ ] Resources\ArchiveResource.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Resources\FileResource.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Resources\ResourceAuto.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Resources\ResourceAutoHelpers.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Resources\ResourceFormat.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Resources\ResourceIdentifier.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Resources\ResourceType.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Resources\Salvage.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Tools\Archives.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Tools\Conversions.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Tools\Creature.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Tools\Door.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Tools\Encoding.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Tools\Heuristics.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Tools\Kit.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Tools\Misc.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Tools\Model.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Tools\Module.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Tools\Patching.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Tools\Path.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Tools\PazaakGui.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Tools\Placeable.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Tools\PlayPazaak.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Tools\ReferenceCache.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Tools\Registry.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Tools\ResourceConversions.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Tools\Scripts.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Tools\StringUtils.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Tools\Template.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Tools\Utilities.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Tools\Validation.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] TSLPatcher\GeneratorValidation.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] TSLPatcher\IncrementalTSLPatchDataWriter.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] TSLPatcher\INIManager.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] TSLPatcher\InstallFolderDeterminer.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] TSLPatcher\TSLPatchDataGenerator.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Uninstall\ModUninstaller.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Uninstall\UninstallHelpers.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Utility\CaseInsensitiveDict.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Utility\ErrorHandling.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Utility\Misc.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Utility\MiscString\CaseInsensImmutableStr.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Utility\MiscString\StringUtilFunctions.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Utility\MiscString\WrappedStr.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Utility\OrderedSet.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
+- [ ] Utility\System\OSHelper.cs
+  - Target: Review if KOTOR-specific
+  - Status: [ ] Review
 
-#### Tools/ (KOTOR-Specific)
+### Migration Progress
 
-- [ ] Tools\Module.cs - KOTOR-specific module tools
-  - Target: Odyssey.Engines.Odyssey.Tools\Module.cs
-  - Status: [ ] Review if KOTOR-specific, [ ] Move if needed
+- [x] Create Odyssey.Engines.Common with base interfaces and classes
+- [x] Create Odyssey.Engines.Odyssey project structure
+- [x] Create Odyssey.Engines.Aurora placeholder
+- [x] Create Odyssey.Engines.Eclipse placeholder
+- [x] Move EngineApi classes to Odyssey.Engines.Odyssey
+- [x] Move ModuleLoader to Odyssey.Engines.Odyssey
+- [ ] Move Module class (deferred - used by patcher tools)
+- [ ] Move GFF templates to Odyssey.Engines.Odyssey.Templates
+- [ ] Update all references
+- [ ] Verify compilation
+- [ ] Update patcher tools to use new structure
 
-#### Uninstall/ (Update to be engine-agnostic)
+### Notes
 
-- [ ] Uninstall\UninstallHelpers.cs - References Game enum
-  - Target: Keep in AuroraEngine.Common, make engine-agnostic
-  - Status: [ ] Update to use IEngineProfile instead of Game enum
+- Game enum kept in AuroraEngine.Common for patcher tools compatibility
+- Module class migration deferred due to patcher tools dependencies
+- Follow xoreos pattern: kotorbase for shared KOTOR code, engine-specific projects for game-specific code
+- Maximize code in base classes, minimize duplication
+- Ensure C# 7.3 compatibility
+- Maintain 1:1 parity with original KOTOR 2 engine (Ghidra verification)
 
-### Files to Keep in AuroraEngine.Common (Engine-Agnostic)
-
-- [x] Common\GameObject.cs - ObjectType enum (shared across engines)
-- [x] Common\ResRef.cs - Resource reference (shared)
-- [x] Formats\** - All file format parsers (GFF, 2DA, TLK, MDL, TPC, BWM, LYT, VIS, KEY, BIF, ERF, RIM, etc.)
-- [x] Installation\** - Installation detection and resource management
-- [x] Resources\** - Resource management and loading
-- [x] Logger\** - Logging infrastructure
-- [x] Utility\** - Utility classes
-
-### Odyssey.Engines.Odyssey (New Structure)
-
-- [x] OdysseyEngine.cs - Base Odyssey engine implementation
-- [x] OdysseyGameSession.cs - Game session implementation
-- [x] OdysseyModuleLoader.cs - Module loader implementation
-- [x] Profiles\OdysseyK1GameProfile.cs - KOTOR 1 profile
-- [x] Profiles\OdysseyK2GameProfile.cs - KOTOR 2 profile
-- [x] EngineApi\OdysseyK1EngineApi.cs - KOTOR 1 engine API
-- [x] EngineApi\OdysseyK2EngineApi.cs - KOTOR 2 engine API
-- [ ] Common\Game.cs - Game enum (moved from AuroraEngine.Common)
-- [ ] Module\Module.cs - Module class (moved from AuroraEngine.Common)
-- [ ] Module\ModuleDataLoader.cs - Module data loader (moved from AuroraEngine.Common)
-- [ ] Templates\UTC.cs - Creature template (moved from AuroraEngine.Common)
-- [ ] Templates\UTD.cs - Door template (moved from AuroraEngine.Common)
-- [ ] Templates\UTE.cs - Encounter template (moved from AuroraEngine.Common)
-- [ ] Templates\UTI.cs - Item template (moved from AuroraEngine.Common)
-- [ ] Templates\UTM.cs - Merchant template (moved from AuroraEngine.Common)
-- [ ] Templates\UTP.cs - Placeable template (moved from AuroraEngine.Common)
-- [ ] Templates\UTS.cs - Sound template (moved from AuroraEngine.Common)
-- [ ] Templates\UTT.cs - Trigger template (moved from AuroraEngine.Common)
-- [ ] Templates\UTW.cs - Waypoint template (moved from AuroraEngine.Common)
-
-### Migration Tasks
-
-- [ ] Phase 1: Identify all KOTOR-specific code
-- [ ] Phase 2: Create target directory structure in Odyssey.Engines.Odyssey
-- [ ] Phase 3: Move Game.cs and update all references
-- [ ] Phase 4: Move Module.cs and update all references
-- [ ] Phase 5: Move GFF templates and update all references
-- [ ] Phase 6: Update UninstallHelpers.cs to be engine-agnostic
-- [ ] Phase 7: Verify compilation
-- [ ] Phase 8: Run tests and verify no regressions
