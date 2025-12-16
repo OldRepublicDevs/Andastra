@@ -1393,15 +1393,52 @@ namespace Odyssey.Engines.Odyssey.EngineApi
 
                 case 7: // CREATURE_TYPE_PERCEPTION
                     // Check perception type
-                    // Perception types are typically handled by PerceptionManager
+                    // Based on swkotor2.exe: GetIsObjectValid perception type check
+                    // Located via string references: "PerceptionData" @ 0x007bf6c4, "PerceptionList" @ 0x007bf6d4
+                    // Original implementation: Checks if creature matches perception type from perceiver's perspective
+                    // Perception type constants: PERCEPTION_SEEN, PERCEPTION_HEARD, PERCEPTION_SEEN_AND_HEARD, etc.
                     if (ctx is VMExecutionContext execCtxPer && execCtxPer.AdditionalContext is IGameServicesContext servicesPer)
                     {
-                        if (servicesPer.PerceptionManager != null && servicesPer.PlayerEntity != null)
+                        if (servicesPer.PerceptionManager != null && ctx.Caller != null)
                         {
-                            // criteriaValue is the perception type to check
-                            // This would need PerceptionManager to check if creature matches perception type
-                            // For now, return true as a placeholder - full implementation would check perception flags
-                            return true;
+                            PerceptionManager perceptionManager = servicesPer.PerceptionManager as PerceptionManager;
+                            if (perceptionManager != null)
+                            {
+                                // criteriaValue is the perception type constant to check
+                                // Check if creature matches the perception type from caller's perspective
+                                bool isSeen = perceptionManager.HasSeen(ctx.Caller, creature);
+                                bool isHeard = perceptionManager.HasHeard(ctx.Caller, creature);
+                                
+                                // Map perception type constants to checks
+                                // Constants from nwscript.nss (approximate values, may need adjustment):
+                                // PERCEPTION_SEEN = 1, PERCEPTION_HEARD = 2, PERCEPTION_SEEN_AND_HEARD = 3
+                                // PERCEPTION_SEEN_AND_NOT_HEARD = 4, PERCEPTION_HEARD_AND_NOT_SEEN = 5
+                                // PERCEPTION_NOT_SEEN = 6, PERCEPTION_NOT_HEARD = 7
+                                // PERCEPTION_NOT_SEEN_AND_NOT_HEARD = 8
+                                
+                                switch (criteriaValue)
+                                {
+                                    case 1: // PERCEPTION_SEEN
+                                        return isSeen;
+                                    case 2: // PERCEPTION_HEARD
+                                        return isHeard;
+                                    case 3: // PERCEPTION_SEEN_AND_HEARD
+                                        return isSeen && isHeard;
+                                    case 4: // PERCEPTION_SEEN_AND_NOT_HEARD
+                                        return isSeen && !isHeard;
+                                    case 5: // PERCEPTION_HEARD_AND_NOT_SEEN
+                                        return isHeard && !isSeen;
+                                    case 6: // PERCEPTION_NOT_SEEN
+                                        return !isSeen;
+                                    case 7: // PERCEPTION_NOT_HEARD
+                                        return !isHeard;
+                                    case 8: // PERCEPTION_NOT_SEEN_AND_NOT_HEARD
+                                        return !isSeen && !isHeard;
+                                    default:
+                                        // Unknown perception type, default to false
+                                        return false;
+                                }
+                            }
                         }
                     }
                     return false;
