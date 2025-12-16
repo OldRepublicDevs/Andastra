@@ -1,9 +1,9 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Numerics;
-using AuroraEngine.Common.Common;
+using AuroraEngine.Common;
 using AuroraEngine.Common.Config;
 using AuroraEngine.Common.Formats.GFF;
 using AuroraEngine.Common.Mods.GFF;

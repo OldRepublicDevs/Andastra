@@ -1,5 +1,5 @@
-﻿using System;
-using AuroraEngine.Common.Common;
+using System;
+using AuroraEngine.Common;
 using AuroraEngine.Common.Resources;
 
 namespace AuroraEngine.Common.Formats.KEY

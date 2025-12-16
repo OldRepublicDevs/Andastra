@@ -1,10 +1,10 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
-using AuroraEngine.Common.Common;
+using AuroraEngine.Common;
 using AuroraEngine.Common.Formats.NCS;
 using AuroraEngine.Common.Formats.NCS.Compiler;
 using AuroraEngine.Common.Logger;

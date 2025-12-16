@@ -1,8 +1,8 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
-using AuroraEngine.Common.Common;
+using AuroraEngine.Common;
 using JetBrains.Annotations;
 
 namespace AuroraEngine.Common.Formats.TLK

@@ -1,10 +1,10 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Markup.Xaml;
-using AuroraEngine.Common.Common;
+using AuroraEngine.Common;
 using HolocronToolset.NET.Data;
 using HolocronToolset.NET.Widgets;
 using HolocronToolset.NET.Widgets.Edit;

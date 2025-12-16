@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -12,7 +12,7 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Layout;
 using Avalonia.Markup.Xaml;
-using AuroraEngine.Common.Common;
+using AuroraEngine.Common;
 using AuroraEngine.Common.Formats.TLK;
 using AuroraEngine.Common.Resources;
 using HolocronToolset.NET.Common;

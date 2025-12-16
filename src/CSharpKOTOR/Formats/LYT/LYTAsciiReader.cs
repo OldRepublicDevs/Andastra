@@ -1,10 +1,10 @@
-﻿using System;
+using System;
 using System.Numerics;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using AuroraEngine.Common.Common;
+using AuroraEngine.Common;
 using AuroraEngine.Common.Formats.LYT;
 
 namespace AuroraEngine.Common.Formats.LYT

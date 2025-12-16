@@ -1,10 +1,10 @@
-﻿// Comprehensive tests for TSLPatchDataGenerator
+// Comprehensive tests for TSLPatchDataGenerator
 // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/generator.py
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using AuroraEngine.Common.Common;
+using AuroraEngine.Common;
 using AuroraEngine.Common.Formats.GFF;
 using AuroraEngine.Common.Formats.SSF;
 using AuroraEngine.Common.Formats.TLK;

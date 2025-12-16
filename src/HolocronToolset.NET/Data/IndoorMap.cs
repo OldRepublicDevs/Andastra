@@ -1,6 +1,6 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Numerics;
-using AuroraEngine.Common.Common;
+using AuroraEngine.Common;
 
 namespace HolocronToolset.NET.Data
 {

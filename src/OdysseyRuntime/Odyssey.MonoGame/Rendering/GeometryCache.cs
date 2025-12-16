@@ -108,12 +108,23 @@ namespace Odyssey.MonoGame.Rendering
         /// <summary>
         /// Gets cached geometry or loads it.
         /// </summary>
+        /// <param name="meshName">Mesh name/identifier. Must not be null or empty.</param>
+        /// <param name="vertexBuffer">Output vertex buffer, or null if not cached.</param>
+        /// <param name="indexBuffer">Output index buffer, or null if not cached.</param>
+        /// <param name="vertexCount">Output vertex count.</param>
+        /// <param name="indexCount">Output index count.</param>
+        /// <returns>True if geometry was found in cache, false otherwise.</returns>
         public bool GetGeometry(string meshName, out VertexBuffer vertexBuffer, out IndexBuffer indexBuffer, out int vertexCount, out int indexCount)
         {
             vertexBuffer = null;
             indexBuffer = null;
             vertexCount = 0;
             indexCount = 0;
+
+            if (string.IsNullOrEmpty(meshName))
+            {
+                return false;
+            }
 
             lock (_lock)
             {
@@ -138,11 +149,35 @@ namespace Odyssey.MonoGame.Rendering
         /// <summary>
         /// Adds geometry to the cache.
         /// </summary>
+        /// <param name="meshName">Mesh name/identifier. Must not be null or empty.</param>
+        /// <param name="vertexBuffer">Vertex buffer. Must not be null.</param>
+        /// <param name="indexBuffer">Index buffer. Must not be null.</param>
+        /// <param name="vertexCount">Number of vertices. Must be non-negative.</param>
+        /// <param name="indexCount">Number of indices. Must be non-negative.</param>
+        /// <returns>True if geometry was added successfully, false otherwise.</returns>
+        /// <exception cref="ArgumentNullException">Thrown if meshName, vertexBuffer, or indexBuffer is null.</exception>
+        /// <exception cref="ArgumentException">Thrown if vertexCount or indexCount is negative.</exception>
         public bool AddGeometry(string meshName, VertexBuffer vertexBuffer, IndexBuffer indexBuffer, int vertexCount, int indexCount)
         {
-            if (string.IsNullOrEmpty(meshName) || vertexBuffer == null || indexBuffer == null)
+            if (string.IsNullOrEmpty(meshName))
             {
-                return false;
+                throw new ArgumentNullException(nameof(meshName));
+            }
+            if (vertexBuffer == null)
+            {
+                throw new ArgumentNullException(nameof(vertexBuffer));
+            }
+            if (indexBuffer == null)
+            {
+                throw new ArgumentNullException(nameof(indexBuffer));
+            }
+            if (vertexCount < 0)
+            {
+                throw new ArgumentException("Vertex count must be non-negative.", nameof(vertexCount));
+            }
+            if (indexCount < 0)
+            {
+                throw new ArgumentException("Index count must be non-negative.", nameof(indexCount));
             }
 
             lock (_lock)

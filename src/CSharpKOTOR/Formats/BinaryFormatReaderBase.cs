@@ -1,6 +1,6 @@
-﻿using System.IO;
+using System.IO;
 using System.Text;
-using AuroraEngine.Common.Common;
+using AuroraEngine.Common;
 using JetBrains.Annotations;
 
 namespace AuroraEngine.Common.Formats
@@ -12,18 +12,18 @@ namespace AuroraEngine.Common.Formats
     public abstract class BinaryFormatReaderBase
     {
         protected readonly byte[] Data;
-        protected readonly AuroraEngine.Common.Common.BinaryReader Reader;
+        protected readonly AuroraEngine.Common.BinaryReader Reader;
 
         protected BinaryFormatReaderBase(byte[] data, [CanBeNull] Encoding encoding = null)
         {
             Data = data;
-            Reader = AuroraEngine.Common.Common.BinaryReader.FromBytes(data, 0, null);
+            Reader = AuroraEngine.Common.BinaryReader.FromBytes(data, 0, null);
         }
 
         protected BinaryFormatReaderBase(string filepath, [CanBeNull] Encoding encoding = null)
         {
             Data = File.ReadAllBytes(filepath);
-            Reader = AuroraEngine.Common.Common.BinaryReader.FromBytes(Data, 0, null);
+            Reader = AuroraEngine.Common.BinaryReader.FromBytes(Data, 0, null);
         }
 
         protected BinaryFormatReaderBase(Stream source, [CanBeNull] Encoding encoding = null)
@@ -32,7 +32,7 @@ namespace AuroraEngine.Common.Formats
             {
                 source.CopyTo(ms);
                 Data = ms.ToArray();
-                Reader = AuroraEngine.Common.Common.BinaryReader.FromBytes(Data, 0, null);
+                Reader = AuroraEngine.Common.BinaryReader.FromBytes(Data, 0, null);
             }
         }
     }

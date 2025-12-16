@@ -1,4 +1,4 @@
-﻿// Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/generator.py:68-129
+// Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/generator.py:68-129
 // Original: class TSLPatchDataGenerator: ...
 using System;
 using System.Numerics;
@@ -16,7 +16,7 @@ using AuroraEngine.Common.Formats.TwoDA;
 using AuroraEngine.Common.Formats.TLK;
 using AuroraEngine.Common.Formats.SSF;
 using AuroraEngine.Common.Resources;
-using AuroraEngine.Common.Common;
+using AuroraEngine.Common;
 using AuroraEngine.Common.Formats.LIP;
 using GFFContent = AuroraEngine.Common.Formats.GFF.GFFContent;
 using TLKAuto = AuroraEngine.Common.Formats.TLK.TLKAuto;

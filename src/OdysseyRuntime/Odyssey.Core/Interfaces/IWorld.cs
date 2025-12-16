@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Numerics;
+using Odyssey.Core.Animation;
 using Odyssey.Core.Combat;
 using Odyssey.Core.Enums;
 using Odyssey.Core.Templates;
@@ -122,6 +123,11 @@ namespace Odyssey.Core.Interfaces
         /// The AI controller for NPC behavior.
         /// </summary>
         AI.AIController AIController { get; }
+
+        /// <summary>
+        /// The animation system for updating entity animations.
+        /// </summary>
+        Animation.AnimationSystem AnimationSystem { get; }
 
         /// <summary>
         /// Registers an entity with the world.

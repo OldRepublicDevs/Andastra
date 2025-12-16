@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Avalonia.Controls;
@@ -7,7 +7,7 @@ using Avalonia.Data;
 using Avalonia.Input;
 using Avalonia.Layout;
 using Avalonia.Markup.Xaml;
-using AuroraEngine.Common.Common;
+using AuroraEngine.Common;
 using System.Numerics;
 using AuroraEngine.Common.Formats.GFF;
 using AuroraEngine.Common.Resources;

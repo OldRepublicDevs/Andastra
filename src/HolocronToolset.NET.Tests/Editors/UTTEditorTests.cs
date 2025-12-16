@@ -1,6 +1,6 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using AuroraEngine.Common.Common;
+using AuroraEngine.Common;
 using AuroraEngine.Common.Formats.GFF;
 using AuroraEngine.Common.Resources;
 using FluentAssertions;
@@ -68,7 +68,7 @@ namespace HolocronToolset.NET.Tests.Editors
             var (data, _) = editor.Build();
             var newUtt = AuroraEngine.Common.Resource.Generics.UTTAuto.ReadUtt(data);
 
-            newUtt.Name.Get(AuroraEngine.Common.Common.Language.English, AuroraEngine.Common.Common.Gender.Male).Should().Be("New Trigger");
+            newUtt.Name.Get(AuroraEngine.Common.Language.English, AuroraEngine.Common.Gender.Male).Should().Be("New Trigger");
             newUtt.Tag.Should().Be("new_trigger");
             // Use approximate comparison for float due to GFF single-precision serialization
             Math.Abs(newUtt.HighlightHeight - 2.0f).Should().BeLessThan(0.01f);
@@ -142,12 +142,12 @@ namespace HolocronToolset.NET.Tests.Editors
             // Save and verify
             var (data, _) = editor.Build();
             var modifiedUtt = AuroraEngine.Common.Resource.Generics.UTTAuto.ReadUtt(data);
-            modifiedUtt.Name.Get(AuroraEngine.Common.Common.Language.English, AuroraEngine.Common.Common.Gender.Male).Should().Be("Modified Trigger Name");
-            modifiedUtt.Name.Get(AuroraEngine.Common.Common.Language.English, AuroraEngine.Common.Common.Gender.Male).Should().NotBe(originalUtt.Name.Get(AuroraEngine.Common.Common.Language.English, AuroraEngine.Common.Common.Gender.Male));
+            modifiedUtt.Name.Get(AuroraEngine.Common.Language.English, AuroraEngine.Common.Gender.Male).Should().Be("Modified Trigger Name");
+            modifiedUtt.Name.Get(AuroraEngine.Common.Language.English, AuroraEngine.Common.Gender.Male).Should().NotBe(originalUtt.Name.Get(AuroraEngine.Common.Language.English, AuroraEngine.Common.Gender.Male));
 
             // Load back and verify
             editor.Load(uttFile, "newtransition9", ResourceType.UTT, data);
-            editor.NameEdit.GetLocString().Get(AuroraEngine.Common.Common.Language.English, AuroraEngine.Common.Common.Gender.Male).Should().Be("Modified Trigger Name");
+            editor.NameEdit.GetLocString().Get(AuroraEngine.Common.Language.English, AuroraEngine.Common.Gender.Male).Should().Be("Modified Trigger Name");
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utt_editor.py:51-75
@@ -1515,7 +1515,7 @@ namespace HolocronToolset.NET.Tests.Editors
             var (data, _) = editor.Build();
             var modifiedUtt = AuroraEngine.Common.Resource.Generics.UTTAuto.ReadUtt(data);
 
-            modifiedUtt.Name.Get(AuroraEngine.Common.Common.Language.English, AuroraEngine.Common.Common.Gender.Male).Should().Be("Combined Test Trigger");
+            modifiedUtt.Name.Get(AuroraEngine.Common.Language.English, AuroraEngine.Common.Gender.Male).Should().Be("Combined Test Trigger");
             modifiedUtt.Tag.Should().Be("combined_test");
             modifiedUtt.ResRef.ToString().Should().Be("combined_resref");
         }

@@ -1,4 +1,4 @@
-﻿using AuroraEngine.Common.Common;
+using AuroraEngine.Common;
 using AuroraEngine.Common.Memory;
 using AuroraEngine.Common.Mods.GFF;
 using Xunit;

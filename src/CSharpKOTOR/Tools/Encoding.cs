@@ -1,7 +1,7 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Text;
-using AuroraEngine.Common.Common;
+using AuroraEngine.Common;
 using JetBrains.Annotations;
 
 namespace AuroraEngine.Common.Tools

@@ -1,9 +1,9 @@
-﻿using System;
+using System;
 using System.Numerics;
 using System.Collections.Generic;
 using System.Linq;
-using AuroraEngine.Common.Common;
-using AuroraEngine.Common.Common.Script;
+using AuroraEngine.Common;
+using AuroraEngine.Common.Script;
 using AuroraEngine.Common.Formats.NCS;
 using CompileError = AuroraEngine.Common.Formats.NCS.Compiler.NSS.CompileError;
 

@@ -1,4 +1,4 @@
-﻿// Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/resolution.py:539-1226
+// Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/resolution.py:539-1226
 // Original: def diff_installations_with_resolution(...): ...
 // This file contains the main n-way installation comparison function with proper resource resolution order handling.
 
@@ -6,7 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using AuroraEngine.Common.Common;
+using AuroraEngine.Common;
 using AuroraEngine.Common.Installation;
 using AuroraEngine.Common.Resources;
 using AuroraEngine.Common.Mods;

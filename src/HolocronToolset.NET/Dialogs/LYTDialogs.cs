@@ -1,9 +1,9 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Numerics;
 using Avalonia.Controls;
 using Avalonia.Layout;
-using AuroraEngine.Common.Common;
+using AuroraEngine.Common;
 using AuroraEngine.Common.Formats.LYT;
 
 namespace HolocronToolset.NET.Dialogs

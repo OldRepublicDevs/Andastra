@@ -1,6 +1,6 @@
-﻿using System;
+using System;
 using System.Numerics;
-using AuroraEngine.Common.Common;
+using AuroraEngine.Common;
 
 namespace AuroraEngine.Common.Formats.LYT
 {

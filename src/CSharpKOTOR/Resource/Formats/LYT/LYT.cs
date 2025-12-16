@@ -1,12 +1,12 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
-using AuroraEngine.Common.Common;
+using AuroraEngine.Common;
 using AuroraEngine.Common.Formats.GFF;
 using AuroraEngine.Common.Resources;
 using JetBrains.Annotations;
 using Vector3 = System.Numerics.Vector3;
-using Quaternion = AuroraEngine.Common.Common.Quaternion;
+using Quaternion = AuroraEngine.Common.Quaternion;
 
 namespace AuroraEngine.Common.Resource.Formats.LYT
 {
@@ -133,6 +133,6 @@ namespace AuroraEngine.Common.Resource.Formats.LYT
         public string Room { get; set; }
         public string Door { get; set; }
         public Vector3 Position { get; set; }
-        public AuroraEngine.Common.Common.Quaternion Orientation { get; set; }
+        public AuroraEngine.Common.Quaternion Orientation { get; set; }
     }
 }

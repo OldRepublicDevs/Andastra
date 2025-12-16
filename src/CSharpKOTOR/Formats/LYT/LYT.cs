@@ -1,8 +1,8 @@
-﻿using System;
+using System;
 using System.Numerics;
 using System.Collections.Generic;
 using System.Linq;
-using AuroraEngine.Common.Common;
+using AuroraEngine.Common;
 using AuroraEngine.Common.Resources;
 using Vector3 = System.Numerics.Vector3;
 

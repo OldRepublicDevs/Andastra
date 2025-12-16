@@ -102,6 +102,7 @@ namespace Odyssey.Core.Entities
         public PerceptionSystem PerceptionSystem { get; }
         public TriggerSystem TriggerSystem { get; }
         public AIController AIController { get; }
+        public AnimationSystem AnimationSystem { get; }
         public ModuleTransitionSystem ModuleTransitionSystem { get; }
 
         public IEntity CreateEntity(IEntityTemplate template, Vector3 position, float facing)
@@ -128,15 +129,25 @@ namespace Odyssey.Core.Entities
         /// </summary>
         /// <remarks>
         /// Based on swkotor2.exe: DestroyObject NWScript function
-        /// Located via string references: "EVENT_DESTROY_OBJECT" @ 0x007bcd48 (destroy object event)
+        /// Located via string references: "EVENT_DESTROY_OBJECT" @ 0x007bcd48 (destroy object event, case 0xb in FUN_004dcfb0)
         /// Original implementation: Unregisters entity from world, fires destroy events, marks as invalid
-        /// Destroy sequence: Unregister from world indices, fire OnDestroy script event, mark entity as invalid
+        /// Destroy sequence: Fire OnDeath script event (for creatures), unregister from world indices, mark entity as invalid
+        /// EVENT_DESTROY_OBJECT (case 0xb) is an object event logged by FUN_004dcfb0, not a script event
+        /// For creatures, OnDeath script event should fire before destruction (CSWSSCRIPTEVENT_EVENTTYPE_ON_DEATH @ 0x007bca54, case 0xa)
         /// </remarks>
         public void DestroyEntity(uint objectId)
         {
             IEntity entity = GetEntity(objectId);
             if (entity != null)
             {
+                // Fire OnDeath script event for creatures before destruction
+                // Based on swkotor2.exe: OnDeath script fires before entity is destroyed
+                // Located via string reference: "CSWSSCRIPTEVENT_EVENTTYPE_ON_DEATH" @ 0x007bca54 (case 0xa in FUN_004dcfb0)
+                if (EventBus != null && (entity.ObjectType & ObjectType.Creature) != 0)
+                {
+                    EventBus.FireScriptEvent(entity, ScriptEvent.OnDeath, null);
+                }
+
                 UnregisterEntity(entity);
 
                 if (entity is Entity concreteEntity)
@@ -335,11 +346,10 @@ namespace Odyssey.Core.Entities
             // Update AI controller
             AIController.Update(deltaTime);
 
+            // Update animation system
+            AnimationSystem.Update(deltaTime);
+
             // Update combat system
             CombatSystem.Update(deltaTime);
 
-            EventBus.DispatchQueuedEvents();
-        }
-    }
-}
-
+            

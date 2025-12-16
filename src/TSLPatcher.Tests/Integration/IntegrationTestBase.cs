@@ -1,8 +1,8 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using AuroraEngine.Common.Common;
+using AuroraEngine.Common;
 using AuroraEngine.Common.Config;
 using AuroraEngine.Common.Formats.TLK;
 using AuroraEngine.Common.Formats.TwoDA;

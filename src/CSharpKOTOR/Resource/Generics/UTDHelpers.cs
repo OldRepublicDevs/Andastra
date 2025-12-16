@@ -1,7 +1,7 @@
-﻿using AuroraEngine.Common.Common;
+using AuroraEngine.Common;
 using AuroraEngine.Common.Formats.GFF;
 using AuroraEngine.Common.Resources;
-using static AuroraEngine.Common.Common.GameExtensions;
+using static AuroraEngine.Common.GameExtensions;
 
 namespace AuroraEngine.Common.Resource.Generics
 {

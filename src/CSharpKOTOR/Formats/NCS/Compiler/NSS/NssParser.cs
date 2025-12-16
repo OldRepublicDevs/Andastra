@@ -1,8 +1,8 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using AuroraEngine.Common.Common.Script;
+using AuroraEngine.Common.Script;
 using JetBrains.Annotations;
 
 namespace AuroraEngine.Common.Formats.NCS.Compiler.NSS

@@ -1,11 +1,11 @@
-﻿// Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/tests/tslpatcher/test_diff_comprehensive.py:61-257
+// Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/tests/tslpatcher/test_diff_comprehensive.py:61-257
 // Original: class TestDataHelper: ...
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using AuroraEngine.Common.Common;
+using AuroraEngine.Common;
 using AuroraEngine.Common.Formats.GFF;
 using static AuroraEngine.Common.Formats.GFF.GFFAuto;
 using AuroraEngine.Common.Formats.SSF;

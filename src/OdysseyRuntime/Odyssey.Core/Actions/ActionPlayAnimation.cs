@@ -50,22 +50,39 @@ namespace Odyssey.Core.Actions
             if (!_started)
             {
                 _started = true;
-                // Animation system would be notified here
-                // Original engine: Sets CurrentAnim on entity, animation system plays it
+                
+                // Get animation component and play animation
+                var animationComponent = actor.GetComponent<Interfaces.Components.IAnimationComponent>();
+                if (animationComponent != null)
+                {
+                    // Duration > 0 means loop for that duration, duration = 0 means play once
+                    bool loop = _duration > 0;
+                    animationComponent.PlayAnimation(_animation, _speed, loop);
+                }
             }
 
-            // If duration is 0, play once and complete immediately
+            // If duration is 0, play once and wait for animation to complete
             // Original engine: Action completes when animation finishes (checked by animation system)
-            // For now, we complete immediately - animation system should track completion
             if (_duration <= 0)
             {
-                return ActionStatus.Complete;
+                var animationComponent = actor.GetComponent<Interfaces.Components.IAnimationComponent>();
+                if (animationComponent != null && animationComponent.AnimationComplete)
+                {
+                    return ActionStatus.Complete;
+                }
+                return ActionStatus.InProgress;
             }
 
             // If duration > 0, loop animation for specified duration
             // Original engine: Animation loops until duration expires
             if (ElapsedTime >= _duration)
             {
+                // Stop looping animation
+                var animationComponent = actor.GetComponent<Interfaces.Components.IAnimationComponent>();
+                if (animationComponent != null)
+                {
+                    animationComponent.StopAnimation();
+                }
                 return ActionStatus.Complete;
             }
 

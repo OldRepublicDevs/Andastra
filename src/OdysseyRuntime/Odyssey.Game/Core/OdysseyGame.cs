@@ -1596,12 +1596,10 @@ namespace Odyssey.Game.Core
         }
 
         // Track previous keyboard state for dialogue input
-        private KeyboardState _previousKeyboardState;
-
         /// <summary>
         /// Handles player input for movement.
         /// </summary>
-        private void HandlePlayerInput(KeyboardState keyboardState, Microsoft.Xna.Framework.Input.MouseState mouseState, GameTime gameTime)
+        private void HandlePlayerInput(IKeyboardState keyboardState, IMouseState mouseState, GameTime gameTime)
         {
             // Handle dialogue input first (if in dialogue)
             if (_session != null && _session.DialogueManager != null && _session.DialogueManager.IsConversationActive)
@@ -1664,13 +1662,13 @@ namespace Odyssey.Game.Core
             }
 
             // Click-to-move with walkmesh raycasting
-            if (mouseState.LeftButton == Microsoft.Xna.Framework.Input.ButtonState.Pressed &&
-                _previousMouseState.LeftButton == Microsoft.Xna.Framework.Input.ButtonState.Released)
+            if (mouseState.LeftButton == ButtonState.Pressed &&
+                _previousMouseState.LeftButton == ButtonState.Released)
             {
                 // Only trigger on click (not hold)
                 // First check if we clicked on an entity
-                Vector3 rayOrigin = GetCameraPosition();
-                Vector3 rayDirection = GetMouseRayDirection(mouseState.X, mouseState.Y);
+                System.Numerics.Vector3 rayOrigin = GetCameraPosition();
+                System.Numerics.Vector3 rayDirection = GetMouseRayDirection(mouseState.X, mouseState.Y);
 
                 Odyssey.Core.Interfaces.IEntity clickedEntity = FindEntityAtRay(rayOrigin, rayDirection);
 

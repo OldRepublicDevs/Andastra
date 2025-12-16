@@ -1,8 +1,8 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Text;
-using AuroraEngine.Common.Common;
-using AuroraEngine.Common.Common.LZMA;
+using AuroraEngine.Common;
+using AuroraEngine.Common.LZMA;
 using AuroraEngine.Common.Formats;
 using AuroraEngine.Common.Resources;
 using JetBrains.Annotations;

@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.Numerics;
-using AuroraEngine.Common.Common;
-using AuroraEngine.Common.Common.Script;
+using AuroraEngine.Common;
+using AuroraEngine.Common.Script;
 
 namespace AuroraEngine.Common.Script
 {

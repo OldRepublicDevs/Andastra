@@ -1,5 +1,5 @@
-﻿using System.Collections.Generic;
-using AuroraEngine.Common.Common;
+using System.Collections.Generic;
+using AuroraEngine.Common;
 using AuroraEngine.Common.Formats.TLK;
 using AuroraEngine.Common.Logger;
 using AuroraEngine.Common.Memory;

@@ -1,7 +1,7 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using AuroraEngine.Common.Common.Script;
+using AuroraEngine.Common.Script;
 using AuroraEngine.Common.Formats.NCS;
 using JetBrains.Annotations;
 

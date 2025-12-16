@@ -1,7 +1,7 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
-using AuroraEngine.Common.Common;
+using AuroraEngine.Common;
 
 namespace HolocronToolset.NET.Common
 {

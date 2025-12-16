@@ -1,11 +1,11 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using AuroraEngine.Common.Common;
-using AuroraEngine.Common.Common.Script;
+using AuroraEngine.Common;
+using AuroraEngine.Common.Script;
 using AuroraEngine.Common.Formats.NCS.Compiler;
 using AuroraEngine.Common.Formats.NCS.NCSDecomp;
 using AuroraEngine.Common.Formats.NCS.NCSDecomp.Utils;

@@ -1,8 +1,8 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
-using AuroraEngine.Common.Common;
-using AuroraEngine.Common.Common.Script;
+using AuroraEngine.Common;
+using AuroraEngine.Common.Script;
 using AuroraEngine.Common.Formats.NCS;
 using AuroraEngine.Common.Formats.NCS.Compiler.NSS;
 using AuroraEngine.Common.Formats.NCS.Optimizers;

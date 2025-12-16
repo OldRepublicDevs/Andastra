@@ -1,4 +1,4 @@
-﻿using AuroraEngine.Common.Common;
+using AuroraEngine.Common;
 using JetBrains.Annotations;
 
 namespace AuroraEngine.Common.Resource.Generics.GUI

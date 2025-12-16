@@ -1,16 +1,16 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Markup.Xaml;
-using AuroraEngine.Common.Common;
+using AuroraEngine.Common;
 using AuroraEngine.Common.Formats.GFF;
 using AuroraEngine.Common.Resource.Generics;
 using AuroraEngine.Common.Resources;
 using HolocronToolset.NET.Data;
 using HolocronToolset.NET.Dialogs;
 using HolocronToolset.NET.Widgets;
-using InventoryItem = AuroraEngine.Common.Common.InventoryItem;
+using InventoryItem = AuroraEngine.Common.InventoryItem;
 using GFFAuto = AuroraEngine.Common.Formats.GFF.GFFAuto;
 
 namespace HolocronToolset.NET.Editors

@@ -1,10 +1,10 @@
-﻿// Comprehensive tests for IncrementalTSLPatchDataWriter
+// Comprehensive tests for IncrementalTSLPatchDataWriter
 // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/writer.py:1214-4389
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using AuroraEngine.Common.Common;
+using AuroraEngine.Common;
 using AuroraEngine.Common.Formats.GFF;
 using AuroraEngine.Common.Formats.SSF;
 using AuroraEngine.Common.Formats.TLK;

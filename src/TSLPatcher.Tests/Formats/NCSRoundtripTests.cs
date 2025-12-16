@@ -1,4 +1,4 @@
-﻿// Matching vendor/NCSDecomp/src/test/java/com/kotor/resource/formats/ncs/test_roundtrip_decompiler.java:1-4050
+// Matching vendor/NCSDecomp/src/test/java/com/kotor/resource/formats/ncs/test_roundtrip_decompiler.java:1-4050
 // Copyright 2021-2025 NCSDecomp
 // Licensed under the Business Source License 1.1 (BSL 1.1).
 // Visit https://bolabaden.org for more information and other ventures
@@ -11,7 +11,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using AuroraEngine.Common.Common;
+using AuroraEngine.Common;
 using AuroraEngine.Common.Formats.NCS;
 using AuroraEngine.Common.Formats.NCS.NCSDecomp;
 using IOException = AuroraEngine.Common.Formats.NCS.NCSDecomp.IOException;

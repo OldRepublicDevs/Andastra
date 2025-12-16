@@ -1,5 +1,5 @@
-﻿using System;
-using AuroraEngine.Common.Common;
+using System;
+using AuroraEngine.Common;
 using JetBrains.Annotations;
 
 namespace AuroraEngine.Common.Resources
