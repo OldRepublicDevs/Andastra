@@ -12,10 +12,11 @@ namespace Odyssey.Kotor.Profiles
     /// Game Profile Factory:
     /// - Based on swkotor2.exe game profile system
     /// - Located via string references: Game version detection determines which profile to use (K1 vs K2)
+    /// - Resource setup: FUN_00633270 @ 0x00633270 sets up resource directories and precedence (related to game profile configuration)
     /// - Original implementation: Factory pattern for creating game-specific profiles
     /// - Game detection: Determines game type from installation directory (checks for swkotor.exe vs swkotor2.exe)
     /// - Profile creation: Returns K1GameProfile for KOTOR 1, K2GameProfile for KOTOR 2
-    /// - Note: This is a factory pattern abstraction, no direct Ghidra function equivalent
+    /// - Note: This is a factory pattern abstraction, but relates to game profile system initialized by FUN_00633270
     /// </remarks>
     public static class GameProfileFactory
     {
