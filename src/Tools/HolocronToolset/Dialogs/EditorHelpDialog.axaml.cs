@@ -74,8 +74,23 @@ namespace HolocronToolset.Dialogs
 
         private void SetupUI()
         {
-            // Find controls from XAML
-            _textBrowser = this.FindControl<TextBox>("textBrowser");
+            // If _textBrowser is already initialized (e.g., by SetupProgrammaticUI), skip control finding
+            if (_textBrowser != null)
+            {
+                return;
+            }
+
+            // Use try-catch to handle cases where XAML controls might not be available (e.g., in tests)
+            try
+            {
+                // Find controls from XAML
+                _textBrowser = this.FindControl<TextBox>("textBrowser");
+            }
+            catch
+            {
+                // XAML controls not available - create programmatic UI for tests
+                SetupProgrammaticUI();
+            }
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/editor_help.py:19-43
