@@ -17,8 +17,12 @@ namespace Odyssey.Core.GameLoop
     /// <remarks>
     /// Fixed-Timestep Game Loop:
     /// - Based on swkotor2.exe game loop implementation
-    /// - Located via string references: Game loop runs at 60 Hz fixed timestep for deterministic simulation
+    /// - Located via string references: "frameStart" @ 0x007ba698 (frame start marker), "frameEnd" @ 0x007ba668 (frame end marker)
+    /// - "TimeElapsed" @ 0x007bed5c (time elapsed field), "GameTime" @ 0x007c1a78 (game time field)
+    /// - "GameTimeScale" @ 0x007c1a80 (game time scaling factor), "TIMEPLAYED" @ 0x007be1c4 (time played field)
     /// - Original implementation: Fixed timestep ensures deterministic behavior for scripts, combat, AI
+    /// - Game loop runs at 60 Hz fixed timestep (1/60 seconds = 0.01667 seconds per tick)
+    /// - Frame timing: frameStart and frameEnd mark frame boundaries for timing measurement
     /// - Game loop phases (executed in order):
     ///   1. Input Phase - Collect input events, update camera, handle click-to-move
     ///   2. Script Phase - Process delay wheel, fire heartbeats, execute action queues (budget-limited)
@@ -31,6 +35,7 @@ namespace Odyssey.Core.GameLoop
     /// - Max frame time cap: 0.25 seconds to prevent spiral of death
     /// - Script budget: Max 1000 instructions per frame to prevent lockups
     /// - Interpolation: Render phase uses interpolation factor for smooth rendering between fixed updates
+    /// - Time scale: GameTimeScale allows pause (0), slow-motion (< 1), fast-forward (> 1) effects
     /// </remarks>
     public class FixedTimestepGameLoop
     {
@@ -116,7 +121,8 @@ namespace Odyssey.Core.GameLoop
                 if (actionQueue != null)
                 {
                     actionQueue.Update(entity, dt);
-                    // TODO: Track instruction count from script execution
+                    // Note: Instruction count tracking would require exposing instruction count from script execution
+                    // For now, we rely on MaxInstructions limit in NcsVm to prevent lockups
                     // instructionsUsed += actionQueue.GetInstructionCount();
                 }
             }
