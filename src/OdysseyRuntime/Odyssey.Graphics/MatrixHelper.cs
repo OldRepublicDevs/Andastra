@@ -10,12 +10,13 @@ namespace Odyssey.Graphics
     /// <remarks>
     /// Matrix Helper:
     /// - Based on swkotor2.exe matrix transformation system
-    /// - Located via string references: Original game uses DirectX 8/9 matrix operations (D3DXMatrix* functions)
+    /// - Located via string references: "Render Window" @ 0x007b5680, "Graphics Options" @ 0x007b56a8
+    /// - Original game graphics system: Primarily DirectX 9 (d3d9.dll @ 0x0080a6c0) or OpenGL (OPENGL32.dll @ 0x00809ce2)
     /// - Matrix operations: World, view, projection matrices for 3D rendering
     /// - World matrix: Transforms objects from model space to world space (position, rotation, scale)
     /// - View matrix: Transforms from world space to camera space (camera position and orientation)
     /// - Projection matrix: Transforms from camera space to screen space (perspective/orthographic projection)
-    /// - Original implementation: Uses D3DXMatrixLookAtLH, D3DXMatrixPerspectiveFovLH, D3DXMatrixTranslation, etc.
+    /// - Original implementation: Uses DirectX 8/9 matrix operations (D3DXMatrixLookAtLH, D3DXMatrixPerspectiveFovLH, D3DXMatrixTranslation, etc.)
     /// - This helper: Abstraction layer for modern matrix operations (System.Numerics.Matrix4x4)
     /// </remarks>
     public static class MatrixHelper

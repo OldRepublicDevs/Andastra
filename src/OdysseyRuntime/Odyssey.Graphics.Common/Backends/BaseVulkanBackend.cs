@@ -22,6 +22,15 @@ namespace Odyssey.Graphics.Common.Backends
     ///
     /// Based on Vulkan API: https://www.khronos.org/vulkan/
     /// </summary>
+    /// <remarks>
+    /// Vulkan Backend:
+    /// - This is a modern graphics API abstraction (Vulkan was released after KOTOR2)
+    /// - Original game graphics system: Primarily DirectX 9 (d3d9.dll @ 0x0080a6c0) or OpenGL (OPENGL32.dll @ 0x00809ce2)
+    /// - Located via string references: "Render Window" @ 0x007b5680, "Graphics Options" @ 0x007b56a8
+    /// - Original game did not use Vulkan; this is a modern enhancement for cross-platform support and advanced features
+    /// - Raytracing: Original game did not support raytracing; this is a modern enhancement
+    /// - This abstraction: Provides Vulkan backend for modern systems, not directly mapped to swkotor2.exe functions
+    /// </remarks>
     public abstract class BaseVulkanBackend : BaseGraphicsBackend, IComputeBackend, IRaytracingBackend
     {
         protected IntPtr _instance;
