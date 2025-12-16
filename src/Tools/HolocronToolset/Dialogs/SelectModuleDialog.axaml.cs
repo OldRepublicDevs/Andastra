@@ -70,32 +70,20 @@ namespace HolocronToolset.Dialogs
             Width = 500;
             Height = 400;
 
-            var panel = new StackPanel();
-            var titleLabel = new TextBlock
-            {
-                Text = "Select Module",
-                FontSize = 18,
-                HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center
-            };
-            var openButton = new Button { Content = "Open" };
-            openButton.Click += (sender, e) => Confirm();
-            var cancelButton = new Button { Content = "Cancel" };
-            cancelButton.Click += (sender, e) => Close();
+            // Create all UI controls programmatically for test scenarios
+            _filterEdit = new TextBox { Watermark = "Filter" };
+            _moduleList = new ListBox();
+            _openButton = new Button { Content = "Open" };
+            _cancelButton = new Button { Content = "Cancel" };
+            _browseButton = new Button { Content = "Browse" };
 
-            panel.Children.Add(titleLabel);
-            panel.Children.Add(openButton);
-            panel.Children.Add(cancelButton);
-            Content = panel;
-        }
-
-        private void SetupUI()
-        {
-            // Find controls from XAML
-            _filterEdit = this.FindControl<TextBox>("filterEdit");
-            _moduleList = this.FindControl<ListBox>("moduleList");
-            _openButton = this.FindControl<Button>("openButton");
-            _cancelButton = this.FindControl<Button>("cancelButton");
-            _browseButton = this.FindControl<Button>("browseButton");
+            // Connect events
+            _openButton.Click += (s, e) => Confirm();
+            _cancelButton.Click += (s, e) => Close();
+            _browseButton.Click += (s, e) => Browse();
+            _moduleList.SelectionChanged += (s, e) => OnRowChanged();
+            _moduleList.DoubleTapped += (s, e) => Confirm();
+            _filterEdit.TextChanged += (s, e) => OnFilterEdited();
 
             // Create UI wrapper for testing
             Ui = new SelectModuleDialogUi
@@ -106,6 +94,52 @@ namespace HolocronToolset.Dialogs
                 CancelButton = _cancelButton,
                 BrowseButton = _browseButton
             };
+
+            var panel = new StackPanel();
+            var titleLabel = new TextBlock
+            {
+                Text = "Select Module",
+                FontSize = 18,
+                HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center
+            };
+            panel.Children.Add(titleLabel);
+            panel.Children.Add(_filterEdit);
+            panel.Children.Add(_moduleList);
+            var buttonPanel = new StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal, Spacing = 5 };
+            buttonPanel.Children.Add(_openButton);
+            buttonPanel.Children.Add(_browseButton);
+            buttonPanel.Children.Add(_cancelButton);
+            panel.Children.Add(buttonPanel);
+            Content = panel;
+        }
+
+        private void SetupUI()
+        {
+            // Use try-catch to handle cases where XAML controls might not be available (e.g., in tests)
+            Ui = new SelectModuleDialogUi();
+            
+            try
+            {
+                // Find controls from XAML
+                _filterEdit = this.FindControl<TextBox>("filterEdit");
+                _moduleList = this.FindControl<ListBox>("moduleList");
+                _openButton = this.FindControl<Button>("openButton");
+                _cancelButton = this.FindControl<Button>("cancelButton");
+                _browseButton = this.FindControl<Button>("browseButton");
+            }
+            catch
+            {
+                // XAML controls not available - create programmatic UI for tests
+                SetupProgrammaticUI();
+                return; // SetupProgrammaticUI already sets up Ui and connects events
+            }
+
+            // Create UI wrapper for testing
+            Ui.FilterEdit = _filterEdit;
+            Ui.ModuleList = _moduleList;
+            Ui.OpenButton = _openButton;
+            Ui.CancelButton = _cancelButton;
+            Ui.BrowseButton = _browseButton;
 
             if (_openButton != null)
             {
