@@ -332,6 +332,7 @@ namespace Odyssey.Engines.Odyssey.EngineApi
                 case 200: return Func_GetObjectByTag(args, ctx);
                 case 226: return Func_GetNearestCreatureToLocation(args, ctx);
                 case 227: return Func_GetNearestObject(args, ctx);
+                case 228: return Func_GetNearestObjectToLocation(args, ctx);
                 case 229: return Func_GetNearestObjectByTag(args, ctx);
                 case 203: return Func_SetAreaTransitionBMP(args, ctx);
                 case 204: return Func_ActionStartConversation(args, ctx);
