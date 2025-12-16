@@ -121,8 +121,8 @@ namespace Odyssey.MonoGame.Rendering
             _executionOrder.Clear();
 
             // Topological sort to determine execution order
-            var visited = new HashSet<string>();
-            var visiting = new HashSet<string>();
+            HashSet<string> visited = new HashSet<string>();
+            HashSet<string> visiting = new HashSet<string>();
 
             foreach (string passName in _passes.Keys)
             {
@@ -138,7 +138,7 @@ namespace Odyssey.MonoGame.Rendering
             if (visiting.Contains(passName))
             {
                 // Circular dependency detected
-                throw new InvalidOperationException($"Circular dependency detected involving pass: {passName}");
+                throw new InvalidOperationException(string.Format("Circular dependency detected involving pass: {0}", passName));
             }
 
             if (visited.Contains(passName))
