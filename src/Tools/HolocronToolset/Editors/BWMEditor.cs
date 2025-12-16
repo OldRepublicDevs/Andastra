@@ -2,7 +2,7 @@ using System;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using Andastra.Parsing.Formats.BWM;
-using Andastra.Parsing.Resources;
+using Andastra.Parsing.Resource;
 using HolocronToolset.Data;
 
 namespace HolocronToolset.Editors

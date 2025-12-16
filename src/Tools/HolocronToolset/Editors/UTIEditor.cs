@@ -1,3 +1,4 @@
+using Andastra.Parsing.Common;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -8,12 +9,11 @@ using Andastra.Parsing;
 using Andastra.Parsing.Formats.GFF;
 using Andastra.Parsing.Formats.TwoDA;
 using Andastra.Parsing.Resource.Generics;
-using Andastra.Parsing.Resources;
+using Andastra.Parsing.Resource;
 using HolocronToolset.Data;
 using HolocronToolset.Dialogs;
 using JetBrains.Annotations;
 using GFFAuto = Andastra.Parsing.Formats.GFF.GFFAuto;
-using LocalizedString = Andastra.Parsing.LocalizedString;
 
 namespace HolocronToolset.Editors
 {

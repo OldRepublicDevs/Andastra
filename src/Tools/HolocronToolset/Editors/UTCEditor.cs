@@ -1,3 +1,4 @@
+using Andastra.Parsing.Common;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -7,7 +8,7 @@ using Avalonia.Markup.Xaml;
 using Andastra.Parsing;
 using Andastra.Parsing.Formats.GFF;
 using Andastra.Parsing.Resource.Generics;
-using Andastra.Parsing.Resources;
+using Andastra.Parsing.Resource;
 using HolocronToolset.Data;
 using HolocronToolset.Dialogs;
 using GFFAuto = Andastra.Parsing.Formats.GFF.GFFAuto;

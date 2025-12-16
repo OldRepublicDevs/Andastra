@@ -1,3 +1,4 @@
+using Andastra.Parsing.Common;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,7 +11,7 @@ using Avalonia.Markup.Xaml;
 using Andastra.Parsing;
 using System.Numerics;
 using Andastra.Parsing.Formats.GFF;
-using Andastra.Parsing.Resources;
+using Andastra.Parsing.Resource;
 using HolocronToolset.Common;
 using HolocronToolset.Data;
 

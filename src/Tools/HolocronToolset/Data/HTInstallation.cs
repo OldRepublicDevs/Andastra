@@ -570,7 +570,7 @@ namespace HolocronToolset.Data
             try
             {
                 // Use LazyCapsule to read module resources
-                var capsule = new Andastra.Parsing.Formats.Capsule.LazyCapsule(moduleFile);
+                var capsule = new LazyCapsule(moduleFile);
                 resources.AddRange(capsule.GetResources());
             }
             catch (Exception ex)
@@ -791,11 +791,11 @@ namespace HolocronToolset.Data
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/extract/installation.py:1845-1888
         // Original: def textures(self, resnames: Iterable[str], order: Sequence[SearchLocation] | None = None, ...) -> CaseInsensitiveDict[TPC | None]:
-        public Andastra.Parsing.Utility.CaseInsensitiveDict<Andastra.Parsing.Formats.TPC.TPC> Textures(
+        public Andastra.Utility.CaseInsensitiveDict<Andastra.Parsing.Formats.TPC.TPC> Textures(
             List<string> resnames,
             SearchLocation[] searchOrder = null)
         {
-            var textures = new Andastra.Parsing.Utility.CaseInsensitiveDict<Andastra.Parsing.Formats.TPC.TPC>();
+            var textures = new Andastra.Utility.CaseInsensitiveDict<Andastra.Parsing.Formats.TPC.TPC>();
             if (resnames == null)
             {
                 return textures;
@@ -824,11 +824,11 @@ namespace HolocronToolset.Data
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/extract/installation.py:1918-2042
         // Original: def sounds(self, resnames: Iterable[str], order: Sequence[SearchLocation] | None = None, ...) -> CaseInsensitiveDict[bytes | None]:
-        public Andastra.Parsing.Utility.CaseInsensitiveDict<byte[]> Sounds(
+        public Andastra.Utility.CaseInsensitiveDict<byte[]> Sounds(
             List<string> resnames,
             SearchLocation[] searchOrder = null)
         {
-            var sounds = new Andastra.Parsing.Utility.CaseInsensitiveDict<byte[]>();
+            var sounds = new Andastra.Utility.CaseInsensitiveDict<byte[]>();
             if (resnames == null)
             {
                 return sounds;

@@ -8,7 +8,7 @@ using Andastra.Parsing.Formats.MDL;
 using Andastra.Parsing.Formats.MDLData;
 using Andastra.Parsing.Formats.RIM;
 using Andastra.Parsing.Installation;
-using Andastra.Parsing.Resources;
+using Andastra.Parsing.Resource;
 using HolocronToolset.Data;
 using HolocronToolset.Widgets;
 
