@@ -128,6 +128,13 @@ namespace Odyssey.Kotor.Systems
                         entity.AddComponent(new EncounterComponent());
                     }
                     break;
+
+                case ObjectType.Item:
+                    if (!entity.HasComponent<IItemComponent>())
+                    {
+                        entity.AddComponent(new ItemComponent());
+                    }
+                    break;
             }
 
             // Add ScriptHooksComponent for all entities (most entities have scripts)

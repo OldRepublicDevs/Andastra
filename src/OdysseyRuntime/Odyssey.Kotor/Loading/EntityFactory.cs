@@ -7,6 +7,7 @@ using AuroraEngine.Common.Resources;
 using JetBrains.Annotations;
 using Odyssey.Core.Entities;
 using Odyssey.Core.Interfaces;
+using Odyssey.Kotor.Components;
 using ObjectType = Odyssey.Core.Enums.ObjectType;
 using ScriptEvent = Odyssey.Core.Enums.ScriptEvent;
 
@@ -554,24 +555,38 @@ namespace Odyssey.Kotor.Loading
             }
 
             entity.SetData("TemplateResRef", templateResRef);
-            entity.SetData("BaseItem", GetIntField(root, "BaseItem", 0));
+            
+            // Create ItemComponent from UTI template data
+            // Based on swkotor2.exe: Item component creation from UTI template
+            // Located via string references: "ItemComponent" @ 0x007c41e4, "BaseItem" @ 0x007c0a78
+            // Original implementation: Items loaded from UTI templates have ItemComponent with BaseItem, Properties, Charges, etc.
+            var itemComponent = new ItemComponent
+            {
+                BaseItem = GetIntField(root, "BaseItem", 0),
+                StackSize = GetIntField(root, "StackSize", 1),
+                Charges = GetIntField(root, "Charges", 0),
+                Cost = GetIntField(root, "Cost", 0),
+                Identified = GetIntField(root, "Identified", 1) != 0,
+                TemplateResRef = templateResRef
+            };
+
+            // Store additional item data for reference
             entity.SetData("LocalizedName", GetLocStringField(root, "LocalizedName"));
             entity.SetData("Description", GetLocStringField(root, "Description"));
-            entity.SetData("Cost", GetIntField(root, "Cost", 0));
-            entity.SetData("StackSize", GetIntField(root, "StackSize", 1));
-            entity.SetData("Charges", GetIntField(root, "Charges", 0));
             entity.SetData("MaxCharges", GetIntField(root, "MaxCharges", 0));
             entity.SetData("Stolen", GetIntField(root, "Stolen", 0) != 0);
             entity.SetData("Plot", GetIntField(root, "Plot", 0) != 0);
             entity.SetData("Cursed", GetIntField(root, "Cursed", 0) != 0);
 
-            // Item properties
+            // Load item properties from PropertiesList
+            // Based on swkotor2.exe: Item properties loaded from UTI PropertiesList array
+            // Located via string references: "PropertiesList" @ 0x007c2f3c, "PropertyName" @ 0x007beb58
+            // Original implementation: Each property entry has PropertyName, Subtype, CostTable, CostValue, Param1, Param1Value
             if (root.Exists("PropertiesList"))
             {
                 GFFList propertiesList = root.GetList("PropertiesList");
                 if (propertiesList != null)
                 {
-                    var properties = new List<object>();
                     foreach (GFFStruct propStruct in propertiesList)
                     {
                         int propertyName = GetIntField(propStruct, "PropertyName", 0);
@@ -580,22 +595,23 @@ namespace Odyssey.Kotor.Loading
                         int costValue = GetIntField(propStruct, "CostValue", 0);
                         int param1 = GetIntField(propStruct, "Param1", 0);
                         int param1Value = GetIntField(propStruct, "Param1Value", 0);
-                        int chanceAppear = GetIntField(propStruct, "ChanceAppear", 100);
                         
-                        properties.Add(new
+                        var property = new Odyssey.Core.Interfaces.Components.ItemProperty
                         {
-                            PropertyName = propertyName,
+                            PropertyType = propertyName,
                             Subtype = subType,
                             CostTable = costTable,
                             CostValue = costValue,
                             Param1 = param1,
-                            Param1Value = param1Value,
-                            ChanceAppear = chanceAppear
-                        });
+                            Param1Value = param1Value
+                        };
+                        itemComponent.AddProperty(property);
                     }
-                    entity.SetData("PropertiesList", properties);
                 }
             }
+
+            // Add ItemComponent to entity
+            entity.AddComponent(itemComponent);
 
             SetEntityScripts(entity, root, new Dictionary<string, ScriptEvent>
             {
