@@ -1605,13 +1605,13 @@ namespace Odyssey.Game.Core
             if (_session != null && _session.DialogueManager != null && _session.DialogueManager.IsConversationActive)
             {
                 HandleDialogueInput(keyboardState);
-                _previousKeyboardState = keyboardState;
+                _previousPlayerKeyboardState = keyboardState;
                 return; // Don't process movement while in dialogue
             }
 
             if (_session == null || _session.PlayerEntity == null)
             {
-                _previousKeyboardState = keyboardState;
+                _previousPlayerKeyboardState = keyboardState;
                 return;
             }
 
@@ -1733,13 +1733,13 @@ namespace Odyssey.Game.Core
             }
 
             _previousMouseState = mouseState;
-            _previousKeyboardState = keyboardState;
+            _previousPlayerKeyboardState = keyboardState;
         }
 
         /// <summary>
         /// Handles keyboard input for dialogue replies.
         /// </summary>
-        private void HandleDialogueInput(KeyboardState keyboardState)
+        private void HandleDialogueInput(IKeyboardState keyboardState)
         {
             if (_session == null || _session.DialogueManager == null || !_session.DialogueManager.IsConversationActive)
             {
@@ -1757,7 +1757,7 @@ namespace Odyssey.Game.Core
 
             for (int i = 0; i < Math.Min(numberKeys.Length, state.AvailableReplies.Count); i++)
             {
-                if (keyboardState.IsKeyDown(numberKeys[i]) && _previousKeyboardState.IsKeyUp(numberKeys[i]))
+                if (keyboardState.IsKeyDown(numberKeys[i]) && _previousPlayerKeyboardState.IsKeyUp(numberKeys[i]))
                 {
                     // Key was just pressed
                     Console.WriteLine($"[Dialogue] Selected reply {i + 1}");
@@ -1767,7 +1767,7 @@ namespace Odyssey.Game.Core
             }
 
             // ESC to abort conversation
-            if (keyboardState.IsKeyDown(Keys.Escape) && _previousKeyboardState.IsKeyUp(Keys.Escape))
+            if (keyboardState.IsKeyDown(Keys.Escape) && _previousPlayerKeyboardState.IsKeyUp(Keys.Escape))
             {
                 Console.WriteLine("[Dialogue] Conversation aborted");
                 _session.DialogueManager.AbortConversation();
@@ -1777,7 +1777,7 @@ namespace Odyssey.Game.Core
         /// <summary>
         /// Gets the camera position for raycasting.
         /// </summary>
-        private Microsoft.Xna.Framework.Vector3 GetCameraPosition()
+        private System.Numerics.Vector3 GetCameraPosition()
         {
             if (_session != null && _session.PlayerEntity != null)
             {
@@ -1790,7 +1790,7 @@ namespace Odyssey.Game.Core
                     float cameraAngle = transform.Facing + (float)Math.PI;
 
                     System.Numerics.Vector3 playerPos = transform.Position;
-                    return new Microsoft.Xna.Framework.Vector3(
+                    return new System.Numerics.Vector3(
                         playerPos.X + (float)Math.Sin(cameraAngle) * cameraDistance,
                         playerPos.Y + cameraHeight,
                         playerPos.Z + (float)Math.Cos(cameraAngle) * cameraDistance
