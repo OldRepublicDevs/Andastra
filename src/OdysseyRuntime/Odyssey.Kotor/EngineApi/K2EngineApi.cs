@@ -831,8 +831,11 @@ namespace Odyssey.Kotor.EngineApi
                 }
                 
                 // Create entity from template using EntityFactory
+                // Based on swkotor2.exe: AddAvailableNPCByTemplate implementation
+                // Located via string references: Party member creation from template
+                // Original implementation: Creates creature from UTC template and adds to available party members
                 // Get current module from ModuleLoader
-                AuroraEngine.Common.Module module = moduleLoader.GetCSharpKotorModule();
+                AuroraEngine.Common.Module module = moduleLoader.GetCurrentModule();
                 if (module != null)
                 {
                     // Get spawn position (use player position or default)
@@ -849,9 +852,8 @@ namespace Odyssey.Kotor.EngineApi
                         }
                     }
                     
-                    // TODO: EntityFactory not yet implemented - return failure for now
-                    // IEntity newEntity = moduleLoader.EntityFactory.CreateCreatureFromTemplate(module, template, spawnPosition, spawnFacing);
-                    IEntity newEntity = null;
+                    // Create creature from template using EntityFactory
+                    IEntity newEntity = moduleLoader.EntityFactory.CreateCreatureFromTemplate(module, template, spawnPosition, spawnFacing);
                     if (newEntity != null)
                     {
                         // Register entity with world if not already registered
