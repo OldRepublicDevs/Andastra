@@ -145,6 +145,26 @@ namespace Odyssey.MonoGame.Graphics
             throw new ArgumentException("Camera controller must be a CameraController instance", nameof(cameraController));
         }
 
+        public object CreateSoundPlayer(object resourceProvider)
+        {
+            if (resourceProvider is Odyssey.Content.Interfaces.IGameResourceProvider provider)
+            {
+                var spatialAudio = CreateSpatialAudio() as Odyssey.MonoGame.Audio.SpatialAudio;
+                return new Odyssey.MonoGame.Audio.MonoGameSoundPlayer(provider, spatialAudio);
+            }
+            throw new ArgumentException("Resource provider must be an IGameResourceProvider instance", nameof(resourceProvider));
+        }
+
+        public object CreateVoicePlayer(object resourceProvider)
+        {
+            if (resourceProvider is Odyssey.Content.Interfaces.IGameResourceProvider provider)
+            {
+                var spatialAudio = CreateSpatialAudio() as Odyssey.MonoGame.Audio.SpatialAudio;
+                return new Odyssey.MonoGame.Audio.MonoGameVoicePlayer(provider, spatialAudio);
+            }
+            throw new ArgumentException("Resource provider must be an IGameResourceProvider instance", nameof(resourceProvider));
+        }
+
         public void Dispose()
         {
             if (_graphicsDevice != null)
