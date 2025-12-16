@@ -180,14 +180,14 @@ When processing a file:
 
 ### Odyssey.Game (8 files)
 
-- [ ] Core\GamePathDetector.cs
-- [ ] Core\GameSettings.cs
-- [ ] Core\GameState.cs
-- [ ] Core\GraphicsBackendFactory.cs
-- [ ] Core\OdysseyGame.cs
-- [ ] GUI\MenuRenderer.cs
-- [ ] GUI\SaveLoadMenu.cs
-- [ ] Program.cs
+- [x] Core\GamePathDetector.cs - Registry access patterns, chitin.key validation, executable validation
+- [x] Core\GameSettings.cs - FUN_00633270 @ 0x00633270, FUN_00630a90 @ 0x00630a90, FUN_00631ea0 @ 0x00631ea0, swkotor2.ini @ 0x007b5740
+- [x] Core\GameState.cs - FUN_006caab0 @ 0x006caab0, ModuleLoaded @ 0x007bdd70, ModuleRunning @ 0x007bdd58, GameState @ 0x007c15d0
+- [x] Core\GraphicsBackendFactory.cs - Abstraction layer factory, no Ghidra references needed
+- [x] Core\OdysseyGame.cs - FUN_00404250 @ 0x00404250, UpdateScenes @ 0x007b8b54, frameStart @ 0x007ba698, frameEnd @ 0x007ba668
+- [x] GUI\MenuRenderer.cs - RIMS:MAINMENU @ 0x007b6044, mainmenu_p @ 0x007cc000, MAINMENU @ 0x007cc030, mainmenu01-05 variants
+- [x] GUI\SaveLoadMenu.cs - savenfo @ 0x007be1f0, FUN_004eb750 @ 0x004eb750, FUN_00708990 @ 0x00708990, FUN_0070a020 @ 0x0070a020
+- [x] Program.cs - FUN_00404250 @ 0x00404250, mutex "swkotor2" @ 0x007b575c, config.txt loading FUN_00460ff0, INI loading FUN_00630a90/FUN_00631ea0
 
 ### Odyssey.Graphics (22 files)
 
@@ -517,52 +517,112 @@ When processing a file:
 
 #### Resource/Generics/ (KOTOR/Odyssey GFF Templates)
 
+**Entity Templates (KOTOR-specific - Move to Odyssey.Engines.Odyssey.Templates\):**
+
 - [ ] Resource\Generics\UTC.cs - Creature template
   - Target: Odyssey.Engines.Odyssey.Templates\UTC.cs
+  - Status: [ ] Move, [ ] Update references
+
+- [ ] Resource\Generics\UTCHelpers.cs - Creature template helpers
+  - Target: Odyssey.Engines.Odyssey.Templates\UTCHelpers.cs
   - Status: [ ] Move, [ ] Update references
 
 - [ ] Resource\Generics\UTD.cs - Door template
   - Target: Odyssey.Engines.Odyssey.Templates\UTD.cs
   - Status: [ ] Move, [ ] Update references
 
+- [ ] Resource\Generics\UTDHelpers.cs - Door template helpers
+  - Target: Odyssey.Engines.Odyssey.Templates\UTDHelpers.cs
+  - Status: [ ] Move, [ ] Update references
+
 - [ ] Resource\Generics\UTE.cs - Encounter template
   - Target: Odyssey.Engines.Odyssey.Templates\UTE.cs
+  - Status: [ ] Move, [ ] Update references
+
+- [ ] Resource\Generics\UTEHelpers.cs - Encounter template helpers
+  - Target: Odyssey.Engines.Odyssey.Templates\UTEHelpers.cs
   - Status: [ ] Move, [ ] Update references
 
 - [ ] Resource\Generics\UTI.cs - Item template
   - Target: Odyssey.Engines.Odyssey.Templates\UTI.cs
   - Status: [ ] Move, [ ] Update references
 
+- [ ] Resource\Generics\UTIHelpers.cs - Item template helpers
+  - Target: Odyssey.Engines.Odyssey.Templates\UTIHelpers.cs
+  - Status: [ ] Move, [ ] Update references
+
 - [ ] Resource\Generics\UTM.cs - Merchant template
   - Target: Odyssey.Engines.Odyssey.Templates\UTM.cs
+  - Status: [ ] Move, [ ] Update references
+
+- [ ] Resource\Generics\UTMHelpers.cs - Merchant template helpers
+  - Target: Odyssey.Engines.Odyssey.Templates\UTMHelpers.cs
   - Status: [ ] Move, [ ] Update references
 
 - [ ] Resource\Generics\UTP.cs - Placeable template
   - Target: Odyssey.Engines.Odyssey.Templates\UTP.cs
   - Status: [ ] Move, [ ] Update references
 
+- [ ] Resource\Generics\UTPHelpers.cs - Placeable template helpers
+  - Target: Odyssey.Engines.Odyssey.Templates\UTPHelpers.cs
+  - Status: [ ] Move, [ ] Update references
+
 - [ ] Resource\Generics\UTS.cs - Sound template
   - Target: Odyssey.Engines.Odyssey.Templates\UTS.cs
+  - Status: [ ] Move, [ ] Update references
+
+- [ ] Resource\Generics\UTSHelpers.cs - Sound template helpers
+  - Target: Odyssey.Engines.Odyssey.Templates\UTSHelpers.cs
   - Status: [ ] Move, [ ] Update references
 
 - [ ] Resource\Generics\UTT.cs - Trigger template
   - Target: Odyssey.Engines.Odyssey.Templates\UTT.cs
   - Status: [ ] Move, [ ] Update references
 
+- [ ] Resource\Generics\UTTAuto.cs - Trigger template auto-generated code
+  - Target: Odyssey.Engines.Odyssey.Templates\UTTAuto.cs
+  - Status: [ ] Move, [ ] Update references
+
+- [ ] Resource\Generics\UTTHelpers.cs - Trigger template helpers
+  - Target: Odyssey.Engines.Odyssey.Templates\UTTHelpers.cs
+  - Status: [ ] Move, [ ] Update references
+
 - [ ] Resource\Generics\UTW.cs - Waypoint template
   - Target: Odyssey.Engines.Odyssey.Templates\UTW.cs
   - Status: [ ] Move, [ ] Update references
 
+- [ ] Resource\Generics\UTWAuto.cs - Waypoint template auto-generated code
+  - Target: Odyssey.Engines.Odyssey.Templates\UTWAuto.cs
+  - Status: [ ] Move, [ ] Update references
+
+- [ ] Resource\Generics\UTWHelpers.cs - Waypoint template helpers
+  - Target: Odyssey.Engines.Odyssey.Templates\UTWHelpers.cs
+  - Status: [ ] Move, [ ] Update references
+
+**Module/Area Structures (Review - May be KOTOR-specific):**
+
 - [ ] Resource\Generics\IFO.cs - Module info (review if KOTOR-specific)
   - Target: Odyssey.Engines.Odyssey.Module\IFO.cs (if KOTOR-specific)
+  - Status: [ ] Review, [ ] Move if needed
+
+- [ ] Resource\Generics\IFOHelpers.cs - Module info helpers
+  - Target: Odyssey.Engines.Odyssey.Module\IFOHelpers.cs (if KOTOR-specific)
   - Status: [ ] Review, [ ] Move if needed
 
 - [ ] Resource\Generics\ARE.cs - Area (review if KOTOR-specific)
   - Target: Odyssey.Engines.Odyssey.Module\ARE.cs (if KOTOR-specific)
   - Status: [ ] Review, [ ] Move if needed
 
+- [ ] Resource\Generics\AREHelpers.cs - Area helpers
+  - Target: Odyssey.Engines.Odyssey.Module\AREHelpers.cs (if KOTOR-specific)
+  - Status: [ ] Review, [ ] Move if needed
+
 - [ ] Resource\Generics\GIT.cs - Game instance template (review if KOTOR-specific)
   - Target: Odyssey.Engines.Odyssey.Module\GIT.cs (if KOTOR-specific)
+  - Status: [ ] Review, [ ] Move if needed
+
+- [ ] Resource\Generics\GITHelpers.cs - Game instance template helpers
+  - Target: Odyssey.Engines.Odyssey.Module\GITHelpers.cs (if KOTOR-specific)
   - Status: [ ] Review, [ ] Move if needed
 
 - [ ] Resource\Generics\JRL.cs - Journal (review if KOTOR-specific)
@@ -573,8 +633,76 @@ When processing a file:
   - Target: Odyssey.Engines.Odyssey.Module\PTH.cs (if KOTOR-specific)
   - Status: [ ] Review, [ ] Move if needed
 
-- [ ] Resource\Generics\DLG\DLG.cs - Dialogue (review if KOTOR-specific)
+- [ ] Resource\Generics\PTHAuto.cs - Path auto-generated code
+  - Target: Odyssey.Engines.Odyssey.Module\PTHAuto.cs (if KOTOR-specific)
+  - Status: [ ] Review, [ ] Move if needed
+
+- [ ] Resource\Generics\PTHHelpers.cs - Path helpers
+  - Target: Odyssey.Engines.Odyssey.Module\PTHHelpers.cs (if KOTOR-specific)
+  - Status: [ ] Review, [ ] Move if needed
+
+**Dialogue (Review - May be KOTOR-specific):**
+
+- [ ] Resource\Generics\DLG\DLG.cs - Dialogue structure
   - Target: Odyssey.Engines.Odyssey.Dialogue\DLG.cs (if KOTOR-specific)
+  - Status: [ ] Review, [ ] Move if needed
+
+- [ ] Resource\Generics\DLG\DLGAnimation.cs - Dialogue animation
+  - Target: Odyssey.Engines.Odyssey.Dialogue\DLGAnimation.cs (if KOTOR-specific)
+  - Status: [ ] Review, [ ] Move if needed
+
+- [ ] Resource\Generics\DLG\DLGHelper.cs - Dialogue helpers
+  - Target: Odyssey.Engines.Odyssey.Dialogue\DLGHelper.cs (if KOTOR-specific)
+  - Status: [ ] Review, [ ] Move if needed
+
+- [ ] Resource\Generics\DLG\DLGLink.cs - Dialogue link
+  - Target: Odyssey.Engines.Odyssey.Dialogue\DLGLink.cs (if KOTOR-specific)
+  - Status: [ ] Review, [ ] Move if needed
+
+- [ ] Resource\Generics\DLG\DLGNode.cs - Dialogue node
+  - Target: Odyssey.Engines.Odyssey.Dialogue\DLGNode.cs (if KOTOR-specific)
+  - Status: [ ] Review, [ ] Move if needed
+
+- [ ] Resource\Generics\DLG\DLGStunt.cs - Dialogue stunt
+  - Target: Odyssey.Engines.Odyssey.Dialogue\DLGStunt.cs (if KOTOR-specific)
+  - Status: [ ] Review, [ ] Move if needed
+
+**GUI (Review - May be KOTOR-specific):**
+
+- [ ] Resource\Generics\GUI\GUI.cs - GUI structure
+  - Target: Odyssey.Engines.Odyssey.GUI\GUI.cs (if KOTOR-specific)
+  - Status: [ ] Review, [ ] Move if needed
+
+- [ ] Resource\Generics\GUI\GUIBorder.cs - GUI border
+  - Target: Odyssey.Engines.Odyssey.GUI\GUIBorder.cs (if KOTOR-specific)
+  - Status: [ ] Review, [ ] Move if needed
+
+- [ ] Resource\Generics\GUI\GUIControl.cs - GUI control
+  - Target: Odyssey.Engines.Odyssey.GUI\GUIControl.cs (if KOTOR-specific)
+  - Status: [ ] Review, [ ] Move if needed
+
+- [ ] Resource\Generics\GUI\GUIEnums.cs - GUI enums
+  - Target: Odyssey.Engines.Odyssey.GUI\GUIEnums.cs (if KOTOR-specific)
+  - Status: [ ] Review, [ ] Move if needed
+
+- [ ] Resource\Generics\GUI\GUIMoveTo.cs - GUI move to
+  - Target: Odyssey.Engines.Odyssey.GUI\GUIMoveTo.cs (if KOTOR-specific)
+  - Status: [ ] Review, [ ] Move if needed
+
+- [ ] Resource\Generics\GUI\GUIProgress.cs - GUI progress
+  - Target: Odyssey.Engines.Odyssey.GUI\GUIProgress.cs (if KOTOR-specific)
+  - Status: [ ] Review, [ ] Move if needed
+
+- [ ] Resource\Generics\GUI\GUIReader.cs - GUI reader
+  - Target: Odyssey.Engines.Odyssey.GUI\GUIReader.cs (if KOTOR-specific)
+  - Status: [ ] Review, [ ] Move if needed
+
+- [ ] Resource\Generics\GUI\GUIScrollbar.cs - GUI scrollbar
+  - Target: Odyssey.Engines.Odyssey.GUI\GUIScrollbar.cs (if KOTOR-specific)
+  - Status: [ ] Review, [ ] Move if needed
+
+- [ ] Resource\Generics\GUI\GUIText.cs - GUI text
+  - Target: Odyssey.Engines.Odyssey.GUI\GUIText.cs (if KOTOR-specific)
   - Status: [ ] Review, [ ] Move if needed
 
 #### Tools/ (KOTOR-Specific)
