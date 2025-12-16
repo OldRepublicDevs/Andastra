@@ -271,6 +271,8 @@ namespace AuroraEngine.Common.Formats.NCS
                 // Note: Using Console.WriteLine instead of JavaSystem since this is in the binary reader, not decompiler
                 // This will appear in test output
                 Console.WriteLine($"DEBUG NCSBinaryReader: Found ACTION bytecode (0x05) at offset {instructionOffset}, qualifier=0x{qualifier:X2}");
+                // Also log to stderr for visibility in test output
+                Console.Error.WriteLine($"DEBUG NCSBinaryReader: Found ACTION bytecode (0x05) at offset {instructionOffset}, qualifier=0x{qualifier:X2}");
             }
 
             // Try to convert to NCSByteCode enum
