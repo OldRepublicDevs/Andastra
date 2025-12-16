@@ -187,16 +187,19 @@ namespace AuroraEngine.Common.Formats.NCS
             NCS ncs = compiler.Compile(source, library);
 
             // Ensure NOP removal is always first optimization pass
-            // EXCEPTION: If optimizers is an empty list (not null), don't add any optimizers
-            // This allows callers to disable all optimizations for roundtrip tests
+            // EXCEPTION: If optimizers is an empty list (not null), we still need to remove function-start NOPs
+            // because the external compiler (nwnnsscomp) doesn't generate them, and we need to match its output
+            // for roundtrip tests. Function-start NOPs are markers without inbound links and should be removed.
             if (optimizers == null)
             {
                 optimizers = new List<NCSOptimizer> { new RemoveNopOptimizer() };
             }
             else if (optimizers.Count == 0)
             {
-                // Empty list means no optimizations - used for roundtrip tests to match external compiler output
-                // Don't add RemoveNopOptimizer
+                // Empty list means no optimizations - but we still need to remove function-start NOPs
+                // (ones without inbound links) to match external compiler output for roundtrip tests
+                // The external compiler doesn't generate these NOPs, so we must remove them
+                optimizers = new List<NCSOptimizer> { new RemoveNopOptimizer() };
             }
             else if (!optimizers.Any(o => o is RemoveNopOptimizer))
             {
