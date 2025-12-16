@@ -87,10 +87,15 @@ namespace HolocronToolset.NET.Tests.Editors
             // Verify entries loaded - access via reflection since _sourceEntries is private
             var sourceEntriesField = typeof(TLKEditor).GetField("_sourceEntries", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
             sourceEntriesField.Should().NotBeNull("_sourceEntries field should exist");
-            var sourceEntries = sourceEntriesField.GetValue(editor) as System.Collections.ObjectModel.ObservableCollection<object>;
+            var sourceEntries = sourceEntriesField.GetValue(editor);
             sourceEntries.Should().NotBeNull("Source entries collection should not be null");
-            sourceEntries.Count.Should().BeGreaterThan(0, "Editor should have loaded entries");
-            sourceEntries.Count.Should().Be(testTlk.Count, $"Editor should have {testTlk.Count} entries, got {sourceEntries.Count}");
+            
+            // Get Count property via reflection since we don't know the exact generic type
+            var countProperty = sourceEntries.GetType().GetProperty("Count");
+            countProperty.Should().NotBeNull("Source entries should have Count property");
+            int entryCount = (int)countProperty.GetValue(sourceEntries);
+            entryCount.Should().BeGreaterThan(0, "Editor should have loaded entries");
+            entryCount.Should().Be(testTlk.Count, $"Editor should have {testTlk.Count} entries, got {entryCount}");
 
             // Verify the editor can build the file
             var (data, _) = editor.Build();
