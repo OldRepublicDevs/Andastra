@@ -2,6 +2,9 @@
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/misc.py:250-285
     // Original: class Game(IntEnum):
+    // NOTE: This enum is KOTOR/Odyssey-specific. For runtime use, consider using Odyssey.Engines.Odyssey.Common.Game
+    // This enum is kept in AuroraEngine.Common for backward compatibility with patcher tools (HoloPatcher.NET, HolocronToolset, NCSDecomp, KotorDiff)
+    // Future: When Aurora/Eclipse engines are implemented, this will be moved to Odyssey.Engines.Odyssey.Common
     /// <summary>
     /// Represents which KOTOR game / platform variant.
     /// </summary>
