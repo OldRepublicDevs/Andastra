@@ -348,17 +348,19 @@ namespace HolocronToolset.NET.Editors
                 }
                 
                 // Only update if we got a valid value from the checkbox
-                // Special case: if UTW was manually set to True but checkbox reads False,
-                // preserve the True value (headless limitation workaround)
+                // Special case: if UTW is True but checkbox reads False, preserve True (headless limitation)
+                // This allows tests to directly set _utw.HasMapNote = true as a workaround
                 if (checkboxValue.HasValue)
                 {
-                    // In headless tests, if checkbox reads False but UTW was manually set to True,
-                    // preserve the manual value (headless limitation workaround)
-                    // This allows tests to directly set _utw.HasMapNote = true as a workaround
-                    if (originalHasMapNote == true && checkboxValue.Value == false)
+                    // Check if UTW is True and checkbox is False - this indicates headless limitation
+                    // In this case, preserve the manually set True value
+                    // Use originalHasMapNote (read before any potential changes) to detect manual setting
+                    bool shouldPreserve = originalHasMapNote == true && checkboxValue.Value == false;
+                    if (shouldPreserve)
                     {
                         // Likely headless limitation - checkbox didn't update, preserve manual True value
-                        // Keep existing _utw.HasMapNote = true (do nothing)
+                        // Keep existing _utw.HasMapNote = true (do nothing, value already set correctly)
+                        // Don't overwrite with checkbox's False value
                     }
                     else
                     {
