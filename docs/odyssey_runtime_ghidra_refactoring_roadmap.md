@@ -1,4 +1,4 @@
-﻿# OdysseyRuntime Ghidra Refactoring Roadmap
+﻿# BioWare Engines Refactoring Roadmap
 
 Internal tracking document for AI agents. Not public-facing. Do not commit to repository.
 
@@ -8,11 +8,55 @@ Internal tracking document for AI agents. Not public-facing. Do not commit to re
 **Completed**: Checking systematically
 **Remaining**: Checking systematically
 
+## CRITICAL: Canonical Renaming Strategy
+
+**Status**: PENDING  
+**Priority**: HIGHEST  
+**Purpose**: Rename `OdysseyRuntime` folder and all `Odyssey.*` namespaces to canonical `BioWareEngines.*` structure following xoreos pattern.
+
+### Renaming Plan
+
+**Folder Structure**:
+- `src/OdysseyRuntime/` → `src/BioWareEngines/`
+- All project folders remain the same structure, just moved
+
+**Namespace Structure** (following xoreos canonical hierarchy):
+- `Odyssey.*` → `BioWareEngines.*`
+- `Odyssey.Engines.Common` → `BioWareEngines.Common` (base engine abstraction)
+- `Odyssey.Engines.Odyssey` → `BioWareEngines.Odyssey` (KOTOR 1/2 engine)
+- `Odyssey.Engines.Aurora` → `BioWareEngines.Aurora` (NWN/NWN2 engine)
+- `Odyssey.Engines.Eclipse` → `BioWareEngines.Eclipse` (Dragon Age/Mass Effect engine)
+- `Odyssey.Engines.Infinity` → `BioWareEngines.Infinity` (Baldur's Gate/Icewind Dale engine - future)
+- `Odyssey.Core` → `BioWareEngines.Core` (shared domain logic)
+- `Odyssey.Content` → `BioWareEngines.Content` (asset pipeline)
+- `Odyssey.Scripting` → `BioWareEngines.Scripting` (NCS VM + NWScript API)
+- `Odyssey.Kotor` → `BioWareEngines.Kotor` (KOTOR-specific game rules)
+- `Odyssey.MonoGame` → `BioWareEngines.MonoGame` (MonoGame rendering adapters)
+- `Odyssey.Stride` → `BioWareEngines.Stride` (Stride rendering adapters - future)
+- `Odyssey.Graphics` → `BioWareEngines.Graphics` (graphics abstractions)
+- `Odyssey.Graphics.Common` → `BioWareEngines.Graphics.Common` (shared graphics base)
+- `Odyssey.Game` → `BioWareEngines.Game` (executable launcher)
+
+**Rationale**: 
+- "Odyssey" is a specific engine, not the base for all engines
+- Following xoreos pattern: base engine class, then engine-specific implementations
+- Canonical naming: BioWareEngines is the umbrella, engines are children
+
+### Renaming Tasks
+
+- [ ] Rename `src/OdysseyRuntime/` folder to `src/BioWareEngines/`
+- [ ] Update all namespace declarations from `namespace Odyssey.*` to `namespace BioWareEngines.*`
+- [ ] Update all `using Odyssey.*` statements to `using BioWareEngines.*`
+- [ ] Update all project references in `.csproj` files
+- [ ] Update solution file references
+- [ ] Update documentation references
+- [ ] Update wiki documentation
+
 ## Engine Abstraction Refactoring
 
 **Status**: IN PROGRESS  
 **Started**: 2025-01-15  
-**Purpose**: Abstract KOTOR-specific code from AuroraEngine.Common to support multiple BioWare engine families (Odyssey, Aurora, Eclipse) following xoreos pattern with maximum code in base classes.
+**Purpose**: Abstract KOTOR-specific code from AuroraEngine.Common to support multiple BioWare engine families (Odyssey, Aurora, Eclipse, Infinity) following xoreos pattern with maximum code in base classes.
 
 **Architecture Document**: See `docs/engine_abstraction_refined_architecture.md` for comprehensive architecture plan.
 
@@ -20,43 +64,64 @@ Internal tracking document for AI agents. Not public-facing. Do not commit to re
 
 Following xoreos architecture pattern (but cleaner):
 
-- **AuroraEngine.Common**: Pure file format parsers, installation detection, resource management (engine-agnostic)
-- **Odyssey.Engines.Common**: Base engine abstraction (IEngine, BaseEngine, etc.)
-- **Odyssey.Engines.Odyssey**: KOTOR 1/2 shared code (like xoreos's `kotorbase`)
-- **Odyssey.Engines.Aurora**: NWN/NWN2 shared code (future)
-- **Odyssey.Engines.Eclipse**: Dragon Age/Mass Effect shared code (future)
+- **CSharpKOTOR (AuroraEngine.Common)**: Pure file format parsers, installation detection, resource management (engine-agnostic)
+- **BioWareEngines.Common**: Base engine abstraction (IEngine, BaseEngine, etc.) - like xoreos's `engine.h`
+- **BioWareEngines.Odyssey**: KOTOR 1/2 shared code (like xoreos's `kotorbase`)
+- **BioWareEngines.Aurora**: NWN/NWN2 shared code (like xoreos's `aurora` base)
+- **BioWareEngines.Eclipse**: Dragon Age/Mass Effect shared code (future)
+- **BioWareEngines.Infinity**: Baldur's Gate/Icewind Dale engine (future)
 
-**Key Principle**: Maximize code in base classes, minimize duplication. All shared logic goes in `Odyssey.Engines.Common` base classes.
+**Key Principle**: Maximize code in base classes, minimize duplication. All shared logic goes in `BioWareEngines.Common` base classes.
 
 ### Architecture Pattern
 
 ```
-AuroraEngine.Common (src/CSharpKOTOR/)
+CSharpKOTOR (src/CSharpKOTOR/) - Engine-agnostic file format parsers
     ├── Formats/** - Engine-agnostic file parsers (GFF, 2DA, TLK, MDL, TPC, BWM, LYT, VIS, KEY, BIF, ERF, RIM)
     ├── Installation/** - Installation detection (currently KOTOR-specific, but structure allows expansion)
     ├── Resources/** - Resource management
     └── Resource/Generics/UTC.cs, etc. (kept for patcher tools compatibility - DEPRECATED)
 
-Odyssey.Engines.Common
-    ├── IEngine, IEngineGame, IEngineModule, IEngineProfile (interfaces)
-    └── BaseEngine, BaseEngineGame, BaseEngineModule, BaseEngineProfile (base classes)
-
-Odyssey.Engines.Odyssey (like xoreos's kotorbase)
-    ├── Templates/ - All 9 GFF templates (UTC, UTD, UTE, UTI, UTP, UTS, UTT, UTW, UTM) ✅
-    ├── Module/ - KOTOR-specific module structure (Module.cs, KModuleType, etc.)
-    ├── Profiles/ - OdysseyK1GameProfile, OdysseyK2GameProfile ✅
-    ├── EngineApi/ - OdysseyK1EngineApi, OdysseyK2EngineApi ✅
-    ├── OdysseyEngine.cs ✅
-    ├── OdysseyGameSession.cs ✅
-    └── OdysseyModuleLoader.cs ✅
+BioWareEngines (src/BioWareEngines/) - Runtime engine implementations
+    ├── Common/ - Base engine abstraction (like xoreos's engine.h)
+    │   ├── IEngine, IEngineGame, IEngineModule, IEngineProfile (interfaces)
+    │   └── BaseEngine, BaseEngineGame, BaseEngineModule, BaseEngineProfile (base classes)
+    │
+    ├── Odyssey/ - KOTOR 1/2 engine (like xoreos's kotorbase)
+    │   ├── Templates/ - All 9 GFF templates (UTC, UTD, UTE, UTI, UTP, UTS, UTT, UTW, UTM) ✅
+    │   ├── Module/ - KOTOR-specific module structure (Module.cs, KModuleType, etc.)
+    │   ├── Profiles/ - OdysseyK1GameProfile, OdysseyK2GameProfile ✅
+    │   ├── EngineApi/ - OdysseyK1EngineApi, OdysseyK2EngineApi ✅
+    │   ├── OdysseyEngine.cs ✅
+    │   ├── OdysseyGameSession.cs ✅
+    │   └── OdysseyModuleLoader.cs ✅
+    │
+    ├── Aurora/ - NWN/NWN2 engine (like xoreos's aurora base)
+    │   └── AuroraEngine.cs (placeholder - future implementation)
+    │
+    ├── Eclipse/ - Dragon Age/Mass Effect engine (future)
+    │   └── EclipseEngine.cs (placeholder - future implementation)
+    │
+    ├── Infinity/ - Baldur's Gate/Icewind Dale engine (future)
+    │   └── InfinityEngine.cs (placeholder - future implementation)
+    │
+    ├── Core/ - Shared domain logic (no engine-specific code)
+    ├── Content/ - Asset pipeline
+    ├── Scripting/ - NCS VM + NWScript API
+    ├── Kotor/ - KOTOR-specific game rules
+    ├── Graphics/ - Graphics abstractions
+    ├── Graphics.Common/ - Shared graphics base classes
+    ├── MonoGame/ - MonoGame rendering adapters
+    ├── Stride/ - Stride rendering adapters (future)
+    └── Game/ - Executable launcher
 ```
 
 ### Files to Review/Migrate from AuroraEngine.Common
 
 #### GFF Templates (KOTOR/Odyssey-Specific) - ✅ COMPLETED
 
-- [x] Resource\Generics\UTC.cs → Odyssey.Engines.Odyssey.Templates.UTC.cs
-- [x] Resource\Generics\UTCHelpers.cs → Odyssey.Engines.Odyssey.Templates.UTCHelpers.cs
+- [x] Resource\Generics\UTC.cs → BioWareEngines.Odyssey.Templates.UTC.cs
+- [x] Resource\Generics\UTCHelpers.cs → BioWareEngines.Odyssey.Templates.UTCHelpers.cs
 - [x] Resource\Generics\UTD.cs → Odyssey.Engines.Odyssey.Templates.UTD.cs
 - [x] Resource\Generics\UTDHelpers.cs → Odyssey.Engines.Odyssey.Templates.UTDHelpers.cs
 - [x] Resource\Generics\UTE.cs → Odyssey.Engines.Odyssey.Templates.UTE.cs
@@ -74,48 +139,48 @@ Odyssey.Engines.Odyssey (like xoreos's kotorbase)
 - [x] Resource\Generics\UTM.cs → Odyssey.Engines.Odyssey.Templates.UTM.cs
 - [x] Resource\Generics\UTMHelpers.cs → Odyssey.Engines.Odyssey.Templates.UTMHelpers.cs
 
-**Status**: All 9 GFF templates migrated. Original files kept in AuroraEngine.Common for patcher tools compatibility (DEPRECATED).
+**Status**: All 9 GFF templates migrated to `BioWareEngines.Odyssey.Templates`. Original files kept in CSharpKOTOR for patcher tools compatibility (DEPRECATED).
 
 #### Module/Area Structures (Review for KOTOR-Specific)
 
-- [ ] Common\Module.cs → Odyssey.Engines.Odyssey.Module.Module.cs
+- [ ] Common\Module.cs → BioWareEngines.Odyssey.Module.Module.cs
   - [ ] Review: Contains KModuleType enum (.rim, _s.rim,_dlg.erf, .mod) - KOTOR-specific
   - [ ] Move: Module class, KModuleType enum, ModulePieceInfo, ModulePieceResource classes
   - [ ] Update references: All code using Module class
-  - [ ] Backward compatibility: Keep in AuroraEngine.Common for patcher tools (DEPRECATED)
+  - [ ] Backward compatibility: Keep in CSharpKOTOR for patcher tools (DEPRECATED)
 
-- [ ] Common\ModuleDataLoader.cs → Odyssey.Engines.Odyssey.Module.ModuleDataLoader.cs
+- [ ] Common\ModuleDataLoader.cs → BioWareEngines.Odyssey.Module.ModuleDataLoader.cs
   - [ ] Review: KOTOR-specific module data loading
   - [ ] Move if KOTOR-specific
   - [ ] Update references
 
 - [ ] Resource\Generics\IFO.cs → Review if KOTOR-specific or engine-agnostic
   - [ ] Review: IFO structure - check if used by Aurora/Eclipse engines
-  - [ ] Decision: Keep in AuroraEngine.Common if shared, move to Odyssey.Engines.Odyssey if KOTOR-specific
+  - [ ] Decision: Keep in CSharpKOTOR if shared, move to BioWareEngines.Odyssey if KOTOR-specific
   - [ ] Note: IFO is GFF-based, but structure may be KOTOR-specific
 
 - [ ] Resource\Generics\ARE.cs → Review if KOTOR-specific or engine-agnostic
   - [ ] Review: ARE (Area) structure - check if used by Aurora/Eclipse engines
-  - [ ] Decision: Keep in AuroraEngine.Common if shared, move to Odyssey.Engines.Odyssey if KOTOR-specific
+  - [ ] Decision: Keep in CSharpKOTOR if shared, move to BioWareEngines.Odyssey if KOTOR-specific
 
 - [ ] Resource\Generics\GIT.cs → Review if KOTOR-specific or engine-agnostic
   - [ ] Review: GIT (Game Instance Template) structure - check if used by Aurora/Eclipse engines
-  - [ ] Decision: Keep in AuroraEngine.Common if shared, move to Odyssey.Engines.Odyssey if KOTOR-specific
+  - [ ] Decision: Keep in CSharpKOTOR if shared, move to BioWareEngines.Odyssey if KOTOR-specific
 
 - [ ] Resource\Generics\JRL.cs → Review if KOTOR-specific or engine-agnostic
   - [ ] Review: JRL (Journal) structure - check if used by Aurora/Eclipse engines
-  - [ ] Decision: Keep in AuroraEngine.Common if shared, move to Odyssey.Engines.Odyssey if KOTOR-specific
+  - [ ] Decision: Keep in CSharpKOTOR if shared, move to BioWareEngines.Odyssey if KOTOR-specific
 
 - [ ] Resource\Generics\PTH.cs → Review if KOTOR-specific or engine-agnostic
   - [ ] Review: PTH (Path) structure - check if used by Aurora/Eclipse engines
-  - [ ] Decision: Keep in AuroraEngine.Common if shared, move to Odyssey.Engines.Odyssey if KOTOR-specific
+  - [ ] Decision: Keep in CSharpKOTOR if shared, move to BioWareEngines.Odyssey if KOTOR-specific
   - [ ] Note: Pathfinding may be engine-specific
 
 #### Dialogue Structures (Review for KOTOR-Specific)
 
 - [ ] Resource\Generics\DLG\DLG.cs → Review if KOTOR-specific or engine-agnostic
   - [ ] Review: DLG (Dialogue) structure - check if used by Aurora/Eclipse engines
-  - [ ] Decision: Keep in AuroraEngine.Common if shared, move to Odyssey.Engines.Odyssey if KOTOR-specific
+  - [ ] Decision: Keep in CSharpKOTOR if shared, move to BioWareEngines.Odyssey if KOTOR-specific
 
 - [ ] Resource\Generics\DLG\DLGNode.cs → Review if KOTOR-specific or engine-agnostic
 - [ ] Resource\Generics\DLG\DLGLink.cs → Review if KOTOR-specific or engine-agnostic
@@ -127,7 +192,7 @@ Odyssey.Engines.Odyssey (like xoreos's kotorbase)
 
 - [ ] Resource\Generics\GUI\GUI.cs → Review if KOTOR-specific or engine-agnostic
   - [ ] Review: GUI structure - check if used by Aurora/Eclipse engines
-  - [ ] Decision: Keep in AuroraEngine.Common if shared, move to Odyssey.Engines.Odyssey if KOTOR-specific
+  - [ ] Decision: Keep in CSharpKOTOR if shared, move to BioWareEngines.Odyssey if KOTOR-specific
 
 - [ ] Resource\Generics\GUI\GUIControl.cs → Review if KOTOR-specific or engine-agnostic
 - [ ] Resource\Generics\GUI\GUIBorder.cs → Review if KOTOR-specific or engine-agnostic
@@ -140,33 +205,35 @@ Odyssey.Engines.Odyssey (like xoreos's kotorbase)
 
 #### Game Enum (KOTOR-Specific - Kept for Compatibility)
 
-- [x] Common\Game.cs → Decision: KEEP in AuroraEngine.Common
+- [x] Common\Game.cs → Decision: KEEP in CSharpKOTOR
   - [x] Review: Used extensively by patcher tools (HoloPatcher.NET, HolocronToolset, NCSDecomp, KotorDiff)
-  - [x] Decision: Keep in AuroraEngine.Common for backward compatibility
+  - [x] Decision: Keep in CSharpKOTOR for backward compatibility
   - [x] Note: Documented as KOTOR-specific, but kept for patcher tools
 
 #### Installation Class (KOTOR-Specific - Kept for Compatibility)
 
-- [x] Installation\Installation.cs → Decision: KEEP in AuroraEngine.Common for now
+- [x] Installation\Installation.cs → Decision: KEEP in CSharpKOTOR for now
   - [x] Review: KOTOR-specific (checks for swkotor.exe, swkotor2.exe)
   - [x] Decision: Keep for patcher tools compatibility
-  - [x] Future: Create IEngineInstallation interface when other engines are implemented
+  - [x] Future: Create IEngineInstallation interface in BioWareEngines.Common when other engines are implemented
 
 #### Comprehensive File List (671 files total)
 
 **Purpose**: Complete inventory of all AuroraEngine.Common source files for systematic review and migration tracking.
 
 **Status Tracking**:
+
 - `[ ]` = Not reviewed
 - `[/]` = In progress
 - `[x]` = Reviewed/Completed
-- `[K]` = Keep in AuroraEngine.Common (engine-agnostic or patcher tool dependency)
-- `[M]` = Move to Odyssey.Engines.Odyssey (KOTOR-specific)
+- `[K]` = Keep in CSharpKOTOR (engine-agnostic or patcher tool dependency)
+- `[M]` = Move to BioWareEngines.Odyssey (KOTOR-specific)
 
 **Note**: Files are organized by directory. Each file should be reviewed to determine if it's:
-1. Engine-agnostic (keep in AuroraEngine.Common)
-2. KOTOR/Odyssey-specific (move to Odyssey.Engines.Odyssey)
-3. Used by patcher tools (may need to keep in AuroraEngine.Common for compatibility)
+
+1. Engine-agnostic (keep in CSharpKOTOR)
+2. KOTOR/Odyssey-specific (move to BioWareEngines.Odyssey)
+3. Used by patcher tools (may need to keep in CSharpKOTOR for compatibility)
 
 **Common**
 
@@ -928,7 +995,7 @@ Odyssey.Engines.Odyssey (like xoreos's kotorbase)
 - [ ] Resource\Generics\PTH.cs → Review: KOTOR-specific or engine-agnostic
 - [ ] Resource\Generics\PTHAuto.cs
 - [ ] Resource\Generics\PTHHelpers.cs
-- [x] Resource\Generics\UTC.cs → Moved to Odyssey.Engines.Odyssey.Templates (kept for compatibility)
+- [x] Resource\Generics\UTC.cs → Moved to BioWareEngines.Odyssey.Templates (kept for compatibility)
 - [x] Resource\Generics\UTCHelpers.cs → Moved to Odyssey.Engines.Odyssey.Templates (kept for compatibility)
 - [x] Resource\Generics\UTD.cs → Moved to Odyssey.Engines.Odyssey.Templates (kept for compatibility)
 - [x] Resource\Generics\UTDHelpers.cs → Moved to Odyssey.Engines.Odyssey.Templates (kept for compatibility)
@@ -1041,7 +1108,7 @@ Odyssey.Engines.Odyssey (like xoreos's kotorbase)
 
 Following xoreos pattern, maximize code in base classes:
 
-#### Odyssey.Engines.Common (Base Classes)
+#### BioWareEngines.Common (Base Classes)
 
 - [x] IEngine.cs - Core engine interface
 - [x] IEngineGame.cs - Game session interface
@@ -1054,7 +1121,7 @@ Following xoreos pattern, maximize code in base classes:
 
 **Goal**: All common engine logic (initialization, shutdown, resource management, world management) should be in base classes. Engine-specific projects should only contain what differs.
 
-#### Odyssey.Engines.Odyssey (KOTOR-Specific)
+#### BioWareEngines.Odyssey (KOTOR-Specific)
 
 - [x] OdysseyEngine.cs - Inherits from BaseEngine, implements KOTOR-specific initialization
 - [x] OdysseyGameSession.cs - Inherits from BaseEngineGame, implements KOTOR-specific game logic
@@ -1069,9 +1136,9 @@ Following xoreos pattern, maximize code in base classes:
 
 **Completed**:
 
-- ✅ All 9 GFF templates migrated to Odyssey.Engines.Odyssey.Templates
-- ✅ Base engine abstraction layer created (Odyssey.Engines.Common)
-- ✅ Odyssey.Engines.Odyssey project structure created
+- ✅ All 9 GFF templates migrated to BioWareEngines.Odyssey.Templates
+- ✅ Base engine abstraction layer created (BioWareEngines.Common)
+- ✅ BioWareEngines.Odyssey project structure created
 - ✅ OdysseyEngine, OdysseyGameSession, OdysseyModuleLoader created
 - ✅ Profiles and EngineApi classes migrated
 
@@ -1111,7 +1178,7 @@ When processing a file:
 
 ## Files to Process
 
-### Odyssey.Content (18 files)
+### BioWareEngines.Content (18 files)
 
 - [ ] Cache\ContentCache.cs
 - [ ] Converters\BwmToNavigationMeshConverter.cs
@@ -1132,7 +1199,7 @@ When processing a file:
 - [ ] Save\SaveDataProvider.cs
 - [ ] Save\SaveSerializer.cs
 
-### Odyssey.Core (99 files)
+### BioWareEngines.Core (99 files)
 
 - [ ] Actions\ActionAttack.cs
 - [ ] Actions\ActionBase.cs
@@ -1234,11 +1301,11 @@ When processing a file:
 - [ ] Templates\WaypointTemplate.cs
 - [ ] Triggers\TriggerSystem.cs
 
-### Odyssey.Engines.Aurora (1 file)
+### BioWareEngines.Aurora (1 file)
 
 - [ ] AuroraEngine.cs
 
-### Odyssey.Engines.Common (8 files)
+### BioWareEngines.Common (8 files)
 
 - [ ] BaseEngine.cs
 - [ ] BaseEngineGame.cs
@@ -1249,11 +1316,11 @@ When processing a file:
 - [ ] IEngineModule.cs
 - [ ] IEngineProfile.cs
 
-### Odyssey.Engines.Eclipse (1 file)
+### BioWareEngines.Eclipse (1 file)
 
 - [ ] EclipseEngine.cs
 
-### Odyssey.Engines.Odyssey (9 files)
+### BioWareEngines.Odyssey (9 files)
 
 - [ ] EngineApi\OdysseyK1EngineApi.cs
 - [ ] EngineApi\OdysseyK2EngineApi.cs
@@ -1265,7 +1332,7 @@ When processing a file:
 - [ ] Templates\UTC.cs
 - [ ] Templates\UTCHelpers.cs
 
-### Odyssey.Game (8 files)
+### BioWareEngines.Game (8 files)
 
 - [ ] Core\GamePathDetector.cs
 - [ ] Core\GameSettings.cs
@@ -1276,7 +1343,7 @@ When processing a file:
 - [ ] GUI\SaveLoadMenu.cs
 - [ ] Program.cs
 
-### Odyssey.Graphics (22 files)
+### BioWareEngines.Graphics (22 files)
 
 - [x] GraphicsBackend.cs - Graphics Options @ 0x007b56a8, BTN_GRAPHICS @ 0x007d0d8c, optgraphics_p @ 0x007d2064, 2D3DBias @ 0x007c612c, 2D3D Bias @ 0x007c71f8
 - [x] IContentManager.cs - Resource @ 0x007c14d4, Loading @ 0x007c7e40, CExoKeyTable @ 0x007b6078, FUN_00633270 @ 0x00633270
@@ -1301,7 +1368,7 @@ When processing a file:
 - [x] MatrixHelper.cs - DirectX 8/9 matrix operations (D3DXMatrix* functions)
 - [x] VertexPositionColor.cs - Disable Vertex Buffer Objects @ 0x007b56bc, DirectX 8/9 FVF D3DFVF_XYZ | D3DFVF_DIFFUSE
 
-### Odyssey.Graphics.Common (15 files)
+### BioWareEngines.Graphics.Common (15 files)
 
 - [ ] Backends\BaseDirect3D11Backend.cs
 - [ ] Backends\BaseDirect3D12Backend.cs
@@ -1319,7 +1386,7 @@ When processing a file:
 - [ ] Structs\GraphicsStructs.cs
 - [ ] Upscaling\BaseUpscalingSystem.cs
 
-### Odyssey.Kotor (56 files)
+### BioWareEngines.Kotor (56 files)
 
 - [ ] Combat\CombatManager.cs
 - [ ] Combat\CombatRound.cs
@@ -1378,7 +1445,7 @@ When processing a file:
 - [ ] Systems\StoreSystem.cs
 - [ ] Systems\TriggerSystem.cs
 
-### Odyssey.MonoGame (159 files)
+### BioWareEngines.MonoGame (159 files)
 
 - [ ] Animation\AnimationCompression.cs
 - [ ] Animation\SkeletalAnimationBatching.cs
@@ -1540,7 +1607,7 @@ When processing a file:
 - [ ] UI\PauseMenu.cs
 - [ ] UI\ScreenFade.cs
 
-### Odyssey.Scripting (11 files)
+### BioWareEngines.Scripting (11 files)
 
 - [ ] EngineApi\BaseEngineApi.cs
 - [ ] Interfaces\IEngineApi.cs
@@ -1554,7 +1621,7 @@ When processing a file:
 - [ ] VM\NcsVm.cs
 - [ ] VM\ScriptGlobals.cs
 
-### Odyssey.Stride (31 files)
+### BioWareEngines.Stride (31 files)
 
 - [ ] Audio\StrideSoundPlayer.cs
 - [ ] Audio\StrideVoicePlayer.cs
@@ -1588,19 +1655,19 @@ When processing a file:
 - [ ] Upscaling\StrideDlssSystem.cs
 - [ ] Upscaling\StrideFsrSystem.cs
 
-### Odyssey.Tests (3 files)
+### BioWareEngines.Tests (3 files)
 
 - [ ] UI\FallbackUITests.cs
 - [ ] UI\KotorGuiManagerTests.cs
 - [ ] VM\NcsVmTests.cs
 
-### Odyssey.Tooling (1 file)
+### BioWareEngines.Tooling (1 file)
 
 - [ ] Program.cs
 
 ## Notes
 
-- Focus on core game logic first (Odyssey.Core, Odyssey.Kotor, Odyssey.Scripting)
+- Focus on core game logic first (BioWareEngines.Core, BioWareEngines.Kotor, BioWareEngines.Scripting)
 - Graphics/MonoGame adapters can be lower priority unless they affect gameplay
 - Use Ghidra string searches to locate functions (e.g., "GLOBALVARS", "PARTYTABLE", "savenfo")
 - Document all Ghidra function addresses and string references in comments
