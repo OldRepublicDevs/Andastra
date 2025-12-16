@@ -2809,10 +2809,10 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                         {
                             dotypes.AssertStack();
                         }
-                catch (Exception)
-                {
-                    JavaSystem.@out.Println("Could not assert stack, continuing anyway.");
-                }
+                        catch (Exception)
+                        {
+                            JavaSystem.@out.Println("Could not assert stack, continuing anyway.");
+                        }
 
                         dotypes.Done();
                     }

@@ -474,7 +474,18 @@ namespace HolocronToolset.NET.Tests.Editors
                         if (resourceResult != null && resourceResult.Data != null && resourceResult.Data.Length > 0)
                         {
                             originalData = resourceResult.Data;
-                            ifoFile = "module.ifo"; // Placeholder filename
+                            // Use the resource name to construct the filename, or use FilePath if it's a direct file
+                            // Matching Python: ifo_resource.filepath() if available, else Path("module.ifo")
+                            if (!string.IsNullOrEmpty(resource.FilePath) && !resource.InsideCapsule && !resource.InsideBif)
+                            {
+                                // Direct file - use the filepath
+                                ifoFile = resource.FilePath;
+                            }
+                            else
+                            {
+                                // Inside capsule or BIF - construct filename from resname
+                                ifoFile = resource.ResName + ".ifo";
+                            }
                             break;
                         }
                     }
