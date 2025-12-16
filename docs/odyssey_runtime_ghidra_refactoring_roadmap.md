@@ -29,6 +29,8 @@ This document tracks the progress of refactoring the `OdysseyRuntime` engine to 
 - ✅ ModuleTransitionSystem.cs: Verified - correct module loading sequence
 - ✅ SaveSerializer.cs: Verified - correct save file format (FUN_004eb750)
 - ✅ SaveGameManager.cs: Updated - CreateSaveInfoGFF now matches exact field order from FUN_004eb750 (AREANAME, LASTMODULE, TIMEPLAYED, CHEATUSED, SAVEGAMENAME, TIMESTAMP, PCNAME, SAVENUMBER, GAMEPLAYHINT, STORYHINT0-9, LIVECONTENT)
+- ✅ IInputManager.cs: Added Ghidra reference comment noting original uses DirectInput8 (DINPUT8.dll @ 0x0080a6c0, DirectInput8Create @ 0x0080a6ac)
+- ✅ PlayerInputHandler.cs: Verified - already has comprehensive Ghidra references
 - ✅ EventBus.cs: Verified - correct event routing (FUN_004dcfb0)
 - ✅ CombatSystem.cs: Verified - correct combat rounds
 - ✅ PartySystem.cs: Verified - correct PARTYTABLE implementation
