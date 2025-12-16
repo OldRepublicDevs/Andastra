@@ -324,31 +324,21 @@ namespace HolocronToolset.NET.Editors
                 _utw.ResRef = !string.IsNullOrEmpty(_resrefEdit.Text) ? new ResRef(_resrefEdit.Text) : new ResRef("");
             }
             // Matching Python: utw.has_map_note = self.ui.isNoteCheckbox.isChecked()
-            // Prefer cached value (set by SetIsNoteCheckbox or PropertyChanged), otherwise read from checkbox
-            if (_cachedHasMapNote.HasValue)
+            // Read directly from checkbox (matching Python behavior)
+            if (_isNoteCheckbox != null)
             {
-                _utw.HasMapNote = _cachedHasMapNote.Value;
-            }
-            else if (_isNoteCheckbox != null)
-            {
-                bool? currentValue = _isNoteCheckbox.IsChecked;
-                _cachedHasMapNote = currentValue;
-                _utw.HasMapNote = currentValue.GetValueOrDefault(false);
+                // Prefer cached value if set (for tests), otherwise read from checkbox
+                _utw.HasMapNote = _cachedHasMapNote ?? _isNoteCheckbox.IsChecked ?? false;
             }
             else
             {
                 _utw.HasMapNote = false;
             }
             // Matching Python: utw.map_note_enabled = self.ui.noteEnabledCheckbox.isChecked()
-            if (_cachedMapNoteEnabled.HasValue)
+            if (_noteEnabledCheckbox != null)
             {
-                _utw.MapNoteEnabled = _cachedMapNoteEnabled.Value;
-            }
-            else if (_noteEnabledCheckbox != null)
-            {
-                bool? currentValue = _noteEnabledCheckbox.IsChecked;
-                _cachedMapNoteEnabled = currentValue;
-                _utw.MapNoteEnabled = currentValue.GetValueOrDefault(false);
+                // Prefer cached value if set (for tests), otherwise read from checkbox
+                _utw.MapNoteEnabled = _cachedMapNoteEnabled ?? _noteEnabledCheckbox.IsChecked ?? false;
             }
             else
             {
