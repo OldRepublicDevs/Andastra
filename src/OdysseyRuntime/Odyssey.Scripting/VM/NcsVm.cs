@@ -127,9 +127,10 @@ namespace Odyssey.Scripting.VM
             _aborted = false;
             _context = ctx;
 
-            // Clear string pool for new execution
+            // Clear pools for new execution
             _stringPool.Clear();
             _nextStringHandle = 1; // Start at 1, 0 reserved for null/empty
+            ClearLocations(); // Clear location pool for new script execution
 
             Array.Clear(_stack, 0, _stack.Length);
 
