@@ -1,13 +1,13 @@
 using System;
 using System.Collections.Generic;
 using Avalonia.Controls;
-using Andastra.Parsing.Resources;
+using Andastra.Parsing.Resource;
 using FluentAssertions;
 using HolocronToolset.Data;
 using HolocronToolset.Dialogs;
 using HolocronToolset.Tests.TestHelpers;
 using Xunit;
-using FileResource = Andastra.Parsing.Resources.FileResource;
+using FileResource = Andastra.Parsing.Extract.FileResource;
 
 namespace HolocronToolset.Tests.Dialogs
 {

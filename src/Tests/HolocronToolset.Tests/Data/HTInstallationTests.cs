@@ -3,16 +3,18 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Andastra.Parsing;
+using Andastra.Parsing.Common;
 using Andastra.Parsing.Extract;
-using Andastra.Parsing.Formats.Capsule;
+using Andastra.Parsing.Extract.Capsule;
 using Andastra.Parsing.Installation;
-using Andastra.Parsing.Resources;
+using Andastra.Parsing.Resource;
 using FluentAssertions;
 using HolocronToolset.Data;
 using HolocronToolset.Tests.TestHelpers;
 using Xunit;
+using Andastra.Parsing.Common;
 using ResourceResult = Andastra.Parsing.Installation.ResourceResult;
-using LocationResult = Andastra.Parsing.Resources.LocationResult;
+using LocationResult = Andastra.Parsing.Extract.LocationResult;
 
 namespace HolocronToolset.Tests.Data
 {

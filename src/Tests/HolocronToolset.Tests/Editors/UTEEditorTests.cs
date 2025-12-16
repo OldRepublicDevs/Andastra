@@ -1,5 +1,5 @@
 using System;
-using Andastra.Parsing.Resources;
+using Andastra.Parsing.Resource;
 using FluentAssertions;
 using HolocronToolset.Data;
 using HolocronToolset.Editors;
@@ -117,9 +117,9 @@ namespace HolocronToolset.Tests.Editors
                 }
 
                 // Try to get a UTE resource from installation
-                var queries = new System.Collections.Generic.List<Andastra.Parsing.Resources.ResourceIdentifier>
+                var queries = new System.Collections.Generic.List<Andastra.Parsing.Resource.ResourceIdentifier>
                 {
-                    new Andastra.Parsing.Resources.ResourceIdentifier("", ResourceType.UTE)
+                    new Andastra.Parsing.Resource.ResourceIdentifier("", ResourceType.UTE)
                 };
                 var uteResourcesDict = installation.Resources(queries);
                 var uteResources = new System.Collections.Generic.List<Andastra.Parsing.Installation.ResourceResult>();

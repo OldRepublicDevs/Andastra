@@ -3,7 +3,7 @@ using System.IO;
 using System.Reflection;
 using Andastra.Parsing.Extract.SaveData;
 using Andastra.Parsing.Formats.ERF;
-using Andastra.Parsing.Resources;
+using Andastra.Parsing.Resource;
 using FluentAssertions;
 using HolocronToolset.Data;
 using HolocronToolset.Editors;
@@ -139,7 +139,7 @@ namespace HolocronToolset.Tests.Editors
                 // Original: erf_data = (b"SAV V1.0" + ...)
                 // Create empty ERF file using ERF class
                 var erf = new Andastra.Parsing.Formats.ERF.ERF(Andastra.Parsing.Formats.ERF.ERFType.ERF, isSave: true);
-                byte[] erfData = Andastra.Parsing.Formats.ERF.ERFAuto.BytesErf(erf, Andastra.Parsing.Resources.ResourceType.SAV);
+                byte[] erfData = Andastra.Parsing.Formats.ERF.ERFAuto.BytesErf(erf, Andastra.Parsing.Resource.ResourceType.SAV);
                 System.IO.File.WriteAllBytes(System.IO.Path.Combine(saveFolder, "SAVEGAME.sav"), erfData);
 
                 // Matching PyKotor implementation: Load save components directly (skip SAVEGAME.sav which requires valid ERF)
