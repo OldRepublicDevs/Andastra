@@ -481,3 +481,153 @@ When processing a file:
 ### Odyssey.Tooling (1 files)
 
 - [ ] Program.cs
+
+---
+
+## Engine Abstraction Refactoring
+
+**Status**: IN PROGRESS  
+**Started**: 2025-01-15  
+**Current Phase**: Identifying KOTOR-specific code in AuroraEngine.Common  
+**Goal**: Move all KOTOR/Odyssey-specific code from AuroraEngine.Common to Odyssey.Engines.Odyssey
+
+### Strategy
+
+1. Identify KOTOR-specific code in AuroraEngine.Common
+2. Move to Odyssey.Engines.Odyssey (shared KOTOR code)
+3. Create engine-specific projects following xoreos pattern
+4. Maximize code in base classes, minimize duplication
+5. Ensure 1:1 parity with original KOTOR 2 engine (Ghidra verification)
+
+### Files to Move from AuroraEngine.Common
+
+#### Common/ (KOTOR-Specific)
+
+- [ ] Common\Game.cs - Game enum (K1, K2, etc.) and extensions
+  - Target: Odyssey.Engines.Odyssey.Common\Game.cs
+  - Status: [ ] Identify all usages, [ ] Move, [ ] Update references
+
+- [ ] Common\Module.cs - KModuleType enum and Module class
+  - Target: Odyssey.Engines.Odyssey.Module\Module.cs
+  - Status: [ ] Identify all usages, [ ] Move, [ ] Update references
+
+- [ ] Common\ModuleDataLoader.cs - KOTOR-specific module data loading
+  - Target: Odyssey.Engines.Odyssey.Module\ModuleDataLoader.cs
+  - Status: [ ] Review if KOTOR-specific, [ ] Move if needed
+
+#### Resource/Generics/ (KOTOR/Odyssey GFF Templates)
+
+- [ ] Resource\Generics\UTC.cs - Creature template
+  - Target: Odyssey.Engines.Odyssey.Templates\UTC.cs
+  - Status: [ ] Move, [ ] Update references
+
+- [ ] Resource\Generics\UTD.cs - Door template
+  - Target: Odyssey.Engines.Odyssey.Templates\UTD.cs
+  - Status: [ ] Move, [ ] Update references
+
+- [ ] Resource\Generics\UTE.cs - Encounter template
+  - Target: Odyssey.Engines.Odyssey.Templates\UTE.cs
+  - Status: [ ] Move, [ ] Update references
+
+- [ ] Resource\Generics\UTI.cs - Item template
+  - Target: Odyssey.Engines.Odyssey.Templates\UTI.cs
+  - Status: [ ] Move, [ ] Update references
+
+- [ ] Resource\Generics\UTM.cs - Merchant template
+  - Target: Odyssey.Engines.Odyssey.Templates\UTM.cs
+  - Status: [ ] Move, [ ] Update references
+
+- [ ] Resource\Generics\UTP.cs - Placeable template
+  - Target: Odyssey.Engines.Odyssey.Templates\UTP.cs
+  - Status: [ ] Move, [ ] Update references
+
+- [ ] Resource\Generics\UTS.cs - Sound template
+  - Target: Odyssey.Engines.Odyssey.Templates\UTS.cs
+  - Status: [ ] Move, [ ] Update references
+
+- [ ] Resource\Generics\UTT.cs - Trigger template
+  - Target: Odyssey.Engines.Odyssey.Templates\UTT.cs
+  - Status: [ ] Move, [ ] Update references
+
+- [ ] Resource\Generics\UTW.cs - Waypoint template
+  - Target: Odyssey.Engines.Odyssey.Templates\UTW.cs
+  - Status: [ ] Move, [ ] Update references
+
+- [ ] Resource\Generics\IFO.cs - Module info (review if KOTOR-specific)
+  - Target: Odyssey.Engines.Odyssey.Module\IFO.cs (if KOTOR-specific)
+  - Status: [ ] Review, [ ] Move if needed
+
+- [ ] Resource\Generics\ARE.cs - Area (review if KOTOR-specific)
+  - Target: Odyssey.Engines.Odyssey.Module\ARE.cs (if KOTOR-specific)
+  - Status: [ ] Review, [ ] Move if needed
+
+- [ ] Resource\Generics\GIT.cs - Game instance template (review if KOTOR-specific)
+  - Target: Odyssey.Engines.Odyssey.Module\GIT.cs (if KOTOR-specific)
+  - Status: [ ] Review, [ ] Move if needed
+
+- [ ] Resource\Generics\JRL.cs - Journal (review if KOTOR-specific)
+  - Target: Odyssey.Engines.Odyssey.Module\JRL.cs (if KOTOR-specific)
+  - Status: [ ] Review, [ ] Move if needed
+
+- [ ] Resource\Generics\PTH.cs - Path (review if KOTOR-specific)
+  - Target: Odyssey.Engines.Odyssey.Module\PTH.cs (if KOTOR-specific)
+  - Status: [ ] Review, [ ] Move if needed
+
+- [ ] Resource\Generics\DLG\DLG.cs - Dialogue (review if KOTOR-specific)
+  - Target: Odyssey.Engines.Odyssey.Dialogue\DLG.cs (if KOTOR-specific)
+  - Status: [ ] Review, [ ] Move if needed
+
+#### Tools/ (KOTOR-Specific)
+
+- [ ] Tools\Module.cs - KOTOR-specific module tools
+  - Target: Odyssey.Engines.Odyssey.Tools\Module.cs
+  - Status: [ ] Review if KOTOR-specific, [ ] Move if needed
+
+#### Uninstall/ (Update to be engine-agnostic)
+
+- [ ] Uninstall\UninstallHelpers.cs - References Game enum
+  - Target: Keep in AuroraEngine.Common, make engine-agnostic
+  - Status: [ ] Update to use IEngineProfile instead of Game enum
+
+### Files to Keep in AuroraEngine.Common (Engine-Agnostic)
+
+- [x] Common\GameObject.cs - ObjectType enum (shared across engines)
+- [x] Common\ResRef.cs - Resource reference (shared)
+- [x] Formats\** - All file format parsers (GFF, 2DA, TLK, MDL, TPC, BWM, LYT, VIS, KEY, BIF, ERF, RIM, etc.)
+- [x] Installation\** - Installation detection and resource management
+- [x] Resources\** - Resource management and loading
+- [x] Logger\** - Logging infrastructure
+- [x] Utility\** - Utility classes
+
+### Odyssey.Engines.Odyssey (New Structure)
+
+- [x] OdysseyEngine.cs - Base Odyssey engine implementation
+- [x] OdysseyGameSession.cs - Game session implementation
+- [x] OdysseyModuleLoader.cs - Module loader implementation
+- [x] Profiles\OdysseyK1GameProfile.cs - KOTOR 1 profile
+- [x] Profiles\OdysseyK2GameProfile.cs - KOTOR 2 profile
+- [x] EngineApi\OdysseyK1EngineApi.cs - KOTOR 1 engine API
+- [x] EngineApi\OdysseyK2EngineApi.cs - KOTOR 2 engine API
+- [ ] Common\Game.cs - Game enum (moved from AuroraEngine.Common)
+- [ ] Module\Module.cs - Module class (moved from AuroraEngine.Common)
+- [ ] Module\ModuleDataLoader.cs - Module data loader (moved from AuroraEngine.Common)
+- [ ] Templates\UTC.cs - Creature template (moved from AuroraEngine.Common)
+- [ ] Templates\UTD.cs - Door template (moved from AuroraEngine.Common)
+- [ ] Templates\UTE.cs - Encounter template (moved from AuroraEngine.Common)
+- [ ] Templates\UTI.cs - Item template (moved from AuroraEngine.Common)
+- [ ] Templates\UTM.cs - Merchant template (moved from AuroraEngine.Common)
+- [ ] Templates\UTP.cs - Placeable template (moved from AuroraEngine.Common)
+- [ ] Templates\UTS.cs - Sound template (moved from AuroraEngine.Common)
+- [ ] Templates\UTT.cs - Trigger template (moved from AuroraEngine.Common)
+- [ ] Templates\UTW.cs - Waypoint template (moved from AuroraEngine.Common)
+
+### Migration Tasks
+
+- [ ] Phase 1: Identify all KOTOR-specific code
+- [ ] Phase 2: Create target directory structure in Odyssey.Engines.Odyssey
+- [ ] Phase 3: Move Game.cs and update all references
+- [ ] Phase 4: Move Module.cs and update all references
+- [ ] Phase 5: Move GFF templates and update all references
+- [ ] Phase 6: Update UninstallHelpers.cs to be engine-agnostic
+- [ ] Phase 7: Verify compilation
+- [ ] Phase 8: Run tests and verify no regressions
