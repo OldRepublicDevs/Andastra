@@ -594,13 +594,17 @@ namespace AuroraEngine.Common.Formats.NCS.NCSDecomp.Utils
                             }
                             JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Removed globals subroutine(s) that included main code");
                             
-                            // Create split globals (0 to first ACTION)
-                            int globalsInitEnd = mainCodeStartInGlobals;
+                            // Create split globals
+                            // CRITICAL: Globals must include ALL instructions up to SAVEBP, not just up to first ACTION
+                            // This ensures RSADDI and other instructions before SAVEBP are included in globals
+                            // Globals: 0 to savebpIndex+1 (includes all variable initialization up to SAVEBP)
+                            // Main: mainCodeStartInGlobals to last RETN (includes main code and everything after)
+                            int globalsInitEnd = savebpIndex + 1; // Always include all instructions up to SAVEBP
                             ASubroutine globalsSub = ConvertInstructionRangeToSubroutine(ncs, instructions, 0, globalsInitEnd, 0);
                             if (globalsSub != null)
                             {
                                 program.GetSubroutine().Add(globalsSub);
-                                JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Created split globals subroutine (range 0-{globalsInitEnd}, globals initialization only, before first ACTION at {mainCodeStartInGlobals})");
+                                JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Created split globals subroutine (range 0-{globalsInitEnd}, includes all instructions up to SAVEBP, first ACTION at {mainCodeStartInGlobals})");
                             }
                             
                             // Update mainStart to include the main function code (from first ACTION to last RETN)
@@ -705,16 +709,19 @@ namespace AuroraEngine.Common.Formats.NCS.NCSDecomp.Utils
                         if (mainCodeStartInGlobals >= 0)
                         {
                             // Split at the first ACTION instruction
-                            // Globals: 0 to mainCodeStartInGlobals (variable initialization only)
+                            // CRITICAL: Globals must include ALL instructions up to SAVEBP, not just up to first ACTION
+                            // This ensures RSADDI and other instructions before SAVEBP are included in globals
+                            // Globals: 0 to savebpIndex+1 (includes all variable initialization up to SAVEBP)
                             // Main: mainCodeStartInGlobals to last RETN (includes main code and everything after)
-                            int globalsInitEnd = mainCodeStartInGlobals;
+                            // NOTE: There will be overlap (mainCodeStartInGlobals to SAVEBP), but that's handled by the main function
+                            int globalsInitEnd = savebpIndex + 1; // Always include all instructions up to SAVEBP
                             
-                            // Create globals subroutine (globals initialization only, up to first ACTION)
+                            // Create globals subroutine (includes all variable initialization up to SAVEBP)
                             ASubroutine globalsSub = ConvertInstructionRangeToSubroutine(ncs, instructions, 0, globalsInitEnd, 0);
                             if (globalsSub != null)
                             {
                                 program.GetSubroutine().Add(globalsSub);
-                                JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Created split globals subroutine (range 0-{globalsInitEnd}, globals initialization only, before first ACTION at {mainCodeStartInGlobals})");
+                                JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Created split globals subroutine (range 0-{globalsInitEnd}, includes all instructions up to SAVEBP, first ACTION at {mainCodeStartInGlobals})");
                             }
                             
                             // Update mainStart to include the main function code (from first ACTION to last RETN)
