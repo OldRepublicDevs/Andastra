@@ -1867,8 +1867,38 @@ namespace Odyssey.Kotor.EngineApi
 
         #region Placeholder Functions
 
+        /// <summary>
+        /// SwitchPlayerCharacter(int nNPC) - Switches the main character to a specified NPC
+        /// Based on swkotor2.exe: SwitchPlayerCharacter implementation (routine ID 11)
+        /// Located via string references: Party leader switching system
+        /// Original implementation: Switches controlled character to NPC (-1 = switch back to original PC)
+        /// </summary>
         private Variable Func_SwitchPlayerCharacter(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
+            int npcIndex = args.Count > 0 ? args[0].AsInt() : -1;
+
+            if (ctx is VMExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services && services.PartyManager is PartyManager partyManager)
+            {
+                if (npcIndex == -1)
+                {
+                    // Switch back to original PC
+                    if (services.PlayerEntity != null)
+                    {
+                        partyManager.SetLeader(services.PlayerEntity);
+                        return Variable.Void();
+                    }
+                }
+                else
+                {
+                    // Switch to NPC party member
+                    IEntity member = partyManager.GetAvailableMember(npcIndex);
+                    if (member != null && partyManager.IsSelected(npcIndex))
+                    {
+                        partyManager.SetLeader(member);
+                        return Variable.Void();
+                    }
+                }
+            }
             return Variable.Void();
         }
 
@@ -6516,7 +6546,7 @@ namespace Odyssey.Kotor.EngineApi
                 // Located via string references: "StackSize" @ 0x007c0a34, "stacking" column in baseitems.2da
                 // Original implementation: Looks up max stack size from baseitems.2da "stacking" column using BaseItem ID
                 int maxStackSize = 100; // Default max
-                
+
                 // Try to look up max stack size from baseitems.2da using CSharpKOTOR
                 if (ctx is VMExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
                 {
@@ -6532,7 +6562,7 @@ namespace Odyssey.Kotor.EngineApi
                                 {
                                     var reader = new TwoDABinaryReader(stream);
                                     TwoDA baseitems = reader.Load();
-                                    
+
                                     if (baseitems != null && itemComponent.BaseItem >= 0 && itemComponent.BaseItem < baseitems.GetHeight())
                                     {
                                         TwoDARow row = baseitems.GetRow(itemComponent.BaseItem);
@@ -6552,7 +6582,7 @@ namespace Odyssey.Kotor.EngineApi
                         }
                     }
                 }
-                
+
                 int clampedSize = Math.Max(1, Math.Min(maxStackSize, stackSize));
                 itemComponent.StackSize = clampedSize;
             }
