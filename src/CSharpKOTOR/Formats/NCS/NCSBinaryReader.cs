@@ -126,8 +126,25 @@ namespace AuroraEngine.Common.Formats.NCS
             // total_size is the end position (includes the header)
             int codeEndPosition = (int)totalSize;
 
-            // Safety: don't read beyond actual file size
-            int safeEndPosition = Math.Min(codeEndPosition, actualFileSize);
+            // CRITICAL: Some NCS files have incorrect size fields that are smaller than the actual file size
+            // This causes instructions to be missed. We should read to the actual file size if it's larger
+            // than the size field, but only if the size field is significantly smaller (more than header size difference)
+            // This matches behavior needed for roundtrip tests where external compiler may write incorrect size fields
+            Console.WriteLine($"DEBUG NCSBinaryReader: Size field={codeEndPosition}, actualFileSize={actualFileSize}, difference={actualFileSize - codeEndPosition}, headerSize={NCS_HEADER_SIZE}");
+            int safeEndPosition = codeEndPosition;
+            if (actualFileSize > codeEndPosition && (actualFileSize - codeEndPosition) > NCS_HEADER_SIZE)
+            {
+                // Size field is significantly smaller than actual file - use actual file size
+                // This handles cases where external compiler writes incorrect size fields
+                Console.WriteLine($"DEBUG NCSBinaryReader: Size field ({codeEndPosition}) is smaller than actual file size ({actualFileSize}), using actual file size");
+                safeEndPosition = actualFileSize;
+            }
+            else
+            {
+                // Normal case: use the smaller of size field or actual file size
+                safeEndPosition = Math.Min(codeEndPosition, actualFileSize);
+                Console.WriteLine($"DEBUG NCSBinaryReader: Using normal case: safeEndPosition={safeEndPosition}");
+            }
 
             int instructionCountBeforeLoop = _instructions.Count;
             while (_reader.Position < safeEndPosition && _reader.Remaining > 0)
