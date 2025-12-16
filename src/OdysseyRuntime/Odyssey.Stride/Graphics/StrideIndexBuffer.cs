@@ -9,13 +9,13 @@ namespace Odyssey.Stride.Graphics
     /// </summary>
     public class StrideIndexBuffer : IIndexBuffer
     {
-        private readonly Buffer _buffer;
+        private readonly Stride.Graphics.Buffer _buffer;
         private readonly int _indexCount;
         private readonly bool _isShort;
 
-        internal Buffer Buffer => _buffer;
+        internal Stride.Graphics.Buffer Buffer => _buffer;
 
-        public StrideIndexBuffer(Buffer buffer, int indexCount, bool isShort)
+        public StrideIndexBuffer(Stride.Graphics.Buffer buffer, int indexCount, bool isShort)
         {
             _buffer = buffer ?? throw new ArgumentNullException(nameof(buffer));
             _indexCount = indexCount;

@@ -10,6 +10,7 @@ namespace Odyssey.Stride.Graphics
     public class StrideSpriteBatch : ISpriteBatch
     {
         private readonly SpriteBatch _spriteBatch;
+        private readonly GraphicsDevice _graphicsDevice;
         private bool _isBegun;
 
         internal SpriteBatch SpriteBatch => _spriteBatch;
@@ -17,6 +18,10 @@ namespace Odyssey.Stride.Graphics
         public StrideSpriteBatch(SpriteBatch spriteBatch)
         {
             _spriteBatch = spriteBatch ?? throw new System.ArgumentNullException(nameof(spriteBatch));
+            // Store GraphicsDevice reference for accessing ImmediateContext
+            // SpriteBatch is created with GraphicsDevice, so we need to get it from the constructor
+            // For now, we'll get it from the GraphicsContext when needed
+            _graphicsDevice = spriteBatch.GraphicsDevice;
         }
 
         public void Begin(SpriteSortMode sortMode = SpriteSortMode.Deferred, BlendState blendState = null)
@@ -29,7 +34,7 @@ namespace Odyssey.Stride.Graphics
             var strideSortMode = ConvertSortMode(sortMode);
             var strideBlendState = ConvertBlendState(blendState);
 
-            _spriteBatch.Begin(_spriteBatch.GraphicsContext, strideSortMode, strideBlendState);
+            _spriteBatch.Begin(_graphicsDevice.ImmediateContext, strideSortMode, strideBlendState);
             _isBegun = true;
         }
 

@@ -1,6 +1,7 @@
 using System;
 using Stride.Engine;
 using Stride.Graphics;
+using Stride.Content;
 using Odyssey.Graphics;
 
 namespace Odyssey.Stride.Graphics
@@ -10,11 +11,11 @@ namespace Odyssey.Stride.Graphics
     /// </summary>
     public class StrideContentManager : IContentManager
     {
-        private readonly ContentManager _contentManager;
+        private readonly Stride.Content.ContentManager _contentManager;
 
-        internal ContentManager ContentManager => _contentManager;
+        internal Stride.Content.ContentManager ContentManager => _contentManager;
 
-        public StrideContentManager(ContentManager contentManager)
+        public StrideContentManager(Stride.Content.ContentManager contentManager)
         {
             _contentManager = contentManager ?? throw new ArgumentNullException(nameof(contentManager));
         }

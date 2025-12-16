@@ -54,26 +54,26 @@ namespace Odyssey.Stride.Graphics
             _inputManager = inputManager;
         }
 
-        public bool IsKeyDown(Keys key)
+        public bool IsKeyDown(Odyssey.Graphics.Keys key)
         {
             var strideKey = ConvertKey(key);
             return _inputManager.IsKeyDown(strideKey);
         }
 
-        public bool IsKeyUp(Keys key)
+        public bool IsKeyUp(Odyssey.Graphics.Keys key)
         {
             var strideKey = ConvertKey(key);
             return _inputManager.IsKeyUp(strideKey);
         }
 
-        public Keys[] GetPressedKeys()
+        public Odyssey.Graphics.Keys[] GetPressedKeys()
         {
             // Stride doesn't have a direct GetPressedKeys method
             // We'll need to check all keys manually
-            var pressedKeys = new System.Collections.Generic.List<Keys>();
-            foreach (Keys key in System.Enum.GetValues(typeof(Keys)))
+            var pressedKeys = new System.Collections.Generic.List<Odyssey.Graphics.Keys>();
+            foreach (Odyssey.Graphics.Keys key in System.Enum.GetValues(typeof(Odyssey.Graphics.Keys)))
             {
-                if (key != Keys.None && IsKeyDown(key))
+                if (key != Odyssey.Graphics.Keys.None && IsKeyDown(key))
                 {
                     pressedKeys.Add(key);
                 }
@@ -81,138 +81,138 @@ namespace Odyssey.Stride.Graphics
             return pressedKeys.ToArray();
         }
 
-        private Stride.Input.Keys ConvertKey(Keys key)
+        private Stride.Input.Keys ConvertKey(Odyssey.Graphics.Keys key)
         {
             // Map our Keys enum to Stride's Keys enum
             switch (key)
             {
-                case Keys.None:
+                case Odyssey.Graphics.Keys.None:
                     return Stride.Input.Keys.None;
-                case Keys.Back:
+                case Odyssey.Graphics.Keys.Back:
                     return Stride.Input.Keys.Back;
-                case Keys.Tab:
+                case Odyssey.Graphics.Keys.Tab:
                     return Stride.Input.Keys.Tab;
-                case Keys.Enter:
+                case Odyssey.Graphics.Keys.Enter:
                     return Stride.Input.Keys.Enter;
-                case Keys.Escape:
+                case Odyssey.Graphics.Keys.Escape:
                     return Stride.Input.Keys.Escape;
-                case Keys.Space:
+                case Odyssey.Graphics.Keys.Space:
                     return Stride.Input.Keys.Space;
-                case Keys.Up:
+                case Odyssey.Graphics.Keys.Up:
                     return Stride.Input.Keys.Up;
-                case Keys.Down:
+                case Odyssey.Graphics.Keys.Down:
                     return Stride.Input.Keys.Down;
-                case Keys.Left:
+                case Odyssey.Graphics.Keys.Left:
                     return Stride.Input.Keys.Left;
-                case Keys.Right:
+                case Odyssey.Graphics.Keys.Right:
                     return Stride.Input.Keys.Right;
-                case Keys.A:
+                case Odyssey.Graphics.Keys.A:
                     return Stride.Input.Keys.A;
-                case Keys.B:
+                case Odyssey.Graphics.Keys.B:
                     return Stride.Input.Keys.B;
-                case Keys.C:
+                case Odyssey.Graphics.Keys.C:
                     return Stride.Input.Keys.C;
-                case Keys.D:
+                case Odyssey.Graphics.Keys.D:
                     return Stride.Input.Keys.D;
-                case Keys.E:
+                case Odyssey.Graphics.Keys.E:
                     return Stride.Input.Keys.E;
-                case Keys.F:
+                case Odyssey.Graphics.Keys.F:
                     return Stride.Input.Keys.F;
-                case Keys.G:
+                case Odyssey.Graphics.Keys.G:
                     return Stride.Input.Keys.G;
-                case Keys.H:
+                case Odyssey.Graphics.Keys.H:
                     return Stride.Input.Keys.H;
-                case Keys.I:
+                case Odyssey.Graphics.Keys.I:
                     return Stride.Input.Keys.I;
-                case Keys.J:
+                case Odyssey.Graphics.Keys.J:
                     return Stride.Input.Keys.J;
-                case Keys.K:
+                case Odyssey.Graphics.Keys.K:
                     return Stride.Input.Keys.K;
-                case Keys.L:
+                case Odyssey.Graphics.Keys.L:
                     return Stride.Input.Keys.L;
-                case Keys.M:
+                case Odyssey.Graphics.Keys.M:
                     return Stride.Input.Keys.M;
-                case Keys.N:
+                case Odyssey.Graphics.Keys.N:
                     return Stride.Input.Keys.N;
-                case Keys.O:
+                case Odyssey.Graphics.Keys.O:
                     return Stride.Input.Keys.O;
-                case Keys.P:
+                case Odyssey.Graphics.Keys.P:
                     return Stride.Input.Keys.P;
-                case Keys.Q:
+                case Odyssey.Graphics.Keys.Q:
                     return Stride.Input.Keys.Q;
-                case Keys.R:
+                case Odyssey.Graphics.Keys.R:
                     return Stride.Input.Keys.R;
-                case Keys.S:
+                case Odyssey.Graphics.Keys.S:
                     return Stride.Input.Keys.S;
-                case Keys.T:
+                case Odyssey.Graphics.Keys.T:
                     return Stride.Input.Keys.T;
-                case Keys.U:
+                case Odyssey.Graphics.Keys.U:
                     return Stride.Input.Keys.U;
-                case Keys.V:
+                case Odyssey.Graphics.Keys.V:
                     return Stride.Input.Keys.V;
-                case Keys.W:
+                case Odyssey.Graphics.Keys.W:
                     return Stride.Input.Keys.W;
-                case Keys.X:
+                case Odyssey.Graphics.Keys.X:
                     return Stride.Input.Keys.X;
-                case Keys.Y:
+                case Odyssey.Graphics.Keys.Y:
                     return Stride.Input.Keys.Y;
-                case Keys.Z:
+                case Odyssey.Graphics.Keys.Z:
                     return Stride.Input.Keys.Z;
-                case Keys.D0:
+                case Odyssey.Graphics.Keys.D0:
                     return Stride.Input.Keys.D0;
-                case Keys.D1:
+                case Odyssey.Graphics.Keys.D1:
                     return Stride.Input.Keys.D1;
-                case Keys.D2:
+                case Odyssey.Graphics.Keys.D2:
                     return Stride.Input.Keys.D2;
-                case Keys.D3:
+                case Odyssey.Graphics.Keys.D3:
                     return Stride.Input.Keys.D3;
-                case Keys.D4:
+                case Odyssey.Graphics.Keys.D4:
                     return Stride.Input.Keys.D4;
-                case Keys.D5:
+                case Odyssey.Graphics.Keys.D5:
                     return Stride.Input.Keys.D5;
-                case Keys.D6:
+                case Odyssey.Graphics.Keys.D6:
                     return Stride.Input.Keys.D6;
-                case Keys.D7:
+                case Odyssey.Graphics.Keys.D7:
                     return Stride.Input.Keys.D7;
-                case Keys.D8:
+                case Odyssey.Graphics.Keys.D8:
                     return Stride.Input.Keys.D8;
-                case Keys.D9:
+                case Odyssey.Graphics.Keys.D9:
                     return Stride.Input.Keys.D9;
-                case Keys.F1:
+                case Odyssey.Graphics.Keys.F1:
                     return Stride.Input.Keys.F1;
-                case Keys.F2:
+                case Odyssey.Graphics.Keys.F2:
                     return Stride.Input.Keys.F2;
-                case Keys.F3:
+                case Odyssey.Graphics.Keys.F3:
                     return Stride.Input.Keys.F3;
-                case Keys.F4:
+                case Odyssey.Graphics.Keys.F4:
                     return Stride.Input.Keys.F4;
-                case Keys.F5:
+                case Odyssey.Graphics.Keys.F5:
                     return Stride.Input.Keys.F5;
-                case Keys.F6:
+                case Odyssey.Graphics.Keys.F6:
                     return Stride.Input.Keys.F6;
-                case Keys.F7:
+                case Odyssey.Graphics.Keys.F7:
                     return Stride.Input.Keys.F7;
-                case Keys.F8:
+                case Odyssey.Graphics.Keys.F8:
                     return Stride.Input.Keys.F8;
-                case Keys.F9:
+                case Odyssey.Graphics.Keys.F9:
                     return Stride.Input.Keys.F9;
-                case Keys.F10:
+                case Odyssey.Graphics.Keys.F10:
                     return Stride.Input.Keys.F10;
-                case Keys.F11:
+                case Odyssey.Graphics.Keys.F11:
                     return Stride.Input.Keys.F11;
-                case Keys.F12:
+                case Odyssey.Graphics.Keys.F12:
                     return Stride.Input.Keys.F12;
-                case Keys.LeftControl:
+                case Odyssey.Graphics.Keys.LeftControl:
                     return Stride.Input.Keys.LeftCtrl;
-                case Keys.RightControl:
+                case Odyssey.Graphics.Keys.RightControl:
                     return Stride.Input.Keys.RightCtrl;
-                case Keys.LeftShift:
+                case Odyssey.Graphics.Keys.LeftShift:
                     return Stride.Input.Keys.LeftShift;
-                case Keys.RightShift:
+                case Odyssey.Graphics.Keys.RightShift:
                     return Stride.Input.Keys.RightShift;
-                case Keys.LeftAlt:
+                case Odyssey.Graphics.Keys.LeftAlt:
                     return Stride.Input.Keys.LeftAlt;
-                case Keys.RightAlt:
+                case Odyssey.Graphics.Keys.RightAlt:
                     return Stride.Input.Keys.RightAlt;
                 default:
                     return Stride.Input.Keys.None;
@@ -234,7 +234,7 @@ namespace Odyssey.Stride.Graphics
 
         public int X => (int)_inputManager.MousePosition.X;
         public int Y => (int)_inputManager.MousePosition.Y;
-        public Vector2 Position => new Vector2(_inputManager.MousePosition.X, _inputManager.MousePosition.Y);
+        public Odyssey.Graphics.Vector2 Position => new Odyssey.Graphics.Vector2(_inputManager.MousePosition.X, _inputManager.MousePosition.Y);
         public int ScrollWheelValue => (int)_inputManager.MouseWheelDelta;
 
         public ButtonState LeftButton => _inputManager.IsMouseButtonDown(MouseButton.Left) ? ButtonState.Pressed : ButtonState.Released;
