@@ -2190,22 +2190,11 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Scriptutils
         {
             bool isstruct = copy > 1;
             StackEntry entry = stack.Get(loc);
-            if (!typeof(Variable).IsInstanceOfType(entry))
+            // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptutils/SubScriptState.java:1906-1907
+            // Original: if (!Variable.class.isInstance(entry) && assign) { throw new RuntimeException("Attempting to assign to a non-variable"); }
+            if (!typeof(Variable).IsInstanceOfType(entry) && assign)
             {
-                if (assign)
-                {
-
-                    // In some edge cases, the stack might contain a constant where an assignment is expected
-                    // This can happen with certain bytecode patterns. Return a constant reference instead of throwing.
-                    if (typeof(Const).IsInstanceOfType(entry))
-                    {
-
-                        // Return the constant - the decompiler will handle it as an expression
-                        return new ScriptNode.AConst((Const)entry);
-                    }
-
-                    throw new Exception("Attempting to assign to a non-variable of type: " + entry.GetType().Name);
-                }
+                throw new Exception("Attempting to assign to a non-variable");
             }
 
             if (typeof(Const).IsInstanceOfType(entry))
