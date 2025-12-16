@@ -2,10 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using Microsoft.Xna.Framework;
 using Odyssey.Core.Interfaces;
-using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Input;
 using Odyssey.Kotor.Game;
 using Odyssey.Kotor.EngineApi;
 using Odyssey.Scripting.EngineApi;
@@ -17,18 +14,20 @@ using CSharpKOTOR.Common;
 using CSharpKOTOR.Installation;
 using CSharpKOTOR.Resources;
 using CSharpKOTOR.Formats.MDL;
-using Game = Microsoft.Xna.Framework.Game;
-using Matrix = Microsoft.Xna.Framework.Matrix;
-using Color = Microsoft.Xna.Framework.Color;
+using Odyssey.Graphics;
+using Vector2 = Odyssey.Graphics.Vector2;
+using Rectangle = Odyssey.Graphics.Rectangle;
+using Color = Odyssey.Graphics.Color;
 
 namespace Odyssey.Game.Core
 {
     /// <summary>
-    /// MonoGame-based Odyssey game implementation.
+    /// Odyssey game implementation using graphics abstraction layer.
+    /// Supports both MonoGame and Stride backends.
     /// Simplified version focused on getting menu working and game launching.
     /// </summary>
     /// <remarks>
-    /// Odyssey Game (MonoGame Implementation):
+    /// Odyssey Game (Graphics Abstraction Implementation):
     /// - Based on swkotor2.exe: FUN_00404250 @ 0x00404250 (main game loop, WinMain equivalent)
     /// - Main loop structure: while (DAT_00828390 == 0) { PeekMessageA, update game, render, SwapBuffers }
     /// - Located via string references: "UpdateScenes" @ 0x007b8b54 (referenced by FUN_00452060, FUN_0045f960, FUN_004cbe40)
@@ -41,15 +40,15 @@ namespace Odyssey.Game.Core
     /// - Entity serialization: FUN_005226d0 @ 0x005226d0 saves creature entity data to GFF (script hooks, inventory, perception, combat, position/orientation)
     /// - Update() called every frame (60 Hz fixed timestep), Draw() renders frame
     /// - Original implementation: Main loop processes Windows messages, updates game state, renders frame, swaps buffers
-    /// - MonoGame integration: Wraps MonoGame Game class for window management, input, and rendering
-    /// - Based on MonoGame API: https://docs.monogame.net/api/Microsoft.Xna.Framework.Game.html
+    /// - Graphics abstraction: Uses IGraphicsBackend for backend-agnostic rendering (MonoGame or Stride)
     /// </remarks>
-    public class OdysseyGame : Microsoft.Xna.Framework.Game
+    public class OdysseyGame : IDisposable
     {
         private readonly Odyssey.Core.GameSettings _settings;
-        private GraphicsDeviceManager _graphics;
-        private SpriteBatch _spriteBatch;
-        private SpriteFont _font;
+        private readonly IGraphicsBackend _graphicsBackend;
+        private IGraphicsDevice _graphicsDevice;
+        private ISpriteBatch _spriteBatch;
+        private IFont _font;
 
         // Game systems
         private GameSession _session;
@@ -58,13 +57,13 @@ namespace Odyssey.Game.Core
         private K1EngineApi _engineApi;
         private NcsVm _vm;
 
-        // Menu - Professional MonoGame menu implementation
+        // Menu - Professional menu implementation
         private GameState _currentState = GameState.MainMenu;
         private int _selectedMenuIndex = 0;
         private readonly string[] _menuItems = { "Start Game", "Options", "Exit" };
-        private Texture2D _menuTexture; // 1x1 white texture for drawing rectangles
-        private KeyboardState _previousMenuKeyboardState;
-        private MouseState _previousMenuMouseState;
+        private ITexture2D _menuTexture; // 1x1 white texture for drawing rectangles
+        private IKeyboardState _previousMenuKeyboardState;
+        private IMouseState _previousMenuMouseState;
         private float _menuAnimationTime = 0f; // For smooth animations
         private int _hoveredMenuIndex = -1; // Track mouse hover
 
@@ -74,11 +73,14 @@ namespace Odyssey.Game.Core
         private bool _isSelectingPath = false;
 
         // Basic 3D rendering
-        private BasicEffect _basicEffect;
-        private VertexBuffer _groundVertexBuffer;
-        private IndexBuffer _groundIndexBuffer;
-        private Matrix _viewMatrix;
-        private Matrix _projectionMatrix;
+        // Note: BasicEffect, VertexBuffer, IndexBuffer, Matrix are MonoGame-specific
+        // These will need to be abstracted or replaced with abstraction layer equivalents
+        // For now, keeping as placeholders - full 3D rendering abstraction is future work
+        private object _basicEffect; // TODO: Abstract BasicEffect
+        private IVertexBuffer _groundVertexBuffer;
+        private IIndexBuffer _groundIndexBuffer;
+        private System.Numerics.Matrix4x4 _viewMatrix;
+        private System.Numerics.Matrix4x4 _projectionMatrix;
         private float _cameraAngle = 0f;
 
         // Room rendering
@@ -96,24 +98,28 @@ namespace Odyssey.Game.Core
         private string _newSaveName = string.Empty;
 
         // Input tracking
-        private Microsoft.Xna.Framework.Input.MouseState _previousMouseState;
+        private IMouseState _previousMouseState;
+        private IKeyboardState _previousKeyboardState;
 
-        public OdysseyGame(Odyssey.Core.GameSettings settings)
+        public OdysseyGame(Odyssey.Core.GameSettings settings, IGraphicsBackend graphicsBackend)
         {
-            _settings = settings;
-            _graphics = new GraphicsDeviceManager(this);
-            Content.RootDirectory = "Content";
-            IsMouseVisible = true;
+            _settings = settings ?? throw new ArgumentNullException(nameof(settings));
+            _graphicsBackend = graphicsBackend ?? throw new ArgumentNullException(nameof(graphicsBackend));
 
-            // Set window title
-            Window.Title = "Odyssey Engine - " + (_settings.Game == Odyssey.Core.KotorGame.K1 ? "Knights of the Old Republic" : "The Sith Lords");
+            // Initialize graphics backend
+            string windowTitle = "Odyssey Engine - " + (_settings.Game == Odyssey.Core.KotorGame.K1 ? "Knights of the Old Republic" : "The Sith Lords");
+            _graphicsBackend.Initialize(1280, 720, windowTitle, false);
 
-            Console.WriteLine("[Odyssey] Game window initialized - IsMouseVisible: " + IsMouseVisible);
+            // Get graphics components from backend
+            _graphicsDevice = _graphicsBackend.GraphicsDevice;
+            _graphicsBackend.Window.IsMouseVisible = true;
+
+            Console.WriteLine("[Odyssey] Game window initialized - Backend: " + _graphicsBackend.BackendType);
         }
 
-        protected override void Initialize()
+        private void Initialize()
         {
-            Console.WriteLine("[Odyssey] Initializing MonoGame-based engine");
+            Console.WriteLine("[Odyssey] Initializing engine with backend: " + _graphicsBackend.BackendType);
 
             // Initialize game systems
             _world = new World();
@@ -123,44 +129,38 @@ namespace Odyssey.Game.Core
             _session = new GameSession(_settings, _world, _vm, _globals);
 
             // Initialize input state
-            _previousMouseState = Microsoft.Xna.Framework.Input.Mouse.GetState();
-            _previousKeyboardState = Microsoft.Xna.Framework.Input.Keyboard.GetState();
-
-            base.Initialize();
+            _previousMouseState = _graphicsBackend.InputManager.MouseState;
+            _previousKeyboardState = _graphicsBackend.InputManager.KeyboardState;
 
             Console.WriteLine("[Odyssey] Core systems initialized");
         }
 
-        protected override void LoadContent()
+        private void LoadContent()
         {
             // Create SpriteBatch for rendering
-            _spriteBatch = new SpriteBatch(GraphicsDevice);
+            _spriteBatch = _graphicsDevice.CreateSpriteBatch();
 
             // Load font with comprehensive error handling
-            // Based on MonoGame API: https://docs.monogame.net/api/Microsoft.Xna.Framework.Content.ContentManager.html
-            // Method signature: T Load<T>(string assetName)
-            // The font must be processed by the MGCB Editor Content Pipeline first
             try
             {
-                _font = Content.Load<SpriteFont>("Fonts/Arial");
+                _font = _graphicsBackend.ContentManager.Load<IFont>("Fonts/Arial");
                 Console.WriteLine("[Odyssey] Font loaded successfully from 'Fonts/Arial'");
             }
             catch (Exception ex)
             {
                 // Font not found - this is a critical issue for menu display
                 Console.WriteLine("[Odyssey] ERROR: Failed to load font from 'Fonts/Arial': " + ex.Message);
-                Console.WriteLine("[Odyssey] The font file must be built by the MonoGame Content Pipeline");
-                Console.WriteLine("[Odyssey] Ensure Content/Fonts/Arial.spritefont exists and is included in Content.mgcb");
+                Console.WriteLine("[Odyssey] The font file must be built by the content pipeline");
                 _font = null;
             }
 
             // Create 1x1 white texture for menu drawing
-            _menuTexture = new Texture2D(GraphicsDevice, 1, 1);
-            _menuTexture.SetData(new[] { Color.White });
+            byte[] whitePixel = new byte[] { 255, 255, 255, 255 }; // RGBA white
+            _menuTexture = _graphicsDevice.CreateTexture2D(1, 1, whitePixel);
 
             // Initialize menu input states
-            _previousMenuKeyboardState = Keyboard.GetState();
-            _previousMenuMouseState = Mouse.GetState();
+            _previousMenuKeyboardState = _graphicsBackend.InputManager.KeyboardState;
+            _previousMenuMouseState = _graphicsBackend.InputManager.MouseState;
 
             // Initialize installation path selection
             InitializeInstallationPaths();
@@ -171,7 +171,9 @@ namespace Odyssey.Game.Core
             InitializeGameRendering();
 
             // Initialize room renderer
-            _roomRenderer = new Odyssey.MonoGame.Converters.RoomMeshRenderer(GraphicsDevice);
+            // TODO: RoomMeshRenderer needs to be abstracted or work with IGraphicsDevice
+            // For now, this will need MonoGame-specific implementation
+            // _roomRenderer = new Odyssey.MonoGame.Converters.RoomMeshRenderer(_graphicsDevice);
             _roomMeshes = new Dictionary<string, Odyssey.MonoGame.Converters.RoomMeshData>();
 
             // Initialize entity model renderer (will be initialized when module loads)
@@ -180,15 +182,19 @@ namespace Odyssey.Game.Core
             Console.WriteLine("[Odyssey] Content loaded");
         }
 
-        protected override void Update(GameTime gameTime)
+        private void Update(float deltaTime)
         {
+            var inputManager = _graphicsBackend.InputManager;
+            var keyboardState = inputManager.KeyboardState;
+            var mouseState = inputManager.MouseState;
+
             // Handle exit
-            if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed ||
-                Keyboard.GetState().IsKeyDown(Keys.Escape))
+            if (keyboardState.IsKeyDown(Keys.Escape))
             {
                 if (_currentState == GameState.MainMenu)
                 {
-                    Exit();
+                    _graphicsBackend.Exit();
+                    return;
                 }
                 else if (_currentState == GameState.SaveMenu || _currentState == GameState.LoadMenu)
                 {
@@ -205,23 +211,22 @@ namespace Odyssey.Game.Core
             // Update menu if visible
             if (_currentState == GameState.MainMenu)
             {
-                _menuAnimationTime += (float)gameTime.ElapsedGameTime.TotalSeconds;
-                UpdateMainMenu(gameTime);
+                _menuAnimationTime += deltaTime;
+                UpdateMainMenu(deltaTime, keyboardState, mouseState);
             }
             else if (_currentState == GameState.SaveMenu)
             {
-                UpdateSaveMenu(gameTime);
+                UpdateSaveMenu(deltaTime, keyboardState, mouseState);
             }
             else if (_currentState == GameState.LoadMenu)
             {
-                UpdateLoadMenu(gameTime);
+                UpdateLoadMenu(deltaTime, keyboardState, mouseState);
             }
 
             // Update game systems if in game
             if (_currentState == GameState.InGame)
             {
                 // Handle save/load shortcuts
-                KeyboardState keyboardState = Keyboard.GetState();
                 if (keyboardState.IsKeyDown(Keys.F5) && !_previousKeyboardState.IsKeyDown(Keys.F5))
                 {
                     // Quick save
@@ -248,7 +253,6 @@ namespace Odyssey.Game.Core
                 // Update game session
                 if (_session != null)
                 {
-                    float deltaTime = (float)gameTime.ElapsedGameTime.TotalSeconds;
                     _session.Update(deltaTime);
                 }
 
@@ -256,41 +260,53 @@ namespace Odyssey.Game.Core
                 UpdateCamera();
             }
 
-            _previousKeyboardState = Keyboard.GetState();
-
-            base.Update(gameTime);
+            _previousKeyboardState = keyboardState;
+            _previousMouseState = mouseState;
         }
 
-        protected override void Draw(GameTime gameTime)
+        private void Draw()
         {
             // Draw menu if in main menu state
             if (_currentState == GameState.MainMenu)
             {
-                DrawMainMenu(gameTime);
+                DrawMainMenu();
+            }
+            else if (_currentState == GameState.SaveMenu)
+            {
+                DrawSaveMenu();
+            }
+            else if (_currentState == GameState.LoadMenu)
+            {
+                DrawLoadMenu();
             }
             else if (_currentState == GameState.InGame)
             {
-                DrawGameWorld(gameTime);
+                DrawGameWorld();
             }
             else
             {
                 // Fallback: clear to black
-                GraphicsDevice.Clear(Color.Black);
+                _graphicsDevice.Clear(new Color(0, 0, 0, 255));
             }
+        }
 
-            base.Draw(gameTime);
+        public void Run()
+        {
+            Initialize();
+            LoadContent();
+
+            // Run the game loop using the graphics backend
+            _graphicsBackend.Run(Update, Draw);
         }
 
         /// <summary>
         /// Updates the main menu state and handles input.
-        /// Professional MonoGame menu implementation with keyboard and mouse support.
+        /// Professional menu implementation with keyboard and mouse support.
         /// </summary>
-        private void UpdateMainMenu(GameTime gameTime)
+        private void UpdateMainMenu(float deltaTime, IKeyboardState keyboardState, IMouseState mouseState)
         {
-            KeyboardState currentKeyboardState = Keyboard.GetState();
-            MouseState currentMouseState = Mouse.GetState();
-            int viewportWidth = GraphicsDevice.Viewport.Width;
-            int viewportHeight = GraphicsDevice.Viewport.Height;
+            int viewportWidth = _graphicsDevice.Viewport.Width;
+            int viewportHeight = _graphicsDevice.Viewport.Height;
 
             // Calculate menu button positions (matching DrawMainMenu layout)
             int centerX = viewportWidth / 2;
@@ -385,7 +401,7 @@ namespace Odyssey.Game.Core
             _previousMenuMouseState = currentMouseState;
         }
 
-        private bool IsKeyJustPressed(KeyboardState previous, KeyboardState current, Keys key)
+        private bool IsKeyJustPressed(IKeyboardState previous, IKeyboardState current, Keys key)
         {
             return previous.IsKeyUp(key) && current.IsKeyDown(key);
         }
@@ -463,20 +479,17 @@ namespace Odyssey.Game.Core
 
         /// <summary>
         /// Draws a professional main menu with proper text rendering, shadows, and visual effects.
-        /// Based on MonoGame best practices: https://docs.monogame.net/api/Microsoft.Xna.Framework.Graphics.SpriteBatch.html
         /// </summary>
-        private void DrawMainMenu(GameTime gameTime)
+        private void DrawMainMenu()
         {
             // Clear to dark space-like background (deep blue/black gradient effect)
-            GraphicsDevice.Clear(new Color(15, 15, 25, 255));
+            _graphicsDevice.Clear(new Color(15, 15, 25, 255));
 
             // Begin sprite batch rendering
-            // Based on MonoGame API: https://docs.monogame.net/api/Microsoft.Xna.Framework.Graphics.SpriteBatch.html
-            // Begin() starts a sprite batch operation for efficient rendering
             _spriteBatch.Begin();
 
-            int viewportWidth = GraphicsDevice.Viewport.Width;
-            int viewportHeight = GraphicsDevice.Viewport.Height;
+            int viewportWidth = _graphicsDevice.Viewport.Width;
+            int viewportHeight = _graphicsDevice.Viewport.Height;
             int centerX = viewportWidth / 2;
             int centerY = viewportHeight / 2;
 
@@ -560,14 +573,14 @@ namespace Odyssey.Game.Core
                 // Button colors with smooth transitions
                 Color buttonBgColor;
                 Color buttonBorderColor;
-                Color buttonTextColor = Color.White;
+                Color buttonTextColor = new Color(255, 255, 255, 255);
                 float buttonScale = 1.0f;
 
                 if (isSelected || isHovered)
                 {
                     // Selected/hovered: bright blue with white border
                     buttonBgColor = new Color(60, 120, 200, 255);
-                    buttonBorderColor = Color.White;
+                    buttonBorderColor = new Color(255, 255, 255, 255);
                     buttonScale = 1.05f; // Slightly larger when selected
                 }
                 else
@@ -799,7 +812,7 @@ namespace Odyssey.Game.Core
             _spriteBatch.End();
         }
 
-        private void DrawRectangleBorder(SpriteBatch spriteBatch, Rectangle rect, int thickness, Color color)
+        private void DrawRectangleBorder(ISpriteBatch spriteBatch, Rectangle rect, int thickness, Color color)
         {
             // Top
             spriteBatch.Draw(_menuTexture, new Rectangle(rect.X, rect.Y, rect.Width, thickness), color);
@@ -815,7 +828,7 @@ namespace Odyssey.Game.Core
         /// Draws a filled triangle using rectangles (approximation).
         /// Used for play button icon when font is not available.
         /// </summary>
-        private void DrawTriangle(SpriteBatch spriteBatch, int[] x, int[] y, Color color)
+        private void DrawTriangle(ISpriteBatch spriteBatch, int[] x, int[] y, Color color)
         {
             // Simple triangle drawing using line approximation
             // Draw lines between points
@@ -853,7 +866,7 @@ namespace Odyssey.Game.Core
         /// <summary>
         /// Draws a filled triangle with smooth rendering.
         /// </summary>
-        private void DrawFilledTriangle(SpriteBatch spriteBatch, int[] x, int[] y, Color color)
+        private void DrawFilledTriangle(ISpriteBatch spriteBatch, int[] x, int[] y, Color color)
         {
             DrawTriangle(spriteBatch, x, y, color);
         }
@@ -861,7 +874,7 @@ namespace Odyssey.Game.Core
         /// <summary>
         /// Draws a triangle outline (border only).
         /// </summary>
-        private void DrawTriangleOutline(SpriteBatch spriteBatch, int[] x, int[] y, Color color)
+        private void DrawTriangleOutline(ISpriteBatch spriteBatch, int[] x, int[] y, Color color)
         {
             int thickness = 2;
             // Draw three edges of the triangle
@@ -873,7 +886,7 @@ namespace Odyssey.Game.Core
         /// <summary>
         /// Draws a line between two points.
         /// </summary>
-        private void DrawLine(SpriteBatch spriteBatch, int x1, int y1, int x2, int y2, int thickness, Color color)
+        private void DrawLine(ISpriteBatch spriteBatch, int x1, int y1, int x2, int y2, int thickness, Color color)
         {
             float dx = x2 - x1;
             float dy = y2 - y1;
@@ -913,7 +926,7 @@ namespace Odyssey.Game.Core
         /// <summary>
         /// Draws a diagonal line between two points.
         /// </summary>
-        private void DrawDiagonalLine(SpriteBatch spriteBatch, int x1, int y1, int x2, int y2, int thickness, Color color)
+        private void DrawDiagonalLine(ISpriteBatch spriteBatch, int x1, int y1, int x2, int y2, int thickness, Color color)
         {
             DrawLine(spriteBatch, x1, y1, x2, y2, thickness, color);
         }
@@ -922,7 +935,7 @@ namespace Odyssey.Game.Core
         /// Draws a rounded rectangle border with smooth corners.
         /// Creates the appearance of rounded corners using border lines with corner arcs.
         /// </summary>
-        private void DrawRoundedRectangle(SpriteBatch spriteBatch, Rectangle rect, int borderThickness, Color color)
+        private void DrawRoundedRectangle(ISpriteBatch spriteBatch, Rectangle rect, int borderThickness, Color color)
         {
             int cornerRadius = borderThickness * 2;
             int cornerGap = cornerRadius;
@@ -947,7 +960,7 @@ namespace Odyssey.Game.Core
         /// <summary>
         /// Draws a corner arc (quarter circle border) for rounded rectangle corners.
         /// </summary>
-        private void DrawCornerArc(SpriteBatch spriteBatch, int centerX, int centerY, int radius, int thickness, Color color, bool leftSide, bool topSide)
+        private void DrawCornerArc(ISpriteBatch spriteBatch, int centerX, int centerY, int radius, int thickness, Color color, bool leftSide, bool topSide)
         {
             // Draw quarter circle arc using border approach
             for (int y = -radius; y <= 0; y++)
@@ -969,7 +982,7 @@ namespace Odyssey.Game.Core
         /// <summary>
         /// Draws a filled circle (approximated with rectangle).
         /// </summary>
-        private void DrawFilledCircle(SpriteBatch spriteBatch, Rectangle bounds, Color color)
+        private void DrawFilledCircle(ISpriteBatch spriteBatch, Rectangle bounds, Color color)
         {
             int centerX = bounds.X + bounds.Width / 2;
             int centerY = bounds.Y + bounds.Height / 2;
@@ -1053,76 +1066,30 @@ namespace Odyssey.Game.Core
 
         private void InitializeGameRendering()
         {
-            try
-            {
-                // Initialize basic 3D effect
-                _basicEffect = new BasicEffect(GraphicsDevice);
-                _basicEffect.VertexColorEnabled = true;
-
-                // Enable basic lighting for better visuals
-                _basicEffect.LightingEnabled = true;
-                _basicEffect.PreferPerPixelLighting = false;
-
-                // Set up ambient light (base illumination)
-                _basicEffect.AmbientLightColor = new Vector3(0.3f, 0.3f, 0.3f);
-
-                // Set up directional light (simulating sun/moon)
-                _basicEffect.DirectionalLight0.Enabled = true;
-                _basicEffect.DirectionalLight0.Direction = new Vector3(-0.5f, -1.0f, -0.3f); // Light from above and slightly behind
-                _basicEffect.DirectionalLight0.DiffuseColor = new Vector3(0.8f, 0.8f, 0.7f); // Slightly warm white
-                _basicEffect.DirectionalLight0.SpecularColor = new Vector3(0.2f, 0.2f, 0.2f);
-
-                // Enable a second directional light for fill lighting
-                _basicEffect.DirectionalLight1.Enabled = true;
-                _basicEffect.DirectionalLight1.Direction = new Vector3(0.5f, -0.5f, 0.5f); // Fill light from opposite side
-                _basicEffect.DirectionalLight1.DiffuseColor = new Vector3(0.3f, 0.3f, 0.4f); // Cooler fill light
-
-                // Disable third light (not needed for basic demo)
-                _basicEffect.DirectionalLight2.Enabled = false;
-
-                // Create a simple ground plane
-                CreateGroundPlane();
-
-                // Initialize camera
-                UpdateCamera();
-
-                Console.WriteLine("[Odyssey] Game rendering initialized");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("[Odyssey] WARNING: Failed to initialize game rendering: " + ex.Message);
-            }
+            // TODO: Full 3D rendering abstraction (BasicEffect, Matrix, Vector3, VertexPositionColor) needs to be implemented
+            // For now, 3D rendering initialization is disabled until abstraction is complete
+            // This includes:
+            // - BasicEffect (shader/effect system)
+            // - VertexPositionColor (vertex format)
+            // - Matrix operations (CreateLookAt, CreatePerspectiveFieldOfView)
+            // - 3D rendering pipeline (SetVertexBuffer, DrawIndexedPrimitives)
+            
+            Console.WriteLine("[Odyssey] Game rendering initialized (3D rendering disabled - needs abstraction)");
         }
 
         private void CreateGroundPlane()
         {
-            // Create a simple 10x10 ground plane
-            var vertices = new VertexPositionColor[]
-            {
-                new VertexPositionColor(new Vector3(-5, 0, -5), Color.Gray),
-                new VertexPositionColor(new Vector3(5, 0, -5), Color.Gray),
-                new VertexPositionColor(new Vector3(5, 0, 5), Color.Gray),
-                new VertexPositionColor(new Vector3(-5, 0, 5), Color.Gray)
-            };
-
-            short[] indices = new short[]
-            {
-                0, 1, 2,
-                0, 2, 3
-            };
-
-            _groundVertexBuffer = new VertexBuffer(GraphicsDevice, typeof(VertexPositionColor), vertices.Length, BufferUsage.WriteOnly);
-            _groundVertexBuffer.SetData(vertices);
-
-            _groundIndexBuffer = new IndexBuffer(GraphicsDevice, IndexElementSize.SixteenBits, indices.Length, BufferUsage.WriteOnly);
-            _groundIndexBuffer.SetData(indices);
+            // TODO: Ground plane creation needs 3D rendering abstraction
+            // This will be implemented once 3D rendering abstraction is complete
         }
 
         private void UpdateCamera()
         {
-            Microsoft.Xna.Framework.Vector3 target = new Microsoft.Xna.Framework.Vector3(0, 0, 0);
-            Microsoft.Xna.Framework.Vector3 cameraPosition;
-            Microsoft.Xna.Framework.Vector3 up = new Microsoft.Xna.Framework.Vector3(0, 1, 0);
+            // TODO: 3D camera system needs abstraction
+            // For now, camera update is simplified
+            System.Numerics.Vector3 target = new System.Numerics.Vector3(0, 0, 0);
+            System.Numerics.Vector3 cameraPosition;
+            System.Numerics.Vector3 up = new System.Numerics.Vector3(0, 1, 0);
 
             // Try to follow player if available
             if (_session != null && _session.PlayerEntity != null)
@@ -1130,14 +1097,14 @@ namespace Odyssey.Game.Core
                 Kotor.Components.TransformComponent transform = _session.PlayerEntity.GetComponent<Odyssey.Kotor.Components.TransformComponent>();
                 if (transform != null)
                 {
-                    target = new Microsoft.Xna.Framework.Vector3(transform.Position.X, transform.Position.Y, transform.Position.Z);
+                    target = new System.Numerics.Vector3(transform.Position.X, transform.Position.Y, transform.Position.Z);
 
                     // Camera follows behind and above player
                     float cameraDistance = 8f;
                     float cameraHeight = 4f;
                     float cameraAngle = transform.Facing + (float)Math.PI; // Behind player
 
-                    cameraPosition = new Vector3(
+                    cameraPosition = new System.Numerics.Vector3(
                         target.X + (float)Math.Sin(cameraAngle) * cameraDistance,
                         target.Y + cameraHeight,
                         target.Z + (float)Math.Cos(cameraAngle) * cameraDistance
@@ -1149,7 +1116,7 @@ namespace Odyssey.Game.Core
                     _cameraAngle += 0.01f;
                     float distance = 10f;
                     float height = 5f;
-                    cameraPosition = new Vector3(
+                    cameraPosition = new System.Numerics.Vector3(
                         (float)Math.Sin(_cameraAngle) * distance,
                         height,
                         (float)Math.Cos(_cameraAngle) * distance
@@ -1162,56 +1129,44 @@ namespace Odyssey.Game.Core
                 _cameraAngle += 0.01f;
                 float distance = 10f;
                 float height = 5f;
-                cameraPosition = new Vector3(
+                cameraPosition = new System.Numerics.Vector3(
                     (float)Math.Sin(_cameraAngle) * distance,
                     height,
                     (float)Math.Cos(_cameraAngle) * distance
                 );
             }
 
-            _viewMatrix = Matrix.CreateLookAt(cameraPosition, target, up);
+            // TODO: Matrix operations need abstraction
+            // _viewMatrix = System.Numerics.Matrix4x4.CreateLookAt(cameraPosition, target, up);
 
-            float aspectRatio = (float)GraphicsDevice.Viewport.Width / GraphicsDevice.Viewport.Height;
-            _projectionMatrix = Matrix.CreatePerspectiveFieldOfView(
-                MathHelper.ToRadians(60f),
-                aspectRatio,
-                0.1f,
-                100f
-            );
+            float aspectRatio = (float)_graphicsDevice.Viewport.Width / _graphicsDevice.Viewport.Height;
+            // _projectionMatrix = System.Numerics.Matrix4x4.CreatePerspectiveFieldOfView(
+            //     (float)(60.0 * Math.PI / 180.0),
+            //     aspectRatio,
+            //     0.1f,
+            //     100f
+            // );
         }
 
-        private void DrawGameWorld(GameTime gameTime)
+        private void DrawGameWorld()
         {
             // Clear with a sky color
-            GraphicsDevice.Clear(new Color(135, 206, 250, 255)); // Sky blue
+            _graphicsDevice.Clear(new Color(135, 206, 250, 255)); // Sky blue
 
-            // Set up graphics device state for 3D rendering
-            GraphicsDevice.DepthStencilState = DepthStencilState.Default;
-            GraphicsDevice.RasterizerState = RasterizerState.CullCounterClockwise;
-            GraphicsDevice.BlendState = BlendState.Opaque;
-            GraphicsDevice.SamplerStates[0] = SamplerState.LinearWrap;
+            // TODO: 3D rendering state management needs abstraction
+            // For now, basic 3D rendering is disabled until abstraction is complete
+            // GraphicsDevice.DepthStencilState = DepthStencilState.Default;
+            // GraphicsDevice.RasterizerState = RasterizerState.CullCounterClockwise;
+            // GraphicsDevice.BlendState = BlendState.Opaque;
+            // GraphicsDevice.SamplerStates[0] = SamplerState.LinearWrap;
 
             // Draw 3D scene
-            if (_groundVertexBuffer != null && _groundIndexBuffer != null && _basicEffect != null)
-            {
-                GraphicsDevice.SetVertexBuffer(_groundVertexBuffer);
-                GraphicsDevice.Indices = _groundIndexBuffer;
-
-                _basicEffect.View = _viewMatrix;
-                _basicEffect.Projection = _projectionMatrix;
-                _basicEffect.World = Matrix.Identity;
-
-                foreach (EffectPass pass in _basicEffect.CurrentTechnique.Passes)
-                {
-                    pass.Apply();
-                    GraphicsDevice.DrawIndexedPrimitives(
-                        PrimitiveType.TriangleList,
-                        0,
-                        0,
-                        2 // 2 triangles
-                    );
-                }
-            }
+            // TODO: 3D rendering needs full abstraction (BasicEffect, EffectPass, DrawIndexedPrimitives)
+            // For now, 3D rendering is disabled until abstraction is complete
+            // if (_groundVertexBuffer != null && _groundIndexBuffer != null && _basicEffect != null)
+            // {
+            //     // 3D rendering code will be implemented once abstraction is complete
+            // }
 
             // Draw loaded area rooms if available
             if (_session != null && _session.CurrentRuntimeModule != null)
@@ -1275,10 +1230,15 @@ namespace Odyssey.Game.Core
 
         private void DrawAreaRooms(Odyssey.Core.Module.RuntimeArea area)
         {
-            if (area.Rooms == null || area.Rooms.Count == 0 || _basicEffect == null || _roomRenderer == null)
+            // TODO: 3D room rendering needs abstraction (BasicEffect, RoomMeshRenderer)
+            // For now, room rendering is disabled until 3D abstraction is complete
+            if (area.Rooms == null || area.Rooms.Count == 0)
             {
                 return;
             }
+            
+            // Room rendering disabled - needs 3D abstraction
+            return;
 
             // Determine which room the player is in for VIS culling
             int currentRoomIndex = -1;
@@ -1364,16 +1324,15 @@ namespace Odyssey.Game.Core
         /// </summary>
         private void DrawAreaEntities(Odyssey.Core.Module.RuntimeArea area)
         {
-            if (area == null || _basicEffect == null)
+            // TODO: 3D entity rendering needs abstraction (BasicEffect, VertexBuffer, IndexBuffer, Matrix)
+            // For now, entity rendering is disabled until 3D abstraction is complete
+            if (area == null)
             {
                 return;
             }
-
-            // Draw all entities as simple colored boxes
-            foreach (Odyssey.Core.Interfaces.IEntity entity in area.GetAllEntities())
-            {
-                DrawEntity(entity);
-            }
+            
+            // Entity rendering disabled - needs 3D abstraction
+            return;
         }
 
         /// <summary>
@@ -1381,10 +1340,9 @@ namespace Odyssey.Game.Core
         /// </summary>
         private void DrawEntity(Odyssey.Core.Interfaces.IEntity entity)
         {
-            if (entity == null || _basicEffect == null)
-            {
-                return;
-            }
+            // TODO: 3D entity rendering needs abstraction
+            // For now, entity rendering is disabled until 3D abstraction is complete
+            return;
 
             Kotor.Components.TransformComponent transform = entity.GetComponent<Odyssey.Kotor.Components.TransformComponent>();
             if (transform == null)
@@ -1506,10 +1464,9 @@ namespace Odyssey.Game.Core
         /// </summary>
         private void DrawPlayerEntity(Odyssey.Core.Interfaces.IEntity playerEntity)
         {
-            if (_basicEffect == null)
-            {
-                return;
-            }
+            // TODO: 3D player rendering needs abstraction
+            // For now, player rendering is disabled until 3D abstraction is complete
+            return;
 
             Kotor.Components.TransformComponent transform = playerEntity.GetComponent<Odyssey.Kotor.Components.TransformComponent>();
             if (transform == null)
@@ -2577,10 +2534,11 @@ namespace Odyssey.Game.Core
         /// <summary>
         /// Updates the save menu.
         /// </summary>
-        private void UpdateSaveMenu(GameTime gameTime)
+        private void UpdateSaveMenu(float deltaTime, IKeyboardState keyboardState, IMouseState mouseState)
         {
-            KeyboardState currentKeyboard = Keyboard.GetState();
-            MouseState currentMouse = Mouse.GetState();
+            var inputManager = _graphicsBackend.InputManager;
+            var currentKeyboard = inputManager.KeyboardState;
+            var currentMouse = inputManager.MouseState;
 
             // Handle ESC to cancel
             if (IsKeyJustPressed(_previousKeyboardState, currentKeyboard, Keys.Escape))
@@ -2632,10 +2590,11 @@ namespace Odyssey.Game.Core
         /// <summary>
         /// Updates the load menu.
         /// </summary>
-        private void UpdateLoadMenu(GameTime gameTime)
+        private void UpdateLoadMenu(float deltaTime, IKeyboardState keyboardState, IMouseState mouseState)
         {
-            KeyboardState currentKeyboard = Keyboard.GetState();
-            MouseState currentMouse = Mouse.GetState();
+            var inputManager = _graphicsBackend.InputManager;
+            var currentKeyboard = inputManager.KeyboardState;
+            var currentMouse = inputManager.MouseState;
 
             // Handle ESC to cancel
             if (IsKeyJustPressed(_previousKeyboardState, currentKeyboard, Keys.Escape))
@@ -2670,9 +2629,9 @@ namespace Odyssey.Game.Core
         /// <summary>
         /// Draws the save menu.
         /// </summary>
-        private void DrawSaveMenu(GameTime gameTime)
+        private void DrawSaveMenu()
         {
-            GraphicsDevice.Clear(new Color(20, 20, 30));
+            _graphicsDevice.Clear(new Color(20, 20, 30, 255));
 
             if (_spriteBatch == null || _font == null || _menuTexture == null)
             {
@@ -2681,14 +2640,14 @@ namespace Odyssey.Game.Core
 
             _spriteBatch.Begin();
 
-            int viewportWidth = GraphicsDevice.Viewport.Width;
-            int viewportHeight = GraphicsDevice.Viewport.Height;
+            int viewportWidth = _graphicsDevice.Viewport.Width;
+            int viewportHeight = _graphicsDevice.Viewport.Height;
 
             // Title
             string title = "Save Game";
             Vector2 titleSize = _font.MeasureString(title);
             Vector2 titlePos = new Vector2((viewportWidth - titleSize.X) / 2, 50);
-            _spriteBatch.DrawString(_font, title, titlePos, Color.White);
+            _spriteBatch.DrawString(_font, title, titlePos, new Color(255, 255, 255, 255));
 
             // Save list
             int startY = 150;
@@ -2712,13 +2671,13 @@ namespace Odyssey.Game.Core
                     Odyssey.Core.Save.SaveGameInfo save = _availableSaves[i];
                     string saveText = $"{save.Name} - {save.ModuleName} - {save.SaveTime:g}";
                     Vector2 textPos = new Vector2(itemRect.X + 10, itemRect.Y + (itemHeight - _font.LineSpacing) / 2);
-                    _spriteBatch.DrawString(_font, saveText, textPos, Color.White);
+                    _spriteBatch.DrawString(_font, saveText, textPos, new Color(255, 255, 255, 255));
                 }
                 else
                 {
                     string newSaveText = "New Save";
                     Vector2 textPos = new Vector2(itemRect.X + 10, itemRect.Y + (itemHeight - _font.LineSpacing) / 2);
-                    _spriteBatch.DrawString(_font, newSaveText, textPos, Color.LightGray);
+                    _spriteBatch.DrawString(_font, newSaveText, textPos, new Color(211, 211, 211, 255));
                 }
             }
 
@@ -2726,7 +2685,7 @@ namespace Odyssey.Game.Core
             string instructions = "Select a save slot or create a new save. Press Escape to cancel.";
             Vector2 instSize = _font.MeasureString(instructions);
             Vector2 instPos = new Vector2((viewportWidth - instSize.X) / 2, viewportHeight - 50);
-            _spriteBatch.DrawString(_font, instructions, instPos, Color.LightGray);
+            _spriteBatch.DrawString(_font, instructions, instPos, new Color(211, 211, 211, 255));
 
             _spriteBatch.End();
         }
@@ -2734,9 +2693,9 @@ namespace Odyssey.Game.Core
         /// <summary>
         /// Draws the load menu.
         /// </summary>
-        private void DrawLoadMenu(GameTime gameTime)
+        private void DrawLoadMenu()
         {
-            GraphicsDevice.Clear(new Color(20, 20, 30));
+            _graphicsDevice.Clear(new Color(20, 20, 30, 255));
 
             if (_spriteBatch == null || _font == null || _menuTexture == null)
             {
@@ -2745,14 +2704,14 @@ namespace Odyssey.Game.Core
 
             _spriteBatch.Begin();
 
-            int viewportWidth = GraphicsDevice.Viewport.Width;
-            int viewportHeight = GraphicsDevice.Viewport.Height;
+            int viewportWidth = _graphicsDevice.Viewport.Width;
+            int viewportHeight = _graphicsDevice.Viewport.Height;
 
             // Title
             string title = "Load Game";
             Vector2 titleSize = _font.MeasureString(title);
             Vector2 titlePos = new Vector2((viewportWidth - titleSize.X) / 2, 50);
-            _spriteBatch.DrawString(_font, title, titlePos, Color.White);
+            _spriteBatch.DrawString(_font, title, titlePos, new Color(255, 255, 255, 255));
 
             // Save list
             int startY = 150;
@@ -2774,19 +2733,39 @@ namespace Odyssey.Game.Core
                 Odyssey.Core.Save.SaveGameInfo save = _availableSaves[i];
                 string saveText = $"{save.Name} - {save.ModuleName} - {save.SaveTime:g}";
                 Vector2 textPos = new Vector2(itemRect.X + 10, itemRect.Y + (itemHeight - _font.LineSpacing) / 2);
-                _spriteBatch.DrawString(_font, saveText, textPos, Color.White);
+                _spriteBatch.DrawString(_font, saveText, textPos, new Color(255, 255, 255, 255));
             }
 
             // Instructions
             string instructions = "Select a save to load. Press Escape to cancel.";
             Vector2 instSize = _font.MeasureString(instructions);
             Vector2 instPos = new Vector2((viewportWidth - instSize.X) / 2, viewportHeight - 50);
-            _spriteBatch.DrawString(_font, instructions, instPos, Color.LightGray);
+            _spriteBatch.DrawString(_font, instructions, instPos, new Color(211, 211, 211, 255));
 
             _spriteBatch.End();
         }
 
         #endregion
+
+        public void Dispose()
+        {
+            if (_spriteBatch != null)
+            {
+                _spriteBatch.Dispose();
+                _spriteBatch = null;
+            }
+
+            if (_menuTexture != null)
+            {
+                _menuTexture.Dispose();
+                _menuTexture = null;
+            }
+
+            if (_graphicsBackend != null)
+            {
+                _graphicsBackend.Dispose();
+            }
+        }
     }
 }
 
