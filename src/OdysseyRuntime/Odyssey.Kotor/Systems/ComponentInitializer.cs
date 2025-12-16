@@ -135,6 +135,33 @@ namespace Odyssey.Kotor.Systems
             {
                 entity.AddComponent(new ScriptHooksComponent());
             }
+
+            // Add ActionQueueComponent for entities that can perform actions (creatures, placeables, doors)
+            if (ShouldHaveActionQueue(entity.ObjectType))
+            {
+                if (!entity.HasComponent<IActionQueueComponent>())
+                {
+                    var actionQueue = new ActionQueueComponent();
+                    actionQueue.Owner = entity;
+                    entity.AddComponent(actionQueue);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Determines if an entity type should have an ActionQueueComponent.
+        /// </summary>
+        private static bool ShouldHaveActionQueue(ObjectType objectType)
+        {
+            switch (objectType)
+            {
+                case ObjectType.Creature:
+                case ObjectType.Door:
+                case ObjectType.Placeable:
+                    return true;
+                default:
+                    return false;
+            }
         }
 
         /// <summary>
