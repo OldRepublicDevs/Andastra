@@ -12,8 +12,9 @@ namespace Odyssey.Content.Interfaces
     /// <remarks>
     /// Content Cache Interface:
     /// - Based on swkotor2.exe asset caching system
-    /// - Located via string references: Asset caching and memory management functions
+    /// - Located via string references: "CACHE" @ 0x007c6848, "z:\cache" @ 0x007c6850, CExoKeyTable resource management
     /// - Original implementation: Caches converted assets (MDL→runtime model, TPC→runtime texture) to disk
+    /// - Resource management: CExoKeyTable handles resource key management, tracks loaded resources in memory
     /// - Cache key: Includes game type, ResRef, resource type, source hash, converter version
     /// - Cache invalidation: Source hash changes when source file modified, converter version changes when converter updated
     /// - Cache pruning: LRU eviction when cache exceeds size limits (prevents disk space issues)
@@ -21,7 +22,7 @@ namespace Odyssey.Content.Interfaces
     /// - Performance: Avoids redundant conversions, speeds up module loading after first load
     /// - Cache safety: Converter version ensures cache invalidation when converter logic changes
     /// - Source hash: MD5/SHA1 hash of source file ensures cache invalidation when source file changes
-    /// - Note: Original engine uses in-memory caching, this adds persistent disk cache for converted assets
+    /// - Note: Original engine uses in-memory caching via CExoKeyTable, this adds persistent disk cache for converted assets
     /// </remarks>
     public interface IContentCache
     {

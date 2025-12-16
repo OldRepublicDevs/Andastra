@@ -18,6 +18,7 @@ Internal tracking document for AI agents. Not public-facing. Do not commit to re
 ## Update Instructions
 
 When processing a file:
+
 - Mark as - [/] when starting work
 - Mark as - [x] when complete with Ghidra references added
 - Add notes about function addresses, string references, and implementation details
@@ -480,4 +481,3 @@ When processing a file:
 ### Odyssey.Tooling (1 files)
 
 - [ ] Program.cs
-
