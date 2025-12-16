@@ -440,8 +440,26 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
                         {
                             // No ACTION instructions between SAVEBP+1 and last RETN
                             // Main function code must be in the globals range (0 to SAVEBP) - need to split
-                            mainCodeInGlobals = true;
-                            JavaSystem.@out.Println($"DEBUG NcsToAstConverter: No ACTION instructions found between SAVEBP+1 ({checkStart}) and last RETN ({instructions.Count - 1}), main code is in globals range (0-{savebpIndex}) - will split globals");
+                            // Find where the main code actually starts by looking for the first ACTION instruction in the 0 to SAVEBP range
+                            int mainCodeStartInGlobals = -1;
+                            for (int i = 0; i <= savebpIndex; i++)
+                            {
+                                if (instructions[i].InsType == NCSInstructionType.ACTION)
+                                {
+                                    mainCodeStartInGlobals = i;
+                                    JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Found first ACTION instruction in globals range at index {i}");
+                                    break;
+                                }
+                            }
+                            if (mainCodeStartInGlobals >= 0)
+                            {
+                                mainCodeInGlobals = true;
+                                JavaSystem.@out.Println($"DEBUG NcsToAstConverter: No ACTION instructions found between SAVEBP+1 ({checkStart}) and last RETN ({instructions.Count - 1}), but found ACTION at {mainCodeStartInGlobals} in globals range (0-{savebpIndex}) - will split globals at {mainCodeStartInGlobals}");
+                            }
+                            else
+                            {
+                                JavaSystem.@out.Println($"DEBUG NcsToAstConverter: No ACTION instructions found anywhere - file may be empty or malformed");
+                            }
                         }
                         else
                         {
