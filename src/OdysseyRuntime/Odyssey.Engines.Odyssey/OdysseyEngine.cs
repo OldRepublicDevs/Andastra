@@ -10,6 +10,15 @@ namespace Odyssey.Engines.Odyssey
     /// <summary>
     /// Odyssey Engine implementation for KOTOR 1/2.
     /// </summary>
+    /// <remarks>
+    /// Engine Initialization:
+    /// - Based on swkotor2.exe engine initialization system
+    /// - Located via string references: "ModuleLoaded" @ 0x007bdd70, "ModuleRunning" @ 0x007bdd58
+    /// - Original implementation: Engine initializes resource provider, game session, and module loader
+    /// - Resource provider: Accesses game installation directory for file loading (GFF, 2DA, MDL, etc.)
+    /// - Game session: Coordinates module loading, entity management, script execution, combat, AI
+    /// - Module loader: Handles loading module files (MOD, ARE, GIT, etc.) and spawning entities
+    /// </remarks>
     public class OdysseyEngine : BaseEngine
     {
         private string _installationPath;
