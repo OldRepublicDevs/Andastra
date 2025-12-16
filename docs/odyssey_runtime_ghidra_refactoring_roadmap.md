@@ -29,23 +29,23 @@ When processing a file:
 ### Odyssey.Content (18 files)
 
 - [x] Cache\ContentCache.cs - CACHE @ 0x007c6848, z:\cache @ 0x007c6850, CExoKeyTable resource management
-- [ ] Converters\BwmToNavigationMeshConverter.cs
+- [x] Converters\BwmToNavigationMeshConverter.cs - nwsareapathfind.cpp @ 0x007be3ff, pathfinding errors @ 0x007be510, 0x007c03c0, 0x007c0408
 - [x] Interfaces\IContentCache.cs - CACHE @ 0x007c6848, z:\cache @ 0x007c6850, CExoKeyTable resource management
 - [x] Interfaces\IContentConverter.cs - Resource @ 0x007c14d4, Loading @ 0x007c7e40, CExoKeyTable resource loading
-- [ ] Interfaces\IGameResourceProvider.cs
-- [ ] Interfaces\IResourceProvider.cs
-- [ ] Loaders\GITLoader.cs
-- [ ] Loaders\TemplateLoader.cs
+- [x] Interfaces\IGameResourceProvider.cs - Resource @ 0x007c14d4, FUN_00633270 @ 0x00633270, CExoKeyTable resource management
+- [x] Interfaces\IResourceProvider.cs - Resource @ 0x007c14d4, CExoKeyTable @ 0x007b6078, FUN_00633270 @ 0x00633270
+- [x] Loaders\GITLoader.cs - Already has comprehensive Ghidra references (31 matches)
+- [x] Loaders\TemplateLoader.cs - Already has comprehensive Ghidra references (16 matches)
 - [x] MDL\MDLBulkReader.cs - ModelName @ 0x007c1c8c, Model @ 0x007c1ca8, CSWCCreature::LoadModel @ 0x007c82fc, FUN_005261b0 @ 0x005261b0
 - [x] MDL\MDLCache.cs - ModelName @ 0x007c1c8c, Model @ 0x007c1ca8, CSWCCreature::LoadModel @ 0x007c82fc, FUN_005261b0 @ 0x005261b0
 - [x] MDL\MDLConstants.cs - DoubleMdlVar @ 0x007d05d8, ShortMdlVar @ 0x007d05e8, LongMdlVar @ 0x007d05f4, FUN_005261b0 @ 0x005261b0
 - [x] MDL\MDLDataTypes.cs - ModelName @ 0x007c1c8c, Model @ 0x007c1ca8, FUN_005261b0 @ 0x005261b0
-- [ ] MDL\MDLFastReader.cs
-- [ ] MDL\MDLLoader.cs
-- [ ] MDL\MDLOptimizedReader.cs
-- [ ] ResourceProviders\GameResourceProvider.cs
-- [ ] Save\SaveDataProvider.cs
-- [ ] Save\SaveSerializer.cs
+- [x] MDL\MDLFastReader.cs - ModelName @ 0x007c1c8c, Model @ 0x007c1ca8, CSWCCreature::LoadModel @ 0x007c82fc, FUN_005261b0 @ 0x005261b0
+- [x] MDL\MDLLoader.cs - ModelName @ 0x007c1c8c, Model @ 0x007c1ca8, CSWCCreature::LoadModel @ 0x007c82fc, FUN_005261b0 @ 0x005261b0
+- [x] MDL\MDLOptimizedReader.cs - ModelName @ 0x007c1c8c, Model @ 0x007c1ca8, CSWCCreature::LoadModel @ 0x007c82fc, FUN_005261b0 @ 0x005261b0
+- [x] ResourceProviders\GameResourceProvider.cs - Resource @ 0x007c14d4, CExoKeyTable @ 0x007b6078, 0x007b6124
+- [x] Save\SaveDataProvider.cs - Already has comprehensive Ghidra references (26 matches: FUN_004eb750, FUN_00708990, savenfo @ 0x007be1f0, SAVES: @ 0x007be284)
+- [x] Save\SaveSerializer.cs - Already has comprehensive Ghidra references (48 matches: FUN_004eb750, FUN_005ac670, FUN_0057bd70, savenfo @ 0x007be1f0)
 
 ### Odyssey.Core (99 files)
 
