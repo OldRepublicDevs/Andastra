@@ -673,7 +673,14 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             }
 
             data.GenerateCode();
-            return data.GetCode();
+            string code = data.GetCode();
+            // Ensure we always return a non-null string (even if empty) so file is always created
+            if (code == null)
+            {
+                JavaSystem.@out.Println("WARNING: GenerateCode() returned null code, using empty string as fallback");
+                code = "";
+            }
+            return code;
         }
 
         // Matching NCSDecomp implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:460-474
