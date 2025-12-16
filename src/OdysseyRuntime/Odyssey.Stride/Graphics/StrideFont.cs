@@ -18,15 +18,15 @@ namespace Odyssey.Stride.Graphics
             _font = font ?? throw new System.ArgumentNullException(nameof(font));
         }
 
-        public Vector2 MeasureString(string text)
+        public Odyssey.Graphics.Vector2 MeasureString(string text)
         {
             if (text == null)
             {
-                return Vector2.Zero;
+                return Odyssey.Graphics.Vector2.Zero;
             }
 
             var size = _font.MeasureString(text);
-            return new Vector2(size.X, size.Y);
+            return new Odyssey.Graphics.Vector2(size.X, size.Y);
         }
 
         public float LineSpacing => _font.LineSpacing;

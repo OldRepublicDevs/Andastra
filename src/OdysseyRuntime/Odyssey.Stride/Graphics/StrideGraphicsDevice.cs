@@ -17,12 +17,12 @@ namespace Odyssey.Stride.Graphics
             _device = device ?? throw new ArgumentNullException(nameof(device));
         }
 
-        public Viewport Viewport
+        public Odyssey.Graphics.Viewport Viewport
         {
             get
             {
                 var vp = _device.Viewport;
-                return new Viewport(vp.X, vp.Y, vp.Width, vp.Height, vp.MinDepth, vp.MaxDepth);
+                return new Odyssey.Graphics.Viewport(vp.X, vp.Y, vp.Width, vp.Height, vp.MinDepth, vp.MaxDepth);
             }
         }
 
@@ -67,7 +67,7 @@ namespace Odyssey.Stride.Graphics
             }
         }
 
-        public void Clear(Color color)
+        public void Clear(Odyssey.Graphics.Color color)
         {
             var strideColor = new Stride.Core.Mathematics.Color4(color.R / 255.0f, color.G / 255.0f, color.B / 255.0f, color.A / 255.0f);
             _device.Clear(strideColor);
@@ -114,7 +114,7 @@ namespace Odyssey.Stride.Graphics
 
         public IVertexBuffer CreateVertexBuffer<T>(T[] data) where T : struct
         {
-            var buffer = Stride.Graphics.Buffer.Vertex.New(_device, data, GraphicsResourceUsage.Dynamic);
+            var buffer = Stride.Graphics.Buffer.Vertex.New(_device, data, Stride.Graphics.GraphicsResourceUsage.Dynamic);
             return new StrideVertexBuffer(buffer, data != null ? data.Length : 0, System.Runtime.InteropServices.Marshal.SizeOf<T>());
         }
 
@@ -128,17 +128,18 @@ namespace Odyssey.Stride.Graphics
                 {
                     shortIndices[i] = (ushort)indices[i];
                 }
-                buffer = Stride.Graphics.Buffer.Index.New(_device, shortIndices, GraphicsResourceUsage.Dynamic);
+                buffer = Stride.Graphics.Buffer.Index.New(_device, shortIndices, Stride.Graphics.GraphicsResourceUsage.Dynamic);
             }
             else
             {
-                buffer = Stride.Graphics.Buffer.Index.New(_device, indices, GraphicsResourceUsage.Dynamic);
+                buffer = Stride.Graphics.Buffer.Index.New(_device, indices, Stride.Graphics.GraphicsResourceUsage.Dynamic);
             }
             return new StrideIndexBuffer(buffer, indices != null ? indices.Length : 0, isShort);
         }
 
         public ISpriteBatch CreateSpriteBatch()
         {
+            // Stride SpriteBatch requires GraphicsDevice, which we have
             return new StrideSpriteBatch(new SpriteBatch(_device));
         }
 
