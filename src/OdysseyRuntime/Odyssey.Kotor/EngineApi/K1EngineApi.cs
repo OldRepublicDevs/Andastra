@@ -4036,8 +4036,29 @@ namespace Odyssey.Kotor.EngineApi
             return Variable.FromInt(0);
         }
 
+        /// <summary>
+        /// CancelCombat(object oTarget=OBJECT_SELF) - Cancels combat for the specified creature
+        /// Based on swkotor2.exe: CancelCombat ends combat state for a creature
+        /// Located via string references: Combat state management
+        /// Original implementation: Sets combat state to Idle, clears attack targets
+        /// </summary>
         private Variable Func_CancelCombat(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
+            uint targetId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
+            IEntity target = ResolveObject(targetId, ctx);
+
+            if (target == null)
+            {
+                return Variable.Void();
+            }
+
+            // Access CombatManager from GameServicesContext
+            if (ctx is VMExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services && services.CombatManager is CombatManager combatManager)
+            {
+                // End combat for the target entity
+                combatManager.EndCombat(target);
+            }
+
             return Variable.Void();
         }
 
