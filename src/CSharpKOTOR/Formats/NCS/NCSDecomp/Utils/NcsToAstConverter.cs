@@ -470,24 +470,51 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
                     if (mainCodeInGlobals)
                     {
                         // Main function code is in globals range - split globals
-                        // The main code is between SAVEBP and entryStubEnd
-                        // Globals should only include variable initialization (0 to SAVEBP+1)
-                        // Main should include everything from SAVEBP+1 to the last RETN (includes entry stub and main code)
-                        int globalsInitEnd = savebpIndex + 1; // Globals end at SAVEBP+1 (includes SAVEBP)
-                        int mainCodeStart = savebpIndex + 1; // Main code starts right after SAVEBP
-                        
-                        // Create globals subroutine (globals initialization only, up to SAVEBP+1)
-                        ASubroutine globalsSub = ConvertInstructionRangeToSubroutine(ncs, instructions, 0, globalsInitEnd, 0);
-                        if (globalsSub != null)
+                        // Find where the main code actually starts in the 0 to SAVEBP range
+                        int mainCodeStartInGlobals = -1;
+                        for (int i = 0; i <= savebpIndex; i++)
                         {
-                            program.GetSubroutine().Add(globalsSub);
-                            JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Created split globals subroutine (range 0-{globalsInitEnd}, globals initialization only)");
+                            if (instructions[i].InsType == NCSInstructionType.ACTION)
+                            {
+                                mainCodeStartInGlobals = i;
+                                break;
+                            }
                         }
                         
-                        // Update mainStart to include the main function code (from SAVEBP+1 to last RETN)
-                        mainStart = mainCodeStart;
-                        mainEnd = instructions.Count; // Include all instructions from SAVEBP+1 to last RETN
-                        JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Updated mainStart to {mainStart} and mainEnd to {mainEnd} (main includes all code from {mainStart} to last RETN, including entry stub and main function code)");
+                        if (mainCodeStartInGlobals >= 0)
+                        {
+                            // Split at the first ACTION instruction
+                            // Globals: 0 to mainCodeStartInGlobals (variable initialization only)
+                            // Main: mainCodeStartInGlobals to last RETN (includes main code and everything after)
+                            int globalsInitEnd = mainCodeStartInGlobals;
+                            
+                            // Create globals subroutine (globals initialization only, up to first ACTION)
+                            ASubroutine globalsSub = ConvertInstructionRangeToSubroutine(ncs, instructions, 0, globalsInitEnd, 0);
+                            if (globalsSub != null)
+                            {
+                                program.GetSubroutine().Add(globalsSub);
+                                JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Created split globals subroutine (range 0-{globalsInitEnd}, globals initialization only, before first ACTION at {mainCodeStartInGlobals})");
+                            }
+                            
+                            // Update mainStart to include the main function code (from first ACTION to last RETN)
+                            mainStart = mainCodeStartInGlobals;
+                            mainEnd = instructions.Count; // Include all instructions from first ACTION to last RETN
+                            JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Updated mainStart to {mainStart} and mainEnd to {mainEnd} (main includes all code from first ACTION at {mainStart} to last RETN)");
+                        }
+                        else
+                        {
+                            // No ACTION instructions found in globals range either - use SAVEBP+1 as split point
+                            int globalsInitEnd = savebpIndex + 1;
+                            ASubroutine globalsSub = ConvertInstructionRangeToSubroutine(ncs, instructions, 0, globalsInitEnd, 0);
+                            if (globalsSub != null)
+                            {
+                                program.GetSubroutine().Add(globalsSub);
+                                JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Created split globals subroutine (range 0-{globalsInitEnd}, no ACTION found, using SAVEBP+1 as split)");
+                            }
+                            mainStart = globalsInitEnd;
+                            mainEnd = instructions.Count;
+                            JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Updated mainStart to {mainStart} and mainEnd to {mainEnd} (no ACTION in globals, using SAVEBP+1 as main start)");
+                        }
                     }
                     else
                     {
