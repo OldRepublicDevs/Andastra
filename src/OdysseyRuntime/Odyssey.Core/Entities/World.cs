@@ -35,12 +35,17 @@ namespace Odyssey.Core.Entities
         private readonly Dictionary<uint, IEntity> _entitiesById;
         private readonly Dictionary<string, List<IEntity>> _entitiesByTag;
         private readonly Dictionary<ObjectType, List<IEntity>> _entitiesByType;
+        
+        // Based on swkotor2.exe: Tag lookup is case-insensitive
+        // Located via string references: "GetObjectByTag" function uses case-insensitive tag comparison
+        // Original implementation: Tag matching ignores case differences
+        private static readonly StringComparer TagComparer = StringComparer.OrdinalIgnoreCase;
         private readonly List<IEntity> _allEntities;
 
         public World()
         {
             _entitiesById = new Dictionary<uint, IEntity>();
-            _entitiesByTag = new Dictionary<string, List<IEntity>>(StringComparer.OrdinalIgnoreCase);
+            _entitiesByTag = new Dictionary<string, List<IEntity>>(TagComparer);
             _entitiesByType = new Dictionary<ObjectType, List<IEntity>>();
             _allEntities = new List<IEntity>();
             TimeManager = new TimeManager();
