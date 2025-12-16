@@ -87,6 +87,10 @@ namespace Odyssey.Kotor.Save
             try
             {
                 // Create save directory
+                // Based on swkotor2.exe: FUN_00708990 @ 0x00708990
+                // Original implementation: Constructs path using format "%06d - %s" (save number and name)
+                // Path format: "SAVES:\{saveNumber:06d} - {saveName}\SAVEGAME"
+                // For now, we use saveName directly, but the original uses formatted save number + name
                 string saveDir = Path.Combine(_savesDirectory, saveName);
                 if (!Directory.Exists(saveDir))
                 {

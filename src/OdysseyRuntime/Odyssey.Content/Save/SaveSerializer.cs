@@ -418,13 +418,18 @@ namespace Odyssey.Content.Save
             }
 
             // CatNumber list: Each entry has "Name" field
+            // Based on swkotor2.exe: FUN_005ab310 @ 0x005ab310
+            // Original implementation: Stores numbers as bytes in ValNumber binary array
+            // Note: The original engine uses a byte array, but integers are typically stored as 4-byte values
+            // However, the Ghidra code shows it stores as single bytes, so we match that format
             var catNumberList = root.Acquire<GFFList>("CatNumber", new GFFList());
             var numValues = new List<byte>();
             foreach (KeyValuePair<string, int> kvp in state.Numbers)
             {
                 GFFStruct entry = catNumberList.Add();
                 entry.SetString("Name", kvp.Key);
-                // Store as single byte (original uses byte array)
+                // Store as single byte (original uses byte array per Ghidra FUN_005ab310)
+                // The original engine stores numbers as bytes, truncating to 0-255 range
                 byte numValue = (byte)(kvp.Value & 0xFF);
                 numValues.Add(numValue);
             }
