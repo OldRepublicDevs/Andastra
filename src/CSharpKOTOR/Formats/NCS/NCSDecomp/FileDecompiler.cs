@@ -3131,7 +3131,17 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                     ((ASubroutine)subs.Next()).Apply(destroytree);
                 }
 
-                mainsub.Apply(destroytree);
+                if (mainsub != null)
+                {
+                    try
+                    {
+                        mainsub.Apply(destroytree);
+                    }
+                    catch (Exception e)
+                    {
+                        JavaSystem.@out.Println("Error destroying main parse tree: " + e.Message);
+                    }
+                }
                 return data;
             }
             catch (Exception e)
