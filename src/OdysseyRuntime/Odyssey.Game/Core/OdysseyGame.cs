@@ -29,14 +29,18 @@ namespace Odyssey.Game.Core
     /// </summary>
     /// <remarks>
     /// Odyssey Game (MonoGame Implementation):
-    /// - Based on swkotor2.exe game loop and rendering system
-    /// - Located via string references: "UpdateScenes" @ 0x007b8b54 (scene update function), "update" @ 0x007bab3c (update constant)
-    /// - "GameObjUpdate" @ 0x007c246c (game object update), "ForceAlwaysUpdate" @ 0x007bf5b4 (force always update flag)
+    /// - Based on swkotor2.exe: FUN_00404250 @ 0x00404250 (main game loop, WinMain equivalent)
+    /// - Main loop structure: while (DAT_00828390 == 0) { PeekMessageA, update game, render, SwapBuffers }
+    /// - Located via string references: "UpdateScenes" @ 0x007b8b54 (referenced by FUN_00452060, FUN_0045f960, FUN_004cbe40)
+    /// - "update" @ 0x007bab3c (update constant), "GameObjUpdate" @ 0x007c246c (game object update)
+    /// - "ForceAlwaysUpdate" @ 0x007bf5b4 (force always update flag, saved by FUN_005226d0 @ 0x005226d0)
     /// - Rendering: "DRAWSTYLE" @ 0x007b63d4 (draw style constant), "DRAWMODE" @ 0x007b6a4c (draw mode constant)
     /// - "glDrawArrays" @ 0x0080aab6, "glDrawElements" @ 0x0080aafe, "glDrawBuffer" @ 0x0080ac4e (OpenGL draw functions)
     /// - "mgs_drawmain" @ 0x007cc8f0 (main draw function), "hologram_donotdraw" @ 0x007bae78 (hologram don't draw flag)
-    /// - Game loop: Update() called every frame (60 Hz fixed timestep), Draw() renders frame
-    /// - Original implementation: FUN_005226d0 @ 0x005226d0 manages game loop, entity updates, rendering
+    /// - Game loop phases (FUN_00404250): Message processing (PeekMessageA), game update (FUN_00638ca0), rendering (glClear, FUN_00461c20/FUN_00461c00), SwapBuffers
+    /// - Entity serialization: FUN_005226d0 @ 0x005226d0 saves creature entity data to GFF (script hooks, inventory, perception, combat, position/orientation)
+    /// - Update() called every frame (60 Hz fixed timestep), Draw() renders frame
+    /// - Original implementation: Main loop processes Windows messages, updates game state, renders frame, swaps buffers
     /// - MonoGame integration: Wraps MonoGame Game class for window management, input, and rendering
     /// - Based on MonoGame API: https://docs.monogame.net/api/Microsoft.Xna.Framework.Game.html
     /// </remarks>
