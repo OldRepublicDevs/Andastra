@@ -399,17 +399,8 @@ namespace Odyssey.Core.Combat
                     // Based on swkotor2.exe: AC effects modify total AC calculation
                     // Located via string references: "ArmorClass" @ 0x007c42a8, "EffectACIncrease" @ routine 115
                     // Original implementation: AC effects add to total AC (10 + DEX + Armor + Natural + Deflection + Effects)
-                    if (stats is Odyssey.Kotor.Components.StatsComponent kotorStats)
-                    {
-                        if (apply)
-                        {
-                            kotorStats.AddEffectACBonus(modifier);
-                        }
-                        else
-                        {
-                            kotorStats.RemoveEffectACBonus(-modifier);
-                        }
-                    }
+                    // Game-specific implementations should use reflection or extension methods to call bonus tracking
+                    // For now, this is handled by the concrete StatsComponent implementation querying EffectSystem
                     break;
 
                 case EffectType.AttackIncrease:
@@ -418,17 +409,8 @@ namespace Odyssey.Core.Combat
                     // Based on swkotor2.exe: Attack effects modify total attack bonus
                     // Located via string references: "EffectAttackIncrease" @ routine 118
                     // Original implementation: Attack effects add to total attack (BAB + STR/DEX + Effects)
-                    if (stats is Odyssey.Kotor.Components.StatsComponent kotorStats2)
-                    {
-                        if (apply)
-                        {
-                            kotorStats2.AddEffectAttackBonus(modifier);
-                        }
-                        else
-                        {
-                            kotorStats2.RemoveEffectAttackBonus(-modifier);
-                        }
-                    }
+                    // Game-specific implementations should use reflection or extension methods to call bonus tracking
+                    // For now, this is handled by the concrete StatsComponent implementation querying EffectSystem
                     break;
 
                 case EffectType.DamageIncrease:
