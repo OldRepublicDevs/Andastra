@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Avalonia.Controls;
+using Avalonia.Headless;
 using CSharpKOTOR.Common;
 using CSharpKOTOR.Formats.GFF;
 using CSharpKOTOR.Resource.Generics;
@@ -348,7 +349,11 @@ namespace HolocronToolset.NET.Tests.Editors
                 return; // Skip if test file not available
             }
 
-            var editor = new UTWEditor(null, installation);
+            // Create a window and attach the editor to ensure it's in a visual tree
+            var window = new Window();
+            var editor = new UTWEditor(window, installation);
+            window.Content = editor;
+            
             byte[] originalData = System.IO.File.ReadAllBytes(utwFile);
 
             editor.Load(utwFile, "tar05_sw05aa10", ResourceType.UTW, originalData);
