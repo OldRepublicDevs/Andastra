@@ -30,10 +30,12 @@ namespace Odyssey.Kotor.Game
     /// </summary>
     /// <remarks>
     /// Game Session System:
-    /// - Based on swkotor2.exe game session management
+    /// - Based on swkotor2.exe: FUN_006caab0 @ 0x006caab0 (server command parser, handles module commands)
     /// - Located via string references: "GAMEINPROGRESS" @ 0x007c15c8 (game in progress flag), "GameSession" @ 0x007be620
-    /// - "ModuleLoaded" @ 0x007bdd70, "ModuleRunning" @ 0x007bdd58 (module state tracking)
+    /// - "ModuleLoaded" @ 0x007bdd70, "ModuleRunning" @ 0x007bdd58 (module state tracking, referenced by FUN_006caab0)
+    /// - Module state: FUN_006caab0 sets module state flags (0=Idle, 1=ModuleLoaded, 2=ModuleRunning) in DAT_008283d4 structure
     /// - "GameState" @ 0x007c15d0 (game state field), "GameMode" @ 0x007c15e0 (game mode field)
+    /// - Module name formatting: FUN_005da410 @ 0x005da410 formats module names for display/logging
     /// - Coordinates: Module loading, entity management, script execution, combat, AI, triggers, dialogue, party
     /// - Game loop integration: Update() called every frame to update all systems (60 Hz fixed timestep)
     /// - Module transitions: Handles loading new modules and positioning player at entry waypoint
@@ -267,9 +269,11 @@ namespace Odyssey.Kotor.Game
             }
 
             // Update module heartbeat (fires every 6 seconds)
-            // Based on swkotor2.exe: Module heartbeat script execution
+            // Based on swkotor2.exe: FUN_00501fa0 @ 0x00501fa0 (module loading), FUN_00501fa0 reads "Mod_OnHeartbeat" script from module GFF
             // Located via string references: "Mod_OnHeartbeat" @ 0x007be840
             // Original implementation: Module heartbeat fires every 6 seconds for module-level scripts
+            // Module heartbeat script is loaded from Mod_OnHeartbeat field in module IFO GFF during module load
+            // Module state flags: 0=Idle, 1=ModuleLoaded, 2=ModuleRunning (set in FUN_006caab0 @ 0x006caab0)
             if (_currentModule != null)
             {
                 _moduleHeartbeatTimer += deltaTime;
@@ -508,9 +512,6 @@ namespace Odyssey.Kotor.Game
             }
         }
 
-        /// <summary>
-        /// Fires a script event for an entity.
-        /// </summary>
         /// <summary>
         /// Fires the module heartbeat script.
         /// </summary>
