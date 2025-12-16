@@ -8,7 +8,8 @@ namespace Odyssey.Scripting.Interfaces
     /// - Based on swkotor2.exe NCS VM implementation
     /// - Located via string references: NCS script execution engine handles bytecode interpretation
     /// - NCS file format: "NCS " signature (bytes 0-3), "V1.0" version (bytes 4-7), 0x42 marker at offset 8
-    /// - Instructions start at offset 0x0D (13 decimal)
+    /// - Instructions start at offset 0x0D (13 decimal) - matches original engine NCS file structure
+    /// - Original implementation: NCS VM executes bytecode instructions, handles ACTION opcode for engine function calls
     /// - Stack-based VM with 65536-byte stack, 4-byte aligned
     /// - Opcodes: ACTION (0x2A) calls engine functions, others handle stack operations, jumps, conditionals
     /// - ACTION opcode format: uint16 routineId (big-endian) + uint8 argCount (stack elements, not bytes)

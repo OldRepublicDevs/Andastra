@@ -15,9 +15,16 @@ namespace Odyssey.Kotor.Input
     /// <remarks>
     /// Player Controller (Input):
     /// - Based on swkotor2.exe player input and movement system
-    /// - Located via string references: Click-to-move and player control functions
+    /// - Located via string references: "Input" @ 0x007c2520 (input system), "CExoInputInternal::GetEvents() Invalid InputClass parameter" @ 0x007c64f4
+    /// - "exoinputinternal.cpp" @ 0x007c64dc (input implementation file), "Unnamed Input Class" @ 0x007c64c8
+    /// - DirectInput: "DirectInput8Create" @ 0x0080a6ac, "DINPUT8.dll" @ 0x0080a6c0 (DirectInput8 API)
+    /// - Mouse: "Mouse" @ 0x007cb908, "EnableHardwareMouse" @ 0x007c71c8, "Mouse Sensitivity" @ 0x007c85cc, "Mouse Look" @ 0x007c8608
+    /// - "Reverse Mouse Buttons" @ 0x007c8628, "Enable Mouse Teleporting To Buttons" @ 0x007c85a8
+    /// - GUI: "LBL_MOUSESEN" @ 0x007d1f44 (mouse sensitivity label), "SLI_MOUSESEN" @ 0x007d1f54 (mouse sensitivity slider), "optmouse_p" @ 0x007d1f64 (mouse options panel)
+    /// - "BTN_MOUSE" @ 0x007d28a0 (mouse button), ";gui_mouse" @ 0x007b5f93 (GUI mouse reference)
+    /// - Click events: "CSWSSCRIPTEVENT_EVENTTYPE_ON_CLICKED" @ 0x007bc704 (clicked event type), "OnClick" @ 0x007c1a20 (on click script)
     /// - Original implementation: Handles click-to-move with pathfinding on walkmesh
-    /// - Click-to-move: Left-click on walkmesh initiates pathfinding and movement
+    /// - Click-to-move: Left-click on walkmesh initiates pathfinding and movement (FUN_0054be70 @ 0x0054be70 handles movement)
     /// - Uses NavigationMesh pathfinding to find path from current position to destination
     /// - Walk/run speed determined by entity stats (WalkSpeed/RunSpeed from appearance.2da)
     /// - Movement follows path waypoints, facing movement direction (Y-up: Atan2(Y, X))
