@@ -186,6 +186,8 @@ namespace Odyssey.Graphics.Common.Upscaling
 
     /// <summary>
     /// Abstract base class for AMD FSR implementations.
+    /// Supports FSR 1.0, 2.0, 2.1, 2.2, 3.0, and 3.1.
+    /// Based on AMD FidelityFX SDK: https://gpuopen.com/fidelityfx-superresolution/
     /// </summary>
     public abstract class BaseFsrSystem : BaseUpscalingSystem, IFsrSystem
     {
@@ -235,6 +237,61 @@ namespace Odyssey.Graphics.Common.Upscaling
 
         protected virtual void OnModeChanged(FsrMode mode) { }
         protected virtual void OnFrameGenerationChanged(bool enabled) { }
+    }
+
+    /// <summary>
+    /// Abstract base class for Intel XeSS implementations.
+    /// Supports XeSS 1.0, 1.1, 1.2, and 1.3.
+    /// Based on Intel XeSS SDK: https://www.intel.com/content/www/us/en/developer/articles/technical/xess.html
+    /// </summary>
+    public abstract class BaseXeSSSystem : BaseUpscalingSystem, IXeSSSystem
+    {
+        protected XeSSMode _mode;
+        protected bool _dpaEnabled;
+
+        public override string Name => "XeSS";
+
+        public XeSSMode Mode
+        {
+            get => _mode;
+            set
+            {
+                _mode = value;
+                OnModeChanged(value);
+            }
+        }
+
+        public abstract int XeSSVersion { get; }
+        public abstract bool DpaAvailable { get; }
+
+        public bool DpaEnabled
+        {
+            get => _dpaEnabled;
+            set
+            {
+                if (DpaAvailable)
+                {
+                    _dpaEnabled = value;
+                    OnDpaChanged(value);
+                }
+            }
+        }
+
+        public override float GetScaleFactor()
+        {
+            switch (_mode)
+            {
+                case XeSSMode.Off: return 1.0f;
+                case XeSSMode.Quality: return 0.67f;
+                case XeSSMode.Balanced: return 0.59f;
+                case XeSSMode.Performance: return 0.50f;
+                case XeSSMode.UltraPerformance: return 0.33f;
+                default: return 1.0f;
+            }
+        }
+
+        protected virtual void OnModeChanged(XeSSMode mode) { }
+        protected virtual void OnDpaChanged(bool enabled) { }
     }
 }
 

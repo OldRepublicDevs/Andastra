@@ -94,6 +94,7 @@ namespace Odyssey.Graphics.Common.Interfaces
 
     /// <summary>
     /// AMD FSR (FidelityFX Super Resolution) interface.
+    /// Supports FSR 1.0, 2.0, 2.1, 2.2, 3.0, 3.1, and 4.0 (RDNA4).
     /// </summary>
     public interface IFsrSystem : IUpscalingSystem
     {
@@ -103,19 +104,46 @@ namespace Odyssey.Graphics.Common.Interfaces
         FsrMode Mode { get; set; }
 
         /// <summary>
-        /// FSR version (1, 2, 3).
+        /// FSR version (1, 2, 3, 4).
         /// </summary>
         int FsrVersion { get; }
 
         /// <summary>
-        /// Whether FSR 3 Frame Generation is available.
+        /// Whether FSR 3/4 Frame Generation is available.
         /// </summary>
         bool FrameGenerationAvailable { get; }
 
         /// <summary>
-        /// Enables/disables FSR 3 Frame Generation.
+        /// Enables/disables FSR Frame Generation.
         /// </summary>
         bool FrameGenerationEnabled { get; set; }
+    }
+
+    /// <summary>
+    /// Intel XeSS (Xe Super Sampling) interface.
+    /// Supports XeSS 1.0, 1.1, 1.2, and 1.3.
+    /// </summary>
+    public interface IXeSSSystem : IUpscalingSystem
+    {
+        /// <summary>
+        /// XeSS mode.
+        /// </summary>
+        XeSSMode Mode { get; set; }
+
+        /// <summary>
+        /// XeSS version (1).
+        /// </summary>
+        int XeSSVersion { get; }
+
+        /// <summary>
+        /// Whether DPA (Deep Performance Analyzer) is available.
+        /// </summary>
+        bool DpaAvailable { get; }
+
+        /// <summary>
+        /// Enables/disables DPA.
+        /// </summary>
+        bool DpaEnabled { get; set; }
     }
 
     /// <summary>

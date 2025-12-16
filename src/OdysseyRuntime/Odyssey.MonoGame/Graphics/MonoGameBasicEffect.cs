@@ -2,105 +2,149 @@ using System;
 using System.Numerics;
 using Microsoft.Xna.Framework.Graphics;
 using Odyssey.Graphics;
+using Odyssey.Graphics.Common.Effects;
 
 namespace Odyssey.MonoGame.Graphics
 {
     /// <summary>
     /// MonoGame implementation of IBasicEffect.
+    /// Inherits from BaseBasicEffect to share common implementation logic.
     /// </summary>
-    public class MonoGameBasicEffect : IBasicEffect
+    public class MonoGameBasicEffect : BaseBasicEffect
     {
         private readonly BasicEffect _effect;
 
-        public MonoGameBasicEffect(GraphicsDevice device)
+        public MonoGameBasicEffect(GraphicsDevice device) : base()
         {
             _effect = new BasicEffect(device);
         }
 
-        public Matrix4x4 World
+        public override Matrix4x4 World
         {
-            get { return ConvertMatrix(_effect.World); }
-            set { _effect.World = ConvertMatrix(value); }
-        }
-
-        public Matrix4x4 View
-        {
-            get { return ConvertMatrix(_effect.View); }
-            set { _effect.View = ConvertMatrix(value); }
-        }
-
-        public Matrix4x4 Projection
-        {
-            get { return ConvertMatrix(_effect.Projection); }
-            set { _effect.Projection = ConvertMatrix(value); }
-        }
-
-        public bool VertexColorEnabled
-        {
-            get { return _effect.VertexColorEnabled; }
-            set { _effect.VertexColorEnabled = value; }
-        }
-
-        public bool LightingEnabled
-        {
-            get { return _effect.LightingEnabled; }
-            set { _effect.LightingEnabled = value; }
-        }
-
-        public bool TextureEnabled
-        {
-            get { return _effect.TextureEnabled; }
-            set { _effect.TextureEnabled = value; }
-        }
-
-        public Vector3 AmbientLightColor
-        {
-            get { return ConvertVector3(_effect.AmbientLightColor); }
-            set { _effect.AmbientLightColor = ConvertVector3(value); }
-        }
-
-        public Vector3 DiffuseColor
-        {
-            get { return ConvertVector3(_effect.DiffuseColor); }
-            set { _effect.DiffuseColor = ConvertVector3(value); }
-        }
-
-        public Vector3 EmissiveColor
-        {
-            get { return ConvertVector3(_effect.EmissiveColor); }
-            set { _effect.EmissiveColor = ConvertVector3(value); }
-        }
-
-        public Vector3 SpecularColor
-        {
-            get { return ConvertVector3(_effect.SpecularColor); }
-            set { _effect.SpecularColor = ConvertVector3(value); }
-        }
-
-        public float SpecularPower
-        {
-            get { return _effect.SpecularPower; }
-            set { _effect.SpecularPower = value; }
-        }
-
-        public float Alpha
-        {
-            get { return _effect.Alpha; }
-            set { _effect.Alpha = value; }
-        }
-
-        public ITexture2D Texture
-        {
-            get
-            {
-                if (_effect.Texture != null)
-                {
-                    return new MonoGameTexture2D(_effect.Texture);
-                }
-                return null;
-            }
+            get { return base.World; }
             set
             {
+                base.World = value;
+                _effect.World = ConvertMatrix(value);
+            }
+        }
+
+        public override Matrix4x4 View
+        {
+            get { return base.View; }
+            set
+            {
+                base.View = value;
+                _effect.View = ConvertMatrix(value);
+            }
+        }
+
+        public override Matrix4x4 Projection
+        {
+            get { return base.Projection; }
+            set
+            {
+                base.Projection = value;
+                _effect.Projection = ConvertMatrix(value);
+            }
+        }
+
+        public override bool VertexColorEnabled
+        {
+            get { return base.VertexColorEnabled; }
+            set
+            {
+                base.VertexColorEnabled = value;
+                _effect.VertexColorEnabled = value;
+            }
+        }
+
+        public override bool LightingEnabled
+        {
+            get { return base.LightingEnabled; }
+            set
+            {
+                base.LightingEnabled = value;
+                _effect.LightingEnabled = value;
+            }
+        }
+
+        public override bool TextureEnabled
+        {
+            get { return base.TextureEnabled; }
+            set
+            {
+                base.TextureEnabled = value;
+                _effect.TextureEnabled = value;
+            }
+        }
+
+        public override Vector3 AmbientLightColor
+        {
+            get { return base.AmbientLightColor; }
+            set
+            {
+                base.AmbientLightColor = value;
+                _effect.AmbientLightColor = ConvertVector3(value);
+            }
+        }
+
+        public override Vector3 DiffuseColor
+        {
+            get { return base.DiffuseColor; }
+            set
+            {
+                base.DiffuseColor = value;
+                _effect.DiffuseColor = ConvertVector3(value);
+            }
+        }
+
+        public override Vector3 EmissiveColor
+        {
+            get { return base.EmissiveColor; }
+            set
+            {
+                base.EmissiveColor = value;
+                _effect.EmissiveColor = ConvertVector3(value);
+            }
+        }
+
+        public override Vector3 SpecularColor
+        {
+            get { return base.SpecularColor; }
+            set
+            {
+                base.SpecularColor = value;
+                _effect.SpecularColor = ConvertVector3(value);
+            }
+        }
+
+        public override float SpecularPower
+        {
+            get { return base.SpecularPower; }
+            set
+            {
+                base.SpecularPower = value;
+                _effect.SpecularPower = value;
+            }
+        }
+
+        public override float Alpha
+        {
+            get { return base.Alpha; }
+            set
+            {
+                base.Alpha = value;
+                _effect.Alpha = value;
+            }
+        }
+
+        public override ITexture2D Texture
+        {
+            get { return base.Texture; }
+            set
+            {
+                base.Texture = value;
                 if (value == null)
                 {
                     _effect.Texture = null;
@@ -116,27 +160,25 @@ namespace Odyssey.MonoGame.Graphics
             }
         }
 
-        public IEffectTechnique CurrentTechnique
+        protected override IEffectTechnique GetCurrentTechniqueInternal()
         {
-            get { return new MonoGameEffectTechnique(_effect.CurrentTechnique); }
+            return new MonoGameEffectTechnique(_effect.CurrentTechnique);
         }
 
-        public IEffectTechnique[] Techniques
+        protected override IEffectTechnique[] GetTechniquesInternal()
         {
-            get
+            var techniques = new IEffectTechnique[_effect.Techniques.Count];
+            for (int i = 0; i < _effect.Techniques.Count; i++)
             {
-                var techniques = new IEffectTechnique[_effect.Techniques.Count];
-                for (int i = 0; i < _effect.Techniques.Count; i++)
-                {
-                    techniques[i] = new MonoGameEffectTechnique(_effect.Techniques[i]);
-                }
-                return techniques;
+                techniques[i] = new MonoGameEffectTechnique(_effect.Techniques[i]);
             }
+            return techniques;
         }
 
-        public void Dispose()
+        protected override void OnDispose()
         {
             _effect?.Dispose();
+            base.OnDispose();
         }
 
         private static Microsoft.Xna.Framework.Matrix ConvertMatrix(Matrix4x4 matrix)

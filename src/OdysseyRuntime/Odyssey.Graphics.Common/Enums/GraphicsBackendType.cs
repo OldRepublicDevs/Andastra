@@ -457,6 +457,37 @@ namespace Odyssey.Graphics.Common.Enums
     }
 
     /// <summary>
+    /// Intel XeSS modes.
+    /// </summary>
+    public enum XeSSMode
+    {
+        /// <summary>
+        /// XeSS disabled.
+        /// </summary>
+        Off,
+
+        /// <summary>
+        /// Quality mode (highest quality upscaling).
+        /// </summary>
+        Quality,
+
+        /// <summary>
+        /// Balanced mode.
+        /// </summary>
+        Balanced,
+
+        /// <summary>
+        /// Performance mode.
+        /// </summary>
+        Performance,
+
+        /// <summary>
+        /// Ultra performance mode (lowest quality, highest performance).
+        /// </summary>
+        UltraPerformance
+    }
+
+    /// <summary>
     /// DirectX 11 feature levels.
     /// Based on D3D11 API: https://docs.microsoft.com/en-us/windows/win32/api/d3dcommon/ne-d3dcommon-d3d_feature_level
     /// </summary>
