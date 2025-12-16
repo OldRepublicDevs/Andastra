@@ -397,6 +397,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
                 
                 // If globals were created normally, check if we need to split them
                 // This handles cases where main code is in the globals range even when entry JSR doesn't target last RETN
+                JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Checking if we need to split globals - shouldDeferGlobals={shouldDeferGlobals}, savebpIndex={savebpIndex}, mainStart={mainStart}, entryStubEnd={entryStubEnd}");
                 if (!shouldDeferGlobals)
                 {
                     // Check if main code is actually in the globals range (0 to SAVEBP)
