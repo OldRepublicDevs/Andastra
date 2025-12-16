@@ -7,6 +7,18 @@ namespace Odyssey.Graphics
     /// Graphics device abstraction for rendering operations.
     /// Provides unified access to graphics hardware across MonoGame and Stride.
     /// </summary>
+    /// <remarks>
+    /// Graphics Device Interface:
+    /// - Based on swkotor2.exe DirectX device system
+    /// - Located via string references: "Render Window" @ 0x007b5680, "render" @ 0x007bab34
+    /// - "WGL_NV_render_texture_rectangle" @ 0x007b880c, "WGL_ARB_render_texture" @ 0x007b8890 (OpenGL extensions)
+    /// - Original game uses DirectX 8/9 device (IDirect3DDevice8/IDirect3DDevice9)
+    /// - Device creation: Original game creates DirectX device with specific parameters (resolution, fullscreen, etc.)
+    /// - Rendering: Original game uses fixed-function pipeline (no shaders), immediate mode rendering
+    /// - This interface: Abstraction layer for modern graphics APIs (DirectX 11/12, OpenGL, Vulkan via MonoGame/Stride)
+    /// - Note: Modern graphics APIs use programmable pipelines (shaders), not fixed-function like original game
+    /// - Original game rendering: DirectX 8/9 fixed-function pipeline, immediate mode, no modern features
+    /// </remarks>
     public interface IGraphicsDevice : IDisposable
     {
         /// <summary>

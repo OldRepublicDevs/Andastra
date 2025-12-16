@@ -6,6 +6,18 @@ namespace Odyssey.Graphics
     /// Core graphics backend interface that all rendering backends must implement.
     /// Provides unified access to graphics device, content loading, window management, and input.
     /// </summary>
+    /// <remarks>
+    /// Graphics Backend Interface:
+    /// - Based on swkotor2.exe graphics initialization system
+    /// - Located via string references: "Graphics Options" @ 0x007b56a8, "BTN_GRAPHICS" @ 0x007d0d8c, "optgraphics_p" @ 0x007d2064
+    /// - "Render Window" @ 0x007b5680, "render" @ 0x007bab34, "renderorder" @ 0x007bab50
+    /// - Original game uses DirectX 8/9 for rendering (D3D8.dll, D3D9.dll)
+    /// - Engine initialization: FUN_00404250 @ 0x00404250 initializes graphics device during startup
+    /// - Original implementation: Initializes DirectX device, sets up rendering pipeline, creates window
+    /// - This interface: Abstraction layer for modern graphics backends (MonoGame, Stride)
+    /// - Note: MonoGame and Stride are modern graphics frameworks, not present in original game
+    /// - Original game rendering: DirectX 8/9 fixed-function pipeline, no modern post-processing or upscaling
+    /// </remarks>
     public interface IGraphicsBackend : IDisposable
     {
         /// <summary>
