@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <RootNamespace>Odyssey.Graphics.Common</RootNamespace>
+    <AssemblyName>Odyssey.Graphics.Common</AssemblyName>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <Description>Shared graphics abstractions and base classes for Odyssey Engine backends (MonoGame, Stride, etc.)</Description>
+    <Authors>HoloPatcher Team</Authors>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="JetBrains.Annotations" Version="2024.3.0" />
+  </ItemGroup>
+
+</Project>

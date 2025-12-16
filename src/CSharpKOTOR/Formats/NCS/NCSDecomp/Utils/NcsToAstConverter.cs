@@ -53,7 +53,7 @@ namespace AuroraEngine.Common.Formats.NCS.NCSDecomp.Utils
             // Also check instruction offsets to understand the mapping
             int totalActionCount = 0;
             JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Scanning {instructions.Count} instructions for ACTION type");
-            
+
             // Sample some instructions to see what types we have
             int sampleCount = Math.Min(100, instructions.Count);
             var typeCounts = new Dictionary<NCSInstructionType, int>();
@@ -70,7 +70,7 @@ namespace AuroraEngine.Common.Formats.NCS.NCSDecomp.Utils
                 }
             }
             JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Sample of first {sampleCount} instructions - type counts: {string.Join(", ", typeCounts.Select(kvp => $"{kvp.Key}={kvp.Value}"))}");
-            
+
             // Also sample around known ACTION instruction offsets (like 2463, 2476, etc.)
             // Find the instruction indices that correspond to those offsets
             if (instructions.Count > 1000)
@@ -84,13 +84,13 @@ namespace AuroraEngine.Common.Formats.NCS.NCSDecomp.Utils
                     }
                 }
             }
-            
+
             // Check specific known ACTION instruction indices to verify they're found
             if (instructions.Count > 453)
             {
                 JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Pre-check - Instruction 453: InsType={instructions[453]?.InsType}, IsAction={instructions[453]?.InsType == NCSInstructionType.ACTION}");
             }
-            
+
             for (int i = 0; i < instructions.Count; i++)
             {
                 // Progress logging for large files
@@ -98,7 +98,7 @@ namespace AuroraEngine.Common.Formats.NCS.NCSDecomp.Utils
                 {
                     JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Progress - scanned {i}/{instructions.Count} instructions, found {totalActionCount} ACTION so far");
                 }
-                
+
                 if (instructions[i] == null)
                 {
                     if (i < 10 || (i >= 450 && i <= 460)) // Only log nulls for first 10 or around known ACTION
@@ -110,14 +110,14 @@ namespace AuroraEngine.Common.Formats.NCS.NCSDecomp.Utils
                 // Check if InsType is ACTION using both == and Equals for debugging
                 bool isAction = instructions[i].InsType == NCSInstructionType.ACTION;
                 bool isActionEquals = instructions[i].InsType.Equals(NCSInstructionType.ACTION);
-                
+
                 // Special logging for index 453 where we know there's an ACTION
                 if (i == 453)
                 {
                     JavaSystem.@out.Println($"DEBUG NcsToAstConverter: At index 453 - InsType={instructions[i].InsType}, isAction={isAction}, isActionEquals={isActionEquals}, Offset={instructions[i].Offset}, totalActionCount before={totalActionCount}");
                     JavaSystem.@out.Println($"DEBUG NcsToAstConverter: At index 453 - Condition check: (isAction || isActionEquals) = ({isAction} || {isActionEquals}) = {isAction || isActionEquals}");
                 }
-                
+
                 if (isAction || isActionEquals)
                 {
                     totalActionCount++;
@@ -191,7 +191,7 @@ namespace AuroraEngine.Common.Formats.NCS.NCSDecomp.Utils
             {
                 JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Found {allSavebpIndices.Count} SAVEBP instruction(s) at indices: {string.Join(", ", allSavebpIndices)}");
                 JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Using LAST SAVEBP at instruction index {savebpIndex} as globals boundary");
-                
+
                 // Debug: Show instructions around the SAVEBP for context
                 int debugStart = Math.Max(0, savebpIndex - 3);
                 int debugEnd = Math.Min(instructions.Count - 1, savebpIndex + 3);
@@ -200,6 +200,30 @@ namespace AuroraEngine.Common.Formats.NCS.NCSDecomp.Utils
                 {
                     string marker = (i == savebpIndex) ? " <-- SAVEBP" : "";
                     JavaSystem.@out.Println($"  {i:D4}: {instructions[i].InsType}{marker}");
+                }
+                
+                // CRITICAL DEBUG: Check if there are RSADDI instructions AFTER the SAVEBP we found
+                // This would indicate we're using the wrong SAVEBP as the boundary
+                JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Checking for RSADDI instructions after SAVEBP at index {savebpIndex}:");
+                int rsaddiCountAfterSavebp = 0;
+                for (int i = savebpIndex + 1; i < instructions.Count && i < savebpIndex + 50; i++)
+                {
+                    if (instructions[i].InsType == NCSInstructionType.RSADDI || 
+                        instructions[i].InsType == NCSInstructionType.RSADDF ||
+                        instructions[i].InsType == NCSInstructionType.RSADDS ||
+                        instructions[i].InsType == NCSInstructionType.RSADDO)
+                    {
+                        rsaddiCountAfterSavebp++;
+                        JavaSystem.@out.Println($"  WARNING: Found RSADD instruction at index {i} AFTER SAVEBP at {savebpIndex} - this suggests we're using the wrong SAVEBP!");
+                    }
+                }
+                if (rsaddiCountAfterSavebp > 0)
+                {
+                    JavaSystem.@out.Println($"  ERROR: Found {rsaddiCountAfterSavebp} RSADD instruction(s) after SAVEBP - globals range calculation is WRONG!");
+                }
+                else
+                {
+                    JavaSystem.@out.Println($"  OK: No RSADD instructions found after SAVEBP (checked up to index {Math.Min(savebpIndex + 50, instructions.Count - 1)})");
                 }
             }
 
@@ -533,16 +557,16 @@ namespace AuroraEngine.Common.Formats.NCS.NCSDecomp.Utils
                 {
                     entryStubEnd = entryStubEnd + 2; // JSR + RESTOREBP
                 }
-                
+
                 // If globals were created normally OR deferred, check if we need to split them
                 // This handles cases where main code is in the globals range
                 JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Checking if we need to split globals - shouldDeferGlobals={shouldDeferGlobals}, savebpIndex={savebpIndex}, mainStart={mainStart}, entryStubEnd={entryStubEnd}");
-                
+
                 // Check if main code is in globals range - this applies to BOTH normal and deferred cases
                 // When entry JSR targets last RETN, main code is often in the globals range (0 to SAVEBP)
                 bool mainCodeInGlobals = false;
                 bool entryJsrTargetIsLastRetnCheck = (entryJsrTarget >= 0 && entryJsrTarget == instructions.Count - 1);
-                
+
                 // First, scan the globals range (0 to SAVEBP) to see what instruction types are there
                 JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Scanning globals range (0-{savebpIndex}) for instruction types");
                 int actionCountInGlobals = 0;
@@ -558,14 +582,14 @@ namespace AuroraEngine.Common.Formats.NCS.NCSDecomp.Utils
                     }
                 }
                 JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Total ACTION instructions in globals range (0-{savebpIndex}): {actionCountInGlobals}");
-                
+
                 if (entryJsrTargetIsLastRetnCheck || !shouldDeferGlobals)
                 {
                     // Check if main code is actually in the globals range (0 to SAVEBP)
                     // If mainStart is at or after entryStubEnd and there are no ACTION instructions after SAVEBP+1,
                     // the main code must be in the globals range
                     JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Checking if main code is in globals - entryJsrTarget={entryJsrTarget}, instructions.Count-1={instructions.Count - 1}, entryJsrTargetIsLastRetnCheck={entryJsrTargetIsLastRetnCheck}, mainStart={mainStart}, entryStubEnd={entryStubEnd}, savebpIndex={savebpIndex}, actionCountInGlobals={actionCountInGlobals}");
-                    
+
                     // Check if there are ACTION instructions in the range from SAVEBP+1 to last RETN
                     int actionCount = 0;
                     int checkStart = savebpIndex + 1;
@@ -577,7 +601,7 @@ namespace AuroraEngine.Common.Formats.NCS.NCSDecomp.Utils
                             JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Found ACTION instruction at index {i} in range {checkStart} to {instructions.Count - 1}");
                         }
                     }
-                    
+
                     if (actionCount == 0)
                     {
                         // No ACTION instructions between SAVEBP+1 and last RETN
@@ -596,7 +620,7 @@ namespace AuroraEngine.Common.Formats.NCS.NCSDecomp.Utils
                         {
                             mainCodeInGlobals = true;
                             JavaSystem.@out.Println($"DEBUG NcsToAstConverter: No ACTION instructions found between SAVEBP+1 ({checkStart}) and last RETN ({instructions.Count - 1}), but found ACTION at {mainCodeStartInGlobals} in globals range (0-{savebpIndex}) - will split globals at {mainCodeStartInGlobals}");
-                            
+
                             // Remove the globals subroutine that was created earlier (it includes main code)
                             // We'll recreate it with the correct split
                             var subroutines = program.GetSubroutine();
@@ -613,7 +637,7 @@ namespace AuroraEngine.Common.Formats.NCS.NCSDecomp.Utils
                                 }
                             }
                             JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Removed globals subroutine(s) that included main code");
-                            
+
                             // Create split globals
                             // CRITICAL: Globals must include ALL instructions up to SAVEBP, not just up to first ACTION
                             // This ensures RSADDI and other instructions before SAVEBP are included in globals
@@ -626,7 +650,7 @@ namespace AuroraEngine.Common.Formats.NCS.NCSDecomp.Utils
                                 program.GetSubroutine().Add(globalsSub);
                                 JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Created split globals subroutine (range 0-{globalsInitEnd}, includes all instructions up to SAVEBP, first ACTION at {mainCodeStartInGlobals})");
                             }
-                            
+
                             // Update mainStart to include the main function code (from first ACTION to last RETN)
                             mainStart = mainCodeStartInGlobals;
                             mainEnd = instructions.Count;
@@ -634,7 +658,7 @@ namespace AuroraEngine.Common.Formats.NCS.NCSDecomp.Utils
                         }
                     }
                 }
-                
+
                 if (shouldDeferGlobals && mainStart < savebpIndex + 1 && mainStart > 0)
                 {
                     // Split globals:
@@ -713,7 +737,7 @@ namespace AuroraEngine.Common.Formats.NCS.NCSDecomp.Utils
                             JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Found {actionCount} ACTION instructions between SAVEBP+1 ({checkStart}) and last RETN ({instructions.Count - 1}), main code is after SAVEBP");
                         }
                     }
-                    
+
                     if (mainCodeInGlobalsInner)
                     {
                         // Main function code is in globals range - split globals
@@ -727,7 +751,7 @@ namespace AuroraEngine.Common.Formats.NCS.NCSDecomp.Utils
                                 break;
                             }
                         }
-                        
+
                         if (mainCodeStartInGlobals >= 0)
                         {
                             // Split at the first ACTION instruction
@@ -737,7 +761,7 @@ namespace AuroraEngine.Common.Formats.NCS.NCSDecomp.Utils
                             // Main: mainCodeStartInGlobals to last RETN (includes main code and everything after)
                             // NOTE: There will be overlap (mainCodeStartInGlobals to SAVEBP), but that's handled by the main function
                             int globalsInitEnd = savebpIndex + 1; // Always include all instructions up to SAVEBP
-                            
+
                             // Create globals subroutine (includes all variable initialization up to SAVEBP)
                             ASubroutine globalsSub = ConvertInstructionRangeToSubroutine(ncs, instructions, 0, globalsInitEnd, 0);
                             if (globalsSub != null)
@@ -745,7 +769,7 @@ namespace AuroraEngine.Common.Formats.NCS.NCSDecomp.Utils
                                 program.GetSubroutine().Add(globalsSub);
                                 JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Created split globals subroutine (range 0-{globalsInitEnd}, includes all instructions up to SAVEBP, first ACTION at {mainCodeStartInGlobals})");
                             }
-                            
+
                             // Update mainStart to include the main function code (from first ACTION to last RETN)
                             mainStart = mainCodeStartInGlobals;
                             mainEnd = instructions.Count; // Include all instructions from first ACTION to last RETN

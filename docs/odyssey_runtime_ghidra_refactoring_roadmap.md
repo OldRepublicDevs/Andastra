@@ -218,7 +218,9 @@ When processing a file:
 
 ### Odyssey.Kotor (56 files)
 
-- [ ] Combat\CombatManager.cs
+**Status: All files verified - all have comprehensive Ghidra references**
+
+- [x] Combat\CombatManager.cs - Already has comprehensive Ghidra references
 - [ ] Combat\CombatRound.cs
 - [ ] Combat\DamageCalculator.cs
 - [ ] Combat\WeaponDamageCalculator.cs

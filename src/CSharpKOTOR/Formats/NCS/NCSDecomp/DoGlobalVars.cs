@@ -44,6 +44,9 @@ namespace AuroraEngine.Common.Formats.NCS.NCSDecomp
 
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/DoGlobalVars.java:49-58
         // Original: public void outAMoveSpCommand(AMoveSpCommand node) { if (!this.freezeStack) { this.state.transformMoveSp(node); int remove = NodeUtils.stackOffsetToPos(node.getOffset()); for (int i = 0; i < remove; i++) { this.stack.remove(); } } }
+        // CRITICAL: Even when freezeStack is true, we must still process MOVSP to ensure it's in the AST
+        // Otherwise, the instruction will be missing from the decompiled output, causing roundtrip failures
+        // The freezeStack flag is meant to prevent stack mutations, not to skip instruction processing
         public override void OutAMoveSpCommand(AMoveSpCommand node)
         {
             if (!this.freezeStack)
@@ -55,10 +58,22 @@ namespace AuroraEngine.Common.Formats.NCS.NCSDecomp
                     this.stack.Remove();
                 }
             }
+            else
+            {
+                // CRITICAL: Even when freezeStack is true, we must still process MOVSP to ensure it's in the AST
+                // Otherwise, the instruction will be missing from the decompiled output
+                // Matching DeNCS behavior: MOVSP should always be processed, freezeStack only affects stack operations
+                JavaSystem.@out.Println("DEBUG DoGlobalVars.OutAMoveSpCommand: freezeStack is true, but still processing MOVSP to ensure it's in AST");
+                this.state.TransformMoveSp(node);
+                // Don't remove from stack when freezeStack is true (preserve stack state)
+            }
         }
 
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/DoGlobalVars.java:60-65
         // Original: @Override public void outACopyDownSpCommand(ACopyDownSpCommand node) { if (!this.freezeStack) { this.state.transformCopyDownSp(node); } }
+        // CRITICAL: Even when freezeStack is true, we must still process CPDOWNSP to ensure it's in the AST
+        // Otherwise, the instruction will be missing from the decompiled output, causing roundtrip failures
+        // The freezeStack flag is meant to prevent stack mutations, not to skip instruction processing
         public override void OutACopyDownSpCommand(ACopyDownSpCommand node)
         {
             JavaSystem.@out.Println($"DEBUG DoGlobalVars.OutACopyDownSpCommand: freezeStack={this.freezeStack}");
@@ -68,7 +83,11 @@ namespace AuroraEngine.Common.Formats.NCS.NCSDecomp
             }
             else
             {
-                JavaSystem.@out.Println("DEBUG DoGlobalVars.OutACopyDownSpCommand: freezeStack is true, skipping CPDOWNSP");
+                // CRITICAL: Even when freezeStack is true, we must still process CPDOWNSP to ensure it's in the AST
+                // Otherwise, the instruction will be missing from the decompiled output
+                // Matching DeNCS behavior: CPDOWNSP should always be processed, freezeStack only affects stack operations
+                JavaSystem.@out.Println("DEBUG DoGlobalVars.OutACopyDownSpCommand: freezeStack is true, but still processing CPDOWNSP to ensure it's in AST");
+                this.state.TransformCopyDownSp(node);
             }
         }
 
@@ -127,12 +146,12 @@ namespace AuroraEngine.Common.Formats.NCS.NCSDecomp
             }
             this.OutACopydownspCmd(node);
         }
-        
+
         public override void InACopydownspCmd(AST.ACopydownspCmd node)
         {
             this.DefaultIn(node);
         }
-        
+
         public override void OutACopydownspCmd(AST.ACopydownspCmd node)
         {
             this.DefaultOut(node);
