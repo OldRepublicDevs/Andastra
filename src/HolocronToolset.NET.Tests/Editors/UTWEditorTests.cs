@@ -1448,5 +1448,44 @@ namespace HolocronToolset.NET.Tests.Editors
             modifiedUtw.Tag.Should().Be("modified_gff_test", "Tag should be modified");
             modifiedUtw.HasMapNote.Should().BeTrue("HasMapNote should be true");
         }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utw_editor.py:551-570
+        // Original: def test_utw_editor_new_file_all_defaults(qtbot, installation: HTInstallation):
+        [Fact]
+        public void TestUtwEditorNewFileAllDefaults()
+        {
+            string k2Path = Environment.GetEnvironmentVariable("K2_PATH");
+            if (string.IsNullOrEmpty(k2Path))
+            {
+                k2Path = @"C:\Program Files (x86)\Steam\steamapps\common\Knights of the Old Republic II";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k2Path) && System.IO.File.Exists(System.IO.Path.Combine(k2Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k2Path, "Test Installation", tsl: true);
+            }
+
+            if (installation == null)
+            {
+                return; // Skip if no installation available
+            }
+
+            var editor = new UTWEditor(null, installation);
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utw_editor.py:556
+            // Original: editor.new()
+            editor.New();
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utw_editor.py:559-563
+            // Original: data, _ = editor.build()
+            // Original: new_utw = read_utw(data)
+            // Original: assert isinstance(new_utw.tag, str)
+            // Original: assert isinstance(new_utw.resref, ResRef)
+            var (data, _) = editor.Build();
+            var newUtw = UTWAuto.ReadUtw(data);
+            newUtw.Tag.Should().BeOfType<string>("Tag should be a string");
+            newUtw.ResRef.Should().NotBeNull("ResRef should not be null");
+        }
     }
 }
