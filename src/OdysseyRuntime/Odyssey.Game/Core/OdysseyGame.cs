@@ -1595,7 +1595,9 @@ namespace Odyssey.Game.Core
             }
         }
 
-        // Track previous keyboard state for dialogue input
+        // Track previous keyboard state for dialogue input (using abstraction layer)
+        private IKeyboardState _previousPlayerKeyboardState;
+
         /// <summary>
         /// Handles player input for movement.
         /// </summary>
