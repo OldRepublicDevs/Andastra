@@ -22,10 +22,24 @@ namespace Odyssey.Core.Entities
     /// - Based on swkotor2.exe world management system
     /// - Located via string references: "ObjectId" @ 0x007bce5c, "ObjectIDList" @ 0x007bfd7c
     /// - "AreaId" @ 0x007bef48 (entity area association), "Area" @ 0x007be340 (area name)
+    /// - Object logging format: "OID: %08x, Tag: %s, %s" @ 0x007c76b8 used for debug/error logging
     /// - Original engine maintains entity lists by ObjectId, Tag, and ObjectType
     /// - Entity lookup: GetEntityByTag searches by tag string (case-insensitive), GetEntity by ObjectId (O(1) lookup)
-    /// - ObjectId is unique 32-bit identifier assigned sequentially (OBJECT_INVALID = 0x7F000000)
+    /// - ObjectId is unique 32-bit identifier assigned sequentially (OBJECT_INVALID = 0x7F000000, OBJECT_SELF = 0x7F000001)
     /// - Entity registration: Entities are registered in world with ObjectId, Tag, and ObjectType indices
+    /// - Entity serialization: FUN_005226d0 @ 0x005226d0 saves entity state including ObjectId, AreaId, Position, Orientation
+    ///   - Function signature: `void FUN_005226d0(void *param_1, void *param_2)`
+    ///   - param_1: Entity pointer
+    ///   - param_2: GFF structure pointer
+    ///   - Writes ObjectId (uint32) via FUN_00413880 with "ObjectId" field name
+    ///   - Writes AreaId (uint32) via FUN_00413880 with "AreaId" field name
+    ///   - Writes Position (XPosition, YPosition, ZPosition as float) via FUN_00413a00
+    ///   - Writes Orientation (XOrientation, YOrientation, ZOrientation as float) via FUN_00413a00
+    ///   - Calls FUN_00508200 to save action queue, FUN_00505db0 to save effect list
+    /// - Entity deserialization: FUN_005223a0 @ 0x005223a0 loads entity data from GFF
+    ///   - Reads ObjectId (uint32) via FUN_00412d40 with "ObjectId" field name (default 0x7f000000)
+    ///   - Reads AreaId (uint32) via FUN_00412d40 with "AreaId" field name
+    ///   - Reads Position and Orientation from GFF structure
     /// - Area management: Entities belong to areas (AreaId field), areas contain entity lists by type
     /// - Module management: "ModuleList" @ 0x007bdd3c, "ModuleName" @ 0x007bde2c, "LASTMODULE" @ 0x007be1d0
     /// - Module events: "CSWSSCRIPTEVENT_EVENTTYPE_ON_MODULE_LOAD" @ 0x007bc91c, "CSWSSCRIPTEVENT_EVENTTYPE_ON_MODULE_START" @ 0x007bc948
