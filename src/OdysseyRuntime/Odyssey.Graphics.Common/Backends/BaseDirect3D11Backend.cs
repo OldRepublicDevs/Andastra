@@ -21,7 +21,19 @@ namespace Odyssey.Graphics.Common.Backends
     ///
     /// Based on D3D11 API: https://docs.microsoft.com/en-us/windows/win32/direct3d11/
     /// </summary>
-    public abstract class BaseDirect3D11Backend : BaseGraphicsBackend, IComputeBackend
+    /// <remarks>
+    /// DirectX 11 Backend:
+    /// - This is a modern graphics API abstraction (DirectX 11 was released after KOTOR2)
+    /// - Original game graphics system: Primarily DirectX 9 (d3d9.dll @ 0x0080a6c0) or OpenGL (OPENGL32.dll @ 0x00809ce2)
+    /// - Located via string references: "Render Window" @ 0x007b5680, "Graphics Options" @ 0x007b56a8
+    /// - Original game did not use DirectX 11; this is a modern enhancement for better hardware support
+    /// - This abstraction: Provides DirectX 11 backend for modern Windows systems, not directly mapped to swkotor2.exe functions
+    /// </remarks>
+    /// <summary>
+    /// DirectX 11 backend with optional DXR fallback layer support for software raytracing.
+    /// The fallback layer allows DXR API usage on hardware without native raytracing support.
+    /// </summary>
+    public abstract class BaseDirect3D11Backend : BaseGraphicsBackend, IComputeBackend, IRaytracingBackend
     {
         protected IntPtr _factory;
         protected IntPtr _adapter;
@@ -32,8 +44,13 @@ namespace Odyssey.Graphics.Common.Backends
         protected IntPtr _depthStencilView;
         protected IntPtr _deferredContext;
         protected D3D11FeatureLevel _featureLevel;
+        protected IntPtr _raytracingFallbackDevice;
+        protected bool _raytracingEnabled;
+        protected RaytracingLevel _raytracingLevel;
+        protected bool _useDxrFallbackLayer;
 
         public override GraphicsBackendType BackendType => GraphicsBackendType.Direct3D11;
+        public override bool IsRaytracingEnabled => _raytracingEnabled;
 
         /// <summary>
         /// Gets the current D3D11 feature level.
@@ -52,7 +69,7 @@ namespace Odyssey.Graphics.Common.Backends
                 SupportsComputeShaders = _featureLevel >= D3D11FeatureLevel.Level_11_0,
                 SupportsGeometryShaders = _featureLevel >= D3D11FeatureLevel.Level_10_0,
                 SupportsTessellation = _featureLevel >= D3D11FeatureLevel.Level_11_0,
-                SupportsRaytracing = false, // DX11 does not support DXR
+                SupportsRaytracing = QueryDxrFallbackSupport(), // DX11 can use DXR fallback layer
                 SupportsMeshShaders = false, // Requires DX12
                 SupportsVariableRateShading = false, // Requires DX12
                 DedicatedVideoMemory = QueryVideoMemory(),
@@ -67,6 +84,99 @@ namespace Odyssey.Graphics.Common.Backends
                 FsrAvailable = true // FSR works on DX11 via compute
             };
         }
+
+        protected override void OnInitialized()
+        {
+            base.OnInitialized();
+
+            // Initialize DXR fallback layer if available and requested
+            if (_capabilities.SupportsRaytracing && _settings.Raytracing != RaytracingLevel.Disabled)
+            {
+                InitializeDxrFallback();
+            }
+        }
+
+        #endregion
+
+        #region IRaytracingBackend Implementation
+
+        public override void SetRaytracingLevel(RaytracingLevel level)
+        {
+            if (!_capabilities.SupportsRaytracing)
+            {
+                if (level != RaytracingLevel.Disabled)
+                {
+                    Console.WriteLine($"[{BackendType}] DXR fallback layer not available");
+                }
+                return;
+            }
+
+            _raytracingLevel = level;
+            _raytracingEnabled = level != RaytracingLevel.Disabled;
+
+            if (_raytracingEnabled && _raytracingFallbackDevice == IntPtr.Zero)
+            {
+                InitializeDxrFallback();
+            }
+
+            Console.WriteLine($"[{BackendType}] Raytracing level set to: {level} (via fallback layer)");
+        }
+
+        public virtual IntPtr CreateBlas(MeshGeometry geometry)
+        {
+            if (!_raytracingEnabled || _raytracingFallbackDevice == IntPtr.Zero) return IntPtr.Zero;
+            var handle = AllocateHandle();
+            var resource = CreateBlasFallbackInternal(geometry, handle);
+            if (resource.Handle != IntPtr.Zero)
+            {
+                _resources[handle] = resource;
+            }
+            return handle;
+        }
+
+        public virtual IntPtr CreateTlas(int maxInstances)
+        {
+            if (!_raytracingEnabled || _raytracingFallbackDevice == IntPtr.Zero) return IntPtr.Zero;
+            var handle = AllocateHandle();
+            var resource = CreateTlasFallbackInternal(maxInstances, handle);
+            if (resource.Handle != IntPtr.Zero)
+            {
+                _resources[handle] = resource;
+            }
+            return handle;
+        }
+
+        public virtual IntPtr CreateRaytracingPso(RaytracingPipelineDesc desc)
+        {
+            if (!_raytracingEnabled || _raytracingFallbackDevice == IntPtr.Zero) return IntPtr.Zero;
+            var handle = AllocateHandle();
+            var resource = CreateRaytracingPsoFallbackInternal(desc, handle);
+            if (resource.Handle != IntPtr.Zero)
+            {
+                _resources[handle] = resource;
+            }
+            return handle;
+        }
+
+        public virtual void DispatchRays(DispatchRaysDesc desc)
+        {
+            if (!_raytracingEnabled || _raytracingFallbackDevice == IntPtr.Zero) return;
+            OnDispatchRaysFallback(desc);
+        }
+
+        public virtual void UpdateTlasInstance(IntPtr tlas, int instanceIndex, System.Numerics.Matrix4x4 transform)
+        {
+            if (!_raytracingEnabled || _raytracingFallbackDevice == IntPtr.Zero) return;
+            OnUpdateTlasInstanceFallback(tlas, instanceIndex, transform);
+        }
+
+        protected abstract void InitializeDxrFallback();
+        protected abstract ResourceInfo CreateBlasFallbackInternal(MeshGeometry geometry, IntPtr handle);
+        protected abstract ResourceInfo CreateTlasFallbackInternal(int maxInstances, IntPtr handle);
+        protected abstract ResourceInfo CreateRaytracingPsoFallbackInternal(RaytracingPipelineDesc desc, IntPtr handle);
+        protected abstract void OnDispatchRaysFallback(DispatchRaysDesc desc);
+        protected abstract void OnUpdateTlasInstanceFallback(IntPtr tlas, int instanceIndex, System.Numerics.Matrix4x4 transform);
+        protected virtual bool QueryDxrFallbackSupport() => false; // Override to check for fallback layer availability
 
         #endregion
 
