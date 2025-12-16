@@ -5,6 +5,7 @@ This document describes the GitHub Actions workflows for Andastra.
 ## Overview
 
 The project uses GitHub Actions for:
+
 - **Continuous Integration**: Testing and validation on every PR
 - **Automated Releases**: Using release-please for version management
 - **Multi-Platform Builds**: Building for Windows, Linux, and macOS
@@ -15,6 +16,7 @@ The project uses GitHub Actions for:
 ### CI Workflow (`ci.yml`)
 
 Runs on every push and pull request:
+
 - Restores dependencies
 - Builds the solution
 - Runs unit tests
@@ -23,12 +25,14 @@ Runs on every push and pull request:
 ### Test Builds (`test-builds.yml`)
 
 Tests builds on a representative subset of platforms:
+
 - Windows 7 x64 (.NET Framework 4.8)
 - Windows 10/11 x64 (.NET 9)
 - Linux x64 (.NET 9)
 - macOS arm64 (.NET 9)
 
 Validates that:
+
 - Code compiles successfully
 - Tests pass
 - Build artifacts are created
@@ -39,19 +43,23 @@ Validates that:
 Reusable workflow that builds all platform/architecture combinations:
 
 **Windows 7** (requires .NET Framework 4.8):
+
 - x64
 - x86
 
 **Windows 10/11** (.NET 9, self-contained):
+
 - x64
 - x86
 - arm64
 
 **Linux** (.NET 9, self-contained):
+
 - x64
 - arm64
 
 **macOS** (.NET 9, self-contained):
+
 - x64
 - arm64
 
@@ -60,6 +68,7 @@ Reusable workflow that builds all platform/architecture combinations:
 ### Release Please (`release-please.yml`)
 
 Automated release management:
+
 1. Monitors conventional commits (feat:, fix:, etc.)
 2. Creates release PRs with version bumps
 3. When PR is merged, triggers build workflow
@@ -72,6 +81,7 @@ Automated release management:
 ### NetSparkle Appcast (`netsparkle-appcast.yml`)
 
 Generates `appcast.xml` for auto-updates:
+
 - Runs when a release is published
 - Uses NetSparkle tools to generate signed appcast
 - Uploads appcast to release assets
@@ -105,6 +115,7 @@ Or use an environment variable or configuration file.
 ### 4. Configure Release Please
 
 The `release-please-config.json` is already configured. It will:
+
 - Monitor commits for conventional commit messages
 - Update version in `HoloPatcher.csproj` (note: project name is legacy, solution is now Andastra)
 - Create release PRs automatically
@@ -114,12 +125,14 @@ The `release-please-config.json` is already configured. It will:
 ### Automatic Release (Recommended)
 
 1. **Make changes** with conventional commit messages:
+
    ```bash
    git commit -m "feat: add new feature"
    git commit -m "fix: fix bug"
    ```
 
 2. **Push to main/master**:
+
    ```bash
    git push origin main
    ```
@@ -137,17 +150,20 @@ The `release-please-config.json` is already configured. It will:
 ### Manual Release
 
 1. **Update version** in `src/HoloPatcher/HoloPatcher.csproj` (note: folder/project name is legacy, solution is now Andastra):
+
    ```xml
    <Version>2.0.0</Version>
    ```
 
 2. **Create and push tag**:
+
    ```bash
    git tag v2.0.0
    git push origin v2.0.0
    ```
 
 3. **Trigger build workflow**:
+
    ```bash
    gh workflow run build-all-platforms.yml -f version=2.0.0 -f tag_name=v2.0.0
    ```
@@ -163,6 +179,7 @@ Release Please uses conventional commits to determine version bumps:
 - `BREAKING CHANGE:` → Major version bump (1.0.0 → 2.0.0)
 
 Examples:
+
 ```bash
 git commit -m "feat: add auto-update support"
 git commit -m "fix: resolve crash on startup"
@@ -220,11 +237,13 @@ git commit -m "feat!: redesign UI"  # Breaking change
 ## Testing Workflows
 
 The `validate-workflows.yml` workflow:
+
 - Validates YAML syntax
 - Checks for required secrets
 - Runs on workflow file changes
 
 Run manually to validate:
+
 ```bash
 gh workflow run validate-workflows.yml
 ```
@@ -250,8 +269,8 @@ gh workflow run validate-workflows.yml
 ## Support
 
 For issues with workflows:
+
 1. Check workflow logs in GitHub Actions
 2. Validate YAML syntax
 3. Verify secrets are configured
 4. Check platform-specific requirements
-

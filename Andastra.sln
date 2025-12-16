@@ -3,41 +3,41 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Andastra.Formats", "src\Andastra.Formats\Andastra.Formats.csproj", "{8A9D1E2F-3C4B-5E6A-7D8B-9F1A2C3D4E5F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Andastra.Formats", "src\Andastra\Formats\Andastra.Formats.csproj", "{8A9D1E2F-3C4B-5E6A-7D8B-9F1A2C3D4E5F}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Andastra.Runtime", "Andastra.Runtime", "{B2C3D4E5-F6A7-8B9C-0D1E-2F3A4B5C6D7E}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Core", "Core", "{C3D4E5F6-A7B8-9C0D-1E2F-3A4B5C6D7E8F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Andastra.Runtime.Core", "src\Andastra.Runtime\Core\Andastra.Runtime.Core.csproj", "{6D60797F-9C20-45A9-9555-38865885E5C8}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Andastra.Runtime.Core", "src\Andastra\Runtime\Core\Andastra.Runtime.Core.csproj", "{6D60797F-9C20-45A9-9555-38865885E5C8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Andastra.Runtime.Content", "src\Andastra.Runtime\Content\Andastra.Runtime.Content.csproj", "{3452FBD2-23D5-4E96-938A-087B0A2010E5}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Andastra.Runtime.Content", "src\Andastra\Runtime\Content\Andastra.Runtime.Content.csproj", "{3452FBD2-23D5-4E96-938A-087B0A2010E5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Andastra.Runtime.Scripting", "src\Andastra.Runtime\Scripting\Andastra.Runtime.Scripting.csproj", "{E5AD48E5-052B-4312-BB09-B98A10B48663}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Andastra.Runtime.Scripting", "src\Andastra\Runtime\Scripting\Andastra.Runtime.Scripting.csproj", "{E5AD48E5-052B-4312-BB09-B98A10B48663}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Graphics", "Graphics", "{D4E5F6A7-B8C9-0D1E-2F3A-4B5C6D7E8F9A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Andastra.Runtime.Graphics", "src\Andastra.Runtime\Graphics\Andastra.Runtime.Graphics.csproj", "{18E620A8-3053-482B-9A89-B0D9112A750D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Andastra.Runtime.Graphics", "src\Andastra\Runtime\Graphics\Andastra.Runtime.Graphics.csproj", "{18E620A8-3053-482B-9A89-B0D9112A750D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Andastra.Runtime.Graphics.Common", "src\Andastra.Runtime\Graphics\Andastra.Runtime.Graphics.Common.csproj", "{37B19E9C-E304-42EB-B1E6-4650ECCADE91}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Andastra.Runtime.Graphics.Common", "src\Andastra\Runtime\Graphics\Andastra.Runtime.Graphics.Common.csproj", "{37B19E9C-E304-42EB-B1E6-4650ECCADE91}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Andastra.Runtime.Graphics.MonoGame", "src\Andastra.Runtime\Graphics\MonoGame\Andastra.Runtime.Graphics.MonoGame.csproj", "{432FF7BA-B171-49EC-BF32-7190BF9F2325}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Andastra.Runtime.Graphics.MonoGame", "src\Andastra\Runtime\Graphics\MonoGame\Andastra.Runtime.Graphics.MonoGame.csproj", "{432FF7BA-B171-49EC-BF32-7190BF9F2325}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Andastra.Runtime.Graphics.Stride", "src\Andastra.Runtime\Graphics\Stride\Andastra.Runtime.Graphics.Stride.csproj", "{89381CF8-A859-479A-AEAC-9C8A36D6D355}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Andastra.Runtime.Graphics.Stride", "src\Andastra\Runtime\Graphics\Stride\Andastra.Runtime.Graphics.Stride.csproj", "{89381CF8-A859-479A-AEAC-9C8A36D6D355}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Games", "Games", "{E5F6A7B8-C9D0-1E2F-3A4B-5C6D7E8F9A0B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Andastra.Runtime.Games.Common", "src\Andastra.Runtime\Games\Common\Andastra.Runtime.Games.Common.csproj", "{C013626C-1404-4FEF-A1B4-C02CADA857BC}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Andastra.Runtime.Games.Common", "src\Andastra\Runtime\Games\Common\Andastra.Runtime.Games.Common.csproj", "{C013626C-1404-4FEF-A1B4-C02CADA857BC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Andastra.Runtime.Games.Kotor", "src\Andastra.Runtime\Games\Kotor\Andastra.Runtime.Games.Kotor.csproj", "{827FE34C-1C5F-4F6E-8D68-917689C4EBA5}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Andastra.Runtime.Games.Kotor", "src\Andastra\Runtime\Games\Kotor\Andastra.Runtime.Games.Kotor.csproj", "{827FE34C-1C5F-4F6E-8D68-917689C4EBA5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Andastra.Runtime.Games.Aurora", "src\Andastra.Runtime\Games\Aurora\Andastra.Runtime.Games.Aurora.csproj", "{F2508EE5-8989-4AE2-8891-A7147CC1B0CB}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Andastra.Runtime.Games.Aurora", "src\Andastra\Runtime\Games\Aurora\Andastra.Runtime.Games.Aurora.csproj", "{F2508EE5-8989-4AE2-8891-A7147CC1B0CB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Andastra.Runtime.Games.Eclipse", "src\Andastra.Runtime\Games\Eclipse\Andastra.Runtime.Games.Eclipse.csproj", "{59ECBBB7-4F75-45B4-AF07-2F741E2BAB93}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Andastra.Runtime.Games.Eclipse", "src\Andastra\Runtime\Games\Eclipse\Andastra.Runtime.Games.Eclipse.csproj", "{59ECBBB7-4F75-45B4-AF07-2F741E2BAB93}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Andastra.Runtime.Games.Odyssey", "src\Andastra.Runtime\Games\Odyssey\Andastra.Runtime.Games.Odyssey.csproj", "{FEED5800-938A-4D45-A8EE-73ECEF36C8A6}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Andastra.Runtime.Games.Odyssey", "src\Andastra\Runtime\Games\Odyssey\Andastra.Runtime.Games.Odyssey.csproj", "{FEED5800-938A-4D45-A8EE-73ECEF36C8A6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Andastra.Game", "src\Andastra.Game\Andastra.Game.csproj", "{463A33EC-7903-447E-B2CC-992FD84722F3}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Andastra.Game", "src\Andastra\Game\Andastra.Game.csproj", "{463A33EC-7903-447E-B2CC-992FD84722F3}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tools", "Tools", "{F6A7B8C9-D0E1-2F3A-4B5C-6D7E8F9A0B1C}"
 EndProject

@@ -1,0 +1,41 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="HolocronToolset.Dialogs.BlenderChoiceDialog"
+        Title="Choose Editor"
+        MinWidth="500"
+        WindowStartupLocation="CenterOwner">
+    <StackPanel Margin="20" Spacing="16">
+        <!-- Info Frame -->
+        <Border Name="infoFrame" BorderBrush="Gray" BorderThickness="1" Padding="10">
+            <StackPanel Name="infoLayout" Spacing="5">
+                <!-- Blender info will be added here -->
+            </StackPanel>
+        </Border>
+
+        <!-- Question -->
+        <TextBlock Text="How would you like to open the Module Designer?"
+                   FontWeight="Bold"
+                   HorizontalAlignment="Center" />
+
+        <!-- Choice Buttons -->
+        <StackPanel Orientation="Horizontal" Spacing="16" HorizontalAlignment="Center">
+            <Button Name="blenderButton" Content="Open in Blender&#x0a;(Recommended)" MinHeight="60" Width="200" />
+            <Button Name="builtinButton" Content="Use Built-in Editor" MinHeight="60" Width="200" />
+        </StackPanel>
+
+        <!-- Feature Comparison -->
+        <TextBlock Text="Blender: ⭐⭐⭐ Performance, ⭐⭐⭐ 3D Navigation, ⭐⭐⭐ Model Editing&#x0a;Built-in: ⭐ Performance, ⭐⭐ 3D Navigation, ❌ Model Editing"
+                   FontSize="11"
+                   Foreground="Gray"
+                   HorizontalAlignment="Center"
+                   TextAlignment="Center" />
+
+        <!-- Remember Choice -->
+        <CheckBox Name="rememberCheckbox" Content="Remember my choice" HorizontalAlignment="Center" />
+
+        <!-- Cancel Button -->
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+            <Button Name="cancelButton" Content="Cancel" Width="75" />
+        </StackPanel>
+    </StackPanel>
+</Window>

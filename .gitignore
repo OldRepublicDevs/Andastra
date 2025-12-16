@@ -151,3 +151,4 @@ test-run2.txt
 .backups/
 test_*/
 temp_*/
+~dotnetcleanup-*/
