@@ -6,7 +6,12 @@ namespace Odyssey.Core.Interfaces
     /// <remarks>
     /// Delay Scheduler Interface:
     /// - Based on swkotor2.exe DelayCommand system
-    /// - Located via string references: DelayCommand implementation schedules actions for future execution
+    /// - Located via string references: "DelayCommand" @ 0x007be900 (NWScript DelayCommand function)
+    /// - Delay-related fields: "Delay" @ 0x007c35b0 (delay field), "DelayReply" @ 0x007c38f0 (delay reply field)
+    /// - "DelayEntry" @ 0x007c38fc (delay entry field), "FadeDelay" @ 0x007c358c (fade delay field)
+    /// - "DestroyObjectDelay" @ 0x007c0248 (destroy object delay field), "FadeDelayOnDeath" @ 0x007bf55c (fade delay on death)
+    /// - "ReaxnDelay" @ 0x007bf94c (reaction delay field), "MusicDelay" @ 0x007c14b4 (music delay field)
+    /// - "ShakeDelay" @ 0x007c49ec (shake delay field), "TooltipDelay Sec" @ 0x007c71dc (tooltip delay)
     /// - Original implementation: DelayCommand NWScript function schedules actions to execute after specified delay
     /// - Uses priority queue sorted by execution time to efficiently process delayed actions
     /// - Delayed actions execute in order based on schedule time

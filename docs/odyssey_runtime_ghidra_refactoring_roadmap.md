@@ -115,7 +115,7 @@ When processing a file:
 - [ ] Interfaces\IActionQueue.cs
 - [ ] Interfaces\IArea.cs
 - [ ] Interfaces\IComponent.cs
-- [ ] Interfaces\IDelayScheduler.cs
+- [x] Interfaces\IDelayScheduler.cs - DelayCommand @ 0x007be900, Delay @ 0x007c35b0, DelayReply @ 0x007c38f0, STORE_STATE opcode
 - [ ] Interfaces\IEntity.cs
 - [ ] Interfaces\IEventBus.cs
 - [ ] Interfaces\IGameServicesContext.cs
