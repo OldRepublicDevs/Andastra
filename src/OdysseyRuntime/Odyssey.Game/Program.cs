@@ -1,5 +1,6 @@
 using System;
 using Odyssey.Game.Core;
+using Odyssey.Graphics;
 
 namespace Odyssey.Game
 {
@@ -48,12 +49,33 @@ namespace Odyssey.Game
                 Console.WriteLine("Path: " + settings.GamePath);
                 Console.WriteLine();
 
-                // Create and run the game (MonoGame version)
-                using (var game = new OdysseyGame(settings))
+                // Determine graphics backend (default to MonoGame, can be overridden via command line)
+                GraphicsBackendType backendType = GraphicsBackendType.MonoGame;
+                for (int i = 0; i < args.Length; i++)
                 {
-                    // MonoGame Game.Run() starts the game loop and blocks until the game exits
-                    // Based on MonoGame API: https://docs.monogame.net/api/Microsoft.Xna.Framework.Game.html
-                    // Method signature: void Run()
+                    if (args[i] == "--backend" && i + 1 < args.Length)
+                    {
+                        if (args[i + 1].Equals("stride", StringComparison.OrdinalIgnoreCase))
+                        {
+                            backendType = GraphicsBackendType.Stride;
+                        }
+                        else if (args[i + 1].Equals("monogame", StringComparison.OrdinalIgnoreCase))
+                        {
+                            backendType = GraphicsBackendType.MonoGame;
+                        }
+                        break;
+                    }
+                }
+
+                Console.WriteLine("Graphics Backend: " + backendType);
+                Console.WriteLine();
+
+                // Create graphics backend
+                IGraphicsBackend graphicsBackend = GraphicsBackendFactory.CreateBackend(backendType);
+
+                // Create and run the game using abstraction layer
+                using (var game = new OdysseyGame(settings, graphicsBackend))
+                {
                     game.Run();
                 }
 
