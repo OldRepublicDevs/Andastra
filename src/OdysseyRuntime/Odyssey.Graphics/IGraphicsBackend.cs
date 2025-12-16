@@ -90,6 +90,20 @@ namespace Odyssey.Graphics
         /// <param name="cameraController">The camera controller to use.</param>
         /// <returns>Created dialogue camera controller.</returns>
         object CreateDialogueCameraController(object cameraController);
+
+        /// <summary>
+        /// Creates a sound player for playing sound effects.
+        /// </summary>
+        /// <param name="resourceProvider">Resource provider for loading audio files.</param>
+        /// <returns>Created sound player.</returns>
+        object CreateSoundPlayer(object resourceProvider);
+
+        /// <summary>
+        /// Creates a voice player for playing voice-over dialogue.
+        /// </summary>
+        /// <param name="resourceProvider">Resource provider for loading audio files.</param>
+        /// <returns>Created voice player.</returns>
+        object CreateVoicePlayer(object resourceProvider);
     }
 }
 
