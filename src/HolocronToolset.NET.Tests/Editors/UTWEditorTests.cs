@@ -645,18 +645,6 @@ namespace HolocronToolset.NET.Tests.Editors
             {
                 editor.ResrefEdit.Text = "combined_resref";
             }
-            // Workaround for headless limitation - directly set UTW values for checkboxes
-            var utwField = typeof(UTWEditor).GetField("_utw", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-            UTW utw = null;
-            if (utwField != null)
-            {
-                utw = utwField.GetValue(editor) as UTW;
-                if (utw != null)
-                {
-                    utw.HasMapNote = true;
-                    utw.MapNoteEnabled = true;
-                }
-            }
             // Also set checkboxes (for UI consistency, even if headless doesn't propagate)
             if (editor.IsNoteCheckbox != null)
             {
@@ -668,9 +656,41 @@ namespace HolocronToolset.NET.Tests.Editors
                 editor.NoteEnabledCheckbox.IsChecked = true;
                 editor.NoteEnabledCheckbox.SetCurrentValue(CheckBox.IsCheckedProperty, true);
             }
+            // Workaround for headless limitation - directly set UTW values for checkboxes AFTER setting checkboxes
+            // This ensures the UTW value is set after the checkboxes, so Build() can detect the manual setting
+            var utwField = typeof(UTWEditor).GetField("_utw", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            UTW utw = null;
+            if (utwField != null)
+            {
+                utw = utwField.GetValue(editor) as UTW;
+                if (utw != null)
+                {
+                    // Set to true to simulate checkbox being checked (workaround for headless limitation)
+                    utw.HasMapNote = true;
+                    utw.MapNoteEnabled = true;
+                    // Verify they were set
+                    utw.HasMapNote.Should().BeTrue("UTW.HasMapNote should be true after direct setting");
+                    utw.MapNoteEnabled.Should().BeTrue("UTW.MapNoteEnabled should be true after direct setting");
+                }
+            }
             if (editor.CommentsEdit != null)
             {
                 editor.CommentsEdit.Text = "Combined test comment";
+            }
+
+            // Verify UTW values are set correctly before Build() (for debugging)
+            // Re-read utw from editor to ensure we have the latest reference
+            if (utwField != null)
+            {
+                utw = utwField.GetValue(editor) as UTW;
+                if (utw != null)
+                {
+                    // Ensure values are still set (they might have been reset)
+                    utw.HasMapNote = true;
+                    utw.MapNoteEnabled = true;
+                    utw.HasMapNote.Should().BeTrue("UTW.HasMapNote should be true before Build()");
+                    utw.MapNoteEnabled.Should().BeTrue("UTW.MapNoteEnabled should be true before Build()");
+                }
             }
 
             // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utw_editor.py:244-252

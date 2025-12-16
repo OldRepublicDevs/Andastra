@@ -114,6 +114,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
 
         public override void OutARsaddCommand(ARsaddCommand node)
         {
+            int pos = this.nodedata.TryGetPos(node);
             if (!this.skipdeadcode)
             {
                 // Extract type from ARsaddCommand's GetType() which returns TIntegerConstant
@@ -137,6 +138,7 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             }
             else
             {
+                JavaSystem.@out.Println($"DEBUG MainPass: OutARsaddCommand at pos {pos} marked as dead code, skipping");
                 this.state.TransformDeadCode(node);
             }
         }
@@ -660,7 +662,14 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             this.CheckOrigins(node);
             if (NodeUtils.IsCommandNode(node))
             {
-                this.skipdeadcode = !this.nodedata.TryProcessCode(node);
+                bool shouldProcess = this.nodedata.TryProcessCode(node);
+                this.skipdeadcode = !shouldProcess;
+                if (!shouldProcess && node is AST.PCmd cmd)
+                {
+                    // Log first few skipped commands for debugging
+                    int pos = this.nodedata.TryGetPos(node);
+                    JavaSystem.@out.Println($"DEBUG MainPass: Command at pos {pos} marked as dead code (TryProcessCode returned false), type={node.GetType().Name}");
+                }
             }
         }
 
