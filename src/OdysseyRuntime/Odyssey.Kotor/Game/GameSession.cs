@@ -369,15 +369,22 @@ namespace Odyssey.Kotor.Game
                     {
                         _world.SetCurrentArea(entryArea);
                         
-                        // Register all encounters in the area
-                        if (_encounterSystem != null)
+                        // Register all entities from area into world
+                        // Based on swkotor2.exe: Entities must be registered in world for lookups to work
+                        // Located via string references: "ObjectId" @ 0x007bce5c, "ObjectIDList" @ 0x007bfd7c
+                        // Original implementation: All entities are registered in world's ObjectId, Tag, and ObjectType indices
+                        if (entryArea is RuntimeArea runtimeArea)
                         {
-                            // IArea doesn't have GetAllEntities, but RuntimeArea does
-                            if (entryArea is RuntimeArea runtimeArea)
+                            foreach (IEntity entity in runtimeArea.GetAllEntities())
                             {
-                                foreach (IEntity entity in runtimeArea.GetAllEntities())
+                                if (entity != null && entity.IsValid)
                                 {
-                                    if (entity != null && entity.ObjectType == Odyssey.Core.Enums.ObjectType.Encounter)
+                                    // Set entity's World reference and register in world
+                                    entity.World = _world;
+                                    _world.RegisterEntity(entity);
+                                    
+                                    // Register encounters with encounter system
+                                    if (_encounterSystem != null && entity.ObjectType == Odyssey.Core.Enums.ObjectType.Encounter)
                                     {
                                         _encounterSystem.RegisterEncounter(entity);
                                     }
