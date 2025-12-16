@@ -159,8 +159,11 @@ namespace Odyssey.Core.Perception
             }
 
             // Line-of-sight check through walkmesh
-            Vector3 eyePos = subjectTransform.Position + Vector3.UnitY * DefaultEyeHeight;
-            Vector3 targetEyePos = targetTransform.Position + Vector3.UnitY * DefaultEyeHeight;
+            // Based on swkotor2.exe: Eye height uses Z axis (vertical) - TransformComponent.Up = UnitZ
+            // Located via string references: Position offsets use Z for vertical, Y for horizontal (2D movement plane)
+            // Original implementation: Eye position offset by DefaultEyeHeight along Z axis (vertical)
+            Vector3 eyePos = subjectTransform.Position + Vector3.UnitZ * DefaultEyeHeight;
+            Vector3 targetEyePos = targetTransform.Position + Vector3.UnitZ * DefaultEyeHeight;
             Vector3 direction = targetEyePos - eyePos;
             float distance = direction.Length();
 
