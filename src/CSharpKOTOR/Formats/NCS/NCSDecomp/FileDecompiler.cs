@@ -669,11 +669,30 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
             Utils.FileScriptData data = this.DecompileNcs(file);
             if (data == null)
             {
-                throw new DecompilerException("Decompile failed for " + file.GetAbsolutePath());
+                throw new DecompilerException("Decompile failed for " + file.GetAbsolutePath() + " - DecompileNcs returned null (this should not happen)");
             }
 
-            data.GenerateCode();
-            string code = data.GetCode();
+            string code = null;
+            try
+            {
+                data.GenerateCode();
+                code = data.GetCode();
+            }
+            catch (Exception genEx)
+            {
+                JavaSystem.@out.Println("WARNING: GenerateCode() threw exception: " + genEx.GetType().Name + " - " + genEx.Message);
+                genEx.PrintStackTrace(JavaSystem.@out);
+                // Try to get code anyway, in case it was partially generated
+                try
+                {
+                    code = data.GetCode();
+                }
+                catch
+                {
+                    // Ignore
+                }
+            }
+            
             // Ensure we always return a non-null string (even if empty) so file is always created
             if (code == null)
             {
