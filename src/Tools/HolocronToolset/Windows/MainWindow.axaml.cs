@@ -74,6 +74,10 @@ namespace HolocronToolset.Windows
             // Original: self.update_manager: UpdateManager = UpdateManager(silent=True)
             _updateManager = new UpdateManager(silent: true);
 
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:821
+            // Original: self.setWindowTitle(f"{tr('Holocron Toolset')} ({qtpy.API_NAME})")
+            Title = "Holocron Toolset";
+
             SetupUI();
             SetupSignals();
             ReloadSettings();
