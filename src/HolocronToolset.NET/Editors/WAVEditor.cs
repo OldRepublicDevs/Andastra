@@ -376,9 +376,21 @@ namespace HolocronToolset.NET.Editors
                 Ui.CurrentTimeLabel.Text = currentTime;
             }
 
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/wav.py:500-503
-            // Original: Only update slider if not being dragged
-            // For testing, we'll always update the slider (no drag state tracking needed)
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/wav.py:501-504
+            // Original: if position > self.ui.timeSlider.maximum():
+            // Original:     clamped_position = max(0, min(position, 2147483647))
+            // Original:     self._on_duration_changed(clamped_position)
+            // Fix for inaccurate duration calculation (but clamp to avoid overflow)
+            if (Ui?.TimeSlider != null && clampedPosition > Ui.TimeSlider.Maximum)
+            {
+                long clampedPositionForDuration = Math.Max(0, Math.Min(clampedPosition, maxSliderValue));
+                OnDurationChanged(clampedPositionForDuration);
+            }
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/wav.py:506-508
+            // Original: if not self.ui.timeSlider.isSliderDown():
+            // Original:     self.ui.timeSlider.setValue(position)
+            // Update slider if not being dragged
             if (Ui?.TimeSlider != null)
             {
                 Ui.TimeSlider.Value = clampedPosition;
