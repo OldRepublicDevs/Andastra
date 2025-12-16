@@ -27,7 +27,7 @@ namespace Odyssey.Engines.Odyssey
     {
         private readonly OdysseyEngine _odysseyEngine;
         private readonly Installation _installation;
-        private readonly Odyssey.Kotor.Loading.ModuleLoader _moduleLoader;
+        private readonly OdysseyModuleLoader _moduleLoader;
 
         public OdysseyGameSession(OdysseyEngine engine)
             : base(engine)
@@ -49,9 +49,8 @@ namespace Odyssey.Engines.Odyssey
                 throw new InvalidOperationException("Resource provider must be GameResourceProvider for Odyssey engine");
             }
 
-            // Initialize module loader
-            // TODO: Move ModuleLoader from Odyssey.Kotor.Loading to Odyssey.Engines.Odyssey
-            _moduleLoader = new Odyssey.Kotor.Loading.ModuleLoader(_installation);
+            // Initialize module loader (now using Odyssey.Engines.Odyssey implementation)
+            _moduleLoader = new OdysseyModuleLoader(engine.World, engine.ResourceProvider);
         }
 
         public override async Task LoadModuleAsync(string moduleName, [CanBeNull] Action<float> progressCallback = null)
@@ -61,24 +60,20 @@ namespace Odyssey.Engines.Odyssey
                 throw new ArgumentException("Module name cannot be null or empty", nameof(moduleName));
             }
 
-            CurrentModuleName = moduleName;
+            // Load module using OdysseyModuleLoader
+            await _moduleLoader.LoadModuleAsync(moduleName, progressCallback);
 
-            // TODO: Implement proper module loading
-            // This will be implemented by moving code from Odyssey.Kotor.Game.GameSession
-            // For now, provide skeleton implementation
-            progressCallback?.Invoke(0.0f);
-            
-            // Placeholder: actual implementation will load module using _moduleLoader
-            // The ModuleLoader.LoadModule method will be called here
-            await Task.CompletedTask;
-            
-            progressCallback?.Invoke(1.0f);
+            // Update game session state
+            CurrentModuleName = moduleName;
         }
 
         protected override void OnUnloadModule()
         {
-            // Clean up module-specific resources
-            // TODO: Implement proper cleanup when module loading is fully implemented
+            // Unload module using module loader
+            if (_moduleLoader != null)
+            {
+                _moduleLoader.UnloadModule();
+            }
         }
     }
 }

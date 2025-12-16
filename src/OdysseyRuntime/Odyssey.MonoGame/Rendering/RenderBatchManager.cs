@@ -184,10 +184,15 @@ namespace Odyssey.MonoGame.Rendering
                 for (int i = 0; i < batch.Objects.Count; i += MaxBatchSize)
                 {
                     int count = Math.Min(MaxBatchSize, batch.Objects.Count - i);
+                    List<BatchObject> splitObjects = new List<BatchObject>(count);
+                    for (int j = 0; j < count; j++)
+                    {
+                        splitObjects.Add(batch.Objects[i + j]);
+                    }
                     RenderBatch split = new RenderBatch
                     {
                         MaterialId = batch.MaterialId,
-                        Objects = batch.Objects.GetRange(i, count)
+                        Objects = splitObjects
                     };
                     splits.Add(split);
                 }
