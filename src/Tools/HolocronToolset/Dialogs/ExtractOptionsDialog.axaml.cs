@@ -51,6 +51,31 @@ namespace HolocronToolset.Dialogs
             Width = 400;
             Height = 300;
 
+            // Create all UI controls programmatically for test scenarios
+            _tpcDecompileCheckbox = new CheckBox { Content = "TPC Decompile" };
+            _tpcTxiCheckbox = new CheckBox { Content = "TPC Extract TXI" };
+            _mdlDecompileCheckbox = new CheckBox { Content = "MDL Decompile" };
+            _mdlTexturesCheckbox = new CheckBox { Content = "MDL Extract Textures" };
+            _okButton = new Button { Content = "OK" };
+            _cancelButton = new Button { Content = "Cancel" };
+
+            // Connect events
+            _okButton.Click += (s, e) => { UpdateValues(); Close(); };
+            _cancelButton.Click += (s, e) => Close();
+            _tpcDecompileCheckbox.IsCheckedChanged += (s, e) => _tpcDecompile = _tpcDecompileCheckbox.IsChecked ?? false;
+            _tpcTxiCheckbox.IsCheckedChanged += (s, e) => _tpcExtractTxi = _tpcTxiCheckbox.IsChecked ?? false;
+            _mdlDecompileCheckbox.IsCheckedChanged += (s, e) => _mdlDecompile = _mdlDecompileCheckbox.IsChecked ?? false;
+            _mdlTexturesCheckbox.IsCheckedChanged += (s, e) => _mdlExtractTextures = _mdlTexturesCheckbox.IsChecked ?? false;
+
+            // Create UI wrapper for testing
+            Ui = new ExtractOptionsDialogUi
+            {
+                TpcDecompileCheckbox = _tpcDecompileCheckbox,
+                TpcTxiCheckbox = _tpcTxiCheckbox,
+                MdlDecompileCheckbox = _mdlDecompileCheckbox,
+                MdlTexturesCheckbox = _mdlTexturesCheckbox
+            };
+
             var panel = new StackPanel();
             var titleLabel = new TextBlock
             {
@@ -58,11 +83,15 @@ namespace HolocronToolset.Dialogs
                 FontSize = 18,
                 HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center
             };
-            var okButton = new Button { Content = "OK" };
-            okButton.Click += (sender, e) => Close();
-
             panel.Children.Add(titleLabel);
-            panel.Children.Add(okButton);
+            panel.Children.Add(_tpcDecompileCheckbox);
+            panel.Children.Add(_tpcTxiCheckbox);
+            panel.Children.Add(_mdlDecompileCheckbox);
+            panel.Children.Add(_mdlTexturesCheckbox);
+            var buttonPanel = new StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal, Spacing = 5 };
+            buttonPanel.Children.Add(_okButton);
+            buttonPanel.Children.Add(_cancelButton);
+            panel.Children.Add(buttonPanel);
             Content = panel;
         }
 
@@ -80,22 +109,37 @@ namespace HolocronToolset.Dialogs
 
         private void SetupUI()
         {
-            // Find controls from XAML
-            _tpcDecompileCheckbox = this.FindControl<CheckBox>("tpcDecompileCheckbox");
-            _tpcTxiCheckbox = this.FindControl<CheckBox>("tpcTxiCheckbox");
-            _mdlDecompileCheckbox = this.FindControl<CheckBox>("mdlDecompileCheckbox");
-            _mdlTexturesCheckbox = this.FindControl<CheckBox>("mdlTexturesCheckbox");
-            _okButton = this.FindControl<Button>("okButton");
-            _cancelButton = this.FindControl<Button>("cancelButton");
+            // If Ui is already initialized (e.g., by SetupProgrammaticUI), skip control finding
+            if (Ui != null)
+            {
+                return;
+            }
+
+            // Use try-catch to handle cases where XAML controls might not be available (e.g., in tests)
+            Ui = new ExtractOptionsDialogUi();
+            
+            try
+            {
+                // Find controls from XAML
+                _tpcDecompileCheckbox = this.FindControl<CheckBox>("tpcDecompileCheckbox");
+                _tpcTxiCheckbox = this.FindControl<CheckBox>("tpcTxiCheckbox");
+                _mdlDecompileCheckbox = this.FindControl<CheckBox>("mdlDecompileCheckbox");
+                _mdlTexturesCheckbox = this.FindControl<CheckBox>("mdlTexturesCheckbox");
+                _okButton = this.FindControl<Button>("okButton");
+                _cancelButton = this.FindControl<Button>("cancelButton");
+            }
+            catch
+            {
+                // XAML controls not available - create programmatic UI for tests
+                SetupProgrammaticUI();
+                return; // SetupProgrammaticUI already sets up Ui and connects events
+            }
 
             // Create UI wrapper for testing
-            Ui = new ExtractOptionsDialogUi
-            {
-                TpcDecompileCheckbox = _tpcDecompileCheckbox,
-                TpcTxiCheckbox = _tpcTxiCheckbox,
-                MdlDecompileCheckbox = _mdlDecompileCheckbox,
-                MdlTexturesCheckbox = _mdlTexturesCheckbox
-            };
+            Ui.TpcDecompileCheckbox = _tpcDecompileCheckbox;
+            Ui.TpcTxiCheckbox = _tpcTxiCheckbox;
+            Ui.MdlDecompileCheckbox = _mdlDecompileCheckbox;
+            Ui.MdlTexturesCheckbox = _mdlTexturesCheckbox;
 
             if (_okButton != null)
             {
