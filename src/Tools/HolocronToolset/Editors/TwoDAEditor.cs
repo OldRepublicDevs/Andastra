@@ -96,23 +96,63 @@ namespace HolocronToolset.Editors
 
         private void SetupUI()
         {
-            // Try to find controls from XAML if available
-            _twodaTable = this.FindControl<DataGrid>("twodaTable");
-            _filterEdit = this.FindControl<TextBox>("filterEdit");
-            var filterBoxExpander = this.FindControl<Expander>("filterBox");
-            if (filterBoxExpander != null)
+            // If controls are already initialized (e.g., by SetupProgrammaticUI), skip control finding
+            if (_twodaTable != null && _filterEdit != null && _filterBox != null)
             {
-                // Find the content panel inside the expander
-                var content = filterBoxExpander.Content as Panel;
-                if (content != null)
+                if (_twodaTable.ItemsSource == null)
                 {
-                    _filterBox = content;
+                    _twodaTable.ItemsSource = _filteredData.View;
+                }
+                return;
+            }
+
+            // Use try-catch to handle cases where XAML controls might not be available (e.g., in tests)
+            try
+            {
+                // Try to find controls from XAML if available
+                _twodaTable = this.FindControl<DataGrid>("twodaTable");
+                _filterEdit = this.FindControl<TextBox>("filterEdit");
+                var filterBoxExpander = this.FindControl<Expander>("filterBox");
+                if (filterBoxExpander != null)
+                {
+                    // Find the content panel inside the expander
+                    var content = filterBoxExpander.Content as Panel;
+                    if (content != null)
+                    {
+                        _filterBox = content;
+                    }
+                }
+            }
+            catch
+            {
+                // XAML controls not available - controls should already be initialized by SetupProgrammaticUI
+                // If not, ensure minimal setup
+                if (_twodaTable == null)
+                {
+                    _twodaTable = new DataGrid
+                    {
+                        AutoGenerateColumns = false,
+                        CanUserReorderColumns = false,
+                        CanUserResizeColumns = true,
+                        SelectionMode = DataGridSelectionMode.Extended
+                    };
+                }
+                if (_filterEdit == null)
+                {
+                    _filterEdit = new TextBox { Watermark = "Filter..." };
+                }
+                if (_filterBox == null)
+                {
+                    _filterBox = new StackPanel { Orientation = Orientation.Horizontal };
                 }
             }
 
             if (_twodaTable != null)
             {
-                _twodaTable.ItemsSource = _filteredData.View;
+                if (_twodaTable.ItemsSource == null)
+                {
+                    _twodaTable.ItemsSource = _filteredData.View;
+                }
             }
         }
 
