@@ -5428,6 +5428,24 @@ namespace Odyssey.Kotor.EngineApi
                 string firstName = concreteEntity.GetData<string>("FirstName", null);
                 string lastName = concreteEntity.GetData<string>("LastName", null);
 
+                // Resolve TLK string references if the values are numeric string refs
+                if (ctx is VMExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
+                {
+                    if (services.DialogueManager is DialogueManager dialogueManager)
+                    {
+                        // Check if firstName is a string ref (numeric string)
+                        if (!string.IsNullOrEmpty(firstName) && int.TryParse(firstName, out int firstNameRef) && firstNameRef >= 0)
+                        {
+                            firstName = dialogueManager.LookupString(firstNameRef);
+                        }
+                        // Check if lastName is a string ref (numeric string)
+                        if (!string.IsNullOrEmpty(lastName) && int.TryParse(lastName, out int lastNameRef) && lastNameRef >= 0)
+                        {
+                            lastName = dialogueManager.LookupString(lastNameRef);
+                        }
+                    }
+                }
+
                 if (!string.IsNullOrEmpty(firstName) || !string.IsNullOrEmpty(lastName))
                 {
                     string fullName = string.Empty;
