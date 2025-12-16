@@ -113,6 +113,85 @@ namespace HolocronToolset.NET.Tests.Editors
             diff.Should().BeTrue($"GFF comparison failed. Log messages: {string.Join(Environment.NewLine, logMessages)}");
         }
 
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utw_editor.py:258-287
+        // Original: def test_utw_editor_save_load_roundtrip_identity(qtbot, installation: HTInstallation, test_files_dir: Path):
+        [Fact]
+        public void TestUtwEditorSaveLoadRoundtripIdentity()
+        {
+            string k2Path = Environment.GetEnvironmentVariable("K2_PATH");
+            if (string.IsNullOrEmpty(k2Path))
+            {
+                k2Path = @"C:\Program Files (x86)\Steam\steamapps\common\Knights of the Old Republic II";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k2Path) && System.IO.File.Exists(System.IO.Path.Combine(k2Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k2Path, "Test Installation", tsl: true);
+            }
+
+            if (installation == null)
+            {
+                return; // Skip if no installation available
+            }
+
+            string testFilesDir = System.IO.Path.Combine(
+                System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+
+            string utwFile = System.IO.Path.Combine(testFilesDir, "tar05_sw05aa10.utw");
+            if (!System.IO.File.Exists(utwFile))
+            {
+                testFilesDir = System.IO.Path.Combine(
+                    System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                    "..", "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+                utwFile = System.IO.Path.Combine(testFilesDir, "tar05_sw05aa10.utw");
+            }
+
+            if (!System.IO.File.Exists(utwFile))
+            {
+                return; // Skip if test file not available
+            }
+
+            var editor = new UTWEditor(null, installation);
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utw_editor.py:268-270
+            // Original: original_data = utw_file.read_bytes()
+            // Original: original_utw = read_utw(original_data)
+            // Original: editor.load(utw_file, "tar05_sw05aa10", ResourceType.UTW, original_data)
+            byte[] originalData = System.IO.File.ReadAllBytes(utwFile);
+            var originalUtw = UTWAuto.ReadUtw(originalData);
+            editor.Load(utwFile, "tar05_sw05aa10", ResourceType.UTW, originalData);
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utw_editor.py:273-280
+            // Original: data, _ = editor.build()
+            // Original: saved_utw = read_utw(data)
+            // Original: assert saved_utw.tag == original_utw.tag
+            // Original: assert str(saved_utw.resref) == str(original_utw.resref)
+            // Original: assert saved_utw.has_map_note == original_utw.has_map_note
+            // Original: assert saved_utw.map_note_enabled == original_utw.map_note_enabled
+            var (data, _) = editor.Build();
+            var savedUtw = UTWAuto.ReadUtw(data);
+            savedUtw.Tag.Should().Be(originalUtw.Tag, "Tag should match original");
+            savedUtw.ResRef?.ToString().Should().Be(originalUtw.ResRef?.ToString(), "ResRef should match original");
+            savedUtw.HasMapNote.Should().Be(originalUtw.HasMapNote, "HasMapNote should match original");
+            savedUtw.MapNoteEnabled.Should().Be(originalUtw.MapNoteEnabled, "MapNoteEnabled should match original");
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utw_editor.py:283-287
+            // Original: editor.load(utw_file, "tar05_sw05aa10", ResourceType.UTW, data)
+            // Original: assert editor.ui.tagEdit.text() == original_utw.tag
+            // Original: assert editor.ui.resrefEdit.text() == str(original_utw.resref)
+            editor.Load(utwFile, "tar05_sw05aa10", ResourceType.UTW, data);
+            if (editor.TagEdit != null)
+            {
+                editor.TagEdit.Text.Should().Be(originalUtw.Tag, "UI tag should match original after reload");
+            }
+            if (editor.ResrefEdit != null)
+            {
+                editor.ResrefEdit.Text.Should().Be(originalUtw.ResRef?.ToString(), "UI resref should match original after reload");
+            }
+        }
+
         // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utw_editor.py:24-49
         // Original: def test_utw_editor_manipulate_name_locstring(qtbot, installation: HTInstallation, test_files_dir: Path):
         [Fact]
