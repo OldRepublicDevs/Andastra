@@ -779,7 +779,20 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp.Utils
                 ASubroutine mainSub = ConvertInstructionRangeToSubroutine(ncs, instructions, mainStart, mainEnd, mainStart);
                 if (mainSub != null)
                 {
+                    // Check if main subroutine has commands
+                    var cmdBlock = mainSub.GetCommandBlock();
+                    int cmdCount = 0;
+                    if (cmdBlock is AST.ACommandBlock aCmdBlock)
+                    {
+                        cmdCount = aCmdBlock.GetCmd().Count;
+                    }
+                    JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Main subroutine created with {cmdCount} commands, subId={mainSub.GetId()}");
                     program.GetSubroutine().Add(mainSub);
+                    JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Main subroutine added to program, total subroutines now: {program.GetSubroutine().Count}");
+                }
+                else
+                {
+                    JavaSystem.@out.Println($"DEBUG NcsToAstConverter: WARNING - Main subroutine creation returned null for range {mainStart}-{mainEnd}");
                 }
             }
             else
