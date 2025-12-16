@@ -20,6 +20,7 @@
 ### ⏳ In Progress
 - Refactoring `Odyssey.Kotor` code to use base classes
 - Moving KOTOR-specific implementations to `Odyssey.Engines.Odyssey`
+- Namespace rename: CSharpKOTOR → AuroraEngine.Common (mostly complete, directory rename pending)
 
 ### ✅ Additional Progress
 3. **Phase 3 (Continued)**: Odyssey Engine Implementation
@@ -50,7 +51,7 @@
   - Implement Eclipse-specific resource provider
   - Implement EclipseGameSession
   - Implement Eclipse-specific systems
-- Rename CSharpKOTOR to AuroraEngine.Common (large find/replace operation)
+- Rename CSharpKOTOR to AuroraEngine.Common (namespace rename complete, directory rename pending due to file locks)
 - Update solution file with new projects
 - Update all project references throughout codebase
 

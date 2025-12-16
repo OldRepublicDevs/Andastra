@@ -54,7 +54,7 @@ namespace AuroraEngine.Common
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
         }
 
-        public static Vector3 ReadVector3(this AuroraEngine.Common.Common.BinaryReader reader)
+        public static Vector3 ReadVector3(this AuroraEngine.Common.BinaryReader reader)
         {
             float x = reader.ReadSingle();
             float y = reader.ReadSingle();
@@ -62,14 +62,14 @@ namespace AuroraEngine.Common
             return new Vector3(x, y, z);
         }
 
-        public static void WriteVector3(this AuroraEngine.Common.Common.BinaryWriter writer, Vector3 value)
+        public static void WriteVector3(this AuroraEngine.Common.BinaryWriter writer, Vector3 value)
         {
             writer.WriteSingle(value.X);
             writer.WriteSingle(value.Y);
             writer.WriteSingle(value.Z);
         }
 
-        public static Vector4 ReadVector4(this AuroraEngine.Common.Common.BinaryReader reader)
+        public static Vector4 ReadVector4(this AuroraEngine.Common.BinaryReader reader)
         {
             float x = reader.ReadSingle();
             float y = reader.ReadSingle();
@@ -78,7 +78,7 @@ namespace AuroraEngine.Common
             return new Vector4(x, y, z, w);
         }
 
-        public static void WriteVector4(this AuroraEngine.Common.Common.BinaryWriter writer, Vector4 value)
+        public static void WriteVector4(this AuroraEngine.Common.BinaryWriter writer, Vector4 value)
         {
             writer.WriteSingle(value.X);
             writer.WriteSingle(value.Y);
@@ -89,7 +89,7 @@ namespace AuroraEngine.Common
         /// <summary>
         /// Reads a LocalizedString following the GFF format specification.
         /// </summary>
-        public static LocalizedString ReadLocalizedString(this AuroraEngine.Common.Common.BinaryReader reader)
+        public static LocalizedString ReadLocalizedString(this AuroraEngine.Common.BinaryReader reader)
         {
             var locString = LocalizedString.FromInvalid();
 
@@ -129,10 +129,10 @@ namespace AuroraEngine.Common
         /// <summary>
         /// Writes a LocalizedString following the GFF format specification.
         /// </summary>
-        public static void WriteLocalizedString(this AuroraEngine.Common.Common.BinaryWriter writer, LocalizedString value)
+        public static void WriteLocalizedString(this AuroraEngine.Common.BinaryWriter writer, LocalizedString value)
         {
             // Build the locstring data first to calculate total length
-            using (var tempWriter = AuroraEngine.Common.Common.BinaryWriter.ToByteArray())
+            using (var tempWriter = AuroraEngine.Common.BinaryWriter.ToByteArray())
             {
                 // Write StringRef
                 uint stringref = value.StringRef == -1 ? 0xFFFFFFFF : (uint)value.StringRef;

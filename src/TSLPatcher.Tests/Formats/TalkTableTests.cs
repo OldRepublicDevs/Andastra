@@ -1,5 +1,5 @@
-﻿using System;
-using AuroraEngine.Common.Common;
+using System;
+using AuroraEngine.Common;
 using AuroraEngine.Common.Formats.TLK;
 using AuroraEngine.Common.Tests.Common;
 using FluentAssertions;

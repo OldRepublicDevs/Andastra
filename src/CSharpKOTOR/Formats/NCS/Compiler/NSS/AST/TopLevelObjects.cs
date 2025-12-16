@@ -1,13 +1,13 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using AuroraEngine.Common.Common.Script;
+using AuroraEngine.Common.Script;
 using AuroraEngine.Common.Formats.NCS;
 using AuroraEngine.Common.Formats.NCS.Compiler.NSS;
 using MissingIncludeError = AuroraEngine.Common.Formats.NCS.Compiler.NSS.MissingIncludeError;
-using ScriptDataType = AuroraEngine.Common.Common.Script.DataType;
+using ScriptDataType = AuroraEngine.Common.Script.DataType;
 
 namespace AuroraEngine.Common.Formats.NCS.Compiler
 {

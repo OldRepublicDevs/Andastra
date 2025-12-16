@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using Avalonia;
 using Avalonia.Controls;
@@ -996,6 +996,83 @@ namespace HolocronToolset.NET.Tests.Editors
                     editor.TagEdit.Text.Should().Be($"cycle_{cycle}", $"Tag should be cycle_{cycle} after reload");
                 }
             }
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utw_editor.py:365-384
+        // Original: def test_utw_editor_minimum_values(qtbot, installation: HTInstallation, test_files_dir: Path):
+        [Fact]
+        public void TestUtwEditorMinimumValues()
+        {
+            string k2Path = Environment.GetEnvironmentVariable("K2_PATH");
+            if (string.IsNullOrEmpty(k2Path))
+            {
+                k2Path = @"C:\Program Files (x86)\Steam\steamapps\common\Knights of the Old Republic II";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k2Path) && System.IO.File.Exists(System.IO.Path.Combine(k2Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k2Path, "Test Installation", tsl: true);
+            }
+
+            if (installation == null)
+            {
+                return; // Skip if no installation available
+            }
+
+            string testFilesDir = System.IO.Path.Combine(
+                System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+
+            string utwFile = System.IO.Path.Combine(testFilesDir, "tar05_sw05aa10.utw");
+            if (!System.IO.File.Exists(utwFile))
+            {
+                testFilesDir = System.IO.Path.Combine(
+                    System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                    "..", "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+                utwFile = System.IO.Path.Combine(testFilesDir, "tar05_sw05aa10.utw");
+            }
+
+            if (!System.IO.File.Exists(utwFile))
+            {
+                return; // Skip if test file not available
+            }
+
+            var editor = new UTWEditor(null, installation);
+            byte[] originalData = System.IO.File.ReadAllBytes(utwFile);
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utw_editor.py:374
+            // Original: editor.load(utw_file, "tar05_sw05aa10", ResourceType.UTW, original_data)
+            editor.Load(utwFile, "tar05_sw05aa10", ResourceType.UTW, originalData);
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utw_editor.py:377-379
+            // Original: editor.ui.tagEdit.setText("")
+            // Original: editor.ui.resrefEdit.setText("")
+            // Original: editor.ui.commentsEdit.setPlainText("")
+            if (editor.TagEdit != null)
+            {
+                editor.TagEdit.Text = "";
+            }
+            if (editor.ResrefEdit != null)
+            {
+                editor.ResrefEdit.Text = "";
+            }
+            if (editor.CommentsEdit != null)
+            {
+                editor.CommentsEdit.Text = "";
+            }
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utw_editor.py:382-386
+            // Original: data, _ = editor.build()
+            // Original: modified_utw = read_utw(data)
+            // Original: assert modified_utw.tag == ""
+            // Original: assert str(modified_utw.resref) == ""
+            // Original: assert modified_utw.comment == ""
+            var (data, _) = editor.Build();
+            var modifiedUtw = UTWAuto.ReadUtw(data);
+            modifiedUtw.Tag.Should().Be("", "Tag should be empty string");
+            modifiedUtw.ResRef?.ToString().Should().Be("", "ResRef should be empty string");
+            modifiedUtw.Comment.Should().Be("", "Comment should be empty string");
         }
     }
 }

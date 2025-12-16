@@ -1,6 +1,6 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Numerics;
-using AuroraEngine.Common.Common;
+using AuroraEngine.Common;
 using AuroraEngine.Common.Formats.BWM;
 using AuroraEngine.Common.Formats.GFF;
 using AuroraEngine.Common.Formats.MDL;

@@ -125,6 +125,15 @@ namespace Odyssey.MonoGame.Particles
         /// <exception cref="ArgumentException">Thrown if spawn count is invalid.</exception>
         public void SpawnParticles(ParticleSpawnData spawnData)
         {
+            if (spawnData.Count <= 0)
+            {
+                throw new ArgumentException("Spawn count must be greater than zero.", "spawnData.Count");
+            }
+            if (spawnData.Count > _maxParticles)
+            {
+                throw new ArgumentException($"Spawn count ({spawnData.Count}) exceeds maximum particles ({_maxParticles}).", "spawnData.Count");
+            }
+
             // Add spawn commands to spawn buffer
             // Compute shader will process spawns during update
         }

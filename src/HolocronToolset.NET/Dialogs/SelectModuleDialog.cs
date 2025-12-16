@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using Avalonia.Platform.Storage;
-using AuroraEngine.Common.Common;
+using AuroraEngine.Common;
 using HolocronToolset.NET.Data;
 
 namespace HolocronToolset.NET.Dialogs

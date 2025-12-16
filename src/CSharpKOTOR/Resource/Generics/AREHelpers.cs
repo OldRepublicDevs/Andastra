@@ -1,4 +1,4 @@
-﻿using AuroraEngine.Common.Common;
+using AuroraEngine.Common;
 using AuroraEngine.Common.Formats.GFF;
 using AuroraEngine.Common.Resources;
 using GFFAuto = AuroraEngine.Common.Formats.GFF.GFFAuto;

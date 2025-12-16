@@ -1,8 +1,8 @@
-﻿using System;
+using System;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
-using AuroraEngine.Common.Common;
+using AuroraEngine.Common;
 using HolocronToolset.NET.Data;
 using HolocronToolset.NET.Dialogs;
 

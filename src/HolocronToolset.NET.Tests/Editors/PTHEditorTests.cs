@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Numerics;
 using AuroraEngine.Common.Resource.Generics;
@@ -715,9 +715,9 @@ namespace HolocronToolset.NET.Tests.Editors
             editor.MaterialColors.Count.Should().BeGreaterThan(0, "MaterialColors should have entries");
 
             // Verify some expected materials exist
-            editor.MaterialColors.Should().ContainKey(AuroraEngine.Common.Common.SurfaceMaterial.Undefined, "Should contain UNDEFINED material");
-            editor.MaterialColors.Should().ContainKey(AuroraEngine.Common.Common.SurfaceMaterial.Grass, "Should contain GRASS material");
-            editor.MaterialColors.Should().ContainKey(AuroraEngine.Common.Common.SurfaceMaterial.Water, "Should contain WATER material");
+            editor.MaterialColors.Should().ContainKey(AuroraEngine.Common.SurfaceMaterial.Undefined, "Should contain UNDEFINED material");
+            editor.MaterialColors.Should().ContainKey(AuroraEngine.Common.SurfaceMaterial.Grass, "Should contain GRASS material");
+            editor.MaterialColors.Should().ContainKey(AuroraEngine.Common.SurfaceMaterial.Water, "Should contain WATER material");
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_pth_editor.py:587-614

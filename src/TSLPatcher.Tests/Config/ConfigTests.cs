@@ -1,7 +1,7 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Linq;
-using AuroraEngine.Common.Common;
+using AuroraEngine.Common;
 using AuroraEngine.Common.Formats.Capsule;
 using AuroraEngine.Common.Logger;
 using AuroraEngine.Common.Memory;

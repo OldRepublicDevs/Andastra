@@ -1,11 +1,11 @@
-﻿// Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/analyzers.py:872-1549
+// Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/analyzers.py:872-1549
 // Original: def _find_strref_in_gff_struct, _extract_ncs_consti_offsets, analyze_tlk_strref_references, analyze_2da_memory_references: ...
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using AuroraEngine.Common.Common;
+using AuroraEngine.Common;
 using AuroraEngine.Common.Diff;
 using AuroraEngine.Common.Extract;
 using AuroraEngine.Common.Formats.GFF;
@@ -94,7 +94,7 @@ namespace KotorDiff.NET.Diff
             var offsets = new List<int>();
             try
             {
-                using (var reader = AuroraEngine.Common.Common.BinaryReader.FromBytes(ncsData))
+                using (var reader = AuroraEngine.Common.BinaryReader.FromBytes(ncsData))
                 {
                     // Skip NCS header (13 bytes)
                     string signature = reader.ReadString(4);

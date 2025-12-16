@@ -1,10 +1,10 @@
-﻿// Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/resolution.py:86-310
+// Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/resolution.py:86-310
 // Original: def resolve_resource_in_installation(...): ...
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using AuroraEngine.Common.Common;
+using AuroraEngine.Common;
 using AuroraEngine.Common.Extract;
 using AuroraEngine.Common.Formats.Capsule;
 using AuroraEngine.Common.Installation;

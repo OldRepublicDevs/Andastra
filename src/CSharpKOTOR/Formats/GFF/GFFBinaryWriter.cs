@@ -1,10 +1,10 @@
-﻿using System;
+using System;
 using System.Numerics;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using AuroraEngine.Common.Common;
+using AuroraEngine.Common;
 
 namespace AuroraEngine.Common.Formats.GFF
 {
@@ -16,11 +16,11 @@ namespace AuroraEngine.Common.Formats.GFF
     public class GFFBinaryWriter
     {
         private readonly GFF _gff;
-        private readonly AuroraEngine.Common.Common.RawBinaryWriter _structWriter;
-        private readonly AuroraEngine.Common.Common.RawBinaryWriter _fieldWriter;
-        private readonly AuroraEngine.Common.Common.RawBinaryWriter _fieldDataWriter;
-        private readonly AuroraEngine.Common.Common.RawBinaryWriter _fieldIndicesWriter;
-        private readonly AuroraEngine.Common.Common.RawBinaryWriter _listIndicesWriter;
+        private readonly AuroraEngine.Common.RawBinaryWriter _structWriter;
+        private readonly AuroraEngine.Common.RawBinaryWriter _fieldWriter;
+        private readonly AuroraEngine.Common.RawBinaryWriter _fieldDataWriter;
+        private readonly AuroraEngine.Common.RawBinaryWriter _fieldIndicesWriter;
+        private readonly AuroraEngine.Common.RawBinaryWriter _listIndicesWriter;
         private readonly List<string> _labels = new List<string>();
         private int _structCount = 0;
         private int _fieldCount = 0;
@@ -42,11 +42,11 @@ namespace AuroraEngine.Common.Formats.GFF
         public GFFBinaryWriter(GFF gff)
         {
             _gff = gff;
-            _structWriter = AuroraEngine.Common.Common.RawBinaryWriter.ToByteArray();
-            _fieldWriter = AuroraEngine.Common.Common.RawBinaryWriter.ToByteArray();
-            _fieldDataWriter = AuroraEngine.Common.Common.RawBinaryWriter.ToByteArray();
-            _fieldIndicesWriter = AuroraEngine.Common.Common.RawBinaryWriter.ToByteArray();
-            _listIndicesWriter = AuroraEngine.Common.Common.RawBinaryWriter.ToByteArray();
+            _structWriter = AuroraEngine.Common.RawBinaryWriter.ToByteArray();
+            _fieldWriter = AuroraEngine.Common.RawBinaryWriter.ToByteArray();
+            _fieldDataWriter = AuroraEngine.Common.RawBinaryWriter.ToByteArray();
+            _fieldIndicesWriter = AuroraEngine.Common.RawBinaryWriter.ToByteArray();
+            _listIndicesWriter = AuroraEngine.Common.RawBinaryWriter.ToByteArray();
         }
 
         public byte[] Write()
@@ -69,7 +69,7 @@ namespace AuroraEngine.Common.Formats.GFF
             int listIndicesCount = _listIndicesWriter.Size();
 
             // Write the file using RawBinaryWriter for consistency
-            using (var fileWriter = AuroraEngine.Common.Common.RawBinaryWriter.ToByteArray())
+            using (var fileWriter = AuroraEngine.Common.RawBinaryWriter.ToByteArray())
             {
                 // Write header
                 fileWriter.WriteBytes(Encoding.ASCII.GetBytes(_gff.Content.ToFourCC()));

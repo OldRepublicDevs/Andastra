@@ -1,6 +1,6 @@
-﻿using System;
+using System;
 using System.IO;
-using AuroraEngine.Common.Common;
+using AuroraEngine.Common;
 using AuroraEngine.Common.Formats.MDLData;
 using AuroraEngine.Common.Formats.MDL;
 

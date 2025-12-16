@@ -1,8 +1,8 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
-using AuroraEngine.Common.Common;
-using AuroraEngine.Common.Common.Script;
+using AuroraEngine.Common;
+using AuroraEngine.Common.Script;
 using AuroraEngine.Common.Formats.NCS;
 
 namespace AuroraEngine.Common.Tools

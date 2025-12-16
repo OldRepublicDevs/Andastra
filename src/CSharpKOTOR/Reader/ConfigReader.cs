@@ -1,9 +1,9 @@
-﻿using System;
+using System;
 using System.Numerics;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using AuroraEngine.Common.Common;
+using AuroraEngine.Common;
 using AuroraEngine.Common.Config;
 using AuroraEngine.Common.Formats.GFF;
 using AuroraEngine.Common.Formats.SSF;
@@ -1142,7 +1142,7 @@ namespace AuroraEngine.Common.Reader
                 int substringId = ParseIntValue(key.Substring(lowerKey.IndexOf("(lang") + 5, key.Length - lowerKey.IndexOf("(lang") - 6));
                 Language language;
                 Gender gender;
-                AuroraEngine.Common.Common.LocalizedString.SubstringPair(substringId, out language, out gender);
+                AuroraEngine.Common.LocalizedString.SubstringPair(substringId, out language, out gender);
                 var locstring = new LocalizedStringDelta();
                 locstring.SetData(language, gender, strValue);
                 value = new FieldValueConstant(locstring);

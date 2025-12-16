@@ -1,5 +1,5 @@
-﻿using System;
-using AuroraEngine.Common.Common.Script;
+using System;
+using AuroraEngine.Common.Script;
 using JetBrains.Annotations;
 
 namespace AuroraEngine.Common.Formats.NCS.Compiler

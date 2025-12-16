@@ -1,9 +1,9 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using AuroraEngine.Common.Common;
+using AuroraEngine.Common;
 using JetBrains.Annotations;
-using BinaryReader = AuroraEngine.Common.Common.RawBinaryReader;
+using BinaryReader = AuroraEngine.Common.RawBinaryReader;
 
 namespace AuroraEngine.Common.Tools
 {

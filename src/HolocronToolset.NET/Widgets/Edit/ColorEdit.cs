@@ -1,9 +1,9 @@
-﻿using System;
+using System;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using Avalonia.Media;
-using AuroraEngine.Common.Common;
-using KotorColor = AuroraEngine.Common.Common.Color;
+using AuroraEngine.Common;
+using KotorColor = AuroraEngine.Common.Color;
 
 namespace HolocronToolset.NET.Widgets.Edit
 {

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using Avalonia.Controls;
 using FluentAssertions;
@@ -209,8 +209,8 @@ namespace HolocronToolset.NET.Tests.Dialogs
             // Matching PyKotor implementation at Tools/HolocronToolset/tests/test_ui_dialogs_extra.py:135-137
             // Original: capsules = [] # No capsules for now
             var capsules = new List<object>(); // No capsules for now
-            var inventory = new List<AuroraEngine.Common.Common.InventoryItem>();
-            var equipment = new Dictionary<AuroraEngine.Common.Common.EquipmentSlot, AuroraEngine.Common.Common.InventoryItem>(); // equipment must be a dict[EquipmentSlot, InventoryItem], not a list
+            var inventory = new List<AuroraEngine.Common.InventoryItem>();
+            var equipment = new Dictionary<AuroraEngine.Common.EquipmentSlot, AuroraEngine.Common.InventoryItem>(); // equipment must be a dict[EquipmentSlot, InventoryItem], not a list
 
             // Matching PyKotor implementation at Tools/HolocronToolset/tests/test_ui_dialogs_extra.py:139
             // Original: dialog = InventoryEditor(parent, installation, capsules, [], inventory, equipment, droid=False)

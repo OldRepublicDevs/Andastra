@@ -1,7 +1,7 @@
-﻿using System;
+using System;
 using System.Numerics;
 using System.Collections.Generic;
-using AuroraEngine.Common.Common;
+using AuroraEngine.Common;
 
 namespace AuroraEngine.Common.Formats.LYT
 {

@@ -1,7 +1,7 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Text;
-using AuroraEngine.Common.Common;
+using AuroraEngine.Common;
 using AuroraEngine.Common.Formats.NCS;
 using AuroraEngine.Common.Formats.NCS.NCSDecomp;
 using HolocronToolset.NET.Data;

@@ -1,8 +1,8 @@
-﻿using System.Collections.Generic;
-using AuroraEngine.Common.Common;
+using System.Collections.Generic;
+using AuroraEngine.Common;
 using AuroraEngine.Common.Formats.GFF;
 using AuroraEngine.Common.Resources;
-using static AuroraEngine.Common.Common.GameExtensions;
+using static AuroraEngine.Common.GameExtensions;
 
 namespace AuroraEngine.Common.Resource.Generics
 {

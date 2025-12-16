@@ -1,6 +1,6 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Linq;
-using AuroraEngine.Common.Common;
+using AuroraEngine.Common;
 using AuroraEngine.Common.Config;
 using AuroraEngine.Common.Formats.TwoDA;
 using AuroraEngine.Common.Logger;

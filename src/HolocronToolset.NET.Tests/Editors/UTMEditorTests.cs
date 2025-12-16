@@ -1,6 +1,6 @@
-﻿using System;
+using System;
 using System.Linq;
-using AuroraEngine.Common.Common;
+using AuroraEngine.Common;
 using AuroraEngine.Common.Resource.Generics;
 using AuroraEngine.Common.Resources;
 using FluentAssertions;

@@ -1,9 +1,9 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using AuroraEngine.Common.Common;
-using AuroraEngine.Common.Common.LZMA;
+using AuroraEngine.Common;
+using AuroraEngine.Common.LZMA;
 using AuroraEngine.Common.Extract;
 using JetBrains.Annotations;
 

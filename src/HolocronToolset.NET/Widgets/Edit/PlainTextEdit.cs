@@ -1,8 +1,8 @@
-﻿using System;
+using System;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Markup.Xaml;
-using AuroraEngine.Common.Common;
+using AuroraEngine.Common;
 
 namespace HolocronToolset.NET.Widgets.Edit
 {

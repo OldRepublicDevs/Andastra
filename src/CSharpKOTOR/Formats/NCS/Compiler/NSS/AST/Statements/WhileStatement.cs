@@ -1,5 +1,5 @@
-﻿using System.Collections.Generic;
-using AuroraEngine.Common.Common.Script;
+using System.Collections.Generic;
+using AuroraEngine.Common.Script;
 using AuroraEngine.Common.Formats.NCS;
 using JetBrains.Annotations;
 

@@ -1,8 +1,8 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
-using AuroraEngine.Common.Common;
+using AuroraEngine.Common;
 using BinaryWriter = System.IO.BinaryWriter;
 
 namespace AuroraEngine.Common.Formats.TLK

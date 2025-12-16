@@ -1,10 +1,10 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Markup.Xaml;
-using AuroraEngine.Common.Common;
+using AuroraEngine.Common;
 using AuroraEngine.Common.Formats.GFF;
 using AuroraEngine.Common.Formats.TwoDA;
 using AuroraEngine.Common.Resource.Generics;
@@ -13,7 +13,7 @@ using HolocronToolset.NET.Data;
 using HolocronToolset.NET.Dialogs;
 using JetBrains.Annotations;
 using GFFAuto = AuroraEngine.Common.Formats.GFF.GFFAuto;
-using LocalizedString = AuroraEngine.Common.Common.LocalizedString;
+using LocalizedString = AuroraEngine.Common.LocalizedString;
 
 namespace HolocronToolset.NET.Editors
 {

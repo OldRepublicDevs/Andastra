@@ -1,7 +1,7 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Linq;
-using AuroraEngine.Common.Common;
+using AuroraEngine.Common;
 
 namespace AuroraEngine.Common.Tools
 {

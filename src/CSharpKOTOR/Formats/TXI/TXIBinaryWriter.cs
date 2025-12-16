@@ -1,10 +1,10 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Globalization;
 using System.Collections.Generic;
-using AuroraEngine.Common.Common;
+using AuroraEngine.Common;
 
 namespace AuroraEngine.Common.Formats.TXI
 {

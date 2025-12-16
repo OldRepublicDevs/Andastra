@@ -1,11 +1,11 @@
-﻿// Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/engine.py:3294-3386
+// Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/engine.py:3294-3386
 // Original: def run_differ_from_args_impl(...): ...
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using AuroraEngine.Common.Mods;
-using AuroraEngine.Common.Common;
+using AuroraEngine.Common;
 using AuroraEngine.Common.Installation;
 using AuroraEngine.Common.TSLPatcher;
 using AuroraEngine.Common.Formats.Capsule;

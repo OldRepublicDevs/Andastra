@@ -1,7 +1,7 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using AuroraEngine.Common.Common;
-using KotorColor = AuroraEngine.Common.Common.Color;
+using AuroraEngine.Common;
+using KotorColor = AuroraEngine.Common.Color;
 
 namespace HolocronToolset.NET.Data
 {

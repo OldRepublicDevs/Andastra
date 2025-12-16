@@ -1,7 +1,7 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Reflection;
-using AuroraEngine.Common.Common;
+using AuroraEngine.Common;
 using AuroraEngine.Common.Resources;
 
 namespace AuroraEngine.Common.Formats.LIP

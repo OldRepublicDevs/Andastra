@@ -1,4 +1,4 @@
-﻿//
+//
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -7,7 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
-using AuroraEngine.Common.Common;
+using AuroraEngine.Common;
 using AuroraEngine.Common.Formats.NCS;
 using AuroraEngine.Common.Formats.NCS.NCSDecomp;
 using AuroraEngine.Common.Formats.NCS.NCSDecomp.Analysis;

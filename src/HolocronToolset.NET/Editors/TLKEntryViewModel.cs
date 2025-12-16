@@ -1,5 +1,5 @@
-﻿using System.ComponentModel;
-using AuroraEngine.Common.Common;
+using System.ComponentModel;
+using AuroraEngine.Common;
 using AuroraEngine.Common.Formats.TLK;
 
 namespace HolocronToolset.NET.Editors
