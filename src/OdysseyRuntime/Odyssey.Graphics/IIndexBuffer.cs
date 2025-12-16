@@ -5,6 +5,15 @@ namespace Odyssey.Graphics
     /// <summary>
     /// Index buffer interface.
     /// </summary>
+    /// <remarks>
+    /// Index Buffer Interface:
+    /// - Based on swkotor2.exe DirectX index buffer system
+    /// - Located via string references: "GetNextIndex: Duplicate triangle sent\n" @ 0x007bb308, "GetNextIndex: Duplicate triangle probably got us derailed\n" @ 0x007bb330
+    /// - "GetNextIndex: Triangle doesn't have all of its vertices\n" @ 0x007bb36c (index buffer validation)
+    /// - Original implementation: DirectX 8/9 index buffer (IDirect3DIndexBuffer8/IDirect3DIndexBuffer9) for indexed rendering
+    /// - Index buffers: Store triangle indices for indexed primitive rendering (reduces vertex duplication)
+    /// - This interface: Abstraction layer for modern graphics APIs (DirectX 11/12, OpenGL, Vulkan)
+    /// </remarks>
     public interface IIndexBuffer : IDisposable
     {
         /// <summary>

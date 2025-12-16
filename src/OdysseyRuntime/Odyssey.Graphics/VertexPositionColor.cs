@@ -6,6 +6,15 @@ namespace Odyssey.Graphics
     /// <summary>
     /// Vertex structure with position and color (equivalent to MonoGame's VertexPositionColor).
     /// </summary>
+    /// <remarks>
+    /// Vertex Position Color Structure:
+    /// - Based on swkotor2.exe vertex format system
+    /// - Located via string references: "Disable Vertex Buffer Objects" @ 0x007b56bc (VBO option)
+    /// - Original implementation: DirectX 8/9 flexible vertex format (FVF) with position and color
+    /// - Vertex format: D3DFVF_XYZ | D3DFVF_DIFFUSE (position + color)
+    /// - Used for: Simple 3D rendering with vertex colors (debug rendering, simple geometry)
+    /// - This structure: Abstraction layer for modern graphics APIs (DirectX 11/12, OpenGL, Vulkan)
+    /// </remarks>
     public struct VertexPositionColor : IEquatable<VertexPositionColor>
     {
         public Vector3 Position;
