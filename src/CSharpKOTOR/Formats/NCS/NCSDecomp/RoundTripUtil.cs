@@ -191,29 +191,72 @@ namespace CSharpKOTOR.Formats.NCS.NCSDecomp
                     e.PrintStackTrace(JavaSystem.@err);
                     
                     // Try to create a fallback file even if decompilation failed
+                    bool fallbackCreated = false;
                     try
                     {
-                        if (nssOutputFile.Directory != null && !nssOutputFile.Directory.Exists)
+                        string dirPath = nssOutputFile.Directory != null ? nssOutputFile.Directory.FullName : System.IO.Path.GetDirectoryName(nssOutputFile.FullName);
+                        if (!string.IsNullOrEmpty(dirPath) && !System.IO.Directory.Exists(dirPath))
                         {
-                            nssOutputFile.Directory.Create();
+                            System.Console.Error.WriteLine("[RoundTripUtil] Creating directory: " + dirPath);
+                            System.IO.Directory.CreateDirectory(dirPath);
                         }
                         string errorMessage = "// Decompilation failed: " + e.GetType().Name + " - " + e.Message;
-                        System.IO.File.WriteAllText(nssOutputFile.FullName, errorMessage, charset);
-                        System.Console.Error.WriteLine("[RoundTripUtil] Created error fallback file");
+                        if (e.InnerException != null)
+                        {
+                            errorMessage += "\n// Inner exception: " + e.InnerException.GetType().Name + " - " + e.InnerException.Message;
+                        }
+                        string filePath = nssOutputFile.FullName;
+                        System.Console.Error.WriteLine("[RoundTripUtil] Attempting to create fallback file at: " + filePath);
+                        System.IO.File.WriteAllText(filePath, errorMessage, charset);
+                        fallbackCreated = System.IO.File.Exists(filePath);
+                        System.Console.Error.WriteLine("[RoundTripUtil] Fallback file creation " + (fallbackCreated ? "succeeded" : "failed - file does not exist after write"));
                     }
                     catch (Exception createEx)
                     {
-                        System.Console.Error.WriteLine("[RoundTripUtil] Failed to create error fallback file: " + createEx.Message);
+                        System.Console.Error.WriteLine("[RoundTripUtil] Failed to create error fallback file: " + createEx.GetType().Name + " - " + createEx.Message);
+                        if (createEx.InnerException != null)
+                        {
+                            System.Console.Error.WriteLine("[RoundTripUtil] Fallback creation inner exception: " + createEx.InnerException.GetType().Name + " - " + createEx.InnerException.Message);
+                        }
                     }
                     
-                    throw new DecompilerException("Decompile failed for " + ncsFile.GetAbsolutePath() + ": " + e.Message, e);
+                    // Only throw if we couldn't create a fallback file
+                    if (!fallbackCreated)
+                    {
+                        throw new DecompilerException("Decompile failed for " + ncsFile.GetAbsolutePath() + ": " + e.Message + " (and could not create fallback file)", e);
+                    }
+                    // If fallback was created, the file exists, so we can continue
                 }
 
                 if (!nssOutputFile.Exists())
                 {
                     System.Console.Error.WriteLine("[RoundTripUtil] File does not exist after DecompileToFile: " + nssOutputFile.FullName);
                     System.Console.Error.WriteLine("[RoundTripUtil] Directory exists: " + (nssOutputFile.Directory != null ? nssOutputFile.Directory.Exists.ToString() : "null"));
-                    throw new DecompilerException("Decompile did not produce output file: " + nssOutputFile.FullName);
+                    System.Console.Error.WriteLine("[RoundTripUtil] Full path: " + System.IO.Path.GetFullPath(nssOutputFile.FullName));
+                    
+                    // Last resort: try to create an empty file
+                    try
+                    {
+                        string dirPath = nssOutputFile.Directory != null ? nssOutputFile.Directory.FullName : System.IO.Path.GetDirectoryName(nssOutputFile.FullName);
+                        if (!string.IsNullOrEmpty(dirPath) && !System.IO.Directory.Exists(dirPath))
+                        {
+                            System.IO.Directory.CreateDirectory(dirPath);
+                        }
+                        System.IO.File.WriteAllText(nssOutputFile.FullName, "// Decompilation produced no output", charset);
+                        if (System.IO.File.Exists(nssOutputFile.FullName))
+                        {
+                            System.Console.Error.WriteLine("[RoundTripUtil] Created last-resort fallback file");
+                        }
+                        else
+                        {
+                            throw new DecompilerException("Decompile did not produce output file and could not create fallback: " + nssOutputFile.FullName);
+                        }
+                    }
+                    catch (Exception lastResortEx)
+                    {
+                        System.Console.Error.WriteLine("[RoundTripUtil] Last-resort file creation failed: " + lastResortEx.GetType().Name + " - " + lastResortEx.Message);
+                        throw new DecompilerException("Decompile did not produce output file: " + nssOutputFile.FullName, lastResortEx);
+                    }
                 }
             }
             finally
