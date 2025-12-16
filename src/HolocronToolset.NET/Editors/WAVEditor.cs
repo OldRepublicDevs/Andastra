@@ -287,6 +287,18 @@ namespace HolocronToolset.NET.Editors
             Save();
         }
 
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/wav.py:529-539
+        // Original: def closeEvent(self, a0: QCloseEvent | None) -> None:
+        protected override void OnClosing(WindowClosingEventArgs e)
+        {
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/wav.py:535-536
+            // Original: self.mediaPlayer.player.stop()
+            // Original: self._cleanup_temp_file()
+            // Stop player if available (not implemented in C# yet, but cleanup temp file)
+            CleanupTempFile();
+            base.OnClosing(e);
+        }
+
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/wav.py:456-478
         // Original: def _on_duration_changed(self, duration: int) -> None:
         // Public method for testing (matching Python's test access pattern)

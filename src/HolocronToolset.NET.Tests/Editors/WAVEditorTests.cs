@@ -1542,5 +1542,350 @@ namespace HolocronToolset.NET.Tests.Editors
             string totalTime = editor.Ui.TotalTimeLabel.Text;
             totalTime.Should().Contain("03:25:45", $"TotalTimeLabel should contain '03:25:45' for 12345000ms, but was '{totalTime}'");
         }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_wav_editor.py:562-576
+        // Original: def test_close_event_cleans_up(self, wav_editor, sample_wav_data: bytes):
+        [Fact]
+        public void TestWavEditorCloseEventCleansUp()
+        {
+            // Create a temp file
+            string tempPath = System.IO.Path.GetTempFileName();
+            System.IO.File.WriteAllBytes(tempPath, new byte[] { (byte)'t', (byte)'e', (byte)'s', (byte)'t' });
+
+            try
+            {
+                // Create sample WAV data (matching Python fixture)
+                int sampleRate = 8000;
+                int numChannels = 1;
+                int bitsPerSample = 8;
+                int durationSeconds = 1;
+                int numSamples = sampleRate * durationSeconds;
+                byte[] audioData = new byte[numSamples];
+                for (int i = 0; i < numSamples; i++)
+                {
+                    audioData[i] = 128; // 128 is silence for 8-bit
+                }
+
+                int dataSize = audioData.Length;
+                int fmtChunkSize = 16;
+                int fileSize = 4 + (8 + fmtChunkSize) + (8 + dataSize);
+
+                byte[] sampleWavData;
+                using (var ms = new System.IO.MemoryStream())
+                {
+                    // RIFF header
+                    ms.Write(System.Text.Encoding.ASCII.GetBytes("RIFF"), 0, 4);
+                    ms.Write(BitConverter.GetBytes(fileSize), 0, 4);
+                    ms.Write(System.Text.Encoding.ASCII.GetBytes("WAVE"), 0, 4);
+
+                    // fmt chunk
+                    ms.Write(System.Text.Encoding.ASCII.GetBytes("fmt "), 0, 4);
+                    ms.Write(BitConverter.GetBytes(fmtChunkSize), 0, 4);
+                    ms.Write(BitConverter.GetBytes((ushort)1), 0, 2); // Audio format (PCM)
+                    ms.Write(BitConverter.GetBytes((ushort)numChannels), 0, 2);
+                    ms.Write(BitConverter.GetBytes(sampleRate), 0, 4);
+                    ms.Write(BitConverter.GetBytes(sampleRate * numChannels * bitsPerSample / 8), 0, 4); // Byte rate
+                    ms.Write(BitConverter.GetBytes((ushort)(numChannels * bitsPerSample / 8)), 0, 2); // Block align
+                    ms.Write(BitConverter.GetBytes((ushort)bitsPerSample), 0, 2);
+
+                    // data chunk
+                    ms.Write(System.Text.Encoding.ASCII.GetBytes("data"), 0, 4);
+                    ms.Write(BitConverter.GetBytes(dataSize), 0, 4);
+                    ms.Write(audioData, 0, audioData.Length);
+
+                    sampleWavData = ms.ToArray();
+                }
+
+                var editor = new WAVEditor(null, null);
+
+                // Set temp file using reflection (matching Python's direct attribute access)
+                var tempFileField = typeof(WAVEditor).GetField("_tempFile", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                tempFileField.SetValue(editor, tempPath);
+
+                // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_wav_editor.py:570
+                // Original: wav_editor.load(Path("test.wav"), "test", ResourceType.WAV, sample_wav_data)
+                editor.Load("test.wav", "test", ResourceType.WAV, sampleWavData);
+
+                // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_wav_editor.py:573
+                // Original: wav_editor.close()
+                editor.Close();
+
+                // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_wav_editor.py:576
+                // Original: assert not Path(temp_path).exists() or wav_editor._temp_file is None
+                bool tempFileExists = System.IO.File.Exists(tempPath);
+                bool tempFileIsNull = editor.TempFile == null;
+                (tempFileExists == false || tempFileIsNull).Should().BeTrue("Temp file should be cleaned up or TempFile should be None after close");
+            }
+            finally
+            {
+                // Ensure cleanup even if test fails
+                if (System.IO.File.Exists(tempPath))
+                {
+                    try
+                    {
+                        System.IO.File.Delete(tempPath);
+                    }
+                    catch
+                    {
+                        // Ignore cleanup errors
+                    }
+                }
+            }
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_wav_editor.py:586-604
+        // Original: def test_full_workflow_new_to_save(self, wav_editor, sample_wav_data: bytes, tmp_path: Path):
+        [Fact]
+        public void TestWavEditorFullWorkflowNewToSave()
+        {
+            // Create sample WAV data (matching Python fixture)
+            int sampleRate = 8000;
+            int numChannels = 1;
+            int bitsPerSample = 8;
+            int durationSeconds = 1;
+            int numSamples = sampleRate * durationSeconds;
+            byte[] audioData = new byte[numSamples];
+            for (int i = 0; i < numSamples; i++)
+            {
+                audioData[i] = 128; // 128 is silence for 8-bit
+            }
+
+            int dataSize = audioData.Length;
+            int fmtChunkSize = 16;
+            int fileSize = 4 + (8 + fmtChunkSize) + (8 + dataSize);
+
+            byte[] sampleWavData;
+            using (var ms = new System.IO.MemoryStream())
+            {
+                // RIFF header
+                ms.Write(System.Text.Encoding.ASCII.GetBytes("RIFF"), 0, 4);
+                ms.Write(BitConverter.GetBytes(fileSize), 0, 4);
+                ms.Write(System.Text.Encoding.ASCII.GetBytes("WAVE"), 0, 4);
+
+                // fmt chunk
+                ms.Write(System.Text.Encoding.ASCII.GetBytes("fmt "), 0, 4);
+                ms.Write(BitConverter.GetBytes(fmtChunkSize), 0, 4);
+                ms.Write(BitConverter.GetBytes((ushort)1), 0, 2); // Audio format (PCM)
+                ms.Write(BitConverter.GetBytes((ushort)numChannels), 0, 2);
+                ms.Write(BitConverter.GetBytes(sampleRate), 0, 4);
+                ms.Write(BitConverter.GetBytes(sampleRate * numChannels * bitsPerSample / 8), 0, 4); // Byte rate
+                ms.Write(BitConverter.GetBytes((ushort)(numChannels * bitsPerSample / 8)), 0, 2); // Block align
+                ms.Write(BitConverter.GetBytes((ushort)bitsPerSample), 0, 2);
+
+                // data chunk
+                ms.Write(System.Text.Encoding.ASCII.GetBytes("data"), 0, 4);
+                ms.Write(BitConverter.GetBytes(dataSize), 0, 4);
+                ms.Write(audioData, 0, audioData.Length);
+
+                sampleWavData = ms.ToArray();
+            }
+
+            var editor = new WAVEditor(null, null);
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_wav_editor.py:589
+            // Original: wav_editor.new()
+            editor.New();
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_wav_editor.py:592
+            // Original: wav_editor.load(tmp_path / "test.wav", "test", ResourceType.WAV, sample_wav_data)
+            string testPath = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "test.wav");
+            editor.Load(testPath, "test", ResourceType.WAV, sampleWavData);
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_wav_editor.py:595
+            // Original: assert wav_editor._audio_data == sample_wav_data
+            editor.AudioData.Should().Equal(sampleWavData, "Audio data should match loaded data");
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_wav_editor.py:598-599
+            // Original: data, _ = wav_editor.build()
+            // Original: assert data == sample_wav_data
+            var (data, _) = editor.Build();
+            data.Should().Equal(sampleWavData, "Build() should return the loaded data");
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_wav_editor.py:602-604
+            // Original: output_path.write_bytes(data)
+            // Original: assert output_path.read_bytes() == sample_wav_data
+            string outputPath = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "output.wav");
+            try
+            {
+                System.IO.File.WriteAllBytes(outputPath, data);
+                byte[] savedData = System.IO.File.ReadAllBytes(outputPath);
+                savedData.Should().Equal(sampleWavData, "Saved file should match original data");
+            }
+            finally
+            {
+                if (System.IO.File.Exists(outputPath))
+                {
+                    try
+                    {
+                        System.IO.File.Delete(outputPath);
+                    }
+                    catch
+                    {
+                        // Ignore cleanup errors
+                    }
+                }
+            }
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_wav_editor.py:606-620
+        // Original: def test_format_switching(self, wav_editor, sample_wav_data: bytes, sample_mp3_data: bytes):
+        [Fact]
+        public void TestWavEditorFormatSwitching()
+        {
+            // Create sample WAV data (matching Python fixture)
+            int sampleRate = 8000;
+            int numChannels = 1;
+            int bitsPerSample = 8;
+            int durationSeconds = 1;
+            int numSamples = sampleRate * durationSeconds;
+            byte[] audioData = new byte[numSamples];
+            for (int i = 0; i < numSamples; i++)
+            {
+                audioData[i] = 128; // 128 is silence for 8-bit
+            }
+
+            int dataSize = audioData.Length;
+            int fmtChunkSize = 16;
+            int fileSize = 4 + (8 + fmtChunkSize) + (8 + dataSize);
+
+            byte[] sampleWavData;
+            using (var ms = new System.IO.MemoryStream())
+            {
+                // RIFF header
+                ms.Write(System.Text.Encoding.ASCII.GetBytes("RIFF"), 0, 4);
+                ms.Write(BitConverter.GetBytes(fileSize), 0, 4);
+                ms.Write(System.Text.Encoding.ASCII.GetBytes("WAVE"), 0, 4);
+
+                // fmt chunk
+                ms.Write(System.Text.Encoding.ASCII.GetBytes("fmt "), 0, 4);
+                ms.Write(BitConverter.GetBytes(fmtChunkSize), 0, 4);
+                ms.Write(BitConverter.GetBytes((ushort)1), 0, 2); // Audio format (PCM)
+                ms.Write(BitConverter.GetBytes((ushort)numChannels), 0, 2);
+                ms.Write(BitConverter.GetBytes(sampleRate), 0, 4);
+                ms.Write(BitConverter.GetBytes(sampleRate * numChannels * bitsPerSample / 8), 0, 4); // Byte rate
+                ms.Write(BitConverter.GetBytes((ushort)(numChannels * bitsPerSample / 8)), 0, 2); // Block align
+                ms.Write(BitConverter.GetBytes((ushort)bitsPerSample), 0, 2);
+
+                // data chunk
+                ms.Write(System.Text.Encoding.ASCII.GetBytes("data"), 0, 4);
+                ms.Write(BitConverter.GetBytes(dataSize), 0, 4);
+                ms.Write(audioData, 0, audioData.Length);
+
+                sampleWavData = ms.ToArray();
+            }
+
+            // Create minimal MP3-like data with ID3 header for testing (matching Python fixture)
+            byte[] sampleMp3Data = new byte[107];
+            System.Text.Encoding.ASCII.GetBytes("ID3").CopyTo(sampleMp3Data, 0);
+            sampleMp3Data[3] = 0x03;
+            sampleMp3Data[4] = 0x00;
+            sampleMp3Data[5] = 0x00;
+            sampleMp3Data[6] = 0x00;
+            sampleMp3Data[7] = 0x00;
+            sampleMp3Data[8] = 0x00;
+            sampleMp3Data[9] = 0x00;
+            sampleMp3Data[10] = 0xFF;
+            sampleMp3Data[11] = 0xFB;
+            sampleMp3Data[12] = 0x90;
+            sampleMp3Data[13] = 0x00;
+            // Rest is zeros (already initialized)
+
+            var editor = new WAVEditor(null, null);
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_wav_editor.py:611-612
+            // Original: wav_editor.load(Path("test.wav"), "test", ResourceType.WAV, sample_wav_data)
+            // Original: assert "WAV" in wav_editor._detected_format
+            editor.Load("test.wav", "test", ResourceType.WAV, sampleWavData);
+            editor.DetectedFormat.Should().Contain("WAV", "Detected format should contain 'WAV'");
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_wav_editor.py:615-616
+            // Original: wav_editor.load(Path("test.mp3"), "test", ResourceType.MP3, sample_mp3_data)
+            // Original: assert "MP3" in wav_editor._detected_format
+            editor.Load("test.mp3", "test", ResourceType.MP3, sampleMp3Data);
+            editor.DetectedFormat.Should().Contain("MP3", "Detected format should contain 'MP3'");
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_wav_editor.py:619-620
+            // Original: wav_editor.new()
+            // Original: assert wav_editor._detected_format == "Unknown"
+            editor.New();
+            editor.DetectedFormat.Should().Be("Unknown", "Detected format should be 'Unknown' after new()");
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_wav_editor.py:630-633
+        // Original: def test_inherits_from_editor(self, wav_editor):
+        [Fact]
+        public void TestWavEditorInheritsFromEditor()
+        {
+            var editor = new WAVEditor(null, null);
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_wav_editor.py:632-633
+            // Original: from toolset.gui.editor import Editor
+            // Original: assert isinstance(wav_editor, Editor)
+            editor.Should().BeAssignableTo<Editor>("WAVEditor should inherit from Editor");
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_wav_editor.py:635-638
+        // Original: def test_has_media_player_widget(self, wav_editor):
+        [Fact]
+        public void TestWavEditorHasMediaPlayerWidget()
+        {
+            var editor = new WAVEditor(null, null);
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_wav_editor.py:638
+            // Original: assert hasattr(wav_editor, 'mediaPlayer')
+            // In C#, we check if the field or property exists via reflection
+            // The Python test checks for the attribute, but in C# the implementation may differ
+            // We verify the editor has playback functionality by checking for UI controls
+            editor.Ui.Should().NotBeNull("WAVEditor should have UI");
+            editor.Ui.PlayButton.Should().NotBeNull("WAVEditor should have PlayButton for playback");
+            editor.Ui.PauseButton.Should().NotBeNull("WAVEditor should have PauseButton for playback");
+            editor.Ui.StopButton.Should().NotBeNull("WAVEditor should have StopButton for playback");
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_wav_editor.py:640-642
+        // Original: def test_has_installation_attribute(self, wav_editor):
+        [Fact]
+        public void TestWavEditorHasInstallationAttribute()
+        {
+            var editor = new WAVEditor(null, null);
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_wav_editor.py:642
+            // Original: assert hasattr(wav_editor, '_installation')
+            // In C#, we check if the field exists via reflection
+            var installationField = typeof(WAVEditor).GetField("_installation", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            installationField.Should().NotBeNull("WAVEditor should have _installation field");
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_wav_editor.py:644-655
+        // Original: def test_supported_types_set_correctly(self, wav_editor):
+        [Fact]
+        public void TestWavEditorSupportedTypesSetCorrectly()
+        {
+            var editor = new WAVEditor(null, null);
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_wav_editor.py:648-651
+            // Original: read_supported = getattr(wav_editor, '_readSupported', None)
+            // Original: if read_supported is not None:
+            // Original:     assert ResourceType.WAV in read_supported
+            // Original:     assert ResourceType.MP3 in read_supported
+            // In C#, we check if the field exists via reflection
+            var readSupportedField = typeof(WAVEditor).GetField("_readSupported", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            if (readSupportedField != null)
+            {
+                var readSupported = readSupportedField.GetValue(editor) as System.Collections.Generic.HashSet<ResourceType>;
+                if (readSupported != null)
+                {
+                    readSupported.Should().Contain(ResourceType.WAV, "WAVEditor should support WAV resource type");
+                    readSupported.Should().Contain(ResourceType.MP3, "WAVEditor should support MP3 resource type");
+                }
+            }
+            else
+            {
+                // If attribute doesn't exist, verify by attempting to load (matching Python behavior)
+                // This tests the functionality rather than internal structure
+                editor.Load("test.wav", "test", ResourceType.WAV, new byte[] { (byte)'R', (byte)'I', (byte)'F', (byte)'F' });
+                editor.Load("test.mp3", "test", ResourceType.MP3, new byte[] { (byte)'I', (byte)'D', (byte)'3' });
+            }
+        }
     }
 }
