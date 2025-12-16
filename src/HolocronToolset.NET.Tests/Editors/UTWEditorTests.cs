@@ -1074,5 +1074,73 @@ namespace HolocronToolset.NET.Tests.Editors
             modifiedUtw.ResRef?.ToString().Should().Be("", "ResRef should be empty string");
             modifiedUtw.Comment.Should().Be("", "Comment should be empty string");
         }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utw_editor.py:390-408
+        // Original: def test_utw_editor_maximum_values(qtbot, installation: HTInstallation, test_files_dir: Path):
+        [Fact]
+        public void TestUtwEditorMaximumValues()
+        {
+            string k2Path = Environment.GetEnvironmentVariable("K2_PATH");
+            if (string.IsNullOrEmpty(k2Path))
+            {
+                k2Path = @"C:\Program Files (x86)\Steam\steamapps\common\Knights of the Old Republic II";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k2Path) && System.IO.File.Exists(System.IO.Path.Combine(k2Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k2Path, "Test Installation", tsl: true);
+            }
+
+            if (installation == null)
+            {
+                return; // Skip if no installation available
+            }
+
+            string testFilesDir = System.IO.Path.Combine(
+                System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+
+            string utwFile = System.IO.Path.Combine(testFilesDir, "tar05_sw05aa10.utw");
+            if (!System.IO.File.Exists(utwFile))
+            {
+                testFilesDir = System.IO.Path.Combine(
+                    System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                    "..", "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+                utwFile = System.IO.Path.Combine(testFilesDir, "tar05_sw05aa10.utw");
+            }
+
+            if (!System.IO.File.Exists(utwFile))
+            {
+                return; // Skip if test file not available
+            }
+
+            var editor = new UTWEditor(null, installation);
+            byte[] originalData = System.IO.File.ReadAllBytes(utwFile);
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utw_editor.py:399
+            // Original: editor.load(utw_file, "tar05_sw05aa10", ResourceType.UTW, original_data)
+            editor.Load(utwFile, "tar05_sw05aa10", ResourceType.UTW, originalData);
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utw_editor.py:402-403
+            // Original: editor.ui.tagEdit.setText("x" * 32)  # Max tag length
+            // Original: editor.ui.commentsEdit.setPlainText("x" * 1000)  # Long comment
+            if (editor.TagEdit != null)
+            {
+                editor.TagEdit.Text = new string('x', 32); // Max tag length
+            }
+            if (editor.CommentsEdit != null)
+            {
+                editor.CommentsEdit.Text = new string('x', 1000); // Long comment
+            }
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utw_editor.py:406-408
+            // Original: data, _ = editor.build()
+            // Original: modified_utw = read_utw(data)
+            // Original: assert len(modified_utw.tag) > 0
+            var (data, _) = editor.Build();
+            var modifiedUtw = UTWAuto.ReadUtw(data);
+            modifiedUtw.Tag.Length.Should().BeGreaterThan(0, "Tag should have length greater than 0");
+        }
     }
 }
