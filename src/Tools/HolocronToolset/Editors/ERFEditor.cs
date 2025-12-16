@@ -12,7 +12,7 @@ using Avalonia.Markup.Xaml;
 using Andastra.Parsing;
 using Andastra.Parsing.Formats.ERF;
 using Andastra.Parsing.Formats.RIM;
-using Andastra.Parsing.Resources;
+using Andastra.Parsing.Resource;
 using HolocronToolset.Common;
 using HolocronToolset.Data;
 using ERFResource = Andastra.Parsing.Formats.ERF.ERFResource;

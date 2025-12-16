@@ -3,8 +3,8 @@ using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using HolocronToolset.Data;
 using HolocronToolset.Widgets.Edit;
-using Andastra.Parsing;
-using KotorColor = Andastra.Parsing.Color;
+using Andastra.Parsing.Common;
+using KotorColor = Andastra.Parsing.Common.Color;
 
 namespace HolocronToolset.Widgets.Settings
 {
