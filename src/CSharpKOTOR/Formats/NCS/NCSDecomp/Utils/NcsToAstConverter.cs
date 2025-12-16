@@ -201,14 +201,14 @@ namespace AuroraEngine.Common.Formats.NCS.NCSDecomp.Utils
                     string marker = (i == savebpIndex) ? " <-- SAVEBP" : "";
                     JavaSystem.@out.Println($"  {i:D4}: {instructions[i].InsType}{marker}");
                 }
-                
+
                 // CRITICAL DEBUG: Check if there are RSADDI instructions AFTER the SAVEBP we found
                 // This would indicate we're using the wrong SAVEBP as the boundary
                 JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Checking for RSADDI instructions after SAVEBP at index {savebpIndex}:");
                 int rsaddiCountAfterSavebp = 0;
                 for (int i = savebpIndex + 1; i < instructions.Count && i < savebpIndex + 50; i++)
                 {
-                    if (instructions[i].InsType == NCSInstructionType.RSADDI || 
+                    if (instructions[i].InsType == NCSInstructionType.RSADDI ||
                         instructions[i].InsType == NCSInstructionType.RSADDF ||
                         instructions[i].InsType == NCSInstructionType.RSADDS ||
                         instructions[i].InsType == NCSInstructionType.RSADDO)
@@ -431,11 +431,25 @@ namespace AuroraEngine.Common.Formats.NCS.NCSDecomp.Utils
                 }
                 else if (entryJsrTargetIsLastRetn2 && entryJsrTarget >= 0 && entryJsrTarget >= entryStubEnd)
                 {
-                    // CRITICAL FIX: If entry JSR targets last RETN, the main function code is between entryStubEnd and the last RETN
-                    // Use entryStubEnd as mainStart to include all the actual main function code
-                    // The last RETN will be included in the main function range (mainEnd will be instructions.Count)
-                    mainStart = entryStubEnd;
-                    JavaSystem.@out.Println($"DEBUG NcsToAstConverter: entryJsrTarget {entryJsrTarget} is last RETN and after entry stub at {entryStubEnd}, using entryStubEnd as mainStart (main includes all code from {entryStubEnd} to last RETN)");
+                    // CRITICAL FIX: If entry JSR targets last RETN, the main function code starts right after SAVEBP
+                    // (or after entry stub if there's code there), not at entryStubEnd.
+                    // The entry stub (JSR+RETN) is just a wrapper - the actual main code is after globals initialization.
+                    // Use SAVEBP+1 as mainStart to include all code from after globals to the last RETN.
+                    // If entry stub exists, check if there's code between entryStubEnd and last RETN.
+                    // If entryStubEnd is very close to last RETN (only cleanup code), use SAVEBP+1 instead.
+                    int codeAfterEntryStub = instructions.Count - entryStubEnd;
+                    if (codeAfterEntryStub <= 3)
+                    {
+                        // Only cleanup code (MOVSP+RETN+RETN) after entry stub - main code is before entry stub
+                        mainStart = savebpIndex + 1;
+                        JavaSystem.@out.Println($"DEBUG NcsToAstConverter: entryJsrTarget {entryJsrTarget} is last RETN, but only {codeAfterEntryStub} instructions after entry stub at {entryStubEnd} (likely cleanup), using SAVEBP+1 ({mainStart}) as mainStart");
+                    }
+                    else
+                    {
+                        // There's actual code after entry stub - use entryStubEnd as mainStart
+                        mainStart = entryStubEnd;
+                        JavaSystem.@out.Println($"DEBUG NcsToAstConverter: entryJsrTarget {entryJsrTarget} is last RETN and after entry stub at {entryStubEnd}, using entryStubEnd as mainStart (main includes all code from {entryStubEnd} to last RETN)");
+                    }
                 }
                 else
                 {
@@ -496,8 +510,9 @@ namespace AuroraEngine.Common.Formats.NCS.NCSDecomp.Utils
                 JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Keeping alternative mainStart {mainStart} (in globals range, entry JSR targets last RETN)");
             }
 
-            // Calculate mainEnd - it should be the minimum of all subroutine starts that are AFTER mainStart
-            // This ensures main doesn't include other subroutines
+            // Calculate mainEnd - CRITICAL: Main function should include ALL instructions from mainStart
+            // to the last RETN (instructions.Count), not just up to the first subroutine start.
+            // Subroutines are separate functions called from main, but they don't truncate the main function.
             // NOTE: If mainStart is in globals range (alternative main start), mainEnd will be updated
             // in the split globals logic below to include SAVEBP
             if (isAlternativeMainStart && savebpIndex >= 0)
@@ -507,33 +522,19 @@ namespace AuroraEngine.Common.Formats.NCS.NCSDecomp.Utils
                 mainEnd = savebpIndex;
                 JavaSystem.@out.Println($"DEBUG NcsToAstConverter: mainEnd initially set to {mainEnd} (SAVEBP, alternative main start in globals range, may be updated if splitting globals)");
             }
-            else if (subroutineStarts.Count > 0)
-            {
-                List<int> sortedSubStarts = new List<int>(subroutineStarts);
-                sortedSubStarts.Sort();
-                JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Found {subroutineStarts.Count} subroutine starts: {string.Join(", ", sortedSubStarts)}");
-                bool foundSubAfterMain = false;
-                foreach (int subStart in sortedSubStarts)
-                {
-                    if (subStart > mainStart)
-                    {
-                        mainEnd = subStart;
-                        foundSubAfterMain = true;
-                        JavaSystem.@out.Println($"DEBUG NcsToAstConverter: mainEnd set to {mainEnd} (first subroutine start after mainStart={mainStart}, will include instructions {mainStart} to {mainEnd - 1})");
-                        break;
-                    }
-                }
-                // CRITICAL: Ensure mainEnd is valid - if no subroutine start was found after mainStart,
-                // mainEnd should remain at instructions.Count to include all remaining instructions
-                if (!foundSubAfterMain)
-                {
-                    JavaSystem.@out.Println($"DEBUG NcsToAstConverter: No subroutine starts found after mainStart={mainStart}, keeping mainEnd={mainEnd} (all {instructions.Count} instructions)");
-                }
-            }
             else
             {
-                // No subroutine starts - main includes all instructions from mainStart to end
-                JavaSystem.@out.Println($"DEBUG NcsToAstConverter: No subroutine starts found, mainEnd remains at {mainEnd} (all {instructions.Count} instructions)");
+                // CRITICAL FIX: Main function should include ALL instructions from mainStart to the last RETN
+                // Subroutines are separate functions and should not truncate the main function.
+                // The main function contains all the code, including calls to subroutines.
+                mainEnd = instructions.Count;
+                JavaSystem.@out.Println($"DEBUG NcsToAstConverter: mainEnd set to {mainEnd} (all {instructions.Count} instructions from mainStart={mainStart} to last RETN)");
+                if (subroutineStarts.Count > 0)
+                {
+                    List<int> sortedSubStarts = new List<int>(subroutineStarts);
+                    sortedSubStarts.Sort();
+                    JavaSystem.@out.Println($"DEBUG NcsToAstConverter: Found {subroutineStarts.Count} subroutine starts: {string.Join(", ", sortedSubStarts)} (these are separate functions, not boundaries for main)");
+                }
             }
 
             // If we deferred globals creation (entry JSR targets last RETN), create it now
