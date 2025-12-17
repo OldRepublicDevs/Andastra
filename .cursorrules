@@ -338,22 +338,22 @@ When working on Andastra Engine code (anything in `src/Andastra/`), AI agents MU
 ├─────────────────────────────────────────────────────────────┤
 │                    Odyssey.Core (Domain)                    │
 ├─────────────────────────────────────────────────────────────┤
-│                    CSharpKOTOR (File Formats)               │
+│                    Andastra (File Formats)               │
 └─────────────────────────────────────────────────────────────┘
 ```
 
 **Dependency Rules**:
 
-- `Odyssey.Core` MUST NOT reference MonoGame, CSharpKOTOR.Formats, or game-specific code
+- `Odyssey.Core` MUST NOT reference MonoGame, Andastra.Parsing, or game-specific code
 - `Odyssey.Scripting` MUST NOT reference MonoGame
-- `Odyssey.Content` may reference CSharpKOTOR for format parsing
+- `Odyssey.Content` may reference Andastra for format parsing
 - `Odyssey.MonoGame` may reference MonoGame and Odyssey.Core
 - `Odyssey.Kotor` may reference all Odyssey.* except Odyssey.Game
 
 **Dependency Direction**:
 
 - Core → (nothing external)
-- Content → Core, CSharpKOTOR
+- Content → Core, Andastra
 - Scripting → Core
 - Kotor → Core, Content, Scripting
 - MonoGame → Core, Content, Kotor (adapter layer)
@@ -366,7 +366,7 @@ When working on Andastra Engine code (anything in `src/Andastra/`), AI agents MU
 When implementing features, follow this order to avoid rework:
 
 1. Foundation: projects, config, MonoGame window
-2. Resource provider: wrap CSharpKOTOR.Installation
+2. Resource provider: wrap Andastra.Installation
 3. Content cache: texture/model decode
 4. Area rendering: LYT + VIS + room meshes
 5. Walkmesh: collision + navigation
@@ -409,99 +409,12 @@ When implementing NCS VM features:
 
 When implementing NWScript engine functions:
 
-1. **Use ScriptDefs**: Reference `CSharpKOTOR.Common.Script.ScriptDefs` for function signatures
+1. **Use ScriptDefs**: Reference `Andastra.Common.Script.ScriptDefs` for function signatures
 2. **Profile separation**: K1 has ~850 functions, K2 has ~950 functions
 3. **Incremental coverage**: Start with minimal set for boot/movement, expand by feature
 4. **Return conventions**: Follow exact return type semantics (void, int, float, object, etc.)
 
-**Do NOT implement all NWScript functions alphabetically.** Implement by usage tiers:
-
-- **Tier 0**: Boot/Basic (~50 functions) - PrintString, Random, GetTag, GetLocal*, etc.
-- **Tier 1**: Movement/Actions (~80 functions) - ActionMove*, AssignCommand, DelayCommand
-- **Tier 2**: Creatures/Stats (~100 functions) - GetAbilityScore, GetCurrentHitPoints
-- **Tier 3**: Combat (~80 functions) - ActionAttack, EffectDamage, ApplyEffectToObject
-- **Tier 4**: Dialogue (~40 functions) - SpeakString, GetPCSpeaker, BeginConversation
-- **Tier 5**: Inventory (~60 functions) - GetItemInSlot, CreateItemOnObject
-- **Tier 6**: Force Powers (~50 functions) - ActionCastSpellAtObject, GetHasSpell
-
-### Entity/Component System
-
-Follow these patterns for entity implementation:
-
-```csharp
-// Object type hierarchy
-Object (abstract base)
-├── Creature (PC, NPC)
-├── Door
-├── Placeable
-├── Trigger (invisible volume)
-├── Waypoint (invisible marker)
-├── Sound (ambient emitter)
-├── Store (merchant)
-├── Encounter (spawn point)
-├── Item (world-dropped or inventory)
-└── AreaOfEffect (spell zones)
-```
-
-**GFF Template Loading**:
-
-- UTC → Creature entity + components
-- UTP → Placeable entity + components
-- UTD → Door entity + components
-- UTT → Trigger entity + components (polygon geometry)
-- UTW → Waypoint entity
-- UTS → Sound emitter entity
-- UTE → Encounter spawner entity
-- UTI → Item (BaseItem, Properties, Charges)
-
-### Walkmesh Implementation
-
-BWM format requirements:
-
-- Type 1 (WOK): Area walkmesh with AABB tree, adjacency, perimeter edges
-- Type 0 (PWK/DWK): Placeable/door walkmesh with hook vectors
-- Adjacency encoding: `adjacency = faceIndex * 3 + edgeIndex`, `-1` = no neighbor
-- Decode adjacency: `face = encoded / 3`, `edge = encoded % 3`
-- Surface materials: Lookup via `surfacemat.2da` for walkability
-
-### Combat System
-
-Combat follows round-based model (~3 second rounds):
-
-```
-Round States:
-Starting    (0.0s)  - Init animations
-FirstAttack (~0.5s) - Primary attack
-SecondAttack(~1.5s) - Offhand/counter (if duel)
-Cooldown    (~2.5s) - Return to ready
-Finished    (3.0s)  - Complete
-```
-
-D20 attack resolution:
-
-- Natural 20 = always hit (check for crit)
-- Natural 1 = always miss
-- Roll + attack bonus >= target AC = hit
-
-### File Format References
-
-When implementing format handling, reference these CSharpKOTOR parsers:
-
-- NCS: `CSharpKOTOR/Formats/NCS/` - NWScript bytecode
-- BWM: `CSharpKOTOR/Formats/BWM/` - Walkmesh (WOK/PWK/DWK)
-- LYT: `CSharpKOTOR/Formats/LYT/` - Area layout
-- VIS: `CSharpKOTOR/Formats/VIS/` - Room visibility
-- MDL/MDX: `CSharpKOTOR/Formats/MDL/` - Models/animations
-- TPC/TXI: `CSharpKOTOR/Formats/TPC/` - Textures
-- DLG: `CSharpKOTOR/Formats/DLG/` - Dialogue
-- GIT: `CSharpKOTOR/Formats/GIT/` - Instance spawning
-- GFF templates: UTC, UTP, UTD, UTT, UTW, UTS, UTE, UTI
-
 Design for extensibility to other engines:
-
-- Keep `IGameProfile` interface for game-specific behavior
-- Game rules in `Odyssey.Kotor`, not `Odyssey.Core`
-- MonoGame-only logic/code is allowed in OdysseyRunner. Keep ANY AND ALL other code in a shared library named CSharpKOTOR.
 
 ### Clean-Room Process
 
@@ -531,6 +444,6 @@ A feature is complete when:
 
 - Implementation matches original engine behavior
 - Unit tests meticulously written, and passing for deterministic logic
-- Integration with CSharpKOTOR format parsers works
+- Integration with Andastra format parsers works
 - C# 7.3 syntax or lower, 8+ isn't supported.
 - Code compiles with no warnings
