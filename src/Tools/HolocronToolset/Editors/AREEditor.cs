@@ -19,6 +19,7 @@ namespace HolocronToolset.Editors
         private ARE _are;
         private GFF _originalGff;
         private LocalizedStringEdit _nameEdit;
+        private TextBox _tagEdit;
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/are.py:36-74
         // Original: def __init__(self, parent, installation):
@@ -59,11 +60,18 @@ namespace HolocronToolset.Editors
             panel.Children.Add(nameLabel);
             panel.Children.Add(_nameEdit);
             
+            // Tag field - matching Python: self.ui.tagEdit
+            var tagLabel = new Avalonia.Controls.TextBlock { Text = "Tag:" };
+            _tagEdit = new TextBox();
+            panel.Children.Add(tagLabel);
+            panel.Children.Add(_tagEdit);
+            
             Content = panel;
         }
 
-        // Matching PyKotor implementation - expose NameEdit for testing
+        // Matching PyKotor implementation - expose controls for testing
         public LocalizedStringEdit NameEdit => _nameEdit;
+        public TextBox TagEdit => _tagEdit;
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/are.py:134-149
         // Original: def load(self, filepath, resref, restype, data):
@@ -97,6 +105,11 @@ namespace HolocronToolset.Editors
             {
                 _nameEdit.SetLocString(are.Name);
             }
+            // Matching Python: self.ui.tagEdit.setText(are.tag) (line 178)
+            if (_tagEdit != null)
+            {
+                _tagEdit.Text = are.Tag ?? "";
+            }
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/are.py:250-300
@@ -111,6 +124,11 @@ namespace HolocronToolset.Editors
             if (_nameEdit != null)
             {
                 are.Name = _nameEdit.GetLocString();
+            }
+            // Matching Python: are.tag = self.ui.tagEdit.text() (line 284)
+            if (_tagEdit != null)
+            {
+                are.Tag = _tagEdit.Text ?? "";
             }
 
             // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/are.py:250-277
