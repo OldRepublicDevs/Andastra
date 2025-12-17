@@ -31,6 +31,8 @@ namespace HolocronToolset.Editors
         private NumericUpDown _stealthMaxSpin;
         private NumericUpDown _stealthLossSpin;
         private ComboBox _mapAxisSelect;
+        private NumericUpDown _mapZoomSpin;
+        private NumericUpDown _mapResXSpin;
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/are.py:36-74
         // Original: def __init__(self, parent, installation):
@@ -120,19 +122,19 @@ namespace HolocronToolset.Editors
             // Stealth XP checkbox - matching Python: self.ui.stealthCheck
             _stealthCheck = new CheckBox { Content = "Stealth XP" };
             panel.Children.Add(_stealthCheck);
-            
+
             // Stealth XP Max spin - matching Python: self.ui.stealthMaxSpin
             var stealthMaxLabel = new Avalonia.Controls.TextBlock { Text = "Stealth XP Max:" };
             _stealthMaxSpin = new NumericUpDown { Minimum = 0, Maximum = int.MaxValue, Value = 0 };
             panel.Children.Add(stealthMaxLabel);
             panel.Children.Add(_stealthMaxSpin);
-            
+
             // Stealth XP Loss spin - matching Python: self.ui.stealthLossSpin
             var stealthLossLabel = new Avalonia.Controls.TextBlock { Text = "Stealth XP Loss:" };
             _stealthLossSpin = new NumericUpDown { Minimum = 0, Maximum = int.MaxValue, Value = 0 };
             panel.Children.Add(stealthLossLabel);
             panel.Children.Add(_stealthLossSpin);
-            
+
             // Map Axis select - matching Python: self.ui.mapAxisSelect
             var mapAxisLabel = new Avalonia.Controls.TextBlock { Text = "Map Axis:" };
             _mapAxisSelect = new ComboBox();
@@ -140,6 +142,18 @@ namespace HolocronToolset.Editors
             _mapAxisSelect.SelectedIndex = 0;
             panel.Children.Add(mapAxisLabel);
             panel.Children.Add(_mapAxisSelect);
+            
+            // Map Zoom spin - matching Python: self.ui.mapZoomSpin
+            var mapZoomLabel = new Avalonia.Controls.TextBlock { Text = "Map Zoom:" };
+            _mapZoomSpin = new NumericUpDown { Minimum = 1, Maximum = int.MaxValue, Value = 1 };
+            panel.Children.Add(mapZoomLabel);
+            panel.Children.Add(_mapZoomSpin);
+            
+            // Map Res X spin - matching Python: self.ui.mapResXSpin
+            var mapResXLabel = new Avalonia.Controls.TextBlock { Text = "Map Res X:" };
+            _mapResXSpin = new NumericUpDown { Minimum = 0, Maximum = int.MaxValue, Value = 0 };
+            panel.Children.Add(mapResXLabel);
+            panel.Children.Add(_mapResXSpin);
 
             Content = panel;
         }
@@ -157,6 +171,8 @@ namespace HolocronToolset.Editors
         public NumericUpDown StealthMaxSpin => _stealthMaxSpin;
         public NumericUpDown StealthLossSpin => _stealthLossSpin;
         public ComboBox MapAxisSelect => _mapAxisSelect;
+        public NumericUpDown MapZoomSpin => _mapZoomSpin;
+        public NumericUpDown MapResXSpin => _mapResXSpin;
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/are.py:134-149
         // Original: def load(self, filepath, resref, restype, data):
@@ -248,6 +264,16 @@ namespace HolocronToolset.Editors
             {
                 _mapAxisSelect.SelectedIndex = (int)are.NorthAxis;
             }
+            // Matching Python: self.ui.mapZoomSpin.setValue(are.map_zoom) (line 190)
+            if (_mapZoomSpin != null)
+            {
+                _mapZoomSpin.Value = are.MapZoom;
+            }
+            // Matching Python: self.ui.mapResXSpin.setValue(are.map_res_x) (line 191)
+            if (_mapResXSpin != null)
+            {
+                _mapResXSpin.Value = are.MapResX;
+            }
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/are.py:250-300
@@ -312,6 +338,16 @@ namespace HolocronToolset.Editors
             if (_mapAxisSelect != null && _mapAxisSelect.SelectedIndex >= 0)
             {
                 are.NorthAxis = (ARENorthAxis)_mapAxisSelect.SelectedIndex;
+            }
+            // Matching Python: are.map_zoom = self.ui.mapZoomSpin.value() (line 296)
+            if (_mapZoomSpin != null && _mapZoomSpin.Value.HasValue)
+            {
+                are.MapZoom = (int)_mapZoomSpin.Value.Value;
+            }
+            // Matching Python: are.map_res_x = self.ui.mapResXSpin.value() (line 297)
+            if (_mapResXSpin != null && _mapResXSpin.Value.HasValue)
+            {
+                are.MapResX = (int)_mapResXSpin.Value.Value;
             }
 
             // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/are.py:250-277
@@ -592,6 +628,8 @@ namespace HolocronToolset.Editors
             copy.StealthXpMax = source.StealthXpMax;
             copy.StealthXpLoss = source.StealthXpLoss;
             copy.NorthAxis = source.NorthAxis;
+            copy.MapZoom = source.MapZoom;
+            copy.MapResX = source.MapResX;
             copy.GrassTexture = source.GrassTexture;
             copy.GrassDensity = source.GrassDensity;
             copy.GrassSize = source.GrassSize;
