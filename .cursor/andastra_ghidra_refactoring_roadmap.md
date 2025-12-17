@@ -5,6 +5,133 @@ Internal tracking document for AI agents. Not public-facing. Do not commit to re
 **Status**: IN PROGRESS
 **Started**: 2025-01-16
 **Current Phase**: Initial file inventory and systematic review
+**Ghidra Project**: `C:\Users\boden\test.gpr` (20 programs loaded)
+
+## Ghidra Executables Inventory
+
+### ✅ PRIMARY TARGET: Odyssey Engine (KotOR 1 & 2)
+
+**Most Relevant for Current Project Goals** - This is the primary focus for implementation/unification with class inheritance.
+
+- **swkotor.exe** (KotOR 1)
+  - Path: `/swkotor.exe`
+  - Functions: **12,045** (filtered, excluding default names)
+  - Status: ✅ Loaded and available
+  - Priority: **HIGH** - Primary reference for KotOR 1 engine behavior
+
+- **swkotor2.exe** (KotOR 2: The Sith Lords)
+  - Path: `/swkotor2.exe`
+  - Functions: **13,782** (filtered, excluding default names)
+  - Status: ✅ Loaded and available
+  - Priority: **HIGHEST** - Most complete Odyssey implementation, primary reference for KotOR 2
+
+### Aurora Engine (Neverwinter Nights)
+
+- **nwmain.exe** (Neverwinter Nights main executable)
+  - Path: `/nwmain.exe`
+  - Functions: **52,644** (filtered, excluding default names)
+  - Status: ✅ Loaded and available
+  - Priority: **MEDIUM** - Reference for Aurora engine architecture
+
+- **nwnnsscomp.exe** (NWN Script Compiler)
+  - Path: `/nwnnsscomp.exe`
+  - Status: ✅ Loaded and available
+  - Priority: **LOW** - Tool, not runtime engine
+
+- **nwnnsscomp_kscript.exe** (NWN Script Compiler - KScript variant)
+  - Path: `/nwnnsscomp_kscript.exe`
+  - Status: ✅ Loaded and available
+  - Priority: **LOW** - Tool, not runtime engine
+
+### Eclipse Engine (Dragon Age Origins)
+
+- **daorigins.exe** (Dragon Age: Origins)
+  - Path: `/daorigins.exe`
+  - Functions: **8,420** (filtered, excluding default names)
+  - Status: ✅ Loaded and available
+  - Priority: **MEDIUM** - Reference for Eclipse engine architecture
+
+- **DragonAge2.exe** (Dragon Age II)
+  - Path: `/DragonAge2.exe`
+  - Functions: **12,069** (filtered, excluding default names)
+  - Status: ✅ Loaded and available
+  - Priority: **MEDIUM** - Reference for Eclipse engine evolution
+
+### Mass Effect Series (Eclipse-based/Custom)
+
+- **MassEffect.exe** (Mass Effect 1)
+  - Path: `/MassEffect.exe`
+  - Functions: **12,558** (filtered, excluding default names)
+  - Status: ✅ Loaded and available
+  - Priority: **LOW** - Eclipse-derived, may have unique implementations
+
+- **MassEffect2.exe** (Mass Effect 2)
+  - Path: `/MassEffect2.exe`
+  - Functions: **3** (filtered, appears to be a launcher/stub)
+  - Status: ✅ Loaded and available
+  - Priority: **LOW** - Minimal executable, likely launcher
+
+### Windows System DLLs (Not Game Executables)
+
+- USER32.DLL, KERNEL32.DLL, GDI32.DLL, IMM32.DLL, VERSION.DLL, OLE32.DLL
+- DINPUT8.DLL, OPENGL32.DLL, GLU32.DLL, MSS32.DLL, BINKW32.DLL
+- Status: ✅ Loaded (for cross-reference analysis)
+- Priority: **LOW** - System libraries, not engine code
+
+### Total Executables Available: 20
+
+- Game Executables: 8 (swkotor.exe, swkotor2.exe, nwmain.exe, daorigins.exe, DragonAge2.exe, MassEffect.exe, MassEffect2.exe, nwnnsscomp.exe, nwnnsscomp_kscript.exe)
+- System DLLs: 11
+- **Total Functions Available**: ~120,000+ across all game executables
+
+## Reverse Engineering Strategy by Engine
+
+### Odyssey Engine (PRIMARY FOCUS)
+
+**Target Files**: `swkotor.exe` and `swkotor2.exe`
+**Goal**: Achieve 1:1 parity with original engine behavior for all systems:
+
+- Module loading (LYT, VIS, GIT, ARE)
+- Walkmesh navigation (BWM parsing and pathfinding)
+- Entity spawning and management
+- Script execution (NCS VM)
+- Combat system
+- Dialogue system (DLG, TLK, VO)
+- Save/Load system (GFF serialization)
+- Party management
+- Perception system
+- Trigger system
+- Encounter system
+- Store system
+- Animation system
+- Audio system
+
+**Key String References to Search**:
+
+- "GLOBALVARS", "PARTYTABLE", "savenfo", "SAVES", "MODULES", "AREAS"
+- "BWM", "walkmesh", "pathfind", "navigation"
+- "DLG", "TLK", "dialogue", "conversation"
+- "NCS", "script", "ACTION", "STORE_STATE"
+- "UTC", "UTD", "UTI", "UTP", "UTS", "UTT", "UTW", "UTE", "UTM" (template types)
+
+### Aurora Engine (SECONDARY)
+
+**Target File**: `nwmain.exe`
+**Goal**: Understand Aurora architecture for future unification:
+
+- Server/client architecture
+- Script compilation differences
+- Module system differences
+- Combat system differences
+
+### Eclipse Engine (SECONDARY)
+
+**Target Files**: `daorigins.exe`, `DragonAge2.exe`
+**Goal**: Understand Eclipse architecture for future unification:
+
+- Dialogue system evolution
+- Combat system evolution
+- Save system differences
 
 ## Update Instructions
 
@@ -592,11 +719,397 @@ When processing a file:
 - [ ] GUI/MenuRenderer.cs
 - [ ] GUI/SaveLoadMenu.cs
 
+### Parsing (600+ files)
+
+**Note**: Parsing layer files typically don't need Ghidra references as they handle file format parsing, not engine behavior. However, some files that implement engine-specific logic may need references.
+
+#### Common (18 files)
+
+- [ ] Common/AlienSounds.cs
+- [ ] Common/BinaryExtensions.cs
+- [ ] Common/BinaryReader.cs
+- [ ] Common/BinaryWriter.cs
+- [ ] Common/CaseAwarePath.cs
+- [ ] Common/Face.cs
+- [ ] Common/Game.cs
+- [ ] Common/GameObject.cs
+- [ ] Common/Language.cs
+- [ ] Common/LocalizedString.cs
+- [ ] Common/Misc.cs
+- [ ] Common/Module.cs
+- [ ] Common/ModuleDataLoader.cs
+- [ ] Common/Pathfinding.cs
+- [ ] Common/ResRef.cs
+- [ ] Common/SurfaceMaterial.cs
+- [ ] Common/Script/DataType.cs
+- [ ] Common/Script/DataTypeExtensions.cs
+- [ ] Common/Script/NwscriptParser.cs
+- [ ] Common/Script/ScriptConstant.cs
+- [ ] Common/Script/ScriptDefs.cs
+- [ ] Common/Script/ScriptFunction.cs
+- [ ] Common/Script/ScriptLib.cs
+- [ ] Common/Script/ScriptParam.cs
+
+#### Extract (15 files)
+
+- [ ] Extract/Capsule/Capsule.cs
+- [ ] Extract/Capsule/LazyCapsule.cs
+- [ ] Extract/Chitin/Chitin.cs
+- [ ] Extract/ChitinWrapper.cs
+- [ ] Extract/FileResource.cs
+- [ ] Extract/FileResourceHelpers.cs
+- [ ] Extract/InstallationWrapper.cs
+- [ ] Extract/KeyFileWrapper.cs
+- [ ] Extract/KeyWriterWrapper.cs
+- [ ] Extract/SaveData/GlobalVars.cs
+- [ ] Extract/SaveData/PartyTable.cs
+- [ ] Extract/SaveData/SaveFolderEntry.cs
+- [ ] Extract/SaveData/SaveInfo.cs
+- [ ] Extract/SaveData/SaveNestedCapsule.cs
+- [ ] Extract/TalkTable.cs
+- [ ] Extract/TwoDAManager.cs
+- [ ] Extract/TwoDARegistry.cs
+
+#### Installation (4 files)
+
+- [ ] Installation/Installation.cs
+- [ ] Installation/InstallationResourceManager.cs
+- [ ] Installation/ResourceResult.cs
+- [ ] Installation/SearchLocation.cs
+
+#### Merge (1 file)
+
+- [ ] Merge/ModuleManager.cs
+
+#### Resource/Formats (500+ files)
+
+**BIF Format** (5 files)
+- [ ] Resource/Formats/BIF/BIF.cs
+- [ ] Resource/Formats/BIF/BIFBinaryReader.cs
+- [ ] Resource/Formats/BIF/BIFBinaryWriter.cs
+- [ ] Resource/Formats/BIF/BIFResource.cs
+- [ ] Resource/Formats/BIF/BIFType.cs
+- [ ] Resource/Formats/BIF/BZF.cs
+
+**BWM Format** (9 files) - **HIGH PRIORITY** (walkmesh navigation)
+- [ ] Resource/Formats/BWM/BWM.cs
+- [ ] Resource/Formats/BWM/BWMAdjacency.cs
+- [ ] Resource/Formats/BWM/BWMAuto.cs
+- [ ] Resource/Formats/BWM/BWMBinaryReader.cs
+- [ ] Resource/Formats/BWM/BWMBinaryWriter.cs
+- [ ] Resource/Formats/BWM/BWMEdge.cs
+- [ ] Resource/Formats/BWM/BWMFace.cs
+- [ ] Resource/Formats/BWM/BWMMostSignificantPlane.cs
+- [ ] Resource/Formats/BWM/BWMNodeAABB.cs
+- [ ] Resource/Formats/BWM/BWMType.cs
+
+**ERF Format** (4 files)
+- [ ] Resource/Formats/ERF/ERF.cs
+- [ ] Resource/Formats/ERF/ERFAuto.cs
+- [ ] Resource/Formats/ERF/ERFBinaryReader.cs
+- [ ] Resource/Formats/ERF/ERFBinaryWriter.cs
+- [ ] Resource/Formats/ERF/ERFType.cs
+
+**GFF Format** (50+ files) - **HIGH PRIORITY** (save/load, templates)
+- [ ] Resource/Formats/GFF/GFF.cs
+- [ ] Resource/Formats/GFF/GFFAuto.cs
+- [ ] Resource/Formats/GFF/GFFBinaryReader.cs
+- [ ] Resource/Formats/GFF/GFFBinaryWriter.cs
+- [ ] Resource/Formats/GFF/GFFContent.cs
+- [ ] Resource/Formats/GFF/GFFFieldType.cs
+- [ ] Resource/Formats/GFF/GFFList.cs
+- [ ] Resource/Formats/GFF/GFFStruct.cs
+- [ ] Resource/Formats/GFF/Generics/* (46 files)
+
+**KEY Format** (5 files)
+- [ ] Resource/Formats/KEY/BifEntry.cs
+- [ ] Resource/Formats/KEY/KEY.cs
+- [ ] Resource/Formats/KEY/KEYAuto.cs
+- [ ] Resource/Formats/KEY/KEYBinaryReader.cs
+- [ ] Resource/Formats/KEY/KEYBinaryWriter.cs
+- [ ] Resource/Formats/KEY/KeyEntry.cs
+
+**LIP Format** (6 files) - **MEDIUM PRIORITY** (lip sync)
+- [ ] Resource/Formats/LIP/LIP.cs
+- [ ] Resource/Formats/LIP/LIPAuto.cs
+- [ ] Resource/Formats/LIP/LIPBinaryReader.cs
+- [ ] Resource/Formats/LIP/LIPBinaryWriter.cs
+- [ ] Resource/Formats/LIP/LIPKeyFrame.cs
+- [ ] Resource/Formats/LIP/LIPShape.cs
+
+**LTR Format** (4 files)
+- [ ] Resource/Formats/LTR/LTR.cs
+- [ ] Resource/Formats/LTR/LTRAuto.cs
+- [ ] Resource/Formats/LTR/LTRBinaryReader.cs
+- [ ] Resource/Formats/LTR/LTRBinaryWriter.cs
+- [ ] Resource/Formats/LTR/LTRBlock.cs
+
+**LYT Format** (9 files) - **HIGH PRIORITY** (area layout)
+- [ ] Resource/Formats/LYT/* (9 files)
+
+**MDL Format** (7 files) - **HIGH PRIORITY** (3D models)
+- [ ] Resource/Formats/MDL/* (7 files)
+
+**NCS Format** (375+ files) - **HIGHEST PRIORITY** (script VM)
+- [ ] Resource/Formats/NCS/* (375 files including compiler, decompiler, VM)
+
+**RIM Format** (4 files)
+- [ ] Resource/Formats/RIM/* (4 files)
+
+**SSF Format** (5 files)
+- [ ] Resource/Formats/SSF/* (5 files)
+
+**TLK Format** (6 files) - **HIGH PRIORITY** (dialogue text)
+- [ ] Resource/Formats/TLK/* (6 files)
+
+**TPC Format** (12 files) - **HIGH PRIORITY** (textures)
+- [ ] Resource/Formats/TPC/* (12 files)
+
+**TwoDA Format** (5 files) - **HIGH PRIORITY** (game data tables)
+- [ ] Resource/Formats/TwoDA/* (5 files)
+
+**TXI Format** (7 files)
+- [ ] Resource/Formats/TXI/* (7 files)
+
+**VIS Format** (5 files) - **HIGH PRIORITY** (area visibility)
+- [ ] Resource/Formats/VIS/* (5 files)
+
+**WAV Format** (10 files)
+- [ ] Resource/Formats/WAV/* (10 files)
+
+#### Resource Core (6 files)
+
+- [ ] Resource/ArchiveResource.cs
+- [ ] Resource/ResourceAuto.cs
+- [ ] Resource/ResourceAutoHelpers.cs
+- [ ] Resource/ResourceFormat.cs
+- [ ] Resource/ResourceIdentifier.cs
+- [ ] Resource/ResourceType.cs
+- [ ] Resource/Salvage.cs
+
+#### Tools (24 files)
+
+- [ ] Tools/Archives.cs
+- [ ] Tools/Conversions.cs
+- [ ] Tools/Creature.cs
+- [ ] Tools/Door.cs
+- [ ] Tools/Encoding.cs
+- [ ] Tools/Heuristics.cs
+- [ ] Tools/Kit.cs
+- [ ] Tools/Misc.cs
+- [ ] Tools/Model.cs
+- [ ] Tools/Module.cs
+- [ ] Tools/Patching.cs
+- [ ] Tools/Path.cs
+- [ ] Tools/Placeable.cs
+- [ ] Tools/PlayPazaak.cs
+- [ ] Tools/ReferenceCache.cs
+- [ ] Tools/Registry.cs
+- [ ] Tools/ResourceConversions.cs
+- [ ] Tools/Scripts.cs
+- [ ] Tools/StringUtils.cs
+- [ ] Tools/Template.cs
+- [ ] Tools/Utilities.cs
+- [ ] Tools/Validation.cs
+
+#### TSLPatcher (40+ files)
+
+- [ ] TSLPatcher/Config/LogLevel.cs
+- [ ] TSLPatcher/Config/PatcherConfig.cs
+- [ ] TSLPatcher/Diff/DiffAnalyzerFactory.cs
+- [ ] TSLPatcher/Diff/DiffEngine.cs
+- [ ] TSLPatcher/Diff/DiffHelpers.cs
+- [ ] TSLPatcher/Diff/GffDiff.cs
+- [ ] TSLPatcher/Diff/GffDiffAnalyzer.cs
+- [ ] TSLPatcher/Diff/Resolution.cs
+- [ ] TSLPatcher/Diff/SsfDiff.cs
+- [ ] TSLPatcher/Diff/TlkDiff.cs
+- [ ] TSLPatcher/Diff/TwoDaDiff.cs
+- [ ] TSLPatcher/Diff/TwoDaDiffAnalyzer.cs
+- [ ] TSLPatcher/GeneratorValidation.cs
+- [ ] TSLPatcher/IncrementalTSLPatchDataWriter.cs
+- [ ] TSLPatcher/INIManager.cs
+- [ ] TSLPatcher/InstallFolderDeterminer.cs
+- [ ] TSLPatcher/Logger/InstallLogWriter.cs
+- [ ] TSLPatcher/Logger/LogType.cs
+- [ ] TSLPatcher/Logger/PatchLog.cs
+- [ ] TSLPatcher/Logger/PatchLogger.cs
+- [ ] TSLPatcher/Logger/RobustLogger.cs
+- [ ] TSLPatcher/Memory/PatcherMemory.cs
+- [ ] TSLPatcher/Memory/TokenUsage.cs
+- [ ] TSLPatcher/ModInstaller.cs
+- [ ] TSLPatcher/Mods/GFF/* (3 files)
+- [ ] TSLPatcher/Mods/InstallFile.cs
+- [ ] TSLPatcher/Mods/ModificationsByType.cs
+- [ ] TSLPatcher/Mods/NCS/* (1 file)
+- [ ] TSLPatcher/Mods/NSS/* (1 file)
+- [ ] TSLPatcher/Mods/PatcherModifications.cs
+- [ ] TSLPatcher/Mods/SSF/* (1 file)
+- [ ] TSLPatcher/Mods/TLK/* (1 file)
+- [ ] TSLPatcher/Mods/TSLPatcherINISerializer.cs
+- [ ] TSLPatcher/Mods/TwoDA/* (4 files)
+- [ ] TSLPatcher/PatcherNamespace.cs
+- [ ] TSLPatcher/Reader/ConfigReader.cs
+- [ ] TSLPatcher/Reader/NamespaceReader.cs
+- [ ] TSLPatcher/TSLPatchDataGenerator.cs
+- [ ] TSLPatcher/Uninstall/ModUninstaller.cs
+- [ ] TSLPatcher/Uninstall/UninstallHelpers.cs
+
+### Utility (14 files)
+
+**Note**: Utility files typically don't need Ghidra references as they are helper/utility code.
+
+- [ ] Utility/ArrayHead.cs
+- [ ] Utility/CaseInsensitiveDict.cs
+- [ ] Utility/ErrorHandling.cs
+- [ ] Utility/Geometry/GeometryUtils.cs
+- [ ] Utility/Geometry/Polygon2.cs
+- [ ] Utility/Geometry/Polygon3.cs
+- [ ] Utility/Geometry/Quaternion.cs
+- [ ] Utility/KeyError.cs
+- [ ] Utility/LZMA/LzmaHelper.cs
+- [ ] Utility/Misc.cs
+- [ ] Utility/MiscString/CaseInsensImmutableStr.cs
+- [ ] Utility/MiscString/StringUtilFunctions.cs
+- [ ] Utility/MiscString/WrappedStr.cs
+- [ ] Utility/OrderedSet.cs
+- [ ] Utility/System/OSHelper.cs
+- [ ] Utility/SystemHelpers.cs
+
+## Reverse Engineering Requirements
+
+### Files Requiring Ghidra References
+
+**MANDATORY**: All files in the following directories MUST have Ghidra references:
+
+1. **Runtime/Core** - All files (99 files)
+   - These implement core engine behavior
+   - Must match original engine behavior exactly
+   - Every function should reference Ghidra function addresses
+
+2. **Runtime/Games/Odyssey** - All files (84 files)
+   - Primary implementation target
+   - Must achieve 1:1 parity with swkotor.exe/swkotor2.exe
+   - Every system must be reverse engineered
+
+3. **Runtime/Scripting** - All files (11 files)
+   - NCS VM implementation
+   - Engine API functions
+   - Must match original script execution behavior
+
+4. **Runtime/Content** - Selected files
+   - Loaders/GITLoader.cs (entity spawning)
+   - Loaders/TemplateLoader.cs (template loading)
+   - Save/SaveSerializer.cs (save/load system)
+   - Save/SaveDataProvider.cs (save data handling)
+   - Converters/BwmToNavigationMeshConverter.cs (walkmesh)
+
+5. **Parsing/Extract/SaveData** - Selected files
+   - SaveData/GlobalVars.cs (global variable system)
+   - SaveData/PartyTable.cs (party management)
+   - SaveData/SaveInfo.cs (save metadata)
+
+6. **Parsing/Resource/Formats** - Selected files
+   - BWM/* (walkmesh format - must match engine pathfinding)
+   - GFF/* (save format - must match engine serialization)
+   - NCS/* (script format - must match VM behavior)
+
+### Files NOT Requiring Ghidra References
+
+These files are format parsers, utilities, or modern enhancements:
+
+1. **Parsing/Resource/Formats** - Most format parsers
+   - File format parsing doesn't need engine references
+   - Exception: BWM, GFF, NCS (see above)
+
+2. **Utility/** - All files
+   - Helper/utility code
+   - No engine behavior to match
+
+3. **Runtime/Graphics/** - Most files
+   - Modern MonoGame/Stride adapters
+   - Original engines used DirectX/OpenGL
+   - Note enhancements vs. original behavior
+
+4. **TSLPatcher/** - All files
+   - Modding tool, not engine code
+
+5. **Parsing/Tools/** - All files
+   - Utility tools for format manipulation
+
+### Exhaustive Reverse Engineering Checklist
+
+For each file requiring Ghidra references:
+
+- [ ] **Search Ghidra** for relevant functions using:
+  - String searches (e.g., "GLOBALVARS", "PARTYTABLE", "savenfo")
+  - Function name searches
+  - Cross-references from known functions
+  - Data references
+
+- [ ] **Decompile** all relevant functions in:
+  - swkotor.exe (KotOR 1 behavior)
+  - swkotor2.exe (KotOR 2 behavior - PRIMARY)
+  - nwmain.exe (Aurora reference, if applicable)
+  - daorigins.exe (Eclipse reference, if applicable)
+
+- [ ] **Document in Ghidra**:
+  - Rename functions with descriptive names
+  - Set accurate function prototypes
+  - Rename variables and data labels
+  - Add comprehensive comments
+  - Track analysis status ([STATUS: ANALYZED], [STATUS: TODO], [C#: IMPLEMENTED])
+
+- [ ] **Document in C# Code**:
+  - Add comments with Ghidra executable name and function address
+  - Include function name from Ghidra (descriptive, not FUN_xxxxx)
+  - Include string references used to locate function
+  - Include key implementation details from decompiled code
+  - Note any deviations or improvements
+
+- [ ] **Verify Implementation**:
+  - Match original engine behavior exactly
+  - Test with actual game assets
+  - Verify edge cases and error handling
+  - Ensure C# 7.3 compatibility
+
+### Priority Order for Reverse Engineering
+
+1. **Phase 1: Core Systems** (swkotor2.exe PRIMARY)
+   - Module loading (LYT, VIS, GIT, ARE)
+   - Walkmesh navigation (BWM parsing and pathfinding)
+   - Entity spawning and management
+   - Script execution (NCS VM)
+   - Save/Load system (GFF serialization)
+
+2. **Phase 2: Gameplay Systems** (swkotor2.exe PRIMARY)
+   - Combat system
+   - Dialogue system (DLG, TLK, VO)
+   - Party management
+   - Perception system
+   - Trigger system
+   - Encounter system
+   - Store system
+
+3. **Phase 3: Presentation Systems** (swkotor.exe + swkotor2.exe)
+   - Animation system
+   - Audio system
+   - Camera system
+   - Rendering (reference only, modern implementation)
+
+4. **Phase 4: Cross-Engine Unification** (All engines)
+   - Aurora engine (nwmain.exe) - architecture reference
+   - Eclipse engine (daorigins.exe, DragonAge2.exe) - architecture reference
+   - Infinity engine - architecture reference (if available)
+
 ## Notes
 
+- **PRIMARY TARGET**: swkotor2.exe is the most complete Odyssey implementation - use as primary reference
 - Focus on core game logic first (Runtime/Core, Runtime/Games/Odyssey, Runtime/Scripting)
 - Graphics/MonoGame adapters can be lower priority unless they affect gameplay
-- Use Ghidra string searches to locate functions (e.g., "GLOBALVARS", "PARTYTABLE", "savenfo")
+- Use Ghidra string searches to locate functions (e.g., "GLOBALVARS", "PARTYTABLE", "savenfo", "BWM", "walkmesh", "pathfind")
 - Document all Ghidra function addresses and string references in comments
 - Match original engine behavior exactly where documented
 - Modern graphics enhancements (DLSS, FSR, RTX Remix, raytracing) are not in original game - note as enhancements
+- **EXHAUSTIVE REQUIREMENT**: Every function in Runtime/Core, Runtime/Games/Odyssey, and Runtime/Scripting MUST have Ghidra references
+- **GHIDRA DOCUMENTATION**: All analyzed functions MUST be documented in Ghidra with descriptive names, prototypes, and comments before documenting in C# code
