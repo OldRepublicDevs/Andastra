@@ -314,12 +314,13 @@ When working on Andastra Engine code (anything in `src/Andastra/`), AI agents MU
    - Document any deviations or improvements
 
 6. **Code Organization**:
-   - `Odyssey.Core` - Pure domain, no MonoGame dependency
-   - `Odyssey.Content` - Asset conversion/caching
-   - `Odyssey.Scripting` - NCS VM + NWScript API
-   - `Odyssey.Kotor` - K1/K2 specific rules
-   - `Odyssey.MonoGame` - MonoGame rendering adapters
-   - `Odyssey.Game` - Executable launcher
+   - `Runtime.Core` - Pure domain, no MonoGame dependency
+   - `Runtime.Content` - Asset conversion/caching
+   - `Runtime.Scripting` - NCS VM + NWScript API
+   - `Runtime.Games.Common` - Common abstractions for all engines
+   - `Runtime.Games.{Engine}` - Engine-specific implementations (Odyssey, Aurora, Eclipse, Infinity)
+   - `Runtime.Graphics` - MonoGame rendering adapters
+   - `Game` - Executable launcher
 
 7. **Maintain C# 7.3 Compatibility**: Even in Andastra projects
 
@@ -329,37 +330,39 @@ When working on Andastra Engine code (anything in `src/Andastra/`), AI agents MU
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                    Odyssey.Game (Executable)                │
+│                    Game (Executable)                         │
 ├─────────────────────────────────────────────────────────────┤
-│  Odyssey.MonoGame   │  Odyssey.Kotor      │  Odyssey.Content│
-│  (Rendering)        │  (Game Rules)       │  (Asset Pipeline)│
+│  Graphics   │  Games.{Engine}      │  Content                │
+│  (Rendering)│  (Engine Rules)      │  (Asset Pipeline)       │
 ├─────────────────────────────────────────────────────────────┤
-│                    Odyssey.Scripting (NCS VM)               │
+│                    Scripting (NCS VM)                       │
 ├─────────────────────────────────────────────────────────────┤
-│                    Odyssey.Core (Domain)                    │
+│                    Core (Domain)                             │
 ├─────────────────────────────────────────────────────────────┤
-│                    Andastra (File Formats)               │
+│                    Parsing (File Formats)                   │
 └─────────────────────────────────────────────────────────────┘
 ```
 
 **Dependency Rules**:
 
-- `Odyssey.Core` MUST NOT reference MonoGame, Andastra.Parsing, or game-specific code
-- `Odyssey.Scripting` MUST NOT reference MonoGame
-- `Odyssey.Content` may reference Andastra for format parsing
-- `Odyssey.MonoGame` may reference MonoGame and Odyssey.Core
-- `Odyssey.Kotor` may reference all Odyssey.* except Odyssey.Game
+- `Runtime.Core` MUST NOT reference MonoGame, Parsing, or engine-specific code
+- `Runtime.Scripting` MUST NOT reference MonoGame
+- `Runtime.Content` may reference Parsing for format parsing
+- `Runtime.Graphics` may reference MonoGame and Runtime.Core
+- `Runtime.Games.{Engine}` may reference Core, Content, Scripting, Games.Common
+- `Runtime.Games.Common` may reference Core only
 
 **Dependency Direction**:
 
 - Core → (nothing external)
-- Content → Core, Andastra
+- Content → Core, Parsing
 - Scripting → Core
-- Kotor → Core, Content, Scripting
-- MonoGame → Core, Content, Kotor (adapter layer)
+- Games.Common → Core
+- Games.{Engine} → Core, Content, Scripting, Games.Common
+- Graphics → Core, Content, Games.Common
 - Game → All
 
-**No Game Assets**: The runtime must load from user-provided KOTOR/TSL installation. Never ship game assets.
+**No Game Assets**: Runtime loads from user-provided game installations. Never ship game assets.
 
 ### Implementation Order (Dependency-First)
 
@@ -414,7 +417,7 @@ When implementing NWScript engine functions:
 3. **Incremental coverage**: Start with minimal set for boot/movement, expand by feature
 4. **Return conventions**: Follow exact return type semantics (void, int, float, object, etc.)
 
-Design for extensibility to other engines:
+Design for extensibility across engine families (Odyssey, Aurora, Eclipse, Infinity):
 
 ### Clean-Room Process
 

@@ -1,26 +1,44 @@
 # Andastra
 
-A modern game engine runtime and development tooling suite for BioWare's Odyssey engine family games, built with .NET and MonoGame.
+A unified game engine runtime and development tooling suite for BioWare's engine families (Odyssey, Aurora, Eclipse, Infinity), built with .NET and MonoGame.
 
 ## Overview
 
-Andastra is a .NET implementation of BioWare's Odyssey engine family, providing a modern, cross-platform runtime for games originally built on this architecture. Similar in scope to projects like Xoreos, Andastra aims to create a complete, faithful reimplementation of the engine with full support for Knights of the Old Republic (KOTOR) and Knights of the Old Republic II: The Sith Lords (TSL). The project includes both the game engine runtime and a comprehensive suite of development tools for modding and content creation.
+Andastra is a .NET implementation providing a modern, cross-platform unified runtime for games built on BioWare's engine architectures. Similar in scope to projects like Xoreos, Andastra aims to create complete, faithful reimplementations of multiple BioWare engine families with a shared codebase and common abstractions.
+
+The project unifies support for four major BioWare engine families:
+
+- **Odyssey Engine**: Knights of the Old Republic (KOTOR), KOTOR II: The Sith Lords (TSL), Jade Empire
+- **Aurora Engine**: Neverwinter Nights, Neverwinter Nights 2
+- **Eclipse Engine**: Dragon Age series, Mass Effect series
+- **Infinity Engine**: Baldur's Gate, Icewind Dale, Planescape: Torment
+
+Currently, the Odyssey engine implementation is the most mature, with full support for KOTOR and TSL. The other engine families have foundational implementations with ongoing development. The project includes both the game engine runtime and a comprehensive suite of development tools for modding and content creation.
 
 ### Project Name
 
 The name "Andastra" draws from multiple sources:
 
 - **Logical AND**: Represents the intersection and combination of multiple systems and technologies
-- **Astraea**: In Greek mythology, the daughter of Eos (goddess of dawn) and Astraeus, later identified with the constellation Virgo and associated with justice and precision
+- **Astraea**: In Greek mythology, the daughter of Eos (goddess of dawn) and Astraeus, later identified with the constellation Virgo and associated with justice and precision. Xoreos 
 - **Andraste**: The Celtic war goddess historically associated with Boudica, and also referenced as "The Maker" in BioWare's Dragon Age series
 
-This name reflects the project's goal of bringing together modern .NET technologies with the precision and faithfulness required to recreate BioWare's classic game engines.
+This name reflects the project's goal of bringing together modern .NET technologies with the precision and faithfulness required to recreate BioWare's classic game engines across multiple engine families.
+
+### Supported Engine Families
+
+Andastra provides a unified runtime architecture that supports multiple BioWare engine families through a common abstraction layer:
+
+- **Odyssey Engine** (Primary Implementation): Full support for KOTOR and TSL with area rendering, navigation, scripting, dialogue, combat, and save/load systems
+- **Aurora Engine** (In Development): Foundation for Neverwinter Nights and NWN2 support
+- **Eclipse Engine** (In Development): Foundation for Dragon Age and Mass Effect series support
+- **Infinity Engine** (In Development): Foundation for classic Infinity Engine games support
 
 ### Core Components
 
-- **Odyssey Engine Runtime**: A faithful reimplementation of the Odyssey engine with support for area rendering, navigation, scripting, dialogue, combat, and save/load systems
+- **Unified Engine Runtime**: A multi-engine runtime architecture with engine-specific implementations sharing common abstractions
 - **Development Tools**: A collection of utilities for modding, script compilation, file format manipulation, and content creation
-- **File Format Support**: Complete parsing and manipulation support for all game file formats (GFF, 2DA, TLK, MDL, BWM, NCS, and more)
+- **File Format Support**: Complete parsing and manipulation support for all game file formats across engine families (GFF, 2DA, TLK, MDL, BWM, NCS, ERF, and more)
 
 ## Architecture
 
@@ -51,7 +69,11 @@ The Andastra runtime is organized into a layered architecture with strict depend
 - `Andastra.Runtime.Content` - Asset conversion and caching pipeline
 - `Andastra.Runtime.Scripting` - NCS virtual machine and NWScript execution
 - `Andastra.Runtime.Graphics` - Rendering backends (MonoGame, Stride)
-- `Andastra.Runtime.Games` - Game-specific implementations (Odyssey, Aurora, Eclipse, Infinity)
+- `Andastra.Runtime.Games.Common` - Common abstractions and base classes for all engine families
+- `Andastra.Runtime.Games.Odyssey` - Odyssey engine implementation (KOTOR, TSL, Jade Empire)
+- `Andastra.Runtime.Games.Aurora` - Aurora engine implementation (NWN, NWN2)
+- `Andastra.Runtime.Games.Eclipse` - Eclipse engine implementation (Dragon Age, Mass Effect)
+- `Andastra.Runtime.Games.Infinity` - Infinity engine implementation (Baldur's Gate, Icewind Dale, etc.)
 - `Andastra.Game` - Main executable and game launcher
 
 **Supporting Projects:**
@@ -187,11 +209,12 @@ Andastra/
 
 ### Key Design Principles
 
-1. **Layered Architecture**: Core domain logic is independent of rendering and game-specific code
-2. **Component-Based Entities**: Entity system uses composition over inheritance
-3. **Resource Precedence**: Matches original game resource loading behavior exactly
-4. **Script Compatibility**: NCS VM maintains bytecode compatibility with original engine
-5. **Mod Support**: Full compatibility with existing mod formats and tools
+1. **Unified Multi-Engine Architecture**: Common abstractions enable support for multiple BioWare engine families with shared code
+2. **Layered Architecture**: Core domain logic is independent of rendering and game-specific code
+3. **Component-Based Entities**: Entity system uses composition over inheritance
+4. **Resource Precedence**: Matches original game resource loading behavior exactly for each engine
+5. **Script Compatibility**: NCS VM maintains bytecode compatibility with original engines
+6. **Mod Support**: Full compatibility with existing mod formats and tools across all supported engines
 
 ### Adding New Features
 
@@ -199,9 +222,10 @@ When implementing new engine features:
 
 1. **Core Domain First**: Implement pure domain logic in `Runtime.Core`
 2. **Content Pipeline**: Add asset conversion in `Runtime.Content`
-3. **Game Rules**: Implement game-specific behavior in `Runtime.Games`
-4. **Rendering**: Add MonoGame adapters in `Runtime.Graphics.MonoGame`
-5. **Tests**: Write comprehensive tests for deterministic logic
+3. **Engine Abstraction**: Add common interfaces in `Runtime.Games.Common` if needed
+4. **Engine Implementation**: Implement engine-specific behavior in the appropriate `Runtime.Games.{Engine}` project
+5. **Rendering**: Add MonoGame adapters in `Runtime.Graphics.MonoGame`
+6. **Tests**: Write comprehensive tests for deterministic logic
 
 ## Testing
 
@@ -234,7 +258,8 @@ When contributing to Andastra:
 3. Write tests for new features
 4. Document public APIs with XML comments
 5. Match original engine behavior where applicable
-6. Keep game-specific logic in `Runtime.Games` projects
+6. Keep engine-specific logic in the appropriate `Runtime.Games.{Engine}` project
+7. Use common abstractions in `Runtime.Games.Common` for shared functionality across engines
 
 ## License
 
@@ -246,4 +271,4 @@ This project is licensed under the Business Source License 1.1 (BSL-1.1). See th
 
 ## Status
 
-Andastra is under active development. Core systems are implemented and functional, with ongoing work on rendering, scripting, and game-specific features. See the [engine roadmap](docs/engine_roadmap.md) for detailed implementation status.
+Andastra is under active development. The Odyssey engine implementation is the most mature, with core systems functional for KOTOR and TSL. The Aurora, Eclipse, and Infinity engine families have foundational implementations with ongoing development. See the [engine roadmap](docs/engine_roadmap.md) for detailed implementation status across all engine families.
