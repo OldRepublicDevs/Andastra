@@ -1,167 +1,227 @@
 # Andastra
 
-A direct 1:1 port of HoloPatcher from Python to C#/.NET with Avalonia UI framework.
+A modern game engine runtime and development tooling suite for BioWare's Odyssey engine family games, built with .NET and MonoGame.
 
-## Port Philosophy
+## Overview
 
-This project is a **faithful, line-by-line translation** of the original Python implementation. The codebase maintains strict functional equivalence with the source material, with **no creative changes, architectural modifications, or feature additions** beyond what is necessary for language and framework translation.
+Andastra provides a complete runtime implementation for games built on the Odyssey engine architecture, with full support for Knights of the Old Republic (KOTOR) and Knights of the Old Republic II: The Sith Lords (TSL). The project includes both the game engine runtime and a comprehensive suite of development tools for modding and content creation.
 
-### Porting Standards
+### Core Components
 
-- **1:1 Functional Equivalence**: Every function, class, and method maintains identical behavior to the Python source
-- **Preserved Logic**: All business logic, algorithms, and data structures are translated directly without modification
-- **Comment Preservation**: Original Python comments and documentation are preserved where applicable
-- **No Feature Creep**: No additional features or "improvements" beyond the original specification
-- **Framework Translation Only**: Changes are limited to:
-  - Python → C# syntax translation
-  - Tkinter → Avalonia UI framework adaptation
-  - Python standard library → .NET equivalent APIs
-  - Threading model adaptation (Python threading → C# async/await)
+- **Odyssey Engine Runtime**: A faithful reimplementation of the Odyssey engine with support for area rendering, navigation, scripting, dialogue, combat, and save/load systems
+- **Development Tools**: A collection of utilities for modding, script compilation, file format manipulation, and content creation
+- **File Format Support**: Complete parsing and manipulation support for all game file formats (GFF, 2DA, TLK, MDL, BWM, NCS, and more)
 
-The only exception to strict 1:1 parity is RTF rendering: the C# version attempts to render RTF content natively using Avalonia's RichTextBox control before falling back to stripped plain text (matching Python's behavior), whereas the Python version strips RTF immediately due to Tkinter limitations.
+## Architecture
 
-## Project Structure
+### Runtime Structure
 
-- **Andastra** - Main Avalonia UI application
-- **TSLPatcher.Core** - Core patching engine and logic (portable library)
+The Andastra runtime is organized into a layered architecture with strict dependency rules:
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    Andastra.Game (Executable)                │
+├─────────────────────────────────────────────────────────────┤
+│  Runtime.Graphics   │  Runtime.Games      │  Runtime.Content│
+│  (Rendering)         │  (Game Rules)       │  (Asset Pipeline)│
+├─────────────────────────────────────────────────────────────┤
+│                    Runtime.Scripting (NCS VM)               │
+├─────────────────────────────────────────────────────────────┤
+│                    Runtime.Core (Domain)                     │
+├─────────────────────────────────────────────────────────────┤
+│                    Parsing (File Formats)                    │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Project Organization
+
+**Runtime Projects:**
+- `Andastra.Runtime.Core` - Pure domain logic, no external dependencies
+- `Andastra.Runtime.Content` - Asset conversion and caching pipeline
+- `Andastra.Runtime.Scripting` - NCS virtual machine and NWScript execution
+- `Andastra.Runtime.Graphics` - Rendering backends (MonoGame, Stride)
+- `Andastra.Runtime.Games` - Game-specific implementations (Odyssey, Aurora, Eclipse, Infinity)
+- `Andastra.Game` - Main executable and game launcher
+
+**Supporting Projects:**
+- `Andastra.Parsing` - File format parsers and resource management
+- `Andastra.Tests` - Unit and integration tests
+
+**Development Tools:**
+- `HoloPatcher.UI` - Mod installation and patching tool
+- `NCSDecomp` - NWScript bytecode decompiler
+- `KNSSComp.NET` - NWScript compiler
+- `HolocronToolset.NET` - Content creation and editing tools
+- `KotorDiff.NET` - File comparison and diff tool
 
 ## Features
 
-### Implemented
+### Engine Runtime
 
-- ✅ Basic UI structure with Avalonia
-- ✅ Logger system (PatchLogger)
-- ✅ Configuration models (PatcherConfig, LogLevel)
-- ✅ Memory system (PatcherMemory)
-- ✅ Token system (TokenUsage, NoTokenUsage, TokenUsage2DA, TokenUsageTLK)
-- ✅ Namespace support (PatcherNamespace)
-- ✅ Menu system (Tools, Help)
-- ✅ Progress tracking
-- ✅ Modification infrastructure (PatcherModification base class)
-- ✅ 2DA modification system:
-  - RowValue classes (Constant, 2DAMemory, TLKMemory, High, RowIndex, RowLabel, RowCell)
-  - Target resolution (RowIndex, RowLabel, LabelColumn)
-  - ChangeRow2DA, AddRow2DA, CopyRow2DA, AddColumn2DA
-  - Modifications2DA container
-- ✅ Comprehensive unit tests (xUnit + FluentAssertions)
+- **Area System**: Complete area loading with LYT layout, VIS visibility culling, and room mesh rendering
+- **Navigation**: Walkmesh-based pathfinding with A* algorithm, surface material support, and dynamic obstacle handling
+- **Entity System**: Component-based architecture supporting creatures, doors, placeables, triggers, waypoints, and more
+- **Scripting**: Full NCS virtual machine implementation with NWScript engine API surface
+- **Dialogue**: DLG conversation system with voice-over playback and lip-sync support
+- **Combat**: Round-based combat system with d20 mechanics, damage calculation, and effect application
+- **Save/Load**: Complete save game serialization compatible with original game formats
+- **Mod Support**: Full resource precedence chain (override → module → save → chitin) matching original behavior
 
-### TODO
+### Development Tools
 
-- ⏳ Permission fixing tools
-- ⏳ iOS case sensitivity fixing
-- ⏳ Auto-update system
-- ⏳ RTF file handling
-- ⏳ Complete test coverage
+- **HoloPatcher**: Comprehensive mod installation tool with support for 2DA, GFF, TLK, NSS/NCS, and SSF modifications
+- **NCSDecomp**: Decompile NWScript bytecode back to source with full instruction analysis
+- **Script Compiler**: Compile NWScript source files to bytecode with KOTOR 1/2 compatibility
+- **Format Tools**: Read, write, and manipulate all game file formats
 
 ## Requirements
 
-- .NET 8.0 SDK
-- Avalonia 11.0.10
+- **.NET 8.0 SDK** or later
+- **MonoGame 3.8** or later (for runtime)
+- **Visual Studio 2022** or **JetBrains Rider** (recommended for development)
+
+## Building
+
+### Quick Start
+
+```bash
+# Clone the repository
+git clone <repository-url>
+cd HoloPatcher.NET
+
+# Restore dependencies
+dotnet restore
+
+# Build the solution
+dotnet build Andastra.sln
+
+# Run the game
+dotnet run --project src/Andastra/Game/Andastra.Game.csproj
+```
+
+### Building Specific Components
+
+```bash
+# Build only the runtime
+dotnet build src/Andastra/Runtime/
+
+# Build only the tools
+dotnet build src/Tools/
+
+# Build with release configuration
+dotnet build Andastra.sln --configuration Release
+```
+
+## Running
+
+### Game Runtime
+
+```bash
+# Run the game (requires game installation)
+dotnet run --project src/Andastra/Game/Andastra.Game.csproj
+
+# Or specify game path
+dotnet run --project src/Andastra/Game/Andastra.Game.csproj -- --game-path "C:\Games\KOTOR"
+```
+
+### Development Tools
+
+```bash
+# Run HoloPatcher
+dotnet run --project src/Tools/HoloPatcher.UI/HoloPatcher.UI.csproj
+
+# Run NCSDecomp
+dotnet run --project src/Tools/NCSDecomp/NCSDecomp.csproj
+
+# Run script compiler
+dotnet run --project src/Tools/KNSSComp.NET/KNSSComp.NET.csproj
+```
+
+## Project Structure
+
+```
+Andastra/
+├── src/
+│   ├── Andastra/
+│   │   ├── Game/              # Main executable
+│   │   ├── Runtime/           # Engine runtime
+│   │   │   ├── Core/          # Domain logic
+│   │   │   ├── Content/       # Asset pipeline
+│   │   │   ├── Scripting/     # NCS VM
+│   │   │   ├── Graphics/      # Rendering backends
+│   │   │   └── Games/          # Game implementations
+│   │   ├── Parsing/           # File format parsers
+│   │   ├── Tests/             # Unit tests
+│   │   └── Utility/           # Shared utilities
+│   └── Tools/                 # Development tools
+│       ├── HoloPatcher.UI/
+│       ├── NCSDecomp/
+│       ├── KNSSComp.NET/
+│       └── ...
+├── docs/                      # Documentation
+├── scripts/                   # Build and utility scripts
+└── vendor/                    # Third-party dependencies
+```
+
+## Development
+
+### Code Standards
+
+- **C# Language Version**: Maximum C# 7.3 (for .NET Framework 4.x compatibility)
+- **Architecture**: Layered architecture with strict dependency rules
+- **Testing**: Comprehensive unit and integration tests
+- **Documentation**: XML documentation comments for public APIs
+
+### Key Design Principles
+
+1. **Layered Architecture**: Core domain logic is independent of rendering and game-specific code
+2. **Component-Based Entities**: Entity system uses composition over inheritance
+3. **Resource Precedence**: Matches original game resource loading behavior exactly
+4. **Script Compatibility**: NCS VM maintains bytecode compatibility with original engine
+5. **Mod Support**: Full compatibility with existing mod formats and tools
+
+### Adding New Features
+
+When implementing new engine features:
+
+1. **Core Domain First**: Implement pure domain logic in `Runtime.Core`
+2. **Content Pipeline**: Add asset conversion in `Runtime.Content`
+3. **Game Rules**: Implement game-specific behavior in `Runtime.Games`
+4. **Rendering**: Add MonoGame adapters in `Runtime.Graphics.MonoGame`
+5. **Tests**: Write comprehensive tests for deterministic logic
 
 ## Testing
-
-The project includes comprehensive unit tests covering all core functionality. See [TESTING.md](TESTING.md) for detailed information.
-
-### Running Tests
 
 ```bash
 # Run all tests
 dotnet test
 
-# Run tests with detailed output
+# Run with detailed output
 dotnet test --verbosity detailed
 
-# Run specific test
-dotnet test --filter "FullyQualifiedName~PatcherMemoryTests"
+# Run specific test project
+dotnet test src/Andastra/Tests/Andastra.Tests.csproj
+
+# Run with code coverage
+dotnet test --collect:"XPlat Code Coverage"
 ```
 
-### Test Coverage
+## Documentation
 
-Current test coverage includes:
-
-- ✅ PatcherMemory (token storage and retrieval)
-- ✅ PatchLogger (logging with different levels)
-- ✅ PatcherConfig (configuration management)
-- ✅ LogLevel (enum behavior)
-- ✅ PatcherNamespace (namespace handling)
-- ✅ 2DA modifications
-- ✅ GFF modifications
-- ✅ TLK modifications
-- ✅ SSF modifications
-- 🚧 NSS/NCS modifications
-- ✅ Config reader/INI parsing
-
-## Building
-
-```bash
-cd Andastra
-dotnet restore
-dotnet build
-```
-
-## Running
-
-```bash
-dotnet run --project src/HoloPatcher/HoloPatcher.csproj
-```
-
-## Architecture
-
-### TSLPatcher.Core
-
-The core library contains all the patching logic independent of UI:
-
-- **Config/** - Configuration models and parsing
-- **Logger/** - Logging system
-- **Memory/** - Token memory for patches
-- **Namespaces/** - Namespace management
-- **Mods/** - Modification operations (GFF, 2DA, TLK, etc.)
-- **Patcher/** - Main installation engine
-
-### Andastra
-
-The Avalonia UI application follows MVVM pattern:
-
-- **Views/** - XAML views
-- **ViewModels/** - View models with business logic
-- **Services/** - Application services
-
-## Port Implementation Details
-
-This codebase is a direct translation from the original Python/Tkinter implementation located in `vendor/PyKotor/Tools/HoloPatcher/src/holopatcher/`. The following technical adaptations were made solely for language and framework compatibility:
-
-1. **UI Framework**: Tkinter → Avalonia (required for cross-platform .NET UI)
-2. **Language**: Python → C# (.NET) (syntax translation only, no logic changes)
-3. **Architecture**: Maintains original structure; MVVM pattern used only where Avalonia requires it
-4. **Threading**: Python threading → C# Tasks/async-await (equivalent functionality)
-5. **Logging**: Original observable pattern preserved in C# implementation
-
-**Important**: All functional behavior, error handling, edge cases, and business logic remain identical to the Python source. This is not a rewrite or reimplementation—it is a faithful translation.
+- **[Quick Start Guide](docs/QUICKSTART.md)** - Getting started with development
+- **[Engine Roadmap](docs/engine_roadmap.md)** - Implementation roadmap and status
+- **[Architecture Documentation](docs/)** - Detailed architecture and design documents
 
 ## Contributing
 
-When contributing to this port:
+When contributing to Andastra:
 
-1. **Reference the original Python code** in `vendor/PyKotor/Tools/HoloPatcher/src/holopatcher/`
-2. **Maintain strict 1:1 functional equivalence**—no creative changes or feature additions
-3. **Preserve original logic**—translate, don't reimplement
-4. **Follow C# coding conventions** for syntax and style
-5. **Use async/await** for I/O operations (equivalent to Python's async patterns)
-6. **Add XML documentation comments** that reference the original Python implementation
-7. **Document any deviations** from the source material (should be minimal to none)
-
-### Porting Guidelines
-
-- If the Python code has a bug, port the bug (then file a separate issue to fix it in both versions)
-- If the Python code uses an inefficient algorithm, port the inefficient algorithm
-- If the Python code has a TODO comment, preserve the TODO in the C# version
-- The goal is **functional parity**, not improvement
-
-This ensures that bug fixes, feature requests, and behavioral changes can be synchronized between the Python and C# implementations.
-
-## CI/CD
-
-This project uses GitHub Actions for continuous integration and automated releases. See [GITHUB_ACTIONS_SETUP.md](GITHUB_ACTIONS_SETUP.md) for details.
+1. Follow the layered architecture and dependency rules
+2. Maintain C# 7.3 compatibility
+3. Write tests for new features
+4. Document public APIs with XML comments
+5. Match original engine behavior where applicable
+6. Keep game-specific logic in `Runtime.Games` projects
 
 ## License
 
@@ -169,4 +229,9 @@ This project is licensed under the Business Source License 1.1 (BSL-1.1). See th
 
 **Important**: The BSL is not an Open Source license. The Licensed Work will transition to the GNU General Public License v2.0 or later on 2029-12-31 (Change Date).
 
-**Production Use**: Use of this software in a production environment, to provide services to third parties, or to generate revenue requires explicit authorization from the Licensor (th3w1zard1).
+**Production Use**: Use of this software in a production environment, to provide services to third parties, or to generate revenue requires explicit authorization from the Licensor.
+
+## Status
+
+Andastra is under active development. Core systems are implemented and functional, with ongoing work on rendering, scripting, and game-specific features. See the [engine roadmap](docs/engine_roadmap.md) for detailed implementation status.
+
