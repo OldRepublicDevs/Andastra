@@ -573,6 +573,98 @@ namespace HolocronToolset.Tests.Editors
                 }
             }
         }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:158-184
+        // Original: def test_are_editor_manipulate_disable_transit_checkbox(qtbot: QtBot, installation: HTInstallation, test_files_dir: Path):
+        [Fact]
+        public void TestAreEditorManipulateDisableTransitCheckbox()
+        {
+            string k1Path = Environment.GetEnvironmentVariable("K1_PATH");
+            if (string.IsNullOrEmpty(k1Path))
+            {
+                k1Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k1Path) && System.IO.File.Exists(System.IO.Path.Combine(k1Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k1Path, "Test Installation", tsl: false);
+            }
+
+            if (installation == null)
+            {
+                return; // Skip if no installation available
+            }
+
+            string testFilesDir = System.IO.Path.Combine(
+                System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+
+            string areFile = System.IO.Path.Combine(testFilesDir, "tat001.are");
+            if (!System.IO.File.Exists(areFile))
+            {
+                testFilesDir = System.IO.Path.Combine(
+                    System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                    "..", "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+                areFile = System.IO.Path.Combine(testFilesDir, "tat001.are");
+            }
+
+            if (!System.IO.File.Exists(areFile))
+            {
+                return; // Skip if test file not available
+            }
+
+            // Matching Python: editor = AREEditor(None, installation)
+            var editor = new AREEditor(null, installation);
+
+            // Matching Python: original_data = are_file.read_bytes()
+            byte[] originalData = System.IO.File.ReadAllBytes(areFile);
+
+            // Matching Python: editor.load(are_file, "tat001", ResourceType.ARE, original_data)
+            editor.Load(areFile, "tat001", ResourceType.ARE, originalData);
+
+            // Matching Python: original_are = read_are(original_data)
+            var originalAre = AREHelpers.ReadAre(originalData);
+
+            // Matching Python: editor.ui.disableTransitCheck.setChecked(True)
+            if (editor.DisableTransitCheck != null)
+            {
+                editor.DisableTransitCheck.IsChecked = true;
+            }
+
+            // Matching Python: data, _ = editor.build()
+            var (data, _) = editor.Build();
+
+            // Matching Python: modified_are = read_are(data)
+            var modifiedAre = AREHelpers.ReadAre(data);
+
+            // Matching Python: assert modified_are.disable_transit
+            modifiedAre.DisableTransit.Should().BeTrue();
+
+            // Matching Python: editor.ui.disableTransitCheck.setChecked(False)
+            if (editor.DisableTransitCheck != null)
+            {
+                editor.DisableTransitCheck.IsChecked = false;
+            }
+
+            // Matching Python: data, _ = editor.build()
+            var (data2, _) = editor.Build();
+
+            // Matching Python: modified_are = read_are(data)
+            var modifiedAre2 = AREHelpers.ReadAre(data2);
+
+            // Matching Python: assert not modified_are.disable_transit
+            modifiedAre2.DisableTransit.Should().BeFalse();
+
+            // Matching Python: editor.load(are_file, "tat001", ResourceType.ARE, data)
+            editor.Load(areFile, "tat001", ResourceType.ARE, data2);
+
+            // Matching Python: assert editor.ui.disableTransitCheck.isChecked() == False
+            if (editor.DisableTransitCheck != null)
+            {
+                editor.DisableTransitCheck.IsChecked.Should().BeFalse();
+            }
+        }
     }
 }
 
