@@ -1534,6 +1534,86 @@ namespace HolocronToolset.Tests.Editors
             // Matching Python: assert not modified_are.fog_enabled
             modifiedAre2.FogEnabled.Should().BeFalse();
         }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:484-513
+        // Original: def test_are_editor_manipulate_fog_color(qtbot: QtBot, installation: HTInstallation, test_files_dir: Path):
+        [Fact]
+        public void TestAreEditorManipulateFogColor()
+        {
+            string k1Path = Environment.GetEnvironmentVariable("K1_PATH");
+            if (string.IsNullOrEmpty(k1Path))
+            {
+                k1Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k1Path) && System.IO.File.Exists(System.IO.Path.Combine(k1Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k1Path, "Test Installation", tsl: false);
+            }
+
+            if (installation == null)
+            {
+                return; // Skip if no installation available
+            }
+
+            string testFilesDir = System.IO.Path.Combine(
+                System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+
+            string areFile = System.IO.Path.Combine(testFilesDir, "tat001.are");
+            if (!System.IO.File.Exists(areFile))
+            {
+                testFilesDir = System.IO.Path.Combine(
+                    System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                    "..", "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+                areFile = System.IO.Path.Combine(testFilesDir, "tat001.are");
+            }
+
+            if (!System.IO.File.Exists(areFile))
+            {
+                return; // Skip if test file not available
+            }
+
+            // Matching Python: editor = AREEditor(None, installation)
+            var editor = new AREEditor(null, installation);
+
+            // Matching Python: original_data = are_file.read_bytes()
+            byte[] originalData = System.IO.File.ReadAllBytes(areFile);
+
+            // Matching Python: editor.load(are_file, "tat001", ResourceType.ARE, original_data)
+            editor.Load(areFile, "tat001", ResourceType.ARE, originalData);
+
+            // Matching Python: test_colors = [Color(1.0, 0.0, 0.0), ...]
+            var testColors = new[]
+            {
+                new Andastra.Parsing.Common.Color(1.0f, 0.0f, 0.0f),  // Red
+                new Andastra.Parsing.Common.Color(0.0f, 1.0f, 0.0f),  // Green
+                new Andastra.Parsing.Common.Color(0.0f, 0.0f, 1.0f),  // Blue
+                new Andastra.Parsing.Common.Color(0.5f, 0.5f, 0.5f),  // Gray
+                new Andastra.Parsing.Common.Color(1.0f, 1.0f, 1.0f)   // White
+            };
+
+            foreach (var color in testColors)
+            {
+                // Matching Python: editor.ui.fogColorEdit.set_color(color)
+                if (editor.FogColorEdit != null)
+                {
+                    editor.FogColorEdit.SetColor(color);
+                }
+
+                // Matching Python: data, _ = editor.build()
+                var (data, _) = editor.Build();
+
+                // Matching Python: modified_are = read_are(data)
+                var modifiedAre = AREHelpers.ReadAre(data);
+
+                // Matching Python: assert abs(modified_are.fog_color.r - color.r) < 0.01
+                System.Math.Abs(modifiedAre.FogColor.R - color.R).Should().BeLessThan(0.01f);
+                System.Math.Abs(modifiedAre.FogColor.G - color.G).Should().BeLessThan(0.01f);
+                System.Math.Abs(modifiedAre.FogColor.B - color.B).Should().BeLessThan(0.01f);
+            }
+        }
     }
 }
 

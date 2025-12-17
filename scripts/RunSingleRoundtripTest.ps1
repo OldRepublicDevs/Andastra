@@ -5,7 +5,7 @@
 param(
     [Parameter(Mandatory=$true)]
     [string]$Pattern,
-    
+
     [switch]$ShowDetails
 )
 
@@ -29,7 +29,7 @@ Write-Host "Repository root: $repoRoot" -ForegroundColor Gray
 try {
     Write-Host "Running NCS roundtrip tests matching pattern: $Pattern" -ForegroundColor Cyan
     Write-Host ""
-    
+
     # Build the test project first
     Write-Host "Building test project..." -ForegroundColor Yellow
     $buildResult = dotnet build src/Andastra/Tests/TSLPatcher.Tests.csproj --verbosity quiet 2>&1
@@ -38,18 +38,18 @@ try {
         $buildResult | Write-Host
         exit 1
     }
-    
+
     # Run the test with filtering
     Write-Host "Running tests..." -ForegroundColor Yellow
     Write-Host ""
-    
+
     $testOutput = dotnet test src/Andastra/Tests/TSLPatcher.Tests.csproj `
         --filter "FullyQualifiedName~NCSRoundtripTests" `
         --verbosity normal 2>&1
-    
+
     # Filter output for the specific pattern
     $filtered = $testOutput | Select-String -Pattern $Pattern -Context 15,10
-    
+
     if ($filtered) {
         Write-Host "=== Test Results for '$Pattern' ===" -ForegroundColor Cyan
         Write-Host ""
@@ -69,7 +69,7 @@ try {
         Write-Host "Full test output (last 50 lines):" -ForegroundColor Cyan
         $testOutput | Select-Object -Last 50
     }
-    
+
     # Show summary
     $summary = $testOutput | Select-String -Pattern "Passed|Failed|Total tests"
     if ($summary) {
@@ -77,7 +77,7 @@ try {
         Write-Host "=== Test Summary ===" -ForegroundColor Cyan
         $summary | ForEach-Object { Write-Host $_.Line }
     }
-    
+
 } finally {
     Pop-Location
 }
