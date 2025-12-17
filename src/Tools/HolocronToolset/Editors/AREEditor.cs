@@ -9,6 +9,7 @@ using Andastra.Parsing.Resource.Generics;
 using Andastra.Parsing.Resource;
 using HolocronToolset.Data;
 using HolocronToolset.Widgets;
+using HolocronToolset.Widgets.Edit;
 using GFFAuto = Andastra.Parsing.Formats.GFF.GFFAuto;
 
 namespace HolocronToolset.Editors
@@ -216,6 +217,12 @@ namespace HolocronToolset.Editors
             // Fog Enabled checkbox - matching Python: self.ui.fogEnabledCheck
             _fogEnabledCheck = new CheckBox { Content = "Fog Enabled" };
             panel.Children.Add(_fogEnabledCheck);
+            
+            // Fog Color edit - matching Python: self.ui.fogColorEdit
+            var fogColorLabel = new Avalonia.Controls.TextBlock { Text = "Fog Color:" };
+            _fogColorEdit = new ColorEdit(null);
+            panel.Children.Add(fogColorLabel);
+            panel.Children.Add(_fogColorEdit);
 
             Content = panel;
         }
@@ -507,6 +514,11 @@ namespace HolocronToolset.Editors
             if (_fogEnabledCheck != null)
             {
                 are.FogEnabled = _fogEnabledCheck.IsChecked == true;
+            }
+            // Matching Python: are.fog_color = self.ui.fogColorEdit.color() (line 305)
+            if (_fogColorEdit != null)
+            {
+                are.FogColor = _fogColorEdit.GetColor();
             }
 
             // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/are.py:250-277
