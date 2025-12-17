@@ -42,6 +42,7 @@ namespace HolocronToolset.Editors
         private NumericUpDown _mapWorldX2Spin;
         private NumericUpDown _mapWorldY2Spin;
         private CheckBox _fogEnabledCheck;
+        private ColorEdit _fogColorEdit;
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/are.py:36-74
         // Original: def __init__(self, parent, installation):
@@ -211,7 +212,7 @@ namespace HolocronToolset.Editors
             _mapWorldY2Spin = new NumericUpDown { Minimum = double.MinValue, Maximum = double.MaxValue, DecimalPlaces = 6, Value = 0.0 };
             panel.Children.Add(mapWorldY2Label);
             panel.Children.Add(_mapWorldY2Spin);
-            
+
             // Fog Enabled checkbox - matching Python: self.ui.fogEnabledCheck
             _fogEnabledCheck = new CheckBox { Content = "Fog Enabled" };
             panel.Children.Add(_fogEnabledCheck);
@@ -243,6 +244,7 @@ namespace HolocronToolset.Editors
         public NumericUpDown MapWorldX2Spin => _mapWorldX2Spin;
         public NumericUpDown MapWorldY2Spin => _mapWorldY2Spin;
         public CheckBox FogEnabledCheck => _fogEnabledCheck;
+        public ColorEdit FogColorEdit => _fogColorEdit;
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/are.py:134-149
         // Original: def load(self, filepath, resref, restype, data):
@@ -389,6 +391,11 @@ namespace HolocronToolset.Editors
             {
                 _fogEnabledCheck.IsChecked = are.FogEnabled;
             }
+            // Matching Python: self.ui.fogColorEdit.set_color(are.fog_color) (line 203)
+            if (_fogColorEdit != null)
+            {
+                _fogColorEdit.SetColor(are.FogColor);
+            }
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/are.py:250-300
@@ -489,7 +496,7 @@ namespace HolocronToolset.Editors
                     (float)_mapWorldY1Spin.Value.Value);
             }
             // Matching Python: are.world_point_2 = Vector2(self.ui.mapWorldX2Spin.value(), self.ui.mapWorldY2Spin.value()) (line 301)
-            if (_mapWorldX2Spin != null && _mapWorldY2Spin != null && 
+            if (_mapWorldX2Spin != null && _mapWorldY2Spin != null &&
                 _mapWorldX2Spin.Value.HasValue && _mapWorldY2Spin.Value.HasValue)
             {
                 are.WorldPoint2 = new System.Numerics.Vector2(
