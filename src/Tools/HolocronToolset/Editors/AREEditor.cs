@@ -30,6 +30,7 @@ namespace HolocronToolset.Editors
         private CheckBox _stealthCheck;
         private NumericUpDown _stealthMaxSpin;
         private NumericUpDown _stealthLossSpin;
+        private ComboBox _mapAxisSelect;
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/are.py:36-74
         // Original: def __init__(self, parent, installation):
@@ -131,6 +132,14 @@ namespace HolocronToolset.Editors
             _stealthLossSpin = new NumericUpDown { Minimum = 0, Maximum = int.MaxValue, Value = 0 };
             panel.Children.Add(stealthLossLabel);
             panel.Children.Add(_stealthLossSpin);
+            
+            // Map Axis select - matching Python: self.ui.mapAxisSelect
+            var mapAxisLabel = new Avalonia.Controls.TextBlock { Text = "Map Axis:" };
+            _mapAxisSelect = new ComboBox();
+            _mapAxisSelect.Items = new[] { "PositiveY", "NegativeY", "PositiveX", "NegativeX" };
+            _mapAxisSelect.SelectedIndex = 0;
+            panel.Children.Add(mapAxisLabel);
+            panel.Children.Add(_mapAxisSelect);
 
             Content = panel;
         }
@@ -147,6 +156,7 @@ namespace HolocronToolset.Editors
         public CheckBox StealthCheck => _stealthCheck;
         public NumericUpDown StealthMaxSpin => _stealthMaxSpin;
         public NumericUpDown StealthLossSpin => _stealthLossSpin;
+        public ComboBox MapAxisSelect => _mapAxisSelect;
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/are.py:134-149
         // Original: def load(self, filepath, resref, restype, data):
@@ -233,6 +243,11 @@ namespace HolocronToolset.Editors
             {
                 _stealthLossSpin.Value = are.StealthXpLoss;
             }
+            // Matching Python: self.ui.mapAxisSelect.setCurrentIndex(are.north_axis) (line 189)
+            if (_mapAxisSelect != null)
+            {
+                _mapAxisSelect.SelectedIndex = (int)are.NorthAxis;
+            }
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/are.py:250-300
@@ -292,6 +307,11 @@ namespace HolocronToolset.Editors
             if (_stealthLossSpin != null && _stealthLossSpin.Value.HasValue)
             {
                 are.StealthXpLoss = (int)_stealthLossSpin.Value.Value;
+            }
+            // Matching Python: are.north_axis = ARENorthAxis(self.ui.mapAxisSelect.currentIndex()) (line 295)
+            if (_mapAxisSelect != null && _mapAxisSelect.SelectedIndex >= 0)
+            {
+                are.NorthAxis = (ARENorthAxis)_mapAxisSelect.SelectedIndex;
             }
 
             // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/are.py:250-277
@@ -571,6 +591,7 @@ namespace HolocronToolset.Editors
             copy.StealthXp = source.StealthXp;
             copy.StealthXpMax = source.StealthXpMax;
             copy.StealthXpLoss = source.StealthXpLoss;
+            copy.NorthAxis = source.NorthAxis;
             copy.GrassTexture = source.GrassTexture;
             copy.GrassDensity = source.GrassDensity;
             copy.GrassSize = source.GrassSize;
