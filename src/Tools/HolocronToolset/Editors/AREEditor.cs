@@ -1,6 +1,7 @@
 using Andastra.Parsing.Common;
 using System;
 using Avalonia.Controls;
+using Avalonia.Layout;
 using Avalonia.Markup.Xaml;
 using Andastra.Parsing;
 using Andastra.Parsing.Formats.GFF;
@@ -20,6 +21,7 @@ namespace HolocronToolset.Editors
         private GFF _originalGff;
         private LocalizedStringEdit _nameEdit;
         private TextBox _tagEdit;
+        private Button _tagGenerateButton;
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/are.py:36-74
         // Original: def __init__(self, parent, installation):
@@ -63,8 +65,13 @@ namespace HolocronToolset.Editors
             // Tag field - matching Python: self.ui.tagEdit
             var tagLabel = new Avalonia.Controls.TextBlock { Text = "Tag:" };
             _tagEdit = new TextBox();
+            _tagGenerateButton = new Button { Content = "Generate" };
+            _tagGenerateButton.Click += (s, e) => GenerateTag();
+            var tagPanel = new StackPanel { Orientation = Orientation.Horizontal };
+            tagPanel.Children.Add(_tagEdit);
+            tagPanel.Children.Add(_tagGenerateButton);
             panel.Children.Add(tagLabel);
-            panel.Children.Add(_tagEdit);
+            panel.Children.Add(tagPanel);
             
             Content = panel;
         }
@@ -72,6 +79,7 @@ namespace HolocronToolset.Editors
         // Matching PyKotor implementation - expose controls for testing
         public LocalizedStringEdit NameEdit => _nameEdit;
         public TextBox TagEdit => _tagEdit;
+        public Button TagGenerateButton => _tagGenerateButton;
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/are.py:134-149
         // Original: def load(self, filepath, resref, restype, data):
@@ -483,6 +491,17 @@ namespace HolocronToolset.Editors
                 copy.SetData(language, gender, text);
             }
             return copy;
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/are.py:392-393
+        // Original: def generate_tag(self):
+        private void GenerateTag()
+        {
+            // Matching Python: self.ui.tagEdit.setText("newarea" if self._resname is None or self._resname == "" else self._resname)
+            if (_tagEdit != null)
+            {
+                _tagEdit.Text = string.IsNullOrEmpty(_resname) ? "newarea" : _resname;
+            }
         }
     }
 }
