@@ -27,6 +27,7 @@ namespace HolocronToolset.Editors
         private CheckBox _disableTransitCheck;
         private CheckBox _unescapableCheck;
         private NumericUpDown _alphaTestSpin;
+        private CheckBox _stealthCheck;
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/are.py:36-74
         // Original: def __init__(self, parent, installation):
@@ -106,12 +107,16 @@ namespace HolocronToolset.Editors
             // Unescapable checkbox - matching Python: self.ui.unescapableCheck
             _unescapableCheck = new CheckBox { Content = "Unescapable" };
             panel.Children.Add(_unescapableCheck);
-            
+
             // Alpha Test spin - matching Python: self.ui.alphaTestSpin
             var alphaTestLabel = new Avalonia.Controls.TextBlock { Text = "Alpha Test:" };
             _alphaTestSpin = new NumericUpDown { Minimum = 0, Maximum = 255, Value = 0 };
             panel.Children.Add(alphaTestLabel);
             panel.Children.Add(_alphaTestSpin);
+            
+            // Stealth XP checkbox - matching Python: self.ui.stealthCheck
+            _stealthCheck = new CheckBox { Content = "Stealth XP" };
+            panel.Children.Add(_stealthCheck);
 
             Content = panel;
         }
@@ -125,6 +130,7 @@ namespace HolocronToolset.Editors
         public CheckBox DisableTransitCheck => _disableTransitCheck;
         public CheckBox UnescapableCheck => _unescapableCheck;
         public NumericUpDown AlphaTestSpin => _alphaTestSpin;
+        public CheckBox StealthCheck => _stealthCheck;
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/are.py:134-149
         // Original: def load(self, filepath, resref, restype, data):
@@ -196,6 +202,11 @@ namespace HolocronToolset.Editors
             {
                 _alphaTestSpin.Value = are.AlphaTest;
             }
+            // Matching Python: self.ui.stealthCheck.setChecked(are.stealth_xp) (line 184)
+            if (_stealthCheck != null)
+            {
+                _stealthCheck.IsChecked = are.StealthXp;
+            }
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/are.py:250-300
@@ -240,6 +251,11 @@ namespace HolocronToolset.Editors
             if (_alphaTestSpin != null && _alphaTestSpin.Value.HasValue)
             {
                 are.AlphaTest = (int)_alphaTestSpin.Value.Value;
+            }
+            // Matching Python: are.stealth_xp = self.ui.stealthCheck.isChecked() (line 290)
+            if (_stealthCheck != null)
+            {
+                are.StealthXp = _stealthCheck.IsChecked == true;
             }
 
             // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/are.py:250-277
@@ -516,6 +532,9 @@ namespace HolocronToolset.Editors
             copy.DefaultEnvMap = source.DefaultEnvMap;
             copy.DisableTransit = source.DisableTransit;
             copy.Unescapable = source.Unescapable;
+            copy.StealthXp = source.StealthXp;
+            copy.StealthXpMax = source.StealthXpMax;
+            copy.StealthXpLoss = source.StealthXpLoss;
             copy.GrassTexture = source.GrassTexture;
             copy.GrassDensity = source.GrassDensity;
             copy.GrassSize = source.GrassSize;
