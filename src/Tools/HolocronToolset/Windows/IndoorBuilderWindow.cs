@@ -79,6 +79,9 @@ namespace HolocronToolset.Windows
 
             // Setup select all action (matching Python: self.ui.actionSelectAll.triggered.connect(self.select_all))
             Ui.ActionSelectAll = SelectAll;
+
+            // Setup deselect all action (matching Python: self.ui.actionDeselectAll.triggered.connect(self.deselect_all))
+            Ui.ActionDeselectAll = DeselectAll;
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/indoor_builder.py:1751-1755
@@ -99,6 +102,27 @@ namespace HolocronToolset.Windows
                 renderer.SelectRoom(room, clearExisting: false);
             }
         }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/indoor_builder.py:1756-1764
+        // Original: def deselect_all(self):
+        private void DeselectAll()
+        {
+            // Matching Python: self.ui.mapRenderer.clear_selected_rooms()
+            // Original implementation:
+            // def deselect_all(self):
+            //     self.ui.mapRenderer.clear_selected_rooms()
+            //     self.ui.mapRenderer.set_cursor_component(None)
+            //     self.ui.componentList.clearSelection()
+            //     self.ui.componentList.setCurrentItem(None)
+            //     self.ui.moduleComponentList.clearSelection()
+            //     self.ui.moduleComponentList.setCurrentItem(None)
+            //     self._set_preview_image(None)
+            //     self._refresh_status_bar()
+            var renderer = Ui.MapRenderer;
+            renderer.ClearSelectedRooms();
+            // Note: Additional UI clearing (componentList, moduleComponentList, preview image, status bar)
+            // will be implemented when those UI components are available
+        }
     }
 
     // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/indoor_builder.py
@@ -108,6 +132,10 @@ namespace HolocronToolset.Windows
         // Matching PyKotor implementation - actionSelectAll menu action
         // Original: self.ui.actionSelectAll.triggered.connect(self.select_all)
         public Action ActionSelectAll { get; set; }
+
+        // Matching PyKotor implementation - actionDeselectAll menu action
+        // Original: self.ui.actionDeselectAll.triggered.connect(self.deselect_all)
+        public Action ActionDeselectAll { get; set; }
 
         // Matching PyKotor implementation - mapRenderer widget
         // Original: self.ui.mapRenderer

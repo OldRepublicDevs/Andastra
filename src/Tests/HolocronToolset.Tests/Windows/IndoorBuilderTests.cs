@@ -1298,6 +1298,7 @@ namespace HolocronToolset.Tests.Windows
         public void TestDeselectAllAction()
         {
             // Matching Python: Test deselect all menu action.
+            // Matching Python fixture builder_with_rooms (lines 307-326): Creates builder with 5 rooms
             string tempPath = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
             string kitsDir = Path.Combine(tempPath, "kits");
             Directory.CreateDirectory(kitsDir);
@@ -1307,18 +1308,55 @@ namespace HolocronToolset.Tests.Windows
             {
                 Directory.SetCurrentDirectory(tempPath);
 
+                // Create builder (matching builder_no_kits fixture)
                 var builder = new IndoorBuilderWindow(null, _installation);
                 builder.Show();
 
-                // Matching Python test logic:
+                // Create KitComponent matching real_kit_component fixture
+                var kitComponent = CreateRealKitComponent();
+
+                // Add 5 rooms in a row (matching builder_with_rooms fixture lines 311-320)
+                for (int i = 0; i < 5; i++)
+                {
+                    var room = new IndoorMapRoom(
+                        kitComponent,
+                        new Vector3(i * 15, 0, 0),
+                        0.0f,
+                        flipX: false,
+                        flipY: false
+                    );
+                    builder.Map.Rooms.Add(room);
+                }
+
+                // Matching Python line 826-827:
                 // for room in builder._map.rooms:
                 //     renderer.select_room(room, clear_existing=False)
-                // builder.ui.actionDeselectAll.trigger()
-                // qtbot.wait(10)
-                // QApplication.processEvents()
-                // assert len(renderer.selected_rooms()) == 0
+                var renderer = builder.Ui.MapRenderer;
+                foreach (var room in builder.Map.Rooms)
+                {
+                    renderer.SelectRoom(room, clearExisting: false);
+                }
 
-                builder.Should().NotBeNull();
+                // Verify rooms are selected before deselect
+                renderer.SelectedRooms().Should().HaveCount(5, "All 5 rooms should be selected before deselect");
+
+                // Matching Python: builder.ui.actionDeselectAll.trigger()
+                // Matching Python line 829: builder.ui.actionDeselectAll.trigger()
+                builder.Ui.ActionDeselectAll.Should().NotBeNull("ActionDeselectAll should be initialized");
+                builder.Ui.ActionDeselectAll.Invoke();
+
+                // Matching Python: qtbot.wait(10)
+                // Matching Python line 830: qtbot.wait(10)
+                System.Threading.Thread.Sleep(10);
+
+                // Matching Python: QApplication.processEvents()
+                // Matching Python line 831: QApplication.processEvents()
+                // Note: In headless tests, operations are synchronous
+
+                // Matching Python: assert len(renderer.selected_rooms()) == 0
+                // Matching Python line 833: assert len(renderer.selected_rooms()) == 0
+                var selected = renderer.SelectedRooms();
+                selected.Should().HaveCount(0, "No rooms should be selected after DeselectAll action");
             }
             finally
             {
