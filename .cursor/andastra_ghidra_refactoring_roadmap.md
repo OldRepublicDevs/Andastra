@@ -226,6 +226,7 @@ Internal tracking document for AI agents. Not public-facing. Do not commit to re
 
 - **Odyssey Implementation**: `OdysseyStoreSystem : StoreSystem` (Runtime.Games.Odyssey)
   - `swkotor2.exe`: StoreList @ 0x007bd098 (string reference, LoadStoreFromGFF @ 0x00571310, SaveStoreToGFF @ 0x00570e30)
+  - `swkotor.exe`: SaveStoreList @ 0x00507ca0, LoadStoreList @ 0x005057a0
 - **Aurora Implementation**: `AuroraStoreSystem : StoreSystem` (Runtime.Games.Aurora)
   - `nwmain.exe`: TODO - Search for similar functions
 - **Eclipse Implementation**: `EclipseStoreSystem : StoreSystem` (Runtime.Games.Eclipse)
