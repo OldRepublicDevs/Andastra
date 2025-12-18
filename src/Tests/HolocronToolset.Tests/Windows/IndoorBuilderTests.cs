@@ -1492,15 +1492,28 @@ namespace HolocronToolset.Tests.Windows
                 var builder = new IndoorBuilderWindow(null, _installation);
                 builder.Show();
 
-                // Matching Python test logic:
-                // room = IndoorMapRoom(real_kit_component, Vector3(0, 0, 0), 0.0, flip_x=False, flip_y=False)
-                // builder._map.rooms.append(room)
-                // renderer.select_room(room, clear_existing=True)
-                // assert len(renderer.selected_rooms()) == 1
-                // renderer.select_room(room, clear_existing=False)
-                // Should toggle off (depending on implementation)
+                // Create KitComponent matching real_kit_component fixture
+                var kitComponent = CreateRealKitComponent();
 
-                builder.Should().NotBeNull();
+                // Matching Python line 782: renderer = builder.ui.mapRenderer
+                var renderer = builder.Ui.MapRenderer;
+
+                // Matching Python line 784: room = IndoorMapRoom(real_kit_component, Vector3(0, 0, 0), 0.0, flip_x=False, flip_y=False)
+                var room = new IndoorMapRoom(kitComponent, new Vector3(0, 0, 0), 0.0f, flipX: false, flipY: false);
+
+                // Matching Python line 785: builder._map.rooms.append(room)
+                builder.Map.Rooms.Add(room);
+
+                // Matching Python line 787: renderer.select_room(room, clear_existing=True)
+                renderer.SelectRoom(room, clearExisting: true);
+
+                // Matching Python line 788: assert len(renderer.selected_rooms()) == 1
+                renderer.SelectedRooms().Should().HaveCount(1, "Should have one selected room");
+
+                // Matching Python line 791: renderer.select_room(room, clear_existing=False)
+                // Select same room again (toggle) - should toggle off (depending on implementation)
+                renderer.SelectRoom(room, clearExisting: false);
+                // If implementation doesn't toggle, this just verifies no crash
             }
             finally
             {
@@ -1534,14 +1547,30 @@ namespace HolocronToolset.Tests.Windows
                 var builder = new IndoorBuilderWindow(null, _installation);
                 builder.Show();
 
-                // Matching Python test logic:
-                // for i, room in enumerate(builder._map.rooms):
-                //     renderer.select_room(room, clear_existing=(i == 0))
-                // assert len(renderer.selected_rooms()) == 5
-                // renderer.clear_selected_rooms()
-                // assert len(renderer.selected_rooms()) == 0
+                // Create 5 rooms matching builder_with_rooms fixture (which creates 5 rooms)
+                var kitComponent = CreateRealKitComponent();
+                var renderer = builder.Ui.MapRenderer;
 
-                builder.Should().NotBeNull();
+                for (int i = 0; i < 5; i++)
+                {
+                    var room = new IndoorMapRoom(kitComponent, new Vector3(i * 10, 0, 0), 0.0f, flipX: false, flipY: false);
+                    builder.Map.Rooms.Add(room);
+                }
+
+                // Matching Python lines 801-802: Select all rooms - first one clears, rest add
+                for (int i = 0; i < builder.Map.Rooms.Count; i++)
+                {
+                    renderer.SelectRoom(builder.Map.Rooms[i], clearExisting: (i == 0));
+                }
+
+                // Matching Python line 804: assert len(renderer.selected_rooms()) == 5
+                renderer.SelectedRooms().Should().HaveCount(5, "Should have 5 selected rooms");
+
+                // Matching Python line 806: renderer.clear_selected_rooms()
+                renderer.ClearSelectedRooms();
+
+                // Matching Python line 807: assert len(renderer.selected_rooms()) == 0
+                renderer.SelectedRooms().Should().BeEmpty("Should have no selected rooms after clear");
             }
             finally
             {
