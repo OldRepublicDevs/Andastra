@@ -188,9 +188,12 @@ Internal tracking document for AI agents. Not public-facing. Do not commit to re
 - **Door System**: ✅ **ANALYZED**
   - `swkotor2.exe`: LoadDoorList @ 0x004e56b0 - ✅ ANALYZED - Loads door list from GIT GFF into area, iterates through "Door List" GFF list, reads ObjectId, creates door entities (via FUN_00580ba0), loads door data from GFF (Bearing, position X/Y/Z), adds doors to area. If param4 is 0, loads from template; if 1, loads from save data (via "Door List" @ 0x007bd248, "ObjectId", "Bearing", "XPosition", "YPosition", "ZPosition")
   - `swkotor2.exe`: SaveDoorList @ 0x004e2a60 - ✅ ANALYZED - Saves door list from area to GFF save data, iterates through door list, gets door objects from world (via FUN_00503bd0), checks door type (DAT_007beb24, type 8), saves each door state with ObjectId field, calls FUN_00580330 (SaveDoorToGFF) and FUN_00508200 (SaveActionList) for each door (via "Door List" @ 0x007bd248)
+  - `swkotor.exe`: LoadDoorList @ 0x0050a0e0 - ✅ ANALYZED - Loads door list from GFF format (swkotor.exe version), similar to swkotor2.exe version, reads door entities from GFF, creates door objects, sets position, orientation, bearing, state (via "Door List" @ 0x00747680)
+  - `swkotor.exe`: SaveDoorList @ 0x00507810 - ✅ ANALYZED - Saves door list to GFF format (swkotor.exe version), similar to swkotor2.exe version, writes door entities to GFF with ObjectId, position, orientation, bearing, state (via "Door List" @ 0x00747680)
   - `swkotor2.exe`: "Door List" @ 0x007bd248, "DoorList" @ 0x007bd270 (string references) - ✅ FOUND
+  - `swkotor.exe`: "Door List" @ 0x00747680 (string reference) - ✅ FOUND
   - **Inheritance**: Base class `DoorSystem` (Runtime.Games.Common), `OdysseyDoorSystem : DoorSystem` (Runtime.Games.Odyssey), `AuroraDoorSystem : DoorSystem` (Runtime.Games.Aurora)
-  - **Cross-engine**: ✅ Found swkotor2.exe equivalents, swkotor.exe/nwmain.exe/daorigins.exe TODO
+  - **Cross-engine**: ✅ Found swkotor.exe and swkotor2.exe equivalents, nwmain.exe/daorigins.exe TODO
   - **Note**: Door system handles door entities stored in GIT files. Doors store position, bearing (orientation), and can be opened/closed. Doors are loaded from GIT files with ObjectId and door-specific properties. Doors are saved to GFF save data with ObjectId and entity state. Door templates are loaded from UTD files (similar to item templates from UTI files).
 
 ## Class Inheritance Structure
