@@ -785,8 +785,8 @@ When processing a file:
 
 - [ ] Dialogue/DialogueInterfaces.cs
 - [x] Dialogue/DialogueSystem.cs - ✅ COMPLETE - Ghidra references added: ExecuteDialogue @ 0x005e9920 (swkotor2.exe), ProcessDialogueEntry @ 0x005a13d0 (swkotor.exe)
-- [ ] Dialogue/LipSyncController.cs
-- [ ] Dialogue/RuntimeDialogue.cs
+- [x] Dialogue/LipSyncController.cs - ✅ COMPLETE - Ghidra references added: LIPS:localization @ 0x007be654, LIPS:%s_loc @ 0x007be668, .\lips @ 0x007c6838, all LIP file format fields
+- [x] Dialogue/RuntimeDialogue.cs - ✅ COMPLETE - Ghidra references added: ScriptDialogue @ 0x007bee40, ScriptEndDialogue @ 0x007bede0, CSWSSCRIPTEVENT_EVENTTYPE_ON_DIALOGUE @ 0x007bcac4, "Error: dialogue can't find object '%s'!" @ 0x007c3730
 
 #### Enums (5 files)
 
