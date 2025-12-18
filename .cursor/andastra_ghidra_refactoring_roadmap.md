@@ -166,6 +166,96 @@ Internal tracking document for AI agents. Not public-facing. Do not commit to re
   - `daorigins.exe`: TODO - Search for similar functions
   - `DragonAge2.exe`: TODO - Search for similar functions
 
+### Entity Spawning System
+
+**Base Class**: `SpawnSystem` (Runtime.Games.Common)
+
+- **Odyssey Implementation**: `OdysseySpawnSystem : SpawnSystem` (Runtime.Games.Odyssey)
+  - `swkotor.exe`: SpawnPointList @ 0x007474ac (string reference, functions @ 0x00592430, 0x00591350, 0x00505060)
+  - `swkotor2.exe`: SpawnPointList @ 0x007bd034 (string reference, used in LoadEncounterList @ 0x004e01a0)
+- **Aurora Implementation**: `AuroraSpawnSystem : SpawnSystem` (Runtime.Games.Aurora)
+  - `nwmain.exe`: DungeonMaster_SpawnCreature @ 0x140dcbc00, DungeonMaster_SpawnItem @ 0x140dcbc20, DungeonMaster_SpawnTrigger @ 0x140dcbc38 (string references)
+- **Eclipse Implementation**: `EclipseSpawnSystem : SpawnSystem` (Runtime.Games.Eclipse)
+  - `daorigins.exe`: TODO - Search for similar functions
+  - `DragonAge2.exe`: TODO - Search for similar functions
+
+### Animation System
+
+**Base Class**: `AnimationSystem` (Runtime.Games.Common)
+
+- **Odyssey Implementation**: `OdysseyAnimationSystem : AnimationSystem` (Runtime.Games.Odyssey)
+  - `swkotor.exe`: Animation @ 0x00746060, AnimationTime @ 0x00746050, AnimationState @ 0x007495b0 (string references)
+  - `swkotor2.exe`: Animation @ 0x007bf604, AnimationTime @ 0x007bf810, AnimationState @ 0x007c1f30 (string references)
+- **Aurora Implementation**: `AuroraAnimationSystem : AnimationSystem` (Runtime.Games.Aurora)
+  - `nwmain.exe`: Animation @ 0x140ddc0e0, AnimationTime @ 0x140ddc0f0, AnimationLength @ 0x140ddc218 (string references)
+- **Eclipse Implementation**: `EclipseAnimationSystem : AnimationSystem` (Runtime.Games.Eclipse)
+  - `daorigins.exe`: TODO - Search for similar functions
+  - `DragonAge2.exe`: TODO - Search for similar functions
+
+### Trigger System
+
+**Base Class**: `TriggerSystem` (Runtime.Games.Common)
+
+- **Odyssey Implementation**: `OdysseyTriggerSystem : TriggerSystem` (Runtime.Games.Odyssey)
+  - `swkotor.exe`: TriggerList @ 0x0074768c (string reference)
+  - `swkotor2.exe`: TriggerList @ 0x007bd254 (string reference, SaveTriggerList @ 0x004e2b20, LoadTriggerList @ 0x004e5920)
+- **Aurora Implementation**: `AuroraTriggerSystem : TriggerSystem` (Runtime.Games.Aurora)
+  - `nwmain.exe`: TriggerList @ 0x140ddb780 (string reference), DungeonMaster_TriggerEntered @ 0x140dcbf08, DungeonMaster_TriggerExit @ 0x140dcbf28 (string references)
+- **Eclipse Implementation**: `EclipseTriggerSystem : TriggerSystem` (Runtime.Games.Eclipse)
+  - `daorigins.exe`: TODO - Search for similar functions
+  - `DragonAge2.exe`: TODO - Search for similar functions
+
+### Encounter System
+
+**Base Class**: `EncounterSystem` (Runtime.Games.Common)
+
+- **Odyssey Implementation**: `OdysseyEncounterSystem : EncounterSystem` (Runtime.Games.Odyssey)
+  - `swkotor.exe`: Encounter List @ 0x007474c8 (string reference)
+  - `swkotor2.exe`: Encounter List @ 0x007bd050 (string reference, LoadEncounterList @ 0x004e01a0, SaveEncounterList @ 0x004e2be0)
+- **Aurora Implementation**: `AuroraEncounterSystem : EncounterSystem` (Runtime.Games.Aurora)
+  - `nwmain.exe`: Encounter List @ 0x140ddb790 (string reference), DungeonMaster_SpawnEncounter @ 0x140dcbc78 (string reference)
+- **Eclipse Implementation**: `EclipseEncounterSystem : EncounterSystem` (Runtime.Games.Eclipse)
+  - `daorigins.exe`: TODO - Search for similar functions
+  - `DragonAge2.exe`: TODO - Search for similar functions
+
+### Store System
+
+**Base Class**: `StoreSystem` (Runtime.Games.Common)
+
+- **Odyssey Implementation**: `OdysseyStoreSystem : StoreSystem` (Runtime.Games.Odyssey)
+  - `swkotor2.exe`: StoreList @ 0x007bd098 (string reference, LoadStoreFromGFF @ 0x00571310, SaveStoreToGFF @ 0x00570e30)
+- **Aurora Implementation**: `AuroraStoreSystem : StoreSystem` (Runtime.Games.Aurora)
+  - `nwmain.exe`: TODO - Search for similar functions
+- **Eclipse Implementation**: `EclipseStoreSystem : StoreSystem` (Runtime.Games.Eclipse)
+  - `daorigins.exe`: TODO - Search for similar functions
+  - `DragonAge2.exe`: TODO - Search for similar functions
+
+### Party Management System
+
+**Base Class**: `PartySystem` (Runtime.Games.Common)
+
+- **Odyssey Implementation**: `OdysseyPartySystem : PartySystem` (Runtime.Games.Odyssey)
+  - `swkotor.exe`: PARTYTABLE @ 0x0074930c (string reference, SavePartyTable @ 0x0052ade0)
+  - `swkotor2.exe`: PARTYTABLE @ 0x007c1910 (string reference, SavePartyTable @ 0x0057bd70)
+- **Aurora Implementation**: `AuroraPartySystem : PartySystem` (Runtime.Games.Aurora)
+  - `nwmain.exe`: Party @ 0x140dc9d70, OnPartyDeath @ 0x140dc9740, NonPartyKillable @ 0x140dc95e0 (string references)
+- **Eclipse Implementation**: `EclipsePartySystem : PartySystem` (Runtime.Games.Eclipse)
+  - `daorigins.exe`: TODO - Search for similar functions
+  - `DragonAge2.exe`: TODO - Search for similar functions
+
+### Perception System
+
+**Base Class**: `PerceptionSystem` (Runtime.Games.Common)
+
+- **Odyssey Implementation**: `OdysseyPerceptionSystem : PerceptionSystem` (Runtime.Games.Odyssey)
+  - `swkotor.exe`: PerceptionData @ 0x00747304, PerceptionList @ 0x00747314, PERCEPTIONDIST @ 0x0074ae10, PerceptionRange @ 0x0074ae20 (string references)
+  - `swkotor2.exe`: PerceptionData @ 0x007bf6c4, PerceptionList @ 0x007bf6d4, PERCEPTIONDIST @ 0x007c4070, PerceptionRange @ 0x007c4080 (string references)
+- **Aurora Implementation**: `AuroraPerceptionSystem : PerceptionSystem` (Runtime.Games.Aurora)
+  - `nwmain.exe`: PerceptionData @ 0x140dde100, PerceptionList @ 0x140dde0f0, PerceptionRange @ 0x140dde0e0, PERCEPTIONDIST @ 0x140de59b0 (string references)
+- **Eclipse Implementation**: `EclipsePerceptionSystem : PerceptionSystem` (Runtime.Games.Eclipse)
+  - `daorigins.exe`: TODO - Search for similar functions
+  - `DragonAge2.exe`: TODO - Search for similar functions
+
 ## Ghidra Executables Inventory
 
 ### ✅ PRIMARY TARGET: Odyssey Engine (KotOR 1 & 2)
