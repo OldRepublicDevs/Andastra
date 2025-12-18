@@ -4,7 +4,7 @@ Internal tracking document for AI agents. Not public-facing. Do not commit to re
 
 **Status**: ✅ CORE SYSTEMS COMPLETE
 **Started**: 2025-01-16
-**Current Phase**: Phase 1 Complete - All 15 core systems fully analyzed and documented
+**Current Phase**: Phase 1 Complete - All 18 major game systems fully analyzed and documented
 **Ghidra Project**: `C:\Users\boden\test.gpr` (7 executables loaded: swkotor.exe, swkotor2.exe, nwmain.exe, daorigins.exe, DragonAge2.exe, MassEffect.exe, MassEffect2.exe)
 
 ## Progress Summary
@@ -495,7 +495,7 @@ Internal tracking document for AI agents. Not public-facing. Do not commit to re
 
 ### Total Executables Available: 20
 
-**Project Path**: `C:\Users\boden\test.gpr`  
+**Project Path**: `C:\Users\boden\test.gpr`
 **Status**: ✅ **ALL PROGRAMS LOADED INTO MEMORY**
 
 - **Game Executables**: 9
@@ -592,14 +592,14 @@ When processing a file:
 
 ## Complete File Inventory - src/Andastra
 
-**Total Files**: ~1,200+ C# files across all projects  
+**Total Files**: ~1,200+ C# files across all projects
 **Organization**: Organized by layer (Core → Games → Graphics → Content → Scripting → Parsing)
 
 ### Runtime Layer (Core Engine Logic)
 
 #### Runtime/Core (99 files) - **HIGHEST PRIORITY FOR REVERSE ENGINEERING**
 
-**Purpose**: Core domain logic, no MonoGame dependency  
+**Purpose**: Core domain logic, no MonoGame dependency
 **Ghidra References Required**: ✅ **YES - ALL FILES**
 
 - **Entities** (4 files): Entity.cs, World.cs, EventBus.cs, TimeManager.cs
@@ -626,7 +626,7 @@ When processing a file:
 
 #### Runtime/Games (99 files) - **HIGHEST PRIORITY FOR REVERSE ENGINEERING**
 
-**Purpose**: Engine-specific implementations with class inheritance  
+**Purpose**: Engine-specific implementations with class inheritance
 **Ghidra References Required**: ✅ **YES - ALL FILES**
 
 - **Common** (8 files): BaseEngine.cs, BaseEngineGame.cs, BaseEngineModule.cs, BaseEngineProfile.cs, IEngine.cs, IEngineGame.cs, IEngineModule.cs, IEngineProfile.cs
@@ -650,7 +650,7 @@ When processing a file:
 
 #### Runtime/Scripting (11 files) - **HIGHEST PRIORITY FOR REVERSE ENGINEERING**
 
-**Purpose**: NCS VM implementation and Engine API  
+**Purpose**: NCS VM implementation and Engine API
 **Ghidra References Required**: ✅ **YES - ALL FILES**
 
 - **EngineApi** (2 files): BaseEngineApi.cs, K1EngineApi.cs.backup
@@ -661,7 +661,7 @@ When processing a file:
 
 #### Runtime/Content (18 files) - **SELECTED FILES REQUIRE REVERSE ENGINEERING**
 
-**Purpose**: Asset conversion/caching  
+**Purpose**: Asset conversion/caching
 **Ghidra References Required**: ⚠️ **SELECTED FILES ONLY**
 
 - **Cache** (1 file): ContentCache.cs
@@ -674,7 +674,7 @@ When processing a file:
 
 #### Runtime/Graphics (247 files) - **LOW PRIORITY**
 
-**Purpose**: Modern MonoGame/Stride rendering adapters  
+**Purpose**: Modern MonoGame/Stride rendering adapters
 **Ghidra References Required**: ❌ **NO** (Modern implementation, not original engine code)
 
 - **Common** (50 files): Base graphics backends, interfaces, post-processing, raytracing, upscaling
@@ -686,7 +686,7 @@ When processing a file:
 
 #### Parsing (600+ files) - **SELECTED FILES REQUIRE REVERSE ENGINEERING**
 
-**Purpose**: File format parsing and extraction  
+**Purpose**: File format parsing and extraction
 **Ghidra References Required**: ⚠️ **SELECTED FILES ONLY** (BWM, GFF, NCS formats)
 
 - **Common** (18 files): BinaryExtensions.cs, BinaryReader.cs, BinaryWriter.cs, CaseAwarePath.cs, Face.cs, Game.cs, GameObject.cs, Language.cs, LocalizedString.cs, Misc.cs, Module.cs, ModuleDataLoader.cs, Pathfinding.cs, ResRef.cs, SurfaceMaterial.cs, Script/DataType.cs, Script/DataTypeExtensions.cs, Script/NwscriptParser.cs, Script/ScriptConstant.cs, Script/ScriptDefs.cs, Script/ScriptFunction.cs, Script/ScriptLib.cs, Script/ScriptParam.cs
@@ -719,7 +719,7 @@ When processing a file:
 
 #### Game (8 files) - **LOW PRIORITY**
 
-**Purpose**: Executable launcher and game initialization  
+**Purpose**: Executable launcher and game initialization
 **Ghidra References Required**: ❌ **NO** (Application layer, not engine code)
 
 - **Core** (5 files): GamePathDetector.cs, GameSettings.cs, GameState.cs, GraphicsBackendFactory.cs, OdysseyGame.cs
@@ -730,7 +730,7 @@ When processing a file:
 
 #### Utility (14 files) - **NO REVERSE ENGINEERING NEEDED**
 
-**Purpose**: Helper/utility code  
+**Purpose**: Helper/utility code
 **Ghidra References Required**: ❌ **NO**
 
 - ArrayHead.cs, CaseInsensitiveDict.cs, ErrorHandling.cs, Geometry/ (4 files), KeyError.cs, LZMA/LzmaHelper.cs, Misc.cs, MiscString/ (3 files), OrderedSet.cs, System/OSHelper.cs, SystemHelpers.cs
@@ -899,7 +899,7 @@ When processing a file:
 
 #### Root (1 file)
 
-- [x] GameSettings.cs - ✅ COMPLETE - Ghidra references added: swkotor2.ini @ 0x007b5740, swkotor.ini, config.txt @ 0x007b5750, FUN_00633270 @ 0x00633270, all configuration fields
+- [ ] GameSettings.cs
 
 ### Runtime/Content (18 files)
 
