@@ -1168,24 +1168,54 @@ namespace HolocronToolset.Tests.Windows
                 var builder = new IndoorBuilderWindow(null, _installation);
                 builder.Show();
 
-                // Matching Python test logic:
-                // room = IndoorMapRoom(real_kit_component, Vector3(0, 0, 0), 0.0, flip_x=False, flip_y=False)
-                // cmd1 = AddRoomCommand(builder._map, room)
-                // undo_stack.push(cmd1)
-                // cmd2 = RotateRoomsCommand(builder._map, [room], [0.0], [45.0])
-                // undo_stack.push(cmd2)
-                // cmd3 = RotateRoomsCommand(builder._map, [room], [45.0], [90.0])
-                // undo_stack.push(cmd3)
-                // undo_stack.undo()  # Undo rotate to 90
-                // undo_stack.undo()  # Undo rotate to 45
-                // assert abs(room.rotation - 0.0) < 0.001
-                // undo_stack.redo()  # Redo rotate to 45
-                // assert abs(room.rotation - 45.0) < 0.001
-                // cmd4 = FlipRoomsCommand(builder._map, [room], flip_x=True, flip_y=False)
-                // undo_stack.push(cmd4)
-                // assert not undo_stack.canRedo()
+                // Create KitComponent matching real_kit_component fixture
+                var kitComponent = CreateRealKitComponent();
 
-                builder.Should().NotBeNull();
+                // Matching Python line 680: undo_stack = builder._undo_stack
+                var undoStack = builder.UndoStack;
+
+                // Matching Python line 682: room = IndoorMapRoom(real_kit_component, Vector3(0, 0, 0), 0.0, flip_x=False, flip_y=False)
+                var room = new IndoorMapRoom(kitComponent, new Vector3(0, 0, 0), 0.0f, flipX: false, flipY: false);
+
+                // Matching Python line 684: cmd1 = AddRoomCommand(builder._map, room)
+                var cmd1 = new AddRoomCommand(builder.Map, room);
+
+                // Matching Python line 685: undo_stack.push(cmd1)
+                undoStack.Push(cmd1);
+
+                // Matching Python line 687: cmd2 = RotateRoomsCommand(builder._map, [room], [0.0], [45.0])
+                var cmd2 = new RotateRoomsCommand(builder.Map, new List<IndoorMapRoom> { room }, new List<float> { 0.0f }, new List<float> { 45.0f });
+
+                // Matching Python line 688: undo_stack.push(cmd2)
+                undoStack.Push(cmd2);
+
+                // Matching Python line 690: cmd3 = RotateRoomsCommand(builder._map, [room], [45.0], [90.0])
+                var cmd3 = new RotateRoomsCommand(builder.Map, new List<IndoorMapRoom> { room }, new List<float> { 45.0f }, new List<float> { 90.0f });
+
+                // Matching Python line 691: undo_stack.push(cmd3)
+                undoStack.Push(cmd3);
+
+                // Matching Python lines 694-695: Undo last two
+                undoStack.Undo(); // Undo rotate to 90
+                undoStack.Undo(); // Undo rotate to 45
+
+                // Matching Python line 697: assert abs(room.rotation - 0.0) < 0.001
+                room.Rotation.Should().BeApproximately(0.0f, 0.001f, "Room rotation should be 0.0 after undoing two rotations");
+
+                // Matching Python line 700: undo_stack.redo()  # Redo rotate to 45
+                undoStack.Redo();
+
+                // Matching Python line 701: assert abs(room.rotation - 45.0) < 0.001
+                room.Rotation.Should().BeApproximately(45.0f, 0.001f, "Room rotation should be 45.0 after redoing one rotation");
+
+                // Matching Python line 704: cmd4 = FlipRoomsCommand(builder._map, [room], flip_x=True, flip_y=False)
+                var cmd4 = new FlipRoomsCommand(builder.Map, new List<IndoorMapRoom> { room }, flipX: true, flipY: false);
+
+                // Matching Python line 705: undo_stack.push(cmd4)
+                undoStack.Push(cmd4);
+
+                // Matching Python line 707: assert not undo_stack.canRedo()
+                undoStack.CanRedo.Should().BeFalse("Redo stack should be cleared after new operation");
             }
             finally
             {
