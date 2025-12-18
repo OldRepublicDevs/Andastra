@@ -861,9 +861,9 @@ When processing a file:
 
 #### Save (3 files)
 
-- [ ] Save/AreaState.cs
-- [ ] Save/SaveGameData.cs
-- [ ] Save/SaveSystem.cs
+- [x] Save/AreaState.cs - ✅ COMPLETE - Ghidra references added: FUN_005226d0 @ 0x005226d0, area state serialization, all entity state fields
+- [x] Save/SaveGameData.cs - ✅ COMPLETE - Ghidra references added: savenfo @ 0x007be1f0, SAVEGAME @ 0x007be28c, FUN_004eb750 @ 0x004eb750, all save game structure fields
+- [x] Save/SaveSystem.cs - ✅ COMPLETE - Ghidra references added: SerializeSaveNfo @ 0x004eb750, SaveGlobalVariables @ 0x005ac670, SavePartyTable @ 0x0057bd70, FUN_00708990 @ 0x00708990, all save/load functions
 
 #### Templates (9 files)
 
