@@ -47,18 +47,20 @@ Internal tracking document for AI agents. Not public-facing. Do not commit to re
 
 ### 📋 Pending Systems
 
-- **Dialogue System (DLG, TLK, VO)**:
-  - `swkotor2.exe`: ExecuteDialogue @ 0x005e9920 (via "Error: dialogue can't find object '%s'!" @ 0x007c3730)
-  - `swkotor.exe`: ExecuteDialogue @ 0x005a1c00, ProcessDialogueEntry @ 0x005a13d0 (via "Error: dialogue can't find object '%s'!" @ 0x0074a61c)
-  - `nwmain.exe`: ScriptDialogue @ 0x140dddb80 (string reference, function @ 0x14039d252)
-  - **Inheritance**: Base class `DialogueSystem` (Runtime.Games.Common), `OdysseyDialogueSystem : DialogueSystem` (Runtime.Games.Odyssey)
-  - **Cross-engine**: Found swkotor.exe, swkotor2.exe, and nwmain.exe equivalents, daorigins.exe TODO
-- **Combat System**:
-  - `swkotor2.exe`: EndCombatRound @ 0x00529c30 (via "CSWSCombatRound::EndCombatRound" @ 0x007bfb80)
-  - `swkotor.exe`: EndCombatRound @ 0x004d4620 (via "CSWSCombatRound::EndCombatRound" @ 0x007463d0)
-  - `nwmain.exe`: CombatInfo @ 0x140dc45b8 (string reference), CombatRoundData @ 0x140dde110 (string reference)
-  - **Inheritance**: Base class `CombatSystem` (Runtime.Games.Common), `OdysseyCombatSystem : CombatSystem` (Runtime.Games.Odyssey)
-  - **Cross-engine**: Found swkotor.exe and swkotor2.exe equivalents, nwmain.exe/daorigins.exe TODO
+- **Dialogue System (DLG, TLK, VO)**: ✅ **ANALYZED**
+  - `swkotor2.exe`: ExecuteDialogue @ 0x005e9920 - ✅ ANALYZED - Executes dialogue conversation, loads DLG file, validates object exists, processes dialogue entries, handles player responses, executes entry scripts, updates dialogue state (via "Error: dialogue can't find object '%s'!" @ 0x007c3730)
+  - `swkotor.exe`: ExecuteDialogue @ 0x005a1c00 - ✅ ANALYZED - Similar to swkotor2.exe version (via "Error: dialogue can't find object '%s'!" @ 0x0074a61c)
+  - `swkotor.exe`: ProcessDialogueEntry @ 0x005a13d0 - ✅ ANALYZED - Processes dialogue entry, checks conditions, executes scripts, updates dialogue state
+  - `nwmain.exe`: ScriptDialogue @ 0x140dddb80 (string reference, function @ 0x14039d252) - ✅ FOUND - Dialogue script hook loading
+  - **String References**: "CSWSSCRIPTEVENT_EVENTTYPE_ON_DIALOGUE" @ 0x007bcac4, "PT_DLG_MSG_MSG" @ 0x007c1630, "PT_DLG_MSG_SPKR" @ 0x007c1640, "PT_DLG_MSG_LIST" @ 0x007c1650, "CONVERSATION ERROR" @ 0x007c3768
+  - **Inheritance**: Base class `DialogueSystem` (Runtime.Games.Common), `OdysseyDialogueSystem : DialogueSystem` (Runtime.Games.Odyssey), `AuroraDialogueSystem : DialogueSystem` (Runtime.Games.Aurora)
+  - **Cross-engine**: ✅ Found swkotor.exe, swkotor2.exe, and nwmain.exe equivalents, daorigins.exe TODO
+- **Combat System**: ✅ **ANALYZED**
+  - `swkotor2.exe`: EndCombatRound @ 0x00529c30 - ✅ ANALYZED - Ends a combat round and resets combat state, resets combat round data (attacker, target, action type, etc.), clears combat slave references, updates combat master state, fires combat end event (via "CSWSCombatRound::EndCombatRound - %x Combat Slave (%x) not found!" @ 0x007bfb80)
+  - `swkotor.exe`: EndCombatRound @ 0x004d4620 - ✅ ANALYZED - Similar to swkotor2.exe version (via "CSWSCombatRound::EndCombatRound" @ 0x007463d0)
+  - `nwmain.exe`: CombatInfo @ 0x140dc45b8 (string reference), CombatRoundData @ 0x140dde110 (string reference) - ✅ FOUND
+  - **Inheritance**: Base class `CombatSystem` (Runtime.Games.Common), `OdysseyCombatSystem : CombatSystem` (Runtime.Games.Odyssey), `AuroraCombatSystem : CombatSystem` (Runtime.Games.Aurora)
+  - **Cross-engine**: ✅ Found swkotor.exe and swkotor2.exe equivalents, nwmain.exe found, daorigins.exe TODO
 - **Audio System**:
   - `swkotor2.exe`: SaveSoundList @ 0x004e2d60, LoadSoundList @ 0x004e06a0 (via "SoundList" @ 0x007bd080)
   - `swkotor.exe`: SaveSoundList @ 0x00507b10, LoadSoundList @ 0x00505560 (via "SoundList" @ 0x007474f8)
