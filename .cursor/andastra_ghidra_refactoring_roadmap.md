@@ -171,6 +171,13 @@ Internal tracking document for AI agents. Not public-facing. Do not commit to re
   - **Inheritance**: Base class `CreatureSystem` (Runtime.Games.Common), `OdysseyCreatureSystem : CreatureSystem` (Runtime.Games.Odyssey), `AuroraCreatureSystem : CreatureSystem` (Runtime.Games.Aurora)
   - **Cross-engine**: ✅ Found swkotor2.exe equivalents, swkotor.exe/nwmain.exe/daorigins.exe TODO
   - **Note**: Creature system handles creature entities (NPCs, party members, enemies). Creatures are loaded from GIT files with ObjectId, TemplateResRef, position, orientation, and creature-specific properties (DetectMode, StealthMode, AreaId). Creatures are saved to GFF save data with ObjectId and entity state. Creature templates are loaded from UTC files (similar to item templates from UTI files).
+- **Camera System**: ✅ **ANALYZED**
+  - `swkotor2.exe`: LoadCameraList @ 0x004e0ff0 - ✅ ANALYZED - Loads camera list from GIT GFF into camera manager, iterates through "CameraList" GFF list, reads CameraID, Position (X, Y, Z), Orientation, Pitch, Height, FieldOfView (default 55.0), MicRange, creates camera entries in camera manager (via FUN_00680430 and FUN_00680450), validates camera count < 0x47 (71) (via "CameraList" @ 0x007bd16c, "CameraID" @ 0x007bd160, "Position", "Orientation", "Pitch", "Height", "FieldOfView" @ 0x007bd12c, "MicRange")
+  - `swkotor2.exe`: SaveCameraList @ 0x004e13f0 - ✅ ANALYZED - Saves camera list from camera manager to GFF save data, iterates through camera manager entries (via FUN_00680600), writes CameraID, Position (X, Y, Z), Orientation, Pitch, Height, FieldOfView, MicRange to GFF (via "CameraList" @ 0x007bd16c)
+  - `swkotor2.exe`: "CameraList" @ 0x007bd16c, "CameraID" @ 0x007bd160, "FieldOfView" @ 0x007bd12c, "CameraStyle" @ 0x007bd6e0, "CameraAnimation" @ 0x007c3460, "CameraAngle" @ 0x007c3490, "CameraModel" @ 0x007c3908, "CameraHeightOffset" @ 0x007c5114, "CameraRotate" @ 0x007cb910, "CameraViewAngle" @ 0x007cb940 (string references) - ✅ FOUND
+  - **Inheritance**: Base class `CameraSystem` (Runtime.Games.Common), `OdysseyCameraSystem : CameraSystem` (Runtime.Games.Odyssey), `AuroraCameraSystem : CameraSystem` (Runtime.Games.Aurora)
+  - **Cross-engine**: ✅ Found swkotor2.exe equivalents, swkotor.exe/nwmain.exe/daorigins.exe TODO
+  - **Note**: Camera system handles camera entities stored in GIT files. Cameras store position, orientation, pitch, height, field of view, and microphone range. Used for cutscenes, dialogue cameras, and area cameras. Camera manager limits camera count to 71 (0x47).
 
 ## Class Inheritance Structure
 
@@ -990,9 +997,9 @@ When processing a file:
 - [x] Odyssey/Data/TwoDATableManager.cs - ✅ COMPLETE - Ghidra references added: 2DAName @ 0x007c3980, all 2DA table loading error messages, all table lookup fields
 - [ ] Odyssey/Dialogue/ConversationContext.cs
 - [x] Odyssey/Dialogue/DialogueManager.cs - ✅ COMPLETE - Ghidra references added: ExecuteDialogue @ 0x005e9920 (swkotor2.exe), ScriptDialogue @ 0x007bee40, ScriptEndDialogue @ 0x007bede0, "Error: dialogue can't find object '%s'!" @ 0x007c3730
-- [ ] Odyssey/Dialogue/DialogueState.cs
+- [x] Odyssey/Dialogue/DialogueState.cs - ✅ COMPLETE - Ghidra references added: Conversation @ 0x007c1abc, ConversationType @ 0x007c38e0, ScriptDialogue @ 0x007bee40, ScriptEndDialogue @ 0x007bede0, all dialogue state fields
 - [x] Odyssey/Dialogue/KotorDialogueLoader.cs - ✅ COMPLETE - Ghidra references added: ScriptDialogue @ 0x007bee40, ScriptEndDialogue @ 0x007bede0, CSWSSCRIPTEVENT_EVENTTYPE_ON_DIALOGUE @ 0x007bcac4, "Error: dialogue can't find object '%s'!" @ 0x007c3730
-- [ ] Odyssey/Dialogue/KotorLipDataLoader.cs
+- [x] Odyssey/Dialogue/KotorLipDataLoader.cs - ✅ COMPLETE - Ghidra references added: LIPS:localization @ 0x007be654, LIPS:%s_loc @ 0x007be668, .\lips @ 0x007c6838, all LIP file format fields
 - [x] Odyssey/EngineApi/K1EngineApi.cs - ✅ COMPLETE - Ghidra references added: ACTION opcode handler, function dispatch system, ScriptDefs.KOTOR_FUNCTIONS (~850 functions), all engine API fields
 - [x] Odyssey/EngineApi/K2EngineApi.cs - ✅ COMPLETE - Ghidra references added: ACTION opcode handler, TSL-specific functions (~950 total), PT_INFLUENCE @ 0x007c1788, Influence system, all engine API fields
 - [x] Odyssey/EngineApi/OdysseyK1EngineApi.cs - ✅ COMPLETE - Ghidra references added: ACTION opcode handler, function dispatch system, ScriptDefs.KOTOR_FUNCTIONS (~850 functions)
