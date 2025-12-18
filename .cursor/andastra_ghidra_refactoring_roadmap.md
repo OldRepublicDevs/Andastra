@@ -996,7 +996,7 @@ When processing a file:
 
 #### Common (8 files)
 
-- [x] Common/BaseEngine.cs - ✅ COMPLETE - Ghidra references added: FUN_00404250 @ 0x00404250, FUN_00633270 @ 0x00633270, cross-engine analysis (Odyssey, Aurora, Eclipse), base class inheritance structure
+- [x] Common/BaseEngine.cs - ✅ COMPLETE - Base class cleaned of engine-specific details, contains only abstract common functionality. Cross-engine analysis: nwmain.exe SDL_main @ 0x140046340 (CExoBase/CAppManager), swkotor2.exe FUN_00404250 @ 0x00404250 (config.txt/swkotor2.ini), daorigins.exe entry @ 0x00401000 (external DLL). Common pattern: base system → resource management → game session (implementations differ per engine)
 - [x] Common/BaseEngineGame.cs - ✅ COMPLETE - Ghidra references added: FUN_006caab0 @ 0x006caab0, ModuleLoaded @ 0x007bdd70, ModuleRunning @ 0x007bdd58, cross-engine analysis (Odyssey, Aurora, Eclipse), base class inheritance structure
 - [x] Common/BaseEngineModule.cs - ✅ COMPLETE - Ghidra references added: FUN_006caab0 @ 0x006caab0, ModuleLoaded @ 0x007bdd70, ModuleRunning @ 0x007bdd58, cross-engine analysis (Odyssey, Aurora, Eclipse), base class inheritance structure
 - [ ] Common/BaseEngineProfile.cs
