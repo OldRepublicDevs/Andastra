@@ -930,14 +930,14 @@ When processing a file:
 - [ ] Odyssey/Components/CreatureComponent.cs
 - [ ] Odyssey/Components/DoorComponent.cs
 - [ ] Odyssey/Components/EncounterComponent.cs
-- [ ] Odyssey/Components/FactionComponent.cs
-- [ ] Odyssey/Components/InventoryComponent.cs
+- [x] Odyssey/Components/FactionComponent.cs - ✅ COMPLETE - Ghidra references added: FactionID @ 0x007c40b4, FactionRep @ 0x007c290c, FactionList @ 0x007be604, FACTIONREP @ 0x007bcec8, FactionID1 @ 0x007c2924, FactionID2 @ 0x007c2918
+- [x] Odyssey/Components/InventoryComponent.cs - ✅ COMPLETE - Ghidra references added: FUN_005226d0 @ 0x005226d0 (save inventory), InventoryRes @ 0x007bf570, InventorySlot @ 0x007bf7d0, ItemList @ 0x007bf580, Equip_ItemList @ 0x007bf5a4
 - [ ] Odyssey/Components/ItemComponent.cs
 - [ ] Odyssey/Components/PerceptionComponent.cs
 - [ ] Odyssey/Components/PlaceableComponent.cs
 - [ ] Odyssey/Components/QuickSlotComponent.cs
 - [ ] Odyssey/Components/RenderableComponent.cs
-- [ ] Odyssey/Components/ScriptHooksComponent.cs
+- [x] Odyssey/Components/ScriptHooksComponent.cs - ✅ COMPLETE - Ghidra references added: FUN_0050c510 @ 0x0050c510 (load script hooks), FUN_005226d0 @ 0x005226d0 (save script hooks), all Script* fields (ScriptHeartbeat @ 0x007beeb0, etc.)
 - [ ] Odyssey/Components/SoundComponent.cs
 - [ ] Odyssey/Components/StatsComponent.cs
 - [ ] Odyssey/Components/StoreComponent.cs
