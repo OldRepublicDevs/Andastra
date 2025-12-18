@@ -1006,11 +1006,11 @@ When processing a file:
 - [x] Common/BaseEngine.cs - ✅ COMPLETE - Base class cleaned of engine-specific details, contains only abstract common functionality. Cross-engine analysis: nwmain.exe SDL_main @ 0x140046340 (CExoBase/CAppManager), swkotor2.exe FUN_00404250 @ 0x00404250 (config.txt/swkotor2.ini), daorigins.exe entry @ 0x00401000 (external DLL). Common pattern: base system → resource management → game session (implementations differ per engine)
 - [x] Common/BaseEngineGame.cs - ✅ COMPLETE - Ghidra references added: FUN_006caab0 @ 0x006caab0, ModuleLoaded @ 0x007bdd70, ModuleRunning @ 0x007bdd58, cross-engine analysis (Odyssey, Aurora, Eclipse), base class inheritance structure
 - [x] Common/BaseEngineModule.cs - ✅ COMPLETE - Ghidra references added: FUN_006caab0 @ 0x006caab0, ModuleLoaded @ 0x007bdd70, ModuleRunning @ 0x007bdd58, cross-engine analysis (Odyssey, Aurora, Eclipse), base class inheritance structure
-- [ ] Common/BaseEngineProfile.cs
-- [ ] Common/IEngine.cs
-- [ ] Common/IEngineGame.cs
-- [ ] Common/IEngineModule.cs
-- [ ] Common/IEngineProfile.cs
+- [x] Common/BaseEngineProfile.cs - ✅ COMPLETE - Base class cleaned of engine-specific details, contains only abstract common functionality
+- [x] Common/IEngine.cs - ✅ COMPLETE - Interface cleaned of engine-specific details, contains only common contract
+- [x] Common/IEngineGame.cs - ✅ COMPLETE - Interface cleaned of engine-specific details, contains only common contract
+- [x] Common/IEngineModule.cs - ✅ COMPLETE - Interface cleaned of engine-specific details, contains only common contract
+- [x] Common/IEngineProfile.cs - ✅ COMPLETE - Interface cleaned of engine-specific details, contains only common contract
 
 #### Odyssey (84 files)
 
