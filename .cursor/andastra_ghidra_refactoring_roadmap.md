@@ -1137,8 +1137,8 @@ When processing a file:
 - [ ] Odyssey/Profiles/K1GameProfile.cs
 - [ ] Odyssey/Profiles/K2GameProfile.cs
 - [x] Odyssey/Save/SaveGameManager.cs - ✅ COMPLETE - Ghidra references added: FUN_004eb750 @ 0x004eb750 (save), FUN_00708990 @ 0x00708990 (load), FUN_0057dcd0 @ 0x0057dcd0 (party table), FUN_005ac740 @ 0x005ac740 (global vars)
-- [ ] Odyssey/Systems/AIController.cs
-- [ ] Odyssey/Systems/ComponentInitializer.cs
+- [x] Odyssey/Systems/AIController.cs - ✅ COMPLETE - Ghidra references added: "OnHeartbeat" @ 0x007c1f60, "OnPerception" @ 0x007c1f64, "OnCombatRoundEnd" @ 0x007c1f68, "OnDamaged" @ 0x007c1f6c, "OnDeath" @ 0x007c1f70, "PT_AISTATE" @ 0x007c1768, "AISTATE" @ 0x007c81f8, "AIState" @ 0x007c4090, "aiscripts" @ 0x007c4fd0, "?The Path find has Failed... Why?" @ 0x007c055f, "Bailed the desired position is unsafe." @ 0x007c0584, "failed to grid based pathfind from the creatures position to the starting path point." @ 0x007be510, "failed to grid based pathfind from the ending path point ot the destiantion." @ 0x007be4b8, "k_def_pathfail01" @ 0x007c52fc, "AI Level: " @ 0x007cb174, FUN_004eb750 @ 0x004eb750, FUN_005226d0 @ 0x005226d0, FUN_004dfbb0 @ 0x004dfbb0
+- [x] Odyssey/Systems/ComponentInitializer.cs - ✅ COMPLETE - Ghidra references added: FUN_005fb0f0 @ 0x005fb0f0, FUN_004e08e0 @ 0x004e08e0, component initialization system references
 - [x] Odyssey/Systems/EncounterSystem.cs - ✅ COMPLETE - Ghidra references added: LoadEncounterList @ 0x004e01a0, SaveEncounterList @ 0x004e2be0 (swkotor2.exe), "Encounter List" @ 0x007bd050
 - [x] Odyssey/Systems/FactionManager.cs - ✅ COMPLETE - Ghidra references added: FactionRep @ 0x007c290c, FactionID1 @ 0x007c2924, FactionID2 @ 0x007c2918, FACTIONREP @ 0x007bcec8, FactionList @ 0x007be604
 - [x] Odyssey/Systems/HeartbeatSystem.cs - ✅ COMPLETE - Ghidra references added: "ScriptHeartbeat" @ 0x007beeb0, "OnHeartbeat" @ 0x007bd720, "CSWSSCRIPTEVENT_EVENTTYPE_ON_HEARTBEAT" @ 0x007bcb90, "HEARTBEAT" @ 0x007c1348, "HeartbeatTime" @ 0x007c0c30, "HeartbeatDay" @ 0x007c0c40, "Mod_OnHeartbeat" @ 0x007be840, "HeartbeatInterval" @ 0x007c38e8, FUN_005226d0 @ 0x005226d0, FUN_004139e0
