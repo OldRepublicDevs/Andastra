@@ -930,24 +930,56 @@ namespace HolocronToolset.Tests.Windows
                 var builder = new IndoorBuilderWindow(null, _installation);
                 builder.Show();
 
-                // Matching Python test logic:
-                // room = IndoorMapRoom(real_kit_component, Vector3(5, 5, 0), 45.0, flip_x=True, flip_y=False)
-                // builder._map.rooms.append(room)
-                // offset = Vector3(2.0, 2.0, 0.0)
-                // cmd = DuplicateRoomsCommand(builder._map, [room], offset)
-                // undo_stack.push(cmd)
-                // assert len(builder._map.rooms) == 2
-                // duplicate = cmd.duplicates[0]
-                // assert abs(duplicate.position.x - 7.0) < 0.001
-                // assert abs(duplicate.position.y - 7.0) < 0.001
-                // assert abs(duplicate.rotation - 45.0) < 0.001
-                // assert duplicate.flip_x is True
-                // assert duplicate.flip_y is False
-                // undo_stack.undo()
-                // assert len(builder._map.rooms) == 1
-                // assert duplicate not in builder._map.rooms
+                // Create KitComponent matching real_kit_component fixture
+                var kitComponent = CreateRealKitComponent();
 
-                builder.Should().NotBeNull();
+                // Matching Python line 590: undo_stack = builder._undo_stack
+                var undoStack = builder.UndoStack;
+
+                // Matching Python line 592: room = IndoorMapRoom(real_kit_component, Vector3(5, 5, 0), 45.0, flip_x=True, flip_y=False)
+                var room = new IndoorMapRoom(kitComponent, new Vector3(5, 5, 0), 45.0f, flipX: true, flipY: false);
+
+                // Matching Python line 593: builder._map.rooms.append(room)
+                builder.Map.Rooms.Add(room);
+
+                // Matching Python line 595: offset = Vector3(2.0, 2.0, 0.0)
+                var offset = new Vector3(2.0f, 2.0f, 0.0f);
+
+                // Matching Python line 596: cmd = DuplicateRoomsCommand(builder._map, [room], offset)
+                var cmd = new DuplicateRoomsCommand(builder.Map, new List<IndoorMapRoom> { room }, offset);
+
+                // Matching Python line 597: undo_stack.push(cmd)
+                undoStack.Push(cmd);
+
+                // Matching Python line 599: assert len(builder._map.rooms) == 2
+                builder.Map.Rooms.Should().HaveCount(2, "Should have 2 rooms after duplicate");
+
+                // Matching Python line 600: duplicate = cmd.duplicates[0]
+                var duplicate = cmd.Duplicates[0];
+
+                // Matching Python line 603: assert abs(duplicate.position.x - 7.0) < 0.001
+                duplicate.Position.X.Should().BeApproximately(7.0f, 0.001f, "Duplicate X position should be 7.0 (5 + 2)");
+
+                // Matching Python line 604: assert abs(duplicate.position.y - 7.0) < 0.001
+                duplicate.Position.Y.Should().BeApproximately(7.0f, 0.001f, "Duplicate Y position should be 7.0 (5 + 2)");
+
+                // Matching Python line 607: assert abs(duplicate.rotation - 45.0) < 0.001
+                duplicate.Rotation.Should().BeApproximately(45.0f, 0.001f, "Duplicate rotation should be 45.0");
+
+                // Matching Python line 608: assert duplicate.flip_x is True
+                duplicate.FlipX.Should().BeTrue("Duplicate flip_x should be True");
+
+                // Matching Python line 609: assert duplicate.flip_y is False
+                duplicate.FlipY.Should().BeFalse("Duplicate flip_y should be False");
+
+                // Matching Python line 612: undo_stack.undo()
+                undoStack.Undo();
+
+                // Matching Python line 613: assert len(builder._map.rooms) == 1
+                builder.Map.Rooms.Should().HaveCount(1, "Should have 1 room after undo");
+
+                // Matching Python line 614: assert duplicate not in builder._map.rooms
+                builder.Map.Rooms.Should().NotContain(duplicate, "Duplicate should not be in map after undo");
             }
             finally
             {
