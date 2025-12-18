@@ -1147,8 +1147,8 @@ When processing a file:
 - [x] Odyssey/Systems/PerceptionManager.cs - ✅ COMPLETE - Ghidra references added: SaveEntityState @ 0x005226d0, LoadEntityState @ 0x005fb0f0, PerceptionData @ 0x007bf6c4, PerceptionList @ 0x007bf6d4, PERCEPTIONDIST @ 0x007c4070
 - [x] Odyssey/Systems/StoreSystem.cs - ✅ COMPLETE - Ghidra references added: LoadStoreFromGFF @ 0x00571310, SaveStoreToGFF @ 0x00570e30 (swkotor2.exe), StoreList @ 0x007bd098
 - [x] Odyssey/Systems/TriggerSystem.cs - ✅ COMPLETE - Ghidra references added: LoadTriggerList @ 0x004e5920, SaveTriggerList @ 0x004e2b20 (swkotor2.exe), TriggerList @ 0x007bd254, EVENT_ENTERED_TRIGGER @ 0x007bce08, EVENT_LEFT_TRIGGER @ 0x007bcdf4
-- [ ] Odyssey/Templates/UTC.cs
-- [ ] Odyssey/Templates/UTCHelpers.cs
+- [x] Odyssey/Templates/UTC.cs - ✅ COMPLETE - Ghidra references added: "Creature" @ 0x007bc544, "CreatureList" @ 0x007c0c80, "CreatureSize" @ 0x007bf680, "CreatureSpeed" @ 0x007c4b8c, "GetCreatureRadius" @ 0x007bb128, "tutchemcreate" @ 0x007d0724, "Creature template '%s' doesn't exist.\n" @ 0x007bf78c, "Cannot set creature %s to faction %d because faction does not exist! Setting to Hostile1." @ 0x007bf2a8, "Tried to reduce XP of creature '%s' to '%d'. Cannot reduce XP." @ 0x007c3fa8, "CSWCCreature::LoadModel(): Failed to load creature model '%s'." @ 0x007c82fc, "CSWCCreatureAppearance::CreateBTypeBody(): Failed to load model '%s'." @ 0x007cdc40, "u=nwccreature.cpp" @ 0x007c7f5e, FUN_005223a0 @ 0x005223a0, FUN_005226d0 @ 0x005226d0
+- [x] Odyssey/Templates/UTCHelpers.cs - ✅ COMPLETE - Helper file for UTC, references same as UTC.cs
 - [ ] Odyssey/Templates/UTD.cs
 - [ ] Odyssey/Templates/UTDHelpers.cs
 - [ ] Odyssey/Templates/UTE.cs
