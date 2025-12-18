@@ -790,11 +790,11 @@ When processing a file:
 
 #### Enums (5 files)
 
-- [ ] Enums/Ability.cs
-- [ ] Enums/ActionStatus.cs
-- [ ] Enums/ActionType.cs
-- [ ] Enums/ObjectType.cs
-- [ ] Enums/ScriptEvent.cs
+- [x] Enums/Ability.cs - ✅ COMPLETE - Ghidra references added: STR @ 0x007c3a44, DEX @ 0x007c3a54, CON @ 0x007c3a64, INT @ 0x007c3a74, WIS @ 0x007c3a84, CHA @ 0x007c3a94, all ability modifier fields
+- [x] Enums/ActionStatus.cs - ✅ COMPLETE - Ghidra references added: FUN_00508260 @ 0x00508260, FUN_00505bc0 @ 0x00505bc0, action execution status system
+- [x] Enums/ActionType.cs - ✅ COMPLETE - Ghidra references added: ActionType @ 0x007bf7f8, ActionList @ 0x007bebdc, FUN_00508260 @ 0x00508260, FUN_00505bc0 @ 0x00505bc0
+- [x] Enums/ObjectType.cs - ✅ COMPLETE - Ghidra references added: Creature @ 0x007bc4e0, Door @ 0x007bc4f4, Placeable @ 0x007bc508, Item @ 0x007bc530, all object type strings, FUN_005226d0 @ 0x005226d0
+- [x] Enums/ScriptEvent.cs - ✅ COMPLETE - Ghidra references added: All CSWSSCRIPTEVENT_EVENTTYPE_ON_* constants, FUN_004dcfb0 @ 0x004dcfb0, all script event fields
 
 #### GameLoop (1 file)
 
@@ -847,12 +847,12 @@ When processing a file:
 #### Navigation (2 files)
 
 - [x] Navigation/NavigationMesh.cs - ✅ COMPLETE - Ghidra references added: WriteBWMFile @ 0x0055aef0, ValidateBWMHeader @ 0x006160c0 (swkotor2.exe), "BWM V1.0" @ 0x007c061c
-- [ ] Navigation/NavigationMeshFactory.cs
+- [x] Navigation/NavigationMeshFactory.cs - ✅ COMPLETE - Ghidra references added: "walkmesh" pathfinding, "nwsareapathfind.cpp" @ 0x007be3ff, "BWM V1.0" @ 0x007c061c, all pathfinding error messages
 
 #### Party (3 files)
 
-- [ ] Party/PartyInventory.cs
-- [ ] Party/PartyMember.cs
+- [x] Party/PartyInventory.cs - ✅ COMPLETE - Ghidra references added: Inventory @ 0x007c2504, InventorySlot @ 0x007bf7d0, CSWSSCRIPTEVENT_EVENTTYPE_ON_INVENTORY_DISTURBED @ 0x007bc778, all inventory fields
+- [x] Party/PartyMember.cs - ✅ COMPLETE - Ghidra references added: PARTYTABLE @ 0x007c1910, PT_MEMBERS @ 0x007c1844, PT_MEMBER_ID @ 0x007c1834, FUN_0057dcd0 @ 0x0057dcd0, all party member fields
 - [x] Party/PartySystem.cs - ✅ COMPLETE - Ghidra references added: SavePartyTable @ 0x0057bd70, FUN_0057dcd0 (swkotor2.exe), SavePartyTable @ 0x0052ade0 (swkotor.exe)
 
 #### Perception (1 file)
