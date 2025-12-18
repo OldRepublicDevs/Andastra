@@ -922,7 +922,7 @@ When processing a file:
 - [ ] Odyssey/OdysseyEngine.cs
 - [ ] Odyssey/OdysseyGameSession.cs
 - [ ] Odyssey/OdysseyModuleLoader.cs
-- [ ] Odyssey/Combat/CombatManager.cs
+- [x] Odyssey/Combat/CombatManager.cs - ✅ COMPLETE - Ghidra references added: EndCombatRound @ 0x00529c30 (swkotor2.exe), CombatRoundData @ 0x007bf6b4, CombatInfo @ 0x007c2e60, CSWSCombatRound error messages
 - [ ] Odyssey/Combat/CombatRound.cs
 - [ ] Odyssey/Combat/DamageCalculator.cs
 - [ ] Odyssey/Combat/WeaponDamageCalculator.cs
@@ -947,7 +947,7 @@ When processing a file:
 - [ ] Odyssey/Data/GameDataManager.cs
 - [ ] Odyssey/Data/TwoDATableManager.cs
 - [ ] Odyssey/Dialogue/ConversationContext.cs
-- [ ] Odyssey/Dialogue/DialogueManager.cs
+- [x] Odyssey/Dialogue/DialogueManager.cs - ✅ COMPLETE - Ghidra references added: ExecuteDialogue @ 0x005e9920 (swkotor2.exe), ScriptDialogue @ 0x007bee40, ScriptEndDialogue @ 0x007bede0, "Error: dialogue can't find object '%s'!" @ 0x007c3730
 - [ ] Odyssey/Dialogue/DialogueState.cs
 - [ ] Odyssey/Dialogue/KotorDialogueLoader.cs
 - [ ] Odyssey/Dialogue/KotorLipDataLoader.cs
@@ -970,12 +970,12 @@ When processing a file:
 - [x] Odyssey/Save/SaveGameManager.cs - ✅ COMPLETE - Ghidra references added: FUN_004eb750 @ 0x004eb750 (save), FUN_00708990 @ 0x00708990 (load), FUN_0057dcd0 @ 0x0057dcd0 (party table), FUN_005ac740 @ 0x005ac740 (global vars)
 - [ ] Odyssey/Systems/AIController.cs
 - [ ] Odyssey/Systems/ComponentInitializer.cs
-- [ ] Odyssey/Systems/EncounterSystem.cs
-- [ ] Odyssey/Systems/FactionManager.cs
+- [x] Odyssey/Systems/EncounterSystem.cs - ✅ COMPLETE - Ghidra references added: LoadEncounterList @ 0x004e01a0, SaveEncounterList @ 0x004e2be0 (swkotor2.exe), "Encounter List" @ 0x007bd050
+- [x] Odyssey/Systems/FactionManager.cs - ✅ COMPLETE - Ghidra references added: FactionRep @ 0x007c290c, FactionID1 @ 0x007c2924, FactionID2 @ 0x007c2918, FACTIONREP @ 0x007bcec8, FactionList @ 0x007be604
 - [ ] Odyssey/Systems/HeartbeatSystem.cs
 - [ ] Odyssey/Systems/ModelResolver.cs
 - [x] Odyssey/Systems/PartyManager.cs - ✅ COMPLETE - Ghidra references added: PARTYTABLE @ 0x007c1910, SavePartyTable @ 0x0057bd70, FUN_0057dcd0 @ 0x0057dcd0
-- [ ] Odyssey/Systems/PerceptionManager.cs
+- [x] Odyssey/Systems/PerceptionManager.cs - ✅ COMPLETE - Ghidra references added: SaveEntityState @ 0x005226d0, LoadEntityState @ 0x005fb0f0, PerceptionData @ 0x007bf6c4, PerceptionList @ 0x007bf6d4, PERCEPTIONDIST @ 0x007c4070
 - [x] Odyssey/Systems/StoreSystem.cs - ✅ COMPLETE - Ghidra references added: LoadStoreFromGFF @ 0x00571310, SaveStoreToGFF @ 0x00570e30 (swkotor2.exe), StoreList @ 0x007bd098
 - [x] Odyssey/Systems/TriggerSystem.cs - ✅ COMPLETE - Ghidra references added: LoadTriggerList @ 0x004e5920, SaveTriggerList @ 0x004e2b20 (swkotor2.exe), TriggerList @ 0x007bd254, EVENT_ENTERED_TRIGGER @ 0x007bce08, EVENT_LEFT_TRIGGER @ 0x007bcdf4
 - [ ] Odyssey/Templates/UTC.cs
