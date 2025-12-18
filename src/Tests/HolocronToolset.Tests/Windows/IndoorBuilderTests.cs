@@ -1307,15 +1307,29 @@ namespace HolocronToolset.Tests.Windows
                 var builder = new IndoorBuilderWindow(null, _installation);
                 builder.Show();
 
-                // Matching Python test logic:
-                // room = IndoorMapRoom(real_kit_component, Vector3(0, 0, 0), 0.0, flip_x=False, flip_y=False)
-                // builder._map.rooms.append(room)
-                // renderer.select_room(room, clear_existing=True)
-                // selected = renderer.selected_rooms()
-                // assert len(selected) == 1
-                // assert selected[0] is room
+                // Create KitComponent matching real_kit_component fixture
+                var kitComponent = CreateRealKitComponent();
 
-                builder.Should().NotBeNull();
+                // Matching Python line 737: renderer = builder.ui.mapRenderer
+                var renderer = builder.Ui.MapRenderer;
+
+                // Matching Python line 739: room = IndoorMapRoom(real_kit_component, Vector3(0, 0, 0), 0.0, flip_x=False, flip_y=False)
+                var room = new IndoorMapRoom(kitComponent, new Vector3(0, 0, 0), 0.0f, flipX: false, flipY: false);
+
+                // Matching Python line 740: builder._map.rooms.append(room)
+                builder.Map.Rooms.Add(room);
+
+                // Matching Python line 742: renderer.select_room(room, clear_existing=True)
+                renderer.SelectRoom(room, clearExisting: true);
+
+                // Matching Python line 744: selected = renderer.selected_rooms()
+                var selected = renderer.SelectedRooms();
+
+                // Matching Python line 745: assert len(selected) == 1
+                selected.Should().HaveCount(1, "Should have exactly one selected room");
+
+                // Matching Python line 746: assert selected[0] is room
+                selected[0].Should().BeSameAs(room, "Selected room should be the same instance");
             }
             finally
             {
@@ -1349,17 +1363,36 @@ namespace HolocronToolset.Tests.Windows
                 var builder = new IndoorBuilderWindow(null, _installation);
                 builder.Show();
 
-                // Matching Python test logic:
-                // room1 = IndoorMapRoom(real_kit_component, Vector3(0, 0, 0), 0.0, flip_x=False, flip_y=False)
-                // room2 = IndoorMapRoom(real_kit_component, Vector3(20, 0, 0), 0.0, flip_x=False, flip_y=False)
-                // builder._map.rooms.extend([room1, room2])
-                // renderer.select_room(room1, clear_existing=True)
-                // renderer.select_room(room2, clear_existing=True)
-                // selected = renderer.selected_rooms()
-                // assert len(selected) == 1
-                // assert selected[0] is room2
+                // Create KitComponent matching real_kit_component fixture
+                var kitComponent = CreateRealKitComponent();
 
-                builder.Should().NotBeNull();
+                // Matching Python line 751: renderer = builder.ui.mapRenderer
+                var renderer = builder.Ui.MapRenderer;
+
+                // Matching Python line 753: room1 = IndoorMapRoom(real_kit_component, Vector3(0, 0, 0), 0.0, flip_x=False, flip_y=False)
+                var room1 = new IndoorMapRoom(kitComponent, new Vector3(0, 0, 0), 0.0f, flipX: false, flipY: false);
+
+                // Matching Python line 754: room2 = IndoorMapRoom(real_kit_component, Vector3(20, 0, 0), 0.0, flip_x=False, flip_y=False)
+                var room2 = new IndoorMapRoom(kitComponent, new Vector3(20, 0, 0), 0.0f, flipX: false, flipY: false);
+
+                // Matching Python line 755: builder._map.rooms.extend([room1, room2])
+                builder.Map.Rooms.Add(room1);
+                builder.Map.Rooms.Add(room2);
+
+                // Matching Python line 757: renderer.select_room(room1, clear_existing=True)
+                renderer.SelectRoom(room1, clearExisting: true);
+
+                // Matching Python line 758: renderer.select_room(room2, clear_existing=True)
+                renderer.SelectRoom(room2, clearExisting: true);
+
+                // Matching Python line 760: selected = renderer.selected_rooms()
+                var selected = renderer.SelectedRooms();
+
+                // Matching Python line 761: assert len(selected) == 1
+                selected.Should().HaveCount(1, "Should have exactly one selected room after replacing selection");
+
+                // Matching Python line 762: assert selected[0] is room2
+                selected[0].Should().BeSameAs(room2, "Selected room should be room2");
             }
             finally
             {

@@ -185,6 +185,13 @@ Internal tracking document for AI agents. Not public-facing. Do not commit to re
   - **Inheritance**: Base class `AreaEffectSystem` (Runtime.Games.Common), `OdysseyAreaEffectSystem : AreaEffectSystem` (Runtime.Games.Odyssey), `AuroraAreaEffectSystem : AreaEffectSystem` (Runtime.Games.Aurora)
   - **Cross-engine**: ✅ Found swkotor2.exe equivalents, swkotor.exe/nwmain.exe/daorigins.exe TODO
   - **Note**: Area effect system handles area-wide effects (environmental effects, spell effects that affect an area, etc.). Area effects are loaded from GIT files with ObjectId, position, orientation, and effect data. Area effects can have action lists and are saved to GFF save data. Different from entity-specific effects (Effect System) - these are area-wide persistent effects.
+- **Door System**: ✅ **ANALYZED**
+  - `swkotor2.exe`: LoadDoorList @ 0x004e56b0 - ✅ ANALYZED - Loads door list from GIT GFF into area, iterates through "Door List" GFF list, reads ObjectId, creates door entities (via FUN_00580ba0), loads door data from GFF (Bearing, position X/Y/Z), adds doors to area. If param4 is 0, loads from template; if 1, loads from save data (via "Door List" @ 0x007bd248, "ObjectId", "Bearing", "XPosition", "YPosition", "ZPosition")
+  - `swkotor2.exe`: SaveDoorList @ 0x004e2a60 - ✅ ANALYZED - Saves door list from area to GFF save data, iterates through door list, gets door objects from world (via FUN_00503bd0), checks door type (DAT_007beb24, type 8), saves each door state with ObjectId field, calls FUN_00580330 (SaveDoorToGFF) and FUN_00508200 (SaveActionList) for each door (via "Door List" @ 0x007bd248)
+  - `swkotor2.exe`: "Door List" @ 0x007bd248, "DoorList" @ 0x007bd270 (string references) - ✅ FOUND
+  - **Inheritance**: Base class `DoorSystem` (Runtime.Games.Common), `OdysseyDoorSystem : DoorSystem` (Runtime.Games.Odyssey), `AuroraDoorSystem : DoorSystem` (Runtime.Games.Aurora)
+  - **Cross-engine**: ✅ Found swkotor2.exe equivalents, swkotor.exe/nwmain.exe/daorigins.exe TODO
+  - **Note**: Door system handles door entities stored in GIT files. Doors store position, bearing (orientation), and can be opened/closed. Doors are loaded from GIT files with ObjectId and door-specific properties. Doors are saved to GFF save data with ObjectId and entity state. Door templates are loaded from UTD files (similar to item templates from UTI files).
 
 ## Class Inheritance Structure
 

@@ -133,8 +133,6 @@ Unified tool for all NCS (bytecode) and NSS (source) file operations. Supports m
 
 The tool supports `-WhatIf` for dry-run testing, `-Verbose` for detailed output, and follows PowerShell best practices. It can process single files, multiple files, or entire directory trees recursively.
 
-## NCSDecomp.NET - External Compiler Prohibition
-
 **CRITICAL: Ghidra MCP Usage for Andastra Code (Aurora/Eclipse/Infinity/Odyssey)**
 
 When working on Andastra Engine code (anything in `src/Andastra/`), AI agents MUST:
