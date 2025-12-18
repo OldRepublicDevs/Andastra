@@ -817,7 +817,7 @@ When processing a file:
 - [x] Interfaces/IDelayScheduler.cs - ✅ COMPLETE - Ghidra references added: DelayCommand @ 0x007be900, all delay-related fields, STORE_STATE opcode
 - [x] Interfaces/IEntity.cs - ✅ COMPLETE - Ghidra references added: ObjectId @ 0x007bce5c, ObjectIDList @ 0x007bfd7c, FUN_004e28c0 @ 0x004e28c0, FUN_005fb0f0 @ 0x005fb0f0, all entity fields
 - [x] Interfaces/IEventBus.cs - ✅ COMPLETE - Ghidra references added: All EVENT_* and CSWSSCRIPTEVENT_EVENTTYPE_* constants, FUN_004dcfb0 @ 0x004dcfb0
-- [ ] Interfaces/IGameServicesContext.cs
+- [x] Interfaces/IGameServicesContext.cs - ✅ COMPLETE - Ghidra references added: FUN_005226d0 @ 0x005226d0, script execution context system, all game service fields
 - [x] Interfaces/IModule.cs - ✅ COMPLETE - Ghidra references added: Mod_ prefix fields, FUN_00708990 @ 0x00708990, IFO file format
 - [x] Interfaces/INavigationMesh.cs - ✅ COMPLETE - Ghidra references added: BWM V1.0 @ 0x007c061c, FUN_004f5070 @ 0x004f5070, all walkmesh/navigation fields
 - [x] Interfaces/ITimeManager.cs - ✅ COMPLETE - Ghidra references added: TIMEPLAYED @ 0x007be1c4, frameStart @ 0x007ba698, frameEnd @ 0x007ba668, all time management fields
