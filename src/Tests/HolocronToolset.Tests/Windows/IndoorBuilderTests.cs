@@ -1426,16 +1426,39 @@ namespace HolocronToolset.Tests.Windows
                 var builder = new IndoorBuilderWindow(null, _installation);
                 builder.Show();
 
-                // Matching Python test logic:
-                // rooms = [IndoorMapRoom(real_kit_component, Vector3(i * 10, 0, 0), 0.0, flip_x=False, flip_y=False) for i in range(3)]
-                // builder._map.rooms.extend(rooms)
-                // renderer.select_room(rooms[0], clear_existing=True)
-                // renderer.select_room(rooms[1], clear_existing=False)
-                // renderer.select_room(rooms[2], clear_existing=False)
-                // selected = renderer.selected_rooms()
-                // assert len(selected) == 3
+                // Create KitComponent matching real_kit_component fixture
+                var kitComponent = CreateRealKitComponent();
 
-                builder.Should().NotBeNull();
+                // Matching Python line 767: renderer = builder.ui.mapRenderer
+                var renderer = builder.Ui.MapRenderer;
+
+                // Matching Python line 769: rooms = [IndoorMapRoom(real_kit_component, Vector3(i * 10, 0, 0), 0.0, flip_x=False, flip_y=False) for i in range(3)]
+                var rooms = new List<IndoorMapRoom>();
+                for (int i = 0; i < 3; i++)
+                {
+                    rooms.Add(new IndoorMapRoom(kitComponent, new Vector3(i * 10, 0, 0), 0.0f, flipX: false, flipY: false));
+                }
+
+                // Matching Python line 770: builder._map.rooms.extend(rooms)
+                foreach (var room in rooms)
+                {
+                    builder.Map.Rooms.Add(room);
+                }
+
+                // Matching Python line 772: renderer.select_room(rooms[0], clear_existing=True)
+                renderer.SelectRoom(rooms[0], clearExisting: true);
+
+                // Matching Python line 773: renderer.select_room(rooms[1], clear_existing=False)
+                renderer.SelectRoom(rooms[1], clearExisting: false);
+
+                // Matching Python line 774: renderer.select_room(rooms[2], clear_existing=False)
+                renderer.SelectRoom(rooms[2], clearExisting: false);
+
+                // Matching Python line 776: selected = renderer.selected_rooms()
+                var selected = renderer.SelectedRooms();
+
+                // Matching Python line 777: assert len(selected) == 3
+                selected.Should().HaveCount(3, "Should have three selected rooms after additive selection");
             }
             finally
             {
