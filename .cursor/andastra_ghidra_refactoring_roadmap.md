@@ -725,11 +725,11 @@ When processing a file:
 
 - [x] Actions/ActionAttack.cs - ✅ COMPLETE - Ghidra references added: EVENT_ON_MELEE_ATTACKED @ 0x007bccf4, ScriptAttacked @ 0x007bee80, AttackList @ 0x007bf9f0, all attack-related fields
 - [x] Actions/ActionBase.cs - ✅ COMPLETE - Ghidra references added: FUN_00508260 @ 0x00508260, FUN_00505bc0 @ 0x00505bc0, ActionList @ 0x007bebdc, ActionId @ 0x007bebd0, all action parameter fields
-- [ ] Actions/ActionCastSpellAtLocation.cs
-- [ ] Actions/ActionCastSpellAtObject.cs
-- [ ] Actions/ActionCloseDoor.cs
-- [ ] Actions/ActionDestroyObject.cs
-- [ ] Actions/ActionDoCommand.cs
+- [x] Actions/ActionCastSpellAtLocation.cs - ✅ COMPLETE - Ghidra references added: ScriptSpellAt @ 0x007bee90, CSWSSCRIPTEVENT_EVENTTYPE_ON_SPELLCASTAT @ 0x007bcb3c, EVENT_SPELL_IMPACT @ 0x007bcd8c, all spell/Force point fields
+- [x] Actions/ActionCastSpellAtObject.cs - ✅ COMPLETE - Ghidra references added: ScriptSpellAt @ 0x007bee90, OnSpellCastAt @ 0x007c1a44, CSWSSCRIPTEVENT_EVENTTYPE_ON_SPELLCASTAT @ 0x007bcb3c, all spell casting fields
+- [x] Actions/ActionCloseDoor.cs - ✅ COMPLETE - Ghidra references added: OnClosed @ 0x007be1c8, EVENT_CLOSE_OBJECT @ 0x007bcdb4, CSWSSCRIPTEVENT_EVENTTYPE_ON_CLOSE @ 0x007bc820, FUN_004dcfb0 @ 0x004dcfb0
+- [x] Actions/ActionDestroyObject.cs - ✅ COMPLETE - Ghidra references added: EVENT_DESTROY_OBJECT @ 0x007bcd48, FUN_004dcfb0 @ 0x004dcfb0, IsDestroyable @ 0x007bf670, Destroyed @ 0x007c4bdc
+- [x] Actions/ActionDoCommand.cs - ✅ COMPLETE - Ghidra references added: DelayCommand @ 0x007be900, Commandable @ 0x007bec3c, STORE_STATE opcode, AssignCommand/DelayCommand NWScript functions
 - [x] Actions/ActionEquipItem.cs - ✅ COMPLETE - Ghidra references added: EquipItem @ 0x007be4e0, CSWSSCRIPTEVENT_EVENTTYPE_ON_EQUIP_ITEM @ 0x007bc594, ItemList @ 0x007bf580, Equip_ItemList @ 0x007bf5a4, all equipment/inventory fields
 - [ ] Actions/ActionFollowObject.cs
 - [ ] Actions/ActionJumpToLocation.cs

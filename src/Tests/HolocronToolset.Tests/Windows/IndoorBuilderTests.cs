@@ -69,17 +69,28 @@ namespace HolocronToolset.Tests.Windows
                 var builder = new IndoorBuilderWindow(null, _installation);
                 builder.Show();
 
-                // Matching Python assertions:
-                // assert builder._map is not None
-                // assert isinstance(builder._map, IndoorMap)
-                // assert builder._undo_stack is not None
-                // assert isinstance(builder._undo_stack, QUndoStack)
-                // assert builder._clipboard == []
-                // assert builder.ui is not None
-                // assert builder._installation is installation
+                // Matching Python line 351: assert builder._map is not None
+                builder.Map.Should().NotBeNull("Map should be initialized");
+
+                // Matching Python line 352: assert isinstance(builder._map, IndoorMap)
+                builder.Map.Should().BeOfType<IndoorMap>("Map should be of type IndoorMap");
+
+                // Matching Python line 353: assert builder._undo_stack is not None
+                builder.UndoStack.Should().NotBeNull("UndoStack should be initialized");
+
+                // Matching Python line 354: assert isinstance(builder._undo_stack, QUndoStack)
+                builder.UndoStack.Should().BeOfType<UndoStack>("UndoStack should be of type UndoStack");
+
+                // Matching Python line 355: assert builder._clipboard == []
+                builder.Clipboard.Should().NotBeNull("Clipboard should be initialized");
+                builder.Clipboard.Should().BeEmpty("Clipboard should be empty on initialization");
+
+                // Matching Python line 356: assert builder.ui is not None
+                builder.Ui.Should().NotBeNull("UI should be initialized");
+
+                // Matching Python line 357: assert builder._installation is installation
+                // Note: _installation is private, we test via public API
                 builder.Should().NotBeNull();
-                builder.Ui.Should().NotBeNull();
-                // Note: Full implementation will require _map, _undo_stack, _clipboard properties
             }
             finally
             {
@@ -113,14 +124,21 @@ namespace HolocronToolset.Tests.Windows
                 var builder = new IndoorBuilderWindow(null, null);
                 builder.Show();
 
-                // Matching Python assertions:
-                // assert builder._installation is None
-                // assert builder._map is not None
-                // assert builder.ui.actionSettings.isEnabled() is False
-                // assert builder._module_kit_manager is None
-                builder.Should().NotBeNull();
-                builder.Ui.Should().NotBeNull();
-                // Note: Full implementation will require _installation, _map, _module_kit_manager properties
+                // Matching Python line 375: assert builder._installation is None
+                // Note: _installation is private, we test via public API - builder should work without installation
+
+                // Matching Python line 376: assert builder._map is not None
+                builder.Map.Should().NotBeNull("Map should be initialized even without installation");
+
+                // Matching Python line 377: assert builder.ui.actionSettings.isEnabled() is False
+                // Note: ActionSettingsEnabled will be implemented when settings UI is complete
+                // For now, verify builder works without installation
+
+                // Matching Python line 378: assert builder._module_kit_manager is None
+                // Note: _module_kit_manager will be implemented when module kit functionality is complete
+
+                builder.Should().NotBeNull("Builder should be created without installation");
+                builder.Ui.Should().NotBeNull("UI should be initialized");
             }
             finally
             {
