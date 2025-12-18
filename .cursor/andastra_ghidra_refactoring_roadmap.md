@@ -714,8 +714,8 @@ When processing a file:
 
 - [x] Entities/Entity.cs - ✅ COMPLETE - Ghidra references added: SaveEntityState @ 0x005226d0, LoadEntityState @ 0x005fb0f0 (swkotor2.exe), ObjectId @ 0x007bce5c
 - [x] Entities/World.cs - ✅ COMPLETE - Ghidra references added: Entity management system, ObjectId @ 0x007bce5c, AreaId @ 0x007bef48
-- [ ] Entities/EventBus.cs
-- [ ] Entities/TimeManager.cs
+- [x] Entities/EventBus.cs - ✅ COMPLETE - Ghidra references added: FUN_004dcfb0 @ 0x004dcfb0 (event dispatch), all EVENT_* and CSWSSCRIPTEVENT_EVENTTYPE_* constants, EventQueue @ 0x007bce74
+- [x] Entities/TimeManager.cs - ✅ COMPLETE - Ghidra references added: TIMEPLAYED @ 0x007be1d0, GameTime @ 0x007c1a78, GameTimeScale @ 0x007c1a80, all time-related fields and Windows API time functions
 
 #### Actions (27 files)
 
@@ -748,7 +748,7 @@ When processing a file:
 
 #### AI (1 file)
 
-- [ ] AI/AIController.cs
+- [x] AI/AIController.cs - ✅ COMPLETE - Ghidra references added: OnHeartbeat @ 0x007beeb0, CSWSSCRIPTEVENT_EVENTTYPE_ON_HEARTBEAT @ 0x007bc9a4, HeartbeatInterval @ 0x007c38e8, AIState @ 0x007c4090, FUN_005226d0 @ 0x005226d0
 
 #### Animation (1 file)
 
@@ -760,7 +760,7 @@ When processing a file:
 
 #### Camera (1 file)
 
-- [ ] Camera/CameraController.cs
+- [x] Camera/CameraController.cs - ✅ COMPLETE - Ghidra references added: camera @ 0x007b63fc, CameraID @ 0x007bd160, CameraList @ 0x007bd16c, CameraStyle @ 0x007bd6e0, CameraAnimation @ 0x007c3460, all camera-related fields
 
 #### Combat (3 files)
 
@@ -785,7 +785,7 @@ When processing a file:
 
 #### GameLoop (1 file)
 
-- [ ] GameLoop/FixedTimestepGameLoop.cs
+- [x] GameLoop/FixedTimestepGameLoop.cs - ✅ COMPLETE - Ghidra references added: frameStart @ 0x007ba698, frameEnd @ 0x007ba668, TimeElapsed @ 0x007bed5c, GameTime @ 0x007c1a78, TIMEPLAYED @ 0x007be1c4, 60 Hz fixed timestep
 
 #### Interfaces (25 files)
 
