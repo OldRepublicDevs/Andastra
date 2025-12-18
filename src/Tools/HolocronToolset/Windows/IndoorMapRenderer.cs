@@ -12,6 +12,12 @@ namespace HolocronToolset.Windows
         private readonly List<IndoorMapRoom> _selectedRooms = new List<IndoorMapRoom>();
         private IndoorMap _map;
         private bool _dirty = false;
+        
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/indoor_builder.py:2491-2492
+        // Original: self.snap_to_grid: bool = False
+        // Original: self.snap_to_hooks: bool = True
+        public bool SnapToGrid { get; set; } = false;
+        public bool SnapToHooks { get; set; } = true;
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/indoor_builder.py:2597-2600
         // Original: def mark_dirty(self):
@@ -121,6 +127,20 @@ namespace HolocronToolset.Windows
         public IndoorMap GetMap()
         {
             return _map;
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/indoor_builder.py:2718-2719
+        // Original: def set_snap_to_grid(self, enabled: bool):
+        public void SetSnapToGrid(bool enabled)
+        {
+            SnapToGrid = enabled;
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/indoor_builder.py:2722-2723
+        // Original: def set_snap_to_hooks(self, enabled: bool):
+        public void SetSnapToHooks(bool enabled)
+        {
+            SnapToHooks = enabled;
         }
     }
 }
