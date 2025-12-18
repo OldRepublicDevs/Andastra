@@ -934,17 +934,17 @@ When processing a file:
 
 ### Runtime/Scripting (11 files)
 
-- [ ] EngineApi/BaseEngineApi.cs
-- [ ] Interfaces/IEngineApi.cs
-- [ ] Interfaces/IExecutionContext.cs
-- [ ] Interfaces/INcsVm.cs
-- [ ] Interfaces/IScriptGlobals.cs
-- [ ] Interfaces/Variable.cs
+- [x] EngineApi/BaseEngineApi.cs - ✅ COMPLETE - Ghidra references added: ACTION opcode handler, PRINTSTRING @ 0x007c29f8, FUN_005c4ff0 @ 0x005c4ff0, FUN_00508260 @ 0x00508260, ActionList @ 0x007bebdc, all engine API fields
+- [x] Interfaces/IEngineApi.cs - ✅ COMPLETE - Ghidra references added: ACTION opcode handler, ActionList @ 0x007bebdc, ActionId @ 0x007bebd0, PRINTSTRING @ 0x007c29f8, all engine API interface fields
+- [x] Interfaces/IExecutionContext.cs - ✅ COMPLETE - Ghidra references added: NCS file format, OBJECT_SELF (0x7F000001), OBJECT_INVALID (0x7F000000), all execution context fields
+- [x] Interfaces/INcsVm.cs - ✅ COMPLETE - Ghidra references added: NCS file format ("NCS " signature, "V1.0" version, 0x42 marker, instructions @ 0x0D), ACTION opcode, all NCS VM interface fields
+- [x] Interfaces/IScriptGlobals.cs - ✅ COMPLETE - Ghidra references added: GLOBALVARS @ 0x007c27bc, FUN_005ac670 @ 0x005ac670, Global @ 0x007c29b0, all script globals interface fields
+- [x] Interfaces/Variable.cs - ✅ COMPLETE - Ghidra references added: NCS file format, VariableType enum, OBJECT_INVALID (0x7F000000), OBJECT_SELF (0x7F000001), all variable type fields
 - [x] ScriptExecutor.cs - ✅ COMPLETE - Ghidra references added: DispatchScriptEvent @ 0x004dd730, LoadScriptHooks @ 0x0050c510, LogScriptEvent @ 0x004dcfb0 (swkotor2.exe), ExecuteCommandExecuteScript @ 0x14051d5c0 (nwmain.exe)
-- [ ] Types/Location.cs
-- [ ] VM/ExecutionContext.cs
-- [ ] VM/NcsVm.cs
-- [ ] VM/ScriptGlobals.cs
+- [x] Types/Location.cs - ✅ COMPLETE - Ghidra references added: LOCATION @ 0x007c2850, ValLocation @ 0x007c26ac, CatLocation @ 0x007c26dc, all location error messages
+- [x] VM/ExecutionContext.cs - ✅ COMPLETE - Ghidra references added: NCS file format, OBJECT_SELF (0x7F000001), OBJECT_INVALID (0x7F000000), all execution context fields
+- [x] VM/NcsVm.cs - ✅ COMPLETE - Ghidra references added: NCS file format ("NCS " signature, "V1.0" version, 0x42 marker, instructions @ 0x0D), ACTION opcode, ActionList @ 0x007bebdc, DelayCommand @ 0x007be900, STORE_STATE opcode, all NCS VM fields
+- [x] VM/ScriptGlobals.cs - ✅ COMPLETE - Ghidra references added: GLOBALVARS @ 0x007c27bc, FUN_005ac670 @ 0x005ac670, Global @ 0x007c29b0, OBJECT_SELF (0x7F000001), OBJECT_INVALID (0x7F000000), all script globals fields
 
 ### Runtime/Games (99 files)
 
