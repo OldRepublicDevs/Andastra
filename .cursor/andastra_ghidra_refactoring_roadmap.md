@@ -168,12 +168,15 @@ Internal tracking document for AI agents. Not public-facing. Do not commit to re
 - **Creature System**: ✅ **ANALYZED**
   - `swkotor2.exe`: FUN_004dfbb0 - ✅ ANALYZED - Loads creature list from GIT GFF into area, iterates through "Creature List" GFF list, reads ObjectId, creates creature entities (via FUN_005199e0), loads creature data from GFF (via FUN_005223a0 which is LoadCreatureFromGFF), reads position (XPosition, YPosition, ZPosition), validates position on walkmesh (via FUN_004f7590), reads orientation (XOrientation, YOrientation, ZOrientation), adds creatures to area (via FUN_0051bfc0), sets orientation (via FUN_00506550) (via "Creature List" @ 0x007bd01c)
   - `swkotor2.exe`: FUN_004e28c0 - ✅ ANALYZED - Saves creature list from area to GFF save data, iterates through creature array, gets creature objects from world (via FUN_00503bd0), checks creature type (DAT_007beb24), filters creatures (checks if creature is not in transition and not in party), saves each creature state with ObjectId field, calls SaveEntityState for each creature (via "Creature List" @ 0x007bd01c)
+  - `swkotor.exe`: LoadCreatureList @ 0x00504a70 - ✅ FOUND - Loads creature list from GFF format (swkotor.exe version), similar to swkotor2.exe version, iterates through "Creature List" GFF list, reads ObjectId, creates creature entities, loads creature data from GFF (via "Creature List" @ 0x007458dc)
+  - `swkotor.exe`: SaveCreatureList @ 0x00507680 - ✅ FOUND - Saves creature list to GFF format (swkotor.exe version), similar to swkotor2.exe version, writes creature entities to GFF with ObjectId, position, orientation, etc. (via "Creature List" @ 0x007458dc)
   - `swkotor2.exe`: FUN_005223a0 - ✅ ANALYZED - Loads creature data from GIT GFF into creature object (LoadCreatureFromGFF), reads AreaId, calls LoadEntityState, reads DetectMode, StealthMode, updates creature flags (0x1120, 0x1124), calls FUN_00542bd0 and FUN_00542bf0 for stealth/detect mode changes, reads other creature properties from GFF
   - `swkotor2.exe`: FUN_004feec0 - ✅ FOUND - Another function that saves creature list from area to GFF save data (similar to FUN_004e28c0)
   - `swkotor2.exe`: FUN_00501bc0 - ✅ FOUND - Another function that loads creature list from GIT GFF (similar to FUN_004dfbb0)
   - `swkotor2.exe`: "Creature List" @ 0x007bd01c, "CreatureList" @ 0x007c0c80 (string references) - ✅ FOUND
+  - `swkotor.exe`: "Creature List" @ 0x007458dc, "CreatureList" @ 0x00749ce8 (string references) - ✅ FOUND
   - **Inheritance**: Base class `CreatureSystem` (Runtime.Games.Common), `OdysseyCreatureSystem : CreatureSystem` (Runtime.Games.Odyssey), `AuroraCreatureSystem : CreatureSystem` (Runtime.Games.Aurora)
-  - **Cross-engine**: ✅ Found swkotor2.exe equivalents, swkotor.exe/nwmain.exe/daorigins.exe TODO
+  - **Cross-engine**: ✅ Found swkotor.exe and swkotor2.exe equivalents, nwmain.exe/daorigins.exe TODO
   - **Note**: Creature system handles creature entities (NPCs, party members, enemies). Creatures are loaded from GIT files with ObjectId, TemplateResRef, position, orientation, and creature-specific properties (DetectMode, StealthMode, AreaId). Creatures are saved to GFF save data with ObjectId and entity state. Creature templates are loaded from UTC files (similar to item templates from UTI files).
 - **Camera System**: ✅ **ANALYZED**
   - `swkotor2.exe`: LoadCameraList @ 0x004e0ff0 - ✅ ANALYZED - Loads camera list from GIT GFF into camera manager, iterates through "CameraList" GFF list, reads CameraID, Position (X, Y, Z), Orientation, Pitch, Height, FieldOfView (default 55.0), MicRange, creates camera entries in camera manager (via FUN_00680430 and FUN_00680450), validates camera count < 0x47 (71) (via "CameraList" @ 0x007bd16c, "CameraID" @ 0x007bd160, "Position", "Orientation", "Pitch", "Height", "FieldOfView" @ 0x007bd12c, "MicRange")
@@ -1082,7 +1085,7 @@ When processing a file:
 - [ ] Odyssey/Game/GameSession.cs
 - [ ] Odyssey/Game/ModuleLoader.cs
 - [x] Odyssey/Game/ScriptExecutor.cs - ✅ COMPLETE - Ghidra references added: FUN_004dcfb0 @ 0x004dcfb0 (script event dispatch), all CSWSSCRIPTEVENT_EVENTTYPE_* constants, Script hook fields
-- [ ] Odyssey/Input/PlayerController.cs
+- [x] Odyssey/Input/PlayerController.cs - ✅ COMPLETE - Ghidra references added: FUN_0054be70 @ 0x0054be70, "Input" @ 0x007c2520, cross-engine analysis (Aurora: CClientExoAppInternal::ProcessInput, Eclipse: UnrealScript-based InputSystem), inheritance structure
 - [ ] Odyssey/Loading/EntityFactory.cs
 - [ ] Odyssey/Loading/KotorModuleLoader.cs
 - [ ] Odyssey/Loading/ModuleLoader.cs
