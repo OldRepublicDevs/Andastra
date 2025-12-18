@@ -756,17 +756,35 @@ namespace HolocronToolset.Tests.Windows
                 var builder = new IndoorBuilderWindow(null, _installation);
                 builder.Show();
 
-                // Matching Python test logic:
-                // room = IndoorMapRoom(real_kit_component, Vector3(0, 0, 0), 0.0, flip_x=False, flip_y=False)
-                // builder._map.rooms.append(room)
-                // cmd = FlipRoomsCommand(builder._map, [room], flip_x=True, flip_y=False)
-                // undo_stack.push(cmd)
-                // assert room.flip_x is True
-                // assert room.flip_y is False
-                // undo_stack.undo()
-                // assert room.flip_x is False
+                // Create KitComponent matching real_kit_component fixture
+                var kitComponent = CreateRealKitComponent();
 
-                builder.Should().NotBeNull();
+                // Matching Python line 545: undo_stack = builder._undo_stack
+                var undoStack = builder.UndoStack;
+
+                // Matching Python line 547: room = IndoorMapRoom(real_kit_component, Vector3(0, 0, 0), 0.0, flip_x=False, flip_y=False)
+                var room = new IndoorMapRoom(kitComponent, new Vector3(0, 0, 0), 0.0f, flipX: false, flipY: false);
+
+                // Matching Python line 548: builder._map.rooms.append(room)
+                builder.Map.Rooms.Add(room);
+
+                // Matching Python line 550: cmd = FlipRoomsCommand(builder._map, [room], flip_x=True, flip_y=False)
+                var cmd = new FlipRoomsCommand(builder.Map, new List<IndoorMapRoom> { room }, flipX: true, flipY: false);
+
+                // Matching Python line 551: undo_stack.push(cmd)
+                undoStack.Push(cmd);
+
+                // Matching Python line 553: assert room.flip_x is True
+                room.FlipX.Should().BeTrue("Room flip_x should be True after flip command");
+
+                // Matching Python line 554: assert room.flip_y is False
+                room.FlipY.Should().BeFalse("Room flip_y should be False after flip command");
+
+                // Matching Python line 556: undo_stack.undo()
+                undoStack.Undo();
+
+                // Matching Python line 557: assert room.flip_x is False
+                room.FlipX.Should().BeFalse("Room flip_x should be False after undo");
             }
             finally
             {

@@ -412,5 +412,69 @@ namespace HolocronToolset.Windows
             // Note: rebuild_room_connections will be implemented when needed
         }
     }
+
+    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/indoor_builder.py:279-312
+    // Original: class FlipRoomsCommand(QUndoCommand):
+    public class FlipRoomsCommand : IUndoCommand
+    {
+        private readonly IndoorMap _indoorMap;
+        private readonly List<IndoorMapRoom> _rooms;
+        private readonly bool _flipX;
+        private readonly bool _flipY;
+        private readonly List<bool> _oldFlipX;
+        private readonly List<bool> _oldFlipY;
+
+        public string Text => $"Flip {_rooms.Count} Room(s)";
+
+        public FlipRoomsCommand(
+            IndoorMap indoorMap,
+            List<IndoorMapRoom> rooms,
+            bool flipX,
+            bool flipY)
+        {
+            _indoorMap = indoorMap;
+            _rooms = new List<IndoorMapRoom>(rooms);
+            _flipX = flipX;
+            _flipY = flipY;
+            // Store original states (matching Python lines 297-298)
+            _oldFlipX = new List<bool>();
+            _oldFlipY = new List<bool>();
+            foreach (var room in rooms)
+            {
+                _oldFlipX.Add(room.FlipX);
+                _oldFlipY.Add(room.FlipY);
+            }
+        }
+
+        // Matching Python: def undo(self)
+        public void Undo()
+        {
+            // Restore original flip states (matching Python lines 301-303)
+            for (int i = 0; i < _rooms.Count && i < _oldFlipX.Count && i < _oldFlipY.Count; i++)
+            {
+                _rooms[i].FlipX = _oldFlipX[i];
+                _rooms[i].FlipY = _oldFlipY[i];
+            }
+            // Note: rebuild_room_connections will be implemented when needed
+        }
+
+        // Matching Python: def redo(self)
+        public void Redo()
+        {
+            // Apply flip states (matching Python lines 309-312)
+            foreach (var room in _rooms)
+            {
+                if (_flipX)
+                {
+                    room.FlipX = !room.FlipX;
+                }
+                if (_flipY)
+                {
+                    room.FlipY = !room.FlipY;
+                }
+            }
+            // Note: rebuild_room_connections will be implemented when needed
+        }
+    }
 }
 
