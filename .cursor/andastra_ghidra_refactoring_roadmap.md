@@ -719,14 +719,14 @@ When processing a file:
 
 #### Actions (27 files)
 
-- [ ] Actions/ActionAttack.cs
+- [x] Actions/ActionAttack.cs - ✅ COMPLETE - Ghidra references added: EVENT_ON_MELEE_ATTACKED @ 0x007bccf4, ScriptAttacked @ 0x007bee80, AttackList @ 0x007bf9f0, all attack-related fields
 - [ ] Actions/ActionBase.cs
 - [ ] Actions/ActionCastSpellAtLocation.cs
 - [ ] Actions/ActionCastSpellAtObject.cs
 - [ ] Actions/ActionCloseDoor.cs
 - [ ] Actions/ActionDestroyObject.cs
 - [ ] Actions/ActionDoCommand.cs
-- [ ] Actions/ActionEquipItem.cs
+- [x] Actions/ActionEquipItem.cs - ✅ COMPLETE - Ghidra references added: EquipItem @ 0x007be4e0, CSWSSCRIPTEVENT_EVENTTYPE_ON_EQUIP_ITEM @ 0x007bc594, ItemList @ 0x007bf580, Equip_ItemList @ 0x007bf5a4, all equipment/inventory fields
 - [ ] Actions/ActionFollowObject.cs
 - [ ] Actions/ActionJumpToLocation.cs
 - [ ] Actions/ActionJumpToObject.cs
@@ -735,14 +735,14 @@ When processing a file:
 - [ ] Actions/ActionMoveToObject.cs
 - [ ] Actions/ActionOpenDoor.cs
 - [ ] Actions/ActionPickUpItem.cs
-- [ ] Actions/ActionPlayAnimation.cs
+- [x] Actions/ActionPlayAnimation.cs - ✅ COMPLETE - Ghidra references added: Animation @ 0x007c3440, PlayAnim @ 0x007c346c, AnimList @ 0x007c3694, CurrentAnim @ 0x007c38d4, NextAnim @ 0x007c38c8
 - [ ] Actions/ActionPutDownItem.cs
 - [x] Actions/ActionQueue.cs - ✅ COMPLETE - Ghidra references added: FUN_00508260 @ 0x00508260 (load ActionList), FUN_00505bc0 @ 0x00505bc0 (save ActionList), ActionList @ 0x007bebdc, ActionId @ 0x007bebd0
 - [ ] Actions/ActionRandomWalk.cs
-- [ ] Actions/ActionSpeakString.cs
+- [x] Actions/ActionSpeakString.cs - ✅ COMPLETE - Ghidra references added: TalkString @ 0x007c14f8, Speaker @ 0x007c35f8, SpeakString NWScript function
 - [ ] Actions/ActionUnequipItem.cs
 - [ ] Actions/ActionUseItem.cs
-- [ ] Actions/ActionUseObject.cs
+- [x] Actions/ActionUseObject.cs - ✅ COMPLETE - Ghidra references added: OnUsed @ 0x007c1f70, EVENT_OPEN_OBJECT @ 0x007bcda0, EVENT_CLOSE_OBJECT @ 0x007bcdb4, FUN_004dcfb0 @ 0x004dcfb0
 - [ ] Actions/ActionWait.cs
 - [ ] Actions/DelayScheduler.cs
 
