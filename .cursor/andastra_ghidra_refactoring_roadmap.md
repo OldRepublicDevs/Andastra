@@ -136,6 +136,15 @@ Internal tracking document for AI agents. Not public-facing. Do not commit to re
   - `swkotor2.exe`: CSWSSCRIPTEVENT_EVENTTYPE_ON_PERCEPTION @ 0x007bcb68 (string reference) - ✅ FOUND - Perception event type
   - **Inheritance**: Base class `PerceptionSystem` (Runtime.Games.Common), `OdysseyPerceptionSystem : PerceptionSystem` (Runtime.Games.Odyssey), `AuroraPerceptionSystem : PerceptionSystem` (Runtime.Games.Aurora)
   - **Cross-engine**: ✅ Found swkotor.exe, swkotor2.exe, and nwmain.exe equivalents, daorigins.exe TODO
+- **Journal/Quest System**: ✅ **ANALYZED**
+  - `swkotor2.exe`: SaveJournalFlagsToGFF @ 0x004eac50 - ✅ ANALYZED - Saves journal flags to GFF format, writes JOURNAL flag (bit 4), NEWQUESTSOUND flag (bit 6), COMPLETESOUND flag (bit 7), and other party status flags to GFF, called by SavePartyTable (via "JOURNAL" @ 0x007bdf44, "NEWQUESTSOUND" @ 0x007bded8)
+  - `swkotor2.exe`: LoadJournalFlagsFromGFF @ 0x00579360 - ✅ ANALYZED - Loads journal flags from GFF format, reads JOURNAL flag (bit 4), NEWQUESTSOUND flag (bit 6), COMPLETESOUND flag (bit 7), and other party status flags from GFF, called by LoadPartyTable (via "JOURNAL" @ 0x007bdf44, "NEWQUESTSOUND" @ 0x007bded8)
+  - `swkotor2.exe`: FUN_005e6ac0 - ✅ FOUND - Loads dialogue entry from GFF, reads Quest and QuestEntry fields from dialogue entry data (via "Quest" @ 0x007c35e4, "QuestEntry" @ 0x007c35d8)
+  - `swkotor2.exe`: FUN_005a9210 - ✅ FOUND - Server-side journal message handler, handles journal update messages from server to client (via "Journal" @ 0x007c2490)
+  - `swkotor2.exe`: "JOURNAL" @ 0x007bdf44, "NW_JOURNAL" @ 0x007c20e8, "Journal" @ 0x007c2490, "Quest" @ 0x007c35e4, "QuestEntry" @ 0x007c35d8, "NEWQUESTSOUND" @ 0x007bded8 (string references) - ✅ FOUND
+  - **Inheritance**: Base class `JournalSystem` (Runtime.Games.Common), `OdysseyJournalSystem : JournalSystem` (Runtime.Games.Odyssey)
+  - **Cross-engine**: ✅ Found swkotor2.exe equivalents, swkotor.exe/nwmain.exe/daorigins.exe TODO
+  - **Note**: Journal system is integrated with party table system - journal flags stored in party table GFF. Quest state changes stored as global variables. Journal entries loaded from JRL files (GFF with "JRL " signature).
 
 ## Class Inheritance Structure
 
@@ -731,9 +740,9 @@ When processing a file:
 - [x] Actions/ActionDestroyObject.cs - ✅ COMPLETE - Ghidra references added: EVENT_DESTROY_OBJECT @ 0x007bcd48, FUN_004dcfb0 @ 0x004dcfb0, IsDestroyable @ 0x007bf670, Destroyed @ 0x007c4bdc
 - [x] Actions/ActionDoCommand.cs - ✅ COMPLETE - Ghidra references added: DelayCommand @ 0x007be900, Commandable @ 0x007bec3c, STORE_STATE opcode, AssignCommand/DelayCommand NWScript functions
 - [x] Actions/ActionEquipItem.cs - ✅ COMPLETE - Ghidra references added: EquipItem @ 0x007be4e0, CSWSSCRIPTEVENT_EVENTTYPE_ON_EQUIP_ITEM @ 0x007bc594, ItemList @ 0x007bf580, Equip_ItemList @ 0x007bf5a4, all equipment/inventory fields
-- [ ] Actions/ActionFollowObject.cs
-- [ ] Actions/ActionJumpToLocation.cs
-- [ ] Actions/ActionJumpToObject.cs
+- [x] Actions/ActionFollowObject.cs - ✅ COMPLETE - Ghidra references added: FollowObject @ 0x007bedb8, FollowInfo @ 0x007beec0, PT_FOLLOWSTATE @ 0x007c1758, all follow-related fields
+- [x] Actions/ActionJumpToLocation.cs - ✅ COMPLETE - Ghidra references added: JumpToLocation action type, Position @ 0x007bef70, ActionJumpToLocation NWScript function
+- [x] Actions/ActionJumpToObject.cs - ✅ COMPLETE - Ghidra references added: JumpToObject action type, Position @ 0x007bef70, ActionJumpToObject NWScript function
 - [ ] Actions/ActionMoveAwayFromObject.cs
 - [x] Actions/ActionMoveToLocation.cs - ✅ COMPLETE - Ghidra references added: FUN_00508260 @ 0x00508260, FUN_0054be70 @ 0x0054be70 (walking collision), ActionList @ 0x007bebdc, MOVETO @ 0x007b6b24
 - [ ] Actions/ActionMoveToObject.cs
