@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using Andastra.Parsing.Formats.GFF;
 using Andastra.Parsing.Formats.TLK;
 using Andastra.Parsing.Formats.TwoDA;
-using Andastra.Parsing.Resources;
+using Andastra.Parsing.Resource;
 
 namespace KotorDiff.Diff.Objects
 {

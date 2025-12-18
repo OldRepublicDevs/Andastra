@@ -6,10 +6,12 @@ using System.IO;
 using System.Linq;
 using Andastra.Parsing.Mods;
 using Andastra.Parsing;
+using Andastra.Parsing.Common;
+using Andastra.Parsing.Extract;
 using Andastra.Parsing.Installation;
 using Andastra.Parsing.TSLPatcher;
 using Andastra.Parsing.Formats.Capsule;
-using Andastra.Parsing.Resources;
+using Andastra.Parsing.Resource;
 using KotorDiff.Resolution;
 using KotorDiff.Cache;
 

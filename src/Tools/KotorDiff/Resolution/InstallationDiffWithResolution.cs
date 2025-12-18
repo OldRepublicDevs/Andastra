@@ -8,7 +8,7 @@ using System.IO;
 using System.Linq;
 using Andastra.Parsing;
 using Andastra.Parsing.Installation;
-using Andastra.Parsing.Resources;
+using Andastra.Parsing.Resource;
 using Andastra.Parsing.Mods;
 using KotorDiff.Diff;
 using Andastra.Parsing.TSLPatcher;

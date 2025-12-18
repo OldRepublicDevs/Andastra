@@ -20,7 +20,7 @@ using Andastra.Parsing.Mods.NCS;
 using Andastra.Parsing.Mods.SSF;
 using Andastra.Parsing.Mods.TwoDA;
 using Andastra.Parsing.Memory;
-using Andastra.Parsing.Resources;
+using Andastra.Parsing.Resource;
 using Andastra.Parsing.Tools;
 using JetBrains.Annotations;
 
@@ -94,7 +94,7 @@ namespace KotorDiff.Diff
             var offsets = new List<int>();
             try
             {
-                using (var reader = Andastra.Parsing.BinaryReader.FromBytes(ncsData))
+                using (var reader = Andastra.Parsing.Common.BinaryReader.FromBytes(ncsData))
                 {
                     // Skip NCS header (13 bytes)
                     string signature = reader.ReadString(4);
