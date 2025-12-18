@@ -757,7 +757,7 @@ When processing a file:
 
 - [x] Combat/CombatSystem.cs - ✅ COMPLETE - Ghidra references added: EndCombatRound @ 0x00529c30 (swkotor2.exe), EndCombatRound @ 0x004d4620 (swkotor.exe)
 - [ ] Combat/CombatTypes.cs
-- [ ] Combat/EffectSystem.cs
+- [x] Combat/EffectSystem.cs - ✅ COMPLETE - Ghidra references added: LoadEffectListFromGFF @ 0x0050b540, SaveEffectListToGFF @ 0x00505db0 (swkotor2.exe), EffectList @ 0x007bebe8
 
 #### Dialogue (4 files)
 
@@ -882,7 +882,7 @@ When processing a file:
 - [ ] MDL/MDLOptimizedReader.cs
 - [ ] ResourceProviders/GameResourceProvider.cs
 - [ ] Save/SaveDataProvider.cs
-- [ ] Save/SaveSerializer.cs
+- [x] Save/SaveSerializer.cs - ✅ COMPLETE - Ghidra references added: SerializeSaveNfo @ 0x004eb750, SaveGlobalVariables @ 0x005ac670, SavePartyTable @ 0x0057bd70 (swkotor2.exe)
 
 ### Runtime/Scripting (11 files)
 
