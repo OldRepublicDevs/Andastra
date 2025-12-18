@@ -8,7 +8,7 @@ using Andastra.Parsing;
 using Andastra.Parsing.Extract;
 using Andastra.Parsing.Formats.Capsule;
 using Andastra.Parsing.Installation;
-using Andastra.Parsing.Resources;
+using Andastra.Parsing.Resource;
 using KotorDiff.Diff;
 using KotorDiff.Logger;
 using JetBrains.Annotations;

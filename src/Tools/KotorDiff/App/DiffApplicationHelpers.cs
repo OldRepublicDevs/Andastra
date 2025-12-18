@@ -6,10 +6,10 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using Andastra.Parsing;
+using Andastra.Parsing.Common;
 using Andastra.Parsing.Installation;
 using Andastra.Parsing.Mods;
 using Andastra.Parsing.Tools;
-using Andastra.Parsing.Utility;
 using KotorDiff.Diff;
 using Andastra.Parsing.TSLPatcher;
 using Tuple = System.Tuple;
@@ -457,7 +457,7 @@ namespace KotorDiff.App
                         {
                             baseDataPath = installation.Path;
                         }
-                        
+
                         // Extract modded data path from second path if available
                         if (config.Paths.Count > 1)
                         {
@@ -598,7 +598,7 @@ namespace KotorDiff.App
                         // Here we do not have strref_mappings directly, so pass empty mapping for now
                         var strrefMappings = new Dictionary<int, int>();
                         var tlkModTuple = Tuple.Create(tlkMod, strrefMappings);
-                        
+
                         ReferenceAnalyzers.AnalyzeTlkStrrefReferences(
                             tlkModTuple,
                             strrefMappings,

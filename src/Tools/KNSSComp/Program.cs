@@ -4,7 +4,8 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using Andastra.Parsing;
-using Andastra.Parsing.Script;
+using Andastra.Parsing.Common;
+using Andastra.Parsing.Common.Script;
 using Andastra.Parsing.Formats.NCS;
 using Andastra.Parsing.Formats.NCS.Optimizers;
 
@@ -247,11 +248,11 @@ namespace KNSSComp.NET
                 {
                     if (arg == "1" || arg == "k1" || arg.Equals("kotor1", StringComparison.OrdinalIgnoreCase))
                     {
-                        result.Game = Andastra.Parsing.Game.K1;
+                        result.Game = Andastra.Parsing.Common.Game.K1;
                     }
                     else if (arg == "2" || arg == "k2" || arg.Equals("kotor2", StringComparison.OrdinalIgnoreCase) || arg.Equals("tsl", StringComparison.OrdinalIgnoreCase))
                     {
-                        result.Game = Andastra.Parsing.Game.K2;
+                        result.Game = Andastra.Parsing.Common.Game.K2;
                     }
                     else
                     {
@@ -421,11 +422,11 @@ namespace KNSSComp.NET
                 }
                 else if (arg == "-k1" || arg == "--kotor1")
                 {
-                    result.Game = Andastra.Parsing.Game.K1;
+                    result.Game = Andastra.Parsing.Common.Game.K1;
                 }
                 else if (arg == "-k2" || arg == "--kotor2" || arg == "--tsl")
                 {
-                    result.Game = Andastra.Parsing.Game.K2;
+                    result.Game = Andastra.Parsing.Common.Game.K2;
                 }
                 else if (arg == "-i" || arg == "--include" || arg == "--input")
                 {
@@ -567,7 +568,7 @@ namespace KNSSComp.NET
                         }
                     }
                 }
-                
+
                 // Check SourceFile (compile mode)
                 if (!result.Compile && !result.Decompile && result.SourceFile != null)
                 {
@@ -589,14 +590,14 @@ namespace KNSSComp.NET
                         return null;
                     }
                 }
-                
+
                 if (!result.Compile && !result.Decompile)
                 {
                     Console.Error.WriteLine("ERROR: Must specify operation (-c or -d) or provide file with .nss or .ncs extension");
                     return null;
                 }
             }
-            
+
             // Resolve ambiguous -i arguments now that we know the mode
             if (result.Compile && result.InputFiles.Count > 0)
             {
@@ -625,13 +626,13 @@ namespace KNSSComp.NET
                     Console.Error.WriteLine("ERROR: Input file(s) required for decompilation. Use -i/--input or positional arguments.");
                     return null;
                 }
-                
+
                 // If SourceFile is set but InputFiles is empty, add it
                 if (result.SourceFile != null && result.InputFiles.Count == 0)
                 {
                     result.InputFiles.Add(result.SourceFile);
                 }
-                
+
                 // Validate input files exist
                 foreach (string inputFile in result.InputFiles)
                 {
@@ -686,7 +687,7 @@ namespace KNSSComp.NET
             {
                 // Try to infer from source file location or content
                 // Default to K2 (TSL) as it's more common
-                result.Game = Andastra.Parsing.Game.K2;
+                result.Game = Andastra.Parsing.Common.Game.K2;
             }
 
             return result;
@@ -714,7 +715,7 @@ namespace KNSSComp.NET
                 }
 
                 string source = File.ReadAllText(args.SourceFile, Encoding.UTF8);
-                Game game = args.Game ?? Andastra.Parsing.Game.K2;
+                Game game = args.Game ?? Andastra.Parsing.Common.Game.K2;
 
                 // Build library lookup paths
                 List<string> libraryLookup = new List<string>();
@@ -790,7 +791,7 @@ namespace KNSSComp.NET
         {
             try
             {
-                Game game = args.Game ?? Andastra.Parsing.Game.K2;
+                Game game = args.Game ?? Andastra.Parsing.Common.Game.K2;
                 Encoding encoding = GetEncoding(args.Encoding);
 
                 // Collect all input files
@@ -855,7 +856,7 @@ namespace KNSSComp.NET
                             string inputDir = Path.GetDirectoryName(inputFile);
                             string inputName = Path.GetFileNameWithoutExtension(inputFile);
                             string outputDir = args.OutputDir ?? inputDir ?? ".";
-                            
+
                             string outputName = (args.Prefix ?? "") + inputName + (args.Suffix ?? "") + args.OutputExt;
                             outputFile = Path.Combine(outputDir, outputName);
                         }

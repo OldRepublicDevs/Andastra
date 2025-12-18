@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using Andastra.Parsing;
 using Andastra.Parsing.Extract;
-using Andastra.Parsing.Resources;
+using Andastra.Parsing.Resource;
 using JetBrains.Annotations;
 
 namespace KotorDiff.Resolution

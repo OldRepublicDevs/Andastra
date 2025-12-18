@@ -23,8 +23,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Andastra.Runtime.Graphics.S
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Andastra.Runtime.Games.Common", "src\Andastra\Runtime\Games\Common\Andastra.Runtime.Games.Common.csproj", "{C013626C-1404-4FEF-A1B4-C02CADA857BC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Andastra.Runtime.Games.Kotor", "src\Andastra\Runtime\Games\Odyssey\Andastra.Runtime.Games.Kotor.csproj", "{827FE34C-1C5F-4F6E-8D68-917689C4EBA5}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Andastra.Runtime.Games.Aurora", "src\Andastra\Runtime\Games\Aurora\Andastra.Runtime.Games.Aurora.csproj", "{F2508EE5-8989-4AE2-8891-A7147CC1B0CB}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Andastra.Runtime.Games.Eclipse", "src\Andastra\Runtime\Games\Eclipse\Andastra.Runtime.Games.Eclipse.csproj", "{59ECBBB7-4F75-45B4-AF07-2F741E2BAB93}"
@@ -179,18 +177,6 @@ Global
 		{C013626C-1404-4FEF-A1B4-C02CADA857BC}.Release|x64.Build.0 = Release|Any CPU
 		{C013626C-1404-4FEF-A1B4-C02CADA857BC}.Release|x86.ActiveCfg = Release|Any CPU
 		{C013626C-1404-4FEF-A1B4-C02CADA857BC}.Release|x86.Build.0 = Release|Any CPU
-		{827FE34C-1C5F-4F6E-8D68-917689C4EBA5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{827FE34C-1C5F-4F6E-8D68-917689C4EBA5}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{827FE34C-1C5F-4F6E-8D68-917689C4EBA5}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{827FE34C-1C5F-4F6E-8D68-917689C4EBA5}.Debug|x64.Build.0 = Debug|Any CPU
-		{827FE34C-1C5F-4F6E-8D68-917689C4EBA5}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{827FE34C-1C5F-4F6E-8D68-917689C4EBA5}.Debug|x86.Build.0 = Debug|Any CPU
-		{827FE34C-1C5F-4F6E-8D68-917689C4EBA5}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{827FE34C-1C5F-4F6E-8D68-917689C4EBA5}.Release|Any CPU.Build.0 = Release|Any CPU
-		{827FE34C-1C5F-4F6E-8D68-917689C4EBA5}.Release|x64.ActiveCfg = Release|Any CPU
-		{827FE34C-1C5F-4F6E-8D68-917689C4EBA5}.Release|x64.Build.0 = Release|Any CPU
-		{827FE34C-1C5F-4F6E-8D68-917689C4EBA5}.Release|x86.ActiveCfg = Release|Any CPU
-		{827FE34C-1C5F-4F6E-8D68-917689C4EBA5}.Release|x86.Build.0 = Release|Any CPU
 		{F2508EE5-8989-4AE2-8891-A7147CC1B0CB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{F2508EE5-8989-4AE2-8891-A7147CC1B0CB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F2508EE5-8989-4AE2-8891-A7147CC1B0CB}.Debug|x64.ActiveCfg = Debug|Any CPU
