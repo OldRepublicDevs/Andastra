@@ -325,20 +325,38 @@ namespace HolocronToolset.Tests.Windows
                 var builder = new IndoorBuilderWindow(null, _installation);
                 builder.Show();
 
-                // Matching Python test logic:
-                // builder = builder_no_kits
-                // undo_stack = builder._undo_stack
-                // room = IndoorMapRoom(real_kit_component, Vector3(0, 0, 0), 0.0, flip_x=False, flip_y=False)
-                // builder._map.rooms.append(room)
-                // cmd = DeleteRoomsCommand(builder._map, [room])
-                // undo_stack.push(cmd)
-                // assert room not in builder._map.rooms
-                // undo_stack.undo()
-                // assert room in builder._map.rooms
-                // undo_stack.redo()
-                // assert room not in builder._map.rooms
+                // Create KitComponent matching real_kit_component fixture
+                var kitComponent = CreateRealKitComponent();
 
-                builder.Should().NotBeNull();
+                // Matching Python line 431: undo_stack = builder._undo_stack
+                var undoStack = builder.UndoStack;
+
+                // Matching Python line 433: room = IndoorMapRoom(real_kit_component, Vector3(0, 0, 0), 0.0, flip_x=False, flip_y=False)
+                var room = new IndoorMapRoom(kitComponent, new Vector3(0, 0, 0), 0.0f, flipX: false, flipY: false);
+
+                // Matching Python line 434: builder._map.rooms.append(room)
+                builder.Map.Rooms.Add(room);
+
+                // Matching Python line 436: cmd = DeleteRoomsCommand(builder._map, [room])
+                var cmd = new DeleteRoomsCommand(builder.Map, new List<IndoorMapRoom> { room });
+
+                // Matching Python line 437: undo_stack.push(cmd)
+                undoStack.Push(cmd);
+
+                // Matching Python line 439: assert room not in builder._map.rooms
+                builder.Map.Rooms.Should().NotContain(room, "Room should be removed from map after delete command");
+
+                // Matching Python line 441: undo_stack.undo()
+                undoStack.Undo();
+
+                // Matching Python line 442: assert room in builder._map.rooms
+                builder.Map.Rooms.Should().Contain(room, "Room should be back in map after undo");
+
+                // Matching Python line 444: undo_stack.redo()
+                undoStack.Redo();
+
+                // Matching Python line 445: assert room not in builder._map.rooms
+                builder.Map.Rooms.Should().NotContain(room, "Room should be removed again after redo");
             }
             finally
             {

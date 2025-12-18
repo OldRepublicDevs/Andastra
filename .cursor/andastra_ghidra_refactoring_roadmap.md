@@ -822,20 +822,20 @@ When processing a file:
 - [x] Interfaces/INavigationMesh.cs - ✅ COMPLETE - Ghidra references added: BWM V1.0 @ 0x007c061c, FUN_004f5070 @ 0x004f5070, all walkmesh/navigation fields
 - [x] Interfaces/ITimeManager.cs - ✅ COMPLETE - Ghidra references added: TIMEPLAYED @ 0x007be1c4, frameStart @ 0x007ba698, frameEnd @ 0x007ba668, all time management fields
 - [x] Interfaces/IWorld.cs - ✅ COMPLETE - Ghidra references added: ObjectId @ 0x007bce5c, Module @ 0x007bc4e0, AREANAME @ 0x007be1dc, all world management fields
-- [ ] Interfaces/Components/IActionQueueComponent.cs
-- [ ] Interfaces/Components/IAnimationComponent.cs
-- [ ] Interfaces/Components/IDoorComponent.cs
-- [ ] Interfaces/Components/IFactionComponent.cs
-- [ ] Interfaces/Components/IInventoryComponent.cs
-- [ ] Interfaces/Components/IItemComponent.cs
-- [ ] Interfaces/Components/IPerceptionComponent.cs
-- [ ] Interfaces/Components/IPlaceableComponent.cs
-- [ ] Interfaces/Components/IQuickSlotComponent.cs
-- [ ] Interfaces/Components/IRenderableComponent.cs
-- [ ] Interfaces/Components/IScriptHooksComponent.cs
-- [ ] Interfaces/Components/IStatsComponent.cs
-- [ ] Interfaces/Components/ITransformComponent.cs
-- [ ] Interfaces/Components/ITriggerComponent.cs
+- [x] Interfaces/Components/IActionQueueComponent.cs - ✅ COMPLETE - Ghidra references added: ActionList @ 0x007bebdc, ActionId @ 0x007bebd0, all action queue fields
+- [x] Interfaces/Components/IAnimationComponent.cs - ✅ COMPLETE - Ghidra references added: Animation @ 0x007c3440, AnimList @ 0x007c3694, PlayAnim @ 0x007c346c, CurrentAnim @ 0x007c38d4, all animation fields
+- [x] Interfaces/Components/IDoorComponent.cs - ✅ COMPLETE - Ghidra references added: Door @ 0x007bc538, EVENT_OPEN_OBJECT @ 0x007bcda0, EVENT_CLOSE_OBJECT @ 0x007bcdb4, FUN_004dcfb0 @ 0x004dcfb0, all door fields
+- [x] Interfaces/Components/IFactionComponent.cs - ✅ COMPLETE - Ghidra references added: repute.2da @ 0x007c0a28, FactionID @ 0x007c40b4, FactionRep @ 0x007c290c, FUN_005226d0 @ 0x005226d0, all faction fields
+- [x] Interfaces/Components/IInventoryComponent.cs - ✅ COMPLETE - Ghidra references added: Inventory @ 0x007c2504, InventorySlot @ 0x007bf7d0, ItemList @ 0x007bf580, FUN_005226d0 @ 0x005226d0, FUN_0050c510 @ 0x0050c510, all inventory fields
+- [x] Interfaces/Components/IItemComponent.cs - ✅ COMPLETE - Ghidra references added: Item @ 0x007bc550, BaseItem @ 0x007c0a78, ItemList @ 0x007bf580, all item event constants, FUN_005226d0 @ 0x005226d0, all item fields
+- [x] Interfaces/Components/IPerceptionComponent.cs - ✅ COMPLETE - Ghidra references added: PERCEPTIONDIST @ 0x007c4070, CSWSSCRIPTEVENT_EVENTTYPE_ON_PERCEPTION @ 0x007bcb68, FUN_005fb0f0 @ 0x005fb0f0, all perception fields
+- [x] Interfaces/Components/IPlaceableComponent.cs - ✅ COMPLETE - Ghidra references added: Placeable @ 0x007bc530, OnUsed @ 0x007be1c4, EVENT_OPEN_OBJECT @ 0x007bcda0, FUN_004dcfb0 @ 0x004dcfb0, all placeable fields
+- [x] Interfaces/Components/IQuickSlotComponent.cs - ✅ COMPLETE - Ghidra references added: QuickSlot_* fields, FUN_005226d0 @ 0x005226d0, FUN_005223a0 @ 0x005223a0, all quick slot fields
+- [x] Interfaces/Components/IRenderableComponent.cs - ✅ COMPLETE - Ghidra references added: ModelResRef @ 0x007c2f6c, Appearance_Type @ 0x007c40f0, FUN_005261b0 @ 0x005261b0, all model/rendering fields
+- [x] Interfaces/Components/IScriptHooksComponent.cs - ✅ COMPLETE - Ghidra references added: ScriptHeartbeat @ 0x007bee60, ScriptOnNotice @ 0x007bee70, FUN_005226d0 @ 0x005226d0, FUN_0050c510 @ 0x0050c510, all script hook fields
+- [x] Interfaces/Components/IStatsComponent.cs - ✅ COMPLETE - Ghidra references added: CurrentHP @ 0x007c1b40, Max_HPs @ 0x007cb714, ArmorClass @ 0x007c0b10, all stats fields
+- [x] Interfaces/Components/ITransformComponent.cs - ✅ COMPLETE - Ghidra references added: XPosition @ 0x007bd000, YPosition @ 0x007bd00c, ZPosition @ 0x007bd018, XOrientation @ 0x007bcfb8, FUN_005226d0 @ 0x005226d0, FUN_004e08e0 @ 0x004e08e0, all transform fields
+- [x] Interfaces/Components/ITriggerComponent.cs - ✅ COMPLETE - Ghidra references added: Trigger @ 0x007bc548, EVENT_ENTERED_TRIGGER @ 0x007bcbcc, EVENT_LEFT_TRIGGER @ 0x007bcc00, FUN_004dcfb0 @ 0x004dcfb0, all trigger fields
 
 #### Journal (1 file)
 
