@@ -1717,16 +1717,32 @@ namespace HolocronToolset.Tests.Windows
                 var builder = new IndoorBuilderWindow(null, _installation);
                 builder.Show();
 
-                // Matching Python test logic:
-                // room = IndoorMapRoom(real_kit_component, Vector3(0, 0, 0), 0.0, flip_x=False, flip_y=False)
-                // builder._map.rooms.append(room)
-                // renderer.select_room(room, clear_existing=True)
-                // builder.ui.actionDuplicate.trigger()
-                // qtbot.wait(10)
-                // QApplication.processEvents()
-                // assert len(builder._map.rooms) == 2
+                // Create KitComponent matching real_kit_component fixture
+                var kitComponent = CreateRealKitComponent();
 
-                builder.Should().NotBeNull();
+                // Matching Python line 925: room = IndoorMapRoom(real_kit_component, Vector3(0, 0, 0), 0.0, flip_x=False, flip_y=False)
+                var room = new IndoorMapRoom(kitComponent, new Vector3(0, 0, 0), 0.0f, flipX: false, flipY: false);
+
+                // Matching Python line 926: builder._map.rooms.append(room)
+                builder.Map.Rooms.Add(room);
+
+                var renderer = builder.Ui.MapRenderer;
+
+                // Matching Python line 927: renderer.select_room(room, clear_existing=True)
+                renderer.SelectRoom(room, clearExisting: true);
+
+                // Matching Python line 929: builder.ui.actionDuplicate.trigger()
+                builder.Ui.ActionDuplicate.Should().NotBeNull("ActionDuplicate should be initialized");
+                builder.Ui.ActionDuplicate.Invoke();
+
+                // Matching Python line 930: qtbot.wait(10)
+                System.Threading.Thread.Sleep(10);
+
+                // Matching Python line 931: QApplication.processEvents()
+                // Note: In headless tests, operations are synchronous
+
+                // Matching Python line 933: assert len(builder._map.rooms) == 2
+                builder.Map.Rooms.Should().HaveCount(2, "Should have 2 rooms after duplicating (original + duplicate)");
             }
             finally
             {

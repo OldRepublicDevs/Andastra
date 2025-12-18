@@ -246,5 +246,79 @@ namespace HolocronToolset.Windows
             // Note: rebuild_room_connections will be implemented when needed
         }
     }
+
+    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/indoor_builder.py:319-365
+    // Original: class DuplicateRoomsCommand(QUndoCommand):
+    public class DuplicateRoomsCommand : IUndoCommand
+    {
+        private readonly IndoorMap _indoorMap;
+        private readonly List<IndoorMapRoom> _originalRooms;
+        private readonly System.Numerics.Vector3 _offset;
+        public List<IndoorMapRoom> Duplicates { get; private set; }
+
+        public string Text => $"Duplicate {_originalRooms.Count} Room(s)";
+
+        // Duplicate offset constants (matching Python constants)
+        private const float DUPLICATE_OFFSET_X = 2.0f;
+        private const float DUPLICATE_OFFSET_Y = 2.0f;
+        private const float DUPLICATE_OFFSET_Z = 0.0f;
+
+        public DuplicateRoomsCommand(IndoorMap indoorMap, List<IndoorMapRoom> rooms, System.Numerics.Vector3? offset = null)
+        {
+            _indoorMap = indoorMap;
+            _originalRooms = new List<IndoorMapRoom>(rooms);
+            _offset = offset ?? new System.Numerics.Vector3(DUPLICATE_OFFSET_X, DUPLICATE_OFFSET_Y, DUPLICATE_OFFSET_Z);
+            
+            // Create duplicates (matching Python lines 335-349)
+            Duplicates = new List<IndoorMapRoom>();
+            foreach (var room in rooms)
+            {
+                // Note: For now, we use the same component reference. Full deep copy of component
+                // will be implemented when component editing is needed. This matches the basic behavior.
+                var newRoom = new IndoorMapRoom(
+                    room.Component, // Component reference (shallow for now)
+                    new System.Numerics.Vector3(
+                        room.Position.X + _offset.X,
+                        room.Position.Y + _offset.Y,
+                        room.Position.Z + _offset.Z
+                    ),
+                    room.Rotation,
+                    flipX: room.FlipX,
+                    flipY: room.FlipY
+                );
+                // Note: walkmesh_override deep copy will be implemented when needed
+                // newRoom.walkmesh_override = deepcopy(room.walkmesh_override) if room.walkmesh_override is not None else None
+                Duplicates.Add(newRoom);
+            }
+        }
+
+        // Matching Python: def undo(self)
+        public void Undo()
+        {
+            // Remove duplicates (matching Python lines 352-354)
+            foreach (var room in Duplicates)
+            {
+                if (_indoorMap.Rooms.Contains(room))
+                {
+                    _indoorMap.Rooms.Remove(room);
+                }
+            }
+            // Note: rebuild_room_connections will be implemented when needed
+        }
+
+        // Matching Python: def redo(self)
+        public void Redo()
+        {
+            // Add duplicates (matching Python lines 360-362)
+            foreach (var room in Duplicates)
+            {
+                if (!_indoorMap.Rooms.Contains(room))
+                {
+                    _indoorMap.Rooms.Add(room);
+                }
+            }
+            // Note: rebuild_room_connections will be implemented when needed
+        }
+    }
 }
 
