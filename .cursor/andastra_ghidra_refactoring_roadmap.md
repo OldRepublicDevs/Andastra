@@ -1062,9 +1062,9 @@ When processing a file:
 - [x] Odyssey/Components/WaypointComponent.cs - ✅ COMPLETE - Ghidra references added: WaypointList @ 0x007bd288, Waypoint @ 0x007bc510, STARTWAYPOINT @ 0x007be034, FUN_004e08e0 @ 0x004e08e0, all waypoint fields
 - [x] Odyssey/Data/GameDataManager.cs - ✅ COMPLETE - Ghidra references added: FUN_005edd20 @ 0x005edd20, "2DAName" @ 0x007c3980, cross-engine analysis (Aurora: C2DA::Load2DArray @ 0x1401a73a0, Eclipse: UnrealScript-based), inheritance structure
 - [x] Odyssey/Data/TwoDATableManager.cs - ✅ COMPLETE - Ghidra references added: FUN_005edd20 @ 0x005edd20, "2DAName" @ 0x007c3980, cross-engine analysis (Aurora: C2DA::Load2DArray @ 0x1401a73a0, Eclipse: UnrealScript-based), inheritance structure
-- [ ] Odyssey/Dialogue/ConversationContext.cs
+- [x] Odyssey/Dialogue/ConversationContext.cs - ✅ COMPLETE - Ghidra references added: ExecuteDialogue @ 0x005e9920, "Conversation" @ 0x007c1abc, cross-engine analysis (Aurora: CNWSDialog, Eclipse: UnrealScript-based Conversation), inheritance structure
 - [x] Odyssey/Dialogue/DialogueManager.cs - ✅ COMPLETE - Ghidra references added: ExecuteDialogue @ 0x005e9920 (swkotor2.exe), ScriptDialogue @ 0x007bee40, ScriptEndDialogue @ 0x007bede0, "Error: dialogue can't find object '%s'!" @ 0x007c3730
-- [ ] Odyssey/Dialogue/DialogueState.cs
+- [x] Odyssey/Dialogue/DialogueState.cs - ✅ COMPLETE - Ghidra references added: ExecuteDialogue @ 0x005e9920, "ScriptDialogue" @ 0x007bee40, cross-engine analysis (Aurora: CNWSDialog, Eclipse: UnrealScript-based Conversation), inheritance structure
 - [x] Odyssey/Dialogue/KotorDialogueLoader.cs - ✅ COMPLETE - Ghidra references added: ScriptDialogue @ 0x007bee40, ScriptEndDialogue @ 0x007bede0, CSWSSCRIPTEVENT_EVENTTYPE_ON_DIALOGUE @ 0x007bcac4, "Error: dialogue can't find object '%s'!" @ 0x007c3730
 - [ ] Odyssey/Dialogue/KotorLipDataLoader.cs
 - [ ] Odyssey/EngineApi/K1EngineApi.cs
