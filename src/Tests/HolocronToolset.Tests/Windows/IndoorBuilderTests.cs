@@ -2258,14 +2258,22 @@ namespace HolocronToolset.Tests.Windows
                 var builder = new IndoorBuilderWindow(null, _installation);
                 builder.Show();
 
-                // Matching Python test logic:
-                // assert renderer.snap_to_hooks is True  # Default is on
-                // builder.ui.snapToHooksCheck.setChecked(False)
-                // qtbot.wait(10)
-                // QApplication.processEvents()
-                // assert renderer.snap_to_hooks is False
+                // Matching Python line 966: renderer = builder.ui.mapRenderer
+                var renderer = builder.Ui.MapRenderer;
 
-                builder.Should().NotBeNull();
+                // Matching Python line 968: assert renderer.snap_to_hooks is True  # Default is on
+                renderer.SnapToHooks.Should().BeTrue("snap_to_hooks should default to True");
+
+                // Matching Python line 970: builder.ui.snapToHooksCheck.setChecked(False)
+                // Note: UI checkbox binding will be implemented when UI is complete
+                // For now, directly set the property to test the renderer behavior
+                renderer.SetSnapToHooks(false);
+
+                // Matching Python lines 971-972: qtbot.wait(10) and QApplication.processEvents()
+                // Note: In headless tests, operations are synchronous
+
+                // Matching Python line 974: assert renderer.snap_to_hooks is False
+                renderer.SnapToHooks.Should().BeFalse("snap_to_hooks should be False after setting");
             }
             finally
             {
