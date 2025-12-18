@@ -1129,7 +1129,7 @@ When processing a file:
 - [x] Odyssey/Game/ScriptExecutor.cs - ✅ COMPLETE - Ghidra references added: FUN_004dcfb0 @ 0x004dcfb0 (script event dispatch), all CSWSSCRIPTEVENT_EVENTTYPE_* constants, Script hook fields
 - [x] Odyssey/Input/PlayerController.cs - ✅ COMPLETE - Ghidra references added: FUN_0054be70 @ 0x0054be70, "Input" @ 0x007c2520, cross-engine analysis (Aurora: CClientExoAppInternal::ProcessInput, Eclipse: UnrealScript-based InputSystem), inheritance structure
 - [x] Odyssey/Loading/EntityFactory.cs - ✅ COMPLETE - Ghidra references added: "TemplateResRef" @ 0x007bd00c, "ScriptHeartbeat" @ 0x007beeb0, "tmpgit" @ 0x007be618, FUN_005fb0f0 @ 0x005fb0f0, FUN_004e5920 @ 0x004e5920, FUN_00412d40, FUN_0050c510 @ 0x0050c510, FUN_00580330 @ 0x00580330, "Conversation" @ 0x007c1abc, "ObjectId" @ 0x007bce5c, "ObjectIDList" @ 0x007bfd7c, all GFF template signatures
-- [ ] Odyssey/Loading/KotorModuleLoader.cs
+- [x] Odyssey/Loading/KotorModuleLoader.cs - ✅ COMPLETE - Ghidra references added: LoadModule @ 0x004f20d0, LoadModuleFromPath @ 0x004f3460, "MODULES:" @ 0x007b58b4, "Module" @ 0x007bc4e0
 - [x] Odyssey/Loading/ModuleLoader.cs - ✅ COMPLETE - Same as Odyssey/Game/ModuleLoader.cs (duplicate entry)
 - [x] Odyssey/Loading/NavigationMeshFactory.cs - ✅ COMPLETE - Ghidra references added: "walkmesh" pathfinding functions, "?nwsareapathfind.cpp" @ 0x007be3ff, "BWM V1.0" @ 0x007c061c, "ERROR: opening a Binary walkmesh file for writeing that already exists (File: %s)" @ 0x007c0630, "failed to grid based pathfind from the creatures position to the starting path point." @ 0x007be510, "failed to grid based pathfind from the ending path point ot the destiantion." @ 0x007be4b8
 - [ ] Odyssey/Profiles/GameProfileFactory.cs
