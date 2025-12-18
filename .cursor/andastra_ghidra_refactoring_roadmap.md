@@ -883,15 +883,15 @@ When processing a file:
 
 #### Templates (9 files)
 
-- [ ] Templates/CreatureTemplate.cs
-- [ ] Templates/DoorTemplate.cs
-- [ ] Templates/EncounterTemplate.cs
-- [ ] Templates/IEntityTemplate.cs
-- [ ] Templates/PlaceableTemplate.cs
-- [ ] Templates/SoundTemplate.cs
-- [ ] Templates/StoreTemplate.cs
-- [ ] Templates/TriggerTemplate.cs
-- [ ] Templates/WaypointTemplate.cs
+- [x] Templates/CreatureTemplate.cs - ✅ COMPLETE - Ghidra references added: Creature @ 0x007bc544, Creature List @ 0x007bd01c, FUN_005226d0 @ 0x005226d0, UTC file format
+- [x] Templates/DoorTemplate.cs - ✅ COMPLETE - Ghidra references added: Door @ 0x007bc538, Door List @ 0x007bd270, FUN_005226d0 @ 0x005226d0, UTD file format
+- [x] Templates/EncounterTemplate.cs - ✅ COMPLETE - Ghidra references added: Encounter @ 0x007bc524, Encounter List @ 0x007bd050, FUN_005226d0 @ 0x005226d0, UTE file format
+- [x] Templates/IEntityTemplate.cs - ✅ COMPLETE - Ghidra references added: All GFF template signatures (UTC, UTP, UTD, UTT, UTW, UTS, UTE, UTI, UTM), FUN_004e10b0 @ 0x004e10b0, FUN_004e08e0 @ 0x004e08e0, FUN_004e01a0 @ 0x004e01a0
+- [x] Templates/PlaceableTemplate.cs - ✅ COMPLETE - Ghidra references added: Placeable @ 0x007bc530, Placeable List @ 0x007bd260, FUN_005226d0 @ 0x005226d0, UTP file format
+- [x] Templates/SoundTemplate.cs - ✅ COMPLETE - Ghidra references added: SoundList @ 0x007bd080, Sound @ 0x007bc500, FUN_004e08e0 @ 0x004e08e0, FUN_005226d0 @ 0x005226d0, UTS file format, all sound fields
+- [x] Templates/StoreTemplate.cs - ✅ COMPLETE - Ghidra references added: FUN_005226d0 @ 0x005226d0, UTM file format, all store/merchant fields
+- [x] Templates/TriggerTemplate.cs - ✅ COMPLETE - Ghidra references added: Trigger @ 0x007bc51c, TriggerList @ 0x007bd254, EVENT_ENTERED_TRIGGER @ 0x007bce08, FUN_005226d0 @ 0x005226d0, UTT file format
+- [x] Templates/WaypointTemplate.cs - ✅ COMPLETE - Ghidra references added: Waypoint @ 0x007bc510, WaypointList @ 0x007bd060, STARTWAYPOINT @ 0x007be034, FUN_004e08e0 @ 0x004e08e0, FUN_005226d0 @ 0x005226d0, UTW file format
 
 #### Triggers (1 file)
 
@@ -899,7 +899,7 @@ When processing a file:
 
 #### Root (1 file)
 
-- [ ] GameSettings.cs
+- [x] GameSettings.cs - ✅ COMPLETE - Ghidra references added: swkotor2.ini @ 0x007b5740, swkotor.ini, config.txt @ 0x007b5750, FUN_00633270 @ 0x00633270, all configuration fields
 
 ### Runtime/Content (18 files)
 
