@@ -19,8 +19,9 @@ Internal tracking document for AI agents. Not public-facing. Do not commit to re
   - **Cross-engine**: Found swkotor.exe and nwmain.exe equivalents, daorigins.exe/nwmain.exe/masseffect.exe/masseffect2.exe/dragonage2.exe TODO
 - **Walkmesh System**:
   - `swkotor2.exe`: WriteBWMFile @ 0x0055aef0, ValidateBWMHeader @ 0x006160c0
+  - `swkotor.exe`: WriteBWMFile @ 0x0059a040 - ✅ FOUND - Writes BWM (Binary Walkmesh) file format, opens file for writing, writes walkmesh data (via "ERROR: opening a Binary walkmesh file for writeing that already exists (File: %s)" @ 0x0074a0a8)
   - **Inheritance**: Base class `WalkmeshSystem` (Runtime.Games.Common), `OdysseyWalkmeshSystem : WalkmeshSystem` (Runtime.Games.Odyssey)
-  - **Cross-engine**: TODO - Search swkotor.exe, nwmain.exe, daorigins.exe for similar functions
+  - **Cross-engine**: ✅ Found swkotor.exe and swkotor2.exe equivalents, nwmain.exe/daorigins.exe TODO
 - **Module Loading**:
   - `swkotor2.exe`: LoadModule @ 0x004f20d0, LoadModuleFromPath @ 0x004f3460
   - `swkotor.exe`: LoadModule @ 0x0067bc40, 0x004ba920, 0x00579b50, 0x004094a0, 0x004b95b0, 0x006cfa70, 0x004b51a0, 0x004c44d0 (via MODULES: @ 0x0073d90c)
@@ -92,6 +93,8 @@ Internal tracking document for AI agents. Not public-facing. Do not commit to re
 - **Trigger System**: ✅ **ANALYZED**
   - `swkotor2.exe`: LoadTriggerList @ 0x004e5920 - ✅ ANALYZED - Loads trigger list from GIT GFF into area, iterates through "TriggerList" GFF list, reads ObjectId, TemplateResRef, position, geometry polygon, LinkedToModule, TransitionDestination, LinkedTo, LinkedToFlags (via "TriggerList" @ 0x007bd254)
   - `swkotor2.exe`: SaveTriggerList @ 0x004e2b20 - ✅ ANALYZED - Saves trigger list from area to GFF save data, iterates through trigger array, gets trigger objects from world, saves each trigger state (via "TriggerList" @ 0x007bd254)
+  - `swkotor.exe`: LoadTriggerList @ 0x0050a350 - ✅ FOUND - Loads trigger list from GFF format (swkotor.exe version), similar to swkotor2.exe version, iterates through "TriggerList" GFF list, reads ObjectId, TemplateResRef, position, geometry polygon (via "TriggerList" @ 0x0074768c)
+  - `swkotor.exe`: SaveTriggerList @ 0x005078d0 - ✅ FOUND - Saves trigger list to GFF format (swkotor.exe version), similar to swkotor2.exe version, writes trigger entities to GFF with ObjectId, position, geometry, etc. (via "TriggerList" @ 0x0074768c)
   - `swkotor.exe`: TriggerList @ 0x0074768c (string reference) - ✅ FOUND
   - `swkotor2.exe`: EVENT_ENTERED_TRIGGER @ 0x007bce08, EVENT_LEFT_TRIGGER @ 0x007bcdf4 (string references) - ✅ FOUND
   - `swkotor.exe`: EVENT_ENTERED_TRIGGER @ 0x00744bd0, EVENT_LEFT_TRIGGER @ 0x00744bbc (string references) - ✅ FOUND
