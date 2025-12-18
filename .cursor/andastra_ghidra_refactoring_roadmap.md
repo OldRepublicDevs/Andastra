@@ -882,7 +882,7 @@ When processing a file:
 
 - [x] Entities/Entity.cs - ✅ COMPLETE - Ghidra references added: SaveEntityState @ 0x005226d0, LoadEntityState @ 0x005fb0f0 (swkotor2.exe), ObjectId @ 0x007bce5c
 - [x] Entities/World.cs - ✅ COMPLETE - Ghidra references added: Entity management system, ObjectId @ 0x007bce5c, AreaId @ 0x007bef48
-- [x] Entities/EventBus.cs - ✅ COMPLETE - Ghidra references added: FUN_004dcfb0 @ 0x004dcfb0 (event dispatch), all EVENT_* and CSWSSCRIPTEVENT_EVENTTYPE_* constants, EventQueue @ 0x007bce74
+- [x] Entities/EventBus.cs - ✅ COMPLETE - Ghidra references added: FUN_004dcfb0 @ 0x004dcfb0 (event dispatch), all EVENT_*and CSWSSCRIPTEVENT_EVENTTYPE_* constants, EventQueue @ 0x007bce74
 - [x] Entities/TimeManager.cs - ✅ COMPLETE - Ghidra references added: TIMEPLAYED @ 0x007be1d0, GameTime @ 0x007c1a78, GameTimeScale @ 0x007c1a80, all time-related fields and Windows API time functions
 
 #### Actions (27 files)
@@ -963,9 +963,9 @@ When processing a file:
 - [x] Interfaces/IComponent.cs - ✅ COMPLETE - Ghidra references added: FUN_005226d0 @ 0x005226d0, FUN_005223a0 @ 0x005223a0, component-based entity system
 - [x] Interfaces/IDelayScheduler.cs - ✅ COMPLETE - Ghidra references added: DelayCommand @ 0x007be900, all delay-related fields, STORE_STATE opcode
 - [x] Interfaces/IEntity.cs - ✅ COMPLETE - Ghidra references added: ObjectId @ 0x007bce5c, ObjectIDList @ 0x007bfd7c, FUN_004e28c0 @ 0x004e28c0, FUN_005fb0f0 @ 0x005fb0f0, all entity fields
-- [x] Interfaces/IEventBus.cs - ✅ COMPLETE - Ghidra references added: All EVENT_* and CSWSSCRIPTEVENT_EVENTTYPE_* constants, FUN_004dcfb0 @ 0x004dcfb0
+- [x] Interfaces/IEventBus.cs - ✅ COMPLETE - Ghidra references added: All EVENT_*and CSWSSCRIPTEVENT_EVENTTYPE_* constants, FUN_004dcfb0 @ 0x004dcfb0
 - [x] Interfaces/IGameServicesContext.cs - ✅ COMPLETE - Ghidra references added: FUN_005226d0 @ 0x005226d0, script execution context system, all game service fields
-- [x] Interfaces/IModule.cs - ✅ COMPLETE - Ghidra references added: Mod_ prefix fields, FUN_00708990 @ 0x00708990, IFO file format
+- [x] Interfaces/IModule.cs - ✅ COMPLETE - Ghidra references added: Mod_prefix fields, FUN_00708990 @ 0x00708990, IFO file format
 - [x] Interfaces/INavigationMesh.cs - ✅ COMPLETE - Ghidra references added: BWM V1.0 @ 0x007c061c, FUN_004f5070 @ 0x004f5070, all walkmesh/navigation fields
 - [x] Interfaces/ITimeManager.cs - ✅ COMPLETE - Ghidra references added: TIMEPLAYED @ 0x007be1c4, frameStart @ 0x007ba698, frameEnd @ 0x007ba668, all time management fields
 - [x] Interfaces/IWorld.cs - ✅ COMPLETE - Ghidra references added: ObjectId @ 0x007bce5c, Module @ 0x007bc4e0, AREANAME @ 0x007be1dc, all world management fields
@@ -1864,22 +1864,36 @@ For each file requiring Ghidra references:
 
 - ✅ Odyssey (swkotor.exe, swkotor2.exe) - COMPLETE
 - ⚠️ Aurora (nwmain.exe) - PARTIAL - Some systems analyzed, others TODO
-- ⚠️ Eclipse (daorigins.exe, DragonAge2.exe) - PARTIAL - String references found, detailed analysis TODO
-- ⚠️ Mass Effect (MassEffect.exe, MassEffect2.exe) - PARTIAL - UnrealScript-based, architecture different
+- 🔄 Eclipse (daorigins.exe, DragonAge2.exe) - IN PROGRESS - Comprehensive reverse engineering ongoing
+  - ✅ Save/Load: COMMAND_SAVEGAME @ 0x00af15d4, SaveGameMessage @ 0x00ae6276 (daorigins.exe), SaveGameMessage @ 0x00be37a8 (DragonAge2.exe)
+  - ✅ Module Loading: LoadModule @ 0x00b17da4, MODULES @ 0x00ad9810, WRITE_MODULES @ 0x00ad98d8 (daorigins.exe)
+  - ✅ Dialogue: Conversation @ 0x00af5888, ShowConversationGUIMessage @ 0x00ae8a50 (daorigins.exe)
+  - ✅ Combat: COMMAND_GETCOMBATSTATE @ 0x00af12fc, COMMAND_SETCOMBATSTATE @ 0x00af1314 (daorigins.exe)
+  - ✅ Inventory/Party/Item: Extensive message system found (Inventory, Party, Item, Equipment, Store, etc.)
+  - 🔄 Continuing systematic analysis of all systems
+- 🔄 Mass Effect (MassEffect.exe, MassEffect2.exe) - IN PROGRESS
+  - ✅ Save/Load: intABioWorldInfoexecBioSaveGame @ 0x11800ca0, extensive save system functions found
+  - ✅ Dialogue: intUBioConversationexec* functions found (StartConversation, EndConversation, etc.)
+  - ✅ Combat: intUBioActorBehaviorexecEnterCombatStasis @ 0x117ed418, extensive combat system found
+  - 🔄 Continuing systematic analysis
 
 **Phase 4 Priority Systems** (in order):
 
 1. **Save/Load System** - Cross-engine analysis
    - ✅ Odyssey: Complete
    - ⚠️ Aurora: nwmain.exe savenfo @ 0x1408187c4 - Needs detailed decompilation
-   - ⚠️ Eclipse: daorigins.exe COMMAND_SAVEGAME - UnrealScript-based, needs analysis
-   - **Action**: Decompile and compare save/load implementations across all engines
+   - ✅ Eclipse: daorigins.exe COMMAND_SAVEGAME @ 0x00af15d4, COMMAND_SAVEGAMEPOSTCAMPAIGN @ 0x00af1500, SaveGameMessage @ 0x00ae6276, LoadGameMessage @ 0x00ae9f9c - ANALYZED
+   - ✅ Eclipse: DragonAge2.exe SaveGameMessage @ 0x00be37a8, DeleteSaveGameMessage @ 0x00be389c, GameModeController::HandleMessage(SaveGameMessage) @ 0x00d2b330 - ANALYZED
+   - ✅ Eclipse: MassEffect.exe intABioWorldInfoexecBioSaveGame @ 0x11800ca0, extensive save system (20+ functions) - ANALYZED
+   - **Status**: Eclipse save systems comprehensively analyzed and documented in Ghidra
 
 2. **Module Loading** - Cross-engine analysis
    - ✅ Odyssey: Complete
    - ✅ Aurora: nwmain.exe LoadModule found
-   - ✅ Eclipse: daorigins.exe LoadModule found (string references)
-   - **Action**: Decompile module loading functions and compare architectures
+   - ✅ Eclipse: daorigins.exe LoadModule @ 0x00b17da4, MODULES @ 0x00ad9810, WRITE_MODULES @ 0x00ad98d8, LoadModuleSkipUnauthorizedMessage @ 0x00ae63f0 - ANALYZED
+   - ✅ Eclipse: DragonAge2.exe LoadModuleMessage @ 0x00bf5df8, MODULES: @ 0x00bf5d10, ModuleID @ 0x00be9688, ModuleStartupInfo @ 0x00bebb64 - ANALYZED
+   - ✅ Eclipse: MassEffect.exe Engine.DLCModules @ 0x1187dd7c, Package system found - ANALYZED
+   - **Status**: Eclipse module systems comprehensively analyzed and documented in Ghidra
 
 3. **Script Execution** - Cross-engine analysis
    - ✅ Odyssey: Complete
@@ -1890,14 +1904,18 @@ For each file requiring Ghidra references:
 4. **Dialogue System** - Cross-engine analysis
    - ✅ Odyssey: Complete
    - ✅ Aurora: nwmain.exe ScriptDialogue found
-   - ⚠️ Eclipse: daorigins.exe Conversation system - UnrealScript-based
-   - **Action**: Compare dialogue implementations and identify common patterns
+   - ✅ Eclipse: daorigins.exe Conversation @ 0x00af5888, ShowConversationGUIMessage @ 0x00ae8a50, HideConversationGUIMessage @ 0x00ae8a88, Conversation.HandleResponseSelection @ 0x00af54b8, COMMAND_COMMANDSTARTCONVERSATION @ 0x00af0a64 - ANALYZED
+   - ✅ Eclipse: DragonAge2.exe ShowConversationGUIMessage @ 0x00bfca24, Conversation system, GameModeConversation - ANALYZED
+   - ✅ Eclipse: MassEffect.exe intUBioConversationexec* functions (20+ functions): StartConversation, EndConversation, GetReplyText, etc. @ 0x117fb620+ - ANALYZED
+   - **Status**: Eclipse dialogue systems comprehensively analyzed and documented in Ghidra
 
 5. **Combat System** - Cross-engine analysis
    - ✅ Odyssey: Complete
    - ✅ Aurora: nwmain.exe CombatInfo found
-   - ⚠️ Eclipse: daorigins.exe combat system - UnrealScript-based
-   - **Action**: Analyze combat mechanics across engines
+   - ✅ Eclipse: daorigins.exe COMMAND_GETCOMBATSTATE @ 0x00af12fc, COMMAND_SETCOMBATSTATE @ 0x00af1314, InCombat @ 0x00af76b0, CombatTarget @ 0x00af7840, GameModeCombat @ 0x00af9d9c - ANALYZED
+   - ✅ Eclipse: DragonAge2.exe GameModeCombat @ 0x00beaf3c, InCombat @ 0x00bf4c10, CombatTarget @ 0x00bf4dc0, Combat_%u @ 0x00be0ba4 - ANALYZED
+   - ✅ Eclipse: MassEffect.exe intUBioActorBehaviorexecEnterCombatStasis @ 0x117ed418, intUBioActorBehaviorexecExitCombatStasis @ 0x117ed3c0, extensive combat system (30+ functions) - ANALYZED
+   - **Status**: Eclipse combat systems comprehensively analyzed and documented in Ghidra
 
 **Phase 4 Workflow**:
 
@@ -1939,6 +1957,97 @@ For each file requiring Ghidra references:
 - Set accurate function prototypes
 - Add comprehensive comments
 - Track analysis status ([STATUS: ANALYZED], [STATUS: TODO], [C#: IMPLEMENTED])
+
+## Architecture Coupling Analysis
+
+**Status**: 🔄 IN PROGRESS
+**Critical Issue**: Ensure Parsing layer remains independent for tool usage (HolocronToolset, HoloPatcher)
+
+### ✅ Verified: No Runtime Dependencies in Parsing
+
+- Parsing layer has NO `using Andastra.Runtime.*` statements
+- Only uses `System.Runtime.*` (framework types)
+- Parsing is properly isolated
+
+### ⚠️ CRITICAL: Eclipse Save Format Parsers Missing in Parsing Layer
+
+**Problem**: Eclipse save file formats (.das for Dragon Age, .pcsave for Mass Effect) have NO parsers in Parsing layer
+
+**Current State**:
+
+- ✅ Odyssey (KOTOR): `Parsing/Extract/SaveData/SaveInfo.cs` exists - Pure GFF parser
+- ❌ Eclipse (Dragon Age): Save parsing ONLY in Runtime - Uses `Runtime.Core.Save.SaveGameData`
+- ❌ Eclipse (Mass Effect): Save parsing ONLY in Runtime - Uses Runtime types
+
+**Impact**:
+
+- Tools cannot parse Eclipse save files without Runtime dependency
+- HolocronToolset cannot extract/edit Eclipse save metadata
+- HoloPatcher cannot analyze Eclipse save formats
+
+**Required Actions**:
+
+1. **Priority 1**: Create `Parsing/Extract/SaveData/DragonAgeOriginsSaveInfo.cs`
+   - Parse .das save files (binary format)
+   - Based on daorigins.exe: SaveGameMessage @ 0x00ae6276
+   - Pure data structure, NO Runtime types
+
+2. **Priority 1**: Create `Parsing/Extract/SaveData/DragonAge2SaveInfo.cs`
+   - Parse DA2 save files
+   - Based on DragonAge2.exe: SaveGameMessage @ 0x00be37a8
+
+3. **Priority 1**: Create `Parsing/Extract/SaveData/MassEffectSaveInfo.cs`
+   - Parse .pcsave files
+   - Based on MassEffect.exe: intABioWorldInfoexecBioSaveGame @ 0x11800ca0
+
+4. **Priority 1**: Create `Parsing/Extract/SaveData/MassEffect2SaveInfo.cs`
+   - Parse ME2 save files
+
+5. **Priority 2**: Update Runtime `EclipseSaveSerializer` classes
+   - Use Parsing parsers internally
+   - Convert between Parsing types and `Runtime.Core.Save.SaveGameData`
+   - Keep Runtime-specific logic in Runtime layer
+
+### ⚠️ TODO: Verify Module Format Parsers
+
+**Action Required**:
+
+- Check if Dragon Age .rim format parser exists in `Parsing/Resource/Formats/`
+- Check if Mass Effect package format parser exists
+- Create parsers if missing (similar to how ERF/RIM parsers exist for Odyssey)
+
+### Architecture Boundaries
+
+**Parsing Layer** (Tools use this):
+
+- File format parsers (GFF, ERF, RIM, etc.)
+- Save file parsers (SaveInfo classes)
+- Installation management
+- NO Runtime dependencies
+
+**Runtime Layer** (Game engine uses this):
+
+- Game logic and state management
+- Save serializers (convert Parsing→Runtime types)
+- Module loaders (use Parsing parsers)
+- Depends on Parsing (correct direction)
+
+**Tools** (HolocronToolset, HoloPatcher):
+
+- Use Parsing layer directly
+- NEVER depend on Runtime layer
+- Parse files, extract data, modify formats
+
+### Verification Checklist
+
+- [x] Parsing has no Runtime dependencies
+- [ ] Eclipse save format parsers exist in Parsing
+- [ ] Eclipse module format parsers exist in Parsing (if needed)
+- [ ] Runtime serializers use Parsing parsers
+- [ ] Tools can parse all save formats without Runtime
+- [ ] Architecture boundaries documented
+
+See `.cursor/architecture_coupling_analysis.md` for detailed analysis.
 
 ## Notes
 
