@@ -25,7 +25,7 @@ Internal tracking document for AI agents. Not public-facing. Do not commit to re
   - `swkotor2.exe`: LoadModule @ 0x004f20d0, LoadModuleFromPath @ 0x004f3460
   - `swkotor.exe`: LoadModule @ 0x0067bc40, 0x004ba920, 0x00579b50, 0x004094a0, 0x004b95b0, 0x006cfa70, 0x004b51a0, 0x004c44d0 (via MODULES: @ 0x0073d90c)
   - `nwmain.exe`: LoadModule @ 0x140dfdb20 (string reference, functions @ 0x140566fd6, 0x1407cd384, 0x1407cd400)
-  - `daorigins.exe`: LoadModule @ 0x00b17da4 (string reference)
+  - `daorigins.exe`: LoadModule @ 0x00b17da4 (string reference), MODULES @ 0x00ad9810, WRITE_MODULES @ 0x00ad98d8, LoadModuleSkipUnauthorizedMessage @ 0x00ae63f0 (string references)
   - `DragonAge2.exe`: Module system found (string references: "MODULES:" @ 0x00bf5d10, "MODULE DOES NOT EXIST" @ 0x00be5d34, "ModuleID" @ 0x00be9688, "ModuleStartupInfo" @ 0x00bebb64) - UnrealScript-based, different architecture
   - `MassEffect.exe`: Module system found (string references: "Engine.DLCModules" @ 0x1187dd7c, "Package %s does not belong to any DLC module" @ 0x1187ddb0) - UnrealScript-based, different architecture
   - `MassEffect2.exe`: Module system found (string references: "MODULES:", "ModuleID") - UnrealScript-based, different architecture
@@ -116,8 +116,8 @@ Internal tracking document for AI agents. Not public-facing. Do not commit to re
 - **Aurora Implementation**: `AuroraScriptExecutor : ScriptExecutor` (Runtime.Games.Aurora)
   - `nwmain.exe`: CScriptEvent @ 0x1404c6490, ExecuteCommandExecuteScript @ 0x14051d5c0
 - **Eclipse Implementation**: `EclipseScriptExecutor : ScriptExecutor` (Runtime.Games.Eclipse)
-  - `daorigins.exe`: COMMAND_EXECUTESCRIPT @ 0x00af4aac (string reference)
-  - `DragonAge2.exe`: Script system found (string references: "ScriptDialogResultMessage" @ 0x00be5abc, "ScriptResRefID" @ 0x00bf34cc, "EventScripts" @ 0x00bf5464, "Initialize - Scripting Engine" @ 0x00bf81b0) - UnrealScript-based, different architecture
+  - `daorigins.exe`: COMMAND_EXECUTESCRIPT @ 0x00af4aac (string reference), RunScriptMessage @ 0x00b17fd8 (string reference) - UnrealScript-based, different architecture
+  - `DragonAge2.exe`: Script system found (string references: "ScriptDialogResultMessage" @ 0x00be5abc, "ScriptResRefID" @ 0x00bf34cc, "EventScripts" @ 0x00bf5464, "Initialize - Scripting Engine" @ 0x00bf81b0, "RunScriptMessage" @ 0x00c0ea70) - UnrealScript-based, different architecture
 - **Mass Effect Implementation**: `MassEffectScriptExecutor : ScriptExecutor` (Runtime.Games.MassEffect)
   - `MassEffect.exe`: Script system found (string references: "intUBioPowerScriptexecPlayForceFeedback" @ 0x117e9368, "intUBioPowerScriptexecPlayGuiSound" @ 0x117e93b8, "intUBioPowerScriptexecGetFloorLocation" @ 0x117e9400) - UnrealScript-based, different architecture
   - `MassEffect2.exe`: Script system found (string references: "ScriptDialogResultMessage", "ScriptResRefID", "EventScripts") - UnrealScript-based, different architecture
@@ -132,7 +132,7 @@ Internal tracking document for AI agents. Not public-facing. Do not commit to re
 - **Aurora Implementation**: `AuroraSaveSerializer : SaveSerializer` (Runtime.Games.Aurora)
   - `nwmain.exe`: savenfo @ 0x140df01d0 (string reference, function @ 0x1408187c4), GLOBAL_VARIABLES @ 0x140dbf3d0 (string reference)
 - **Eclipse Implementation**: `EclipseSaveSerializer : SaveSerializer` (Runtime.Games.Eclipse)
-  - `daorigins.exe`: TODO - Search for similar functions
+  - `daorigins.exe`: COMMAND_SAVEGAME @ 0x00af15d4 (string reference), COMMAND_SAVEGAMEPOSTCAMPAIGN @ 0x00af1500 (string reference) - UnrealScript-based, different architecture
   - `DragonAge2.exe`: SaveLoad system found (string references: "vSaveLoad" @ 0x00be255a, "SaveGameMessage" @ 0x00be37a8, "LoadGameMessage" @ 0x00be37c8, "LoadExternalSaveMessage" @ 0x00be386c) - UnrealScript-based, different architecture
 - **Mass Effect Implementation**: `MassEffectSaveSerializer : SaveSerializer` (Runtime.Games.MassEffect)
   - `MassEffect.exe`: Save system found (string references: "intABioWorldInfoexecIsAbleToSave" @ 0x117ff8d8, "intABioWorldInfoexecBioSaveGame" @ 0x11800ca0) - UnrealScript-based, different architecture
@@ -148,7 +148,7 @@ Internal tracking document for AI agents. Not public-facing. Do not commit to re
 - **Aurora Implementation**: `AuroraDialogueSystem : DialogueSystem` (Runtime.Games.Aurora)
   - `nwmain.exe`: ScriptDialogue @ 0x140dddb80 (string reference, function @ 0x14039d252)
 - **Eclipse Implementation**: `EclipseDialogueSystem : DialogueSystem` (Runtime.Games.Eclipse)
-  - `daorigins.exe`: TODO - Search for similar functions
+  - `daorigins.exe`: Conversation system found (string references: "ShowConversationGUIMessage" @ 0x00ae8a50, "HideConversationGUIMessage" @ 0x00ae8a88, "Conversation" @ 0x00af5888, "Conversation.HandleResponseSelection" @ 0x00af54b8, "Conversation.OnNPCLineFinished" @ 0x00af543f) - UnrealScript-based, different architecture
   - `DragonAge2.exe`: Dialogue system found - ResolveDialogueEvent @ 0x00a83190, 0x00a831e0, 0x00a83270 (string references: "TargetDialogue" @ 0x00bf6974, "ScriptDialogResultMessage" @ 0x00be5abc, "DialogBoxClosedMessage" @ 0x00be51f0) - UnrealScript-based, different architecture
 - **Mass Effect Implementation**: `MassEffectDialogueSystem : DialogueSystem` (Runtime.Games.MassEffect)
   - `MassEffect.exe`: Dialogue system found (string references: "WM_INITDIALOG" @ 0x118edfb0) - UnrealScript-based, different architecture
@@ -164,8 +164,8 @@ Internal tracking document for AI agents. Not public-facing. Do not commit to re
 - **Aurora Implementation**: `AuroraCombatSystem : CombatSystem` (Runtime.Games.Aurora)
   - `nwmain.exe`: CombatInfo @ 0x140dc45b8 (string reference), CombatRoundData @ 0x140dde110 (string reference)
 - **Eclipse Implementation**: `EclipseCombatSystem : CombatSystem` (Runtime.Games.Eclipse)
-  - `daorigins.exe`: COMMAND_GETCOMBATSTATE @ 0x00af12fc, COMMAND_SETCOMBATSTATE @ 0x00af1314 (string references)
-  - `DragonAge2.exe`: Combat system found (string references: "Combat_%u" @ 0x00be0ba4, "GameModeCombat" @ 0x00beaf3c, "InCombat" @ 0x00bf4c10, "CombatTarget" @ 0x00bf4dc0) - UnrealScript-based, different architecture
+  - `daorigins.exe`: COMMAND_GETCOMBATSTATE @ 0x00af12fc, COMMAND_SETCOMBATSTATE @ 0x00af1314 (string references), Combat system found (string references: "Combat_%u" @ 0x00af5f80, "GameModeCombat" @ 0x00af9d9c, "InCombat" @ 0x00af76b0, "CombatTarget" @ 0x00af7840, "ShowHostileDamageNumbers" @ 0x00ae7610, "ShowPartyDamageNumbers" @ 0x00ae762c, "AutoPauseCombat" @ 0x00ae7660) - UnrealScript-based, different architecture
+  - `DragonAge2.exe`: Combat system found (string references: "Combat_%u" @ 0x00be0ba4, "GameModeCombat" @ 0x00beaf3c, "InCombat" @ 0x00bf4c10, "CombatTarget" @ 0x00bf4dc0, "GetAttackValue" @ 0x00c03868, "GetDamage" @ 0x00c038a4, "GetDamageDPS" @ 0x00c03888) - UnrealScript-based, different architecture
 - **Mass Effect Implementation**: `MassEffectCombatSystem : CombatSystem` (Runtime.Games.MassEffect)
   - `MassEffect.exe`: Combat system found (string references: "intUBioGamerProfileexecGetCombatDifficulty" @ 0x117e7fe8, "intUBioGamerProfileexecSetCombatDifficulty" @ 0x117e8040, "intUBioActorBehaviorexecEnterCombatStasis" @ 0x117ed418, "intUBioActorBehaviorexecExitCombatStasis" @ 0x117ed3c0) - UnrealScript-based, different architecture
   - `MassEffect2.exe`: Combat system found (string references: "GameModeCombat", "InCombat", "CombatTarget") - UnrealScript-based, different architecture
@@ -288,6 +288,70 @@ Internal tracking document for AI agents. Not public-facing. Do not commit to re
 - **Mass Effect Implementation**: `MassEffectPerceptionSystem : PerceptionSystem` (Runtime.Games.MassEffect)
   - `MassEffect.exe`: Perception system found (string references: "intABioHUDexecDisplayPerceptionList" @ 0x117fc5d8, "intABioHUDexecProfilePerception" @ 0x117fc838, "intABioBaseSquadexecAddSquadToPerception" @ 0x118080d8, "intABioBaseSquadexecRemoveSquadFromPerception" @ 0x11807fe0, "PERCEPTION" @ 0x11981194) - UnrealScript-based, different architecture
   - `MassEffect2.exe`: Perception system found (string references: "PerceptionClass", "PERCEPTION") - UnrealScript-based, different architecture
+
+### Item System
+
+**Base Class**: `ItemSystem` (Runtime.Games.Common)
+
+- **Odyssey Implementation**: `OdysseyItemSystem : ItemSystem` (Runtime.Games.Odyssey)
+  - `swkotor.exe`: PROTOITEM @ 0x0073ec64 (string reference), EVENT_ACQUIRE_ITEM @ 0x007449bc, EVENT_ITEM_ON_HIT_SPELL_IMPACT @ 0x00744a54, CSWSSCRIPTEVENT_EVENTTYPE_ON_EQUIP_ITEM @ 0x0074435c, CSWSSCRIPTEVENT_EVENTTYPE_ON_LOSE_ITEM @ 0x00744664, CSWSSCRIPTEVENT_EVENTTYPE_ON_ACQUIRE_ITEM @ 0x0074468c, CSWSSCRIPTEVENT_EVENTTYPE_ON_ACTIVATE_ITEM @ 0x007446b8 (string references)
+  - `swkotor2.exe`: PROTOITEM @ 0x007b6c0c (string reference), EVENT_ACQUIRE_ITEM @ 0x007bcbf4, EVENT_ITEM_ON_HIT_SPELL_IMPACT @ 0x007bcc8c, CSWSSCRIPTEVENT_EVENTTYPE_ON_EQUIP_ITEM @ 0x007bc594, CSWSSCRIPTEVENT_EVENTTYPE_ON_LOSE_ITEM @ 0x007bc89c, CSWSSCRIPTEVENT_EVENTTYPE_ON_ACQUIRE_ITEM @ 0x007bc8c4, CSWSSCRIPTEVENT_EVENTTYPE_ON_ACTIVATE_ITEM @ 0x007bc8f0 (string references)
+- **Aurora Implementation**: `AuroraItemSystem : ItemSystem` (Runtime.Games.Aurora)
+  - `nwmain.exe`: Item system found (string references: "sceneGUI_PNL_EXAM_ITEM" @ 0x140d83680, "AddItem" @ 0x140db10c8, "DeleteItem" @ 0x140db10a8, "SetItem" @ 0x140db10d0)
+- **Eclipse Implementation**: `EclipseItemSystem : ItemSystem` (Runtime.Games.Eclipse)
+  - `daorigins.exe`: TODO - Search for similar functions
+  - `DragonAge2.exe`: TODO - Search for similar functions
+- **Mass Effect Implementation**: `MassEffectItemSystem : ItemSystem` (Runtime.Games.MassEffect)
+  - `MassEffect.exe`: TODO - Search for similar functions
+  - `MassEffect2.exe`: TODO - Search for similar functions
+
+### Inventory System
+
+**Base Class**: `InventorySystem` (Runtime.Games.Common)
+
+- **Odyssey Implementation**: `OdysseyInventorySystem : InventorySystem` (Runtime.Games.Odyssey)
+  - `swkotor.exe`: Inventory @ 0x00748234, InventorySlot @ 0x00746010, InventoryRes @ 0x00747200, GuiInventory @ 0x00748224, HasInventory @ 0x007496e0, INVENTORY @ 0x00749320, GAMEINPROGRESS:INVENTORY @ 0x007490c0, CSWSSCRIPTEVENT_EVENTTYPE_ON_INVENTORY_DISTURBED @ 0x00744540, InventorySound @ 0x0074e7ec, inventorysnds @ 0x0074e7fc (string references)
+  - `swkotor2.exe`: Inventory @ 0x007c2504, InventorySlot @ 0x007bf7d0, InventoryRes @ 0x007bf570, GuiInventory @ 0x007c24f4, HasInventory @ 0x007c1fb0, INVENTORY @ 0x007c1927, GAMEINPROGRESS:INVENTORY @ 0x007c1570, CSWSSCRIPTEVENT_EVENTTYPE_ON_INVENTORY_DISTURBED @ 0x007bc778, InventorySound @ 0x007c7164, inventorysnds @ 0x007c7174 (string references)
+- **Aurora Implementation**: `AuroraInventorySystem : InventorySystem` (Runtime.Games.Aurora)
+  - `nwmain.exe`: Inventory @ 0x140dc9d50, GuiInventory @ 0x140dc9d60, Inventory_Equip @ 0x140dcac08, Inventory_EquipCancel @ 0x140dcac18, Inventory_Drop @ 0x140dcac30, Inventory_DropCancel @ 0x140dcac40, Inventory_Pickup @ 0x140dcac58, Inventory_PickupCancel @ 0x140dcac70, Inventory_Unequip @ 0x140dcac88, Inventory_UnequipCancel @ 0x140dcaca0 (string references)
+- **Eclipse Implementation**: `EclipseInventorySystem : InventorySystem` (Runtime.Games.Eclipse)
+  - `daorigins.exe`: TODO - Search for similar functions
+  - `DragonAge2.exe`: TODO - Search for similar functions
+- **Mass Effect Implementation**: `MassEffectInventorySystem : InventorySystem` (Runtime.Games.MassEffect)
+  - `MassEffect.exe`: TODO - Search for similar functions
+  - `MassEffect2.exe`: TODO - Search for similar functions
+
+### Effect System
+
+**Base Class**: `EffectSystem` (Runtime.Games.Common)
+
+- **Odyssey Implementation**: `OdysseyEffectSystem : EffectSystem` (Runtime.Games.Odyssey)
+  - `swkotor.exe`: EffectList @ 0x00745eac, EffectAttacks @ 0x00746274, Mod_Effect_NxtId @ 0x00745c84, DEffectType @ 0x007469e7, VisualEffect_02 @ 0x00746a6c, VisualEffect_03 @ 0x00746a4c, VisualEffect_04 @ 0x00746a2c, EVENT_APPLY_EFFECT @ 0x00744b90, EVENT_REMOVE_EFFECT @ 0x00744ad4, EVENT_ABILITY_EFFECT_APPLIED @ 0x007449e8 (string references)
+  - `swkotor2.exe`: EffectList @ 0x007bebe8, EffectAttacks @ 0x007bfa28, Mod_Effect_NxtId @ 0x007bea0c, DEffectType @ 0x007c016b, VisualEffect_02 @ 0x007c01d0, VisualEffect_03 @ 0x007c01b0, VisualEffect_04 @ 0x007c0190, AreaEffectList @ 0x007bd0d4, EVENT_APPLY_EFFECT @ 0x007bcdc8, EVENT_REMOVE_EFFECT @ 0x007bcd0c, EVENT_ABILITY_EFFECT_APPLIED @ 0x007bcc20 (string references)
+- **Aurora Implementation**: `AuroraEffectSystem : EffectSystem` (Runtime.Games.Aurora)
+  - `nwmain.exe`: Effect system found (string references: "effect" @ 0x140d8a2fc, "effects" @ 0x140d8a308, "visualeffect" @ 0x140d88e10, "visualeffects" @ 0x140dc5ef8, "visualeffects.2DA" references)
+- **Eclipse Implementation**: `EclipseEffectSystem : EffectSystem` (Runtime.Games.Eclipse)
+  - `daorigins.exe`: TODO - Search for similar functions
+  - `DragonAge2.exe`: TODO - Search for similar functions
+- **Mass Effect Implementation**: `MassEffectEffectSystem : EffectSystem` (Runtime.Games.MassEffect)
+  - `MassEffect.exe`: TODO - Search for similar functions
+  - `MassEffect2.exe`: TODO - Search for similar functions
+
+### Faction System
+
+**Base Class**: `FactionSystem` (Runtime.Games.Common)
+
+- **Odyssey Implementation**: `OdysseyFactionSystem : FactionSystem` (Runtime.Games.Odyssey)
+  - `swkotor.exe`: FactionList @ 0x00745848, Faction @ 0x007497c8, FactionID @ 0x0074ae48, FactionID1 @ 0x0074865c, FactionID2 @ 0x00748650, FactionRep @ 0x00748644, FactionName @ 0x00748638, FactionParentID @ 0x00748628, FactionGlobal @ 0x00748618, "Cannot set creature %s to faction %d because faction does not exist! Setting to Hostile1." @ 0x00746fa0 (string references)
+  - `swkotor2.exe`: FactionList @ 0x007be604, Faction @ 0x007c0ca0, FACTIONREP @ 0x007bcec8, FactionID1 @ 0x007c2918, FactionID2 @ 0x007c2924, FactionRep @ 0x007c290c, FactionName @ 0x007c2900, FactionParentID @ 0x007c28f0, FactionGlobal @ 0x007c28e0, "Cannot set creature %s to faction %d because faction does not exist! Setting to Hostile1." @ 0x007bf2a8 (string references)
+- **Aurora Implementation**: `AuroraFactionSystem : FactionSystem` (Runtime.Games.Aurora)
+  - `nwmain.exe`: Faction system found (string references: "DungeonMaster_SetFaction" @ 0x140dcbff8, "DungeonMaster_SetFactionByName" @ 0x140dcc018, "DungeonMaster_SetFactionReputation" @ 0x140dcc128, "DungeonMaster_GetFactionReputation" @ 0x140dcc150, "FactionName" @ 0x140dda160, "FactionParentID" @ 0x140dda170, "FactionGlobal" @ 0x140dda180, "FactionID1" @ 0x140dda190, "FactionID2" @ 0x140dda1a0, "FactionRep" @ 0x140dda1b0)
+- **Eclipse Implementation**: `EclipseFactionSystem : FactionSystem` (Runtime.Games.Eclipse)
+  - `daorigins.exe`: TODO - Search for similar functions
+  - `DragonAge2.exe`: TODO - Search for similar functions
+- **Mass Effect Implementation**: `MassEffectFactionSystem : FactionSystem` (Runtime.Games.MassEffect)
+  - `MassEffect.exe`: TODO - Search for similar functions
+  - `MassEffect2.exe`: TODO - Search for similar functions
 
 ## Ghidra Executables Inventory
 
