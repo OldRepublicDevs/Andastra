@@ -778,7 +778,7 @@ When processing a file:
 #### Combat (3 files)
 
 - [x] Combat/CombatSystem.cs - ✅ COMPLETE - Ghidra references added: EndCombatRound @ 0x00529c30 (swkotor2.exe), EndCombatRound @ 0x004d4620 (swkotor.exe)
-- [ ] Combat/CombatTypes.cs
+- [x] Combat/CombatTypes.cs - ✅ COMPLETE - Ghidra references added: DamageValue @ 0x007bf890, DamageList @ 0x007bf89c, ScriptDamaged @ 0x007bee70, CSWSSCRIPTEVENT_EVENTTYPE_ON_DAMAGED @ 0x007bcb14, all damage type fields
 - [x] Combat/EffectSystem.cs - ✅ COMPLETE - Ghidra references added: LoadEffectListFromGFF @ 0x0050b540, SaveEffectListToGFF @ 0x00505db0 (swkotor2.exe), EffectList @ 0x007bebe8
 
 #### Dialogue (4 files)
@@ -831,18 +831,18 @@ When processing a file:
 
 #### Journal (1 file)
 
-- [ ] Journal/JournalSystem.cs
+- [x] Journal/JournalSystem.cs - ✅ COMPLETE - Ghidra references added: JOURNAL @ 0x007bdf44, NW_JOURNAL @ 0x007c20e8, Quest @ 0x007c35e4, QuestState @ 0x007c2458, all journal/quest fields
 
 #### Module (3 files)
 
-- [ ] Module/ModuleTransitionSystem.cs
-- [ ] Module/RuntimeArea.cs
-- [ ] Module/RuntimeModule.cs
+- [x] Module/ModuleTransitionSystem.cs - ✅ COMPLETE - Ghidra references added: Module @ 0x007c1a70, LASTMODULE @ 0x007be1d0, ModuleLoaded @ 0x007bdd70, ModuleRunning @ 0x007bdd58, CSWSSCRIPTEVENT_EVENTTYPE_ON_MODULE_LOAD @ 0x007bc91c, CSWSSCRIPTEVENT_EVENTTYPE_ON_MODULE_START @ 0x007bc948, LinkedToModule @ 0x007bd7bc
+- [x] Module/RuntimeArea.cs - ✅ COMPLETE - Ghidra references added: Area @ 0x007be340, AreaId @ 0x007bef48, AREANAME @ 0x007be1dc, FUN_005226d0 @ 0x005226d0, EVENT_AREA_TRANSITION @ 0x007bcbdc
+- [x] Module/RuntimeModule.cs - ✅ COMPLETE - Ghidra references added: Module @ 0x007bc4e0, ModuleName @ 0x007bde2c, ModuleLoaded @ 0x007bdd70, ModuleRunning @ 0x007bdd58, MODULES @ 0x007b58b4, FUN_00633270 @ 0x00633270, FUN_00708990 @ 0x00708990
 
 #### Movement (2 files)
 
-- [ ] Movement/CharacterController.cs
-- [ ] Movement/PlayerInputHandler.cs
+- [x] Movement/CharacterController.cs - ✅ COMPLETE - Ghidra references added: MovementRate @ 0x007c400c, WALKRATE @ 0x007c4b78, RUNRATE @ 0x007c4b84, MOVETO @ 0x007b6b24, "nwsareapathfind.cpp" @ 0x007be3ff, all movement error messages
+- [x] Movement/PlayerInputHandler.cs - ✅ COMPLETE - Ghidra references added: "Mouse Sensitivity" @ 0x007c85cc, CSWSSCRIPTEVENT_EVENTTYPE_ON_CLICKED @ 0x007bc704, OnClick @ 0x007c1a20, DirectInput8 references
 
 #### Navigation (2 files)
 
