@@ -324,11 +324,15 @@ Internal tracking document for AI agents. Not public-facing. Do not commit to re
 
 ### Item System
 
+✅ **ANALYZED**
+
 **Base Class**: `ItemSystem` (Runtime.Games.Common)
 
 - **Odyssey Implementation**: `OdysseyItemSystem : ItemSystem` (Runtime.Games.Odyssey)
   - `swkotor.exe`: PROTOITEM @ 0x0073ec64 (string reference), EVENT_ACQUIRE_ITEM @ 0x007449bc, EVENT_ITEM_ON_HIT_SPELL_IMPACT @ 0x00744a54, CSWSSCRIPTEVENT_EVENTTYPE_ON_EQUIP_ITEM @ 0x0074435c, CSWSSCRIPTEVENT_EVENTTYPE_ON_LOSE_ITEM @ 0x00744664, CSWSSCRIPTEVENT_EVENTTYPE_ON_ACQUIRE_ITEM @ 0x0074468c, CSWSSCRIPTEVENT_EVENTTYPE_ON_ACTIVATE_ITEM @ 0x007446b8 (string references)
-  - `swkotor2.exe`: PROTOITEM @ 0x007b6c0c (string reference), EVENT_ACQUIRE_ITEM @ 0x007bcbf4, EVENT_ITEM_ON_HIT_SPELL_IMPACT @ 0x007bcc8c, CSWSSCRIPTEVENT_EVENTTYPE_ON_EQUIP_ITEM @ 0x007bc594, CSWSSCRIPTEVENT_EVENTTYPE_ON_LOSE_ITEM @ 0x007bc89c, CSWSSCRIPTEVENT_EVENTTYPE_ON_ACQUIRE_ITEM @ 0x007bc8c4, CSWSSCRIPTEVENT_EVENTTYPE_ON_ACTIVATE_ITEM @ 0x007bc8f0 (string references)
+  - `swkotor2.exe`: LoadItemTemplateFromUTI @ 0x0056b530 - ✅ ANALYZED - Loads an item template from a UTI (Item Template) file, creates new item object from UTI template, loads item properties (name, description, stats, etc.), returns 1 on success, 0 on failure (via "UTI " @ 0x007d07c8, "CreateItem::CreateItemEntry() -- Could not find a row for an item. Major error: " @ 0x007d07c8)
+  - `swkotor2.exe`: LoadItemFromGFF @ 0x0056b5f0 - ✅ ANALYZED - Loads an item from GFF data (either EquippedRes or InventoryRes), reads Dropable and Pickpocketable flags from GFF, calls LoadItemTemplateFromUTI to load item template from UTI file, returns 1 on success, 0 on failure (via EquippedRes, InventoryRes, Dropable, Pickpocketable GFF fields)
+  - `swkotor2.exe`: PROTOITEM @ 0x007b6c0c (string reference), EVENT_ACQUIRE_ITEM @ 0x007bcbf4, EVENT_ITEM_ON_HIT_SPELL_IMPACT @ 0x007bcc8c, CSWSSCRIPTEVENT_EVENTTYPE_ON_EQUIP_ITEM @ 0x007bc594, CSWSSCRIPTEVENT_EVENTTYPE_ON_LOSE_ITEM @ 0x007bc89c, CSWSSCRIPTEVENT_EVENTTYPE_ON_ACQUIRE_ITEM @ 0x007bc8c4, CSWSSCRIPTEVENT_EVENTTYPE_ON_ACTIVATE_ITEM @ 0x007bc8f0 (string references) - ✅ FOUND
 - **Aurora Implementation**: `AuroraItemSystem : ItemSystem` (Runtime.Games.Aurora)
   - `nwmain.exe`: Item system found (string references: "sceneGUI_PNL_EXAM_ITEM" @ 0x140d83680, "AddItem" @ 0x140db10c8, "DeleteItem" @ 0x140db10a8, "SetItem" @ 0x140db10d0)
 - **Eclipse Implementation**: `EclipseItemSystem : ItemSystem` (Runtime.Games.Eclipse)
