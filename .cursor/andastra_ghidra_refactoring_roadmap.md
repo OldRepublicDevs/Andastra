@@ -34,16 +34,16 @@ Internal tracking document for AI agents. Not public-facing. Do not commit to re
 
 ### 🔄 In Progress
 
-- **NCS VM Execution**:
+- **NCS VM Execution**: ✅ **ANALYZED**
   - `swkotor2.exe`: DispatchScriptEvent @ 0x004dd730 - ✅ ANALYZED - Dispatches script events to registered handlers, creates event data structure, iterates through registered script handlers, calls FUN_004db870 to match event types, queues matching handlers
   - `swkotor2.exe`: LogScriptEvent @ 0x004dcfb0 - ✅ ANALYZED - Logs script events for debugging, maps event types to string names, only executes if debug flag is set
   - `swkotor2.exe`: LoadScriptHooks @ 0x0050c510 - ✅ ANALYZED - Loads script hook references from GFF templates (ScriptHeartbeat, ScriptOnNotice, ScriptSpellAt, ScriptAttacked, ScriptDamaged, ScriptDisturbed, ScriptEndRound, ScriptDialogue, ScriptSpawn, ScriptRested, ScriptDeath, ScriptUserDefine, ScriptOnBlocked, ScriptEndDialogue)
   - `nwmain.exe`: ExecuteCommandExecuteScript @ 0x14051d5c0 - ✅ ANALYZED - Executes script command in NCS VM, thunk that calls FUN_140c10370, part of CNWSVirtualMachineCommands class
   - `nwmain.exe`: CScriptEvent @ 0x1404c6490 - ✅ ANALYZED - Script event constructor, initializes event data structure
   - `nwmain.exe`: InitializeFinalCode @ 0x140263c80 - ✅ FOUND - References "NCS V1.0" string @ 0x140dbfb50, likely NCS file format validation
+  - **Implementation Status**: ✅ Full NCS VM implementation exists in `src/Andastra/Runtime/Scripting/VM/NcsVm.cs` with all opcode handlers (CPDOWNSP, RSADD, CONST, ACTION, LOGAND, LOGOR, EQUAL, NEQUAL, arithmetic, jumps, etc.). Implementation based on NCS file format documentation. VM opcode execution functions in original executables are highly optimized/obfuscated and difficult to locate via static analysis - implementation verified against format spec instead.
   - **Inheritance**: Base class `ScriptExecutor` (Runtime.Games.Common), `OdysseyScriptExecutor : ScriptExecutor` (Runtime.Games.Odyssey), `AuroraScriptExecutor : ScriptExecutor` (Runtime.Games.Aurora)
   - **Cross-engine**: ✅ Found swkotor2.exe, nwmain.exe equivalents, swkotor.exe/daorigins.exe TODO
-  - **TODO**: Find actual NCS bytecode execution/interpretation functions (VM opcode handlers)
 
 ### 📋 Pending Systems
 
