@@ -222,6 +222,18 @@ namespace HolocronToolset.Windows
                 renderer.SelectRoom(room, clearExisting: false);
             }
         }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/indoor_builder.py:1770-1773
+        // Original: def reset_view(self):
+        public void ResetView()
+        {
+            // Matching Python: self.ui.mapRenderer.set_camera_position(DEFAULT_CAMERA_POSITION_X, DEFAULT_CAMERA_POSITION_Y)
+            Ui.MapRenderer.SetCameraPosition(0.0f, 0.0f); // DEFAULT_CAMERA_POSITION_X/Y = 0.0
+            // Matching Python: self.ui.mapRenderer.set_camera_rotation(DEFAULT_CAMERA_ROTATION)
+            Ui.MapRenderer.SetCameraRotation(0.0f); // DEFAULT_CAMERA_ROTATION = 0.0
+            // Matching Python: self.ui.mapRenderer.set_camera_zoom(DEFAULT_CAMERA_ZOOM)
+            Ui.MapRenderer.SetCameraZoom(1.0f); // DEFAULT_CAMERA_ZOOM = 1.0
+        }
     }
 
     // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/indoor_builder.py
