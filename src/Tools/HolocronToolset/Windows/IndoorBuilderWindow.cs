@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using HolocronToolset.Data;
+using DuplicateRoomsCommand = HolocronToolset.Windows.DuplicateRoomsCommand;
 
 namespace HolocronToolset.Windows
 {
@@ -95,6 +97,9 @@ namespace HolocronToolset.Windows
             // Setup delete selected action (matching Python: self.ui.actionDeleteSelected.triggered.connect(self.delete_selected))
             Ui.ActionDeleteSelected = DeleteSelected;
 
+            // Setup duplicate action (matching Python: self.ui.actionDuplicate.triggered.connect(self.duplicate_selected))
+            Ui.ActionDuplicate = DuplicateSelected;
+
             // Setup undo/redo actions (matching Python lines 690-703)
             // Matching Python: self.ui.actionUndo.triggered.connect(self._undo_stack.undo)
             Ui.ActionUndo = () => UndoStack.Undo();
@@ -172,6 +177,44 @@ namespace HolocronToolset.Windows
             var cmd = new DeleteRoomsCommand(Map, selected);
             UndoStack.Push(cmd);
         }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/indoor_builder.py:1650-1674
+        // Original: def duplicate_selected(self):
+        private void DuplicateSelected()
+        {
+            // Matching Python implementation:
+            // def duplicate_selected(self):
+            //     rooms: list[IndoorMapRoom] = self.ui.mapRenderer.selected_rooms()
+            //     if not rooms:
+            //         return
+            //     duplicate_cmd = DuplicateRoomsCommand(
+            //         self._map,
+            //         rooms,
+            //         Vector3(DUPLICATE_OFFSET_X, DUPLICATE_OFFSET_Y, DUPLICATE_OFFSET_Z),
+            //         self._invalidate_rooms,
+            //     )
+            //     self._undo_stack.push(duplicate_cmd)
+            //     # Select the duplicates
+            //     self.ui.mapRenderer.clear_selected_rooms()
+            //     for room in duplicate_cmd.duplicates:
+            //         self.ui.mapRenderer.select_room(room, clear_existing=False)
+            var renderer = Ui.MapRenderer;
+            var selected = renderer.SelectedRooms();
+            if (selected == null || selected.Count == 0)
+            {
+                return;
+            }
+
+            var duplicateCmd = new DuplicateRoomsCommand(Map, selected);
+            UndoStack.Push(duplicateCmd);
+
+            // Select the duplicates (matching Python lines 1669-1671)
+            renderer.ClearSelectedRooms();
+            foreach (var room in duplicateCmd.Duplicates)
+            {
+                renderer.SelectRoom(room, clearExisting: false);
+            }
+        }
     }
 
     // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/indoor_builder.py
@@ -189,6 +232,10 @@ namespace HolocronToolset.Windows
         // Matching PyKotor implementation - actionDeleteSelected menu action
         // Original: self.ui.actionDeleteSelected.triggered.connect(self.delete_selected)
         public Action ActionDeleteSelected { get; set; }
+
+        // Matching PyKotor implementation - actionDuplicate menu action
+        // Original: self.ui.actionDuplicate.triggered.connect(self.duplicate_selected)
+        public Action ActionDuplicate { get; set; }
 
         // Matching PyKotor implementation - actionUndo menu action
         // Original: self.ui.actionUndo.triggered.connect(self._undo_stack.undo)
