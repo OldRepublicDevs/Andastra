@@ -146,14 +146,38 @@ When working on Andastra Engine code (anything in `src/Andastra/`), AI agents MU
    - Verify implementation faithfulness against original engine behavior
    - **MANDATORY: Cross-Engine Analysis and Inheritance Structure**:
      - **NEVER document a function without specifying which .exe it's from** (e.g., `swkotor2.exe: 0x004eb750`, `nwmain.exe: 0x14051d5c0`)
+     - **CRITICAL: Base Class Implementation Workflow**:
+       - **NEVER implement or document base classes (Runtime.Games.Common) until ALL engines have been reverse engineered**
+       - **MANDATORY WORKFLOW for base classes**:
+         1. **FIRST**: Search for and analyze equivalent functions in ALL engines (swkotor.exe, swkotor2.exe, nwmain.exe, daorigins.exe, DragonAge2.exe, MassEffect.exe, MassEffect2.exe)
+         2. **SECOND**: Decompile and compare implementations across ALL engines to identify common patterns
+         3. **THIRD**: Document findings in Ghidra for ALL engines with function addresses and analysis
+         4. **FOURTH**: Only after complete cross-engine analysis, identify what is truly common across ALL engines
+         5. **FIFTH**: Implement base class with ONLY common functionality (no engine-specific details)
+         6. **SIXTH**: Implement engine-specific subclasses with engine-specific details
+       - **Base classes MUST NOT contain**:
+         - Engine-specific function addresses (e.g., `swkotor2.exe: 0x004eb750`)
+         - Engine-specific implementation details
+         - References to engine-specific file formats or systems
+         - Any details that differ between engines
+       - **Base classes MUST ONLY contain**:
+         - Abstract methods/properties that all engines share
+         - Common initialization patterns (if identical across all engines)
+         - Shared interfaces and contracts
+         - Generic documentation that applies to all engines
+       - **Engine-specific details MUST be in subclasses**:
+         - All Ghidra function addresses go in engine-specific subclasses
+         - All engine-specific implementation details go in subclasses
+         - All engine-specific file format references go in subclasses
      - **MANDATORY**: When finding ANY function in ANY engine, AI agents MUST:
        1. Search for similar/equivalent functions in ALL other engines (swkotor.exe, swkotor2.exe, nwmain.exe, daorigins.exe, DragonAge2.exe, MassEffect.exe, etc.)
-       2. Compare implementations across engines to identify common patterns
-       3. Establish base class inheritance structure:
-          - Create base classes in `Runtime.Games.Common` for shared functionality
+       2. Decompile and compare implementations across engines to identify common patterns
+       3. Document findings in Ghidra for ALL engines before implementing base classes
+       4. Establish base class inheritance structure:
+          - Create base classes in `Runtime.Games.Common` for shared functionality (ONLY after complete cross-engine analysis)
           - Create engine-specific implementations in `Runtime.Games.{Engine}` that inherit from base classes
           - Document which functions map to base class methods vs. engine-specific overrides
-       4. Document inheritance structure in roadmap with format (example):
+       5. Document inheritance structure in roadmap with format (example):
 
           ```
           Base Class: `CommonScriptExecutor` (Runtime.Games.Common)
@@ -163,11 +187,18 @@ When working on Andastra Engine code (anything in `src/Andastra/`), AI agents MU
           ```
 
      - **MANDATORY**: When modifying ANY code in `src/Andastra/`, AI agents MUST:
-       - Search Ghidra for related functions using string searches and function name searches across ALL loaded executables
-       - Decompile relevant functions to understand original implementation
-       - Add detailed comments with Ghidra function addresses, executable name, and context
-       - Use consistent comment format matching the MonoGame API documentation pattern
-       - **ALWAYS specify the source executable** in comments (e.g., `swkotor2.exe: 0x004eb750`)
+       - **For base classes (Runtime.Games.Common)**: 
+         - MUST reverse engineer ALL engines first (Odyssey, Aurora, Eclipse)
+         - MUST compare implementations across ALL engines
+         - MUST only document common functionality (no engine-specific details)
+         - MUST NOT include engine-specific function addresses or implementation details
+       - **For engine-specific subclasses (Runtime.Games.{Engine})**:
+         - Search Ghidra for related functions using string searches and function name searches in the relevant engine executable(s)
+         - Decompile relevant functions to understand original implementation
+         - Add detailed comments with Ghidra function addresses, executable name, and context
+         - Use consistent comment format matching the MonoGame API documentation pattern
+         - **ALWAYS specify the source executable** in comments (e.g., `swkotor2.exe: 0x004eb750`)
+       - **PRIORITY**: When working on base classes, prioritize reverse engineering Aurora and Eclipse engines FIRST (they are less documented than Odyssey)
    - **MANDATORY: In-Ghidra Documentation**: AI agents MUST document findings directly within Ghidra using Ghidra MCP tools:
      - Use `mcp_ghidra_set_decompiler_comment` to add comments to decompiled code
      - Use `mcp_ghidra_set_disassembly_comment` to add comments to assembly code
