@@ -745,19 +745,19 @@ When processing a file:
 - [x] Actions/ActionJumpToObject.cs - ✅ COMPLETE - Ghidra references added: JumpToObject action type, Position @ 0x007bef70, ActionJumpToObject NWScript function
 - [ ] Actions/ActionMoveAwayFromObject.cs
 - [x] Actions/ActionMoveToLocation.cs - ✅ COMPLETE - Ghidra references added: FUN_00508260 @ 0x00508260, FUN_0054be70 @ 0x0054be70 (walking collision), ActionList @ 0x007bebdc, MOVETO @ 0x007b6b24
-- [ ] Actions/ActionMoveToObject.cs
-- [ ] Actions/ActionOpenDoor.cs
-- [ ] Actions/ActionPickUpItem.cs
+- [x] Actions/ActionMoveToObject.cs - ✅ COMPLETE - Ghidra references added: FUN_00508260 @ 0x00508260, FUN_0054be70 @ 0x0054be70, ActionList @ 0x007bebdc, MOVETO @ 0x007b6b24, all movement collision fields
+- [x] Actions/ActionOpenDoor.cs - ✅ COMPLETE - Ghidra references added: FUN_00580ed0 @ 0x00580ed0, FUN_005838d0 @ 0x005838d0, OnOpen @ 0x007be1b0, EVENT_OPEN_OBJECT @ 0x007bcda0, FUN_004dcfb0 @ 0x004dcfb0
+- [x] Actions/ActionPickUpItem.cs - ✅ COMPLETE - Ghidra references added: TakeItem @ 0x007be4f0, CSWSSCRIPTEVENT_EVENTTYPE_ON_ACQUIRE_ITEM @ 0x007bc8c4, EVENT_ACQUIRE_ITEM @ 0x007bcbf4, all item/inventory fields
 - [x] Actions/ActionPlayAnimation.cs - ✅ COMPLETE - Ghidra references added: Animation @ 0x007c3440, PlayAnim @ 0x007c346c, AnimList @ 0x007c3694, CurrentAnim @ 0x007c38d4, NextAnim @ 0x007c38c8
-- [ ] Actions/ActionPutDownItem.cs
+- [x] Actions/ActionPutDownItem.cs - ✅ COMPLETE - Ghidra references added: GiveItem @ 0x007be4f8, CSWSSCRIPTEVENT_EVENTTYPE_ON_LOSE_ITEM @ 0x007bc89c, ItemList @ 0x007bf580, all inventory fields
 - [x] Actions/ActionQueue.cs - ✅ COMPLETE - Ghidra references added: FUN_00508260 @ 0x00508260 (load ActionList), FUN_00505bc0 @ 0x00505bc0 (save ActionList), ActionList @ 0x007bebdc, ActionId @ 0x007bebd0
-- [ ] Actions/ActionRandomWalk.cs
+- [x] Actions/ActionRandomWalk.cs - ✅ COMPLETE - Ghidra references added: FUN_00508260 @ 0x00508260, FUN_00505bc0 @ 0x00505bc0, FUN_0054be70 @ 0x0054be70, ActionList @ 0x007bebdc, all action/walking fields
 - [x] Actions/ActionSpeakString.cs - ✅ COMPLETE - Ghidra references added: TalkString @ 0x007c14f8, Speaker @ 0x007c35f8, SpeakString NWScript function
-- [ ] Actions/ActionUnequipItem.cs
-- [ ] Actions/ActionUseItem.cs
+- [x] Actions/ActionUnequipItem.cs - ✅ COMPLETE - Ghidra references added: UnequipItem @ 0x007be4e8, UnequipHItem @ 0x007c3870, CSWSSCRIPTEVENT_EVENTTYPE_ON_INVENTORY_DISTURBED @ 0x007bc778, all equipment/inventory fields
+- [x] Actions/ActionUseItem.cs - ✅ COMPLETE - Ghidra references added: OnUsed @ 0x007c1f70, CSWSSCRIPTEVENT_EVENTTYPE_ON_ACTIVATE_ITEM @ 0x007bc8f0, Mod_OnActvtItem @ 0x007be7f4, all item usage fields
 - [x] Actions/ActionUseObject.cs - ✅ COMPLETE - Ghidra references added: OnUsed @ 0x007c1f70, EVENT_OPEN_OBJECT @ 0x007bcda0, EVENT_CLOSE_OBJECT @ 0x007bcdb4, FUN_004dcfb0 @ 0x004dcfb0
-- [ ] Actions/ActionWait.cs
-- [ ] Actions/DelayScheduler.cs
+- [x] Actions/ActionWait.cs - ✅ COMPLETE - Ghidra references added: ActionWait @ 0x007be8e4, Wait action type, game simulation time tracking
+- [x] Actions/DelayScheduler.cs - ✅ COMPLETE - Ghidra references added: DelayCommand @ 0x007be900, all delay-related fields, STORE_STATE opcode, DelayCommand/AssignCommand NWScript functions
 
 #### AI (1 file)
 
