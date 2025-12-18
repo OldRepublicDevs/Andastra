@@ -149,7 +149,7 @@ Internal tracking document for AI agents. Not public-facing. Do not commit to re
   - `nwmain.exe`: ScriptDialogue @ 0x140dddb80 (string reference, function @ 0x14039d252)
 - **Eclipse Implementation**: `EclipseDialogueSystem : DialogueSystem` (Runtime.Games.Eclipse)
   - `daorigins.exe`: TODO - Search for similar functions
-  - `DragonAge2.exe`: Dialogue system found (string references: "TargetDialogue" @ 0x00bf6974, "ScriptDialogResultMessage" @ 0x00be5abc, "DialogBoxClosedMessage" @ 0x00be51f0) - UnrealScript-based, different architecture
+  - `DragonAge2.exe`: Dialogue system found - ResolveDialogueEvent @ 0x00a83190, 0x00a831e0, 0x00a83270 (string references: "TargetDialogue" @ 0x00bf6974, "ScriptDialogResultMessage" @ 0x00be5abc, "DialogBoxClosedMessage" @ 0x00be51f0) - UnrealScript-based, different architecture
 - **Mass Effect Implementation**: `MassEffectDialogueSystem : DialogueSystem` (Runtime.Games.MassEffect)
   - `MassEffect.exe`: Dialogue system found (string references: "WM_INITDIALOG" @ 0x118edfb0) - UnrealScript-based, different architecture
   - `MassEffect2.exe`: Dialogue system found (string references: "TargetDialogue", "ScriptDialogResultMessage") - UnrealScript-based, different architecture
