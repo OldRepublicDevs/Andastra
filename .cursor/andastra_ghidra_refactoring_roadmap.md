@@ -802,18 +802,18 @@ When processing a file:
 
 #### Interfaces (25 files)
 
-- [ ] Interfaces/IAction.cs
-- [ ] Interfaces/IActionQueue.cs
-- [ ] Interfaces/IArea.cs
-- [ ] Interfaces/IComponent.cs
-- [ ] Interfaces/IDelayScheduler.cs
-- [ ] Interfaces/IEntity.cs
-- [ ] Interfaces/IEventBus.cs
+- [x] Interfaces/IAction.cs - ✅ COMPLETE - Ghidra references added: ActionList @ 0x007bebdc, ActionId @ 0x007bebd0, FUN_00508260 @ 0x00508260, FUN_00505bc0 @ 0x00505bc0
+- [x] Interfaces/IActionQueue.cs - ✅ COMPLETE - Ghidra references added: ActionList @ 0x007bebdc, ActionId @ 0x007bebd0, ActionType @ 0x007bf7f8, all action queue fields
+- [x] Interfaces/IArea.cs - ✅ COMPLETE - Ghidra references added: Area @ 0x007be340, AREANAME @ 0x007be1dc, AreaId @ 0x007bef48, EVENT_AREA_TRANSITION @ 0x007bcbdc, FUN_004dcfb0 @ 0x004dcfb0
+- [x] Interfaces/IComponent.cs - ✅ COMPLETE - Ghidra references added: FUN_005226d0 @ 0x005226d0, FUN_005223a0 @ 0x005223a0, component-based entity system
+- [x] Interfaces/IDelayScheduler.cs - ✅ COMPLETE - Ghidra references added: DelayCommand @ 0x007be900, all delay-related fields, STORE_STATE opcode
+- [x] Interfaces/IEntity.cs - ✅ COMPLETE - Ghidra references added: ObjectId @ 0x007bce5c, ObjectIDList @ 0x007bfd7c, FUN_004e28c0 @ 0x004e28c0, FUN_005fb0f0 @ 0x005fb0f0, all entity fields
+- [x] Interfaces/IEventBus.cs - ✅ COMPLETE - Ghidra references added: All EVENT_* and CSWSSCRIPTEVENT_EVENTTYPE_* constants, FUN_004dcfb0 @ 0x004dcfb0
 - [ ] Interfaces/IGameServicesContext.cs
-- [ ] Interfaces/IModule.cs
-- [ ] Interfaces/INavigationMesh.cs
-- [ ] Interfaces/ITimeManager.cs
-- [ ] Interfaces/IWorld.cs
+- [x] Interfaces/IModule.cs - ✅ COMPLETE - Ghidra references added: Mod_ prefix fields, FUN_00708990 @ 0x00708990, IFO file format
+- [x] Interfaces/INavigationMesh.cs - ✅ COMPLETE - Ghidra references added: BWM V1.0 @ 0x007c061c, FUN_004f5070 @ 0x004f5070, all walkmesh/navigation fields
+- [x] Interfaces/ITimeManager.cs - ✅ COMPLETE - Ghidra references added: TIMEPLAYED @ 0x007be1c4, frameStart @ 0x007ba698, frameEnd @ 0x007ba668, all time management fields
+- [x] Interfaces/IWorld.cs - ✅ COMPLETE - Ghidra references added: ObjectId @ 0x007bce5c, Module @ 0x007bc4e0, AREANAME @ 0x007be1dc, all world management fields
 - [ ] Interfaces/Components/IActionQueueComponent.cs
 - [ ] Interfaces/Components/IAnimationComponent.cs
 - [ ] Interfaces/Components/IDoorComponent.cs
