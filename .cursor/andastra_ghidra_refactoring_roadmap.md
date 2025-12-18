@@ -896,7 +896,7 @@ When processing a file:
 - [x] Actions/ActionFollowObject.cs - ✅ COMPLETE - Ghidra references added: FollowObject @ 0x007bedb8, FollowInfo @ 0x007beec0, PT_FOLLOWSTATE @ 0x007c1758, all follow-related fields
 - [x] Actions/ActionJumpToLocation.cs - ✅ COMPLETE - Ghidra references added: JumpToLocation action type, Position @ 0x007bef70, ActionJumpToLocation NWScript function
 - [x] Actions/ActionJumpToObject.cs - ✅ COMPLETE - Ghidra references added: JumpToObject action type, Position @ 0x007bef70, ActionJumpToObject NWScript function
-- [ ] Actions/ActionMoveAwayFromObject.cs
+- [x] Actions/ActionMoveAwayFromObject.cs - ✅ COMPLETE - Ghidra references added: "MoveAwayFromObject" action type (ACTION_TYPE_MOVE_AWAY_FROM_OBJECT), "MOVETO" @ 0x007b6b24, FUN_0054be70 @ 0x0054be70 (walkmesh projection), ActionMoveAwayFromObject NWScript function (routine ID varies by game version), ActionList @ 0x007bebdc
 - [x] Actions/ActionMoveToLocation.cs - ✅ COMPLETE - Ghidra references added: FUN_00508260 @ 0x00508260, FUN_0054be70 @ 0x0054be70 (walking collision), ActionList @ 0x007bebdc, MOVETO @ 0x007b6b24
 - [x] Actions/ActionMoveToObject.cs - ✅ COMPLETE - Ghidra references added: FUN_00508260 @ 0x00508260, FUN_0054be70 @ 0x0054be70, ActionList @ 0x007bebdc, MOVETO @ 0x007b6b24, all movement collision fields
 - [x] Actions/ActionOpenDoor.cs - ✅ COMPLETE - Ghidra references added: FUN_00580ed0 @ 0x00580ed0, FUN_005838d0 @ 0x005838d0, OnOpen @ 0x007be1b0, EVENT_OPEN_OBJECT @ 0x007bcda0, FUN_004dcfb0 @ 0x004dcfb0
