@@ -119,5 +119,146 @@ namespace HolocronToolset.Data
         public byte[] Mdl { get; set; }
         public byte[] Mdx { get; set; }
     }
+
+    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/indoorkit/module_converter.py:33-57
+    // Original: class ModuleKit(Kit):
+    public class ModuleKit : Kit
+    {
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/indoorkit/module_converter.py:43-57
+        // Original: def __init__(self, name: str, module_root: str, installation: HTInstallation):
+        public ModuleKit(string name, string moduleRoot, HTInstallation installation) : base(name)
+        {
+            ModuleRoot = moduleRoot;
+            _installation = installation;
+            _loaded = false;
+            IsModuleKit = true;
+            SourceModule = moduleRoot;
+        }
+
+        public string ModuleRoot { get; set; }
+        public bool IsModuleKit { get; set; }
+        public string SourceModule { get; set; }
+        private HTInstallation _installation;
+        private bool _loaded;
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/indoorkit/module_converter.py:59-74
+        // Original: def ensure_loaded(self) -> bool:
+        public bool EnsureLoaded()
+        {
+            if (_loaded)
+            {
+                return Components.Count > 0;
+            }
+
+            _loaded = true;
+            try
+            {
+                // TODO: Implement _load_module_components() when Module class is available
+                // For now, return false to indicate components weren't loaded
+                return false;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+    }
+
+    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/indoorkit/module_converter.py:419-503
+    // Original: class ModuleKitManager:
+    public class ModuleKitManager
+    {
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/indoorkit/module_converter.py:426-429
+        // Original: def __init__(self, installation: HTInstallation):
+        public ModuleKitManager(HTInstallation installation)
+        {
+            _installation = installation;
+            _cache = new Dictionary<string, ModuleKit>();
+            _moduleNames = null;
+        }
+
+        private HTInstallation _installation;
+        private Dictionary<string, ModuleKit> _cache;
+        private Dictionary<string, string> _moduleNames;
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/indoorkit/module_converter.py:431-441
+        // Original: def get_module_names(self) -> dict[str, str | None]:
+        public Dictionary<string, string> GetModuleNames()
+        {
+            if (_moduleNames == null)
+            {
+                _moduleNames = _installation.ModuleNames();
+            }
+            return _moduleNames;
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/indoorkit/module_converter.py:443-458
+        // Original: def get_module_roots(self) -> list[str]:
+        public List<string> GetModuleRoots()
+        {
+            var seenRoots = new HashSet<string>();
+            var roots = new List<string>();
+
+            var moduleNames = GetModuleNames();
+            foreach (var moduleFilename in moduleNames.Keys)
+            {
+                string root = Andastra.Parsing.Installation.Installation.GetModuleRoot(moduleFilename);
+                if (!seenRoots.Contains(root))
+                {
+                    seenRoots.Add(root);
+                    roots.Add(root);
+                }
+            }
+
+            roots.Sort();
+            return roots;
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/indoorkit/module_converter.py:460-479
+        // Original: def get_module_display_name(self, module_root: str) -> str:
+        public string GetModuleDisplayName(string moduleRoot)
+        {
+            var moduleNames = GetModuleNames();
+
+            // Try to find the display name from various extensions
+            string[] extensions = { ".rim", ".mod", "_s.rim" };
+            foreach (var ext in extensions)
+            {
+                string filename = moduleRoot + ext;
+                if (moduleNames.ContainsKey(filename))
+                {
+                    string areaName = moduleNames[filename];
+                    if (!string.IsNullOrEmpty(areaName) && areaName != "<Unknown Area>")
+                    {
+                        return $"{moduleRoot.ToUpperInvariant()} - {areaName}";
+                    }
+                }
+            }
+
+            return moduleRoot.ToUpperInvariant();
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/indoorkit/module_converter.py:481-498
+        // Original: def get_module_kit(self, module_root: str) -> ModuleKit:
+        public ModuleKit GetModuleKit(string moduleRoot)
+        {
+            if (!_cache.ContainsKey(moduleRoot))
+            {
+                string displayName = GetModuleDisplayName(moduleRoot);
+                var kit = new ModuleKit(displayName, moduleRoot, _installation);
+                _cache[moduleRoot] = kit;
+            }
+
+            return _cache[moduleRoot];
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/indoorkit/module_converter.py:500-503
+        // Original: def clear_cache(self):
+        public void ClearCache()
+        {
+            _cache.Clear();
+            _moduleNames = null;
+        }
+    }
 }
 
