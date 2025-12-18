@@ -22,6 +22,14 @@ namespace HolocronToolset.Windows
         public bool SnapToHooks { get; set; } = true;
         public float GridSize { get; set; } = 1.0f; // DEFAULT_GRID_SIZE = 1.0
         public float RotationSnap { get; set; } = 15.0f; // DEFAULT_ROTATION_SNAP = 15
+        
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/indoor_builder.py:2460-2463
+        // Original: self._cam_position: Vector2 = Vector2(DEFAULT_CAMERA_POSITION_X, DEFAULT_CAMERA_POSITION_Y)
+        // Original: self._cam_scale: float = DEFAULT_CAMERA_ZOOM
+        // Original: self._cam_rotation: float = DEFAULT_CAMERA_ROTATION
+        private System.Numerics.Vector2 _camPosition = new System.Numerics.Vector2(0.0f, 0.0f); // DEFAULT_CAMERA_POSITION_X/Y = 0.0
+        private float _camScale = 1.0f; // DEFAULT_CAMERA_ZOOM = 1.0
+        private float _camRotation = 0.0f; // DEFAULT_CAMERA_ROTATION = 0.0
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/indoor_builder.py:2597-2600
         // Original: def mark_dirty(self):
@@ -159,6 +167,52 @@ namespace HolocronToolset.Windows
         public void SetRotationSnap(float snap)
         {
             RotationSnap = snap;
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/indoor_builder.py:3058-3059
+        // Original: def camera_zoom(self) -> float:
+        public float CameraZoom()
+        {
+            return _camScale;
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/indoor_builder.py:3061-3063
+        // Original: def set_camera_zoom(self, zoom: float):
+        public void SetCameraZoom(float zoom)
+        {
+            // Matching Python: self._cam_scale = max(MIN_CAMERA_ZOOM, min(zoom, MAX_CAMERA_ZOOM))
+            _camScale = Math.Max(0.1f, Math.Min(zoom, 10.0f)); // MIN_CAMERA_ZOOM = 0.1, MAX_CAMERA_ZOOM = 10.0
+            MarkDirty();
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/indoor_builder.py:3068-3070
+        // Original: def camera_position(self) -> Vector2:
+        public System.Numerics.Vector2 CameraPosition()
+        {
+            return _camPosition;
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/indoor_builder.py:3071-3074
+        // Original: def set_camera_position(self, x: float, y: float):
+        public void SetCameraPosition(float x, float y)
+        {
+            _camPosition = new System.Numerics.Vector2(x, y);
+            MarkDirty();
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/indoor_builder.py:3081-3082
+        // Original: def camera_rotation(self) -> float:
+        public float CameraRotation()
+        {
+            return _camRotation;
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/indoor_builder.py:3084-3086
+        // Original: def set_camera_rotation(self, radians: float):
+        public void SetCameraRotation(float radians)
+        {
+            _camRotation = radians;
+            MarkDirty();
         }
     }
 }
