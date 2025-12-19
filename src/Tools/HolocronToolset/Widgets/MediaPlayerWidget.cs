@@ -22,6 +22,12 @@ namespace HolocronToolset.Widgets
         private bool _isMuted;
         private double _volume;
         private double _playbackSpeed;
+        
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/media_player_widget.py:54-55
+        // Original: self.player: QMediaPlayer = QMediaPlayer(self)
+        // MediaPlayer interface for actual playback control
+        // Note: Avalonia doesn't have a built-in MediaPlayer, so this will be set when media player integration is available
+        private IMediaPlayer _player;
 
         // Public parameterless constructor for XAML
         public MediaPlayerWidget()
@@ -31,6 +37,13 @@ namespace HolocronToolset.Widgets
             _isMuted = false;
             _volume = 0.75;
             _playbackSpeed = 1.0;
+            
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/media_player_widget.py:54-55
+            // Original: self.player: QMediaPlayer = QMediaPlayer(self)
+            // MediaPlayer will be initialized when media player integration is available
+            // For now, _player remains null until a media player implementation is provided
+            _player = null;
+            
             SetupUI();
         }
 
@@ -139,20 +152,53 @@ namespace HolocronToolset.Widgets
             // TODO: Implement actual playback control when media player is available
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/media_player_widget.py:115-120
-        // Original: Stop button handling
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/media_player_widget.py:387-394
+        // Original: def stop(self) -> None:
+        // Original:     """Stop playback and reset position."""
+        // Original:     self.player.stop()
+        // Original:     q_style: QStyle | None = self.style()
+        // Original:     assert q_style is not None, "q_style is somehow None"
+        // Original:     self.play_pause_button.setIcon(q_style.standardIcon(QStyle.StandardPixmap.SP_MediaPlay))
+        // Original:     self.hide_widget()
+        // Original:     self.playback_stopped.emit()
         private void Stop()
         {
+            // Stop the media player if available
+            if (_player != null)
+            {
+                try
+                {
+                    _player.Stop();
+                }
+                catch
+                {
+                    // Ignore errors if media player is not in a valid state
+                }
+            }
+            
+            // Update playback state
             _isPlaying = false;
+            
+            // Update play/pause button to show play icon
             if (_playPauseButton != null)
             {
                 _playPauseButton.Content = "▶";
             }
+            
+            // Reset time slider to beginning
             if (_timeSlider != null)
             {
                 _timeSlider.Value = 0;
             }
-            // TODO: Implement actual stop when media player is available
+            
+            // Reset time label to show 00:00 / 00:00
+            if (_timeLabel != null)
+            {
+                _timeLabel.Text = "00:00 / 00:00";
+            }
+            
+            // Hide the widget when stopped (matching PyKotor behavior)
+            HideWidget();
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/media_player_widget.py:122-491
@@ -209,5 +255,32 @@ namespace HolocronToolset.Widgets
         {
             IsVisible = true;
         }
+        
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/media_player_widget.py:54-55
+        // Original: self.player: QMediaPlayer = QMediaPlayer(self)
+        // Property to set/get the media player instance
+        // This allows external code to provide a media player implementation when available
+        public IMediaPlayer Player
+        {
+            get { return _player; }
+            set { _player = value; }
+        }
+    }
+    
+    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/media_player_widget.py:54-55
+    // Original: QMediaPlayer interface
+    // Interface for media player functionality to allow different implementations
+    // This abstraction allows the widget to work with any media player implementation
+    public interface IMediaPlayer
+    {
+        void Stop();
+        void Play();
+        void Pause();
+        void SetPosition(TimeSpan position);
+        TimeSpan Position { get; }
+        TimeSpan Duration { get; }
+        double Volume { get; set; }
+        bool IsMuted { get; set; }
+        double PlaybackRate { get; set; }
     }
 }
