@@ -598,7 +598,7 @@ namespace HolocronToolset.Tests.Formats
     // Original: class TestDLGGraphUtilities(unittest.TestCase):
     public class TestDLGGraphUtilities
     {
-        private Tuple<DLG, DLGEntry, DLGReply, DLGEntry, DLGLink, DLGLink, DLGLink, DLGLink> BuildSimpleGraph()
+        private Tuple<DLG, DLGEntry, DLGReply, DLGEntry, DLGLink, DLGLink, DLGLink, Tuple<DLGLink>> BuildSimpleGraph()
         {
             var dlg = new DLG();
 
@@ -615,7 +615,8 @@ namespace HolocronToolset.Tests.Formats
             reply0.Links.Add(linkReply0Entry1);
             dlg.Starters.AddRange(new[] { startLink0, startLink1 });
 
-            return Tuple.Create(dlg, entry0, reply0, entry1, startLink0, startLink1, linkEntry0Reply, linkReply0Entry1);
+            var rest = Tuple.Create(linkReply0Entry1);
+            return new Tuple<DLG, DLGEntry, DLGReply, DLGEntry, DLGLink, DLGLink, DLGLink, Tuple<DLGLink>>(dlg, entry0, reply0, entry1, startLink0, startLink1, linkEntry0Reply, rest);
         }
 
         // Matching PyKotor implementation at Libraries/PyKotor/tests/resource/generics/test_dlg.py:1456
@@ -623,7 +624,15 @@ namespace HolocronToolset.Tests.Formats
         [Fact]
         public void TestFindPathsForNodesAndLinks()
         {
-            var (dlg, entry0, reply0, entry1, startLink0, startLink1, linkEntry0Reply, linkReply0Entry1) = BuildSimpleGraph();
+            var graph = BuildSimpleGraph();
+            var dlg = graph.Item1;
+            var entry0 = graph.Item2;
+            var reply0 = graph.Item3;
+            var entry1 = graph.Item4;
+            var startLink0 = graph.Item5;
+            var startLink1 = graph.Item6;
+            var linkEntry0Reply = graph.Item7;
+            var linkReply0Entry1 = graph.Rest.Item1;
 
             var pathsEntry = dlg.FindPaths(entry1);
             var pathsReply = dlg.FindPaths(reply0);
@@ -641,7 +650,15 @@ namespace HolocronToolset.Tests.Formats
         [Fact]
         public void TestGetLinkParentAndPartialPath()
         {
-            var (dlg, entry0, reply0, entry1, startLink0, startLink1, linkEntry0Reply, linkReply0Entry1) = BuildSimpleGraph();
+            var graph = BuildSimpleGraph();
+            var dlg = graph.Item1;
+            var entry0 = graph.Item2;
+            var reply0 = graph.Item3;
+            var entry1 = graph.Item4;
+            var startLink0 = graph.Item5;
+            var startLink1 = graph.Item6;
+            var linkEntry0Reply = graph.Item7;
+            var linkReply0Entry1 = graph.Rest.Item1;
 
             // Note: In C#, we can't directly check if parent is dlg (DLG is not a DLGNode)
             // Python version checks: dlg.get_link_parent(start_link0) is dlg
@@ -658,7 +675,15 @@ namespace HolocronToolset.Tests.Formats
         [Fact]
         public void TestAllEntriesAndRepliesSortedAndUnique()
         {
-            var (dlg, entry0, reply0, entry1, startLink0, startLink1, linkEntry0Reply, linkReply0Entry1) = BuildSimpleGraph();
+            var graph = BuildSimpleGraph();
+            var dlg = graph.Item1;
+            var entry0 = graph.Item2;
+            var reply0 = graph.Item3;
+            var entry1 = graph.Item4;
+            var startLink0 = graph.Item5;
+            var startLink1 = graph.Item6;
+            var linkEntry0Reply = graph.Item7;
+            var linkReply0Entry1 = graph.Rest.Item1;
             var entry2 = new DLGEntry { Comment = "late", ListIndex = -1 };
             var reply1 = new DLGReply { Text = LocalizedString.FromEnglish("shared"), ListIndex = 5 };
 
@@ -686,11 +711,21 @@ namespace HolocronToolset.Tests.Formats
         [Fact]
         public void TestCalculateLinksAndNodesCountsCyclesIncluded()
         {
-            var (dlg, entry0, reply0, entry1, startLink0, startLink1, linkEntry0Reply, linkReply0Entry1) = BuildSimpleGraph();
+            var graph = BuildSimpleGraph();
+            var dlg = graph.Item1;
+            var entry0 = graph.Item2;
+            var reply0 = graph.Item3;
+            var entry1 = graph.Item4;
+            var startLink0 = graph.Item5;
+            var startLink1 = graph.Item6;
+            var linkEntry0Reply = graph.Item7;
+            var linkReply0Entry1 = graph.Rest.Item1;
             // Introduce an explicit cycle entry1 -> entry0
             entry1.Links.Add(new DLGLink(entry0, 2));
 
-            var (numLinks, numNodes) = entry0.CalculateLinksAndNodes();
+            var result = entry0.CalculateLinksAndNodes();
+            var numLinks = result.Item1;
+            var numNodes = result.Item2;
             // entry0 -> reply0, reply0 -> entry1, entry1 -> entry0 (cycle) => 3 links, 3 nodes
             numLinks.Should().Be(3);
             numNodes.Should().Be(3);
@@ -701,7 +736,15 @@ namespace HolocronToolset.Tests.Formats
         [Fact]
         public void TestShiftItemAndBounds()
         {
-            var (dlg, entry0, reply0, entry1, startLink0, startLink1, linkEntry0Reply, linkReply0Entry1) = BuildSimpleGraph();
+            var graph = BuildSimpleGraph();
+            var dlg = graph.Item1;
+            var entry0 = graph.Item2;
+            var reply0 = graph.Item3;
+            var entry1 = graph.Item4;
+            var startLink0 = graph.Item5;
+            var startLink1 = graph.Item6;
+            var linkEntry0Reply = graph.Item7;
+            var linkReply0Entry1 = graph.Rest.Item1;
             entry0.ShiftItem(entry0.Links, 0, 0); // no-op allowed
             entry0.ShiftItem(entry0.Links, 0, 0); // idempotent
             // Add second link for ordering
@@ -754,8 +797,8 @@ namespace HolocronToolset.Tests.Formats
                 VoTextChanged = true,
                 Unskippable = true
             };
-            entry.Text.SetString(Language.ENGLISH, Gender.MALE, "Line");
-            entry.Text.SetString(Language.FRENCH, Gender.FEMALE, "Ligne");
+            entry.Text.SetString(Language.English, Gender.Male, "Line");
+            entry.Text.SetString(Language.French, Gender.Female, "Ligne");
             var animation = new DLGAnimation { Participant = "p1", AnimationId = 123 };
             entry.Animations.Add(animation);
 
@@ -799,7 +842,7 @@ namespace HolocronToolset.Tests.Formats
             restored.RecordVo.Should().BeTrue();
             restored.VoTextChanged.Should().BeTrue();
             restored.Unskippable.Should().BeTrue();
-            restored.Text.GetString(Language.FRENCH, Gender.FEMALE).Should().Be("Ligne");
+            restored.Text.GetString(Language.French, Gender.Female).Should().Be("Ligne");
             restored.Animations[0].AnimationId.Should().Be(123);
             restored.Links[0].Node.Links[0].Node.Comment.Should().Be("deep node");
         }

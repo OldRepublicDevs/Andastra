@@ -6,6 +6,7 @@ using Andastra.Parsing.Common;
 using Andastra.Parsing.Formats.GFF;
 using Andastra.Parsing.Resource;
 using Andastra.Parsing.Resource.Generics.DLG;
+using DLGType = Andastra.Parsing.Resource.Generics.DLG.DLG;
 using FluentAssertions;
 using HolocronToolset.Data;
 using HolocronToolset.Editors;
@@ -24,6 +25,26 @@ namespace HolocronToolset.Tests.Editors
         public DLGEditorTests(AvaloniaTestFixture fixture)
         {
             _fixture = fixture;
+        }
+
+        /// <summary>
+        /// Helper method to create a test installation.
+        /// </summary>
+        private HTInstallation CreateTestInstallation()
+        {
+            string k1Path = Environment.GetEnvironmentVariable("K1_PATH");
+            if (string.IsNullOrEmpty(k1Path))
+            {
+                k1Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k1Path) && System.IO.File.Exists(System.IO.Path.Combine(k1Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k1Path, "Test Installation", tsl: false);
+            }
+
+            return installation;
         }
 
         [Fact]
@@ -1483,8 +1504,9 @@ namespace HolocronToolset.Tests.Editors
 
             // Matching PyKotor implementation: editor.model.add_root_node()
             // Add a node to work with - we'll add a starter link
-            var link = new DLGLink();
-            editor.AddStarter(link);
+            var entry = new DLGEntry();
+            var link = new DLGLink(entry);
+            editor.Model.AddStarter(link);
 
             // Matching PyKotor implementation: Verify keyPressEvent is implemented
             // In C#, OnKeyDown and OnKeyUp are protected methods, but we can verify:
@@ -2415,7 +2437,7 @@ namespace HolocronToolset.Tests.Editors
 
         // Helper method matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:84-141
         // Original: def create_complex_tree(self) -> DLG:
-        private DLG CreateComplexTree()
+        private DLGType CreateComplexTree()
         {
             var dlg = new DLG();
             var entries = new List<DLGEntry>();

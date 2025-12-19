@@ -46,6 +46,7 @@ namespace Andastra.Runtime.Core.Actions
             _targetObjectId = targetObjectId;
             _run = run;
             _range = range;
+
             // TODO: Collision detector should be injected by game-specific runtime
             // Andastra.Runtime.Core cannot depend on Andastra.Runtime.Games.Odyssey
             _collisionDetector = null;
@@ -166,9 +167,9 @@ namespace Andastra.Runtime.Core.Actions
             // Uses FUN_004e17a0 and FUN_004f5290 for collision detection with creature bounding boxes
             // Implementation: Now uses proper bounding box collision detection instead of simplified radius-based check
             // Exclude target object from collision checking (we're moving towards it)
-            uint blockingCreatureId;
+            uint blockingCreatureId = 0x7F000000; // OBJECT_INVALID
             Vector3 collisionNormal;
-            bool hasCollision = _collisionDetector.CheckCreatureCollision(actor, currentPosition, newPosition, out blockingCreatureId, out collisionNormal, _targetObjectId);
+            bool hasCollision = _collisionDetector != null && _collisionDetector.CheckCreatureCollision(actor, currentPosition, newPosition, out blockingCreatureId, out collisionNormal, _targetObjectId);
 
             if (hasCollision)
             {
@@ -225,7 +226,7 @@ namespace Andastra.Runtime.Core.Actions
                             Vector3 obstaclePosition = blockingTransform.Position;
 
                             // Get creature bounding box to determine avoidance radius
-                            CreatureBoundingBox blockingBoundingBox = _collisionDetector.GetCreatureBoundingBoxPublic(blockingCreature);
+                            CreatureBoundingBox blockingBoundingBox = _collisionDetector != null ? _collisionDetector.GetCreatureBoundingBoxPublic(blockingCreature) : new CreatureBoundingBox(0.5f, 0.5f, 1.0f);
                             // Use the larger of width/depth as avoidance radius, with safety margin
                             float avoidanceRadius = Math.Max(blockingBoundingBox.Width, blockingBoundingBox.Depth) * 0.5f + 0.5f;
 
@@ -265,7 +266,7 @@ namespace Andastra.Runtime.Core.Actions
                                     // Check if adjusted path is clear
                                     uint adjustedBlockingId;
                                     Vector3 adjustedNormal;
-                                    bool adjustedHasCollision = _collisionDetector.CheckCreatureCollision(
+                                    bool adjustedHasCollision = _collisionDetector != null && _collisionDetector.CheckCreatureCollision(
                                         actor, currentPosition, adjustedNewPosition, out adjustedBlockingId, out adjustedNormal, _targetObjectId);
 
                                     if (!adjustedHasCollision)
