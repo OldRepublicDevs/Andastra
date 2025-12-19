@@ -322,158 +322,49 @@ namespace Andastra.Runtime.Games.Eclipse
         }
 
         /// <summary>
-        /// Handles area transition events.
+        /// Engine-specific hook called before area transition.
         /// </summary>
         /// <remarks>
-        /// Eclipse transitions are complex with physics state transfer.
-        /// Handles area streaming and entity migration.
-        /// Maintains physics continuity across transitions.
-        ///
+        /// Eclipse-specific: Saves physics state (velocity, angular velocity, mass) before transition.
         /// Based on reverse engineering of:
-        /// - daorigins.exe: Area transition system with physics state preservation
-        /// - DragonAge2.exe: Enhanced area streaming and entity migration
-        /// - MassEffect.exe/MassEffect2.exe: Complex area transition with physics continuity
-        ///
-        /// Transition process:
-        /// 1. Remove entity from current area collections
-        /// 2. Save physics state (velocity, angular velocity, constraints)
-        /// 3. Load target area if not already loaded (area streaming)
-        /// 4. Get target area from world/module
-        /// 5. Project entity position to target area walkmesh
-        /// 6. Transfer physics state to target area physics system
-        /// 7. Add entity to target area collections
-        /// 8. Update entity's AreaId
-        /// 9. Fire transition events (EVENT_AREA_TRANSITION, OnEnter)
+        /// - daorigins.exe: Physics state preservation during area transitions
+        /// - DragonAge2.exe: Enhanced physics state transfer
+        /// - MassEffect.exe/MassEffect2.exe: Complex physics continuity
         /// </remarks>
-        protected override void HandleAreaTransition(IEntity entity, string targetArea)
+        protected override void OnBeforeTransition(IEntity entity, IArea currentArea)
         {
-            if (entity == null || string.IsNullOrEmpty(targetArea))
-            {
-                return;
-            }
-
-            // Get world reference from entity
-            IWorld world = entity.World;
-            if (world == null)
-            {
-                return;
-            }
-
-            // Get current area from entity's AreaId or world's CurrentArea
-            IArea currentArea = null;
-            if (entity.AreaId != 0)
-            {
-                currentArea = world.GetArea(entity.AreaId);
-            }
-
-            if (currentArea == null)
-            {
-                currentArea = world.CurrentArea;
-            }
-
-            // If current area is this area, remove entity from collections
-            if (currentArea == this)
-            {
-                RemoveEntityFromArea(entity);
-            }
-
             // Save physics state before transition
-            PhysicsState savedPhysicsState = SaveEntityPhysicsState(entity);
+            _savedPhysicsState = SaveEntityPhysicsState(entity);
+        }
 
-            // Load target area if not already loaded (area streaming)
-            IArea targetAreaInstance = LoadOrGetTargetArea(world, targetArea);
-            if (targetAreaInstance == null)
+        /// <summary>
+        /// Engine-specific hook called after area transition.
+        /// </summary>
+        /// <remarks>
+        /// Eclipse-specific: Restores physics state in target area after transition.
+        /// Maintains physics continuity across area boundaries.
+        /// </remarks>
+        protected override void OnAfterTransition(IEntity entity, IArea targetArea, IArea currentArea)
+        {
+            // Transfer physics state to target area
+            if (targetArea is EclipseArea eclipseTargetArea)
             {
-                // Failed to load target area - restore entity to current area
-                if (currentArea == this)
-                {
-                    AddEntityToArea(entity);
-                }
-                return;
-            }
-
-            // If target area is different from current, perform full transition
-            if (targetAreaInstance != currentArea)
-            {
-                // Get entity transform for position update
-                Interfaces.Components.ITransformComponent transform = entity.GetComponent<Interfaces.Components.ITransformComponent>();
-                if (transform != null)
-                {
-                    // Project position to target area walkmesh
-                    Vector3 currentPosition = transform.Position;
-                    Vector3 projectedPosition;
-                    float height;
-
-                    if (targetAreaInstance.ProjectToWalkmesh(currentPosition, out projectedPosition, out height))
-                    {
-                        transform.Position = projectedPosition;
-                    }
-                    else
-                    {
-                        // If projection fails, try to find a valid position near the transition point
-                        // Use navigation mesh to find nearest walkable point
-                        if (targetAreaInstance.NavigationMesh != null)
-                        {
-                            Vector3 nearestWalkable = FindNearestWalkablePoint(targetAreaInstance, currentPosition);
-                            transform.Position = nearestWalkable;
-                        }
-                    }
-                }
-
-                // Transfer physics state to target area
-                if (targetAreaInstance is EclipseArea eclipseTargetArea)
-                {
-                    RestoreEntityPhysicsState(entity, savedPhysicsState, eclipseTargetArea);
-                }
-
-                // Add entity to target area collections
-                if (targetAreaInstance is EclipseArea eclipseArea)
-                {
-                    eclipseArea.AddEntityToArea(entity);
-                }
-                else if (targetAreaInstance is Module.RuntimeArea runtimeArea)
-                {
-                    runtimeArea.AddEntity(entity);
-                }
-
-                // Update entity's AreaId
-                uint targetAreaId = world.GetAreaId(targetAreaInstance);
-                if (targetAreaId != 0)
-                {
-                    entity.AreaId = targetAreaId;
-                }
-
-                // Fire transition events
-                if (world.EventBus != null)
-                {
-                    // Fire OnEnter script for target area
-                    // Based on swkotor2.exe: Area enter script execution
-                    // Located via string references: "OnEnter" @ 0x007bee60 (area enter script)
-                    // Original implementation: Fires when entity enters an area
-                    if (targetAreaInstance is Module.RuntimeArea targetRuntimeArea)
-                    {
-                        string enterScript = targetRuntimeArea.GetScript(ScriptEvent.OnEnter);
-                        if (!string.IsNullOrEmpty(enterScript))
-                        {
-                            IEntity areaEntity = world.GetEntityByTag(targetAreaInstance.ResRef, 0);
-                            if (areaEntity == null)
-                            {
-                                areaEntity = world.GetEntityByTag(targetAreaInstance.Tag, 0);
-                            }
-                            if (areaEntity != null)
-                            {
-                                world.EventBus.FireScriptEvent(areaEntity, ScriptEvent.OnEnter, entity);
-                            }
-                        }
-                    }
-                }
+                RestoreEntityPhysicsState(entity, _savedPhysicsState, eclipseTargetArea);
             }
         }
 
         /// <summary>
+        /// Saved physics state for area transition.
+        /// </summary>
+        private PhysicsState _savedPhysicsState;
+
+        /// <summary>
         /// Removes an entity from this area's collections.
         /// </summary>
-        private void RemoveEntityFromArea(IEntity entity)
+        /// <remarks>
+        /// Eclipse-specific: Also removes entity from physics system.
+        /// </remarks>
+        protected override void RemoveEntityFromArea(IEntity entity)
         {
             if (entity == null)
             {
@@ -513,7 +404,10 @@ namespace Andastra.Runtime.Games.Eclipse
         /// <summary>
         /// Adds an entity to this area's collections.
         /// </summary>
-        private void AddEntityToArea(IEntity entity)
+        /// <remarks>
+        /// Eclipse-specific: Also adds entity to physics system.
+        /// </remarks>
+        protected override void AddEntityToArea(IEntity entity)
         {
             if (entity == null)
             {
@@ -677,106 +571,6 @@ namespace Andastra.Runtime.Games.Eclipse
             }
         }
 
-        /// <summary>
-        /// Loads or gets the target area for transition.
-        /// </summary>
-        /// <remarks>
-        /// Implements area streaming: loads target area if not already loaded.
-        /// Checks module for area, loads if necessary.
-        /// </remarks>
-        private IArea LoadOrGetTargetArea(IWorld world, string targetAreaResRef)
-        {
-            if (world == null || string.IsNullOrEmpty(targetAreaResRef))
-            {
-                return null;
-            }
-
-            // First, check if area is already loaded in current module
-            if (world.CurrentModule != null)
-            {
-                // Try to get area from module
-                // In a full implementation, IModule would have GetArea method
-                // For now, check if target area is the current area
-                if (world.CurrentArea != null && string.Equals(world.CurrentArea.ResRef, targetAreaResRef, StringComparison.OrdinalIgnoreCase))
-                {
-                    return world.CurrentArea;
-                }
-
-                // Check if area exists in module's area list
-                // In a full implementation, this would query IModule.GetAreas()
-                // For now, we'll need to load it via module loader
-            }
-
-            // Area streaming: Load target area if not already loaded
-            // In a full implementation, this would:
-            // 1. Check if area is in module's area list
-            // 2. If not, load area via IModuleLoader
-            // 3. Register area with world
-            // 4. Return loaded area
-
-            // For now, return current area if target matches, or null if not found
-            // This is a simplified implementation - full area streaming would require IModuleLoader integration
-            if (world.CurrentArea != null && string.Equals(world.CurrentArea.ResRef, targetAreaResRef, StringComparison.OrdinalIgnoreCase))
-            {
-                return world.CurrentArea;
-            }
-
-            // If target area is not current area and not loaded, we would need to load it
-            // This requires IModuleLoader which may not be available in this context
-            // For now, return null to indicate area not found/not loaded
-            // Full implementation would integrate with module loading system
-            return null;
-        }
-
-        /// <summary>
-        /// Finds the nearest walkable point in the target area.
-        /// </summary>
-        /// <remarks>
-        /// Used when direct position projection fails.
-        /// Searches navigation mesh for nearest valid position.
-        /// </remarks>
-        private Vector3 FindNearestWalkablePoint(IArea area, Vector3 searchPoint)
-        {
-            if (area == null || area.NavigationMesh == null)
-            {
-                return searchPoint;
-            }
-
-            // Try to project the point first
-            Vector3 projected;
-            float height;
-            if (area.ProjectToWalkmesh(searchPoint, out projected, out height))
-            {
-                return projected;
-            }
-
-            // If projection fails, search in expanding radius
-            const float searchRadius = 5.0f;
-            const float stepSize = 1.0f;
-            const int maxSteps = 10;
-
-            for (int step = 1; step <= maxSteps; step++)
-            {
-                float radius = step * stepSize;
-                for (int angle = 0; angle < 360; angle += 45)
-                {
-                    float radians = (float)(angle * Math.PI / 180.0);
-                    Vector3 testPoint = searchPoint + new Vector3(
-                        (float)Math.Cos(radians) * radius,
-                        0,
-                        (float)Math.Sin(radians) * radius
-                    );
-
-                    if (area.ProjectToWalkmesh(testPoint, out projected, out height))
-                    {
-                        return projected;
-                    }
-                }
-            }
-
-            // Fallback: return original point
-            return searchPoint;
-        }
 
         /// <summary>
         /// Adds an entity to the physics system.

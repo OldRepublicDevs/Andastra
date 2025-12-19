@@ -173,7 +173,19 @@ namespace Andastra.Runtime.Games.Odyssey
         /// </remarks>
         public override bool IsPointWalkable(Vector3 point)
         {
-            return _navigationMesh?.IsPointWalkable(point) ?? false;
+            if (_navigationMesh == null)
+            {
+                return false;
+            }
+            // Project point to surface and check if it's walkable
+            Vector3 projected;
+            float height;
+            if (_navigationMesh.ProjectToSurface(point, out projected, out height))
+            {
+                int faceIndex = _navigationMesh.FindFaceAt(projected);
+                return faceIndex >= 0 && _navigationMesh.IsWalkable(faceIndex);
+            }
+            return false;
         }
 
         /// <summary>
@@ -192,7 +204,7 @@ namespace Andastra.Runtime.Games.Odyssey
                 return false;
             }
 
-            return _navigationMesh.ProjectToWalkmesh(point, out result, out height);
+            return _navigationMesh.ProjectToSurface(point, out result, out height);
         }
 
         /// <summary>
@@ -278,19 +290,97 @@ namespace Andastra.Runtime.Games.Odyssey
         }
 
         /// <summary>
-        /// Handles area transition events.
+        /// Removes an entity from this area's collections.
         /// </summary>
         /// <remarks>
-        /// Based on EVENT_AREA_TRANSITION handling in DispatchEvent.
-        /// Manages entity movement between areas.
-        /// Updates area membership and triggers transition scripts.
+        /// Odyssey-specific: Basic entity removal without physics system.
+        /// Based on swkotor.exe/swkotor2.exe entity management.
         /// </remarks>
-        protected override void HandleAreaTransition(IEntity entity, string targetArea)
+        protected override void RemoveEntityFromArea(IEntity entity)
         {
-            // TODO: Implement area transition logic
-            // Remove entity from current area collections
-            // Trigger transition scripts and effects
-            // Queue entity for addition to target area
+            if (entity == null)
+            {
+                return;
+            }
+
+            // Remove from type-specific lists
+            switch (entity.ObjectType)
+            {
+                case ObjectType.Creature:
+                    _creatures.Remove(entity);
+                    break;
+                case ObjectType.Placeable:
+                    _placeables.Remove(entity);
+                    break;
+                case ObjectType.Door:
+                    _doors.Remove(entity);
+                    break;
+                case ObjectType.Trigger:
+                    _triggers.Remove(entity);
+                    break;
+                case ObjectType.Waypoint:
+                    _waypoints.Remove(entity);
+                    break;
+                case ObjectType.Sound:
+                    _sounds.Remove(entity);
+                    break;
+            }
+        }
+
+        /// <summary>
+        /// Adds an entity to this area's collections.
+        /// </summary>
+        /// <remarks>
+        /// Odyssey-specific: Basic entity addition without physics system.
+        /// Based on swkotor.exe/swkotor2.exe entity management.
+        /// </remarks>
+        protected override void AddEntityToArea(IEntity entity)
+        {
+            if (entity == null)
+            {
+                return;
+            }
+
+            // Add to type-specific lists
+            switch (entity.ObjectType)
+            {
+                case ObjectType.Creature:
+                    if (!_creatures.Contains(entity))
+                    {
+                        _creatures.Add(entity);
+                    }
+                    break;
+                case ObjectType.Placeable:
+                    if (!_placeables.Contains(entity))
+                    {
+                        _placeables.Add(entity);
+                    }
+                    break;
+                case ObjectType.Door:
+                    if (!_doors.Contains(entity))
+                    {
+                        _doors.Add(entity);
+                    }
+                    break;
+                case ObjectType.Trigger:
+                    if (!_triggers.Contains(entity))
+                    {
+                        _triggers.Add(entity);
+                    }
+                    break;
+                case ObjectType.Waypoint:
+                    if (!_waypoints.Contains(entity))
+                    {
+                        _waypoints.Add(entity);
+                    }
+                    break;
+                case ObjectType.Sound:
+                    if (!_sounds.Contains(entity))
+                    {
+                        _sounds.Add(entity);
+                    }
+                    break;
+            }
         }
 
         /// <summary>
