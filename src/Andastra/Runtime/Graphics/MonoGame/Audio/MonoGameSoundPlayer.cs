@@ -11,10 +11,10 @@ namespace Andastra.Runtime.MonoGame.Audio
 {
     /// <summary>
     /// MonoGame implementation of ISoundPlayer for playing sound effects.
-    /// 
+    ///
     /// Loads WAV files from KOTOR installation and plays them using MonoGame's SoundEffect API.
     /// Supports positional audio for 3D sound effects.
-    /// 
+    ///
     /// Based on MonoGame API: https://docs.monogame.net/api/Microsoft.Xna.Framework.Audio.SoundEffect.html
     /// SoundEffect.LoadFromStream() loads WAV data from a stream
     /// SoundEffectInstance provides playback control (Play, Stop, Volume, Pan, Pitch)
@@ -59,6 +59,7 @@ namespace Andastra.Runtime.MonoGame.Audio
         private readonly SpatialAudio _spatialAudio;
         private readonly Dictionary<uint, SoundEffectInstance> _playingSounds;
         private readonly Dictionary<uint, SoundEffect> _loadedSounds;
+        private readonly Dictionary<uint, float> _instanceOriginalVolumes;
         private uint _nextSoundInstanceId;
         private float _masterVolume;
 
@@ -73,6 +74,7 @@ namespace Andastra.Runtime.MonoGame.Audio
             _spatialAudio = spatialAudio;
             _playingSounds = new Dictionary<uint, SoundEffectInstance>();
             _loadedSounds = new Dictionary<uint, SoundEffect>();
+            _instanceOriginalVolumes = new Dictionary<uint, float>();
             _nextSoundInstanceId = 1;
             _masterVolume = 1.0f;
         }
@@ -142,8 +144,11 @@ namespace Andastra.Runtime.MonoGame.Audio
                     return 0;
                 }
 
+                // Store original volume before applying master volume
+                float originalVolume = Math.Max(0.0f, Math.Min(1.0f, volume));
+
                 // Configure instance
-                instance.Volume = volume * _masterVolume;
+                instance.Volume = originalVolume * _masterVolume;
                 instance.Pitch = Math.Max(-1.0f, Math.Min(1.0f, pitch));
                 instance.Pan = Math.Max(-1.0f, Math.Min(1.0f, pan));
 
@@ -152,17 +157,18 @@ namespace Andastra.Runtime.MonoGame.Audio
                 {
                     // Convert System.Numerics.Vector3 to Microsoft.Xna.Framework.Vector3
                     var xnaPosition = new Microsoft.Xna.Framework.Vector3(position.Value.X, position.Value.Y, position.Value.Z);
-                    uint emitterId = _spatialAudio.CreateEmitter(xnaPosition, Microsoft.Xna.Framework.Vector3.Zero, volume, 1.0f, 30.0f);
+                    uint emitterId = _spatialAudio.CreateEmitter(xnaPosition, Microsoft.Xna.Framework.Vector3.Zero, originalVolume, 1.0f, 30.0f);
                     _spatialAudio.Apply3D(emitterId, instance);
                 }
 
                 // Play sound
                 instance.Play();
 
-                // Track instance
+                // Track instance and store original volume
                 uint instanceId = _nextSoundInstanceId++;
                 _playingSounds[instanceId] = instance;
                 _loadedSounds[instanceId] = soundEffect;
+                _instanceOriginalVolumes[instanceId] = originalVolume;
 
                 return instanceId;
             }
@@ -189,6 +195,9 @@ namespace Andastra.Runtime.MonoGame.Audio
                     soundEffect.Dispose();
                     _loadedSounds.Remove(soundInstanceId);
                 }
+
+                // Clean up stored original volume
+                _instanceOriginalVolumes.Remove(soundInstanceId);
             }
         }
 
@@ -209,6 +218,9 @@ namespace Andastra.Runtime.MonoGame.Audio
                 kvp.Value.Dispose();
             }
             _loadedSounds.Clear();
+
+            // Clean up all stored original volumes
+            _instanceOriginalVolumes.Clear();
         }
 
         /// <summary>
@@ -218,11 +230,17 @@ namespace Andastra.Runtime.MonoGame.Audio
         {
             _masterVolume = Math.Max(0.0f, Math.Min(1.0f, volume));
 
-            // Update volume of all playing sounds
-            foreach (var instance in _playingSounds.Values)
+            // Update volume of all playing sounds using their stored original volumes
+            foreach (var kvp in _playingSounds)
             {
-                // TODO: SIMPLIFIED - Store original volume per instance to properly update volume
-                // TODO: SIMPLIFIED - For now, this is a simplified implementation
+                uint instanceId = kvp.Key;
+                SoundEffectInstance instance = kvp.Value;
+
+                if (_instanceOriginalVolumes.TryGetValue(instanceId, out float originalVolume))
+                {
+                    // Recalculate volume as original volume * master volume
+                    instance.Volume = originalVolume * _masterVolume;
+                }
             }
         }
 
@@ -251,6 +269,9 @@ namespace Andastra.Runtime.MonoGame.Audio
                     soundEffect.Dispose();
                     _loadedSounds.Remove(instanceId);
                 }
+
+                // Clean up stored original volume
+                _instanceOriginalVolumes.Remove(instanceId);
             }
         }
 
