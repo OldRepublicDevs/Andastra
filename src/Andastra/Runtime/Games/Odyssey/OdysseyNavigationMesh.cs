@@ -162,11 +162,64 @@ namespace Andastra.Runtime.Games.Odyssey
         /// <remarks>
         /// Tests if line segment between points doesn't intersect unwalkable geometry.
         /// Used for AI perception and projectile collision.
+        /// 
+        /// Based on swkotor2.exe: FUN_0054be70 @ 0x0054be70 performs walkmesh raycasts for visibility checks.
+        /// The original implementation:
+        /// 1. Performs a raycast from start to end position
+        /// 2. If a hit is found, checks if the hit face is walkable (walkable faces don't block line of sight)
+        /// 3. Also checks if the hit point is very close to the destination (within tolerance) - if so, line of sight is considered clear
+        /// 4. Returns true if no obstruction or if the obstruction is walkable/close to destination
+        /// 
+        /// This implementation matches the behavior used by:
+        /// - Perception system for AI visibility checks
+        /// - Projectile collision detection
+        /// - Movement collision detection
         /// </remarks>
         public bool HasLineOfSight(Vector3 start, Vector3 end)
         {
-            // TODO: Implement line of sight testing
-            throw new System.NotImplementedException("Line of sight testing not yet implemented");
+            // Handle edge case: same point
+            Vector3 direction = end - start;
+            float distance = direction.Length();
+            if (distance < 1e-6f)
+            {
+                return true; // Same point, line of sight is clear
+            }
+
+            // Normalize direction for raycast
+            Vector3 normalizedDir = direction / distance;
+
+            // Perform raycast to check for obstructions
+            Vector3 hitPoint;
+            int hitFace;
+            if (Raycast(start, normalizedDir, distance, out hitPoint, out hitFace))
+            {
+                // A hit was found - check if it blocks line of sight
+                
+                // Calculate distances
+                float distToHit = Vector3.Distance(start, hitPoint);
+                float distToDest = distance;
+                
+                // If hit is very close to destination (within tolerance), consider line of sight clear
+                // This handles cases where the raycast hits the destination face itself
+                const float tolerance = 0.5f; // 0.5 unit tolerance for walkmesh precision
+                if (distToDest - distToHit < tolerance)
+                {
+                    return true; // Hit is at or very close to destination, line of sight is clear
+                }
+                
+                // Check if the hit face is walkable - walkable faces don't block line of sight
+                // This allows entities to see through walkable surfaces (e.g., through doorways, over walkable terrain)
+                if (hitFace >= 0 && IsWalkable(hitFace))
+                {
+                    return true; // Hit a walkable face, line of sight is clear
+                }
+                
+                // Hit a non-walkable face that blocks line of sight
+                return false;
+            }
+
+            // No hit found - line of sight is clear
+            return true;
         }
 
         // INavigationMesh interface methods
@@ -194,16 +247,50 @@ namespace Andastra.Runtime.Games.Odyssey
             throw new NotImplementedException("GetAdjacentFaces: Adjacent face lookup not yet implemented");
         }
 
+        /// <summary>
+        /// Checks if a face is walkable based on its surface material.
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor.exe and swkotor2.exe walkmesh walkability checks.
+        /// Surface materials are looked up from surfacemat.2da to determine walkability.
+        /// Walkable materials include dirt, grass, stone, wood, water, carpet, metal, etc.
+        /// Non-walkable materials include lava, deep water, non-walk surfaces, etc.
+        /// </remarks>
         public bool IsWalkable(int faceIndex)
         {
-            // TODO: STUB - Implement walkability check
-            throw new NotImplementedException("IsWalkable: Walkability check not yet implemented");
+            if (faceIndex < 0 || faceIndex >= _surfaceMaterials.Length)
+            {
+                return false;
+            }
+
+            int material = _surfaceMaterials[faceIndex];
+            return WalkableMaterials.Contains(material);
         }
 
+        /// <summary>
+        /// Gets the surface material index for a given face.
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor.exe and swkotor2.exe walkmesh surface material lookup.
+        /// Surface materials are stored per-face and correspond to entries in surfacemat.2da.
+        /// Material indices range from 0-30, with specific meanings:
+        /// - 0: Undefined
+        /// - 1: Dirt (walkable)
+        /// - 3: Grass (walkable)
+        /// - 4: Stone (walkable)
+        /// - 7: NonWalk (non-walkable)
+        /// - 15: Lava (non-walkable)
+        /// - 17: DeepWater (non-walkable)
+        /// - etc.
+        /// </remarks>
         public int GetSurfaceMaterial(int faceIndex)
         {
-            // TODO: STUB - Implement surface material lookup
-            throw new NotImplementedException("GetSurfaceMaterial: Surface material lookup not yet implemented");
+            if (faceIndex < 0 || faceIndex >= _surfaceMaterials.Length)
+            {
+                return 0; // Return undefined material for invalid face index
+            }
+
+            return _surfaceMaterials[faceIndex];
         }
 
         /// <summary>
