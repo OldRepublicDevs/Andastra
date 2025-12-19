@@ -42,6 +42,31 @@ namespace Andastra.Parsing.Formats.GFF
         {
         }
 
+        public GFFBinaryReader(byte[] data, int offset, int size) : base(SliceData(data, offset, size))
+        {
+        }
+
+        private static byte[] SliceData(byte[] data, int offset, int size)
+        {
+            if (data == null) throw new ArgumentNullException(nameof(data));
+
+            if (offset < 0 || offset > data.Length)
+            {
+                throw new ArgumentOutOfRangeException(nameof(offset));
+            }
+
+            // size <= 0 means "read to end" to match existing call sites that pass 0 for null.
+            int length = size > 0 ? Math.Min(size, data.Length - offset) : (data.Length - offset);
+            if (offset == 0 && length == data.Length)
+            {
+                return data;
+            }
+
+            byte[] slice = new byte[length];
+            Array.Copy(data, offset, slice, 0, length);
+            return slice;
+        }
+
         public GFFBinaryReader(string filepath) : base(filepath)
         {
         }

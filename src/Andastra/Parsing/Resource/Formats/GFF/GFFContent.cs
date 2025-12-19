@@ -40,7 +40,8 @@ namespace Andastra.Parsing.Formats.GFF
         PT,
         GVT,
         INV,
-        GAM
+        GAM,
+        CNV
     }
 
     public static class GFFContentExtensions
@@ -74,6 +75,7 @@ namespace Andastra.Parsing.Formats.GFF
             if (lower.EndsWith(".utt")) return GFFContent.UTT;
             if (lower.EndsWith(".utw")) return GFFContent.UTW;
             if (lower.EndsWith(".gam")) return GFFContent.GAM;
+            if (lower.EndsWith(".cnv")) return GFFContent.CNV;
             return GFFContent.GFF;
         }
 
@@ -113,6 +115,7 @@ namespace Andastra.Parsing.Formats.GFF
                 case "GVT": return GFFContent.GVT;
                 case "INV": return GFFContent.INV;
                 case "GAM": return GFFContent.GAM;
+                case "CNV": return GFFContent.CNV;
                 default: return GFFContent.GFF;
             }
         }
@@ -127,7 +130,7 @@ namespace Andastra.Parsing.Formats.GFF
             return new HashSet<string>
             {
                 "gff", "utc", "uti", "utp", "ute", "utm", "utd", "utw",
-                "dlg", "are", "git", "ifo", "gui", "jrl", "fac", "pth",
+                "dlg", "cnv", "are", "git", "ifo", "gui", "jrl", "fac", "pth",
                 "bic", "btc", "btd", "bte", "bti", "btp", "btm", "btt",
                 "itp", "nfo", "pt", "gvt", "inv", "gam"
             };

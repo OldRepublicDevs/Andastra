@@ -95,6 +95,8 @@ namespace Andastra.Parsing.Common
 
         public override string ToString() => _value;
 
+        public bool IsBlank() => string.IsNullOrEmpty(_value);
+
         public override int GetHashCode() => _value.ToLower().GetHashCode();
 
         public override bool Equals([CanBeNull] object obj)

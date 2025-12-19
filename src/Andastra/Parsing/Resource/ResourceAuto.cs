@@ -276,6 +276,15 @@ namespace Andastra.Parsing.Resource
             {
                 return DLGHelper.BytesDlg(dlg, Game.K2);
             }
+            // TODO: TEMPORARY - Commented out CNV to fix build errors in CNV files
+            /*
+            if (resource is CNV cnv)
+            {
+                // CNV format is only used by Eclipse Engine games
+                // Default to Dragon Age Origins if game type is not specified
+                return Andastra.Parsing.Resource.Generics.CNV.CNVHelper.BytesCnv(cnv, Game.DA);
+            }
+            */
             if (resource is GIT git)
             {
                 return GITHelpers.BytesGit(git, Game.K2);
@@ -407,7 +416,7 @@ namespace Andastra.Parsing.Resource
 
         private static readonly System.Collections.Generic.HashSet<string> GFFContentExtensions = new System.Collections.Generic.HashSet<string>
         {
-            "ARE", "IFO", "GIT", "UTC", "UTI", "UTD", "UTE", "UTP", "UTS", "UTT", "UTW", "DLG", "JRL", "PTH"
+            "ARE", "IFO", "GIT", "UTC", "UTI", "UTD", "UTE", "UTP", "UTS", "UTT", "UTW", "DLG", "CNV", "JRL", "PTH"
         };
         /// <summary>
         /// Automatically loads a resource from file data based on its type.
@@ -450,6 +459,12 @@ namespace Andastra.Parsing.Resource
                     case 2019: // TwoDA
                         var twodaReader = new TwoDABinaryReader(data);
                         return twodaReader.Load();
+
+                    // TODO: TEMPORARY - Commented out CNV to fix build errors in CNV files
+                    /*
+                    case 2034: // CNV
+                        return Andastra.Parsing.Resource.Generics.CNV.CNVHelper.ReadCnv(data);
+                    */
 
                     // Add more resource types as they are implemented
                     default:
