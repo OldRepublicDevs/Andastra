@@ -1,6 +1,7 @@
 using Andastra.Parsing.Common;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Markup.Xaml;
@@ -8,9 +9,13 @@ using Andastra.Parsing;
 using Andastra.Parsing.Formats.GFF;
 using Andastra.Parsing.Resource.Generics;
 using Andastra.Parsing.Resource;
+using Andastra.Parsing.Resource.Generics.DLG;
 using HolocronToolset.Data;
 using HolocronToolset.Dialogs;
+using HolocronToolset.Utils;
 using HolocronToolset.Widgets;
+using MsBox.Avalonia;
+using MsBox.Avalonia.Enums;
 using GFFAuto = Andastra.Parsing.Formats.GFF.GFFAuto;
 
 namespace HolocronToolset.Editors
@@ -699,16 +704,77 @@ namespace HolocronToolset.Editors
         // Original: def edit_conversation(self):
         private void EditConversation()
         {
-            // Matching PyKotor implementation: Opens DLG editor for conversation
-            // This is a placeholder - actual implementation would require DLG editor to be available
-            // For now, we just log that it was called
-            if (_conversationEdit == null || string.IsNullOrEmpty(_conversationEdit.Text))
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utd.py:364
+            // Original: resname: str = self.ui.conversationEdit.currentText()
+            string resname = _conversationEdit?.Text?.Trim() ?? "";
+            byte[] data = null;
+            string filepath = null;
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utd.py:368-370
+            // Original: if not resname or not resname.strip():
+            if (string.IsNullOrEmpty(resname))
             {
-                System.Console.WriteLine("Conversation field cannot be blank.");
+                var errorBox = MsBox.Avalonia.MessageBoxManager.GetMessageBoxStandard(
+                    "Failed to open DLG Editor",
+                    "Conversation field cannot be blank.",
+                    ButtonEnum.Ok,
+                    MsBox.Avalonia.Enums.Icon.Error);
+                errorBox.ShowAsync();
                 return;
             }
-            // TODO: Implement DLG editor opening when available
-            System.Console.WriteLine($"EditConversation called for: {_conversationEdit.Text}");
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utd.py:363
+            // Original: assert self._installation is not None
+            if (_installation == null)
+            {
+                return;
+            }
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utd.py:372
+            // Original: search: ResourceResult | None = self._installation.resource(resname, ResourceType.DLG)
+            var search = _installation.Resource(resname, ResourceType.DLG);
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utd.py:374-388
+            // Original: if search is None:
+            if (search == null)
+            {
+                // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utd.py:375-380
+                // Original: msgbox = QMessageBox(...).exec()
+                var msgBox = MsBox.Avalonia.MessageBoxManager.GetMessageBoxStandard(
+                    "DLG file not found",
+                    "Do you wish to create a file in the override?",
+                    ButtonEnum.YesNo,
+                    MsBox.Avalonia.Enums.Icon.Question);
+                var result = msgBox.ShowAsync().Result;
+
+                // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utd.py:381
+                // Original: if msgbox == QMessageBox.StandardButton.Yes:
+                if (result == ButtonResult.Yes)
+                {
+                    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utd.py:382-388
+                    // Original: data = bytearray(); write_gff(dismantle_dlg(DLG()), data); filepath = ...
+                    var dlg = new DLG();
+                    var gff = DLGHelper.DismantleDlg(dlg, _installation.Game);
+                    data = GFFAuto.BytesGff(gff, ResourceType.DLG);
+                    filepath = System.IO.Path.Combine(_installation.OverridePath(), $"{resname}.dlg");
+                    File.WriteAllBytes(filepath, data);
+                }
+            }
+            else
+            {
+                // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utd.py:390
+                // Original: resname, filepath, data = search.resname, search.filepath, search.data
+                resname = search.ResName;
+                filepath = search.FilePath;
+                data = search.Data;
+            }
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utd.py:392-393
+            // Original: if data is not None: open_resource_editor(...)
+            if (data != null)
+            {
+                WindowUtils.OpenResourceEditor(filepath, resname, ResourceType.DLG, data, _installation, this);
+            }
         }
 
         public override void SaveAs()
