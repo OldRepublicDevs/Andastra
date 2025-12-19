@@ -1,0 +1,42 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType Condition="'$(OS)' == 'Windows_NT'">WinExe</OutputType>
+    <OutputType Condition="'$(OS)' != 'Windows_NT'">Exe</OutputType>
+    <TargetFramework>net9.0</TargetFramework>
+    <LangVersion>7.3</LangVersion>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <RootNamespace>Andastra.Game</RootNamespace>
+    <AssemblyName>Andastra.Game</AssemblyName>
+    <Description>MonoGame executable launcher for Odyssey Engine</Description>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Runtime\Core\Andastra.Runtime.Core.csproj" />
+    <ProjectReference Include="..\Runtime\Content\Andastra.Runtime.Content.csproj" />
+    <ProjectReference Include="..\Runtime\Scripting\Andastra.Runtime.Scripting.csproj" />
+    <ProjectReference Include="..\Runtime\Games\Kotor\Andastra.Runtime.Games.Kotor.csproj" />
+    <ProjectReference Include="..\Runtime\Graphics\Andastra.Runtime.Graphics.csproj" />
+    <ProjectReference Include="..\Runtime\Graphics\MonoGame\Andastra.Runtime.Graphics.MonoGame.csproj" />
+    <ProjectReference Include="..\Runtime\Graphics\Stride\Andastra.Runtime.Graphics.Stride.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="JetBrains.Annotations" Version="2025.2.4" />
+    <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.1.303" />
+    <PackageReference Include="MonoGame.Content.Builder.Task" Version="3.8.1.303" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <MonoGameContentReference Include="Content.mgcb" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="Content\**\*.xnb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+</Project>

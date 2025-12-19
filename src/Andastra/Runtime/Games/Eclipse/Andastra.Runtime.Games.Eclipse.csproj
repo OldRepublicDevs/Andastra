@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <LangVersion>7.3</LangVersion>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <RootNamespace>Andastra.Runtime.Games.Eclipse</RootNamespace>
+    <AssemblyName>Andastra.Runtime.Games.Eclipse</AssemblyName>
+    <Description>Eclipse Engine implementation for Dragon Age and Mass Effect series</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Core\Andastra.Runtime.Core.csproj" />
+    <ProjectReference Include="..\..\Content\Andastra.Runtime.Content.csproj" />
+    <ProjectReference Include="..\..\Scripting\Andastra.Runtime.Scripting.csproj" />
+    <ProjectReference Include="..\Common\Andastra.Runtime.Games.Common.csproj" />
+    <ProjectReference Include="..\..\..\Parsing\Andastra.Parsing.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="JetBrains.Annotations" Version="2025.2.4" />
+  </ItemGroup>
+
+</Project>
