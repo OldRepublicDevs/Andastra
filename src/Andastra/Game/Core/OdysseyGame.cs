@@ -1166,41 +1166,54 @@ namespace Andastra.Runtime.Game.Core
             _graphicsDevice.SetBlendState(_graphicsDevice.CreateBlendState());
             _graphicsDevice.SetSamplerState(0, _graphicsDevice.CreateSamplerState());
 
-            // Draw 3D scene using abstraction layer
-            if (_groundVertexBuffer != null && _groundIndexBuffer != null && _basicEffect != null)
+            // CRITICAL: Render current area (handles all area rendering including rooms, entities, effects)
+            // Based on swkotor2.exe: FUN_00461c20/FUN_00461c00 @ 0x00461c20/0x00461c00 (render functions)
+            // Located via call chain: Main loop → FUN_00638ca0 → glClear → FUN_00461c20/FUN_00461c00
+            // Original implementation: Area render handles VIS culling, transparency sorting, lighting, fog
+            // Area.Render() is the authoritative rendering method - it handles all area-specific rendering
+            if (_session != null && _session.World != null && _session.World.CurrentArea != null)
             {
-                _graphicsDevice.SetVertexBuffer(_groundVertexBuffer);
-                _graphicsDevice.SetIndexBuffer(_groundIndexBuffer);
-
-                _basicEffect.View = _viewMatrix;
-                _basicEffect.Projection = _projectionMatrix;
-                _basicEffect.World = System.Numerics.Matrix4x4.Identity;
-
-                foreach (IEffectPass pass in _basicEffect.CurrentTechnique.Passes)
-                {
-                    pass.Apply();
-                    // Draw ground plane (would need to know primitive count)
-                    // _graphicsDevice.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, vertexCount, 0, primitiveCount);
-                }
+                _session.World.CurrentArea.Render();
             }
-
-            // Draw loaded area rooms if available
-            if (_session != null && _session.CurrentRuntimeModule != null)
+            else
             {
-                Andastra.Runtime.Core.Interfaces.IArea entryArea = _session.CurrentRuntimeModule.GetArea(_session.CurrentRuntimeModule.EntryArea);
-                if (entryArea != null && entryArea is Andastra.Runtime.Core.Module.RuntimeArea runtimeArea)
+                // Fallback: Manual rendering for backward compatibility (deprecated - should use Area.Render())
+                // Draw 3D scene using abstraction layer
+                if (_groundVertexBuffer != null && _groundIndexBuffer != null && _basicEffect != null)
                 {
-                    DrawAreaRooms(runtimeArea);
+                    _graphicsDevice.SetVertexBuffer(_groundVertexBuffer);
+                    _graphicsDevice.SetIndexBuffer(_groundIndexBuffer);
+
+                    _basicEffect.View = _viewMatrix;
+                    _basicEffect.Projection = _projectionMatrix;
+                    _basicEffect.World = System.Numerics.Matrix4x4.Identity;
+
+                    foreach (IEffectPass pass in _basicEffect.CurrentTechnique.Passes)
+                    {
+                        pass.Apply();
+                        // Draw ground plane (would need to know primitive count)
+                        // _graphicsDevice.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, vertexCount, 0, primitiveCount);
+                    }
                 }
-            }
 
-            // Draw entities from GIT
-            if (_session != null && _session.CurrentRuntimeModule != null)
-            {
-                Andastra.Runtime.Core.Interfaces.IArea entryArea = _session.CurrentRuntimeModule.GetArea(_session.CurrentRuntimeModule.EntryArea);
-                if (entryArea != null && entryArea is Andastra.Runtime.Core.Module.RuntimeArea runtimeArea)
+                // Draw loaded area rooms if available
+                if (_session != null && _session.CurrentRuntimeModule != null)
                 {
-                    DrawAreaEntities(runtimeArea);
+                    Andastra.Runtime.Core.Interfaces.IArea entryArea = _session.CurrentRuntimeModule.GetArea(_session.CurrentRuntimeModule.EntryArea);
+                    if (entryArea != null && entryArea is Andastra.Runtime.Core.Module.RuntimeArea runtimeArea)
+                    {
+                        DrawAreaRooms(runtimeArea);
+                    }
+                }
+
+                // Draw entities from GIT
+                if (_session != null && _session.CurrentRuntimeModule != null)
+                {
+                    Andastra.Runtime.Core.Interfaces.IArea entryArea = _session.CurrentRuntimeModule.GetArea(_session.CurrentRuntimeModule.EntryArea);
+                    if (entryArea != null && entryArea is Andastra.Runtime.Core.Module.RuntimeArea runtimeArea)
+                    {
+                        DrawAreaEntities(runtimeArea);
+                    }
                 }
             }
 

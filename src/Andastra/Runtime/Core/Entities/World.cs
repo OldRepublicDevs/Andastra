@@ -491,6 +491,20 @@ namespace Andastra.Runtime.Core.Entities
         /// <summary>
         /// Updates all entities for a single frame.
         /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: FUN_00404cf0 @ 0x00404cf0 (area update function).
+        /// Called from main game loop via FUN_00638ca0 → FUN_0063de50 → FUN_0077f790 → FUN_00404cf0.
+        /// 
+        /// Execution flow (swkotor2.exe: 0x00404250):
+        /// 1. Main loop: while (DAT_00828390 == 0)
+        /// 2. PeekMessageA() - Windows message processing
+        /// 3. FUN_00638ca0() - Game update (calls area update)
+        /// 4. glClear() - Clear screen
+        /// 5. FUN_00461c20()/FUN_00461c00() - Render
+        /// 6. SwapBuffers() - Present frame
+        /// 
+        /// Area update is called every frame to update area state, effects, lighting, etc.
+        /// </remarks>
         public void Update(float deltaTime)
         {
             TimeManager.Update(deltaTime);
@@ -518,6 +532,15 @@ namespace Andastra.Runtime.Core.Entities
 
             // Update combat system
             CombatSystem.Update(deltaTime);
+
+            // Update current area (CRITICAL: Must be called every frame)
+            // Based on swkotor2.exe: FUN_00404cf0 @ 0x00404cf0 updates area state
+            // Located via call chain: FUN_00638ca0 → FUN_0063de50 → FUN_0077f790 → FUN_00404cf0
+            // Original implementation: Area update handles area effects, lighting, weather, entity spawning/despawning
+            if (CurrentArea != null)
+            {
+                CurrentArea.Update(deltaTime);
+            }
 
             EventBus.DispatchQueuedEvents();
         }
