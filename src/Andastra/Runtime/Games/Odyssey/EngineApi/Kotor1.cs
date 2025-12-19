@@ -2348,7 +2348,7 @@ namespace Andastra.Runtime.Engines.Odyssey.EngineApi
                 // Add item component with UTI template data
                 if (utiTemplate != null)
                 {
-                    var itemComponent = new ItemComponent
+                    var itemComponent = new OdysseyItemComponent
                     {
                         BaseItem = utiTemplate.BaseItem,
                         StackSize = utiTemplate.StackSize,

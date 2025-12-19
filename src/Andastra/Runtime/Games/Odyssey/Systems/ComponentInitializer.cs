@@ -151,7 +151,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Systems
                 case ObjectType.Item:
                     if (!entity.HasComponent<IItemComponent>())
                     {
-                        entity.AddComponent(new ItemComponent());
+                        entity.AddComponent(new OdysseyItemComponent());
                     }
                     break;
             }
