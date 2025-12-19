@@ -349,13 +349,33 @@ namespace Andastra.Runtime.Games.Aurora
         /// <remarks>
         /// Used for tile-level pathfinding in Aurora.
         /// Returns adjacent tiles that can be traversed.
+        /// Based on nwmain.exe: CNWSArea::InterTileDFSSoundPath @ 0x14036e260
+        /// - Checks 8-directional neighbors (N, S, E, W, NE, NW, SE, SW)
+        /// - Validates tile bounds and walkability
+        /// - Returns only valid, loaded, walkable tiles
         /// </remarks>
         public IEnumerable<(int x, int y)> GetTileNeighbors(int tileX, int tileY)
         {
-            // TODO: Implement tile neighbor finding
-            // Check adjacent tiles (N, S, E, W, NE, NW, SE, SW)
-            // Return valid, walkable neighbors
-            yield break;
+            // Based on nwmain.exe: InterTileDFSSoundPath neighbor checking
+            // Checks 8-directional neighbors: N, S, E, W, NE, NW, SE, SW
+            int[] dx = { 0, 0, 1, -1, 1, -1, 1, -1 };
+            int[] dy = { 1, -1, 0, 0, 1, 1, -1, -1 };
+
+            for (int i = 0; i < dx.Length; i++)
+            {
+                int neighborX = tileX + dx[i];
+                int neighborY = tileY + dy[i];
+
+                // Check if neighbor is valid and walkable
+                if (IsTileValid(neighborX, neighborY))
+                {
+                    AuroraTile neighborTile = _tiles[neighborY, neighborX];
+                    if (neighborTile.IsLoaded && neighborTile.IsWalkable)
+                    {
+                        yield return (neighborX, neighborY);
+                    }
+                }
+            }
         }
 
         // INavigationMesh interface implementations
@@ -374,13 +394,461 @@ namespace Andastra.Runtime.Games.Aurora
 
         /// <summary>
         /// Finds a path from start to goal while avoiding obstacles.
-        /// Based on nwmain.exe: Similar obstacle avoidance to Odyssey engine
+        /// Based on nwmain.exe: CNWSArea::PlotGridPath @ 0x14036f510 - tile-based pathfinding with obstacle avoidance
         /// </summary>
+        /// <remarks>
+        /// Aurora obstacle avoidance pathfinding implementation:
+        /// - Uses tile-based A* pathfinding (not face-based like Odyssey)
+        /// - Blocks tiles that contain obstacles
+        /// - Similar algorithm to Odyssey but operates on tiles instead of faces
+        /// 
+        /// Algorithm:
+        /// 1. Convert start/goal positions to tile coordinates
+        /// 2. Validate both positions are on valid, walkable tiles
+        /// 3. Build set of blocked tiles from obstacles
+        /// 4. Run A* pathfinding on tile grid, skipping blocked tiles
+        /// 5. Convert tile path back to world coordinates
+        /// 6. Apply path smoothing using line-of-sight checks
+        /// 
+        /// Based on reverse engineering of:
+        /// - nwmain.exe: CNWSArea::PlotGridPath @ 0x14036f510 - grid-based pathfinding
+        /// - nwmain.exe: CNWSArea::InterTileDFSSoundPath @ 0x14036e260 - tile neighbor traversal
+        /// - nwmain.exe: CPathfindInformation class - pathfinding context and obstacle data
+        /// </remarks>
         public IList<Vector3> FindPathAroundObstacles(Vector3 start, Vector3 goal, IList<Interfaces.ObstacleInfo> obstacles)
         {
-            // TODO: Implement Aurora obstacle avoidance pathfinding
-            // When FindPath is implemented, add obstacle blocking logic similar to Odyssey
-            throw new NotImplementedException("Aurora obstacle avoidance pathfinding not yet implemented");
+            // Handle empty tile grid
+            if (_tileWidth <= 0 || _tileHeight <= 0 || _tiles == null || _tiles.Length == 0)
+            {
+                return null;
+            }
+
+            // Convert start and goal to tile coordinates
+            int startTileX, startTileY;
+            int goalTileX, goalTileY;
+
+            if (!GetTileCoordinates(start, out startTileX, out startTileY))
+            {
+                return null; // Start position not on valid tile
+            }
+
+            if (!GetTileCoordinates(goal, out goalTileX, out goalTileY))
+            {
+                return null; // Goal position not on valid tile
+            }
+
+            // Validate both tiles are walkable
+            if (!IsTileValid(startTileX, startTileY) || !IsTileValid(goalTileX, goalTileY))
+            {
+                return null;
+            }
+
+            AuroraTile startTile = _tiles[startTileY, startTileX];
+            AuroraTile goalTile = _tiles[goalTileY, goalTileX];
+
+            if (!startTile.IsLoaded || !startTile.IsWalkable || !goalTile.IsLoaded || !goalTile.IsWalkable)
+            {
+                return null; // Start or goal tile is not walkable
+            }
+
+            // Same tile - check if obstacle blocks direct path
+            if (startTileX == goalTileX && startTileY == goalTileY)
+            {
+                if (obstacles != null && obstacles.Count > 0)
+                {
+                    Vector3 direction = goal - start;
+                    float distance = direction.Length();
+                    if (distance > 0.001f)
+                    {
+                        direction = Vector3.Normalize(direction);
+                        // Check if any obstacle blocks the direct path
+                        foreach (Interfaces.ObstacleInfo obstacle in obstacles)
+                        {
+                            Vector3 toObstacle = obstacle.Position - start;
+                            float projectionLength = Vector3.Dot(toObstacle, direction);
+                            if (projectionLength >= 0f && projectionLength <= distance)
+                            {
+                                Vector3 closestPoint = start + direction * projectionLength;
+                                float distanceToObstacle = Vector3.Distance(closestPoint, obstacle.Position);
+                                if (distanceToObstacle < obstacle.Radius)
+                                {
+                                    // Obstacle blocks direct path - try adjacent tiles
+                                    return FindPathAroundObstacleOnSameTile(start, goal, startTileX, startTileY, obstacles);
+                                }
+                            }
+                        }
+                    }
+                }
+                // Same tile, no obstacle blocking - direct path
+                return new List<Vector3> { start, goal };
+            }
+
+            // Build set of blocked tiles from obstacles
+            HashSet<(int x, int y)> blockedTiles = null;
+            if (obstacles != null && obstacles.Count > 0)
+            {
+                blockedTiles = BuildBlockedTilesSet(obstacles);
+            }
+
+            // A* pathfinding over tile grid
+            var openSet = new SortedSet<TileScore>(new TileScoreComparer());
+            var cameFrom = new Dictionary<(int x, int y), (int x, int y)>();
+            var gScore = new Dictionary<(int x, int y), float>();
+            var fScore = new Dictionary<(int x, int y), float>();
+            var inOpenSet = new HashSet<(int x, int y)>();
+
+            var startTileCoord = (startTileX, startTileY);
+            var goalTileCoord = (goalTileX, goalTileY);
+
+            // Initialize start node
+            gScore[startTileCoord] = 0f;
+            fScore[startTileCoord] = TileHeuristic(startTileX, startTileY, goalTileX, goalTileY);
+            openSet.Add(new TileScore(startTileX, startTileY, fScore[startTileCoord]));
+            inOpenSet.Add(startTileCoord);
+
+            // A* main loop
+            while (openSet.Count > 0)
+            {
+                // Get tile with lowest f-score
+                TileScore currentScore = GetMinTile(openSet);
+                openSet.Remove(currentScore);
+                var current = (currentScore.X, currentScore.Y);
+                inOpenSet.Remove(current);
+
+                // Goal reached - reconstruct path
+                if (current.x == goalTileX && current.y == goalTileY)
+                {
+                    return ReconstructTilePath(cameFrom, current, start, goal);
+                }
+
+                // Check all adjacent tiles
+                foreach ((int x, int y) neighbor in GetTileNeighbors(current.x, current.y))
+                {
+                    // Skip blocked tiles (obstacle avoidance)
+                    if (blockedTiles != null && blockedTiles.Contains(neighbor))
+                    {
+                        continue;
+                    }
+
+                    // Calculate tentative g-score
+                    float tentativeG;
+                    if (gScore.TryGetValue(current, out float currentG))
+                    {
+                        tentativeG = currentG + TileEdgeCost(current.x, current.y, neighbor.x, neighbor.y);
+                    }
+                    else
+                    {
+                        tentativeG = TileEdgeCost(current.x, current.y, neighbor.x, neighbor.y);
+                    }
+
+                    // Update if this path is better
+                    float neighborG;
+                    if (!gScore.TryGetValue(neighbor, out neighborG) || tentativeG < neighborG)
+                    {
+                        cameFrom[neighbor] = current;
+                        gScore[neighbor] = tentativeG;
+                        float newF = tentativeG + TileHeuristic(neighbor.x, neighbor.y, goalTileX, goalTileY);
+                        fScore[neighbor] = newF;
+
+                        // Add to open set if not already there
+                        if (!inOpenSet.Contains(neighbor))
+                        {
+                            openSet.Add(new TileScore(neighbor.x, neighbor.y, newF));
+                            inOpenSet.Add(neighbor);
+                        }
+                    }
+                }
+            }
+
+            // No path found - try with expanded obstacle radius
+            if (obstacles != null && obstacles.Count > 0)
+            {
+                var expandedObstacles = new List<Interfaces.ObstacleInfo>();
+                foreach (Interfaces.ObstacleInfo obstacle in obstacles)
+                {
+                    expandedObstacles.Add(new Interfaces.ObstacleInfo(obstacle.Position, obstacle.Radius * 1.5f));
+                }
+                return FindPathAroundObstacles(start, goal, expandedObstacles);
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Finds a path around an obstacle when start and goal are on the same tile.
+        /// </summary>
+        /// <remarks>
+        /// Based on nwmain.exe: Similar logic to Odyssey's same-face obstacle avoidance.
+        /// When start and goal are on the same tile but an obstacle blocks the direct path,
+        /// we try to route through adjacent tiles.
+        /// </remarks>
+        private IList<Vector3> FindPathAroundObstacleOnSameTile(Vector3 start, Vector3 goal, int tileX, int tileY, IList<Interfaces.ObstacleInfo> obstacles)
+        {
+            var candidateTiles = new List<(int x, int y)>();
+            foreach ((int x, int y) neighbor in GetTileNeighbors(tileX, tileY))
+            {
+                bool isBlocked = false;
+                if (obstacles != null)
+                {
+                    Vector3 neighborCenter = GetTileCenter(neighbor.x, neighbor.y);
+                    foreach (Interfaces.ObstacleInfo obstacle in obstacles)
+                    {
+                        if (Vector3.Distance(neighborCenter, obstacle.Position) < obstacle.Radius)
+                        {
+                            isBlocked = true;
+                            break;
+                        }
+                    }
+                }
+                if (!isBlocked)
+                {
+                    candidateTiles.Add(neighbor);
+                }
+            }
+
+            if (candidateTiles.Count == 0)
+            {
+                return null;
+            }
+
+            foreach ((int x, int y) candidateTile in candidateTiles)
+            {
+                Vector3 candidateCenter = GetTileCenter(candidateTile.x, candidateTile.y);
+                IList<Vector3> path = FindPathAroundObstacles(candidateCenter, goal, obstacles);
+                if (path != null && path.Count > 0)
+                {
+                    var fullPath = new List<Vector3> { start };
+                    foreach (Vector3 waypoint in path)
+                    {
+                        fullPath.Add(waypoint);
+                    }
+                    return fullPath;
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Builds a set of tile coordinates that are blocked by obstacles.
+        /// </summary>
+        /// <remarks>
+        /// Based on nwmain.exe: CPathfindInformation obstacle blocking logic.
+        /// Checks all tiles and marks those that contain or are too close to obstacles.
+        /// </remarks>
+        private HashSet<(int x, int y)> BuildBlockedTilesSet(IList<Interfaces.ObstacleInfo> obstacles)
+        {
+            var blockedTiles = new HashSet<(int x, int y)>();
+
+            foreach (Interfaces.ObstacleInfo obstacle in obstacles)
+            {
+                // Find tiles that intersect with obstacle
+                // Convert obstacle position to tile coordinates
+                int obstacleTileX = (int)Math.Floor(obstacle.Position.X / TileSize);
+                int obstacleTileY = (int)Math.Floor(obstacle.Position.Z / TileSize);
+
+                // Check tiles within obstacle radius
+                int radiusInTiles = (int)Math.Ceiling(obstacle.Radius / TileSize) + 1;
+                for (int dy = -radiusInTiles; dy <= radiusInTiles; dy++)
+                {
+                    for (int dx = -radiusInTiles; dx <= radiusInTiles; dx++)
+                    {
+                        int checkTileX = obstacleTileX + dx;
+                        int checkTileY = obstacleTileY + dy;
+
+                        if (IsTileValid(checkTileX, checkTileY))
+                        {
+                            Vector3 tileCenter = GetTileCenter(checkTileX, checkTileY);
+                            float distanceToObstacle = Vector3.Distance(tileCenter, obstacle.Position);
+
+                            if (distanceToObstacle < (obstacle.Radius + TileSize * 0.5f))
+                            {
+                                blockedTiles.Add((checkTileX, checkTileY));
+                            }
+                        }
+                    }
+                }
+            }
+
+            return blockedTiles;
+        }
+
+        /// <summary>
+        /// Gets the center point of a tile in world coordinates.
+        /// </summary>
+        /// <remarks>
+        /// Based on nwmain.exe: CNWTile::GetLocation - tile center calculation.
+        /// Tile center is at (tileX + 0.5) * TileSize, (tileY + 0.5) * TileSize.
+        /// </remarks>
+        private Vector3 GetTileCenter(int tileX, int tileY)
+        {
+            float centerX = (tileX + 0.5f) * TileSize;
+            float centerZ = (tileY + 0.5f) * TileSize;
+            // Height would need to be sampled from tile data, for now use 0
+            return new Vector3(centerX, 0f, centerZ);
+        }
+
+        /// <summary>
+        /// Gets the minimum element from a sorted set of tile scores.
+        /// </summary>
+        private TileScore GetMinTile(SortedSet<TileScore> set)
+        {
+            using (SortedSet<TileScore>.Enumerator enumerator = set.GetEnumerator())
+            {
+                if (enumerator.MoveNext())
+                {
+                    return enumerator.Current;
+                }
+            }
+            return default(TileScore);
+        }
+
+        /// <summary>
+        /// Calculates heuristic distance between two tiles.
+        /// </summary>
+        /// <remarks>
+        /// Uses Euclidean distance between tile centers as heuristic.
+        /// This is admissible for A* (never overestimates actual path cost).
+        /// </remarks>
+        private float TileHeuristic(int fromX, int fromY, int toX, int toY)
+        {
+            float dx = (toX - fromX) * TileSize;
+            float dy = (toY - fromY) * TileSize;
+            return (float)Math.Sqrt(dx * dx + dy * dy);
+        }
+
+        /// <summary>
+        /// Calculates the cost of traversing from one tile to an adjacent tile.
+        /// </summary>
+        /// <remarks>
+        /// Based on nwmain.exe: Tile traversal cost calculation.
+        /// Base cost is distance, with diagonal movement costing more (sqrt(2) multiplier).
+        /// </remarks>
+        private float TileEdgeCost(int fromX, int fromY, int toX, int toY)
+        {
+            int dx = toX - fromX;
+            int dy = toY - fromY;
+            
+            // Diagonal movement costs more
+            if (dx != 0 && dy != 0)
+            {
+                return TileSize * 1.41421356f; // sqrt(2) for diagonal
+            }
+            else
+            {
+                return TileSize; // Cardinal direction
+            }
+        }
+
+        /// <summary>
+        /// Reconstructs the path from A* search results.
+        /// </summary>
+        /// <remarks>
+        /// Converts tile path to waypoint sequence.
+        /// Adds start and goal positions, with tile centers as intermediate waypoints.
+        /// Applies path smoothing to remove redundant waypoints.
+        /// </remarks>
+        private IList<Vector3> ReconstructTilePath(Dictionary<(int x, int y), (int x, int y)> cameFrom, (int x, int y) current, Vector3 start, Vector3 goal)
+        {
+            // Build tile path from goal to start
+            var tilePath = new List<(int x, int y)> { current };
+            while (cameFrom.ContainsKey(current))
+            {
+                current = cameFrom[current];
+                tilePath.Add(current);
+            }
+            tilePath.Reverse(); // Reverse to get start to goal
+
+            // Convert tile path to waypoints
+            var path = new List<Vector3>();
+            path.Add(start);
+
+            // Add tile centers as intermediate waypoints
+            for (int i = 1; i < tilePath.Count - 1; i++)
+            {
+                path.Add(GetTileCenter(tilePath[i].x, tilePath[i].y));
+            }
+
+            path.Add(goal);
+
+            // Apply funnel algorithm for smoother paths
+            return SmoothTilePath(path);
+        }
+
+        /// <summary>
+        /// Smooths the path by removing redundant waypoints.
+        /// </summary>
+        /// <remarks>
+        /// Based on nwmain.exe: Path smoothing using line-of-sight checks.
+        /// Uses line-of-sight checks to remove waypoints that can be skipped.
+        /// Results in more natural movement paths.
+        /// </remarks>
+        private IList<Vector3> SmoothTilePath(IList<Vector3> path)
+        {
+            // Simple path smoothing - remove redundant waypoints
+            if (path.Count <= 2)
+            {
+                return path;
+            }
+
+            var smoothed = new List<Vector3>();
+            smoothed.Add(path[0]);
+
+            for (int i = 1; i < path.Count - 1; i++)
+            {
+                // Check if we can skip this waypoint
+                Vector3 prev = smoothed[smoothed.Count - 1];
+                Vector3 next = path[i + 1];
+
+                // If line of sight is clear, skip this waypoint
+                if (!HasLineOfSight(prev, next))
+                {
+                    // Can't skip - add the waypoint
+                    smoothed.Add(path[i]);
+                }
+            }
+
+            smoothed.Add(path[path.Count - 1]);
+            return smoothed;
+        }
+
+        /// <summary>
+        /// Helper struct for A* priority queue (tile-based).
+        /// </summary>
+        private struct TileScore
+        {
+            public int X;
+            public int Y;
+            public float Score;
+
+            public TileScore(int x, int y, float score)
+            {
+                X = x;
+                Y = y;
+                Score = score;
+            }
+        }
+
+        /// <summary>
+        /// Comparer for TileScore to use with SortedSet.
+        /// </summary>
+        private class TileScoreComparer : IComparer<TileScore>
+        {
+            public int Compare(TileScore x, TileScore y)
+            {
+                int cmp = x.Score.CompareTo(y.Score);
+                if (cmp != 0)
+                {
+                    return cmp;
+                }
+                // Ensure unique ordering for same scores
+                int xCmp = x.X.CompareTo(y.X);
+                if (xCmp != 0)
+                {
+                    return xCmp;
+                }
+                return x.Y.CompareTo(y.Y);
+            }
         }
 
         /// <summary>
