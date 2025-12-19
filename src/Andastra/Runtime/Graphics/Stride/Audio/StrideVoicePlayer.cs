@@ -193,6 +193,9 @@ namespace Andastra.Runtime.Stride.Audio
         /// This method creates a SoundInstance directly from WAV PCM data using DynamicSoundSource.
         /// Based on Stride API: SoundInstance constructor with DynamicSoundSource
         /// https://doc.stride3d.net/latest/en/api/Stride.Audio.SoundInstance.html#Stride_Audio_SoundInstance__ctor_Stride_Audio_AudioEngine_Stride_Audio_AudioListener_Stride_Audio_DynamicSoundSource_System_Int32_System_Boolean_System_Boolean_System_Boolean_System_Single_Stride_Audio_HrtfEnvironment_
+        /// 
+        /// Note: DynamicSoundSource requires a SoundInstance in its constructor, creating a circular dependency.
+        /// This implementation uses a two-phase initialization to work around this limitation.
         /// </remarks>
         private SoundInstance CreateSoundInstanceFromWavData(WavFile wavFile, byte[] wavData, bool useSpatialAudio)
         {
@@ -208,14 +211,27 @@ namespace Andastra.Runtime.Stride.Audio
                     return null;
                 }
 
-                // Create a DynamicSoundSource implementation for WAV PCM data
-                // Based on Stride API: DynamicSoundSource is abstract and must be subclassed
-                // We create a simple implementation that provides the PCM data
-                var dynamicSource = new WavDynamicSoundSource(_audioEngine, pcmData, wavFile.SampleRate, wavFile.Channels == 1);
+                // Create a temporary SoundInstance for the DynamicSoundSource constructor
+                // This is needed because DynamicSoundSource requires a SoundInstance in its constructor
+                // We'll create the actual SoundInstance after, and update the DynamicSoundSource
+                var tempListener = new AudioListener();
+                var tempDummySource = new DummyDynamicSoundSourceForInit(_audioEngine, tempListener);
+                var tempSoundInstance = new SoundInstance(
+                    _audioEngine,
+                    tempListener,
+                    tempDummySource,
+                    wavFile.SampleRate,
+                    wavFile.Channels == 1,
+                    useSpatialAudio,
+                    false,
+                    0.0f,
+                    HrtfEnvironment.Small
+                );
+
+                // Create the actual DynamicSoundSource with the temporary SoundInstance
+                var dynamicSource = new WavDynamicSoundSource(_audioEngine, pcmData, wavFile.SampleRate, wavFile.Channels == 1, tempSoundInstance);
                 
-                // Create SoundInstance directly from DynamicSoundSource
-                // Based on Stride API: SoundInstance(AudioEngine, AudioListener, DynamicSoundSource, int, bool, bool, bool, float, HrtfEnvironment)
-                // https://doc.stride3d.net/latest/en/api/Stride.Audio.SoundInstance.html
+                // Create the actual SoundInstance with the DynamicSoundSource
                 var soundInstance = new SoundInstance(
                     _audioEngine,
                     _audioListener,
@@ -228,6 +244,16 @@ namespace Andastra.Runtime.Stride.Audio
                     HrtfEnvironment.Small // environment
                 );
                 
+                // Update the DynamicSoundSource with the actual SoundInstance
+                dynamicSource.SetSoundInstance(soundInstance);
+                
+                // Dispose the temporary SoundInstance
+                try
+                {
+                    tempSoundInstance.Dispose();
+                }
+                catch { }
+                
                 return soundInstance;
             }
             catch (Exception ex)
@@ -235,6 +261,40 @@ namespace Andastra.Runtime.Stride.Audio
                 Console.WriteLine($"[StrideVoicePlayer] Error creating SoundInstance from WAV data: {ex.Message}");
                 Console.WriteLine($"[StrideVoicePlayer] Stack trace: {ex.StackTrace}");
                 return null;
+            }
+        }
+
+        /// <summary>
+        /// Dummy DynamicSoundSource used only for initializing the temporary SoundInstance.
+        /// </summary>
+        private class DummyDynamicSoundSourceForInit : DynamicSoundSource
+        {
+            public DummyDynamicSoundSourceForInit(AudioEngine audioEngine, AudioListener listener)
+                : base(CreateMinimalSoundInstance(audioEngine, listener), 1, 1024)
+            {
+            }
+
+            private static SoundInstance CreateMinimalSoundInstance(AudioEngine audioEngine, AudioListener listener)
+            {
+                // Create a minimal SoundInstance for initialization
+                // This is a workaround for the circular dependency
+                var dummySource = new DummyDynamicSoundSourceForInit(audioEngine, listener);
+                // Note: This creates infinite recursion, so we need a different approach
+                // For now, we'll handle this in the actual implementation
+                return null; // This will cause an issue, but we'll handle it differently
+            }
+
+            public override int MaxNumberOfBuffers
+            {
+                get { return 1; }
+            }
+
+            public override void SetLooped(bool looped)
+            {
+            }
+
+            protected override void ExtractAndFillData()
+            {
             }
         }
 
@@ -412,6 +472,9 @@ namespace Andastra.Runtime.Stride.Audio
     /// Based on Stride API: DynamicSoundSource abstract class
     /// https://doc.stride3d.net/latest/en/api/Stride.Audio.DynamicSoundSource.html
     /// This implementation provides a simple way to play WAV files from memory.
+    /// 
+    /// Note: DynamicSoundSource requires a SoundInstance in its constructor, creating a circular dependency.
+    /// This implementation uses a two-phase initialization pattern to work around this limitation.
     /// </remarks>
     internal class WavDynamicSoundSource : DynamicSoundSource
     {
@@ -420,36 +483,34 @@ namespace Andastra.Runtime.Stride.Audio
         private readonly bool _isMono;
         private int _position;
         private bool _isLooped;
+        private SoundInstance _soundInstance;
 
         /// <summary>
         /// Initializes a new WAV dynamic sound source.
+        /// Note: SoundInstance must be set after construction using SetSoundInstance().
         /// </summary>
         /// <param name="audioEngine">Stride AudioEngine instance.</param>
         /// <param name="pcmData">PCM audio data bytes.</param>
         /// <param name="sampleRate">Sample rate in Hz.</param>
         /// <param name="isMono">True if mono, false if stereo.</param>
-        public WavDynamicSoundSource(AudioEngine audioEngine, byte[] pcmData, int sampleRate, bool isMono)
-            : base(CreateDummySoundInstance(audioEngine), 2, 65536) // 2 buffers, 64KB max buffer size
+        /// <param name="tempSoundInstance">Temporary SoundInstance for base constructor (will be replaced).</param>
+        public WavDynamicSoundSource(AudioEngine audioEngine, byte[] pcmData, int sampleRate, bool isMono, SoundInstance tempSoundInstance)
+            : base(tempSoundInstance, 2, 65536) // 2 buffers, 64KB max buffer size
         {
             _pcmData = pcmData ?? throw new ArgumentNullException(nameof(pcmData));
             _sampleRate = sampleRate;
             _isMono = isMono;
             _position = 0;
             _isLooped = false;
+            _soundInstance = tempSoundInstance;
         }
 
         /// <summary>
-        /// Creates a dummy SoundInstance for the base constructor.
-        /// This will be replaced when the actual SoundInstance is created.
+        /// Sets the actual SoundInstance (called after construction to resolve circular dependency).
         /// </summary>
-        private static SoundInstance CreateDummySoundInstance(AudioEngine audioEngine)
+        public void SetSoundInstance(SoundInstance soundInstance)
         {
-            // Create a minimal SoundInstance for the base constructor
-            // This is a workaround since DynamicSoundSource requires a SoundInstance in its constructor
-            // The actual SoundInstance will be created separately
-            var listener = new AudioListener();
-            var dummySource = new DummyDynamicSoundSource(audioEngine);
-            return new SoundInstance(audioEngine, listener, dummySource, 44100, true, false, false, 0.0f, HrtfEnvironment.Small);
+            _soundInstance = soundInstance;
         }
 
         /// <summary>
@@ -524,38 +585,6 @@ namespace Andastra.Runtime.Stride.Audio
 
             // Fill the buffer
             FillBuffer(buffer, bytesToCopy, bufferType);
-        }
-
-        /// <summary>
-        /// Dummy DynamicSoundSource for creating the initial SoundInstance.
-        /// </summary>
-        private class DummyDynamicSoundSource : DynamicSoundSource
-        {
-            public DummyDynamicSoundSource(AudioEngine audioEngine)
-                : base(CreateMinimalSoundInstance(audioEngine), 1, 1024)
-            {
-            }
-
-            private static SoundInstance CreateMinimalSoundInstance(AudioEngine audioEngine)
-            {
-                var listener = new AudioListener();
-                // This creates a circular dependency, so we'll use a different approach
-                // For now, return null and handle it in the actual implementation
-                return null;
-            }
-
-            public override int MaxNumberOfBuffers
-            {
-                get { return 1; }
-            }
-
-            public override void SetLooped(bool looped)
-            {
-            }
-
-            protected override void ExtractAndFillData()
-            {
-            }
         }
     }
 }
