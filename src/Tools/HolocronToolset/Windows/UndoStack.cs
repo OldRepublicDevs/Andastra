@@ -55,14 +55,32 @@ namespace HolocronToolset.Windows
                 return;
             }
 
-            var command = _redoStack.Pop();
-            command.Redo();
-            _undoStack.Push(command);
+            try
+            {
+                var command = _redoStack.Pop();
+                command.Redo();
+                _undoStack.Push(command);
 
-            OnCanUndoChanged();
-            OnCanRedoChanged();
-            OnUndoTextChanged(GetUndoText());
-            OnRedoTextChanged(GetRedoText());
+                OnCanUndoChanged();
+                OnCanRedoChanged();
+                OnUndoTextChanged(GetUndoText());
+                OnRedoTextChanged(GetRedoText());
+            }
+            catch (Exception ex)
+            {
+                // If redo fails, restore the command to the redo stack to maintain consistency
+                // This prevents the redo stack from losing commands that failed to redo
+                // Note: The command was already popped and pushed to undo stack, so we need to restore it
+                if (_undoStack.Count > 0)
+                {
+                    var failedCommand = _undoStack.Pop();
+                    if (failedCommand != null)
+                    {
+                        _redoStack.Push(failedCommand);
+                    }
+                }
+                throw new InvalidOperationException("Failed to redo command. State may be inconsistent.", ex);
+            }
         }
 
         // Matching Python: def push(self, command: QUndoCommand)
