@@ -187,29 +187,18 @@ namespace Andastra.Parsing.Formats.NCS
             }
             NCS ncs = compiler.Compile(source, library);
 
-            // Ensure NOP removal is always first optimization pass
-            // When optimizers is null or empty, apply standard optimizations to match external compiler output
-            // The external compiler (nwnnsscomp) produces optimized code, so we need to match it
-            if (optimizers == null || optimizers.Count == 0)
+            // Apply optimizers only if explicitly provided
+            // Based on reverse engineering of nwnnsscomp.exe, it does not appear to perform
+            // explicit optimization passes. The bytecode generation should produce optimized
+            // output directly without post-compilation optimization passes.
+            if (optimizers != null && optimizers.Count > 0)
             {
-                // Apply standard optimizations to match external compiler output:
-                // 1. RemoveNopOptimizer - Remove NOP markers (external compiler doesn't generate them)
-                // 2. RemoveMoveSPEqualsZeroOptimizer - Remove MOVSP(0) which is a no-op
-                // 3. MergeAdjacentMoveSPOptimizer - Merge consecutive MOVSP instructions
-                // 4. RemoveJMPToAdjacentOptimizer - Remove JMP to next instruction (fall-through)
-                optimizers = new List<NCSOptimizer>
+                // Apply only user-specified optimizers
+                foreach (NCSOptimizer optimizer in optimizers)
                 {
-                    new RemoveNopOptimizer(),
-                    new Optimizers.RemoveMoveSPEqualsZeroOptimizer(),
-                    new Optimizers.MergeAdjacentMoveSPOptimizer(),
-                    new Optimizers.RemoveJMPToAdjacentOptimizer()
-                };
-            }
-            else if (!optimizers.Any(o => o is RemoveNopOptimizer))
-            {
-                optimizers = new List<NCSOptimizer> { new RemoveNopOptimizer() }
-                    .Concat(optimizers)
-                    .ToList();
+                    optimizer.Reset();
+                }
+                ncs.Optimize(optimizers);
             }
 
             // Apply all optimizers (if any)
