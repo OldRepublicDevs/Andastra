@@ -98,6 +98,11 @@ namespace Andastra.Parsing.TSLPatcher
         // Track modifications for final InstallList generation
         public ModificationsByType AllModifications { get; }
 
+        /// <summary>
+        /// Gets the path to the tslpatchdata directory.
+        /// </summary>
+        public string TslpatchdataPath => _tslpatchdataPath;
+
         // Track insertion positions for each section (for real-time appending)
         private readonly Dictionary<string, string> _sectionMarkers = new Dictionary<string, string>
         {
