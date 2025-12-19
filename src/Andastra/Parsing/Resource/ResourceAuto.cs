@@ -283,12 +283,13 @@ namespace Andastra.Parsing.Resource
             if (resource is IFO ifo)
             {
                 // IFO doesn't have a BytesIfo method, so use DismantleIfo + BytesGff
-                GFF gff = IFOHelpers.DismantleIfo(ifo, Game.K2);
-                return GFFAuto.BytesGff(gff, IFO.BinaryType);
+                GFF ifoGff = IFOHelpers.DismantleIfo(ifo, Game.K2);
+                return GFFAuto.BytesGff(ifoGff, IFO.BinaryType);
             }
             if (resource is JRL jrl)
             {
-                return JRL.BytesJrl(jrl);
+                // TODO: JRL.BytesJrl method needs to be implemented
+                throw new System.NotImplementedException("JRL.BytesJrl not yet implemented");
             }
             if (resource is PTH pth)
             {
@@ -301,32 +302,32 @@ namespace Andastra.Parsing.Resource
             if (resource is UTD utd)
             {
                 // UTD doesn't have a BytesUtd method, so use DismantleUtd + BytesGff
-                GFF gff = UTDHelpers.DismantleUtd(utd, Game.K2);
-                return GFFAuto.BytesGff(gff, UTD.BinaryType);
+                GFF utdGff = UTDHelpers.DismantleUtd(utd, Game.K2);
+                return GFFAuto.BytesGff(utdGff, UTD.BinaryType);
             }
             if (resource is UTE ute)
             {
                 // UTE doesn't have a BytesUte method, so use DismantleUte + BytesGff
-                GFF gff = UTEHelpers.DismantleUte(ute, Game.K2);
-                return GFFAuto.BytesGff(gff, UTE.BinaryType);
+                GFF uteGff = UTEHelpers.DismantleUte(ute, Game.K2);
+                return GFFAuto.BytesGff(uteGff, UTE.BinaryType);
             }
             if (resource is UTM utm)
             {
                 // UTM doesn't have a BytesUtm method, so use DismantleUtm + BytesGff
-                GFF gff = UTMHelpers.DismantleUtm(utm, Game.K2);
-                return GFFAuto.BytesGff(gff, UTM.BinaryType);
+                GFF utmGff = UTMHelpers.DismantleUtm(utm, Game.K2);
+                return GFFAuto.BytesGff(utmGff, UTM.BinaryType);
             }
             if (resource is UTP utp)
             {
                 // UTP doesn't have a BytesUtp method, so use DismantleUtp + BytesGff
-                GFF gff = UTPHelpers.DismantleUtp(utp, Game.K2);
-                return GFFAuto.BytesGff(gff, UTP.BinaryType);
+                GFF utpGff = UTPHelpers.DismantleUtp(utp, Game.K2);
+                return GFFAuto.BytesGff(utpGff, UTP.BinaryType);
             }
             if (resource is UTS uts)
             {
                 // UTS doesn't have a BytesUts method, so use DismantleUts + BytesGff
-                GFF gff = UTSHelpers.DismantleUts(uts, Game.K2);
-                return GFFAuto.BytesGff(gff, UTS.BinaryType);
+                GFF utsGff = UTSHelpers.DismantleUts(uts, Game.K2);
+                return GFFAuto.BytesGff(utsGff, UTS.BinaryType);
             }
             if (resource is UTW utw)
             {
