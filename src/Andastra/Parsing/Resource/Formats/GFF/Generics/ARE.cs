@@ -86,6 +86,63 @@ namespace Andastra.Parsing.Resource.Generics
         public int DayAmbient { get; set; }
         public int DuskAmbient { get; set; }
         public int NightAmbient { get; set; }
+        
+        // Aurora (NWN) specific fields
+        // Based on nwmain.exe: CNWSArea::LoadProperties @ 0x140361dd0
+        // Reads from AreaProperties struct: EnvAudio, SkyBox, MoonFogColor, SunFogColor, MoonFogAmount, SunFogAmount, MoonAmbientColor, MoonDiffuseColor, SunAmbientColor, SunDiffuseColor, DisplayName
+        /// <summary>
+        /// Environment audio ID (Aurora/NWN only).
+        /// </summary>
+        /// <remarks>
+        /// Based on nwmain.exe: CNWSArea::LoadProperties @ 0x140361dd0
+        /// Original: CResGFF::ReadFieldINT(param_1, local_res20, "EnvAudio", ...)
+        /// </remarks>
+        public int EnvAudio { get; set; }
+        
+        /// <summary>
+        /// Display name (Aurora/NWN only).
+        /// </summary>
+        /// <remarks>
+        /// Based on nwmain.exe: CNWSArea::LoadProperties @ 0x140361dd0
+        /// Original: CResGFF::ReadFieldCExoString(param_1, local_60, local_res20, "DisplayName", ...)
+        /// </remarks>
+        public string DisplayName { get; set; } = string.Empty;
+        
+        /// <summary>
+        /// Moon fog color (Aurora/NWN only).
+        /// </summary>
+        /// <remarks>
+        /// Based on nwmain.exe: CNWSArea::LoadProperties @ 0x140361dd0
+        /// Original: CResGFF::ReadFieldDWORD(param_1, local_res20, "MoonFogColor", ...)
+        /// </remarks>
+        public Color MoonFogColor { get; set; } = new Color(0, 0, 0);
+        
+        /// <summary>
+        /// Moon fog amount (Aurora/NWN only).
+        /// </summary>
+        /// <remarks>
+        /// Based on nwmain.exe: CNWSArea::LoadProperties @ 0x140361dd0
+        /// Original: CResGFF::ReadFieldBYTE(param_1, local_res20, "MoonFogAmount", ...)
+        /// </remarks>
+        public byte MoonFogAmount { get; set; }
+        
+        /// <summary>
+        /// Moon ambient color (Aurora/NWN only).
+        /// </summary>
+        /// <remarks>
+        /// Based on nwmain.exe: CNWSArea::LoadProperties @ 0x140361dd0
+        /// Original: CResGFF::ReadFieldDWORD(param_1, local_res20, "MoonAmbientColor", ...)
+        /// </remarks>
+        public Color MoonAmbientColor { get; set; } = new Color(0, 0, 0);
+        
+        /// <summary>
+        /// Moon diffuse color (Aurora/NWN only).
+        /// </summary>
+        /// <remarks>
+        /// Based on nwmain.exe: CNWSArea::LoadProperties @ 0x140361dd0
+        /// Original: CResGFF::ReadFieldDWORD(param_1, local_res20, "MoonDiffuseColor", ...)
+        /// </remarks>
+        public Color MoonDiffuseColor { get; set; } = new Color(0, 0, 0);
         public int DawnDir1 { get; set; }
         public int DawnDir2 { get; set; }
         public int DawnDir3 { get; set; }

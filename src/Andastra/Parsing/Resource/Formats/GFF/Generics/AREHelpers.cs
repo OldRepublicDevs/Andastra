@@ -12,6 +12,11 @@ namespace Andastra.Parsing.Resource.Generics
     {
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/are.py:394-535
         // Original: def construct_are(gff: GFF) -> ARE:
+        // Note: This function loads ALL fields from GFF regardless of game type.
+        // Game-specific field handling is done in DismantleAre when writing.
+        // All engines (Odyssey/KOTOR, Aurora/NWN, Eclipse/DA/ME) use the same ARE file format structure.
+        // K2-specific fields (Grass_Emissive, DirtyARGB, ChanceRain/Snow/Lightning, etc.) are optional
+        // and will be 0/default if not present (which is correct for K1, Aurora, and Eclipse).
         public static ARE ConstructAre(GFF gff)
         {
             var are = new ARE();
@@ -89,13 +94,20 @@ namespace Andastra.Parsing.Resource.Generics
             are.LoadScreenID = root.Acquire<int>("LoadScreenID", 0);
 
             // Extract color fields (as RGB integers)
-            int sunAmbientInt = root.Acquire<int>("SunAmbientColor", 0);
-            int sunDiffuseInt = root.Acquire<int>("SunDiffuseColor", 0);
-            int fogColorInt = root.Acquire<int>("SunFogColor", 0);
-            // Convert RGB integers to Color objects (Color class would need FromRgbInteger method)
-            // are.SunAmbient = Color.FromRgbInteger(sunAmbientInt);
-            // are.SunDiffuse = Color.FromRgbInteger(sunDiffuseInt);
-            // are.FogColor = Color.FromRgbInteger(fogColorInt);
+            // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/are.py:502-505
+            // Original: are.sun_ambient = Color.from_rgb_integer(root.acquire("SunAmbientColor", 0))
+            are.SunAmbient = Color.FromRgbInteger(root.Acquire<int>("SunAmbientColor", 0));
+            // Original: are.sun_diffuse = Color.from_rgb_integer(root.acquire("SunDiffuseColor", 0))
+            are.SunDiffuse = Color.FromRgbInteger(root.Acquire<int>("SunDiffuseColor", 0));
+            // Original: are.dynamic_light = Color.from_rgb_integer(root.acquire("DynAmbientColor", 0))
+            are.DynamicLight = Color.FromRgbInteger(root.Acquire<int>("DynAmbientColor", 0));
+            // Original: are.fog_color = Color.from_rgb_integer(root.acquire("SunFogColor", 0))
+            are.FogColor = Color.FromRgbInteger(root.Acquire<int>("SunFogColor", 0));
+            
+            // Extract Comments field (toolset-only, not used by game engine)
+            // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/are.py:356
+            // Original: are.comment = root.acquire("Comments", "")
+            are.Comment = root.Acquire<string>("Comments", "");
 
             // Extract rooms list
             var roomsList = root.Acquire<GFFList>("Rooms", new GFFList());
@@ -134,9 +146,11 @@ namespace Andastra.Parsing.Resource.Generics
             mapStruct.SetSingle("WorldPt2X", are.WorldPoint2.X);
             mapStruct.SetSingle("WorldPt2Y", are.WorldPoint2.Y);
 
-            // Set basic fields
+            // Set basic fields - written for ALL game types (Odyssey, Aurora, Eclipse)
+            // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/are.py:596-601
             root.SetString("Tag", are.Tag);
             root.SetLocString("Name", are.Name);
+            root.SetString("Comments", are.Comment);
             root.SetSingle("AlphaTest", are.AlphaTest);
             root.SetInt32("CameraStyle", are.CameraStyle);
             root.SetResRef("DefaultEnvMap", are.DefaultEnvMap);
@@ -207,15 +221,93 @@ namespace Andastra.Parsing.Resource.Generics
             // Original: root.set_string("Comments", are.comment)
             root.SetString("Comments", are.Comment);
 
-            // Set color fields (as RGB integers)
-            // root.SetUInt32("SunAmbientColor", are.SunAmbient.RgbInteger());
-            // root.SetUInt32("SunDiffuseColor", are.SunDiffuse.RgbInteger());
-            // root.SetUInt32("SunFogColor", are.FogColor.RgbInteger());
+            // Set color fields (as RGB integers) - written for ALL game types
+            // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/are.py:589-592
+            // Original: root.set_uint32("SunAmbientColor", are.sun_ambient.rgb_integer())
+            root.SetUInt32("SunAmbientColor", (uint)are.SunAmbient.ToRgbInteger());
+            // Original: root.set_uint32("SunDiffuseColor", are.sun_diffuse.rgb_integer())
+            root.SetUInt32("SunDiffuseColor", (uint)are.SunDiffuse.ToRgbInteger());
+            // Original: root.set_uint32("DynAmbientColor", are.dynamic_light.rgb_integer())
+            root.SetUInt32("DynAmbientColor", (uint)are.DynamicLight.ToRgbInteger());
+            // Original: root.set_uint32("SunFogColor", are.fog_color.rgb_integer())
+            root.SetUInt32("SunFogColor", (uint)are.FogColor.ToRgbInteger());
+
+            // Set Aurora (NWN) specific fields in AreaProperties struct
+            // Based on nwmain.exe: CNWSArea::LoadProperties @ 0x140361dd0
+            // Only create AreaProperties struct if we have Aurora-specific fields to write
+            // Aurora games: NWN, NWN2
+            if (game.IsAurora())
+            {
+                var areaPropertiesStruct = new GFFStruct();
+                root.SetStruct("AreaProperties", areaPropertiesStruct);
+                
+                // Based on nwmain.exe: CResGFF::ReadFieldINT(param_1, local_res20, "EnvAudio", ...)
+                areaPropertiesStruct.SetInt32("EnvAudio", are.EnvAudio);
+                // Based on nwmain.exe: CResGFF::ReadFieldBYTE(param_1, local_res20, "SkyBox", ...)
+                areaPropertiesStruct.SetUInt8("SkyBox", (byte)are.SkyBox);
+                // Based on nwmain.exe: CResGFF::ReadFieldDWORD(param_1, local_res20, "MoonFogColor", ...)
+                areaPropertiesStruct.SetUInt32("MoonFogColor", (uint)are.MoonFogColor.ToRgbInteger());
+                // Based on nwmain.exe: CResGFF::ReadFieldDWORD(param_1, local_res20, "SunFogColor", ...)
+                areaPropertiesStruct.SetUInt32("SunFogColor", (uint)are.FogColor.ToRgbInteger());
+                // Based on nwmain.exe: CResGFF::ReadFieldBYTE(param_1, local_res20, "MoonFogAmount", ...)
+                areaPropertiesStruct.SetUInt8("MoonFogAmount", are.MoonFogAmount);
+                // Based on nwmain.exe: CResGFF::ReadFieldBYTE(param_1, local_res20, "SunFogAmount", ...)
+                // Note: SunFogAmount would need to be added to ARE class if needed
+                // Based on nwmain.exe: CResGFF::ReadFieldDWORD(param_1, local_res20, "MoonAmbientColor", ...)
+                areaPropertiesStruct.SetUInt32("MoonAmbientColor", (uint)are.MoonAmbientColor.ToRgbInteger());
+                // Based on nwmain.exe: CResGFF::ReadFieldDWORD(param_1, local_res20, "MoonDiffuseColor", ...)
+                areaPropertiesStruct.SetUInt32("MoonDiffuseColor", (uint)are.MoonDiffuseColor.ToRgbInteger());
+                // Based on nwmain.exe: CResGFF::ReadFieldDWORD(param_1, local_res20, "SunAmbientColor", ...)
+                areaPropertiesStruct.SetUInt32("SunAmbientColor", (uint)are.SunAmbient.ToRgbInteger());
+                // Based on nwmain.exe: CResGFF::ReadFieldDWORD(param_1, local_res20, "SunDiffuseColor", ...)
+                areaPropertiesStruct.SetUInt32("SunDiffuseColor", (uint)are.SunDiffuse.ToRgbInteger());
+                // Based on nwmain.exe: CResGFF::ReadFieldCExoString(param_1, local_60, local_res20, "DisplayName", ...)
+                areaPropertiesStruct.SetString("DisplayName", are.DisplayName);
+            }
+            else
+            {
+                // For Odyssey (K1/K2) games, AreaProperties struct is used for save game data
+                // Based on swkotor2.exe: LoadAreaProperties @ 0x004e26d0, SaveAreaProperties @ 0x004e11d0
+                // These functions read/write Unescapable, RestrictMode, StealthXP, TransPending, SunFogColor
+                // Note: These are runtime properties saved in save games, not ARE file properties
+                // ARE files themselves don't have AreaProperties struct for Odyssey games
+            }
 
             // Set rooms list
             var roomsList = new GFFList();
             root.SetList("Rooms", roomsList);
             // foreach (var room in are.Rooms) { ... }
+
+            return gff;
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/are.py:685-700
+        // Original: def read_are(source: SOURCE_TYPES, offset: int = 0, size: int | None = None) -> ARE:
+        public static ARE ReadAre(byte[] data, int offset = 0, int size = -1)
+        {
+            byte[] dataToRead = data;
+            if (size > 0 && offset + size <= data.Length)
+            {
+                dataToRead = new byte[size];
+                System.Array.Copy(data, offset, dataToRead, 0, size);
+            }
+            GFF gff = GFF.FromBytes(dataToRead);
+            return ConstructAre(gff);
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/are.py:742-757
+        // Original: def bytes_are(are: ARE, game: Game = Game.K2, file_format: ResourceType = ResourceType.GFF) -> bytes:
+        public static byte[] BytesAre(ARE are, Game game = Game.K2, ResourceType fileFormat = null)
+        {
+            if (fileFormat == null)
+            {
+                fileFormat = ResourceType.ARE;
+            }
+            GFF gff = DismantleAre(are, game);
+            return GFFAuto.BytesGff(gff, fileFormat);
+        }
+    }
+}
 
             return gff;
         }
