@@ -38,9 +38,11 @@ namespace Andastra.Tests.Runtime.Core.Journal
             JRL testJrl = CreateTestJRL();
             byte[] jrlData = JRLHelper.BytesJrl(testJrl);
 
+            var resourceResult = new ResourceResult();
+            resourceResult.Data = jrlData;
             _mockResourceManager
                 .Setup(m => m.LookupResource(jrlResRef, ResourceType.JRL))
-                .Returns(new ResourceResult { Data = jrlData });
+                .Returns(resourceResult);
 
             // Act
             JRL loadedJrl = _jrlLoader.LoadJRL(jrlResRef);
@@ -83,9 +85,11 @@ namespace Andastra.Tests.Runtime.Core.Journal
             JRL testJrl = CreateTestJRL();
             byte[] jrlData = JRLHelper.BytesJrl(testJrl);
 
+            var resourceResult = new ResourceResult();
+            resourceResult.Data = jrlData;
             _mockResourceManager
                 .Setup(m => m.LookupResource(jrlResRef, ResourceType.JRL))
-                .Returns(new ResourceResult { Data = jrlData });
+                .Returns(resourceResult);
 
             // Create mock TLK for text resolution
             var mockTlk = new Mock<TLK>();
@@ -109,9 +113,11 @@ namespace Andastra.Tests.Runtime.Core.Journal
             JRL testJrl = CreateTestJRL();
             byte[] jrlData = JRLHelper.BytesJrl(testJrl);
 
+            var resourceResult = new ResourceResult();
+            resourceResult.Data = jrlData;
             _mockResourceManager
                 .Setup(m => m.LookupResource(jrlResRef, ResourceType.JRL))
-                .Returns(new ResourceResult { Data = jrlData });
+                .Returns(resourceResult);
 
             // Act
             string entryText = _jrlLoader.GetQuestEntryText(questTag, entryId, jrlResRef);
@@ -130,9 +136,11 @@ namespace Andastra.Tests.Runtime.Core.Journal
             JRL testJrl = CreateTestJRL();
             byte[] jrlData = JRLHelper.BytesJrl(testJrl);
 
+            var resourceResult = new ResourceResult();
+            resourceResult.Data = jrlData;
             _mockResourceManager
                 .Setup(m => m.LookupResource(jrlResRef, ResourceType.JRL))
-                .Returns(new ResourceResult { Data = jrlData });
+                .Returns(resourceResult);
 
             // Act
             string entryText = _jrlLoader.GetQuestEntryText(questTag, entryId, jrlResRef);
@@ -175,9 +183,11 @@ namespace Andastra.Tests.Runtime.Core.Journal
             JRL testJrl = CreateTestJRL();
             byte[] jrlData = JRLHelper.BytesJrl(testJrl);
 
+            var resourceResult = new ResourceResult();
+            resourceResult.Data = jrlData;
             _mockResourceManager
                 .Setup(m => m.LookupResource(jrlResRef, ResourceType.JRL))
-                .Returns(new ResourceResult { Data = jrlData });
+                .Returns(resourceResult);
 
             // Act
             JRLQuest quest = _jrlLoader.GetQuestByTag(questTag, jrlResRef);
@@ -196,9 +206,11 @@ namespace Andastra.Tests.Runtime.Core.Journal
             JRL testJrl = CreateTestJRL();
             byte[] jrlData = JRLHelper.BytesJrl(testJrl);
 
+            var resourceResult = new ResourceResult();
+            resourceResult.Data = jrlData;
             _mockResourceManager
                 .Setup(m => m.LookupResource(jrlResRef, ResourceType.JRL))
-                .Returns(new ResourceResult { Data = jrlData });
+                .Returns(resourceResult);
 
             // Act
             JRLQuest quest = _jrlLoader.GetQuestByTag(questTag, jrlResRef);
@@ -215,9 +227,11 @@ namespace Andastra.Tests.Runtime.Core.Journal
             JRL testJrl = CreateTestJRL();
             byte[] jrlData = JRLHelper.BytesJrl(testJrl);
 
+            var resourceResult = new ResourceResult();
+            resourceResult.Data = jrlData;
             _mockResourceManager
                 .Setup(m => m.LookupResource(jrlResRef, ResourceType.JRL))
-                .Returns(new ResourceResult { Data = jrlData });
+                .Returns(resourceResult);
 
             _jrlLoader.LoadJRL(jrlResRef);
 
