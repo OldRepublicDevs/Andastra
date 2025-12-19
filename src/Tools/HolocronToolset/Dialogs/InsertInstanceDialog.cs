@@ -307,7 +307,7 @@ namespace HolocronToolset.Dialogs
                 }
 
                 string fileName = Path.GetFileName(filepath);
-                if (Andastra.Parsing.Tools.Misc.IsAnyErfTypeFile(fileName))
+                if (Andastra.Parsing.Tools.FileHelpers.IsAnyErfTypeFile(fileName))
                 {
                     // Handle ERF/MOD/SAV files
                     ERF erf;
