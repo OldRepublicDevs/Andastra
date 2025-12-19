@@ -2,6 +2,7 @@ using System;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
 using Andastra.Runtime.Games.Common.Components;
+using Andastra.Runtime.Content.MDL;
 
 namespace Andastra.Runtime.Engines.Odyssey.Components
 {
@@ -21,6 +22,8 @@ namespace Andastra.Runtime.Engines.Odyssey.Components
     /// - MDX format: Contains animation keyframe data with timing information
     /// - MDL format: References MDX files and contains animation array indices
     /// - Animation system updates animation time each frame, triggers completion events
+    /// - Animation duration loaded from MDX animation header at offset 0x50 (80 bytes) as float
+    /// - Based on swkotor2.exe: AnimationLength field accessed from MDL animation data structure
     /// </remarks>
     public class OdysseyAnimationComponent : BaseAnimationComponent
     {
@@ -36,15 +39,78 @@ namespace Andastra.Runtime.Engines.Odyssey.Components
         /// <summary>
         /// Gets the duration of an animation by ID from MDX data.
         /// </summary>
-        /// <param name="animationId">Animation ID to get duration for.</param>
+        /// <param name="animationId">Animation ID to get duration for (0-based index into animation array).</param>
         /// <returns>Animation duration in seconds from MDX data, or 1.0 if not available.</returns>
+        /// <remarks>
+        /// Animation Duration Loading:
+        /// - Based on swkotor2.exe: AnimationLength field accessed from MDL animation data
+        /// - Located via string references: "AnimationLength" @ 0x007bf980 (swkotor2.exe)
+        /// - MDX format: Animation header contains duration at offset 0x50 (80 bytes) as float
+        /// - MDL format: MDLAnimationData.Length field contains animation duration in seconds
+        /// - Animation ID is 0-based index into MDL model's Animations array
+        /// - Model loaded from MDLCache using entity's ModelResRef from RenderableComponent
+        /// - If model not cached or animation ID invalid, returns default duration (1.0 seconds)
+        /// </remarks>
         protected override float GetAnimationDuration(int animationId)
         {
-            // TODO: PLACEHOLDER - Load animation duration from MDX file data
-            // Should query the entity's model component for MDX animation data
-            // MDX format contains animation keyframe timing information
-            // For now, return default duration - engine-specific implementation should override
-            return 1.0f;
+            // Validate animation ID
+            if (animationId < 0)
+            {
+                return 1.0f;
+            }
+
+            // Get entity's renderable component to access model ResRef
+            if (Owner == null)
+            {
+                return 1.0f;
+            }
+
+            IRenderableComponent renderable = Owner.GetComponent<IRenderableComponent>();
+            if (renderable == null || string.IsNullOrEmpty(renderable.ModelResRef))
+            {
+                return 1.0f;
+            }
+
+            // Try to get model from cache
+            MDLModel model;
+            if (!MDLCache.Instance.TryGet(renderable.ModelResRef, out model))
+            {
+                // Model not in cache - return default duration
+                // Models should typically be loaded before animations are played
+                return 1.0f;
+            }
+
+            // Validate model has animations
+            if (model.Animations == null || model.Animations.Length == 0)
+            {
+                return 1.0f;
+            }
+
+            // Validate animation ID is within bounds
+            if (animationId >= model.Animations.Length)
+            {
+                return 1.0f;
+            }
+
+            // Get animation duration from MDX data
+            MDLAnimationData animation = model.Animations[animationId];
+            if (animation == null)
+            {
+                return 1.0f;
+            }
+
+            // Return animation duration (loaded from MDX animation header at offset 0x50)
+            // MDX format: Animation header contains duration as float at offset 80 (0x50) bytes
+            // This value is already parsed and stored in MDLAnimationData.Length during MDL/MDX loading
+            float duration = animation.Length;
+
+            // Validate duration is positive (should always be, but check for safety)
+            if (duration <= 0.0f)
+            {
+                return 1.0f;
+            }
+
+            return duration;
         }
     }
 }
