@@ -88,10 +88,6 @@ namespace Andastra.Runtime.Games.Odyssey
                 // Create execution context with Odyssey-specific enhancements
                 var context = CreateExecutionContext(caller, triggerer);
 
-                // TODO: Additional context support for game services
-                // Odyssey-specific: Enhanced script context for game services
-                // Note: IExecutionContext doesn't support AdditionalContext - may need extension or wrapper
-
                 // Execute script via VM
                 // Common across KOTOR1 and KOTOR2: Script execution with instruction budget tracking
                 // Based on swkotor.exe/swkotor2.exe: Script execution budget limits per frame
@@ -122,6 +118,54 @@ namespace Andastra.Runtime.Games.Odyssey
         {
             var resource = _installation.Resources.LookupResource(scriptResRef, ResourceType.NCS);
             return resource?.Data;
+        }
+
+        /// <summary>
+        /// Creates an execution context with Odyssey-specific enhancements including game services context.
+        /// </summary>
+        /// <param name="caller">The calling entity (OBJECT_SELF).</param>
+        /// <param name="triggerer">The triggering entity.</param>
+        /// <returns>Execution context with engine API, world, globals, and game services context.</returns>
+        /// <remarks>
+        /// Odyssey-specific: Enhanced execution context with game services support.
+        /// Sets AdditionalContext to IGameServicesContext to provide script access to:
+        /// - DialogueManager: Dialogue system for conversation management
+        /// - PlayerEntity: Current player character entity
+        /// - CombatManager: Combat system for battle management
+        /// - PartyManager: Party management for party member operations
+        /// - ModuleLoader: Module loading system for area transitions
+        /// - FactionManager: Faction relationship management
+        /// - PerceptionManager: Creature perception system
+        /// - CameraController: Camera positioning and movement
+        /// - SoundPlayer: Audio playback system
+        /// - GameSession: Game state management
+        /// - JournalSystem: Quest and journal management
+        /// - UISystem: UI screen and overlay management
+        ///
+        /// Based on reverse engineering of:
+        /// - swkotor.exe: Script execution context setup (KOTOR1)
+        /// - swkotor2.exe: FUN_005226d0 @ 0x005226d0 (script execution context setup, KOTOR2)
+        /// - Engine API functions (Kotor1, TheSithLords) access AdditionalContext as IGameServicesContext
+        /// - Script execution: Engine API functions check for VMExecutionContext.AdditionalContext
+        ///   and cast to IGameServicesContext to access game services
+        /// </remarks>
+        protected override IExecutionContext CreateExecutionContext(IEntity caller, IEntity triggerer)
+        {
+            var context = base.CreateExecutionContext(caller, triggerer);
+            
+            // Set resource provider to Installation for script resource loading
+            if (context is VM.ExecutionContext vmContext)
+            {
+                vmContext.ResourceProvider = _installation;
+                
+                // Set additional context to game services context for engine API access
+                // Engine API functions (Kotor1, TheSithLords) check for AdditionalContext
+                // and cast to IGameServicesContext to access game services like PartyManager,
+                // CombatManager, DialogueManager, etc.
+                vmContext.AdditionalContext = _servicesContext;
+            }
+            
+            return context;
         }
 
     }
