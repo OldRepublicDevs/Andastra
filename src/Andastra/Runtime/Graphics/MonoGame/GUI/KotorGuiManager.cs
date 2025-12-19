@@ -10,6 +10,7 @@ using Andastra.Parsing.Installation;
 using Andastra.Parsing.Resource;
 using Andastra.Parsing.Resource.Generics.GUI;
 using Andastra.Parsing.Common;
+using Andastra.Runtime.MonoGame.Fonts;
 using JetBrains.Annotations;
 
 namespace Andastra.Runtime.MonoGame.GUI
@@ -18,8 +19,8 @@ namespace Andastra.Runtime.MonoGame.GUI
     /// Manages KOTOR GUI rendering using MonoGame SpriteBatch.
     /// </summary>
     /// <remarks>
-    /// KOTOR GUI Manager (MonoGame Implementation):
-    /// - Based on swkotor2.exe GUI system (modern MonoGame adaptation)
+    /// KOTOR GUI Manager (MonoGame Implementation - Odyssey Engine):
+    /// - Based on swkotor.exe and swkotor2.exe GUI system (modern MonoGame adaptation)
     /// - Located via string references: GUI system references throughout executable
     /// - GUI files: "gui_mp_arwalk00" through "gui_mp_arwalk15" @ 0x007b59bc-0x007b58dc (GUI animation frames)
     /// - "gui_mp_arrun00" through "gui_mp_arrun15" @ 0x007b5aac-0x007b59dc (GUI run animation frames)
@@ -35,8 +36,25 @@ namespace Andastra.Runtime.MonoGame.GUI
     /// - This MonoGame implementation: Uses MonoGame SpriteBatch for GUI rendering
     /// - GUI loading: Loads GUI files from game installation, parses panel/button definitions
     /// - Button events: Handles button click events, dispatches to game systems
-    /// - Note: Original engine used DirectX GUI rendering, this is a modern MonoGame adaptation
-    /// - Based on swkotor2.exe: FUN_0070a2e0 @ 0x0070a2e0 demonstrates GUI loading pattern with button initialization
+    /// - Font rendering: Loads bitmap fonts from ResRef using BitmapFont class with TXI metrics
+    /// 
+    /// Ghidra Reverse Engineering Analysis Required:
+    /// - swkotor.exe: GUI font loading and text rendering functions (needs Ghidra address verification)
+    /// - swkotor2.exe: FUN_0070a2e0 @ 0x0070a2e0 demonstrates GUI loading pattern with button initialization (needs verification)
+    /// - nwmain.exe: Aurora engine GUI system and font rendering (needs Ghidra analysis for equivalent implementation)
+    /// - daorigins.exe: Eclipse engine GUI system and font rendering (needs Ghidra analysis for equivalent implementation)
+    /// - DragonAge2.exe: Eclipse engine GUI system and font rendering (needs Ghidra analysis for equivalent implementation)
+    /// - MassEffect.exe: Infinity engine GUI system and font rendering (needs Ghidra analysis for equivalent implementation)
+    /// - MassEffect2.exe: Infinity engine GUI system and font rendering (needs Ghidra analysis for equivalent implementation)
+    /// 
+    /// Cross-Engine Inheritance Structure (to be implemented after Ghidra analysis):
+    /// - Base Class: BaseGuiManager (Runtime.Games.Common) - Common GUI loading/rendering patterns
+    ///   - Odyssey: KotorGuiManager : BaseGuiManager (swkotor.exe: 0x..., swkotor2.exe: 0x0070a2e0)
+    ///   - Aurora: AuroraGuiManager : BaseGuiManager (nwmain.exe: 0x...)
+    ///   - Eclipse: EclipseGuiManager : BaseGuiManager (daorigins.exe: 0x..., DragonAge2.exe: 0x...)
+    ///   - Infinity: InfinityGuiManager : BaseGuiManager (MassEffect.exe: 0x..., MassEffect2.exe: 0x...)
+    /// 
+    /// Note: Original engine used DirectX GUI rendering, this is a modern MonoGame adaptation
     /// </remarks>
     public class KotorGuiManager
     {
@@ -45,6 +63,7 @@ namespace Andastra.Runtime.MonoGame.GUI
         private readonly SpriteBatch _spriteBatch;
         private readonly Dictionary<string, LoadedGui> _loadedGuis;
         private readonly Dictionary<string, Texture2D> _textureCache;
+        private readonly Dictionary<string, BitmapFont> _fontCache;
         private LoadedGui _currentGui;
         private MouseState _previousMouseState;
         private KeyboardState _previousKeyboardState;
@@ -76,6 +95,7 @@ namespace Andastra.Runtime.MonoGame.GUI
             _spriteBatch = new SpriteBatch(device);
             _loadedGuis = new Dictionary<string, LoadedGui>(StringComparer.OrdinalIgnoreCase);
             _textureCache = new Dictionary<string, Texture2D>(StringComparer.OrdinalIgnoreCase);
+            _fontCache = new Dictionary<string, BitmapFont>(StringComparer.OrdinalIgnoreCase);
             _previousMouseState = Mouse.GetState();
             _previousKeyboardState = Keyboard.GetState();
         }
@@ -608,8 +628,6 @@ namespace Andastra.Runtime.MonoGame.GUI
             // Render button text if available
             if (button.GuiText != null && !string.IsNullOrEmpty(button.GuiText.Text))
             {
-                // TODO: Load and use proper font from button.GuiText.Font
-                // For now, use default rendering
                 string text = button.GuiText.Text;
                 Color textColor = new Microsoft.Xna.Framework.Color(
                     button.GuiText.Color.R,
@@ -617,13 +635,19 @@ namespace Andastra.Runtime.MonoGame.GUI
                     button.GuiText.Color.B,
                     button.GuiText.Color.A);
 
-                // Calculate text position (centered for now)
-                // TODO: Use proper font measurement and alignment
-                Vector2 textSize = Vector2.Zero; // Would use font.MeasureString(text)
-                Vector2 textPos = position + (size - textSize) / 2;
+                // Load font from button.GuiText.Font ResRef
+                BitmapFont font = LoadFont(button.GuiText.Font.ToString());
+                if (font != null)
+                {
+                    // Measure text size
+                    Vector2 textSize = font.MeasureString(text);
+                    
+                    // Calculate text position based on alignment
+                    Vector2 textPos = CalculateTextPosition(button.GuiText.Alignment, position, size, textSize);
 
-                // TODO: Use proper font rendering
-                // _spriteBatch.DrawString(font, text, textPos, textColor);
+                    // Render text using bitmap font
+                    RenderBitmapText(font, text, textPos, textColor);
+                }
             }
         }
 
@@ -653,9 +677,19 @@ namespace Andastra.Runtime.MonoGame.GUI
                     label.GuiText.Color.B,
                     label.GuiText.Color.A);
 
-                // TODO: Use proper font rendering with alignment
-                // Vector2 textPos = CalculateTextPosition(label, position, size);
-                // _spriteBatch.DrawString(font, text, textPos, textColor);
+                // Load font from label.GuiText.Font ResRef
+                BitmapFont font = LoadFont(label.GuiText.Font.ToString());
+                if (font != null)
+                {
+                    // Measure text size
+                    Vector2 textSize = font.MeasureString(text);
+                    
+                    // Calculate text position based on alignment
+                    Vector2 textPos = CalculateTextPosition(label.GuiText.Alignment, position, size, textSize);
+
+                    // Render text using bitmap font
+                    RenderBitmapText(font, text, textPos, textColor);
+                }
             }
         }
 
@@ -830,6 +864,135 @@ namespace Andastra.Runtime.MonoGame.GUI
         }
 
         /// <summary>
+        /// Loads a bitmap font from a ResRef, with caching.
+        /// </summary>
+        /// <param name="fontResRef">The font resource reference.</param>
+        /// <returns>The loaded font, or null if loading failed.</returns>
+        [CanBeNull]
+        private BitmapFont LoadFont(string fontResRef)
+        {
+            if (string.IsNullOrEmpty(fontResRef) || fontResRef == "****" || fontResRef.Trim().Length == 0)
+            {
+                return null;
+            }
+
+            string key = fontResRef.ToLowerInvariant();
+
+            // Check cache
+            if (_fontCache.TryGetValue(key, out BitmapFont cached))
+            {
+                return cached;
+            }
+
+            // Load font
+            BitmapFont font = BitmapFont.Load(fontResRef, _installation, _graphicsDevice);
+            if (font != null)
+            {
+                _fontCache[key] = font;
+            }
+
+            return font;
+        }
+
+        /// <summary>
+        /// Calculates text position based on alignment flags.
+        /// </summary>
+        /// <param name="alignment">The alignment flags (1=top-left, 2=top-center, 3=top-right, 17=center-left, 18=center, 19=center-right, 33=bottom-left, 34=bottom-center, 35=bottom-right).</param>
+        /// <param name="controlPosition">The control position.</param>
+        /// <param name="controlSize">The control size.</param>
+        /// <param name="textSize">The text size.</param>
+        /// <returns>The calculated text position.</returns>
+        private Vector2 CalculateTextPosition(int alignment, Vector2 controlPosition, Vector2 controlSize, Vector2 textSize)
+        {
+            float x = controlPosition.X;
+            float y = controlPosition.Y;
+
+            // Horizontal alignment
+            // 1, 17, 33 = left
+            // 2, 18, 34 = center
+            // 3, 19, 35 = right
+            if (alignment == 2 || alignment == 18 || alignment == 34)
+            {
+                // Center horizontally
+                x = controlPosition.X + (controlSize.X - textSize.X) / 2.0f;
+            }
+            else if (alignment == 3 || alignment == 19 || alignment == 35)
+            {
+                // Right align
+                x = controlPosition.X + controlSize.X - textSize.X;
+            }
+            // else: left align (default)
+
+            // Vertical alignment
+            // 1, 2, 3 = top
+            // 17, 18, 19 = center
+            // 33, 34, 35 = bottom
+            if (alignment >= 17 && alignment <= 19)
+            {
+                // Center vertically
+                y = controlPosition.Y + (controlSize.Y - textSize.Y) / 2.0f;
+            }
+            else if (alignment >= 33 && alignment <= 35)
+            {
+                // Bottom align
+                y = controlPosition.Y + controlSize.Y - textSize.Y;
+            }
+            // else: top align (default)
+
+            return new Vector2(x, y);
+        }
+
+        /// <summary>
+        /// Renders text using a bitmap font.
+        /// </summary>
+        /// <param name="font">The bitmap font to use.</param>
+        /// <param name="text">The text to render.</param>
+        /// <param name="position">The position to render at.</param>
+        /// <param name="color">The text color.</param>
+        private void RenderBitmapText([NotNull] BitmapFont font, string text, Vector2 position, Color color)
+        {
+            if (font == null || string.IsNullOrEmpty(text))
+            {
+                return;
+            }
+
+            float currentX = position.X;
+            float currentY = position.Y;
+            float lineHeight = font.FontHeight + font.SpacingB;
+
+            foreach (char c in text)
+            {
+                if (c == '\n')
+                {
+                    // New line
+                    currentX = position.X;
+                    currentY += lineHeight;
+                    continue;
+                }
+
+                int charCode = (int)c;
+                BitmapFont.CharacterGlyph? glyph = font.GetCharacter(charCode);
+                if (glyph.HasValue)
+                {
+                    var g = glyph.Value;
+                    // Render character glyph
+                    _spriteBatch.Draw(
+                        font.Texture,
+                        new Rectangle((int)currentX, (int)currentY, (int)g.Width, (int)g.Height),
+                        g.SourceRect,
+                        color);
+
+                    currentX += g.Width + font.SpacingR;
+                }
+                else
+                {
+                    // Unknown character - skip or use default width
+                    currentX += font.FontWidth + font.SpacingR;
+                }
+            }
+        }
+
+        /// <summary>
         /// Converts GUISelected to GUIBorder for rendering.
         /// </summary>
         private GUIBorder ConvertSelectedToBorder(GUISelected selected)
@@ -899,6 +1062,9 @@ namespace Andastra.Runtime.MonoGame.GUI
                 }
             }
             _textureCache.Clear();
+            
+            // Note: Fonts don't need disposal as they reference textures that are already disposed
+            _fontCache.Clear();
             _loadedGuis.Clear();
         }
     }
