@@ -11,6 +11,11 @@ namespace Andastra.Parsing.Logger
     /// </summary>
     public class RobustLogger
     {
+        /// <summary>
+        /// Static instance for convenience access.
+        /// </summary>
+        public static RobustLogger Instance { get; } = new RobustLogger();
+
         private string _logFilePath;
         private readonly object _lockObject = new object();
 
