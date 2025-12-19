@@ -115,5 +115,32 @@ namespace HolocronToolset.Editors
         {
             _starters.Add(link);
         }
+
+        // Matching PyKotor implementation
+        // Original: def remove_starter(self, link: DLGLink): ...
+        /// <summary>
+        /// Removes a starter link from the model.
+        /// </summary>
+        public void RemoveStarter(DLGLink link)
+        {
+            _starters.Remove(link);
+        }
+
+        // Matching PyKotor implementation
+        // Original: def move_starter(self, old_index: int, new_index: int): ...
+        /// <summary>
+        /// Moves a starter link from one index to another.
+        /// </summary>
+        public void MoveStarter(int oldIndex, int newIndex)
+        {
+            if (oldIndex < 0 || oldIndex >= _starters.Count || newIndex < 0 || newIndex >= _starters.Count)
+            {
+                return;
+            }
+
+            var link = _starters[oldIndex];
+            _starters.RemoveAt(oldIndex);
+            _starters.Insert(newIndex, link);
+        }
     }
 }

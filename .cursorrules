@@ -421,7 +421,7 @@ When working on Andastra Engine code (anything in `src/Andastra/`), AI agents MU
 
 **Layered Architecture** (strict separation):
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────┐
 │                    Game (Executable)                         │
 ├─────────────────────────────────────────────────────────────┤
