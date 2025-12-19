@@ -214,11 +214,7 @@ namespace HolocronToolset.Dialogs
                     {
                         string label = upgrades.GetCellString(i, "label") ?? "";
                         label = label.Replace("_", " ");
-                        // TODO: SIMPLIFIED - Title case conversion (simplified)
-                        if (label.Length > 0)
-                        {
-                            label = char.ToUpper(label[0]) + (label.Length > 1 ? label.Substring(1).ToLower() : "");
-                        }
+                        label = ToTitleCase(label);
                         upgradeItems.Add(label);
                     }
                 }
@@ -295,6 +291,58 @@ namespace HolocronToolset.Dialogs
                 _utiProperty.Param1Value = paramValue;
                 ReloadTextboxes();
             }
+        }
+
+        // Matching Python's str.title() method behavior
+        // Converts string to title case where first letter of each word is capitalized
+        // Examples: "hello world" -> "Hello World", "test_string" -> "Test String" (after replace)
+        // This matches PyKotor's .title() behavior for upgrade label formatting
+        // Only capitalizes if the first character is a letter; preserves numbers and other characters
+        private static string ToTitleCase(string input)
+        {
+            if (string.IsNullOrEmpty(input))
+            {
+                return input;
+            }
+
+            // Split by space to get individual words (after replace("_", " "), we have space-separated words)
+            // Using StringSplitOptions.None to preserve empty entries (for multiple consecutive spaces)
+            string[] words = input.Split(new[] { ' ' }, StringSplitOptions.None);
+            
+            // Process each word: capitalize first letter if it's a letter, lowercase the rest
+            for (int i = 0; i < words.Length; i++)
+            {
+                if (words[i].Length > 0)
+                {
+                    char firstChar = words[i][0];
+                    if (char.IsLetter(firstChar))
+                    {
+                        // First character is a letter - capitalize it and lowercase the rest
+                        words[i] = char.ToUpperInvariant(firstChar) + 
+                                   (words[i].Length > 1 ? words[i].Substring(1).ToLowerInvariant() : "");
+                    }
+                    else
+                    {
+                        // First character is not a letter (number, symbol, etc.) - only lowercase the rest
+                        // This matches Python's .title() behavior: "123test" stays "123test", not "123Test"
+                        if (words[i].Length > 1)
+                        {
+                            // Lowercase any letters in the rest of the word
+                            System.Text.StringBuilder sb = new System.Text.StringBuilder(words[i].Length);
+                            sb.Append(firstChar);
+                            for (int j = 1; j < words[i].Length; j++)
+                            {
+                                char c = words[i][j];
+                                sb.Append(char.IsLetter(c) ? char.ToLowerInvariant(c) : c);
+                            }
+                            words[i] = sb.ToString();
+                        }
+                    }
+                }
+            }
+
+            // Rejoin with spaces (preserving original spacing structure)
+            return string.Join(" ", words);
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uti.py:687-691
