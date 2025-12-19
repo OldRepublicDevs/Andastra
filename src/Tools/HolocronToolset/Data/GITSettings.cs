@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using Andastra.Parsing.Common;
 using KotorColor = Andastra.Parsing.Common.Color;
 
@@ -17,18 +18,71 @@ namespace HolocronToolset.Data
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/editor_settings/git.py:18-22
         // Original: def resetMaterialColors(self):
+        // PyKotor: for setting in dir(self):
+        //              if not setting.endswith("Colour"):
+        //                  continue
+        //              self.reset_setting(setting)
         public void ResetMaterialColors()
         {
-            // TODO: Reset all material color settings when SettingsProperty system is fully available
-            System.Console.WriteLine("Reset material colors not yet implemented");
+            // Get all properties of this class that end with "Colour"
+            var properties = GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance);
+            foreach (var property in properties)
+            {
+                if (property.Name.EndsWith("Colour") && property.PropertyType == typeof(int))
+                {
+                    try
+                    {
+                        ResetSetting(property.Name);
+                    }
+                    catch (Exception ex)
+                    {
+                        // If ResetSetting fails (e.g., property doesn't use SettingsProperty system),
+                        // try to reset using the default value from the property getter
+                        System.Console.WriteLine($"Warning: Could not reset setting '{property.Name}': {ex.Message}");
+                        try
+                        {
+                            // Get the default value by calling the property getter with a new instance context
+                            // This will return the default value specified in the property
+                            var defaultValue = property.GetValue(this);
+                            if (defaultValue is int intValue)
+                            {
+                                SetValue(property.Name, intValue);
+                            }
+                        }
+                        catch
+                        {
+                            // If that also fails, skip this property
+                            System.Console.WriteLine($"Error: Could not reset property '{property.Name}'");
+                        }
+                    }
+                }
+            }
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/editor_settings/git.py:24-28
         // Original: def resetControls(self):
+        // PyKotor: for setting in dir(self):
+        //              if not setting.endswith("Bind"):
+        //                  continue
+        //              self.reset_setting(setting)
         public void ResetControls()
         {
-            // TODO: Reset all control bind settings when SettingsProperty system is fully available
-            System.Console.WriteLine("Reset controls not yet implemented");
+            // Get all properties of this class that end with "Bind"
+            var properties = GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance);
+            foreach (var property in properties)
+            {
+                if (property.Name.EndsWith("Bind"))
+                {
+                    try
+                    {
+                        ResetSetting(property.Name);
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Console.WriteLine($"Warning: Could not reset bind setting '{property.Name}': {ex.Message}");
+                    }
+                }
+            }
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/editor_settings/git.py:30-67

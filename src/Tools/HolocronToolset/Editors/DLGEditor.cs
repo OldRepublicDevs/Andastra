@@ -90,6 +90,11 @@ namespace HolocronToolset.Editors
         
         // Flag to track if node is loaded into UI (prevents updates during loading)
         private bool _nodeLoadedIntoUi = false;
+        
+        // Flag to track if editor is in focus mode (showing only a specific node and its children)
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:152
+        // Original: self._focused: bool = False
+        private bool _focused = false;
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:101-177
         // Original: def __init__(self, parent: QWidget | None = None, installation: HTInstallation | None = None):
@@ -356,6 +361,11 @@ namespace HolocronToolset.Editors
         public TextBox QuestEdit => _questEdit;
         public NumericUpDown QuestEntrySpin => _questEntrySpin;
         
+        // Expose speaker widgets for testing
+        // Matching PyKotor implementation: editor.ui.speakerEdit, editor.ui.speakerEditLabel
+        public TextBox SpeakerEdit => _speakerEdit;
+        public TextBlock SpeakerEditLabel => _speakerEditLabel;
+        
         // Expose script widgets for testing
         // Matching PyKotor implementation: editor.ui.script1Param1Spin
         public NumericUpDown Script1Param1Spin => _script1Param1Spin;
@@ -395,6 +405,15 @@ namespace HolocronToolset.Editors
                 if (_script1Param1Spin != null)
                 {
                     _script1Param1Spin.Value = 0;
+                }
+                if (_speakerEdit != null)
+                {
+                    _speakerEdit.Text = string.Empty;
+                    _speakerEdit.IsVisible = false;
+                }
+                if (_speakerEditLabel != null)
+                {
+                    _speakerEditLabel.IsVisible = false;
                 }
                 _nodeLoadedIntoUi = true;
                 return;
@@ -444,6 +463,34 @@ namespace HolocronToolset.Editors
             if (_logicSpin != null)
             {
                 _logicSpin.Value = link.Logic ? 1 : 0;
+            }
+            
+            // Load speaker field from node (only for Entry nodes)
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:2397-2405
+            // Original: if isinstance(item.link.node, DLGEntry): self.ui.speakerEditLabel.setVisible(True), self.ui.speakerEdit.setVisible(True), self.ui.speakerEdit.setText(item.link.node.speaker)
+            // Original: elif isinstance(item.link.node, DLGReply): self.ui.speakerEditLabel.setVisible(False), self.ui.speakerEdit.setVisible(False)
+            if (node is DLGEntry entry)
+            {
+                if (_speakerEditLabel != null)
+                {
+                    _speakerEditLabel.IsVisible = true;
+                }
+                if (_speakerEdit != null)
+                {
+                    _speakerEdit.IsVisible = true;
+                    _speakerEdit.Text = entry.Speaker ?? string.Empty;
+                }
+            }
+            else if (node is DLGReply)
+            {
+                if (_speakerEditLabel != null)
+                {
+                    _speakerEditLabel.IsVisible = false;
+                }
+                if (_speakerEdit != null)
+                {
+                    _speakerEdit.IsVisible = false;
+                }
             }
             
             // Load quest fields from node
@@ -523,6 +570,14 @@ namespace HolocronToolset.Editors
             if (_logicSpin != null)
             {
                 link.Logic = _logicSpin.Value.HasValue && _logicSpin.Value.Value != 0;
+            }
+            
+            // Update speaker field in node (only for Entry nodes)
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:2523
+            // Original: if isinstance(item.link.node, DLGEntry): item.link.node.speaker = self.ui.speakerEdit.text()
+            if (_speakerEdit != null && node is DLGEntry entry)
+            {
+                entry.Speaker = _speakerEdit.Text ?? string.Empty;
             }
             
             // Update quest fields in node
@@ -952,11 +1007,198 @@ namespace HolocronToolset.Editors
 
         /// <summary>
         /// Jumps to the original node.
-        /// Matching PyKotor implementation: self.jump_to_original(selected_item)
+        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:1489-1510
+        /// Original: def jump_to_original(self, copied_item: DLGStandardItem):
         /// </summary>
         private void JumpToOriginal()
         {
-            // TODO: PLACEHOLDER - Implement jump_to_original when reference system is implemented
+            // Get the currently selected item
+            DLGStandardItem selectedItem = GetSelectedDLGStandardItem();
+            if (selectedItem == null || selectedItem.Link == null)
+            {
+                return;
+            }
+
+            // Get the source node from the selected item's link
+            DLGNode sourceNode = selectedItem.Link.Node;
+            if (sourceNode == null)
+            {
+                return;
+            }
+
+            // Search through all items in the model (breadth-first) to find the original node
+            // Matching PyKotor implementation: items: deque[DLGStandardItem | QStandardItem | None] = deque([self.model.item(i, 0) for i in range(self.model.rowCount())])
+            var items = new Queue<DLGStandardItem>();
+            for (int i = 0; i < _model.RowCount; i++)
+            {
+                DLGStandardItem rootItem = _model.Item(i, 0);
+                if (rootItem != null)
+                {
+                    items.Enqueue(rootItem);
+                }
+            }
+
+            // Matching PyKotor implementation: while items: ... if item.link.node == source_node: ...
+            while (items.Count > 0)
+            {
+                DLGStandardItem item = items.Dequeue();
+                if (item?.Link?.Node == null)
+                {
+                    continue;
+                }
+
+                // Check if this item's node matches the source node (reference equality)
+                // Matching PyKotor implementation: if item.link.node == source_node:
+                if (item.Link.Node.Equals(sourceNode))
+                {
+                    // Found the original node - expand to root and select it
+                    ExpandToRoot(item);
+                    SelectTreeViewItem(item);
+                    return;
+                }
+
+                // Add children to the queue for breadth-first search
+                // Matching PyKotor implementation: items.extend([item.child(i, 0) for i in range(item.rowCount())])
+                foreach (var child in item.Children)
+                {
+                    items.Enqueue(child);
+                }
+            }
+
+            // If we get here, we didn't find the original node
+            // Matching PyKotor implementation: self._logger.error(f"Failed to find original node for node {source_node!r}")
+            // In C#, we'll just return silently (could log if logger is available)
+        }
+
+        /// <summary>
+        /// Gets the currently selected DLGStandardItem from the tree view or model.
+        /// </summary>
+        private DLGStandardItem GetSelectedDLGStandardItem()
+        {
+            // First try to get from tree view selection
+            if (_dialogTree?.SelectedItem != null)
+            {
+                if (_dialogTree.SelectedItem is TreeViewItem treeItem && treeItem.Tag is DLGStandardItem dlgItem)
+                {
+                    return dlgItem;
+                }
+                else if (_dialogTree.SelectedItem is DLGStandardItem dlgItemDirect)
+                {
+                    return dlgItemDirect;
+                }
+            }
+
+            // Fall back to model selection
+            if (_model.SelectedIndex >= 0 && _model.SelectedIndex < _model.RowCount)
+            {
+                return _model.Item(_model.SelectedIndex, 0);
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Expands the tree view from the specified item up to the root.
+        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:1480-1487
+        /// Original: def expand_to_root(self, item: DLGStandardItem):
+        /// </summary>
+        private void ExpandToRoot(DLGStandardItem item)
+        {
+            if (item == null || _dialogTree == null)
+            {
+                return;
+            }
+
+            // Matching PyKotor implementation: parent: DLGStandardItem | None = item.parent()
+            DLGStandardItem parent = item.Parent;
+            
+            // Matching PyKotor implementation: while parent is not None: self.ui.dialogTree.expand(parent.index())
+            while (parent != null)
+            {
+                // Find the TreeViewItem for this parent and expand it
+                TreeViewItem parentTreeItem = FindTreeViewItemByTag(parent);
+                if (parentTreeItem != null)
+                {
+                    parentTreeItem.IsExpanded = true;
+                }
+                
+                parent = parent.Parent;
+            }
+        }
+
+        /// <summary>
+        /// Finds a TreeViewItem in the tree view that has the specified DLGStandardItem as its Tag.
+        /// </summary>
+        private TreeViewItem FindTreeViewItemByTag(DLGStandardItem targetItem)
+        {
+            if (_dialogTree?.ItemsSource == null || targetItem == null)
+            {
+                return null;
+            }
+
+            // Recursively search through the tree view items
+            return FindTreeViewItemByTagRecursive(_dialogTree.ItemsSource, targetItem);
+        }
+
+        /// <summary>
+        /// Recursively searches for a TreeViewItem with the specified DLGStandardItem tag.
+        /// </summary>
+        private TreeViewItem FindTreeViewItemByTagRecursive(System.Collections.IEnumerable items, DLGStandardItem targetItem)
+        {
+            if (items == null)
+            {
+                return null;
+            }
+
+            foreach (var itemObj in items)
+            {
+                if (itemObj is TreeViewItem treeItem)
+                {
+                    // Check if this tree item's tag matches the target
+                    if (treeItem.Tag == targetItem)
+                    {
+                        return treeItem;
+                    }
+
+                    // Recursively search children
+                    if (treeItem.ItemsSource != null)
+                    {
+                        TreeViewItem found = FindTreeViewItemByTagRecursive(treeItem.ItemsSource, targetItem);
+                        if (found != null)
+                        {
+                            return found;
+                        }
+                    }
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Selects the specified DLGStandardItem in the tree view.
+        /// </summary>
+        private void SelectTreeViewItem(DLGStandardItem item)
+        {
+            if (item == null || _dialogTree == null)
+            {
+                return;
+            }
+
+            // Find the TreeViewItem for this DLGStandardItem
+            TreeViewItem treeItem = FindTreeViewItemByTag(item);
+            if (treeItem != null)
+            {
+                // Select the item
+                _dialogTree.SelectedItem = treeItem;
+
+                // Scroll the item into view
+                // Schedule on the next UI thread tick to ensure tree is updated
+                Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                {
+                    treeItem.BringIntoView();
+                }, Avalonia.Threading.DispatcherPriority.Loaded);
+            }
         }
 
         /// <summary>
