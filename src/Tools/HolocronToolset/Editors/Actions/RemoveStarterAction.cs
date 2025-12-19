@@ -39,14 +39,13 @@ namespace HolocronToolset.Editors.Actions
             if (_index >= 0 && _index <= editor.CoreDlg.Starters.Count)
             {
                 editor.CoreDlg.Starters.Insert(_index, _link);
+                editor.Model.InsertStarter(_index, _link);
             }
             else
             {
                 editor.CoreDlg.Starters.Add(_link);
+                editor.Model.AddStarter(_link);
             }
-
-            // Restore to model
-            editor.Model.AddStarter(_link);
         }
     }
 }

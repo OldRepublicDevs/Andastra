@@ -249,6 +249,8 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
             _dialogueManager = new DialogueManager(
                 _vm,
                 _world,
+                _engineApi,
+                _globals,
                 (resRef) => LoadDialogue(resRef),
                 (resRef) => LoadScript(resRef),
                 null, // voicePlayer

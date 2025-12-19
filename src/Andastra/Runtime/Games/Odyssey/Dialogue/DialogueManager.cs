@@ -109,11 +109,13 @@ namespace Andastra.Runtime.Engines.Odyssey.Dialogue
         public DialogueManager(
             INcsVm vm,
             IWorld world,
+            IEngineApi engineApi,
+            IScriptGlobals globals,
             Func<string, DLG> dialogueLoader,
             Func<string, byte[]> scriptLoader,
             IVoicePlayer voicePlayer = null,
             ILipSyncController lipSyncController = null)
-            : base(vm, world)
+            : base(vm, world, engineApi, globals)
         {
             _dialogueLoader = dialogueLoader ?? throw new ArgumentNullException("dialogueLoader");
             _scriptLoader = scriptLoader ?? throw new ArgumentNullException("scriptLoader");
@@ -775,11 +777,27 @@ namespace Andastra.Runtime.Engines.Odyssey.Dialogue
         /// <summary>
         /// Creates an execution context for script execution.
         /// </summary>
+        /// <param name="caller">The calling entity (OBJECT_SELF).</param>
+        /// <returns>Execution context with engine API, world, globals.</returns>
+        /// <remarks>
+        /// Based on swkotor2.exe: Script execution context for dialogue scripts
+        /// - Located via string references: "ScriptDialogue" @ 0x007bee40, "ScriptEndDialogue" @ 0x007bede0
+        /// - ExecuteDialogue @ 0x005e9920: Creates execution context with caller entity, world, engine API, globals
+        /// - Original implementation: Execution context provides script access to:
+        ///   - Caller: The entity that owns the script (OBJECT_SELF, used by GetObjectSelf NWScript function)
+        ///   - World: Reference to game world for entity lookups and engine API calls
+        ///   - EngineApi: Reference to NWScript engine API implementation (Kotor1 or TheSithLords)
+        ///   - Globals: Reference to script globals system for global/local variable access
+        /// - Script context is passed to NCS VM for ACTION opcode execution (engine function calls)
+        /// - Cross-engine analysis:
+        ///   - Aurora (nwmain.exe): CNWSDialog::RunScript @ 0x140dddb80 - similar execution context structure
+        ///   - Eclipse (daorigins.exe): Conversation::ExecuteScript - UnrealScript-based, different but equivalent
+        /// </remarks>
         private IExecutionContext CreateExecutionContext(IEntity caller)
         {
-            // This would typically be implemented by the scripting system
-            // TODO: PLACEHOLDER - For now, return null as a placeholder
-            return null;
+            // Use base class implementation which provides common execution context creation
+            // This ensures consistency across all engines while allowing engine-specific overrides if needed
+            return base.CreateExecutionContext(caller, null);
         }
 
         #endregion

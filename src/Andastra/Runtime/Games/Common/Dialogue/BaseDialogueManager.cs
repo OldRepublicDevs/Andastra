@@ -2,6 +2,7 @@ using System;
 using JetBrains.Annotations;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Scripting.Interfaces;
+using Andastra.Runtime.Scripting.VM;
 
 namespace Andastra.Runtime.Games.Common.Dialogue
 {
@@ -13,14 +14,20 @@ namespace Andastra.Runtime.Games.Common.Dialogue
     /// - Common functionality shared across all BioWare engines (Odyssey, Aurora, Eclipse, Infinity)
     /// - Base classes MUST only contain functionality that is identical across ALL engines
     /// - Engine-specific details MUST be in subclasses (OdysseyDialogueManager, AuroraDialogueManager, EclipseDialogueManager)
-    /// - Common: Conversation state management, pause/resume, abort, update loop
+    /// - Common: Conversation state management, pause/resume, abort, update loop, execution context creation
+    /// - Execution context creation: Common across all engines - requires caller, world, engine API, and globals
+    ///   - Based on swkotor2.exe: Script execution context for dialogue scripts (ExecuteDialogue @ 0x005e9920)
+    ///   - Based on nwmain.exe: CNWSDialog script execution context (CNWSDialog::RunScript @ 0x140dddb80)
+    ///   - Based on daorigins.exe: Conversation script execution context (Conversation::ExecuteScript)
     /// </remarks>
     public abstract class BaseDialogueManager
     {
         protected readonly INcsVm _vm;
         protected readonly IWorld _world;
+        protected readonly IEngineApi _engineApi;
+        protected readonly IScriptGlobals _globals;
 
-        protected BaseDialogueManager(INcsVm vm, IWorld world)
+        protected BaseDialogueManager(INcsVm vm, IWorld world, IEngineApi engineApi, IScriptGlobals globals)
         {
             if (vm == null)
             {
@@ -30,9 +37,19 @@ namespace Andastra.Runtime.Games.Common.Dialogue
             {
                 throw new ArgumentNullException(nameof(world));
             }
+            if (engineApi == null)
+            {
+                throw new ArgumentNullException(nameof(engineApi));
+            }
+            if (globals == null)
+            {
+                throw new ArgumentNullException(nameof(globals));
+            }
 
             _vm = vm;
             _world = world;
+            _engineApi = engineApi;
+            _globals = globals;
         }
 
         /// <summary>
@@ -106,6 +123,34 @@ namespace Andastra.Runtime.Games.Common.Dialogue
         /// Updates the dialogue system (call each frame).
         /// </summary>
         public abstract void Update(float deltaTime);
+
+        /// <summary>
+        /// Creates an execution context for script execution.
+        /// </summary>
+        /// <param name="caller">The calling entity (OBJECT_SELF).</param>
+        /// <param name="triggerer">The triggering entity (optional).</param>
+        /// <returns>Execution context with engine API, world, globals.</returns>
+        /// <remarks>
+        /// Common across all engines: Execution context provides script access to game systems.
+        /// Engine API varies by game but context structure is common.
+        /// Based on swkotor2.exe: Script execution context for dialogue scripts (ExecuteDialogue @ 0x005e9920)
+        /// Based on nwmain.exe: CNWSDialog script execution context (CNWSDialog::RunScript @ 0x140dddb80)
+        /// Based on daorigins.exe: Conversation script execution context (Conversation::ExecuteScript)
+        /// </remarks>
+        protected IExecutionContext CreateExecutionContext(IEntity caller, IEntity triggerer = null)
+        {
+            if (caller == null)
+            {
+                throw new ArgumentNullException(nameof(caller));
+            }
+
+            var context = new ExecutionContext(caller, _world, _engineApi, _globals);
+            if (triggerer != null)
+            {
+                context.SetTriggerer(triggerer);
+            }
+            return context;
+        }
     }
 }
 
