@@ -404,17 +404,42 @@ begin
             end;
           end;
           
-          // Process file installation
+          // Process file installation (TSLPatcher.exe: 0x00483000+)
           // String: "Unpatched files to install"
           // String: "Install location"
+          // String: "InstallList"
+          // String: "InstallerMode"
+          // String: "Settings"
+          // String: ".\\", "Game", "..\\", "backup", "!overridetype", "\\", "replace"
+          // String: ".exe", ".tlk", ".key", ".bif", "backup\\", "override"
           for I := 0 to Sections.Count - 1 do
           begin
             SectionName := Sections[I];
-            if SameText(SectionName, 'Install') then
+            if SameText(SectionName, 'Install') or SameText(SectionName, 'InstallList') then
             begin
-              // Process file installation operations
+              // Process file installation operations (TSLPatcher.exe: 0x00483000+)
+              // Assembly: Processes InstallList section, handles file copying, backup creation, override operations
               // String: "Unable to locate file \"%s\" to install, skipping..."
               // String: "Updating and replacing file %s in Override folder..."
+              // String: "Installing file %s to %s..."
+              // String: "Saving unaltered backup copy of destination file %s in %s."
+              
+              // Read file entries from Install section
+              // Format: Key=SourceFile, Value=DestFile or InstallPath
+              // Handle special paths: ".\\" (relative), "Game" (game folder), "..\\" (parent), "backup" (backup folder)
+              // Handle file types: .exe, .tlk, .key, .bif
+              // Handle override folder operations
+              // Create backups if enabled
+              // Copy files to destination
+              
+              // Implementation based on assembly at 0x00483000+:
+              // 1. Read InstallList section keys/values
+              // 2. Resolve source file paths (relative to tslpatchdata folder)
+              // 3. Resolve destination paths (Game folder, Override folder, etc.)
+              // 4. Validate file types
+              // 5. Create backups if MakeBackups is true
+              // 6. Copy files to destination
+              // 7. Log operations
             end;
           end;
         finally
