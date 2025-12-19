@@ -34,7 +34,7 @@ namespace HolocronToolset.NET
         public static void SetupToolsetDefaultEnv()
         {
             // Setup default environment variables for the toolset
-            // Note: Avalonia doesn't use QT_* environment variables, so this is simplified
+            // TODO: SIMPLIFIED - Note: Avalonia doesn't use QT_* environment variables, so this is simplified
             // Platform-specific settings will be handled by Avalonia automatically
 
             // For Windows-specific settings if needed

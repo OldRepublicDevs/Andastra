@@ -214,7 +214,7 @@ namespace HolocronToolset.Dialogs
                     {
                         string label = upgrades.GetCellString(i, "label") ?? "";
                         label = label.Replace("_", " ");
-                        // Title case conversion (simplified)
+                        // TODO: SIMPLIFIED - Title case conversion (simplified)
                         if (label.Length > 0)
                         {
                             label = char.ToUpper(label[0]) + (label.Length > 1 ? label.Substring(1).ToLower() : "");
@@ -330,7 +330,7 @@ namespace HolocronToolset.Dialogs
                 _okButton.Click += (s, e) => { result = true; };
             }
             // In a full implementation, we'd use ShowDialogAsync and await the result
-            // For now, return true if dialog was shown (simplified)
+            // TODO: SIMPLIFIED - For now, return true if dialog was shown (simplified)
             return result;
         }
     }
