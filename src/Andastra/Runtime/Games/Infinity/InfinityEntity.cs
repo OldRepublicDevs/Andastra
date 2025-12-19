@@ -225,11 +225,22 @@ namespace Andastra.Runtime.Games.Infinity
         /// <remarks>
         /// Doors have open/close state, lock state, transition logic.
         /// Based on door component structure in MassEffect.exe and MassEffect2.exe.
+        /// - Note: Infinity engines may not have traditional door systems like Odyssey/Aurora
+        /// - If doors are supported, they would use Infinity-specific file formats and systems
+        /// - Original implementation: Needs reverse engineering from MassEffect.exe and MassEffect2.exe
+        /// - Door component attached during entity creation if door support exists
         /// </remarks>
         private void AttachDoorComponents()
         {
-            // TODO: Attach door-specific components
-            // DoorComponent with open/closed states, locks, transitions
+            // Attach door component if not already present
+            // Based on Infinity engine: Door component attachment (if doors are supported)
+            // Note: Infinity engines may not support traditional doors, but component exists for compatibility
+            if (!HasComponent<IDoorComponent>())
+            {
+                var doorComponent = new InfinityDoorComponent();
+                doorComponent.Owner = this;
+                AddComponent<IDoorComponent>(doorComponent);
+            }
         }
 
         /// <summary>
