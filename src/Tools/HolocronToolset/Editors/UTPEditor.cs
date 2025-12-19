@@ -1,6 +1,7 @@
 using Andastra.Parsing.Common;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Markup.Xaml;
@@ -8,8 +9,13 @@ using Andastra.Parsing;
 using Andastra.Parsing.Formats.GFF;
 using Andastra.Parsing.Resource.Generics;
 using Andastra.Parsing.Resource;
+using Andastra.Parsing.Resource.Formats.GFF.Generics.DLG;
+using Andastra.Parsing.Formats.Capsule;
 using HolocronToolset.Data;
 using HolocronToolset.Dialogs;
+using HolocronToolset.Utils;
+using MessageBox.Avalonia;
+using MessageBox.Avalonia.Enums;
 using GFFAuto = Andastra.Parsing.Formats.GFF.GFFAuto;
 
 namespace HolocronToolset.Editors
@@ -553,20 +559,161 @@ namespace HolocronToolset.Editors
         // Original: def edit_conversation(self):
         private void EditConversation()
         {
-            // Placeholder for conversation editor
-            // Will be implemented when DLG editor is available
-            System.Console.WriteLine("Conversation editor not yet implemented");
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utp.py:378
+            // Original: resname = self.ui.conversationEdit.currentText()
+            string resname = _conversationEdit?.Text?.Trim() ?? "";
+            byte[] data = null;
+            string filepath = null;
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utp.py:381-383
+            // Original: if not resname or not resname.strip():
+            if (string.IsNullOrEmpty(resname))
+            {
+                var errorBox = MessageBoxManager.GetMessageBoxStandardWindow(
+                    "Failed to open DLG Editor",
+                    "Conversation field cannot be blank.",
+                    ButtonEnum.Ok,
+                    Icon.Error);
+                errorBox.ShowDialog(this);
+                return;
+            }
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utp.py:385-386
+            // Original: assert self._installation is not None
+            if (_installation == null)
+            {
+                return;
+            }
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utp.py:386
+            // Original: search: ResourceResult | None = self._installation.resource(resname, ResourceType.DLG)
+            var search = _installation.Resource(resname, ResourceType.DLG);
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utp.py:387-401
+            // Original: if search is None:
+            if (search == null)
+            {
+                // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utp.py:388-393
+                // Original: msgbox: int = QMessageBox(...).exec()
+                var msgBox = MessageBoxManager.GetMessageBoxStandardWindow(
+                    "DLG file not found",
+                    "Do you wish to create a file in the override?",
+                    ButtonEnum.YesNo,
+                    Icon.Question);
+                var result = msgBox.ShowDialog(this).Result;
+
+                // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utp.py:394
+                // Original: if QMessageBox.StandardButton.Yes == msgbox:
+                if (result == ButtonResult.Yes)
+                {
+                    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utp.py:395-401
+                    // Original: data = bytearray(); write_gff(dismantle_dlg(DLG()), data); filepath = ...
+                    var dlg = new DLG();
+                    var gff = DLGHelper.DismantleDlg(dlg, _installation.Game);
+                    data = GFFAuto.BytesGff(gff, ResourceType.DLG);
+                    filepath = System.IO.Path.Combine(_installation.OverridePath(), $"{resname}.dlg");
+                    File.WriteAllBytes(filepath, data);
+                }
+            }
+            else
+            {
+                // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utp.py:402-403
+                // Original: resname, restype, filepath, data = search
+                resname = search.ResName;
+                filepath = search.FilePath;
+                data = search.GetData();
+            }
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utp.py:405-406
+            // Original: if data is not None: open_resource_editor(...)
+            if (data != null)
+            {
+                WindowUtils.OpenResourceEditor(filepath, resname, ResourceType.DLG, data, _installation, this);
+            }
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utp.py:408-440
         // Original: def open_inventory(self):
         private void OpenInventory()
         {
-            // Placeholder for inventory editor
-            // Will be implemented when InventoryEditor dialog is available
-            System.Console.WriteLine("Inventory editor not yet implemented");
-            // For now, just update the count
-            UpdateItemCount();
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utp.py:418-420
+            // Original: if self._installation is None: self.blink_window(); return
+            if (_installation == null)
+            {
+                return;
+            }
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utp.py:421-426
+            // Original: capsules: list[Capsule] = []; with suppress(Exception): root: str = Module.filepath_to_root(...)
+            var capsules = new List<object>();
+            try
+            {
+                // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utp.py:423
+                // Original: root: str = Module.filepath_to_root(self._filepath)
+                string root = null;
+                if (!string.IsNullOrEmpty(_filepath))
+                {
+                    root = Module.FilepathToRoot(_filepath);
+                }
+
+                // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utp.py:424
+                // Original: moduleNames: list[str] = [path for path in self._installation.module_names() if root in path and path != self._filepath]
+                var moduleNames = _installation.ModuleNames();
+                var matchingModules = new List<string>();
+                foreach (var kvp in moduleNames)
+                {
+                    string modulePath = kvp.Value ?? kvp.Key;
+                    if (root != null && modulePath.Contains(root) && modulePath != _filepath)
+                    {
+                        matchingModules.Add(kvp.Key);
+                    }
+                }
+
+                // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utp.py:425
+                // Original: newCapsules: list[Capsule] = [Capsule(self._installation.module_path() / mod_filename) for mod_filename in moduleNames]
+                foreach (string modFilename in matchingModules)
+                {
+                    string modulePath = System.IO.Path.Combine(_installation.ModulePath(), modFilename);
+                    if (File.Exists(modulePath))
+                    {
+                        try
+                        {
+                            var capsule = new Capsule(modulePath, createIfNotExist: false);
+                            capsules.Add(capsule);
+                        }
+                        catch
+                        {
+                            // Skip invalid capsule files
+                        }
+                    }
+                }
+            }
+            catch
+            {
+                // Matching PyKotor implementation: suppress(Exception) - ignore errors
+            }
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utp.py:428-437
+            // Original: inventoryEditor = InventoryEditor(self, self._installation, capsules, [], self._utp.inventory, {}, droid=False, hide_equipment=True)
+            var inventoryEditor = new InventoryDialog(
+                this,
+                _installation,
+                capsules,
+                new List<string>(), // folders parameter
+                _utp.Inventory ?? new List<InventoryItem>(),
+                new Dictionary<EquipmentSlot, InventoryItem>(), // equipment parameter
+                droid: false,
+                hideEquipment: true,
+                isStore: false
+            );
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utp.py:438-440
+            // Original: if inventoryEditor.exec(): self._utp.inventory = inventoryEditor.inventory; self.update_item_count()
+            if (inventoryEditor.ShowDialog())
+            {
+                _utp.Inventory = inventoryEditor.Inventory ?? new List<InventoryItem>();
+                UpdateItemCount();
+            }
         }
 
         public override void SaveAs()
