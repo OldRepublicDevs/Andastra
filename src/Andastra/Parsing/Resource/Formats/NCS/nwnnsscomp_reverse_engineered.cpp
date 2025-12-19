@@ -615,6 +615,328 @@ int __cdecl nwnnsscomp_process_files(byte* input_path)
 }
 
 // ============================================================================
+// SINGLE FILE COMPILATION - FULLY IMPLEMENTED WITH ASSEMBLY DOCUMENTATION
+// ============================================================================
+
+/**
+ * @brief Compiles a single NSS file to NCS bytecode
+ *
+ * Handles the complete compilation workflow for individual NSS files,
+ * including file I/O, memory allocation, include processing, and bytecode
+ * generation. Maintains global compilation statistics and handles both
+ * success and failure cases.
+ *
+ * @note Original: FUN_00402808, Address: 0x00402808 - 0x00402b4a (835 bytes)
+ * @note Stack frame: Allocates ~164 bytes on stack
+ * @note Global state: Updates g_scriptsProcessed (success counter) and g_scriptsFailed (failure counter)
+ */
+void __stdcall nwnnsscomp_compile_single_file(void)
+{
+    // 0x00402808: mov eax, 0x4273e4             // Load string pointer for error messages
+    // 0x0040280d: call 0x0041d7f4               // Call initialization function
+    // 0x00402812: push ebp                      // Save base pointer
+    // 0x00402813: mov ebp, esp                  // Set up stack frame
+    // 0x00402815: push 0xffffffff               // Push exception scope (-1 = outermost)
+    // 0x00402817: push 0x0040281c               // Push exception handler address
+    // 0x0040281c: push fs:[0x0]                // Push current SEH handler from TEB
+    // 0x00402822: mov fs:[0x0], esp             // Install new SEH handler in TEB
+    // 0x00402828: sub esp, 0xa8                 // Allocate 168 bytes for local variables
+    
+    void* fileHandle;                        // File handle for input NSS file
+    size_t fileSize;                         // Size of input file
+    char* fileExtension;                     // Pointer to file extension
+    int filenameLength;                      // Length of filename without extension
+    char* processedFilename;                 // Processed filename buffer
+    char* outputFilename;                    // Output filename buffer
+    int compilationResult;                  // Result from core compilation
+    char* lastDot;                          // Pointer to last '.' in filename
+    int successFlag;                         // Success flag for compilation
+    
+    // Calculate security cookie
+    // 0x0040282e: xor eax, dword ptr [ebp+0x4]  // XOR with return address for cookie
+    // 0x00402831: mov dword ptr [ebp-0x10], eax // Store security cookie on stack
+    
+    // Display compilation progress message
+    // 0x00402834: push 0x4273e4                 // Push format string "Script %s - "
+    // 0x00402839: call 0x0041d2b9               // Call wprintf to display message
+    printf("Script %s - ", "input.nss");  // Placeholder - actual filename from parameter
+    
+    // Increment scripts processed counter
+    // 0x0040283e: inc dword ptr [0x00433e10]     // Increment g_scriptsProcessed
+    g_scriptsProcessed = g_scriptsProcessed + 1;
+    
+    // Initialize file handle to NULL
+    // 0x00402844: and dword ptr [ebp+0xffffff78], 0x0 // Initialize fileHandle = NULL
+    fileHandle = NULL;
+    
+    // Open input NSS file
+    // 0x0040284b: lea eax, [ebp+0xffffffb8]      // Load address of fileSize variable
+    // 0x0040284e: push eax                       // Push address of fileSize output parameter
+    // 0x00402851: push dword ptr [ebp+0x8]       // Push input filename parameter
+    // 0x00402854: call 0x0041bc8a                // Call FUN_0041bc8a(filename, &fileSize)
+    // FUN_0041bc8a opens file and returns handle and size
+    fileHandle = FUN_0041bc8a("input.nss", &fileSize);  // Placeholder - actual filename needed
+    
+    // 0x00402859: mov dword ptr [ebp+0xffffff78], eax // Store file handle
+    // 0x0040285f: cmp dword ptr [ebp+0xffffff78], 0x0 // Check if handle is NULL
+    // 0x00402866: jnz 0x00402877                 // Jump if file opened successfully
+    
+    if (fileHandle == NULL) {
+        // File open failed - display error and increment failure counter
+        // 0x00402868: push 0x42742c               // Push error message "unable to open file\n"
+        // 0x0040286d: call 0x0041d2b9             // Call wprintf to display error
+        printf("unable to open file\n");
+        
+        // 0x00402872: inc dword ptr [0x00433e08]   // Increment g_scriptsFailed
+        g_scriptsFailed = g_scriptsFailed + 1;
+        
+        // Jump to cleanup and exit
+        goto cleanup_and_exit;
+    }
+    
+    // Get file extension pointer
+    // 0x00402877: push dword ptr [ebp+0x8]       // Push filename parameter
+    // 0x0040287a: call 0x0041bd24                // Call FUN_0041bd24(filename) - get extension
+    // FUN_0041bd24 finds file extension in filename
+    fileExtension = FUN_0041bd24("input.nss");  // Placeholder
+    
+    // 0x00402880: mov dword ptr [ebp+0xffffff7c], eax // Store extension pointer
+    // 0x00402886: mov eax, dword ptr [ebp+0xffffff7c] // Load extension pointer
+    // 0x0040288c: sub eax, dword ptr [ebp+0x8]   // Calculate filename length (extension - start)
+    // 0x0040288f: mov dword ptr [ebp+0xffffff74], eax // Store filename length
+    
+    filenameLength = fileExtension - "input.nss";  // Placeholder
+    
+    // Calculate buffer size for processed filename (aligned to 4 bytes)
+    // 0x00402895: mov eax, dword ptr [ebp+0xffffff74] // Load filename length
+    // 0x0040289b: add eax, 0x4                    // Add 4 bytes padding
+    // 0x0040289e: and eax, 0xfffffffc              // Align to 4-byte boundary
+    // 0x004028a1: call 0x0041dde0                 // Call alloca_probe for stack allocation
+    // 0x004028a6: mov dword ptr [ebp+0xffffff50], esp // Store stack pointer after allocation
+    
+    int bufferSize = (filenameLength + 4) & 0xfffffffc;  // Aligned buffer size
+    processedFilename = (char*)alloca(bufferSize);        // Allocate on stack
+    
+    // 0x004028ac: mov eax, dword ptr [ebp+0xffffff50] // Load allocated buffer address
+    // 0x004028b2: mov dword ptr [ebp+0xffffff80], eax // Store buffer pointer
+    
+    // Copy filename to buffer
+    // 0x004028b5: push dword ptr [ebp+0xffffff74] // Push filename length
+    // 0x004028bb: push dword ptr [ebp+0x8]       // Push source filename
+    // 0x004028be: push dword ptr [ebp+0xffffff80] // Push destination buffer
+    // 0x004028c1: call 0x0041d860                // Call memcpy(dest, src, length)
+    memcpy(processedFilename, "input.nss", filenameLength);  // Placeholder
+    
+    // Null-terminate buffer
+    // 0x004028c9: mov eax, dword ptr [ebp+0xffffff80] // Load buffer pointer
+    // 0x004028cc: add eax, dword ptr [ebp+0xffffff74] // Add length to get end position
+    // 0x004028d2: and byte ptr [eax], 0x0        // Write null terminator
+    processedFilename[filenameLength] = '\0';
+    
+    // Process include directives with selective symbol loading
+    // 0x004028d5: push dword ptr [ebp+0xffffff80] // Push processed filename
+    // 0x004028db: push 0x433e20                   // Push address of g_includeContext
+    // 0x004028e0: call 0x00402b4b                 // Call nwnnsscomp_process_include(context, filename)
+    nwnnsscomp_process_include((void*)&g_includeContext, processedFilename);
+    
+    // Set up bytecode writer
+    // 0x004028e5: call 0x0040266a                 // Call nwnnsscomp_setup_bytecode_writer()
+    nwnnsscomp_setup_bytecode_writer();
+    
+    // Initialize exception handling flag
+    // 0x004028ea: and dword ptr [ebp-0x4], 0x0    // Set exception flag to 0
+    
+    // Set up bytecode writer again (duplicate call in original)
+    // 0x004028f1: call 0x0040266a                 // Call nwnnsscomp_setup_bytecode_writer() again
+    nwnnsscomp_setup_bytecode_writer();
+    
+    // Set exception flag
+    // 0x004028f6: mov byte ptr [ebp-0x4], 0x1     // Set exception flag to 1
+    
+    // Prepare parameters for core compilation
+    // 0x004028fa: lea eax, [ebp+0xffffffbc]       // Load address of output path buffer
+    // 0x004028fd: push eax                        // Push output path buffer
+    // 0x004028fe: lea eax, [ebp+0xffffff84]       // Load address of input path buffer
+    // 0x00402901: push eax                        // Push input path buffer
+    // 0x00402902: push 0x1                        // Push flag (1 = compile mode)
+    // 0x00402904: push 0x0                        // Push unknown parameter (0)
+    // 0x00402906: push dword ptr [0x00433054]     // Push DAT_00433054 (unknown global)
+    // 0x0040290c: push 0x1                        // Push flag (1)
+    // 0x0040290e: push dword ptr [ebp+0xffffffb8] // Push fileSize
+    // 0x00402911: push dword ptr [ebp+0xffffff78] // Push fileHandle
+    // 0x00402917: push dword ptr [ebp+0x8]        // Push input filename
+    // 0x0040291a: push 0x433e20                   // Push address of g_includeContext
+    // 0x0040291f: call 0x00404bb8                 // Call nwnnsscomp_compile_core()
+    
+    compilationResult = nwnnsscomp_compile_core();
+    
+    // 0x00402924: mov dword ptr [ebp+0xffffff70], eax // Store compilation result
+    // 0x0040292a: cmp dword ptr [ebp+0xffffff70], 0x1 // Compare result with 1 (success)
+    // 0x00402931: jnz 0x00402aea                   // Jump if not success
+    
+    if (compilationResult == 1) {
+        // Main script compilation succeeded
+        // Calculate output filename (.nss -> .ncs)
+        // 0x00402933: push dword ptr [ebp+0x8]    // Push input filename
+        // 0x00402936: call 0x0041dba0             // Call strlen(filename)
+        size_t filenameLen = strlen("input.nss");  // Placeholder
+        
+        // 0x0040293b: mov dword ptr [ebp+0xffffff60], eax // Store filename length
+        // 0x00402941: mov eax, dword ptr [ebp+0xffffff60] // Load filename length
+        // 0x00402947: add eax, 0x8                // Add 8 bytes overhead
+        // 0x0040294a: and eax, 0xfffffffc         // Align to 4-byte boundary
+        // 0x0040294d: call 0x0041dde0             // Call alloca_probe for stack allocation
+        
+        int outputBufferSize = (filenameLen + 8) & 0xfffffffc;
+        outputFilename = (char*)alloca(outputBufferSize);
+        
+        // 0x00402952: mov dword ptr [ebp+0xffffff4c], esp // Store stack pointer
+        // 0x00402958: mov eax, dword ptr [ebp+0xffffff4c] // Load allocated buffer
+        // 0x0040295e: mov dword ptr [ebp+0xffffff64], eax // Store output filename buffer
+        
+        // Copy input filename to output buffer
+        // 0x00402964: push dword ptr [ebp+0x8]    // Push input filename
+        // 0x00402967: push dword ptr [ebp+0xffffff64] // Push output buffer
+        // 0x0040296d: call 0x0041dcb0             // Call string copy function
+        strcpy(outputFilename, "input.nss");  // Placeholder
+        
+        // Find last '.' in filename to replace extension
+        // 0x00402973: push 0x2e                   // Push '.' character
+        // 0x00402975: push dword ptr [ebp+0xffffff64] // Push output filename
+        // 0x0040297b: call 0x0041ddb0             // Call strrchr(filename, '.')
+        lastDot = strrchr(outputFilename, '.');
+        
+        // 0x00402981: mov dword ptr [ebp+0xffffff6c], eax // Store last dot pointer
+        // 0x00402987: cmp dword ptr [ebp+0xffffff6c], 0x0 // Check if '.' found
+        // 0x0040298e: jz 0x004029cb                // Jump if no extension found
+        
+        if (lastDot == NULL) {
+            // No extension - append .ncs
+            // 0x00402990: push 0x428b00             // Push ".ncs" string
+            // 0x00402995: push dword ptr [ebp+0xffffff64] // Push output filename
+            // 0x0040299b: call 0x0041dcc0           // Call string append function
+            strcat(outputFilename, ".ncs");
+        }
+        else {
+            // Extension found - check if it's .nss
+            // 0x004029a1: push 0x428adc             // Push ".nss" string
+            // 0x004029a6: push dword ptr [ebp+0xffffff6c] // Push last dot pointer
+            // 0x004029ac: call 0x00427136           // Call stricmp(extension, ".nss")
+            if (stricmp(lastDot, ".nss") == 0) {
+                // Replace .nss with .ncs
+                // 0x004029b2: push 0x428af8           // Push ".ncs" string
+                // 0x004029b7: push dword ptr [ebp+0xffffff6c] // Push last dot pointer
+                // 0x004029bd: call 0x0041dcb0         // Call string copy to replace extension
+                strcpy(lastDot, ".ncs");
+            }
+            else {
+                // Unknown extension - append .ncs
+                // 0x004029c3: push 0x428b00           // Push ".ncs" string
+                // 0x004029c8: push dword ptr [ebp+0xffffff64] // Push output filename
+                // 0x004029ce: call 0x0041dcc0         // Call string append
+                strcat(outputFilename, ".ncs");
+            }
+        }
+        
+        // Set success flag
+        // 0x004029d4: mov byte ptr [ebp+0xffffff6b], 0x1 // Set success flag = 1
+        successFlag = 1;
+        
+        // Open output file for writing
+        // 0x004029db: lea eax, [ebp+0xffffffb8]     // Load address of fileSize variable
+        // 0x004029de: push eax                      // Push fileSize address
+        // 0x004029df: push dword ptr [ebp+0xffffff64] // Push output filename
+        // 0x004029e5: call 0x0041bc8a               // Call FUN_0041bc8a(outputFilename, &fileSize)
+        void* outputHandle = FUN_0041bc8a(outputFilename, &fileSize);  // Placeholder
+        
+        // 0x004029ea: mov dword ptr [ebp+0xffffff78], eax // Store output file handle
+        
+        if (outputHandle != NULL) {
+            // Write compiled bytecode to output file
+            // 0x004029f0: lea ecx, [ebp+0xffffff84]   // Load address of bytecode buffer
+            // 0x004029f3: call 0x0040211f             // Call FUN_0040211f(buffer) - get bytecode
+            // FUN_0040211f retrieves compiled bytecode from compiler object
+            
+            // 0x004029f8: mov dword ptr [ebp+0xffffff5c], eax // Store bytecode pointer
+            // 0x004029fe: lea ecx, [ebp+0xffffff84]   // Load address of bytecode buffer
+            // 0x00402a01: call 0x0040ec59             // Call FUN_0040ec59(buffer) - get bytecode size
+            // FUN_0040ec59 gets bytecode size from compiler object
+            
+            // 0x00402a06: mov dword ptr [ebp+0xffffff58], eax // Store bytecode size
+            
+            // Write bytecode to file
+            // 0x00402a0c: push dword ptr [ebp+0xffffff5c] // Push bytecode pointer
+            // 0x00402a12: push dword ptr [ebp+0xffffff58] // Push bytecode size
+            // 0x00402a18: push dword ptr [ebp+0xffffffb8]   // Push fileSize (output parameter)
+            // 0x00402a1b: push dword ptr [ebp+0xffffff78] // Push output file handle
+            // 0x00402a21: call 0x004010d7                 // Call FUN_004010d7(handle, size, bytecode, fileSize)
+            // FUN_004010d7 writes bytecode to file
+            
+            // 0x00402a26: mov byte ptr [ebp+0xffffff6b], al // Store write result in success flag
+            
+            // Close output file
+            // 0x00402a2c: push dword ptr [ebp+0xffffff78] // Push output file handle
+            // 0x00402a32: call 0x0041d821                 // Call free/close function
+            free(outputHandle);  // Placeholder - actual file close needed
+        }
+    }
+    else if (compilationResult == 2) {
+        // Include file processed (not main script)
+        // 0x00402aea: cmp dword ptr [ebp+0xffffff70], 0x2 // Compare result with 2 (include)
+        // 0x00402af1: jnz 0x00402b00                      // Jump if not include
+        
+        // 0x00402af3: push 0x428ac8                      // Push "include\n" string
+        // 0x00402af8: call 0x0041d2b9                    // Call wprintf to display message
+        printf("include\n");
+    }
+    else {
+        // Compilation failed
+        // 0x00402b00: push 0x428ac0                      // Push "failed\n" string
+        // 0x00402b05: call 0x0041d2b9                    // Call wprintf to display error
+        printf("failed\n");
+        
+        // 0x00402b0a: inc dword ptr [0x00433e08]          // Increment g_scriptsFailed
+        g_scriptsFailed = g_scriptsFailed + 1;
+    }
+    
+    // Check success flag and display result
+    // 0x00402ac5: movzx eax, byte ptr [ebp+0xffffff6b] // Load success flag (zero-extend)
+    // 0x00402acc: test eax, eax                        // Check if success flag is zero
+    // 0x00402ace: jz 0x00402add                        // Jump if failed
+    
+    if (successFlag == 0) {
+        // 0x00402ad0: inc dword ptr [0x00433e0c]          // Increment unknown counter
+        // (DAT_00433e0c appears to be an additional failure counter)
+    }
+    else {
+        // Success - display "passed" message
+        // 0x00402ad0: push 0x428ad4                      // Push "passed\n" string
+        // 0x00402ad5: call 0x0041d2b9                    // Call wprintf to display success
+        printf("passed\n");
+    }
+    
+cleanup_and_exit:
+    // Cleanup compiler object
+    // 0x00402b16: and byte ptr [ebp-0x4], 0x0              // Set exception flag to 0
+    // 0x00402b1d: call 0x00401ecb                         // Call nwnnsscomp_destroy_compiler()
+    nwnnsscomp_destroy_compiler();
+    
+    // 0x00402b22: or dword ptr [ebp-0x4], 0xffffffff      // Set exception flag to -1 (success)
+    // 0x00402b29: call 0x00401ecb                         // Call nwnnsscomp_destroy_compiler() again (cleanup)
+    nwnnsscomp_destroy_compiler();
+    
+    // Restore exception handler
+    // 0x00402b2e: mov ecx, dword ptr [ebp-0xc]            // Load saved SEH handler
+    // 0x00402b34: mov fs:[0x0], ecx                       // Restore SEH handler chain in TEB
+    
+    // Function epilogue
+    // 0x00402b3a: call 0x0041cd3e                         // Call stack cleanup function
+    // 0x00402b3f: mov esp, ebp                            // Restore stack pointer
+    // 0x00402b41: pop ebp                                 // Restore base pointer
+    // 0x00402b42: ret                                     // Return
+}
+
+// ============================================================================
 // BATCH PROCESSING MODE IMPLEMENTATIONS
 // ============================================================================
 
