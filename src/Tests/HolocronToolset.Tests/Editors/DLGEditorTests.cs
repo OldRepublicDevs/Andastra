@@ -563,14 +563,127 @@ namespace HolocronToolset.Tests.Editors
             throw new NotImplementedException("TestDlgEditorMultipleAnimations: Multiple animations test not yet implemented");
         }
 
-        // TODO: STUB - Implement test_dlg_editor_load_and_save_preserves_data (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:1718-1741)
         // Original: def test_dlg_editor_load_and_save_preserves_data(qtbot, installation: HTInstallation, test_files_dir: Path): Test load and save preserves data
         [Fact]
         public void TestDlgEditorLoadAndSavePreservesData()
         {
-            // TODO: STUB - Implement load and save preserves data test
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:1718-1741
-            throw new NotImplementedException("TestDlgEditorLoadAndSavePreservesData: Load and save preserves data test not yet implemented");
+            // Get test files directory
+            string testFilesDir = System.IO.Path.Combine(
+                System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+
+            // Try to find ORIHA.dlg
+            string dlgFile = System.IO.Path.Combine(testFilesDir, "ORIHA.dlg");
+            if (!System.IO.File.Exists(dlgFile))
+            {
+                // Try alternative location
+                testFilesDir = System.IO.Path.Combine(
+                    System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                    "..", "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+                dlgFile = System.IO.Path.Combine(testFilesDir, "ORIHA.dlg");
+            }
+
+            if (!System.IO.File.Exists(dlgFile))
+            {
+                // Skip if test file not available
+                return;
+            }
+
+            // Get installation if available
+            string k1Path = Environment.GetEnvironmentVariable("K1_PATH");
+            if (string.IsNullOrEmpty(k1Path))
+            {
+                k1Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k1Path) && System.IO.File.Exists(System.IO.Path.Combine(k1Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k1Path, "Test Installation", tsl: false);
+            }
+
+            if (installation == null)
+            {
+                // Skip if no installation available
+                return;
+            }
+
+            // Read original file data
+            byte[] originalData = System.IO.File.ReadAllBytes(dlgFile);
+            var originalGff = GFF.FromBytes(originalData);
+
+            // Create editor and load original file
+            var editor = new DLGEditor(null, installation);
+            editor.Load(dlgFile, "ORIHA", ResourceType.DLG, originalData);
+
+            // Verify editor loaded data correctly
+            editor.CoreDlg.Should().NotBeNull("CoreDlg should not be null after loading");
+            editor.Model.RowCount.Should().BeGreaterThan(0, "Model should have loaded starter nodes");
+
+            // Save the loaded data
+            var (savedData, _) = editor.Build();
+            savedData.Should().NotBeNull("Saved data should not be null");
+            savedData.Length.Should().BeGreaterThan(0, "Saved data should not be empty");
+
+            // Parse saved data as GFF
+            var savedGff = GFF.FromBytes(savedData);
+            savedGff.Should().NotBeNull("Saved GFF should not be null");
+            savedGff.Root.Should().NotBeNull("Saved GFF root should not be null");
+
+            // Perform comprehensive GFF comparison
+            // This verifies that all fields, structures, and data are preserved through load/save cycle
+            var logMessages = new List<string>();
+            Action<string> logFunc = msg => logMessages.Add(msg);
+
+            // Compare original and saved GFF structures
+            // ignoreDefaultChanges: true allows for minor differences in default values that may be added during serialization
+            bool structuresMatch = originalGff.Compare(savedGff, logFunc, path: null, ignoreDefaultChanges: true);
+
+            // If comparison fails, provide detailed error message
+            if (!structuresMatch)
+            {
+                string errorDetails = string.Join(Environment.NewLine, logMessages);
+                structuresMatch.Should().BeTrue(
+                    $"GFF structures do not match after load/save cycle. Differences found:{Environment.NewLine}{errorDetails}");
+            }
+
+            // Additional verification: Load the saved data again and verify it matches
+            var editor2 = new DLGEditor(null, installation);
+            editor2.Load(dlgFile, "ORIHA", ResourceType.DLG, savedData);
+
+            // Verify second load preserves data
+            editor2.CoreDlg.Should().NotBeNull("CoreDlg should not be null after second load");
+            editor2.Model.RowCount.Should().Be(editor.Model.RowCount, 
+                "Second load should have same number of starter nodes as first load");
+
+            // Perform second roundtrip: save again and compare
+            var (secondSavedData, _) = editor2.Build();
+            var secondSavedGff = GFF.FromBytes(secondSavedData);
+
+            var secondLogMessages = new List<string>();
+            Action<string> secondLogFunc = msg => secondLogMessages.Add(msg);
+
+            bool secondRoundtripMatches = savedGff.Compare(secondSavedGff, secondLogFunc, path: null, ignoreDefaultChanges: true);
+
+            if (!secondRoundtripMatches)
+            {
+                string secondErrorDetails = string.Join(Environment.NewLine, secondLogMessages);
+                secondRoundtripMatches.Should().BeTrue(
+                    $"GFF structures do not match after second load/save cycle. Differences found:{Environment.NewLine}{secondErrorDetails}");
+            }
+
+            // Final verification: Compare original with second roundtrip
+            var finalLogMessages = new List<string>();
+            Action<string> finalLogFunc = msg => finalLogMessages.Add(msg);
+
+            bool finalRoundtripMatches = originalGff.Compare(secondSavedGff, finalLogFunc, path: null, ignoreDefaultChanges: true);
+
+            if (!finalRoundtripMatches)
+            {
+                string finalErrorDetails = string.Join(Environment.NewLine, finalLogMessages);
+                finalRoundtripMatches.Should().BeTrue(
+                    $"GFF structures do not match after complete roundtrip (original -> save -> load -> save). Differences found:{Environment.NewLine}{finalErrorDetails}");
+            }
         }
 
         // TODO: STUB - Implement test_dlg_editor_load_multiple_files (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:1743-1767)
@@ -994,3 +1107,4 @@ namespace HolocronToolset.Tests.Editors
         }
     }
 }
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  
