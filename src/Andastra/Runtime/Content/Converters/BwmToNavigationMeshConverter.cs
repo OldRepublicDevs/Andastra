@@ -223,9 +223,13 @@ namespace Andastra.Runtime.Content.Converters
                 faceOffset += mesh.FaceCount;
             }
 
-            // TODO: SIMPLIFIED - Cross-mesh adjacency detection is not implemented
-            // This would require finding matching edges between meshes and updating adjacency
-            // TODO: SIMPLIFIED - For now, meshes are combined but remain separate islands
+            // Detect and connect cross-mesh adjacencies
+            // Find matching edges between different meshes and link them in the adjacency array
+            DetectAndConnectCrossMeshAdjacencies(
+                combinedVertices,
+                combinedFaceIndices,
+                combinedAdjacency,
+                combinedMaterials);
 
             // Build a simple AABB tree from combined geometry
             // For a full implementation, we would rebuild the AABB tree properly
@@ -238,6 +242,285 @@ namespace Andastra.Runtime.Content.Converters
                 combinedAdjacency.ToArray(),
                 combinedMaterials.ToArray(),
                 aabbRoot);
+        }
+
+        /// <summary>
+        /// Detects and connects matching edges between different meshes.
+        /// Finds edges that share the same vertex positions (within tolerance) and links them in the adjacency array.
+        /// Only connects walkable faces to ensure proper pathfinding connectivity.
+        /// </summary>
+        /// <param name="vertices">Combined vertex array from all meshes</param>
+        /// <param name="faceIndices">Combined face indices array</param>
+        /// <param name="adjacency">Combined adjacency array (will be modified to add cross-mesh connections)</param>
+        /// <param name="materials">Combined surface materials array</param>
+        private static void DetectAndConnectCrossMeshAdjacencies(
+            List<Vector3> vertices,
+            List<int> faceIndices,
+            List<int> adjacency,
+            List<int> materials)
+        {
+            if (vertices == null || faceIndices == null || adjacency == null || materials == null)
+            {
+                return;
+            }
+
+            int faceCount = faceIndices.Count / 3;
+            if (faceCount == 0)
+            {
+                return;
+            }
+
+            // Tolerance for vertex position matching (accounts for floating-point precision)
+            const float vertexTolerance = 0.001f;
+
+            // Build edge-to-face mapping for all faces
+            // Key: edge (order-independent vertex pair), Value: list of (faceIndex, edgeIndex) pairs
+            var edgeToFaces = new Dictionary<EdgeKey, List<EdgeFaceInfo>>();
+
+            for (int faceIdx = 0; faceIdx < faceCount; faceIdx++)
+            {
+                int baseIdx = faceIdx * 3;
+                int v0 = faceIndices[baseIdx];
+                int v1 = faceIndices[baseIdx + 1];
+                int v2 = faceIndices[baseIdx + 2];
+
+                // Get vertex positions
+                Vector3 p0 = vertices[v0];
+                Vector3 p1 = vertices[v1];
+                Vector3 p2 = vertices[v2];
+
+                // Check if face is walkable (only connect walkable faces)
+                bool isWalkable = IsFaceWalkable(materials, faceIdx);
+
+                // Edge 0: v0 -> v1
+                var edge0 = new EdgeKey(p0, p1, vertexTolerance);
+                AddEdgeToMap(edgeToFaces, edge0, faceIdx, 0, isWalkable);
+
+                // Edge 1: v1 -> v2
+                var edge1 = new EdgeKey(p1, p2, vertexTolerance);
+                AddEdgeToMap(edgeToFaces, edge1, faceIdx, 1, isWalkable);
+
+                // Edge 2: v2 -> v0
+                var edge2 = new EdgeKey(p2, p0, vertexTolerance);
+                AddEdgeToMap(edgeToFaces, edge2, faceIdx, 2, isWalkable);
+            }
+
+            // Find edges that appear in multiple faces (potential cross-mesh connections)
+            foreach (var kvp in edgeToFaces)
+            {
+                List<EdgeFaceInfo> edgeFaces = kvp.Value;
+
+                // Need at least 2 faces to form a connection
+                if (edgeFaces.Count < 2)
+                {
+                    continue;
+                }
+
+                // Find pairs of walkable faces that should be connected
+                for (int i = 0; i < edgeFaces.Count; i++)
+                {
+                    EdgeFaceInfo face1 = edgeFaces[i];
+                    if (!face1.IsWalkable)
+                    {
+                        continue;
+                    }
+
+                    // Check if this edge already has an adjacency
+                    int face1AdjIdx = face1.FaceIndex * 3 + face1.EdgeIndex;
+                    if (face1AdjIdx < adjacency.Count && adjacency[face1AdjIdx] >= 0)
+                    {
+                        // Already has a neighbor - skip
+                        continue;
+                    }
+
+                    // Find the best matching walkable face
+                    for (int j = i + 1; j < edgeFaces.Count; j++)
+                    {
+                        EdgeFaceInfo face2 = edgeFaces[j];
+                        if (!face2.IsWalkable)
+                        {
+                            continue;
+                        }
+
+                        // Check if face2's edge already has an adjacency
+                        int face2AdjIdx = face2.FaceIndex * 3 + face2.EdgeIndex;
+                        if (face2AdjIdx < adjacency.Count && adjacency[face2AdjIdx] >= 0)
+                        {
+                            // Already has a neighbor - skip
+                            continue;
+                        }
+
+                        // Connect the two faces bidirectionally
+                        // Face1's edge -> Face2's edge
+                        if (face1AdjIdx < adjacency.Count)
+                        {
+                            adjacency[face1AdjIdx] = face2.FaceIndex * 3 + face2.EdgeIndex;
+                        }
+
+                        // Face2's edge -> Face1's edge
+                        if (face2AdjIdx < adjacency.Count)
+                        {
+                            adjacency[face2AdjIdx] = face1.FaceIndex * 3 + face1.EdgeIndex;
+                        }
+
+                        // Only connect to the first available neighbor
+                        break;
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Adds an edge to the edge-to-face mapping dictionary.
+        /// </summary>
+        private static void AddEdgeToMap(
+            Dictionary<EdgeKey, List<EdgeFaceInfo>> edgeToFaces,
+            EdgeKey edge,
+            int faceIndex,
+            int edgeIndex,
+            bool isWalkable)
+        {
+            List<EdgeFaceInfo> edgeFaces;
+            if (!edgeToFaces.TryGetValue(edge, out edgeFaces))
+            {
+                edgeFaces = new List<EdgeFaceInfo>();
+                edgeToFaces[edge] = edgeFaces;
+            }
+
+            edgeFaces.Add(new EdgeFaceInfo(faceIndex, edgeIndex, isWalkable));
+        }
+
+        /// <summary>
+        /// Checks if a face is walkable based on its surface material.
+        /// </summary>
+        private static bool IsFaceWalkable(List<int> materials, int faceIndex)
+        {
+            if (faceIndex < 0 || faceIndex >= materials.Count)
+            {
+                return false;
+            }
+
+            int material = materials[faceIndex];
+
+            // Walkable materials (matching NavigationMesh.WalkableMaterials)
+            switch (material)
+            {
+                case 1:  // Dirt
+                case 3:  // Grass
+                case 4:  // Stone
+                case 5:  // Wood
+                case 6:  // Water (shallow)
+                case 9:  // Carpet
+                case 10: // Metal
+                case 11: // Puddles
+                case 12: // Swamp
+                case 13: // Mud
+                case 14: // Leaves
+                case 16: // BottomlessPit (walkable but dangerous)
+                case 18: // Door
+                case 20: // Sand
+                case 21: // BareBones
+                case 22: // StoneBridge
+                case 30: // Trigger (PyKotor extended)
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
+        /// <summary>
+        /// Edge key for cross-mesh adjacency detection.
+        /// Uses order-independent vertex pair with tolerance for floating-point comparison.
+        /// </summary>
+        private struct EdgeKey : IEquatable<EdgeKey>
+        {
+            public readonly Vector3 V0;
+            public readonly Vector3 V1;
+            public readonly float Tolerance;
+
+            public EdgeKey(Vector3 v0, Vector3 v1, float tolerance)
+            {
+                Tolerance = tolerance;
+
+                // Order vertices consistently (min/max) for order-independent comparison
+                if (CompareVertices(v0, v1) < 0)
+                {
+                    V0 = v0;
+                    V1 = v1;
+                }
+                else
+                {
+                    V0 = v1;
+                    V1 = v0;
+                }
+            }
+
+            public bool Equals(EdgeKey other)
+            {
+                // Compare with tolerance
+                return Vector3DistanceSquared(V0, other.V0) <= Tolerance * Tolerance &&
+                       Vector3DistanceSquared(V1, other.V1) <= Tolerance * Tolerance;
+            }
+
+            public override bool Equals(object obj)
+            {
+                return obj is EdgeKey && Equals((EdgeKey)obj);
+            }
+
+            public override int GetHashCode()
+            {
+                // Hash based on quantized positions (rounded to tolerance)
+                int x0 = (int)(V0.X / Tolerance);
+                int y0 = (int)(V0.Y / Tolerance);
+                int z0 = (int)(V0.Z / Tolerance);
+                int x1 = (int)(V1.X / Tolerance);
+                int y1 = (int)(V1.Y / Tolerance);
+                int z1 = (int)(V1.Z / Tolerance);
+
+                // Combine hashes
+                int hash = x0;
+                hash = (hash * 397) ^ y0;
+                hash = (hash * 397) ^ z0;
+                hash = (hash * 397) ^ x1;
+                hash = (hash * 397) ^ y1;
+                hash = (hash * 397) ^ z1;
+                return hash;
+            }
+
+            private static int CompareVertices(Vector3 a, Vector3 b)
+            {
+                // Compare by X, then Y, then Z
+                int cmp = a.X.CompareTo(b.X);
+                if (cmp != 0) return cmp;
+                cmp = a.Y.CompareTo(b.Y);
+                if (cmp != 0) return cmp;
+                return a.Z.CompareTo(b.Z);
+            }
+
+            private static float Vector3DistanceSquared(Vector3 a, Vector3 b)
+            {
+                float dx = a.X - b.X;
+                float dy = a.Y - b.Y;
+                float dz = a.Z - b.Z;
+                return dx * dx + dy * dy + dz * dz;
+            }
+        }
+
+        /// <summary>
+        /// Information about a face and edge for cross-mesh adjacency detection.
+        /// </summary>
+        private struct EdgeFaceInfo
+        {
+            public int FaceIndex;
+            public int EdgeIndex;
+            public bool IsWalkable;
+
+            public EdgeFaceInfo(int faceIndex, int edgeIndex, bool isWalkable)
+            {
+                FaceIndex = faceIndex;
+                EdgeIndex = edgeIndex;
+                IsWalkable = isWalkable;
+            }
         }
 
         private static int GetOrAddVertex(
