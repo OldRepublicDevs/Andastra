@@ -307,6 +307,119 @@ namespace HolocronToolset.Editors
         {
             // Try to find controls from XAML if available
             // For now, programmatic UI is set up in SetupProgrammaticUI
+            
+            if (_installation == null)
+            {
+                return;
+            }
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utd.py:148-159
+            // Original: installation.setup_file_context_menu(self.ui.onClickEdit, [ResourceType.NSS, ResourceType.NCS])
+            // Setup context menus for script TextBoxes (NSS/NCS files)
+            foreach (var kvp in _scriptFields)
+            {
+                SetupScriptTextBoxContextMenu(kvp.Value, kvp.Key + " Script");
+            }
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utd.py:159
+            // Original: installation.setup_file_context_menu(self.ui.conversationEdit, [ResourceType.DLG])
+            // Setup context menu for conversation field (DLG files)
+            if (_conversationEdit != null)
+            {
+                SetupConversationTextBoxContextMenu(_conversationEdit);
+            }
+        }
+
+        // Create context menu for script TextBox controls
+        // Matching PyKotor implementation: setup_file_context_menu for script fields
+        private void SetupScriptTextBoxContextMenu(TextBox textBox, string scriptTypeName)
+        {
+            if (textBox == null)
+            {
+                return;
+            }
+
+            var contextMenu = new ContextMenu();
+            var menuItems = new List<MenuItem>();
+
+            // "Open in Editor" menu item
+            var openInEditorItem = new MenuItem
+            {
+                Header = "Open in Editor",
+                IsEnabled = false
+            };
+            openInEditorItem.Click += (sender, e) => OpenScriptInEditor(textBox, scriptTypeName);
+            menuItems.Add(openInEditorItem);
+
+            // Enable/disable based on whether script name is set
+            textBox.TextChanged += (sender, e) =>
+            {
+                string text = textBox.Text ?? string.Empty;
+                openInEditorItem.IsEnabled = !string.IsNullOrWhiteSpace(text);
+            };
+
+            foreach (var item in menuItems)
+            {
+                contextMenu.Items.Add(item);
+            }
+            textBox.ContextMenu = contextMenu;
+        }
+
+        // Open script in editor
+        private void OpenScriptInEditor(TextBox textBox, string scriptTypeName)
+        {
+            if (textBox == null || string.IsNullOrWhiteSpace(textBox.Text) || _installation == null)
+            {
+                return;
+            }
+
+            string resname = textBox.Text.Trim();
+            var search = _installation.Resource(resname, ResourceType.NSS);
+            if (search == null)
+            {
+                // Try NCS if NSS not found
+                search = _installation.Resource(resname, ResourceType.NCS);
+            }
+
+            if (search != null)
+            {
+                WindowUtils.OpenResourceEditor(search.FilePath, search.ResName, search.ResType, search.Data, _installation, this);
+            }
+        }
+
+        // Create context menu for conversation TextBox control
+        // Matching PyKotor implementation: setup_file_context_menu for conversation field
+        private void SetupConversationTextBoxContextMenu(TextBox textBox)
+        {
+            if (textBox == null)
+            {
+                return;
+            }
+
+            var contextMenu = new ContextMenu();
+            var menuItems = new List<MenuItem>();
+
+            // "Open in Editor" menu item
+            var openInEditorItem = new MenuItem
+            {
+                Header = "Open in Editor",
+                IsEnabled = false
+            };
+            openInEditorItem.Click += (sender, e) => EditConversation();
+            menuItems.Add(openInEditorItem);
+
+            // Enable/disable based on whether conversation name is set
+            textBox.TextChanged += (sender, e) =>
+            {
+                string text = textBox.Text ?? string.Empty;
+                openInEditorItem.IsEnabled = !string.IsNullOrWhiteSpace(text);
+            };
+
+            foreach (var item in menuItems)
+            {
+                contextMenu.Items.Add(item);
+            }
+            textBox.ContextMenu = contextMenu;
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utd.py:172-264
