@@ -1538,6 +1538,74 @@ namespace HolocronToolset.Editors
             _rootItems.RemoveAt(oldIndex);
             _rootItems.Insert(newIndex, item);
         }
+        
+        /// <summary>
+        /// Moves the selected item up in the starter list.
+        /// Returns true if the move was successful, false if the move was invalid (already at top or no selection).
+        /// </summary>
+        /// <returns>True if the move was successful, false otherwise.</returns>
+        public bool MoveItemUp()
+        {
+            int selectedIndex = _selectedIndex;
+            
+            // Check if selection is valid and not already at top
+            if (selectedIndex <= 0 || selectedIndex >= _rootItems.Count)
+            {
+                return false; // No selection, invalid index, or already at top
+            }
+
+            int newIndex = selectedIndex - 1;
+            DLGLink link = _rootItems[selectedIndex].Link;
+            
+            // Synchronize with CoreDlg.Starters if editor is available (before moving in model)
+            if (_editor != null && _editor.CoreDlg != null && selectedIndex < _editor.CoreDlg.Starters.Count)
+            {
+                _editor.CoreDlg.Starters.RemoveAt(selectedIndex);
+                _editor.CoreDlg.Starters.Insert(newIndex, link);
+            }
+            
+            // Move in model
+            MoveStarter(selectedIndex, newIndex);
+            
+            // Update selected index to track the moved item
+            _selectedIndex = newIndex;
+            
+            return true;
+        }
+
+        /// <summary>
+        /// Moves the selected item down in the starter list.
+        /// Returns true if the move was successful, false if the move was invalid (already at bottom or no selection).
+        /// </summary>
+        /// <returns>True if the move was successful, false otherwise.</returns>
+        public bool MoveItemDown()
+        {
+            int selectedIndex = _selectedIndex;
+            
+            // Check if selection is valid and not already at bottom
+            if (selectedIndex < 0 || selectedIndex >= _rootItems.Count - 1)
+            {
+                return false; // No selection, invalid index, or already at bottom
+            }
+
+            int newIndex = selectedIndex + 1;
+            DLGLink link = _rootItems[selectedIndex].Link;
+            
+            // Synchronize with CoreDlg.Starters if editor is available (before moving in model)
+            if (_editor != null && _editor.CoreDlg != null && selectedIndex < _editor.CoreDlg.Starters.Count)
+            {
+                _editor.CoreDlg.Starters.RemoveAt(selectedIndex);
+                _editor.CoreDlg.Starters.Insert(newIndex, link);
+            }
+            
+            // Move in model
+            MoveStarter(selectedIndex, newIndex);
+            
+            // Update selected index to track the moved item
+            _selectedIndex = newIndex;
+            
+            return true;
+        }
 
         /// <summary>
         /// Gets all root items in the model.
