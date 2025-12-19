@@ -1,6 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Reflection;
+using System.Text;
 using JetBrains.Annotations;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
@@ -436,7 +439,17 @@ namespace Andastra.Runtime.Games.Infinity
         /// <remarks>
         /// Based on Infinity entity serialization functions in MassEffect.exe and MassEffect2.exe.
         /// Serializes ObjectId, Tag, components, and custom data.
-        /// Uses Infinity-specific save format.
+        /// Uses Infinity-specific binary save format (similar to Eclipse engine).
+        ///
+        /// Binary format structure:
+        /// - Basic entity properties (ObjectId: uint32, Tag: string, ObjectType: int32, AreaId: uint32, IsValid: int32)
+        /// - Transform component (if present: flag int32, then Position: 3 floats, Facing: float, Scale: 3 floats, ParentObjectId: uint32)
+        /// - Stats component (if present: flag int32, then HP/FP/abilities/saves: various types)
+        /// - Inventory component (if present: flag int32, then item count and items)
+        /// - Script hooks component (if present: flag int32, then script ResRefs and local variables)
+        /// - Door component (if present: flag int32, then door state data)
+        /// - Placeable component (if present: flag int32, then placeable state data)
+        /// - Custom data dictionary (count int32, then key-value pairs)
         ///
         /// Serialized data includes:
         /// - Basic entity properties (ObjectId, Tag, ObjectType, AreaId)
@@ -450,10 +463,342 @@ namespace Andastra.Runtime.Games.Infinity
         /// </remarks>
         public override byte[] Serialize()
         {
-            // TODO: Implement Infinity entity serialization
-            // Based on MassEffect.exe and MassEffect2.exe save format
-            // Serialize ObjectId, Tag, components, and custom data
-            throw new NotImplementedException("Infinity entity serialization not yet implemented");
+            using (var stream = new MemoryStream())
+            using (var writer = new BinaryWriter(stream, Encoding.UTF8))
+            {
+                // Serialize basic entity properties
+                writer.Write(_objectId);
+                WriteString(writer, _tag ?? "");
+                writer.Write((int)_objectType);
+                writer.Write(_areaId);
+                writer.Write(_isValid ? 1 : 0);
+
+                // Serialize Transform component
+                var transformComponent = GetComponent<ITransformComponent>();
+                writer.Write(transformComponent != null ? 1 : 0);
+                if (transformComponent != null)
+                {
+                    writer.Write(transformComponent.Position.X);
+                    writer.Write(transformComponent.Position.Y);
+                    writer.Write(transformComponent.Position.Z);
+                    writer.Write(transformComponent.Facing);
+                    writer.Write(transformComponent.Scale.X);
+                    writer.Write(transformComponent.Scale.Y);
+                    writer.Write(transformComponent.Scale.Z);
+                    writer.Write(transformComponent.Parent != null ? transformComponent.Parent.ObjectId : 0u);
+                }
+
+                // Serialize Stats component
+                var statsComponent = GetComponent<IStatsComponent>();
+                writer.Write(statsComponent != null ? 1 : 0);
+                if (statsComponent != null)
+                {
+                    writer.Write(statsComponent.CurrentHP);
+                    writer.Write(statsComponent.MaxHP);
+                    writer.Write(statsComponent.CurrentFP);
+                    writer.Write(statsComponent.MaxFP);
+                    writer.Write(statsComponent.IsDead ? 1 : 0);
+                    writer.Write(statsComponent.BaseAttackBonus);
+                    writer.Write(statsComponent.ArmorClass);
+                    writer.Write(statsComponent.FortitudeSave);
+                    writer.Write(statsComponent.ReflexSave);
+                    writer.Write(statsComponent.WillSave);
+                    writer.Write(statsComponent.WalkSpeed);
+                    writer.Write(statsComponent.RunSpeed);
+                    writer.Write(statsComponent.Level);
+
+                    // Serialize ability scores
+                    writer.Write(statsComponent.GetAbility(Ability.Strength));
+                    writer.Write(statsComponent.GetAbility(Ability.Dexterity));
+                    writer.Write(statsComponent.GetAbility(Ability.Constitution));
+                    writer.Write(statsComponent.GetAbility(Ability.Intelligence));
+                    writer.Write(statsComponent.GetAbility(Ability.Wisdom));
+                    writer.Write(statsComponent.GetAbility(Ability.Charisma));
+
+                    // Serialize ability modifiers
+                    writer.Write(statsComponent.GetAbilityModifier(Ability.Strength));
+                    writer.Write(statsComponent.GetAbilityModifier(Ability.Dexterity));
+                    writer.Write(statsComponent.GetAbilityModifier(Ability.Constitution));
+                    writer.Write(statsComponent.GetAbilityModifier(Ability.Intelligence));
+                    writer.Write(statsComponent.GetAbilityModifier(Ability.Wisdom));
+                    writer.Write(statsComponent.GetAbilityModifier(Ability.Charisma));
+
+                    // Serialize known spells (simplified - serialize spell IDs)
+                    // Note: In a full implementation, we would iterate through all possible spell IDs
+                    // For now, we serialize an empty count as a placeholder
+                    writer.Write(0); // Known spell count
+                }
+
+                // Serialize Inventory component
+                var inventoryComponent = GetComponent<IInventoryComponent>();
+                writer.Write(inventoryComponent != null ? 1 : 0);
+                if (inventoryComponent != null)
+                {
+                    // Collect all items from all slots
+                    var allItems = new List<(int slot, IEntity item)>();
+                    for (int slot = 0; slot < 256; slot++) // Reasonable upper bound
+                    {
+                        var item = inventoryComponent.GetItemInSlot(slot);
+                        if (item != null)
+                        {
+                            allItems.Add((slot, item));
+                        }
+                    }
+
+                    writer.Write(allItems.Count);
+                    foreach (var (slot, item) in allItems)
+                    {
+                        writer.Write(slot);
+                        writer.Write(item.ObjectId);
+                        WriteString(writer, item.Tag ?? "");
+                        writer.Write((int)item.ObjectType);
+                    }
+                }
+
+                // Serialize ScriptHooks component
+                var scriptHooksComponent = GetComponent<IScriptHooksComponent>();
+                writer.Write(scriptHooksComponent != null ? 1 : 0);
+                if (scriptHooksComponent != null)
+                {
+                    // Serialize script ResRefs for all event types
+                    int scriptCount = 0;
+                    var scripts = new List<(int eventType, string resRef)>();
+                    foreach (ScriptEvent eventType in Enum.GetValues(typeof(ScriptEvent)))
+                    {
+                        string scriptResRef = scriptHooksComponent.GetScript(eventType);
+                        if (!string.IsNullOrEmpty(scriptResRef))
+                        {
+                            scripts.Add(((int)eventType, scriptResRef));
+                            scriptCount++;
+                        }
+                    }
+                    writer.Write(scriptCount);
+                    foreach (var (eventType, resRef) in scripts)
+                    {
+                        writer.Write(eventType);
+                        WriteString(writer, resRef);
+                    }
+
+                    // Serialize local variables using reflection to access private dictionaries
+                    // Based on MassEffect.exe and MassEffect2.exe: Local variables are stored in ScriptHooksComponent
+                    // and serialized to binary format
+                    Type componentType = scriptHooksComponent.GetType();
+                    FieldInfo localIntsField = componentType.GetField("_localInts", BindingFlags.NonPublic | BindingFlags.Instance);
+                    FieldInfo localFloatsField = componentType.GetField("_localFloats", BindingFlags.NonPublic | BindingFlags.Instance);
+                    FieldInfo localStringsField = componentType.GetField("_localStrings", BindingFlags.NonPublic | BindingFlags.Instance);
+
+                    int localIntCount = 0;
+                    int localFloatCount = 0;
+                    int localStringCount = 0;
+                    var localInts = new List<(string name, int value)>();
+                    var localFloats = new List<(string name, float value)>();
+                    var localStrings = new List<(string name, string value)>();
+
+                    if (localIntsField != null)
+                    {
+                        var localIntsDict = localIntsField.GetValue(scriptHooksComponent) as Dictionary<string, int>;
+                        if (localIntsDict != null && localIntsDict.Count > 0)
+                        {
+                            localIntCount = localIntsDict.Count;
+                            foreach (var kvp in localIntsDict)
+                            {
+                                localInts.Add((kvp.Key, kvp.Value));
+                            }
+                        }
+                    }
+
+                    if (localFloatsField != null)
+                    {
+                        var localFloatsDict = localFloatsField.GetValue(scriptHooksComponent) as Dictionary<string, float>;
+                        if (localFloatsDict != null && localFloatsDict.Count > 0)
+                        {
+                            localFloatCount = localFloatsDict.Count;
+                            foreach (var kvp in localFloatsDict)
+                            {
+                                localFloats.Add((kvp.Key, kvp.Value));
+                            }
+                        }
+                    }
+
+                    if (localStringsField != null)
+                    {
+                        var localStringsDict = localStringsField.GetValue(scriptHooksComponent) as Dictionary<string, string>;
+                        if (localStringsDict != null && localStringsDict.Count > 0)
+                        {
+                            localStringCount = localStringsDict.Count;
+                            foreach (var kvp in localStringsDict)
+                            {
+                                localStrings.Add((kvp.Key, kvp.Value ?? ""));
+                            }
+                        }
+                    }
+
+                    writer.Write(localIntCount);
+                    foreach (var (name, value) in localInts)
+                    {
+                        WriteString(writer, name);
+                        writer.Write(value);
+                    }
+
+                    writer.Write(localFloatCount);
+                    foreach (var (name, value) in localFloats)
+                    {
+                        WriteString(writer, name);
+                        writer.Write(value);
+                    }
+
+                    writer.Write(localStringCount);
+                    foreach (var (name, value) in localStrings)
+                    {
+                        WriteString(writer, name);
+                        WriteString(writer, value);
+                    }
+                }
+
+                // Serialize Door component
+                var doorComponent = GetComponent<IDoorComponent>();
+                writer.Write(doorComponent != null ? 1 : 0);
+                if (doorComponent != null)
+                {
+                    writer.Write(doorComponent.IsOpen ? 1 : 0);
+                    writer.Write(doorComponent.IsLocked ? 1 : 0);
+                    writer.Write(doorComponent.LockableByScript ? 1 : 0);
+                    writer.Write(doorComponent.LockDC);
+                    writer.Write(doorComponent.IsBashed ? 1 : 0);
+                    writer.Write(doorComponent.HitPoints);
+                    writer.Write(doorComponent.MaxHitPoints);
+                    writer.Write(doorComponent.Hardness);
+                    WriteString(writer, doorComponent.KeyTag ?? "");
+                    writer.Write(doorComponent.KeyRequired ? 1 : 0);
+                    writer.Write(doorComponent.OpenState);
+                    WriteString(writer, doorComponent.LinkedTo ?? "");
+                    WriteString(writer, doorComponent.LinkedToModule ?? "");
+                }
+
+                // Serialize Placeable component
+                var placeableComponent = GetComponent<IPlaceableComponent>();
+                writer.Write(placeableComponent != null ? 1 : 0);
+                if (placeableComponent != null)
+                {
+                    writer.Write(placeableComponent.IsUseable ? 1 : 0);
+                    writer.Write(placeableComponent.HasInventory ? 1 : 0);
+                    writer.Write(placeableComponent.IsStatic ? 1 : 0);
+                    writer.Write(placeableComponent.IsOpen ? 1 : 0);
+                    writer.Write(placeableComponent.IsLocked ? 1 : 0);
+                    writer.Write(placeableComponent.LockDC);
+                    WriteString(writer, placeableComponent.KeyTag ?? "");
+                    writer.Write(placeableComponent.HitPoints);
+                    writer.Write(placeableComponent.MaxHitPoints);
+                    writer.Write(placeableComponent.Hardness);
+                    writer.Write(placeableComponent.AnimationState);
+                }
+
+                // Serialize custom data dictionary using reflection to access private _data field
+                // BaseEntity stores custom data in _data dictionary for script variables and temporary state
+                Type baseEntityType = typeof(BaseEntity);
+                FieldInfo dataField = baseEntityType.GetField("_data", BindingFlags.NonPublic | BindingFlags.Instance);
+
+                int customDataCount = 0;
+                var customDataEntries = new List<(string key, object value, int type)>();
+
+                if (dataField != null)
+                {
+                    var data = dataField.GetValue(this) as Dictionary<string, object>;
+                    if (data != null && data.Count > 0)
+                    {
+                        customDataCount = data.Count;
+                        foreach (var kvp in data)
+                        {
+                            int valueType = 0; // 0=null, 1=int, 2=float, 3=string, 4=bool, 5=uint
+                            if (kvp.Value == null)
+                            {
+                                valueType = 0;
+                            }
+                            else
+                            {
+                                Type valueTypeObj = kvp.Value.GetType();
+                                if (valueTypeObj == typeof(int))
+                                {
+                                    valueType = 1;
+                                }
+                                else if (valueTypeObj == typeof(float))
+                                {
+                                    valueType = 2;
+                                }
+                                else if (valueTypeObj == typeof(string))
+                                {
+                                    valueType = 3;
+                                }
+                                else if (valueTypeObj == typeof(bool))
+                                {
+                                    valueType = 4;
+                                }
+                                else if (valueTypeObj == typeof(uint))
+                                {
+                                    valueType = 5;
+                                }
+                                else
+                                {
+                                    valueType = 3; // Default to string for unknown types
+                                }
+                            }
+                            customDataEntries.Add((kvp.Key, kvp.Value, valueType));
+                        }
+                    }
+                }
+
+                writer.Write(customDataCount);
+                foreach (var (key, value, type) in customDataEntries)
+                {
+                    WriteString(writer, key);
+                    writer.Write(type);
+                    switch (type)
+                    {
+                        case 0: // null
+                            break;
+                        case 1: // int
+                            writer.Write((int)value);
+                            break;
+                        case 2: // float
+                            writer.Write((float)value);
+                            break;
+                        case 3: // string
+                            WriteString(writer, value?.ToString() ?? "");
+                            break;
+                        case 4: // bool
+                            writer.Write((bool)value ? 1 : 0);
+                            break;
+                        case 5: // uint
+                            writer.Write((uint)value);
+                            break;
+                    }
+                }
+
+                return stream.ToArray();
+            }
+        }
+
+        /// <summary>
+        /// Helper method to write a string to BinaryWriter.
+        /// </summary>
+        /// <remarks>
+        /// Writes string length as int32, then UTF-8 encoded bytes.
+        /// Based on Eclipse save serializer string writing pattern.
+        /// </remarks>
+        private static void WriteString(BinaryWriter writer, string value)
+        {
+            if (value == null)
+            {
+                writer.Write(0);
+                return;
+            }
+
+            byte[] bytes = Encoding.UTF8.GetBytes(value);
+            writer.Write(bytes.Length);
+            if (bytes.Length > 0)
+            {
+                writer.Write(bytes);
+            }
         }
 
         /// <summary>
@@ -463,14 +808,438 @@ namespace Andastra.Runtime.Games.Infinity
         /// Based on Infinity entity deserialization functions in MassEffect.exe and MassEffect2.exe.
         /// Restores ObjectId, Tag, components, and custom data.
         /// Recreates component attachments and state.
+        ///
+        /// Binary format structure (matches Serialize):
+        /// - Basic entity properties (ObjectId: uint32, Tag: string, ObjectType: int32, AreaId: uint32, IsValid: int32)
+        /// - Transform component (if present: flag int32, then Position: 3 floats, Facing: float, Scale: 3 floats, ParentObjectId: uint32)
+        /// - Stats component (if present: flag int32, then HP/FP/abilities/saves: various types)
+        /// - Inventory component (if present: flag int32, then item count and items)
+        /// - Script hooks component (if present: flag int32, then script ResRefs and local variables)
+        /// - Door component (if present: flag int32, then door state data)
+        /// - Placeable component (if present: flag int32, then placeable state data)
+        /// - Custom data dictionary (count int32, then key-value pairs)
         /// </remarks>
         public override void Deserialize(byte[] data)
         {
-            // TODO: Implement Infinity entity deserialization
-            // Read ObjectId, Tag, ObjectType
-            // Recreate and deserialize components
-            // Restore custom data dictionary
-            throw new NotImplementedException("Infinity entity deserialization not yet implemented");
+            if (data == null || data.Length == 0)
+            {
+                throw new ArgumentException("Entity deserialization data cannot be null or empty", nameof(data));
+            }
+
+            using (var stream = new MemoryStream(data))
+            using (var reader = new BinaryReader(stream, Encoding.UTF8))
+            {
+                // Deserialize basic entity properties
+                _objectId = reader.ReadUInt32();
+                _tag = ReadString(reader);
+                // ObjectType is read-only, so we verify it matches
+                int objectTypeValue = reader.ReadInt32();
+                if (objectTypeValue != (int)_objectType)
+                {
+                    throw new InvalidDataException($"Deserialized ObjectType {objectTypeValue} does not match entity ObjectType {(int)_objectType}");
+                }
+                _areaId = reader.ReadUInt32();
+                _isValid = reader.ReadInt32() != 0;
+
+                // Deserialize Transform component
+                bool hasTransform = reader.ReadInt32() != 0;
+                if (hasTransform)
+                {
+                    var transformComponent = GetComponent<ITransformComponent>();
+                    if (transformComponent == null)
+                    {
+                        transformComponent = new InfinityTransformComponent();
+                        AddComponent<ITransformComponent>(transformComponent);
+                    }
+
+                    float x = reader.ReadSingle();
+                    float y = reader.ReadSingle();
+                    float z = reader.ReadSingle();
+                    float facing = reader.ReadSingle();
+                    float scaleX = reader.ReadSingle();
+                    float scaleY = reader.ReadSingle();
+                    float scaleZ = reader.ReadSingle();
+                    uint parentObjectId = reader.ReadUInt32();
+
+                    transformComponent.Position = new System.Numerics.Vector3(x, y, z);
+                    transformComponent.Facing = facing;
+                    transformComponent.Scale = new System.Numerics.Vector3(scaleX, scaleY, scaleZ);
+                    // Parent will be resolved later when all entities are loaded
+                    // Store parentObjectId in custom data for later resolution
+                    if (parentObjectId != 0)
+                    {
+                        Type baseEntityTypeForParent = typeof(BaseEntity);
+                        FieldInfo dataFieldForParent = baseEntityTypeForParent.GetField("_data", BindingFlags.NonPublic | BindingFlags.Instance);
+                        if (dataFieldForParent != null)
+                        {
+                            var data = dataFieldForParent.GetValue(this) as Dictionary<string, object>;
+                            if (data == null)
+                            {
+                                data = new Dictionary<string, object>();
+                                dataFieldForParent.SetValue(this, data);
+                            }
+                            data["_ParentObjectId"] = parentObjectId;
+                        }
+                    }
+                }
+
+                // Deserialize Stats component
+                bool hasStats = reader.ReadInt32() != 0;
+                if (hasStats)
+                {
+                    // Stats component should already exist for creatures, but we ensure it's present
+                    var statsComponent = GetComponent<IStatsComponent>();
+                    if (statsComponent == null)
+                    {
+                        // Create stats component - we'll need to check what the Infinity stats component type is
+                        // For now, we'll use reflection or a factory method
+                        // TODO: Create InfinityStatsComponent if it exists
+                        throw new InvalidOperationException("Stats component not found and cannot be created automatically");
+                    }
+
+                    statsComponent.CurrentHP = reader.ReadInt32();
+                    statsComponent.MaxHP = reader.ReadInt32();
+                    statsComponent.CurrentFP = reader.ReadInt32();
+                    statsComponent.MaxFP = reader.ReadInt32();
+                    // IsDead is computed from CurrentHP, so we don't deserialize it directly
+                    int isDead = reader.ReadInt32();
+                    int baseAttackBonus = reader.ReadInt32();
+                    int armorClass = reader.ReadInt32();
+                    int fortitudeSave = reader.ReadInt32();
+                    int reflexSave = reader.ReadInt32();
+                    int willSave = reader.ReadInt32();
+                    float walkSpeed = reader.ReadSingle();
+                    float runSpeed = reader.ReadSingle();
+                    int level = reader.ReadInt32();
+
+                    // Deserialize ability scores
+                    int str = reader.ReadInt32();
+                    int dex = reader.ReadInt32();
+                    int con = reader.ReadInt32();
+                    int intel = reader.ReadInt32();
+                    int wis = reader.ReadInt32();
+                    int cha = reader.ReadInt32();
+
+                    statsComponent.SetAbility(Ability.Strength, str);
+                    statsComponent.SetAbility(Ability.Dexterity, dex);
+                    statsComponent.SetAbility(Ability.Constitution, con);
+                    statsComponent.SetAbility(Ability.Intelligence, intel);
+                    statsComponent.SetAbility(Ability.Wisdom, wis);
+                    statsComponent.SetAbility(Ability.Charisma, cha);
+
+                    // Deserialize ability modifiers (read but don't set - they're computed)
+                    reader.ReadInt32(); // STR modifier
+                    reader.ReadInt32(); // DEX modifier
+                    reader.ReadInt32(); // CON modifier
+                    reader.ReadInt32(); // INT modifier
+                    reader.ReadInt32(); // WIS modifier
+                    reader.ReadInt32(); // CHA modifier
+
+                    // Deserialize known spells count
+                    int knownSpellCount = reader.ReadInt32();
+                    for (int i = 0; i < knownSpellCount; i++)
+                    {
+                        // In a full implementation, we would read spell IDs and restore them
+                        // For now, we skip the spell data
+                    }
+                }
+
+                // Deserialize Inventory component
+                bool hasInventory = reader.ReadInt32() != 0;
+                if (hasInventory)
+                {
+                    var inventoryComponent = GetComponent<IInventoryComponent>();
+                    if (inventoryComponent == null)
+                    {
+                        // Inventory component should exist for creatures, but we ensure it's present
+                        // TODO: Create InfinityInventoryComponent if it exists
+                        throw new InvalidOperationException("Inventory component not found and cannot be created automatically");
+                    }
+
+                    int itemCount = reader.ReadInt32();
+                    // Store item references for later resolution when all entities are loaded
+                    var itemReferences = new List<(int slot, uint objectId, string tag, int objectType)>();
+                    for (int i = 0; i < itemCount; i++)
+                    {
+                        int slot = reader.ReadInt32();
+                        uint itemObjectId = reader.ReadUInt32();
+                        string itemTag = ReadString(reader);
+                        int itemObjectType = reader.ReadInt32();
+                        itemReferences.Add((slot, itemObjectId, itemTag, itemObjectType));
+                    }
+                    // Store item references in custom data for later resolution
+                    Type baseEntityTypeForItems = typeof(BaseEntity);
+                    FieldInfo dataFieldForItems = baseEntityTypeForItems.GetField("_data", BindingFlags.NonPublic | BindingFlags.Instance);
+                    if (dataFieldForItems != null)
+                    {
+                        var data = dataFieldForItems.GetValue(this) as Dictionary<string, object>;
+                        if (data == null)
+                        {
+                            data = new Dictionary<string, object>();
+                            dataFieldForItems.SetValue(this, data);
+                        }
+                        data["_ItemReferences"] = itemReferences;
+                    }
+                }
+
+                // Deserialize ScriptHooks component
+                bool hasScriptHooks = reader.ReadInt32() != 0;
+                if (hasScriptHooks)
+                {
+                    var scriptHooksComponent = GetComponent<IScriptHooksComponent>();
+                    if (scriptHooksComponent == null)
+                    {
+                        // Script hooks component should exist for all entities
+                        // TODO: Create InfinityScriptHooksComponent if it exists
+                        throw new InvalidOperationException("ScriptHooks component not found and cannot be created automatically");
+                    }
+
+                    // Deserialize script ResRefs
+                    int scriptCount = reader.ReadInt32();
+                    for (int i = 0; i < scriptCount; i++)
+                    {
+                        int eventType = reader.ReadInt32();
+                        string resRef = ReadString(reader);
+                        scriptHooksComponent.SetScript((ScriptEvent)eventType, resRef);
+                    }
+
+                    // Deserialize local variables using reflection
+                    Type componentType = scriptHooksComponent.GetType();
+                    FieldInfo localIntsField = componentType.GetField("_localInts", BindingFlags.NonPublic | BindingFlags.Instance);
+                    FieldInfo localFloatsField = componentType.GetField("_localFloats", BindingFlags.NonPublic | BindingFlags.Instance);
+                    FieldInfo localStringsField = componentType.GetField("_localStrings", BindingFlags.NonPublic | BindingFlags.Instance);
+
+                    // Deserialize local ints
+                    int localIntCount = reader.ReadInt32();
+                    if (localIntsField != null)
+                    {
+                        var localInts = localIntsField.GetValue(scriptHooksComponent) as Dictionary<string, int>;
+                        if (localInts == null)
+                        {
+                            localInts = new Dictionary<string, int>();
+                            localIntsField.SetValue(scriptHooksComponent, localInts);
+                        }
+                        localInts.Clear();
+                        for (int i = 0; i < localIntCount; i++)
+                        {
+                            string name = ReadString(reader);
+                            int value = reader.ReadInt32();
+                            localInts[name] = value;
+                        }
+                    }
+                    else
+                    {
+                        // Skip ints if field not found
+                        for (int i = 0; i < localIntCount; i++)
+                        {
+                            ReadString(reader);
+                            reader.ReadInt32();
+                        }
+                    }
+
+                    // Deserialize local floats
+                    int localFloatCount = reader.ReadInt32();
+                    if (localFloatsField != null)
+                    {
+                        var localFloats = localFloatsField.GetValue(scriptHooksComponent) as Dictionary<string, float>;
+                        if (localFloats == null)
+                        {
+                            localFloats = new Dictionary<string, float>();
+                            localFloatsField.SetValue(scriptHooksComponent, localFloats);
+                        }
+                        localFloats.Clear();
+                        for (int i = 0; i < localFloatCount; i++)
+                        {
+                            string name = ReadString(reader);
+                            float value = reader.ReadSingle();
+                            localFloats[name] = value;
+                        }
+                    }
+                    else
+                    {
+                        // Skip floats if field not found
+                        for (int i = 0; i < localFloatCount; i++)
+                        {
+                            ReadString(reader);
+                            reader.ReadSingle();
+                        }
+                    }
+
+                    // Deserialize local strings
+                    int localStringCount = reader.ReadInt32();
+                    if (localStringsField != null)
+                    {
+                        var localStrings = localStringsField.GetValue(scriptHooksComponent) as Dictionary<string, string>;
+                        if (localStrings == null)
+                        {
+                            localStrings = new Dictionary<string, string>();
+                            localStringsField.SetValue(scriptHooksComponent, localStrings);
+                        }
+                        localStrings.Clear();
+                        for (int i = 0; i < localStringCount; i++)
+                        {
+                            string name = ReadString(reader);
+                            string value = ReadString(reader);
+                            localStrings[name] = value;
+                        }
+                    }
+                    else
+                    {
+                        // Skip strings if field not found
+                        for (int i = 0; i < localStringCount; i++)
+                        {
+                            ReadString(reader);
+                            ReadString(reader);
+                        }
+                    }
+                }
+
+                // Deserialize Door component
+                bool hasDoor = reader.ReadInt32() != 0;
+                if (hasDoor)
+                {
+                    var doorComponent = GetComponent<IDoorComponent>();
+                    if (doorComponent == null)
+                    {
+                        doorComponent = new InfinityDoorComponent();
+                        doorComponent.Owner = this;
+                        AddComponent<IDoorComponent>(doorComponent);
+                    }
+
+                    doorComponent.IsOpen = reader.ReadInt32() != 0;
+                    doorComponent.IsLocked = reader.ReadInt32() != 0;
+                    doorComponent.LockableByScript = reader.ReadInt32() != 0;
+                    doorComponent.LockDC = reader.ReadInt32();
+                    doorComponent.IsBashed = reader.ReadInt32() != 0;
+                    doorComponent.HitPoints = reader.ReadInt32();
+                    doorComponent.MaxHitPoints = reader.ReadInt32();
+                    doorComponent.Hardness = reader.ReadInt32();
+                    doorComponent.KeyTag = ReadString(reader);
+                    doorComponent.KeyRequired = reader.ReadInt32() != 0;
+                    doorComponent.OpenState = reader.ReadInt32();
+                    doorComponent.LinkedTo = ReadString(reader);
+                    doorComponent.LinkedToModule = ReadString(reader);
+                }
+
+                // Deserialize Placeable component
+                bool hasPlaceable = reader.ReadInt32() != 0;
+                if (hasPlaceable)
+                {
+                    var placeableComponent = GetComponent<IPlaceableComponent>();
+                    if (placeableComponent == null)
+                    {
+                        // TODO: Create InfinityPlaceableComponent if it exists
+                        throw new InvalidOperationException("Placeable component not found and cannot be created automatically");
+                    }
+
+                    placeableComponent.IsUseable = reader.ReadInt32() != 0;
+                    placeableComponent.HasInventory = reader.ReadInt32() != 0;
+                    placeableComponent.IsStatic = reader.ReadInt32() != 0;
+                    placeableComponent.IsOpen = reader.ReadInt32() != 0;
+                    placeableComponent.IsLocked = reader.ReadInt32() != 0;
+                    placeableComponent.LockDC = reader.ReadInt32();
+                    placeableComponent.KeyTag = ReadString(reader);
+                    placeableComponent.HitPoints = reader.ReadInt32();
+                    placeableComponent.MaxHitPoints = reader.ReadInt32();
+                    placeableComponent.Hardness = reader.ReadInt32();
+                    placeableComponent.AnimationState = reader.ReadInt32();
+                }
+
+                // Deserialize custom data dictionary
+                int customDataCount = reader.ReadInt32();
+                Type baseEntityType = typeof(BaseEntity);
+                FieldInfo dataField = baseEntityType.GetField("_data", BindingFlags.NonPublic | BindingFlags.Instance);
+
+                if (dataField != null)
+                {
+                    var data = dataField.GetValue(this) as Dictionary<string, object>;
+                    if (data == null)
+                    {
+                        data = new Dictionary<string, object>();
+                        dataField.SetValue(this, data);
+                    }
+                    data.Clear();
+
+                    for (int i = 0; i < customDataCount; i++)
+                    {
+                        string key = ReadString(reader);
+                        int type = reader.ReadInt32();
+                        object value = null;
+
+                        switch (type)
+                        {
+                            case 0: // null
+                                value = null;
+                                break;
+                            case 1: // int
+                                value = reader.ReadInt32();
+                                break;
+                            case 2: // float
+                                value = reader.ReadSingle();
+                                break;
+                            case 3: // string
+                                value = ReadString(reader);
+                                break;
+                            case 4: // bool
+                                value = reader.ReadInt32() != 0;
+                                break;
+                            case 5: // uint
+                                value = reader.ReadUInt32();
+                                break;
+                        }
+
+                        data[key] = value;
+                    }
+                }
+                else
+                {
+                    // Skip custom data if field not found
+                    for (int i = 0; i < customDataCount; i++)
+                    {
+                        ReadString(reader);
+                        int type = reader.ReadInt32();
+                        switch (type)
+                        {
+                            case 0: // null
+                                break;
+                            case 1: // int
+                                reader.ReadInt32();
+                                break;
+                            case 2: // float
+                                reader.ReadSingle();
+                                break;
+                            case 3: // string
+                                ReadString(reader);
+                                break;
+                            case 4: // bool
+                                reader.ReadInt32();
+                                break;
+                            case 5: // uint
+                                reader.ReadUInt32();
+                                break;
+                        }
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Helper method to read a string from BinaryReader.
+        /// </summary>
+        /// <remarks>
+        /// Reads string length as int32, then UTF-8 encoded bytes.
+        /// Based on Eclipse save serializer string reading pattern.
+        /// </remarks>
+        private static string ReadString(BinaryReader reader)
+        {
+            int length = reader.ReadInt32();
+            if (length == 0)
+            {
+                return "";
+            }
+
+            byte[] bytes = reader.ReadBytes(length);
+            return Encoding.UTF8.GetString(bytes);
         }
     }
 
