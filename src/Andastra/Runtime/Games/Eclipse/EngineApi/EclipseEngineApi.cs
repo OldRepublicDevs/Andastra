@@ -780,7 +780,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
             Console.WriteLine("[Eclipse] GetNearestObject: Type {0}, Target 0x{1:X8}, nth {2}", objectType, targetId, nth);
             // Convert objectType to ObjectType enum mask
             // Eclipse object types: 1=Creature, 2=Item, 4=Trigger, 8=Door, 64=Placeable, etc.
-            Core.Enums.ObjectType typeMask = Core.Enums.ObjectType.None;
+            Core.Enums.ObjectType typeMask = Core.Enums.ObjectType.Invalid;
             if ((objectType & 1) != 0) typeMask |= Core.Enums.ObjectType.Creature;
             if ((objectType & 2) != 0) typeMask |= Core.Enums.ObjectType.Item;
             if ((objectType & 4) != 0) typeMask |= Core.Enums.ObjectType.Trigger;
@@ -788,7 +788,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
             if ((objectType & 64) != 0) typeMask |= Core.Enums.ObjectType.Placeable;
             
             // If no type specified, search all types
-            if (typeMask == Core.Enums.ObjectType.None)
+            if (typeMask == Core.Enums.ObjectType.Invalid)
             {
                 typeMask = Core.Enums.ObjectType.All;
             }
@@ -894,7 +894,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
                 
                 // Check if entity is party member at index 0 (party leader)
                 Variable partyLeader = Func_GetPartyMemberByIndex(new[] { Variable.FromInt(0) }, ctx);
-                if (partyLeader != null && partyLeader.AsObjectId() == objectId)
+                if (partyLeader.AsObjectId() != ObjectInvalid && partyLeader.AsObjectId() == objectId)
                 {
                     return Variable.FromInt(1);
                 }
@@ -1030,7 +1030,8 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
             Core.Interfaces.IEntity attacker = ResolveObject(attackerId, ctx);
             if (attacker != null && ctx.World != null && ctx.World.CombatSystem != null)
             {
-                Core.Interfaces.IEntity target = ctx.World.CombatSystem.GetAttackTarget(attacker);
+                // CombatSystem has GetTarget method, not GetAttackTarget
+                Core.Interfaces.IEntity target = ctx.World.CombatSystem.GetTarget(attacker);
                 if (target != null)
                 {
                     return Variable.FromObject(target.ObjectId);
@@ -1428,7 +1429,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
             try
             {
                 Variable partyLeader = Func_GetPartyMemberByIndex(new[] { Variable.FromInt(0) }, ctx);
-                if (partyLeader != null && partyLeader.AsObjectId() != ObjectInvalid)
+                if (partyLeader.AsObjectId() != ObjectInvalid)
                 {
                     return partyLeader;
                 }
@@ -1887,19 +1888,20 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
             
             if (areaEntity == null && ctx.World.CurrentArea != null)
             {
-                // Use current area
-                areaId = ctx.World.CurrentArea.ObjectId;
+                // Use current area - IArea doesn't have ObjectId, so use a special area ID
+                // For iteration purposes, we'll use area ResRef as the key
+                areaId = 0x7F000010; // Special area object ID
             }
             
             // Convert objectType to ObjectType enum mask
-            Core.Enums.ObjectType typeMask = Core.Enums.ObjectType.None;
+            Core.Enums.ObjectType typeMask = Core.Enums.ObjectType.Invalid;
             if ((objectType & 1) != 0) typeMask |= Core.Enums.ObjectType.Creature;
             if ((objectType & 2) != 0) typeMask |= Core.Enums.ObjectType.Item;
             if ((objectType & 4) != 0) typeMask |= Core.Enums.ObjectType.Trigger;
             if ((objectType & 8) != 0) typeMask |= Core.Enums.ObjectType.Door;
             if ((objectType & 64) != 0) typeMask |= Core.Enums.ObjectType.Placeable;
             
-            if (typeMask == Core.Enums.ObjectType.None)
+            if (typeMask == Core.Enums.ObjectType.Invalid)
             {
                 typeMask = Core.Enums.ObjectType.All;
             }
