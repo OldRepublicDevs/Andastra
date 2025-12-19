@@ -3,14 +3,20 @@
   <PropertyGroup>
     <OutputType Condition="'$(OS)' == 'Windows_NT'">WinExe</OutputType>
     <OutputType Condition="'$(OS)' != 'Windows_NT'">Exe</OutputType>
-    <TargetFramework>net9.0</TargetFramework>
+    <!-- Use Windows-specific target framework on Windows to satisfy SDK requirements -->
+    <!-- On other platforms, use generic net9.0 for cross-platform compatibility -->
+    <TargetFramework Condition="'$(OS)' == 'Windows_NT'">net9.0-windows</TargetFramework>
+    <TargetFramework Condition="'$(OS)' != 'Windows_NT'">net9.0</TargetFramework>
     <LangVersion>7.3</LangVersion>
     <Nullable>disable</Nullable>
     <ImplicitUsings>disable</ImplicitUsings>
     <RootNamespace>Andastra.Game</RootNamespace>
     <AssemblyName>Andastra.Game</AssemblyName>
     <Description>MonoGame executable launcher for Odyssey Engine</Description>
-    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationManifest Condition="'$(OS)' == 'Windows_NT'">app.manifest</ApplicationManifest>
+    <!-- Explicitly disable Windows Forms and WPF - we use Eto.Forms for cross-platform UI -->
+    <UseWindowsForms>false</UseWindowsForms>
+    <UseWPF>false</UseWPF>
   </PropertyGroup>
 
   <ItemGroup>
