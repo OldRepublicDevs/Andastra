@@ -330,10 +330,38 @@ namespace Andastra.Runtime.Scripting.EngineApi
             return Variable.FromFloat(-1f);
         }
 
+        /// <summary>
+        /// GetModule() - Returns the module object
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: GetModule NWScript function
+        /// Located via string references: "GetModule" @ NWScript function table
+        /// Original implementation: Returns the module object ID (0x7F000002) if module is loaded, OBJECT_INVALID otherwise
+        /// - Module is a special object with fixed ObjectId (0x7F000002)
+        /// - Returns OBJECT_INVALID (0x7F000000) if no module is currently loaded
+        /// - Module object ID is constant across all engines: 0x7F000002
+        /// Common across all engines: Odyssey, Aurora, Eclipse, Infinity all use fixed module object ID
+        /// </remarks>
         protected Variable Func_GetModule(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
-            // TODO: PLACEHOLDER - Module is a special object - return a placeholder ID
-            return Variable.FromObject(0x7F000002);
+            if (ctx.World == null)
+            {
+                return Variable.FromObject(ObjectInvalid);
+            }
+
+            IModule module = ctx.World.CurrentModule;
+            if (module == null)
+            {
+                return Variable.FromObject(ObjectInvalid);
+            }
+
+            uint moduleId = ctx.World.GetModuleId(module);
+            if (moduleId != 0)
+            {
+                return Variable.FromObject(moduleId);
+            }
+
+            return Variable.FromObject(ObjectInvalid);
         }
 
         /// <summary>

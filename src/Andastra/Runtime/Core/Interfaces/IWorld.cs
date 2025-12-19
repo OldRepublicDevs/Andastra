@@ -201,6 +201,17 @@ namespace Andastra.Runtime.Core.Interfaces
         uint GetAreaId(IArea area);
 
         /// <summary>
+        /// Gets the ModuleId for a module.
+        /// </summary>
+        /// <remarks>
+        /// Returns the ModuleId assigned to a module, or 0 if module is not registered.
+        /// Common across all engines: Modules are special objects with fixed ObjectId (0x7F000002).
+        /// Used by GetModule NWScript function to return the module object ID.
+        /// Engine-specific implementations may use different ID assignment mechanisms.
+        /// </remarks>
+        uint GetModuleId(IModule module);
+
+        /// <summary>
         /// Updates the world (time manager, event bus).
         /// </summary>
         void Update(float deltaTime);

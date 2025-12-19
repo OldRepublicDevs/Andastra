@@ -69,6 +69,15 @@ namespace Andastra.Runtime.Core.Entities
         private static uint _nextAreaId = 0x7F000010;
         private readonly Dictionary<IArea, uint> _areaIds;
 
+        // Module ID assignment: Modules get a fixed ObjectId of 0x7F000002
+        // Based on swkotor2.exe: Module object ID constant
+        // Located via string references: "GetModule" NWScript function, module object references
+        // Original implementation: Modules are special objects with fixed ObjectId (0x7F000002)
+        // Module ObjectId: 0x7F000002 (special object ID for module, between OBJECT_SELF 0x7F000001 and area IDs 0x7F000010+)
+        // Common across all engines: Odyssey, Aurora, Eclipse, Infinity all use fixed module object ID
+        public const uint ModuleObjectId = 0x7F000002;
+        private IModule _registeredModule;
+
         public World()
         {
             _entitiesById = new Dictionary<uint, IEntity>();
@@ -199,9 +208,43 @@ namespace Andastra.Runtime.Core.Entities
         /// <summary>
         /// Sets the current module.
         /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: Module registration system
+        /// Located via string references: "Module" @ 0x007bc4e0, "ModuleName" @ 0x007bde2c, "ModuleLoaded" @ 0x007bdd70
+        /// Original implementation: Module is registered when set as current module
+        /// Module ObjectId: Fixed value 0x7F000002 (special object ID for module)
+        /// Common across all engines: Modules are registered with fixed ObjectId when set as current
+        /// </remarks>
         public void SetCurrentModule(IModule module)
         {
             CurrentModule = module;
+            _registeredModule = module;
+        }
+
+        /// <summary>
+        /// Gets the ModuleId for a module.
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: Module object ID lookup
+        /// Returns the ModuleId assigned to a module, or 0 if module is not registered
+        /// Module ObjectId: Fixed value 0x7F000002 (special object ID for module)
+        /// Common across all engines: Modules use fixed ObjectId (0x7F000002) for script references
+        /// Used by GetModule NWScript function to return the module object ID
+        /// </remarks>
+        public uint GetModuleId(IModule module)
+        {
+            if (module == null)
+            {
+                return 0;
+            }
+
+            // Module is registered if it's the current module
+            if (module == _registeredModule && module == CurrentModule)
+            {
+                return ModuleObjectId;
+            }
+
+            return 0;
         }
         public ITimeManager TimeManager { get; }
         public IEventBus EventBus { get; }

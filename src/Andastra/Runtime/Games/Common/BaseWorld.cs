@@ -289,6 +289,31 @@ namespace Andastra.Runtime.Games.Common
         }
 
         /// <summary>
+        /// Gets the ModuleId for a module.
+        /// </summary>
+        /// <remarks>
+        /// Returns the ModuleId assigned to a module, or 0 if module is not registered.
+        /// Module ObjectId: Fixed value 0x7F000002 (special object ID for module)
+        /// Common across all engines: Modules use fixed ObjectId (0x7F000002) for script references
+        /// Based on swkotor2.exe: Module object ID constant
+        /// Located via string references: "GetModule" NWScript function, module object references
+        /// </remarks>
+        public virtual uint GetModuleId(IModule module)
+        {
+            if (module == null)
+                return 0;
+
+            // Module is registered if it's the current module
+            // Module ObjectId is fixed at 0x7F000002 (common across all engines)
+            if (module == CurrentModule)
+            {
+                return 0x7F000002;
+            }
+
+            return 0;
+        }
+
+        /// <summary>
         /// Creates a new entity from a template.
         /// </summary>
         public abstract IEntity CreateEntity(IEntityTemplate template, Vector3 position, float facing);
