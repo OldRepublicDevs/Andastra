@@ -1787,14 +1787,121 @@ void helper() {
             throw new NotImplementedException("TestNssEditorCodeFoldingShortcuts: Code folding shortcuts test not yet implemented");
         }
 
-        // TODO: STUB - Implement test_nss_editor_word_selection_shortcuts (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1785-1816)
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1785-1816
         // Original: def test_nss_editor_word_selection_shortcuts(qtbot, installation: HTInstallation): Test word selection shortcuts
         [Fact]
         public void TestNssEditorWordSelectionShortcuts()
         {
-            // TODO: STUB - Implement word selection shortcuts test
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1785-1816
-            throw new NotImplementedException("TestNssEditorWordSelectionShortcuts: Word selection shortcuts test not yet implemented");
+            // Get installation if available (K2 preferred for NSS files)
+            string k2Path = Environment.GetEnvironmentVariable("K2_PATH");
+            if (string.IsNullOrEmpty(k2Path))
+            {
+                k2Path = @"C:\Program Files (x86)\Steam\steamapps\common\Knights of the Old Republic II";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k2Path) && System.IO.File.Exists(System.IO.Path.Combine(k2Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k2Path, "Test Installation", tsl: true);
+            }
+            else
+            {
+                // Fallback to K1
+                string k1Path = Environment.GetEnvironmentVariable("K1_PATH");
+                if (string.IsNullOrEmpty(k1Path))
+                {
+                    k1Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor";
+                }
+
+                if (System.IO.Directory.Exists(k1Path) && System.IO.File.Exists(System.IO.Path.Combine(k1Path, "chitin.key")))
+                {
+                    installation = new HTInstallation(k1Path, "Test Installation", tsl: false);
+                }
+            }
+
+            var editor = new NSSEditor(null, installation);
+            editor.New();
+
+            // Set up test script: "int x = 5; int y = x;"
+            // This script has two occurrences of 'x' - one as a variable declaration and one as a variable reference
+            string script = "int x = 5; int y = x;";
+            
+            // Access CodeEditor via reflection
+            var codeEditorField = typeof(NSSEditor).GetField("_codeEdit",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            codeEditorField.Should().NotBeNull("NSSEditor should have _codeEdit field");
+            
+            var codeEditor = codeEditorField.GetValue(editor) as HolocronToolset.Widgets.CodeEditor;
+            codeEditor.Should().NotBeNull("_codeEdit should be initialized");
+
+            // Set the script text
+            codeEditor.SetPlainText(script);
+
+            // Position cursor on first 'x' (at position 4: "int x = 5;")
+            int xPos = script.IndexOf('x');
+            xPos.Should().BeGreaterOrEqualTo(0, "Script should contain 'x' character");
+            
+            // Set cursor position to the first 'x'
+            codeEditor.SelectionStart = xPos;
+            codeEditor.SelectionEnd = xPos;
+
+            // Verify initial state: cursor is at 'x' with no selection
+            codeEditor.SelectionStart.Should().Be(xPos, "Cursor should be positioned at first 'x'");
+            codeEditor.SelectionEnd.Should().Be(xPos, "No text should be selected initially");
+            codeEditor.SelectedText.Should().BeEmpty("No text should be selected initially");
+
+            // Test Ctrl+D shortcut by calling SelectNextOccurrence directly
+            // This matches the Python test which calls select_next_occurrence() directly
+            // The keyboard shortcut (Ctrl+D) is handled by OnKeyDown in CodeEditor
+            bool result = codeEditor.SelectNextOccurrence();
+
+            // Verify that SelectNextOccurrence succeeded
+            result.Should().BeTrue("SelectNextOccurrence should find the second 'x'");
+
+            // Verify that the word at cursor was selected first (VS Code behavior)
+            // After SelectNextOccurrence, the selection should be on the second 'x' (at position ~20: "int y = x;")
+            int secondXPos = script.LastIndexOf('x');
+            secondXPos.Should().BeGreaterThan(xPos, "Second 'x' should be after the first one");
+            
+            // The selection should now be on the second occurrence of 'x'
+            codeEditor.SelectionStart.Should().Be(secondXPos, "Selection should move to second 'x'");
+            codeEditor.SelectionEnd.Should().Be(secondXPos + 1, "Selection should cover the 'x' character");
+            codeEditor.SelectedText.Should().Be("x", "Selected text should be 'x'");
+
+            // Test that calling SelectNextOccurrence again wraps to the beginning
+            // Since we're now at the second 'x', the next occurrence should wrap to the first 'x'
+            bool wrapResult = codeEditor.SelectNextOccurrence();
+            wrapResult.Should().BeTrue("SelectNextOccurrence should wrap to first 'x'");
+            
+            // Verify selection wrapped to first 'x'
+            codeEditor.SelectionStart.Should().Be(xPos, "Selection should wrap to first 'x'");
+            codeEditor.SelectionEnd.Should().Be(xPos + 1, "Selection should cover the 'x' character");
+            codeEditor.SelectedText.Should().Be("x", "Selected text should be 'x'");
+
+            // Test with no word at cursor (cursor on whitespace)
+            codeEditor.SelectionStart = script.IndexOf(' ');
+            codeEditor.SelectionEnd = script.IndexOf(' ');
+            bool noWordResult = codeEditor.SelectNextOccurrence();
+            noWordResult.Should().BeFalse("SelectNextOccurrence should return false when cursor is not on a word");
+
+            // Test with empty text
+            codeEditor.SetPlainText("");
+            bool emptyResult = codeEditor.SelectNextOccurrence();
+            emptyResult.Should().BeFalse("SelectNextOccurrence should return false for empty text");
+
+            // Test with selected text (not just cursor position)
+            codeEditor.SetPlainText(script);
+            codeEditor.SelectionStart = 0;
+            codeEditor.SelectionEnd = 3; // Select "int"
+            bool selectedResult = codeEditor.SelectNextOccurrence();
+            selectedResult.Should().BeTrue("SelectNextOccurrence should find next occurrence of selected text");
+            
+            // Verify it found the second "int"
+            int secondIntPos = script.IndexOf("int", 4); // Find "int" after position 4
+            secondIntPos.Should().BeGreaterThan(0, "Script should contain second 'int'");
+            codeEditor.SelectionStart.Should().Be(secondIntPos, "Selection should move to second 'int'");
+            codeEditor.SelectionEnd.Should().Be(secondIntPos + 3, "Selection should cover 'int'");
+            codeEditor.SelectedText.Should().Be("int", "Selected text should be 'int'");
         }
 
         // TODO: STUB - Implement test_nss_editor_duplicate_line_shortcut (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1818-1845)
