@@ -1,0 +1,54 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework Condition="'$(OS)' == 'Windows_NT'">net9.0-windows</TargetFramework>
+    <TargetFramework Condition="'$(OS)' != 'Windows_NT'">net9.0</TargetFramework>
+    <LangVersion>7.3</LangVersion>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Castle.Core" Version="5.2.1" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.0.1" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.analyzers" Version="1.26.0">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="coverlet.collector" Version="6.0.4">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="FluentAssertions" Version="8.8.0" />
+    <PackageReference Include="Moq" Version="4.20.72" />
+    <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.1.303" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Runtime\Core\Andastra.Runtime.Core.csproj" />
+    <ProjectReference Include="..\..\Runtime\Graphics\Andastra.Runtime.Graphics.csproj" />
+    <ProjectReference Include="..\..\Runtime\Graphics\Common\Andastra.Runtime.Graphics.Common.csproj" />
+    <ProjectReference Include="..\..\Runtime\Graphics\MonoGame\Andastra.Runtime.Graphics.MonoGame.csproj" />
+    <ProjectReference Include="..\..\Runtime\Graphics\Stride\Andastra.Runtime.Graphics.Stride.csproj" />
+    <ProjectReference Include="..\..\Runtime\Games\Odyssey\Andastra.Runtime.Games.Odyssey.csproj" />
+    <ProjectReference Include="..\..\Runtime\Games\Aurora\Andastra.Runtime.Games.Aurora.csproj" />
+    <ProjectReference Include="..\..\Runtime\Games\Eclipse\Andastra.Runtime.Games.Eclipse.csproj" />
+    <ProjectReference Include="..\..\Runtime\Games\Infinity\Andastra.Runtime.Games.Infinity.csproj" />
+    <ProjectReference Include="..\..\Parsing\Andastra.Parsing.csproj" />
+    <ProjectReference Include="..\..\Game\Andastra.Game.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="xunit.runner.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+</Project>

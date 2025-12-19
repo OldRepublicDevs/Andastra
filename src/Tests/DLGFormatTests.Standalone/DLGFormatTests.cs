@@ -180,7 +180,7 @@ namespace HolocronToolset.Tests.Formats
             GFF gff = DLGHelper.DismantleDlg(dlg, Game.K2);
             
             // Verify base fields
-            gff.Root.Acquire("WordCount", 0).Should().Be(200);
+            gff.Root.Acquire("NumWords", 0).Should().Be(200);
             gff.Root.Acquire("ComputerType", (byte)0).Should().Be((byte)1, "Ancient = 1");
             gff.Root.Acquire("ConversationType", 0).Should().Be(1, "Computer = 1");
             

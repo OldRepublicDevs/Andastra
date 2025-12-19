@@ -7,6 +7,7 @@ using Andastra.Parsing.Formats.GFF;
 using Andastra.Parsing.Resource;
 using JetBrains.Annotations;
 using Andastra.Parsing.Common;
+using CNV = Andastra.Parsing.Resource.Generics.CNV;
 
 namespace Andastra.Parsing.Resource.Generics.DLG
 {
@@ -586,6 +587,278 @@ namespace Andastra.Parsing.Resource.Generics.DLG
             }
             GFF gff = DismantleDlg(dlg, game);
             return GFFAuto.BytesGff(gff, fileFormat);
+        }
+
+        // Matching pattern from CNVHelper - conversion between formats
+        /// <summary>
+        /// Converts a DLG object to a CNV object.
+        /// </summary>
+        /// <param name="dlg">The DLG object to convert.</param>
+        /// <returns>A CNV object with converted conversation data.</returns>
+        /// <remarks>
+        /// DLG to CNV Conversion:
+        /// - DLG and CNV share the same structure (conversation trees with entries/replies/links)
+        /// - Main difference is GFF signature ("DLG " vs "CNV ") and some engine-specific fields
+        /// - All common fields are mapped directly
+        /// - K2-specific fields are preserved where possible or mapped to closest CNV equivalent
+        /// - Used for converting Aurora/Odyssey conversation files to Eclipse format
+        /// </remarks>
+        public static CNV.CNV ToCnv(DLG dlg)
+        {
+            if (dlg == null)
+            {
+                throw new ArgumentNullException(nameof(dlg));
+            }
+
+            var cnv = new CNV.CNV();
+
+            // Copy metadata fields (identical structure)
+            cnv.AmbientTrack = dlg.AmbientTrack;
+            cnv.AnimatedCut = dlg.AnimatedCut;
+            cnv.CameraModel = dlg.CameraModel;
+            cnv.ComputerType = (CNV.CNVComputerType)(int)dlg.ComputerType;
+            cnv.ConversationType = (CNV.CNVConversationType)(int)dlg.ConversationType;
+            cnv.OnAbort = dlg.OnAbort;
+            cnv.OnEnd = dlg.OnEnd;
+            cnv.WordCount = dlg.WordCount;
+            cnv.OldHitCheck = dlg.OldHitCheck;
+            cnv.Skippable = dlg.Skippable;
+            cnv.UnequipItems = dlg.UnequipItems;
+            cnv.UnequipHands = dlg.UnequipHands;
+            cnv.VoId = dlg.VoId;
+            cnv.Comment = dlg.Comment;
+            cnv.NextNodeId = dlg.NextNodeId;
+            cnv.DelayEntry = dlg.DelayEntry;
+            cnv.DelayReply = dlg.DelayReply;
+
+            // Convert stunts
+            foreach (DLGStunt dlgStunt in dlg.Stunts)
+            {
+                var cnvStunt = new Andastra.Parsing.Resource.Generics.CNV.CNVStunt
+                {
+                    Participant = dlgStunt.Participant,
+                    StuntModel = dlgStunt.StuntModel
+                };
+                cnv.Stunts.Add(cnvStunt);
+            }
+
+            // Build node maps for conversion
+            var dlgEntryToCnvEntry = new Dictionary<DLGEntry, Andastra.Parsing.Resource.Generics.CNV.CNVEntry>();
+            var dlgReplyToCnvReply = new Dictionary<DLGReply, Andastra.Parsing.Resource.Generics.CNV.CNVReply>();
+
+            // Convert all entries
+            List<DLGEntry> allDlgEntries = dlg.AllEntries(asSorted: true);
+            foreach (DLGEntry dlgEntry in allDlgEntries)
+            {
+                CNV.CNVEntry cnvEntry = ConvertNode(dlgEntry);
+                dlgEntryToCnvEntry[dlgEntry] = cnvEntry;
+            }
+
+            // Convert all replies
+            List<DLGReply> allDlgReplies = dlg.AllReplies(asSorted: true);
+            foreach (DLGReply dlgReply in allDlgReplies)
+            {
+                CNV.CNVReply cnvReply = ConvertNode(dlgReply);
+                dlgReplyToCnvReply[dlgReply] = cnvReply;
+            }
+
+            // Convert links in entries
+            foreach (DLGEntry dlgEntry in allDlgEntries)
+            {
+                CNV.CNVEntry cnvEntry = dlgEntryToCnvEntry[dlgEntry];
+                foreach (DLGLink dlgLink in dlgEntry.Links)
+                {
+                    if (dlgLink.Node is DLGReply dlgReply && dlgReplyToCnvReply.ContainsKey(dlgReply))
+                    {
+                        CNV.CNVReply cnvReply = dlgReplyToCnvReply[dlgReply];
+                        CNV.CNVLink cnvLink = ConvertLink(dlgLink, cnvReply);
+                        cnvEntry.Links.Add(cnvLink);
+                    }
+                }
+            }
+
+            // Convert links in replies
+            foreach (DLGReply dlgReply in allDlgReplies)
+            {
+                CNV.CNVReply cnvReply = dlgReplyToCnvReply[dlgReply];
+                foreach (DLGLink dlgLink in dlgReply.Links)
+                {
+                    if (dlgLink.Node is DLGEntry dlgEntry && dlgEntryToCnvEntry.ContainsKey(dlgEntry))
+                    {
+                        CNV.CNVEntry cnvEntry = dlgEntryToCnvEntry[dlgEntry];
+                        CNV.CNVLink cnvLink = ConvertLink(dlgLink, cnvEntry);
+                        cnvReply.Links.Add(cnvLink);
+                    }
+                }
+            }
+
+            // Convert starters
+            foreach (DLGLink dlgStarter in dlg.Starters)
+            {
+                if (dlgStarter.Node is DLGEntry dlgEntry && dlgEntryToCnvEntry.ContainsKey(dlgEntry))
+                {
+                    CNV.CNVEntry cnvEntry = dlgEntryToCnvEntry[dlgEntry];
+                    CNV.CNVLink cnvLink = ConvertLink(dlgStarter, cnvEntry);
+                    cnv.Starters.Add(cnvLink);
+                }
+            }
+
+            return cnv;
+        }
+
+        // Helper method to convert DLGEntry to CNVEntry
+        private static CNV.CNVEntry ConvertNode(DLGEntry dlgEntry)
+        {
+            var cnvEntry = new CNV.CNVEntry
+            {
+                Speaker = dlgEntry.Speaker,
+                ListIndex = dlgEntry.ListIndex,
+                Comment = dlgEntry.Comment,
+                CameraAngle = dlgEntry.CameraAngle,
+                CameraAnim = dlgEntry.CameraAnim,
+                CameraId = dlgEntry.CameraId,
+                CameraFov = dlgEntry.CameraFov,
+                CameraHeight = dlgEntry.CameraHeight,
+                CameraEffect = dlgEntry.CameraEffect,
+                Delay = dlgEntry.Delay,
+                FadeType = dlgEntry.FadeType,
+                FadeColor = dlgEntry.FadeColor,
+                FadeDelay = dlgEntry.FadeDelay,
+                FadeLength = dlgEntry.FadeLength,
+                Text = dlgEntry.Text,
+                Script1 = dlgEntry.Script1,
+                Script2 = dlgEntry.Script2,
+                Sound = dlgEntry.Sound,
+                SoundExists = dlgEntry.SoundExists,
+                VoResRef = dlgEntry.VoResRef,
+                WaitFlags = dlgEntry.WaitFlags,
+                Script1Param1 = dlgEntry.Script1Param1,
+                Script1Param2 = dlgEntry.Script1Param2,
+                Script1Param3 = dlgEntry.Script1Param3,
+                Script1Param4 = dlgEntry.Script1Param4,
+                Script1Param5 = dlgEntry.Script1Param5,
+                Script1Param6 = dlgEntry.Script1Param6,
+                Script2Param1 = dlgEntry.Script2Param1,
+                Script2Param2 = dlgEntry.Script2Param2,
+                Script2Param3 = dlgEntry.Script2Param3,
+                Script2Param4 = dlgEntry.Script2Param4,
+                Script2Param5 = dlgEntry.Script2Param5,
+                Script2Param6 = dlgEntry.Script2Param6,
+                Quest = dlgEntry.Quest,
+                QuestEntry = dlgEntry.QuestEntry,
+                PlotIndex = dlgEntry.PlotIndex,
+                PlotXpPercentage = dlgEntry.PlotXpPercentage,
+                EmotionId = dlgEntry.EmotionId,
+                FacialId = dlgEntry.FacialId,
+                Listener = dlgEntry.Listener,
+                TargetHeight = dlgEntry.TargetHeight,
+                NodeId = dlgEntry.NodeId,
+                Unskippable = dlgEntry.Unskippable,
+                VoTextChanged = dlgEntry.VoTextChanged
+            };
+
+            // Convert animations
+            foreach (DLGAnimation dlgAnim in dlgEntry.Animations)
+            {
+                var cnvAnim = new CNV.CNVAnimation
+                {
+                    AnimationId = dlgAnim.AnimationId,
+                    Participant = dlgAnim.Participant
+                };
+                cnvEntry.Animations.Add(cnvAnim);
+            }
+
+            return cnvEntry;
+        }
+
+        private static CNV.CNVReply ConvertNode(DLGReply dlgReply)
+        {
+            var cnvReply = new CNV.CNVReply
+            {
+                ListIndex = dlgReply.ListIndex,
+                Comment = dlgReply.Comment,
+                CameraAngle = dlgReply.CameraAngle,
+                CameraAnim = dlgReply.CameraAnim,
+                CameraId = dlgReply.CameraId,
+                CameraFov = dlgReply.CameraFov,
+                CameraHeight = dlgReply.CameraHeight,
+                CameraEffect = dlgReply.CameraEffect,
+                Delay = dlgReply.Delay,
+                FadeType = dlgReply.FadeType,
+                FadeColor = dlgReply.FadeColor,
+                FadeDelay = dlgReply.FadeDelay,
+                FadeLength = dlgReply.FadeLength,
+                Text = dlgReply.Text,
+                Script1 = dlgReply.Script1,
+                Script2 = dlgReply.Script2,
+                Sound = dlgReply.Sound,
+                SoundExists = dlgReply.SoundExists,
+                VoResRef = dlgReply.VoResRef,
+                WaitFlags = dlgReply.WaitFlags,
+                Script1Param1 = dlgReply.Script1Param1,
+                Script1Param2 = dlgReply.Script1Param2,
+                Script1Param3 = dlgReply.Script1Param3,
+                Script1Param4 = dlgReply.Script1Param4,
+                Script1Param5 = dlgReply.Script1Param5,
+                Script1Param6 = dlgReply.Script1Param6,
+                Script2Param1 = dlgReply.Script2Param1,
+                Script2Param2 = dlgReply.Script2Param2,
+                Script2Param3 = dlgReply.Script2Param3,
+                Script2Param4 = dlgReply.Script2Param4,
+                Script2Param5 = dlgReply.Script2Param5,
+                Script2Param6 = dlgReply.Script2Param6,
+                Quest = dlgReply.Quest,
+                QuestEntry = dlgReply.QuestEntry,
+                PlotIndex = dlgReply.PlotIndex,
+                PlotXpPercentage = dlgReply.PlotXpPercentage,
+                EmotionId = dlgReply.EmotionId,
+                FacialId = dlgReply.FacialId,
+                Listener = dlgReply.Listener,
+                TargetHeight = dlgReply.TargetHeight,
+                NodeId = dlgReply.NodeId,
+                Unskippable = dlgReply.Unskippable,
+                VoTextChanged = dlgReply.VoTextChanged
+            };
+
+            // Convert animations
+            foreach (DLGAnimation dlgAnim in dlgReply.Animations)
+            {
+                var cnvAnim = new CNV.CNVAnimation
+                {
+                    AnimationId = dlgAnim.AnimationId,
+                    Participant = dlgAnim.Participant
+                };
+                cnvReply.Animations.Add(cnvAnim);
+            }
+
+            return cnvReply;
+        }
+
+        // Helper method to convert DLGLink to CNVLink
+        private static CNV.CNVLink ConvertLink(DLGLink dlgLink, CNV.CNVNode cnvNode)
+        {
+            return new CNV.CNVLink(cnvNode, dlgLink.ListIndex)
+            {
+                Active1 = dlgLink.Active1,
+                Active2 = dlgLink.Active2,
+                Logic = dlgLink.Logic,
+                Active1Not = dlgLink.Active1Not,
+                Active2Not = dlgLink.Active2Not,
+                Active1Param1 = dlgLink.Active1Param1,
+                Active1Param2 = dlgLink.Active1Param2,
+                Active1Param3 = dlgLink.Active1Param3,
+                Active1Param4 = dlgLink.Active1Param4,
+                Active1Param5 = dlgLink.Active1Param5,
+                Active1Param6 = dlgLink.Active1Param6,
+                Active2Param1 = dlgLink.Active2Param1,
+                Active2Param2 = dlgLink.Active2Param2,
+                Active2Param3 = dlgLink.Active2Param3,
+                Active2Param4 = dlgLink.Active2Param4,
+                Active2Param5 = dlgLink.Active2Param5,
+                Active2Param6 = dlgLink.Active2Param6,
+                IsChild = dlgLink.IsChild,
+                Comment = dlgLink.Comment
+            };
         }
     }
 }

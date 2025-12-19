@@ -30,12 +30,12 @@ namespace Andastra.Parsing.Formats.ERF
         }
 
         /// <summary>
-        /// Writes the ERF data to the target location with the specified format (ERF or MOD).
+        /// Writes the ERF data to the target location with the specified format (ERF, MOD, SAV, or HAK).
         /// 1:1 port of Python write_erf function.
         /// </summary>
         public static void WriteErf(ERF erf, string target, ResourceType fileFormat)
         {
-            if (fileFormat == ResourceType.ERF || fileFormat == ResourceType.MOD || fileFormat == ResourceType.SAV)
+            if (fileFormat == ResourceType.ERF || fileFormat == ResourceType.MOD || fileFormat == ResourceType.SAV || fileFormat == ResourceType.HAK)
             {
                 var writer = new ERFBinaryWriter(erf);
                 byte[] data = writer.Write();
@@ -43,7 +43,7 @@ namespace Andastra.Parsing.Formats.ERF
             }
             else
             {
-                throw new ArgumentException($"Unsupported format specified: '{fileFormat}'; expected one of ResourceType.ERF, ResourceType.MOD, ResourceType.SAV.");
+                throw new ArgumentException($"Unsupported format specified: '{fileFormat}'; expected one of ResourceType.ERF, ResourceType.MOD, ResourceType.SAV, ResourceType.HAK.");
             }
         }
 

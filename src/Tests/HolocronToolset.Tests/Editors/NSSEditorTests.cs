@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Reflection;
 using System.Text;
 using Andastra.Parsing.Resource;
@@ -488,7 +489,7 @@ void helper() {
 
             var itemsList = bookmarkTree.Items as System.Collections.Generic.IEnumerable<Avalonia.Controls.TreeViewItem> ?? new System.Collections.Generic.List<Avalonia.Controls.TreeViewItem>();
             int initialCount = itemsList.Count();
-            initialCount.Should().BeGreaterOrEqualTo(3, "At least 3 bookmarks should be added");
+            initialCount.Should().BeGreaterThanOrEqualTo(3, "At least 3 bookmarks should be added");
 
             // Remove bookmarks one by one
             var itemsListMutable = itemsList.ToList();

@@ -1,0 +1,8 @@
+{
+  "$schema": "https://xunit.net/schema/current/xunit.runner.schema.json",
+  "methodDisplay": "classAndMethod",
+  "methodDisplayOptions": "all",
+  "parallelizeTestCollections": true,
+  "maxParallelThreads": 0
+}
+
