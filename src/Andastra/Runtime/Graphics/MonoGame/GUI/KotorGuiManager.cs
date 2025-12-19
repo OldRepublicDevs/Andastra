@@ -48,6 +48,7 @@ namespace Andastra.Runtime.MonoGame.GUI
         private LoadedGui _currentGui;
         private MouseState _previousMouseState;
         private KeyboardState _previousKeyboardState;
+        private string _highlightedButtonTag;
 
         /// <summary>
         /// Event fired when a GUI button is clicked.
@@ -249,11 +250,15 @@ namespace Andastra.Runtime.MonoGame.GUI
         {
             if (_currentGui == null)
             {
+                _highlightedButtonTag = null;
                 return;
             }
 
             MouseState currentMouseState = Mouse.GetState();
             KeyboardState currentKeyboardState = Keyboard.GetState();
+
+            // Update highlighted button based on mouse position
+            UpdateHighlightedButton(currentMouseState.X, currentMouseState.Y);
 
             // Handle mouse clicks on buttons
             if (_previousMouseState.LeftButton == ButtonState.Released && currentMouseState.LeftButton == ButtonState.Pressed)
@@ -325,6 +330,75 @@ namespace Andastra.Runtime.MonoGame.GUI
                     BuildControlMaps(control.Children, loadedGui);
                 }
             }
+        }
+
+        /// <summary>
+        /// Updates which button is currently highlighted based on mouse position.
+        /// </summary>
+        private void UpdateHighlightedButton(int mouseX, int mouseY)
+        {
+            if (_currentGui == null)
+            {
+                _highlightedButtonTag = null;
+                return;
+            }
+
+            string newHighlightedTag = null;
+
+            // Check all buttons to find which one the mouse is over
+            // Process in reverse order to handle overlapping buttons correctly (topmost first)
+            var buttonsList = _currentGui.ButtonMap.ToList();
+            for (int i = buttonsList.Count - 1; i >= 0; i--)
+            {
+                var kvp = buttonsList[i];
+                var button = kvp.Value;
+                if (button == null)
+                {
+                    continue;
+                }
+
+                // Check if mouse is within button bounds
+                int left = (int)button.Position.X;
+                int top = (int)button.Position.Y;
+                int right = left + (int)button.Size.X;
+                int bottom = top + (int)button.Size.Y;
+
+                if (mouseX >= left && mouseX <= right && mouseY >= top && mouseY <= bottom)
+                {
+                    // Found the topmost button under the mouse
+                    newHighlightedTag = button.Tag;
+                    break;
+                }
+            }
+
+            _highlightedButtonTag = newHighlightedTag;
+        }
+
+        /// <summary>
+        /// Checks if a button is currently highlighted (mouse over).
+        /// </summary>
+        private bool IsButtonHighlighted(GUIButton button)
+        {
+            if (button == null || string.IsNullOrEmpty(button.Tag))
+            {
+                return false;
+            }
+
+            return string.Equals(_highlightedButtonTag, button.Tag, StringComparison.OrdinalIgnoreCase);
+        }
+
+        /// <summary>
+        /// Checks if a button is currently selected (programmatically selected).
+        /// </summary>
+        private bool IsButtonSelected(GUIButton button)
+        {
+            if (button == null)
+            {
+                return false;
+            }
+
+            // IsSelected is an int? property where non-zero/null means selected
+            return button.IsSelected.HasValue && button.IsSelected.Value != 0;
         }
 
         /// <summary>
@@ -477,21 +551,26 @@ namespace Andastra.Runtime.MonoGame.GUI
         /// </summary>
         private void RenderButton(GUIButton button, Vector2 position, Vector2 size)
         {
+            // Check button states: highlighted (mouse over) and selected (programmatically selected)
+            bool isHighlighted = IsButtonHighlighted(button);
+            bool isSelected = IsButtonSelected(button);
+
             // Determine which border state to use (normal, hilight, selected, hilight+selected)
+            // Priority: hilight+selected > selected > hilight > normal
             GUIBorder borderToUse = button.Border;
-            if (button.HilightSelected != null)
+            if (isHighlighted && isSelected && button.HilightSelected != null)
             {
-                // TODO: Check if button is both highlighted and selected
+                // Button is both highlighted and selected - use hilight+selected border
                 borderToUse = ConvertHilightSelectedToBorder(button.HilightSelected);
             }
-            else if (button.Selected != null)
+            else if (isSelected && button.Selected != null)
             {
-                // TODO: Check if button is selected
+                // Button is selected (but not highlighted) - use selected border
                 borderToUse = ConvertSelectedToBorder(button.Selected);
             }
-            else if (button.Hilight != null)
+            else if (isHighlighted && button.Hilight != null)
             {
-                // TODO: Check if button is highlighted (mouse over)
+                // Button is highlighted (but not selected) - use hilight border
                 borderToUse = button.Hilight;
             }
 
