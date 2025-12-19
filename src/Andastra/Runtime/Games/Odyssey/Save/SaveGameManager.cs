@@ -86,12 +86,22 @@ namespace Andastra.Runtime.Engines.Odyssey.Save
 
             try
             {
+                // Auto-generate save number if not set (0 or negative)
+                // Based on swkotor2.exe: Save numbers are auto-incremented
+                // Original implementation: Scans existing saves to find highest number, then increments
+                if (saveData.SaveNumber <= 0)
+                {
+                    saveData.SaveNumber = GetNextSaveNumber();
+                }
+
                 // Create save directory
                 // Based on swkotor2.exe: FUN_00708990 @ 0x00708990
                 // Original implementation: Constructs path using format "%06d - %s" (save number and name)
                 // Path format: "SAVES:\{saveNumber:06d} - {saveName}\SAVEGAME"
-                // TODO: SIMPLIFIED - For now, we use saveName directly, but the original uses formatted save number + name
-                string saveDir = Path.Combine(_savesDirectory, saveName);
+                // Located via string reference: "%06d - %s" @ 0x007be298
+                // Format: 6-digit zero-padded save number, followed by " - ", followed by save name
+                string formattedSaveName = FormatSaveDirectoryName(saveData.SaveNumber, saveName);
+                string saveDir = Path.Combine(_savesDirectory, formattedSaveName);
                 if (!Directory.Exists(saveDir))
                 {
                     Directory.CreateDirectory(saveDir);
@@ -140,6 +150,11 @@ namespace Andastra.Runtime.Engines.Odyssey.Save
         /// <summary>
         /// Loads a save game from a save file.
         /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: FUN_00708990 @ 0x00708990
+        /// Original implementation: Accepts save name and constructs path using format "%06d - %s"
+        /// Supports both formatted names ("000001 - SaveName") and plain names (for backward compatibility)
+        /// </remarks>
         public async Task<SaveGameData> LoadGameAsync(string saveName, CancellationToken ct = default)
         {
             if (string.IsNullOrEmpty(saveName))
@@ -149,8 +164,34 @@ namespace Andastra.Runtime.Engines.Odyssey.Save
 
             try
             {
+                // Try formatted name first (original engine format)
                 string saveDir = Path.Combine(_savesDirectory, saveName);
                 string saveFilePath = Path.Combine(saveDir, "savegame.sav");
+                
+                // If formatted name doesn't exist, try to find it by parsing existing directories
+                // This handles backward compatibility with saves created before this fix
+                if (!File.Exists(saveFilePath))
+                {
+                    // Try to find save by matching the name part (after " - ")
+                    string namePart = ParseSaveNameFromDirectory(saveName);
+                    if (!string.IsNullOrEmpty(namePart))
+                    {
+                        foreach (string dir in Directory.GetDirectories(_savesDirectory))
+                        {
+                            string dirName = Path.GetFileName(dir);
+                            string parsedName = ParseSaveNameFromDirectory(dirName);
+                            if (parsedName == namePart || dirName == saveName)
+                            {
+                                saveDir = dir;
+                                saveFilePath = Path.Combine(saveDir, "savegame.sav");
+                                if (File.Exists(saveFilePath))
+                                {
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
 
                 if (!File.Exists(saveFilePath))
                 {
@@ -237,20 +278,45 @@ namespace Andastra.Runtime.Engines.Odyssey.Save
                     {
                         GFF nfoGff = DeserializeGFF(nfoData);
                         
+                        // Parse save number and name from directory name
+                        // Based on swkotor2.exe: Format "%06d - %s" (6-digit number - name)
+                        int saveNumber = ParseSaveNumberFromDirectory(saveName);
+                        string displayName = ParseSaveNameFromDirectory(saveName);
+                        if (string.IsNullOrEmpty(displayName))
+                        {
+                            // Fallback: use directory name if parsing fails (backward compatibility)
+                            displayName = saveName;
+                        }
+                        
                         info = new SaveGameInfo
                         {
-                            Name = saveName,
+                            Name = displayName,
                             SaveTime = File.GetLastWriteTime(saveFilePath),
-                            SavePath = saveFilePath
+                            SavePath = saveFilePath,
+                            SlotIndex = saveNumber
                         };
 
                         // Extract metadata from NFO GFF
                         var root = nfoGff.Root;
                         if (root != null)
                         {
-                            info.PlayerName = GetStringField(root, "SAVEGAMENAME", "");
+                            // Use SAVEGAMENAME from GFF as the actual save name (user-entered name)
+                            string saveGameName = GetStringField(root, "SAVEGAMENAME", "");
+                            if (!string.IsNullOrEmpty(saveGameName))
+                            {
+                                info.Name = saveGameName;
+                            }
+                            
+                            info.PlayerName = GetStringField(root, "PCNAME", "");
                             info.ModuleName = GetStringField(root, "AREANAME", ""); // AREANAME is actually the module name
                             info.PlayTime = TimeSpan.FromSeconds(GetFloatField(root, "TIMEPLAYED", 0f));
+                            
+                            // Get save number from GFF if available (more reliable than parsing directory name)
+                            int gffSaveNumber = GetIntField(root, "SAVENUMBER", 0);
+                            if (gffSaveNumber > 0)
+                            {
+                                info.SlotIndex = gffSaveNumber;
+                            }
                         }
                     }
                 }
@@ -1018,6 +1084,129 @@ namespace Andastra.Runtime.Engines.Odyssey.Save
         {
             var reader = new ERFBinaryReader(data);
             return reader.Load();
+        }
+
+        #endregion
+
+        #region Save Name Formatting Helpers
+
+        /// <summary>
+        /// Gets the next available save number by scanning existing saves.
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: Save number auto-increment logic
+        /// Original implementation: Scans "SAVES:" directory, parses save numbers from directory names,
+        /// finds the highest number, and returns the next available number (highest + 1)
+        /// Starts at 1 if no saves exist
+        /// </remarks>
+        private int GetNextSaveNumber()
+        {
+            int maxSaveNumber = 0;
+
+            if (Directory.Exists(_savesDirectory))
+            {
+                foreach (string saveDir in Directory.GetDirectories(_savesDirectory))
+                {
+                    string dirName = Path.GetFileName(saveDir);
+                    int saveNumber = ParseSaveNumberFromDirectory(dirName);
+                    if (saveNumber > maxSaveNumber)
+                    {
+                        maxSaveNumber = saveNumber;
+                    }
+                }
+            }
+
+            // Return next available number (highest + 1, or 1 if no saves exist)
+            return maxSaveNumber + 1;
+        }
+
+        /// <summary>
+        /// Formats a save directory name using the original engine format: "%06d - %s"
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: FUN_00708990 @ 0x00708990
+        /// Located via string reference: "%06d - %s" @ 0x007be298
+        /// Original implementation: 6-digit zero-padded save number, followed by " - ", followed by save name
+        /// Example: "000001 - MySave" for save number 1 with name "MySave"
+        /// </remarks>
+        private string FormatSaveDirectoryName(int saveNumber, string saveName)
+        {
+            if (string.IsNullOrEmpty(saveName))
+            {
+                throw new ArgumentException("Save name cannot be null or empty", "saveName");
+            }
+
+            // Format: 6-digit zero-padded number, " - ", save name
+            // Based on swkotor2.exe format string "%06d - %s" @ 0x007be298
+            return string.Format("{0:D6} - {1}", saveNumber, saveName);
+        }
+
+        /// <summary>
+        /// Parses the save number from a formatted directory name.
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: FUN_00708990 @ 0x00708990
+        /// Parses format "%06d - %s" to extract the 6-digit save number
+        /// Returns 0 if the format doesn't match (for backward compatibility with unformatted names)
+        /// </remarks>
+        private int ParseSaveNumberFromDirectory(string directoryName)
+        {
+            if (string.IsNullOrEmpty(directoryName))
+            {
+                return 0;
+            }
+
+            // Format: "000001 - SaveName" or just "SaveName" (backward compatibility)
+            int dashIndex = directoryName.IndexOf(" - ");
+            if (dashIndex > 0 && dashIndex == 6)
+            {
+                // Check if first 6 characters are digits
+                string numberPart = directoryName.Substring(0, 6);
+                int saveNumber;
+                if (int.TryParse(numberPart, out saveNumber))
+                {
+                    return saveNumber;
+                }
+            }
+
+            // Not in formatted format, return 0 (backward compatibility)
+            return 0;
+        }
+
+        /// <summary>
+        /// Parses the save name from a formatted directory name.
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: FUN_00708990 @ 0x00708990
+        /// Parses format "%06d - %s" to extract the save name part (after " - ")
+        /// Returns the original directory name if the format doesn't match (for backward compatibility)
+        /// </remarks>
+        private string ParseSaveNameFromDirectory(string directoryName)
+        {
+            if (string.IsNullOrEmpty(directoryName))
+            {
+                return directoryName;
+            }
+
+            // Format: "000001 - SaveName" or just "SaveName" (backward compatibility)
+            int dashIndex = directoryName.IndexOf(" - ");
+            if (dashIndex > 0 && dashIndex == 6)
+            {
+                // Check if first 6 characters are digits
+                string numberPart = directoryName.Substring(0, 6);
+                int saveNumber;
+                if (int.TryParse(numberPart, out saveNumber))
+                {
+                    // Extract name part (after " - ")
+                    if (directoryName.Length > dashIndex + 3)
+                    {
+                        return directoryName.Substring(dashIndex + 3);
+                    }
+                }
+            }
+
+            // Not in formatted format, return original (backward compatibility)
+            return directoryName;
         }
 
         #endregion
