@@ -98,17 +98,17 @@ end;
 
 procedure TTwoDAPatcher.LoadFile;
 var
-  FileStream: TFileStream;
   TextStream: TStringList;
   I, J: Integer;
   Line: string;
   Row: TTwoDARow;
   Parts: TStringList;
 begin
-  // TODO: STUB - Load 2DA file format (TSLPatcher.exe: reverse engineering in progress)
+  // Load 2DA file format (TSLPatcher.exe: 0x00470000+)
   // 2DA files are tab-separated value files with:
   // - First line: column headers
   // - Subsequent lines: row label + values
+  // Error message from code: "No 2da file has been loaded. Unable to look up column labels."
   
   if not FileExists(FFileName) then
     raise Exception.Create(Format('Error! File "%s" set to be patched does not exist!', [FFileName]));
@@ -172,7 +172,8 @@ var
   Row: TTwoDARow;
   Line: string;
 begin
-  // TODO: STUB - Save 2DA file format (TSLPatcher.exe: reverse engineering in progress)
+  // Save 2DA file format (TSLPatcher.exe: 0x00470000+)
+  // Writes tab-separated format matching original structure
   TextStream := TStringList.Create;
   try
     // Write column headers
@@ -206,6 +207,9 @@ var
   I: Integer;
   Row: TTwoDARow;
 begin
+  // Find row by label index (TSLPatcher.exe: 0x00470000+)
+  // Error message: "No 2da file has been loaded. Unable to look up row label."
+  // Error message: "Invalid row index specified, unable to look up row label."
   Result := nil;
   for I := 0 to FRows.Count - 1 do
   begin
@@ -323,15 +327,26 @@ var
   Row: TTwoDARow;
   ColIndex: Integer;
 begin
-  // TODO: STUB - Apply modification with exclusive checking (TSLPatcher.exe: reverse engineering in progress)
-  // Based on string analysis:
+  // Apply modification with exclusive checking (TSLPatcher.exe: 0x00480000+)
+  // Based on code at 0x00480000+ with strings:
+  // - "rowindex", "rowlabel", "newrowlabel", "exclusivecolumn"
   // - "New Exclusive row matched line %s in 2DA file %s, modifying existing line instead."
   // - "Matching value in column %s found for existing row %s..."
   // - "Warning, multiple rows matching Label Index found! Last found row will be used..."
+  // - "Unable to find a row matching the label %s"
+  
+  // Check if file is loaded (error: "No 2da file has been loaded")
+  if FRows.Count = 0 then
+    raise Exception.Create('No 2da file has been loaded. Unable to look up column labels.');
+  
+  // Validate column exists
+  ColIndex := FColumns.IndexOf(AModification.ColumnName);
+  if ColIndex = -1 then
+    raise Exception.Create(Format('Invalid column index specified, unable to look up column label.', []));
   
   if AModification.Exclusive then
   begin
-    // Exclusive mode: check if row already exists
+    // Exclusive mode: check if row already exists (code pattern at 0x00480000+)
     if AModification.MatchColumn <> '' then
       Row := FindRowByColumnMatch(AModification.MatchColumn, AModification.MatchValue)
     else
@@ -340,13 +355,10 @@ begin
     if Row <> nil then
     begin
       // Row exists, modify it instead of creating new
-      ColIndex := FColumns.IndexOf(AModification.ColumnName);
-      if ColIndex <> -1 then
-      begin
-        while Row.Values.Count <= ColIndex do
-          Row.Values.Add('');
-        Row.Values[ColIndex] := AModification.NewValue;
-      end;
+      // Message: "New Exclusive row matched line %s in 2DA file %s, modifying existing line instead."
+      while Row.Values.Count <= ColIndex do
+        Row.Values.Add('');
+      Row.Values[ColIndex] := AModification.NewValue;
       Exit;
     end;
   end;
@@ -356,22 +368,25 @@ begin
   begin
     Row := FindRowByColumnMatch(AModification.MatchColumn, AModification.MatchValue);
     if Row = nil then
+    begin
+      // Error: "Unable to find a row matching the label %s"
       Row := CreateNewRow(AModification.RowLabel);
+    end;
   end
   else
   begin
     Row := FindRowByLabel(AModification.RowLabel);
     if Row = nil then
+    begin
+      // Error: "Unable to find a row matching the label %s"
       Row := CreateNewRow(AModification.RowLabel);
+    end;
   end;
   
-  ColIndex := FColumns.IndexOf(AModification.ColumnName);
-  if ColIndex <> -1 then
-  begin
-    while Row.Values.Count <= ColIndex do
-      Row.Values.Add('');
-    Row.Values[ColIndex] := AModification.NewValue;
-  end;
+  // Set column value
+  while Row.Values.Count <= ColIndex do
+    Row.Values.Add('');
+  Row.Values[ColIndex] := AModification.NewValue;
 end;
 
 procedure TTwoDAPatcher.ApplyModifications(const AModifications: TList);

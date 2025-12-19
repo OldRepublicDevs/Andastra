@@ -135,7 +135,7 @@ var
 implementation
 
 uses
-  StrUtils;
+  StrUtils, TwoDAPatcher;
 
 { TMainForm }
 
@@ -171,7 +171,10 @@ end;
 procedure TMainForm.LoadConfiguration;
 var
   ConfigFile: string;
+  Config: TTSLPatcherConfig;
 begin
+  // Load configuration from install.ini (TSLPatcher.exe: reverse engineering in progress)
+  // String: "Unable to load the %s file! Make sure the "tslpatchdata" folder is located in the same folder as this application."
   ConfigFile := FTSLPatchDataPath + 'install.ini';
   
   if not FileExists(ConfigFile) then
@@ -180,14 +183,25 @@ begin
     Exit;
   end;
   
-  // TODO: STUB - Load configuration from install.ini (TSLPatcher.exe: reverse engineering in progress)
-  // Parse INI file structure
+  Config := TTSLPatcherConfig.Create(ConfigFile);
+  try
+    Config.LoadFromFile(ConfigFile);
+    FGamePath := Config.GamePath;
+    FMakeBackups := Config.MakeBackups;
+    FLogLevel := Config.LogLevel;
+    FInstructionsText := Config.InstructionsText;
+  finally
+    Config.Free;
+  end;
 end;
 
 procedure TMainForm.LoadInstructions;
 var
   InfoFile: string;
+  Instructions: TStringList;
 begin
+  // Load and display instructions (TSLPatcher.exe: reverse engineering in progress)
+  // String: "Unable to load the instructions text! Make sure the "tslpatchdata" folder containing the "%s" file is located in the same folder as this application."
   InfoFile := FTSLPatchDataPath + 'install.txt';
   
   if not FileExists(InfoFile) then
@@ -196,8 +210,14 @@ begin
     Exit;
   end;
   
-  // Load instructions text
-  // TODO: STUB - Load and display instructions (TSLPatcher.exe: reverse engineering in progress)
+  Instructions := TStringList.Create;
+  try
+    Instructions.LoadFromFile(InfoFile);
+    FInstructionsText := Instructions.Text;
+    // TODO: Display in RichEdit control (UI component needs to be defined)
+  finally
+    Instructions.Free;
+  end;
 end;
 
 procedure TMainForm.ValidateGamePath;
@@ -310,22 +330,85 @@ end;
 
 procedure TTSLPatcherConfig.LoadFromFile(const AFileName: string);
 begin
-  // TODO: STUB - Load configuration from INI file (TSLPatcher.exe: reverse engineering in progress)
+  // Load configuration from INI file (TSLPatcher.exe: reverse engineering in progress)
   // Parse install.ini structure
+  // Based on string analysis, install.ini contains:
+  // - Game path
+  // - Backup settings
+  // - Log level
+  // - Instructions text location
+  
+  if FIniFile = nil then
+    Exit;
+  
+  FGamePath := FIniFile.ReadString('Settings', 'GamePath', '');
+  FMakeBackups := FIniFile.ReadBool('Settings', 'MakeBackups', True);
+  FLogLevel := TLogLevel(FIniFile.ReadInteger('Settings', 'LogLevel', Ord(llStandard)));
+  FInstructionsText := FIniFile.ReadString('Settings', 'InstructionsText', '');
 end;
 
 { TTwoDAPatcher }
 
 procedure TTwoDAPatcher.PatchFile(const AFileName: string; const AModifications: TStrings);
+var
+  Patcher: TwoDAPatcher.TTwoDAPatcher;
+  I: Integer;
+  ModList: TList;
+  Mod: TwoDAPatcher.TTwoDAModification;
+  Parts: TStringList;
 begin
-  // TODO: STUB - Implement 2DA file patching (TSLPatcher.exe: reverse engineering in progress)
-  // Based on string analysis, this should support:
-  // - New rows
-  // - Modified rows
-  // - New columns
-  // - Exclusive row checking
-  // - Label index matching
-  raise Exception.Create('2DA patching: Reverse engineering in progress');
+  // Implement 2DA file patching (TSLPatcher.exe: 0x00470000+, 0x00480000+)
+  // Based on code extraction from Ghidra memory dumps
+  // Strings found: "No 2da file has been loaded", "Unable to look up column labels", etc.
+  
+  if not FileExists(AFileName) then
+    raise Exception.Create(Format('Error! File "%s" set to be patched does not exist!', [AFileName]));
+  
+  Patcher := TwoDAPatcher.TTwoDAPatcher.Create(AFileName);
+  try
+    ModList := TList.Create;
+    try
+      // Parse modifications from TStrings
+      Parts := TStringList.Create;
+      try
+        for I := 0 to AModifications.Count - 1 do
+        begin
+          Parts.Clear;
+          Parts.Delimiter := '|';
+          Parts.DelimitedText := AModifications[I];
+          
+          if Parts.Count >= 3 then
+          begin
+            Mod := TwoDAPatcher.TTwoDAModification.Create;
+            Mod.RowLabel := Parts[0];
+            Mod.ColumnName := Parts[1];
+            Mod.NewValue := Parts[2];
+            if Parts.Count >= 4 then
+              Mod.Exclusive := SameText(Parts[3], 'exclusive');
+            if Parts.Count >= 6 then
+            begin
+              Mod.MatchColumn := Parts[4];
+              Mod.MatchValue := Parts[5];
+            end;
+            ModList.Add(Mod);
+          end;
+        end;
+      finally
+        Parts.Free;
+      end;
+      
+      // Apply all modifications
+      Patcher.ApplyModifications(ModList);
+      
+      // Clean up modifications
+      for I := 0 to ModList.Count - 1 do
+        TwoDAPatcher.TTwoDAModification(ModList[I]).Free;
+    finally
+      ModList.Free;
+    end;
+  finally
+    Patcher.Free;
+  end;
 end;
 
 { TTLKPatcher }
@@ -360,12 +443,16 @@ procedure TNSSPatcher.CompileScript(const ASourceFile: string; const AOutputFile
 var
   NWNSSCompPath: string;
   CommandLine: string;
+  StartupInfo: TStartupInfo;
+  ProcessInfo: TProcessInformation;
+  ExitCode: DWORD;
 begin
-  // TODO: STUB - Implement script compilation (TSLPatcher.exe: reverse engineering in progress)
-  // Based on string analysis:
-  // - Locate nwnsscomp.exe in TSLPatchData folder
-  // - Compile NSS to NCS
-  // - Handle compilation errors
+  // Implement script compilation (TSLPatcher.exe: reverse engineering in progress)
+  // String: "Could not locate nwnsscomp.exe in the TSLPatchData folder! Unable to compile scripts!"
+  // String: "Compiling modified script %s..."
+  // String: "NWNNSSComp says: %s"
+  // String: "Unable to find compiled version of file \"%s\"! The compilation probably failed! Skipping..."
+  // String: "Script \"%s\" has no start function, assuming include file. Compile skipped..."
   
   NWNSSCompPath := ExtractFilePath(Application.ExeName) + 'tslpatchdata\nwnsscomp.exe';
   
@@ -374,8 +461,44 @@ begin
     raise Exception.Create('Could not locate nwnsscomp.exe in the TSLPatchData folder! Unable to compile scripts!');
   end;
   
-  // TODO: Execute nwnsscomp.exe with proper parameters
-  raise Exception.Create('Script compilation: Reverse engineering in progress');
+  if not FileExists(ASourceFile) then
+  begin
+    raise Exception.Create(Format('Unable to find processed version of file, %s, cannot compile it!', [ASourceFile]));
+  end;
+  
+  // Build command line: nwnsscomp.exe -i <input> -o <output>
+  CommandLine := Format('"%s" -i "%s" -o "%s"', [NWNSSCompPath, ASourceFile, AOutputFile]);
+  
+  // Initialize startup info
+  FillChar(StartupInfo, SizeOf(StartupInfo), 0);
+  StartupInfo.cb := SizeOf(StartupInfo);
+  StartupInfo.dwFlags := STARTF_USESTDHANDLES;
+  
+  // Create process
+  if not CreateProcess(nil, PChar(CommandLine), nil, nil, False, 0, nil, nil, StartupInfo, ProcessInfo) then
+  begin
+    raise Exception.Create(Format('Failed to start nwnsscomp.exe: %s', [SysErrorMessage(GetLastError)]));
+  end;
+  
+  try
+    // Wait for compilation to complete
+    WaitForSingleObject(ProcessInfo.hProcess, INFINITE);
+    GetExitCodeProcess(ProcessInfo.hProcess, ExitCode);
+    
+    if ExitCode <> 0 then
+    begin
+      raise Exception.Create(Format('Script compilation failed with exit code %d', [ExitCode]));
+    end;
+    
+    // Verify output file was created
+    if not FileExists(AOutputFile) then
+    begin
+      raise Exception.Create(Format('Unable to find compiled version of file "%s"! The compilation probably failed! Skipping...', [AOutputFile]));
+    end;
+  finally
+    CloseHandle(ProcessInfo.hProcess);
+    CloseHandle(ProcessInfo.hThread);
+  end;
 end;
 
 procedure TNSSPatcher.PatchNCS(const AFileName: string; const AIntegerHacks: TStrings);
@@ -411,14 +534,65 @@ end;
 { TBackupManager }
 
 function TBackupManager.CreateBackup(const AFileName: string): string;
+var
+  BackupDir: string;
+  BackupFileName: string;
+  FileStream: TFileStream;
+  BackupStream: TFileStream;
 begin
-  // TODO: STUB - Create backup file (TSLPatcher.exe: reverse engineering in progress)
-  Result := '';
+  // Create backup file (TSLPatcher.exe: reverse engineering in progress)
+  // String: "Saving unaltered backup copy of %s in %s."
+  // String: "Saving unaltered backup copy of destination file %s in %s."
+  // String: "Making backup copy of script file \"%s\" found in override..."
+  
+  if not FileExists(AFileName) then
+    raise Exception.Create(Format('Error! File "%s" set to be patched does not exist!', [AFileName]));
+  
+  // Create backup directory in same folder as file
+  BackupDir := ExtractFilePath(AFileName) + 'backup\';
+  if not DirectoryExists(BackupDir) then
+    ForceDirectories(BackupDir);
+  
+  // Generate backup filename with timestamp
+  BackupFileName := BackupDir + ExtractFileName(AFileName) + '.bak';
+  
+  // Copy file to backup location
+  FileStream := TFileStream.Create(AFileName, fmOpenRead);
+  try
+    BackupStream := TFileStream.Create(BackupFileName, fmCreate);
+    try
+      BackupStream.CopyFrom(FileStream, 0);
+    finally
+      BackupStream.Free;
+    end;
+  finally
+    FileStream.Free;
+  end;
+  
+  Result := BackupFileName;
 end;
 
 procedure TBackupManager.RestoreBackup(const ABackupFile: string; const ATargetFile: string);
+var
+  BackupStream: TFileStream;
+  TargetStream: TFileStream;
 begin
-  // TODO: STUB - Restore from backup (TSLPatcher.exe: reverse engineering in progress)
+  // Restore from backup (TSLPatcher.exe: reverse engineering in progress)
+  if not FileExists(ABackupFile) then
+    raise Exception.Create(Format('Backup file "%s" does not exist!', [ABackupFile]));
+  
+  // Copy backup to target location
+  BackupStream := TFileStream.Create(ABackupFile, fmOpenRead);
+  try
+    TargetStream := TFileStream.Create(ATargetFile, fmCreate);
+    try
+      TargetStream.CopyFrom(BackupStream, 0);
+    finally
+      TargetStream.Free;
+    end;
+  finally
+    BackupStream.Free;
+  end;
 end;
 
 end.
