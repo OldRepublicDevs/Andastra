@@ -1,44 +1,43 @@
 meta:
-  id: utm
-  title: BioWare UTM (Merchant Template) File Format
+  id: pth
+  title: BioWare PTH (Pathfinding) File Format
   license: MIT
   endian: le
-  file-extension: utm
+  file-extension: pth
   xref:
-    pykotor: vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/generics/utm.py
-    reone: vendor/reone/src/libs/resource/parser/gff/utm.cpp
-    wiki: vendor/PyKotor/wiki/GFF-UTM.md
+    pykotor: vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/generics/pth.py
+    reone: vendor/reone/src/libs/resource/parser/gff/pth.cpp
+    xoreos: vendor/xoreos/src/aurora/pthfile.cpp
+    wiki: vendor/PyKotor/wiki/GFF-File-Format.md
 doc: |
-  UTM (User Template Merchant) files are GFF-based format files that define merchant/store blueprints.
-  UTM files use the GFF (Generic File Format) binary structure with file type signature "UTM ".
+  PTH (Pathfinding) files are GFF-based format files that store pathfinding data including
+  waypoints and connections for NPC navigation. PTH files use the GFF (Generic File Format) 
+  binary structure with file type signature "PTH ".
   
-  UTM files contain:
-  - Root struct with merchant metadata:
-    - ResRef: Merchant template ResRef (unique identifier)
-    - LocName: Localized merchant name (LocalizedString)
-    - Tag: Merchant tag identifier (string)
-    - MarkUp: Markup percentage for selling to player (Int32)
-    - MarkDown: Markdown percentage for buying from player (Int32)
-    - OnOpenStore: Script ResRef executed when store opens (ResRef)
-    - Comment: Developer comment string (string, not used by game engine)
-    - BuySellFlag: Flags for buy/sell capabilities (UInt8)
-      - Bit 0: Can buy items (1 = can buy, 0 = cannot buy)
-      - Bit 1: Can sell items (1 = can sell, 0 = cannot sell)
-    - ID: Deprecated field, not used by game engine (UInt8)
-  - ItemList: Array of UTM_ItemList structs containing merchant inventory items
-    Each item contains:
-    - InventoryRes: Item ResRef (ResRef)
-    - Infinite: Whether item stock is infinite (UInt8, boolean)
-    - Dropable: Whether item is droppable (UInt8, boolean)
-    - Repos_PosX: X position in merchant inventory grid (UInt16)
-    - Repos_PosY: Y position in merchant inventory grid (UInt16)
+  PTH files contain:
+  - Root struct with two LIST fields:
+    - Path_Points: Array of PTHPoint structs (waypoint coordinates and connection metadata)
+    - Path_Conections: Array of PTHConnection structs (edges connecting waypoints)
+  
+  Each PTHPoint struct contains:
+  - Conections (UInt32): Number of outgoing connections from this point
+  - First_Conection (UInt32): Index into Path_Conections list for first connection
+  - X (Single/Float32): X coordinate of the waypoint
+  - Y (Single/Float32): Y coordinate of the waypoint
+  
+  Each PTHConnection struct contains:
+  - Destination (UInt32): Index of the target waypoint in Path_Points list
+  
+  The pathfinding graph is constructed by:
+  1. Iterating through Path_Points to get waypoint positions
+  2. For each point, using First_Conection and Conections to index into Path_Conections
+  3. Reading Destination indices to build the graph edges
   
   References:
-  - vendor/PyKotor/wiki/GFF-UTM.md
+  - vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/generics/pth.py:160-209
+  - vendor/reone/src/libs/resource/parser/gff/pth.cpp
+  - vendor/xoreos/src/aurora/pthfile.cpp
   - vendor/PyKotor/wiki/GFF-File-Format.md
-  - vendor/reone/include/reone/resource/parser/gff/utm.h:35-46 (UTM struct definition)
-  - vendor/reone/src/libs/resource/parser/gff/utm.cpp:37-52 (UTM parsing from GFF)
-  - vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/generics/utm.py:16-223 (PyKotor implementation)
 
 seq:
   - id: gff_header
@@ -88,9 +87,9 @@ types:
         encoding: ASCII
         size: 4
         doc: |
-          File type signature. Must be "UTM " for merchant template files.
-          Other GFF types: "GFF ", "DLG ", "ARE ", "UTC ", "UTI ", etc.
-        valid: "UTM "
+          File type signature. Must be "PTH " for pathfinding files.
+          Other GFF types: "GFF ", "ARE ", "UTC ", "UTI ", "DLG ", etc.
+        valid: "PTH "
       
       - id: file_version
         type: str
@@ -158,7 +157,16 @@ types:
         size: 16
         repeat: expr
         repeat-expr: _root.gff_header.label_count
-        doc: Array of 16-byte null-terminated field name labels
+        doc: |
+          Array of 16-byte null-terminated field name labels.
+          Common PTH labels include:
+          - "Path_Points" (root LIST field for waypoints)
+          - "Path_Conections" (root LIST field for connections)
+          - "Conections" (UInt32 field in PTHPoint struct)
+          - "First_Conection" (UInt32 field in PTHPoint struct)
+          - "X" (Single field in PTHPoint struct)
+          - "Y" (Single field in PTHPoint struct)
+          - "Destination" (UInt32 field in PTHConnection struct)
   
   # Struct Array
   struct_array:
@@ -176,6 +184,8 @@ types:
         doc: |
           Structure type identifier.
           Root struct always has struct_id = 0xFFFFFFFF (-1).
+          PTHPoint structs typically have struct_id = 2.
+          PTHConnection structs typically have struct_id = 3.
           Other structs have programmer-defined IDs.
       
       - id: data_or_offset
@@ -222,6 +232,15 @@ types:
           15 = List
           16 = Vector3
           17 = Vector4
+          
+          PTH-specific field types:
+          - Path_Points: field_type = 15 (List)
+          - Path_Conections: field_type = 15 (List)
+          - Conections: field_type = 4 (UInt32)
+          - First_Conection: field_type = 4 (UInt32)
+          - X: field_type = 8 (Single/Float32)
+          - Y: field_type = 8 (Single/Float32)
+          - Destination: field_type = 4 (UInt32)
       
       - id: label_index
         type: u4
@@ -245,7 +264,10 @@ types:
       - id: data
         type: str
         size: _root.gff_header.field_data_count
-        doc: Raw field data bytes for complex types
+        doc: |
+          Raw field data bytes for complex types.
+          PTH files typically have minimal field_data since most fields are simple types
+          (UInt32, Single) stored inline in field_entry.data_or_offset.
   
   # Field Indices Array (MultiMap)
   field_indices_array:
@@ -254,7 +276,10 @@ types:
         type: u4
         repeat: expr
         repeat-expr: _root.gff_header.field_indices_count
-        doc: Array of field indices (uint32 values) for structs with multiple fields
+        doc: |
+          Array of field indices (uint32 values) for structs with multiple fields.
+          Used when a struct has more than one field - the struct_entry.data_or_offset
+          points to an offset in this array, which contains the field indices.
   
   # List Indices Array
   list_indices_array:
@@ -263,5 +288,12 @@ types:
         type: u4
         repeat: expr
         repeat-expr: _root.gff_header.list_indices_count
-        doc: Array of list indices (uint32 values) for LIST type fields
+        doc: |
+          Array of list indices (uint32 values) for LIST type fields.
+          For PTH files:
+          - Path_Points LIST: Contains struct indices pointing to PTHPoint structs
+          - Path_Conections LIST: Contains struct indices pointing to PTHConnection structs
+          
+          Each LIST field_entry.data_or_offset points to a byte offset in this array.
+          The list indices are stored as consecutive uint32 values starting at that offset.
 

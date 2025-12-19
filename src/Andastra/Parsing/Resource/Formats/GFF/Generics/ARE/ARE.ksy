@@ -1,44 +1,35 @@
 meta:
-  id: utm
-  title: BioWare UTM (Merchant Template) File Format
+  id: are
+  title: BioWare ARE (Area) File Format
   license: MIT
   endian: le
-  file-extension: utm
+  file-extension: are
   xref:
-    pykotor: vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/generics/utm.py
-    reone: vendor/reone/src/libs/resource/parser/gff/utm.cpp
-    wiki: vendor/PyKotor/wiki/GFF-UTM.md
+    pykotor: vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/generics/are.py
+    reone: vendor/reone/src/libs/resource/parser/gff/are.cpp
+    xoreos: vendor/xoreos/src/aurora/arefile.cpp
+    wiki: vendor/PyKotor/wiki/GFF-File-Format.md
 doc: |
-  UTM (User Template Merchant) files are GFF-based format files that define merchant/store blueprints.
-  UTM files use the GFF (Generic File Format) binary structure with file type signature "UTM ".
+  ARE (Area) files are GFF-based format files that store static area information including
+  lighting, fog, grass, weather, script hooks, and map data. ARE files use the GFF (Generic File Format)
+  binary structure with file type signature "ARE ".
   
-  UTM files contain:
-  - Root struct with merchant metadata:
-    - ResRef: Merchant template ResRef (unique identifier)
-    - LocName: Localized merchant name (LocalizedString)
-    - Tag: Merchant tag identifier (string)
-    - MarkUp: Markup percentage for selling to player (Int32)
-    - MarkDown: Markdown percentage for buying from player (Int32)
-    - OnOpenStore: Script ResRef executed when store opens (ResRef)
-    - Comment: Developer comment string (string, not used by game engine)
-    - BuySellFlag: Flags for buy/sell capabilities (UInt8)
-      - Bit 0: Can buy items (1 = can buy, 0 = cannot buy)
-      - Bit 1: Can sell items (1 = can sell, 0 = cannot sell)
-    - ID: Deprecated field, not used by game engine (UInt8)
-  - ItemList: Array of UTM_ItemList structs containing merchant inventory items
-    Each item contains:
-    - InventoryRes: Item ResRef (ResRef)
-    - Infinite: Whether item stock is infinite (UInt8, boolean)
-    - Dropable: Whether item is droppable (UInt8, boolean)
-    - Repos_PosX: X position in merchant inventory grid (UInt16)
-    - Repos_PosY: Y position in merchant inventory grid (UInt16)
+  ARE files contain:
+  - Root struct with area properties (Tag, Name, AlphaTest, CameraStyle, DefaultEnvMap, etc.)
+  - Map struct: Nested struct containing map data (NorthAxis, MapZoom, MapResX, MapPt1X/Y, MapPt2X/Y, WorldPt1X/Y, WorldPt2X/Y)
+  - Lighting properties: SunAmbientColor, SunDiffuseColor, DynAmbientColor, SunFogColor
+  - Grass properties: Grass_TexName, Grass_Density, Grass_QuadSize, Grass_Prob_LL/LR/UL/UR, Grass_Ambient, Grass_Diffuse, Grass_Emissive (KotOR 2 only)
+  - Fog properties: SunFogOn, SunFogNear, SunFogFar
+  - Weather properties: WindPower, ShadowOpacity, ChancesOfRain/Snow/Lightning/Fog (KotOR 2)
+  - Script hooks: OnEnter, OnExit, OnHeartbeat, OnUserDefined (and OnEnter2, OnExit2, OnHeartbeat2, OnUserDefined2)
+  - Lists: Rooms, AreaList, MapList
+  - KotOR 2-specific fields: DirtyFormulaOne/Two/Thre, Grass_Emissive
+  - Aurora/NWN-specific fields: EnvAudio, DisplayName, MoonFogColor, MoonFogAmount, MoonAmbientColor, MoonDiffuseColor
   
   References:
-  - vendor/PyKotor/wiki/GFF-UTM.md
   - vendor/PyKotor/wiki/GFF-File-Format.md
-  - vendor/reone/include/reone/resource/parser/gff/utm.h:35-46 (UTM struct definition)
-  - vendor/reone/src/libs/resource/parser/gff/utm.cpp:37-52 (UTM parsing from GFF)
-  - vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/generics/utm.py:16-223 (PyKotor implementation)
+  - src/Andastra/Parsing/Resource/Formats/GFF/Generics/ARE.cs
+  - src/Andastra/Parsing/Resource/Formats/GFF/Generics/AREHelpers.cs
 
 seq:
   - id: gff_header
@@ -88,9 +79,9 @@ types:
         encoding: ASCII
         size: 4
         doc: |
-          File type signature. Must be "UTM " for merchant template files.
-          Other GFF types: "GFF ", "DLG ", "ARE ", "UTC ", "UTI ", etc.
-        valid: "UTM "
+          File type signature. Must be "ARE " for area files.
+          Other GFF types: "GFF ", "DLG ", "UTC ", "UTI ", etc.
+        valid: "ARE "
       
       - id: file_version
         type: str
@@ -177,6 +168,7 @@ types:
           Structure type identifier.
           Root struct always has struct_id = 0xFFFFFFFF (-1).
           Other structs have programmer-defined IDs.
+          ARE files typically have root struct (struct_id = -1) and Map struct (struct_id varies).
       
       - id: data_or_offset
         type: u4
@@ -204,22 +196,22 @@ types:
         type: u4
         doc: |
           Field data type (see GFFFieldType enum):
-          0 = Byte (UInt8)
+          0 = Byte (UInt8) - used for boolean flags like Unescapable, DisableTransit, StealthXPEnabled, SunFogOn
           1 = Char (Int8)
-          2 = UInt16
+          2 = UInt16 - used for LoadScreenID
           3 = Int16
-          4 = UInt32
-          5 = Int32
+          4 = UInt32 - used for color values (SunAmbientColor, Grass_Ambient, etc.)
+          5 = Int32 - used for AlphaTest, CameraStyle, WindPower, StealthXPLoss/Max, DirtyFormulaOne/Two/Thre
           6 = UInt64
           7 = Int64
-          8 = Single (Float32)
+          8 = Single (Float32) - used for fog distances, grass properties, map coordinates
           9 = Double (Float64)
-          10 = CExoString (String)
-          11 = ResRef
-          12 = CExoLocString (LocalizedString)
+          10 = CExoString (String) - used for Tag, Comments
+          11 = ResRef - used for DefaultEnvMap, Grass_TexName, script hooks (OnEnter, OnExit, etc.)
+          12 = CExoLocString (LocalizedString) - used for Name, DisplayName (Aurora)
           13 = Void (Binary)
-          14 = Struct
-          15 = List
+          14 = Struct - used for Map struct
+          15 = List - used for Rooms, AreaList, MapList
           16 = Vector3
           17 = Vector4
       

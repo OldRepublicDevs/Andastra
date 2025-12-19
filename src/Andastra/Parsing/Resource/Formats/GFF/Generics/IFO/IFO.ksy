@@ -1,44 +1,40 @@
 meta:
-  id: utm
-  title: BioWare UTM (Merchant Template) File Format
+  id: ifo
+  title: BioWare IFO (Module Info) File Format
   license: MIT
   endian: le
-  file-extension: utm
+  file-extension: ifo
   xref:
-    pykotor: vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/generics/utm.py
-    reone: vendor/reone/src/libs/resource/parser/gff/utm.cpp
-    wiki: vendor/PyKotor/wiki/GFF-UTM.md
+    pykotor: vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/generics/ifo.py
+    reone: vendor/reone/src/libs/resource/parser/gff/ifo.cpp
+    xoreos: vendor/xoreos/src/aurora/ifofile.cpp
+    wiki: vendor/PyKotor/wiki/GFF-IFO.md
+    bioware: vendor/PyKotor/wiki/Bioware-Aurora-IFO.md
 doc: |
-  UTM (User Template Merchant) files are GFF-based format files that define merchant/store blueprints.
-  UTM files use the GFF (Generic File Format) binary structure with file type signature "UTM ".
+  IFO (Module Info) files are GFF-based format files that store module information including
+  entry points, script hooks, area lists, and module metadata. IFO files use the GFF (Generic File Format)
+  binary structure with file type signature "IFO ".
   
-  UTM files contain:
-  - Root struct with merchant metadata:
-    - ResRef: Merchant template ResRef (unique identifier)
-    - LocName: Localized merchant name (LocalizedString)
-    - Tag: Merchant tag identifier (string)
-    - MarkUp: Markup percentage for selling to player (Int32)
-    - MarkDown: Markdown percentage for buying from player (Int32)
-    - OnOpenStore: Script ResRef executed when store opens (ResRef)
-    - Comment: Developer comment string (string, not used by game engine)
-    - BuySellFlag: Flags for buy/sell capabilities (UInt8)
-      - Bit 0: Can buy items (1 = can buy, 0 = cannot buy)
-      - Bit 1: Can sell items (1 = can sell, 0 = cannot sell)
-    - ID: Deprecated field, not used by game engine (UInt8)
-  - ItemList: Array of UTM_ItemList structs containing merchant inventory items
-    Each item contains:
-    - InventoryRes: Item ResRef (ResRef)
-    - Infinite: Whether item stock is infinite (UInt8, boolean)
-    - Dropable: Whether item is droppable (UInt8, boolean)
-    - Repos_PosX: X position in merchant inventory grid (UInt16)
-    - Repos_PosY: Y position in merchant inventory grid (UInt16)
+  IFO files contain:
+  - Root struct with module metadata (Mod_ID, Mod_Name, Mod_Tag, Mod_Version, etc.)
+  - Entry configuration (Mod_Entry_Area, Mod_Entry_X/Y/Z, Mod_Entry_Dir_X/Y)
+  - Area list (Mod_Area_list): List of areas in the module
+  - Script hooks (Mod_OnModLoad, Mod_OnModStart, Mod_OnHeartbeat, etc.)
+  - Time settings (Mod_DawnHour, Mod_DuskHour, Mod_StartMonth/Day/Hour/Year)
+  - Expansion pack requirements (Expansion_Pack, Mod_MinGameVer)
+  - HAK file lists (Mod_Hak, Mod_HakList)
+  - Module description and version information
+  
+  Each area in Mod_Area_list contains:
+  - Area_Name (ResRef): Area ResRef (ARE file)
+  - ObjectId (DWord, savegame only): ObjectID of the area
   
   References:
-  - vendor/PyKotor/wiki/GFF-UTM.md
+  - vendor/PyKotor/wiki/GFF-IFO.md
+  - vendor/PyKotor/wiki/Bioware-Aurora-IFO.md
   - vendor/PyKotor/wiki/GFF-File-Format.md
-  - vendor/reone/include/reone/resource/parser/gff/utm.h:35-46 (UTM struct definition)
-  - vendor/reone/src/libs/resource/parser/gff/utm.cpp:37-52 (UTM parsing from GFF)
-  - vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/generics/utm.py:16-223 (PyKotor implementation)
+  - vendor/reone/src/libs/resource/parser/gff/ifo.cpp
+  - vendor/xoreos/src/aurora/ifofile.cpp
 
 seq:
   - id: gff_header
@@ -88,9 +84,9 @@ types:
         encoding: ASCII
         size: 4
         doc: |
-          File type signature. Must be "UTM " for merchant template files.
-          Other GFF types: "GFF ", "DLG ", "ARE ", "UTC ", "UTI ", etc.
-        valid: "UTM "
+          File type signature. Must be "IFO " for module info files.
+          Other GFF types: "GFF ", "ARE ", "UTC ", "UTI ", "DLG ", etc.
+        valid: "IFO "
       
       - id: file_version
         type: str
@@ -176,7 +172,17 @@ types:
         doc: |
           Structure type identifier.
           Root struct always has struct_id = 0xFFFFFFFF (-1).
-          Other structs have programmer-defined IDs.
+          Other structs have programmer-defined IDs:
+          - StructID 6: Area list entry (Mod_Area_list)
+          - StructID 7: Token entry (Mod_Tokens)
+          - StructID 8: HAK list entry (Mod_HakList)
+          - StructID 9: Cached script entry (Mod_CacheNSSList)
+          - StructID 0: Variable table entry (Mod_VarTable)
+          - StructID 43981: Event queue entry
+          - StructID 48813: Player list entry
+          - StructID 13634816: TURD (Temporary User Resource Data) entry
+          - StructID 47787: Personal reputation entry
+          - StructID 43962: Reputation list entry
       
       - id: data_or_offset
         type: u4
@@ -202,8 +208,9 @@ types:
     seq:
       - id: field_type
         type: u4
+        enum: gff_field_type
         doc: |
-          Field data type (see GFFFieldType enum):
+          Field data type (see gff_field_type enum):
           0 = Byte (UInt8)
           1 = Char (Int8)
           2 = UInt16
@@ -259,9 +266,61 @@ types:
   # List Indices Array
   list_indices_array:
     seq:
-      - id: indices
+      - id: entries
+        type: list_entry
+        repeat: until
+        repeat-until: _io.pos >= (_root.gff_header.list_indices_offset + _root.gff_header.list_indices_count * 4)
+        doc: |
+          Array of list entries. Each entry starts with a count, followed by that many struct indices.
+          Entries are accessed via field_entry.list_indices_offset_value offsets.
+  
+  list_entry:
+    seq:
+      - id: count
+        type: u4
+        doc: Number of struct indices in this list
+      - id: struct_indices
         type: u4
         repeat: expr
-        repeat-expr: _root.gff_header.list_indices_count
-        doc: Array of list indices (uint32 values) for LIST type fields
+        repeat-expr: count
+        doc: Array of struct indices (indices into struct_array)
+
+enums:
+  gff_field_type:
+    0: uint8
+    doc: 8-bit unsigned integer (byte)
+    1: int8
+    doc: 8-bit signed integer (char)
+    2: uint16
+    doc: 16-bit unsigned integer (word)
+    3: int16
+    doc: 16-bit signed integer (short)
+    4: uint32
+    doc: 32-bit unsigned integer (dword)
+    5: int32
+    doc: 32-bit signed integer (int)
+    6: uint64
+    doc: 64-bit unsigned integer (stored in field_data)
+    7: int64
+    doc: 64-bit signed integer (stored in field_data)
+    8: single
+    doc: 32-bit floating point (float)
+    9: double
+    doc: 64-bit floating point (stored in field_data)
+    10: string
+    doc: Null-terminated string (CExoString, stored in field_data)
+    11: resref
+    doc: Resource reference (ResRef, max 16 chars, stored in field_data)
+    12: localized_string
+    doc: Localized string (CExoLocString, stored in field_data)
+    13: binary
+    doc: Binary data blob (Void, stored in field_data)
+    14: struct
+    doc: Nested struct (struct index stored inline)
+    15: list
+    doc: List of structs (offset to list_indices stored inline)
+    16: vector4
+    doc: Quaternion/Orientation (4×float, stored in field_data as Vector4)
+    17: vector3
+    doc: 3D vector (3×float, stored in field_data)
 
