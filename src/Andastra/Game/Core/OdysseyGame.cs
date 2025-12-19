@@ -2066,7 +2066,7 @@ namespace Andastra.Runtime.Game.Core
             }
 
             // Try to get from DoorComponent
-            Kotor.Components.DoorComponent doorComponent = entity.GetComponent<Odyssey.Kotor.Components.DoorComponent>();
+            Andastra.Runtime.Games.Odyssey.Components.OdysseyDoorComponent doorComponent = entity.GetComponent<Andastra.Runtime.Games.Odyssey.Components.OdysseyDoorComponent>();
             if (doorComponent != null && !string.IsNullOrEmpty(doorComponent.Conversation))
             {
                 return doorComponent.Conversation;
@@ -2085,7 +2085,7 @@ namespace Andastra.Runtime.Game.Core
                 return;
             }
 
-            Kotor.Components.DoorComponent doorComponent = doorEntity.GetComponent<Odyssey.Kotor.Components.DoorComponent>();
+            Andastra.Runtime.Games.Odyssey.Components.OdysseyDoorComponent doorComponent = doorEntity.GetComponent<Andastra.Runtime.Games.Odyssey.Components.OdysseyDoorComponent>();
             if (doorComponent == null)
             {
                 Console.WriteLine("[Odyssey] Door entity has no DoorComponent");

@@ -101,9 +101,9 @@ namespace Andastra.Runtime.Games.Odyssey.Systems
                     break;
 
                 case ObjectType.Door:
-                    if (!entity.HasComponent<DoorComponent>())
+                    if (!entity.HasComponent<OdysseyDoorComponent>())
                     {
-                        entity.AddComponent(new DoorComponent());
+                        entity.AddComponent(new OdysseyDoorComponent());
                     }
                     break;
 
