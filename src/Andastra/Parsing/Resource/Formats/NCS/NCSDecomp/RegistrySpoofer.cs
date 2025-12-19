@@ -31,10 +31,22 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
         private string originalValue;
         private bool wasModified = false;
         private static readonly string DONT_SHOW_INFO_MARKER_FILE = "ncsdecomp_registry_info_dont_show.txt";
+        private readonly IRegistryDialogHandler dialogHandler;
 
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/RegistrySpoofer.java:51-80
         // Original: public RegistrySpoofer(File installationPath, boolean isK2)
         public RegistrySpoofer(NcsFile installationPath, bool isK2)
+            : this(installationPath, isK2, null)
+        {
+        }
+
+        /// <summary>
+        /// Creates a new RegistrySpoofer instance with an optional dialog handler.
+        /// </summary>
+        /// <param name="installationPath">The installation path to spoof</param>
+        /// <param name="isK2">True if this is KotOR 2, false for KotOR 1</param>
+        /// <param name="dialogHandler">Optional dialog handler for showing user messages. If null, a default Windows Forms handler will be used on Windows.</param>
+        public RegistrySpoofer(NcsFile installationPath, bool isK2, IRegistryDialogHandler dialogHandler)
         {
             if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
@@ -43,6 +55,28 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
 
             this.spoofedPath = installationPath.GetAbsolutePath();
             this.keyName = "Path";
+
+            // Use provided dialog handler, or create a default Windows Forms handler if on Windows
+            if (dialogHandler != null)
+            {
+                this.dialogHandler = dialogHandler;
+            }
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                try
+                {
+                    this.dialogHandler = new WindowsFormsRegistryDialogHandler();
+                }
+                catch (Exception e)
+                {
+                    Debug("[INFO] RegistrySpoofer: Failed to create default Windows Forms dialog handler: " + e.Message);
+                    this.dialogHandler = null; // Will fall back to logging only
+                }
+            }
+            else
+            {
+                this.dialogHandler = null; // Headless mode - will fall back to logging only
+            }
 
             // Determine registry path based on game and architecture
             bool is64Bit = Is64BitArchitecture();
@@ -743,15 +777,50 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
                 return;
             }
 
+            string title = "Registry Access Required";
             string message = "NCSDecomp cannot set the Windows registry key (requires administrator privileges).\n\n" +
                 "To avoid this message, you can either:\n" +
                 "1. Run NCSDecomp as administrator, or\n" +
                 "2. Use a different nwnnsscomp.exe compiler if available\n\n" +
                 "Compilation will be attempted anyway, but may fail if the registry key is not set correctly.";
 
-            Debug("[INFO] RegistrySpoofer: " + message);
-            // Note: UI layer should show this as a dialog with "don't show again" checkbox
-            // TODO: SIMPLIFIED - For now, we just log it
+            // Try to show dialog if handler is available
+            bool dontShowAgain = false;
+            bool dialogShown = false;
+
+            if (this.dialogHandler != null)
+            {
+                try
+                {
+                    dialogShown = this.dialogHandler.ShowDialogWithDontShowAgain(title, message, out dontShowAgain);
+                    if (dialogShown)
+                    {
+                        Debug("[INFO] RegistrySpoofer: Dialog shown successfully, dontShowAgain=" + dontShowAgain);
+                    }
+                    else
+                    {
+                        Debug("[INFO] RegistrySpoofer: Dialog handler failed to show dialog, falling back to logging");
+                    }
+                }
+                catch (Exception e)
+                {
+                    Debug("[INFO] RegistrySpoofer: Exception while showing dialog: " + e.Message);
+                    dialogShown = false;
+                }
+            }
+
+            // If dialog wasn't shown (headless mode or handler unavailable), log the message
+            if (!dialogShown)
+            {
+                Debug("[INFO] RegistrySpoofer: " + message);
+            }
+
+            // If user checked "don't show again", mark it
+            if (dontShowAgain)
+            {
+                MarkDontShowInfoMessage();
+                Debug("[INFO] RegistrySpoofer: User chose 'don't show again', marker file will be created");
+            }
         }
 
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/RegistrySpoofer.java:691-769
