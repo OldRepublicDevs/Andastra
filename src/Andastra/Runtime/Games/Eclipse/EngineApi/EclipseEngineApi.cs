@@ -57,7 +57,6 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
             
             // Tag functions
             RegisterFunctionName(168, "GetTag");
-            // Note: GetObjectByTag is registered below in position/movement section as ID 200
             
             // Global variables
             RegisterFunctionName(578, "GetGlobalBoolean");

@@ -1,8 +1,11 @@
 using System;
+using System.Reactive.Linq;
 using System.Text;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Markup.Xaml;
+using Avalonia.Media;
 using Andastra.Parsing.Resource;
 using FileResource = Andastra.Parsing.Extract.FileResource;
 
@@ -18,6 +21,9 @@ namespace HolocronToolset.Dialogs
         private TextBox _rightText;
         private TextBlock _leftPathLabel;
         private TextBlock _rightPathLabel;
+        private ScrollViewer _leftScrollViewer;
+        private ScrollViewer _rightScrollViewer;
+        private bool _isSyncingScroll;
 
         // Public parameterless constructor for XAML
         public ResourceComparisonDialog() : this(null, null, null)
@@ -76,13 +82,24 @@ namespace HolocronToolset.Dialogs
             headerPanel.Children.Add(rightHeader);
             mainPanel.Children.Add(headerPanel);
 
-            // Comparison view
+            // Comparison view with ScrollViewers for synchronized scrolling
             var splitPanel = new StackPanel { Orientation = Orientation.Horizontal };
-            _leftText = new TextBox { IsReadOnly = true, AcceptsReturn = true, AcceptsTab = false };
-            _rightText = new TextBox { IsReadOnly = true, AcceptsReturn = true, AcceptsTab = false };
-            splitPanel.Children.Add(_leftText);
-            splitPanel.Children.Add(_rightText);
+            _leftText = new TextBox { IsReadOnly = true, AcceptsReturn = true, AcceptsTab = false, TextWrapping = Avalonia.Media.TextWrapping.NoWrap, FontFamily = "Consolas" };
+            _rightText = new TextBox { IsReadOnly = true, AcceptsReturn = true, AcceptsTab = false, TextWrapping = Avalonia.Media.TextWrapping.NoWrap, FontFamily = "Consolas" };
+            
+            // Wrap TextBoxes in ScrollViewers for synchronized scrolling
+            _leftScrollViewer = new ScrollViewer { HorizontalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Auto, VerticalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Auto, Content = _leftText };
+            _rightScrollViewer = new ScrollViewer { HorizontalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Auto, VerticalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Auto, Content = _rightText };
+            
+            splitPanel.Children.Add(_leftScrollViewer);
+            splitPanel.Children.Add(_rightScrollViewer);
             mainPanel.Children.Add(splitPanel);
+            
+            // Setup scroll synchronization for programmatic UI
+            if (_leftScrollViewer != null && _rightScrollViewer != null)
+            {
+                SetupScrollSynchronization();
+            }
 
             // Buttons
             var buttonPanel = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right };
@@ -102,8 +119,90 @@ namespace HolocronToolset.Dialogs
             _leftPathLabel = this.FindControl<TextBlock>("leftPathLabel");
             _rightPathLabel = this.FindControl<TextBlock>("rightPathLabel");
 
-            // Sync scrollbars if both text boxes are available
-            // TODO: Implement scrollbar synchronization when ScrollViewer is available
+            // Find ScrollViewers that wrap the TextBoxes
+            // Based on Avalonia API: ScrollViewer wraps content and provides scrolling
+            // Method: Traverse visual tree to find parent ScrollViewer
+            _leftScrollViewer = FindParentScrollViewer(_leftText);
+            _rightScrollViewer = FindParentScrollViewer(_rightText);
+
+            // Synchronize scrollbars if both ScrollViewers are available
+            // Based on Avalonia API: ScrollViewer.Offset property (Vector) controls scroll position
+            // Implementation: Listen to Offset property changes and sync between viewers
+            // Reference: https://docs.avaloniaui.net/docs/reference/controls/scrollviewer
+            if (_leftScrollViewer != null && _rightScrollViewer != null)
+            {
+                SetupScrollSynchronization();
+            }
+        }
+
+        // Find parent ScrollViewer by traversing visual tree
+        // Based on Avalonia visual tree traversal pattern
+        private ScrollViewer FindParentScrollViewer(Control control)
+        {
+            if (control == null)
+            {
+                return null;
+            }
+
+            Control parent = control.Parent as Control;
+            while (parent != null)
+            {
+                if (parent is ScrollViewer scrollViewer)
+                {
+                    return scrollViewer;
+                }
+                parent = parent.Parent as Control;
+            }
+
+            return null;
+        }
+
+        // Setup bidirectional scroll synchronization between two ScrollViewers
+        // Based on Avalonia API: ScrollViewer.Offset property (Vector) and PropertyChanged event
+        // Implementation note: Uses flag to prevent recursive updates during synchronization
+        private void SetupScrollSynchronization()
+        {
+            // Subscribe to Offset property changes on both ScrollViewers
+            // When one scrolls, update the other to match
+            _leftScrollViewer.GetObservable(ScrollViewer.OffsetProperty).Subscribe(offset =>
+            {
+                if (!_isSyncingScroll && _rightScrollViewer != null)
+                {
+                    _isSyncingScroll = true;
+                    try
+                    {
+                        // Sync vertical scroll position (Y component of Vector)
+                        // Preserve horizontal scroll (X component) independently
+                        Vector currentRightOffset = _rightScrollViewer.Offset;
+                        Vector newRightOffset = new Vector(currentRightOffset.X, offset.Y);
+                        _rightScrollViewer.Offset = newRightOffset;
+                    }
+                    finally
+                    {
+                        _isSyncingScroll = false;
+                    }
+                }
+            });
+
+            _rightScrollViewer.GetObservable(ScrollViewer.OffsetProperty).Subscribe(offset =>
+            {
+                if (!_isSyncingScroll && _leftScrollViewer != null)
+                {
+                    _isSyncingScroll = true;
+                    try
+                    {
+                        // Sync vertical scroll position (Y component of Vector)
+                        // Preserve horizontal scroll (X component) independently
+                        Vector currentLeftOffset = _leftScrollViewer.Offset;
+                        Vector newLeftOffset = new Vector(currentLeftOffset.X, offset.Y);
+                        _leftScrollViewer.Offset = newLeftOffset;
+                    }
+                    finally
+                    {
+                        _isSyncingScroll = false;
+                    }
+                }
+            });
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/resource_comparison.py:121-146

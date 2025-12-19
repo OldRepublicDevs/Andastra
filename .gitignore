@@ -114,6 +114,7 @@ ScaffoldingReadMe.txt
 temp_*
 temp-*
 test_*
+!test_*.py
 test-*
 TestResult.xml
 TestResults/
