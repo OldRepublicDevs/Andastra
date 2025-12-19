@@ -229,10 +229,161 @@ namespace Andastra.Runtime.Games.Odyssey
             throw new NotImplementedException("FindPath: Walkmesh pathfinding not yet implemented");
         }
 
+        /// <summary>
+        /// Finds the face index at a given position using 2D projection.
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor.exe and swkotor2.exe walkmesh face lookup functions.
+        /// Uses AABB tree for spatial acceleration when available, falls back to brute force.
+        /// Performs 2D point-in-triangle test (ignoring Z coordinate) to find which face contains the position.
+        /// 
+        /// Original implementation:
+        /// - swkotor.exe: Walkmesh face lookup for position queries
+        /// - swkotor2.exe: Enhanced with AABB tree acceleration for faster spatial queries
+        /// - Uses 2D projection (X,Y plane) to test point containment in triangles
+        /// - Returns -1 if position is not within any face
+        /// 
+        /// This implementation matches the behavior used by:
+        /// - Pathfinding system to find start/goal faces
+        /// - Projection system to determine which face to project onto
+        /// - Collision detection for position validation
+        /// </remarks>
         public int FindFaceAt(Vector3 position)
         {
-            // TODO: STUB - Implement face lookup at position
-            throw new NotImplementedException("FindFaceAt: Face lookup not yet implemented");
+            if (_faceCount == 0)
+            {
+                return -1;
+            }
+
+            // Use AABB tree if available for faster spatial queries
+            if (_aabbRoot != null)
+            {
+                return FindFaceAabb(_aabbRoot, position);
+            }
+
+            // Brute force fallback - test all faces
+            for (int i = 0; i < _faceCount; i++)
+            {
+                if (PointInFace2d(position, i))
+                {
+                    return i;
+                }
+            }
+
+            return -1;
+        }
+
+        /// <summary>
+        /// Finds face using AABB tree traversal for spatial acceleration.
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe walkmesh AABB tree structure.
+        /// Recursively traverses the tree, testing point against bounding boxes first,
+        /// then testing actual triangles in leaf nodes.
+        /// </remarks>
+        private int FindFaceAabb(NavigationMesh.AabbNode node, Vector3 point)
+        {
+            if (node == null)
+            {
+                return -1;
+            }
+
+            // Test if point is within AABB bounds (2D projection - X,Y plane)
+            if (point.X < node.BoundsMin.X || point.X > node.BoundsMax.X ||
+                point.Y < node.BoundsMin.Y || point.Y > node.BoundsMax.Y)
+            {
+                return -1;
+            }
+
+            // Leaf node - test point against face
+            if (node.FaceIndex >= 0)
+            {
+                if (PointInFace2d(point, node.FaceIndex))
+                {
+                    return node.FaceIndex;
+                }
+                return -1;
+            }
+
+            // Internal node - test children
+            if (node.Left != null)
+            {
+                int result = FindFaceAabb(node.Left, point);
+                if (result >= 0)
+                {
+                    return result;
+                }
+            }
+
+            if (node.Right != null)
+            {
+                int result = FindFaceAabb(node.Right, point);
+                if (result >= 0)
+                {
+                    return result;
+                }
+            }
+
+            return -1;
+        }
+
+        /// <summary>
+        /// Tests if a point is within a face using 2D projection (X,Y plane).
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor.exe and swkotor2.exe walkmesh point-in-triangle test.
+        /// Uses same-side test algorithm: point is inside triangle if it's on the same side
+        /// of all three edges (ignoring Z coordinate).
+        /// 
+        /// Original implementation:
+        /// - swkotor.exe: 2D point-in-triangle test for walkmesh queries
+        /// - swkotor2.exe: Same algorithm, used for face lookup and projection
+        /// - Performs test in X,Y plane (ignoring height/Z coordinate)
+        /// </remarks>
+        private bool PointInFace2d(Vector3 point, int faceIndex)
+        {
+            if (faceIndex < 0 || faceIndex >= _faceCount)
+            {
+                return false;
+            }
+
+            int baseIdx = faceIndex * 3;
+            if (baseIdx + 2 >= _faceIndices.Length)
+            {
+                return false;
+            }
+
+            Vector3 v1 = _vertices[_faceIndices[baseIdx]];
+            Vector3 v2 = _vertices[_faceIndices[baseIdx + 1]];
+            Vector3 v3 = _vertices[_faceIndices[baseIdx + 2]];
+
+            // Same-side test (2D projection - X,Y plane)
+            float d1 = Sign2d(point, v1, v2);
+            float d2 = Sign2d(point, v2, v3);
+            float d3 = Sign2d(point, v3, v1);
+
+            bool hasNeg = (d1 < 0) || (d2 < 0) || (d3 < 0);
+            bool hasPos = (d1 > 0) || (d2 > 0) || (d3 > 0);
+
+            // Point is inside triangle if all signs are the same (not both positive and negative)
+            return !(hasNeg && hasPos);
+        }
+
+        /// <summary>
+        /// Calculates the sign of a point relative to a line segment in 2D (X,Y plane).
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor.exe and swkotor2.exe walkmesh point-in-triangle test.
+        /// Uses cross product to determine which side of the line the point is on.
+        /// Returns positive value if point is on one side, negative on the other, zero if on the line.
+        /// 
+        /// Original implementation:
+        /// - swkotor.exe: 2D cross product for same-side test
+        /// - swkotor2.exe: Same algorithm for point-in-triangle testing
+        /// </remarks>
+        private float Sign2d(Vector3 p1, Vector3 p2, Vector3 p3)
+        {
+            return (p1.X - p3.X) * (p2.Y - p3.Y) - (p2.X - p3.X) * (p1.Y - p3.Y);
         }
 
         public Vector3 GetFaceCenter(int faceIndex)
