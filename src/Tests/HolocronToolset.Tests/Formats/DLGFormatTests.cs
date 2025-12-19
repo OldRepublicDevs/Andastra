@@ -34,12 +34,12 @@ namespace HolocronToolset.Tests.Formats
             var dlg = new DLG
             {
                 WordCount = 100,
-                OnAbort = ResRef.FromString("k_pdan_abort"),
-                OnEnd = ResRef.FromString("k_pdan_end"),
+                OnAbort = new ResRef("k_pdan_abort"),
+                OnEnd = new ResRef("k_pdan_end"),
                 Skippable = true,
-                AmbientTrack = ResRef.FromString("mus_area_dan"),
+                AmbientTrack = new ResRef("mus_area_dan"),
                 AnimatedCut = 1,
-                CameraModel = ResRef.FromString("cameran1"),
+                CameraModel = new ResRef("cameran1"),
                 ComputerType = DLGComputerType.Modern,
                 ConversationType = DLGConversationType.Human,
                 OldHitCheck = false,
@@ -69,8 +69,8 @@ namespace HolocronToolset.Tests.Formats
             GFF gff = DLGHelper.DismantleDlg(dlg, Game.K1);
             
             // Verify base fields are written
-            gff.Root.Acquire("WordCount", 0).Should().Be(100);
-            gff.Root.Acquire("OnAbort", ResRef.FromBlank()).Should().Be(ResRef.FromString("k_pdan_abort"));
+            gff.Root.Acquire("NumWords", 0).Should().Be(100);
+            gff.Root.Acquire("EndConverAbort", ResRef.FromBlank()).Should().Be(new ResRef("k_pdan_abort"));
             gff.Root.Acquire("AnimatedCut", (byte)0).Should().Be((byte)1);
             
             // Ghidra analysis: swkotor.exe:0x005a2ae0 does NOT read AlienRaceOwner
@@ -109,12 +109,12 @@ namespace HolocronToolset.Tests.Formats
             var dlg = new DLG
             {
                 WordCount = 200,
-                OnAbort = ResRef.FromString("a_globalabo"),
-                OnEnd = ResRef.FromString("a_globalend"),
+                OnAbort = new ResRef("a_globalabo"),
+                OnEnd = new ResRef("a_globalend"),
                 Skippable = true,
-                AmbientTrack = ResRef.FromString("mus_s_combat"),
+                AmbientTrack = new ResRef("mus_s_combat"),
                 AnimatedCut = 0,
-                CameraModel = ResRef.FromString("camerag"),
+                CameraModel = new ResRef("camerag"),
                 ComputerType = DLGComputerType.Ancient,
                 ConversationType = DLGConversationType.Computer,
                 OldHitCheck = true,
@@ -136,7 +136,7 @@ namespace HolocronToolset.Tests.Formats
                 // K2-specific node fields
                 Script1Param1 = 10,
                 Script1Param2 = 20,
-                Script2 = ResRef.FromString("a_alienrace"),
+                Script2 = new ResRef("a_alienrace"),
                 AlienRaceNode = 2,
                 EmotionId = 3,
                 FacialId = 4,
@@ -153,7 +153,7 @@ namespace HolocronToolset.Tests.Formats
                 ListIndex = 0,
                 // K2-specific node fields
                 Script1Param1 = 5,
-                Script2 = ResRef.FromString("a_replynode"),
+                Script2 = new ResRef("a_replynode"),
                 NodeId = 2
             };
             reply.Text = LocalizedString.FromEnglish("[Accept]");
@@ -164,7 +164,7 @@ namespace HolocronToolset.Tests.Formats
             // K2-specific link fields
             var replyLink = new DLGLink(reply, 0)
             {
-                Active2 = ResRef.FromString("k_influence"),
+                Active2 = new ResRef("k_influence"),
                 Logic = true,
                 Active1Not = false,
                 Active2Not = true,
@@ -180,7 +180,7 @@ namespace HolocronToolset.Tests.Formats
             GFF gff = DLGHelper.DismantleDlg(dlg, Game.K2);
             
             // Verify base fields
-            gff.Root.Acquire("WordCount", 0).Should().Be(200);
+            gff.Root.Acquire("NumWords", 0).Should().Be(200);
             gff.Root.Acquire("ComputerType", (byte)0).Should().Be((byte)1, "Ancient = 1");
             gff.Root.Acquire("ConversationType", 0).Should().Be(1, "Computer = 1");
             
