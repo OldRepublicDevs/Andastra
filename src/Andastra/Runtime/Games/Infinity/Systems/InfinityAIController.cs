@@ -54,10 +54,47 @@ namespace Andastra.Runtime.Engines.Infinity.Systems
         /// Fires heartbeat script for a creature (Infinity-specific: uses script system).
         /// Based on Infinity engine: Heartbeat script system
         /// </summary>
+        /// <remarks>
+        /// Infinity Heartbeat Script Firing:
+        /// - Based on Infinity Engine (Baldur's Gate, Icewind Dale, Planescape: Torment) heartbeat script system
+        /// - Infinity engine uses script event system similar to other BioWare engines
+        /// - Event processing flow:
+        ///   1. Check if creature is valid and has OnHeartbeat script hook
+        ///   2. Get heartbeat script ResRef from IScriptHooksComponent
+        ///   3. If script exists, fire script event via event bus system
+        ///   4. Event is queued and processed at frame boundary
+        ///   5. Script execution triggered on entities with matching event hooks
+        /// - Script hooks: IScriptHooksComponent stores script ResRefs mapped to event types (OnHeartbeat, OnPerception, etc.)
+        /// - Event routing: Events are queued via InfinityEventBus and dispatched at frame boundaries to prevent re-entrancy
+        /// - Script execution: Script events trigger script execution on entities with matching event hooks
+        /// - Common pattern: Infinity engine follows same heartbeat script firing pattern as Odyssey/Aurora/Eclipse engines
+        /// - Based on Infinity Engine script event system (Baldur's Gate, Icewind Dale, Planescape: Torment)
+        /// - TODO: Reverse engineer specific function addresses from Infinity Engine executables using Ghidra MCP
+        ///   - Baldur's Gate: BaldurGate.exe heartbeat script firing functions
+        ///   - Icewind Dale: IcewindDale.exe heartbeat script firing functions
+        ///   - Planescape: Torment: PlanescapeTorment.exe heartbeat script firing functions
+        /// </remarks>
         protected override void FireHeartbeatScript(IEntity creature)
         {
-            // TODO: STUB - Implement Infinity-specific heartbeat script firing
-            // Infinity engine uses its own script system
+            if (creature == null || !creature.IsValid)
+            {
+                return;
+            }
+
+            // Check if creature has OnHeartbeat script hook
+            IScriptHooksComponent scriptHooks = creature.GetComponent<IScriptHooksComponent>();
+            if (scriptHooks != null)
+            {
+                string heartbeatScript = scriptHooks.GetScript(ScriptEvent.OnHeartbeat);
+                if (!string.IsNullOrEmpty(heartbeatScript))
+                {
+                    // Fire heartbeat script event via Infinity event bus system
+                    // Based on Infinity Engine: Heartbeat script firing follows same pattern as Odyssey/Aurora/Eclipse
+                    // Infinity engine uses script event system similar to other BioWare engines
+                    // Event is queued and processed at frame boundary via InfinityEventBus
+                    _fireScriptEvent(creature, ScriptEvent.OnHeartbeat, null);
+                }
+            }
         }
 
         /// <summary>
