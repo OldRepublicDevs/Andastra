@@ -72,7 +72,7 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
         /// Gets the upgrade table name for regular items (not lightsabers).
         /// </summary>
         /// <returns>Table name for regular item upgrades.</returns>
-        protected abstract override string GetRegularUpgradeTableName();
+        protected new abstract string GetRegularUpgradeTableName();
 
         /// <summary>
         /// Gets available upgrade items for a given item and upgrade slot.
@@ -291,7 +291,7 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
         /// <param name="upgradeSlot">Upgrade slot index (0-based).</param>
         /// <param name="upgradeResRef">ResRef of upgrade item to apply.</param>
         /// <returns>True if upgrade was successful.</returns>
-        public abstract override bool ApplyUpgrade(IEntity item, int upgradeSlot, string upgradeResRef);
+        public new abstract bool ApplyUpgrade(IEntity item, int upgradeSlot, string upgradeResRef);
 
         /// <summary>
         /// Removes an upgrade from an item.
@@ -299,7 +299,7 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
         /// <param name="item">Item to modify.</param>
         /// <param name="upgradeSlot">Upgrade slot index (0-based).</param>
         /// <returns>True if upgrade was removed.</returns>
-        public abstract override bool RemoveUpgrade(IEntity item, int upgradeSlot);
+        public new abstract bool RemoveUpgrade(IEntity item, int upgradeSlot);
 
     }
 }

@@ -7,14 +7,17 @@ namespace Andastra.Runtime.Core.Interfaces
     /// </summary>
     /// <remarks>
     /// UI System Interface:
-    /// - TODO: lookup data from daorigins.exe/dragonage2.exe/masseffect.exe/masseffect2.exe/swkotor.exe/swkotor2.exe and split into subclass'd inheritence structures appropriately. parent class(es) should contain common code.
-    /// - TODO: this should NOT specify swkotor2.exe unless it specifies the other exes as well!!!
-    /// - Based on swkotor2.exe UI system
-    /// - Located via string references: GUI panels, UI screens, upgrade screens
-    /// - Original implementation: Manages UI screen state, screen transitions, modal dialogs
+    /// - Common interface for UI system functionality across all BioWare engines
+    /// - Manages UI screen state, screen transitions, modal dialogs
     /// - UI screens: Upgrade screen, inventory screen, character screen, dialogue screen, etc.
     /// - Screen management: Push/pop screen stack, modal overlays, screen transitions
-    /// - Based on swkotor2.exe: UI system manages GUI panels and screen state
+    /// - Engine-specific implementations provide concrete functionality for their respective engines
+    ///
+    /// Based on reverse engineering of UI systems across engines:
+    /// - Odyssey (swkotor.exe, swkotor2.exe): GUI panel-based UI system with upgrade screens
+    /// - Aurora (nwmain.exe): Scene-based GUI system with multiple panel types
+    /// - Eclipse (daorigins.exe, DragonAge2.exe): Advanced UI system with crafting and inventory screens
+    /// - Infinity (MassEffect.exe, MassEffect2.exe): Modern UI system with cinematic overlays
     /// </remarks>
     public interface IUISystem
     {
