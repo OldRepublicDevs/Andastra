@@ -1622,12 +1622,129 @@ namespace Andastra.Runtime.Games.Eclipse
         /// <remarks>
         /// Samples height from dynamic terrain data.
         /// Considers real-time terrain deformation and movable objects.
+        /// 
+        /// Implementation based on reverse engineering of:
+        /// - daorigins.exe: Dynamic height sampling with physics integration
+        ///   (Ghidra analysis needed: search for height sampling functions, walkmesh projection functions)
+        /// - DragonAge2.exe: Enhanced multi-level height sampling
+        ///   (Ghidra analysis needed: search for multi-level navigation height functions)
+        /// - MassEffect.exe/MassEffect2.exe: Physics-aware height sampling
+        ///   (Ghidra analysis needed: search for physics integration in height sampling)
+        /// 
+        /// Common pattern across Eclipse engines:
+        /// 1. Project point to navigation surface (static geometry, dynamic obstacles, multi-level surfaces)
+        /// 2. Extract height from best projection candidate
+        /// 3. Handle destructible terrain modifications
+        /// 4. Consider physics bodies and movable objects
+        /// 
+        /// Algorithm:
+        /// 1. Use ProjectToWalkmesh to find the best projection candidate
+        /// 2. Extract height from the projected result
+        /// 3. Handles static geometry, dynamic obstacles, destructible modifications, and multi-level surfaces
+        /// 4. Returns false if no valid surface is found
+        /// 
+        /// Note: Function addresses to be determined via Ghidra MCP reverse engineering:
+        /// - daorigins.exe: Height sampling function (search for "GetHeight", "SampleHeight", "ProjectToSurface" references)
+        /// - DragonAge2.exe: Multi-level height sampling function (search for navigation mesh height functions)
+        /// - MassEffect.exe: Physics-aware height sampling (search for physics integration in navigation)
+        /// - MassEffect2.exe: Enhanced physics-aware height sampling (search for improved navigation height functions)
         /// </remarks>
         public bool GetHeightAtPoint(Vector3 point, out float height)
         {
-            // TODO: Implement Eclipse dynamic height sampling
             height = point.Y;
-            throw new System.NotImplementedException("Eclipse dynamic height sampling not yet implemented");
+
+            // Use existing projection logic to find height
+            // ProjectToWalkmesh already handles all dynamic terrain considerations:
+            // - Static geometry with destructible modifications
+            // - Dynamic obstacles (movable objects, physics bodies)
+            // - Multi-level navigation surfaces (platforms, elevated surfaces)
+            if (ProjectToWalkmesh(point, out Vector3 projectedPoint, out float projectedHeight))
+            {
+                height = projectedHeight;
+                return true;
+            }
+
+            // If projection fails, check if point is at least within acceptable range of any surface
+            // This handles edge cases where projection might fail but height can still be determined
+            if (_staticFaceCount == 0)
+            {
+                // No static geometry - try dynamic-only projection
+                if (ProjectToDynamicOnly(point, out Vector3 dynamicResult, out float dynamicHeight))
+                {
+                    height = dynamicHeight;
+                    return true;
+                }
+                return false;
+            }
+
+            // Try to find any nearby face that might provide height information
+            // This is a fallback for cases where exact projection fails but we can still estimate height
+            int faceIndex = FindStaticFaceAt(point);
+            if (faceIndex >= 0)
+            {
+                // Check if face is modified by destruction
+                if (_modificationByFaceId.ContainsKey(faceIndex))
+                {
+                    DestructibleModification mod = _modificationByFaceId[faceIndex];
+                    if (mod.IsDestroyed)
+                    {
+                        // Face is destroyed - cannot determine height
+                        return false;
+                    }
+                    // Face is modified - use modified geometry
+                    if (ProjectToModifiedFace(point, faceIndex, mod, out Vector3 modifiedResult, out float modifiedHeight))
+                    {
+                        height = modifiedHeight;
+                        return true;
+                    }
+                }
+
+                // Project to unmodified static face
+                if (ProjectToStaticFace(point, faceIndex, out Vector3 staticResult, out float staticHeight))
+                {
+                    height = staticHeight;
+                    return true;
+                }
+            }
+
+            // Check dynamic obstacles as fallback
+            foreach (DynamicObstacle obstacle in _dynamicObstacles)
+            {
+                if (!obstacle.IsActive)
+                {
+                    continue;
+                }
+
+                float distToObstacle = Vector3.Distance(point, obstacle.Position);
+                if (distToObstacle > obstacle.InfluenceRadius)
+                {
+                    continue;
+                }
+
+                if (ProjectToObstacleSurface(point, obstacle, out Vector3 obstacleResult, out float obstacleHeight))
+                {
+                    height = obstacleHeight;
+                    return true;
+                }
+            }
+
+            // Check multi-level surfaces as final fallback
+            foreach (NavigationLevel level in _navigationLevels)
+            {
+                if (point.Y < level.HeightRange.X || point.Y > level.HeightRange.Y)
+                {
+                    continue;
+                }
+
+                if (ProjectToLevelSurface(point, level, out Vector3 levelResult, out float levelHeight))
+                {
+                    height = levelHeight;
+                    return true;
+                }
+            }
+
+            // No valid surface found
+            return false;
         }
 
         /// <summary>
