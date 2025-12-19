@@ -1527,14 +1527,36 @@ namespace HolocronToolset.Tests.Editors
             Assert.True(true, "Key press handling infrastructure verified - OnKeyDown and OnKeyUp methods exist");
         }
 
-        // TODO: STUB - Implement test_dlg_editor_focus_on_node (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:1877-1894)
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:1877-1894
         // Original: def test_dlg_editor_focus_on_node(qtbot, installation: HTInstallation): Test focus on node
         [Fact]
         public void TestDlgEditorFocusOnNode()
         {
-            // TODO: STUB - Implement focus on node test
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:1877-1894
-            throw new NotImplementedException("TestDlgEditorFocusOnNode: Focus on node test not yet implemented");
+            var installation = CreateTestInstallation();
+            var editor = new DLGEditor(null, installation);
+            editor.New();
+            
+            // Create structure: root -> child
+            var rootItem = editor.Model.AddRootNode();
+            var childItem = editor.Model.AddChildToItem(rootItem);
+            
+            // Verify initial state: not focused
+            editor.Focused.Should().BeFalse("Editor should not be in focus mode initially");
+            
+            // Focus on child's link
+            var result = editor.FocusOnNode(childItem.Link);
+            
+            // Should return focused item
+            result.Should().NotBeNull("FocusOnNode should return the focused item");
+            result.Link.Should().Be(childItem.Link, "Focused item should have the correct link");
+            
+            // Should be in focus mode
+            editor.Focused.Should().BeTrue("Editor should be in focus mode after focusing on a node");
+            
+            // Model should only contain the focused item
+            var rootItems = editor.Model.GetRootItems();
+            rootItems.Count.Should().Be(1, "Model should contain only the focused item");
+            rootItems[0].Link.Should().Be(childItem.Link, "Root item should be the focused link");
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:1896-1909

@@ -1005,8 +1005,8 @@ namespace HolocronToolset.Editors
                 if (settings.SelectedTheme.Contains("Light") || settings.SelectedTheme == "Native")
                 {
                     // Set light yellow background (#FFFFEE) for focus mode
-                    _dialogTree.Background = new Avalonia.Media.SolidColorBrush(
-                        Avalonia.Media.Color.FromRgb(0xFF, 0xFF, 0xEE));
+                    _dialogTree.Background = new SolidColorBrush(
+                        Color.FromRgb(0xFF, 0xFF, 0xEE));
                 }
             }
 
@@ -1180,6 +1180,12 @@ namespace HolocronToolset.Editors
         // Original: self.keys_down: set[int] = set()
         // Expose for testing
         public HashSet<Key> KeysDown => _keysDown;
+        
+        /// <summary>
+        /// Gets whether the editor is in focus mode (showing only a specific node and its children).
+        /// Matching PyKotor implementation: self._focused
+        /// </summary>
+        public bool Focused => _focused;
     }
 
     /// <summary>
