@@ -3,7 +3,6 @@ using System.IO;
 using System.Text;
 using System.Linq;
 using System.Numerics;
-using Andastra.Parsing.Resource.Formats.LYT;
 using Andastra.Parsing.Formats.LYT;
 using Andastra.Parsing.Resource;
 using Andastra.Parsing.Common;
@@ -105,7 +104,7 @@ namespace Andastra.Parsing.Tests.Formats
 
             // Validate rooms structure (matching LYT.ksy documentation)
             lyt.Rooms.Should().NotBeNull("Rooms list should not be null");
-            lyt.Rooms.Count.Should().BeGreaterOrEqualTo(0, "Room count should be non-negative");
+            lyt.Rooms.Count.Should().BeGreaterThanOrEqualTo(0, "Room count should be non-negative");
 
             // Validate each room entry has required fields
             foreach (var room in lyt.Rooms)
@@ -127,7 +126,7 @@ namespace Andastra.Parsing.Tests.Formats
 
             // Validate tracks structure (matching LYT.ksy documentation)
             lyt.Tracks.Should().NotBeNull("Tracks list should not be null");
-            lyt.Tracks.Count.Should().BeGreaterOrEqualTo(0, "Track count should be non-negative");
+            lyt.Tracks.Count.Should().BeGreaterThanOrEqualTo(0, "Track count should be non-negative");
 
             // Validate each track entry has required fields
             foreach (var track in lyt.Tracks)
@@ -149,7 +148,7 @@ namespace Andastra.Parsing.Tests.Formats
 
             // Validate obstacles structure (matching LYT.ksy documentation)
             lyt.Obstacles.Should().NotBeNull("Obstacles list should not be null");
-            lyt.Obstacles.Count.Should().BeGreaterOrEqualTo(0, "Obstacle count should be non-negative");
+            lyt.Obstacles.Count.Should().BeGreaterThanOrEqualTo(0, "Obstacle count should be non-negative");
 
             // Validate each obstacle entry has required fields
             foreach (var obstacle in lyt.Obstacles)
@@ -171,7 +170,7 @@ namespace Andastra.Parsing.Tests.Formats
 
             // Validate doorhooks structure (matching LYT.ksy documentation)
             lyt.Doorhooks.Should().NotBeNull("Doorhooks list should not be null");
-            lyt.Doorhooks.Count.Should().BeGreaterOrEqualTo(0, "Doorhook count should be non-negative");
+            lyt.Doorhooks.Count.Should().BeGreaterThanOrEqualTo(0, "Doorhook count should be non-negative");
 
             // Validate each doorhook entry has required fields
             foreach (var doorhook in lyt.Doorhooks)
@@ -532,10 +531,10 @@ namespace Andastra.Parsing.Tests.Formats
             lyt.Tracks.Should().NotBeNull();
             lyt.Obstacles.Should().NotBeNull();
             lyt.Doorhooks.Should().NotBeNull();
-            lyt.Rooms.Count.Should().BeGreaterOrEqualTo(0);
-            lyt.Tracks.Count.Should().BeGreaterOrEqualTo(0);
-            lyt.Obstacles.Count.Should().BeGreaterOrEqualTo(0);
-            lyt.Doorhooks.Count.Should().BeGreaterOrEqualTo(0);
+            lyt.Rooms.Count.Should().BeGreaterThanOrEqualTo(0);
+            lyt.Tracks.Count.Should().BeGreaterThanOrEqualTo(0);
+            lyt.Obstacles.Count.Should().BeGreaterThanOrEqualTo(0);
+            lyt.Doorhooks.Count.Should().BeGreaterThanOrEqualTo(0);
         }
 
         private static void CreateTestLytFile(string path)
@@ -551,4 +550,5 @@ namespace Andastra.Parsing.Tests.Formats
         }
     }
 }
+
 
