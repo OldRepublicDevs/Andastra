@@ -79,10 +79,11 @@ namespace HolocronToolset.Editors
                 installation)
         {
             _coreDlg = new DLG();
-            _model = new DLGModel();
+            _model = new DLGModel(this);
             _actionHistory = new DLGActionHistory(this);
             InitializeComponent();
             SetupUI();
+            UpdateTreeView();
             New();
         }
 
@@ -163,6 +164,7 @@ namespace HolocronToolset.Editors
             }
             // Clear undo/redo history when loading a dialog
             _actionHistory.Clear();
+            UpdateTreeView();
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:1229-1254
@@ -183,6 +185,7 @@ namespace HolocronToolset.Editors
             _model.ResetModel();
             // Clear undo/redo history when creating new dialog
             _actionHistory.Clear();
+            UpdateTreeView();
         }
 
         public override void SaveAs()
@@ -446,6 +449,482 @@ namespace HolocronToolset.Editors
                 link.Logic = _logicSpin.Value.HasValue && _logicSpin.Value.Value != 0;
             }
         }
+
+        /// <summary>
+        /// Updates the tree view with the current model data.
+        /// </summary>
+        private void UpdateTreeView()
+        {
+            if (_dialogTree == null || _model == null)
+            {
+                return;
+            }
+
+            var treeItems = new List<TreeViewItem>();
+            foreach (var rootItem in _model.GetRootItems())
+            {
+                var treeItem = CreateTreeViewItem(rootItem);
+                treeItems.Add(treeItem);
+            }
+            _dialogTree.ItemsSource = treeItems;
+        }
+
+        /// <summary>
+        /// Creates a TreeViewItem from a DLGStandardItem, recursively creating children.
+        /// </summary>
+        private TreeViewItem CreateTreeViewItem(DLGStandardItem item)
+        {
+            var treeItem = new TreeViewItem
+            {
+                Header = GetItemDisplayText(item),
+                Tag = item,
+                IsExpanded = true
+            };
+
+            var childItems = new List<TreeViewItem>();
+            foreach (var child in item.Children)
+            {
+                childItems.Add(CreateTreeViewItem(child));
+            }
+            treeItem.ItemsSource = childItems;
+
+            return treeItem;
+        }
+
+        /// <summary>
+        /// Gets the display text for an item.
+        /// </summary>
+        private string GetItemDisplayText(DLGStandardItem item)
+        {
+            if (item?.Link?.Node == null)
+            {
+                return "Unknown";
+            }
+
+            var node = item.Link.Node;
+            string nodeType = node is DLGEntry ? "Entry" : "Reply";
+            string text = node.Text?.GetString(0) ?? "";
+            if (string.IsNullOrEmpty(text))
+            {
+                text = "<empty>";
+            }
+            return $"{nodeType}: {text}";
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:2021-2138
+        // Original: def keyPressEvent(self, event: QKeyEvent, *, is_tree_view_call: bool = False):
+        /// <summary>
+        /// Handles key press events for the DLG editor.
+        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:2021-2138
+        /// </summary>
+        protected override void OnKeyDown(KeyEventArgs e)
+        {
+            base.OnKeyDown(e);
+
+            Key key = e.Key;
+            bool isAutoRepeat = e.IsRepeat;
+
+            // Matching PyKotor implementation: if not is_tree_view_call: check focus
+            // For now, we handle all key events at the window level
+            // In a full implementation, we would check if dialogTree has focus
+
+            // Matching PyKotor implementation: if not selected_index.isValid(): return
+            // For now, we'll handle keys even without selection (for Insert key to add root node)
+
+            // Matching PyKotor implementation: if selected_item is None: handle Insert key
+            if (_model.SelectedIndex < 0)
+            {
+                if (key == Key.Insert)
+                {
+                    // Matching PyKotor implementation: self.model.add_root_node()
+                    AddRootNode();
+                    e.Handled = true;
+                }
+                return;
+            }
+
+            // Matching PyKotor implementation: if event.isAutoRepeat() or key in self.keys_down:
+            if (isAutoRepeat || _keysDown.Contains(key))
+            {
+                // Matching PyKotor implementation: handle arrow keys even on auto-repeat
+                if (key == Key.Up || key == Key.Down)
+                {
+                    _keysDown.Add(key);
+                    HandleShiftItemKeybind(key);
+                }
+                e.Handled = true;
+                return; // Ignore auto-repeat events and prevent multiple executions on single key
+            }
+
+            // Matching PyKotor implementation: if not self.keys_down:
+            if (_keysDown.Count == 0)
+            {
+                _keysDown.Add(key);
+
+                // Matching PyKotor implementation: if key in (Qt.Key.Key_Delete, Qt.Key.Key_Backspace):
+                if (key == Key.Delete || key == Key.Back)
+                {
+                    // Matching PyKotor implementation: self.model.remove_link(selected_item)
+                    RemoveSelectedLink();
+                    e.Handled = true;
+                    return;
+                }
+                // Matching PyKotor implementation: elif key in (Qt.Key.Key_Enter, Qt.Key.Key_Return):
+                else if (key == Key.Enter || key == Key.Return)
+                {
+                    // Matching PyKotor implementation: edit_text based on focus
+                    // For now, we'll just handle the basic case
+                    EditText();
+                    e.Handled = true;
+                    return;
+                }
+                // Matching PyKotor implementation: elif key == Qt.Key.Key_F:
+                else if (key == Key.F)
+                {
+                    // Matching PyKotor implementation: self.focus_on_node(selected_item.link)
+                    FocusOnSelectedNode();
+                    e.Handled = true;
+                    return;
+                }
+                // Matching PyKotor implementation: elif key == Qt.Key.Key_Insert:
+                else if (key == Key.Insert)
+                {
+                    // Matching PyKotor implementation: self.model.add_child_to_item(selected_item)
+                    AddChildToSelectedItem();
+                    e.Handled = true;
+                    return;
+                }
+                // Matching PyKotor implementation: elif key == Qt.Key.Key_P:
+                else if (key == Key.P)
+                {
+                    // Matching PyKotor implementation: play sound or blink window
+                    PlaySoundOrBlink();
+                    e.Handled = true;
+                    return;
+                }
+                return;
+            }
+
+            // Matching PyKotor implementation: self.keys_down.add(key)
+            _keysDown.Add(key);
+
+            // Matching PyKotor implementation: self._handle_shift_item_keybind(...)
+            HandleShiftItemKeybind(key);
+
+            // Matching PyKotor implementation: handle modifier key combinations
+            if (e.KeyModifiers.HasFlag(KeyModifiers.Control))
+            {
+                // Matching PyKotor implementation: Ctrl+G (show_go_to_bar) - commented out in Python
+                if (key == Key.G)
+                {
+                    // Matching PyKotor implementation: self.show_go_to_bar() - commented out
+                    // ShowGoToBar();
+                    e.Handled = true;
+                    return;
+                }
+                // Matching PyKotor implementation: Ctrl+F
+                else if (key == Key.F)
+                {
+                    // Matching PyKotor implementation: self.show_find_bar()
+                    ShowFindBar();
+                    e.Handled = true;
+                    return;
+                }
+                // Matching PyKotor implementation: Ctrl+C
+                else if (key == Key.C)
+                {
+                    if (e.KeyModifiers.HasFlag(KeyModifiers.Alt))
+                    {
+                        // Matching PyKotor implementation: self.copy_path(selected_item.link.node)
+                        CopyPath();
+                    }
+                    else
+                    {
+                        // Matching PyKotor implementation: self.model.copy_link_and_node(selected_item.link)
+                        CopyLinkAndNode();
+                    }
+                    e.Handled = true;
+                    return;
+                }
+                // Matching PyKotor implementation: Ctrl+Enter or Ctrl+Return
+                else if (key == Key.Enter || key == Key.Return)
+                {
+                    // Matching PyKotor implementation: self.jump_to_original(selected_item)
+                    JumpToOriginal();
+                    e.Handled = true;
+                    return;
+                }
+                // Matching PyKotor implementation: Ctrl+V
+                else if (key == Key.V)
+                {
+                    // Matching PyKotor implementation: paste logic
+                    PasteItem(e.KeyModifiers.HasFlag(KeyModifiers.Alt));
+                    e.Handled = true;
+                    return;
+                }
+                // Matching PyKotor implementation: Ctrl+Delete
+                else if (key == Key.Delete)
+                {
+                    if (e.KeyModifiers.HasFlag(KeyModifiers.Shift))
+                    {
+                        // Matching PyKotor implementation: self.model.delete_node_everywhere(selected_item.link.node)
+                        DeleteNodeEverywhere();
+                    }
+                    else
+                    {
+                        // Matching PyKotor implementation: self.model.delete_selected_node()
+                        DeleteSelectedNode();
+                    }
+                    e.Handled = true;
+                    return;
+                }
+            }
+
+            // Matching PyKotor implementation: Shift+Enter/Return combinations
+            if (e.KeyModifiers.HasFlag(KeyModifiers.Shift) && (key == Key.Enter || key == Key.Return))
+            {
+                if (e.KeyModifiers.HasFlag(KeyModifiers.Alt))
+                {
+                    // Matching PyKotor implementation: set_expand_recursively(..., expand=False, maxdepth=-1)
+                    SetExpandRecursively(false, -1);
+                }
+                else
+                {
+                    // Matching PyKotor implementation: set_expand_recursively(..., expand=True)
+                    SetExpandRecursively(true, 0);
+                }
+                e.Handled = true;
+            }
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:2139-2147
+        // Original: def keyReleaseEvent(self, event: QKeyEvent):
+        /// <summary>
+        /// Handles key release events for the DLG editor.
+        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:2139-2147
+        /// </summary>
+        protected override void OnKeyUp(KeyEventArgs e)
+        {
+            base.OnKeyUp(e);
+
+            Key key = e.Key;
+
+            // Matching PyKotor implementation: if key in self.keys_down: self.keys_down.remove(key)
+            if (_keysDown.Contains(key))
+            {
+                _keysDown.Remove(key);
+            }
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:1985-2019
+        // Original: def _handle_shift_item_keybind(self, selected_index, selected_item, key):
+        /// <summary>
+        /// Handles shift+arrow key combinations for moving items.
+        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:1985-2019
+        /// </summary>
+        private void HandleShiftItemKeybind(Key key)
+        {
+            if (_model.SelectedIndex < 0)
+            {
+                return;
+            }
+
+            // Matching PyKotor implementation: handle Shift+Up/Down combinations
+            if (_keysDown.Contains(Key.Shift))
+            {
+                if (key == Key.Up)
+                {
+                    // Matching PyKotor implementation: shift_item(selected_item, -1, no_selection_update=True)
+                    if (_model.SelectedIndex > 0)
+                    {
+                        _model.MoveStarter(_model.SelectedIndex, _model.SelectedIndex - 1);
+                        _model.SelectedIndex = _model.SelectedIndex - 1;
+                    }
+                }
+                else if (key == Key.Down)
+                {
+                    // Matching PyKotor implementation: shift_item(selected_item, 1, no_selection_update=True)
+                    if (_model.SelectedIndex < _model.RowCount - 1)
+                    {
+                        _model.MoveStarter(_model.SelectedIndex, _model.SelectedIndex + 1);
+                        _model.SelectedIndex = _model.SelectedIndex + 1;
+                    }
+                }
+            }
+        }
+
+        // Helper methods for key press actions - these will be fully implemented as the UI is completed
+        // Matching PyKotor implementation patterns
+
+        /// <summary>
+        /// Adds a root node to the dialog.
+        /// Matching PyKotor implementation: self.model.add_root_node()
+        /// </summary>
+        private void AddRootNode()
+        {
+            // TODO: PLACEHOLDER - Implement add_root_node when DLGModel is fully implemented
+            // This would create a new DLGNode and add it as a starter
+        }
+
+        /// <summary>
+        /// Removes the selected link.
+        /// Matching PyKotor implementation: self.model.remove_link(selected_item)
+        /// </summary>
+        private void RemoveSelectedLink()
+        {
+            if (_model.SelectedIndex >= 0 && _model.SelectedIndex < _model.RowCount)
+            {
+                DLGLink link = _model.GetStarterAt(_model.SelectedIndex);
+                if (link != null)
+                {
+                    RemoveStarter(link);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Edits text of the selected item.
+        /// Matching PyKotor implementation: self.edit_text(event, selectedIndexes(), view)
+        /// </summary>
+        private void EditText()
+        {
+            // TODO: PLACEHOLDER - Implement edit_text when UI text editing is implemented
+        }
+
+        /// <summary>
+        /// Focuses on the selected node.
+        /// Matching PyKotor implementation: self.focus_on_node(selected_item.link)
+        /// </summary>
+        private void FocusOnSelectedNode()
+        {
+            // TODO: PLACEHOLDER - Implement focus_on_node when UI tree view is implemented
+        }
+
+        /// <summary>
+        /// Adds a child to the selected item.
+        /// Matching PyKotor implementation: self.model.add_child_to_item(selected_item)
+        /// </summary>
+        private void AddChildToSelectedItem()
+        {
+            // TODO: PLACEHOLDER - Implement add_child_to_item when DLGModel tree structure is implemented
+        }
+
+        /// <summary>
+        /// Plays sound or blinks window.
+        /// Matching PyKotor implementation: self.play_sound(...) or self.blink_window()
+        /// </summary>
+        private void PlaySoundOrBlink()
+        {
+            // TODO: PLACEHOLDER - Implement play_sound and blink_window when audio system is implemented
+        }
+
+        /// <summary>
+        /// Shows the find bar.
+        /// Matching PyKotor implementation: self.show_find_bar()
+        /// </summary>
+        private void ShowFindBar()
+        {
+            // TODO: PLACEHOLDER - Implement show_find_bar when find UI is implemented
+        }
+
+        /// <summary>
+        /// Copies the path of the selected node.
+        /// Matching PyKotor implementation: self.copy_path(selected_item.link.node)
+        /// </summary>
+        private void CopyPath()
+        {
+            // TODO: PLACEHOLDER - Implement copy_path when clipboard system is implemented
+        }
+
+        /// <summary>
+        /// Copies the link and node.
+        /// Matching PyKotor implementation: self.model.copy_link_and_node(selected_item.link)
+        /// </summary>
+        private void CopyLinkAndNode()
+        {
+            if (_model.SelectedIndex >= 0 && _model.SelectedIndex < _model.RowCount)
+            {
+                DLGLink link = _model.GetStarterAt(_model.SelectedIndex);
+                if (link != null)
+                {
+                    // Matching PyKotor implementation: self._copy = link
+                    _copy = link;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Jumps to the original node.
+        /// Matching PyKotor implementation: self.jump_to_original(selected_item)
+        /// </summary>
+        private void JumpToOriginal()
+        {
+            // TODO: PLACEHOLDER - Implement jump_to_original when reference system is implemented
+        }
+
+        /// <summary>
+        /// Pastes an item.
+        /// Matching PyKotor implementation: self.model.paste_item(selected_item, as_new_branches=...)
+        /// </summary>
+        private void PasteItem(bool asNewBranches)
+        {
+            if (_copy == null)
+            {
+                // Matching PyKotor implementation: print("No node/link copy in memory or on clipboard.")
+                // TODO: PLACEHOLDER - Show message to user
+                return;
+            }
+
+            if (_model.SelectedIndex >= 0 && _model.SelectedIndex < _model.RowCount)
+            {
+                DLGLink selectedLink = _model.GetStarterAt(_model.SelectedIndex);
+                if (selectedLink != null)
+                {
+                    // Matching PyKotor implementation: check if node types match
+                    // For now, we'll allow paste (full implementation would check node types)
+                    // TODO: PLACEHOLDER - Implement full paste logic when DLGModel.paste_item is implemented
+                }
+            }
+        }
+
+        /// <summary>
+        /// Deletes the selected node.
+        /// Matching PyKotor implementation: self.model.delete_selected_node()
+        /// </summary>
+        private void DeleteSelectedNode()
+        {
+            if (_model.SelectedIndex >= 0 && _model.SelectedIndex < _model.RowCount)
+            {
+                DLGLink link = _model.GetStarterAt(_model.SelectedIndex);
+                if (link != null)
+                {
+                    RemoveStarter(link);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Deletes the node everywhere.
+        /// Matching PyKotor implementation: self.model.delete_node_everywhere(selected_item.link.node)
+        /// </summary>
+        private void DeleteNodeEverywhere()
+        {
+            // TODO: PLACEHOLDER - Implement delete_node_everywhere when DLGModel tree structure is implemented
+        }
+
+        /// <summary>
+        /// Sets expand recursively for tree items.
+        /// Matching PyKotor implementation: self.set_expand_recursively(selected_item, set(), expand=..., maxdepth=...)
+        /// </summary>
+        private void SetExpandRecursively(bool expand, int maxDepth)
+        {
+            // TODO: PLACEHOLDER - Implement set_expand_recursively when tree view UI is implemented
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:152
+        // Original: self.keys_down: set[int] = set()
+        // Expose for testing
+        public HashSet<Key> KeysDown => _keysDown;
     }
 
     /// <summary>
