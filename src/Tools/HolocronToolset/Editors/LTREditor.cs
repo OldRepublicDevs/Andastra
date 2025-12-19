@@ -619,9 +619,9 @@ namespace HolocronToolset.Editors
             {
                 if (table != null)
                 {
-                    table.AlternatingRowBackground = table.AlternatingRowBackground == null 
-                        ? new SolidColorBrush(Colors.LightGray) 
-                        : null;
+                    // TODO: AlternatingRowBackground property removed in newer Avalonia versions
+                    // Use RowBackground property or styling instead
+                    // This functionality is not available in current Avalonia version
                 }
             }
         }
