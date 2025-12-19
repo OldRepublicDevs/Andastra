@@ -354,6 +354,14 @@ namespace HolocronToolset.Editors
                 {
                     _logicSpin.Value = 0;
                 }
+                if (_questEdit != null)
+                {
+                    _questEdit.Text = string.Empty;
+                }
+                if (_questEntrySpin != null)
+                {
+                    _questEntrySpin.Value = 0;
+                }
                 _nodeLoadedIntoUi = true;
                 return;
             }
@@ -453,6 +461,7 @@ namespace HolocronToolset.Editors
             }
 
             var link = item.Link;
+            var node = link.Node;
 
             // Update condition1
             if (_condition1ResrefEdit != null)
@@ -472,6 +481,19 @@ namespace HolocronToolset.Editors
             if (_logicSpin != null)
             {
                 link.Logic = _logicSpin.Value.HasValue && _logicSpin.Value.Value != 0;
+            }
+            
+            // Update quest fields in node
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:2521-2522
+            // Original: item.link.node.quest = self.ui.questEdit.text(), item.link.node.quest_entry = self.ui.questEntrySpin.value()
+            if (_questEdit != null && node != null)
+            {
+                node.Quest = _questEdit.Text ?? string.Empty;
+            }
+            
+            if (_questEntrySpin != null && node != null)
+            {
+                node.QuestEntry = _questEntrySpin.Value.HasValue ? _questEntrySpin.Value.Value : 0;
             }
         }
 

@@ -89,6 +89,13 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
         private LYT _currentLyt;
         private VIS _currentVis;
 
+        // EntityFactory for creating entities from templates
+        // Based on swkotor2.exe: EntityFactory creates runtime entities from GFF templates (UTC, UTP, UTD, etc.)
+        // Located via string references: "TemplateResRef" @ 0x007bd00c, "ScriptHeartbeat" @ 0x007beeb0
+        // Original implementation: FUN_005fb0f0 @ 0x005fb0f0 loads creature templates from GFF
+        // EntityFactory is cached per ModuleLoader instance to maintain ObjectId uniqueness
+        private readonly Loading.EntityFactory _entityFactory;
+
         /// <summary>
         /// Gets the current IFO (module info).
         /// </summary>
@@ -129,6 +136,11 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
         {
             _gamePath = gamePath;
             _world = world;
+
+            // Initialize EntityFactory for creating entities from templates
+            // Based on swkotor2.exe: EntityFactory is created per ModuleLoader instance
+            // ObjectId assignment uses high range (1000000+) to avoid conflicts with World.CreateEntity counter
+            _entityFactory = new Loading.EntityFactory();
 
             try
             {
@@ -187,17 +199,34 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
         /// Gets the EntityFactory for creating entities from templates.
         /// </summary>
         /// <remarks>
-        /// TODO: STUB - EntityFactory not yet fully implemented in this ModuleLoader
-        /// For now, returns null. Full implementation would create EntityFactory instance.
+        /// Entity Factory System:
+        /// - Based on swkotor2.exe entity creation system
+        /// - Located via string references: "TemplateResRef" @ 0x007bd00c, "ScriptHeartbeat" @ 0x007beeb0
+        /// - "tmpgit" @ 0x007be618 (temporary GIT structure references during entity loading)
+        /// - Template loading: FUN_005fb0f0 @ 0x005fb0f0 loads creature templates from GFF, reads TemplateResRef field
+        /// - Original implementation: Creates runtime entities from GIT instance data and GFF templates
+        /// - Entities created from GIT instances override template values with instance-specific data
+        /// - ObjectId assignment: Sequential uint32 starting from 1000000 (high range to avoid conflicts with World.CreateEntity counter)
+        /// - Position/Orientation: GIT instances specify XPosition, YPosition, ZPosition, XOrientation, YOrientation
+        /// - Tag: GIT instances can override template Tag field (GIT Struct → "Tag" ResRef field)
+        /// - Script hooks: Templates contain script ResRefs (ScriptHeartbeat, ScriptOnNotice, ScriptAttacked, etc.)
+        ///
+        /// GFF Template Types (GFF signatures):
+        /// - UTC → Creature (Appearance_Type, Faction, HP, Attributes, Feats, Scripts)
+        /// - UTP → Placeable (Appearance, Useable, Locked, OnUsed)
+        /// - UTD → Door (GenericType, Locked, OnOpen, OnClose, LinkedToModule, LinkedTo)
+        /// - UTT → Trigger (Geometry polygon, OnEnter, OnExit, LinkedToModule)
+        /// - UTW → Waypoint (Tag, position, MapNote, MapNoteEnabled)
+        /// - UTS → Sound (Active, Looping, Positional, ResRef)
+        /// - UTE → Encounter (Creature list, spawn conditions, Geometry, SpawnPointList)
+        /// - UTI → Item (BaseItem, Properties, Charges)
+        /// - UTM → Store (merchant inventory)
         /// </remarks>
-        [CanBeNull]
         public Loading.EntityFactory EntityFactory
         {
             get
             {
-                // TODO: STUB - EntityFactory creation not yet implemented
-                // In full implementation, this would return a cached EntityFactory instance
-                return null;
+                return _entityFactory;
             }
         }
 
