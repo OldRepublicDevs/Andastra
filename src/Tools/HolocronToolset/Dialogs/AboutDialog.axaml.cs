@@ -1,7 +1,10 @@
 using System;
 using Avalonia.Controls;
+using Avalonia.Layout;
 using Avalonia.Markup.Xaml;
 using Avalonia.Media;
+using Avalonia.Media.Imaging;
+using Avalonia.Platform;
 using HolocronToolset.Config;
 
 namespace HolocronToolset.Dialogs
@@ -69,32 +72,51 @@ namespace HolocronToolset.Dialogs
         private void SetupProgrammaticUI()
         {
             Title = "About";
-            Width = 400;
-            Height = 300;
+            Width = 430;
+            Height = 207;
             CanResize = false;
 
             // Create all UI controls programmatically for test scenarios
+            // Matching XAML layout: Grid with image on left, text content on right
+            _image = new Image
+            {
+                Width = 128,
+                Height = 128,
+                Margin = new Avalonia.Thickness(0, 0, 20, 0)
+            };
+
             _aboutLabel = new TextBlock
             {
                 Text = $"Holocron Toolset\nVersion {ConfigInfo.CurrentVersion}\n\nA toolset for editing KOTOR game files.",
                 TextWrapping = Avalonia.Media.TextWrapping.Wrap,
-                HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center,
-                VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center,
-                Margin = new Avalonia.Thickness(20)
+                HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Left,
+                VerticalAlignment = Avalonia.Layout.VerticalAlignment.Top
             };
-            _closeButton = new Button { Content = "Close", Width = 75, HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center };
+            _closeButton = new Button { Content = "Close", Width = 75, HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Right };
             _closeButton.Click += (sender, e) => Close();
 
-            var panel = new StackPanel
+            // Create right panel with text and button
+            var rightPanel = new StackPanel
+            {
+                Spacing = 10
+            };
+            rightPanel.Children.Add(_aboutLabel);
+            rightPanel.Children.Add(_closeButton);
+
+            // Create main grid layout matching XAML
+            var mainGrid = new Grid
             {
                 Margin = new Avalonia.Thickness(20),
-                Spacing = 10,
-                HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center,
-                VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center
+                ColumnDefinitions = new ColumnDefinitions("Auto,*")
             };
-            panel.Children.Add(_aboutLabel);
-            panel.Children.Add(_closeButton);
-            Content = panel;
+            Grid.SetColumn(_image, 0);
+            Grid.SetColumn(rightPanel, 1);
+            mainGrid.Children.Add(_image);
+            mainGrid.Children.Add(rightPanel);
+            Content = mainGrid;
+
+            // Load icon image
+            LoadIconImage();
 
             // Create UI wrapper for testing
             Ui = new AboutDialogUi
@@ -139,8 +161,8 @@ namespace HolocronToolset.Dialogs
                 }
             }
 
-            // TODO: Load icon image when resources are available
-            // _image.Source = new Bitmap("path/to/sith.png");
+            // Load icon image from embedded resources
+            LoadIconImage();
         }
 
         // Helper method to extract text from TextBlock with Runs
@@ -231,6 +253,81 @@ namespace HolocronToolset.Dialogs
                     }
                     return text.ToString();
                 }
+            }
+        }
+
+        // Load icon image from embedded resources
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/ui/dialogs/about.ui:28-29
+        // Original: <property name="pixmap"><pixmap resource="../../resources/resources.qrc">:/images/icons/sith.png</pixmap></property>
+        private void LoadIconImage()
+        {
+            if (_image == null)
+            {
+                // Image control not available (e.g., in programmatic UI mode)
+                return;
+            }
+
+            // Try multiple resource URI formats to handle different assembly naming conventions
+            var resourcePaths = new[]
+            {
+                "avares://HolocronToolset.NET/Resources/Icons/sith.png",
+                "avares://HolocronToolset/Resources/Icons/sith.png",
+                "avares://Resources/Icons/sith.png"
+            };
+
+            foreach (var resourcePath in resourcePaths)
+            {
+                try
+                {
+                    var resourceUri = new Uri(resourcePath, UriKind.Absolute);
+                    using (var stream = AssetLoader.Open(resourceUri))
+                    {
+                        if (stream != null)
+                        {
+                            var bitmap = new Bitmap(stream);
+                            _image.Source = bitmap;
+                            return; // Successfully loaded, exit
+                        }
+                    }
+                }
+                catch (Exception)
+                {
+                    // Try next URI format
+                    continue;
+                }
+            }
+
+            // If all attempts failed, try loading from assembly manifest resources as fallback
+            try
+            {
+                var assembly = System.Reflection.Assembly.GetExecutingAssembly();
+                var resourceName = "HolocronToolset.NET.Resources.Icons.sith.png";
+                using (var stream = assembly.GetManifestResourceStream(resourceName))
+                {
+                    if (stream != null)
+                    {
+                        var bitmap = new Bitmap(stream);
+                        _image.Source = bitmap;
+                        return;
+                    }
+                }
+
+                // Try alternative resource name format
+                resourceName = "HolocronToolset.Resources.Icons.sith.png";
+                using (var stream = assembly.GetManifestResourceStream(resourceName))
+                {
+                    if (stream != null)
+                    {
+                        var bitmap = new Bitmap(stream);
+                        _image.Source = bitmap;
+                        return;
+                    }
+                }
+            }
+            catch (Exception)
+            {
+                // Resource not available - silently fail (icon is optional)
+                // This allows the dialog to function even if the icon resource is missing
             }
         }
 
