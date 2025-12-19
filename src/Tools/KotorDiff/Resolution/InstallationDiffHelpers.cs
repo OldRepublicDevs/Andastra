@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Andastra.Parsing.Formats.Capsule;
+using Andastra.Parsing.Formats.ERF;
 using Andastra.Parsing.Formats.GFF;
 using Andastra.Parsing.Formats.SSF;
 using Andastra.Parsing.Formats.TwoDA;
@@ -165,9 +166,17 @@ namespace KotorDiff.Resolution
                 return;
             }
 
-            // Note: Module file will need to be created by TSLPatcher during installation
-            // The InstallList entry ensures the file is staged for installation
-            logFunc($"    Note: Module '{capsuleFilename}' will need to be created");
+            // Otherwise, add to install folder and create empty MOD if needed
+            // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/engine.py:314-319
+            incrementalWriter.AddInstallFile(capsuleFolder, capsuleFilename, null);
+            string outputPath = Path.Combine(incrementalWriter.TslpatchdataPath, capsuleFilename);
+            if (!File.Exists(outputPath))
+            {
+                // Create empty MOD file
+                var emptyMod = new ERF(ERFType.MOD);
+                ERFAuto.WriteErf(emptyMod, outputPath, ResourceType.MOD);
+                logFunc($"    Created empty module '{capsuleFilename}' in tslpatchdata");
+            }
         }
 
         // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/engine.py:485-596

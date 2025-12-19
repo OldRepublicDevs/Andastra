@@ -4,9 +4,11 @@ using System.IO;
 using System.Linq;
 using Andastra.Parsing;
 using Andastra.Parsing.Common;
+using Andastra.Parsing.Formats.ERF;
 using Andastra.Parsing.Installation;
 using Andastra.Parsing.Mods;
 using Andastra.Parsing.Resource;
+using Andastra.Parsing.TSLPatcher;
 using Andastra.Parsing.Tools;
 using JetBrains.Annotations;
 
@@ -187,7 +189,7 @@ namespace Andastra.Parsing.Diff
             string capsuleDestination,
             string capsulePath = null,
             Action<string> logFunc = null,
-            object incrementalWriter = null) // TODO: Replace with IncrementalTSLPatchDataWriter when available
+            [CanBeNull] IncrementalTSLPatchDataWriter incrementalWriter = null)
         {
             if (logFunc == null)
             {
@@ -221,14 +223,31 @@ namespace Andastra.Parsing.Diff
                 modificationsByType.Install.Add(installEntry);
             }
 
-            // TODO: Handle incremental_writer when IncrementalTSLPatchDataWriter is ported
+            // Handle incremental writer
             if (incrementalWriter == null || alreadyPresent)
             {
                 return;
             }
 
-            // TODO: Implement incremental writer logic
-            logFunc($"    Staged module '{capsuleFilename}' for installation");
+            // If capsule path exists as a file, use it directly
+            if (!string.IsNullOrEmpty(capsulePath) && File.Exists(capsulePath))
+            {
+                incrementalWriter.AddInstallFile(capsuleFolder, capsuleFilename, capsulePath);
+                logFunc($"    Staged module '{capsuleFilename}' for installation");
+                return;
+            }
+
+            // Otherwise, add to install folder and create empty MOD if needed
+            // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/engine.py:314-319
+            incrementalWriter.AddInstallFile(capsuleFolder, capsuleFilename, null);
+            string outputPath = Path.Combine(incrementalWriter.TslpatchdataPath, capsuleFilename);
+            if (!File.Exists(outputPath))
+            {
+                // Create empty MOD file
+                var emptyMod = new ERF(ERFType.MOD);
+                ERFAuto.WriteErf(emptyMod, outputPath, ResourceType.MOD);
+                logFunc($"    Created empty module '{capsuleFilename}' in tslpatchdata");
+            }
         }
     }
 }
