@@ -121,15 +121,173 @@ namespace Andastra.Runtime.Games.Eclipse
         /// Eclipse considers dynamic obstacles and physics objects.
         /// Checks for movable objects, destructible terrain, and active physics bodies.
         /// More sophisticated than Aurora's tile-based system.
+        ///
+        /// Implementation based on reverse engineering of:
+        /// - daorigins.exe: Dynamic point testing with physics integration
+        /// - DragonAge2.exe: Enhanced multi-level point testing
+        /// - MassEffect.exe/MassEffect2.exe: Physics-aware point testing
+        ///
+        /// Algorithm:
+        /// 1. Collect all projection candidates (static geometry, dynamic obstacles, multi-level surfaces)
+        /// 2. Filter to only walkable candidates
+        /// 3. Select best walkable candidate based on distance and surface type
+        /// 4. Verify point is within acceptable distance threshold of walkable surface
         /// </remarks>
         public bool IsPointWalkable(Vector3 point)
         {
-            // TODO: Implement Eclipse dynamic point testing
-            // Check static walkmesh
-            // Check dynamic obstacles
-            // Check physics objects
-            // Handle real-time environmental changes
-            throw new System.NotImplementedException("Eclipse dynamic walkmesh testing not yet implemented");
+            // If no static geometry, check dynamic obstacles and multi-level surfaces only
+            if (_staticFaceCount == 0)
+            {
+                return IsPointWalkableDynamicOnly(point);
+            }
+
+            // Collect all projection candidates
+            var candidates = new List<ProjectionCandidate>();
+
+            // 1. Project to static geometry (with destructible modifications)
+            ProjectToStaticGeometry(point, candidates);
+
+            // 2. Check dynamic obstacles
+            ProjectToDynamicObstacles(point, candidates);
+
+            // 3. Check multi-level navigation surfaces
+            ProjectToMultiLevelSurfaces(point, candidates);
+
+            // 4. Filter to only walkable candidates
+            var walkableCandidates = new List<ProjectionCandidate>();
+            foreach (ProjectionCandidate candidate in candidates)
+            {
+                if (IsCandidateWalkable(candidate))
+                {
+                    walkableCandidates.Add(candidate);
+                }
+            }
+
+            if (walkableCandidates.Count == 0)
+            {
+                return false;
+            }
+
+            // 5. Select best walkable candidate (prefer ground, then closest)
+            walkableCandidates.Sort((a, b) =>
+            {
+                int typeCompare = a.SurfaceType.CompareTo(b.SurfaceType);
+                if (typeCompare != 0)
+                {
+                    return typeCompare; // Prefer ground over platforms
+                }
+                return a.Distance.CompareTo(b.Distance);
+            });
+
+            ProjectionCandidate best = walkableCandidates[0];
+
+            // 6. Verify point is within acceptable distance threshold
+            // Points too far from walkable surface are not considered walkable
+            const float maxWalkableDistance = 2.0f; // Maximum vertical distance to walkable surface
+            float verticalDistance = Math.Abs(point.Z - best.Height);
+            if (verticalDistance > maxWalkableDistance)
+            {
+                return false;
+            }
+
+            // 7. Additional check: for static faces, verify point is actually within the face bounds
+            if (best.FaceIndex >= 0)
+            {
+                // Point should be within the face's 2D bounds (with some tolerance)
+                if (!PointInStaticFace2d(point, best.FaceIndex))
+                {
+                    // Check if point is close enough to face center to be considered walkable
+                    Vector3 faceCenter = GetStaticFaceCenter(best.FaceIndex);
+                    float dist2D = Vector3Extensions.Distance2D(point, faceCenter);
+                    const float maxFaceDistance = 5.0f; // Maximum 2D distance from face center
+                    if (dist2D > maxFaceDistance)
+                    {
+                        return false;
+                    }
+                }
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Checks if a projection candidate represents a walkable surface.
+        /// </summary>
+        private bool IsCandidateWalkable(ProjectionCandidate candidate)
+        {
+            // Check based on surface type
+            switch (candidate.SurfaceType)
+            {
+                case SurfaceType.Ground:
+                    // Ground surfaces are walkable if:
+                    // - Static face: check IsWalkable
+                    // - Dynamic obstacle: check obstacle.IsWalkable
+                    // - Multi-level: check level walkability
+                    if (candidate.FaceIndex >= 0)
+                    {
+                        return IsWalkable(candidate.FaceIndex);
+                    }
+                    if (candidate.ObstacleId >= 0 && _obstacleById.ContainsKey(candidate.ObstacleId))
+                    {
+                        DynamicObstacle obstacle = _obstacleById[candidate.ObstacleId];
+                        return obstacle.IsWalkable && obstacle.IsActive;
+                    }
+                    if (candidate.LevelId >= 0)
+                    {
+                        // Multi-level surfaces are generally walkable if they're ground type
+                        return true;
+                    }
+                    return false;
+
+                case SurfaceType.Platform:
+                    // Platforms are walkable surfaces
+                    return true;
+
+                case SurfaceType.Elevated:
+                    // Elevated surfaces are walkable
+                    return true;
+
+                case SurfaceType.Obstacle:
+                    // Obstacles are not walkable
+                    return false;
+
+                default:
+                    return false;
+            }
+        }
+
+        /// <summary>
+        /// Tests if a point is walkable when only dynamic obstacles and multi-level surfaces exist.
+        /// </summary>
+        private bool IsPointWalkableDynamicOnly(Vector3 point)
+        {
+            var candidates = new List<ProjectionCandidate>();
+            ProjectToDynamicObstacles(point, candidates);
+            ProjectToMultiLevelSurfaces(point, candidates);
+
+            // Filter to walkable candidates
+            var walkableCandidates = new List<ProjectionCandidate>();
+            foreach (ProjectionCandidate candidate in candidates)
+            {
+                if (IsCandidateWalkable(candidate))
+                {
+                    walkableCandidates.Add(candidate);
+                }
+            }
+
+            if (walkableCandidates.Count == 0)
+            {
+                return false;
+            }
+
+            // Select best walkable candidate
+            walkableCandidates.Sort((a, b) => a.Distance.CompareTo(b.Distance));
+            ProjectionCandidate best = walkableCandidates[0];
+
+            // Verify point is within acceptable distance
+            const float maxWalkableDistance = 2.0f;
+            float verticalDistance = Math.Abs(point.Z - best.Height);
+            return verticalDistance <= maxWalkableDistance;
         }
 
         /// <summary>
