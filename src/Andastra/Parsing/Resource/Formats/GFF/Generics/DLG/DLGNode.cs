@@ -580,17 +580,26 @@ namespace Andastra.Parsing.Resource.Generics.DLG
                     {
                         // Matching PyKotor implementation: always deserialize links, even if empty
                         List<DLGLink> links = new List<DLGLink>();
-                        if (actualValue is List<object> linksList)
+                        // Handle both List<object> and List<Dictionary<string, object>> cases
+                        if (actualValue is System.Collections.IEnumerable linksEnumerable)
                         {
-                            foreach (object linkObj in linksList)
+                            foreach (object linkObj in linksEnumerable)
                             {
                                 if (linkObj is Dictionary<string, object> linkDict)
                                 {
-                                    // Temporarily remove try-catch to see actual exceptions
-                                    DLGLink deserializedLink = DLGLink.FromDict(linkDict, nodeMap);
-                                    if (deserializedLink != null)
+                                    try
                                     {
-                                        links.Add(deserializedLink);
+                                        DLGLink deserializedLink = DLGLink.FromDict(linkDict, nodeMap);
+                                        if (deserializedLink != null)
+                                        {
+                                            links.Add(deserializedLink);
+                                        }
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        // Log exception for debugging but continue processing
+                                        // This matches PyKotor behavior of continuing on errors
+                                        System.Diagnostics.Debug.WriteLine($"Error deserializing link: {ex.Message}");
                                     }
                                 }
                             }
