@@ -275,5 +275,715 @@ namespace HolocronToolset.Tests.Editors
                 newUtc.MultiplierSet.Should().Be(originalUtc.MultiplierSet);
             }
         }
+
+        // TODO: STUB - Implement test_utc_editor_manipulate_firstname_locstring (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:23-48)
+        // Original: def test_utc_editor_manipulate_firstname_locstring(qtbot, installation: HTInstallation, test_files_dir: Path): Test manipulating firstname LocalizedString field.
+        [Fact]
+        public void TestUtcEditorManipulateFirstnameLocstring()
+        {
+            // TODO: PLACEHOLDER - Implement firstname LocalizedString manipulation test
+            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:23-48
+            throw new NotImplementedException("TestUtcEditorManipulateFirstnameLocstring: Firstname LocalizedString manipulation test not yet implemented");
+        }
+
+        // TODO: STUB - Implement test_utc_editor_manipulate_lastname_locstring (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:50-73)
+        // Original: def test_utc_editor_manipulate_lastname_locstring(qtbot, installation: HTInstallation, test_files_dir: Path): Test manipulating lastname LocalizedString field.
+        [Fact]
+        public void TestUtcEditorManipulateLastnameLocstring()
+        {
+            // TODO: PLACEHOLDER - Implement lastname LocalizedString manipulation test
+            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:50-73
+            throw new NotImplementedException("TestUtcEditorManipulateLastnameLocstring: Lastname LocalizedString manipulation test not yet implemented");
+        }
+
+        // TODO: STUB - Implement test_utc_editor_manipulate_tag (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:75-97)
+        // Original: def test_utc_editor_manipulate_tag(qtbot, installation: HTInstallation, test_files_dir: Path): Test manipulating tag field.
+        [Fact]
+        public void TestUtcEditorManipulateTag()
+        {
+            // TODO: PLACEHOLDER - Implement tag field manipulation test
+            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:75-97
+            throw new NotImplementedException("TestUtcEditorManipulateTag: Tag field manipulation test not yet implemented");
+        }
+
+        // TODO: STUB - Implement test_utc_editor_manipulate_tag_generate_button (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:99-119)
+        // Original: def test_utc_editor_manipulate_tag_generate_button(qtbot, installation: HTInstallation, test_files_dir: Path): Test tag generation button.
+        [Fact]
+        public void TestUtcEditorManipulateTagGenerateButton()
+        {
+            // TODO: PLACEHOLDER - Implement tag generation button test
+            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:99-119
+            throw new NotImplementedException("TestUtcEditorManipulateTagGenerateButton: Tag generation button test not yet implemented");
+        }
+
+        // TODO: STUB - Implement test_utc_editor_manipulate_resref (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:121-143)
+        // Original: def test_utc_editor_manipulate_resref(qtbot, installation: HTInstallation, test_files_dir: Path): Test manipulating resref field.
+        [Fact]
+        public void TestUtcEditorManipulateResref()
+        {
+            // TODO: PLACEHOLDER - Implement resref field manipulation test
+            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:121-143
+            throw new NotImplementedException("TestUtcEditorManipulateResref: Resref field manipulation test not yet implemented");
+        }
+
+        // TODO: STUB - Implement test_utc_editor_manipulate_appearance_select (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:145-170)
+        // Original: def test_utc_editor_manipulate_appearance_select(qtbot, installation: HTInstallation, test_files_dir: Path): Test manipulating appearance combo box.
+        [Fact]
+        public void TestUtcEditorManipulateAppearanceSelect()
+        {
+            // TODO: PLACEHOLDER - Implement appearance combo box manipulation test
+            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:145-170
+            throw new NotImplementedException("TestUtcEditorManipulateAppearanceSelect: Appearance combo box manipulation test not yet implemented");
+        }
+
+        // TODO: STUB - Implement test_utc_editor_manipulate_soundset_select (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:172-192)
+        // Original: def test_utc_editor_manipulate_soundset_select(qtbot, installation: HTInstallation, test_files_dir: Path): Test manipulating soundset combo box.
+        [Fact]
+        public void TestUtcEditorManipulateSoundsetSelect()
+        {
+            // TODO: PLACEHOLDER - Implement soundset combo box manipulation test
+            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:172-192
+            throw new NotImplementedException("TestUtcEditorManipulateSoundsetSelect: Soundset combo box manipulation test not yet implemented");
+        }
+
+        // TODO: STUB - Implement test_utc_editor_manipulate_portrait_select (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:194-214)
+        // Original: def test_utc_editor_manipulate_portrait_select(qtbot, installation: HTInstallation, test_files_dir: Path): Test manipulating portrait combo box.
+        [Fact]
+        public void TestUtcEditorManipulatePortraitSelect()
+        {
+            // TODO: PLACEHOLDER - Implement portrait combo box manipulation test
+            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:194-214
+            throw new NotImplementedException("TestUtcEditorManipulatePortraitSelect: Portrait combo box manipulation test not yet implemented");
+        }
+
+        // TODO: STUB - Implement test_utc_editor_manipulate_conversation (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:216-238)
+        // Original: def test_utc_editor_manipulate_conversation(qtbot, installation: HTInstallation, test_files_dir: Path): Test manipulating conversation field.
+        [Fact]
+        public void TestUtcEditorManipulateConversation()
+        {
+            // TODO: PLACEHOLDER - Implement conversation field manipulation test
+            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:216-238
+            throw new NotImplementedException("TestUtcEditorManipulateConversation: Conversation field manipulation test not yet implemented");
+        }
+
+        // TODO: STUB - Implement test_utc_editor_manipulate_alignment_slider (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:240-268)
+        // Original: def test_utc_editor_manipulate_alignment_slider(qtbot, installation: HTInstallation, test_files_dir: Path): Test manipulating alignment slider.
+        [Fact]
+        public void TestUtcEditorManipulateAlignmentSlider()
+        {
+            // TODO: PLACEHOLDER - Implement alignment slider manipulation test
+            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:240-268
+            throw new NotImplementedException("TestUtcEditorManipulateAlignmentSlider: Alignment slider manipulation test not yet implemented");
+        }
+
+        // TODO: STUB - Implement test_utc_editor_manipulate_disarmable_checkbox (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:270-291)
+        // Original: def test_utc_editor_manipulate_disarmable_checkbox(qtbot, installation: HTInstallation, test_files_dir: Path): Test manipulating disarmable checkbox.
+        [Fact]
+        public void TestUtcEditorManipulateDisarmableCheckbox()
+        {
+            // TODO: PLACEHOLDER - Implement disarmable checkbox manipulation test
+            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:270-291
+            throw new NotImplementedException("TestUtcEditorManipulateDisarmableCheckbox: Disarmable checkbox manipulation test not yet implemented");
+        }
+
+        // TODO: STUB - Implement test_utc_editor_manipulate_no_perm_death_checkbox (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:293-314)
+        // Original: def test_utc_editor_manipulate_no_perm_death_checkbox(qtbot, installation: HTInstallation, test_files_dir: Path): Test manipulating no perm death checkbox.
+        [Fact]
+        public void TestUtcEditorManipulateNoPermDeathCheckbox()
+        {
+            // TODO: PLACEHOLDER - Implement no perm death checkbox manipulation test
+            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:293-314
+            throw new NotImplementedException("TestUtcEditorManipulateNoPermDeathCheckbox: No perm death checkbox manipulation test not yet implemented");
+        }
+
+        // TODO: STUB - Implement test_utc_editor_manipulate_min1_hp_checkbox (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:316-337)
+        // Original: def test_utc_editor_manipulate_min1_hp_checkbox(qtbot, installation: HTInstallation, test_files_dir: Path): Test manipulating min1 hp checkbox.
+        [Fact]
+        public void TestUtcEditorManipulateMin1HpCheckbox()
+        {
+            // TODO: PLACEHOLDER - Implement min1 hp checkbox manipulation test
+            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:316-337
+            throw new NotImplementedException("TestUtcEditorManipulateMin1HpCheckbox: Min1 hp checkbox manipulation test not yet implemented");
+        }
+
+        // TODO: STUB - Implement test_utc_editor_manipulate_plot_checkbox (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:339-360)
+        // Original: def test_utc_editor_manipulate_plot_checkbox(qtbot, installation: HTInstallation, test_files_dir: Path): Test manipulating plot checkbox.
+        [Fact]
+        public void TestUtcEditorManipulatePlotCheckbox()
+        {
+            // TODO: PLACEHOLDER - Implement plot checkbox manipulation test
+            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:339-360
+            throw new NotImplementedException("TestUtcEditorManipulatePlotCheckbox: Plot checkbox manipulation test not yet implemented");
+        }
+
+        // TODO: STUB - Implement test_utc_editor_manipulate_is_pc_checkbox (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:362-383)
+        // Original: def test_utc_editor_manipulate_is_pc_checkbox(qtbot, installation: HTInstallation, test_files_dir: Path): Test manipulating is pc checkbox.
+        [Fact]
+        public void TestUtcEditorManipulateIsPcCheckbox()
+        {
+            // TODO: PLACEHOLDER - Implement is pc checkbox manipulation test
+            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:362-383
+            throw new NotImplementedException("TestUtcEditorManipulateIsPcCheckbox: Is pc checkbox manipulation test not yet implemented");
+        }
+
+        // TODO: STUB - Implement test_utc_editor_manipulate_no_reorientate_checkbox (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:385-406)
+        // Original: def test_utc_editor_manipulate_no_reorientate_checkbox(qtbot, installation: HTInstallation, test_files_dir: Path): Test manipulating no reorientate checkbox.
+        [Fact]
+        public void TestUtcEditorManipulateNoReorientateCheckbox()
+        {
+            // TODO: PLACEHOLDER - Implement no reorientate checkbox manipulation test
+            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:385-406
+            throw new NotImplementedException("TestUtcEditorManipulateNoReorientateCheckbox: No reorientate checkbox manipulation test not yet implemented");
+        }
+
+        // TODO: STUB - Implement test_utc_editor_manipulate_tsl_only_checkboxes (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:408-447)
+        // Original: def test_utc_editor_manipulate_tsl_only_checkboxes(qtbot, installation: HTInstallation, test_files_dir: Path): Test manipulating TSL-only checkboxes (ignoreCrePath, hologram).
+        [Fact]
+        public void TestUtcEditorManipulateTslOnlyCheckboxes()
+        {
+            // TODO: PLACEHOLDER - Implement TSL-only checkboxes manipulation test (ignoreCrePath, hologram)
+            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:408-447
+            throw new NotImplementedException("TestUtcEditorManipulateTslOnlyCheckboxes: TSL-only checkboxes manipulation test not yet implemented");
+        }
+
+        // TODO: STUB - Implement test_utc_editor_manipulate_race_select (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:449-479)
+        // Original: def test_utc_editor_manipulate_race_select(qtbot, installation: HTInstallation, test_files_dir: Path): Test manipulating race combo box.
+        [Fact]
+        public void TestUtcEditorManipulateRaceSelect()
+        {
+            // TODO: PLACEHOLDER - Implement race combo box manipulation test
+            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:449-479
+            throw new NotImplementedException("TestUtcEditorManipulateRaceSelect: Race combo box manipulation test not yet implemented");
+        }
+
+        // TODO: STUB - Implement test_utc_editor_manipulate_subrace_select (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:481-501)
+        // Original: def test_utc_editor_manipulate_subrace_select(qtbot, installation: HTInstallation, test_files_dir: Path): Test manipulating subrace combo box.
+        [Fact]
+        public void TestUtcEditorManipulateSubraceSelect()
+        {
+            // TODO: PLACEHOLDER - Implement subrace combo box manipulation test
+            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:481-501
+            throw new NotImplementedException("TestUtcEditorManipulateSubraceSelect: Subrace combo box manipulation test not yet implemented");
+        }
+
+        // TODO: STUB - Implement test_utc_editor_manipulate_speed_select (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:503-523)
+        // Original: def test_utc_editor_manipulate_speed_select(qtbot, installation: HTInstallation, test_files_dir: Path): Test manipulating speed combo box.
+        [Fact]
+        public void TestUtcEditorManipulateSpeedSelect()
+        {
+            // TODO: PLACEHOLDER - Implement speed combo box manipulation test
+            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:503-523
+            throw new NotImplementedException("TestUtcEditorManipulateSpeedSelect: Speed combo box manipulation test not yet implemented");
+        }
+
+        // TODO: STUB - Implement test_utc_editor_manipulate_faction_select (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:525-545)
+        // Original: def test_utc_editor_manipulate_faction_select(qtbot, installation: HTInstallation, test_files_dir: Path): Test manipulating faction combo box.
+        [Fact]
+        public void TestUtcEditorManipulateFactionSelect()
+        {
+            // TODO: PLACEHOLDER - Implement faction combo box manipulation test
+            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:525-545
+            throw new NotImplementedException("TestUtcEditorManipulateFactionSelect: Faction combo box manipulation test not yet implemented");
+        }
+
+        // TODO: STUB - Implement test_utc_editor_manipulate_gender_select (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:547-567)
+        // Original: def test_utc_editor_manipulate_gender_select(qtbot, installation: HTInstallation, test_files_dir: Path): Test manipulating gender combo box.
+        [Fact]
+        public void TestUtcEditorManipulateGenderSelect()
+        {
+            // TODO: PLACEHOLDER - Implement gender combo box manipulation test
+            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:547-567
+            throw new NotImplementedException("TestUtcEditorManipulateGenderSelect: Gender combo box manipulation test not yet implemented");
+        }
+
+        // TODO: STUB - Implement test_utc_editor_manipulate_perception_select (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:569-593)
+        // Original: def test_utc_editor_manipulate_perception_select(qtbot, installation: HTInstallation, test_files_dir: Path): Test manipulating perception combo box.
+        [Fact]
+        public void TestUtcEditorManipulatePerceptionSelect()
+        {
+            // TODO: PLACEHOLDER - Implement perception combo box manipulation test
+            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:569-593
+            throw new NotImplementedException("TestUtcEditorManipulatePerceptionSelect: Perception combo box manipulation test not yet implemented");
+        }
+
+        // TODO: STUB - Implement test_utc_editor_manipulate_challenge_rating_spin (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:595-615)
+        // Original: def test_utc_editor_manipulate_challenge_rating_spin(qtbot, installation: HTInstallation, test_files_dir: Path): Test manipulating challenge rating spin box.
+        [Fact]
+        public void TestUtcEditorManipulateChallengeRatingSpin()
+        {
+            // TODO: PLACEHOLDER - Implement challenge rating spin box manipulation test
+            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:595-615
+            throw new NotImplementedException("TestUtcEditorManipulateChallengeRatingSpin: Challenge rating spin box manipulation test not yet implemented");
+        }
+
+        // TODO: STUB - Implement test_utc_editor_manipulate_blindspot_spin (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:617-641)
+        // Original: def test_utc_editor_manipulate_blindspot_spin(qtbot, installation: HTInstallation, test_files_dir: Path): Test manipulating blindspot spin box (TSL only).
+        [Fact]
+        public void TestUtcEditorManipulateBlindspotSpin()
+        {
+            // TODO: PLACEHOLDER - Implement blindspot spin box manipulation test (TSL only)
+            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:617-641
+            throw new NotImplementedException("TestUtcEditorManipulateBlindspotSpin: Blindspot spin box manipulation test not yet implemented (TSL-only feature)");
+        }
+
+        // TODO: STUB - Implement test_utc_editor_manipulate_multiplier_set_spin (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:643-671)
+        // Original: def test_utc_editor_manipulate_multiplier_set_spin(qtbot, installation: HTInstallation, test_files_dir: Path): Test manipulating multiplier set spin box (TSL only).
+        [Fact]
+        public void TestUtcEditorManipulateMultiplierSetSpin()
+        {
+            // TODO: PLACEHOLDER - Implement multiplier set spin box manipulation test (TSL only)
+            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:643-671
+            throw new NotImplementedException("TestUtcEditorManipulateMultiplierSetSpin: Multiplier set spin box manipulation test not yet implemented (TSL-only feature)");
+        }
+
+        // TODO: STUB - Implement test_utc_editor_manipulate_computer_use_spin (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:673-693)
+        // Original: def test_utc_editor_manipulate_computer_use_spin(qtbot, installation: HTInstallation, test_files_dir: Path): Test manipulating computer use spin box.
+        [Fact]
+        public void TestUtcEditorManipulateComputerUseSpin()
+        {
+            // TODO: PLACEHOLDER - Implement computer use spin box manipulation test
+            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:673-693
+            throw new NotImplementedException("TestUtcEditorManipulateComputerUseSpin: Computer use spin box manipulation test not yet implemented");
+        }
+
+        // TODO: STUB - Implement test_utc_editor_manipulate_all_skill_spins (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:695-727)
+        // Original: def test_utc_editor_manipulate_all_skill_spins(qtbot, installation: HTInstallation, test_files_dir: Path): Test manipulating all skill spin boxes.
+        [Fact]
+        public void TestUtcEditorManipulateAllSkillSpins()
+        {
+            // TODO: PLACEHOLDER - Implement all skill spin boxes manipulation test (demolitions, stealth, awareness, persuade, repair, security, treat injury)
+            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:695-727
+            throw new NotImplementedException("TestUtcEditorManipulateAllSkillSpins: All skill spin boxes manipulation test not yet implemented");
+        }
+
+        // TODO: STUB - Implement test_utc_editor_manipulate_all_save_spins (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:729-756)
+        // Original: def test_utc_editor_manipulate_all_save_spins(qtbot, installation: HTInstallation, test_files_dir: Path): Test manipulating all save spin boxes.
+        [Fact]
+        public void TestUtcEditorManipulateAllSaveSpins()
+        {
+            // TODO: PLACEHOLDER - Implement all save spin boxes manipulation test (fortitude, reflex, willpower)
+            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:729-756
+            throw new NotImplementedException("TestUtcEditorManipulateAllSaveSpins: All save spin boxes manipulation test not yet implemented");
+        }
+
+        // TODO: STUB - Implement test_utc_editor_manipulate_all_ability_spins (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:758-789)
+        // Original: def test_utc_editor_manipulate_all_ability_spins(qtbot, installation: HTInstallation, test_files_dir: Path): Test manipulating all ability spin boxes.
+        [Fact]
+        public void TestUtcEditorManipulateAllAbilitySpins()
+        {
+            // TODO: PLACEHOLDER - Implement all ability spin boxes manipulation test (strength, dexterity, constitution, intelligence, wisdom, charisma)
+            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:758-789
+            throw new NotImplementedException("TestUtcEditorManipulateAllAbilitySpins: All ability spin boxes manipulation test not yet implemented");
+        }
+
+        // TODO: STUB - Implement test_utc_editor_manipulate_hp_fp_spins (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:791-838)
+        // Original: def test_utc_editor_manipulate_hp_fp_spins(qtbot, installation: HTInstallation, test_files_dir: Path): Test manipulating HP and FP spin boxes.
+        [Fact]
+        public void TestUtcEditorManipulateHpFpSpins()
+        {
+            // TODO: PLACEHOLDER - Implement HP and FP spin boxes manipulation test (hp, currentHp, maxHp, fp, naturalAc)
+            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:791-838
+            throw new NotImplementedException("TestUtcEditorManipulateHpFpSpins: HP and FP spin boxes manipulation test not yet implemented");
+        }
+
+        // TODO: STUB - Implement test_utc_editor_manipulate_class1_select (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:840-861)
+        // Original: def test_utc_editor_manipulate_class1_select(qtbot, installation: HTInstallation, test_files_dir: Path): Test manipulating class1 combo box.
+        [Fact]
+        public void TestUtcEditorManipulateClass1Select()
+        {
+            // TODO: PLACEHOLDER - Implement class1 combo box manipulation test
+            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:840-861
+            throw new NotImplementedException("TestUtcEditorManipulateClass1Select: Class1 combo box manipulation test not yet implemented");
+        }
+
+        // TODO: STUB - Implement test_utc_editor_manipulate_class1_level_spin (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:863-888)
+        // Original: def test_utc_editor_manipulate_class1_level_spin(qtbot, installation: HTInstallation, test_files_dir: Path): Test manipulating class1 level spin box.
+        [Fact]
+        public void TestUtcEditorManipulateClass1LevelSpin()
+        {
+            // TODO: PLACEHOLDER - Implement class1 level spin box manipulation test
+            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:863-888
+            throw new NotImplementedException("TestUtcEditorManipulateClass1LevelSpin: Class1 level spin box manipulation test not yet implemented");
+        }
+
+        // TODO: STUB - Implement test_utc_editor_manipulate_class2_select (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:890-911)
+        // Original: def test_utc_editor_manipulate_class2_select(qtbot, installation: HTInstallation, test_files_dir: Path): Test manipulating class2 combo box.
+        [Fact]
+        public void TestUtcEditorManipulateClass2Select()
+        {
+            // TODO: PLACEHOLDER - Implement class2 combo box manipulation test
+            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:890-911
+            throw new NotImplementedException("TestUtcEditorManipulateClass2Select: Class2 combo box manipulation test not yet implemented");
+        }
+
+        // TODO: STUB - Implement test_utc_editor_manipulate_class2_level_spin (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:913-942)
+        // Original: def test_utc_editor_manipulate_class2_level_spin(qtbot, installation: HTInstallation, test_files_dir: Path): Test manipulating class2 level spin box.
+        [Fact]
+        public void TestUtcEditorManipulateClass2LevelSpin()
+        {
+            // TODO: PLACEHOLDER - Implement class2 level spin box manipulation test
+            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:913-942
+            throw new NotImplementedException("TestUtcEditorManipulateClass2LevelSpin: Class2 level spin box manipulation test not yet implemented");
+        }
+
+        // TODO: STUB - Implement test_utc_editor_manipulate_feats_list (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:944-985)
+        // Original: def test_utc_editor_manipulate_feats_list(qtbot, installation: HTInstallation, test_files_dir: Path): Test manipulating feats list.
+        [Fact]
+        public void TestUtcEditorManipulateFeatsList()
+        {
+            // TODO: PLACEHOLDER - Implement feats list manipulation test (add, remove, reorder feats)
+            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:944-985
+            throw new NotImplementedException("TestUtcEditorManipulateFeatsList: Feats list manipulation test not yet implemented");
+        }
+
+        // TODO: STUB - Implement test_utc_editor_manipulate_powers_list (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:987-1024)
+        // Original: def test_utc_editor_manipulate_powers_list(qtbot, installation: HTInstallation, test_files_dir: Path): Test manipulating powers list.
+        [Fact]
+        public void TestUtcEditorManipulatePowersList()
+        {
+            // TODO: PLACEHOLDER - Implement powers list manipulation test (add, remove, reorder powers per class)
+            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:987-1024
+            throw new NotImplementedException("TestUtcEditorManipulatePowersList: Powers list manipulation test not yet implemented");
+        }
+
+        // TODO: STUB - Implement test_utc_editor_manipulate_all_script_fields (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:1026-1067)
+        // Original: def test_utc_editor_manipulate_all_script_fields(qtbot, installation: HTInstallation, test_files_dir: Path): Test manipulating all script fields.
+        [Fact]
+        public void TestUtcEditorManipulateAllScriptFields()
+        {
+            // TODO: PLACEHOLDER - Implement all script fields manipulation test (onBlocked, onAttacked, onNotice, onDialog, onDamaged, onDeath, onEndRound, onEndDialog, onDisturbed, onHeartbeat, onSpawn, onSpell, onUserDefined)
+            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:1026-1067
+            throw new NotImplementedException("TestUtcEditorManipulateAllScriptFields: All script fields manipulation test not yet implemented");
+        }
+
+        // TODO: STUB - Implement test_utc_editor_manipulate_comments (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:1069-1103)
+        // Original: def test_utc_editor_manipulate_comments(qtbot, installation: HTInstallation, test_files_dir: Path): Test manipulating comments field.
+        [Fact]
+        public void TestUtcEditorManipulateComments()
+        {
+            // TODO: PLACEHOLDER - Implement comments field manipulation test (empty, single line, multi-line, special chars, very long)
+            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:1069-1103
+            throw new NotImplementedException("TestUtcEditorManipulateComments: Comments field manipulation test not yet implemented");
+        }
+
+        // TODO: STUB - Implement test_utc_editor_manipulate_all_basic_fields_combination (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:1105-1140)
+        // Original: def test_utc_editor_manipulate_all_basic_fields_combination(qtbot, installation: HTInstallation, test_files_dir: Path): Test manipulating all basic fields simultaneously.
+        [Fact]
+        public void TestUtcEditorManipulateAllBasicFieldsCombination()
+        {
+            // TODO: PLACEHOLDER - Implement combination test for all basic fields manipulated simultaneously
+            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:1105-1140
+            throw new NotImplementedException("TestUtcEditorManipulateAllBasicFieldsCombination: All basic fields combination test not yet implemented");
+        }
+
+        // TODO: STUB - Implement test_utc_editor_manipulate_all_advanced_fields_combination (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:1142-1195)
+        // Original: def test_utc_editor_manipulate_all_advanced_fields_combination(qtbot, installation: HTInstallation, test_files_dir: Path): Test manipulating all advanced fields simultaneously.
+        [Fact]
+        public void TestUtcEditorManipulateAllAdvancedFieldsCombination()
+        {
+            // TODO: PLACEHOLDER - Implement combination test for all advanced fields manipulated simultaneously
+            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:1142-1195
+            throw new NotImplementedException("TestUtcEditorManipulateAllAdvancedFieldsCombination: All advanced fields combination test not yet implemented");
+        }
+
+        // TODO: STUB - Implement test_utc_editor_manipulate_all_stats_fields_combination (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:1197-1249)
+        // Original: def test_utc_editor_manipulate_all_stats_fields_combination(qtbot, installation: HTInstallation, test_files_dir: Path): Test manipulating all stats fields simultaneously.
+        [Fact]
+        public void TestUtcEditorManipulateAllStatsFieldsCombination()
+        {
+            // TODO: PLACEHOLDER - Implement combination test for all stats fields manipulated simultaneously
+            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:1197-1249
+            throw new NotImplementedException("TestUtcEditorManipulateAllStatsFieldsCombination: All stats fields combination test not yet implemented");
+        }
+
+        // TODO: STUB - Implement test_utc_editor_save_load_roundtrip_identity (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:1251-1281)
+        // Original: def test_utc_editor_save_load_roundtrip_identity(qtbot, installation: HTInstallation, test_files_dir: Path): Test that save/load roundtrip preserves all data exactly.
+        [Fact]
+        public void TestUtcEditorSaveLoadRoundtripIdentity()
+        {
+            // TODO: PLACEHOLDER - Implement save/load roundtrip identity test (preserves all data exactly without modifications)
+            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:1251-1281
+            throw new NotImplementedException("TestUtcEditorSaveLoadRoundtripIdentity: Save/load roundtrip identity test not yet implemented");
+        }
+
+        // TODO: STUB - Implement test_utc_editor_save_load_roundtrip_with_modifications (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:1283-1323)
+        // Original: def test_utc_editor_save_load_roundtrip_with_modifications(qtbot, installation: HTInstallation, test_files_dir: Path): Test save/load roundtrip with modifications preserves changes.
+        [Fact]
+        public void TestUtcEditorSaveLoadRoundtripWithModifications()
+        {
+            // TODO: PLACEHOLDER - Implement save/load roundtrip with modifications test (preserves changes through multiple cycles)
+            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:1283-1323
+            throw new NotImplementedException("TestUtcEditorSaveLoadRoundtripWithModifications: Save/load roundtrip with modifications test not yet implemented");
+        }
+
+        // TODO: STUB - Implement test_utc_editor_multiple_save_load_cycles (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:1325-1360)
+        // Original: def test_utc_editor_multiple_save_load_cycles(qtbot, installation: HTInstallation, test_files_dir: Path): Test multiple save/load cycles preserve data correctly.
+        [Fact]
+        public void TestUtcEditorMultipleSaveLoadCycles()
+        {
+            // TODO: PLACEHOLDER - Implement multiple save/load cycles test (5 cycles with different modifications each time)
+            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:1325-1360
+            throw new NotImplementedException("TestUtcEditorMultipleSaveLoadCycles: Multiple save/load cycles test not yet implemented");
+        }
+
+        // TODO: STUB - Implement test_utc_editor_gff_roundtrip_with_modifications (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:1467-1500)
+        // Original: def test_utc_editor_gff_roundtrip_with_modifications(qtbot, installation: HTInstallation, test_files_dir: Path): Test GFF roundtrip with modifications still produces valid GFF.
+        [Fact]
+        public void TestUtcEditorGffRoundtripWithModifications()
+        {
+            // TODO: PLACEHOLDER - Implement GFF roundtrip with modifications test (validates GFF structure after modifications)
+            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:1467-1500
+            throw new NotImplementedException("TestUtcEditorGffRoundtripWithModifications: GFF roundtrip with modifications test not yet implemented");
+        }
+
+        // TODO: STUB - Implement test_utc_editor_new_file_creation (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:1502-1534)
+        // Original: def test_utc_editor_new_file_creation(qtbot, installation: HTInstallation): Test creating a new UTC file from scratch.
+        [Fact]
+        public void TestUtcEditorNewFileCreation()
+        {
+            // TODO: PLACEHOLDER - Implement new file creation test (already exists as TestUtcEditorNewFileCreation but needs full implementation matching Python)
+            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:1502-1534
+            // Note: TestUtcEditorNewFileCreation exists but is SIMPLIFIED - needs full field setting and verification
+        }
+
+        // TODO: STUB - Implement test_utc_editor_minimum_values (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:1536-1563)
+        // Original: def test_utc_editor_minimum_values(qtbot, installation: HTInstallation, test_files_dir: Path): Test setting all fields to minimum values.
+        [Fact]
+        public void TestUtcEditorMinimumValues()
+        {
+            // TODO: PLACEHOLDER - Implement minimum values edge case test (all fields set to minimums)
+            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:1536-1563
+            throw new NotImplementedException("TestUtcEditorMinimumValues: Minimum values edge case test not yet implemented");
+        }
+
+        // TODO: STUB - Implement test_utc_editor_maximum_values (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:1565-1595)
+        // Original: def test_utc_editor_maximum_values(qtbot, installation: HTInstallation, test_files_dir: Path): Test setting all fields to maximum values.
+        [Fact]
+        public void TestUtcEditorMaximumValues()
+        {
+            // TODO: PLACEHOLDER - Implement maximum values edge case test (all fields set to maximums)
+            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:1565-1595
+            throw new NotImplementedException("TestUtcEditorMaximumValues: Maximum values edge case test not yet implemented");
+        }
+
+        // TODO: STUB - Implement test_utc_editor_feats_powers_combinations (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:1597-1631)
+        // Original: def test_utc_editor_feats_powers_combinations(qtbot, installation: HTInstallation, test_files_dir: Path): Test feats and powers combinations.
+        [Fact]
+        public void TestUtcEditorFeatsPowersCombinations()
+        {
+            // TODO: PLACEHOLDER - Implement feats and powers combinations test
+            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:1597-1631
+            throw new NotImplementedException("TestUtcEditorFeatsPowersCombinations: Feats and powers combinations test not yet implemented");
+        }
+
+        // TODO: STUB - Implement test_utc_editor_classes_combinations (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:1633-1661)
+        // Original: def test_utc_editor_classes_combinations(qtbot, installation: HTInstallation, test_files_dir: Path): Test classes combinations.
+        [Fact]
+        public void TestUtcEditorClassesCombinations()
+        {
+            // TODO: PLACEHOLDER - Implement classes combinations test
+            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:1633-1661
+            throw new NotImplementedException("TestUtcEditorClassesCombinations: Classes combinations test not yet implemented");
+        }
+
+        // TODO: STUB - Implement test_utc_editor_all_scripts_combination (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:1663-1690)
+        // Original: def test_utc_editor_all_scripts_combination(qtbot, installation: HTInstallation, test_files_dir: Path): Test all scripts combination.
+        [Fact]
+        public void TestUtcEditorAllScriptsCombination()
+        {
+            // TODO: PLACEHOLDER - Implement all scripts combination test
+            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:1663-1690
+            throw new NotImplementedException("TestUtcEditorAllScriptsCombination: All scripts combination test not yet implemented");
+        }
+
+        // TODO: STUB - Implement test_utc_editor_preview_updates (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:1692-1713)
+        // Original: def test_utc_editor_preview_updates(qtbot, installation: HTInstallation, test_files_dir: Path): Test preview updates.
+        [Fact]
+        public void TestUtcEditorPreviewUpdates()
+        {
+            // TODO: PLACEHOLDER - Implement preview updates test (verifies preview widget updates when fields change)
+            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:1692-1713
+            throw new NotImplementedException("TestUtcEditorPreviewUpdates: Preview updates test not yet implemented");
+        }
+
+        // TODO: STUB - Implement test_utc_editor_random_name_buttons (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:1715-1745)
+        // Original: def test_utc_editor_random_name_buttons(qtbot, installation: HTInstallation, test_files_dir: Path): Test random name buttons.
+        [Fact]
+        public void TestUtcEditorRandomNameButtons()
+        {
+            // TODO: PLACEHOLDER - Implement random name buttons test (firstname and lastname random generation)
+            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:1715-1745
+            throw new NotImplementedException("TestUtcEditorRandomNameButtons: Random name buttons test not yet implemented");
+        }
+
+        // TODO: STUB - Implement test_utc_editor_inventory_button (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:1747-1761)
+        // Original: def test_utc_editor_inventory_button(qtbot, installation: HTInstallation, test_files_dir: Path): Test inventory button.
+        [Fact]
+        public void TestUtcEditorInventoryButton()
+        {
+            // TODO: PLACEHOLDER - Implement inventory button test (opens inventory dialog)
+            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:1747-1761
+            throw new NotImplementedException("TestUtcEditorInventoryButton: Inventory button test not yet implemented");
+        }
+
+        // TODO: STUB - Implement test_utc_editor_menu_actions (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:1763-1792)
+        // Original: def test_utc_editor_menu_actions(qtbot, installation: HTInstallation, test_files_dir: Path): Test menu actions.
+        [Fact]
+        public void TestUtcEditorMenuActions()
+        {
+            // TODO: PLACEHOLDER - Implement menu actions test (verifies menu actions exist and are callable)
+            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:1763-1792
+            throw new NotImplementedException("TestUtcEditorMenuActions: Menu actions test not yet implemented");
+        }
+
+        // TODO: STUB - Implement test_utc_editor_comments_tab_title_update (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:1794-1817)
+        // Original: def test_utc_editor_comments_tab_title_update(qtbot, installation: HTInstallation, test_files_dir: Path): Test comments tab title updates.
+        [Fact]
+        public void TestUtcEditorCommentsTabTitleUpdate()
+        {
+            // TODO: PLACEHOLDER - Implement comments tab title update test (verifies tab title updates when comments change)
+            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:1794-1817
+            throw new NotImplementedException("TestUtcEditorCommentsTabTitleUpdate: Comments tab title update test not yet implemented");
+        }
+
+        // TODO: STUB - Implement test_utc_editor_feat_summary_updates (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:1819-1842)
+        // Original: def test_utc_editor_feat_summary_updates(qtbot, installation: HTInstallation, test_files_dir: Path): Test feat summary updates.
+        [Fact]
+        public void TestUtcEditorFeatSummaryUpdates()
+        {
+            // TODO: PLACEHOLDER - Implement feat summary updates test (verifies feat summary widget updates when feats change)
+            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:1819-1842
+            throw new NotImplementedException("TestUtcEditorFeatSummaryUpdates: Feat summary updates test not yet implemented");
+        }
+
+        // TODO: STUB - Implement test_utc_editor_power_summary_updates (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:1844-1863)
+        // Original: def test_utc_editor_power_summary_updates(qtbot, installation: HTInstallation, test_files_dir: Path): Test power summary updates.
+        [Fact]
+        public void TestUtcEditorPowerSummaryUpdates()
+        {
+            // TODO: PLACEHOLDER - Implement power summary updates test (verifies power summary widget updates when powers change)
+            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:1844-1863
+            throw new NotImplementedException("TestUtcEditorPowerSummaryUpdates: Power summary updates test not yet implemented");
+        }
+
+        // TODO: STUB - Implement test_utc_editor_item_count_updates (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:1865-1891)
+        // Original: def test_utc_editor_item_count_updates(qtbot, installation: HTInstallation, test_files_dir: Path): Test item count updates.
+        [Fact]
+        public void TestUtcEditorItemCountUpdates()
+        {
+            // TODO: PLACEHOLDER - Implement item count updates test (verifies item count widget updates when inventory changes)
+            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:1865-1891
+            throw new NotImplementedException("TestUtcEditorItemCountUpdates: Item count updates test not yet implemented");
+        }
+
+        // TODO: STUB - Implement test_utc_editor_all_widgets_exist (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:1893-1996)
+        // Original: def test_utc_editor_all_widgets_exist(qtbot, installation: HTInstallation): Test all widgets exist.
+        [Fact]
+        public void TestUtcEditorAllWidgetsExist()
+        {
+            // TODO: PLACEHOLDER - Implement all widgets exist test (verifies all UI widgets are accessible and exist)
+            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:1893-1996
+            throw new NotImplementedException("TestUtcEditorAllWidgetsExist: All widgets exist test not yet implemented");
+        }
+
+        // TODO: STUB - Implement test_utc_editor_all_basic_widgets_interactions (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:1998-2053)
+        // Original: def test_utc_editor_all_basic_widgets_interactions(qtbot, installation: HTInstallation): Test all basic widgets interactions.
+        [Fact]
+        public void TestUtcEditorAllBasicWidgetsInteractions()
+        {
+            // TODO: PLACEHOLDER - Implement all basic widgets interactions test (verifies all basic tab widgets can be interacted with)
+            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:1998-2053
+            throw new NotImplementedException("TestUtcEditorAllBasicWidgetsInteractions: All basic widgets interactions test not yet implemented");
+        }
+
+        // TODO: STUB - Implement test_utc_editor_all_advanced_widgets_interactions (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:2055-2115)
+        // Original: def test_utc_editor_all_advanced_widgets_interactions(qtbot, installation: HTInstallation): Test all advanced widgets interactions.
+        [Fact]
+        public void TestUtcEditorAllAdvancedWidgetsInteractions()
+        {
+            // TODO: PLACEHOLDER - Implement all advanced widgets interactions test (verifies all advanced tab widgets can be interacted with)
+            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:2055-2115
+            throw new NotImplementedException("TestUtcEditorAllAdvancedWidgetsInteractions: All advanced widgets interactions test not yet implemented");
+        }
+
+        // TODO: STUB - Implement test_utc_editor_all_stats_widgets_interactions (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:2117-2184)
+        // Original: def test_utc_editor_all_stats_widgets_interactions(qtbot, installation: HTInstallation): Test all stats widgets interactions.
+        [Fact]
+        public void TestUtcEditorAllStatsWidgetsInteractions()
+        {
+            // TODO: PLACEHOLDER - Implement all stats widgets interactions test (verifies all stats tab widgets can be interacted with)
+            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:2117-2184
+            throw new NotImplementedException("TestUtcEditorAllStatsWidgetsInteractions: All stats widgets interactions test not yet implemented");
+        }
+
+        // TODO: STUB - Implement test_utc_editor_all_classes_widgets_interactions (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:2186-2217)
+        // Original: def test_utc_editor_all_classes_widgets_interactions(qtbot, installation: HTInstallation): Test all classes widgets interactions.
+        [Fact]
+        public void TestUtcEditorAllClassesWidgetsInteractions()
+        {
+            // TODO: PLACEHOLDER - Implement all classes widgets interactions test (verifies all classes tab widgets can be interacted with)
+            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:2186-2217
+            throw new NotImplementedException("TestUtcEditorAllClassesWidgetsInteractions: All classes widgets interactions test not yet implemented");
+        }
+
+        // TODO: STUB - Implement test_utc_editor_all_feats_powers_widgets_interactions (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:2219-2269)
+        // Original: def test_utc_editor_all_feats_powers_widgets_interactions(qtbot, installation: HTInstallation): Test all feats/powers widgets interactions.
+        [Fact]
+        public void TestUtcEditorAllFeatsPowersWidgetsInteractions()
+        {
+            // TODO: PLACEHOLDER - Implement all feats/powers widgets interactions test (verifies all feats/powers tab widgets can be interacted with)
+            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:2219-2269
+            throw new NotImplementedException("TestUtcEditorAllFeatsPowersWidgetsInteractions: All feats/powers widgets interactions test not yet implemented");
+        }
+
+        // TODO: STUB - Implement test_utc_editor_all_scripts_widgets_interactions (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:2271-2302)
+        // Original: def test_utc_editor_all_scripts_widgets_interactions(qtbot, installation: HTInstallation): Test all scripts widgets interactions.
+        [Fact]
+        public void TestUtcEditorAllScriptsWidgetsInteractions()
+        {
+            // TODO: PLACEHOLDER - Implement all scripts widgets interactions test (verifies all scripts tab widgets can be interacted with)
+            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:2271-2302
+            throw new NotImplementedException("TestUtcEditorAllScriptsWidgetsInteractions: All scripts widgets interactions test not yet implemented");
+        }
+
+        // TODO: STUB - Implement test_utc_editor_all_widgets_build_verification (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:2304-2411)
+        // Original: def test_utc_editor_all_widgets_build_verification(qtbot, installation: HTInstallation): Test all widgets build verification.
+        [Fact]
+        public void TestUtcEditorAllWidgetsBuildVerification()
+        {
+            // TODO: PLACEHOLDER - Implement all widgets build verification test (verifies all widgets can be set and build() produces valid UTC)
+            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:2304-2411
+            throw new NotImplementedException("TestUtcEditorAllWidgetsBuildVerification: All widgets build verification test not yet implemented");
+        }
+
+        // TODO: STUB - Implement test_utc_editor_load_real_file (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:2413-2433)
+        // Original: def test_utc_editor_load_real_file(qtbot, installation: HTInstallation, test_files_dir): Test loading a real UTC file.
+        [Fact]
+        public void TestUtcEditorLoadRealFile()
+        {
+            // TODO: PLACEHOLDER - Implement load real file test (already exists as TestUtcEditorLoadExistingFile but needs full implementation matching Python)
+            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:2413-2433
+            // Note: TestUtcEditorLoadExistingFile exists but is SIMPLIFIED - needs full field verification
+        }
+
+        // TODO: STUB - Implement test_utc_editor_menu_actions (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:2435-2488)
+        // Original: def test_utc_editor_menu_actions(qtbot, installation: HTInstallation): Test menu actions (duplicate name, different test).
+        [Fact]
+        public void TestUtcEditorMenuActions2()
+        {
+            // TODO: PLACEHOLDER - Implement menu actions test (duplicate name in Python, different implementation - verifies menu actions work correctly)
+            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:2435-2488
+            throw new NotImplementedException("TestUtcEditorMenuActions2: Menu actions test (second implementation) not yet implemented");
+        }
+
+        // TODO: STUB - Implement test_utc_editor_inventory_button (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:2490-2544)
+        // Original: def test_utc_editor_inventory_button(qtbot, installation: HTInstallation): Test inventory button (duplicate name, different test).
+        [Fact]
+        public void TestUtcEditorInventoryButton2()
+        {
+            // TODO: PLACEHOLDER - Implement inventory button test (duplicate name in Python, different implementation - verifies inventory dialog functionality)
+            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:2490-2544
+            throw new NotImplementedException("TestUtcEditorInventoryButton2: Inventory button test (second implementation) not yet implemented");
+        }
     }
 }
