@@ -276,19 +276,97 @@ namespace Andastra.Runtime.Games.Aurora
         }
 
         /// <summary>
-        /// Handles area transition events.
+        /// Removes an entity from this area's collections.
         /// </summary>
         /// <remarks>
-        /// Based on Aurora area transition system.
-        /// More complex than Odyssey due to tile-based areas.
-        /// Handles area loading/unloading and entity migration.
+        /// Aurora-specific: Basic entity removal without physics system.
+        /// Based on nwmain.exe entity management.
         /// </remarks>
-        protected override void HandleAreaTransition(IEntity entity, string targetArea)
+        protected override void RemoveEntityFromArea(IEntity entity)
         {
-            // TODO: Implement Aurora area transition logic
-            // Handle tile-based area transitions
-            // Update entity positioning in new area
-            // Trigger area loading/unloading
+            if (entity == null)
+            {
+                return;
+            }
+
+            // Remove from type-specific lists
+            switch (entity.ObjectType)
+            {
+                case ObjectType.Creature:
+                    _creatures.Remove(entity);
+                    break;
+                case ObjectType.Placeable:
+                    _placeables.Remove(entity);
+                    break;
+                case ObjectType.Door:
+                    _doors.Remove(entity);
+                    break;
+                case ObjectType.Trigger:
+                    _triggers.Remove(entity);
+                    break;
+                case ObjectType.Waypoint:
+                    _waypoints.Remove(entity);
+                    break;
+                case ObjectType.Sound:
+                    _sounds.Remove(entity);
+                    break;
+            }
+        }
+
+        /// <summary>
+        /// Adds an entity to this area's collections.
+        /// </summary>
+        /// <remarks>
+        /// Aurora-specific: Basic entity addition without physics system.
+        /// Based on nwmain.exe entity management.
+        /// </remarks>
+        protected override void AddEntityToArea(IEntity entity)
+        {
+            if (entity == null)
+            {
+                return;
+            }
+
+            // Add to type-specific lists
+            switch (entity.ObjectType)
+            {
+                case ObjectType.Creature:
+                    if (!_creatures.Contains(entity))
+                    {
+                        _creatures.Add(entity);
+                    }
+                    break;
+                case ObjectType.Placeable:
+                    if (!_placeables.Contains(entity))
+                    {
+                        _placeables.Add(entity);
+                    }
+                    break;
+                case ObjectType.Door:
+                    if (!_doors.Contains(entity))
+                    {
+                        _doors.Add(entity);
+                    }
+                    break;
+                case ObjectType.Trigger:
+                    if (!_triggers.Contains(entity))
+                    {
+                        _triggers.Add(entity);
+                    }
+                    break;
+                case ObjectType.Waypoint:
+                    if (!_waypoints.Contains(entity))
+                    {
+                        _waypoints.Add(entity);
+                    }
+                    break;
+                case ObjectType.Sound:
+                    if (!_sounds.Contains(entity))
+                    {
+                        _sounds.Add(entity);
+                    }
+                    break;
+            }
         }
 
         /// <summary>
