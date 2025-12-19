@@ -9,7 +9,7 @@ namespace Andastra.Runtime.MonoGame.Textures
 {
     /// <summary>
     /// Texture streaming and atlas management system.
-    /// 
+    ///
     /// Features:
     /// - Texture streaming for large textures
     /// - Texture atlas management
@@ -268,7 +268,7 @@ namespace Andastra.Runtime.MonoGame.Textures
         private void ProcessCompletedLoads()
         {
             var completedTasks = new List<KeyValuePair<string, Task<byte[]>>>();
-            
+
             lock (_lockObject)
             {
                 foreach (var kvp in _loadingTasks)

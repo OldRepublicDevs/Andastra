@@ -750,7 +750,7 @@ namespace Andastra.Parsing.TSLPatcher
                     int bracketEnd = part.IndexOf("]");
                     string fieldLabel = part.Substring(0, bracketStart);
                     int index = int.Parse(part.Substring(bracketStart + 1, bracketEnd - bracketStart - 1));
-                    
+
                     // Get the list field
                     GFFList list = current.GetList(fieldLabel);
                     if (index < list.Count)
@@ -788,17 +788,17 @@ namespace Andastra.Parsing.TSLPatcher
             {
                 var reader = new GFFBinaryReader(sourceData);
                 GFF gff = reader.Load();
-                
+
                 // Get the field names that should reference this 2DA file
                 string twodaResname = pendingRef.TwodaFilename.ToLowerInvariant().Replace(".2da", "");
                 var relevantFieldNames = new List<string>();
-                
+
                 // Get GFF field to 2DA mapping to identify relevant field names
                 // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/writer.py:3363-3392
                 // Original: gff_field_to_2da_mapping = _get_gff_field_to_2da_mapping()
                 Dictionary<string, ResourceIdentifier> gffFieldTo2daMapping = ReferenceCacheHelpers.GffFieldTo2daMapping();
                 ResourceIdentifier target2daIdentifier = new ResourceIdentifier(twodaResname, ResourceType.TwoDA);
-                
+
                 // Find all GFF field names that reference this 2DA file
                 foreach (var kvp in gffFieldTo2daMapping)
                 {
@@ -807,7 +807,7 @@ namespace Andastra.Parsing.TSLPatcher
                         relevantFieldNames.Add(kvp.Key);
                     }
                 }
-                
+
                 // Verify all field paths in the pending reference still have the row index
                 foreach (string fieldPath in pendingRef.FieldPaths)
                 {
@@ -845,7 +845,7 @@ namespace Andastra.Parsing.TSLPatcher
                     int bracketEnd = part.IndexOf("]");
                     string fieldLabel = part.Substring(0, bracketStart);
                     int index = int.Parse(part.Substring(bracketStart + 1, bracketEnd - bracketStart - 1));
-                    
+
                     // Get the list field
                     GFFList list = current.GetList(fieldLabel);
                     if (index < list.Count)
@@ -895,7 +895,7 @@ namespace Andastra.Parsing.TSLPatcher
             Modifications2DA existingMod;
             bool isNewMod;
 
-            if (modification != null && modification is Modifications2DA mod2da && 
+            if (modification != null && modification is Modifications2DA mod2da &&
                 mod2da.SourceFile.ToLowerInvariant() == filename.ToLowerInvariant())
             {
                 existingMod = mod2da;
@@ -958,7 +958,7 @@ namespace Andastra.Parsing.TSLPatcher
             ModificationsSSF existingMod;
             bool isNewMod;
 
-            if (modification != null && modification is ModificationsSSF modSsf && 
+            if (modification != null && modification is ModificationsSSF modSsf &&
                 modSsf.SourceFile.ToLowerInvariant() == filename.ToLowerInvariant())
             {
                 existingMod = modSsf;
@@ -1015,7 +1015,7 @@ namespace Andastra.Parsing.TSLPatcher
             ModificationsGFF existingMod;
             bool isNewMod;
 
-            if (modification != null && modification is ModificationsGFF modGff && 
+            if (modification != null && modification is ModificationsGFF modGff &&
                 modGff.SourceFile.ToLowerInvariant() == filename.ToLowerInvariant())
             {
                 existingMod = modGff;
@@ -1072,7 +1072,7 @@ namespace Andastra.Parsing.TSLPatcher
             ModificationsGFF existingMod;
             bool isNewMod;
 
-            if (modification != null && modification is ModificationsGFF modGff && 
+            if (modification != null && modification is ModificationsGFF modGff &&
                 modGff.SourceFile.ToLowerInvariant() == gffFilename.ToLowerInvariant())
             {
                 existingMod = modGff;
@@ -1214,7 +1214,7 @@ namespace Andastra.Parsing.TSLPatcher
             try
             {
                 string extUpper = fileExt.ToUpperInvariant();
-                
+
                 // Check if it's a GFF extension
                 var gffExtensions = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
                 {
@@ -1223,7 +1223,7 @@ namespace Andastra.Parsing.TSLPatcher
                     "ARE", "DLG", "FAC", "GIT", "GUI", "IFO", "ITP", "JRL",
                     "PTH", "NFO", "PT", "GVT", "INV"
                 };
-                
+
                 if (gffExtensions.Contains(extUpper))
                 {
                     var reader = new GFFBinaryReader(data);
@@ -1546,7 +1546,7 @@ namespace Andastra.Parsing.TSLPatcher
                                     // So we can't match it statically - skip this token for matching
                                     continue;
                                 }
-                                if (changeRowMod != null && 
+                                if (changeRowMod != null &&
                                     changeRowMod.Target != null &&
                                     changeRowMod.Target.TargetType == TargetType.ROW_INDEX &&
                                     changeRowMod.Target.Value is int rowIndex)
@@ -1562,7 +1562,7 @@ namespace Andastra.Parsing.TSLPatcher
                             else if (rowValue is RowValueRowLabel rowLabel)
                             {
                                 // For RowLabel, we can match if we have the row label
-                                if (changeRowMod != null && 
+                                if (changeRowMod != null &&
                                     changeRowMod.Target != null &&
                                     changeRowMod.Target.TargetType == TargetType.ROW_LABEL &&
                                     changeRowMod.Target.Value is string label)

@@ -1,0 +1,4 @@
+{
+  "dotnet.defaultSolution": "HoloPatcher.sln",
+  "avalonia.dotnetSdkVersion": "8.0"
+}

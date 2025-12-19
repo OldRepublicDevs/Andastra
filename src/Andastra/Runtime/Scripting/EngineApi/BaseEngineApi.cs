@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Numerics;
+using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Scripting.Interfaces;
 
 namespace Andastra.Runtime.Scripting.EngineApi
@@ -350,7 +351,7 @@ namespace Andastra.Runtime.Scripting.EngineApi
         protected Variable Func_GetArea(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
-            
+
             // If invalid or OBJECT_SELF, return current area
             if (objectId == ObjectInvalid || objectId == ObjectSelf)
             {
@@ -361,14 +362,14 @@ namespace Andastra.Runtime.Scripting.EngineApi
                 }
                 return Variable.FromObject(ObjectInvalid);
             }
-            
+
             // Get entity and its area
             IEntity entity = ctx.World.GetEntity(objectId);
             if (entity == null || !entity.IsValid)
             {
                 return Variable.FromObject(ObjectInvalid);
             }
-            
+
             // Get area from entity's AreaId
             if (entity.AreaId != 0)
             {
@@ -378,7 +379,7 @@ namespace Andastra.Runtime.Scripting.EngineApi
                     return Variable.FromObject(entity.AreaId);
                 }
             }
-            
+
             return Variable.FromObject(ObjectInvalid);
         }
 

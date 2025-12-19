@@ -21,23 +21,22 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Parsing\Andastra.Parsing.csproj" />
-    <ProjectReference Include="..\Runtime\Core\Andastra.Runtime.Core.csproj" />
     <ProjectReference Include="..\Runtime\Content\Andastra.Runtime.Content.csproj" />
-    <ProjectReference Include="..\Runtime\Scripting\Andastra.Runtime.Scripting.csproj" />
-    <ProjectReference Include="..\Runtime\Games\Kotor\Andastra.Runtime.Games.Kotor.csproj" />
+    <ProjectReference Include="..\Runtime\Core\Andastra.Runtime.Core.csproj" />
+    <ProjectReference Include="..\Runtime\Games\Odyssey\Andastra.Runtime.Games.Odyssey.csproj" />
     <ProjectReference Include="..\Runtime\Graphics\Andastra.Runtime.Graphics.csproj" />
     <ProjectReference Include="..\Runtime\Graphics\MonoGame\Andastra.Runtime.Graphics.MonoGame.csproj" />
-    <ProjectReference Include="..\Runtime\Graphics\Stride\Andastra.Runtime.Graphics.Stride.csproj" />
+    <ProjectReference Include="..\Runtime\Scripting\Andastra.Runtime.Scripting.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Eto.Forms" Version="2.7.4" />
-    <PackageReference Include="Eto.Platform.Windows" Version="2.7.4" Condition="$([MSBuild]::IsOSPlatform('Windows'))" />
-    <PackageReference Include="Eto.Platform.Mac" Version="2.7.4" Condition="$([MSBuild]::IsOSPlatform('OSX'))" />
     <PackageReference Include="Eto.Platform.Gtk" Version="2.7.4" Condition="$([MSBuild]::IsOSPlatform('Linux'))" />
+    <PackageReference Include="Eto.Platform.Mac" Version="2.7.4" Condition="$([MSBuild]::IsOSPlatform('OSX'))" />
+    <PackageReference Include="Eto.Platform.Windows" Version="2.7.4" Condition="$([MSBuild]::IsOSPlatform('Windows'))" />
     <PackageReference Include="JetBrains.Annotations" Version="2025.2.4" />
-    <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.1.303" />
     <PackageReference Include="MonoGame.Content.Builder.Task" Version="3.8.1.303" />
+    <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.1.303" />
   </ItemGroup>
 
   <ItemGroup>

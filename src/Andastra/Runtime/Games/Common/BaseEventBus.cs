@@ -263,9 +263,15 @@ namespace Andastra.Runtime.Games.Common
         /// Immediate event publishing for time-critical events.
         /// Calls all subscribed handlers synchronously.
         /// </remarks>
-        public virtual void Publish<T>(T gameEvent) where T : class, IGameEvent
+        void IEventBus.Publish<T>(T gameEvent)
         {
-            Fire(gameEvent);
+            if (gameEvent == null)
+            {
+                throw new ArgumentNullException(nameof(gameEvent));
+            }
+            // IGameEvent is always a reference type, so this cast is safe
+            object eventObj = gameEvent;
+            FireInternal(eventObj, typeof(T));
         }
 
         /// <summary>
@@ -277,9 +283,49 @@ namespace Andastra.Runtime.Games.Common
         /// Queues events for processing in the next frame or update cycle.
         /// Prevents recursion and ensures proper execution order.
         /// </remarks>
-        public virtual void QueueEvent<T>(T gameEvent) where T : class, IGameEvent
+        void IEventBus.QueueEvent<T>(T gameEvent)
         {
-            Queue(gameEvent);
+            if (gameEvent == null)
+            {
+                throw new ArgumentNullException(nameof(gameEvent));
+            }
+            // IGameEvent is always a reference type, so this cast is safe
+            object eventObj = gameEvent;
+            QueueInternal(eventObj, typeof(T));
+        }
+
+        private void FireInternal(object eventData, Type eventType)
+        {
+            if (eventData == null)
+                return;
+
+            if (_eventHandlers.TryGetValue(eventType, out var handlers))
+            {
+                var handlersCopy = new List<Delegate>(handlers);
+                foreach (var handler in handlersCopy)
+                {
+                    try
+                    {
+                        handler.DynamicInvoke(eventData);
+                    }
+                    catch (Exception ex)
+                    {
+                        HandleEventError(eventType, ex);
+                    }
+                }
+            }
+        }
+
+        private void QueueInternal(object eventData, Type eventType)
+        {
+            if (eventData == null)
+                return;
+
+            _queuedEvents.Enqueue(new EventEntry
+            {
+                EventType = eventType,
+                EventData = eventData
+            });
         }
 
         /// <summary>

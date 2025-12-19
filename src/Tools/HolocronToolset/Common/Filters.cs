@@ -85,10 +85,10 @@ namespace HolocronToolset.Common
                     evt.Delta,
                     evt.KeyModifiers,
                     evt.Properties);
-                
+
                 // Raise the event on the parent widget
                 _parentWidget.RaiseEvent(parentEvent);
-                
+
                 // Mark event as handled to prevent the control from processing it
                 evt.Handled = true;
             }

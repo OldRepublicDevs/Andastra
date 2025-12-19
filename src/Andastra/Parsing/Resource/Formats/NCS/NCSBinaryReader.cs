@@ -172,21 +172,21 @@ namespace Andastra.Parsing.Formats.NCS
             while (_reader.Position < safeEndPosition)
             {
                 int offset = _reader.Position;
-                
+
                 // DEBUG: Log when we're at or near known ACTION bytecode offsets
                 if (offset == 138 || offset == 514 || (offset >= 135 && offset <= 145) || (offset >= 511 && offset <= 521))
                 {
                     Console.WriteLine($"DEBUG NCSBinaryReader: Reading instruction at offset {offset} (near known ACTION locations: 138, 514)");
                     Console.Error.WriteLine($"DEBUG NCSBinaryReader: Reading instruction at offset {offset} (near known ACTION locations: 138, 514)");
                 }
-                
+
                 // DEBUG: Log when we're near the end of the file (for k_act_com41 debugging)
                 if (offset >= 630 && offset <= 645)
                 {
                     Console.WriteLine($"DEBUG NCSBinaryReader: Reading instruction at offset {offset}, remaining={safeEndPosition - offset} bytes until safeEndPosition={safeEndPosition}");
                     Console.Error.WriteLine($"DEBUG NCSBinaryReader: Reading instruction at offset {offset}, remaining={safeEndPosition - offset} bytes until safeEndPosition={safeEndPosition}");
                 }
-                
+
                 // DEBUG: Log bytecode at offset 635 specifically (where MOVSP should be)
                 if (offset == 635)
                 {
@@ -289,16 +289,16 @@ namespace Andastra.Parsing.Formats.NCS
             int negiCountInDict = _instructions.Values.Count(inst => inst != null && inst.InsType == NCSInstructionType.NEGI);
             Console.WriteLine($"DEBUG NCSBinaryReader: Dictionary contains {actionCountInDict} ACTION instructions before sorting");
             Console.WriteLine($"DEBUG NCSBinaryReader: Dictionary contains {negiCountInDict} NEGI instructions before sorting");
-            
+
             // CRITICAL DEBUG: Log all instruction offsets to verify we have all 121
             var sortedOffsets = _instructions.Keys.OrderBy(k => k).ToList();
             Console.WriteLine($"DEBUG NCSBinaryReader: Instruction offsets (first 20): {string.Join(", ", sortedOffsets.Take(20))}");
             Console.WriteLine($"DEBUG NCSBinaryReader: Instruction offsets (last 20): {string.Join(", ", sortedOffsets.Skip(Math.Max(0, sortedOffsets.Count - 20)))}");
             Console.WriteLine($"DEBUG NCSBinaryReader: Total offset count: {sortedOffsets.Count}, min offset: {sortedOffsets.FirstOrDefault()}, max offset: {sortedOffsets.LastOrDefault()}");
-            
+
             var sortedInstructions = _instructions.OrderBy(kvp => kvp.Key).Select(kvp => kvp.Value).ToList();
             _ncs.Instructions = sortedInstructions;
-            
+
             // CRITICAL DEBUG: Verify the NCS object has all instructions
             Console.WriteLine($"DEBUG NCSBinaryReader: After assignment, _ncs.Instructions.Count={_ncs.Instructions?.Count ?? 0}");
             if (_ncs.Instructions != null && _ncs.Instructions.Count != sortedInstructions.Count)
@@ -319,7 +319,7 @@ namespace Andastra.Parsing.Formats.NCS
                 {
                     Console.WriteLine($"DEBUG NCSBinaryReader: WARNING - Dictionary had {actionCountInDict} ACTION instructions but sorted list has 0!");
                 }
-                
+
                 // CRITICAL DEBUG: Log all instruction types and their counts
                 var typeCounts = new Dictionary<NCSInstructionType, int>();
                 var typeOffsets = new Dictionary<NCSInstructionType, List<int>>();
@@ -337,13 +337,13 @@ namespace Andastra.Parsing.Formats.NCS
                     }
                 }
                 Console.WriteLine($"DEBUG NCSBinaryReader: Instruction type breakdown: {string.Join(", ", typeCounts.Select(kvp => $"{kvp.Key}={kvp.Value}"))}");
-                
+
                 // Log NEGI instructions specifically (they're critical for negative constants)
                 if (typeCounts.ContainsKey(NCSInstructionType.NEGI))
                 {
                     Console.WriteLine($"DEBUG NCSBinaryReader: Found {typeCounts[NCSInstructionType.NEGI]} NEGI instructions at offsets: {string.Join(", ", typeOffsets[NCSInstructionType.NEGI].Take(10))}");
                 }
-                
+
                 // Log SAVEBP instructions
                 if (typeCounts.ContainsKey(NCSInstructionType.SAVEBP))
                 {
@@ -446,7 +446,7 @@ namespace Andastra.Parsing.Formats.NCS
                         // This allows us to write back the exact same bytecode/qualifier even if it's invalid
                         Console.WriteLine($"DEBUG NCSBinaryReader: Invalid qualifier 0x{qualifier:X2} for bytecode 0x{byteCodeValue:X2} at offset {instructionOffset}, preserving original for roundtrip");
                         Console.Error.WriteLine($"DEBUG NCSBinaryReader: Invalid qualifier 0x{qualifier:X2} for bytecode 0x{byteCodeValue:X2} at offset {instructionOffset}, preserving original for roundtrip");
-                        
+
                         // Try to find a fallback instruction type based on bytecode alone
                         // For LOGANDxx (0x06), use LOGANDII as fallback but preserve original qualifier
                         if (byteCode == NCSByteCode.LOGANDxx)
@@ -458,7 +458,7 @@ namespace Andastra.Parsing.Formats.NCS
                             // MOVSP with invalid qualifier - use MOVSP as fallback but preserve original qualifier
                             instruction.InsType = NCSInstructionType.MOVSP;
                         }
-                        else if (byteCode == NCSByteCode.LEQxx || byteCode == NCSByteCode.GEQxx || 
+                        else if (byteCode == NCSByteCode.LEQxx || byteCode == NCSByteCode.GEQxx ||
                                  byteCode == NCSByteCode.GTxx || byteCode == NCSByteCode.LTxx ||
                                  byteCode == NCSByteCode.EQUALxx || byteCode == NCSByteCode.NEQUALxx)
                         {
@@ -510,7 +510,7 @@ namespace Andastra.Parsing.Formats.NCS
                                 case NCSByteCode.BOOLANDxx:
                                     instruction.InsType = NCSInstructionType.BOOLANDII;
                                     break;
-                                
+
                                 // Shift operators - use IntInt variant as fallback
                                 case NCSByteCode.SHLEFTxx:
                                     instruction.InsType = NCSInstructionType.SHLEFTII;
@@ -521,7 +521,7 @@ namespace Andastra.Parsing.Formats.NCS
                                 case NCSByteCode.USHRIGHTxx:
                                     instruction.InsType = NCSInstructionType.USHRIGHTII;
                                     break;
-                                
+
                                 // Arithmetic operators - use IntInt variant as fallback
                                 case NCSByteCode.ADDxx:
                                     instruction.InsType = NCSInstructionType.ADDII;
@@ -538,7 +538,7 @@ namespace Andastra.Parsing.Formats.NCS
                                 case NCSByteCode.MODxx:
                                     instruction.InsType = NCSInstructionType.MODII;
                                     break;
-                                
+
                                 // Unary operators - use Int variant as fallback
                                 case NCSByteCode.NEGx:
                                     instruction.InsType = NCSInstructionType.NEGI;
@@ -549,7 +549,7 @@ namespace Andastra.Parsing.Formats.NCS
                                 case NCSByteCode.NOTx:
                                     instruction.InsType = NCSInstructionType.NOTI;
                                     break;
-                                
+
                                 // Stack/BP operations with type qualifiers - use Int variant as fallback
                                 case NCSByteCode.DECxSP:
                                     instruction.InsType = NCSInstructionType.DECxSP;
@@ -563,17 +563,17 @@ namespace Andastra.Parsing.Formats.NCS
                                 case NCSByteCode.INCxBP:
                                     instruction.InsType = NCSInstructionType.INCxBP;
                                     break;
-                                
+
                                 // RSADD operations - use Int variant as fallback
                                 case NCSByteCode.RSADDx:
                                     instruction.InsType = NCSInstructionType.RSADDI;
                                     break;
-                                
+
                                 // Constant operations - use Int variant as fallback
                                 case NCSByteCode.CONSTx:
                                     instruction.InsType = NCSInstructionType.CONSTI;
                                     break;
-                                
+
                                 // Stack copy operations - use expected qualifier (0x01) as fallback
                                 case NCSByteCode.CPDOWNSP:
                                     instruction.InsType = NCSInstructionType.CPDOWNSP;
@@ -587,7 +587,7 @@ namespace Andastra.Parsing.Formats.NCS
                                 case NCSByteCode.CPTOPBP:
                                     instruction.InsType = NCSInstructionType.CPTOPBP;
                                     break;
-                                
+
                                 // Control flow operations - use expected qualifier (0x00) as fallback
                                 case NCSByteCode.JMP:
                                     instruction.InsType = NCSInstructionType.JMP;
@@ -604,7 +604,7 @@ namespace Andastra.Parsing.Formats.NCS
                                 case NCSByteCode.RETN:
                                     instruction.InsType = NCSInstructionType.RETN;
                                     break;
-                                
+
                                 // Frame pointer operations - use expected qualifier (0x00) as fallback
                                 case NCSByteCode.SAVEBP:
                                     instruction.InsType = NCSInstructionType.SAVEBP;
@@ -612,28 +612,28 @@ namespace Andastra.Parsing.Formats.NCS
                                 case NCSByteCode.RESTOREBP:
                                     instruction.InsType = NCSInstructionType.RESTOREBP;
                                     break;
-                                
+
                                 // Destruct operation - use expected qualifier (0x01) as fallback
                                 case NCSByteCode.DESTRUCT:
                                     instruction.InsType = NCSInstructionType.DESTRUCT;
                                     break;
-                                
+
                                 // Store state operation - use expected qualifier (0x10) as fallback
                                 case NCSByteCode.STORE_STATE:
                                     instruction.InsType = NCSInstructionType.STORE_STATE;
                                     break;
-                                
+
                                 // NOP operations - use NOP as fallback
                                 // Note: NOP and NOP2 both have value 0x2D, so we only need one case
                                 case NCSByteCode.NOP:
                                     instruction.InsType = NCSInstructionType.NOP;
                                     break;
-                                
+
                                 // RESERVED bytecode - already handled above, but include for completeness
                                 case NCSByteCode.RESERVED:
                                     instruction.InsType = NCSInstructionType.RESERVED;
                                     break;
-                                
+
                                 // Unknown bytecode - this should not happen as we check Enum.IsDefined above
                                 // but include as final fallback for safety
                                 default:
@@ -642,7 +642,7 @@ namespace Andastra.Parsing.Formats.NCS
                                     instruction.InsType = NCSInstructionType.RESERVED;
                                     break;
                             }
-                            
+
                             Console.WriteLine($"DEBUG NCSBinaryReader: Applied fallback for bytecode 0x{byteCodeValue:X2} with invalid qualifier 0x{qualifier:X2} at offset {instructionOffset}, using instruction type {instruction.InsType}");
                             Console.Error.WriteLine($"DEBUG NCSBinaryReader: Applied fallback for bytecode 0x{byteCodeValue:X2} with invalid qualifier 0x{qualifier:X2} at offset {instructionOffset}, using instruction type {instruction.InsType}");
                         }

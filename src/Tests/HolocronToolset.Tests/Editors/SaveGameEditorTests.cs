@@ -29,7 +29,7 @@ namespace HolocronToolset.Tests.Editors
         {
             // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_save_editor.py
             // Original: def test_save_game_editor_new_file_creation(qtbot, installation):
-            var editor = new SaveGameEditor(null, null);
+            var editor = new SAVEditor(null, null);
 
             editor.New();
 
@@ -43,7 +43,7 @@ namespace HolocronToolset.Tests.Editors
         {
             // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_save_editor.py
             // Original: def test_save_game_editor_initialization(qtbot, installation):
-            var editor = new SaveGameEditor(null, null);
+            var editor = new SAVEditor(null, null);
 
             // Verify editor is initialized
             editor.Should().NotBeNull();

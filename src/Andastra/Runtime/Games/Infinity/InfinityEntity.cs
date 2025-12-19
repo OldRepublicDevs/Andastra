@@ -203,8 +203,16 @@ namespace Andastra.Runtime.Games.Infinity
                 AddComponent<ITransformComponent>(transformComponent);
             }
 
-            // TODO: Attach script hooks component
-            // TODO: Attach any other common components
+            // Attach script hooks component for all entities
+            // Based on MassEffect.exe and MassEffect2.exe: All entities support script hooks
+            // Script hooks are loaded from entity templates and can be set/modified at runtime
+            // Event system: Uses UnrealScript-based event dispatching (similar to Eclipse engine)
+            // ComponentInitializer also handles this, but we ensure it's attached here for consistency
+            if (!HasComponent<IScriptHooksComponent>())
+            {
+                var scriptHooksComponent = new Components.InfinityScriptHooksComponent();
+                AddComponent<IScriptHooksComponent>(scriptHooksComponent);
+            }
         }
 
         /// <summary>
@@ -990,8 +998,9 @@ namespace Andastra.Runtime.Games.Infinity
                     if (scriptHooksComponent == null)
                     {
                         // Script hooks component should exist for all entities
-                        // TODO: Create InfinityScriptHooksComponent if it exists
-                        throw new InvalidOperationException("ScriptHooks component not found and cannot be created automatically");
+                        // Create InfinityScriptHooksComponent if missing (shouldn't happen, but handle gracefully)
+                        scriptHooksComponent = new Components.InfinityScriptHooksComponent();
+                        AddComponent<IScriptHooksComponent>(scriptHooksComponent);
                     }
 
                     // Deserialize script ResRefs

@@ -12,7 +12,7 @@ namespace HolocronToolset.Editors
 {
     // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/savegame.py:58
     // Original: class SaveGameEditor(Editor):
-    public class SaveGameEditor : Editor
+    public class SAVEditor : Editor
     {
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/savegame.py:96-102
         // Original: self._save_folder: SaveFolderEntry | None = None
@@ -47,7 +47,7 @@ namespace HolocronToolset.Editors
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/savegame.py:71-122
         // Original: def __init__(self, parent, installation):
-        public SaveGameEditor(Window parent = null, HTInstallation installation = null)
+        public SAVEditor(Window parent = null, HTInstallation installation = null)
             : base(parent, "Save Game Editor", "savegame",
                 new[] { ResourceType.SAV },
                 new[] { ResourceType.SAV },

@@ -208,7 +208,7 @@ namespace Andastra.Runtime.Content.Cache
                     if (serializedData != null && serializedData.Length > 0)
                     {
                         File.WriteAllBytes(filePath, serializedData);
-                        
+
                         // Update cache size tracking
                         lock (_lock)
                         {
@@ -490,11 +490,13 @@ namespace Andastra.Runtime.Content.Cache
                 }
 
                 // For other types, use BinaryFormatter
+#pragma warning disable SYSLIB0011 // BinaryFormatter is obsolete but needed for content cache serialization
                 using (var ms = new MemoryStream(data))
                 {
                     var formatter = new BinaryFormatter();
                     object obj = formatter.Deserialize(ms);
-                    
+#pragma warning restore SYSLIB0011
+
                     if (obj is T typedObj)
                     {
                         return typedObj;
@@ -540,12 +542,14 @@ namespace Andastra.Runtime.Content.Cache
                 }
 
                 // For other types, use BinaryFormatter
+#pragma warning disable SYSLIB0011 // BinaryFormatter is obsolete but needed for content cache serialization
                 using (var ms = new MemoryStream())
                 {
                     var formatter = new BinaryFormatter();
                     formatter.Serialize(ms, item);
                     return ms.ToArray();
                 }
+#pragma warning restore SYSLIB0011
             }
             catch (SerializationException)
             {
