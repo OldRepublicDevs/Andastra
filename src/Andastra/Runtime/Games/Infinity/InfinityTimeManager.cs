@@ -114,6 +114,7 @@ namespace Andastra.Runtime.Games.Infinity
         /// <remarks>
         /// Infinity-specific: Frame timing markers for profiling (when reverse engineered).
         /// Based on common pattern: All engines use accumulator pattern for fixed timestep simulation.
+        /// Infinity Engine uses a simpler frame timing system compared to Aurora/Odyssey.
         /// Overrides base implementation to add Infinity-specific frame timing logic when available.
         /// </remarks>
         public override void Update(float realDeltaTime)
@@ -125,6 +126,7 @@ namespace Andastra.Runtime.Games.Infinity
             // Based on common pattern: Frame timing markers are used for performance profiling
             // This would be implemented when Infinity Engine executables are reverse engineered via Ghidra
             // Expected pattern: Similar to Aurora's frame timing markers but Infinity-specific implementation
+            // Infinity Engine uses a simpler frame timing system compared to Aurora/Odyssey
         }
 
         /// <summary>
