@@ -6,71 +6,50 @@ using Andastra.Parsing.Resource;
 using Andastra.Parsing.Resource.Generics;
 using Andastra.Parsing.Common;
 using Andastra.Parsing.Formats.TLK;
+using Andastra.Runtime.Games.Common.Journal;
 using JetBrains.Annotations;
 
-namespace Andastra.Runtime.Core.Journal
+namespace Andastra.Runtime.Games.Eclipse.Journal
 {
     /// <summary>
-    /// Loads and caches JRL (Journal) files for quest entry text lookup (Odyssey-specific implementation).
+    /// Eclipse-specific JRL loader implementation (daorigins.exe, DragonAge2.exe - Dragon Age series).
     /// </summary>
     /// <remarks>
-    /// Odyssey JRL Loader (swkotor.exe, swkotor2.exe):
-    /// - Based on swkotor2.exe journal system
-    /// - Located via string references: "JOURNAL" @ 0x007bdf44, "NW_JOURNAL" @ 0x007c20e8
-    /// - JRL file format: GFF with "JRL " signature containing journal entry definitions
-    /// - Original implementation:
-    ///   1. JRL files contain quest definitions with entry lists
-    ///   2. Each quest has a Tag and a list of entries
-    ///   3. Each entry has EntryId and Text (LocalizedString)
-    ///   4. Quest entry text is looked up from JRL files using quest tag and entry ID
-    ///   5. JRL files are typically named after quest tags (e.g., "quest_001.jrl")
-    /// - Text lookup process:
-    ///   1. Load JRL file by quest tag (or use global.jrl)
-    ///   2. Find quest by tag in JRL
-    ///   3. Find entry by EntryId in quest's entry list
-    ///   4. Return entry Text (LocalizedString) resolved to string
-    /// - Cross-engine analysis:
-    ///   - swkotor.exe: Similar JRL system (needs reverse engineering)
-    ///   - nwmain.exe: Different journal format (needs reverse engineering)
-    ///   - daorigins.exe: Journal system may differ (needs reverse engineering)
-    /// 
-    /// This class is maintained for backward compatibility.
-    /// New code should use OdysseyJRLLoader directly.
-    /// Core cannot depend on Odyssey due to circular dependency, so this is a standalone implementation.
+    /// Eclipse JRL Loader (daorigins.exe, DragonAge2.exe):
+    /// - Based on daorigins.exe: Quest system
+    /// - Located via string references: "Quest" @ 0x00b0849c, "QuestResRef" @ 0x00b084b0
+    /// - Eclipse may use a different file format for quest/journal data
+    /// - Quest system structure differs from Odyssey/Aurora
+    /// - Journal entries may be stored in a different format or location
+    /// - Text lookup may use different mechanisms (possibly embedded in quest files or different format)
+    /// - For now, we'll attempt to use JRL format similar to Odyssey/Aurora as a fallback
+    /// - Full implementation requires reverse engineering of daorigins.exe quest system
     /// </remarks>
-    public class JRLLoader
+    public class EclipseJRLLoader : BaseJRLLoader
     {
-        private readonly Installation _installation;
-        private readonly Dictionary<string, JRL> _jrlCache;
         private TLK _baseTlk;
         private TLK _customTlk;
+        private readonly Dictionary<string, JRL> _jrlCache;
 
-        /// <summary>
-        /// Creates a new JRL loader.
-        /// </summary>
-        /// <param name="installation">The game installation to load JRL files from.</param>
-        public JRLLoader(Installation installation)
+        public EclipseJRLLoader(Installation installation)
+            : base(installation)
         {
-            _installation = installation ?? throw new ArgumentNullException("installation");
             _jrlCache = new Dictionary<string, JRL>(StringComparer.OrdinalIgnoreCase);
         }
 
         /// <summary>
         /// Sets the talk tables for LocalizedString resolution.
         /// </summary>
-        /// <param name="baseTlk">Base talk table.</param>
-        /// <param name="customTlk">Custom talk table (optional).</param>
-        public void SetTalkTables(TLK baseTlk, TLK customTlk = null)
+        public override void SetTalkTables(object baseTlk, object customTlk = null)
         {
-            _baseTlk = baseTlk;
-            _customTlk = customTlk;
+            _baseTlk = baseTlk as TLK;
+            _customTlk = customTlk as TLK;
         }
 
         /// <summary>
-        /// Loads a JRL file by ResRef.
+        /// Loads a JRL file by ResRef (Eclipse may use different format).
         /// </summary>
-        [CanBeNull]
-        public JRL LoadJRL(string jrlResRef)
+        public override object LoadJRL(string jrlResRef)
         {
             if (string.IsNullOrEmpty(jrlResRef))
             {
@@ -86,8 +65,8 @@ namespace Andastra.Runtime.Core.Journal
             try
             {
                 // Load JRL file from installation
-                // Based on swkotor2.exe: JRL files are loaded from resource system
-                // Original implementation: Loads JRL files from chitin.key or module archives
+                // Based on daorigins.exe: Quest files may be in different format
+                // For now, attempt to load as JRL (GFF format) similar to Odyssey/Aurora
                 ResourceResult resource = _installation.Resources.LookupResource(jrlResRef, ResourceType.JRL);
                 if (resource == null || resource.Data == null || resource.Data.Length == 0)
                 {
@@ -96,28 +75,30 @@ namespace Andastra.Runtime.Core.Journal
 
                 byte[] jrlData = resource.Data;
 
-                // Parse JRL file
+                // Parse JRL file (attempt GFF format first, Eclipse may use different format)
                 JRL jrl = JRLHelper.ReadJrl(jrlData);
                 if (jrl != null)
                 {
                     // Cache the loaded JRL
                     _jrlCache[jrlResRef] = jrl;
+                    base._jrlCache[jrlResRef] = jrl; // Also cache in base class (as object)
                 }
 
                 return jrl;
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"[JRLLoader] Error loading JRL file '{jrlResRef}': {ex.Message}");
+                // Eclipse may use different file format - log but don't fail
+                Console.WriteLine($"[EclipseJRLLoader] Error loading JRL file '{jrlResRef}': {ex.Message}");
+                Console.WriteLine($"[EclipseJRLLoader] Note: Eclipse may use different quest file format");
                 return null;
             }
         }
 
         /// <summary>
-        /// Gets quest entry text from a JRL file.
+        /// Gets quest entry text from a JRL file (Eclipse-specific implementation).
         /// </summary>
-        [CanBeNull]
-        public string GetQuestEntryText(string questTag, int entryId, string jrlResRef = null)
+        public override string GetQuestEntryText(string questTag, int entryId, string jrlResRef = null)
         {
             if (string.IsNullOrEmpty(questTag))
             {
@@ -131,7 +112,7 @@ namespace Andastra.Runtime.Core.Journal
             }
 
             // Load JRL file
-            JRL jrl = LoadJRL(jrlResRef);
+            JRL jrl = LoadJRL(jrlResRef) as JRL;
             if (jrl == null)
             {
                 return null;
@@ -184,7 +165,7 @@ namespace Andastra.Runtime.Core.Journal
                 return null;
             }
 
-            // Resolve using TLK tables
+            // Resolve using TLK tables (Eclipse may use different TLK format)
             if (_baseTlk != null)
             {
                 string text = _baseTlk.GetString(locString.StringId);
@@ -210,8 +191,7 @@ namespace Andastra.Runtime.Core.Journal
         /// <summary>
         /// Gets quest entry text from global.jrl file.
         /// </summary>
-        [CanBeNull]
-        public string GetQuestEntryTextFromGlobal(string questTag, int entryId)
+        public override string GetQuestEntryTextFromGlobal(string questTag, int entryId)
         {
             return GetQuestEntryText(questTag, entryId, "global");
         }
@@ -219,8 +199,7 @@ namespace Andastra.Runtime.Core.Journal
         /// <summary>
         /// Gets a quest by tag from a JRL file.
         /// </summary>
-        [CanBeNull]
-        public JRLQuest GetQuestByTag(string questTag, string jrlResRef = null)
+        public override object GetQuestByTag(string questTag, string jrlResRef = null)
         {
             if (string.IsNullOrEmpty(questTag))
             {
@@ -234,7 +213,7 @@ namespace Andastra.Runtime.Core.Journal
             }
 
             // Load JRL file
-            JRL jrl = LoadJRL(jrlResRef);
+            JRL jrl = LoadJRL(jrlResRef) as JRL;
             if (jrl == null)
             {
                 return null;
@@ -255,9 +234,11 @@ namespace Andastra.Runtime.Core.Journal
         /// <summary>
         /// Clears the JRL cache.
         /// </summary>
-        public void ClearCache()
+        public override void ClearCache()
         {
+            base.ClearCache();
             _jrlCache.Clear();
         }
     }
 }
+
