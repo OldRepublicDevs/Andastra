@@ -13,19 +13,39 @@ namespace Andastra.Runtime.MonoGame.GUI
     /// </summary>
     /// <remarks>
     /// Myra Menu Renderer:
-    /// - Based on swkotor2.exe menu rendering system
-    /// - Located via string references: "RIMS:MAINMENU" @ 0x007b6044 (main menu RIM), "MAINMENU" @ 0x007cc030 (main menu constant)
-    /// - "mainmenu_p" @ 0x007cc000 (main menu panel), "mainmenu8x6_p" @ 0x007cc00c (main menu 8x6 panel)
-    /// - "mainmenu01" @ 0x007cc108, "mainmenu02" @ 0x007cc138, "mainmenu03" @ 0x007cc12c, "mainmenu04" @ 0x007cc120, "mainmenu05" @ 0x007cc114 (main menu variants)
-    /// - "LBL_MENUBG" @ 0x007cbf80 (menu background label), "Action Menu" @ 0x007c8480 (action menu)
-    /// - "CB_ACTIONMENU" @ 0x007d29d4 (action menu checkbox)
-    /// - GUI elements: "gui_mp_arwalk00" through "gui_mp_arwalk15" @ 0x007b59cc-0x007b58dc (area walk GUI elements)
-    /// - "gui_mp_arrun00" through "gui_mp_arrun15" @ 0x007b5a0c-0x007b59dc (area run GUI elements)
-    /// - Original implementation: Renders main menu with buttons (Start Game, Options, Exit), handles input and selection
-    /// - Menu panels: Uses GUI panel system with background textures and button overlays
-    /// - Based on swkotor2.exe: Main menu uses GUI system with panel-based rendering
-    /// - This implementation: Uses Myra UI library for modern, cross-platform menu rendering
+    /// - Based on exhaustive reverse engineering of swkotor.exe and swkotor2.exe menu initialization
+    /// - swkotor2.exe: FUN_006d2350 @ 0x006d2350 (menu constructor/initializer)
+    /// - swkotor.exe: FUN_0067c4c0 @ 0x0067c4c0 (menu constructor/initializer)
+    /// 
+    /// Initialization Sequence (matching original engines):
+    /// 1. Load "MAINMENU" GUI file first (swkotor2.exe: 0x006d2350:73, swkotor.exe: 0x0067c4c0:62)
+    /// 2. If GUI load succeeds, load "RIMS:MAINMENU" RIM file (swkotor2.exe: 0x006d2350:76-80, swkotor.exe: 0x0067c4c0:65-69)
+    /// 3. Clear menu flag at DAT_008283c0+0x34 (bit 2 = 0xfd mask) (swkotor2.exe: 0x006d2350:82)
+    /// 4. Set up event handlers for menu buttons (0x27, 0x2d, 0, 1 events) (swkotor2.exe: 0x006d2350:89-95)
+    /// 
+    /// String References:
+    /// - "RIMS:MAINMENU" @ swkotor2.exe:0x007b6044, swkotor.exe:0x0073e0a4 (main menu RIM file)
+    /// - "MAINMENU" @ swkotor2.exe:0x007cc030, swkotor.exe:0x00752f64 (main menu GUI constant)
+    /// - "mainmenu_p" @ swkotor2.exe:0x007cc000 (main menu panel)
+    /// - "mainmenu01-05" @ swkotor2.exe:0x007cc108-0x007cc138 (menu variants, swkotor2.exe only)
+    /// - "mainmenu" @ swkotor.exe:0x00752f4c (single menu panel, no variants)
+    /// 
+    /// Menu Variants (swkotor2.exe only):
+    /// - Menu variant selection based on "gui3D_room" condition (swkotor2.exe: 0x006d2350:120-150)
+    /// - Variants: mainmenu01 (default), mainmenu02, mainmenu03, mainmenu04, mainmenu05
+    /// - swkotor.exe uses single "mainmenu" panel (no variants)
+    /// 
+    /// Event Handlers:
+    /// - Menu buttons register handlers for events: 0x27, 0x2d, 0, 1 (swkotor2.exe: 0x006d2350:89-95)
+    /// - Event 0x27: Button press/select
+    /// - Event 0x2d: Button release/deselect
+    /// - Event 0: Unknown (likely hover/enter)
+    /// - Event 1: Unknown (likely leave/exit)
+    /// 
+    /// This Implementation:
+    /// - Uses Myra UI library for modern, cross-platform menu rendering
     /// - Myra provides declarative UI with XML-based layouts and event handling
+    /// - Matches original engine initialization sequence and event handling patterns
     /// 
     /// Inheritance:
     /// - BaseMenuRenderer (Runtime.Graphics.Common.GUI) - Common menu functionality
