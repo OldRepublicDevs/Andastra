@@ -23,6 +23,13 @@ namespace Andastra.Runtime.Stride.Backends
     /// - Mesh shaders
     /// - Variable rate shading
     /// - DirectStorage support
+    ///
+    /// Platform: Windows only (x64/x86)
+    /// - DirectX 12 is a Windows-specific graphics API
+    /// - Uses COM interop for DirectX 12 interfaces (Windows-only)
+    /// - For cross-platform support (Linux/macOS), use StrideVulkanBackend instead
+    /// - This backend should only be instantiated on Windows via StrideBackendFactory
+    /// - All COM interop methods include runtime platform checks for safety
     /// </summary>
     public class StrideDirect3D12Backend : BaseDirect3D12Backend
     {
@@ -138,17 +145,21 @@ namespace Andastra.Runtime.Stride.Backends
                 var heapInfo = _bindlessHeaps[info.Handle];
                 if (heapInfo.DescriptorHeap != IntPtr.Zero)
                 {
-                    // Release the COM object (call Release on the descriptor heap)
-                    // ID3D12DescriptorHeap::Release is at vtable index 2 (IUnknown::Release)
-                    IntPtr vtable = Marshal.ReadIntPtr(heapInfo.DescriptorHeap);
-                    if (vtable != IntPtr.Zero)
+                    // Platform check: DirectX 12 COM is Windows-only
+                    if (Environment.OSVersion.Platform == PlatformID.Win32NT)
                     {
-                        IntPtr releasePtr = Marshal.ReadIntPtr(vtable, 2 * IntPtr.Size);
-                        if (releasePtr != IntPtr.Zero)
+                        // Release the COM object (call Release on the descriptor heap)
+                        // ID3D12DescriptorHeap::Release is at vtable index 2 (IUnknown::Release)
+                        IntPtr vtable = Marshal.ReadIntPtr(heapInfo.DescriptorHeap);
+                        if (vtable != IntPtr.Zero)
                         {
-                            var releaseDelegate = (ReleaseDelegate)Marshal.GetDelegateForFunctionPointer(
-                                releasePtr, typeof(ReleaseDelegate));
-                            releaseDelegate(heapInfo.DescriptorHeap);
+                            IntPtr releasePtr = Marshal.ReadIntPtr(vtable, 2 * IntPtr.Size);
+                            if (releasePtr != IntPtr.Zero)
+                            {
+                                var releaseDelegate = (ReleaseDelegate)Marshal.GetDelegateForFunctionPointer(
+                                    releasePtr, typeof(ReleaseDelegate));
+                                releaseDelegate(heapInfo.DescriptorHeap);
+                            }
                         }
                     }
                 }
@@ -597,6 +608,19 @@ namespace Andastra.Runtime.Stride.Backends
                 };
             }
 
+            // Platform check: DirectX 12 is Windows-only
+            if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+            {
+                Console.WriteLine("[StrideDX12] CreateBindlessSamplerHeap: DirectX 12 is only available on Windows");
+                return new ResourceInfo
+                {
+                    Type = ResourceType.Heap,
+                    Handle = IntPtr.Zero,
+                    NativeHandle = IntPtr.Zero,
+                    DebugName = "BindlessSamplerHeap"
+                };
+            }
+
             if (_device == IntPtr.Zero)
             {
                 Console.WriteLine("[StrideDX12] CreateBindlessSamplerHeap: DirectX 12 device not available");
@@ -609,10 +633,12 @@ namespace Andastra.Runtime.Stride.Backends
                 };
             }
 
-            // DirectX 12 bindless sampler heap creation
+            // DirectX 12 bindless sampler heap creation (Windows-only)
             // Based on DirectX 12 Descriptor Heaps: https://docs.microsoft.com/en-us/windows/win32/direct3d12/descriptor-heaps
             // Bindless resources require shader-visible descriptor heaps
             // D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER with D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE
+            // Note: This implementation uses DirectX 12 COM interfaces which are Windows-specific
+            // For cross-platform support, use StrideVulkanBackend on Linux/macOS
 
             try
             {
@@ -1068,7 +1094,11 @@ namespace Andastra.Runtime.Stride.Backends
 
         #endregion
 
-        #region DirectX 12 P/Invoke Declarations
+        #region DirectX 12 P/Invoke Declarations (Windows-only)
+
+        // Platform: DirectX 12 is Windows-only (x64/x86)
+        // For cross-platform support (Linux/macOS), use StrideVulkanBackend instead
+        // This backend should only be instantiated on Windows via StrideBackendFactory
 
         // DirectX 12 Descriptor Heap Types
         private const uint D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER = 4;
@@ -1251,35 +1281,156 @@ namespace Andastra.Runtime.Stride.Backends
             public float ResourceMinLODClamp;
         }
 
-        /// <summary>
-        /// P/Invoke declaration for ID3D12Device::CreateDescriptorHeap.
-        /// </summary>
-        [DllImport("d3d12.dll", EntryPoint = "?CreateDescriptorHeap@ID3D12Device@@UEAAJPEBUD3D12_DESCRIPTOR_HEAP_DESC@@AEBU_GUID@@PEAPEAX@Z", CallingConvention = CallingConvention.StdCall)]
-        private static extern int CreateDescriptorHeap(IntPtr device, IntPtr pDescriptorHeapDesc, ref Guid riid, IntPtr ppvHeap);
+        // COM interface method delegates for C# 7.3 compatibility
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate int CreateDescriptorHeapDelegate(IntPtr device, IntPtr pDescriptorHeapDesc, ref Guid riid, IntPtr ppvHeap);
+
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate IntPtr GetCPUDescriptorHandleForHeapStartDelegate(IntPtr descriptorHeap);
+
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate IntPtr GetGPUDescriptorHandleForHeapStartDelegate(IntPtr descriptorHeap);
+
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate uint GetDescriptorHandleIncrementSizeDelegate(IntPtr device, uint DescriptorHeapType);
+
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate void CreateShaderResourceViewDelegate(IntPtr device, IntPtr pResource, IntPtr pDesc, IntPtr DestDescriptor);
 
         /// <summary>
-        /// P/Invoke declaration for ID3D12DescriptorHeap::GetCPUDescriptorHandleForHeapStart.
+        /// Calls ID3D12Device::CreateDescriptorHeap through COM vtable.
+        /// VTable index 27 for ID3D12Device.
+        /// Platform: Windows only (x64/x86) - DirectX 12 COM is Windows-specific
         /// </summary>
-        [DllImport("d3d12.dll", EntryPoint = "?GetCPUDescriptorHandleForHeapStart@ID3D12DescriptorHeap@@QEAA?AUD3D12_CPU_DESCRIPTOR_HANDLE@@XZ", CallingConvention = CallingConvention.StdCall)]
-        private static extern IntPtr GetDescriptorHeapStartHandle(IntPtr descriptorHeap);
+        private unsafe int CreateDescriptorHeap(IntPtr device, IntPtr pDescriptorHeapDesc, ref Guid riid, IntPtr ppvHeap)
+        {
+            // Platform check: DirectX 12 COM is Windows-only
+            if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+            {
+                return unchecked((int)0x80004001); // E_NOTIMPL - Not implemented on this platform
+            }
+
+            if (device == IntPtr.Zero) return unchecked((int)0x80070057); // E_INVALIDARG
+
+            // Get vtable pointer (first field of COM object)
+            IntPtr* vtable = *(IntPtr**)device;
+            // CreateDescriptorHeap is at index 27 in ID3D12Device vtable
+            IntPtr methodPtr = vtable[27];
+
+            // Create delegate from function pointer (C# 7.3 compatible)
+            CreateDescriptorHeapDelegate createDescriptorHeap =
+                (CreateDescriptorHeapDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(CreateDescriptorHeapDelegate));
+
+            return createDescriptorHeap(device, pDescriptorHeapDesc, ref riid, ppvHeap);
+        }
 
         /// <summary>
-        /// P/Invoke declaration for ID3D12DescriptorHeap::GetGPUDescriptorHandleForHeapStart.
+        /// Calls ID3D12DescriptorHeap::GetCPUDescriptorHandleForHeapStart through COM vtable.
+        /// VTable index 9 for ID3D12DescriptorHeap.
+        /// Platform: Windows only (x64/x86) - DirectX 12 COM is Windows-specific
         /// </summary>
-        [DllImport("d3d12.dll", EntryPoint = "?GetGPUDescriptorHandleForHeapStart@ID3D12DescriptorHeap@@QEAA?AUD3D12_GPU_DESCRIPTOR_HANDLE@@XZ", CallingConvention = CallingConvention.StdCall)]
-        private static extern IntPtr GetDescriptorHeapStartHandleGpu(IntPtr descriptorHeap);
+        private unsafe IntPtr GetDescriptorHeapStartHandle(IntPtr descriptorHeap)
+        {
+            // Platform check: DirectX 12 COM is Windows-only
+            if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+            {
+                return IntPtr.Zero;
+            }
+
+            if (descriptorHeap == IntPtr.Zero) return IntPtr.Zero;
+
+            // Get vtable pointer
+            IntPtr* vtable = *(IntPtr**)descriptorHeap;
+            // GetCPUDescriptorHandleForHeapStart is at index 9 in ID3D12DescriptorHeap vtable
+            IntPtr methodPtr = vtable[9];
+
+            // Create delegate from function pointer
+            GetCPUDescriptorHandleForHeapStartDelegate getCpuHandle = 
+                (GetCPUDescriptorHandleForHeapStartDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(GetCPUDescriptorHandleForHeapStartDelegate));
+
+            return getCpuHandle(descriptorHeap);
+        }
 
         /// <summary>
-        /// P/Invoke declaration for ID3D12Device::GetDescriptorHandleIncrementSize.
+        /// Calls ID3D12DescriptorHeap::GetGPUDescriptorHandleForHeapStart through COM vtable.
+        /// VTable index 10 for ID3D12DescriptorHeap.
+        /// Platform: Windows only (x64/x86) - DirectX 12 COM is Windows-specific
         /// </summary>
-        [DllImport("d3d12.dll", EntryPoint = "?GetDescriptorHandleIncrementSize@ID3D12Device@@UEAAIK@Z", CallingConvention = CallingConvention.StdCall)]
-        private static extern uint GetDescriptorHandleIncrementSize(IntPtr device, uint DescriptorHeapType);
+        private unsafe IntPtr GetDescriptorHeapStartHandleGpu(IntPtr descriptorHeap)
+        {
+            // Platform check: DirectX 12 COM is Windows-only
+            if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+            {
+                return IntPtr.Zero;
+            }
+
+            if (descriptorHeap == IntPtr.Zero) return IntPtr.Zero;
+
+            // Get vtable pointer
+            IntPtr* vtable = *(IntPtr**)descriptorHeap;
+            // GetGPUDescriptorHandleForHeapStart is at index 10 in ID3D12DescriptorHeap vtable
+            IntPtr methodPtr = vtable[10];
+
+            // Create delegate from function pointer
+            GetGPUDescriptorHandleForHeapStartDelegate getGpuHandle = 
+                (GetGPUDescriptorHandleForHeapStartDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(GetGPUDescriptorHandleForHeapStartDelegate));
+
+            return getGpuHandle(descriptorHeap);
+        }
 
         /// <summary>
-        /// P/Invoke declaration for ID3D12Device::CreateShaderResourceView.
+        /// Calls ID3D12Device::GetDescriptorHandleIncrementSize through COM vtable.
+        /// VTable index 28 for ID3D12Device.
+        /// Platform: Windows only (x64/x86) - DirectX 12 COM is Windows-specific
         /// </summary>
-        [DllImport("d3d12.dll", EntryPoint = "?CreateShaderResourceView@ID3D12Device@@UEAAXPEAUID3D12Resource@@PEBUD3D12_SHADER_RESOURCE_VIEW_DESC@@UD3D12_CPU_DESCRIPTOR_HANDLE@@@Z", CallingConvention = CallingConvention.StdCall)]
-        private static extern void CreateShaderResourceView(IntPtr device, IntPtr pResource, IntPtr pDesc, IntPtr DestDescriptor);
+        private unsafe uint GetDescriptorHandleIncrementSize(IntPtr device, uint DescriptorHeapType)
+        {
+            // Platform check: DirectX 12 COM is Windows-only
+            if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+            {
+                return 0;
+            }
+
+            if (device == IntPtr.Zero) return 0;
+
+            // Get vtable pointer
+            IntPtr* vtable = *(IntPtr**)device;
+            // GetDescriptorHandleIncrementSize is at index 28 in ID3D12Device vtable
+            IntPtr methodPtr = vtable[28];
+
+            // Create delegate from function pointer
+            GetDescriptorHandleIncrementSizeDelegate getIncrementSize = 
+                Marshal.GetDelegateForFunctionPointer<GetDescriptorHandleIncrementSizeDelegate>(methodPtr);
+
+            return getIncrementSize(device, DescriptorHeapType);
+        }
+
+        /// <summary>
+        /// Calls ID3D12Device::CreateShaderResourceView through COM vtable.
+        /// VTable index 33 for ID3D12Device.
+        /// Platform: Windows only (x64/x86) - DirectX 12 COM is Windows-specific
+        /// </summary>
+        private unsafe void CreateShaderResourceView(IntPtr device, IntPtr pResource, IntPtr pDesc, IntPtr DestDescriptor)
+        {
+            // Platform check: DirectX 12 COM is Windows-only
+            if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+            {
+                return;
+            }
+
+            if (device == IntPtr.Zero || pResource == IntPtr.Zero || DestDescriptor == IntPtr.Zero) return;
+
+            // Get vtable pointer
+            IntPtr* vtable = *(IntPtr**)device;
+            // CreateShaderResourceView is at index 33 in ID3D12Device vtable
+            IntPtr methodPtr = vtable[33];
+
+            // Create delegate from function pointer
+            CreateShaderResourceViewDelegate createSrv = 
+                Marshal.GetDelegateForFunctionPointer<CreateShaderResourceViewDelegate>(methodPtr);
+
+            createSrv(device, pResource, pDesc, DestDescriptor);
+        }
 
         #endregion
     }
