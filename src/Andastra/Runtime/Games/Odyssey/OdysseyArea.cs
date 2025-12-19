@@ -265,7 +265,14 @@ namespace Andastra.Runtime.Games.Odyssey
         /// </summary>
         /// <remarks>
         /// Based on FUN_004f5070 @ 0x004f5070 in swkotor2.exe.
-        /// Projects points to walkable surfaces for accurate positioning.
+        /// 
+        /// Ghidra analysis (swkotor2.exe: 0x004f5070, verified):
+        /// - Signature: `float10 __thiscall FUN_004f5070(void *param_1, float *param_2, int param_3, int *param_4, int *param_5)`
+        /// - Projects point to walkmesh surface and returns height
+        /// - Called from 34 locations throughout the engine for positioning and pathfinding
+        /// - Delegates to OdysseyNavigationMesh.ProjectToWalkmesh for actual projection
+        /// 
+        /// See OdysseyNavigationMesh.ProjectToWalkmesh for detailed implementation notes.
         /// </remarks>
         public override bool ProjectToWalkmesh(Vector3 point, out Vector3 result, out float height)
         {
@@ -276,6 +283,13 @@ namespace Andastra.Runtime.Games.Odyssey
                 return false;
             }
 
+            // Use Odyssey-specific projection if available
+            if (_navigationMesh is OdysseyNavigationMesh odysseyMesh)
+            {
+                return odysseyMesh.ProjectToWalkmesh(point, out result, out height);
+            }
+
+            // Fallback to generic ProjectToSurface
             return _navigationMesh.ProjectToSurface(point, out result, out height);
         }
 
@@ -284,23 +298,41 @@ namespace Andastra.Runtime.Games.Odyssey
         /// </summary>
         /// <remarks>
         /// Based on LoadAreaProperties @ 0x004e26d0 in swkotor2.exe.
-        /// Reads AreaProperties struct from ARE file GFF.
-        /// Extracts Unescapable, StealthXPEnabled, and other area settings.
-        ///
-        /// Ghidra analysis (swkotor2.exe: 0x004e26d0):
-        /// - Gets "AreaProperties" nested struct from GFF root
-        /// - Reads "Unescapable" (UInt8) -> offset 0x2dc
-        /// - Reads "RestrictMode" (UInt8) -> offset 0x2e4
-        /// - Reads "StealthXPMax" (Int32) -> offset 0x2e8
-        /// - Reads "StealthXPCurrent" (Int32) -> offset 0x2ec
-        /// - Reads "StealthXPLoss" (Int32) -> offset 0x2f0
-        /// - Reads "StealthXPEnabled" (UInt8) -> offset 0x2f4
-        /// - Reads "TransPending" (UInt8) -> offset 0x2f8
-        /// - Reads "TransPendNextID" (UInt8) -> offset 0x2fc
-        /// - Reads "TransPendCurrID" (UInt8) -> offset 0x2fd
-        /// - Reads "SunFogColor" (UInt32) -> offset 0x8c
-        ///
-        /// Also reads root-level ARE fields:
+        /// 
+        /// Ghidra analysis (swkotor2.exe: 0x004e26d0, verified):
+        /// - Signature: `uint * __thiscall LoadAreaProperties(void *this, void *param_1, uint *param_2)`
+        /// - this: Area object pointer
+        /// - param_1: GFF struct pointer
+        /// - param_2: Additional parameter (unused in this context)
+        /// - Returns: uint* pointer (typically param_2 or null)
+        /// 
+        /// Function flow:
+        /// 1. Calls FUN_00412b30 to get "AreaProperties" nested struct from GFF root
+        /// 2. If AreaProperties struct exists, reads the following fields:
+        ///    - "Unescapable" (UInt8) via FUN_00412b80 -> stored at offset 0x2dc
+        ///    - "RestrictMode" (UInt8) via FUN_00412b80 -> stored at offset 0x2e4
+        ///      * If RestrictMode changed, triggers FUN_004dc770 and FUN_0057a370 (restriction update)
+        ///    - "StealthXPMax" (Int32) via FUN_00412d40 -> stored at offset 0x2e8
+        ///      * Clamps StealthXPCurrent to StealthXPMax if current > max
+        ///    - "StealthXPCurrent" (Int32) via FUN_00412d40 -> stored at offset 0x2ec
+        ///      * Clamped to StealthXPMax if exceeds max
+        ///    - "StealthXPLoss" (Int32) via FUN_00412d40 -> stored at offset 0x2f0
+        ///    - "StealthXPEnabled" (UInt8) via FUN_00412b80 -> stored at offset 0x2f4
+        ///    - "TransPending" (UInt8) via FUN_00412b80 -> stored at offset 0x2f8
+        ///    - "TransPendNextID" (UInt8) via FUN_00412b80 -> stored at offset 0x2fc
+        ///    - "TransPendCurrID" (UInt8) via FUN_00412b80 -> stored at offset 0x2fd
+        ///    - "SunFogColor" (UInt32) via FUN_00412d40 -> stored at offset 0x8c
+        /// 3. Calls FUN_00574350 to load music properties (MusicDelay, MusicDay, etc.)
+        /// 
+        /// Called from:
+        /// - FUN_004e9440 @ 0x004e9440 (area loading sequence)
+        /// 
+        /// Note: This implementation only stores Unescapable and StealthXPEnabled.
+        /// Other fields (RestrictMode, StealthXPMax, StealthXPCurrent, StealthXPLoss,
+        /// TransPending, TransPendNextID, TransPendCurrID) are read but not stored.
+        /// If needed in future, add corresponding fields to OdysseyArea class.
+        /// 
+        /// Also reads root-level ARE fields (handled in LoadAreaGeometry):
         /// - Tag, Name, ResRef (identity)
         /// - AmbientColor, DynAmbientColor, SunAmbientColor, SunDiffuseColor (lighting)
         /// - FogColor, SunFogOn, SunFogNear, SunFogFar (fog)

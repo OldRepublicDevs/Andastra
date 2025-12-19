@@ -254,12 +254,25 @@ namespace Andastra.Runtime.Games.Odyssey
         /// <remarks>
         /// Returns the walkable height at the given X,Z coordinates.
         /// Returns false if point is not over walkable surface.
+        /// 
+        /// Based on FUN_004f5070 @ 0x004f5070 in swkotor2.exe.
+        /// Uses same projection logic as ProjectToWalkmesh but only returns height.
         /// </remarks>
         public bool GetHeightAtPoint(Vector3 point, out float height)
         {
-            // TODO: Implement height sampling
+            Vector3 projected;
+            if (ProjectToWalkmesh(point, out projected, out height))
+            {
+                // Verify the projected point is on a walkable face
+                int faceIndex = FindFaceAt(projected);
+                if (faceIndex >= 0 && IsWalkable(faceIndex))
+                {
+                    return true;
+                }
+            }
+
             height = point.Y;
-            throw new System.NotImplementedException("Height sampling not yet implemented");
+            return false;
         }
 
         /// <summary>
