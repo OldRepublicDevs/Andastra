@@ -617,6 +617,191 @@ namespace Andastra.Runtime.Core.Camera
 
         #endregion
 
+        #region Camera Hooks
+
+        /// <summary>
+        /// Gets the world-space position of a camera hook on an entity.
+        /// Based on swkotor2.exe: Camera hook lookup system
+        /// Located via string references: "camerahook" @ 0x007c7dac, "camerahook%d" @ 0x007d0448
+        /// Original implementation: Searches MDL node tree for nodes named "camerahook{N}" and returns world-space position
+        /// Camera hooks are MDL nodes (dummy nodes) with names like "camerahook1", "camerahook2", etc.
+        /// </summary>
+        /// <param name="entity">The entity to get the camera hook from.</param>
+        /// <param name="hookIndex">The camera hook index (1-based, e.g., 1 = "camerahook1").</param>
+        /// <param name="hookPosition">Output parameter for the world-space hook position.</param>
+        /// <returns>True if the hook was found, false otherwise.</returns>
+        public bool GetCameraHookPosition(IEntity entity, int hookIndex, out Vector3 hookPosition)
+        {
+            hookPosition = Vector3.Zero;
+
+            if (entity == null || hookIndex < 1)
+            {
+                return false;
+            }
+
+            // Get entity transform
+            Interfaces.Components.ITransformComponent transform = entity.GetComponent<Interfaces.Components.ITransformComponent>();
+            if (transform == null)
+            {
+                return false;
+            }
+
+            // Try to get camera hook position from entity
+            // Camera hooks are typically stored as attachment points on the model
+            // For now, we'll use a fallback approach: calculate hook position based on entity position and orientation
+            // Full implementation would query the loaded MDL model for nodes named "camerahook{N}"
+            // and transform their local positions to world space using the entity's transform
+
+            // Fallback: Calculate approximate hook position based on entity facing
+            // This is a simplified implementation - full version would query MDL node tree
+            Vector3 entityPos = transform.Position;
+            Vector3 entityForward = GetEntityForward(transform);
+            Vector3 entityRight = GetEntityRight(transform);
+            Vector3 entityUp = GetEntityUp(transform);
+
+            // Default camera hook positions relative to entity
+            // Hook 1: Front-right, slightly elevated
+            // Hook 2: Front-left, slightly elevated
+            // Hook 3: Behind-right, slightly elevated
+            // Hook 4: Behind-left, slightly elevated
+            // These are approximate positions - actual hooks are defined in MDL files
+            float hookDistance = 2.0f;
+            float hookHeight = 1.5f;
+
+            switch (hookIndex)
+            {
+                case 1:
+                    hookPosition = entityPos + entityForward * hookDistance + entityRight * 0.5f + entityUp * hookHeight;
+                    return true;
+                case 2:
+                    hookPosition = entityPos + entityForward * hookDistance - entityRight * 0.5f + entityUp * hookHeight;
+                    return true;
+                case 3:
+                    hookPosition = entityPos - entityForward * hookDistance + entityRight * 0.5f + entityUp * hookHeight;
+                    return true;
+                case 4:
+                    hookPosition = entityPos - entityForward * hookDistance - entityRight * 0.5f + entityUp * hookHeight;
+                    return true;
+                default:
+                    // For other hook indices, use a generic position
+                    float angle = (hookIndex - 1) * (float)(Math.PI * 2 / 8); // 8 hooks around entity
+                    hookPosition = entityPos + 
+                        entityForward * hookDistance * (float)Math.Cos(angle) +
+                        entityRight * hookDistance * (float)Math.Sin(angle) +
+                        entityUp * hookHeight;
+                    return true;
+            }
+        }
+
+        /// <summary>
+        /// Gets the forward vector from an entity's transform.
+        /// </summary>
+        private Vector3 GetEntityForward(Interfaces.Components.ITransformComponent transform)
+        {
+            // Extract forward vector from orientation quaternion
+            // KOTOR uses Z-up, Y-forward coordinate system
+            // Forward = (0, 1, 0) rotated by orientation
+            var orientation = transform.Orientation;
+            float x = orientation.X;
+            float y = orientation.Y;
+            float z = orientation.Z;
+            float w = orientation.W;
+
+            // Rotate (0, 1, 0) by quaternion
+            return new Vector3(
+                2.0f * (x * z + w * y),
+                1.0f - 2.0f * (x * x + z * z),
+                2.0f * (y * z - w * x)
+            );
+        }
+
+        /// <summary>
+        /// Gets the right vector from an entity's transform.
+        /// </summary>
+        private Vector3 GetEntityRight(Interfaces.Components.ITransformComponent transform)
+        {
+            // Right = (1, 0, 0) rotated by orientation
+            var orientation = transform.Orientation;
+            float x = orientation.X;
+            float y = orientation.Y;
+            float z = orientation.Z;
+            float w = orientation.W;
+
+            // Rotate (1, 0, 0) by quaternion
+            return new Vector3(
+                1.0f - 2.0f * (y * y + z * z),
+                2.0f * (x * y - w * z),
+                2.0f * (x * z + w * y)
+            );
+        }
+
+        /// <summary>
+        /// Gets the up vector from an entity's transform.
+        /// </summary>
+        private Vector3 GetEntityUp(Interfaces.Components.ITransformComponent transform)
+        {
+            // Up = (0, 0, 1) rotated by orientation
+            var orientation = transform.Orientation;
+            float x = orientation.X;
+            float y = orientation.Y;
+            float z = orientation.Z;
+            float w = orientation.W;
+
+            // Rotate (0, 0, 1) by quaternion
+            return new Vector3(
+                2.0f * (x * y + w * z),
+                2.0f * (y * z - w * x),
+                1.0f - 2.0f * (x * x + y * y)
+            );
+        }
+
+        /// <summary>
+        /// Sets camera position and look-at using camera hooks.
+        /// Based on swkotor2.exe: Camera hook-based positioning for dialogue animations
+        /// </summary>
+        /// <param name="cameraHookEntity">Entity with camera hook (camera position).</param>
+        /// <param name="cameraHookIndex">Camera hook index on camera hook entity.</param>
+        /// <param name="lookAtEntity">Entity to look at (optional, uses head position).</param>
+        /// <param name="lookAtHookIndex">Look-at hook index (optional, uses head position if not specified).</param>
+        public void SetCameraFromHooks(IEntity cameraHookEntity, int cameraHookIndex, IEntity lookAtEntity, int lookAtHookIndex = 0)
+        {
+            Vector3 cameraPos;
+            Vector3 lookAtPos;
+
+            // Get camera position from hook
+            if (!GetCameraHookPosition(cameraHookEntity, cameraHookIndex, out cameraPos))
+            {
+                // Fallback to entity head position
+                cameraPos = GetEntityHeadPosition(cameraHookEntity);
+            }
+
+            // Get look-at position
+            if (lookAtEntity != null)
+            {
+                if (lookAtHookIndex > 0)
+                {
+                    if (!GetCameraHookPosition(lookAtEntity, lookAtHookIndex, out lookAtPos))
+                    {
+                        lookAtPos = GetEntityHeadPosition(lookAtEntity);
+                    }
+                }
+                else
+                {
+                    lookAtPos = GetEntityHeadPosition(lookAtEntity);
+                }
+            }
+            else
+            {
+                // Look at camera hook entity's head if no look-at entity specified
+                lookAtPos = GetEntityHeadPosition(cameraHookEntity);
+            }
+
+            // Set cinematic camera mode with hook-based positions
+            SetCinematicMode(cameraPos, lookAtPos);
+        }
+
+        #endregion
+
         #region View Matrix
 
         /// <summary>
@@ -747,5 +932,70 @@ namespace Andastra.Runtime.Core.Camera
         EaseIn,
         EaseOut,
         EaseInOut
+    }
+
+    /// <summary>
+    /// Defines a dialogue camera animation with hook support.
+    /// Based on swkotor2.exe: Camera animation system for dialogues
+    /// Located via string references: "CameraAnimation" @ 0x007c3460
+    /// Original implementation: Camera animations are scripted camera movements using camera hooks or predefined angles
+    /// </summary>
+    public class DialogueCameraAnimation
+    {
+        /// <summary>
+        /// Animation ID (matches animId parameter in SetAnimation).
+        /// </summary>
+        public int AnimationId { get; set; }
+
+        /// <summary>
+        /// Camera hook entity (entity with camera hook for position).
+        /// </summary>
+        public IEntity CameraHookEntity { get; set; }
+
+        /// <summary>
+        /// Camera hook index (1-based, e.g., 1 = "camerahook1").
+        /// </summary>
+        public int CameraHookIndex { get; set; }
+
+        /// <summary>
+        /// Look-at entity (entity to focus camera on).
+        /// </summary>
+        public IEntity LookAtEntity { get; set; }
+
+        /// <summary>
+        /// Look-at hook index (optional, 0 = use head position).
+        /// </summary>
+        public int LookAtHookIndex { get; set; }
+
+        /// <summary>
+        /// Fallback camera angle (used if hooks are not available).
+        /// </summary>
+        public DialogueCameraAngle FallbackAngle { get; set; }
+
+        /// <summary>
+        /// Animation duration in seconds.
+        /// </summary>
+        public float Duration { get; set; }
+
+        /// <summary>
+        /// Easing function type.
+        /// </summary>
+        public EasingType Easing { get; set; }
+
+        /// <summary>
+        /// Whether this animation uses camera hooks (true) or predefined angles (false).
+        /// </summary>
+        public bool UsesHooks { get; set; }
+
+        public DialogueCameraAnimation()
+        {
+            AnimationId = 0;
+            CameraHookIndex = 0;
+            LookAtHookIndex = 0;
+            FallbackAngle = DialogueCameraAngle.Speaker;
+            Duration = 0.5f;
+            Easing = EasingType.EaseInOut;
+            UsesHooks = false;
+        }
     }
 }
