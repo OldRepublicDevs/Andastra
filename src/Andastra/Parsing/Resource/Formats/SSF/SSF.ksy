@@ -118,14 +118,14 @@ types:
           Raw uint32 value representing the StrRef.
           Value 0xFFFFFFFF (4294967295) represents -1 (no sound assigned).
           All other values are valid StrRefs (typically 0-999999).
+          The conversion from 0xFFFFFFFF to -1 is handled by SSFBinaryReader.ReadInt32MaxNeg1().
     
     instances:
-      strref_value:
-        value: strref_raw == 0xFFFFFFFF ? -1 : strref_raw
+      is_no_sound:
+        value: strref_raw == 0xFFFFFFFF
         doc: |
-          Converted StrRef value.
-          -1 if strref_raw is 0xFFFFFFFF, otherwise the raw value.
-          This matches the behavior of SSFBinaryReader.ReadInt32MaxNeg1().
+          True if this entry represents "no sound" (0xFFFFFFFF).
+          False if this entry contains a valid StrRef value.
 
   padding:
     seq:
