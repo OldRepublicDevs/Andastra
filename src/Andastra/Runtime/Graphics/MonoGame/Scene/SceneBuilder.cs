@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Parsing.Formats.LYT;
 using Andastra.Parsing.Formats.VIS;
+using Andastra.Runtime.Graphics;
 using JetBrains.Annotations;
 
 namespace Andastra.Runtime.MonoGame.Scene
@@ -177,9 +178,11 @@ namespace Andastra.Runtime.MonoGame.Scene
         public string ModelResRef { get; set; }
         public Microsoft.Xna.Framework.Vector3 Position { get; set; }
         public bool IsVisible { get; set; }
-        // TODO: RoomMeshData type needs to be defined
-        // public Rendering.RoomMeshRenderer.RoomMeshData MeshData { get; set; }
-        public object MeshData { get; set; }
+        /// <summary>
+        /// Room mesh data loaded from MDL model. Null until loaded on demand by RoomMeshRenderer.
+        /// </summary>
+        [CanBeNull]
+        public IRoomMeshData MeshData { get; set; }
     }
 }
 
