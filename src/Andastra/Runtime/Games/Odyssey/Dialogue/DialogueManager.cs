@@ -11,6 +11,9 @@ using Andastra.Runtime.Core.Dialogue;
 using Andastra.Runtime.Scripting.Interfaces;
 using Andastra.Runtime.Games.Common.Dialogue;
 using Andastra.Runtime.Core.Journal;
+using Andastra.Runtime.Engines.Odyssey.Data;
+using Andastra.Runtime.Core.Party;
+using Andastra.Parsing.Formats.TwoDA;
 
 namespace Andastra.Runtime.Engines.Odyssey.Dialogue
 {
@@ -60,6 +63,10 @@ namespace Andastra.Runtime.Engines.Odyssey.Dialogue
         private readonly ILipSyncController _lipSyncController;
         [CanBeNull]
         private readonly JournalSystem _journalSystem;
+        [CanBeNull]
+        private readonly GameDataManager _gameDataManager;
+        [CanBeNull]
+        private readonly PartySystem _partySystem;
 
         private TLK _baseTlk;
         private TLK _customTlk;
@@ -118,7 +125,9 @@ namespace Andastra.Runtime.Engines.Odyssey.Dialogue
             Func<string, byte[]> scriptLoader,
             IVoicePlayer voicePlayer = null,
             ILipSyncController lipSyncController = null,
-            [CanBeNull] JournalSystem journalSystem = null)
+            [CanBeNull] JournalSystem journalSystem = null,
+            [CanBeNull] GameDataManager gameDataManager = null,
+            [CanBeNull] PartySystem partySystem = null)
             : base(vm, world, engineApi, globals)
         {
             _dialogueLoader = dialogueLoader ?? throw new ArgumentNullException("dialogueLoader");
@@ -126,6 +135,8 @@ namespace Andastra.Runtime.Engines.Odyssey.Dialogue
             _voicePlayer = voicePlayer;
             _lipSyncController = lipSyncController;
             _journalSystem = journalSystem;
+            _gameDataManager = gameDataManager;
+            _partySystem = partySystem;
         }
 
         /// <summary>
@@ -965,21 +976,93 @@ namespace Andastra.Runtime.Engines.Odyssey.Dialogue
             // Based on swkotor2.exe: FUN_005e6870 @ 0x005e6870
             // Located via string references: "PlotIndex" @ 0x007c35c4, "PlotXPPercentage" @ 0x007c35cc
             // Original implementation: Updates plot flags and awards XP based on PlotIndex and PlotXpPercentage
-            if (node.PlotIndex >= 0)
+            // Flow: FUN_005e6870 -> FUN_0057eb20
+            // FUN_0057eb20: Looks up "XP" column from plot.2da using PlotIndex, calculates final XP, awards XP
+            if (node.PlotIndex >= 0 && node.PlotXpPercentage > 0)
             {
-                // Process plot index
-                // TODO: Implement plot system integration
-                // Original engine updates plot flags based on PlotIndex
-                // This requires plot manager (PTT/PTM) system integration
+                ProcessPlotXP(node.PlotIndex, node.PlotXpPercentage);
+            }
+        }
+
+        /// <summary>
+        /// Processes plot XP based on PlotIndex and PlotXpPercentage.
+        /// </summary>
+        /// <param name="plotIndex">Plot index from plot.2da</param>
+        /// <param name="plotXpPercentage">XP percentage multiplier (0.0-1.0)</param>
+        /// <remarks>
+        /// Plot XP Processing (swkotor2.exe: FUN_005e6870 @ 0x005e6870 -> FUN_0057eb20 @ 0x0057eb20):
+        /// - FUN_005e6870: Checks if plotIndex != -1 and threshold < plotXpPercentage
+        ///   - Calculates: plotXpPercentage * _DAT_007b99b4 (base multiplier)
+        ///   - Calls FUN_0057eb20 with plotIndex and calculated value
+        /// - FUN_0057eb20: Looks up "XP" column from plot.2da using plotIndex
+        ///   - Calculates: (plotXP * param_2) * _DAT_007b5f88 (additional multiplier)
+        ///   - Awards XP via FUN_0057ccd0 (party XP award function)
+        ///   - Notifies journal system via FUN_00681a10
+        /// - Original implementation:
+        ///   1. Look up plot.2da row using PlotIndex
+        ///   2. Get "xp" column value (base XP for this plot)
+        ///   3. Calculate: plotXP * PlotXpPercentage * multipliers
+        ///   4. Award XP to all active party members
+        ///   5. Notify journal system of XP award
+        /// - Cross-engine analysis:
+        ///   - swkotor.exe: Similar plot XP system (needs reverse engineering)
+        ///   - nwmain.exe: Different plot system (needs reverse engineering)
+        ///   - daorigins.exe: Plot system may differ (needs reverse engineering)
+        /// </remarks>
+        private void ProcessPlotXP(int plotIndex, float plotXpPercentage)
+        {
+            if (_gameDataManager == null || _partySystem == null)
+            {
+                return;
             }
 
-            if (node.PlotXpPercentage > 0)
+            // Look up plot.2da row using PlotIndex
+            // Based on swkotor2.exe: FUN_0057eb20 looks up "XP" column from plot.2da
+            TwoDA plotTable = _gameDataManager.GetTable("plot");
+            if (plotTable == null)
             {
-                // Process plot XP percentage
-                // TODO: Implement plot XP calculation
-                // Original engine awards XP based on PlotXpPercentage
-                // This requires XP system integration
+                return;
             }
+
+            // Get row by index (PlotIndex is row index in plot.2da)
+            if (plotIndex < 0 || plotIndex >= plotTable.GetHeight())
+            {
+                return;
+            }
+
+            TwoDARow plotRow = plotTable.GetRow(plotIndex);
+            if (plotRow == null)
+            {
+                return;
+            }
+
+            // Get base XP from "xp" column
+            int? baseXP = plotRow.GetInteger("xp");
+            if (!baseXP.HasValue || baseXP.Value <= 0)
+            {
+                return;
+            }
+
+            // Calculate final XP: baseXP * plotXpPercentage
+            // Based on swkotor2.exe: FUN_0057eb20 calculates (plotXP * param_2) * multiplier
+            // Original implementation uses additional multipliers (_DAT_007b99b4, _DAT_007b5f88)
+            // For now, we'll use a simplified calculation: baseXP * plotXpPercentage
+            // TODO: Add multiplier support if needed (based on game settings or difficulty)
+            int finalXP = (int)(baseXP.Value * plotXpPercentage);
+            if (finalXP <= 0)
+            {
+                return;
+            }
+
+            // Award XP to all active party members
+            // Based on swkotor2.exe: FUN_0057ccd0 awards XP to party
+            // Original implementation awards XP to all active party members
+            _partySystem.AwardXP(finalXP, split: false);
+
+            // Notify journal system of XP award (if needed)
+            // Based on swkotor2.exe: FUN_00681a10 notifies journal system
+            // Original implementation may update journal UI or trigger notifications
+            // For now, we'll just award XP (journal system integration can be added later if needed)
         }
 
         #endregion
