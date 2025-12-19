@@ -69,6 +69,7 @@ namespace HolocronToolset.Editors
         public Button ResrefGenerateBtn => _resrefGenerateBtn;
         public ComboBox AppearanceSelect => _appearanceSelect;
         public TextBox ConversationEdit => _conversationEdit;
+        public Button ConversationModifyBtn => _conversationModifyBtn;
         public CheckBox Min1HpCheckbox => _min1HpCheckbox;
         public CheckBox PlotCheckbox => _plotCheckbox;
         public CheckBox StaticCheckbox => _staticCheckbox;
