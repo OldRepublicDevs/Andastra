@@ -321,9 +321,9 @@ namespace Andastra.Runtime.Core.Video
                 // Using dynamic types since Core cannot depend on Graphics
                 // Rectangle and Color are created dynamically via reflection
                 Type rectType = Type.GetType("Andastra.Runtime.Graphics.Rectangle, Andastra.Runtime.Graphics.Common");
-                Type colorType = Type.GetType("Andastra.Runtime.Graphics.Color, Andastra.Runtime.Graphics.Common");
+                Type whiteColorType = Type.GetType("Andastra.Runtime.Graphics.Color, Andastra.Runtime.Graphics.Common");
                 dynamic destinationRect = rectType != null ? Activator.CreateInstance(rectType, offsetX, offsetY, scaledWidth, scaledHeight) : null;
-                dynamic whiteColor = colorType != null ? Activator.CreateInstance(colorType, 255, 255, 255, 255) : null;
+                dynamic whiteColor = whiteColorType != null ? Activator.CreateInstance(whiteColorType, 255, 255, 255, 255) : null;
                 if (destinationRect != null && whiteColor != null)
                 {
                     spriteBatch.Draw(decoder.FrameTexture, destinationRect, whiteColor);

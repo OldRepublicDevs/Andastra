@@ -268,5 +268,30 @@ namespace Andastra.Runtime.Core.Collision
             return false; // No collision
         }
     }
+
+    /// <summary>
+    /// Default concrete implementation of BaseCreatureCollisionDetector for use in Core.
+    /// Uses default bounding box values when engine-specific implementations are not available.
+    /// </summary>
+    public class DefaultCreatureCollisionDetector : BaseCreatureCollisionDetector
+    {
+        /// <summary>
+        /// Gets the bounding box for a creature entity using default values.
+        /// </summary>
+        /// <param name="entity">The creature entity.</param>
+        /// <returns>The creature's bounding box with default dimensions.</returns>
+        protected override CreatureBoundingBox GetCreatureBoundingBox(IEntity entity)
+        {
+            // Default bounding box dimensions (0.6f width, 1.8f height, 0.6f depth)
+            // These are typical values for humanoid creatures in KOTOR
+            // Engine-specific implementations should override this with proper 2DA lookup
+            return new CreatureBoundingBox
+            {
+                Width = 0.6f,
+                Height = 1.8f,
+                Depth = 0.6f
+            };
+        }
+    }
 }
 
