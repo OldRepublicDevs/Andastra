@@ -11,22 +11,28 @@ namespace Andastra.Runtime.Games.Aurora.Collision
     /// Aurora Creature Collision Detection:
     /// - Based on nwmain.exe and nwn2main.exe collision systems
     /// - Uses appearance.2da hitradius for bounding box dimensions
-    /// - Original implementation: CNWSObject::GetBoundingBox @ 0x1404a2b40 (nwmain.exe: gets bounding box from object structure)
-    /// - Collision checking: CNWSObject::TestCollision @ 0x1404a2c80 (nwmain.exe: tests collision between objects)
-    /// - Spatial queries: CNWSArea::GetObjectsInShape @ 0x14035f2a0 (nwmain.exe: spatial query for objects in area)
-    /// - Bounding box calculation: CNWSCreature::GetBoundingBox @ 0x14040a1c0 (nwmain.exe: creature-specific bounding box)
+    /// - Reverse engineered from nwmain.exe using Ghidra MCP:
+    ///   - CNWSArea::NoCreaturesOnLine @ 0x14036ec90 (nwmain.exe: main collision detection function for line-of-sight and pathfinding)
+    ///   - CNWSCreature::GetIsCreatureBumpable @ 0x140391100 (nwmain.exe: checks if creature can be collided with/bumped)
+    ///   - CNWSCreature::BumpFriends @ 0x140385130 (nwmain.exe: handles creature-to-creature collision/bumping)
+    ///   - CNWSCreature structure: Bounding box data stored at offset 0x530 (pointer to structure), radius at offset +8 from pointer
+    ///   - Gob::GetBoundingBox @ 0x14008e6e0 (nwmain.exe: gets bounding box from Gob structure, used for rendering)
+    ///   - Part::GetMinimumBoundingBox @ 0x14008eb20 (nwmain.exe: calculates minimum bounding box for 3D parts)
     /// - Located via string references:
-    ///   - "BoundingBox" @ 0x140ddb6f0 (nwmain.exe: bounding box field in CNWSObject)
-    ///   - "hitradius" @ 0x140dc5e08 (nwmain.exe: hitradius column in appearance.2da lookup)
-    ///   - "Collision" @ 0x140ddc0e0 (nwmain.exe: collision detection system)
-    ///   - "TestCollision" @ 0x140ddc0f0 (nwmain.exe: collision test function)
+    ///   - "Appearance" @ 0x140dc50b0 (nwmain.exe: appearance field in GFF loading)
+    ///   - "Already loaded Appearance.2DA!" @ 0x140dc5dd8 (nwmain.exe: appearance.2da loading check)
+    ///   - "Failed to load Appearance.2DA!" @ 0x140dc5e08 (nwmain.exe: appearance.2da loading error)
+    ///   - "HandleNotifyCollision" @ 0x140d93d48 (nwmain.exe: collision notification handler)
+    ///   - "Tile Has No Axis-Aligned Bounding Box!" @ 0x140dc8368 (nwmain.exe: tile bounding box error)
     /// - Cross-engine analysis:
-    ///   - Odyssey (swkotor.exe, swkotor2.exe): FUN_005479f0 @ 0x005479f0 (swkotor2.exe: creature bounding box), FUN_004e17a0 @ 0x004e17a0 (spatial query), FUN_004f5290 @ 0x004f5290 (detailed collision)
-    ///   - Aurora (nwmain.exe, nwn2main.exe): CNWSObject::GetBoundingBox @ 0x1404a2b40, CNWSObject::TestCollision @ 0x1404a2c80, CNWSCreature::GetBoundingBox @ 0x14040a1c0
+    ///   - Odyssey (swkotor.exe, swkotor2.exe): FUN_005479f0 @ 0x005479f0 (swkotor2.exe: creature bounding box), FUN_004e17a0 @ 0x004e17a0 (spatial query), FUN_004f5290 @ 0x004f5290 (detailed collision), FUN_0041d2c0 @ 0x0041d2c0 (2DA table lookup for hitradius), FUN_0065a380 @ 0x0065a380 (GetCreatureRadius wrapper)
+    ///   - Aurora (nwmain.exe, nwn2main.exe): CNWSArea::NoCreaturesOnLine @ 0x14036ec90, CNWSCreature::GetIsCreatureBumpable @ 0x140391100, CNWSCreature::BumpFriends @ 0x140385130, C2DA::GetFloatingPoint (appearance.2da lookup)
     ///   - Eclipse (daorigins.exe, DragonAge2.exe): Similar bounding box system using appearance.2da hitradius (needs Ghidra verification)
     ///   - Infinity (MassEffect.exe, MassEffect2.exe): Similar bounding box system using appearance.2da hitradius (needs Ghidra verification)
     /// - Common pattern: All engines use appearance.2da hitradius column for creature collision radius
-    /// - Bounding box structure: Width, Height, Depth stored as half-extents (radius-like values) centered at entity position
+    /// - Bounding box structure: CNWSCreature stores bounding box pointer at offset 0x530, radius at offset +8 from pointer
+    ///   - Radius is used for collision detection in NoCreaturesOnLine: *(float *)(*(longlong *)(creature + 0x530) + 8)
+    ///   - BumpFriends adds two creature radii: radius1 + radius2 for collision distance calculation
     /// - Inheritance structure:
     ///   - BaseCreatureCollisionDetector (Runtime.Core.Collision): Common collision detection logic (line-segment vs AABB intersection)
     ///   - AuroraCreatureCollisionDetector (Runtime.Games.Aurora.Collision): Aurora-specific bounding box retrieval from appearance.2da
@@ -43,9 +49,13 @@ namespace Andastra.Runtime.Games.Aurora.Collision
         /// <param name="entity">The creature entity.</param>
         /// <returns>The creature's bounding box.</returns>
         /// <remarks>
-        /// Based on nwmain.exe: CNWSCreature::GetBoundingBox @ 0x14040a1c0
-        /// - Gets appearance type from CNWSCreature structure (offset 0x718 in CNWSCreature)
-        /// - Looks up "hitradius" column from appearance.2da using C2DA::GetFloatingPoint @ 0x1401a73a0
+        /// Based on nwmain.exe reverse engineering via Ghidra MCP:
+        /// - CNWSArea::NoCreaturesOnLine @ 0x14036ec90 accesses creature radius via: *(float *)(*(longlong *)(creature + 0x530) + 8)
+        ///   - CNWSCreature structure has bounding box pointer at offset 0x530
+        ///   - Radius stored at offset +8 from the bounding box pointer
+        /// - CNWSCreature::BumpFriends @ 0x140385130 adds two creature radii: radius1 + radius2 for collision distance
+        /// - Gets appearance type from CNWSCreature structure (appearance type stored in CNWSObject base class)
+        /// - Looks up "hitradius" column from appearance.2da using C2DA::GetFloatingPoint (via AuroraGameDataProvider)
         /// - Bounding box uses hitradius for all three dimensions (width, height, depth) as half-extents
         /// - Default radius: 0.5f (medium creature size) if appearance data unavailable
         /// - Fallback: Uses size category from appearance.2da if hitradius not available:
@@ -55,9 +65,9 @@ namespace Andastra.Runtime.Games.Aurora.Collision
         ///   - Size 3 (Huge): 1.0f
         ///   - Size 4 (Gargantuan): 1.5f
         /// - Cross-engine comparison:
-        ///   - Odyssey (swkotor2.exe): FUN_005479f0 @ 0x005479f0 gets width/height from entity structure (0x380+0x14, 0x380+0xbc), uses hitradius as fallback
-        ///   - Aurora (nwmain.exe): CNWSCreature::GetBoundingBox @ 0x14040a1c0 uses hitradius directly from appearance.2da
-        ///   - Common: Both use appearance.2da hitradius, Aurora uses it directly, Odyssey uses entity structure with hitradius fallback
+        ///   - Odyssey (swkotor2.exe): FUN_005479f0 @ 0x005479f0 gets width/height from entity structure (0x380+0x14, 0x380+0xbc), uses hitradius as fallback via FUN_0065a380 @ 0x0065a380 which calls FUN_0041d2c0 @ 0x0041d2c0 for 2DA lookup
+        ///   - Aurora (nwmain.exe): Uses hitradius directly from appearance.2da via C2DA::GetFloatingPoint, stored in CNWSCreature bounding box structure at offset 0x530+8
+        ///   - Common: Both use appearance.2da hitradius, Aurora stores it in creature structure, Odyssey looks it up on-demand
         /// </remarks>
         protected override CreatureBoundingBox GetCreatureBoundingBox(IEntity entity)
         {
@@ -68,11 +78,12 @@ namespace Andastra.Runtime.Games.Aurora.Collision
             }
 
             // Get appearance type from entity
-            // Based on nwmain.exe: CNWSCreature::GetBoundingBox @ 0x14040a1c0 gets appearance type from CNWSCreature structure (offset 0x718)
+            // Based on nwmain.exe reverse engineering: Appearance type stored in CNWSObject base class
+            // CNWSDoor::LoadDoor @ 0x1404208a0 reads "Appearance" field from GFF (string reference @ 0x140dc50b0)
             int appearanceType = -1;
 
             // First, try to get appearance type from IRenderableComponent
-            // Based on nwmain.exe: Appearance type stored in CNWSObject::m_nAppearanceType (offset varies by object type)
+            // Based on nwmain.exe: Appearance type stored in CNWSObject base class, accessed via various object types
             IRenderableComponent renderable = entity.GetComponent<IRenderableComponent>();
             if (renderable != null)
             {
@@ -80,7 +91,7 @@ namespace Andastra.Runtime.Games.Aurora.Collision
             }
 
             // If not found, try to get appearance type from engine-specific creature component using reflection
-            // Based on nwmain.exe: CNWSCreature structure has appearance type at offset 0x718
+            // Based on nwmain.exe: CNWSCreature inherits from CNWSObject which stores appearance type
             if (appearanceType < 0)
             {
                 var entityType = entity.GetType();
@@ -103,20 +114,26 @@ namespace Andastra.Runtime.Games.Aurora.Collision
             }
 
             // Get bounding box dimensions from GameDataProvider
-            // Based on nwmain.exe: CNWSCreature::GetBoundingBox @ 0x14040a1c0 uses C2DA::GetFloatingPoint to lookup "hitradius" from appearance.2da
-            // Located via string reference: "hitradius" @ 0x140dc5e08 (nwmain.exe: hitradius column in appearance.2da lookup)
+            // Based on nwmain.exe reverse engineering via Ghidra MCP:
+            // - CNWSArea::NoCreaturesOnLine @ 0x14036ec90 accesses radius via: *(float *)(*(longlong *)(creature + 0x530) + 8)
+            // - CNWSCreature::BumpFriends @ 0x140385130 adds two radii: radius1 + radius2 for collision distance
+            // - Radius is looked up from appearance.2da hitradius column using C2DA::GetFloatingPoint
+            // - Located via string references: "Appearance" @ 0x140dc50b0, "Already loaded Appearance.2DA!" @ 0x140dc5dd8
             float radius = 0.5f; // Default radius (medium creature size)
 
             if (appearanceType >= 0 && entity.World != null && entity.World.GameDataProvider != null)
             {
-                // Based on nwmain.exe: C2DA::GetFloatingPoint @ 0x1401a73a0 accesses "hitradius" column from appearance.2da
+                // Based on nwmain.exe: C2DA::GetFloatingPoint accesses "hitradius" column from appearance.2da
                 // AuroraGameDataProvider.GetCreatureRadius uses AuroraTwoDATableManager to lookup hitradius
+                // This matches the pattern in swkotor2.exe: FUN_0065a380 @ 0x0065a380 calls FUN_0041d2c0 @ 0x0041d2c0 for 2DA lookup
                 radius = entity.World.GameDataProvider.GetCreatureRadius(appearanceType, 0.5f);
             }
 
-            // Based on nwmain.exe: CNWSCreature::GetBoundingBox @ 0x14040a1c0 returns bounding box with hitradius as half-extents
+            // Based on nwmain.exe reverse engineering: CNWSCreature stores bounding box pointer at offset 0x530, radius at offset +8
+            // CNWSArea::NoCreaturesOnLine @ 0x14036ec90 uses this radius for collision detection
+            // CNWSCreature::BumpFriends @ 0x140385130 adds two creature radii together for collision distance calculation
             // Bounding box uses same radius for width, height, and depth (spherical approximation)
-            // Original engine: Could use separate width/height/depth, but Aurora uses hitradius for all dimensions
+            // Original engine: Aurora uses hitradius for all dimensions, stored in creature's bounding box structure
             return new CreatureBoundingBox(radius, radius, radius);
         }
     }
