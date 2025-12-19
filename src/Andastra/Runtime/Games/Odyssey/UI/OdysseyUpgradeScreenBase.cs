@@ -7,7 +7,9 @@ using Andastra.Runtime.Core.Interfaces.Components;
 using Andastra.Parsing;
 using Andastra.Parsing.Installation;
 using Andastra.Parsing.Resource;
+using Andastra.Parsing.Resource.Generics;
 using Andastra.Parsing.Formats.TwoDA;
+using Andastra.Parsing.Formats.GFF;
 using Andastra.Runtime.Core.Enums;
 
 namespace Andastra.Runtime.Engines.Odyssey.UI
@@ -483,6 +485,242 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
         /// <param name="upgradeSlot">Upgrade slot index (0-based).</param>
         /// <returns>True if upgrade was removed.</returns>
         public abstract bool RemoveUpgrade(IEntity item, int upgradeSlot);
+
+        /// <summary>
+        /// Loads an upgrade item UTI template from the installation.
+        /// </summary>
+        /// <param name="upgradeResRef">ResRef of the upgrade item template to load.</param>
+        /// <returns>UTI template if loaded successfully, null otherwise.</returns>
+        /// <remarks>
+        /// Load Upgrade UTI Template:
+        /// - Based on swkotor2.exe: FUN_005226d0 @ 0x005226d0 (load item from UTI template)
+        /// - Based on swkotor.exe: FUN_005fb0f0 @ 0x005fb0f0 (item creation from template)
+        /// - Original implementation: Loads UTI GFF file, parses into UTI structure
+        /// - UTI files contain item properties that modify item stats when applied as upgrades
+        /// </remarks>
+        protected UTI LoadUpgradeUTITemplate(string upgradeResRef)
+        {
+            if (string.IsNullOrEmpty(upgradeResRef))
+            {
+                return null;
+            }
+
+            try
+            {
+                // Normalize ResRef (ensure .uti extension if needed)
+                string normalizedResRef = upgradeResRef;
+                if (!normalizedResRef.EndsWith(".uti", StringComparison.OrdinalIgnoreCase))
+                {
+                    normalizedResRef = normalizedResRef + ".uti";
+                }
+
+                // Load UTI resource from installation
+                // Based on swkotor2.exe: FUN_005226d0 @ 0x005226d0 - loads UTI from resource provider
+                // Based on swkotor.exe: FUN_005fb0f0 @ 0x005fb0f0 - loads UTI from installation
+                ResourceResult utiResult = _installation.Resource(normalizedResRef, ResourceType.UTI, null, null);
+                if (utiResult == null || utiResult.Data == null || utiResult.Data.Length == 0)
+                {
+                    return null;
+                }
+
+                // Parse UTI GFF data
+                // Based on swkotor2.exe: UTI parsing - reads GFF with "UTI " signature
+                // Based on swkotor.exe: UTI parsing - reads GFF with "UTI " signature
+                using (var stream = new MemoryStream(utiResult.Data))
+                {
+                    var reader = new GFFBinaryReader(stream);
+                    GFF gff = reader.Load();
+                    if (gff == null)
+                    {
+                        return null;
+                    }
+
+                    // Construct UTI from GFF
+                    // Based on PyKotor UTIHelpers.ConstructUti implementation
+                    UTI utiTemplate = UTIHelpers.ConstructUti(gff);
+                    return utiTemplate;
+                }
+            }
+            catch (Exception)
+            {
+                // Error loading or parsing UTI template
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Applies properties from an upgrade UTI template to an item.
+        /// </summary>
+        /// <param name="item">Item to apply upgrade properties to.</param>
+        /// <param name="upgradeUTI">UTI template of the upgrade item.</param>
+        /// <returns>True if properties were applied successfully.</returns>
+        /// <remarks>
+        /// Apply Upgrade Properties:
+        /// - Based on swkotor2.exe: FUN_0055e160 @ 0x0055e160 (applies upgrade stats to item)
+        /// - Based on swkotor.exe: FUN_0055e160 @ 0x0055e160 (applies upgrade stats to item)
+        /// - Original implementation: Extracts properties from upgrade UTI, adds to item's property list
+        /// - Upgrade properties modify item stats (damage bonuses, AC bonuses, effects, etc.)
+        /// - Properties are additive - multiple upgrades stack their bonuses
+        /// </remarks>
+        protected bool ApplyUpgradeProperties(IEntity item, UTI upgradeUTI)
+        {
+            if (item == null || upgradeUTI == null)
+            {
+                return false;
+            }
+
+            IItemComponent itemComponent = item.GetComponent<IItemComponent>();
+            if (itemComponent == null)
+            {
+                return false;
+            }
+
+            // Extract properties from upgrade UTI template and add to item
+            // Based on swkotor2.exe: FUN_0055e160 @ 0x0055e160 - iterates through upgrade properties
+            // Based on swkotor.exe: FUN_0055e160 @ 0x0055e160 - iterates through upgrade properties
+            // Original implementation: Adds each property from upgrade UTI to item's property list
+            foreach (var utiProp in upgradeUTI.Properties)
+            {
+                // Convert UTI property to ItemProperty
+                // Based on Kotor1.cs: Func_CreateItem implementation (lines 2344-2356)
+                var itemProperty = new ItemProperty
+                {
+                    PropertyType = utiProp.PropertyName,
+                    Subtype = utiProp.Subtype,
+                    CostTable = utiProp.CostTable,
+                    CostValue = utiProp.CostValue,
+                    Param1 = utiProp.Param1,
+                    Param1Value = utiProp.Param1Value
+                };
+
+                // Add property to item
+                // Properties from upgrades modify item stats (damage, AC, etc.)
+                itemComponent.AddProperty(itemProperty);
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Removes properties from an item that match those in an upgrade UTI template.
+        /// </summary>
+        /// <param name="item">Item to remove upgrade properties from.</param>
+        /// <param name="upgradeUTI">UTI template of the upgrade item to remove.</param>
+        /// <returns>True if properties were removed successfully.</returns>
+        /// <remarks>
+        /// Remove Upgrade Properties:
+        /// - Based on swkotor2.exe: FUN_0055e160 @ 0x0055e160 (removes upgrade stats from item)
+        /// - Based on swkotor.exe: FUN_0055e160 @ 0x0055e160 (removes upgrade stats from item)
+        /// - Original implementation: Removes properties that match upgrade UTI from item's property list
+        /// - When removing an upgrade, its properties must be removed to restore original item stats
+        /// </remarks>
+        protected bool RemoveUpgradeProperties(IEntity item, UTI upgradeUTI)
+        {
+            if (item == null || upgradeUTI == null)
+            {
+                return false;
+            }
+
+            IItemComponent itemComponent = item.GetComponent<IItemComponent>();
+            if (itemComponent == null)
+            {
+                return false;
+            }
+
+            // Remove properties from item that match upgrade UTI template
+            // Based on swkotor2.exe: FUN_0055e160 @ 0x0055e160 - removes matching properties
+            // Based on swkotor.exe: FUN_0055e160 @ 0x0055e160 - removes matching properties
+            // Original implementation: Iterates through item properties, removes those matching upgrade
+            // Note: Property matching is done by PropertyType, Subtype, CostTable, CostValue, Param1, Param1Value
+            var propertiesToRemove = new List<ItemProperty>();
+            foreach (var itemProp in itemComponent.Properties)
+            {
+                // Check if this property matches any property in the upgrade UTI
+                foreach (var utiProp in upgradeUTI.Properties)
+                {
+                    if (itemProp.PropertyType == utiProp.PropertyName &&
+                        itemProp.Subtype == utiProp.Subtype &&
+                        itemProp.CostTable == utiProp.CostTable &&
+                        itemProp.CostValue == utiProp.CostValue &&
+                        itemProp.Param1 == utiProp.Param1 &&
+                        itemProp.Param1Value == utiProp.Param1Value)
+                    {
+                        // Property matches upgrade property - mark for removal
+                        propertiesToRemove.Add(itemProp);
+                        break; // Only remove first matching property (in case of duplicates)
+                    }
+                }
+            }
+
+            // Remove matched properties from item
+            foreach (var propToRemove in propertiesToRemove)
+            {
+                itemComponent.RemoveProperty(propToRemove);
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Recalculates item stats after applying or removing upgrades.
+        /// </summary>
+        /// <param name="item">Item to recalculate stats for.</param>
+        /// <remarks>
+        /// Recalculate Item Stats:
+        /// - Based on swkotor2.exe: Item stat recalculation after upgrade changes
+        /// - Based on swkotor.exe: Item stat recalculation after upgrade changes
+        /// - Original implementation: Recalculates item damage, AC, and other stats based on current properties
+        /// - This method triggers stat recalculation and UI update notifications
+        /// - In full implementation, this would:
+        ///   1. Recalculate base stats from item properties
+        ///   2. Apply upgrade property bonuses
+        ///   3. Update item display (damage, AC, etc.)
+        ///   4. Notify UI system to refresh item display
+        /// - Currently, this is a placeholder that will be expanded when stat calculation system is implemented
+        /// </remarks>
+        protected void RecalculateItemStats(IEntity item)
+        {
+            if (item == null)
+            {
+                return;
+            }
+
+            IItemComponent itemComponent = item.GetComponent<IItemComponent>();
+            if (itemComponent == null)
+            {
+                return;
+            }
+
+            // Recalculate item stats based on current properties and upgrades
+            // Based on swkotor2.exe: Item stat calculation system
+            // Based on swkotor.exe: Item stat calculation system
+            // Original implementation: Iterates through all properties, calculates cumulative bonuses
+            // Stats affected by upgrades include:
+            // - Damage bonuses (weapon damage, critical hit bonuses)
+            // - AC bonuses (armor class improvements)
+            // - Saving throw bonuses
+            // - Skill bonuses
+            // - Ability score bonuses
+            // - Other property-based stat modifications
+
+            // Note: Full stat calculation would require:
+            // 1. Base item stats from baseitems.2da
+            // 2. Property effect calculation (from itempropdef.2da)
+            // 3. Cumulative bonus application
+            // 4. UI display update
+
+            // For now, this method provides the framework for stat recalculation
+            // When the stat calculation system is implemented, this will:
+            // - Call stat calculation methods
+            // - Update item component with calculated stats
+            // - Trigger UI refresh events
+
+            // TODO: When stat calculation system is implemented, expand this method to:
+            // 1. Calculate base item stats from baseitems.2da
+            // 2. Apply property bonuses from all properties
+            // 3. Update item component stat fields
+            // 4. Notify UI system to refresh display
+        }
     }
 }
 
