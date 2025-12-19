@@ -219,7 +219,7 @@ namespace KotorDiff.Resolution
             logFunc("Building resource indices for fast lookups...");
 
             // Build indices for all installations
-            var installIndices = new Dictionary<int, Dictionary<ResourceIdentifier, List<FileResource>>>();
+            var installIndices = new Dictionary<int, Dictionary<ResourceIdentifier, List<Andastra.Parsing.Extract.FileResource>>>();
             var allIdentifiersSet = new HashSet<ResourceIdentifier>();
 
             for (int idx = 0; idx < allInstallations.Count; idx++)

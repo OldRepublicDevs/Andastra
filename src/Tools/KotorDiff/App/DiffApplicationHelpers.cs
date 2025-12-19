@@ -402,14 +402,14 @@ namespace KotorDiff.App
                     // Create 2DA memory caches if we have a valid game
                     // Matching PyKotor implementation at vendor/PyKotor/Tools/KotorDiff/src/kotordiff/app.py:455-464
                     // Structure: {installation_index: CaseInsensitiveDict<TwoDAMemoryReferenceCache>}
-                    Dictionary<int, CaseInsensitiveDict<TwoDAMemoryReferenceCache>> twodaCaches = null;
+                    Dictionary<int, Andastra.Utility.CaseInsensitiveDict<TwoDAMemoryReferenceCache>> twodaCaches = null;
                     if (game.HasValue && config.Paths != null)
                     {
-                        twodaCaches = new Dictionary<int, CaseInsensitiveDict<TwoDAMemoryReferenceCache>>();
+                        twodaCaches = new Dictionary<int, Andastra.Utility.CaseInsensitiveDict<TwoDAMemoryReferenceCache>>();
                         // Initialize caches for each path index
                         for (int idx = 0; idx < config.Paths.Count; idx++)
                         {
-                            twodaCaches[idx] = new CaseInsensitiveDict<TwoDAMemoryReferenceCache>();
+                            twodaCaches[idx] = new Andastra.Utility.CaseInsensitiveDict<TwoDAMemoryReferenceCache>();
                         }
                     }
 
