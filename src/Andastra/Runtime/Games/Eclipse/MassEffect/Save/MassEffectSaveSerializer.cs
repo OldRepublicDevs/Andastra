@@ -348,10 +348,14 @@ namespace Andastra.Runtime.Engines.Eclipse.MassEffect.Save
         }
 
         /// <summary>
-        /// Serializes global variable state.
+        /// Serializes global variable state (Mass Effect-specific: includes Locations, uses int32 for booleans).
         /// Based on MassEffect.exe: Global variable serialization functions
         /// </summary>
-        private void SerializeGlobalVariables(BinaryWriter writer, GlobalVariableState globals)
+        /// <remarks>
+        /// Mass Effect uses int32 for boolean serialization (unlike Dragon Age which uses bool).
+        /// Mass Effect also includes Location globals which are not in the base class implementation.
+        /// </remarks>
+        private new void SerializeGlobalVariables(BinaryWriter writer, GlobalVariableState globals)
         {
             if (globals == null)
             {
@@ -370,7 +374,7 @@ namespace Andastra.Runtime.Engines.Eclipse.MassEffect.Save
                 foreach (var kvp in globals.Booleans)
                 {
                     WriteString(writer, kvp.Key);
-                    writer.Write(kvp.Value ? 1 : 0);
+                    writer.Write(kvp.Value ? 1 : 0); // Mass Effect uses int32 for booleans
                 }
             }
 
@@ -409,9 +413,13 @@ namespace Andastra.Runtime.Engines.Eclipse.MassEffect.Save
         }
 
         /// <summary>
-        /// Deserializes global variable state.
+        /// Deserializes global variable state (Mass Effect-specific: includes Locations, uses int32 for booleans).
         /// </summary>
-        private GlobalVariableState DeserializeGlobalVariables(BinaryReader reader)
+        /// <remarks>
+        /// Mass Effect uses int32 for boolean deserialization (unlike Dragon Age which uses bool).
+        /// Mass Effect also includes Location globals which are not in the base class implementation.
+        /// </remarks>
+        private new GlobalVariableState DeserializeGlobalVariables(BinaryReader reader)
         {
             var globals = new GlobalVariableState();
 
@@ -420,7 +428,7 @@ namespace Andastra.Runtime.Engines.Eclipse.MassEffect.Save
             for (int i = 0; i < boolCount; i++)
             {
                 string name = ReadString(reader);
-                bool value = reader.ReadInt32() != 0;
+                bool value = reader.ReadInt32() != 0; // Mass Effect uses int32 for booleans
                 globals.Booleans[name] = value;
             }
 
@@ -1768,9 +1776,12 @@ namespace Andastra.Runtime.Engines.Eclipse.MassEffect.Save
         }
 
         /// <summary>
-        /// Serializes journal entries.
+        /// Serializes journal entries (Mass Effect-specific: includes DateAdded timestamp).
         /// </summary>
-        private void SerializeJournalEntries(BinaryWriter writer, List<JournalEntry> journalEntries)
+        /// <remarks>
+        /// Mass Effect includes DateAdded timestamp in journal entries, unlike the base class implementation.
+        /// </remarks>
+        private new void SerializeJournalEntries(BinaryWriter writer, List<JournalEntry> journalEntries)
         {
             int count = journalEntries != null ? journalEntries.Count : 0;
             writer.Write(count);
@@ -1786,9 +1797,9 @@ namespace Andastra.Runtime.Engines.Eclipse.MassEffect.Save
         }
 
         /// <summary>
-        /// Deserializes journal entries.
+        /// Deserializes journal entries (Mass Effect-specific: includes DateAdded timestamp).
         /// </summary>
-        private List<JournalEntry> DeserializeJournalEntries(BinaryReader reader)
+        private new List<JournalEntry> DeserializeJournalEntries(BinaryReader reader)
         {
             var journalEntries = new List<JournalEntry>();
 

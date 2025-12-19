@@ -147,90 +147,17 @@ namespace Andastra.Runtime.Engines.Eclipse.DragonAge2.Save
                 // Serialize full game state
                 // Based on DragonAge2.exe: SaveGameMessage @ 0x00be37a8 serialization
                 
-                // Party state: Serialize party member data
-                if (saveData.PartyState != null && saveData.PartyState.SelectedParty != null)
-                {
-                    writer.Write(saveData.PartyState.SelectedParty.Count);
-                    foreach (var partyMemberResRef in saveData.PartyState.SelectedParty)
-                    {
-                        WriteString(writer, partyMemberResRef ?? "");
-                    }
-                }
-                else
-                {
-                    writer.Write(0);
-                }
+                // Party state: Serialize party member data (using base class method)
+                SerializeSelectedParty(writer, saveData.PartyState);
                 
-                // Inventory state: Serialize inventory data from PlayerCharacter
-                int inventoryItemCount = 0;
-                if (saveData.PartyState?.PlayerCharacter?.Inventory != null)
-                {
-                    inventoryItemCount = saveData.PartyState.PlayerCharacter.Inventory.Count;
-                }
-                writer.Write(inventoryItemCount);
-                if (saveData.PartyState?.PlayerCharacter?.Inventory != null)
-                {
-                    foreach (var item in saveData.PartyState.PlayerCharacter.Inventory)
-                    {
-                        WriteString(writer, item?.TemplateResRef ?? "");
-                        writer.Write(item?.StackSize ?? 1);
-                    }
-                }
+                // Inventory state: Serialize inventory data from PlayerCharacter (using base class method)
+                SerializeBasicInventory(writer, saveData.PartyState?.PlayerCharacter?.Inventory);
                 
-                // Quest state: Serialize journal entries
-                int journalEntryCount = saveData.JournalEntries != null ? saveData.JournalEntries.Count : 0;
-                writer.Write(journalEntryCount);
-                if (saveData.JournalEntries != null)
-                {
-                    foreach (var entry in saveData.JournalEntries)
-                    {
-                        WriteString(writer, entry?.QuestTag ?? "");
-                        writer.Write(entry?.State ?? 0);
-                    }
-                }
+                // Quest state: Serialize journal entries (using base class method)
+                SerializeJournalEntries(writer, saveData.JournalEntries);
                 
-                // World state: Serialize global variables
-                if (saveData.GlobalVariables != null)
-                {
-                    // Serialize boolean globals
-                    writer.Write(saveData.GlobalVariables.Booleans != null ? saveData.GlobalVariables.Booleans.Count : 0);
-                    if (saveData.GlobalVariables.Booleans != null)
-                    {
-                        foreach (var kvp in saveData.GlobalVariables.Booleans)
-                        {
-                            WriteString(writer, kvp.Key ?? "");
-                            writer.Write(kvp.Value);
-                        }
-                    }
-                    
-                    // Serialize numeric globals
-                    writer.Write(saveData.GlobalVariables.Numbers != null ? saveData.GlobalVariables.Numbers.Count : 0);
-                    if (saveData.GlobalVariables.Numbers != null)
-                    {
-                        foreach (var kvp in saveData.GlobalVariables.Numbers)
-                        {
-                            WriteString(writer, kvp.Key ?? "");
-                            writer.Write(kvp.Value);
-                        }
-                    }
-                    
-                    // Serialize string globals
-                    writer.Write(saveData.GlobalVariables.Strings != null ? saveData.GlobalVariables.Strings.Count : 0);
-                    if (saveData.GlobalVariables.Strings != null)
-                    {
-                        foreach (var kvp in saveData.GlobalVariables.Strings)
-                        {
-                            WriteString(writer, kvp.Key ?? "");
-                            WriteString(writer, kvp.Value ?? "");
-                        }
-                    }
-                }
-                else
-                {
-                    writer.Write(0);
-                    writer.Write(0);
-                    writer.Write(0);
-                }
+                // World state: Serialize global variables (using base class method)
+                SerializeGlobalVariables(writer, saveData.GlobalVariables);
 
                 return stream.ToArray();
             }
@@ -283,86 +210,25 @@ namespace Andastra.Runtime.Engines.Eclipse.DragonAge2.Save
                 // Deserialize full game state
                 // Based on DragonAge2.exe: SaveGameMessage deserialization
                 
-                // Party state: Deserialize party member data
-                int selectedPartyCount = reader.ReadInt32();
-                if (selectedPartyCount > 0)
+                // Party state: Deserialize party member data (using base class method)
+                if (saveData.PartyState == null)
                 {
-                    if (saveData.PartyState.SelectedParty == null)
-                    {
-                        saveData.PartyState.SelectedParty = new System.Collections.Generic.List<string>();
-                    }
-                    for (int i = 0; i < selectedPartyCount; i++)
-                    {
-                        saveData.PartyState.SelectedParty.Add(ReadString(reader));
-                    }
+                    saveData.PartyState = new Core.Save.PartyState();
                 }
+                DeserializeSelectedParty(reader, saveData.PartyState);
                 
-                // Inventory state: Deserialize inventory data
-                int inventoryItemCount = reader.ReadInt32();
-                if (inventoryItemCount > 0)
+                // Inventory state: Deserialize inventory data (using base class method)
+                if (saveData.PartyState.PlayerCharacter == null)
                 {
-                    if (saveData.PartyState.PlayerCharacter.Inventory == null)
-                    {
-                        saveData.PartyState.PlayerCharacter.Inventory = new System.Collections.Generic.List<Core.Save.ItemState>();
-                    }
-                    for (int i = 0; i < inventoryItemCount; i++)
-                    {
-                        var item = new Core.Save.ItemState();
-                        item.TemplateResRef = ReadString(reader);
-                        item.StackSize = reader.ReadInt32();
-                        saveData.PartyState.PlayerCharacter.Inventory.Add(item);
-                    }
+                    saveData.PartyState.PlayerCharacter = new Core.Save.CreatureState();
                 }
+                saveData.PartyState.PlayerCharacter.Inventory = DeserializeBasicInventory(reader);
                 
-                // Quest state: Deserialize journal entries
-                int journalEntryCount = reader.ReadInt32();
-                if (journalEntryCount > 0)
-                {
-                    if (saveData.JournalEntries == null)
-                    {
-                        saveData.JournalEntries = new System.Collections.Generic.List<Core.Save.JournalEntry>();
-                    }
-                    for (int i = 0; i < journalEntryCount; i++)
-                    {
-                        var entry = new Core.Save.JournalEntry();
-                        entry.QuestTag = ReadString(reader);
-                        entry.State = reader.ReadInt32();
-                        saveData.JournalEntries.Add(entry);
-                    }
-                }
+                // Quest state: Deserialize journal entries (using base class method)
+                saveData.JournalEntries = DeserializeJournalEntries(reader);
                 
-                // World state: Deserialize global variables
-                if (saveData.GlobalVariables == null)
-                {
-                    saveData.GlobalVariables = new Core.Save.GlobalVariableState();
-                }
-                
-                // Deserialize boolean globals
-                int boolGlobalCount = reader.ReadInt32();
-                for (int i = 0; i < boolGlobalCount; i++)
-                {
-                    string key = ReadString(reader);
-                    bool value = reader.ReadBoolean();
-                    saveData.GlobalVariables.Booleans[key] = value;
-                }
-                
-                // Deserialize numeric globals
-                int numGlobalCount = reader.ReadInt32();
-                for (int i = 0; i < numGlobalCount; i++)
-                {
-                    string key = ReadString(reader);
-                    int value = reader.ReadInt32();
-                    saveData.GlobalVariables.Numbers[key] = value;
-                }
-                
-                // Deserialize string globals
-                int strGlobalCount = reader.ReadInt32();
-                for (int i = 0; i < strGlobalCount; i++)
-                {
-                    string key = ReadString(reader);
-                    string value = ReadString(reader);
-                    saveData.GlobalVariables.Strings[key] = value;
-                }
+                // World state: Deserialize global variables (using base class method)
+                saveData.GlobalVariables = DeserializeGlobalVariables(reader);
             }
         }
     }
