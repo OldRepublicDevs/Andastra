@@ -43,7 +43,19 @@ namespace Andastra.Runtime.Games.Eclipse.Components
         /// <remarks>
         /// Eclipse-specific: Loads animation duration from animation tree nodes.
         /// Animation IDs reference nodes in animation trees or animation node hierarchies.
+        /// Based on daorigins.exe/DragonAge2.exe: Animation tree system with animation nodes
+        /// Located via string references: "AnimationTree" @ 0x00ae5e70 (daorigins.exe), "AnimationTree" @ 0x00bdde30 (DragonAge2.exe)
+        /// "ModelAnimationTree" @ 0x00ae5e8c (daorigins.exe), "ModelAnimationTree" @ 0x00bdde4c (DragonAge2.exe)
+        /// "AnimationTask" @ 0x00b53fa4 (daorigins.exe), "@AnimationTask" @ 0x00bddb7e (DragonAge2.exe)
+        /// Original implementation: Animation duration stored in AnimationNode or AnimationTree node data
         /// TODO: PLACEHOLDER - For now, returns default duration. Full implementation should load from animation tree data.
+        /// Full implementation requires:
+        /// 1. Integration with Eclipse animation tree loading system (not yet implemented)
+        /// 2. Look up AnimationNode or AnimationTree node by ID from loaded animation trees
+        /// 3. Access animation duration from node data (stored in AnimationNode.Length or similar field)
+        /// 4. Return duration in seconds
+        /// 5. Cache animation durations for performance (avoid repeated lookups)
+        /// For now, returns default duration (1.0f) as a reasonable placeholder
         /// </remarks>
         protected override float GetAnimationDuration(int animationId)
         {
@@ -54,10 +66,12 @@ namespace Andastra.Runtime.Games.Eclipse.Components
 
             // TODO: PLACEHOLDER - Load animation duration from Eclipse animation tree data
             // Full implementation should:
-            // 1. Look up AnimationNode or AnimationTree node by ID
-            // 2. Access animation duration from node data
-            // 3. Return duration in seconds
-            // For now, return default duration
+            // 1. Get entity's model/animation tree reference (from IModelComponent or similar)
+            // 2. Look up AnimationNode or AnimationTree node by ID from loaded animation trees
+            // 3. Access animation duration from node data (AnimationNode.Length field)
+            // 4. Return duration in seconds
+            // 5. Cache animation durations for performance (Dictionary<int, float> cache)
+            // For now, return default duration (1.0f) as a reasonable placeholder
             return 1.0f;
         }
 
