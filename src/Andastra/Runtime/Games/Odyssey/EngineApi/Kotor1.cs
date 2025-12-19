@@ -257,7 +257,7 @@ namespace Andastra.Runtime.Engines.Odyssey.EngineApi
 
                 // Module
                 case 210: return Func_GetModuleFileName(args, ctx);
-                case 242: return Func_GetModule(args, ctx);
+                case 242: return base.Func_GetModule(args, ctx);
                 case 251: return Func_GetLoadFromSaveGame(args, ctx);
                 case 272: return base.Func_ObjectToString(args, ctx);
                 case 509: return Func_StartNewModule(args, ctx);
@@ -2178,24 +2178,7 @@ namespace Andastra.Runtime.Engines.Odyssey.EngineApi
         #endregion
 
         // Methods removed - using base class implementations instead
-
-        private new Variable Func_GetModule(IReadOnlyList<Variable> args, IExecutionContext ctx)
-        {
-            // GetModule() - Get the module object
-            // Returns OBJECT_INVALID on error
-            // In KOTOR, modules are special objects with a fixed object ID
-            // The module object ID is typically 0x7F000002 (as per base implementation)
-            // However, we should verify the current module exists
-            if (ctx.World != null && ctx.World.CurrentModule != null)
-            {
-                // Return the standard module object ID
-                // This matches the base implementation and KOTOR conventions
-                return Variable.FromObject(0x7F000002);
-            }
-            return Variable.FromObject(ObjectInvalid);
-        }
-
-        // Method removed - using base class implementation instead
+        // GetModule (routine 242) now uses base.Func_GetModule which properly handles module ID lookup
 
         /// <summary>
         /// GetItemPossessor(object oItem) - returns the creature/placeable that possesses the item
@@ -5460,9 +5443,17 @@ namespace Andastra.Runtime.Engines.Odyssey.EngineApi
         /// Located via string references: "Module" @ 0x007c1a70, "ModuleName" @ 0x007bde2c
         /// Original implementation: Shuts down current module and loads new one, positions party at waypoint
         /// 
-        /// Function ID: 509 (NWScript routine ID)
+        /// Function ID: 509 (NWScript routine ID, 0x1fd)
         /// 
-        /// Original Engine Behavior (swkotor.exe):
+        /// Ghidra Reverse Engineering Findings:
+        /// - swkotor.exe: Function ID 509 referenced at 0x0041c54a and 0x0041c554 (function registration/dispatch setup)
+        /// - swkotor2.exe: Function ID 509 referenced at 0x0041bf2a and 0x0041bf34 (identical pattern)
+        /// - Module transition script: "Mod_Transition" @ 0x00745b68 (swkotor.exe), @ 0x007be8f0 (swkotor2.exe)
+        /// - Module transition handlers: FUN_00501fa0 @ 0x00501fa0 (swkotor2.exe) handles module loading and transition scripts
+        /// - Module state management: "ModuleLoaded" @ 0x00745078, "ModuleRunning" @ 0x00745060 (swkotor.exe)
+        /// - Module save system: FUN_004b2380 @ 0x004b2380 (swkotor.exe), FUN_004ea910 @ 0x004ea910 (swkotor2.exe) handle module name in save games
+        /// 
+        /// Original Engine Behavior (swkotor.exe/swkotor2.exe):
         /// - Validates module name parameter (returns immediately if empty)
         /// - Plays movie files (sMovie1-sMovie6) sequentially if provided (before module transition)
         /// - Calls module transition system to unload current module and load new module
@@ -5472,43 +5463,50 @@ namespace Andastra.Runtime.Engines.Odyssey.EngineApi
         /// 
         /// Module Transition Sequence (Original Engine):
         /// 1. Validate module name and waypoint tag
-        /// 2. Play movie files sequentially (if provided)
+        /// 2. Play movie files sequentially (if provided) - BIK format, blocking playback
         /// 3. Show loading screen (from module IFO LoadScreenResRef)
         /// 4. Save current module state (creature positions, door/placeable states)
-        /// 5. Fire OnModuleLeave script on current module
+        /// 5. Fire OnModuleLeave script on current module (ScriptOnExit field in IFO)
         /// 6. Unload current module (destroy entities, clear areas)
-        /// 7. Load new module (IFO, ARE, GIT, LYT, VIS files)
-        /// 8. Restore module state if previously visited
-        /// 9. Position party at waypoint
-        /// 10. Fire OnModuleLoad script on new module
-        /// 11. Fire OnModuleStart script on new module
-        /// 12. Fire OnEnter script for party members
-        /// 13. Hide loading screen
+        /// 7. Load new module (IFO, ARE, GIT, LYT, VIS files via ModuleLoader)
+        /// 8. Restore module state if previously visited (from SaveSystem module state cache)
+        /// 9. Position party at waypoint (TransitionDestination from door, or default entry waypoint)
+        /// 10. Fire OnModuleLoad script on new module (ScriptOnLoad field in IFO, executes before OnModuleStart)
+        /// 11. Fire OnModuleStart script on new module (ScriptOnStart field in IFO, executes after OnModuleLoad)
+        /// 12. Fire OnEnter script for party members (ScriptOnEnter field in ARE)
+        /// 13. Fire OnSpawn script on newly spawned creatures (ScriptSpawn field in UTC template)
+        /// 14. Hide loading screen
         /// 
         /// Movie Playback (Original Engine):
         /// - Movies play sequentially before module transition begins
-        /// - Movie files are BIK format (Bink video)
+        /// - Movie files are BIK format (Bink video) - requires BINKW32.DLL
         /// - Playback is blocking (waits for each movie to finish before playing next)
         /// - If movie playback fails, continues with module transition
+        /// - Movie playback would be handled by Bink video system (not yet implemented)
         /// 
         /// Waypoint Positioning:
         /// - If waypoint tag is provided, positions party at that waypoint
         /// - If waypoint tag is empty, uses default entry waypoint from module IFO
         /// - Party members positioned in line perpendicular to waypoint facing (1.0 unit spacing)
+        /// - Based on swkotor2.exe: FUN_005226d0 @ 0x005226d0 positions all party members at waypoint with spacing
         /// 
         /// Cross-Engine Equivalents:
-        /// - swkotor2.exe: Same function ID (509), identical implementation
+        /// - swkotor2.exe: Same function ID (509), identical implementation pattern
+        ///   - Module transition: FUN_00501fa0 @ 0x00501fa0 handles module loading and "Mod_Transition" script execution
+        ///   - Module state: "Mod_Transition" @ 0x007be8f0, "ModuleName" @ 0x007bde2c
         /// - nwmain.exe (Aurora): Similar function but different function ID, uses Module.ifo format
+        ///   - Module loading: CNWSModule::LoadModule (needs Ghidra address verification)
+        ///   - Module transition: Similar pattern but uses Module.ifo and HAK files
         /// - daorigins.exe (Eclipse): Different architecture (UnrealScript), no direct equivalent
+        ///   - Uses UnrealScript LoadModuleMessage and package loading system
         /// - MassEffect.exe (Infinity): Different architecture, level-based instead of module-based
+        ///   - Uses level streaming system instead of discrete module transitions
         /// 
-        /// Ghidra Reverse Engineering Notes (Required for Complete Implementation):
-        /// - swkotor.exe: Function address for StartNewModule implementation (needs verification)
-        /// - swkotor.exe: Movie playback function calls and BIK file loading
-        /// - swkotor.exe: Module transition system function calls and state management
-        /// - swkotor2.exe: Verify identical implementation and function address
-        /// - nwmain.exe: Equivalent function for Aurora engine (different function ID)
-        /// - Cross-engine comparison: Identify common patterns vs engine-specific details
+        /// Implementation Notes:
+        /// - This implementation uses ModuleTransitionSystem.TransitionToModule() which handles the full transition sequence
+        /// - Movie playback is not yet implemented (requires Bink video system integration)
+        /// - ModuleTransitionSystem handles: loading screen, state save/restore, script execution, entity positioning
+        /// - Function returns immediately while transition happens asynchronously in the game loop
         /// </remarks>
         private Variable Func_StartNewModule(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
