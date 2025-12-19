@@ -126,6 +126,16 @@ namespace Andastra.Runtime.Core.Save
         public List<bool> LiveContent { get; set; }
 
         /// <summary>
+        /// Live content entry strings (up to 9 entries: LIVE1-9).
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: FUN_004eb750 @ 0x004eb750
+        /// Original implementation stores LIVE1-9 as string fields in NFO GFF
+        /// These are live content entry strings that correspond to the LIVECONTENT bitmask
+        /// </remarks>
+        public List<string> LiveContentStrings { get; set; }
+
+        /// <summary>
         /// Player character name.
         /// </summary>
         public string PlayerName { get; set; }
@@ -139,6 +149,7 @@ namespace Andastra.Runtime.Core.Save
             PartyState = new PartyState();
             StoryHints = new List<bool>();
             LiveContent = new List<bool>();
+            LiveContentStrings = new List<string>();
         }
     }
 

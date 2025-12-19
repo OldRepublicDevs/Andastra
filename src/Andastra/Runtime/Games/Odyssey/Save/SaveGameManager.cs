@@ -422,9 +422,25 @@ namespace Andastra.Runtime.Games.Odyssey.Save
             SetIntField(root, "LIVECONTENT", liveContent);
             
             // LIVE1-9 - Live content entry strings (up to 9 entries)
-            // Note: SaveGameData doesn't currently have LiveContentStrings property
-            // This would need to be added if live content strings need to be saved
-            // TODO: SIMPLIFIED - For now, we skip this as it's not in the current SaveGameData structure
+            // Based on swkotor2.exe: FUN_004eb750 @ 0x004eb750
+            // Original implementation stores LIVE1-9 as string fields in NFO GFF
+            if (saveData.LiveContentStrings != null)
+            {
+                for (int i = 1; i <= 9; i++)
+                {
+                    string liveField = "LIVE" + i.ToString();
+                    string liveValue = (i - 1 < saveData.LiveContentStrings.Count) ? (saveData.LiveContentStrings[i - 1] ?? "") : "";
+                    SetStringField(root, liveField, liveValue);
+                }
+            }
+            else
+            {
+                // Initialize empty LIVE1-9 fields if LiveContentStrings is null
+                for (int i = 1; i <= 9; i++)
+                {
+                    SetStringField(root, "LIVE" + i.ToString(), "");
+                }
+            }
 
             return gff;
         }
@@ -724,6 +740,82 @@ namespace Andastra.Runtime.Games.Odyssey.Save
             saveData.SaveNumber = GetIntField(root, "SAVENUMBER", 0);
             saveData.CheatUsed = GetIntField(root, "CHEATUSED", 0) != 0;
             saveData.GameplayHint = GetIntField(root, "GAMEPLAYHINT", 0) != 0;
+            
+            // Load STORYHINT0-9
+            if (saveData.StoryHints == null)
+            {
+                saveData.StoryHints = new List<bool>();
+            }
+            for (int i = 0; i < 10; i++)
+            {
+                string hintField = "STORYHINT" + i.ToString();
+                bool hintValue = GetIntField(root, hintField, 0) != 0;
+                if (i < saveData.StoryHints.Count)
+                {
+                    saveData.StoryHints[i] = hintValue;
+                }
+                else
+                {
+                    saveData.StoryHints.Add(hintValue);
+                }
+            }
+            
+            // Load LIVECONTENT bitmask
+            byte liveContentBitmask = (byte)GetIntField(root, "LIVECONTENT", 0);
+            if (saveData.LiveContent == null)
+            {
+                saveData.LiveContent = new List<bool>();
+            }
+            // Parse bitmask to boolean list
+            for (int i = 0; i < 32; i++)
+            {
+                bool isSet = (liveContentBitmask & (1 << (i & 0x1F))) != 0;
+                if (i < saveData.LiveContent.Count)
+                {
+                    saveData.LiveContent[i] = isSet;
+                }
+                else
+                {
+                    saveData.LiveContent.Add(isSet);
+                }
+            }
+            
+            // Load LIVE1-9 strings
+            // Based on swkotor2.exe: FUN_00707290 @ 0x00707290 loads LIVE1-9 from NFO GFF
+            if (saveData.LiveContentStrings == null)
+            {
+                saveData.LiveContentStrings = new List<string>();
+            }
+            for (int i = 1; i <= 9; i++)
+            {
+                string liveField = "LIVE" + i.ToString();
+                string liveValue = GetStringField(root, liveField, "");
+                if (i - 1 < saveData.LiveContentStrings.Count)
+                {
+                    saveData.LiveContentStrings[i - 1] = liveValue;
+                }
+                else
+                {
+                    saveData.LiveContentStrings.Add(liveValue);
+                }
+            }
+            
+            // Load TIMESTAMP (FileTime)
+            long timestamp = GetInt64Field(root, "TIMESTAMP", 0);
+            if (timestamp != 0)
+            {
+                try
+                {
+                    saveData.SaveTime = DateTime.FromFileTime(timestamp);
+                }
+                catch (ArgumentOutOfRangeException)
+                {
+                    saveData.SaveTime = DateTime.Now;
+                }
+            }
+            
+            // Load PCNAME
+            saveData.PlayerName = GetStringField(root, "PCNAME", "");
         }
 
         private GlobalVariableState LoadGlobalVarsGFF(GFF gff)
