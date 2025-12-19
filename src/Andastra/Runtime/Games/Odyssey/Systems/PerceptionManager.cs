@@ -446,6 +446,15 @@ namespace Andastra.Runtime.Engines.Odyssey.Systems
         /// <summary>
         /// Registers an entity for perception tracking (base class implementation).
         /// </summary>
+        /// <remarks>
+        /// Odyssey-specific implementation:
+        /// - Based on swkotor2.exe: FUN_005fb0f0 @ 0x005fb0f0 (perception update system)
+        /// - Located via string references: "PerceptionData" @ 0x007bf6c4, "PerceptionList" @ 0x007bf6d4
+        /// - Original implementation: Initializes perception tracking data structure when creature is created
+        /// - Perception data is initialized proactively to ensure proper state before first update cycle
+        /// - Links perception component to perception manager for centralized tracking
+        /// - Initializes last perceived entity tracking for GetLastPerceived engine API
+        /// </remarks>
         public override void RegisterEntity(IEntity entity)
         {
             if (entity == null || entity.ObjectType != ObjectType.Creature)
@@ -453,8 +462,34 @@ namespace Andastra.Runtime.Engines.Odyssey.Systems
                 return;
             }
 
-            // Perception data is created on-demand in UpdateCreaturePerception
-            // TODO: STUB - This method is a no-op for Odyssey implementation
+            // Initialize perception data structure proactively
+            // This ensures proper state before the first update cycle
+            if (!_perceptionData.ContainsKey(entity.ObjectId))
+            {
+                PerceptionData data = new PerceptionData();
+                _perceptionData[entity.ObjectId] = data;
+            }
+
+            // Initialize last perceived entity tracking (for GetLastPerceived engine API)
+            // Based on swkotor2.exe: FUN_005fb0f0 @ 0x005fb0f0 - tracks last perceived entity
+            // Based on nwmain.exe: ExecuteCommandGetLastPerceived @ 0x14052a6c0 - retrieves last perceived entity
+            if (!_lastPerceivedEntity.ContainsKey(entity.ObjectId))
+            {
+                _lastPerceivedEntity[entity.ObjectId] = null;
+            }
+
+            if (!_lastPerceptionWasHeard.ContainsKey(entity.ObjectId))
+            {
+                _lastPerceptionWasHeard[entity.ObjectId] = false;
+            }
+
+            // Link perception component to perception manager if it exists
+            // This allows the component to use centralized perception tracking
+            IPerceptionComponent perception = entity.GetComponent<IPerceptionComponent>();
+            if (perception != null && perception is Components.PerceptionComponent odysseyPerception)
+            {
+                odysseyPerception.SetPerceptionManager(this);
+            }
         }
 
         /// <summary>
