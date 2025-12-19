@@ -297,40 +297,40 @@ namespace Andastra.Game.GUI
             // Window Size
             var windowWidthNumeric = new NumericStepper { Value = _settings.WindowWidth ?? 1280, MinValue = 320, MaxValue = 7680 };
             _controlMap["WindowWidth"] = windowWidthNumeric;
-            layout.Rows.Add(CreateLabeledControl("Width:", windowWidthNumeric, ref row));
+            layout.Rows.Add(CreateLabeledControl("Width:", windowWidthNumeric, ref row, "WindowWidth"));
             
             var windowHeightNumeric = new NumericStepper { Value = _settings.WindowHeight ?? 720, MinValue = 240, MaxValue = 4320 };
             _controlMap["WindowHeight"] = windowHeightNumeric;
-            layout.Rows.Add(CreateLabeledControl("Height:", windowHeightNumeric, ref row));
+            layout.Rows.Add(CreateLabeledControl("Height:", windowHeightNumeric, ref row, "WindowHeight"));
 
             // Fullscreen
             var fullscreenCheck = new CheckBox { Checked = _settings.WindowFullscreen ?? false };
             _controlMap["WindowFullscreen"] = fullscreenCheck;
-            layout.Rows.Add(CreateLabeledControl("Fullscreen:", fullscreenCheck, ref row));
+            layout.Rows.Add(CreateLabeledControl("Fullscreen:", fullscreenCheck, ref row, "WindowFullscreen"));
 
             // Mouse Visible
             var mouseVisibleCheck = new CheckBox { Checked = _settings.WindowIsMouseVisible ?? true };
             _controlMap["WindowIsMouseVisible"] = mouseVisibleCheck;
-            layout.Rows.Add(CreateLabeledControl("Mouse Visible:", mouseVisibleCheck, ref row));
+            layout.Rows.Add(CreateLabeledControl("Mouse Visible:", mouseVisibleCheck, ref row, "WindowIsMouseVisible"));
 
             // MonoGame-specific window settings
             if (_selectedBackend == GraphicsBackendType.MonoGame)
             {
                 var syncVerticalRetrace = new CheckBox { Checked = _settings.MonoGameSynchronizeWithVerticalRetrace ?? true };
                 _controlMap["MonoGameSynchronizeWithVerticalRetrace"] = syncVerticalRetrace;
-                layout.Rows.Add(CreateLabeledControl("VSync:", syncVerticalRetrace, ref row));
+                layout.Rows.Add(CreateLabeledControl("VSync:", syncVerticalRetrace, ref row, "MonoGameSynchronizeWithVerticalRetrace"));
 
                 var preferMultiSampling = new CheckBox { Checked = _settings.MonoGamePreferMultiSampling ?? false };
                 _controlMap["MonoGamePreferMultiSampling"] = preferMultiSampling;
-                layout.Rows.Add(CreateLabeledControl("Prefer Multi-Sampling:", preferMultiSampling, ref row));
+                layout.Rows.Add(CreateLabeledControl("Prefer Multi-Sampling:", preferMultiSampling, ref row, "MonoGamePreferMultiSampling"));
 
                 var preferHalfPixelOffset = new CheckBox { Checked = _settings.MonoGamePreferHalfPixelOffset ?? false };
                 _controlMap["MonoGamePreferHalfPixelOffset"] = preferHalfPixelOffset;
-                layout.Rows.Add(CreateLabeledControl("Prefer Half Pixel Offset:", preferHalfPixelOffset, ref row));
+                layout.Rows.Add(CreateLabeledControl("Prefer Half Pixel Offset:", preferHalfPixelOffset, ref row, "MonoGamePreferHalfPixelOffset"));
 
                 var hardwareModeSwitch = new CheckBox { Checked = _settings.MonoGameHardwareModeSwitch ?? false };
                 _controlMap["MonoGameHardwareModeSwitch"] = hardwareModeSwitch;
-                layout.Rows.Add(CreateLabeledControl("Hardware Mode Switch:", hardwareModeSwitch, ref row));
+                layout.Rows.Add(CreateLabeledControl("Hardware Mode Switch:", hardwareModeSwitch, ref row, "MonoGameHardwareModeSwitch"));
             }
 
             // Stride-specific window settings
@@ -365,7 +365,7 @@ namespace Andastra.Game.GUI
             cullModeCombo.Items.Add("CullCounterClockwiseFace");
             cullModeCombo.SelectedValue = _settings.RasterizerCullMode?.ToString() ?? "CullCounterClockwiseFace";
             _controlMap["RasterizerCullMode"] = cullModeCombo;
-            layout.Rows.Add(CreateLabeledControl("Cull Mode:", cullModeCombo, ref row));
+            layout.Rows.Add(CreateLabeledControl("Cull Mode:", cullModeCombo, ref row, "RasterizerCullMode"));
 
             // Fill Mode
             var fillModeCombo = new DropDown();
@@ -373,7 +373,7 @@ namespace Andastra.Game.GUI
             fillModeCombo.Items.Add("WireFrame");
             fillModeCombo.SelectedValue = _settings.RasterizerFillMode?.ToString() ?? "Solid";
             _controlMap["RasterizerFillMode"] = fillModeCombo;
-            layout.Rows.Add(CreateLabeledControl("Fill Mode:", fillModeCombo, ref row));
+            layout.Rows.Add(CreateLabeledControl("Fill Mode:", fillModeCombo, ref row, "RasterizerFillMode"));
 
             // Depth Bias Enabled
             var depthBiasEnabledCheck = new CheckBox { Checked = _settings.RasterizerDepthBiasEnabled ?? false };
@@ -408,7 +408,7 @@ namespace Andastra.Game.GUI
             // Multi-Sample Anti-Alias
             var msaaCheck = new CheckBox { Checked = _settings.RasterizerMultiSampleAntiAlias ?? false };
             _controlMap["RasterizerMultiSampleAntiAlias"] = msaaCheck;
-            layout.Rows.Add(CreateLabeledControl("Multi-Sample Anti-Alias:", msaaCheck, ref row));
+            layout.Rows.Add(CreateLabeledControl("Multi-Sample Anti-Alias:", msaaCheck, ref row, "RasterizerMultiSampleAntiAlias"));
 
             layout.Rows.Add(new TableRow(new TableCell(null, true)));
 
@@ -717,7 +717,7 @@ namespace Andastra.Game.GUI
             }
             filterCombo.SelectedValue = _settings.SamplerFilter?.ToString() ?? "Linear";
             _controlMap["SamplerFilter"] = filterCombo;
-            layout.Rows.Add(CreateLabeledControl("Filter:", filterCombo, ref row));
+            layout.Rows.Add(CreateLabeledControl("Filter:", filterCombo, ref row, "SamplerFilter"));
 
             // Max Anisotropy
             var maxAnisotropyNumeric = new NumericStepper
@@ -727,7 +727,7 @@ namespace Andastra.Game.GUI
                 MaxValue = 16
             };
             _controlMap["SamplerMaxAnisotropy"] = maxAnisotropyNumeric;
-            layout.Rows.Add(CreateLabeledControl("Max Anisotropy:", maxAnisotropyNumeric, ref row));
+            layout.Rows.Add(CreateLabeledControl("Max Anisotropy:", maxAnisotropyNumeric, ref row, "SamplerMaxAnisotropy"));
 
             // Max Mip Level
             var maxMipLevelNumeric = new NumericStepper
@@ -775,12 +775,12 @@ namespace Andastra.Game.GUI
             // Lighting Enabled
             var lightingEnabledCheck = new CheckBox { Checked = _settings.BasicEffectLightingEnabled ?? false };
             _controlMap["BasicEffectLightingEnabled"] = lightingEnabledCheck;
-            layout.Rows.Add(CreateLabeledControl("Lighting Enabled:", lightingEnabledCheck, ref row));
+            layout.Rows.Add(CreateLabeledControl("Lighting Enabled:", lightingEnabledCheck, ref row, "BasicEffectLightingEnabled"));
 
             // Texture Enabled
             var textureEnabledCheck = new CheckBox { Checked = _settings.BasicEffectTextureEnabled ?? false };
             _controlMap["BasicEffectTextureEnabled"] = textureEnabledCheck;
-            layout.Rows.Add(CreateLabeledControl("Texture Enabled:", textureEnabledCheck, ref row));
+            layout.Rows.Add(CreateLabeledControl("Texture Enabled:", textureEnabledCheck, ref row, "BasicEffectTextureEnabled"));
 
             // Ambient Light Color
             var ambientColorLayout = CreateColorVector3Layout(
@@ -903,7 +903,7 @@ namespace Andastra.Game.GUI
                 Increment = 0.001
             };
             _controlMap["SpatialAudioDopplerFactor"] = dopplerFactorNumeric;
-            layout.Rows.Add(CreateLabeledControl("Doppler Factor:", dopplerFactorNumeric, ref row));
+            layout.Rows.Add(CreateLabeledControl("Doppler Factor:", dopplerFactorNumeric, ref row, "SpatialAudioDopplerFactor"));
 
             // Speed of Sound
             var speedOfSoundNumeric = new NumericStepper
@@ -914,7 +914,7 @@ namespace Andastra.Game.GUI
                 DecimalPlaces = 2
             };
             _controlMap["SpatialAudioSpeedOfSound"] = speedOfSoundNumeric;
-            layout.Rows.Add(CreateLabeledControl("Speed of Sound (m/s):", speedOfSoundNumeric, ref row));
+            layout.Rows.Add(CreateLabeledControl("Speed of Sound (m/s):", speedOfSoundNumeric, ref row, "SpatialAudioSpeedOfSound"));
 
             layout.Rows.Add(new TableRow(new TableCell(null, true)));
 
