@@ -53,6 +53,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
         private readonly IScriptGlobals _globals;
         private readonly Installation _installation;
         private readonly Loading.ModuleLoader _moduleLoader;
+        private readonly Data.GameDataManager _gameDataManager;
 
         // Game systems
         private readonly TriggerSystem _triggerSystem;
@@ -213,8 +214,8 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
             // Based on swkotor2.exe: GameDataManager provides access to 2DA tables (appearance.2da, etc.)
             // Located via string references: "2DAName" @ 0x007c3980, " 2DA file" @ 0x007c4674
             // Original implementation: GameDataManager loads and caches 2DA tables from installation
-            var gameDataManager = new Data.GameDataManager(_installation);
-            var gameDataProvider = new Data.OdysseyGameDataProvider(gameDataManager);
+            _gameDataManager = new Data.GameDataManager(_installation);
+            var gameDataProvider = new Data.OdysseyGameDataProvider(_gameDataManager);
             _world.GameDataProvider = gameDataProvider;
 
             // Initialize game systems
@@ -846,15 +847,14 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
                 {
                     // Queue ActionCastSpellAtObject action (target self for now)
                     // Based on swkotor2.exe: Spell casting from quick slots
+                    // Located via string references: Quick slot system handles spell casting
                     // Original implementation: Quick slot ability usage casts spell at self or selected target
+                    // Spell data (cast time, Force point cost, effects) is looked up from spells.2da via GameDataManager
                     Core.Interfaces.Components.IActionQueueComponent actionQueue = _playerEntity.GetComponent<Core.Interfaces.Components.IActionQueueComponent>();
                     if (actionQueue != null)
                     {
-                        // Get GameDataManager for spell data lookup
-                        // TODO: GameDataManager should be accessible from GameSession or passed as dependency
-                        object gameDataManager = null;
-
-                        var castAction = new Core.Actions.ActionCastSpellAtObject(abilityId, _playerEntity.ObjectId, gameDataManager);
+                        // Use GameDataManager for spell data lookup (spell cast time, Force point cost, effects)
+                        var castAction = new Core.Actions.ActionCastSpellAtObject(abilityId, _playerEntity.ObjectId, _gameDataManager);
                         actionQueue.Add(castAction);
                     }
                 }
