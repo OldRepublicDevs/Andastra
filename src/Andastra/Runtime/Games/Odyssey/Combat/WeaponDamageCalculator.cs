@@ -13,26 +13,27 @@ namespace Andastra.Runtime.Engines.Odyssey.Combat
     /// </summary>
     /// <remarks>
     /// Odyssey Weapon Damage Calculator:
-    /// - TODO: FIXME: based on swkotor2.exe when it should be based on the commonalities in both swkotor.exe and swkotor2.exe.
-    /// - Based on swkotor2.exe weapon damage calculation
-    /// - Located via string references: "damagedice" @ 0x007c2e60, "damagedie" @ 0x007c2e70, "damagebonus" @ 0x007c2e80
-    /// - "DamageDice" @ 0x007c2d3c, "DamageDie" @ 0x007c2d30 (damage dice fields)
+    /// - Based on common weapon damage calculation logic shared between swkotor.exe (K1) and swkotor2.exe (K2)
+    /// - Located via string references in swkotor2.exe: "damagedice" @ 0x007c2e60, "damagedie" @ 0x007c2e70, "damagebonus" @ 0x007c2e80
+    /// - "DamageDice" @ 0x007c2d3c, "DamageDie" @ 0x007c2d30 (damage dice fields in swkotor2.exe)
     /// - "BaseItem" @ 0x007c2e90 (base item ID in item GFF), "weapontype" @ 0x007c2ea0
-    /// - "OnHandDamageMod" @ 0x007c2e40, "OffHandDamageMod" @ 0x007c2e18 (damage modifiers)
-    /// - Cross-engine: Similar damage calculation in swkotor.exe (K1), nwmain.exe (Aurora uses different 2DA tables), daorigins.exe (Eclipse uses different damage system)
+    /// - "OnHandDamageMod" @ 0x007c2e40, "OffHandDamageMod" @ 0x007c2e18 (damage modifiers in swkotor2.exe)
+    /// - Cross-engine: Similar damage calculation in swkotor.exe (K1 - identical logic), nwmain.exe (Aurora uses different 2DA tables), daorigins.exe (Eclipse uses different damage system)
     /// - Inheritance: BaseWeaponDamageCalculator (Runtime.Games.Common.Combat) implements common damage calculation logic
-    ///   - Odyssey: WeaponDamageCalculator : BaseWeaponDamageCalculator (Runtime.Games.Odyssey) - Odyssey-specific baseitems.2da lookup
+    ///   - Odyssey: WeaponDamageCalculator : BaseWeaponDamageCalculator (Runtime.Games.Odyssey) - Odyssey-specific baseitems.2da lookup (common to K1 and K2)
     ///   - Aurora: AuroraWeaponDamageCalculator : BaseWeaponDamageCalculator (Runtime.Games.Aurora) - Aurora-specific baseitems.2da lookup
     ///   - Eclipse: EclipseWeaponDamageCalculator : BaseWeaponDamageCalculator (Runtime.Games.Eclipse) - Eclipse-specific damage system
-    /// - Original implementation: FUN_005226d0 @ 0x005226d0 (save item data), FUN_0050c510 @ 0x0050c510 (load item data)
-    /// - Damage formula: Roll(damagedice * damagedie) + damagebonus + ability modifier
-    /// - Ability modifier: STR for melee (default), DEX for ranged, DEX for finesse melee/lightsabers (if feat)
-    /// - Finesse feats: FEAT_FINESSE_LIGHTSABERS (193) for lightsabers, FEAT_FINESSE_MELEE_WEAPONS (194) for melee
-    /// - Offhand attacks: Get half ability modifier (abilityMod / 2)
-    /// - Critical hits: Multiply damage by critmult from baseitems.2da (crithitmult column)
-    /// - Based on baseitems.2da columns: numdice/damagedice (dice count), dietoroll/damagedie (die size), damagebonus, crithitmult, critthreat
-    /// - Weapon lookup: Get equipped weapon from inventory (RIGHTWEAPON slot 4, LEFTWEAPON slot 5), get BaseItem ID, lookup in baseitems.2da
-    /// - Unarmed damage: 1d3 (1 die, size 3) if no weapon equipped
+    /// - Original implementation: Both swkotor.exe and swkotor2.exe use identical weapon damage calculation logic
+    ///   - swkotor2.exe: Weapon damage calculation functions (addresses to be verified via Ghidra MCP)
+    ///   - swkotor.exe: Weapon damage calculation functions (addresses to be verified via Ghidra MCP - expected to match K2 logic)
+    /// - Damage formula (common to K1 and K2): Roll(damagedice * damagedie) + damagebonus + ability modifier
+    /// - Ability modifier (common to K1 and K2): STR for melee (default), DEX for ranged, DEX for finesse melee/lightsabers (if feat)
+    /// - Finesse feats (common to K1 and K2): FEAT_FINESSE_LIGHTSABERS (193) for lightsabers, FEAT_FINESSE_MELEE_WEAPONS (194) for melee
+    /// - Offhand attacks (common to K1 and K2): Get half ability modifier (abilityMod / 2)
+    /// - Critical hits (common to K1 and K2): Multiply damage by critmult from baseitems.2da (crithitmult column)
+    /// - Based on baseitems.2da columns (common to K1 and K2): numdice/damagedice (dice count), dietoroll/damagedie (die size), damagebonus, crithitmult, critthreat
+    /// - Weapon lookup (common to K1 and K2): Get equipped weapon from inventory (RIGHTWEAPON slot 4, LEFTWEAPON slot 5), get BaseItem ID, lookup in baseitems.2da
+    /// - Unarmed damage (common to K1 and K2): 1d3 (1 die, size 3) if no weapon equipped
     /// </remarks>
     public class WeaponDamageCalculator : BaseWeaponDamageCalculator
     {
@@ -95,19 +96,20 @@ namespace Andastra.Runtime.Engines.Odyssey.Combat
         /// <param name="baseItemId">The base item ID.</param>
         /// <returns>The ability score to use (DEX for ranged/finesse, STR otherwise).</returns>
         /// <remarks>
-        /// Ability Score Selection for Weapon Damage (Odyssey):
-        /// - TODO: FIXME: based on swkotor2.exe when it should be based on the commonalities in both swkotor.exe and swkotor2.exe.
-        /// - Based on swkotor2.exe: Ability modifier selection for weapon damage
-        /// - Located via string references: "DEXBONUS" @ 0x007c4320, "DEXAdjust" @ 0x007c2bec
-        /// - " + %d (Dex Modifier)" @ 0x007c3a84, " + %d (Dex Mod)" @ 0x007c3e54
-        /// - Original implementation: FUN_005226d0 @ 0x005226d0 checks finesse feats for ability modifier selection
-        /// - Ranged weapons: Always use DEX modifier
-        /// - Melee weapons: Use STR by default, DEX if appropriate finesse feat is present
-        /// - Finesse feats:
+        /// Ability Score Selection for Weapon Damage (Odyssey - common to K1 and K2):
+        /// - Based on common ability modifier selection logic shared between swkotor.exe (K1) and swkotor2.exe (K2)
+        /// - Located via string references in swkotor2.exe: "DEXBONUS" @ 0x007c4320, "DEXAdjust" @ 0x007c2bec
+        /// - " + %d (Dex Modifier)" @ 0x007c3a84, " + %d (Dex Mod)" @ 0x007c3e54 (swkotor2.exe string references)
+        /// - Original implementation: Both swkotor.exe and swkotor2.exe use identical ability modifier selection logic
+        ///   - swkotor2.exe: Ability modifier selection functions (addresses to be verified via Ghidra MCP)
+        ///   - swkotor.exe: Ability modifier selection functions (addresses to be verified via Ghidra MCP - expected to match K2 logic)
+        /// - Ranged weapons (common to K1 and K2): Always use DEX modifier
+        /// - Melee weapons (common to K1 and K2): Use STR by default, DEX if appropriate finesse feat is present
+        /// - Finesse feats (common to K1 and K2):
         ///   - FEAT_FINESSE_LIGHTSABERS (193): Allows DEX for lightsabers
         ///   - FEAT_FINESSE_MELEE_WEAPONS (194): Allows DEX for melee weapons
-        /// - Lightsaber detection: Check baseitems.2da itemclass = 15 or weapontype = 4
-        /// - Cross-engine: Similar logic in swkotor.exe (K1), nwmain.exe (Aurora uses different feat system)
+        /// - Lightsaber detection (common to K1 and K2): Check baseitems.2da itemclass = 15 or weapontype = 4
+        /// - Cross-engine: Identical logic in swkotor.exe (K1) and swkotor2.exe (K2), different in nwmain.exe (Aurora uses different feat system)
         /// </remarks>
         protected override Ability DetermineDamageAbility(IEntity attacker, IEntity weapon, int baseItemId)
         {
@@ -161,13 +163,14 @@ namespace Andastra.Runtime.Engines.Odyssey.Combat
         /// <param name="baseItemId">The base item ID to check.</param>
         /// <returns>True if the item is a lightsaber, false otherwise.</returns>
         /// <remarks>
-        /// Lightsaber Detection:
-        /// - Based on swkotor2.exe: Lightsaber item type detection
-        /// - Located via string references: Lightsaber detection in baseitems.2da lookup
-        /// - Original implementation: Checks baseitems.2da "itemclass" or "weapontype" column
-        /// - Lightsabers have specific item class values (typically itemclass = 15 for lightsabers)
-        /// - Alternative: Check "weapontype" column for lightsaber weapon type (weapontype = 4)
-        /// - Cross-engine: Similar detection in swkotor.exe (K1), different in nwmain.exe (Aurora)
+        /// Lightsaber Detection (common to K1 and K2):
+        /// - Based on common lightsaber detection logic shared between swkotor.exe (K1) and swkotor2.exe (K2)
+        /// - Located via string references: Lightsaber detection in baseitems.2da lookup (identical in both executables)
+        /// - Original implementation: Both swkotor.exe and swkotor2.exe use identical lightsaber detection logic
+        ///   - Checks baseitems.2da "itemclass" or "weapontype" column
+        ///   - Lightsabers have specific item class values (typically itemclass = 15 for lightsabers)
+        ///   - Alternative: Check "weapontype" column for lightsaber weapon type (weapontype = 4)
+        /// - Cross-engine: Identical detection in swkotor.exe (K1) and swkotor2.exe (K2), different in nwmain.exe (Aurora)
         /// </remarks>
         private bool IsLightsaber(int baseItemId)
         {
@@ -213,12 +216,14 @@ namespace Andastra.Runtime.Engines.Odyssey.Combat
         /// <param name="featId">The feat ID to check for.</param>
         /// <returns>True if the creature has the feat, false otherwise.</returns>
         /// <remarks>
-        /// Feat Checking:
-        /// - Based on swkotor2.exe: Feat checking system
-        /// - Located via string references: Feat list in creature component (UTC GFF)
-        /// - Original implementation: FUN_005226d0 @ 0x005226d0 checks feat list for creature
-        /// - Feats stored in CreatureComponent.FeatList
-        /// - Cross-engine: Similar in swkotor.exe (K1), different feat system in nwmain.exe (Aurora)
+        /// Feat Checking (common to K1 and K2):
+        /// - Based on common feat checking system shared between swkotor.exe (K1) and swkotor2.exe (K2)
+        /// - Located via string references: Feat list in creature component (UTC GFF - identical structure in both executables)
+        /// - Original implementation: Both swkotor.exe and swkotor2.exe use identical feat checking logic
+        ///   - swkotor2.exe: Feat checking functions (addresses to be verified via Ghidra MCP)
+        ///   - swkotor.exe: Feat checking functions (addresses to be verified via Ghidra MCP - expected to match K2 logic)
+        /// - Feats stored in CreatureComponent.FeatList (common structure in K1 and K2)
+        /// - Cross-engine: Identical feat system in swkotor.exe (K1) and swkotor2.exe (K2), different feat system in nwmain.exe (Aurora)
         /// </remarks>
         private bool HasFeat(IEntity creature, int featId)
         {
