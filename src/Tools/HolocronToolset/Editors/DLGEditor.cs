@@ -1109,11 +1109,51 @@ namespace HolocronToolset.Editors
 
         /// <summary>
         /// Adds a child to the selected item.
-        /// Matching PyKotor implementation: self.model.add_child_to_item(selected_item)
+        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:2021-2138
+        /// Original: self.model.add_child_to_item(selected_item)
         /// </summary>
         private void AddChildToSelectedItem()
         {
-            // TODO: PLACEHOLDER - Implement add_child_to_item when DLGModel tree structure is implemented
+            if (_dialogTree?.SelectedItem == null)
+            {
+                return;
+            }
+
+            // Get selected item from tree
+            DLGStandardItem selectedItem = null;
+            var treeSelectedItem = _dialogTree.SelectedItem;
+            if (treeSelectedItem is TreeViewItem treeItem && treeItem.Tag is DLGStandardItem dlgItem)
+            {
+                selectedItem = dlgItem;
+            }
+            else if (treeSelectedItem is DLGStandardItem dlgItemDirect)
+            {
+                selectedItem = dlgItemDirect;
+            }
+
+            if (selectedItem == null || selectedItem.Link == null)
+            {
+                return;
+            }
+
+            // Add child using the model
+            DLGStandardItem newChildItem = _model.AddChildToItem(selectedItem, null);
+
+            if (newChildItem == null || newChildItem.Link == null)
+            {
+                return;
+            }
+
+            // Create action for undo/redo
+            int childIndex = selectedItem.Link.Node != null ? selectedItem.Link.Node.Links.IndexOf(newChildItem.Link) : -1;
+            var action = new AddChildToItemAction(selectedItem, newChildItem, newChildItem.Link, childIndex);
+            _actionHistory.Apply(action);
+
+            // Update tree view to show the new child
+            UpdateTreeView();
+
+            // Select the newly added child in the tree view
+            SelectTreeViewItem(newChildItem);
         }
 
         /// <summary>
@@ -1216,7 +1256,33 @@ namespace HolocronToolset.Editors
         /// </summary>
         private void DeleteNodeEverywhere()
         {
-            // TODO: PLACEHOLDER - Implement delete_node_everywhere when DLGModel tree structure is implemented
+            if (_dialogTree?.SelectedItem == null)
+            {
+                return;
+            }
+
+            // Get selected item from tree
+            DLGLink link = null;
+            var selectedItem = _dialogTree.SelectedItem;
+            if (selectedItem is TreeViewItem treeItem && treeItem.Tag is DLGStandardItem dlgItem)
+            {
+                link = dlgItem?.Link;
+            }
+            else if (selectedItem is DLGStandardItem dlgItemDirect)
+            {
+                link = dlgItemDirect?.Link;
+            }
+
+            if (link?.Node == null)
+            {
+                return;
+            }
+
+            // Delete the node everywhere using the model
+            _model.DeleteNodeEverywhere(link.Node);
+            
+            // Update tree view after deletion
+            UpdateTreeView();
         }
 
         /// <summary>
@@ -1281,6 +1347,25 @@ namespace HolocronToolset.Editors
         /// Gets all child items.
         /// </summary>
         public IReadOnlyList<DLGStandardItem> Children => _children;
+
+        /// <summary>
+        /// Removes a child item from this item.
+        /// </summary>
+        /// <param name="child">The child item to remove.</param>
+        /// <returns>True if the child was removed, false if it was not found.</returns>
+        public bool RemoveChild(DLGStandardItem child)
+        {
+            if (child == null)
+            {
+                return false;
+            }
+            if (_children.Remove(child))
+            {
+                child._parent = null;
+                return true;
+            }
+            return false;
+        }
 
         /// <summary>
         /// Initializes a new instance of DLGStandardItem with the specified link.
@@ -1696,6 +1781,159 @@ namespace HolocronToolset.Editors
                 
                 // Recursively load children of this child
                 LoadDlgItemRec(childItem);
+            }
+        }
+
+        /// <summary>
+        /// Removes all occurrences of a node and all links to it from the model and CoreDlg.
+        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/model.py:1017-1049
+        /// Original: def delete_node_everywhere(self, node: DLGNode):
+        /// </summary>
+        /// <param name="nodeToRemove">The node to remove everywhere.</param>
+        public void DeleteNodeEverywhere(DLGNode nodeToRemove)
+        {
+            if (nodeToRemove == null || _editor == null || _editor.CoreDlg == null)
+            {
+                return;
+            }
+
+            // First, remove all links from CoreDlg that point to this node
+            // This includes links from all nodes' Links collections and from Starters
+            RemoveLinksToNode(nodeToRemove);
+
+            // Recursively remove items from the model tree
+            RemoveLinksRecursive(nodeToRemove, null);
+
+            // Update tree view if editor is available
+            if (_editor != null)
+            {
+                _editor.UpdateTreeView();
+            }
+        }
+
+        /// <summary>
+        /// Recursively removes links to a node from the model tree.
+        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/model.py:1025-1046
+        /// Original: def remove_links_recursive(node_to_remove: DLGNode, parent_item: DLGStandardItem | DLGStandardItemModel):
+        /// </summary>
+        /// <param name="nodeToRemove">The node to remove.</param>
+        /// <param name="parentItem">The parent item to search in, or null to search root items.</param>
+        private void RemoveLinksRecursive(DLGNode nodeToRemove, DLGStandardItem parentItem)
+        {
+            if (nodeToRemove == null)
+            {
+                return;
+            }
+
+            // Get the list of children to iterate over
+            List<DLGStandardItem> children;
+            if (parentItem == null)
+            {
+                // Search root items
+                children = new List<DLGStandardItem>(_rootItems);
+            }
+            else
+            {
+                // Search children of parent item
+                children = new List<DLGStandardItem>(parentItem.Children);
+            }
+
+            // Iterate in reverse to safely remove items while iterating
+            for (int i = children.Count - 1; i >= 0; i--)
+            {
+                var childItem = children[i];
+                if (childItem == null)
+                {
+                    continue;
+                }
+
+                var childLink = childItem.Link;
+                if (childLink == null)
+                {
+                    continue;
+                }
+
+                // Check if this child item's node is the one we want to remove
+                if (childLink.Node == nodeToRemove)
+                {
+                    // First, recursively remove all children of this item
+                    RemoveLinksRecursive(childLink.Node, childItem);
+
+                    // Remove the link from the parent node's Links collection
+                    if (parentItem != null && parentItem.Link != null && parentItem.Link.Node != null)
+                    {
+                        parentItem.Link.Node.Links.Remove(childLink);
+                    }
+
+                    // Remove the item from the model
+                    if (parentItem == null)
+                    {
+                        // Remove from root items
+                        _rootItems.Remove(childItem);
+                    }
+                    else
+                    {
+                        // Remove from parent's children
+                        parentItem.RemoveChild(childItem);
+                    }
+                }
+                else
+                {
+                    // Continue searching recursively in this child
+                    RemoveLinksRecursive(nodeToRemove, childItem);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Removes all links from CoreDlg that point to the specified node.
+        /// This includes links from Starters and from all nodes' Links collections.
+        /// </summary>
+        /// <param name="nodeToRemove">The node to remove links to.</param>
+        private void RemoveLinksToNode(DLGNode nodeToRemove)
+        {
+            if (nodeToRemove == null || _editor == null || _editor.CoreDlg == null)
+            {
+                return;
+            }
+
+            // Remove from Starters
+            for (int i = _editor.CoreDlg.Starters.Count - 1; i >= 0; i--)
+            {
+                if (_editor.CoreDlg.Starters[i]?.Node == nodeToRemove)
+                {
+                    _editor.CoreDlg.Starters.RemoveAt(i);
+                }
+            }
+
+            // Remove links from all entries
+            foreach (var entry in _editor.CoreDlg.AllEntries())
+            {
+                if (entry != null && entry.Links != null)
+                {
+                    for (int i = entry.Links.Count - 1; i >= 0; i--)
+                    {
+                        if (entry.Links[i]?.Node == nodeToRemove)
+                        {
+                            entry.Links.RemoveAt(i);
+                        }
+                    }
+                }
+            }
+
+            // Remove links from all replies
+            foreach (var reply in _editor.CoreDlg.AllReplies())
+            {
+                if (reply != null && reply.Links != null)
+                {
+                    for (int i = reply.Links.Count - 1; i >= 0; i--)
+                    {
+                        if (reply.Links[i]?.Node == nodeToRemove)
+                        {
+                            reply.Links.RemoveAt(i);
+                        }
+                    }
+                }
             }
         }
     }
