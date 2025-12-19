@@ -45,27 +45,37 @@ namespace Andastra.Runtime.Games.Aurora.Collision
         /// <returns>The creature's bounding box.</returns>
         /// <remarks>
         /// Based on nwmain.exe reverse engineering via Ghidra MCP:
-        /// - CNWSCreature::GetUseRange @ 0x140396480 accesses bounding box via: `*(float *)(*(longlong *)(this + 0x530) + 8)`
-        /// - Radius stored at offset +8 from bounding box pointer: `*param_3 = *(float *)(*(longlong *)(this + 0x530) + 8);` (line 35)
-        /// - Width stored at offset +4: `*param_3 = *(float *)(*(longlong *)(this + 0x530) + 4);` (line 27, default)
+        /// - CNWSCreature::GetUseRange @ 0x140396480:
+        ///   - Line 27: Default radius (width): `*param_3 = *(float *)(*(longlong *)(this + 0x530) + 4);` - width at +4
+        ///   - Line 35: For creatures: `*param_3 = *(float *)(*(longlong *)(this + 0x530) + 8);` - radius at +8
+        ///   - Line 41: Adds two radii: `*param_3 = *(float *)(*(longlong *)(lVar5 + 0x530) + 8) + *param_3;`
+        /// - CNWSArea::NoCreaturesOnLine @ 0x14036ec90 (collision detection):
+        ///   - Line 113: Uses radius: `fVar14 = *(float *)(*(longlong *)(pCVar7 + 0x530) + 8);`
+        ///   - Line 134: Adds two radii: `fVar18 = local_fc + *(float *)(*(longlong *)(pCVar7 + 0x530) + 8);`
+        /// - CNWSCreature::BumpFriends @ 0x140385130 (creature-to-creature collision):
+        ///   - Line 52-53: Adds two radii: `*(float *)(*(longlong *)(this + 0x530) + 8) + DAT_140d83b74 + *(float *)(*(longlong *)(param_1 + 0x530) + 8);`
         /// - CNWSCreature::AIActionCheckMoveToObjectRadius @ 0x1403b4580 calls GetUseRange to get creature radius
         /// - CNWSCreature::AIActionCheckMoveToPointRadius @ 0x1403b5b00 uses radius parameter from action node
-        /// - Gets appearance type from entity structure (accessed via CNWSCreature virtual functions)
-        /// - Looks up hitradius from appearance.2da using C2DA::GetFloatingPoint (same as original NWN)
+        /// - Note: GetUseRange doesn't show appearance type lookup - it directly uses bounding box structure
+        /// - Looks up hitradius from appearance.2da using C2DA::GetFloatingPoint (done elsewhere, not in GetUseRange)
         /// - Default radius: 0.5f (medium creature size) if appearance data unavailable
-        /// - Fallback: Uses size category from appearance.2da if hitradius not available
         /// </remarks>
         protected override CreatureBoundingBox GetCreatureBoundingBox(IEntity entity)
         {
             if (entity == null)
             {
                 // Based on nwmain.exe: Default bounding box for null entity (medium creature size)
+                // CNWSCreature::GetUseRange @ 0x140396480 line 27: Default uses width at +4
+                // For creatures (line 35), uses radius at +8
                 return CreatureBoundingBox.FromRadius(0.5f); // Default radius
             }
 
             // Get appearance type from entity
-            // Based on nwmain.exe: CNWSCreature::GetUseRange gets appearance type from entity structure
-            // Appearance type accessed via CNWSCreature virtual functions or entity properties
+            // Based on nwmain.exe: CNWSCreature::GetUseRange doesn't show appearance type lookup
+            // It directly accesses bounding box structure at offset 0x530
+            // Appearance type lookup is done elsewhere (likely during creature initialization)
+            // Our abstraction: Use GetAppearanceType() which tries IRenderableComponent, then reflection
+            // This matches the behavior but uses high-level API instead of direct memory access
             int appearanceType = -1;
 
             // First, try to get appearance type from IRenderableComponent
@@ -98,20 +108,26 @@ namespace Andastra.Runtime.Games.Aurora.Collision
             }
 
             // Get bounding box dimensions from GameDataProvider
-            // Based on nwmain.exe: CNWSCreature::GetUseRange uses C2DA::GetFloatingPoint to lookup "hitradius" from appearance.2da
+            // Based on nwmain.exe: CNWSCreature::GetUseRange uses bounding box structure directly
+            // The radius at offset +8 is set from appearance.2da hitradius (lookup done elsewhere)
+            // CNWSArea::NoCreaturesOnLine @ 0x14036ec90 uses radius at +8 for collision detection
             // Located via string reference: "hitradius" column in appearance.2da lookup
             float radius = 0.5f; // Default radius (medium creature size)
 
             if (appearanceType >= 0 && entity.World != null && entity.World.GameDataProvider != null)
             {
                 // Based on nwmain.exe: C2DA::GetFloatingPoint accesses "hitradius" column from appearance.2da
+                // This is done during creature initialization, not in GetUseRange
                 // AuroraGameDataProvider.GetCreatureRadius uses AuroraTwoDATableManager to lookup hitradius
                 radius = entity.World.GameDataProvider.GetCreatureRadius(appearanceType, 0.5f);
             }
 
-            // Based on nwmain.exe reverse engineering: Bounding box structure at offset 0x530, radius at offset +8
-            // CNWSCreature::GetUseRange @ 0x140396480 sets radius at: `*param_3 = *(float *)(*(longlong *)(this + 0x530) + 8);`
-            // CNWSCreature::AIActionCheckMoveToObjectRadius @ 0x1403b4580 uses GetUseRange to get radius for movement checks
+            // Based on nwmain.exe reverse engineering: Bounding box structure at offset 0x530
+            // CNWSCreature::GetUseRange @ 0x140396480:
+            // - Line 27: Default uses width at +4: `*param_3 = *(float *)(*(longlong *)(this + 0x530) + 4);`
+            // - Line 35: For creatures uses radius at +8: `*param_3 = *(float *)(*(longlong *)(this + 0x530) + 8);`
+            // CNWSArea::NoCreaturesOnLine @ 0x14036ec90 uses radius at +8: `fVar14 = *(float *)(*(longlong *)(pCVar7 + 0x530) + 8);`
+            // CNWSCreature::BumpFriends @ 0x140385130 adds two radii: radius1 + radius2 + DAT_140d83b74
             // Bounding box uses same radius for width, height, and depth (spherical approximation)
             // Original engine: NWN:EE uses offset 0x530 (same as original NWN), radius at +8, width at +4
             return new CreatureBoundingBox(radius, radius, radius);

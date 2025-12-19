@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using Avalonia.Controls;
 using Andastra.Parsing.Common;
 using Andastra.Parsing.Formats.GFF;
 using Andastra.Parsing.Resource;
@@ -294,7 +296,7 @@ namespace HolocronToolset.Tests.Editors
             // Modify OnAbort script (matching Python: editor.ui.onAbortCombo.set_combo_box_text("test_abort"))
             // Since UI controls are not exposed yet, we modify the CoreDlg directly
             // This tests that the Build() method properly saves the OnAbort field
-            ResRef testAbortScript = ResRef.FromString("test_abort");
+            ResRef testAbortScript = new ResRef("test_abort");
             editor.CoreDlg.OnAbort = testAbortScript;
 
             // Save and verify (matching Python: data, _ = editor.build())
@@ -353,7 +355,7 @@ namespace HolocronToolset.Tests.Editors
             // Modify OnEnd script (matching Python: editor.ui.onEndEdit.set_combo_box_text("test_on_end"))
             // Since UI controls are not exposed yet, we modify the CoreDlg directly
             // This tests that the Build() method properly saves the OnEnd field
-            ResRef testOnEndScript = ResRef.FromString("test_on_end");
+            ResRef testOnEndScript = new ResRef("test_on_end");
             editor.CoreDlg.OnEnd = testOnEndScript;
 
             // Save and verify (matching Python: data, _ = editor.build())

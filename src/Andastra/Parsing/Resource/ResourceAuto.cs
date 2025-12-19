@@ -89,7 +89,8 @@ namespace Andastra.Parsing.Resource
                 }
                 if (ResourceType.FromExtension(resourceExt) == ResourceType.ERF ||
                     ResourceType.FromExtension(resourceExt) == ResourceType.MOD ||
-                    ResourceType.FromExtension(resourceExt) == ResourceType.SAV)
+                    ResourceType.FromExtension(resourceExt) == ResourceType.SAV ||
+                    ResourceType.FromExtension(resourceExt) == ResourceType.HAK)
                 {
                     ERF erf = source is string s4 ? ERFAuto.ReadErf(s4) : ERFAuto.ReadErf(source as byte[]);
                     return ERFAuto.BytesErf(erf);
