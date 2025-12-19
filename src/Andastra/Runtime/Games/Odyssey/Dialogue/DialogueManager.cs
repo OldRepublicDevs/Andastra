@@ -506,6 +506,12 @@ namespace Andastra.Runtime.Engines.Odyssey.Dialogue
             // Execute Script1 (on-enter)
             ExecuteNodeScript(reply.Script1, reply);
 
+            // Process quest fields if present
+            // Based on swkotor2.exe: FUN_005e61d0 @ 0x005e61d0
+            // Called from FUN_005ec340 @ 0x005ec6a9 (dialogue reply processing)
+            // Reply nodes also have quest fields that need processing
+            ProcessQuestFields(reply);
+
             // Get display text
             string text = GetNodeText(reply);
 
@@ -818,9 +824,9 @@ namespace Andastra.Runtime.Engines.Odyssey.Dialogue
         }
 
         /// <summary>
-        /// Processes quest fields from a dialogue entry node.
+        /// Processes quest fields from a dialogue node (entry or reply).
         /// </summary>
-        /// <param name="entry">The dialogue entry node</param>
+        /// <param name="node">The dialogue node (DLGEntry or DLGReply)</param>
         /// <remarks>
         /// Quest Field Processing (swkotor2.exe: FUN_005e61d0 @ 0x005e61d0):
         /// - Called from FUN_005e7cb0 @ 0x005e7f85 (dialogue entry processing)
@@ -843,22 +849,22 @@ namespace Andastra.Runtime.Engines.Odyssey.Dialogue
         ///   - nwmain.exe: Journal system uses different format (JRL files)
         ///   - daorigins.exe: Quest system may differ (needs reverse engineering)
         /// </remarks>
-        private void ProcessQuestFields(DLGEntry entry)
+        private void ProcessQuestFields(DLGNode node)
         {
-            if (entry == null || _journalSystem == null)
+            if (node == null || _journalSystem == null)
             {
                 return;
             }
 
             // Check if quest field is present
-            string questTag = entry.Quest;
+            string questTag = node.Quest;
             if (string.IsNullOrEmpty(questTag))
             {
                 return;
             }
 
             // Get quest entry index (defaults to 0 if not set)
-            int questEntryIndex = entry.QuestEntry ?? 0;
+            int questEntryIndex = node.QuestEntry ?? 0;
 
             // Get current quest entry count
             // Based on swkotor2.exe: FUN_00600c30 - Get quest entry count
@@ -872,14 +878,35 @@ namespace Andastra.Runtime.Engines.Odyssey.Dialogue
             if (questEntryIndex < currentEntryCount)
             {
                 // Update existing entry
-                // Note: JournalSystem doesn't currently support updating entries
-                // For now, we'll add a new entry (matching behavior when entry index >= count)
-                // TODO: Add UpdateEntry method to JournalSystem for proper entry updates
+                // Based on swkotor2.exe: FUN_00601780 - Set quest entry text
+                // Original implementation updates existing entry text and state
                 JournalEntry existingEntry = existingEntries[questEntryIndex];
                 if (existingEntry != null)
                 {
-                    // Entry exists - in original engine this would update it
-                    // For now, we'll just ensure the quest state is set
+                    // Get quest data to determine entry text
+                    QuestData quest = _journalSystem.GetQuest(questTag);
+                    string entryText = string.Empty;
+
+                    if (quest != null)
+                    {
+                        // Get text from quest stage data
+                        QuestStage stage = quest.GetStage(questEntryIndex);
+                        if (stage != null)
+                        {
+                            entryText = stage.Text;
+                        }
+                    }
+
+                    // If no quest data or stage text, keep existing text
+                    if (string.IsNullOrEmpty(entryText))
+                    {
+                        entryText = existingEntry.Text ?? string.Empty;
+                    }
+
+                    // Update the entry
+                    _journalSystem.UpdateEntry(questTag, questEntryIndex, entryText, existingEntry.XPReward);
+
+                    // Ensure quest state is set
                     int currentState = _journalSystem.GetQuestState(questTag);
                     if (currentState == 0)
                     {
@@ -938,18 +965,20 @@ namespace Andastra.Runtime.Engines.Odyssey.Dialogue
             // Based on swkotor2.exe: FUN_005e6870 @ 0x005e6870
             // Located via string references: "PlotIndex" @ 0x007c35c4, "PlotXPPercentage" @ 0x007c35cc
             // Original implementation: Updates plot flags and awards XP based on PlotIndex and PlotXpPercentage
-            if (entry.PlotIndex >= 0)
+            if (node.PlotIndex >= 0)
             {
                 // Process plot index
                 // TODO: Implement plot system integration
                 // Original engine updates plot flags based on PlotIndex
+                // This requires plot manager (PTT/PTM) system integration
             }
 
-            if (entry.PlotXpPercentage > 0)
+            if (node.PlotXpPercentage > 0)
             {
                 // Process plot XP percentage
                 // TODO: Implement plot XP calculation
                 // Original engine awards XP based on PlotXpPercentage
+                // This requires XP system integration
             }
         }
 

@@ -279,6 +279,52 @@ namespace Andastra.Runtime.Core.Journal
             return latest;
         }
 
+        /// <summary>
+        /// Gets a journal entry by quest tag and state index.
+        /// </summary>
+        public JournalEntry GetEntryByState(string questTag, int state)
+        {
+            if (string.IsNullOrEmpty(questTag))
+            {
+                return null;
+            }
+
+            List<JournalEntry> entries = GetEntriesForQuest(questTag);
+            if (state >= 0 && state < entries.Count)
+            {
+                // Entries are ordered by state, so we can index directly
+                return entries[state];
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Updates an existing journal entry.
+        /// </summary>
+        /// <param name="questTag">Quest tag</param>
+        /// <param name="state">Quest state index</param>
+        /// <param name="text">New entry text</param>
+        /// <param name="xpReward">New XP reward</param>
+        /// <returns>True if entry was updated, false if entry not found</returns>
+        public bool UpdateEntry(string questTag, int state, string text, int xpReward = 0)
+        {
+            if (string.IsNullOrEmpty(questTag))
+            {
+                return false;
+            }
+
+            JournalEntry entry = GetEntryByState(questTag, state);
+            if (entry != null)
+            {
+                entry.Text = text ?? string.Empty;
+                entry.XPReward = xpReward;
+                return true;
+            }
+
+            return false;
+        }
+
         #endregion
 
         #region Quest Categories
