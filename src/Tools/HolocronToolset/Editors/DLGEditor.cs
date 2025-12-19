@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Avalonia.Controls;
+using Avalonia.Input;
 using Avalonia.Markup.Xaml;
 using Andastra.Parsing.Common;
 using Andastra.Parsing.Formats.GFF;
@@ -24,6 +25,14 @@ namespace HolocronToolset.Editors
         // Original: self.undo_stack: QUndoStack = QUndoStack()
         private DLGActionHistory _actionHistory;
 
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:152
+        // Original: self.keys_down: set[int] = set()
+        private HashSet<Key> _keysDown = new HashSet<Key>();
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:113
+        // Original: self._copy: DLGLink | None = None
+        private DLGLink _copy;
+
         // UI Controls - Animations
         // Matching PyKotor implementation at Tools/HolocronToolset/src/ui/editors/dlg.ui:966-992
         // Original: QListWidget animsList, QPushButton addAnimButton, removeAnimButton, editAnimButton
@@ -31,6 +40,33 @@ namespace HolocronToolset.Editors
         private Button _addAnimButton;
         private Button _removeAnimButton;
         private Button _editAnimButton;
+
+        // Search functionality
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:122-124, 451-465
+        // Original: self.search_results: list[DLGStandardItem] = [], self.current_search_text: str = "", self.current_result_index: int = 0
+        private List<DLGLink> _searchResults = new List<DLGLink>();
+        private string _currentSearchText = "";
+        private int _currentResultIndex = 0;
+
+        // Search UI Controls
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:451-465
+        // Original: self.find_bar: QWidget, self.find_input: QLineEdit, self.find_button: QPushButton, self.back_button: QPushButton, self.results_label: QLabel
+        private Panel _findBar;
+        private TextBox _findInput;
+        private Button _findButton;
+        private Button _backButton;
+        private TextBlock _resultsLabel;
+
+        // UI Controls - Link widgets
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/ui/editors/dlg.ui
+        // Original: QComboBox condition1ResrefEdit, condition2ResrefEdit, QSpinBox logicSpin, QTreeView dialogTree
+        private ComboBox _condition1ResrefEdit;
+        private ComboBox _condition2ResrefEdit;
+        private NumericUpDown _logicSpin;
+        private TreeView _dialogTree;
+        
+        // Flag to track if node is loaded into UI (prevents updates during loading)
+        private bool _nodeLoadedIntoUi = false;
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:101-177
         // Original: def __init__(self, parent: QWidget | None = None, installation: HTInstallation | None = None):
@@ -60,6 +96,30 @@ namespace HolocronToolset.Editors
         {
             var panel = new StackPanel();
             Content = panel;
+
+            // Initialize dialog tree view
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/ui/editors/dlg.ui
+            _dialogTree = new TreeView();
+            _dialogTree.SelectionChanged += (s, e) => OnSelectionChanged();
+            panel.Children.Add(_dialogTree);
+
+            // Initialize link condition widgets
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/ui/editors/dlg.ui
+            _condition1ResrefEdit = new ComboBox { IsEditable = true };
+            _condition1ResrefEdit.LostFocus += (s, e) => OnNodeUpdate();
+            _condition2ResrefEdit = new ComboBox { IsEditable = true };
+            _condition2ResrefEdit.LostFocus += (s, e) => OnNodeUpdate();
+            _logicSpin = new NumericUpDown { Minimum = 0, Maximum = 1, Value = 0 };
+            _logicSpin.ValueChanged += (s, e) => OnNodeUpdate();
+
+            var linkPanel = new StackPanel();
+            linkPanel.Children.Add(new TextBlock { Text = "Condition 1 ResRef:" });
+            linkPanel.Children.Add(_condition1ResrefEdit);
+            linkPanel.Children.Add(new TextBlock { Text = "Condition 2 ResRef:" });
+            linkPanel.Children.Add(_condition2ResrefEdit);
+            linkPanel.Children.Add(new TextBlock { Text = "Logic:" });
+            linkPanel.Children.Add(_logicSpin);
+            panel.Children.Add(linkPanel);
 
             // Initialize animation UI controls
             // Matching PyKotor implementation at Tools/HolocronToolset/src/ui/editors/dlg.ui:966-992
@@ -246,6 +306,144 @@ namespace HolocronToolset.Editors
         public Button AddAnimButton => _addAnimButton;
         public Button RemoveAnimButton => _removeAnimButton;
         public Button EditAnimButton => _editAnimButton;
+        
+        // Expose link widgets for testing
+        // Matching PyKotor implementation: editor.ui.condition1ResrefEdit, etc.
+        public ComboBox Condition1ResrefEdit => _condition1ResrefEdit;
+        public ComboBox Condition2ResrefEdit => _condition2ResrefEdit;
+        public NumericUpDown LogicSpin => _logicSpin;
+        public TreeView DialogTree => _dialogTree;
+
+        /// <summary>
+        /// Handles selection changes in the dialog tree.
+        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:2364-2454
+        /// Original: def on_selection_changed(self, selection: QItemSelection):
+        /// </summary>
+        private void OnSelectionChanged()
+        {
+            _nodeLoadedIntoUi = false;
+            
+            if (_dialogTree?.SelectedItem == null)
+            {
+                // Clear UI when nothing is selected
+                if (_condition1ResrefEdit != null)
+                {
+                    _condition1ResrefEdit.Text = string.Empty;
+                }
+                if (_condition2ResrefEdit != null)
+                {
+                    _condition2ResrefEdit.Text = string.Empty;
+                }
+                if (_logicSpin != null)
+                {
+                    _logicSpin.Value = 0;
+                }
+                _nodeLoadedIntoUi = true;
+                return;
+            }
+
+            // Get selected item from tree
+            var selectedItem = _dialogTree.SelectedItem;
+            if (selectedItem is TreeViewItem treeItem && treeItem.Tag is DLGStandardItem dlgItem)
+            {
+                LoadLinkIntoUI(dlgItem);
+            }
+            else if (selectedItem is DLGStandardItem dlgItemDirect)
+            {
+                LoadLinkIntoUI(dlgItemDirect);
+            }
+            
+            _nodeLoadedIntoUi = true;
+        }
+
+        /// <summary>
+        /// Loads link properties into UI controls.
+        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:2364-2454
+        /// </summary>
+        private void LoadLinkIntoUI(DLGStandardItem item)
+        {
+            if (item?.Link == null)
+            {
+                return;
+            }
+
+            var link = item.Link;
+            
+            // Load condition1
+            if (_condition1ResrefEdit != null)
+            {
+                _condition1ResrefEdit.Text = link.Active1?.ToString() ?? string.Empty;
+            }
+            
+            // Load condition2
+            if (_condition2ResrefEdit != null)
+            {
+                _condition2ResrefEdit.Text = link.Active2?.ToString() ?? string.Empty;
+            }
+            
+            // Load logic (0 = AND/false, 1 = OR/true)
+            if (_logicSpin != null)
+            {
+                _logicSpin.Value = link.Logic ? 1 : 0;
+            }
+        }
+
+        /// <summary>
+        /// Updates node properties based on UI selections.
+        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:2456-2491
+        /// Original: def on_node_update(self, *args, **kwargs):
+        /// </summary>
+        public void OnNodeUpdate()
+        {
+            if (!_nodeLoadedIntoUi)
+            {
+                return;
+            }
+
+            if (_dialogTree?.SelectedItem == null)
+            {
+                return;
+            }
+
+            // Get selected item from tree
+            DLGStandardItem item = null;
+            var selectedItem = _dialogTree.SelectedItem;
+            if (selectedItem is TreeViewItem treeItem && treeItem.Tag is DLGStandardItem dlgItem)
+            {
+                item = dlgItem;
+            }
+            else if (selectedItem is DLGStandardItem dlgItemDirect)
+            {
+                item = dlgItemDirect;
+            }
+
+            if (item?.Link == null)
+            {
+                return;
+            }
+
+            var link = item.Link;
+
+            // Update condition1
+            if (_condition1ResrefEdit != null)
+            {
+                string text = _condition1ResrefEdit.Text ?? string.Empty;
+                link.Active1 = string.IsNullOrEmpty(text) ? ResRef.FromBlank() : new ResRef(text);
+            }
+
+            // Update condition2
+            if (_condition2ResrefEdit != null)
+            {
+                string text = _condition2ResrefEdit.Text ?? string.Empty;
+                link.Active2 = string.IsNullOrEmpty(text) ? ResRef.FromBlank() : new ResRef(text);
+            }
+
+            // Update logic (0 = AND/false, 1 = OR/true)
+            if (_logicSpin != null)
+            {
+                link.Logic = _logicSpin.Value.HasValue && _logicSpin.Value.Value != 0;
+            }
+        }
     }
 
     // Simple model class for tests (matching Python DLGStandardItemModel)

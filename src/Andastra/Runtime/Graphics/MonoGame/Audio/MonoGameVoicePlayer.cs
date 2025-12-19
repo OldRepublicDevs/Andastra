@@ -266,43 +266,27 @@ namespace Andastra.Runtime.MonoGame.Audio
 
         /// <summary>
         /// Creates a MonoGame-compatible WAV stream from a WAV object.
+        /// 
+        /// Handles all WAV formats comprehensively:
+        /// - PCM (8-bit, 16-bit, 24-bit, 32-bit) - converts to 16-bit PCM
+        /// - IMA ADPCM - decodes to 16-bit PCM
+        /// - MS ADPCM - decodes to 16-bit PCM
+        /// - A-Law - decodes to 16-bit PCM
+        /// - μ-Law - decodes to 16-bit PCM
+        /// - Mono and stereo channels - preserves channel configuration
+        /// - All common sample rates - preserves sample rate
         /// </summary>
         private byte[] CreateMonoGameWavStream(WAV wav)
         {
+            if (wav == null)
+            {
+                return null;
+            }
+
             try
             {
-                using (MemoryStream stream = new MemoryStream())
-                using (BinaryWriter writer = new BinaryWriter(stream))
-                {
-                    // Write RIFF header
-                    writer.Write(System.Text.Encoding.ASCII.GetBytes("RIFF"));
-                    uint fileSize = (uint)(36 + wav.Data.Length); // Will update later
-                    writer.Write(fileSize);
-                    writer.Write(System.Text.Encoding.ASCII.GetBytes("WAVE"));
-
-                    // Write fmt chunk
-                    writer.Write(System.Text.Encoding.ASCII.GetBytes("fmt "));
-                    writer.Write((uint)16); // fmt chunk size
-                    writer.Write((ushort)wav.Encoding); // audio format (PCM = 1)
-                    writer.Write((ushort)wav.Channels);
-                    writer.Write((uint)wav.SampleRate);
-                    writer.Write((uint)wav.BytesPerSec);
-                    writer.Write((ushort)wav.BlockAlign);
-                    writer.Write((ushort)wav.BitsPerSample);
-
-                    // Write data chunk
-                    writer.Write(System.Text.Encoding.ASCII.GetBytes("data"));
-                    writer.Write((uint)wav.Data.Length);
-                    writer.Write(wav.Data);
-
-                    // Update file size
-                    long currentPos = stream.Position;
-                    stream.Position = 4;
-                    writer.Write((uint)(currentPos - 8));
-                    stream.Position = currentPos;
-
-                    return stream.ToArray();
-                }
+                // Use comprehensive format converter
+                return WavFormatConverter.ConvertToMonoGameFormat(wav);
             }
             catch (Exception ex)
             {

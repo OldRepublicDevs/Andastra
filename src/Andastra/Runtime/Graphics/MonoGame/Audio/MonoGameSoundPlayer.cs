@@ -277,38 +277,27 @@ namespace Andastra.Runtime.MonoGame.Audio
 
         /// <summary>
         /// Converts Andastra.Parsing WAV object to MonoGame-compatible RIFF/WAVE byte array.
+        /// 
+        /// Handles all WAV formats comprehensively:
+        /// - PCM (8-bit, 16-bit, 24-bit, 32-bit) - converts to 16-bit PCM
+        /// - IMA ADPCM - decodes to 16-bit PCM
+        /// - MS ADPCM - decodes to 16-bit PCM
+        /// - A-Law - decodes to 16-bit PCM
+        /// - μ-Law - decodes to 16-bit PCM
+        /// - Mono and stereo channels - preserves channel configuration
+        /// - All common sample rates - preserves sample rate
         /// </summary>
         private byte[] CreateMonoGameWavStream(WAV wav)
         {
-            // TODO: SIMPLIFIED - Full implementation would handle all WAV formats (mono/stereo, sample rates, bit depths)
-            // MonoGame expects standard RIFF/WAVE format
+            if (wav == null)
+            {
+                return null;
+            }
+
             try
             {
-                using (var stream = new MemoryStream())
-                {
-                    // Write RIFF header
-                    stream.Write(System.Text.Encoding.ASCII.GetBytes("RIFF"), 0, 4);
-                    int dataSize = wav.Data.Length + 36; // Approximate size
-                    stream.Write(BitConverter.GetBytes(dataSize), 0, 4);
-                    stream.Write(System.Text.Encoding.ASCII.GetBytes("WAVE"), 0, 4);
-
-                    // Write fmt chunk
-                    stream.Write(System.Text.Encoding.ASCII.GetBytes("fmt "), 0, 4);
-                    stream.Write(BitConverter.GetBytes(16), 0, 4); // fmt chunk size
-                    stream.Write(BitConverter.GetBytes((ushort)1), 0, 2); // PCM format
-                    stream.Write(BitConverter.GetBytes((ushort)wav.Channels), 0, 2);
-                    stream.Write(BitConverter.GetBytes((uint)wav.SampleRate), 0, 4);
-                    stream.Write(BitConverter.GetBytes((uint)(wav.SampleRate * wav.Channels * (wav.BitsPerSample / 8))), 0, 4); // Byte rate
-                    stream.Write(BitConverter.GetBytes((ushort)(wav.Channels * (wav.BitsPerSample / 8))), 0, 2); // Block align
-                    stream.Write(BitConverter.GetBytes((ushort)wav.BitsPerSample), 0, 2);
-
-                    // Write data chunk
-                    stream.Write(System.Text.Encoding.ASCII.GetBytes("data"), 0, 4);
-                    stream.Write(BitConverter.GetBytes((uint)wav.Data.Length), 0, 4);
-                    stream.Write(wav.Data, 0, wav.Data.Length);
-
-                    return stream.ToArray();
-                }
+                // Use comprehensive format converter
+                return WavFormatConverter.ConvertToMonoGameFormat(wav);
             }
             catch (Exception ex)
             {
