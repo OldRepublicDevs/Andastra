@@ -1,6 +1,7 @@
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
 using Andastra.Runtime.Games.Common.Components;
+using Andastra.Runtime.Content.MDL;
 
 namespace Andastra.Runtime.Games.Aurora.Components
 {
@@ -23,6 +24,9 @@ namespace Andastra.Runtime.Games.Aurora.Components
     /// - Animations managed through Animation class hierarchy with CExoArrayList&lt;Animation*&gt;
     /// - Animation system supports queued animations, fire-and-forget animations, animation replacement
     /// - Aurora-specific: Animation name-based lookup, animation queuing system, animation replacement lists
+    /// - Animation duration loaded from MDX animation header at offset 0x50 (80 bytes) as float
+    /// - Based on nwmain.exe: AnimationLength field accessed from MDL animation data structure
+    /// - Aurora uses MDL/MDX format (same as Odyssey) for model and animation data
     /// </remarks>
     public class AuroraAnimationComponent : BaseAnimationComponent
     {
@@ -38,27 +42,79 @@ namespace Andastra.Runtime.Games.Aurora.Components
         /// <summary>
         /// Gets the duration of an animation by ID from Aurora animation data.
         /// </summary>
-        /// <param name="animationId">Animation ID (name hash or index).</param>
+        /// <param name="animationId">Animation ID (0-based index into animation array).</param>
         /// <returns>Animation duration in seconds from animation data, or default 1.0f if not available.</returns>
         /// <remarks>
-        /// Aurora-specific: Loads animation duration from Animation class instances.
-        /// Animation IDs can be name hashes or indices into animation arrays.
-        /// TODO: PLACEHOLDER - For now, returns default duration. Full implementation should load from Animation class data.
+        /// Animation Duration Loading:
+        /// - Based on nwmain.exe: AnimationLength field accessed from MDL animation data
+        /// - Located via string references: "AnimationLength" @ 0x140ddc218 (nwmain.exe)
+        /// - MDX format: Animation header contains duration at offset 0x50 (80 bytes) as float
+        /// - MDL format: MDLAnimationData.Length field contains animation duration in seconds
+        /// - Animation ID is 0-based index into MDL model's Animations array
+        /// - Model loaded from MDLCache using entity's ModelResRef from RenderableComponent
+        /// - If model not cached or animation ID invalid, returns default duration (1.0 seconds)
+        /// - Aurora uses the same MDL/MDX format as Odyssey, so implementation follows same pattern
         /// </remarks>
         protected override float GetAnimationDuration(int animationId)
         {
+            // Validate animation ID
             if (animationId < 0)
             {
                 return 1.0f;
             }
 
-            // TODO: PLACEHOLDER - Load animation duration from Aurora Animation class data
-            // Full implementation should:
-            // 1. Look up Animation instance by ID (name hash or index)
-            // 2. Access Animation class duration/length property
-            // 3. Return duration in seconds
-            // For now, return default duration
-            return 1.0f;
+            // Get entity's renderable component to access model ResRef
+            if (Owner == null)
+            {
+                return 1.0f;
+            }
+
+            IRenderableComponent renderable = Owner.GetComponent<IRenderableComponent>();
+            if (renderable == null || string.IsNullOrEmpty(renderable.ModelResRef))
+            {
+                return 1.0f;
+            }
+
+            // Try to get model from cache
+            MDLModel model;
+            if (!MDLCache.Instance.TryGet(renderable.ModelResRef, out model))
+            {
+                // Model not in cache - return default duration
+                // Models should typically be loaded before animations are played
+                return 1.0f;
+            }
+
+            // Validate model has animations
+            if (model.Animations == null || model.Animations.Length == 0)
+            {
+                return 1.0f;
+            }
+
+            // Validate animation ID is within bounds
+            if (animationId >= model.Animations.Length)
+            {
+                return 1.0f;
+            }
+
+            // Get animation duration from MDX data
+            MDLAnimationData animation = model.Animations[animationId];
+            if (animation == null)
+            {
+                return 1.0f;
+            }
+
+            // Return animation duration (loaded from MDX animation header at offset 0x50)
+            // MDX format: Animation header contains duration as float at offset 80 (0x50) bytes
+            // This value is already parsed and stored in MDLAnimationData.Length during MDL/MDX loading
+            float duration = animation.Length;
+
+            // Validate duration is positive (should always be, but check for safety)
+            if (duration <= 0.0f)
+            {
+                return 1.0f;
+            }
+
+            return duration;
         }
 
         /// <summary>
