@@ -227,7 +227,9 @@ UINT __stdcall nwnnsscomp_entry(void)
     // Initialize heap
     // 0x0041e7a9: push edi                     // Push 0 (parameter)
     // 0x0041e7aa: call 0x004214e6               // Call __heap_init()
-    heapInitResult = __heap_init();  // Placeholder - actual CRT function
+    // __heap_init is a CRT function that initializes the heap
+    // Returns 0 on success, non-zero on failure
+    heapInitResult = __heap_init();
     
     // 0x0041e7b0: test eax, eax                // Check heap init result
     // 0x0041e7b2: jnz 0x0041e7d5               // Jump if successful
@@ -237,32 +239,40 @@ UINT __stdcall nwnnsscomp_entry(void)
         // 0x0041e7b4: cmp dword ptr [0x00434550], 0x2 // Check error mode
         // 0x0041e7bb: jz 0x0041e7c2            // Jump if error mode 2
         
-        if (g_errorMode != 2) {  // Placeholder
+        // 0x0041e7b4: cmp dword ptr [0x00434550], 0x2 // Check error mode global
+        int errorMode = *((int*)0x00434550);
+        if (errorMode != 2) {
             // 0x0041e7bd: call 0x0042330c       // Call __FF_MSGBANNER()
-            __FF_MSGBANNER();  // Placeholder
+            // __FF_MSGBANNER displays CRT error message banner
+            __FF_MSGBANNER();
         }
         
-        // 0x0041e7c4: call 0x00423195           // Call FUN_00423195(0x1c)
-        FUN_00423195(0x1c);  // Placeholder
+        // 0x0041e7c4: call 0x00423195           // Call nwnnsscomp_display_error_message(0x1c)
+        // Displays error message for error code 0x1c (28)
+        nwnnsscomp_display_error_message(0x1c);
         
-        // 0x0041e7ce: call 0x0041e4ee           // Call FUN_0041e4ee(0xff)
-        FUN_0041e4ee(0xff);  // Placeholder
+        // 0x0041e7ce: call 0x0041e4ee           // Call nwnnsscomp_exit_process(0xff)
+        // Exits process with error code 0xff (255)
+        nwnnsscomp_exit_process(0xff);
     }
     
     // Initialize CRT
-    // 0x0041e7d5: call 0x004230a7               // Call FUN_004230a7()
-    FUN_004230a7();  // Placeholder
+    // 0x0041e7d5: call 0x004230a7               // Call nwnnsscomp_init_crt_constructors()
+    // Initializes C++ static constructors
+    nwnnsscomp_init_crt_constructors();
     
     // Initialize process environment
-    // 0x0041e7dd: call 0x004238ad               // Call FUN_004238ad()
-    processInitResult = FUN_004238ad();  // Placeholder
+    // 0x0041e7dd: call 0x004238ad               // Call nwnnsscomp_init_process_environment()
+    // Initializes process environment (startup info, locale, etc.)
+    processInitResult = nwnnsscomp_init_process_environment();
     
     // 0x0041e7e2: test eax, eax                // Check process init result
     // 0x0041e7e4: jge 0x0041e7ee               // Jump if successful
     
     if (processInitResult < 0) {
         // 0x0041e7e8: call 0x0041e6bf           // Call __amsg_exit(0x1b)
-        __amsg_exit(0x1b);  // Placeholder
+        // __amsg_exit displays error message and exits
+        __amsg_exit(0x1b);
     }
     
     // Get command line
@@ -271,47 +281,51 @@ UINT __stdcall nwnnsscomp_entry(void)
     
     // Get environment strings
     // 0x0041e7f9: call 0x0042378b               // Call ___crtGetEnvironmentStringsA()
-    g_environmentStrings = ___crtGetEnvironmentStringsA();  // Placeholder
+    // ___crtGetEnvironmentStringsA retrieves environment variable strings
+    g_environmentStrings = ___crtGetEnvironmentStringsA();
     
     // Initialize environment
-    // 0x0041e803: call 0x004236e9               // Call FUN_004236e9(extraout_ECX)
-    environmentInitResult = FUN_004236e9(0);  // Placeholder
+    // 0x0041e803: call 0x004236e9               // Call nwnnsscomp_init_environment_table(0)
+    // Initializes environment variable table
+    environmentInitResult = nwnnsscomp_init_environment_table(0);
     
     // 0x0041e808: test eax, eax                // Check environment init result
     // 0x0041e80a: jge 0x0041e814               // Jump if successful
     
     if (environmentInitResult < 0) {
         // 0x0041e80e: call 0x0041e6bf           // Call __amsg_exit(8)
-        __amsg_exit(8);  // Placeholder
+        __amsg_exit(8);
     }
     
     // Set environment pointer
     // 0x0041e814: call 0x004234b6               // Call __setenvp()
-    int envpResult = __setenvp();  // Placeholder
+    // __setenvp sets up environment pointer array
+    int envpResult = __setenvp();
     
     // 0x0041e819: test eax, eax                // Check envp result
     // 0x0041e81b: jge 0x0041e825               // Jump if successful
     
     if (envpResult < 0) {
         // 0x0041e81f: call 0x0041e6bf           // Call __amsg_exit(9)
-        __amsg_exit(9);  // Placeholder
+        __amsg_exit(9);
     }
     
     // Initialize process
-    // 0x0041e825: call 0x0041e51e               // Call FUN_0041e51e()
-    int processInit = FUN_0041e51e();  // Placeholder
+    // 0x0041e825: call 0x0041e51e               // Call nwnnsscomp_init_process_atexit()
+    // Initializes atexit handlers and process-specific initialization
+    int processInit = nwnnsscomp_init_process_atexit();
     
     // 0x0041e82d: cmp eax, edi                 // Check process init result
     // 0x0041e82f: jz 0x0041e838                // Jump if successful
     
     if (processInit != 0) {
         // 0x0041e832: call 0x0041e6bf           // Call __amsg_exit(processInit)
-        __amsg_exit(processInit);  // Placeholder
+        __amsg_exit(processInit);
     }
     
     // Store process initialization result
     // 0x0041e83d: mov [0x00434528], eax         // Store initialization result
-    g_processInitResult = processInit;  // Placeholder
+    g_processInitResult = processInit;
     
     // Call main compilation driver
     // 0x0041e84f: call 0x004032da               // Call nwnnsscomp_compile_main()
@@ -322,13 +336,15 @@ UINT __stdcall nwnnsscomp_entry(void)
     // 0x0041e85f: jnz 0x0041e867                // Jump if PE32+
     
     if (!isPE32Plus) {
-        // 0x0041e862: call 0x0041e645           // Call FUN_0041e645(mainResult)
-        FUN_0041e645(mainResult);  // Placeholder - cleanup function
+        // 0x0041e862: call 0x0041e645           // Call nwnnsscomp_cleanup_process(mainResult)
+        // Cleanup function for non-PE32+ executables
+        nwnnsscomp_cleanup_process(mainResult);
     }
     
     // Final cleanup
-    // 0x0041e867: call 0x0041e667               // Call FUN_0041e667()
-    FUN_0041e667();  // Placeholder
+    // 0x0041e867: call 0x0041e667               // Call nwnnsscomp_final_cleanup()
+    // Final cleanup before exit
+    nwnnsscomp_final_cleanup();
     
     // Function epilogue
     // 0x0041e89d: mov eax, esi                  // Load return value
