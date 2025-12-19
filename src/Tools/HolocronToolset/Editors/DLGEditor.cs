@@ -17,6 +17,10 @@ namespace HolocronToolset.Editors
 {
     // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:88
     // Original: class DLGEditor(Editor):
+    // DLG (Dialogue) format is Aurora Engine format used by:
+    // - Neverwinter Nights (Aurora)
+    // - KotOR 1/2 (Odyssey, which uses Aurora engine)
+    // Note: Eclipse Engine (Dragon Age/Mass Effect) may use different conversation formats
     public class DLGEditor : Editor
     {
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:116
@@ -72,6 +76,12 @@ namespace HolocronToolset.Editors
         // Original: QLineEdit questEdit, QSpinBox questEntrySpin, QComboBox plotIndexCombo, QDoubleSpinBox plotXpSpin
         private TextBox _questEdit;
         private NumericUpDown _questEntrySpin;
+        
+        // UI Controls - Speaker widgets
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/ui/editors/dlg.ui
+        // Original: QLineEdit speakerEdit, QLabel speakerEditLabel
+        private TextBox _speakerEdit;
+        private TextBlock _speakerEditLabel;
         
         // UI Controls - Script widgets
         // Matching PyKotor implementation at Tools/HolocronToolset/src/ui/editors/dlg.ui
@@ -1177,6 +1187,199 @@ namespace HolocronToolset.Editors
             UpdateItemDisplayText(newItem);
             
             // Update tree view if editor is available
+            if (_editor != null)
+            {
+                _editor.UpdateTreeView();
+            }
+            
+            return newItem;
+        }
+
+        /// <summary>
+        /// Adds a child node to the specified parent item.
+        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/model.py:858-877
+        /// Original: def add_child_to_item(self, parent_item: DLGStandardItem, link: DLGLink | None = None) -> DLGStandardItem:
+        /// </summary>
+        public DLGStandardItem AddChildToItem(DLGStandardItem parentItem, DLGLink link = null)
+        {
+            if (parentItem == null)
+            {
+                throw new ArgumentNullException(nameof(parentItem));
+            }
+            
+            if (parentItem.Link == null)
+            {
+                throw new InvalidOperationException("Parent item must have a valid link");
+            }
+
+            if (link == null)
+            {
+                // Create new node - if parent is Reply, create Entry; if parent is Entry, create Reply
+                DLGNode newNode;
+                if (parentItem.Link.Node is DLGReply)
+                {
+                    newNode = new DLGEntry();
+                }
+                else
+                {
+                    newNode = new DLGReply();
+                }
+                newNode.PlotIndex = -1;
+                newNode.ListIndex = GetNewNodeListIndex(newNode);
+                link = new DLGLink(newNode);
+            }
+
+            // Link the nodes
+            if (parentItem.Link.Node != null)
+            {
+                link.ListIndex = parentItem.Link.Node.Links.Count;
+                parentItem.Link.Node.Links.Add(link);
+            }
+
+            var newItem = new DLGStandardItem(link);
+            parentItem.AddChild(newItem);
+            
+            UpdateItemDisplayText(newItem);
+            UpdateItemDisplayText(parentItem);
+            
+            return newItem;
+        }
+
+        /// <summary>
+        /// Gets the item at the specified row and column.
+        /// Matching PyKotor implementation: def item(self, row: int, column: int = 0) -> DLGStandardItem | None:
+        /// </summary>
+        public DLGStandardItem Item(int row, int column = 0)
+        {
+            if (row < 0 || row >= _rootItems.Count || column != 0)
+            {
+                return null;
+            }
+            return _rootItems[row];
+        }
+
+        /// <summary>
+        /// Gets a new list index for a node.
+        /// </summary>
+        private int GetNewNodeListIndex(DLGNode node)
+        {
+            if (_editor?.CoreDlg == null)
+            {
+                return 0;
+            }
+
+            if (node is DLGEntry)
+            {
+                int maxIndex = -1;
+                foreach (var entry in _editor.CoreDlg.AllEntries())
+                {
+                    if (entry.ListIndex > maxIndex)
+                    {
+                        maxIndex = entry.ListIndex;
+                    }
+                }
+                return maxIndex + 1;
+            }
+            else if (node is DLGReply)
+            {
+                int maxIndex = -1;
+                foreach (var reply in _editor.CoreDlg.AllReplies())
+                {
+                    if (reply.ListIndex > maxIndex)
+                    {
+                        maxIndex = reply.ListIndex;
+                    }
+                }
+                return maxIndex + 1;
+            }
+            return 0;
+        }
+
+        /// <summary>
+        /// Updates the display text for an item.
+        /// </summary>
+        private void UpdateItemDisplayText(DLGStandardItem item)
+        {
+            // This would update the display text in the tree view
+            // For now, it's a placeholder
+        }
+
+        /// <summary>
+        /// Inserts a starter link at the specified index.
+        /// </summary>
+        public void InsertStarter(int index, DLGLink link)
+        {
+            if (link == null)
+            {
+                return;
+            }
+            var item = new DLGStandardItem(link);
+            if (index < 0 || index > _rootItems.Count)
+            {
+                _rootItems.Add(item);
+            }
+            else
+            {
+                _rootItems.Insert(index, item);
+            }
+        }
+
+        /// <summary>
+        /// Gets the starter link at the specified index.
+        /// </summary>
+        public DLGLink GetStarterAt(int index)
+        {
+            if (index < 0 || index >= _rootItems.Count)
+            {
+                return null;
+            }
+            return _rootItems[index].Link;
+        }
+
+        // Matching PyKotor implementation
+        // Original: def remove_starter(self, link: DLGLink): ...
+        /// <summary>
+        /// Removes a starter link from the model.
+        /// </summary>
+        public void RemoveStarter(DLGLink link)
+        {
+            for (int i = _rootItems.Count - 1; i >= 0; i--)
+            {
+                if (_rootItems[i].Link == link)
+                {
+                    _rootItems.RemoveAt(i);
+                    break;
+                }
+            }
+        }
+
+        // Matching PyKotor implementation
+        // Original: def move_starter(self, old_index: int, new_index: int): ...
+        /// <summary>
+        /// Moves a starter link from one index to another.
+        /// </summary>
+        public void MoveStarter(int oldIndex, int newIndex)
+        {
+            if (oldIndex < 0 || oldIndex >= _rootItems.Count || newIndex < 0 || newIndex >= _rootItems.Count)
+            {
+                return;
+            }
+
+            var item = _rootItems[oldIndex];
+            _rootItems.RemoveAt(oldIndex);
+            _rootItems.Insert(newIndex, item);
+        }
+
+        /// <summary>
+        /// Gets all root items in the model.
+        /// </summary>
+        public IReadOnlyList<DLGStandardItem> GetRootItems()
+        {
+            return _rootItems;
+        }
+    }
+}
+
             if (_editor != null)
             {
                 _editor.UpdateTreeView();
