@@ -224,14 +224,6 @@ namespace Andastra.Parsing.Installation
         }
 
         /// <summary>
-        /// Gets the Packages directory path for an installation (Mass Effect series).
-        /// </summary>
-        public static string GetPackagesPath(string installPath)
-        {
-            return System.IO.Path.Combine(installPath, "Packages");
-        }
-
-        /// <summary>
         /// Extracts the module root name from a module filename.
         /// Example: "danm13.rim" -> "danm13", "danm13_s.rim" -> "danm13"
         /// </summary>
