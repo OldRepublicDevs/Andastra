@@ -52,6 +52,7 @@ type
     procedure LogWarning(const AMessage: string);
     procedure LogInfo(const AMessage: string);
     procedure LogDebug(const AMessage: string);
+    procedure ProcessFileInstallation(AIniFile: TIniFile; const ASectionName: string; ABackupMgr: TBackupManager);
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -271,7 +272,7 @@ var
   Config: TTSLPatcherConfig;
   IniFile: TIniFile;
   Sections: TStringList;
-  I: Integer;
+  I, J: Integer;
   SectionName: string;
   FileName: string;
   BackupMgr: TBackupManager;
@@ -300,13 +301,20 @@ begin
         
         BackupMgr := TBackupManager.Create;
         try
-          // Process 2DA file changes
+          // Process 2DA file changes (TSLPatcher.exe: 0x00480700+, 0x00481000+)
+          // Assembly: Processes 2DA sections from INI, loads modifications, applies patches
+          // String: "2DA file changes"
+          LogInfo('2DA file changes');
           for I := 0 to Sections.Count - 1 do
           begin
             SectionName := Sections[I];
-            if Pos('2DA', SectionName) > 0 then
+            if (Pos('2DA', SectionName) > 0) or StartsText('2DA:', SectionName) then
             begin
-              FileName := FGamePath + IniFile.ReadString(SectionName, 'FileName', '');
+              FileName := IniFile.ReadString(SectionName, 'FileName', '');
+              if FileName = '' then
+                FileName := Copy(SectionName, 5, MaxInt); // Remove "2DA:" prefix
+              
+              FileName := FGamePath + FileName;
               if FileExists(FileName) then
               begin
                 if FMakeBackups then
@@ -314,10 +322,21 @@ begin
                 
                 Modifications := TStringList.Create;
                 try
-                  // Load modifications from INI
-                  // Format: RowLabel|ColumnName|NewValue|Exclusive|MatchColumn|MatchValue
+                  // Load modifications from INI section (TSLPatcher.exe: 0x00481000+)
+                  // Format: Key=RowLabel|ColumnName|NewValue|Exclusive|MatchColumn|MatchValue
+                  // Or: Key=Value where Key is rowlabel, columnlabel, newvalue, etc.
+                  IniFile.ReadSectionValues(SectionName, Modifications);
+                  
+                  // Filter out FileName key
+                  for J := Modifications.Count - 1 downto 0 do
+                  begin
+                    if SameText(Modifications.Names[J], 'FileName') then
+                      Modifications.Delete(J);
+                  end;
+                  
                   TwoDAPatcher := TTwoDAPatcher.Create;
                   try
+                    LogInfo(Format('Applying 2DA patch to %s...', [ExtractFileName(FileName)]));
                     TwoDAPatcher.PatchFile(FileName, Modifications);
                   finally
                     TwoDAPatcher.Free;
@@ -325,47 +344,85 @@ begin
                 finally
                   Modifications.Free;
                 end;
+              end
+              else
+              begin
+                LogWarning(Format('2DA file "%s" not found, skipping section %s', [FileName, SectionName]));
               end;
             end;
           end;
           
-          // Process TLK file changes
+          // Process TLK file changes (TSLPatcher.exe: reverse engineering in progress)
+          // Assembly: Processes TLK sections from INI, handles append and modify operations
+          // String: "dialog tlk appending"
+          LogInfo('dialog tlk appending');
           for I := 0 to Sections.Count - 1 do
           begin
             SectionName := Sections[I];
-            if Pos('TLK', SectionName) > 0 then
+            if (Pos('TLK', SectionName) > 0) or StartsText('TLK:', SectionName) then
             begin
-              FileName := FGamePath + IniFile.ReadString(SectionName, 'FileName', '');
-              if FileExists(FileName) then
+              FileName := IniFile.ReadString(SectionName, 'FileName', 'dialog.tlk');
+              FileName := FGamePath + FileName;
+              
+              if not FileExists(FileName) then
               begin
-                if FMakeBackups then
-                  BackupMgr.CreateBackup(FileName);
+                LogError(Format('Invalid game folder specified, dialog.tlk file not found!', []));
+                Continue;
+              end;
+              
+              if FMakeBackups then
+                BackupMgr.CreateBackup(FileName);
+              
+              Modifications := TStringList.Create;
+              try
+                // Load modifications from INI section
+                // Format: Key=StrRef|Text or Key=Text for append operations
+                IniFile.ReadSectionValues(SectionName, Modifications);
                 
-                Modifications := TStringList.Create;
+                // Filter out FileName and Operation keys
+                for J := Modifications.Count - 1 downto 0 do
+                begin
+                  if SameText(Modifications.Names[J], 'FileName') or SameText(Modifications.Names[J], 'Operation') then
+                    Modifications.Delete(J);
+                end;
+                
+                TLKPatcher := TTLKPatcher.Create;
                 try
-                  TLKPatcher := TTLKPatcher.Create;
-                  try
-                    if SameText(IniFile.ReadString(SectionName, 'Operation', ''), 'Append') then
-                      TLKPatcher.AppendDialog(FileName, Modifications)
-                    else
-                      TLKPatcher.ModifyEntries(FileName, Modifications);
-                  finally
-                    TLKPatcher.Free;
+                  if SameText(IniFile.ReadString(SectionName, 'Operation', ''), 'Append') then
+                  begin
+                    LogInfo(Format('Appending strings to TLK file "%s"', [ExtractFileName(FileName)]));
+                    TLKPatcher.AppendDialog(FileName, Modifications);
+                  end
+                  else
+                  begin
+                    LogInfo(Format('Modifying StrRefs in TLK file "%s"...', [ExtractFileName(FileName)]));
+                    TLKPatcher.ModifyEntries(FileName, Modifications);
                   end;
                 finally
-                  Modifications.Free;
+                  TLKPatcher.Free;
                 end;
+              finally
+                Modifications.Free;
               end;
             end;
           end;
           
-          // Process GFF file changes
+          // Process GFF file changes (TSLPatcher.exe: reverse engineering in progress)
+          // Assembly: Processes GFF sections from INI, handles field path modifications
+          // String: "GFF file changes"
+          // String: "Modifying GFF format files..."
+          LogInfo('GFF file changes');
+          LogInfo('Modifying GFF format files...');
           for I := 0 to Sections.Count - 1 do
           begin
             SectionName := Sections[I];
-            if Pos('GFF', SectionName) > 0 then
+            if (Pos('GFF', SectionName) > 0) or StartsText('GFF:', SectionName) then
             begin
-              FileName := FGamePath + IniFile.ReadString(SectionName, 'FileName', '');
+              FileName := IniFile.ReadString(SectionName, 'FileName', '');
+              if FileName = '' then
+                FileName := Copy(SectionName, 5, MaxInt); // Remove "GFF:" prefix
+              
+              FileName := FGamePath + FileName;
               if FileExists(FileName) then
               begin
                 if FMakeBackups then
@@ -373,33 +430,89 @@ begin
                 
                 GFFPatcher := TGFFPatcher.Create(FileName);
                 try
-                  // Process GFF modifications
-                  // String: "Modifying GFF format files..."
-                  // String: "Modifying GFF file %s..."
+                  LogInfo(Format('Modifying GFF file %s...', [ExtractFileName(FileName)]));
+                  
+                  // Load modifications from INI section
+                  // Format: Key=FieldPath, Value=NewValue
+                  // Or: FieldPath=NewValue
+                  Modifications := TStringList.Create;
+                  try
+                    IniFile.ReadSectionValues(SectionName, Modifications);
+                    
+                    // Filter out FileName key
+                    for J := Modifications.Count - 1 downto 0 do
+                    begin
+                      if SameText(Modifications.Names[J], 'FileName') then
+                        Modifications.Delete(J);
+                    end;
+                    
+                    // Process each modification
+                    for J := 0 to Modifications.Count - 1 do
+                    begin
+                      GFFPatcher.PatchFile(Modifications.Names[J], Modifications.ValueFromIndex[J]);
+                    end;
+                  finally
+                    Modifications.Free;
+                  end;
                 finally
                   GFFPatcher.Free;
                 end;
+              end
+              else
+              begin
+                LogWarning(Format('GFF file "%s" not found, skipping section %s', [FileName, SectionName]));
               end;
             end;
           end;
           
-          // Process NSS script compilation
+          // Process NSS script compilation (TSLPatcher.exe: reverse engineering in progress)
+          // Assembly: Processes NSS sections, handles script modification and compilation
+          // String: "Modified & recompiled scripts"
+          // String: "Modifying and compiling scripts..."
+          LogInfo('Modified & recompiled scripts');
+          LogInfo('Modifying and compiling scripts...');
           for I := 0 to Sections.Count - 1 do
           begin
             SectionName := Sections[I];
-            if Pos('NSS', SectionName) > 0 then
+            if (Pos('NSS', SectionName) > 0) or StartsText('NSS:', SectionName) then
             begin
-              FileName := FTSLPatchDataPath + IniFile.ReadString(SectionName, 'SourceFile', '');
+              FileName := IniFile.ReadString(SectionName, 'SourceFile', '');
+              if FileName = '' then
+                FileName := Copy(SectionName, 5, MaxInt); // Remove "NSS:" prefix
+              
+              FileName := FTSLPatchDataPath + FileName;
               if FileExists(FileName) then
               begin
                 NSSPatcher := TNSSPatcher.Create;
                 try
-                  // String: "Modifying and compiling scripts..."
-                  // String: "Compiling modified script %s..."
+                  LogInfo(Format('Compiling modified script %s...', [ExtractFileName(FileName)]));
                   NSSPatcher.CompileScript(FileName, ChangeFileExt(FileName, '.ncs'));
+                  
+                  // Process NCS integer hacks if specified
+                  Modifications := TStringList.Create;
+                  try
+                    IniFile.ReadSectionValues(SectionName, Modifications);
+                    for J := Modifications.Count - 1 downto 0 do
+                    begin
+                      if SameText(Modifications.Names[J], 'SourceFile') then
+                        Modifications.Delete(J);
+                    end;
+                    
+                    if Modifications.Count > 0 then
+                    begin
+                      LogInfo('NCS file integer hacks');
+                      NSSPatcher.PatchNCS(ChangeFileExt(FileName, '.ncs'), Modifications);
+                    end;
+                  finally
+                    Modifications.Free;
+                  end;
                 finally
                   NSSPatcher.Free;
                 end;
+              end
+              else
+              begin
+                LogWarning(Format('NSS source file "%s" not found, skipping section %s', [FileName, SectionName]));
               end;
             end;
           end;
@@ -424,22 +537,7 @@ begin
               // String: "Installing file %s to %s..."
               // String: "Saving unaltered backup copy of destination file %s in %s."
               
-              // Read file entries from Install section
-              // Format: Key=SourceFile, Value=DestFile or InstallPath
-              // Handle special paths: ".\\" (relative), "Game" (game folder), "..\\" (parent), "backup" (backup folder)
-              // Handle file types: .exe, .tlk, .key, .bif
-              // Handle override folder operations
-              // Create backups if enabled
-              // Copy files to destination
-              
-              // Implementation based on assembly at 0x00483000+:
-              // 1. Read InstallList section keys/values
-              // 2. Resolve source file paths (relative to tslpatchdata folder)
-              // 3. Resolve destination paths (Game folder, Override folder, etc.)
-              // 4. Validate file types
-              // 5. Create backups if MakeBackups is true
-              // 6. Copy files to destination
-              // 7. Log operations
+              ProcessFileInstallation(IniFile, SectionName, BackupMgr);
             end;
           end;
         finally
@@ -488,6 +586,129 @@ end;
 procedure TMainForm.LogDebug(const AMessage: string);
 begin
   LogMessage(AMessage, llDebug);
+end;
+
+procedure TMainForm.ProcessFileInstallation(AIniFile: TIniFile; const ASectionName: string; ABackupMgr: TBackupManager);
+var
+  Keys: TStringList;
+  I: Integer;
+  SourceFile: string;
+  DestFile: string;
+  InstallPath: string;
+  SourcePath: string;
+  DestPath: string;
+  FileExt: string;
+  OverrideType: string;
+  BackupPath: string;
+begin
+  // Process file installation (TSLPatcher.exe: 0x00483000+)
+  // Assembly disassembly: Function processes InstallList section from INI file
+  // Handles file copying, backup creation, override folder operations
+  // String references found in assembly:
+  // - "InstallList" (0x00483000+)
+  // - "InstallerMode" (0x00483000+)
+  // - "Settings" (0x00483000+)
+  // - ".\\" (relative path)
+  // - "Game" (game folder)
+  // - "..\\" (parent folder)
+  // - "backup" (backup folder)
+  // - "!overridetype" (override type flag)
+  // - "\\" (path separator)
+  // - "replace" (replace mode)
+  // - ".exe", ".tlk", ".key", ".bif" (file extensions)
+  // - "backup\\" (backup path)
+  // - "override" (override folder)
+  
+  Keys := TStringList.Create;
+  try
+    AIniFile.ReadSectionValues(ASectionName, Keys);
+    
+    for I := 0 to Keys.Count - 1 do
+    begin
+      // Parse key=value pairs
+      // Format: SourceFile=DestPath or SourceFile=InstallPath
+      SourceFile := Keys.Names[I];
+      DestFile := Keys.ValueFromIndex[I];
+      
+      if SourceFile = '' then
+        Continue;
+      
+      // Resolve source file path (relative to tslpatchdata folder)
+      if StartsText('.\\', SourceFile) then
+        SourcePath := FTSLPatchDataPath + Copy(SourceFile, 4, MaxInt)
+      else if StartsText('..\\', SourceFile) then
+        SourcePath := ExtractFilePath(FTSLPatchDataPath) + Copy(SourceFile, 4, MaxInt)
+      else
+        SourcePath := FTSLPatchDataPath + SourceFile;
+      
+      // Check if source file exists
+      if not FileExists(SourcePath) then
+      begin
+        LogWarning(Format('Unable to locate file "%s" to install, skipping...', [SourceFile]));
+        Continue;
+      end;
+      
+      // Resolve destination path
+      if SameText(DestFile, 'Game') then
+        DestPath := FGamePath
+      else if StartsText('Game\\', DestFile) or StartsText('Game/', DestFile) then
+        DestPath := FGamePath + Copy(DestFile, 6, MaxInt)
+      else if SameText(DestFile, 'override') or StartsText('override\\', DestFile) or StartsText('override/', DestFile) then
+      begin
+        DestPath := FGamePath + 'override\';
+        if StartsText('override\\', DestFile) then
+          DestPath := DestPath + Copy(DestFile, 10, MaxInt)
+        else if StartsText('override/', DestFile) then
+          DestPath := DestPath + Copy(DestFile, 10, MaxInt);
+      end
+      else if StartsText('.\\', DestFile) then
+        DestPath := FTSLPatchDataPath + Copy(DestFile, 4, MaxInt)
+      else if StartsText('..\\', DestFile) then
+        DestPath := ExtractFilePath(FTSLPatchDataPath) + Copy(DestFile, 4, MaxInt)
+      else
+        DestPath := FGamePath + DestFile;
+      
+      // Ensure destination directory exists
+      if not DirectoryExists(ExtractFilePath(DestPath)) then
+        ForceDirectories(ExtractFilePath(DestPath));
+      
+      // Check for override type flag
+      OverrideType := AIniFile.ReadString(ASectionName, '!overridetype', '');
+      
+      // Validate file extension
+      FileExt := LowerCase(ExtractFileExt(SourceFile));
+      if (FileExt <> '.exe') and (FileExt <> '.tlk') and (FileExt <> '.key') and (FileExt <> '.bif') and
+         (FileExt <> '.ncs') and (FileExt <> '.nss') and (FileExt <> '.2da') and (FileExt <> '.gff') then
+      begin
+        // Allow other file types, but log
+        LogDebug(Format('Installing file with extension %s: %s', [FileExt, SourceFile]));
+      end;
+      
+      // Create backup if enabled and destination exists
+      if FMakeBackups and FileExists(DestPath) then
+      begin
+        BackupPath := ABackupMgr.CreateBackup(DestPath);
+        LogInfo(Format('Saving unaltered backup copy of destination file %s in %s.', [ExtractFileName(DestPath), ExtractFilePath(BackupPath)]));
+      end;
+      
+      // Copy file to destination
+      if FileExists(SourcePath) then
+      begin
+        if SameText(ExtractFilePath(DestPath), FGamePath + 'override\') or SameText(ExtractFilePath(DestPath), FGamePath + 'override/') then
+          LogInfo(Format('Updating and replacing file %s in Override folder...', [ExtractFileName(DestPath)]))
+        else
+          LogInfo(Format('Installing file %s to %s...', [ExtractFileName(SourceFile), DestPath]));
+        
+        // Copy file
+        if not CopyFile(PChar(SourcePath), PChar(DestPath), False) then
+        begin
+          LogError(Format('Failed to copy file "%s" to "%s": %s', [SourcePath, DestPath, SysErrorMessage(GetLastError)]));
+        end;
+      end;
+    end;
+  finally
+    Keys.Free;
+  end;
 end;
 
 { TTSLPatcherConfig }
