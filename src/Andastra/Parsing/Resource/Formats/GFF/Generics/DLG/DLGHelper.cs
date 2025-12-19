@@ -284,10 +284,17 @@ namespace Andastra.Parsing.Resource.Generics.DLG
             root.SetUInt8("UnequipHItem", dlg.UnequipHands ? (byte)1 : (byte)0);
             root.SetUInt8("UnequipItems", dlg.UnequipItems ? (byte)1 : (byte)0);
             root.SetString("VO_ID", dlg.VoId);
-            root.SetInt32("AlienRaceOwner", dlg.AlienRaceOwner);
-            root.SetInt32("PostProcOwner", dlg.PostProcOwner);
-            root.SetInt32("RecordNoVO", dlg.RecordNoVo);
-            root.SetInt32("NextNodeID", dlg.NextNodeId);
+            // K2-specific root fields - only write for K2
+            // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/dlg/io/gff.py:516-520
+            // Original: if game.is_k2(): root.set_int32("AlienRaceOwner", ...), etc.
+            if (game.IsK2())
+            {
+                root.SetInt32("AlienRaceOwner", dlg.AlienRaceOwner);
+                root.SetInt32("PostProcOwner", dlg.PostProcOwner);
+                root.SetInt32("RecordNoVO", dlg.RecordNoVo);
+                root.SetInt32("NextNodeID", dlg.NextNodeId);
+            }
+            // Deprecated fields - write for all games (matching PyKotor use_deprecated=True default)
             root.SetInt32("DelayEntry", dlg.DelayEntry);
             root.SetInt32("DelayReply", dlg.DelayReply);
 
@@ -311,7 +318,7 @@ namespace Andastra.Parsing.Resource.Generics.DLG
                 GFFStruct linkStruct = startingList.Add(i);
                 int entryIndex = allEntries.IndexOf(link.Node as DLGEntry);
                 linkStruct.SetUInt32("Index", entryIndex >= 0 ? (uint)entryIndex : 0);
-                DismantleLink(linkStruct, link);
+                DismantleLink(linkStruct, link, game);
             }
 
             // EntryList
@@ -424,7 +431,11 @@ namespace Andastra.Parsing.Resource.Generics.DLG
                 gffStruct.SetVector3("FadeColor", node.FadeColor.ToBgrVector3());
             }
 
-            if (game == Game.K2)
+            // K2-specific node fields - only write for K2
+            // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/dlg/io/gff.py:459-481
+            // Original: if game.is_k2(): gff_struct.set_int32("ActionParam1", ...), etc.
+            // Note: Eclipse games (DA, DA2) use K1-style fields (no K2-specific fields)
+            if (game.IsK2())
             {
                 gffStruct.SetInt32("ActionParam1", node.Script1Param1);
                 gffStruct.SetInt32("ActionParam1b", node.Script2Param1);
@@ -470,31 +481,41 @@ namespace Andastra.Parsing.Resource.Generics.DLG
                 linkStruct.SetUInt32("Index", nodeIndex >= 0 ? (uint)nodeIndex : 0);
                 linkStruct.SetUInt8("IsChild", link.IsChild ? (byte)1 : (byte)0);
                 linkStruct.SetString("LinkComment", link.Comment);
-                DismantleLink(linkStruct, link);
+                DismantleLink(linkStruct, link, game);
             }
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/dlg/io/gff.py:332-353
-        // Original: def dismantle_link(gff_struct: GFFStruct, link: DLGLink, nodes: list[DLGNode], list_name: str):
-        private static void DismantleLink(GFFStruct gffStruct, DLGLink link)
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/dlg/io/gff.py:334-385
+        // Original: def dismantle_link(gff_struct: GFFStruct, link: DLGLink, nodes: list, list_name: str):
+        // Note: PyKotor's dismantle_link is nested inside dismantle_dlg and has access to game parameter
+        private static void DismantleLink(GFFStruct gffStruct, DLGLink link, Game game)
         {
+            // Basic link fields - written for all games
             gffStruct.SetResRef("Active", link.Active1);
-            gffStruct.SetResRef("Active2", link.Active2);
-            gffStruct.SetUInt8("Logic", link.Logic ? (byte)1 : (byte)0);
-            gffStruct.SetUInt8("Not", link.Active1Not ? (byte)1 : (byte)0);
-            gffStruct.SetUInt8("Not2", link.Active2Not ? (byte)1 : (byte)0);
-            gffStruct.SetInt32("Param1", link.Active1Param1);
-            gffStruct.SetInt32("Param2", link.Active1Param2);
-            gffStruct.SetInt32("Param3", link.Active1Param3);
-            gffStruct.SetInt32("Param4", link.Active1Param4);
-            gffStruct.SetInt32("Param5", link.Active1Param5);
-            gffStruct.SetString("ParamStrA", link.Active1Param6);
-            gffStruct.SetInt32("Param1b", link.Active2Param1);
-            gffStruct.SetInt32("Param2b", link.Active2Param2);
-            gffStruct.SetInt32("Param3b", link.Active2Param3);
-            gffStruct.SetInt32("Param4b", link.Active2Param4);
-            gffStruct.SetInt32("Param5b", link.Active2Param5);
-            gffStruct.SetString("ParamStrB", link.Active2Param6);
+            
+            // K2-specific link fields - only write for K2
+            // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/dlg/io/gff.py:368-384
+            // Original: if game.is_k2(): gff_struct.set_resref("Active2", ...), etc.
+            // Note: Eclipse games (DA, DA2) use K1-style fields (no K2-specific link fields)
+            if (game.IsK2())
+            {
+                gffStruct.SetResRef("Active2", link.Active2);
+                gffStruct.SetUInt8("Logic", link.Logic ? (byte)1 : (byte)0);
+                gffStruct.SetUInt8("Not", link.Active1Not ? (byte)1 : (byte)0);
+                gffStruct.SetUInt8("Not2", link.Active2Not ? (byte)1 : (byte)0);
+                gffStruct.SetInt32("Param1", link.Active1Param1);
+                gffStruct.SetInt32("Param2", link.Active1Param2);
+                gffStruct.SetInt32("Param3", link.Active1Param3);
+                gffStruct.SetInt32("Param4", link.Active1Param4);
+                gffStruct.SetInt32("Param5", link.Active1Param5);
+                gffStruct.SetString("ParamStrA", link.Active1Param6);
+                gffStruct.SetInt32("Param1b", link.Active2Param1);
+                gffStruct.SetInt32("Param2b", link.Active2Param2);
+                gffStruct.SetInt32("Param3b", link.Active2Param3);
+                gffStruct.SetInt32("Param4b", link.Active2Param4);
+                gffStruct.SetInt32("Param5b", link.Active2Param5);
+                gffStruct.SetString("ParamStrB", link.Active2Param6);
+            }
         }
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/dlg/io/gff.py:551-575
