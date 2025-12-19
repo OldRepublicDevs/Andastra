@@ -57,7 +57,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends
             _useDirectX9 = false;
             _useOpenGL = true;
             _adapterIndex = 0;
-            _fullscreen = false; // Default to windowed
+            _fullscreen = true; // Default to fullscreen (swkotor.exe: FUN_0044dab0 @ 0x0044dab0, param_7 != 0 = fullscreen)
             _refreshRate = 60; // Default refresh rate
 
             return true;
