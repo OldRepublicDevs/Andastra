@@ -29,6 +29,7 @@ using KotorVector3 = System.Numerics.Vector3;
 using OdyObjectType = Andastra.Runtime.Core.Enums.ObjectType;
 using InstResourceResult = Andastra.Parsing.Installation.ResourceResult;
 using Andastra.Runtime.Engines.Odyssey.Components;
+using Andastra.Runtime.Engines.Odyssey.Loading;
 
 namespace Andastra.Runtime.Engines.Odyssey.Game
 {
@@ -472,107 +473,69 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
             }
         }
 
+        /// <summary>
+        /// Loads walkmesh (WOK/BWM) files from LYT rooms and creates navigation mesh.
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe walkmesh loading system
+        /// Located via string references: "walkmesh" pathfinding functions, "?nwsareapathfind.cpp" @ 0x007be3ff
+        /// "BWM V1.0" @ 0x007c061c (BWM file signature)
+        /// Original implementation:
+        /// - Loads WOK (area walkmesh) files for each room in LYT
+        /// - Combines all room walkmeshes into single navigation mesh
+        /// - Uses BWM adjacency data for pathfinding
+        /// - Uses BWM surface materials for walkability determination
+        /// - Builds AABB tree for spatial acceleration
+        /// - Pathfinding uses A* algorithm on walkmesh adjacency graph
+        /// </remarks>
         private void LoadWalkmesh(string moduleName)
         {
-            _currentNavMesh = new NavigationMesh();
-
-            // Load WOK (area walkmesh) files for each room in LYT
-            if (_currentLyt != null)
-            {
-                var allVertices = new List<SysVector3>();
-                var allIndices = new List<int>();
-
-                foreach (LYTRoom room in _currentLyt.Rooms)
-                {
-                    try
-                    {
-                        string wokName = room.Model.ToLowerInvariant();
-                        InstResourceResult result = _installation.Resource(wokName, ResourceType.WOK, null, moduleName);
-                        if (result != null && result.Data != null)
-                        {
-                            BWM bwm = BWMAuto.ReadBwm(result.Data);
-
-                            // Room offset
-                            KotorVector3 roomOffset = room.Position;
-                            int vertexOffset = allVertices.Count;
-
-                            // Get unique vertices from BWM
-                            List<KotorVector3> bwmVertices = bwm.Vertices();
-
-                            // Add vertices with room offset
-                            foreach (KotorVector3 vertex in bwmVertices)
-                            {
-                                allVertices.Add(new SysVector3(
-                                    vertex.X + roomOffset.X,
-                                    vertex.Y + roomOffset.Y,
-                                    vertex.Z + roomOffset.Z));
-                            }
-
-                            // Add face indices (only walkable faces)
-                            // BWMFace stores actual vertex positions, so we need to find indices
-                            foreach (BWMFace face in bwm.Faces)
-                            {
-                                // Check if face is walkable (material check)
-                                if (IsFaceWalkable(face))
-                                {
-                                    int idx1 = FindVertexIndex(bwmVertices, face.V1);
-                                    int idx2 = FindVertexIndex(bwmVertices, face.V2);
-                                    int idx3 = FindVertexIndex(bwmVertices, face.V3);
-
-                                    if (idx1 >= 0 && idx2 >= 0 && idx3 >= 0)
-                                    {
-                                        allIndices.Add(idx1 + vertexOffset);
-                                        allIndices.Add(idx2 + vertexOffset);
-                                        allIndices.Add(idx3 + vertexOffset);
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine("[ModuleLoader] Failed to load WOK for room " + room.Model + ": " + ex.Message);
-                    }
-                }
-
-                if (allVertices.Count > 0 && allIndices.Count > 0)
-                {
-                    _currentNavMesh.BuildFromTriangles(allVertices, allIndices);
-                    Console.WriteLine("[ModuleLoader] Built NavMesh: " + allVertices.Count + " vertices, " +
-                                      (allIndices.Count / 3) + " faces");
-                }
-                else
-                {
-                    Console.WriteLine("[ModuleLoader] WARNING: No walkmesh data loaded, creating placeholder");
-                    CreatePlaceholderNavMesh();
-                }
-            }
-            else
+            if (_currentLyt == null || _currentLyt.Rooms.Count == 0)
             {
                 Console.WriteLine("[ModuleLoader] WARNING: No LYT data, creating placeholder navmesh");
                 CreatePlaceholderNavMesh();
+                return;
             }
-        }
 
-        private int FindVertexIndex(List<KotorVector3> vertices, KotorVector3 target)
-        {
-            for (int i = 0; i < vertices.Count; i++)
+            // Convert LYT rooms to RoomInfo list for NavigationMeshFactory
+            var roomInfos = new List<RoomInfo>();
+            foreach (LYTRoom lytRoom in _currentLyt.Rooms)
             {
-                if (vertices[i].Equals(target))
+                var roomInfo = new RoomInfo
                 {
-                    return i;
-                }
+                    ModelName = lytRoom.Model.ToLowerInvariant(),
+                    Position = new SysVector3(lytRoom.Position.X, lytRoom.Position.Y, lytRoom.Position.Z),
+                    Rotation = 0f, // LYT rooms don't have rotation, only position
+                    VisibleRooms = new List<int>()
+                };
+                roomInfos.Add(roomInfo);
             }
-            return -1;
-        }
 
-        private bool IsFaceWalkable(BWMFace face)
-        {
-            // Surface material 0-30 are typically walkable
-            // Material 7 = non-walk, 10+ = special surfaces
-            // TODO: SIMPLIFIED - This is a simplified check - could use surfacemat.2da for full accuracy
-            int material = (int)face.Material;
-            return material < 7 || (material >= 8 && material <= 10);
+            // Get Parsing Module for NavigationMeshFactory
+            Andastra.Parsing.Common.Module parsingModule = GetParsingModule();
+            if (parsingModule == null)
+            {
+                Console.WriteLine("[ModuleLoader] WARNING: Cannot get Parsing Module, creating placeholder navmesh");
+                CreatePlaceholderNavMesh();
+                return;
+            }
+
+            // Use NavigationMeshFactory to create proper navigation mesh from WOK/BWM files
+            // This properly handles BWM adjacency, surface materials, and AABB tree construction
+            var navMeshFactory = new NavigationMeshFactory();
+            INavigationMesh combinedNavMesh = navMeshFactory.CreateFromModule(parsingModule, roomInfos);
+
+            if (combinedNavMesh != null && combinedNavMesh is NavigationMesh navMesh)
+            {
+                _currentNavMesh = navMesh;
+                Console.WriteLine("[ModuleLoader] Built NavMesh from WOK/BWM: " + navMesh.Vertices.Count + " vertices, " +
+                                  navMesh.FaceCount + " faces (" + navMesh.WalkableFaceCount + " walkable)");
+            }
+            else
+            {
+                Console.WriteLine("[ModuleLoader] WARNING: Failed to build navmesh from WOK/BWM, creating placeholder");
+                CreatePlaceholderNavMesh();
+            }
         }
 
         private void CreatePlaceholderNavMesh()
@@ -1523,7 +1486,9 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
                 runtimeArea.AddEntity(playerSpawn);
             }
 
-            // TODO: PLACEHOLDER - Create placeholder navmesh (should load from WOK/BWM)
+            // Create placeholder navmesh when installation is null (cannot load WOK/BWM files without installation)
+            // Note: This is a fallback for when installation is not available
+            // In normal operation, LoadWalkmesh() is called which properly loads WOK/BWM files
             CreatePlaceholderNavMesh();
         }
     }
