@@ -858,6 +858,30 @@ namespace Andastra.Runtime.Engines.Infinity
             // AreaId is set by the entity's area assignment
             // Infinity Engine areas use ResRef as identifier
         }
+
+        public override void Update(float deltaTime)
+        {
+            // Update area state each frame
+            // Infinity Engine areas update entities, triggers, etc.
+        }
+
+        public override void Render()
+        {
+            // Render the area
+            // Infinity Engine areas render overlays, entities, etc.
+        }
+
+        public override void Unload()
+        {
+            // Unload area and clean up resources
+            _creatures.Clear();
+            _placeables.Clear();
+            _doors.Clear();
+            _triggers.Clear();
+            _waypoints.Clear();
+            _sounds.Clear();
+            _navigationMesh = null;
+        }
     }
 }
 
