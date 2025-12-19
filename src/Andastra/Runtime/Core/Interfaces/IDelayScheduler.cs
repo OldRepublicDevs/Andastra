@@ -5,22 +5,22 @@ namespace Andastra.Runtime.Core.Interfaces
     /// </summary>
     /// <remarks>
     /// Delay Scheduler Interface:
-    /// - TODO: lookup data from daorigins.exe/dragonage2.exe/masseffect.exe/masseffect2.exe/swkotor.exe/swkotor2.exe and split into subclass'd inheritence structures appropriately. parent class(es) should contain common code.
-    /// - TODO: this should NOT specify swkotor2.exe unless it specifies the other exes as well!!!
-    /// - Based on swkotor2.exe DelayCommand system
-    /// - Located via string references: "DelayCommand" @ 0x007be900 (NWScript DelayCommand function)
-    /// - Delay-related fields: "Delay" @ 0x007c35b0 (delay field), "DelayReply" @ 0x007c38f0 (delay reply field)
-    /// - "DelayEntry" @ 0x007c38fc (delay entry field), "FadeDelay" @ 0x007c358c (fade delay field)
-    /// - "DestroyObjectDelay" @ 0x007c0248 (destroy object delay field), "FadeDelayOnDeath" @ 0x007bf55c (fade delay on death)
-    /// - "ReaxnDelay" @ 0x007bf94c (reaction delay field), "MusicDelay" @ 0x007c14b4 (music delay field)
-    /// - "ShakeDelay" @ 0x007c49ec (shake delay field), "TooltipDelay Sec" @ 0x007c71dc (tooltip delay)
-    /// - Original implementation: DelayCommand NWScript function schedules actions to execute after specified delay
+    /// - Common interface for scheduling delayed actions across all BioWare engines
+    /// - DelayCommand NWScript function schedules actions to execute after specified delay
     /// - Uses priority queue sorted by execution time to efficiently process delayed actions
     /// - Delayed actions execute in order based on schedule time
     /// - STORE_STATE opcode in NCS VM stores stack/local state for DelayCommand semantics
     /// - Actions are queued to target entity's action queue when delay expires
-    /// - NCS VM: STORE_STATE opcode @ offset 0x0D+ in NCS file stores execution context for delayed execution
+    /// - NCS VM: STORE_STATE opcode stores execution context for delayed execution
     /// - DelayCommand implementation: Stores action + delay time, executes when delay expires
+    /// 
+    /// Engine-specific implementations:
+    /// - Odyssey: OdysseyDelayScheduler (swkotor.exe, swkotor2.exe) - float-based time
+    /// - Aurora: AuroraDelayScheduler (nwmain.exe) - calendar day/time of day system
+    /// - Eclipse: EclipseDelayScheduler (daorigins.exe, DragonAge2.exe) - float-based time
+    /// - Infinity: InfinityDelayScheduler (MassEffect.exe, MassEffect2.exe) - float-based time
+    /// 
+    /// Base implementation: BaseDelayScheduler (Runtime.Games.Common) provides common functionality.
     /// </remarks>
     public interface IDelayScheduler
     {

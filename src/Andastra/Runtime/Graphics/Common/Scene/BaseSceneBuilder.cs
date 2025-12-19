@@ -28,14 +28,17 @@ namespace Andastra.Runtime.Graphics.Common.Scene
     /// - Eclipse: ARE with advanced features, dynamic geometry, physics-aware rendering
     /// - Infinity: ARE/WED files, area-based rendering
     ///
-    /// Inheritance Structure:
+    /// Inheritance Structure (Graphics-Backend Agnostic):
     /// - BaseSceneBuilder (this class) - Common functionality only
-    ///   - Odyssey (swkotor.exe, swkotor2.exe) - LYT/VIS files:
-    ///     - MonoGame: OdysseySceneBuilder : BaseSceneBuilder (Runtime.MonoGame.Scene)
-    ///     - Stride: StrideOdysseySceneBuilder : BaseSceneBuilder (Runtime.Stride.Scene)
-    ///   - AuroraSceneBuilder : BaseSceneBuilder (nwmain.exe) - ARE tile-based layout
-    ///   - EclipseSceneBuilder : BaseSceneBuilder (daorigins.exe, DragonAge2.exe, MassEffect.exe, MassEffect2.exe) - Advanced ARE features
-    ///   - InfinitySceneBuilder : BaseSceneBuilder (Baldur's Gate, Icewind Dale, Planescape: Torment) - ARE/WED files
+    ///   - OdysseySceneBuilder : BaseSceneBuilder (Runtime.Games.Odyssey.Scene) - LYT/VIS files (swkotor.exe, swkotor2.exe)
+    ///   - AuroraSceneBuilder : BaseSceneBuilder (Runtime.Games.Aurora.Scene) - ARE tile-based layout (nwmain.exe)
+    ///   - EclipseSceneBuilder : BaseSceneBuilder (Runtime.Games.Eclipse.Scene) - Advanced ARE features (daorigins.exe, DragonAge2.exe, MassEffect.exe, MassEffect2.exe)
+    ///   - InfinitySceneBuilder : BaseSceneBuilder (Runtime.Games.Infinity.Scene) - ARE/WED files (Baldur's Gate, Icewind Dale, Planescape: Torment)
+    ///
+    /// Graphics Backend Rendering:
+    /// - Scene builders are graphics-backend agnostic (work with MonoGame, Stride, etc.)
+    /// - Graphics backends (MonoGame, Stride) consume the abstract scene data structures
+    /// - IRoomMeshData interface provides graphics-backend abstraction for mesh data
     /// </remarks>
     public abstract class BaseSceneBuilder
     {

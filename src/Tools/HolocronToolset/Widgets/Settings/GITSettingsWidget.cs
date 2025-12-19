@@ -255,9 +255,9 @@ namespace HolocronToolset.Widgets.Settings
         // Original: def resetControls(self):
         private void ResetControls()
         {
-            if (_settings != null)
+            if (_settings != null && _settings is GITSettings gitSettings)
             {
-                _settings.ResetControls();
+                gitSettings.ResetControls();
                 SetupBindValues();
             }
         }
