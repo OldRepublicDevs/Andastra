@@ -73,7 +73,7 @@ namespace HolocronToolset.Editors
             Camera.SetPosition(new Vector2(sumX / _pth.Count, sumY / _pth.Count));
         }
 
-        public List<Vector2> PathNodesUnderMouse(float tolerance = 0.1f)
+        public List<Vector2> PathNodesUnderMouse(float tolerance = 0.5f)
         {
             var hits = new List<Vector2>();
             foreach (var point in _pth.GetPoints())
@@ -339,6 +339,11 @@ namespace HolocronToolset.Editors
         // Original: def addEdge(self, source: int, target: int):
         public void AddEdge(int source, int target)
         {
+            if (source < 0 || target < 0 || source >= _pth.Count || target >= _pth.Count)
+            {
+                return;
+            }
+
             // Create bidirectional connections like other path editors
             _pth.Connect(source, target);
             _pth.Connect(target, source);
@@ -348,16 +353,40 @@ namespace HolocronToolset.Editors
         // Original: def removeEdge(self, source: int, target: int):
         public void RemoveEdge(int source, int target)
         {
+            if (source < 0 || target < 0 || source >= _pth.Count || target >= _pth.Count)
+            {
+                return;
+            }
+
             // Remove bidirectional connections like other path editors
             _pth.Disconnect(source, target);
             _pth.Disconnect(target, source);
         }
 
+        /// <summary>
+        /// Updates the cached mouse position used for hit testing.
+        /// </summary>
+        /// <param name="x">Mouse X coordinate in world space.</param>
+        /// <param name="y">Mouse Y coordinate in world space.</param>
+        public void UpdateMousePosition(float x, float y)
+        {
+            var position = new Vector2(x, y);
+            if (StatusOut != null)
+            {
+                StatusOut.SetMousePosition(position);
+            }
+            RenderArea.SetMousePosition(position);
+            if (StatusOut != null)
+            {
+                StatusOut.UpdateStatusBar();
+            }
+        }
+
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/pth.py:361-363
         // Original: def points_under_mouse(self) -> list[Vector2]:
-        public List<Vector2> PointsUnderMouse()
+        public List<Vector2> PointsUnderMouse(float tolerance = 0.5f)
         {
-            return RenderArea.PathNodesUnderMouse();
+            return RenderArea.PathNodesUnderMouse(tolerance);
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/pth.py:365-367
