@@ -61,7 +61,10 @@ namespace HolocronToolset.Editors
         private void LoadGIT(GIT git)
         {
             // Load GIT data into UI
-            // This will be expanded when full UI is implemented
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/git.py:512-517
+            // Original: def _loadGIT(self, git: GIT):
+            _git = git;
+            // UI loading will be expanded when full UI is implemented
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/git.py
@@ -86,6 +89,7 @@ namespace HolocronToolset.Editors
                     "CameraList",
                     "Creature List",
                     "Door List",
+                    "Encounter List",
                     "Placeable List",
                     "SoundList",
                     "StoreList",
