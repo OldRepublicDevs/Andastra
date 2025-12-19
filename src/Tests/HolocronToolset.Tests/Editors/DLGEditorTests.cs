@@ -819,10 +819,9 @@ namespace HolocronToolset.Tests.Editors
             throw new NotImplementedException("TestDlgEditorTreeExpansion: Tree expansion test not yet implemented");
         }
 
-        // TODO: STUB - Implement test_dlg_editor_move_item_up_down (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:1336-1365)
+        // Matching PyKotor implementation: test_dlg_editor_move_item_up_down (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:1336-1365)
         // Original: def test_dlg_editor_move_item_up_down(qtbot, installation: HTInstallation): Test moving item up/down
-        // Temporarily skipped - MoveItemUp/MoveItemDown methods not yet implemented
-        [Fact(Skip = "MoveItemUp/MoveItemDown methods not yet implemented in DLGEditor")]
+        [Fact]
         public void TestDlgEditorMoveItemUpDown()
         {
             // Create editor
@@ -866,8 +865,7 @@ namespace HolocronToolset.Tests.Editors
 
             // Test 1: Move item down from position 1 (link2 should move to position 2)
             editor.Model.SelectedIndex = 1;
-            // TODO: MoveItemDown method not yet implemented
-            // editor.MoveItemDown();
+            editor.Model.MoveItemDown();
 
             // Verify order changed: link1, link3, link2, link4
             editor.Model.GetStarterAt(0).Should().BeSameAs(link1, "First item should still be link1");
@@ -883,8 +881,7 @@ namespace HolocronToolset.Tests.Editors
             editor.CoreDlg.Starters[3].Should().BeSameAs(link4);
 
             // Test 2: Move item up from position 2 (link2 should move back to position 1)
-            // TODO: MoveItemUp method not yet implemented
-            // editor.MoveItemUp();
+            editor.Model.MoveItemUp();
 
             // Verify order restored: link1, link2, link3, link4
             editor.Model.GetStarterAt(0).Should().BeSameAs(link1, "First item should still be link1");
@@ -901,25 +898,22 @@ namespace HolocronToolset.Tests.Editors
 
             // Test 3: Move first item up (should fail - already at top)
             editor.Model.SelectedIndex = 0;
-            // TODO: MoveItemUp method not yet implemented
-            // bool moveUpResult = editor.Model.MoveItemUp();
-            // moveUpResult.Should().BeFalse("Moving first item up should fail");
+            bool moveUpResult = editor.Model.MoveItemUp();
+            moveUpResult.Should().BeFalse("Moving first item up should fail");
             editor.Model.SelectedIndex.Should().Be(0, "Selected index should remain 0");
             editor.Model.GetStarterAt(0).Should().BeSameAs(link1, "First item should remain link1");
 
             // Test 4: Move last item down (should fail - already at bottom)
             editor.Model.SelectedIndex = 3;
-            // TODO: MoveItemDown method not yet implemented
-            // bool moveDownResult = editor.Model.MoveItemDown();
-            // moveDownResult.Should().BeFalse("Moving last item down should fail");
+            bool moveDownResult = editor.Model.MoveItemDown();
+            moveDownResult.Should().BeFalse("Moving last item down should fail");
             editor.Model.SelectedIndex.Should().Be(3, "Selected index should remain 3");
             editor.Model.GetStarterAt(3).Should().BeSameAs(link4, "Last item should remain link4");
 
             // Test 5: Move item from middle to top
             editor.Model.SelectedIndex = 2; // Select link3
-            // TODO: MoveItemUp method not yet implemented
-            // editor.MoveItemUp(); // Move to position 1
-            // editor.MoveItemUp(); // Move to position 0
+            editor.Model.MoveItemUp(); // Move to position 1
+            editor.Model.MoveItemUp(); // Move to position 0
 
             // Verify order: link3, link1, link2, link4
             editor.Model.GetStarterAt(0).Should().BeSameAs(link3, "First item should now be link3");
@@ -935,10 +929,9 @@ namespace HolocronToolset.Tests.Editors
             editor.CoreDlg.Starters[3].Should().BeSameAs(link4);
 
             // Test 6: Move item from top to bottom
-            // TODO: MoveItemDown method not yet implemented
-            // editor.MoveItemDown(); // Move link3 to position 1
-            // editor.MoveItemDown(); // Move link3 to position 2
-            // editor.MoveItemDown(); // Move link3 to position 3
+            editor.Model.MoveItemDown(); // Move link3 to position 1
+            editor.Model.MoveItemDown(); // Move link3 to position 2
+            editor.Model.MoveItemDown(); // Move link3 to position 3
 
             // Verify order: link1, link2, link4, link3
             editor.Model.GetStarterAt(0).Should().BeSameAs(link1, "First item should now be link1");
@@ -955,11 +948,10 @@ namespace HolocronToolset.Tests.Editors
 
             // Test 7: Test with invalid selected index (no selection)
             editor.Model.SelectedIndex = -1;
-            // TODO: MoveItemUp/MoveItemDown methods not yet implemented
-            // bool invalidMoveUp = editor.Model.MoveItemUp();
-            // bool invalidMoveDown = editor.Model.MoveItemDown();
-            // invalidMoveUp.Should().BeFalse("Moving with no selection should fail");
-            // invalidMoveDown.Should().BeFalse("Moving with no selection should fail");
+            bool invalidMoveUp = editor.Model.MoveItemUp();
+            bool invalidMoveDown = editor.Model.MoveItemDown();
+            invalidMoveUp.Should().BeFalse("Moving with no selection should fail");
+            invalidMoveDown.Should().BeFalse("Moving with no selection should fail");
 
             // Test 8: Verify row count remains constant throughout all operations
             editor.Model.RowCount.Should().Be(4, "Row count should remain 4 throughout all operations");
