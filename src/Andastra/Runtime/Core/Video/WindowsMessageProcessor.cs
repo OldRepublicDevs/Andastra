@@ -12,6 +12,13 @@ namespace Andastra.Runtime.Core.Video
     internal static class WindowsMessageProcessor
     {
         [StructLayout(LayoutKind.Sequential)]
+        public struct POINT
+        {
+            public int X;
+            public int Y;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
         public struct MSG
         {
             public IntPtr hwnd;
@@ -19,7 +26,7 @@ namespace Andastra.Runtime.Core.Video
             public IntPtr wParam;
             public IntPtr lParam;
             public uint time;
-            public System.Drawing.Point pt;
+            public POINT pt;
         }
 
         [DllImport("user32.dll", CharSet = CharSet.Auto)]

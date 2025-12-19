@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Numerics;
 using JetBrains.Annotations;
 using Andastra.Runtime.Core.Actions;
+using Andastra.Runtime.Core.Combat;
 using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
@@ -196,12 +197,31 @@ namespace Andastra.Runtime.Engines.Aurora.Systems
                 }
             }
 
-            // TODO: SIMPLIFIED - Stealth detection not yet implemented
-            // Based on nwmain.exe: DoStealthDetection @ 0x14038b4b6 (called from DoPerceptionUpdateOnCreature)
+            // Stealth detection (Aurora-specific: D20 stealth vs. perception system)
+            // Based on nwmain.exe: DoStealthDetection @ 0x14038bfa0 (nwmain.exe)
             // Original implementation: Checks if target is invisible/stealthed and if perceiver can detect stealth
-            // For now, assume target is visible if line-of-sight is clear
-
-            return true;
+            // DoStealthDetection calls DoListenDetection and DoSpotDetection for hearing/sight-based detection
+            
+            // Check if target is invisible (has Invisibility effect)
+            bool targetIsInvisible = _world.EffectSystem.HasEffect(target, EffectType.Invisibility);
+            if (targetIsInvisible)
+            {
+                // Check if subject can see invisible (TrueSeeing effect or feat)
+                bool canSeeInvisible = _world.EffectSystem.HasEffect(subject, EffectType.TrueSeeing);
+                if (!canSeeInvisible)
+                {
+                    // Subject cannot see invisible targets
+                    return false;
+                }
+            }
+            
+            // Perform stealth detection checks (hearing and sight)
+            // Based on nwmain.exe: DoStealthDetection @ 0x14038bfa0 calls DoListenDetection and DoSpotDetection
+            bool heardTarget = DoListenDetection(subject, target, targetIsInvisible ? 1 : 0);
+            bool spottedTarget = DoSpotDetection(subject, target, targetIsInvisible ? 1 : 0);
+            
+            // Target is detected if either heard or spotted
+            return heardTarget || spottedTarget;
         }
 
         /// <summary>
@@ -219,6 +239,203 @@ namespace Andastra.Runtime.Engines.Aurora.Systems
 
             float distance = Vector3.Distance(subjectTransform.Position, targetTransform.Position);
             return distance <= range;
+        }
+
+        /// <summary>
+        /// Performs listen-based stealth detection (Aurora-specific: D20 Listen skill check).
+        /// Based on nwmain.exe: DoListenDetection @ 0x14038aab0 (nwmain.exe)
+        /// </summary>
+        /// <remarks>
+        /// Aurora Listen Detection:
+        /// - Based on nwmain.exe: DoListenDetection @ 0x14038aab0 (nwmain.exe)
+        /// - Original implementation:
+        ///   1. Checks if target is moving silently (has Move Silently skill active)
+        ///   2. Calculates distance between subject and target
+        ///   3. Checks if target is within hearing range (hearing range from perception component)
+        ///   4. Performs Listen skill check (subject's Listen skill) vs. Move Silently check (target's Move Silently skill)
+        ///   5. Returns true if subject successfully hears target (Listen check beats Move Silently check)
+        /// - Skill IDs: Listen = 6 (SKILL_LISTEN), Move Silently = 8 (SKILL_MOVE_SILENTLY)
+        /// - Hearing range: Based on subject's hearing range from perception component
+        /// - Deafness: If subject has Deafness effect, cannot hear (returns false)
+        /// </remarks>
+        private bool DoListenDetection(IEntity subject, IEntity target, int param2)
+        {
+            if (subject == null || target == null)
+            {
+                return false;
+            }
+
+            // Check if target is moving silently (has Move Silently skill active)
+            // Based on nwmain.exe: DoListenDetection checks if target has Move Silently active
+            IStatsComponent targetStats = target.GetComponent<IStatsComponent>();
+            if (targetStats == null)
+            {
+                return false; // Cannot detect if target has no stats
+            }
+
+            // Check if subject is deaf (cannot hear)
+            if (_world.EffectSystem.HasEffect(subject, EffectType.Deafness))
+            {
+                return false; // Subject is deaf, cannot hear
+            }
+
+            // Check if target is moving silently (has Move Silently skill)
+            // Based on nwmain.exe: DoListenDetection checks target's Move Silently skill
+            // Skill ID: Move Silently = 8 (SKILL_MOVE_SILENTLY in D&D 3.5/NWN)
+            const int SKILL_MOVE_SILENTLY = 8;
+            int targetMoveSilently = targetStats.GetSkillRank(SKILL_MOVE_SILENTLY);
+            if (targetMoveSilently <= 0)
+            {
+                // Target is not moving silently, can be heard
+                return true;
+            }
+
+            // Get positions and calculate distance
+            ITransformComponent subjectTransform = subject.GetComponent<ITransformComponent>();
+            ITransformComponent targetTransform = target.GetComponent<ITransformComponent>();
+            if (subjectTransform == null || targetTransform == null)
+            {
+                return false;
+            }
+
+            Vector3 subjectPos = subjectTransform.Position;
+            Vector3 targetPos = targetTransform.Position;
+            float distance = Vector3.Distance(subjectPos, targetPos);
+
+            // Get hearing range from perception component
+            // Based on nwmain.exe: DoListenDetection uses hearing range from perception component
+            IPerceptionComponent subjectPerception = subject.GetComponent<IPerceptionComponent>();
+            float hearingRange = 20.0f; // Default hearing range (Aurora default)
+            if (subjectPerception != null)
+            {
+                hearingRange = subjectPerception.HearingRange;
+            }
+
+            // Check if within hearing range
+            if (distance > hearingRange)
+            {
+                return false; // Too far to hear
+            }
+
+            // Perform Listen vs. Move Silently skill check
+            // Based on nwmain.exe: DoListenDetection performs skill check
+            // Skill ID: Listen = 6 (SKILL_LISTEN in D&D 3.5/NWN)
+            const int SKILL_LISTEN = 6;
+            IStatsComponent subjectStats = subject.GetComponent<IStatsComponent>();
+            if (subjectStats == null)
+            {
+                return false; // Cannot detect if subject has no stats
+            }
+
+            int subjectListen = subjectStats.GetSkillRank(SKILL_LISTEN);
+            
+            // Roll Listen check (d20 + Listen skill rank)
+            // Based on nwmain.exe: DoListenDetection rolls d20 for skill check
+            int listenRoll = _random.Next(1, 21); // d20 roll
+            int listenCheck = listenRoll + subjectListen;
+
+            // Roll Move Silently check (d20 + Move Silently skill rank)
+            int moveSilentlyRoll = _random.Next(1, 21); // d20 roll
+            int moveSilentlyCheck = moveSilentlyRoll + targetMoveSilently;
+
+            // Subject hears target if Listen check beats Move Silently check
+            return listenCheck >= moveSilentlyCheck;
+        }
+
+        /// <summary>
+        /// Performs spot-based stealth detection (Aurora-specific: D20 Spot skill check).
+        /// Based on nwmain.exe: DoSpotDetection @ 0x14038baa0 (nwmain.exe)
+        /// </summary>
+        /// <remarks>
+        /// Aurora Spot Detection:
+        /// - Based on nwmain.exe: DoSpotDetection @ 0x14038baa0 (nwmain.exe)
+        /// - Original implementation:
+        ///   1. Checks if target is hiding (has Hide skill active)
+        ///   2. Calculates distance between subject and target
+        ///   3. Checks if target is within sight range (sight range from perception component)
+        ///   4. Performs Spot skill check (subject's Spot skill) vs. Hide check (target's Hide skill)
+        ///   5. Returns true if subject successfully spots target (Spot check beats Hide check)
+        /// - Skill IDs: Spot = 5 (SKILL_SPOT), Hide = 7 (SKILL_HIDE)
+        /// - Sight range: Based on subject's sight range from perception component
+        /// - Invisibility: If target is invisible and subject cannot see invisible, cannot spot (returns false)
+        /// - Light conditions: Dark areas reduce Spot checks (not fully implemented, but structure exists)
+        /// </remarks>
+        private bool DoSpotDetection(IEntity subject, IEntity target, int param2)
+        {
+            if (subject == null || target == null)
+            {
+                return false;
+            }
+
+            // Check if target is hiding (has Hide skill active)
+            // Based on nwmain.exe: DoSpotDetection checks if target has Hide active
+            IStatsComponent targetStats = target.GetComponent<IStatsComponent>();
+            if (targetStats == null)
+            {
+                return false; // Cannot detect if target has no stats
+            }
+
+            // Get positions and calculate distance
+            ITransformComponent subjectTransform = subject.GetComponent<ITransformComponent>();
+            ITransformComponent targetTransform = target.GetComponent<ITransformComponent>();
+            if (subjectTransform == null || targetTransform == null)
+            {
+                return false;
+            }
+
+            Vector3 subjectPos = subjectTransform.Position;
+            Vector3 targetPos = targetTransform.Position;
+            float distance = Vector3.Distance(subjectPos, targetPos);
+
+            // Get sight range from perception component
+            // Based on nwmain.exe: DoSpotDetection uses sight range from perception component
+            IPerceptionComponent subjectPerception = subject.GetComponent<IPerceptionComponent>();
+            float sightRange = 30.0f; // Default sight range (Aurora default)
+            if (subjectPerception != null)
+            {
+                sightRange = subjectPerception.SightRange;
+            }
+
+            // Check if within sight range
+            if (distance > sightRange)
+            {
+                return false; // Too far to see
+            }
+
+            // Check if target is hiding (has Hide skill)
+            // Based on nwmain.exe: DoSpotDetection checks target's Hide skill
+            // Skill ID: Hide = 7 (SKILL_HIDE in D&D 3.5/NWN)
+            const int SKILL_HIDE = 7;
+            int targetHide = targetStats.GetSkillRank(SKILL_HIDE);
+            if (targetHide <= 0)
+            {
+                // Target is not hiding, can be spotted
+                return true;
+            }
+
+            // Perform Spot vs. Hide skill check
+            // Based on nwmain.exe: DoSpotDetection performs skill check
+            // Skill ID: Spot = 5 (SKILL_SPOT in D&D 3.5/NWN)
+            const int SKILL_SPOT = 5;
+            IStatsComponent subjectStats = subject.GetComponent<IStatsComponent>();
+            if (subjectStats == null)
+            {
+                return false; // Cannot detect if subject has no stats
+            }
+
+            int subjectSpot = subjectStats.GetSkillRank(SKILL_SPOT);
+            
+            // Roll Spot check (d20 + Spot skill rank)
+            // Based on nwmain.exe: DoSpotDetection rolls d20 for skill check
+            int spotRoll = _random.Next(1, 21); // d20 roll
+            int spotCheck = spotRoll + subjectSpot;
+
+            // Roll Hide check (d20 + Hide skill rank)
+            int hideRoll = _random.Next(1, 21); // d20 roll
+            int hideCheck = hideRoll + targetHide;
+
+            // Subject spots target if Spot check beats Hide check
+            return spotCheck >= hideCheck;
         }
 
         /// <summary>

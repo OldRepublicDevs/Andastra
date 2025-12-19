@@ -64,15 +64,55 @@ namespace Andastra.Runtime.Games.Eclipse.Components
                 return 1.0f;
             }
 
-            // TODO: PLACEHOLDER - Load animation duration from Eclipse animation tree data
-            // Full implementation should:
-            // 1. Get entity's model/animation tree reference (from IModelComponent or similar)
-            // 2. Look up AnimationNode or AnimationTree node by ID from loaded animation trees
-            // 3. Access animation duration from node data (AnimationNode.Length field)
-            // 4. Return duration in seconds
-            // 5. Cache animation durations for performance (Dictionary<int, float> cache)
-            // For now, return default duration (1.0f) as a reasonable placeholder
-            return 1.0f;
+            // Load animation duration from MDL model data
+            // Based on Eclipse engine: Animation duration loaded from MDL animation data structure
+            // Eclipse uses MDL format similar to Odyssey/Aurora for model and animation data
+            // MDLAnimationData.Length field contains animation duration in seconds
+            
+            // Get entity's model resource reference
+            if (Owner == null)
+            {
+                return 1.0f; // Default duration if no owner
+            }
+
+            IRenderableComponent renderable = Owner.GetComponent<IRenderableComponent>();
+            if (renderable == null || string.IsNullOrEmpty(renderable.ModelResRef))
+            {
+                return 1.0f; // Default duration if no model
+            }
+
+            // Try to get model from cache
+            // Based on Eclipse engine: Models are cached in MDLCache for performance
+            Runtime.Content.MDL.MDLModel model;
+            if (!Runtime.Content.MDL.MDLCache.Instance.TryGet(renderable.ModelResRef, out model))
+            {
+                return 1.0f; // Default duration if model not loaded
+            }
+
+            // Check if animations are loaded
+            if (model.Animations == null || model.Animations.Length == 0)
+            {
+                return 1.0f; // Default duration if no animations
+            }
+
+            // Check if animation ID is valid
+            if (animationId >= model.Animations.Length)
+            {
+                return 1.0f; // Default duration if animation ID out of range
+            }
+
+            // Get animation data and return duration
+            // Based on Eclipse engine: MDLAnimationData.Length contains animation duration in seconds
+            Runtime.Content.MDL.MDLAnimationData animation = model.Animations[animationId];
+            if (animation == null)
+            {
+                return 1.0f; // Default duration if animation data is null
+            }
+
+            // Return animation duration from MDL data
+            // This value is already parsed and stored in MDLAnimationData.Length during MDL/MDX loading
+            float duration = animation.Length;
+            return duration > 0.0f ? duration : 1.0f; // Ensure positive duration
         }
 
         /// <summary>
