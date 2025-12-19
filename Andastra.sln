@@ -13,7 +13,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Andastra.Runtime.Content", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Andastra.Runtime.Scripting", "src\Andastra\Runtime\Scripting\Andastra.Runtime.Scripting.csproj", "{E5AD48E5-052B-4312-BB09-B98A10B48663}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Andastra.Runtime.Graphics", "src\Andastra\Runtime\Graphics\Common\Andastra.Runtime.Graphics.csproj", "{18E620A8-3053-482B-9A89-B0D9112A750D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Andastra.Runtime.Graphics", "src\Andastra\Runtime\Graphics\Andastra.Runtime.Graphics.csproj", "{18E620A8-3053-482B-9A89-B0D9112A750D}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Andastra.Runtime.Graphics.Common", "src\Andastra\Runtime\Graphics\Common\Andastra.Runtime.Graphics.Common.csproj", "{37B19E9C-E304-42EB-B1E6-4650ECCADE91}"
 EndProject
