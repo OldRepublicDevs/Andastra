@@ -6,6 +6,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Markup.Xaml;
+using Avalonia.Platform.Storage;
 using HolocronToolset.Data;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Enums;
@@ -279,12 +280,85 @@ namespace HolocronToolset.Dialogs
             }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/tslpatchdata_editor.py:150-459
-        // Original: Various methods for TSLPatchData generation
-        private void BrowseTslpatchdataPath()
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/tslpatchdata_editor.py:397-403
+        // Original: def _browse_tslpatchdata_path(self):
+        private async void BrowseTslpatchdataPath()
         {
-            // TODO: Implement folder browser dialog when available
-            System.Console.WriteLine("Browse TSLPatchData path not yet implemented");
+            if (_pathEdit == null)
+            {
+                return;
+            }
+
+            var topLevel = TopLevel.GetTopLevel(this);
+            if (topLevel == null)
+            {
+                return;
+            }
+
+            // Get initial directory from current path edit text if it's a valid path
+            string initialDirectory = _pathEdit.Text;
+            if (!string.IsNullOrEmpty(initialDirectory) && Directory.Exists(initialDirectory))
+            {
+                // Use the current path as initial directory
+            }
+            else if (!string.IsNullOrEmpty(initialDirectory))
+            {
+                // If it's not empty but doesn't exist, try to get the parent directory
+                string parentDir = Path.GetDirectoryName(initialDirectory);
+                if (!string.IsNullOrEmpty(parentDir) && Directory.Exists(parentDir))
+                {
+                    initialDirectory = parentDir;
+                }
+                else
+                {
+                    // Use current working directory or user's home
+                    initialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+                }
+            }
+            else
+            {
+                // Use current working directory or user's home
+                initialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+            }
+
+            try
+            {
+                var options = new FolderPickerOpenOptions
+                {
+                    Title = "Select TSLPatchData Folder",
+                    AllowMultiple = false
+                };
+
+                // Set initial directory if available
+                if (!string.IsNullOrEmpty(initialDirectory) && Directory.Exists(initialDirectory))
+                {
+                    var storageFolder = await topLevel.StorageProvider.TryGetFolderFromPathAsync(initialDirectory);
+                    if (storageFolder != null)
+                    {
+                        options.SuggestedStartLocation = storageFolder;
+                    }
+                }
+
+                var folders = await topLevel.StorageProvider.OpenFolderPickerAsync(options);
+                if (folders != null && folders.Count > 0)
+                {
+                    string selectedPath = folders[0].Path.LocalPath;
+                    if (!string.IsNullOrWhiteSpace(selectedPath))
+                    {
+                        _tslpatchdataPath = selectedPath;
+                        _pathEdit.Text = selectedPath;
+                        // Reload existing configuration if the folder exists
+                        if (Directory.Exists(_tslpatchdataPath))
+                        {
+                            LoadExistingConfig();
+                        }
+                    }
+                }
+            }
+            catch
+            {
+                // Ignore errors - user may have cancelled or dialog failed
+            }
         }
 
         private void CreateNewTslpatchdata()

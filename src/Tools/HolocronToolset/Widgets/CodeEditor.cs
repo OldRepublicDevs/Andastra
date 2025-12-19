@@ -1,5 +1,6 @@
 using System;
 using System.Text;
+using System.Text.RegularExpressions;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Markup.Xaml;
@@ -205,6 +206,221 @@ namespace HolocronToolset.Widgets
             }
 
             base.OnKeyDown(e);
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/common/widgets/code_editor.py:983-1026
+        // Original: def find_next(self, find_text: str | None = None, case_sensitive: bool = False, whole_words: bool = False, regex: bool = False, backward: bool = False):
+        /// <summary>
+        /// Finds the next occurrence of the specified text in the document.
+        /// Matches PyKotor implementation which supports case-sensitive, whole words, and regex search.
+        /// </summary>
+        /// <param name="findText">The text to search for. If null, uses currently selected text.</param>
+        /// <param name="caseSensitive">Whether the search should be case-sensitive.</param>
+        /// <param name="wholeWords">Whether to match whole words only.</param>
+        /// <param name="regex">Whether to treat the search text as a regular expression.</param>
+        /// <param name="backward">Whether to search backward from the current position.</param>
+        /// <returns>True if a match was found and selected, false otherwise.</returns>
+        public bool FindNext(string findText = null, bool caseSensitive = false, bool wholeWords = false, bool regex = false, bool backward = false)
+        {
+            if (string.IsNullOrEmpty(Text))
+            {
+                return false;
+            }
+
+            // Use selected text if findText is null
+            if (findText == null)
+            {
+                if (SelectionStart != SelectionEnd && !string.IsNullOrEmpty(SelectedText))
+                {
+                    findText = SelectedText;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+
+            if (string.IsNullOrEmpty(findText))
+            {
+                return false;
+            }
+
+            string documentText = Text;
+            int searchStart = backward ? SelectionStart : SelectionEnd;
+            int searchEnd = backward ? 0 : documentText.Length;
+
+            // Build regex pattern if needed
+            string pattern = findText;
+            if (regex)
+            {
+                pattern = findText;
+            }
+            else
+            {
+                // Escape special regex characters for literal search
+                pattern = Regex.Escape(findText);
+            }
+
+            // Add whole word boundaries if needed
+            if (wholeWords && !regex)
+            {
+                pattern = @"\b" + pattern + @"\b";
+            }
+
+            RegexOptions options = RegexOptions.None;
+            if (!caseSensitive)
+            {
+                options |= RegexOptions.IgnoreCase;
+            }
+
+            try
+            {
+                Regex searchRegex = new Regex(pattern, options);
+
+                if (backward)
+                {
+                    // Search backward from current position
+                    MatchCollection matches = searchRegex.Matches(documentText, 0, searchStart);
+                    if (matches.Count > 0)
+                    {
+                        Match lastMatch = matches[matches.Count - 1];
+                        SelectionStart = lastMatch.Index;
+                        SelectionEnd = lastMatch.Index + lastMatch.Length;
+                        return true;
+                    }
+                }
+                else
+                {
+                    // Search forward from current position
+                    Match match = searchRegex.Match(documentText, searchStart);
+                    if (match.Success)
+                    {
+                        SelectionStart = match.Index;
+                        SelectionEnd = match.Index + match.Length;
+                        return true;
+                    }
+
+                    // Wrap around - search from beginning
+                    match = searchRegex.Match(documentText, 0, searchStart);
+                    if (match.Success)
+                    {
+                        SelectionStart = match.Index;
+                        SelectionEnd = match.Index + match.Length;
+                        return true;
+                    }
+                }
+            }
+            catch (ArgumentException)
+            {
+                // Invalid regex pattern - return false
+                return false;
+            }
+
+            return false;
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/common/widgets/code_editor.py:1028-1030
+        // Original: def find_previous(self, find_text: str | None = None, case_sensitive: bool = False, whole_words: bool = False, regex: bool = False):
+        /// <summary>
+        /// Finds the previous occurrence of the specified text in the document.
+        /// </summary>
+        /// <param name="findText">The text to search for. If null, uses currently selected text.</param>
+        /// <param name="caseSensitive">Whether the search should be case-sensitive.</param>
+        /// <param name="wholeWords">Whether to match whole words only.</param>
+        /// <param name="regex">Whether to treat the search text as a regular expression.</param>
+        /// <returns>True if a match was found and selected, false otherwise.</returns>
+        public bool FindPrevious(string findText = null, bool caseSensitive = false, bool wholeWords = false, bool regex = false)
+        {
+            return FindNext(findText, caseSensitive, wholeWords, regex, backward: true);
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/common/widgets/code_editor.py:1040-1070
+        // Original: def replace_all_occurrences(self, find_text: str, replace_text: str, case_sensitive: bool = False, whole_words: bool = False, regex: bool = False):
+        /// <summary>
+        /// Replaces all occurrences of the specified text in the document.
+        /// Matches PyKotor implementation which supports case-sensitive, whole words, and regex search.
+        /// </summary>
+        /// <param name="findText">The text to search for.</param>
+        /// <param name="replaceText">The text to replace matches with.</param>
+        /// <param name="caseSensitive">Whether the search should be case-sensitive.</param>
+        /// <param name="wholeWords">Whether to match whole words only.</param>
+        /// <param name="regex">Whether to treat the search text as a regular expression.</param>
+        /// <returns>The number of occurrences replaced.</returns>
+        public int ReplaceAllOccurrences(string findText, string replaceText, bool caseSensitive = false, bool wholeWords = false, bool regex = false)
+        {
+            if (string.IsNullOrEmpty(Text) || string.IsNullOrEmpty(findText))
+            {
+                return 0;
+            }
+
+            string documentText = Text;
+
+            // Build regex pattern if needed
+            string pattern = findText;
+            if (regex)
+            {
+                pattern = findText;
+            }
+            else
+            {
+                // Escape special regex characters for literal search
+                pattern = Regex.Escape(findText);
+            }
+
+            // Add whole word boundaries if needed
+            if (wholeWords && !regex)
+            {
+                pattern = @"\b" + pattern + @"\b";
+            }
+
+            RegexOptions options = RegexOptions.None;
+            if (!caseSensitive)
+            {
+                options |= RegexOptions.IgnoreCase;
+            }
+
+            try
+            {
+                Regex searchRegex = new Regex(pattern, options);
+                
+                // Count occurrences before replacement
+                int count = searchRegex.Matches(documentText).Count;
+
+                if (count == 0)
+                {
+                    return 0;
+                }
+
+                // Matching PyKotor implementation: Replace all matches with literal replaceText
+                // The PyKotor code uses cursor.insertText(replace_text) which inserts literal text,
+                // not a regex replacement pattern. So we need to replace each match individually.
+                StringBuilder result = new StringBuilder(documentText);
+                int offset = 0;
+
+                // Find all matches and replace them (working backwards to preserve indices)
+                MatchCollection matches = searchRegex.Matches(documentText);
+                for (int i = matches.Count - 1; i >= 0; i--)
+                {
+                    Match match = matches[i];
+                    result.Remove(match.Index + offset, match.Length);
+                    result.Insert(match.Index + offset, replaceText ?? "");
+                    offset += (replaceText ?? "").Length - match.Length;
+                }
+
+                // Update the text
+                Text = result.ToString();
+                
+                // Clear selection after replace all
+                SelectionStart = 0;
+                SelectionEnd = 0;
+
+                return count;
+            }
+            catch (ArgumentException)
+            {
+                // Invalid regex pattern - return 0
+                return 0;
+            }
         }
     }
 }

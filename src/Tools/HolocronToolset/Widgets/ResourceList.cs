@@ -28,6 +28,26 @@ namespace HolocronToolset.Widgets
         // Original: UI wrapper exposing controls for testing
         public ResourceListUi Ui { get; private set; }
 
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/main_widgets.py:57
+        // Original: sig_section_changed: Signal = Signal(str)
+        // Event emitted when the section combo box selection changes
+        public event EventHandler<string> SectionChanged;
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/main_widgets.py:80
+        // Original: sig_request_reload: Signal = Signal(str)
+        // Event emitted when the reload button is clicked, passing the selected section string
+        public event EventHandler<string> ReloadClicked;
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/main_widgets.py:81
+        // Original: sig_request_refresh: Signal = Signal()
+        // Event emitted when the refresh button is clicked
+        public event EventHandler RefreshClicked;
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/main_widgets.py:55
+        // Original: sig_request_open_resource: Signal = Signal(list, object)
+        // Event emitted when a resource is double-clicked, passing the list of selected resources and useSpecializedEditor flag
+        public event EventHandler<ResourceOpenEventArgs> ResourceDoubleClicked;
+
         public ResourceList()
         {
             InitializeComponent();
@@ -314,29 +334,63 @@ namespace HolocronToolset.Widgets
         // Original: def on_section_changed(self):
         private void OnSectionChanged()
         {
-            // TODO: Emit section changed signal when events are implemented
+            // Get the selected section string from the combo box
+            string sectionData = null;
+            if (_sectionCombo != null && _sectionCombo.SelectedItem != null)
+            {
+                // In PyKotor, this uses currentData(Qt.ItemDataRole.UserRole), but since we're storing strings directly,
+                // we use the SelectedItem as the section string
+                sectionData = _sectionCombo.SelectedItem.ToString();
+            }
+
+            // Emit section changed signal (matching PyKotor: self.sig_section_changed.emit(data))
+            SectionChanged?.Invoke(this, sectionData);
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/main_widgets.py:240-244
         // Original: def on_reload_clicked(self):
         private void OnReloadClicked()
         {
-            // TODO: Emit reload signal when events are implemented
+            // Get the selected section string from the combo box
+            string sectionData = null;
+            if (_sectionCombo != null && _sectionCombo.SelectedItem != null)
+            {
+                // In PyKotor, this uses currentData(Qt.ItemDataRole.UserRole), but since we're storing strings directly,
+                // we use the SelectedItem as the section string
+                sectionData = _sectionCombo.SelectedItem.ToString();
+            }
+
+            // Emit reload signal (matching PyKotor: self.sig_request_reload.emit(data))
+            ReloadClicked?.Invoke(this, sectionData);
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/main_widgets.py:246-250
         // Original: def on_refresh_clicked(self):
         private void OnRefreshClicked()
         {
+            // Clear the modules model (matching PyKotor: self._clear_modules_model())
             _modulesModel.Clear();
-            // TODO: Emit refresh signal when events are implemented
+
+            // Emit refresh signal (matching PyKotor: self.sig_request_refresh.emit())
+            RefreshClicked?.Invoke(this, EventArgs.Empty);
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/main_widgets.py:416-418
         // Original: def on_resource_double_clicked(self):
         private void OnResourceDoubleClicked()
         {
-            // TODO: Emit open resource signal when events are implemented
+            // Get the selected resources from the tree view
+            var selectedResources = SelectedResources();
+
+            if (selectedResources == null || selectedResources.Count == 0)
+            {
+                return;
+            }
+
+            // Emit open resource signal (matching PyKotor: self.sig_request_open_resource.emit(self.selected_resources(), None))
+            // The second parameter (useSpecializedEditor) defaults to None/null, which means use default editor behavior
+            var args = new ResourceOpenEventArgs(selectedResources, null);
+            ResourceDoubleClicked?.Invoke(this, args);
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/main_widgets.py:131-133
@@ -500,5 +554,20 @@ namespace HolocronToolset.Widgets
         public Button ReloadButton { get; set; }
         public Button RefreshButton { get; set; }
         public TreeView ResourceTree { get; set; }
+    }
+
+    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/main_widgets.py:55
+    // Original: sig_request_open_resource: Signal = Signal(list, object)
+    // Event arguments for ResourceDoubleClicked event, containing the list of resources and useSpecializedEditor flag
+    public class ResourceOpenEventArgs : EventArgs
+    {
+        public List<FileResource> Resources { get; }
+        public bool? UseSpecializedEditor { get; }
+
+        public ResourceOpenEventArgs(List<FileResource> resources, bool? useSpecializedEditor)
+        {
+            Resources = resources ?? new List<FileResource>();
+            UseSpecializedEditor = useSpecializedEditor;
+        }
     }
 }
