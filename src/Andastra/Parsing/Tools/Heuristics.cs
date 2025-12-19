@@ -209,11 +209,11 @@ namespace Andastra.Parsing.Tools
 
             // Determine the game with the most checks passed
             int gaScore = gaPcChecks.Count(x => x);
-            int gaScore2 = gaPcChecks2.Count(x => x);
+            int gaScore2 = gaK2PcChecks.Count(x => x);
             int gaXboxScore = gaXboxChecks.Count(x => x);
-            int gaXboxScore2 = gaXboxChecks2.Count(x => x);
+            int gaXboxScore2 = gaK2XboxChecks.Count(x => x);
             int gaIosScore = gaIosChecks.Count(x => x);
-            int gaIosScore2 = gaIosChecks2.Count(x => x);
+            int gaIosScore2 = gaK2IosChecks.Count(x => x);
             int gaAndroidScore = gaAndroidChecks.Count(x => x);
 
             Game? highestScoringGame = null;
