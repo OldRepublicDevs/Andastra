@@ -39,7 +39,8 @@ namespace Andastra.Parsing.Formats.GFF
         NFO,
         PT,
         GVT,
-        INV
+        INV,
+        GAM
     }
 
     public static class GFFContentExtensions
@@ -72,6 +73,7 @@ namespace Andastra.Parsing.Formats.GFF
             if (lower.EndsWith(".uts")) return GFFContent.UTS;
             if (lower.EndsWith(".utt")) return GFFContent.UTT;
             if (lower.EndsWith(".utw")) return GFFContent.UTW;
+            if (lower.EndsWith(".gam")) return GFFContent.GAM;
             return GFFContent.GFF;
         }
 
@@ -110,6 +112,7 @@ namespace Andastra.Parsing.Formats.GFF
                 case "PT": return GFFContent.PT;
                 case "GVT": return GFFContent.GVT;
                 case "INV": return GFFContent.INV;
+                case "GAM": return GFFContent.GAM;
                 default: return GFFContent.GFF;
             }
         }
@@ -126,7 +129,7 @@ namespace Andastra.Parsing.Formats.GFF
                 "gff", "utc", "uti", "utp", "ute", "utm", "utd", "utw",
                 "dlg", "are", "git", "ifo", "gui", "jrl", "fac", "pth",
                 "bic", "btc", "btd", "bte", "bti", "btp", "btm", "btt",
-                "itp", "nfo", "pt", "gvt", "inv"
+                "itp", "nfo", "pt", "gvt", "inv", "gam"
             };
         }
 

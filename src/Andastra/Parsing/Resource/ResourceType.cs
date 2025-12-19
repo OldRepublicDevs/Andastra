@@ -338,6 +338,7 @@ namespace Andastra.Parsing.Resource
         public static readonly ResourceType RIM = new ResourceType(3002, "rim", "Modules", "binary", name: "RIM");
         public static readonly ResourceType PTH = new ResourceType(3003, "pth", "Paths", "gff", name: "PTH");
         public static readonly ResourceType LIP = new ResourceType(3004, "lip", "Lips", "lips", name: "LIP");
+        public static readonly ResourceType GAM = new ResourceType(3005, "gam", "Save Data", "gff", name: "GAM");
         public static readonly ResourceType TPC = new ResourceType(3007, "tpc", "Textures", "binary", name: "TPC");
         public static readonly ResourceType MDX = new ResourceType(3008, "mdx", "Models", "binary", name: "MDX");
         public static readonly ResourceType CWA = new ResourceType(3027, "cwa", "Crowd Attributes", "gff", name: "CWA");
