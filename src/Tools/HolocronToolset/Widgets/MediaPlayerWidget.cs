@@ -12,7 +12,7 @@ namespace HolocronToolset.Widgets
 {
     /// <summary>
     /// Industry-standard media player widget with comprehensive controls and sleek modern design.
-    /// 
+    ///
     /// Features:
     /// - Play/pause, stop, and mute controls
     /// - Volume control with slider
@@ -22,7 +22,7 @@ namespace HolocronToolset.Widgets
     /// - Real-time position updates
     /// - Modern, sleek UI design inspired by React components
     /// - Cross-platform compatible
-    /// 
+    ///
     /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/media_player_widget.py:26
     /// </summary>
     public partial class MediaPlayerWidget : UserControl, INotifyPropertyChanged
@@ -34,7 +34,7 @@ namespace HolocronToolset.Widgets
         private Button _muteButton;
         private Slider _volumeSlider;
         private Button _speedButton;
-        
+
         private bool _isPlaying;
         private bool _isMuted;
         private double _volume = 0.75;
@@ -42,7 +42,7 @@ namespace HolocronToolset.Widgets
         private bool _isSeeking;
         private TimeSpan _currentPosition;
         private TimeSpan _duration;
-        
+
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/media_player_widget.py:54-55
         // Original: self.player: QMediaPlayer = QMediaPlayer(self)
         // MediaPlayer interface for actual playback control
@@ -66,7 +66,7 @@ namespace HolocronToolset.Widgets
             InitializeComponent();
             SetupControls();
             SetupKeyboardShortcuts();
-            
+
             // Initialize state
             _isPlaying = false;
             _isMuted = false;
@@ -139,79 +139,79 @@ namespace HolocronToolset.Widgets
         private void SetupProgrammaticUI()
         {
             // Fallback programmatic UI if XAML is not available
-            var mainPanel = new StackPanel 
-            { 
-                Orientation = Orientation.Vertical, 
-                Spacing = 4, 
-                Margin = new Avalonia.Thickness(12, 8) 
+            var mainPanel = new StackPanel
+            {
+                Orientation = Orientation.Vertical,
+                Spacing = 4,
+                Margin = new Avalonia.Thickness(12, 8)
             };
 
-            var controlsPanel = new StackPanel 
-            { 
-                Orientation = Orientation.Horizontal, 
+            var controlsPanel = new StackPanel
+            {
+                Orientation = Orientation.Horizontal,
                 Spacing = 8,
                 VerticalAlignment = VerticalAlignment.Center
             };
 
-            _playPauseButton = new Button 
-            { 
-                Content = "▶", 
-                Width = 40, 
+            _playPauseButton = new Button
+            {
+                Content = "▶",
+                Width = 40,
                 Height = 40,
                 FontSize = 18
             };
             _playPauseButton.Click += (s, e) => TogglePlayPause();
 
-            _stopButton = new Button 
-            { 
-                Content = "■", 
-                Width = 36, 
+            _stopButton = new Button
+            {
+                Content = "■",
+                Width = 36,
                 Height = 36,
                 FontSize = 14,
                 Margin = new Avalonia.Thickness(4, 0, 0, 0)
             };
             _stopButton.Click += (s, e) => Stop();
 
-            _timeSlider = new Slider 
-            { 
-                Minimum = 0, 
-                Maximum = 100, 
-                Value = 0, 
+            _timeSlider = new Slider
+            {
+                Minimum = 0,
+                Maximum = 100,
+                Value = 0,
                 Width = 200
             };
             _timeSlider.ValueChanged += (s, e) => OnTimeSliderValueChanged();
 
-            _timeLabel = new TextBlock 
-            { 
-                Text = "00:00 / 00:00", 
-                MinWidth = 100, 
+            _timeLabel = new TextBlock
+            {
+                Text = "00:00 / 00:00",
+                MinWidth = 100,
                 HorizontalAlignment = HorizontalAlignment.Center,
                 VerticalAlignment = VerticalAlignment.Center,
                 FontSize = 12
             };
 
-            _muteButton = new Button 
-            { 
-                Content = "🔊", 
-                Width = 32, 
+            _muteButton = new Button
+            {
+                Content = "🔊",
+                Width = 32,
                 Height = 32,
                 FontSize = 14
             };
             _muteButton.Click += (s, e) => ToggleMute();
 
-            _volumeSlider = new Slider 
-            { 
-                Minimum = 0, 
-                Maximum = 100, 
-                Value = 75, 
-                Width = 80 
+            _volumeSlider = new Slider
+            {
+                Minimum = 0,
+                Maximum = 100,
+                Value = 75,
+                Width = 80
             };
             _volumeSlider.ValueChanged += (s, e) => OnVolumeChanged();
 
-            _speedButton = new Button 
-            { 
-                Content = "1.0x", 
-                Width = 50, 
+            _speedButton = new Button
+            {
+                Content = "1.0x",
+                Width = 50,
                 Height = 28,
                 FontSize = 11
             };
@@ -334,12 +334,12 @@ namespace HolocronToolset.Widgets
 
             _isPlaying = false;
             _currentPosition = TimeSpan.Zero;
-            
+
             UpdatePlayPauseButton();
             UpdateTimeSlider();
             UpdateTimeLabel();
             HideWidget();
-            
+
             PlaybackStopped?.Invoke(this, EventArgs.Empty);
         }
 
@@ -416,7 +416,7 @@ namespace HolocronToolset.Widgets
                 return;
 
             _isSeeking = false;
-            
+
             if (_timeSlider != null && _duration.TotalMilliseconds > 0)
             {
                 var ratio = _timeSlider.Value / _timeSlider.Maximum;
@@ -490,18 +490,18 @@ namespace HolocronToolset.Widgets
                         // Handle errors gracefully
                     }
                 }
-                
+
                 if (_volumeSlider != null)
                 {
                     _volumeSlider.Value = _volume * 100;
                 }
-                
+
                 if (_volume > 0)
                 {
                     _isMuted = false;
                     UpdateMuteButton();
                 }
-                
+
                 VolumeChanged?.Invoke(this, _volume);
                 OnPropertyChanged();
             }
@@ -553,7 +553,7 @@ namespace HolocronToolset.Widgets
                     closestIndex = i;
                 }
             }
-            
+
             _currentSpeedIndex = closestIndex;
             _playbackSpeed = SpeedLevels[_currentSpeedIndex];
 

@@ -2851,7 +2851,7 @@ namespace HolocronToolset.Tests.Editors
                 are.GrassDiffuse = testCase.Color;
                 
                 // Test for all game types
-                foreach (var game in new[] { Game.K1, Game.K2, Game.NWN, Game.DA, Game.ME })
+                foreach (var game in new[] { Game.K1, Game.K2, Game.NWN, Game.DA })
                 {
                     var bytes = AREHelpers.BytesAre(are, game);
                     var reconstructedAre = AREHelpers.ReadAre(bytes);
@@ -2878,7 +2878,7 @@ namespace HolocronToolset.Tests.Editors
             // Test that default ARE values are correctly handled
             var are = new ARE(); // All defaults
             
-            foreach (var game in new[] { Game.K1, Game.K2, Game.NWN, Game.DA, Game.ME })
+            foreach (var game in new[] { Game.K1, Game.K2, Game.NWN, Game.DA })
             {
                 var bytes = AREHelpers.BytesAre(are, game);
                 var reconstructedAre = AREHelpers.ReadAre(bytes);

@@ -115,7 +115,7 @@ namespace HolocronToolset.Dialogs
             string currentDir = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
             if (!string.IsNullOrEmpty(currentDir))
             {
-                // Navigate up from bin/Debug/net9/ to src/HolocronToolset.NET/Dialogs/ then up to root
+                // Navigate up from bin/Debug/net9.0/ to src/HolocronToolset.NET/Dialogs/ then up to root
                 var toolsetWiki = Path.Combine(currentDir, "..", "..", "..", "..", "wiki");
                 toolsetWiki = Path.GetFullPath(toolsetWiki);
                 if (Directory.Exists(toolsetWiki))

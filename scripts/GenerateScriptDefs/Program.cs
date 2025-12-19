@@ -836,7 +836,7 @@ namespace GenerateScriptDefs
         {
             // Matching PyKotor implementation at Libraries/PyKotor/scripts/generate_scriptdefs.py:772-795
             // Original: def main():
-            // Calculate repo root: from scripts/GenerateScriptDefs/bin/Debug/net8.0/ go up to repo root
+            // Calculate repo root: from scripts/GenerateScriptDefs/bin/Debug/net9.0.0/ go up to repo root
             string currentDir = AppDomain.CurrentDomain.BaseDirectory;
             string repoRoot = Path.GetFullPath(Path.Combine(currentDir, "..", "..", "..", "..", ".."));
             string k1Nss = Path.Combine(repoRoot, "vendor", "DeNCS", "k1_nwscript.nss");

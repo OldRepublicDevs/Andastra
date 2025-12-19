@@ -264,25 +264,25 @@ namespace Andastra.Runtime.Core.Actions
                         if (blockingTransform != null)
                         {
                             Vector3 obstaclePosition = blockingTransform.Position;
-                            
+
                             // Get creature bounding box to determine avoidance radius
                             // Use collision detector to get proper bounding box
                             CreatureBoundingBox blockingBoundingBox = _collisionDetector.GetCreatureBoundingBoxPublic(blockingCreature);
                             // Use the larger of width/depth as avoidance radius, with safety margin
                             float avoidanceRadius = Math.Max(blockingBoundingBox.Width, blockingBoundingBox.Depth) * 0.5f + 0.5f;
-                            
+
                             // Create obstacle info
                             var obstacles = new List<Interfaces.ObstacleInfo>
                             {
                                 new Interfaces.ObstacleInfo(obstaclePosition, avoidanceRadius)
                             };
-                            
+
                             // Try to find path around obstacle from current position to destination
                             IList<Vector3> newPath = currentArea.NavigationMesh.FindPathAroundObstacles(
                                 transform.Position,
                                 _destination,
                                 obstacles);
-                            
+
                             if (newPath != null && newPath.Count > 0)
                             {
                                 // Found alternative path around obstacle - use it
@@ -295,7 +295,7 @@ namespace Andastra.Runtime.Core.Actions
                         }
                     }
                 }
-                
+
                 // Could not find path around obstacle - action fails
                 // Based on swkotor2.exe: If FUN_0054a1f0 returns null, movement is aborted
                 // Located via string reference: "aborted walking, we are totaly blocked. can't get around this creature at all." @ 0x007c0408
@@ -311,6 +311,7 @@ namespace Andastra.Runtime.Core.Actions
 
             return ActionStatus.InProgress;
         }
+
         /// <summary>
         /// Gets the bump counter for an entity.
         /// Based on swkotor2.exe: Bump counter stored at offset 0x268 in entity structure.

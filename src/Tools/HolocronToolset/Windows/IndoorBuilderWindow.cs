@@ -73,7 +73,7 @@ namespace HolocronToolset.Windows
 
         // Matching PyKotor implementation - self._clipboard property
         // Original: self._clipboard: list[RoomClipboardData] = []
-        // Intentionally hides base Clipboard property (IClipboard? - system clipboard) 
+        // Intentionally hides base Clipboard property (IClipboard? - system clipboard)
         // to provide domain-specific room clipboard (List<RoomClipboardData>)
         public new List<RoomClipboardData> Clipboard { get; private set; }
 

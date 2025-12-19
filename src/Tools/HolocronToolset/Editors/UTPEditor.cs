@@ -12,7 +12,7 @@ using Andastra.Parsing.Formats.GFF;
 using Andastra.Parsing.Formats.TwoDA;
 using Andastra.Parsing.Resource.Generics;
 using Andastra.Parsing.Resource;
-using Andastra.Parsing.Resource.Generics.DLG;
+using DLGType = Andastra.Parsing.Resource.Generics.DLG.DLG;
 using Andastra.Parsing.Formats.Capsule;
 using HolocronToolset.Data;
 using HolocronToolset.Dialogs;
@@ -808,7 +808,7 @@ namespace HolocronToolset.Editors
                 {
                     // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utp.py:395-401
                     // Original: data = bytearray(); write_gff(dismantle_dlg(DLG()), data); filepath = ...
-                    var dlg = new DLG();
+                    var dlg = new DLGType();
                     var gff = DLGHelper.DismantleDlg(dlg, _installation.Game);
                     data = GFFAuto.BytesGff(gff, ResourceType.DLG);
                     filepath = System.IO.Path.Combine(_installation.OverridePath(), $"{resname}.dlg");

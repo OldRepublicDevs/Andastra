@@ -88,11 +88,11 @@ namespace HolocronToolset.Widgets
                     return false;
                 }
                 searchText = Text.Substring(wordStart, wordEnd - wordStart);
-                
+
                 // Select the word at cursor first (matching VS Code behavior)
                 SelectionStart = wordStart;
                 SelectionEnd = wordEnd;
-                
+
                 // Start searching after the end of the word at cursor
                 searchStartIndex = wordEnd;
             }
@@ -382,7 +382,7 @@ namespace HolocronToolset.Widgets
             try
             {
                 Regex searchRegex = new Regex(pattern, options);
-                
+
                 // Count occurrences before replacement
                 int count = searchRegex.Matches(documentText).Count;
 
@@ -409,7 +409,7 @@ namespace HolocronToolset.Widgets
 
                 // Update the text
                 Text = result.ToString();
-                
+
                 // Clear selection after replace all
                 SelectionStart = 0;
                 SelectionEnd = 0;

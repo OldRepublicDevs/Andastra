@@ -13,6 +13,8 @@ using Andastra.Parsing.Resource;
 using DLGType = Andastra.Parsing.Resource.Generics.DLG.DLG;
 using DLGLink = Andastra.Parsing.Resource.Generics.DLG.DLGLink;
 using DLGNode = Andastra.Parsing.Resource.Generics.DLG.DLGNode;
+using DLGEntry = Andastra.Parsing.Resource.Generics.DLG.DLGEntry;
+using DLGReply = Andastra.Parsing.Resource.Generics.DLG.DLGReply;
 using HolocronToolset.Data;
 using HolocronToolset.Editors.Actions;
 using GFFAuto = Andastra.Parsing.Formats.GFF.GFFAuto;
@@ -1751,18 +1753,6 @@ namespace HolocronToolset.Editors
             return newItem;
         }
 
-        /// <summary>
-        /// Gets the item at the specified row and column.
-        /// Matching PyKotor implementation: def item(self, row: int, column: int = 0) -> DLGStandardItem | None:
-        /// </summary>
-        public DLGStandardItem Item(int row, int column = 0)
-        {
-            if (row < 0 || row >= _rootItems.Count || column != 0)
-            {
-                return null;
-            }
-            return _rootItems[row];
-        }
 
         /// <summary>
         /// Gets a new list index for a node.

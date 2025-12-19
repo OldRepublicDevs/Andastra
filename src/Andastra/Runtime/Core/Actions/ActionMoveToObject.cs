@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Numerics;
 using Andastra.Runtime.Core.Collision;
 using Andastra.Runtime.Core.Entities;
@@ -230,24 +231,24 @@ namespace Andastra.Runtime.Core.Actions
                         if (blockingTransform != null)
                         {
                             Vector3 obstaclePosition = blockingTransform.Position;
-                            
+
                             // Get creature bounding box to determine avoidance radius
                             CreatureBoundingBox blockingBoundingBox = _collisionDetector.GetCreatureBoundingBoxPublic(blockingCreature);
                             // Use the larger of width/depth as avoidance radius, with safety margin
                             float avoidanceRadius = Math.Max(blockingBoundingBox.Width, blockingBoundingBox.Depth) * 0.5f + 0.5f;
-                            
+
                             // Create obstacle info
                             var obstacles = new List<Interfaces.ObstacleInfo>
                             {
                                 new Interfaces.ObstacleInfo(obstaclePosition, avoidanceRadius)
                             };
-                            
+
                             // Try to find path around obstacle from current position to target
                             IList<Vector3> newPath = currentArea.NavigationMesh.FindPathAroundObstacles(
                                 transform.Position,
                                 targetTransform.Position,
                                 obstacles);
-                            
+
                             if (newPath != null && newPath.Count > 0)
                             {
                                 // Found alternative path around obstacle - use it for direct movement
@@ -260,7 +261,7 @@ namespace Andastra.Runtime.Core.Actions
                                     adjustedDirection = Vector3.Normalize(adjustedDirection);
                                     // Use adjusted direction for movement this frame
                                     Vector3 adjustedNewPosition = currentPosition + adjustedDirection * moveDistance;
-                                    
+
                                     // Project to walkmesh
                                     Vector3 projectedPos;
                                     float height;
@@ -268,13 +269,13 @@ namespace Andastra.Runtime.Core.Actions
                                     {
                                         adjustedNewPosition = projectedPos;
                                     }
-                                    
+
                                     // Check if adjusted path is clear
                                     uint adjustedBlockingId;
                                     Vector3 adjustedNormal;
                                     bool adjustedHasCollision = _collisionDetector.CheckCreatureCollision(
                                         actor, currentPosition, adjustedNewPosition, out adjustedBlockingId, out adjustedNormal, _targetObjectId);
-                                    
+
                                     if (!adjustedHasCollision)
                                     {
                                         // Adjusted path is clear - use it
@@ -288,7 +289,7 @@ namespace Andastra.Runtime.Core.Actions
                         }
                     }
                 }
-                
+
                 // Could not find path around obstacle - action fails
                 // Based on swkotor2.exe: If FUN_0054a1f0 returns null, movement is aborted
                 return ActionStatus.Failed;

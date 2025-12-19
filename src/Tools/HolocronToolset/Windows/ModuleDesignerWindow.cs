@@ -6,7 +6,6 @@ using Avalonia.Markup.Xaml;
 using HolocronToolset.Data;
 using HolocronToolset.Windows;
 using Andastra.Parsing;
-using ModuleType = global::Andastra.Parsing.Common.Module.Module;
 
 namespace HolocronToolset.Windows
 {
@@ -17,7 +16,7 @@ namespace HolocronToolset.Windows
         private HTInstallation _installation;
         private string _modulePath;
         private string _moduleName;
-        private ModuleType _module;
+        private Andastra.Parsing.Common.Module _module;
         private UndoStack _undoStack;
         private List<object> _selectedInstances; // GITInstance equivalents
 
@@ -26,7 +25,7 @@ namespace HolocronToolset.Windows
         public ModuleDesignerWindowUi Ui { get; private set; }
 
         // Matching PyKotor implementation - self._module property
-        public ModuleType GetModule() => _module;
+        public Andastra.Parsing.Common.Module GetModule() => _module;
 
         // Matching PyKotor implementation - self.undo_stack property
         public UndoStack UndoStack => _undoStack;

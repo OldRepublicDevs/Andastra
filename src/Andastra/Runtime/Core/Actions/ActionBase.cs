@@ -15,13 +15,19 @@ namespace Andastra.Runtime.Core.Actions
     /// 
     /// This class is kept for backward compatibility. Core cannot depend on Games, so this is a standalone implementation.
     /// </remarks>
-    public abstract class ActionBase
+    public abstract class ActionBase : IAction
     {
         public ActionType Type { get; }
+        public int GroupId { get; set; }
+        public IEntity Owner { get; set; }
+        protected float ElapsedTime { get; private set; }
 
         protected ActionBase(ActionType type)
         {
             Type = type;
+            ElapsedTime = 0f;
+            GroupId = 0;
+            Owner = null;
         }
 
         /// <summary>
@@ -34,7 +40,24 @@ namespace Andastra.Runtime.Core.Actions
         /// </summary>
         public ActionStatus Execute(IEntity actor, float deltaTime)
         {
+            ElapsedTime += deltaTime;
             return ExecuteInternal(actor, deltaTime);
+        }
+
+        /// <summary>
+        /// Updates the action and returns its status.
+        /// </summary>
+        public ActionStatus Update(IEntity actor, float deltaTime)
+        {
+            return Execute(actor, deltaTime);
+        }
+
+        /// <summary>
+        /// Called when the action is cancelled or completed.
+        /// </summary>
+        public virtual void Dispose()
+        {
+            // Default implementation does nothing
         }
     }
 }

@@ -50,12 +50,12 @@
           CornerRadius="0"
           Padding="12,8"
           Opacity="0.95">
-    
+
     <Grid ColumnDefinitions="Auto,Auto,*,Auto,Auto,Auto,Auto,Auto"
           RowDefinitions="Auto"
           VerticalAlignment="Center"
           Margin="0">
-      
+
       <!-- Play/Pause Button -->
       <Button x:Name="playPauseButton"
               Grid.Column="0"
@@ -67,7 +67,7 @@
               Content="▶"
               ToolTip.Tip="Play/Pause (Space)"
               Classes="playPause"/>
-      
+
       <!-- Stop Button -->
       <Button x:Name="stopButton"
               Grid.Column="1"
@@ -80,7 +80,7 @@
               ToolTip.Tip="Stop (S)"
               Margin="4,0,0,0"
               Classes="stop"/>
-      
+
       <!-- Time Slider (Progress Bar) -->
       <Grid Grid.Column="2"
             VerticalAlignment="Center"
@@ -93,7 +93,7 @@
                 Classes="timeSlider"
                 VerticalAlignment="Center"/>
       </Grid>
-      
+
       <!-- Time Label -->
       <TextBlock x:Name="timeLabel"
                  Grid.Column="3"
@@ -104,13 +104,13 @@
                  Margin="12,0"
                  Classes="timeLabel"
                  TextAlignment="Center"/>
-      
+
       <!-- Volume Controls Container -->
       <Grid Grid.Column="4"
             ColumnDefinitions="Auto,Auto"
             VerticalAlignment="Center"
             Margin="8,0">
-        
+
         <!-- Mute Button -->
         <Button x:Name="muteButton"
                 Grid.Column="0"
@@ -121,7 +121,7 @@
                 ToolTip.Tip="Mute/Unmute (M)"
                 Margin="0,0,4,0"
                 Classes="mute"/>
-        
+
         <!-- Volume Slider -->
         <Slider x:Name="volumeSlider"
                 Grid.Column="1"
@@ -133,7 +133,7 @@
                 Classes="volumeSlider"
                 VerticalAlignment="Center"/>
       </Grid>
-      
+
       <!-- Playback Speed Button -->
       <Button x:Name="speedButton"
               Grid.Column="5"
@@ -145,10 +145,10 @@
               Margin="8,0,0,0"
               Classes="speed"
               Padding="8,4"/>
-      
+
       <!-- Spacer -->
       <Border Grid.Column="6" Width="8"/>
-      
+
     </Grid>
   </Border>
 </UserControl>

@@ -105,8 +105,8 @@ function Test-RequiredTools {
 function Get-PredefinedPublishProfiles {
     [pscustomobject[]]@(
         [pscustomobject]@{
-            Name              = "net8.0_win-x64_selfcontained"
-            BaseName          = "net8.0_win-x64_selfcontained"
+            Name              = "net9.0.0_win-x64_selfcontained"
+            BaseName          = "net9.0.0_win-x64_selfcontained"
             TargetFramework   = "net9.0"
             RuntimeIdentifier = "win-x64"
             SelfContained     = $true
@@ -126,18 +126,18 @@ function Get-PredefinedPublishProfiles {
             }
         },
         [pscustomobject]@{
-            Name              = "net8.0_win-x86_selfcontained"
-            BaseName          = "net8.0_win-x86_selfcontained"
-            TargetFramework   = "net8.0"
+            Name              = "net9.0.0_win-x86_selfcontained"
+            BaseName          = "net9.0.0_win-x86_selfcontained"
+            TargetFramework   = "net9.0.0"
             RuntimeIdentifier = "win-x86"
             SelfContained     = $true
             MsBuildProperties = [ordered]@{
                 SolutionDir                          = "..\"
                 SelfContained                        = "true"
-                TargetFramework                      = "net8.0"
+                TargetFramework                      = "net9.0.0"
                 Platform                             = "x86"
                 RuntimeIdentifier                    = "win-x86"
-                PublishDir                           = "dist\build\selfcontained\net8.0\win-x86\"
+                PublishDir                           = "dist\build\selfcontained\net9.0.0\win-x86\"
                 IncludeNativeLibrariesForSelfExtract = "true"
                 PublishSingleFile                    = "true"
                 PublishReadyToRun                    = "true"
@@ -147,18 +147,18 @@ function Get-PredefinedPublishProfiles {
             }
         },
         [pscustomobject]@{
-            Name              = "net8.0_linux-x64_selfcontained"
-            BaseName          = "net8.0_linux-x64_selfcontained"
-            TargetFramework   = "net8.0"
+            Name              = "net9.0.0_linux-x64_selfcontained"
+            BaseName          = "net9.0.0_linux-x64_selfcontained"
+            TargetFramework   = "net9.0.0"
             RuntimeIdentifier = "linux-x64"
             SelfContained     = $true
             MsBuildProperties = [ordered]@{
                 SolutionDir                          = "..\"
                 SelfContained                        = "true"
-                TargetFramework                      = "net8.0"
+                TargetFramework                      = "net9.0.0"
                 Platform                             = "x64"
                 RuntimeIdentifier                    = "linux-x64"
-                PublishDir                           = "dist\build\selfcontained\net8.0\linux-x64\"
+                PublishDir                           = "dist\build\selfcontained\net9.0.0\linux-x64\"
                 IncludeNativeLibrariesForSelfExtract = "true"
                 PublishSingleFile                    = "true"
                 PublishReadyToRun                    = "true"
@@ -189,18 +189,18 @@ function Get-PredefinedPublishProfiles {
             }
         },
         [pscustomobject]@{
-            Name              = "net8.0_osx-x64_selfcontained"
-            BaseName          = "net8.0_osx-x64_selfcontained"
-            TargetFramework   = "net8.0"
+            Name              = "net9.0.0_osx-x64_selfcontained"
+            BaseName          = "net9.0.0_osx-x64_selfcontained"
+            TargetFramework   = "net9.0.0"
             RuntimeIdentifier = "osx-x64"
             SelfContained     = $true
             MsBuildProperties = [ordered]@{
                 SolutionDir                          = "..\"
                 SelfContained                        = "true"
-                TargetFramework                      = "net8.0"
+                TargetFramework                      = "net9.0.0"
                 Platform                             = "x64"
                 RuntimeIdentifier                    = "osx-x64"
-                PublishDir                           = "dist\build\selfcontained\net8.0\osx-x64\"
+                PublishDir                           = "dist\build\selfcontained\net9.0.0\osx-x64\"
                 IncludeNativeLibrariesForSelfExtract = "true"
                 PublishSingleFile                    = "true"
                 PublishTrimmed                       = "false"
@@ -219,18 +219,18 @@ function Get-PredefinedPublishProfiles {
             }
         },
         [pscustomobject]@{
-            Name              = "net8.0_osx-arm64_selfcontained"
-            BaseName          = "net8.0_osx-arm64_selfcontained"
-            TargetFramework   = "net8.0"
+            Name              = "net9.0.0_osx-arm64_selfcontained"
+            BaseName          = "net9.0.0_osx-arm64_selfcontained"
+            TargetFramework   = "net9.0.0"
             RuntimeIdentifier = "osx-arm64"
             SelfContained     = $true
             MsBuildProperties = [ordered]@{
                 SolutionDir                          = "..\"
                 SelfContained                        = "true"
-                TargetFramework                      = "net8.0"
+                TargetFramework                      = "net9.0.0"
                 Platform                             = "x64"
                 RuntimeIdentifier                    = "osx-arm64"
-                PublishDir                           = "dist\build\selfcontained\net8.0\osx-arm64\"
+                PublishDir                           = "dist\build\selfcontained\net9.0.0\osx-arm64\"
                 IncludeNativeLibrariesForSelfExtract = "true"
                 PublishSingleFile                    = "true"
                 PublishTrimmed                       = "false"
@@ -491,7 +491,7 @@ function Remove-LeftoverFiles {
         }
 
         # Check if this looks like an old build folder (contains framework names)
-        $isOldBuild = $subdir.Name -match "(net48|net9\.0|win7-|linux-|osx-|selfcontained)"
+        $isOldBuild = $subdir.Name -match "(net48|net9.0\.0|win7-|linux-|osx-|selfcontained)"
         if ($isOldBuild) {
             Write-Log "Removing leftover build folder: $($subdir.Name)" -Level "DEBUG" -Variables @{ "Folder" = $subdir.FullName }
             try {

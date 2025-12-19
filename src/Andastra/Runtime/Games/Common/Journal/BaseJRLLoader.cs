@@ -1,0 +1,114 @@
+using System;
+using System.Collections.Generic;
+using JetBrains.Annotations;
+using Andastra.Parsing.Installation;
+
+namespace Andastra.Runtime.Games.Common.Journal
+{
+    /// <summary>
+    /// Base implementation of JRL (Journal) file loader shared across all BioWare engines.
+    /// </summary>
+    /// <remarks>
+    /// Base JRL Loader Implementation:
+    /// - Common JRL file loading functionality across all engines
+    /// - Base classes MUST only contain functionality that is identical across ALL engines
+    /// - Engine-specific details MUST be in subclasses (OdysseyJRLLoader, AuroraJRLLoader, EclipseJRLLoader)
+    /// 
+    /// Based on reverse engineering of:
+    /// - swkotor.exe: JRL file loading (needs reverse engineering)
+    /// - swkotor2.exe: JRL file loading (GFF with "JRL " signature)
+    /// - nwmain.exe: JRL file loading (CNWSJournal::ReloadJournalEntries @ 0x14039ddb0, different format)
+    /// - daorigins.exe: Quest system (may use different file format, needs reverse engineering)
+    /// 
+    /// Common functionality across engines:
+    /// - JRL file loading from installation
+    /// - JRL file caching for performance
+    /// - Quest entry text lookup by quest tag and entry ID
+    /// - Talk table (TLK) integration for LocalizedString resolution
+    /// 
+    /// Engine-specific differences:
+    /// - Odyssey (swkotor.exe, swkotor2.exe): GFF with "JRL " signature, JRLQuest/JRLQuestEntry structure
+    /// - Aurora (nwmain.exe): Different JRL format, CNWSJournal structure
+    /// - Eclipse (daorigins.exe): May use different file format or structure
+    /// </remarks>
+    public abstract class BaseJRLLoader
+    {
+        protected readonly Installation _installation;
+        protected readonly Dictionary<string, object> _jrlCache; // Cache stores engine-specific JRL types
+
+        /// <summary>
+        /// Creates a new JRL loader.
+        /// </summary>
+        /// <param name="installation">The game installation to load JRL files from.</param>
+        protected BaseJRLLoader(Installation installation)
+        {
+            _installation = installation ?? throw new ArgumentNullException("installation");
+            _jrlCache = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
+        }
+
+        /// <summary>
+        /// Sets the talk tables for LocalizedString resolution (engine-specific implementation).
+        /// </summary>
+        /// <remarks>
+        /// Engine-specific subclasses implement this to handle engine-specific TLK formats.
+        /// </remarks>
+        public abstract void SetTalkTables(object baseTlk, object customTlk = null);
+
+        /// <summary>
+        /// Loads a JRL file by ResRef (engine-specific implementation).
+        /// </summary>
+        /// <param name="jrlResRef">ResRef of the JRL file (without extension).</param>
+        /// <returns>The loaded JRL (engine-specific type), or null if not found.</returns>
+        /// <remarks>
+        /// Engine-specific subclasses implement this to handle engine-specific JRL file formats.
+        /// </remarks>
+        [CanBeNull]
+        public abstract object LoadJRL(string jrlResRef);
+
+        /// <summary>
+        /// Gets quest entry text from a JRL file (engine-specific implementation).
+        /// </summary>
+        /// <param name="questTag">Quest tag to look up.</param>
+        /// <param name="entryId">Entry ID (0-based index in entry list).</param>
+        /// <param name="jrlResRef">Optional JRL ResRef. If null, uses quest tag as ResRef.</param>
+        /// <returns>The entry text, or null if not found.</returns>
+        /// <remarks>
+        /// Engine-specific subclasses implement this to handle engine-specific JRL structures and text lookup.
+        /// </remarks>
+        [CanBeNull]
+        public abstract string GetQuestEntryText(string questTag, int entryId, string jrlResRef = null);
+
+        /// <summary>
+        /// Gets quest entry text from global.jrl file (engine-specific implementation).
+        /// </summary>
+        /// <param name="questTag">Quest tag to look up.</param>
+        /// <param name="entryId">Entry ID (0-based index in entry list).</param>
+        /// <returns>The entry text, or null if not found.</returns>
+        /// <remarks>
+        /// Engine-specific subclasses implement this to handle engine-specific global.jrl lookup.
+        /// </remarks>
+        [CanBeNull]
+        public abstract string GetQuestEntryTextFromGlobal(string questTag, int entryId);
+
+        /// <summary>
+        /// Clears the JRL cache.
+        /// </summary>
+        public virtual void ClearCache()
+        {
+            _jrlCache.Clear();
+        }
+
+        /// <summary>
+        /// Gets a quest by tag from a JRL file (engine-specific implementation).
+        /// </summary>
+        /// <param name="questTag">Quest tag to look up.</param>
+        /// <param name="jrlResRef">Optional JRL ResRef. If null, uses quest tag as ResRef.</param>
+        /// <returns>The quest (engine-specific type), or null if not found.</returns>
+        /// <remarks>
+        /// Engine-specific subclasses implement this to handle engine-specific quest structures.
+        /// </remarks>
+        [CanBeNull]
+        public abstract object GetQuestByTag(string questTag, string jrlResRef = null);
+    }
+}
+
