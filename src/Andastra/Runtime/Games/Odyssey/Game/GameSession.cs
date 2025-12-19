@@ -256,7 +256,9 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
                 (resRef) => LoadScript(resRef),
                 null, // voicePlayer
                 null, // lipSyncController
-                _journalSystem // journalSystem
+                _journalSystem, // journalSystem
+                _gameDataManager, // gameDataManager (for plot.2da access)
+                _partySystem // partySystem (for XP awards)
             );
 
             // Initialize module transition system
