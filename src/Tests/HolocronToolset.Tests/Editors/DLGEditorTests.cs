@@ -246,14 +246,63 @@ namespace HolocronToolset.Tests.Editors
             throw new NotImplementedException("TestDlgEditorManipulateVoIdEdit: VO ID edit manipulation test not yet implemented");
         }
 
-        // TODO: STUB - Implement test_dlg_editor_manipulate_on_abort_combo (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:580-599)
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:580-599
         // Original: def test_dlg_editor_manipulate_on_abort_combo(qtbot, installation: HTInstallation, test_files_dir: Path): Test manipulating on abort combo
         [Fact]
         public void TestDlgEditorManipulateOnAbortCombo()
         {
-            // TODO: STUB - Implement on abort combo manipulation test
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:580-599
-            throw new NotImplementedException("TestDlgEditorManipulateOnAbortCombo: On abort combo manipulation test not yet implemented");
+            // Get test files directory
+            string testFilesDir = System.IO.Path.Combine(
+                System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+
+            // Try to find ORIHA.dlg
+            string dlgFile = System.IO.Path.Combine(testFilesDir, "ORIHA.dlg");
+            if (!System.IO.File.Exists(dlgFile))
+            {
+                // Try alternative location
+                testFilesDir = System.IO.Path.Combine(
+                    System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                    "..", "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+                dlgFile = System.IO.Path.Combine(testFilesDir, "ORIHA.dlg");
+            }
+
+            if (!System.IO.File.Exists(dlgFile))
+            {
+                // Skip if test file not available (matching Python pytest.skip behavior)
+                return;
+            }
+
+            // Get installation if available
+            string k1Path = Environment.GetEnvironmentVariable("K1_PATH");
+            if (string.IsNullOrEmpty(k1Path))
+            {
+                k1Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k1Path) && System.IO.File.Exists(System.IO.Path.Combine(k1Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k1Path, "Test Installation", tsl: false);
+            }
+
+            var editor = new DLGEditor(null, installation);
+
+            byte[] originalData = System.IO.File.ReadAllBytes(dlgFile);
+            editor.Load(dlgFile, "ORIHA", ResourceType.DLG, originalData);
+
+            // Modify OnAbort script (matching Python: editor.ui.onAbortCombo.set_combo_box_text("test_abort"))
+            // Since UI controls are not exposed yet, we modify the CoreDlg directly
+            // This tests that the Build() method properly saves the OnAbort field
+            ResRef testAbortScript = ResRef.FromString("test_abort");
+            editor.CoreDlg.OnAbort = testAbortScript;
+
+            // Save and verify (matching Python: data, _ = editor.build())
+            var (savedData, _) = editor.Build();
+
+            // Verify the change was saved (matching Python: assert str(modified_dlg.on_abort) == "test_abort")
+            DLG modifiedDlg = DLGHelper.ReadDlg(savedData);
+            modifiedDlg.OnAbort.ToString().Should().Be("test_abort", "OnAbort script should be saved correctly");
         }
 
         // TODO: STUB - Implement test_dlg_editor_manipulate_on_end_edit (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:601-620)
