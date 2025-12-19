@@ -265,6 +265,7 @@ namespace Andastra.Parsing.Resource
         public static readonly ResourceType BTC = new ResourceType(2026, "btc", "Creatures", "gff", name: "BTC");
         public static readonly ResourceType UTC = new ResourceType(2027, "utc", "Creatures", "gff", name: "UTC");
         public static readonly ResourceType DLG = new ResourceType(2029, "dlg", "Dialogs", "gff", name: "DLG");
+        public static readonly ResourceType CNV = new ResourceType(2034, "cnv", "Conversations", "gff", name: "CNV"); // Eclipse Engine conversation format
         public static readonly ResourceType ITP = new ResourceType(2030, "itp", "Palettes", "binary", name: "ITP");
         public static readonly ResourceType BTT = new ResourceType(2031, "btt", "Triggers", "gff", name: "BTT");
         public static readonly ResourceType UTT = new ResourceType(2032, "utt", "Triggers", "gff", name: "UTT");
