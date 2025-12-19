@@ -41,7 +41,7 @@ namespace HolocronToolset.Widgets
 
                 while (!cancellationToken.IsCancellationRequested)
                 {
-                    // TODO: Process texture load requests when queue system is implemented
+                    // TODO: STUB - Process texture load requests when queue system is implemented
                     Thread.Sleep(100); // Prevent tight loop
                 }
             }
