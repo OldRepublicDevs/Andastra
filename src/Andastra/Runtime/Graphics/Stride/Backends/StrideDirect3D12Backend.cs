@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using System.Numerics;
 using Stride.Graphics;
 using Andastra.Runtime.Graphics.Common.Backends;
@@ -27,9 +29,15 @@ namespace Andastra.Runtime.Stride.Backends
         private global::Stride.Engine.Game _game;
         private GraphicsDevice _strideDevice;
 
+        // Bindless resource tracking
+        private readonly Dictionary<IntPtr, BindlessHeapInfo> _bindlessHeaps;
+        private readonly Dictionary<IntPtr, int> _textureToHeapIndex; // texture handle -> heap index
+
         public StrideDirect3D12Backend(global::Stride.Engine.Game game)
         {
             _game = game ?? throw new ArgumentNullException(nameof(game));
+            _bindlessHeaps = new Dictionary<IntPtr, BindlessHeapInfo>();
+            _textureToHeapIndex = new Dictionary<IntPtr, int>();
         }
 
         #region BaseGraphicsBackend Implementation
@@ -124,8 +132,36 @@ namespace Andastra.Runtime.Stride.Backends
 
         protected override void DestroyResourceInternal(ResourceInfo info)
         {
-            // Stride manages resource lifetime
+            // Clean up bindless heaps if this is a heap resource
+            if (info.Type == ResourceType.Heap && _bindlessHeaps.ContainsKey(info.Handle))
+            {
+                var heapInfo = _bindlessHeaps[info.Handle];
+                if (heapInfo.DescriptorHeap != IntPtr.Zero)
+                {
+                    // Release the COM object (call Release on the descriptor heap)
+                    // ID3D12DescriptorHeap::Release is at vtable index 2 (IUnknown::Release)
+                    IntPtr vtable = Marshal.ReadIntPtr(heapInfo.DescriptorHeap);
+                    if (vtable != IntPtr.Zero)
+                    {
+                        IntPtr releasePtr = Marshal.ReadIntPtr(vtable, 2 * IntPtr.Size);
+                        if (releasePtr != IntPtr.Zero)
+                        {
+                            var releaseDelegate = (ReleaseDelegate)Marshal.GetDelegateForFunctionPointer(
+                                releasePtr, typeof(ReleaseDelegate));
+                            releaseDelegate(heapInfo.DescriptorHeap);
+                        }
+                    }
+                }
+                _bindlessHeaps.Remove(info.Handle);
+                Console.WriteLine($"[StrideDX12] DestroyResourceInternal: Released bindless heap {info.Handle}");
+            }
+
+            // Stride manages other resource lifetimes
         }
+
+        // Delegate for IUnknown::Release
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate uint ReleaseDelegate(IntPtr comObject);
 
         #endregion
 
@@ -405,35 +441,441 @@ namespace Andastra.Runtime.Stride.Backends
 
         #region BaseDirect3D12Backend Abstract Method Implementations
 
-        // TODO: STUB - Bindless resources methods not yet implemented for Stride
         protected override ResourceInfo CreateBindlessTextureHeapInternal(int capacity, IntPtr handle)
         {
-            // TODO: STUB - Create bindless texture heap
-            return new ResourceInfo
+            // Validate inputs
+            if (capacity <= 0)
             {
-                Type = ResourceType.Heap,
-                Handle = handle,
-                NativeHandle = IntPtr.Zero,
-                DebugName = "BindlessTextureHeap"
-            };
+                Console.WriteLine("[StrideDX12] CreateBindlessTextureHeap: Invalid capacity " + capacity);
+                return new ResourceInfo
+                {
+                    Type = ResourceType.Heap,
+                    Handle = IntPtr.Zero,
+                    NativeHandle = IntPtr.Zero,
+                    DebugName = "BindlessTextureHeap"
+                };
+            }
+
+            if (_device == IntPtr.Zero)
+            {
+                Console.WriteLine("[StrideDX12] CreateBindlessTextureHeap: DirectX 12 device not available");
+                return new ResourceInfo
+                {
+                    Type = ResourceType.Heap,
+                    Handle = IntPtr.Zero,
+                    NativeHandle = IntPtr.Zero,
+                    DebugName = "BindlessTextureHeap"
+                };
+            }
+
+            // DirectX 12 bindless texture heap creation
+            // Based on DirectX 12 Descriptor Heaps: https://docs.microsoft.com/en-us/windows/win32/direct3d12/descriptor-heaps
+            // Bindless resources require shader-visible descriptor heaps
+            // D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV with D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE
+
+            try
+            {
+                // Create D3D12_DESCRIPTOR_HEAP_DESC structure
+                var heapDesc = new D3D12_DESCRIPTOR_HEAP_DESC
+                {
+                    Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV,
+                    NumDescriptors = (uint)capacity,
+                    Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE,
+                    NodeMask = 0
+                };
+
+                // Allocate memory for the descriptor heap descriptor structure
+                int heapDescSize = Marshal.SizeOf(typeof(D3D12_DESCRIPTOR_HEAP_DESC));
+                IntPtr heapDescPtr = Marshal.AllocHGlobal(heapDescSize);
+                try
+                {
+                    Marshal.StructureToPtr(heapDesc, heapDescPtr, false);
+
+                    // Allocate memory for the output descriptor heap pointer
+                    IntPtr heapPtr = Marshal.AllocHGlobal(IntPtr.Size);
+                    try
+                    {
+                        // Call ID3D12Device::CreateDescriptorHeap
+                        Guid iidDescriptorHeap = new Guid("8efb471d-616c-4f49-90f7-127bb763fa51"); // IID_ID3D12DescriptorHeap
+
+                        int hr = CreateDescriptorHeap(_device, heapDescPtr, ref iidDescriptorHeap, heapPtr);
+                        if (hr < 0)
+                        {
+                            Console.WriteLine($"[StrideDX12] CreateBindlessTextureHeap: CreateDescriptorHeap failed with HRESULT 0x{hr:X8}");
+                            return new ResourceInfo
+                            {
+                                Type = ResourceType.Heap,
+                                Handle = IntPtr.Zero,
+                                NativeHandle = IntPtr.Zero,
+                                DebugName = "BindlessTextureHeap"
+                            };
+                        }
+
+                        // Get the descriptor heap pointer
+                        IntPtr descriptorHeap = Marshal.ReadIntPtr(heapPtr);
+                        if (descriptorHeap == IntPtr.Zero)
+                        {
+                            Console.WriteLine("[StrideDX12] CreateBindlessTextureHeap: Descriptor heap pointer is null");
+                            return new ResourceInfo
+                            {
+                                Type = ResourceType.Heap,
+                                Handle = IntPtr.Zero,
+                                NativeHandle = IntPtr.Zero,
+                                DebugName = "BindlessTextureHeap"
+                            };
+                        }
+
+                        // Get descriptor heap start handle (CPU handle for descriptor heap)
+                        IntPtr cpuHandle = GetDescriptorHeapStartHandle(descriptorHeap);
+
+                        // Get descriptor heap start handle for GPU (shader-visible)
+                        IntPtr gpuHandle = GetDescriptorHeapStartHandleGpu(descriptorHeap);
+
+                        // Get descriptor increment size
+                        uint descriptorIncrementSize = GetDescriptorHandleIncrementSize(_device, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+
+                        // Store heap information for later use
+                        var heapInfo = new BindlessHeapInfo
+                        {
+                            DescriptorHeap = descriptorHeap,
+                            CpuHandle = cpuHandle,
+                            GpuHandle = gpuHandle,
+                            Capacity = capacity,
+                            DescriptorIncrementSize = descriptorIncrementSize,
+                            NextIndex = 0,
+                            FreeIndices = new HashSet<int>()
+                        };
+                        _bindlessHeaps[handle] = heapInfo;
+
+                        Console.WriteLine($"[StrideDX12] CreateBindlessTextureHeap: Created texture heap with capacity {capacity}, descriptor size {descriptorIncrementSize} bytes");
+
+                        return new ResourceInfo
+                        {
+                            Type = ResourceType.Heap,
+                            Handle = handle,
+                            NativeHandle = descriptorHeap,
+                            DebugName = $"BindlessTextureHeap_{capacity}",
+                            SizeInBytes = (long)capacity * descriptorIncrementSize
+                        };
+                    }
+                    finally
+                    {
+                        Marshal.FreeHGlobal(heapPtr);
+                    }
+                }
+                finally
+                {
+                    Marshal.FreeHGlobal(heapDescPtr);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[StrideDX12] CreateBindlessTextureHeap: Exception: {ex.Message}");
+                Console.WriteLine($"[StrideDX12] CreateBindlessTextureHeap: Stack trace: {ex.StackTrace}");
+                return new ResourceInfo
+                {
+                    Type = ResourceType.Heap,
+                    Handle = IntPtr.Zero,
+                    NativeHandle = IntPtr.Zero,
+                    DebugName = "BindlessTextureHeap"
+                };
+            }
         }
 
         protected override ResourceInfo CreateBindlessSamplerHeapInternal(int capacity, IntPtr handle)
         {
-            // TODO: STUB - Create bindless sampler heap
-            return new ResourceInfo
+            // Validate inputs
+            if (capacity <= 0)
             {
-                Type = ResourceType.Heap,
-                Handle = handle,
-                NativeHandle = IntPtr.Zero,
-                DebugName = "BindlessSamplerHeap"
-            };
+                Console.WriteLine("[StrideDX12] CreateBindlessSamplerHeap: Invalid capacity " + capacity);
+                return new ResourceInfo
+                {
+                    Type = ResourceType.Heap,
+                    Handle = IntPtr.Zero,
+                    NativeHandle = IntPtr.Zero,
+                    DebugName = "BindlessSamplerHeap"
+                };
+            }
+
+            if (_device == IntPtr.Zero)
+            {
+                Console.WriteLine("[StrideDX12] CreateBindlessSamplerHeap: DirectX 12 device not available");
+                return new ResourceInfo
+                {
+                    Type = ResourceType.Heap,
+                    Handle = IntPtr.Zero,
+                    NativeHandle = IntPtr.Zero,
+                    DebugName = "BindlessSamplerHeap"
+                };
+            }
+
+            // DirectX 12 bindless sampler heap creation
+            // Based on DirectX 12 Descriptor Heaps: https://docs.microsoft.com/en-us/windows/win32/direct3d12/descriptor-heaps
+            // Bindless resources require shader-visible descriptor heaps
+            // D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER with D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE
+
+            try
+            {
+                // Create D3D12_DESCRIPTOR_HEAP_DESC structure
+                var heapDesc = new D3D12_DESCRIPTOR_HEAP_DESC
+                {
+                    Type = D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER,
+                    NumDescriptors = (uint)capacity,
+                    Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE,
+                    NodeMask = 0
+                };
+
+                // Allocate memory for the descriptor heap descriptor structure
+                int heapDescSize = Marshal.SizeOf(typeof(D3D12_DESCRIPTOR_HEAP_DESC));
+                IntPtr heapDescPtr = Marshal.AllocHGlobal(heapDescSize);
+                try
+                {
+                    Marshal.StructureToPtr(heapDesc, heapDescPtr, false);
+
+                    // Allocate memory for the output descriptor heap pointer
+                    IntPtr heapPtr = Marshal.AllocHGlobal(IntPtr.Size);
+                    try
+                    {
+                        // Call ID3D12Device::CreateDescriptorHeap
+                        // HRESULT CreateDescriptorHeap(
+                        //   const D3D12_DESCRIPTOR_HEAP_DESC *pDescriptorHeapDesc,
+                        //   REFIID riid,
+                        //   void **ppvHeap
+                        // );
+                        Guid iidDescriptorHeap = IID_ID3D12DescriptorHeap;
+
+                        int hr = CreateDescriptorHeap(_device, heapDescPtr, ref iidDescriptorHeap, heapPtr);
+                        if (hr < 0)
+                        {
+                            Console.WriteLine($"[StrideDX12] CreateBindlessSamplerHeap: CreateDescriptorHeap failed with HRESULT 0x{hr:X8}");
+                            return new ResourceInfo
+                            {
+                                Type = ResourceType.Heap,
+                                Handle = IntPtr.Zero,
+                                NativeHandle = IntPtr.Zero,
+                                DebugName = "BindlessSamplerHeap"
+                            };
+                        }
+
+                        // Get the descriptor heap pointer
+                        IntPtr descriptorHeap = Marshal.ReadIntPtr(heapPtr);
+                        if (descriptorHeap == IntPtr.Zero)
+                        {
+                            Console.WriteLine("[StrideDX12] CreateBindlessSamplerHeap: Descriptor heap pointer is null");
+                            return new ResourceInfo
+                            {
+                                Type = ResourceType.Heap,
+                                Handle = IntPtr.Zero,
+                                NativeHandle = IntPtr.Zero,
+                                DebugName = "BindlessSamplerHeap"
+                            };
+                        }
+
+                        // Get descriptor heap start handle (CPU handle for descriptor heap)
+                        IntPtr cpuHandle = GetDescriptorHeapStartHandle(descriptorHeap);
+
+                        // Get descriptor heap start handle for GPU (shader-visible)
+                        IntPtr gpuHandle = GetDescriptorHeapStartHandleGpu(descriptorHeap);
+
+                        // Get descriptor increment size
+                        uint descriptorIncrementSize = GetDescriptorHandleIncrementSize(_device, D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);
+
+                        // Store heap information for later use
+                        var heapInfo = new BindlessHeapInfo
+                        {
+                            DescriptorHeap = descriptorHeap,
+                            CpuHandle = cpuHandle,
+                            GpuHandle = gpuHandle,
+                            Capacity = capacity,
+                            DescriptorIncrementSize = descriptorIncrementSize,
+                            NextIndex = 0,
+                            FreeIndices = new HashSet<int>()
+                        };
+                        _bindlessHeaps[handle] = heapInfo;
+
+                        Console.WriteLine($"[StrideDX12] CreateBindlessSamplerHeap: Created sampler heap with capacity {capacity}, descriptor size {descriptorIncrementSize} bytes");
+
+                        return new ResourceInfo
+                        {
+                            Type = ResourceType.Heap,
+                            Handle = handle,
+                            NativeHandle = descriptorHeap,
+                            DebugName = $"BindlessSamplerHeap_{capacity}",
+                            SizeInBytes = (long)capacity * descriptorIncrementSize
+                        };
+                    }
+                    finally
+                    {
+                        Marshal.FreeHGlobal(heapPtr);
+                    }
+                }
+                finally
+                {
+                    Marshal.FreeHGlobal(heapDescPtr);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[StrideDX12] CreateBindlessSamplerHeap: Exception: {ex.Message}");
+                Console.WriteLine($"[StrideDX12] CreateBindlessSamplerHeap: Stack trace: {ex.StackTrace}");
+                return new ResourceInfo
+                {
+                    Type = ResourceType.Heap,
+                    Handle = IntPtr.Zero,
+                    NativeHandle = IntPtr.Zero,
+                    DebugName = "BindlessSamplerHeap"
+                };
+            }
         }
 
         protected override int OnAddBindlessTexture(IntPtr heap, IntPtr texture)
         {
-            // TODO: STUB - Add texture to bindless heap
-            return 0;
+            // Validate inputs
+            if (heap == IntPtr.Zero)
+            {
+                Console.WriteLine("[StrideDX12] OnAddBindlessTexture: Invalid heap handle");
+                return -1;
+            }
+
+            if (texture == IntPtr.Zero)
+            {
+                Console.WriteLine("[StrideDX12] OnAddBindlessTexture: Invalid texture handle");
+                return -1;
+            }
+
+            if (_device == IntPtr.Zero)
+            {
+                Console.WriteLine("[StrideDX12] OnAddBindlessTexture: DirectX 12 device not available");
+                return -1;
+            }
+
+            // Get heap information
+            if (!_bindlessHeaps.TryGetValue(heap, out BindlessHeapInfo heapInfo))
+            {
+                Console.WriteLine($"[StrideDX12] OnAddBindlessTexture: Heap not found for handle {heap}");
+                return -1;
+            }
+
+            // Get texture resource information
+            if (!_resources.TryGetValue(texture, out ResourceInfo textureResource))
+            {
+                Console.WriteLine($"[StrideDX12] OnAddBindlessTexture: Texture resource not found for handle {texture}");
+                return -1;
+            }
+
+            if (textureResource.Type != ResourceType.Texture)
+            {
+                Console.WriteLine($"[StrideDX12] OnAddBindlessTexture: Resource is not a texture (type: {textureResource.Type})");
+                return -1;
+            }
+
+            if (textureResource.NativeHandle == IntPtr.Zero)
+            {
+                Console.WriteLine("[StrideDX12] OnAddBindlessTexture: Native texture handle is invalid");
+                return -1;
+            }
+
+            // Check if texture is already in the heap
+            if (_textureToHeapIndex.TryGetValue(texture, out int existingIndex))
+            {
+                // Check if this index is still valid in the heap
+                if (existingIndex >= 0 && existingIndex < heapInfo.Capacity && !heapInfo.FreeIndices.Contains(existingIndex))
+                {
+                    Console.WriteLine($"[StrideDX12] OnAddBindlessTexture: Texture already in heap at index {existingIndex}");
+                    return existingIndex;
+                }
+            }
+
+            // Find next available index
+            int index = -1;
+            if (heapInfo.FreeIndices.Count > 0)
+            {
+                // Reuse a free index
+                var enumerator = heapInfo.FreeIndices.GetEnumerator();
+                enumerator.MoveNext();
+                index = enumerator.Current;
+                heapInfo.FreeIndices.Remove(index);
+            }
+            else if (heapInfo.NextIndex < heapInfo.Capacity)
+            {
+                // Use next available index
+                index = heapInfo.NextIndex;
+                heapInfo.NextIndex++;
+            }
+            else
+            {
+                Console.WriteLine($"[StrideDX12] OnAddBindlessTexture: Heap is full (capacity: {heapInfo.Capacity})");
+                return -1;
+            }
+
+            // Create SRV (Shader Resource View) descriptor for the texture
+            // Based on DirectX 12 Descriptors: https://docs.microsoft.com/en-us/windows/win32/direct3d12/descriptors-overview
+            // D3D12_SHADER_RESOURCE_VIEW_DESC structure
+            try
+            {
+                // Calculate CPU descriptor handle for this index
+                IntPtr cpuDescriptorHandle = OffsetDescriptorHandle(heapInfo.CpuHandle, index, heapInfo.DescriptorIncrementSize);
+
+                // Create D3D12_SHADER_RESOURCE_VIEW_DESC structure
+                // For a 2D texture, we use D3D12_SRV_DIMENSION_TEXTURE2D
+                var srvDesc = new D3D12_SHADER_RESOURCE_VIEW_DESC
+                {
+                    Format = D3D12_DXGI_FORMAT_UNKNOWN, // Use texture's format
+                    ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D,
+                    Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING,
+                    Texture2D = new D3D12_TEX2D_SRV
+                    {
+                        MostDetailedMip = 0,
+                        MipLevels = unchecked((uint)-1), // All mip levels
+                        PlaneSlice = 0,
+                        ResourceMinLODClamp = 0.0f
+                    }
+                };
+
+                // Allocate memory for the SRV descriptor structure
+                int srvDescSize = Marshal.SizeOf(typeof(D3D12_SHADER_RESOURCE_VIEW_DESC));
+                IntPtr srvDescPtr = Marshal.AllocHGlobal(srvDescSize);
+                try
+                {
+                    Marshal.StructureToPtr(srvDesc, srvDescPtr, false);
+
+                    // Call ID3D12Device::CreateShaderResourceView
+                    // void CreateShaderResourceView(
+                    //   ID3D12Resource *pResource,
+                    //   const D3D12_SHADER_RESOURCE_VIEW_DESC *pDesc,
+                    //   D3D12_CPU_DESCRIPTOR_HANDLE DestDescriptor
+                    // );
+                    CreateShaderResourceView(_device, textureResource.NativeHandle, srvDescPtr, cpuDescriptorHandle);
+
+                    // Track texture to index mapping
+                    _textureToHeapIndex[texture] = index;
+
+                    Console.WriteLine($"[StrideDX12] OnAddBindlessTexture: Added texture {texture} to heap {heap} at index {index}");
+
+                    return index;
+                }
+                finally
+                {
+                    Marshal.FreeHGlobal(srvDescPtr);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[StrideDX12] OnAddBindlessTexture: Exception: {ex.Message}");
+                Console.WriteLine($"[StrideDX12] OnAddBindlessTexture: Stack trace: {ex.StackTrace}");
+
+                // If we allocated an index, mark it as free again
+                if (index >= 0)
+                {
+                    heapInfo.FreeIndices.Add(index);
+                    if (index == heapInfo.NextIndex - 1)
+                    {
+                        heapInfo.NextIndex--;
+                    }
+                }
+
+                return -1;
+            }
         }
 
         protected override int OnAddBindlessSampler(IntPtr heap, IntPtr sampler)
@@ -597,7 +1039,7 @@ namespace Andastra.Runtime.Stride.Backends
                 // Full implementation would require DirectX 12 P/Invoke or Stride API extensions
 
                 Console.WriteLine($"[StrideDX12] OnReadSamplerFeedback: Reading {dataSize} bytes from sampler feedback texture {resourceInfo.NativeHandle}");
-                
+
                 // Zero-initialize output buffer as safety measure
                 // In full implementation, this would be overwritten with actual data
                 Array.Clear(data, 0, Math.Min(dataSize, data.Length));
@@ -623,6 +1065,221 @@ namespace Andastra.Runtime.Stride.Backends
         {
             // TODO: STUB - Set sampler feedback texture
         }
+
+        #endregion
+
+        #region DirectX 12 P/Invoke Declarations
+
+        // DirectX 12 Descriptor Heap Types
+        private const uint D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER = 4;
+
+        // DirectX 12 Descriptor Heap Flags
+        private const uint D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE = 0x1;
+
+        // D3D12_DESCRIPTOR_HEAP_DESC structure
+        [StructLayout(LayoutKind.Sequential)]
+        private struct D3D12_DESCRIPTOR_HEAP_DESC
+        {
+            public uint Type;           // D3D12_DESCRIPTOR_HEAP_TYPE
+            public uint NumDescriptors; // UINT
+            public uint Flags;          // D3D12_DESCRIPTOR_HEAP_FLAGS
+            public uint NodeMask;       // UINT
+        }
+
+        // ID3D12Device::CreateDescriptorHeap
+        // HRESULT CreateDescriptorHeap(
+        //   const D3D12_DESCRIPTOR_HEAP_DESC *pDescriptorHeapDesc,
+        //   REFIID riid,
+        //   void **ppvHeap
+        // );
+        [DllImport("d3d12.dll", EntryPoint = "?CreateDescriptorHeap@ID3D12Device@@UEAAJPEBUD3D12_DESCRIPTOR_HEAP_DESC@@AEBU_GUID@@PEAPEAX@Z", CallingConvention = CallingConvention.StdCall)]
+        private static extern int CreateDescriptorHeap(IntPtr device, IntPtr pDescriptorHeapDesc, ref Guid riid, IntPtr ppvHeap);
+
+        // ID3D12DescriptorHeap::GetCPUDescriptorHandleForHeapStart
+        // D3D12_CPU_DESCRIPTOR_HANDLE GetCPUDescriptorHandleForHeapStart();
+        [DllImport("d3d12.dll", EntryPoint = "?GetCPUDescriptorHandleForHeapStart@ID3D12DescriptorHeap@@QEAA?AUD3D12_CPU_DESCRIPTOR_HANDLE@@XZ", CallingConvention = CallingConvention.StdCall)]
+        private static extern IntPtr GetDescriptorHeapStartHandle(IntPtr descriptorHeap);
+
+        // ID3D12DescriptorHeap::GetGPUDescriptorHandleForHeapStart
+        // D3D12_GPU_DESCRIPTOR_HANDLE GetGPUDescriptorHandleForHeapStart();
+        [DllImport("d3d12.dll", EntryPoint = "?GetGPUDescriptorHandleForHeapStart@ID3D12DescriptorHeap@@QEAA?AUD3D12_GPU_DESCRIPTOR_HANDLE@@XZ", CallingConvention = CallingConvention.StdCall)]
+        private static extern IntPtr GetDescriptorHeapStartHandleGpu(IntPtr descriptorHeap);
+
+        // ID3D12Device::GetDescriptorHandleIncrementSize
+        // UINT GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE DescriptorHeapType);
+        [DllImport("d3d12.dll", EntryPoint = "?GetDescriptorHandleIncrementSize@ID3D12Device@@UEAAIW4D3D12_DESCRIPTOR_HEAP_TYPE@@@Z", CallingConvention = CallingConvention.StdCall)]
+        private static extern uint GetDescriptorHandleIncrementSize(IntPtr device, uint descriptorHeapType);
+
+        // Note: The above P/Invoke declarations use mangled C++ names which may vary by compiler.
+        // For production use, consider using COM interop with proper interface definitions
+        // or use a library like SharpDX/Vortice.Windows that provides proper DirectX 12 bindings.
+        // Alternative approach: Use vtable offsets to call methods directly.
+
+        // Helper method to call CreateDescriptorHeap using vtable offset (more reliable)
+        private static int CreateDescriptorHeapVTable(IntPtr device, IntPtr pDescriptorHeapDesc, ref Guid riid, IntPtr ppvHeap)
+        {
+            // ID3D12Device vtable layout (simplified):
+            // [0] QueryInterface
+            // [1] AddRef
+            // [2] Release
+            // ...
+            // [47] CreateDescriptorHeap (offset varies by D3D12 version, typically around index 47-50)
+
+            // For now, use a simplified approach: try the P/Invoke first, fallback to vtable if needed
+            // In production, you would calculate the exact vtable offset or use a proper COM interop library
+
+            try
+            {
+                return CreateDescriptorHeap(device, pDescriptorHeapDesc, ref riid, ppvHeap);
+            }
+            catch (DllNotFoundException)
+            {
+                // Fallback: Use vtable calling convention
+                // This requires calculating the vtable offset for CreateDescriptorHeap
+                // For DirectX 12, CreateDescriptorHeap is typically at vtable index 47
+                // We'll use a more reliable approach with proper error handling
+                Console.WriteLine("[StrideDX12] CreateDescriptorHeap: P/Invoke failed, vtable fallback not implemented");
+                return unchecked((int)0x80070057); // E_INVALIDARG
+            }
+        }
+
+        #endregion
+
+        #region Helper Classes
+
+        /// <summary>
+        /// Information about a bindless descriptor heap.
+        /// Tracks the heap, handles, capacity, and allocation state.
+        /// </summary>
+        private class BindlessHeapInfo
+        {
+            public IntPtr DescriptorHeap { get; set; }
+            public IntPtr CpuHandle { get; set; }
+            public IntPtr GpuHandle { get; set; }
+            public int Capacity { get; set; }
+            public uint DescriptorIncrementSize { get; set; }
+            public int NextIndex { get; set; }
+            public HashSet<int> FreeIndices { get; set; }
+        }
+
+        #endregion
+
+        #region Helper Methods
+
+        /// <summary>
+        /// Offsets a descriptor handle by a given number of descriptors.
+        /// </summary>
+        private IntPtr OffsetDescriptorHandle(IntPtr handle, int offset, uint incrementSize)
+        {
+            // D3D12_CPU_DESCRIPTOR_HANDLE and D3D12_GPU_DESCRIPTOR_HANDLE are 64-bit values
+            // Offset = handle.ptr + (offset * incrementSize)
+            ulong handleValue = (ulong)handle.ToInt64();
+            ulong offsetValue = (ulong)offset * incrementSize;
+            return new IntPtr((long)(handleValue + offsetValue));
+        }
+
+        #endregion
+
+        #region DirectX 12 P/Invoke Declarations and Structures
+
+        // DirectX 12 Descriptor Heap Types
+        private const uint D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV = 0;
+        private const uint D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER = 1;
+        private const uint D3D12_DESCRIPTOR_HEAP_TYPE_RTV = 2;
+        private const uint D3D12_DESCRIPTOR_HEAP_TYPE_DSV = 3;
+
+        // DirectX 12 Descriptor Heap Flags
+        private const uint D3D12_DESCRIPTOR_HEAP_FLAG_NONE = 0;
+        private const uint D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE = 0x1;
+
+        // DirectX 12 SRV Dimension
+        private const uint D3D12_SRV_DIMENSION_TEXTURE2D = 4;
+
+        // DirectX 12 Default Shader 4 Component Mapping
+        private const uint D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING = 0x1688; // D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING
+
+        // DirectX 12 DXGI Format
+        private const uint D3D12_DXGI_FORMAT_UNKNOWN = 0;
+
+        /// <summary>
+        /// Bindless heap state information.
+        /// </summary>
+        private struct BindlessHeapInfo
+        {
+            public IntPtr DescriptorHeap; // ID3D12DescriptorHeap*
+            public IntPtr CpuHandle; // D3D12_CPU_DESCRIPTOR_HANDLE
+            public IntPtr GpuHandle; // D3D12_GPU_DESCRIPTOR_HANDLE
+            public int Capacity;
+            public uint DescriptorIncrementSize;
+            public int NextIndex;
+            public HashSet<int> FreeIndices; // Indices that have been freed and can be reused
+        }
+
+        /// <summary>
+        /// D3D12_DESCRIPTOR_HEAP_DESC structure.
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        private struct D3D12_DESCRIPTOR_HEAP_DESC
+        {
+            public uint Type; // D3D12_DESCRIPTOR_HEAP_TYPE
+            public uint NumDescriptors;
+            public uint Flags; // D3D12_DESCRIPTOR_HEAP_FLAGS
+            public uint NodeMask;
+        }
+
+        /// <summary>
+        /// D3D12_SHADER_RESOURCE_VIEW_DESC structure.
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        private struct D3D12_SHADER_RESOURCE_VIEW_DESC
+        {
+            public uint Format; // DXGI_FORMAT
+            public uint ViewDimension; // D3D12_SRV_DIMENSION
+            public uint Shader4ComponentMapping;
+            public D3D12_TEX2D_SRV Texture2D;
+        }
+
+        /// <summary>
+        /// D3D12_TEX2D_SRV structure.
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        private struct D3D12_TEX2D_SRV
+        {
+            public uint MostDetailedMip;
+            public uint MipLevels;
+            public uint PlaneSlice;
+            public float ResourceMinLODClamp;
+        }
+
+        /// <summary>
+        /// P/Invoke declaration for ID3D12Device::CreateDescriptorHeap.
+        /// </summary>
+        [DllImport("d3d12.dll", EntryPoint = "?CreateDescriptorHeap@ID3D12Device@@UEAAJPEBUD3D12_DESCRIPTOR_HEAP_DESC@@AEBU_GUID@@PEAPEAX@Z", CallingConvention = CallingConvention.StdCall)]
+        private static extern int CreateDescriptorHeap(IntPtr device, IntPtr pDescriptorHeapDesc, ref Guid riid, IntPtr ppvHeap);
+
+        /// <summary>
+        /// P/Invoke declaration for ID3D12DescriptorHeap::GetCPUDescriptorHandleForHeapStart.
+        /// </summary>
+        [DllImport("d3d12.dll", EntryPoint = "?GetCPUDescriptorHandleForHeapStart@ID3D12DescriptorHeap@@QEAA?AUD3D12_CPU_DESCRIPTOR_HANDLE@@XZ", CallingConvention = CallingConvention.StdCall)]
+        private static extern IntPtr GetDescriptorHeapStartHandle(IntPtr descriptorHeap);
+
+        /// <summary>
+        /// P/Invoke declaration for ID3D12DescriptorHeap::GetGPUDescriptorHandleForHeapStart.
+        /// </summary>
+        [DllImport("d3d12.dll", EntryPoint = "?GetGPUDescriptorHandleForHeapStart@ID3D12DescriptorHeap@@QEAA?AUD3D12_GPU_DESCRIPTOR_HANDLE@@XZ", CallingConvention = CallingConvention.StdCall)]
+        private static extern IntPtr GetDescriptorHeapStartHandleGpu(IntPtr descriptorHeap);
+
+        /// <summary>
+        /// P/Invoke declaration for ID3D12Device::GetDescriptorHandleIncrementSize.
+        /// </summary>
+        [DllImport("d3d12.dll", EntryPoint = "?GetDescriptorHandleIncrementSize@ID3D12Device@@UEAAIK@Z", CallingConvention = CallingConvention.StdCall)]
+        private static extern uint GetDescriptorHandleIncrementSize(IntPtr device, uint DescriptorHeapType);
+
+        /// <summary>
+        /// P/Invoke declaration for ID3D12Device::CreateShaderResourceView.
+        /// </summary>
+        [DllImport("d3d12.dll", EntryPoint = "?CreateShaderResourceView@ID3D12Device@@UEAAXPEAUID3D12Resource@@PEBUD3D12_SHADER_RESOURCE_VIEW_DESC@@UD3D12_CPU_DESCRIPTOR_HANDLE@@@Z", CallingConvention = CallingConvention.StdCall)]
+        private static extern void CreateShaderResourceView(IntPtr device, IntPtr pResource, IntPtr pDesc, IntPtr DestDescriptor);
 
         #endregion
     }
