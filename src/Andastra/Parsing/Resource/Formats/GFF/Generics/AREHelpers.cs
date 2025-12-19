@@ -205,21 +205,46 @@ namespace Andastra.Parsing.Resource.Generics
                 // root.SetInt32("DirtyFormulaThre", are.DirtyFormula3);
                 // root.SetInt32("DirtyFuncThree", are.DirtyFunc3);
             }
+            // Set fog and lighting fields - written for ALL game types
+            // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/are.py:609-614
             root.SetUInt8("SunFogOn", are.FogEnabled ? (byte)1 : (byte)0);
             root.SetSingle("SunFogNear", are.FogNear);
             root.SetSingle("SunFogFar", are.FogFar);
             root.SetInt32("WindPower", are.WindPower);
+            // Note: ShadowOpacity in Python is int (shadow_opacity), but C# ARE class uses ResRef
+            // This may need to be fixed if ShadowOpacity should be int instead of ResRef
+            // For now, writing as ResRef to match current ARE class definition
             root.SetResRef("ShadowOpacity", are.ShadowOpacity);
+            
+            // Set script hooks - written for ALL game types
+            // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/are.py:620-623
             root.SetResRef("OnEnter", are.OnEnter);
             root.SetResRef("OnExit", are.OnExit);
             root.SetResRef("OnHeartbeat", are.OnHeartbeat);
             root.SetResRef("OnUserDefined", are.OnUserDefined);
+            
+            // Set rooms list - written for ALL game types, but with K2-specific fields conditionally
+            // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/are.py:625-633
+            var roomsList = new GFFList();
+            root.SetList("Rooms", roomsList);
+            // TODO: When ARE class has Rooms property (List<ARERoom>), implement room serialization:
+            // foreach (var room in are.Rooms)
+            // {
+            //     var roomStruct = roomsList.Add(0);
+            //     roomStruct.SetSingle("AmbientScale", room.AmbientScale);
+            //     roomStruct.SetInt32("EnvAudio", room.EnvAudio);
+            //     roomStruct.SetString("RoomName", room.Name);
+            //     if (game.IsK2())
+            //     {
+            //         roomStruct.SetUInt8("DisableWeather", room.Weather ? (byte)1 : (byte)0);
+            //         roomStruct.SetInt32("ForceRating", room.ForceRating);
+            //     }
+            // }
+            
+            // Set load screen ID - written for ALL game types
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/are.py:673
             // Original: root.set_uint16("LoadScreenID", are.loadscreen_id)
             root.SetUInt16("LoadScreenID", (ushort)are.LoadScreenID);
-            // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/are.py:356
-            // Original: root.set_string("Comments", are.comment)
-            root.SetString("Comments", are.Comment);
 
             // Set color fields (as RGB integers) - written for ALL game types
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/are.py:589-592
@@ -232,11 +257,12 @@ namespace Andastra.Parsing.Resource.Generics
             // Original: root.set_uint32("SunFogColor", are.fog_color.rgb_integer())
             root.SetUInt32("SunFogColor", (uint)are.FogColor.ToRgbInteger());
 
-            // Set Aurora (NWN) specific fields in AreaProperties struct
-            // Based on nwmain.exe: CNWSArea::LoadProperties @ 0x140361dd0
-            // Only create AreaProperties struct if we have Aurora-specific fields to write
-            // Aurora games: NWN, NWN2
-            if (game.IsAurora())
+            // Set deprecated fields - only written when useDeprecated is true
+            // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/are.py:654-680
+            // Original: if use_deprecated:
+            // Note: These fields are toolset-only and not used by game engines
+            // They are preserved for compatibility with existing ARE files
+            if (useDeprecated)
             {
                 var areaPropertiesStruct = new GFFStruct();
                 root.SetStruct("AreaProperties", areaPropertiesStruct);
