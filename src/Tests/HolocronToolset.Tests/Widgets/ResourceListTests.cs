@@ -155,7 +155,8 @@ namespace HolocronToolset.Tests.Widgets
             // Trigger refresh button click
             if (resourceList.Ui.RefreshButton != null)
             {
-                resourceList.Ui.RefreshButton.Command?.Execute(null);
+                // Simulate button click by raising the Click event
+                resourceList.Ui.RefreshButton.RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(Avalonia.Controls.Button.ClickEvent));
                 eventFired.Should().BeTrue();
             }
         }

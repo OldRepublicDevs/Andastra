@@ -84,7 +84,9 @@ namespace Andastra.Runtime.Core.Video.Bink
             // Parameters: window handle, width, height, flags (0x5d000000)
             // Line 128: _BinkBufferOpen_16(*(undefined4 *)((int)this + 0x50), *puVar8, puVar8[1], 0x5d000000)
             // windowHandle = this + 0x50 (window handle), width = *puVar8 (BINK width), height = puVar8[1] (BINK height)
-            IntPtr windowHandle = _graphicsDevice.NativeHandle; // Get window handle if available (0 if not available)
+            // Get window handle if available (using dynamic since Core cannot depend on Graphics)
+            dynamic graphicsDevice = _graphicsDevice;
+            IntPtr windowHandle = graphicsDevice.NativeHandle; // Get window handle if available (0 if not available)
             const uint BinkBufferFlags = 0x5d000000; // Flags from decompilation
             _bufferHandle = BinkApi.BinkBufferOpen(windowHandle, _frameWidth, _frameHeight, BinkBufferFlags);
             if (_bufferHandle == IntPtr.Zero)
@@ -97,7 +99,6 @@ namespace Andastra.Runtime.Core.Video.Bink
             // Set buffer scale and offset for fullscreen rendering
             // Based on swkotor.exe: FUN_004053e0 @ 0x004053e0 line 154-160
             // BinkBufferSetScale and BinkBufferSetOffset are called to position video
-            dynamic graphicsDevice = _graphicsDevice;
             dynamic viewport = graphicsDevice.Viewport;
             int screenWidth = viewport.Width;
             int screenHeight = viewport.Height;
@@ -123,7 +124,6 @@ namespace Andastra.Runtime.Core.Video.Bink
             _frameBuffer = new byte[_frameWidth * _frameHeight * 4];
 
             // Create texture for rendering (using dynamic since Core cannot depend on Graphics)
-            dynamic graphicsDevice = _graphicsDevice;
             _frameTexture = graphicsDevice.CreateTexture2D(_frameWidth, _frameHeight, null);
         }
 

@@ -56,9 +56,9 @@ namespace Andastra.Runtime.Core.Actions
         {
             // Factory method: Create engine-specific collision detector
             // For now, default to Odyssey detector (can be made engine-agnostic via world type checking)
-            // Core cannot depend on Games, so use base class directly
+            // Core cannot depend on Games, so use default implementation
             // Engine-specific implementations should override this method
-            return new BaseCreatureCollisionDetector();
+            return new DefaultCreatureCollisionDetector();
         }
 
         protected override ActionStatus ExecuteInternal(IEntity actor, float deltaTime)
