@@ -268,6 +268,27 @@ namespace HolocronToolset.Editors
             panel.Children.Add(dynamicColorLabel);
             panel.Children.Add(_dynamicColorEdit);
 
+            // Scripts section - matching Python: self.ui.onEnterSelect, onExitSelect, onHeartbeatSelect, onUserDefinedSelect
+            var onEnterLabel = new Avalonia.Controls.TextBlock { Text = "OnEnter Script:" };
+            _onEnterSelect = new ComboBox { IsEditable = true };
+            panel.Children.Add(onEnterLabel);
+            panel.Children.Add(_onEnterSelect);
+
+            var onExitLabel = new Avalonia.Controls.TextBlock { Text = "OnExit Script:" };
+            _onExitSelect = new ComboBox { IsEditable = true };
+            panel.Children.Add(onExitLabel);
+            panel.Children.Add(_onExitSelect);
+
+            var onHeartbeatLabel = new Avalonia.Controls.TextBlock { Text = "OnHeartbeat Script:" };
+            _onHeartbeatSelect = new ComboBox { IsEditable = true };
+            panel.Children.Add(onHeartbeatLabel);
+            panel.Children.Add(_onHeartbeatSelect);
+
+            var onUserDefinedLabel = new Avalonia.Controls.TextBlock { Text = "OnUserDefined Script:" };
+            _onUserDefinedSelect = new ComboBox { IsEditable = true };
+            panel.Children.Add(onUserDefinedLabel);
+            panel.Children.Add(_onUserDefinedSelect);
+
             // Comments edit - matching Python: self.ui.commentsEdit
             var commentsLabel = new Avalonia.Controls.TextBlock { Text = "Comments:" };
             _commentsEdit = new TextBox
@@ -313,6 +334,9 @@ namespace HolocronToolset.Editors
         public ColorEdit AmbientColorEdit => _ambientColorEdit;
         public ColorEdit DiffuseColorEdit => _diffuseColorEdit;
         public ColorEdit DynamicColorEdit => _dynamicColorEdit;
+        public ColorEdit GrassDiffuseEdit => _grassDiffuseEdit;
+        public ColorEdit GrassAmbientEdit => _grassAmbientEdit;
+        public ColorEdit GrassEmissiveEdit => _grassEmissiveEdit;
         public TextBox CommentsEdit => _commentsEdit;
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/are.py:134-149
@@ -636,6 +660,22 @@ namespace HolocronToolset.Editors
             if (_dynamicColorEdit != null)
             {
                 are.DynamicLight = _dynamicColorEdit.GetColor();
+            }
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/are.py:328-330
+            // Original: are.grass_diffuse = self.ui.grassDiffuseEdit.color()
+            if (_grassDiffuseEdit != null)
+            {
+                are.GrassDiffuse = _grassDiffuseEdit.GetColor();
+            }
+            // Original: are.grass_ambient = self.ui.grassAmbientEdit.color()
+            if (_grassAmbientEdit != null)
+            {
+                are.GrassAmbient = _grassAmbientEdit.GetColor();
+            }
+            // Original: are.grass_emissive = self.ui.grassEmissiveEdit.color()
+            if (_grassEmissiveEdit != null)
+            {
+                are.GrassEmissive = _grassEmissiveEdit.GetColor();
             }
             // Matching Python: are.comment = self.ui.commentsEdit.toPlainText() (line 357)
             if (_commentsEdit != null)
@@ -969,6 +1009,9 @@ namespace HolocronToolset.Editors
             copy.SunAmbient = source.SunAmbient;
             copy.SunDiffuse = source.SunDiffuse;
             copy.DynamicLight = source.DynamicLight;
+            copy.GrassDiffuse = source.GrassDiffuse;
+            copy.GrassAmbient = source.GrassAmbient;
+            copy.GrassEmissive = source.GrassEmissive;
             copy.WindPower = source.WindPower;
             copy.ShadowOpacity = source.ShadowOpacity;
             copy.ChancesOfRain = source.ChancesOfRain;
