@@ -144,6 +144,14 @@ namespace Andastra.Parsing.Installation
         }
 
         /// <summary>
+        /// Gets the Packages directory path for an installation (Mass Effect games).
+        /// </summary>
+        public static string GetPackagesPath(string installPath)
+        {
+            return System.IO.Path.Combine(installPath, "Packages");
+        }
+
+        /// <summary>
         /// Gets the data directory path for an installation (contains BIF files).
         /// </summary>
         public static string GetDataPath(string installPath)
@@ -213,6 +221,14 @@ namespace Andastra.Parsing.Installation
         public static string GetRimsPath(string installPath)
         {
             return System.IO.Path.Combine(installPath, "rims");
+        }
+
+        /// <summary>
+        /// Gets the Packages directory path for an installation (Mass Effect series).
+        /// </summary>
+        public static string GetPackagesPath(string installPath)
+        {
+            return System.IO.Path.Combine(installPath, "Packages");
         }
 
         /// <summary>
@@ -418,6 +434,24 @@ namespace Andastra.Parsing.Installation
         public string OverridePath()
         {
             return GetOverridePath(_path);
+        }
+
+        /// <summary>
+        /// Returns the path to Packages folder of the Installation (Mass Effect games).
+        /// This method maintains the case of the foldername.
+        /// </summary>
+        public string PackagePath()
+        {
+            return GetPackagesPath(_path);
+        }
+
+        /// <summary>
+        /// Returns the path to Packages folder of the Installation (Mass Effect series).
+        /// This method maintains the case of the foldername.
+        /// </summary>
+        public string PackagePath()
+        {
+            return GetPackagesPath(_path);
         }
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/extract/installation.py:935-942

@@ -1,10 +1,14 @@
 using System;
 using System.IO;
+using System.Text;
+using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Markup.Xaml;
 using HolocronToolset.Data;
+using MsBox.Avalonia;
+using MsBox.Avalonia.Enums;
 
 namespace HolocronToolset.Dialogs
 {
@@ -20,6 +24,17 @@ namespace HolocronToolset.Dialogs
         private Button _generateButton;
         private Button _previewButton;
         private Button _saveButton;
+        
+        // General settings controls
+        private TextBox _modNameEdit;
+        private TextBox _modAuthorEdit;
+        private TextBox _modDescriptionEdit;
+        private CheckBox _installToOverrideCheck;
+        private CheckBox _backupFilesCheck;
+        private CheckBox _confirmOverwritesCheck;
+        
+        // INI Preview control
+        private TextBox _iniPreviewText;
 
         // Public parameterless constructor for XAML
         public TSLPatchDataEditorDialog() : this(null, null, null)
@@ -127,13 +142,55 @@ namespace HolocronToolset.Dialogs
             _saveButton = this.FindControl<Button>("saveButton");
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/tslpatchdata_editor.py:63-79
-        // Original: def _setup_ui(self):
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/tslpatchdata_editor.py:160-212
+        // Original: def _create_general_tab(self):
         private void CreateGeneralTab()
         {
             var tab = new TabItem { Header = "General Settings" };
-            var content = new StackPanel();
-            // TODO: Add general settings controls
+            var content = new StackPanel { Spacing = 10, Margin = new Avalonia.Thickness(10) };
+
+            // Mod Information Group
+            var modInfoGroup = new GroupBox { Header = "Mod Information", Margin = new Avalonia.Thickness(0, 0, 0, 10) };
+            var modInfoLayout = new StackPanel { Spacing = 5 };
+
+            // Mod name
+            var nameLayout = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 5 };
+            nameLayout.Children.Add(new TextBlock { Text = "Mod Name:", VerticalAlignment = VerticalAlignment.Center, MinWidth = 100 });
+            _modNameEdit = new TextBox { MinWidth = 300 };
+            nameLayout.Children.Add(_modNameEdit);
+            modInfoLayout.Children.Add(nameLayout);
+
+            // Mod author
+            var authorLayout = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 5 };
+            authorLayout.Children.Add(new TextBlock { Text = "Author:", VerticalAlignment = VerticalAlignment.Center, MinWidth = 100 });
+            _modAuthorEdit = new TextBox { MinWidth = 300 };
+            authorLayout.Children.Add(_modAuthorEdit);
+            modInfoLayout.Children.Add(authorLayout);
+
+            // Description
+            modInfoLayout.Children.Add(new TextBlock { Text = "Description:" });
+            _modDescriptionEdit = new TextBox { MinHeight = 100, AcceptsReturn = true, TextWrapping = Avalonia.Media.TextWrapping.Wrap };
+            modInfoLayout.Children.Add(_modDescriptionEdit);
+
+            modInfoGroup.Content = modInfoLayout;
+            content.Children.Add(modInfoGroup);
+
+            // Installation Options Group
+            var installOptionsGroup = new GroupBox { Header = "Installation Options", Margin = new Avalonia.Thickness(0, 0, 0, 10) };
+            var installOptionsLayout = new StackPanel { Spacing = 5 };
+
+            _installToOverrideCheck = new CheckBox { Content = "Install files to Override folder", IsChecked = true };
+            installOptionsLayout.Children.Add(_installToOverrideCheck);
+
+            _backupFilesCheck = new CheckBox { Content = "Backup original files", IsChecked = true };
+            installOptionsLayout.Children.Add(_backupFilesCheck);
+
+            _confirmOverwritesCheck = new CheckBox { Content = "Confirm before overwriting files", IsChecked = true };
+            installOptionsLayout.Children.Add(_confirmOverwritesCheck);
+
+            installOptionsGroup.Content = installOptionsLayout;
+            content.Children.Add(installOptionsGroup);
+
             tab.Content = content;
             if (_configTabs != null)
             {
@@ -189,11 +246,32 @@ namespace HolocronToolset.Dialogs
             }
         }
 
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/tslpatchdata_editor.py:375-394
+        // Original: def _create_ini_preview_tab(self):
         private void CreateINIPreviewTab()
         {
             var tab = new TabItem { Header = "INI Preview" };
-            var content = new StackPanel();
-            // TODO: Add INI preview controls
+            var content = new StackPanel { Spacing = 10, Margin = new Avalonia.Thickness(10) };
+
+            content.Children.Add(new TextBlock { Text = "changes.ini Preview:", FontWeight = Avalonia.Media.FontWeight.Bold });
+
+            _iniPreviewText = new TextBox
+            {
+                IsReadOnly = true,
+                AcceptsReturn = true,
+                TextWrapping = Avalonia.Media.TextWrapping.NoWrap,
+                FontFamily = new Avalonia.Media.FontFamily("Consolas, Courier New, monospace"),
+                MinHeight = 400
+            };
+            content.Children.Add(_iniPreviewText);
+
+            var btnLayout = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 5 };
+            var refreshPreviewBtn = new Button { Content = "Refresh Preview" };
+            refreshPreviewBtn.Click += (s, e) => UpdateIniPreview();
+            btnLayout.Children.Add(refreshPreviewBtn);
+            btnLayout.Children.Add(new TextBlock()); // Spacer
+            content.Children.Add(btnLayout);
+
             tab.Content = content;
             if (_configTabs != null)
             {
@@ -227,16 +305,136 @@ namespace HolocronToolset.Dialogs
             System.Console.WriteLine("Generate TSLPatchData not yet implemented");
         }
 
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/tslpatchdata_editor.py:566-571
+        // Original: def _preview_ini(self):
         private void PreviewIni()
         {
-            // TODO: Preview generated INI file
-            System.Console.WriteLine("Preview INI not yet implemented");
+            // Switch to INI Preview tab
+            if (_configTabs != null && _configTabs.Items.Count > 0)
+            {
+                int previewTabIndex = _configTabs.Items.Count - 1; // Last tab is INI Preview
+                _configTabs.SelectedIndex = previewTabIndex;
+            }
+            UpdateIniPreview();
         }
 
-        private void SaveConfiguration()
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/tslpatchdata_editor.py:542-564
+        // Original: def _update_ini_preview(self):
+        private void UpdateIniPreview()
         {
-            // TODO: Save configuration
-            System.Console.WriteLine("Save configuration not yet implemented");
+            if (_iniPreviewText == null)
+            {
+                return;
+            }
+
+            // Generate preview from current configuration
+            var previewLines = new StringBuilder();
+            
+            // Settings section
+            previewLines.AppendLine("[settings]");
+            string modName = _modNameEdit?.Text?.Trim() ?? "My Mod";
+            string modAuthor = _modAuthorEdit?.Text?.Trim() ?? "Unknown";
+            previewLines.AppendLine($"modname={modName}");
+            previewLines.AppendLine($"author={modAuthor}");
+            previewLines.AppendLine();
+
+            // GFF files section
+            previewLines.AppendLine("[GFF files]");
+            previewLines.AppendLine("; Files to be patched");
+            previewLines.AppendLine();
+
+            // 2DAMEMORY section
+            previewLines.AppendLine("[2DAMEMORY]");
+            previewLines.AppendLine("; 2DA memory tokens");
+            previewLines.AppendLine();
+
+            // TLKList section
+            previewLines.AppendLine("[TLKList]");
+            previewLines.AppendLine("; TLK string additions");
+            previewLines.AppendLine();
+
+            // InstallList section
+            previewLines.AppendLine("[InstallList]");
+            previewLines.AppendLine("; Files to install");
+            previewLines.AppendLine();
+
+            // 2DAList section
+            previewLines.AppendLine("[2DAList]");
+            previewLines.AppendLine("; 2DA files to patch");
+            previewLines.AppendLine();
+
+            // CompileList section
+            previewLines.AppendLine("[CompileList]");
+            previewLines.AppendLine("; Scripts to compile");
+            previewLines.AppendLine();
+
+            _iniPreviewText.Text = previewLines.ToString();
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/tslpatchdata_editor.py:573-588
+        // Original: def _save_configuration(self):
+        private async void SaveConfiguration()
+        {
+            try
+            {
+                // Ensure tslpatchdata directory exists
+                if (string.IsNullOrEmpty(_tslpatchdataPath))
+                {
+                    var msgBox = MessageBoxManager.GetMessageBoxStandard(
+                        "Error",
+                        "TSLPatchData path is not set. Please specify a path first.",
+                        ButtonEnum.Ok,
+                        Icon.Error);
+                    await msgBox.ShowAsync();
+                    return;
+                }
+
+                // Create directory if it doesn't exist
+                if (!Directory.Exists(_tslpatchdataPath))
+                {
+                    Directory.CreateDirectory(_tslpatchdataPath);
+                }
+
+                // Build and update INI preview
+                UpdateIniPreview();
+
+                // Get the INI content from preview
+                string iniContent = _iniPreviewText?.Text ?? string.Empty;
+                if (string.IsNullOrWhiteSpace(iniContent))
+                {
+                    // If preview is empty, generate basic content
+                    var sb = new StringBuilder();
+                    sb.AppendLine("[settings]");
+                    string modName = _modNameEdit?.Text?.Trim() ?? "My Mod";
+                    string modAuthor = _modAuthorEdit?.Text?.Trim() ?? "Unknown";
+                    sb.AppendLine($"modname={modName}");
+                    sb.AppendLine($"author={modAuthor}");
+                    sb.AppendLine();
+                    iniContent = sb.ToString();
+                }
+
+                // Write to changes.ini
+                string iniPath = Path.Combine(_tslpatchdataPath, "changes.ini");
+                File.WriteAllText(iniPath, iniContent, Encoding.UTF8);
+
+                // Show success message
+                var successBox = MessageBoxManager.GetMessageBoxStandard(
+                    "Saved",
+                    $"Configuration saved to:\n{iniPath}",
+                    ButtonEnum.Ok,
+                    Icon.Success);
+                await successBox.ShowAsync();
+            }
+            catch (Exception ex)
+            {
+                // Show error message
+                var errorBox = MessageBoxManager.GetMessageBoxStandard(
+                    "Error",
+                    $"Failed to save configuration:\n{ex.Message}",
+                    ButtonEnum.Ok,
+                    Icon.Error);
+                await errorBox.ShowAsync();
+            }
         }
     }
 }
