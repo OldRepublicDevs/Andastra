@@ -20,7 +20,7 @@ namespace Andastra.Parsing.Resource.Generics
         /// <remarks>
         /// GAM Construction:
         /// - Extracts game state from GFF root struct
-        /// - Handles both Aurora and Infinity engine formats
+        /// - Handles both Aurora and  formats
         /// - Game time, time played, party members, global variables
         /// - Engine-specific fields are extracted based on presence in GFF
         /// </remarks>
@@ -130,14 +130,14 @@ namespace Andastra.Parsing.Resource.Generics
         /// Dismantles a GAM object into a GFF structure.
         /// </summary>
         /// <param name="gam">The GAM object to dismantle.</param>
-        /// <param name="game">The game type (must be Aurora or Infinity engine, not Odyssey).</param>
+        /// <param name="game">The game type (must be Aurora or , not Odyssey).</param>
         /// <returns>A GFF structure containing GAM data.</returns>
         /// <remarks>
         /// GAM Dismantling:
         /// - Validates that game is Aurora or Infinity (not Odyssey)
         /// - Creates GFF with "GAM " signature
         /// - Writes game state to GFF root struct
-        /// - Handles both Aurora and Infinity engine formats
+        /// - Handles both Aurora and  formats
         /// - Engine-specific fields are written based on game type
         /// </remarks>
         public static GFF DismantleGam(GAM gam, Game game)
@@ -147,18 +147,18 @@ namespace Andastra.Parsing.Resource.Generics
             {
                 throw new ArgumentException(
                     $"GAM format is not supported for Odyssey engine (KOTOR). Odyssey uses NFO format for save games. " +
-                    $"GAM format is only supported for Aurora (NWN) and Infinity Engine (Baldur's Gate, Icewind Dale, Planescape: Torment). " +
+                    $"GAM format is only supported for Aurora (NWN) and  (, , ). " +
                     $"Provided game: {game}",
                     nameof(game));
             }
 
-            // For now, only Aurora is supported (Infinity Engine games not in Game enum yet)
-            // When Infinity Engine games are added to Game enum, remove this check
+            // For now, only Aurora is supported ( games not in Game enum yet)
+            // When  games are added to Game enum, remove this check
             if (!game.IsAurora())
             {
                 throw new ArgumentException(
-                    $"GAM format is only supported for Aurora (NWN) and Infinity Engine games. " +
-                    $"Currently only Aurora (NWN, NWN2) is supported as Infinity Engine games are not yet in the Game enum. " +
+                    $"GAM format is only supported for Aurora (NWN) and  games. " +
+                    $"Currently only Aurora (NWN, NWN2) is supported as  games are not yet in the Game enum. " +
                     $"Provided game: {game}",
                     nameof(game));
             }
@@ -235,8 +235,8 @@ namespace Andastra.Parsing.Resource.Generics
                 root.SetResRef("PlayerCharacter", gam.PlayerCharacter);
             }
 
-            // Set Infinity-specific fields (only for Infinity Engine games)
-            if (IsInfinityEngine(game))
+            // Set Infinity-specific fields (only for  games)
+            if (Is(game))
             {
                 root.SetString("GameName", gam.GameName);
                 root.SetInt32("Chapter", gam.Chapter);
@@ -260,24 +260,24 @@ namespace Andastra.Parsing.Resource.Generics
         }
 
         /// <summary>
-        /// Checks if the game is an Infinity Engine game.
+        /// Checks if the game is an  game.
         /// </summary>
         /// <param name="game">The game enum value.</param>
-        /// <returns>True if the game is an Infinity Engine game.</returns>
+        /// <returns>True if the game is an  game.</returns>
         /// <remarks>
-        /// Infinity Engine games:
-        /// - Baldur's Gate (BaldurGate.exe)
-        /// - Icewind Dale (IcewindDale.exe)
-        /// - Planescape: Torment (PlanescapeTorment.exe)
+        ///  games:
+        /// -  (.exe)
+        /// -  (.exe)
+        /// -  (.exe)
         /// 
-        /// NOTE: Infinity Engine games are not currently in the Game enum, but this method
+        /// NOTE:  games are not currently in the Game enum, but this method
         /// is prepared for when they are added. For now, this returns false.
         /// </remarks>
-        private static bool IsInfinityEngine(Game game)
+        private static bool Is(Game game)
         {
-            // Infinity Engine games would be added to Game enum in the future
-            // For now, return false as Infinity Engine games are not in the enum yet
-            // This method is prepared for future Infinity Engine support
+            //  games would be added to Game enum in the future
+            // For now, return false as  games are not in the enum yet
+            // This method is prepared for future  support
             return false;
         }
     }

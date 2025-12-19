@@ -171,7 +171,7 @@ namespace Andastra.Runtime.Core.Camera
         ///   - swkotor2.exe (KOTOR 2): Player entity tagged "Player", stored in module player list
         ///   - nwmain.exe (Aurora): Player entity via GetFirstPC() NWScript function, similar lookup pattern
         ///   - daorigins.exe/DragonAge2.exe (Eclipse): Player entity tagged "PlayerCharacter" or via GetControlled() function
-        ///   - MassEffect.exe/MassEffect2.exe (Infinity): Player entity via party leader or controlled entity
+        ///   - / (Infinity): Player entity via party leader or controlled entity
         /// </summary>
         /// <returns>The player entity, or null if not found.</returns>
         public IEntity GetPlayerEntity()

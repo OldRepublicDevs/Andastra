@@ -25,7 +25,7 @@ namespace Andastra.Parsing.Resource.Generics.CNV
         /// <remarks>
         /// CNV Construction:
         /// - Extracts conversation tree from GFF root struct
-        /// - Handles Eclipse Engine conversation format (Dragon Age, Mass Effect)
+        /// - Handles Eclipse Engine conversation format (Dragon Age, )
         /// - Similar structure to DLG but adapted for Eclipse conversation system
         /// </remarks>
         public static CNV ConstructCnv(GFF gff)
@@ -277,7 +277,7 @@ namespace Andastra.Parsing.Resource.Generics.CNV
         /// <returns>A GFF structure containing CNV data.</returns>
         /// <remarks>
         /// CNV Dismantling:
-        /// - Validates that game is Eclipse (Dragon Age or Mass Effect)
+        /// - Validates that game is Eclipse (Dragon Age or )
         /// - Creates GFF with "CNV " signature
         /// - Writes conversation tree to GFF root struct
         /// - Handles Eclipse Engine conversation format
@@ -288,7 +288,7 @@ namespace Andastra.Parsing.Resource.Generics.CNV
             if (!game.IsEclipse())
             {
                 throw new ArgumentException(
-                    $"CNV format is only supported for Eclipse Engine games (Dragon Age, Mass Effect). " +
+                    $"CNV format is only supported for Eclipse Engine games (Dragon Age, ). " +
                     $"Provided game: {game}",
                     nameof(game));
             }

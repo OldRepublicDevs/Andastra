@@ -15,7 +15,7 @@ namespace Andastra.Runtime.Games.Common.Components
     ///   - Odyssey: PerceptionComponent (swkotor.exe: FUN_005afce0 @ 0x005afce0, swkotor2.exe: FUN_005fb0f0 @ 0x005fb0f0)
     ///   - Aurora: AuroraPerceptionComponent (nwmain.exe: DoPerceptionUpdateOnCreature @ 0x14038b0c0)
     ///   - Eclipse: EclipsePerceptionComponent (daorigins.exe: PerceptionClass found, different AI system)
-    ///   - Infinity: InfinityPerceptionComponent (MassEffect.exe, MassEffect2.exe: DisplayPerceptionList, squad-based)
+    ///   - Infinity: InfinityPerceptionComponent (, : DisplayPerceptionList, squad-based)
     /// - Common: SightRange, HearingRange, GetSeenObjects(), GetHeardObjects(), WasSeen(), WasHeard(), UpdatePerception(), ClearPerception()
     /// - Engine-specific: PerceptionManager integration, perception event types, serialization format, update frequency
     ///

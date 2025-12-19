@@ -7,7 +7,7 @@
     <ImplicitUsings>disable</ImplicitUsings>
     <RootNamespace>Andastra.Runtime.Games.Eclipse</RootNamespace>
     <AssemblyName>Andastra.Runtime.Games.Eclipse</AssemblyName>
-    <Description>Eclipse Engine implementation for Dragon Age and Mass Effect series</Description>
+    <Description>Eclipse Engine implementation for Dragon Age and  series</Description>
   </PropertyGroup>
 
   <ItemGroup>

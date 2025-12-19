@@ -9,7 +9,7 @@ namespace Andastra.Parsing.Common
     /// </summary>
     public enum Game
     {
-        // Odyssey Engine (KOTOR)
+        // Odyssey Engine
         K1 = 1,
         K2 = 2,
         K1_XBOX = 3,
@@ -20,22 +20,13 @@ namespace Andastra.Parsing.Common
         K2_ANDROID = 8,
         TSL = K2,
 
-        // Eclipse Engine (Dragon Age)
+        // Eclipse Engine
         DA = 10,
         DA_ORIGINS = DA,
         DA2 = 11,
         DRAGON_AGE_2 = DA2,
 
-        // Eclipse Engine (Mass Effect)
-        ME = 20,
-        MASS_EFFECT = ME,
-        ME1 = ME,
-        ME2 = 21,
-        MASS_EFFECT_2 = ME2,
-        ME3 = 22,
-        MASS_EFFECT_3 = ME3,
-
-        // Aurora Engine (Neverwinter Nights)
+        // Aurora Engine
         NWN = 30,
         NEVERWINTER_NIGHTS = NWN,
         NWN2 = 31,
@@ -84,7 +75,7 @@ namespace Andastra.Parsing.Common
             return game == Game.K1_IOS || game == Game.K2_IOS;
         }
 
-        // Eclipse Engine (Dragon Age)
+        // Eclipse Engine
         public static bool IsDragonAge(this Game game)
         {
             return game == Game.DA || game == Game.DA_ORIGINS || game == Game.DA2 || game == Game.DRAGON_AGE_2;
@@ -100,30 +91,7 @@ namespace Andastra.Parsing.Common
             return game == Game.DA2 || game == Game.DRAGON_AGE_2;
         }
 
-        // Eclipse Engine (Mass Effect)
-        public static bool IsMassEffect(this Game game)
-        {
-            return game == Game.ME || game == Game.MASS_EFFECT || game == Game.ME1 ||
-                   game == Game.ME2 || game == Game.MASS_EFFECT_2 ||
-                   game == Game.ME3 || game == Game.MASS_EFFECT_3;
-        }
-
-        public static bool IsMassEffect1(this Game game)
-        {
-            return game == Game.ME || game == Game.MASS_EFFECT || game == Game.ME1;
-        }
-
-        public static bool IsMassEffect2(this Game game)
-        {
-            return game == Game.ME2 || game == Game.MASS_EFFECT_2;
-        }
-
-        public static bool IsMassEffect3(this Game game)
-        {
-            return game == Game.ME3 || game == Game.MASS_EFFECT_3;
-        }
-
-        // Aurora Engine (Neverwinter Nights)
+        // Aurora Engine
         public static bool IsNeverwinterNights(this Game game)
         {
             return game == Game.NWN || game == Game.NEVERWINTER_NIGHTS ||
@@ -148,7 +116,7 @@ namespace Andastra.Parsing.Common
 
         public static bool IsEclipse(this Game game)
         {
-            return IsDragonAge(game) || IsMassEffect(game);
+            return IsDragonAge(game);
         }
 
         public static bool IsAurora(this Game game)

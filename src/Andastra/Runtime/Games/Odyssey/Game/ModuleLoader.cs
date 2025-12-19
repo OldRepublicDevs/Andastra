@@ -42,7 +42,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
     /// - Located via string references: "MODULES:" @ 0x007b58b4, "MODULES" @ 0x007c6bc4
     /// - Cross-engine analysis:
     ///   - Aurora (nwmain.exe): CNWSModule::LoadModule, CNWCModule::LoadModuleResources - similar module loading system, uses HAK files, different file formats
-    ///   - Eclipse (daorigins.exe, DragonAge2.exe, MassEffect.exe): "LoadModule" - UnrealScript-based module loading, different architecture
+    ///   - Eclipse (daorigins.exe, DragonAge2.exe, ): "LoadModule" - UnrealScript-based module loading, different architecture
     /// - Inheritance: Base class BaseModuleLoader (Runtime.Games.Common) - abstract module loading, Odyssey override (Runtime.Games.Odyssey) - IFO/LYT/VIS/GIT/ARE-based module loading
     /// - Directory setup: FUN_00633270 @ 0x00633270 (sets up MODULES, OVERRIDE, SAVES, etc. directory aliases)
     ///   - Original implementation (from decompiled FUN_00633270):
@@ -793,7 +793,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
         //   - CNWSWaypoint::LoadWaypoint @ 0x140509f80 loads waypoint properties from GIT struct
         //   - Loads: Tag (CExoString), LocalizedName (CExoLocString), Position, Orientation, HasMapNote, MapNoteEnabled, MapNote
         // - Eclipse (daorigins.exe): Waypoint system similar, needs verification
-        // - Infinity (MassEffect.exe, MassEffect2.exe): Waypoint system similar, needs verification
+        // - Infinity (, ): Waypoint system similar, needs verification
         private void SpawnWaypoint(GITWaypoint waypoint, RuntimeArea area)
         {
             IEntity entity = _world.CreateEntity(OdyObjectType.Waypoint, ToSysVector3(waypoint.Position), waypoint.Bearing);

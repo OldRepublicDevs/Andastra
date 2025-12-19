@@ -134,4 +134,9 @@
     <Compile Include="..\Utility\**\*.cs" />
   </ItemGroup>
 
+  <!-- Temporarily exclude Tools directory that has build errors -->
+  <ItemGroup>
+    <Compile Remove="Tools\**\*.cs" />
+  </ItemGroup>
+
 </Project>

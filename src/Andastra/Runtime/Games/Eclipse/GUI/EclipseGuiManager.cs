@@ -19,10 +19,10 @@ using JetBrains.Annotations;
 namespace Andastra.Runtime.Games.Eclipse.GUI
 {
     /// <summary>
-    /// Eclipse engine (Dragon Age, Mass Effect) GUI manager implementation.
+    /// Eclipse engine (Dragon Age, ) GUI manager implementation.
     /// </summary>
     /// <remarks>
-    /// Eclipse GUI Manager (daorigins.exe, DragonAge2.exe, MassEffect.exe, MassEffect2.exe):
+    /// Eclipse GUI Manager (daorigins.exe, DragonAge2.exe, , ):
     /// - Based on Eclipse engine GUI systems
     /// - GUI format: Uses ResourceType.GUI format (Eclipse-specific format support pending Ghidra analysis)
     /// - Font rendering: Uses EclipseBitmapFont for text rendering
@@ -30,8 +30,8 @@ namespace Andastra.Runtime.Games.Eclipse.GUI
     /// Ghidra Reverse Engineering Analysis:
     /// - daorigins.exe: GUI loading functions (address verification pending Ghidra analysis)
     /// - DragonAge2.exe: GUI loading functions (address verification pending Ghidra analysis)
-    /// - MassEffect.exe: GUI loading functions (address verification pending Ghidra analysis)
-    /// - MassEffect2.exe: GUI loading functions (address verification pending Ghidra analysis)
+    /// - : GUI loading functions (address verification pending Ghidra analysis)
+    /// - : GUI loading functions (address verification pending Ghidra analysis)
     /// 
     /// TODO: PLACEHOLDER - Add Eclipse-specific GUI format support when format is determined via Ghidra analysis
     /// Currently uses ResourceType.GUI format as working implementation

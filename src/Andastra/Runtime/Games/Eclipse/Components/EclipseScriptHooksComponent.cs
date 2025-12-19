@@ -22,9 +22,9 @@ namespace Andastra.Runtime.Games.Eclipse.Components
     ///   - Command processing: Events are dispatched through UnrealScript command system
     ///   - Event commands: COMMAND_HANDLEEVENT, COMMAND_SETEVENTSCRIPT, COMMAND_ENABLEEVENT, etc.
     /// - UnrealScript event dispatcher: Uses BioEventDispatcher interface
-    ///   - Function names (UnrealScript): "intUBioEventDispatcherexecDispatch" (MassEffect.exe: 0x117e7b90)
-    ///   - Function names (UnrealScript): "intUBioEventDispatcherexecSubscribe" (MassEffect.exe: 0x117e7c28)
-    ///   - Function names (UnrealScript): "intUBioEventDispatcherexecUnsubscribe" (MassEffect.exe: 0x117e7bd8)
+    ///   - Function names (UnrealScript): "intUBioEventDispatcherexecDispatch" (: 0x117e7b90)
+    ///   - Function names (UnrealScript): "intUBioEventDispatcherexecSubscribe" (: 0x117e7c28)
+    ///   - Function names (UnrealScript): "intUBioEventDispatcherexecUnsubscribe" (: 0x117e7bd8)
     ///   - Note: These are UnrealScript interface functions, not direct C++ addresses
     /// - Maps script events to script resource references (ResRef strings)
     /// - Scripts are executed by UnrealScript VM when events fire (OnHeartbeat, OnPerception, OnAttacked, etc.)

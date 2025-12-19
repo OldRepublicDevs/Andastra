@@ -18,8 +18,8 @@ namespace Andastra.Runtime.Core.Interfaces
     /// Engine-specific implementations:
     /// - Odyssey (swkotor.exe, swkotor2.exe): Uses GFF-based action serialization (ActionList field)
     /// - Aurora (nwmain.exe, nwn2main.exe): Uses GFF-based action serialization (ActionList field, CNWSObject methods)
-    /// - Eclipse (daorigins.exe, DragonAge2.exe, MassEffect.exe): Uses ActionFramework (different architecture)
-    /// - Infinity (MassEffect.exe, MassEffect2.exe): May use different system (needs investigation)
+    /// - Eclipse (daorigins.exe, DragonAge2.exe, ): Uses ActionFramework (different architecture)
+    /// - Infinity (, ): May use different system (needs investigation)
     /// 
     /// All engine-specific details (function addresses, serialization formats, implementation specifics) are in engine-specific base classes.
     /// </remarks>

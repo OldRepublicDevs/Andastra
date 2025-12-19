@@ -39,7 +39,7 @@ namespace Andastra.Parsing.Resource.Generics
         /// </summary>
         /// <param name="gam">The GAM object to write.</param>
         /// <param name="target">Target to write to (string filepath or Stream).</param>
-        /// <param name="game">The game type (must be Aurora or Infinity engine, not Odyssey).</param>
+        /// <param name="game">The game type (must be Aurora or , not Odyssey).</param>
         /// <param name="fileFormat">File format (default: GAM, must be GAM).</param>
         /// <remarks>
         /// GAM Writing:
@@ -61,18 +61,18 @@ namespace Andastra.Parsing.Resource.Generics
             {
                 throw new ArgumentException(
                     $"GAM format is not supported for Odyssey engine (KOTOR). Odyssey uses NFO format for save games. " +
-                    $"GAM format is only supported for Aurora (NWN) and Infinity Engine (Baldur's Gate, Icewind Dale, Planescape: Torment). " +
+                    $"GAM format is only supported for Aurora (NWN) and  (, , ). " +
                     $"Provided game: {game}",
                     nameof(game));
             }
 
-            // For now, only Aurora is supported (Infinity Engine games not in Game enum yet)
-            // When Infinity Engine games are added to Game enum, update this validation
+            // For now, only Aurora is supported ( games not in Game enum yet)
+            // When  games are added to Game enum, update this validation
             if (!game.IsAurora())
             {
                 throw new ArgumentException(
-                    $"GAM format is only supported for Aurora (NWN) and Infinity Engine games. " +
-                    $"Currently only Aurora (NWN, NWN2) is supported as Infinity Engine games are not yet in the Game enum. " +
+                    $"GAM format is only supported for Aurora (NWN) and  games. " +
+                    $"Currently only Aurora (NWN, NWN2) is supported as  games are not yet in the Game enum. " +
                     $"Provided game: {game}",
                     nameof(game));
             }
@@ -88,7 +88,7 @@ namespace Andastra.Parsing.Resource.Generics
         /// Converts a GAM object to bytes.
         /// </summary>
         /// <param name="gam">The GAM object to convert.</param>
-        /// <param name="game">The game type (must be Aurora or Infinity engine, not Odyssey).</param>
+        /// <param name="game">The game type (must be Aurora or , not Odyssey).</param>
         /// <param name="fileFormat">File format (default: GAM, must be GAM).</param>
         /// <returns>Byte array containing GAM file data.</returns>
         /// <remarks>
@@ -110,18 +110,18 @@ namespace Andastra.Parsing.Resource.Generics
             {
                 throw new ArgumentException(
                     $"GAM format is not supported for Odyssey engine (KOTOR). Odyssey uses NFO format for save games. " +
-                    $"GAM format is only supported for Aurora (NWN) and Infinity Engine (Baldur's Gate, Icewind Dale, Planescape: Torment). " +
+                    $"GAM format is only supported for Aurora (NWN) and  (, , ). " +
                     $"Provided game: {game}",
                     nameof(game));
             }
 
-            // For now, only Aurora is supported (Infinity Engine games not in Game enum yet)
-            // When Infinity Engine games are added to Game enum, update this validation
+            // For now, only Aurora is supported ( games not in Game enum yet)
+            // When  games are added to Game enum, update this validation
             if (!game.IsAurora())
             {
                 throw new ArgumentException(
-                    $"GAM format is only supported for Aurora (NWN) and Infinity Engine games. " +
-                    $"Currently only Aurora (NWN, NWN2) is supported as Infinity Engine games are not yet in the Game enum. " +
+                    $"GAM format is only supported for Aurora (NWN) and  games. " +
+                    $"Currently only Aurora (NWN, NWN2) is supported as  games are not yet in the Game enum. " +
                     $"Provided game: {game}",
                     nameof(game));
             }

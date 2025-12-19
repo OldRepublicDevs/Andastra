@@ -14,7 +14,7 @@ namespace Andastra.Parsing.Resource.Generics.CNV
     /// <remarks>
     /// CNV Binary Reader:
     /// - Reads GFF format files with "CNV " signature
-    /// - Used by Eclipse Engine games (Dragon Age, Mass Effect)
+    /// - Used by Eclipse Engine games (Dragon Age, )
     /// - Constructs CNV objects from GFF structures
     /// </remarks>
     public class CNVBinaryReader : IDisposable

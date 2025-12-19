@@ -62,7 +62,7 @@ namespace Andastra.Runtime.Games.Aurora
     ///   - OdysseyTimeManager : BaseTimeManager (Runtime.Games.Odyssey) - Odyssey-specific (swkotor.exe, swkotor2.exe)
     ///     - IFO game time storage (different format from Aurora)
     ///     - NFO file time played tracking
-    ///   - EclipseTimeManager : BaseTimeManager (Runtime.Games.Eclipse) - Eclipse-specific (daorigins.exe, DragonAge2.exe, MassEffect.exe, MassEffect2.exe)
+    ///   - EclipseTimeManager : BaseTimeManager (Runtime.Games.Eclipse) - Eclipse-specific (daorigins.exe, DragonAge2.exe, , )
     ///   - InfinityTimeManager : BaseTimeManager (Runtime.Games.Infinity) - Infinity-specific
     /// 
     /// NOTE: All nwmain.exe function addresses and string references listed above have been VERIFIED via Ghidra MCP reverse engineering.

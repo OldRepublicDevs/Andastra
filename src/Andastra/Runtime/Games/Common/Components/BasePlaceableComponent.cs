@@ -33,7 +33,7 @@ namespace Andastra.Runtime.Games.Common.Components
     ///   - PlaceableList @ 0x00af5028, CPlaceable @ 0x00b0d488
     ///   - COMMAND_GETPLACEABLE* and COMMAND_SETPLACEABLE* functions
     /// - DragonAge2.exe: Enhanced Eclipse engine (similar to daorigins.exe)
-    /// - MassEffect.exe/MassEffect2.exe: Infinity engine (different placeable system, not fully reverse engineered)
+    /// - /:  (different placeable system, not fully reverse engineered)
     ///
     /// Common structure across engines:
     /// - IsUseable (bool): Whether placeable can be used/interacted with

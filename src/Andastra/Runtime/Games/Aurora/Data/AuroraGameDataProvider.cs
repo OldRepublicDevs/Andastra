@@ -19,8 +19,8 @@ namespace Andastra.Runtime.Games.Aurora.Data
     /// - Cross-engine analysis:
     ///   - Odyssey (swkotor.exe, swkotor2.exe): Uses GameDataManager for 2DA access, FUN_0041d2c0 @ 0x0041d2c0 (2DA table lookup), FUN_0065a380 @ 0x0065a380 (GetCreatureRadius)
     ///   - Aurora (nwmain.exe): Uses C2DA class for 2DA access, C2DA::Load2DArray @ 0x1401a73a0
-    ///   - Eclipse (daorigins.exe, DragonAge2.exe, MassEffect.exe): Uses EclipseTwoDATableManager (same pattern as Aurora)
-    ///   - Infinity (MassEffect.exe, MassEffect2.exe): Uses 2DA tables (similar to Eclipse)
+    ///   - Eclipse (daorigins.exe, DragonAge2.exe, ): Uses EclipseTwoDATableManager (same pattern as Aurora)
+    ///   - Infinity (, ): Uses 2DA tables (similar to Eclipse)
     /// - Common pattern: All engines store creature properties (radius, speed, etc.) in data tables indexed by appearance type
     /// </remarks>
     [PublicAPI]

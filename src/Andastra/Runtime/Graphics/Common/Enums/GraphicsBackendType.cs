@@ -106,13 +106,7 @@ namespace Andastra.Runtime.Graphics.Common.Enums
         /// Aurora Engine - Neverwinter Nights Enhanced Edition rendering backend.
         /// Matches nwmain.exe rendering implementation exactly.
         /// </summary>
-        AuroraEngine = 1 << 14,
-
-        /// <summary>
-        /// Infinity Engine - Mass Effect 1 and Mass Effect 2 rendering backend.
-        /// Matches MassEffect.exe and MassEffect2.exe rendering implementation exactly.
-        /// </summary>
-        InfinityEngine = 1 << 15
+        AuroraEngine = 1 << 14
     }
 
     /// <summary>

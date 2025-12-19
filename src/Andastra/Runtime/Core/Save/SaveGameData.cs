@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Numerics;
+using Andastra.Runtime.Core.Plot;
 using Andastra.Runtime.Core.Enums;
 
 namespace Andastra.Runtime.Core.Save
@@ -81,6 +82,17 @@ namespace Andastra.Runtime.Core.Save
         public List<JournalEntry> JournalEntries { get; set; }
 
         /// <summary>
+        /// Plot states (keyed by plot index).
+        /// </summary>
+        /// <remarks>
+        /// Plot State Storage:
+        /// - Based on swkotor2.exe: Plot states are saved as part of game state
+        /// - Original implementation: Plot states track which plots have been triggered/completed
+        /// - Plot state includes: plot index, label, triggered status, completed status, trigger count, last triggered time
+        /// </remarks>
+        public Dictionary<int, Plot.PlotState> PlotStates { get; set; }
+
+        /// <summary>
         /// Screenshot data (PNG bytes).
         /// </summary>
         public byte[] Screenshot { get; set; }
@@ -150,6 +162,7 @@ namespace Andastra.Runtime.Core.Save
             StoryHints = new List<bool>();
             LiveContent = new List<bool>();
             LiveContentStrings = new List<string>();
+            PlotStates = new Dictionary<int, PlotState>();
         }
     }
 

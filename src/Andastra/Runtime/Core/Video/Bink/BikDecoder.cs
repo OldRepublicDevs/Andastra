@@ -3,6 +3,7 @@ using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
+// TODO: Core cannot depend on Graphics - this should be injected or removed
 using Andastra.Runtime.Graphics;
 
 namespace Andastra.Runtime.Core.Video.Bink
@@ -18,8 +19,8 @@ namespace Andastra.Runtime.Core.Video.Bink
         private BinkApi.BINKSUMMARY _summary;
         private bool _isDisposed;
         private readonly string _moviePath;
-        private readonly IGraphicsDevice _graphicsDevice;
-        private ITexture2D _frameTexture;
+        private readonly object _graphicsDevice;
+        private object _frameTexture;
         private int _frameWidth;
         private int _frameHeight;
         private byte[] _frameBuffer;
@@ -29,7 +30,7 @@ namespace Andastra.Runtime.Core.Video.Bink
         /// </summary>
         /// <param name="moviePath">Path to BIK file.</param>
         /// <param name="graphicsDevice">Graphics device for rendering.</param>
-        public BikDecoder(string moviePath, IGraphicsDevice graphicsDevice)
+        public BikDecoder(string moviePath, object graphicsDevice)
         {
             _moviePath = moviePath ?? throw new ArgumentNullException("moviePath");
             _graphicsDevice = graphicsDevice ?? throw new ArgumentNullException("graphicsDevice");
@@ -269,7 +270,7 @@ namespace Andastra.Runtime.Core.Video.Bink
             if (_frameTexture != null && _frameBuffer != null)
             {
                 // Update texture with frame buffer data
-                // ITexture2D.SetData updates the texture with new pixel data
+                // object.SetData updates the texture with new pixel data
                 _frameTexture.SetData(_frameBuffer);
             }
 
@@ -317,7 +318,7 @@ namespace Andastra.Runtime.Core.Video.Bink
         /// <summary>
         /// Gets the frame texture for rendering.
         /// </summary>
-        public ITexture2D FrameTexture
+        public object FrameTexture
         {
             get { return _frameTexture; }
         }

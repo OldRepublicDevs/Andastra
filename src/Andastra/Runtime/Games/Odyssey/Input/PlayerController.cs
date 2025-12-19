@@ -18,7 +18,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Input
     /// - Located via string references: "Input" @ 0x007c2520, "Mouse" @ 0x007cb908, "DirectInput8Create" @ 0x0080a6ac
     /// - Cross-engine analysis:
     ///   - Aurora (nwmain.exe): CClientExoAppInternal::ProcessInput, HandleLMouseDown, HandleRMouseDown, Input_WalkToWayPoint - similar click-to-move system
-    ///   - Eclipse (daorigins.exe, DragonAge2.exe, MassEffect.exe): "Initialize - Input", "InputSystem", "Mouse::LeftClick", "Keyboard::Button_*" - UnrealScript-based input system
+    ///   - Eclipse (daorigins.exe, DragonAge2.exe, ): "Initialize - Input", "InputSystem", "Mouse::LeftClick", "Keyboard::Button_*" - UnrealScript-based input system
     /// - Inheritance: Base class BasePlayerController (Runtime.Games.Common) - abstract player input, Odyssey override (Runtime.Games.Odyssey) - click-to-move with pathfinding
     /// - Original implementation: Handles click-to-move with pathfinding on walkmesh, uses DirectInput8 for input, NavigationMesh for pathfinding
     /// - Click-to-move: Left-click on walkmesh initiates pathfinding and movement (UpdateCreatureMovement @ 0x0054be70 handles movement)

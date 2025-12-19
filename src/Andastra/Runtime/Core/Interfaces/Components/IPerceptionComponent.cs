@@ -12,7 +12,7 @@ namespace Andastra.Runtime.Core.Interfaces.Components
     ///   - Odyssey (swkotor.exe, swkotor2.exe): PerceptionData/PerceptionList structures, FUN_005fb0f0 @ 0x005fb0f0 (swkotor2.exe), FUN_005afce0 @ 0x005afce0 (swkotor.exe)
     ///   - Aurora (nwmain.exe): DoPerceptionUpdateOnCreature @ 0x14038b0c0, PerceptionList/PerceptionData structures
     ///   - Eclipse (daorigins.exe, DragonAge2.exe): PerceptionClass found, uses different AI system
-    ///   - Infinity (MassEffect.exe, MassEffect2.exe): DisplayPerceptionList found, squad-based perception system
+    ///   - Infinity (, ): DisplayPerceptionList found, squad-based perception system
     /// - Each creature has sight and hearing ranges (SightRange, HearingRange)
     /// - Perception is updated periodically (not every frame)
     /// - Events fire when perception state changes: OnPerceive (new object seen/heard), OnVanish (object no longer seen)

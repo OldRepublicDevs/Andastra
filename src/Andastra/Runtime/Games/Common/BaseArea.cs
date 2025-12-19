@@ -35,7 +35,7 @@ namespace Andastra.Runtime.Games.Common
     /// - BaseArea (this class) - Common functionality only
     ///   - OdysseyArea : BaseArea (swkotor.exe, swkotor2.exe)
     ///   - AuroraArea : BaseArea (nwmain.exe)
-    ///   - EclipseArea : BaseArea (daorigins.exe, DragonAge2.exe, MassEffect.exe, MassEffect2.exe)
+    ///   - EclipseArea : BaseArea (daorigins.exe, DragonAge2.exe, , )
     /// </remarks>
     [PublicAPI]
     public abstract class BaseArea : IArea

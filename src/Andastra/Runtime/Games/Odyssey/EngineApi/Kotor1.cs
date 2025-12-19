@@ -5499,7 +5499,7 @@ namespace Andastra.Runtime.Engines.Odyssey.EngineApi
         ///   - Module transition: Similar pattern but uses Module.ifo and HAK files
         /// - daorigins.exe (Eclipse): Different architecture (UnrealScript), no direct equivalent
         ///   - Uses UnrealScript LoadModuleMessage and package loading system
-        /// - MassEffect.exe (Infinity): Different architecture, level-based instead of module-based
+        /// -  (Infinity): Different architecture, level-based instead of module-based
         ///   - Uses level streaming system instead of discrete module transitions
         /// 
         /// Implementation Notes:

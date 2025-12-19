@@ -40,7 +40,7 @@ namespace Andastra.Runtime.Engines.Common
     ///   - OdysseyTheSithLordsGameProfile: K2-specific features (Influence, Prestige Classes, Crafting)
     /// - AuroraEngineProfile: Aurora-specific resource paths (hak files, module files)
     /// - EclipseEngineProfile: Eclipse-specific resource paths (packages/core/override structure)
-    /// - InfinityEngineProfile: Infinity-specific resource paths (CHITIN.KEY, dialog.tlk variants)
+    /// - Profile: Infinity-specific resource paths (CHITIN.KEY, dialog.tlk variants)
     /// </remarks>
     public abstract class BaseEngineProfile : IEngineProfile
     {

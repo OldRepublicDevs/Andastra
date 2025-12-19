@@ -11,7 +11,7 @@ namespace Andastra.Runtime.Core.Interfaces.Components
     ///   - Odyssey: OdysseyFactionComponent (swkotor.exe: FUN_005b1b90 @ 0x005b1b90, swkotor2.exe: FUN_005fb0f0 @ 0x005fb0f0)
     ///   - Aurora: AuroraFactionComponent (nwmain.exe: CNWSFaction @ 0x1404ad3e0, GetFaction @ 0x140357900)
     ///   - Eclipse: EclipseFactionComponent (daorigins.exe, DragonAge2.exe: IsHostile/IsFriendly checks)
-    ///   - Infinity: InfinityFactionComponent (MassEffect.exe, MassEffect2.exe: BioFaction classes)
+    ///   - Infinity: InfinityFactionComponent (, : BioFaction classes)
     /// - Common functionality: FactionId, IsHostile, IsFriendly, IsNeutral, SetTemporaryHostile
     /// - Engine-specific: Faction relationship tables, reputation systems, hostility calculations
     /// - Faction relationships stored in 2DA tables (repute.2da for Odyssey, faction.2da for Aurora, etc.)

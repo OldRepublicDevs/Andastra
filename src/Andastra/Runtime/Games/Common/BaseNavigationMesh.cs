@@ -16,8 +16,8 @@ namespace Andastra.Runtime.Games.Common
     /// Cross-engine analysis:
     /// - Odyssey (swkotor.exe, swkotor2.exe): Walkmesh-based line of sight with walkable face checks
     /// - Aurora (nwmain.exe): Tile-based line of sight with blocking tile checks
-    /// - Eclipse (daorigins.exe, DragonAge2.exe, MassEffect.exe, MassEffect2.exe): Dynamic obstacle-aware line of sight
-    /// - Infinity (MassEffect.exe, MassEffect2.exe): Similar to Eclipse with physics integration
+    /// - Eclipse (daorigins.exe, DragonAge2.exe): Dynamic obstacle-aware line of sight
+    /// - Infinity (BaldurGate.exe, IcewindDale.exe, PlanescapeTorment.exe): Similar to Eclipse with physics integration
     /// 
     /// Common line-of-sight algorithm:
     /// 1. Handle edge case: same point (always has line of sight)

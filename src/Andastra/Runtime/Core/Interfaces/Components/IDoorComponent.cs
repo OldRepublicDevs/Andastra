@@ -11,7 +11,7 @@ namespace Andastra.Runtime.Core.Interfaces.Components
     ///   - Odyssey: OdysseyDoorComponent (swkotor.exe, swkotor2.exe)
     ///   - Aurora: AuroraDoorComponent (nwmain.exe)
     ///   - Eclipse: EclipseDoorComponent (daorigins.exe, DragonAge2.exe) - if doors are supported
-    ///   - Infinity: InfinityDoorComponent (MassEffect.exe, MassEffect2.exe) - if doors are supported
+    ///   - Infinity: InfinityDoorComponent (, ) - if doors are supported
     /// - Common functionality: Open/Closed state, Locking, Hit Points, Transitions, Basic Operations
     /// - OpenState: 0=closed, 1=open, 2=destroyed
     /// - Doors can be locked (IsLocked), require keys (KeyRequired, KeyTag), have lock DC (LockDC)

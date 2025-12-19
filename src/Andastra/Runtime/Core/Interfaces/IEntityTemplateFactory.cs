@@ -8,7 +8,7 @@ namespace Andastra.Runtime.Core.Interfaces
     /// </summary>
     /// <remarks>
     /// Entity Template Factory:
-    /// - TODO: lookup data from daorigins.exe/dragonage2.exe/masseffect.exe/masseffect2.exe/swkotor.exe/swkotor2.exe and split into subclass'd inheritence structures appropriately. parent class(es) should contain common code.
+    /// - TODO: lookup data from daorigins.exe/dragonage2.exe///swkotor.exe/swkotor2.exe and split into subclass'd inheritence structures appropriately. parent class(es) should contain common code.
     /// - Based on swkotor2.exe entity creation system
     /// - Located via string references: "TemplateResRef" @ 0x007bd00c
     /// - Template loading: FUN_005fb0f0 @ 0x005fb0f0 loads creature templates from GFF

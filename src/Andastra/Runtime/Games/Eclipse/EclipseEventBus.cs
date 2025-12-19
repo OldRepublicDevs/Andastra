@@ -12,7 +12,7 @@ namespace Andastra.Runtime.Games.Eclipse
     /// <remarks>
     /// Eclipse Event Bus System:
     /// - Based on daorigins.exe (Dragon Age: Origins), DragonAge2.exe (Dragon Age 2),
-    ///   MassEffect.exe (Mass Effect), and MassEffect2.exe (Mass Effect 2) event systems
+    ///    (), and  ( 2) event systems
     /// - Eclipse engine uses UnrealScript-based event dispatching (different from Odyssey's NWScript)
     /// - Event system architecture:
     ///   - Event data structures: "EventListeners" @ 0x00ae8194 (daorigins.exe), 0x00bf543c (DragonAge2.exe)
@@ -24,9 +24,9 @@ namespace Andastra.Runtime.Games.Eclipse
     ///   - Command processing: Events are dispatched through UnrealScript command system
     ///   - Event commands: COMMAND_HANDLEEVENT, COMMAND_SETEVENTSCRIPT, COMMAND_ENABLEEVENT, etc.
     /// - UnrealScript event dispatcher: Uses BioEventDispatcher interface
-    ///   - Function names (UnrealScript): "intUBioEventDispatcherexecDispatch" (MassEffect.exe: 0x117e7b90)
-    ///   - Function names (UnrealScript): "intUBioEventDispatcherexecSubscribe" (MassEffect.exe: 0x117e7c28)
-    ///   - Function names (UnrealScript): "intUBioEventDispatcherexecUnsubscribe" (MassEffect.exe: 0x117e7bd8)
+    ///   - Function names (UnrealScript): "intUBioEventDispatcherexecDispatch" (: 0x117e7b90)
+    ///   - Function names (UnrealScript): "intUBioEventDispatcherexecSubscribe" (: 0x117e7c28)
+    ///   - Function names (UnrealScript): "intUBioEventDispatcherexecUnsubscribe" (: 0x117e7bd8)
     ///   - Note: These are UnrealScript interface functions, not direct C++ addresses
     /// - Event processing pattern:
     ///   1. Events are queued via QueueEvent (inherited from BaseEventBus)
@@ -65,7 +65,7 @@ namespace Andastra.Runtime.Games.Eclipse
         /// <param name="triggerer">The triggering entity (optional).</param>
         /// <remarks>
         /// Eclipse Script Event Firing Implementation:
-        /// - Based on daorigins.exe/DragonAge2.exe/MassEffect.exe/MassEffect2.exe event systems
+        /// - Based on daorigins.exe/DragonAge2.exe// event systems
         /// - Event processing flow:
         ///   1. Event is created with entity, event type, and triggerer
         ///   2. Event is queued via QueueEvent (inherited from BaseEventBus)
@@ -75,8 +75,8 @@ namespace Andastra.Runtime.Games.Eclipse
         /// - Event data structures (from Ghidra reverse engineering):
         ///   - daorigins.exe: "EventListeners" @ 0x00ae8194, "EventId" @ 0x00ae81a4, "EventScripts" @ 0x00ae81bc
         ///   - DragonAge2.exe: "EventListeners" @ 0x00bf543c, "EventId" @ 0x00bf544c, "EventScripts" @ 0x00bf5464
-        ///   - MassEffect.exe: Uses UnrealScript BioEventDispatcher interface
-        ///   - MassEffect2.exe: Uses UnrealScript BioEventDispatcher interface
+        ///   - : Uses UnrealScript BioEventDispatcher interface
+        ///   - : Uses UnrealScript BioEventDispatcher interface
         /// - Command processing: "COMMAND_SIGNALEVENT" @ 0x00af4180 (daorigins.exe) handles event commands
         /// - UnrealScript integration: Events routed through UnrealScript's native event dispatcher system
         /// - Event queuing: Events are queued and processed at frame boundaries to prevent re-entrancy
@@ -103,7 +103,7 @@ namespace Andastra.Runtime.Games.Eclipse
         /// </summary>
         /// <remarks>
         /// Eclipse-specific script event arguments structure.
-        /// Based on daorigins.exe/DragonAge2.exe/MassEffect.exe/MassEffect2.exe event data structure.
+        /// Based on daorigins.exe/DragonAge2.exe// event data structure.
         /// Event structure contains:
         /// - Entity: Target entity for the event (OBJECT_SELF equivalent)
         /// - EventType: Script event type (OnHeartbeat, OnPerception, etc.)

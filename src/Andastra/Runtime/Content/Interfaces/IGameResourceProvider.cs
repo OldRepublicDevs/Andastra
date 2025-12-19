@@ -51,7 +51,7 @@ namespace Andastra.Runtime.Content.Interfaces
         Task<byte[]> GetResourceBytesAsync(ResourceIdentifier id, CancellationToken ct);
         
         /// <summary>
-        /// The game type (K1, K2, BaldursGate, IcewindDale, PlanescapeTorment, etc.).
+        /// The game type (K1, K2, BaldursGate, , , etc.).
         /// </summary>
         GameType GameType { get; }
     }
@@ -89,10 +89,10 @@ namespace Andastra.Runtime.Content.Interfaces
         // Odyssey Engine games
         K1,
         K2,
-        // Infinity Engine games
+        //  games
         BaldursGate,
-        IcewindDale,
-        PlanescapeTorment
+        ,
+        
     }
 }
 

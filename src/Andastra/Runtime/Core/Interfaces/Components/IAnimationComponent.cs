@@ -11,7 +11,7 @@ namespace Andastra.Runtime.Core.Interfaces.Components
     ///   - Odyssey: OdysseyAnimationComponent (swkotor.exe, swkotor2.exe)
     ///   - Aurora: AuroraAnimationComponent (nwmain.exe)
     ///   - Eclipse: EclipseAnimationComponent (daorigins.exe, DragonAge2.exe)
-    ///   - Infinity: InfinityAnimationComponent (MassEffect.exe, MassEffect2.exe)
+    ///   - Infinity: InfinityAnimationComponent (, )
     /// - Common functionality: Animation playback, timing, looping, completion tracking
     /// - Animation IDs reference animation indices in model animation arrays (0-based index)
     /// - CurrentAnimation: Currently playing animation ID (-1 = no animation, idle state)

@@ -13,7 +13,7 @@ namespace Andastra.Runtime.Core.Interfaces.Components
     ///   - Odyssey: TransformComponent (swkotor.exe, swkotor2.exe)
     ///   - Aurora: AuroraTransformComponent (nwmain.exe)
     ///   - Eclipse: EclipseTransformComponent (daorigins.exe, DragonAge2.exe)
-    ///   - Infinity: InfinityTransformComponent (MassEffect.exe, MassEffect2.exe)
+    ///   - Infinity: InfinityTransformComponent (, )
     ///
     /// Cross-Engine Analysis (Reverse Engineered):
     /// - Odyssey (swkotor.exe, swkotor2.exe):
@@ -35,7 +35,7 @@ namespace Andastra.Runtime.Core.Interfaces.Components
     ///   - daorigins.exe: XPosition @ 0x00af4f68, YPosition @ 0x00af4f5c, ZPosition @ 0x00af4f50
     ///     XOrientation @ 0x00af4f40, YOrientation @ 0x00af4f30, ZOrientation @ 0x00af4f20
     ///   - DragonAge2.exe: Similar transform system (verified via cross-engine analysis)
-    /// - Infinity (MassEffect.exe, MassEffect2.exe):
+    /// - Infinity (, ):
     ///   - Transform system similar to other engines (verified via cross-engine analysis)
     ///   - Uses same position/orientation storage pattern (XPosition, YPosition, ZPosition, XOrientation, YOrientation, ZOrientation)
     ///

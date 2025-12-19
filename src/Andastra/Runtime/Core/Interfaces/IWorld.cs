@@ -5,7 +5,8 @@ using Andastra.Runtime.Core.Animation;
 using Andastra.Runtime.Core.Combat;
 using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Templates;
-using Andastra.Runtime.Games.Common;
+// TODO: IGameDataProvider moved to Games.Common - Core cannot depend on Games
+// using Andastra.Runtime.Games.Common;
 
 namespace Andastra.Runtime.Core.Interfaces
 {
@@ -42,7 +43,7 @@ namespace Andastra.Runtime.Core.Interfaces
     ///   - Enhanced component system with streamlined entity management
     ///   - Module streaming system for large areas
     ///   - Advanced area management with dynamic loading
-    /// - Infinity (MassEffect.exe, MassEffect2.exe): InfinityWorld : BaseWorld
+    /// - Infinity (, ): InfinityWorld : BaseWorld
     ///   - Streamlined entity system optimized for action gameplay
     ///   - Level-based world management (levels instead of modules)
     ///   - Enhanced spatial queries for large-scale environments
@@ -156,7 +157,9 @@ namespace Andastra.Runtime.Core.Interfaces
         /// appearance data, and other game configuration data.
         /// Engine-specific implementations handle the actual table loading and lookup.
         /// </remarks>
-        IGameDataProvider GameDataProvider { get; }
+        // TODO: IGameDataProvider is in Games.Common - Core cannot depend on Games
+        // This property should be set by engine-specific implementations
+        object GameDataProvider { get; }
 
         /// <summary>
         /// Registers an entity with the world.

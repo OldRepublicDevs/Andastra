@@ -34,12 +34,12 @@ namespace HolocronToolset.Tests.Formats
             var dlg = new DLG
             {
                 WordCount = 100,
-                OnAbort = ResRef.FromString("k_pdan_abort"),
-                OnEnd = ResRef.FromString("k_pdan_end"),
+                OnAbort = new ResRef("k_pdan_abort"),
+                OnEnd = new ResRef("k_pdan_end"),
                 Skippable = true,
-                AmbientTrack = ResRef.FromString("mus_area_dan"),
+                AmbientTrack = new ResRef("mus_area_dan"),
                 AnimatedCut = 1,
-                CameraModel = ResRef.FromString("cameran1"),
+                CameraModel = new ResRef("cameran1"),
                 ComputerType = DLGComputerType.Modern,
                 ConversationType = DLGConversationType.Human,
                 OldHitCheck = false,
@@ -65,12 +65,18 @@ namespace HolocronToolset.Tests.Formats
             var replyLink = new DLGLink(reply, 0);
             entry.Links.Add(replyLink);
 
+            // Verify WordCount is set correctly before serialization
+            dlg.WordCount.Should().Be(100, "WordCount should be 100 before serialization");
+
             // Serialize as K1 format - K2 fields should NOT be written
             GFF gff = DLGHelper.DismantleDlg(dlg, Game.K1);
             
-            // Verify base fields are written
-            gff.Root.Acquire("NumWords", 0).Should().Be(100);
-            gff.Root.Acquire("EndConverAbort", ResRef.FromBlank()).Should().Be(ResRef.FromString("k_pdan_abort"));
+            // Debug: Check if field exists and what value it has
+            bool fieldExists = gff.Root.Exists("NumWords");
+            uint fieldValue = gff.Root.Acquire("NumWords", 999u); // Use 999 as default to detect if field is missing
+            fieldExists.Should().BeTrue($"NumWords field should exist in GFF (exists={fieldExists}, value={fieldValue})");
+            fieldValue.Should().Be(100u, $"NumWords should be 100 but was {fieldValue}");
+            gff.Root.Acquire("EndConverAbort", ResRef.FromBlank()).Should().Be(new ResRef("k_pdan_abort"));
             gff.Root.Acquire("AnimatedCut", (byte)0).Should().Be((byte)1);
             
             // Ghidra analysis: swkotor.exe:0x005a2ae0 does NOT read AlienRaceOwner
@@ -91,9 +97,16 @@ namespace HolocronToolset.Tests.Formats
             entryStruct.Exists("Script2").Should().BeFalse("K1 nodes should not have Script2");
             entryStruct.Exists("AlienRaceNode").Should().BeFalse("K1 nodes should not have AlienRaceNode");
             
-            // Round-trip test
+            // Round-trip test - verify field still exists before reading
+            gff.Root.Exists("NumWords").Should().BeTrue("NumWords should still exist before round-trip");
+            gff.Root.Acquire("NumWords", 999u).Should().Be(100u, "NumWords should still be 100 before round-trip");
+            
+            // Debug: Check what GetUInt32 returns
+            uint getUInt32Value = gff.Root.GetUInt32("NumWords");
+            getUInt32Value.Should().Be(100u, $"GetUInt32 should return 100 but returned {getUInt32Value}");
+            
             DLG reconstructed = DLGHelper.ConstructDlg(gff);
-            reconstructed.WordCount.Should().Be(100);
+            reconstructed.WordCount.Should().Be(100, $"WordCount should be 100 after round-trip, but was {reconstructed.WordCount}");
             reconstructed.AnimatedCut.Should().Be(1);
             reconstructed.AlienRaceOwner.Should().Be(0, "K1 format should read as 0");
         }
@@ -109,12 +122,12 @@ namespace HolocronToolset.Tests.Formats
             var dlg = new DLG
             {
                 WordCount = 200,
-                OnAbort = ResRef.FromString("a_globalabo"),
-                OnEnd = ResRef.FromString("a_globalend"),
+                OnAbort = new ResRef("a_globalabo"),
+                OnEnd = new ResRef("a_globalend"),
                 Skippable = true,
-                AmbientTrack = ResRef.FromString("mus_s_combat"),
+                AmbientTrack = new ResRef("mus_s_combat"),
                 AnimatedCut = 0,
-                CameraModel = ResRef.FromString("camerag"),
+                CameraModel = new ResRef("camerag"),
                 ComputerType = DLGComputerType.Ancient,
                 ConversationType = DLGConversationType.Computer,
                 OldHitCheck = true,
@@ -136,7 +149,7 @@ namespace HolocronToolset.Tests.Formats
                 // K2-specific node fields
                 Script1Param1 = 10,
                 Script1Param2 = 20,
-                Script2 = ResRef.FromString("a_alienrace"),
+                Script2 = new ResRef("a_alienrace"),
                 AlienRaceNode = 2,
                 EmotionId = 3,
                 FacialId = 4,
@@ -153,7 +166,7 @@ namespace HolocronToolset.Tests.Formats
                 ListIndex = 0,
                 // K2-specific node fields
                 Script1Param1 = 5,
-                Script2 = ResRef.FromString("a_replynode"),
+                Script2 = new ResRef("a_replynode"),
                 NodeId = 2
             };
             reply.Text = LocalizedString.FromEnglish("[Accept]");
@@ -164,7 +177,7 @@ namespace HolocronToolset.Tests.Formats
             // K2-specific link fields
             var replyLink = new DLGLink(reply, 0)
             {
-                Active2 = ResRef.FromString("k_influence"),
+                Active2 = new ResRef("k_influence"),
                 Logic = true,
                 Active1Not = false,
                 Active2Not = true,

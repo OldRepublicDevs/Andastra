@@ -44,11 +44,11 @@ namespace Andastra.Runtime.Engines.Common
     ///   - nwmain.exe: CNWSModule::LoadModule (needs Ghidra address verification)
     ///   - nwmain.exe: CServerExoApp::LoadModule (needs Ghidra address verification)
     ///   - Module state management similar to Odyssey with Aurora-specific file formats
-    /// - Eclipse (daorigins.exe, DragonAge2.exe, MassEffect.exe, MassEffect2.exe): UnrealScript-based module loading
+    /// - Eclipse (daorigins.exe, DragonAge2.exe, , ): UnrealScript-based module loading
     ///   - daorigins.exe: LoadModuleMessage handling (needs Ghidra address verification)
     ///   - Eclipse: Module package loading and area streaming (needs Ghidra analysis)
     ///   - Different architecture (message-based) but similar state management patterns
-    /// - Infinity (BaldurGate.exe, IcewindDale.exe, PlanescapeTorment.exe): ARE/WED/GAM file formats
+    /// - Infinity (.exe, .exe, .exe): ARE/WED/GAM file formats
     ///   - Infinity: Module loading functions (needs Ghidra address verification)
     ///   - Infinity: ARE file parsing and entity spawning (needs Ghidra analysis)
     ///   - Simpler module system but follows same state management patterns

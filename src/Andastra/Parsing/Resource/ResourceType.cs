@@ -230,7 +230,7 @@ namespace Andastra.Parsing.Resource
         public static readonly ResourceType INVALID = new ResourceType(-1, "", "Undefined", "binary", isInvalid: true, name: "INVALID");
         public static readonly ResourceType RES = new ResourceType(0, "res", "Save Data", "gff", name: "RES");
         public static readonly ResourceType BMP = new ResourceType(1, "bmp", "Images", "binary", name: "BMP");
-        public static readonly ResourceType MVE = new ResourceType(2, "mve", "Video", "video", name: "MVE"); // Video, Infinity Engine
+        public static readonly ResourceType MVE = new ResourceType(2, "mve", "Video", "video", name: "MVE"); // Video, 
         public static readonly ResourceType TGA = new ResourceType(3, "tga", "Textures", "binary", name: "TGA");
         public static readonly ResourceType WAV = new ResourceType(4, "wav", "Audio", "binary", name: "WAV");
         public static readonly ResourceType PLT = new ResourceType(6, "plt", "Other", "binary", name: "PLT");
@@ -348,7 +348,7 @@ namespace Andastra.Parsing.Resource
         public static readonly ResourceType BIF = new ResourceType(9998, "bif", "Archives", "binary", name: "BIF");
         public static readonly ResourceType KEY = new ResourceType(9999, "key", "Chitin", "binary", name: "KEY");
         
-        // Unreal Engine 3 Package formats (Eclipse Engine - Dragon Age, Mass Effect)
+        // Unreal Engine 3 Package formats (Eclipse Engine - Dragon Age, )
         public static readonly ResourceType PCC = new ResourceType(10000, "pcc", "Packages", "binary", name: "PCC");
         public static readonly ResourceType UPK = new ResourceType(10001, "upk", "Packages", "binary", name: "UPK");
 

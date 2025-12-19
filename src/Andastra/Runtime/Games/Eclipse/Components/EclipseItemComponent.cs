@@ -9,13 +9,13 @@ namespace Andastra.Runtime.Games.Eclipse.Components
     /// Eclipse Item Component:
     /// - Inherits common functionality from BaseItemComponent
     /// - Implements Eclipse-specific item system features
-    /// - Based on daorigins.exe, DragonAge2.exe, MassEffect.exe, and MassEffect2.exe item systems
+    /// - Based on daorigins.exe, DragonAge2.exe, , and  item systems
     ///
     /// Eclipse-specific details:
     /// - daorigins.exe: Eclipse item component system with enhanced property calculations
     /// - DragonAge2.exe: Enhanced Eclipse item system with different upgrade mechanics
-    /// - MassEffect.exe: Infinity item system with streamlined property system
-    /// - MassEffect2.exe: Enhanced Infinity item system with different upgrade/modification mechanics
+    /// - : Infinity item system with streamlined property system
+    /// - : Enhanced Infinity item system with different upgrade/modification mechanics
     /// - Item component structure similar to Odyssey/Aurora but with engine-specific variations
     /// - Property system and cost calculations differ from Odyssey/Aurora
     /// - Upgrade system with different mechanics than Odyssey

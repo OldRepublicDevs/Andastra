@@ -19,7 +19,7 @@ namespace Andastra.Runtime.Games.Eclipse
     /// - Physics-aware navigation with collision avoidance
     ///
     /// Based on reverse engineering of:
-    /// - daorigins.exe/DragonAge2.exe/MassEffect.exe/MassEffect2.exe navigation systems
+    /// - daorigins.exe/DragonAge2.exe// navigation systems
     /// - Dynamic obstacle avoidance algorithms
     /// - Cover system implementations
     /// - Tactical pathfinding with threat assessment
@@ -126,7 +126,7 @@ namespace Andastra.Runtime.Games.Eclipse
         /// Implementation based on reverse engineering of:
         /// - daorigins.exe: Dynamic point testing with physics integration
         /// - DragonAge2.exe: Enhanced multi-level point testing
-        /// - MassEffect.exe/MassEffect2.exe: Physics-aware point testing
+        /// - /: Physics-aware point testing
         ///
         /// Algorithm:
         /// 1. Collect all projection candidates (static geometry, dynamic obstacles, multi-level surfaces)
@@ -302,7 +302,7 @@ namespace Andastra.Runtime.Games.Eclipse
         /// Implementation based on reverse engineering of:
         /// - daorigins.exe: Dynamic projection with physics integration
         /// - DragonAge2.exe: Enhanced multi-level projection
-        /// - MassEffect.exe/MassEffect2.exe: Physics-aware projection
+        /// - /: Physics-aware projection
         ///
         /// Algorithm:
         /// 1. Check static geometry projection (with destructible modifications)
@@ -864,7 +864,7 @@ namespace Andastra.Runtime.Games.Eclipse
 
         /// <summary>
         /// Finds a path from start to goal while avoiding obstacles.
-        /// Based on daorigins.exe/DragonAge2.exe/MassEffect.exe/MassEffect2.exe: Advanced obstacle avoidance
+        /// Based on daorigins.exe/DragonAge2.exe//: Advanced obstacle avoidance
         /// Eclipse engine has the most sophisticated obstacle avoidance with dynamic obstacles and cover system.
         /// </summary>
         public System.Collections.Generic.IList<Vector3> FindPathAroundObstacles(Vector3 start, Vector3 goal, IList<Interfaces.ObstacleInfo> obstacles)
@@ -1179,7 +1179,7 @@ namespace Andastra.Runtime.Games.Eclipse
         /// Implementation based on reverse engineering of:
         /// - daorigins.exe: Tactical pathfinding with cover integration
         /// - DragonAge2.exe: Enhanced tactical pathfinding with threat assessment
-        /// - MassEffect.exe/MassEffect2.exe: Advanced tactical pathfinding with dynamic obstacle avoidance
+        /// - /: Advanced tactical pathfinding with dynamic obstacle avoidance
         ///
         /// Algorithm:
         /// 1. Project start and end points to walkable surfaces
@@ -1629,7 +1629,7 @@ namespace Andastra.Runtime.Games.Eclipse
         ///   (Ghidra analysis needed: search for height sampling functions, walkmesh projection functions)
         /// - DragonAge2.exe: Enhanced multi-level height sampling
         ///   (Ghidra analysis needed: search for multi-level navigation height functions)
-        /// - MassEffect.exe/MassEffect2.exe: Physics-aware height sampling
+        /// - /: Physics-aware height sampling
         ///   (Ghidra analysis needed: search for physics integration in height sampling)
         /// 
         /// Common pattern across Eclipse engines:
@@ -1647,8 +1647,8 @@ namespace Andastra.Runtime.Games.Eclipse
         /// Note: Function addresses to be determined via Ghidra MCP reverse engineering:
         /// - daorigins.exe: Height sampling function (search for "GetHeight", "SampleHeight", "ProjectToSurface" references)
         /// - DragonAge2.exe: Multi-level height sampling function (search for navigation mesh height functions)
-        /// - MassEffect.exe: Physics-aware height sampling (search for physics integration in navigation)
-        /// - MassEffect2.exe: Enhanced physics-aware height sampling (search for improved navigation height functions)
+        /// - : Physics-aware height sampling (search for physics integration in navigation)
+        /// - : Enhanced physics-aware height sampling (search for improved navigation height functions)
         /// </remarks>
         public bool GetHeightAtPoint(Vector3 point, out float height)
         {
@@ -1757,13 +1757,13 @@ namespace Andastra.Runtime.Games.Eclipse
         /// Implementation based on reverse engineering of:
         /// - daorigins.exe: Dynamic line of sight with destructible environment support
         /// - DragonAge2.exe: Enhanced dynamic line of sight with physics integration
-        /// - MassEffect.exe/MassEffect2.exe: Physics-aware line of sight with dynamic obstacles
+        /// - /: Physics-aware line of sight with dynamic obstacles
         /// 
         /// Note: Function addresses to be determined via Ghidra MCP reverse engineering:
         /// - daorigins.exe: Line of sight function (search for "HasLineOfSight", "LineOfSight", "Raycast" references)
         /// - DragonAge2.exe: Enhanced line of sight function (search for dynamic obstacle integration)
-        /// - MassEffect.exe: Physics-aware line of sight (search for physics integration in line of sight)
-        /// - MassEffect2.exe: Enhanced physics-aware line of sight (search for improved line of sight functions)
+        /// - : Physics-aware line of sight (search for physics integration in line of sight)
+        /// - : Enhanced physics-aware line of sight (search for improved line of sight functions)
         /// </remarks>
         public new bool HasLineOfSight(Vector3 start, Vector3 end)
         {
@@ -1774,7 +1774,7 @@ namespace Andastra.Runtime.Games.Eclipse
         /// Eclipse-specific check: handles destructible modifications and walkable faces.
         /// </summary>
         /// <remarks>
-        /// Based on daorigins.exe, DragonAge2.exe, MassEffect.exe, MassEffect2.exe:
+        /// Based on daorigins.exe, DragonAge2.exe, , :
         /// - Destroyed faces don't block line of sight
         /// - Modified faces check walkability
         /// - Walkable faces don't block line of sight
@@ -1815,7 +1815,7 @@ namespace Andastra.Runtime.Games.Eclipse
         /// Eclipse-specific check for dynamic obstacles.
         /// </summary>
         /// <remarks>
-        /// Based on daorigins.exe, DragonAge2.exe, MassEffect.exe, MassEffect2.exe:
+        /// Based on daorigins.exe, DragonAge2.exe, , :
         /// - Only active, non-walkable obstacles block line of sight
         /// - Walkable obstacles (platforms, movable surfaces) don't block
         /// </remarks>

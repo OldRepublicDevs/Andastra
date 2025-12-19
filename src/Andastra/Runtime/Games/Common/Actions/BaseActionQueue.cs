@@ -22,8 +22,8 @@ namespace Andastra.Runtime.Games.Common.Actions
     /// Engine-specific implementations:
     /// - Odyssey (swkotor.exe, swkotor2.exe): OdysseyActionQueue - specific function addresses for GFF loading/saving
     /// - Aurora (nwmain.exe, nwn2main.exe): AuroraActionQueue - CNWSObject::LoadActionQueue/SaveActionQueue methods
-    /// - Eclipse (daorigins.exe, DragonAge2.exe, MassEffect.exe): Uses ActionFramework (different architecture)
-    /// - Infinity (MassEffect.exe, MassEffect2.exe): May use different system (needs investigation)
+    /// - Eclipse (daorigins.exe, DragonAge2.exe, ): Uses ActionFramework (different architecture)
+    /// - Infinity (, ): May use different system (needs investigation)
     /// 
     /// All engine-specific details (function addresses, GFF field offsets, implementation specifics) are in subclasses.
     /// This base class contains only functionality that is identical across engines using GFF-based action serialization.

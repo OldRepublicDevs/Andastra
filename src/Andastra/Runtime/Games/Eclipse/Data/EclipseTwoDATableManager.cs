@@ -10,7 +10,7 @@ namespace Andastra.Runtime.Games.Eclipse.Data
     /// </summary>
     /// <remarks>
     /// Eclipse 2DA Table Manager:
-    /// - Based on daorigins.exe, DragonAge2.exe, MassEffect.exe, MassEffect2.exe
+    /// - Based on daorigins.exe, DragonAge2.exe, , 
     /// - Eclipse engines use 2DA files similar to Odyssey/Aurora, accessed through Installation.Resources
     /// - Original implementation: Loads 2DA files from installation archives via resource system
     /// - Resource precedence: override → module → base game archives

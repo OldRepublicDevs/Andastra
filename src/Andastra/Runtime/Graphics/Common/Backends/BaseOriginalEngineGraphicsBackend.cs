@@ -21,7 +21,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends
     /// - Eclipse: Dragon Age Origins, Dragon Age 2
     /// - Odyssey: KOTOR 1, KOTOR 2
     /// - Aurora: Neverwinter Nights Enhanced Edition
-    /// - Infinity: Mass Effect 1, Mass Effect 2
+    /// - Infinity:  1,  2
     /// </summary>
     /// <remarks>
     /// Original Engine Graphics Backend:
@@ -31,7 +31,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends
     ///   * Aurora (NWN:EE): OpenGL ONLY (nwmain.exe imports OPENGL32.DLL, GLU32.DLL)
     ///   * Eclipse (DA:O): DirectX 9 (daorigins.exe dynamically loads d3d9.dll, Direct3DCreate9)
     ///   * Eclipse (DA2): DirectX 11 primary with DirectX 9 fallback (DragonAge2.exe loads d3d11.dll/dxgi.dll, UseDirectX11Renderer flag)
-    ///   * Infinity (ME1/ME2): TBD (requires further analysis)
+    ///   * Infinity (/): TBD (requires further analysis)
     /// - Graphics initialization: Matches original engine initialization code from game executables
     /// - Located via reverse engineering: DirectX/OpenGL calls, rendering pipeline, shader usage
     /// - This implementation: Direct 1:1 match of original engine rendering code
@@ -246,7 +246,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends
         protected abstract string GetEngineName();
 
         /// <summary>
-        /// Gets the game name (e.g., "Dragon Age Origins", "KOTOR 1", "NWN:EE", "Mass Effect 1").
+        /// Gets the game name (e.g., "Dragon Age Origins", "KOTOR 1", "NWN:EE", " 1").
         /// </summary>
         protected abstract string GetGameName();
 

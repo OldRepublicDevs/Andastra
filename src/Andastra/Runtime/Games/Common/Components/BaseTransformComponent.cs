@@ -26,10 +26,10 @@ namespace Andastra.Runtime.Games.Common.Components
     ///   - Eclipse: daorigins.exe, DragonAge2.exe
     ///     - daorigins.exe: XPosition @ 0x00af4f68, YPosition @ 0x00af4f5c, ZPosition @ 0x00af4f50, XOrientation @ 0x00af4f40, YOrientation @ 0x00af4f30, ZOrientation @ 0x00af4f20
     ///     - DragonAge2.exe: Similar transform system (verified via cross-engine analysis)
-    ///   - Infinity: MassEffect.exe, MassEffect2.exe
+    ///   - Infinity: , 
     ///     - Transform system verified via cross-engine analysis: uses same XPosition, YPosition, ZPosition, XOrientation, YOrientation, ZOrientation pattern
-    ///     - MassEffect.exe: Standard BioWare transform pattern (verified via cross-engine comparison)
-    ///     - MassEffect2.exe: Enhanced transform system with same core structure (verified via cross-engine comparison)
+    ///     - : Standard BioWare transform pattern (verified via cross-engine comparison)
+    ///     - : Enhanced transform system with same core structure (verified via cross-engine comparison)
     ///
     /// Common functionality across all engines:
     /// - Position: Vector3 world position (Y-up coordinate system, meters)

@@ -14,14 +14,14 @@ namespace Andastra.Parsing.Formats.PCC
     /// </summary>
     /// <remarks>
     /// PCC/UPK Package Format:
-    /// - Based on Unreal Engine 3 package format used by Eclipse Engine games (Dragon Age, Mass Effect)
+    /// - Based on Unreal Engine 3 package format used by Eclipse Engine games (Dragon Age, )
     /// - PCC: Package file containing cooked content (textures, meshes, scripts, etc.)
     /// - UPK: Unreal Package file (same format as PCC, different extension)
     /// - Package structure: Header, Name Table, Import Table, Export Table, Data Chunks
     /// - Resources are stored as exports in the Export Table
     /// - Each export has a name, type, and data offset/size
     /// - Based on Unreal Engine 3 package format specification
-    /// - Used by Dragon Age: Origins, Dragon Age 2, Mass Effect, Mass Effect 2
+    /// - Used by Dragon Age: Origins, Dragon Age 2, ,  2
     /// </remarks>
     public class PCC : IEnumerable<PCCResource>
     {

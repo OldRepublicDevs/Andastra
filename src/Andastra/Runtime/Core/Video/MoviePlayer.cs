@@ -3,10 +3,11 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using Andastra.Parsing.Resource;
-using Andastra.Runtime.Content.Interfaces;
+// TODO: Core cannot depend on Content or Graphics - these should be injected or removed
+// using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Video.Bink;
-using Andastra.Runtime.Graphics;
+// using Andastra.Runtime.Graphics;
 
 namespace Andastra.Runtime.Core.Video
 {
@@ -44,8 +45,8 @@ namespace Andastra.Runtime.Core.Video
     public class MoviePlayer
     {
         private readonly IWorld _world;
-        private readonly IGameResourceProvider _resourceProvider;
-        private readonly IGraphicsDevice _graphicsDevice;
+        private readonly Andastra.Runtime.Content.Interfaces.object _resourceProvider;
+        private readonly Andastra.Runtime.Graphics.Common.object _graphicsDevice;
         private bool _isPlaying;
 
         /// <summary>
@@ -54,7 +55,7 @@ namespace Andastra.Runtime.Core.Video
         /// <param name="world">World instance for accessing game services.</param>
         /// <param name="resourceProvider">Resource provider for loading movie files.</param>
         /// <param name="graphicsDevice">Graphics device for rendering video frames.</param>
-        public MoviePlayer(IWorld world, IGameResourceProvider resourceProvider, IGraphicsDevice graphicsDevice)
+        public MoviePlayer(IWorld world, Andastra.Runtime.Content.Interfaces.object resourceProvider, Andastra.Runtime.Graphics.Common.object graphicsDevice)
         {
             _world = world ?? throw new ArgumentNullException("world");
             _resourceProvider = resourceProvider ?? throw new ArgumentNullException("resourceProvider");

@@ -10,7 +10,7 @@ namespace Andastra.Runtime.Games.Eclipse.Data
     /// </summary>
     /// <remarks>
     /// Eclipse Game Data Provider:
-    /// - Based on daorigins.exe, DragonAge2.exe, MassEffect.exe, MassEffect2.exe
+    /// - Based on daorigins.exe, DragonAge2.exe, , 
     /// - Eclipse engines use 2DA files similar to Odyssey/Aurora, accessed through Installation.Resources
     /// - Original implementation: Loads 2DA tables from installation archives via resource system
     /// - Uses EclipseTwoDATableManager to access 2DA tables (appearance.2da, baseitems.2da, etc.)

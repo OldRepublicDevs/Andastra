@@ -26,7 +26,7 @@ namespace Andastra.Runtime.Core.Interfaces
     /// - Eclipse (daorigins.exe, DragonAge2.exe): Enhanced component system
     ///   - Component serialization format similar to Odyssey/Aurora (exact addresses to be determined via reverse engineering)
     ///   - Enhanced component interactions and dependencies
-    /// - Infinity (MassEffect.exe, MassEffect2.exe): Streamlined component system
+    /// - Infinity (, ): Streamlined component system
     ///   - Component serialization format similar to other engines (exact addresses to be determined via reverse engineering)
     ///   - Streamlined component architecture for performance
     ///

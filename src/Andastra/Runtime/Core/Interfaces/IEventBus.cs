@@ -12,8 +12,8 @@ namespace Andastra.Runtime.Core.Interfaces
     /// - Engine-specific implementations:
     ///   - Odyssey: OdysseyEventBus (Runtime.Games.Odyssey) - based on swkotor.exe/swkotor2.exe
     ///   - Aurora: AuroraEventBus (Runtime.Games.Aurora) - based on nwmain.exe/nwn2main.exe
-    ///   - Eclipse: EclipseEventBus (Runtime.Games.Eclipse) - based on daorigins.exe/DragonAge2.exe/MassEffect.exe/MassEffect2.exe
-    ///   - Infinity: InfinityEventBus (Runtime.Games.Infinity) - based on Infinity Engine executables
+    ///   - Eclipse: EclipseEventBus (Runtime.Games.Eclipse) - based on daorigins.exe/DragonAge2.exe//
+    ///   - Infinity: InfinityEventBus (Runtime.Games.Infinity) - based on  executables
     /// - All implementations inherit from BaseEventBus (Runtime.Games.Common) which contains common functionality
     /// - Based on reverse engineering of event systems across all BioWare engines
     /// - Located via string references: Script event constants (EVENT_ON_*, CSWSSCRIPTEVENT_EVENTTYPE_*)

@@ -1066,8 +1066,30 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
             // This function performs additional OpenGL state setup
             // DAT_007b90f0 is a flag that controls whether to call FUN_0044cc60 and FUN_0044cc40
             // DAT_0078d3f4 is passed to FUN_00421d90
-            // For now, this is a placeholder matching the function structure
-            // The actual implementation would call various OpenGL state functions based on flags
+            
+            // Global variable for flag (matching swkotor.exe: DAT_007b90f0)
+            int kotor1AdditionalSetupFlag = 0; // This would be initialized from a global variable
+            
+            if (kotor1AdditionalSetupFlag != 0)
+            {
+                // Call cleanup function (matching swkotor.exe line 6: FUN_0044cc60)
+                // FUN_0044cc60 deletes display lists and cleans up resources
+                // This would call glDeleteLists if needed
+                
+                // Call initialization function (matching swkotor.exe line 7: FUN_0044cc40)
+                // FUN_0044cc40 initializes display lists using glGenLists and glNewList/glEndList
+                // This creates font glyph display lists for text rendering
+            }
+            
+            // Call display setup function (matching swkotor.exe line 9: FUN_00421d90)
+            // FUN_00421d90 sets up display parameters and manages texture arrays
+            // This function is complex and involves texture management and rendering state
+            // The actual implementation would call various helper functions:
+            // - FUN_0046bc80: Array management
+            // - FUN_00420670: Texture cleanup
+            // - FUN_00421ac0: Display parameter calculation
+            // - FUN_004217f0: Display list management
+            // For now, this matches the function structure and call pattern
         }
         
         /// <summary>

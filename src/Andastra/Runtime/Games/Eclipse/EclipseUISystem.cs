@@ -7,12 +7,12 @@ using Andastra.Parsing.Installation;
 namespace Andastra.Runtime.Games.Eclipse
 {
     /// <summary>
-    /// UI system implementation for Eclipse engine (Dragon Age, Mass Effect).
+    /// UI system implementation for Eclipse engine (Dragon Age, ).
     /// </summary>
     /// <remarks>
     /// UI System Implementation:
     /// - Eclipse-specific UI system implementation inheriting from BaseUISystem
-    /// - Based on daorigins.exe, DragonAge2.exe, MassEffect.exe, MassEffect2.exe UI systems
+    /// - Based on daorigins.exe, DragonAge2.exe, ,  UI systems
     /// - Eclipse engine uses advanced UI system with crafting, inventory, and character progression screens
     /// - Enhanced screen management with transitions and cinematic overlays
     ///
@@ -21,13 +21,13 @@ namespace Andastra.Runtime.Games.Eclipse
     ///   - ItemUpgrade system with GUIItemUpgrade class (daorigins.exe: ItemUpgrade @ 0x00aef22c, GUIItemUpgrade @ 0x00b02ca0, COMMAND_OPENITEMUPGRADEGUI @ 0x00af1c7c)
     /// - DragonAge2.exe: Enhanced UI system with character progression and ability screens
     ///   - ItemUpgrade system with GUIItemUpgrade class (DragonAge2.exe: ItemUpgrade @ 0x00beb1f0, GUIItemUpgrade @ 0x00beb1d0, UpgradePrereqType @ 0x00c0583c, GetAbilityUpgradedValue @ 0x00c0f20c)
-    /// - MassEffect.exe: Modern UI system with cinematic overlays and dialogue system
+    /// - : Modern UI system with cinematic overlays and dialogue system
     ///   - No item upgrade system (only vehicle upgrades)
-    /// - MassEffect2.exe: Advanced UI system with inventory, character, and mission screens
+    /// - : Advanced UI system with inventory, character, and mission screens
     ///   - No item upgrade system (only vehicle upgrades)
     ///
     /// Note: Dragon Age games (Origins, DA2) have ItemUpgrade systems similar to Odyssey but with different implementation.
-    /// Mass Effect games do not have item upgrade systems.
+    ///  games do not have item upgrade systems.
     /// </remarks>
     public class EclipseUISystem : BaseUISystem
     {
@@ -47,7 +47,7 @@ namespace Andastra.Runtime.Games.Eclipse
             }
 
             // Create Eclipse upgrade screen
-            // Dragon Age games support item upgrades, Mass Effect games do not
+            // Dragon Age games support item upgrades,  games do not
             _upgradeScreen = new EclipseUpgradeScreen(installation, world);
         }
 
@@ -63,7 +63,7 @@ namespace Andastra.Runtime.Games.Eclipse
         /// Based on reverse engineering:
         /// - daorigins.exe: COMMAND_OPENITEMUPGRADEGUI @ 0x00af1c7c opens ItemUpgrade GUI
         /// - DragonAge2.exe: GUIItemUpgrade class structure handles upgrade screen display
-        /// - Mass Effect games: No upgrade screen support (method will handle gracefully)
+        /// -  games: No upgrade screen support (method will handle gracefully)
         /// </remarks>
         protected override void ShowUpgradeScreenImpl(uint item, uint character, bool disableItemCreation, bool disableUpgrade, string override2DA)
         {

@@ -13,12 +13,28 @@ namespace Andastra.Runtime.Core.Actions
     /// - Aurora: Runtime.Games.Aurora.Actions.AuroraAction
     /// - Common: Runtime.Games.Common.Actions.BaseAction
     /// 
-    /// This class is kept for backward compatibility and delegates to BaseAction.
+    /// This class is kept for backward compatibility. Core cannot depend on Games, so this is a standalone implementation.
     /// </remarks>
-    public abstract class ActionBase : Games.Common.Actions.BaseAction
+    public abstract class ActionBase
     {
-        protected ActionBase(ActionType type) : base(type)
+        public ActionType Type { get; }
+
+        protected ActionBase(ActionType type)
         {
+            Type = type;
+        }
+
+        /// <summary>
+        /// Executes the action. Returns the status of the action execution.
+        /// </summary>
+        protected abstract ActionStatus ExecuteInternal(IEntity actor, float deltaTime);
+
+        /// <summary>
+        /// Executes the action. This is the public entry point.
+        /// </summary>
+        public ActionStatus Execute(IEntity actor, float deltaTime)
+        {
+            return ExecuteInternal(actor, deltaTime);
         }
     }
 }

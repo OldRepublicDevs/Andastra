@@ -22,7 +22,7 @@ namespace Andastra.Runtime.Games.Common
     ///   - Odyssey: KotorGuiManager : BaseGuiManager (swkotor.exe, swkotor2.exe)
     ///   - Aurora: AuroraGuiManager : BaseGuiManager (nwmain.exe)
     ///   - Eclipse: EclipseGuiManager : BaseGuiManager (daorigins.exe, DragonAge2.exe)
-    ///   - Infinity: InfinityGuiManager : BaseGuiManager (MassEffect.exe, MassEffect2.exe)
+    ///   - Infinity: InfinityGuiManager : BaseGuiManager (, )
     /// </remarks>
     public abstract class BaseGuiManager : IDisposable
     {

@@ -11,7 +11,7 @@ namespace Andastra.Runtime.Core.Interfaces.Components
     ///   - Odyssey: PlaceableComponent (swkotor.exe, swkotor2.exe)
     ///   - Aurora: AuroraPlaceableComponent (nwmain.exe)
     ///   - Eclipse: EclipsePlaceableComponent (daorigins.exe, DragonAge2.exe)
-    ///   - Infinity: InfinityPlaceableComponent (MassEffect.exe, MassEffect2.exe)
+    ///   - Infinity: InfinityPlaceableComponent (, )
     /// - Cross-engine analysis completed for all engines
     /// - Common functionality: Useability, Inventory, Static flag, Open/Closed state, Locking, Hit Points, Hardness, Animation State, Conversation
     /// - Engine-specific details are in subclasses (trap systems, appearance systems, event handling, field names)

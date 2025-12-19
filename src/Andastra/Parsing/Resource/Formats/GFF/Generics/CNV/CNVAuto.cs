@@ -24,7 +24,7 @@ namespace Andastra.Parsing.Resource.Generics.CNV
         /// - Reads GFF format file with "CNV " signature
         /// - Supports file paths, byte arrays, and streams
         /// - Constructs CNV object from GFF structure
-        /// - Used by Eclipse Engine games (Dragon Age, Mass Effect)
+        /// - Used by Eclipse Engine games (Dragon Age, )
         /// </remarks>
         public static CNV ReadCnv(object source, int offset = 0, int? size = null)
         {
@@ -61,7 +61,7 @@ namespace Andastra.Parsing.Resource.Generics.CNV
             if (!game.IsEclipse())
             {
                 throw new ArgumentException(
-                    $"CNV format is only supported for Eclipse Engine games (Dragon Age, Mass Effect). " +
+                    $"CNV format is only supported for Eclipse Engine games (Dragon Age, ). " +
                     $"Provided game: {game}",
                     nameof(game));
             }
@@ -109,7 +109,7 @@ namespace Andastra.Parsing.Resource.Generics.CNV
             if (!game.IsEclipse())
             {
                 throw new ArgumentException(
-                    $"CNV format is only supported for Eclipse Engine games (Dragon Age, Mass Effect). " +
+                    $"CNV format is only supported for Eclipse Engine games (Dragon Age, ). " +
                     $"Provided game: {game}",
                     nameof(game));
             }

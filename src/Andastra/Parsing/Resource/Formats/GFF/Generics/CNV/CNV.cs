@@ -9,17 +9,17 @@ using Andastra.Parsing.Common;
 namespace Andastra.Parsing.Resource.Generics.CNV
 {
     /// <summary>
-    /// Stores conversation data for Eclipse Engine games (Dragon Age, Mass Effect).
+    /// Stores conversation data for Eclipse Engine games (Dragon Age, ).
     /// </summary>
     /// <remarks>
     /// CNV files are GFF-based format files that store conversation trees with entries, replies,
     /// links, and conversation metadata. Used by Eclipse Engine games (Dragon Age Origins,
-    /// Dragon Age 2, Mass Effect 1, Mass Effect 2).
+    /// Dragon Age 2,  1,  2).
     /// 
     /// CNV Format:
     /// - GFF format with "CNV " signature
     /// - Similar structure to DLG but adapted for Eclipse conversation system
-    /// - Used by Eclipse Engine games (daorigins.exe, DragonAge2.exe, MassEffect.exe, MassEffect2.exe)
+    /// - Used by Eclipse Engine games (daorigins.exe, DragonAge2.exe, , )
     /// - Conversation system uses message passing and UnrealScript-based architecture
     /// 
     /// Differences from DLG:

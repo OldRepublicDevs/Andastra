@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Numerics;
 using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces;
+using Andastra.Runtime.Core.Plot;
 
 namespace Andastra.Runtime.Core.Save
 {
@@ -57,6 +58,7 @@ namespace Andastra.Runtime.Core.Save
         private readonly ISaveDataProvider _dataProvider;
         private object _globals; // IScriptGlobals - stored as object to avoid dependency
         private Party.PartySystem _partySystem; // PartySystem - stored as concrete type since both are in Andastra.Runtime.Core
+        private PlotSystem _plotSystem; // PlotSystem - stored as concrete type since both are in Andastra.Runtime.Core
 
         /// <summary>
         /// Currently loaded save data.
@@ -217,6 +219,9 @@ namespace Andastra.Runtime.Core.Save
 
             // Save area states
             SaveAreaStates(saveData);
+
+            // Save plot state
+            SavePlotState(saveData);
 
             return saveData;
         }
@@ -719,6 +724,45 @@ namespace Andastra.Runtime.Core.Save
         }
 
         /// <summary>
+        /// Restores plot state from save data.
+        /// </summary>
+        /// <remarks>
+        /// Plot State Restoration (swkotor2.exe):
+        /// - Based on swkotor2.exe: Plot state is restored from save data
+        /// - Original implementation: Plot states are restored to prevent duplicate processing
+        /// - Plot state includes: plot index, label, triggered status, completed status, trigger count
+        /// </remarks>
+        private void RestorePlotState(SaveGameData saveData)
+        {
+            if (saveData.PlotStates == null || _plotSystem == null)
+            {
+                return;
+            }
+
+            // Clear existing plot states
+            _plotSystem.Clear();
+
+            // Restore all plot states
+            foreach (var kvp in saveData.PlotStates)
+            {
+                PlotState plotState = kvp.Value;
+                
+                // Register the plot
+                _plotSystem.RegisterPlot(plotState.PlotIndex, plotState.Label);
+
+                // Restore plot state
+                PlotState restoredState = _plotSystem.GetPlotState(plotState.PlotIndex);
+                if (restoredState != null)
+                {
+                    restoredState.IsTriggered = plotState.IsTriggered;
+                    restoredState.IsCompleted = plotState.IsCompleted;
+                    restoredState.TriggerCount = plotState.TriggerCount;
+                    restoredState.LastTriggered = plotState.LastTriggered;
+                }
+            }
+        }
+
+        /// <summary>
         /// Gets the area state for a specific area from the current save.
         /// </summary>
         public AreaState GetAreaState(string areaResRef)
@@ -853,7 +897,7 @@ namespace Andastra.Runtime.Core.Save
         /// - Odyssey (swkotor.exe, swkotor2.exe): Mod_Area_list in IFO GFF file
         /// - Aurora (nwmain.exe): Similar area list in Module.ifo
         /// - Eclipse (daorigins.exe, DragonAge2.exe): Area list in module definition
-        /// - Infinity (MassEffect.exe, MassEffect2.exe): Level area associations
+        /// - Infinity (, ): Level area associations
         /// 
         /// Common pattern: All engines maintain a list of areas that belong to each module.
         /// This method uses IModule.GetArea() to check if the area exists in the module,

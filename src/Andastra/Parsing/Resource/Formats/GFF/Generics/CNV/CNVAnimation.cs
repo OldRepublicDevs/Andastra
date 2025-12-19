@@ -9,7 +9,7 @@ namespace Andastra.Parsing.Resource.Generics.CNV
     /// </summary>
     /// <remarks>
     /// CNV Animation:
-    /// - Eclipse Engine conversation format (Dragon Age, Mass Effect)
+    /// - Eclipse Engine conversation format (Dragon Age, )
     /// - Similar to DLG animation but for Eclipse conversation system
     /// - Used for character animations during conversation lines
     /// </remarks>

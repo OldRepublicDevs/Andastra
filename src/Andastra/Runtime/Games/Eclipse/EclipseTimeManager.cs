@@ -4,12 +4,12 @@ using Andastra.Runtime.Games.Common;
 namespace Andastra.Runtime.Games.Eclipse
 {
     /// <summary>
-    /// Eclipse engine time manager implementation for Dragon Age and Mass Effect.
+    /// Eclipse engine time manager implementation for Dragon Age and .
     /// </summary>
     /// <remarks>
     /// Eclipse Time Manager:
     /// - Engine-specific time management for daorigins.exe (Dragon Age: Origins), DragonAge2.exe (Dragon Age 2),
-    ///   MassEffect.exe (Mass Effect 1), and MassEffect2.exe (Mass Effect 2)
+    ///    ( 1), and  ( 2)
     /// - Based on reverse engineering of Eclipse engine executables and common patterns from other BioWare engines
     /// - Inherits common functionality from BaseTimeManager
     /// 
@@ -18,14 +18,14 @@ namespace Andastra.Runtime.Games.Eclipse
     /// - Game time storage: Eclipse-specific time storage format (varies by game)
     ///   - Dragon Age: Origins: Stored in save game format (DAS format)
     ///   - Dragon Age 2: Stored in save game format (DAS format)
-    ///   - Mass Effect: Stored in save game format (ME1 format)
-    ///   - Mass Effect 2: Stored in save game format (ME2 format)
+    ///   - : Stored in save game format ( format)
+    ///   -  2: Stored in save game format ( format)
     /// - Time played tracking: Eclipse-specific save game format (different from Odyssey/Aurora)
     /// - Frame timing: Eclipse-specific frame timing markers (needs Ghidra verification)
     /// - UnrealScript integration: Eclipse uses UnrealScript for game logic, may affect time management
     /// - Unreal Engine integration: Eclipse is based on Unreal Engine 3, uses Unreal's time management system
     /// 
-    /// String References (daorigins.exe, DragonAge2.exe, MassEffect.exe, MassEffect2.exe):
+    /// String References (daorigins.exe, DragonAge2.exe, , ):
     /// - Time-related string references need to be reverse engineered via Ghidra MCP
     /// - Expected patterns (based on common BioWare patterns):
     ///   - "GameTime" - Game time field in save game
@@ -34,7 +34,7 @@ namespace Andastra.Runtime.Games.Eclipse
     ///   - "TimeScale" - Time scaling factor
     ///   - "PauseTime" - Pause time tracking
     /// 
-    /// Function Addresses (daorigins.exe, DragonAge2.exe, MassEffect.exe, MassEffect2.exe):
+    /// Function Addresses (daorigins.exe, DragonAge2.exe, , ):
     /// - Time management functions need to be reverse engineered via Ghidra MCP
     /// - Expected functions (based on common patterns):
     ///   - UpdateGameTime: Updates game time with simulation time (1:1 ratio, same as all engines)
@@ -60,7 +60,7 @@ namespace Andastra.Runtime.Games.Eclipse
     /// 
     /// Inheritance Structure:
     /// - BaseTimeManager (Runtime.Games.Common) - Common functionality (fixed timestep, accumulator, game time tracking)
-    ///   - EclipseTimeManager : BaseTimeManager (Runtime.Games.Eclipse) - Eclipse-specific (daorigins.exe, DragonAge2.exe, MassEffect.exe, MassEffect2.exe)
+    ///   - EclipseTimeManager : BaseTimeManager (Runtime.Games.Eclipse) - Eclipse-specific (daorigins.exe, DragonAge2.exe, , )
     ///     - Unreal Engine 3 time system integration
     ///     - Eclipse-specific save game time storage
     ///     - Eclipse-specific frame timing markers (when reverse engineered)
@@ -71,12 +71,12 @@ namespace Andastra.Runtime.Games.Eclipse
     ///   - AuroraTimeManager : BaseTimeManager (Runtime.Games.Aurora) - Aurora-specific (nwmain.exe, nwn2main.exe)
     ///     - Module.ifo game time storage
     ///     - GAM file time played tracking
-    ///   - InfinityTimeManager : BaseTimeManager (Runtime.Games.Infinity) - Infinity-specific (BaldurGate.exe, IcewindDale.exe, PlanescapeTorment.exe)
+    ///   - InfinityTimeManager : BaseTimeManager (Runtime.Games.Infinity) - Infinity-specific (.exe, .exe, .exe)
     ///     - GAM file game time storage
     ///     - GAM file time played tracking
     /// 
     /// TODO: Reverse engineer specific function addresses from Eclipse executables using Ghidra MCP:
-    /// - Game time update function (daorigins.exe, DragonAge2.exe, MassEffect.exe, MassEffect2.exe)
+    /// - Game time update function (daorigins.exe, DragonAge2.exe, , )
     /// - Frame timing functions
     /// - Time scale application function
     /// - Save/load time functions (Eclipse-specific save game format)
@@ -85,7 +85,7 @@ namespace Andastra.Runtime.Games.Eclipse
     /// - Unreal Engine 3 time system integration points
     /// 
     /// NOTE: All function addresses and string references listed above need verification via Ghidra MCP when Eclipse executables
-    /// (daorigins.exe, DragonAge2.exe, MassEffect.exe, MassEffect2.exe) are available in the Ghidra project.
+    /// (daorigins.exe, DragonAge2.exe, , ) are available in the Ghidra project.
     /// The implementation is based on common patterns observed across all BioWare engines and Unreal Engine 3 architecture.
     /// </remarks>
     public class EclipseTimeManager : BaseTimeManager
@@ -152,7 +152,7 @@ namespace Andastra.Runtime.Games.Eclipse
         /// Based on common pattern: All engines advance game time with simulation time at 1:1 ratio.
         /// Unreal Engine 3 integration: Eclipse may integrate with Unreal's time system.
         /// Overrides base implementation to add Eclipse-specific game time update logic.
-        /// Game time is stored in Eclipse-specific save game format (varies by game: DAS for Dragon Age, ME1/ME2 for Mass Effect).
+        /// Game time is stored in Eclipse-specific save game format (varies by game: DAS for Dragon Age, / for ).
         /// </remarks>
         public override void Tick()
         {
@@ -161,7 +161,7 @@ namespace Andastra.Runtime.Games.Eclipse
 
             // Eclipse-specific: Game time tracking
             // Based on common pattern: Game time advances at 1:1 ratio with simulation time (same as all engines)
-            // Game time is stored in Eclipse-specific save game format (DAS for Dragon Age, ME1/ME2 for Mass Effect)
+            // Game time is stored in Eclipse-specific save game format (DAS for Dragon Age, / for )
             // This update would typically be done by the game session/module system, not the time manager directly
             // The time manager provides the game time values, and the game session persists them to save game
             // Unreal Engine 3 integration: Eclipse may integrate with Unreal's time system for physics updates
@@ -178,7 +178,7 @@ namespace Andastra.Runtime.Games.Eclipse
         /// Eclipse-specific: Sets game time (stored in Eclipse-specific save game format).
         /// Based on common pattern: All engines support setting game time with hour/minute/second/millisecond components.
         /// Overrides base implementation to add Eclipse-specific game time persistence logic.
-        /// Game time is stored in Eclipse-specific save game format (varies by game: DAS for Dragon Age, ME1/ME2 for Mass Effect).
+        /// Game time is stored in Eclipse-specific save game format (varies by game: DAS for Dragon Age, / for ).
         /// </remarks>
         public override void SetGameTime(int hour, int minute, int second, int millisecond)
         {
@@ -187,7 +187,7 @@ namespace Andastra.Runtime.Games.Eclipse
 
             // Eclipse-specific: Persist game time to save game
             // Based on common pattern: Game time is stored in save game format
-            // Game time is stored in Eclipse-specific save game format (DAS for Dragon Age, ME1/ME2 for Mass Effect)
+            // Game time is stored in Eclipse-specific save game format (DAS for Dragon Age, / for )
             // This persistence would typically be done by the game session/module system, not the time manager directly
             // The time manager provides the game time values, and the game session persists them to save game
         }

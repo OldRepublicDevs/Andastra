@@ -23,7 +23,7 @@ namespace Andastra.Runtime.Games.Common.Components
     /// - nwmain.exe: Aurora faction system using CNWSFaction and CFactionManager (CNWSFaction @ 0x1404ad3e0, GetFaction @ 0x140357900)
     /// - daorigins.exe: Eclipse faction system with IsHostile/IsFriendly checks
     /// - DragonAge2.exe: Enhanced Eclipse faction system
-    /// - MassEffect.exe/MassEffect2.exe: Infinity faction system with BioFaction classes
+    /// - /: Infinity faction system with BioFaction classes
     ///
     /// Common structure across engines:
     /// - FactionId (int): Faction identifier from faction relationship table (repute.2da, faction.2da, etc.)

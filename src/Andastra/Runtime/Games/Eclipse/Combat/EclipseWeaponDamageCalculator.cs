@@ -12,7 +12,7 @@ namespace Andastra.Runtime.Games.Eclipse.Combat
     /// </summary>
     /// <remarks>
     /// Eclipse Weapon Damage Calculator:
-    /// - Based on daorigins.exe/DragonAge2.exe/MassEffect.exe/MassEffect2.exe weapon damage calculation
+    /// - Based on daorigins.exe/DragonAge2.exe// weapon damage calculation
     /// - Cross-engine: Eclipse uses the same 2DA-based damage system as Odyssey/Aurora (baseitems.2da structure is identical)
     /// - Inheritance: BaseWeaponDamageCalculator (Runtime.Games.Common.Combat) implements common damage calculation logic
     ///   - Eclipse: EclipseWeaponDamageCalculator : BaseWeaponDamageCalculator (Runtime.Games.Eclipse) - Eclipse-specific 2DA table access via EclipseTwoDATableManager
@@ -30,7 +30,7 @@ namespace Andastra.Runtime.Games.Eclipse.Combat
     /// - NOTE: Ghidra analysis required to verify exact function addresses and implementation details:
     ///   - daorigins.exe: Need to locate weapon damage calculation function and ability modifier selection
     ///   - DragonAge2.exe: Need to verify ability selection logic matches daorigins.exe
-    ///   - MassEffect.exe/MassEffect2.exe: May use different system (needs verification)
+    ///   - /: May use different system (needs verification)
     /// </remarks>
     public class EclipseWeaponDamageCalculator : BaseWeaponDamageCalculator
     {
@@ -53,11 +53,11 @@ namespace Andastra.Runtime.Games.Eclipse.Combat
         /// </summary>
         /// <remarks>
         /// Eclipse Main Hand Weapon Slot:
-        /// - Based on daorigins.exe/DragonAge2.exe/MassEffect.exe/MassEffect2.exe weapon slot system
+        /// - Based on daorigins.exe/DragonAge2.exe// weapon slot system
         /// - Cross-engine verification: All BioWare engines (Odyssey, Aurora, Eclipse) use slot 4 for main hand weapon
         ///   - Odyssey: INVENTORY_SLOT_RIGHTWEAPON = 4 (swkotor.exe, swkotor2.exe)
         ///   - Aurora: RIGHTHAND slot = 4 (nwmain.exe)
-        ///   - Eclipse: Main hand weapon slot = 4 (daorigins.exe, DragonAge2.exe, MassEffect.exe, MassEffect2.exe)
+        ///   - Eclipse: Main hand weapon slot = 4 (daorigins.exe, DragonAge2.exe, , )
         /// - Verified via cross-reference analysis:
         ///   - ScriptDefs.cs confirms INVENTORY_SLOT_RIGHTWEAPON = 4 for Odyssey engines
         ///   - AuroraWeaponDamageCalculator documents RIGHTHAND = 4 from nwmain.exe
@@ -73,11 +73,11 @@ namespace Andastra.Runtime.Games.Eclipse.Combat
         /// </summary>
         /// <remarks>
         /// Eclipse Offhand Weapon Slot:
-        /// - Based on daorigins.exe/DragonAge2.exe/MassEffect.exe/MassEffect2.exe weapon slot system
+        /// - Based on daorigins.exe/DragonAge2.exe// weapon slot system
         /// - Cross-engine verification: All BioWare engines (Odyssey, Aurora, Eclipse) use slot 5 for offhand weapon
         ///   - Odyssey: INVENTORY_SLOT_LEFTWEAPON = 5 (swkotor.exe, swkotor2.exe)
         ///   - Aurora: LEFTHAND slot = 5 (nwmain.exe)
-        ///   - Eclipse: Offhand weapon slot = 5 (daorigins.exe, DragonAge2.exe, MassEffect.exe, MassEffect2.exe)
+        ///   - Eclipse: Offhand weapon slot = 5 (daorigins.exe, DragonAge2.exe, , )
         /// - Verified via cross-reference analysis:
         ///   - ScriptDefs.cs confirms INVENTORY_SLOT_LEFTWEAPON = 5 for Odyssey engines
         ///   - AuroraWeaponDamageCalculator documents LEFTHAND = 5 from nwmain.exe
@@ -98,7 +98,7 @@ namespace Andastra.Runtime.Games.Eclipse.Combat
         /// <returns>True if successful, false otherwise.</returns>
         /// <remarks>
         /// Eclipse Weapon Damage Dice Lookup:
-        /// - Based on daorigins.exe, DragonAge2.exe, MassEffect.exe, MassEffect2.exe: baseitems.2da damage calculation
+        /// - Based on daorigins.exe, DragonAge2.exe, , : baseitems.2da damage calculation
         /// - Eclipse engines use the same 2DA file format and baseitems.2da structure as Odyssey/Aurora
         /// - Column names from baseitems.2da (may vary - try multiple names):
         ///   - numdice/damagedice = number of dice (e.g., 2d6 = 2 dice)
@@ -108,7 +108,7 @@ namespace Andastra.Runtime.Games.Eclipse.Combat
         /// - Cross-engine verification: Eclipse uses identical baseitems.2da structure to Odyssey/Aurora
         ///   - Odyssey (swkotor.exe, swkotor2.exe): Uses numdice/dietoroll/damagebonus or damagedice/damagedie/damagebonus
         ///   - Aurora (nwmain.exe): Uses numdice/dietoroll/damagebonus or damagedice/damagedie/damagebonus
-        ///   - Eclipse (daorigins.exe, DragonAge2.exe, MassEffect.exe, MassEffect2.exe): Same column names as Odyssey/Aurora
+        ///   - Eclipse (daorigins.exe, DragonAge2.exe, , ): Same column names as Odyssey/Aurora
         /// - Damage formula: Roll(damagedice * damagedie) + damagebonus + ability modifier
         /// - Fallback values: If table lookup fails, returns false (caller should use unarmed damage)
         /// </remarks>
@@ -176,7 +176,7 @@ namespace Andastra.Runtime.Games.Eclipse.Combat
         /// - NOTE: Ghidra analysis required to locate exact function addresses:
         ///   - daorigins.exe: Need to find weapon damage calculation function that determines ability modifier
         ///   - DragonAge2.exe: Need to verify ability selection logic matches daorigins.exe
-        ///   - MassEffect.exe/MassEffect2.exe: May use different system (needs verification via Ghidra)
+        ///   - /: May use different system (needs verification via Ghidra)
         /// - Eclipse engines (Dragon Age Origins, Dragon Age 2) use simpler ability system than D20:
         ///   - Ranged weapons: Always use DEX modifier (daorigins.exe, DragonAge2.exe: ranged weapon damage uses Dexterity)
         ///   - Melee weapons: Always use STR modifier (daorigins.exe, DragonAge2.exe: melee weapon damage uses Strength)
@@ -276,7 +276,7 @@ namespace Andastra.Runtime.Games.Eclipse.Combat
         /// <returns>The critical multiplier (default 2).</returns>
         /// <remarks>
         /// Eclipse Critical Multiplier Lookup:
-        /// - Based on daorigins.exe, DragonAge2.exe, MassEffect.exe, MassEffect2.exe: baseitems.2da critical multiplier lookup
+        /// - Based on daorigins.exe, DragonAge2.exe, , : baseitems.2da critical multiplier lookup
         /// - Eclipse engines use the same 2DA file format and baseitems.2da structure as Odyssey/Aurora
         /// - Column name: crithitmult (critical hit multiplier)
         /// - Default value: 2 (standard D20 critical multiplier)
@@ -284,7 +284,7 @@ namespace Andastra.Runtime.Games.Eclipse.Combat
         /// - Cross-engine verification: Eclipse uses identical baseitems.2da structure to Odyssey/Aurora
         ///   - Odyssey (swkotor.exe, swkotor2.exe): Uses crithitmult column from baseitems.2da
         ///   - Aurora (nwmain.exe): Uses crithitmult column from baseitems.2da
-        ///   - Eclipse (daorigins.exe, DragonAge2.exe, MassEffect.exe, MassEffect2.exe): Same crithitmult column as Odyssey/Aurora
+        ///   - Eclipse (daorigins.exe, DragonAge2.exe, , ): Same crithitmult column as Odyssey/Aurora
         /// - Critical multiplier: Applied when isCritical is true in CalculateDamage
         /// - Formula: totalDamage *= critMult (multiplies final damage by critical multiplier)
         /// </remarks>
@@ -324,7 +324,7 @@ namespace Andastra.Runtime.Games.Eclipse.Combat
         /// <returns>The critical threat range (default 20).</returns>
         /// <remarks>
         /// Eclipse Critical Threat Range Lookup:
-        /// - Based on daorigins.exe, DragonAge2.exe, MassEffect.exe, MassEffect2.exe: baseitems.2da critical threat range lookup
+        /// - Based on daorigins.exe, DragonAge2.exe, , : baseitems.2da critical threat range lookup
         /// - Eclipse engines use the same 2DA file format and baseitems.2da structure as Odyssey/Aurora
         /// - Column name: critthreat (critical threat range)
         /// - Default value: 20 (standard D20 critical threat range - only 20 is a critical threat)
@@ -332,7 +332,7 @@ namespace Andastra.Runtime.Games.Eclipse.Combat
         /// - Cross-engine verification: Eclipse uses identical baseitems.2da structure to Odyssey/Aurora
         ///   - Odyssey (swkotor.exe, swkotor2.exe): Uses critthreat column from baseitems.2da
         ///   - Aurora (nwmain.exe): Uses critthreat column from baseitems.2da
-        ///   - Eclipse (daorigins.exe, DragonAge2.exe, MassEffect.exe, MassEffect2.exe): Same critthreat column as Odyssey/Aurora
+        ///   - Eclipse (daorigins.exe, DragonAge2.exe, , ): Same critthreat column as Odyssey/Aurora
         /// - Critical threat range: The highest d20 roll that can be a critical threat (e.g., 20 = only natural 20 threatens)
         /// - Formula: If attack roll >= (21 - critthreat), then the attack threatens a critical hit
         /// - Example: critthreat = 20 means only natural 20 threatens, critthreat = 19 means 19-20 threatens

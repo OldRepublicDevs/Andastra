@@ -12,8 +12,8 @@ namespace Andastra.Runtime.Games.Common
     /// - Engine-specific implementations:
     ///   - Odyssey (swkotor.exe, swkotor2.exe): Uses 2DA tables (appearance.2da) via GameDataManager
     ///   - Aurora (nwmain.exe): Uses C2DA class for 2DA table access via AuroraTwoDATableManager
-    ///   - Eclipse (daorigins.exe, DragonAge2.exe, MassEffect.exe): Uses 2DA tables via EclipseTwoDATableManager
-    ///   - Infinity (MassEffect.exe, MassEffect2.exe): Uses 2DA tables (similar to Eclipse)
+    ///   - Eclipse (daorigins.exe, DragonAge2.exe, ): Uses 2DA tables via EclipseTwoDATableManager
+    ///   - Infinity (, ): Uses 2DA tables (similar to Eclipse)
     /// - Based on reverse engineering:
     ///   - swkotor2.exe: FUN_0041d2c0 @ 0x0041d2c0 (2DA table lookup), FUN_0065a380 @ 0x0065a380 (GetCreatureRadius)
     ///   - swkotor.exe: Similar 2DA lookup system

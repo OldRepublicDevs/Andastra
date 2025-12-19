@@ -39,7 +39,8 @@ namespace Andastra.Parsing.Resource.Generics.DLG
             }
 
             // Dialog metadata
-            dlg.WordCount = root.Acquire("NumWords", 0);
+            // NumWords is stored as uint32 in GFF, but WordCount is int - use GetUInt32 to properly read it
+            dlg.WordCount = (int)root.GetUInt32("NumWords");
             dlg.OnAbort = root.Acquire("EndConverAbort", ResRef.FromBlank());
             dlg.OnEnd = root.Acquire("EndConversation", ResRef.FromBlank());
             dlg.Skippable = root.Acquire("Skippable", (byte)0) != 0;
@@ -637,7 +638,7 @@ namespace Andastra.Parsing.Resource.Generics.DLG
             // Convert stunts
             foreach (DLGStunt dlgStunt in dlg.Stunts)
             {
-                var cnvStunt = new Andastra.Parsing.Resource.Generics.CNV.CNVStunt
+                var cnvStunt = new CNVStunt
                 {
                     Participant = dlgStunt.Participant,
                     StuntModel = dlgStunt.StuntModel
@@ -689,7 +690,7 @@ namespace Andastra.Parsing.Resource.Generics.DLG
                     if (dlgLink.Node is DLGEntry dlgEntry && dlgEntryToCnvEntry.ContainsKey(dlgEntry))
                     {
                         CNVEntry cnvEntry = dlgEntryToCnvEntry[dlgEntry];
-                        Andastra.Parsing.Resource.Generics.CNV.CNVLink cnvLink = ConvertLink(dlgLink, cnvEntry);
+                        CNVLink cnvLink = ConvertLink(dlgLink, cnvEntry);
                         cnvReply.Links.Add(cnvLink);
                     }
                 }
@@ -701,7 +702,7 @@ namespace Andastra.Parsing.Resource.Generics.DLG
                 if (dlgStarter.Node is DLGEntry dlgEntry && dlgEntryToCnvEntry.ContainsKey(dlgEntry))
                 {
                     CNVEntry cnvEntry = dlgEntryToCnvEntry[dlgEntry];
-                    Andastra.Parsing.Resource.Generics.CNV.CNVLink cnvLink = ConvertLink(dlgStarter, cnvEntry);
+                    CNVLink cnvLink = ConvertLink(dlgStarter, cnvEntry);
                     cnv.Starters.Add(cnvLink);
                 }
             }
@@ -710,9 +711,9 @@ namespace Andastra.Parsing.Resource.Generics.DLG
         }
 
         // Helper method to convert DLGEntry to CNVEntry
-        private static Andastra.Parsing.Resource.Generics.CNV.CNVEntry ConvertNode(DLGEntry dlgEntry)
+        private static CNVEntry ConvertNode(DLGEntry dlgEntry)
         {
-            var cnvEntry = new Andastra.Parsing.Resource.Generics.CNV.CNVEntry
+            var cnvEntry = new CNVEntry
             {
                 Speaker = dlgEntry.Speaker,
                 ListIndex = dlgEntry.ListIndex,
@@ -763,7 +764,7 @@ namespace Andastra.Parsing.Resource.Generics.DLG
             // Convert animations
             foreach (DLGAnimation dlgAnim in dlgEntry.Animations)
             {
-                var cnvAnim = new CNV.CNVAnimation
+                var cnvAnim = new CNVAnimation
                 {
                     AnimationId = dlgAnim.AnimationId,
                     Participant = dlgAnim.Participant
@@ -774,9 +775,9 @@ namespace Andastra.Parsing.Resource.Generics.DLG
             return cnvEntry;
         }
 
-        private static Andastra.Parsing.Resource.Generics.CNV.CNVReply ConvertNode(DLGReply dlgReply)
+        private static CNVReply ConvertNode(DLGReply dlgReply)
         {
-            var cnvReply = new Andastra.Parsing.Resource.Generics.CNV.CNVReply
+            var cnvReply = new CNVReply
             {
                 ListIndex = dlgReply.ListIndex,
                 Comment = dlgReply.Comment,
@@ -826,7 +827,7 @@ namespace Andastra.Parsing.Resource.Generics.DLG
             // Convert animations
             foreach (DLGAnimation dlgAnim in dlgReply.Animations)
             {
-                var cnvAnim = new CNV.CNVAnimation
+                var cnvAnim = new CNVAnimation
                 {
                     AnimationId = dlgAnim.AnimationId,
                     Participant = dlgAnim.Participant

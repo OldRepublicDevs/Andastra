@@ -21,7 +21,7 @@ namespace Andastra.Runtime.Games.Common
     ///   - Odyssey: OdysseyBitmapFont : BaseBitmapFont (swkotor.exe, swkotor2.exe)
     ///   - Aurora: AuroraBitmapFont : BaseBitmapFont (nwmain.exe)
     ///   - Eclipse: EclipseBitmapFont : BaseBitmapFont (daorigins.exe, DragonAge2.exe)
-    ///   - Infinity: InfinityBitmapFont : BaseBitmapFont (MassEffect.exe, MassEffect2.exe)
+    ///   - Infinity: InfinityBitmapFont : BaseBitmapFont (, )
     /// </remarks>
     public abstract class BaseBitmapFont
     {

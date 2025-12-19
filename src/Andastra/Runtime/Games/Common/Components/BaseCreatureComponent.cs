@@ -18,7 +18,7 @@ namespace Andastra.Runtime.Games.Common.Components
     /// - Cross-engine analysis:
     ///   - Odyssey: swkotor.exe, swkotor2.exe - single feat list, force powers
     ///   - Aurora: nwmain.exe, nwn2main.exe - two feat lists (normal + bonus), no force powers
-    ///   - Eclipse: daorigins.exe, DragonAge2.exe, MassEffect.exe, MassEffect2.exe - uses talents/abilities, not feats
+    ///   - Eclipse: daorigins.exe, DragonAge2.exe, ,  - uses talents/abilities, not feats
     ///   - Infinity: Uses different character system, not yet reverse engineered
     /// </remarks>
     public abstract class BaseCreatureComponent : IComponent

@@ -12,7 +12,7 @@ using Andastra.Runtime.Games.Common;
 namespace Andastra.Runtime.Games.Eclipse
 {
     /// <summary>
-    /// Upgrade screen implementation for Eclipse engine (Dragon Age, Mass Effect).
+    /// Upgrade screen implementation for Eclipse engine (Dragon Age, ).
     /// </summary>
     /// <remarks>
     /// Eclipse Upgrade Screen Implementation:
@@ -22,8 +22,8 @@ namespace Andastra.Runtime.Games.Eclipse
     ///   - Based on daorigins.exe: ItemUpgrade @ 0x00aef22c, GUIItemUpgrade @ 0x00b02ca0, COMMAND_OPENITEMUPGRADEGUI @ 0x00af1c7c
     /// - Dragon Age 2: Enhanced ItemUpgrade system with UpgradePrereqType, GetAbilityUpgradedValue
     ///   - Based on DragonAge2.exe: ItemUpgrade @ 0x00beb1f0, GUIItemUpgrade @ 0x00beb1d0, UpgradePrereqType @ 0x00c0583c, GetAbilityUpgradedValue @ 0x00c0f20c
-    /// - Mass Effect: No item upgrade system (only vehicle upgrades)
-    /// - Mass Effect 2: No item upgrade system (only vehicle upgrades)
+    /// - : No item upgrade system (only vehicle upgrades)
+    /// -  2: No item upgrade system (only vehicle upgrades)
     ///
     /// Eclipse upgrade system differs from Odyssey:
     /// - Eclipse uses ItemUpgrade class structure rather than 2DA-based upgrade tables
@@ -49,14 +49,14 @@ namespace Andastra.Runtime.Games.Eclipse
         /// Based on reverse engineering:
         /// - daorigins.exe: COMMAND_OPENITEMUPGRADEGUI @ 0x00af1c7c opens ItemUpgrade GUI
         /// - DragonAge2.exe: GUIItemUpgrade class structure handles upgrade screen display
-        /// - Mass Effect games: No upgrade screen support (method handles gracefully)
+        /// -  games: No upgrade screen support (method handles gracefully)
         /// </remarks>
         public override void Show()
         {
-            // Check if this is a Mass Effect game (no upgrade support)
-            if (IsMassEffectGame())
+            // Check if this is a  game (no upgrade support)
+            if (IsGame())
             {
-                // Mass Effect games do not have item upgrade screens
+                //  games do not have item upgrade screens
                 _isVisible = false;
                 return;
             }
@@ -112,8 +112,8 @@ namespace Andastra.Runtime.Games.Eclipse
         {
             List<string> availableUpgrades = new List<string>();
 
-            // Check if this is a Mass Effect game (no upgrade support)
-            if (IsMassEffectGame())
+            // Check if this is a  game (no upgrade support)
+            if (IsGame())
             {
                 return availableUpgrades;
             }
@@ -216,8 +216,8 @@ namespace Andastra.Runtime.Games.Eclipse
         /// </remarks>
         public override bool ApplyUpgrade(IEntity item, int upgradeSlot, string upgradeResRef)
         {
-            // Check if this is a Mass Effect game (no upgrade support)
-            if (IsMassEffectGame())
+            // Check if this is a  game (no upgrade support)
+            if (IsGame())
             {
                 return false;
             }
@@ -362,8 +362,8 @@ namespace Andastra.Runtime.Games.Eclipse
         /// </remarks>
         public override bool RemoveUpgrade(IEntity item, int upgradeSlot)
         {
-            // Check if this is a Mass Effect game (no upgrade support)
-            if (IsMassEffectGame())
+            // Check if this is a  game (no upgrade support)
+            if (IsGame())
             {
                 return false;
             }
@@ -443,15 +443,15 @@ namespace Andastra.Runtime.Games.Eclipse
             // Eclipse engine uses a different upgrade system structure
             // Eclipse uses ItemUpgrade class with item properties rather than 2DA tables
             // Dragon Age games use item properties and prerequisites for upgrade compatibility
-            // Mass Effect games do not have item upgrade systems
+            //  games do not have item upgrade systems
             return string.Empty;
         }
 
         /// <summary>
-        /// Checks if this is a Mass Effect game (no item upgrade support).
+        /// Checks if this is a  game (no item upgrade support).
         /// </summary>
-        /// <returns>True if Mass Effect game, false otherwise.</returns>
-        private bool IsMassEffectGame()
+        /// <returns>True if  game, false otherwise.</returns>
+        private bool IsGame()
         {
             if (_installation == null)
             {
@@ -459,7 +459,7 @@ namespace Andastra.Runtime.Games.Eclipse
             }
 
             Game game = _installation.Game;
-            return game.IsMassEffect();
+            return game.Is();
         }
 
         /// <summary>

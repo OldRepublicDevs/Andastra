@@ -7,21 +7,21 @@ using Andastra.Parsing.Common;
 namespace Andastra.Parsing.Resource.Generics
 {
     /// <summary>
-    /// Stores game state information for Aurora and Infinity engines.
+    /// Stores game state information for Aurora and s.
     ///
     /// GAM files are GFF-based format files that store game state including party information,
     /// global variables, game time, and time played. Used by Aurora (Neverwinter Nights) and
-    /// Infinity Engine (Baldur's Gate, Icewind Dale, Planescape: Torment).
+    ///  (, , ).
     ///
     /// NOTE: Odyssey (KOTOR) does NOT use GAM format - it uses NFO format for save games.
     /// </summary>
     /// <remarks>
     /// GAM File Format:
     /// - GFF format with "GAM " signature
-    /// - Used by Aurora (nwmain.exe, nwn2main.exe) and Infinity Engine (BaldurGate.exe, IcewindDale.exe, PlanescapeTorment.exe)
+    /// - Used by Aurora (nwmain.exe, nwn2main.exe) and  (.exe, .exe, .exe)
     /// - NOT used by Odyssey (swkotor.exe, swkotor2.exe) - Odyssey uses NFO format
     /// - Contains game state: party members, global variables, game time, time played
-    /// - Structure differs between Aurora and Infinity engines (different field names and organization)
+    /// - Structure differs between Aurora and s (different field names and organization)
     /// </remarks>
     [PublicAPI]
     public sealed class GAM
@@ -94,7 +94,7 @@ namespace Andastra.Parsing.Resource.Generics
         /// </summary>
         public ResRef PlayerCharacter { get; set; } = ResRef.FromBlank();
 
-        // Infinity-specific fields (BaldurGate.exe, IcewindDale.exe, PlanescapeTorment.exe)
+        // Infinity-specific fields (.exe, .exe, .exe)
         /// <summary>
         /// Game name/identifier (Infinity-specific).
         /// </summary>
@@ -111,7 +111,7 @@ namespace Andastra.Parsing.Resource.Generics
         public List<GAMJournalEntry> JournalEntries { get; set; } = new List<GAMJournalEntry>();
 
         /// <summary>
-        /// Represents a journal entry in Infinity Engine GAM files.
+        /// Represents a journal entry in  GAM files.
         /// </summary>
         public class GAMJournalEntry
         {

@@ -11,7 +11,7 @@ namespace Andastra.Parsing.Resource.Generics.CNV
     /// </summary>
     /// <remarks>
     /// CNV Node:
-    /// - Eclipse Engine conversation format (Dragon Age, Mass Effect)
+    /// - Eclipse Engine conversation format (Dragon Age, )
     /// - Base class for conversation entries (NPC lines) and replies (player options)
     /// - Similar structure to DLG nodes but adapted for Eclipse conversation system
     /// </remarks>

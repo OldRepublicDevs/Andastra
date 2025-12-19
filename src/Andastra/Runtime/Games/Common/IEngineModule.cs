@@ -22,8 +22,8 @@ namespace Andastra.Runtime.Engines.Common
     ///    - All engines: Validate module name -> Check module existence -> Load module resources -> Initialize module state -> Set current module
     ///    - Odyssey (swkotor.exe, swkotor2.exe): IFO -> LYT -> VIS -> GIT -> ARE -> Spawn entities -> Set ModuleLoaded flag
     ///    - Aurora (nwmain.exe): Module.ifo -> Area files -> HAK files -> Entity spawning -> Module state initialization
-    ///    - Eclipse (daorigins.exe, DragonAge2.exe, MassEffect.exe, MassEffect2.exe): UnrealScript LoadModuleMessage -> Package loading -> Area streaming
-    ///    - Infinity (BaldurGate.exe, IcewindDale.exe, PlanescapeTorment.exe): ARE -> WED -> GAM -> BIF resources -> Entity spawning
+    ///    - Eclipse (daorigins.exe, DragonAge2.exe, , ): UnrealScript LoadModuleMessage -> Package loading -> Area streaming
+    ///    - Infinity (.exe, .exe, .exe): ARE -> WED -> GAM -> BIF resources -> Entity spawning
     /// 
     /// 2. Module State Management:
     ///    - All engines track: Current module name, Current area, Navigation mesh, Module loaded state
@@ -55,10 +55,10 @@ namespace Andastra.Runtime.Engines.Common
     ///   - nwmain.exe: CNWSModule::LoadModule (needs Ghidra address verification)
     ///   - nwmain.exe: CServerExoApp::LoadModule (needs Ghidra address verification)
     ///   - nwmain.exe: Module state flags and resource loading (needs Ghidra analysis)
-    /// - Eclipse: daorigins.exe, DragonAge2.exe, MassEffect.exe, MassEffect2.exe - UnrealScript module loading
+    /// - Eclipse: daorigins.exe, DragonAge2.exe, ,  - UnrealScript module loading
     ///   - daorigins.exe: LoadModuleMessage handling (needs Ghidra address verification)
     ///   - Eclipse: Module package loading and area streaming (needs Ghidra analysis)
-    /// - Infinity: BaldurGate.exe, IcewindDale.exe, PlanescapeTorment.exe - ARE/WED/GAM loading
+    /// - Infinity: .exe, .exe, .exe - ARE/WED/GAM loading
     ///   - Infinity: Module loading functions (needs Ghidra address verification)
     ///   - Infinity: ARE file parsing and entity spawning (needs Ghidra analysis)
     /// 
