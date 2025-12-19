@@ -90,8 +90,7 @@ namespace Andastra.Runtime.Content.Interfaces
         K1,
         K2,
         //  games
-        BaldursGate,
-        ,
+        BaldursGate
 
     }
 }
