@@ -35,7 +35,7 @@ namespace KotorDiff.App
 
             // Run with optional profiler (not implemented in C# - would need profiling library)
             // Python: if config.use_profiler: profiler = cProfile.Profile(); profiler.enable()
-            // C# equivalent would require a profiling library like MiniProfiler or similar
+            // TODO: STUB - C# equivalent would require a profiling library like MiniProfiler or similar
             // For now, we skip profiler support
 
             try

@@ -442,7 +442,7 @@ namespace HolocronToolset.Editors
         private void RemoveSingleRow()
         {
             // Removing rows is not applicable - rows are generated from LTR data
-            // This would require modifying the LTR structure itself
+            // TODO: STUB - This would require modifying the LTR structure itself
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/ltr.py:248-250
