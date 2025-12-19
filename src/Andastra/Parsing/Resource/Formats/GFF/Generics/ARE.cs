@@ -179,6 +179,33 @@ namespace Andastra.Parsing.Resource.Generics
         public List<ResRef> MapList { get; set; } = new List<ResRef>();
 
         /// <summary>
+        /// Dirty formula 1 (KotOR 2 Only).
+        /// </summary>
+        /// <remarks>
+        /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/are.py:78
+        /// Original: dirty_formula_1: "DirtyFormulaOne" field. KotOR 2 Only.
+        /// </remarks>
+        public int DirtyFormula1 { get; set; }
+
+        /// <summary>
+        /// Dirty formula 2 (KotOR 2 Only).
+        /// </summary>
+        /// <remarks>
+        /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/are.py:81
+        /// Original: dirty_formula_2: "DirtyFormulaTwo" field. KotOR 2 Only.
+        /// </remarks>
+        public int DirtyFormula2 { get; set; }
+
+        /// <summary>
+        /// Dirty formula 3 (KotOR 2 Only).
+        /// </summary>
+        /// <remarks>
+        /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/are.py:84
+        /// Original: dirty_formula_3: "DirtyFormulaThre" field. KotOR 2 Only.
+        /// </remarks>
+        public int DirtyFormula3 { get; set; }
+
+        /// <summary>
         /// Developer comments/notes (toolset only, not used by game engine).
         /// </summary>
         /// <remarks>

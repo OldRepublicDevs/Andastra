@@ -54,6 +54,9 @@ namespace HolocronToolset.Editors
         private ColorEdit _grassDiffuseEdit;
         private ColorEdit _grassAmbientEdit;
         private ColorEdit _grassEmissiveEdit;
+        private NumericUpDown _dirtFormula1Spin;
+        private NumericUpDown _dirtFormula2Spin;
+        private NumericUpDown _dirtFormula3Spin;
         private TextBox _commentsEdit;
         private ComboBox _onEnterSelect;
         private ComboBox _onExitSelect;
@@ -291,6 +294,18 @@ namespace HolocronToolset.Editors
             panel.Children.Add(onUserDefinedLabel);
             panel.Children.Add(_onUserDefinedSelect);
 
+            // Dirt Formula spins (TSL only) - matching Python: self.ui.dirtFormula1Spin, dirtFormula2Spin, dirtFormula3Spin
+            var dirtFormulaLabel = new Avalonia.Controls.TextBlock { Text = "Dirt Formula (TSL only):" };
+            var dirtFormulaPanel = new StackPanel { Orientation = Orientation.Horizontal };
+            _dirtFormula1Spin = new NumericUpDown { Minimum = 0, Maximum = int.MaxValue, Value = 0 };
+            _dirtFormula2Spin = new NumericUpDown { Minimum = 0, Maximum = int.MaxValue, Value = 0 };
+            _dirtFormula3Spin = new NumericUpDown { Minimum = 0, Maximum = int.MaxValue, Value = 0 };
+            dirtFormulaPanel.Children.Add(_dirtFormula1Spin);
+            dirtFormulaPanel.Children.Add(_dirtFormula2Spin);
+            dirtFormulaPanel.Children.Add(_dirtFormula3Spin);
+            panel.Children.Add(dirtFormulaLabel);
+            panel.Children.Add(dirtFormulaPanel);
+
             // Comments edit - matching Python: self.ui.commentsEdit
             var commentsLabel = new Avalonia.Controls.TextBlock { Text = "Comments:" };
             _commentsEdit = new TextBox
@@ -340,6 +355,9 @@ namespace HolocronToolset.Editors
         public ColorEdit GrassDiffuseEdit => _grassDiffuseEdit;
         public ColorEdit GrassAmbientEdit => _grassAmbientEdit;
         public ColorEdit GrassEmissiveEdit => _grassEmissiveEdit;
+        public NumericUpDown DirtFormula1Spin => _dirtFormula1Spin;
+        public NumericUpDown DirtFormula2Spin => _dirtFormula2Spin;
+        public NumericUpDown DirtFormula3Spin => _dirtFormula3Spin;
         public TextBox CommentsEdit => _commentsEdit;
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/are.py:134-149
@@ -532,6 +550,21 @@ namespace HolocronToolset.Editors
             {
                 _grassEmissiveEdit.SetColor(are.GrassEmissive);
             }
+            // Matching Python: self.ui.dirtFormula1Spin.setValue(are.dirty_formula_1) (TSL only)
+            if (_dirtFormula1Spin != null)
+            {
+                _dirtFormula1Spin.Value = are.DirtyFormula1;
+            }
+            // Matching Python: self.ui.dirtFormula2Spin.setValue(are.dirty_formula_2) (TSL only)
+            if (_dirtFormula2Spin != null)
+            {
+                _dirtFormula2Spin.Value = are.DirtyFormula2;
+            }
+            // Matching Python: self.ui.dirtFormula3Spin.setValue(are.dirty_formula_3) (TSL only)
+            if (_dirtFormula3Spin != null)
+            {
+                _dirtFormula3Spin.Value = are.DirtyFormula3;
+            }
             // Matching Python: self.ui.commentsEdit.setPlainText(are.comment) (line 247)
             if (_commentsEdit != null)
             {
@@ -694,6 +727,21 @@ namespace HolocronToolset.Editors
             if (_grassEmissiveEdit != null)
             {
                 are.GrassEmissive = _grassEmissiveEdit.GetColor();
+            }
+            // Matching Python: are.dirty_formula_1 = self.ui.dirtFormula1Spin.value() (TSL only)
+            if (_dirtFormula1Spin != null && _dirtFormula1Spin.Value.HasValue)
+            {
+                are.DirtyFormula1 = (int)_dirtFormula1Spin.Value.Value;
+            }
+            // Matching Python: are.dirty_formula_2 = self.ui.dirtFormula2Spin.value() (TSL only)
+            if (_dirtFormula2Spin != null && _dirtFormula2Spin.Value.HasValue)
+            {
+                are.DirtyFormula2 = (int)_dirtFormula2Spin.Value.Value;
+            }
+            // Matching Python: are.dirty_formula_3 = self.ui.dirtFormula3Spin.value() (TSL only)
+            if (_dirtFormula3Spin != null && _dirtFormula3Spin.Value.HasValue)
+            {
+                are.DirtyFormula3 = (int)_dirtFormula3Spin.Value.Value;
             }
             // Matching Python: are.comment = self.ui.commentsEdit.toPlainText() (line 357)
             if (_commentsEdit != null)
@@ -1032,6 +1080,9 @@ namespace HolocronToolset.Editors
             copy.GrassDiffuse = source.GrassDiffuse;
             copy.GrassAmbient = source.GrassAmbient;
             copy.GrassEmissive = source.GrassEmissive;
+            copy.DirtyFormula1 = source.DirtyFormula1;
+            copy.DirtyFormula2 = source.DirtyFormula2;
+            copy.DirtyFormula3 = source.DirtyFormula3;
             copy.WindPower = source.WindPower;
             copy.ShadowOpacity = source.ShadowOpacity;
             copy.ChancesOfRain = source.ChancesOfRain;

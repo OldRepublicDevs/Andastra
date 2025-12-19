@@ -1959,14 +1959,106 @@ namespace HolocronToolset.Tests.Editors
             throw new NotImplementedException("TestAreEditorManipulateDirtColors: Dirt color manipulation test not yet implemented (TSL-only features)");
         }
 
-        // TODO: STUB - Implement test_are_editor_manipulate_dirt_formula_spins (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:857-885)
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:857-885
         // Original: def test_are_editor_manipulate_dirt_formula_spins(qtbot: QtBot, tsl_installation: HTInstallation, test_files_dir: Path): Test manipulating dirt formula spin boxes (TSL only).
         [Fact]
         public void TestAreEditorManipulateDirtFormulaSpins()
         {
-            // TODO: STUB - Implement dirt formula spin boxes manipulation test (TSL only - dirtFormula1Spin, dirtFormula2Spin, dirtFormula3Spin)
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:857-885
-            throw new NotImplementedException("TestAreEditorManipulateDirtFormulaSpins: Dirt formula spin boxes manipulation test not yet implemented (TSL-only features)");
+            // Get TSL installation path
+            string k2Path = Environment.GetEnvironmentVariable("K2_PATH");
+            if (string.IsNullOrEmpty(k2Path))
+            {
+                k2Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor2";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k2Path) && System.IO.File.Exists(System.IO.Path.Combine(k2Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k2Path, "Test Installation", tsl: true);
+            }
+
+            if (installation == null)
+            {
+                return; // Skip if no TSL installation available
+            }
+
+            // Get test files directory
+            string testFilesDir = System.IO.Path.Combine(
+                System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+
+            string areFile = System.IO.Path.Combine(testFilesDir, "tat001.are");
+            if (!System.IO.File.Exists(areFile))
+            {
+                testFilesDir = System.IO.Path.Combine(
+                    System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                    "..", "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+                areFile = System.IO.Path.Combine(testFilesDir, "tat001.are");
+            }
+
+            if (!System.IO.File.Exists(areFile))
+            {
+                return; // Skip if test file not available
+            }
+
+            // Matching Python: editor = AREEditor(None, tsl_installation)
+            var editor = new AREEditor(null, installation);
+
+            // Matching Python: original_data = are_file.read_bytes()
+            byte[] originalData = System.IO.File.ReadAllBytes(areFile);
+
+            // Matching Python: editor.load(are_file, "tat001", ResourceType.ARE, original_data)
+            editor.Load(areFile, "tat001", ResourceType.ARE, originalData);
+
+            // Matching Python: test_formulas = [0, 1, 2, 3, 4, 5]
+            int[] testFormulas = { 0, 1, 2, 3, 4, 5 };
+            foreach (int formula in testFormulas)
+            {
+                // Matching Python: editor.ui.dirtFormula1Spin.setValue(formula)
+                if (editor.DirtFormula1Spin != null)
+                {
+                    editor.DirtFormula1Spin.Value = formula;
+                }
+
+                // Matching Python: data, _ = editor.build()
+                var (data, _) = editor.Build();
+
+                // Matching Python: modified_are = read_are(data)
+                var modifiedAre = AREHelpers.ReadAre(data);
+
+                // Matching Python: assert modified_are.dirty_formula_1 == formula
+                modifiedAre.DirtyFormula1.Should().Be(formula);
+
+                // Matching Python: editor.ui.dirtFormula2Spin.setValue(formula)
+                if (editor.DirtFormula2Spin != null)
+                {
+                    editor.DirtFormula2Spin.Value = formula;
+                }
+
+                // Matching Python: data, _ = editor.build()
+                (data, _) = editor.Build();
+
+                // Matching Python: modified_are = read_are(data)
+                modifiedAre = AREHelpers.ReadAre(data);
+
+                // Matching Python: assert modified_are.dirty_formula_2 == formula
+                modifiedAre.DirtyFormula2.Should().Be(formula);
+
+                // Matching Python: editor.ui.dirtFormula3Spin.setValue(formula)
+                if (editor.DirtFormula3Spin != null)
+                {
+                    editor.DirtFormula3Spin.Value = formula;
+                }
+
+                // Matching Python: data, _ = editor.build()
+                (data, _) = editor.Build();
+
+                // Matching Python: modified_are = read_are(data)
+                modifiedAre = AREHelpers.ReadAre(data);
+
+                // Matching Python: assert modified_are.dirty_formula_3 == formula
+                modifiedAre.DirtyFormula3.Should().Be(formula);
+            }
         }
 
         // TODO: STUB - Implement test_are_editor_manipulate_dirt_function_spins (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:887-915)
