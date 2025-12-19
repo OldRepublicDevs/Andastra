@@ -248,6 +248,7 @@ namespace Andastra.Runtime.Content.ResourceProviders
                 string[] hakFiles = Directory.GetFiles(hakPath, "*.hak", SearchOption.TopDirectoryOnly);
                 foreach (string hakFile in hakFiles)
                 {
+                    var resources = new List<ResourceIdentifier>();
                     try
                     {
                         // HAK files are ERF format
@@ -256,7 +257,7 @@ namespace Andastra.Runtime.Content.ResourceProviders
                         {
                             if (resource.ResType == type)
                             {
-                                yield return new ResourceIdentifier(resource.ResRef.ToString(), resource.ResType);
+                                resources.Add(new ResourceIdentifier(resource.ResRef.ToString(), resource.ResType));
                             }
                         }
                     }
@@ -264,6 +265,10 @@ namespace Andastra.Runtime.Content.ResourceProviders
                     {
                         // Skip corrupted or invalid HAK files
                         continue;
+                    }
+                    foreach (var resource in resources)
+                    {
+                        yield return resource;
                     }
                 }
             }

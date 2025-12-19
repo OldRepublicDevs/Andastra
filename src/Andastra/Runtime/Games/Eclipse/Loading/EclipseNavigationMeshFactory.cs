@@ -6,8 +6,8 @@ using Andastra.Parsing.Common;
 using Andastra.Parsing.Formats.BWM;
 using Andastra.Parsing.Installation;
 using Andastra.Parsing.Resource;
-using Andastra.Runtime.Content.Converters;
 using Andastra.Runtime.Core.Module;
+using Andastra.Runtime.Games.Eclipse;
 using JetBrains.Annotations;
 
 namespace Andastra.Runtime.Games.Eclipse.Loading
@@ -17,17 +17,17 @@ namespace Andastra.Runtime.Games.Eclipse.Loading
     /// </summary>
     /// <remarks>
     /// Eclipse Navigation Mesh Factory:
-    /// - Based on daorigins.exe/DragonAge2.exe// navigation systems
+    /// - Based on daorigins.exe/DragonAge2.exe/ navigation systems
     /// - Eclipse uses BWM format similar to Odyssey but with additional features
     /// - Supports dynamic obstacles, destructible terrain, and multi-level navigation
     /// - Physics-aware navigation with collision avoidance
-    /// 
+    ///
     /// Eclipse-specific features:
     /// - Multi-level navigation surfaces (ground, platforms, elevated surfaces)
     /// - Dynamic obstacle support (added at runtime)
     /// - Destructible terrain modifications (applied at runtime)
     /// - Physics-aware navigation with collision avoidance
-    /// 
+    ///
     /// BWM file format (same as Odyssey):
     /// - Header: "BWM V1.0" signature (8 bytes)
     /// - Walkmesh type: 0 = PWK/DWK (placeable/door), 1 = WOK (area walkmesh)
@@ -36,7 +36,7 @@ namespace Andastra.Runtime.Games.Eclipse.Loading
     /// - Materials: Array of uint32 (SurfaceMaterial ID per face)
     /// - Adjacency: Array of int32 triplets (face/edge pairs, -1 = no neighbor)
     /// - AABB tree: Spatial acceleration structure for efficient queries
-    /// 
+    ///
     /// Based on BWM file format documentation:
     /// - vendor/PyKotor/wiki/BWM-File-Format.md
     /// </remarks>
