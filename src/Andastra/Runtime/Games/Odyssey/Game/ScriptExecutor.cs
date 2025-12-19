@@ -2,6 +2,7 @@ using System;
 using JetBrains.Annotations;
 using Andastra.Runtime.Core.Dialogue;
 using Andastra.Runtime.Core.Interfaces;
+using Andastra.Runtime.Core.Interfaces.Components;
 using Andastra.Runtime.Scripting.VM;
 using Andastra.Runtime.Scripting.Interfaces;
 using Andastra.Runtime.Scripting.EngineApi;
@@ -117,7 +118,22 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
                 }
 
                 // Execute script via VM
+                // Based on swkotor2.exe: Script execution with instruction budget tracking
+                // Located via string references: Script execution budget limits per frame
+                // Original implementation: Tracks instruction count per entity for budget enforcement
                 int returnValue = _vm.Execute(resource.Data, context);
+                
+                // Accumulate instruction count to owner entity's action queue component
+                // This allows the game loop to enforce per-frame script budget limits
+                int instructionsExecuted = _vm.InstructionsExecuted;
+                if (instructionsExecuted > 0 && owner != null)
+                {
+                    IActionQueueComponent actionQueue = owner.GetComponent<IActionQueueComponent>();
+                    if (actionQueue != null)
+                    {
+                        actionQueue.AddInstructionCount(instructionsExecuted);
+                    }
+                }
 
                 return returnValue;
             }

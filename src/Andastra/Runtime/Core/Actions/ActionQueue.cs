@@ -53,6 +53,8 @@ namespace Andastra.Runtime.Core.Actions
         private IEntity _owner;
         private readonly LinkedList<IAction> _queue;
         private IAction _current;
+        private int _lastInstructionCount;
+        private int _accumulatedInstructionCount;
 
         public ActionQueue()
         {
@@ -160,6 +162,7 @@ namespace Andastra.Runtime.Core.Actions
             // FUN_00505bc0 @ 0x00505bc0 saves ActionList to GFF (writes ActionId, GroupActionId, NumParams, Paramaters array)
             // Actions processed sequentially: Current action executes until complete, then next action dequeued
             // Action structure: ActionId (uint32), GroupActionId (int16), NumParams (int16), Paramaters array
+            // Instruction count tracking: Accumulates instruction count from script executions during action processing
             int instructionsExecuted = 0;
 
             // Get next action if we don't have one
@@ -172,13 +175,17 @@ namespace Andastra.Runtime.Core.Actions
 
             if (_current == null)
             {
+                // Store accumulated instruction count from this frame
+                _lastInstructionCount = _accumulatedInstructionCount;
                 return instructionsExecuted;
             }
 
             // Execute current action
             // Original engine: Action.Update() called each frame until status != InProgress
             ActionStatus status = _current.Update(_owner, deltaTime);
-            instructionsExecuted++; // TODO: SIMPLIFIED - real implementation would track VM instructions
+            // Note: Instruction count is tracked separately via AddInstructionCount() when scripts execute
+            // Actions themselves don't directly execute scripts, but scripts executed during action processing
+            // (via ExecuteScript, heartbeats, etc.) will accumulate instruction count
 
             if (status != ActionStatus.InProgress)
             {
@@ -188,7 +195,46 @@ namespace Andastra.Runtime.Core.Actions
                 _current = null;
             }
 
+            // Store accumulated instruction count from this frame
+            _lastInstructionCount = _accumulatedInstructionCount;
             return instructionsExecuted;
+        }
+
+        /// <summary>
+        /// Adds instruction count from script execution to the accumulator.
+        /// </summary>
+        /// <param name="count">The number of instructions executed.</param>
+        /// <remarks>
+        /// Instruction Count Accumulation:
+        /// - Based on swkotor2.exe script budget system
+        /// - Called when scripts execute (ExecuteScript, heartbeats, etc.) to track instruction usage
+        /// - Accumulates instruction count per frame for budget enforcement
+        /// - Reset each frame via ResetInstructionCount()
+        /// </remarks>
+        public void AddInstructionCount(int count)
+        {
+            if (count > 0)
+            {
+                _accumulatedInstructionCount += count;
+            }
+        }
+
+        /// <summary>
+        /// Gets the instruction count from the last Process() call.
+        /// </summary>
+        /// <returns>The instruction count from the last update.</returns>
+        public int GetLastInstructionCount()
+        {
+            return _lastInstructionCount;
+        }
+
+        /// <summary>
+        /// Resets the instruction count accumulator for the current frame.
+        /// </summary>
+        public void ResetInstructionCount()
+        {
+            _accumulatedInstructionCount = 0;
+            _lastInstructionCount = 0;
         }
 
         public IEnumerable<IAction> GetAllActions()
