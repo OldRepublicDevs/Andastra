@@ -71,6 +71,21 @@ namespace Andastra.Runtime.Engines.Odyssey.Components
             // Process action queue (updates current action and dequeues when complete)
             _actionQueue.Process(deltaTime);
         }
+
+        public int GetLastInstructionCount()
+        {
+            return _actionQueue.GetLastInstructionCount();
+        }
+
+        public void ResetInstructionCount()
+        {
+            _actionQueue.ResetInstructionCount();
+        }
+
+        public void AddInstructionCount(int count)
+        {
+            _actionQueue.AddInstructionCount(count);
+        }
     }
 }
 

@@ -109,21 +109,45 @@ namespace Andastra.Runtime.Core.GameLoop
             // Heartbeat processing is done in AI controller Update()
 
             // Process action queues (budget-limited)
+            // Based on swkotor2.exe: Script budget enforcement per frame
+            // Located via string references: Script execution budget limits per frame
+            // Original implementation: Enforces MaxScriptBudget (1000 instructions) per frame to prevent lockups
+            // Instruction count tracking: Accumulates instruction count from all script executions
+            // Reset instruction count for all action queues at start of frame
+            foreach (IEntity entity in _world.GetAllEntities())
+            {
+                IActionQueueComponent actionQueue = entity.GetComponent<IActionQueueComponent>();
+                if (actionQueue != null)
+                {
+                    actionQueue.ResetInstructionCount();
+                }
+            }
+
             int instructionsUsed = 0;
             foreach (IEntity entity in _world.GetAllEntities())
             {
                 if (instructionsUsed >= MaxScriptBudget)
                 {
+                    // Budget exhausted - stop processing action queues for this frame
+                    // Original engine: Script budget prevents infinite loops and lockups
                     break;
                 }
 
                 IActionQueueComponent actionQueue = entity.GetComponent<IActionQueueComponent>();
                 if (actionQueue != null)
                 {
+                    // Update action queue (may trigger script execution)
                     actionQueue.Update(entity, dt);
-                    // TODO: SIMPLIFIED - Note: Instruction count tracking would require exposing instruction count from script execution
-                    // For now, we rely on MaxInstructions limit in NcsVm to prevent lockups
-                    // instructionsUsed += actionQueue.GetInstructionCount();
+                    
+                    // Accumulate instruction count from script executions during this update
+                    int entityInstructions = actionQueue.GetLastInstructionCount();
+                    instructionsUsed += entityInstructions;
+                    
+                    // Check budget again after accumulating (may have exceeded during update)
+                    if (instructionsUsed >= MaxScriptBudget)
+                    {
+                        break;
+                    }
                 }
             }
 
