@@ -1,6 +1,7 @@
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
 using Andastra.Runtime.Games.Common.Components;
+using Andastra.Runtime.Games.Infinity.Systems;
 
 namespace Andastra.Runtime.Games.Infinity.Components
 {
@@ -33,9 +34,12 @@ namespace Andastra.Runtime.Games.Infinity.Components
     /// - Faction relationships may be determined by squad membership, plot flags, or other game state
     /// - Temporary hostility tracked per-entity (stored in TemporaryHostileTargets HashSet from base class)
     /// - Infinity-specific: Uses BioFaction types (Player, Hacked, Vehicle, etc.) rather than numeric IDs
+    /// - InfinityFactionManager handles complex faction relationships and reputation lookups
     /// </remarks>
     public class InfinityFactionComponent : BaseFactionComponent
     {
+        private InfinityFactionManager _factionManager;
+
         /// <summary>
         /// Initializes a new instance of the Infinity faction component.
         /// </summary>
@@ -45,10 +49,33 @@ namespace Andastra.Runtime.Games.Infinity.Components
         }
 
         /// <summary>
+        /// Initializes a new instance of the Infinity faction component with a faction manager.
+        /// </summary>
+        /// <param name="factionManager">The faction manager to use for reputation lookups.</param>
+        public InfinityFactionComponent(InfinityFactionManager factionManager) : this()
+        {
+            _factionManager = factionManager;
+        }
+
+        /// <summary>
+        /// Called when the component is attached to an entity.
+        /// </summary>
+        public override void OnAttach()
+        {
+            // FactionId is set during entity creation
+            base.OnAttach();
+        }
+
+        /// <summary>
         /// Checks if this entity is hostile to another.
         /// </summary>
         /// <param name="other">The other entity to check hostility against.</param>
         /// <returns>True if hostile, false otherwise.</returns>
+        /// <remarks>
+        /// Based on MassEffect2.exe: intABioBaseSquadexecFactionRelationship @ 0x11806ad0
+        /// Uses InfinityFactionManager for reputation-based hostility determination.
+        /// Infinity-specific: Squad members are always friendly to each other.
+        /// </remarks>
         public override bool IsHostile(IEntity other)
         {
             if (other == null || other == Owner)
@@ -62,11 +89,13 @@ namespace Andastra.Runtime.Games.Infinity.Components
                 return true;
             }
 
-            // TODO: PLACEHOLDER - Implement Infinity-specific faction relationship lookup
-            // Infinity engines (MassEffect.exe, MassEffect2.exe) use BioFaction types and squad relationships
-            // Need to integrate with Infinity's faction determination system when implemented
-            // For now, fall back to simple faction comparison
+            // Use faction manager if available
+            if (_factionManager != null)
+            {
+                return _factionManager.IsHostile(Owner, other);
+            }
 
+            // Fall back to simple faction comparison
             IFactionComponent otherFaction = other.GetComponent<IFactionComponent>();
             if (otherFaction == null)
             {
@@ -88,6 +117,11 @@ namespace Andastra.Runtime.Games.Infinity.Components
         /// </summary>
         /// <param name="other">The other entity to check friendliness against.</param>
         /// <returns>True if friendly, false otherwise.</returns>
+        /// <remarks>
+        /// Based on MassEffect2.exe: intABioPawnexecFactionRelationship @ 0x118099c8
+        /// Uses InfinityFactionManager for reputation-based friendliness determination.
+        /// Infinity-specific: Squad members are always friendly to each other.
+        /// </remarks>
         public override bool IsFriendly(IEntity other)
         {
             if (other == null)
@@ -106,11 +140,13 @@ namespace Andastra.Runtime.Games.Infinity.Components
                 return false;
             }
 
-            // TODO: PLACEHOLDER - Implement Infinity-specific faction relationship lookup
-            // Infinity engines (MassEffect.exe, MassEffect2.exe) use BioFaction types and squad relationships
-            // Need to integrate with Infinity's friendliness determination system when implemented
-            // For now, fall back to simple faction comparison
+            // Use faction manager if available
+            if (_factionManager != null)
+            {
+                return _factionManager.IsFriendly(Owner, other);
+            }
 
+            // Fall back to simple faction comparison
             IFactionComponent otherFaction = other.GetComponent<IFactionComponent>();
             if (otherFaction == null)
             {
@@ -119,6 +155,31 @@ namespace Andastra.Runtime.Games.Infinity.Components
 
             // Same faction = friendly
             return FactionId == otherFaction.FactionId;
+        }
+
+        /// <summary>
+        /// Sets temporary hostility toward a target.
+        /// </summary>
+        /// <param name="target">The target entity.</param>
+        /// <param name="hostile">True to set as hostile, false to clear hostility.</param>
+        public override void SetTemporaryHostile(IEntity target, bool hostile)
+        {
+            base.SetTemporaryHostile(target, hostile);
+
+            // Also update faction manager if available
+            if (_factionManager != null)
+            {
+                _factionManager.SetTemporaryHostile(Owner, target, hostile);
+            }
+        }
+
+        /// <summary>
+        /// Sets the faction manager reference.
+        /// </summary>
+        /// <param name="manager">The faction manager to use for reputation lookups.</param>
+        public void SetFactionManager(InfinityFactionManager manager)
+        {
+            _factionManager = manager;
         }
     }
 }
