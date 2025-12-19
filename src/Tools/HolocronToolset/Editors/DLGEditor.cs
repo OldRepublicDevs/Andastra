@@ -106,14 +106,40 @@ namespace HolocronToolset.Editors
 
         public int RowCount => _starters.Count;
 
+        private int _selectedIndex = -1;
+        public int SelectedIndex
+        {
+            get { return _selectedIndex; }
+            set
+            {
+                if (value >= -1 && value < _starters.Count)
+                {
+                    _selectedIndex = value;
+                }
+            }
+        }
+
         public void ResetModel()
         {
             _starters.Clear();
+            _selectedIndex = -1;
         }
 
         public void AddStarter(DLGLink link)
         {
             _starters.Add(link);
+        }
+
+        /// <summary>
+        /// Gets the starter link at the specified index.
+        /// </summary>
+        public DLGLink GetStarterAt(int index)
+        {
+            if (index < 0 || index >= _starters.Count)
+            {
+                return null;
+            }
+            return _starters[index];
         }
 
         // Matching PyKotor implementation
