@@ -725,14 +725,6 @@ namespace Andastra.Runtime.Core.Camera
             return Vector3.Cross(forward, right);
         }
 
-            // Rotate (0, 0, 1) by quaternion
-            return new Vector3(
-                2.0f * (x * y + w * z),
-                2.0f * (y * z - w * x),
-                1.0f - 2.0f * (x * x + y * y)
-            );
-        }
-
         /// <summary>
         /// Sets camera position and look-at using camera hooks.
         /// Based on swkotor2.exe: Camera hook-based positioning for dialogue animations
