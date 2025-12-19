@@ -214,6 +214,14 @@ namespace HolocronToolset.Windows
             _camRotation = radians;
             MarkDirty();
         }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/indoor_builder.py:3065-3066
+        // Original: def zoom_in_camera(self, zoom: float):
+        public void ZoomInCamera(float zoom)
+        {
+            // Matching Python: self.set_camera_zoom(self._cam_scale + zoom)
+            SetCameraZoom(_camScale + zoom);
+        }
     }
 }
 

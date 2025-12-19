@@ -23,6 +23,8 @@
 
 Example: `git commit -m "fix: correct finalize job condition in workflow"`
 
+Note: root-level .git is different repo than ./src/Andastra/.git
+
 ---
 
 ## Documentation

@@ -36,7 +36,7 @@ namespace HolocronToolset.Widgets
         {
             try
             {
-                // TODO: Initialize installation when CSharpKOTOR Installation class is available
+                // TODO: Initialize installation when Andastra.Parsing Installation class is available
                 System.Console.WriteLine($"TextureLoader started for: {_installationPath}");
 
                 while (!cancellationToken.IsCancellationRequested)
@@ -61,7 +61,7 @@ namespace HolocronToolset.Widgets
         {
             try
             {
-                // TODO: Implement texture loading when CSharpKOTOR texture loading is available
+                // TODO: Implement texture loading when Andastra.Parsing texture loading is available
                 // This should load the texture from the installation and return serialized mipmap data
                 System.Console.WriteLine($"Loading texture: {resref}.{restype}");
                 return new byte[0];

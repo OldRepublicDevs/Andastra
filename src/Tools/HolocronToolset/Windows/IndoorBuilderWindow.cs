@@ -121,6 +121,12 @@ namespace HolocronToolset.Windows
             // Matching Python lines 702-703: self.ui.actionUndo.setEnabled(False); self.ui.actionRedo.setEnabled(False)
             Ui.ActionUndoEnabled = false;
             Ui.ActionRedoEnabled = false;
+
+            // Matching Python line 609: self.ui.actionZoomIn.triggered.connect(lambda: self.ui.mapRenderer.zoom_in_camera(ZOOM_STEP))
+            Ui.ActionZoomIn = () => Ui.MapRenderer.ZoomInCamera(0.2f); // ZOOM_STEP = 0.2
+
+            // Matching Python line 610: self.ui.actionZoomOut.triggered.connect(lambda: self.ui.mapRenderer.zoom_in_camera(-ZOOM_STEP))
+            Ui.ActionZoomOut = () => Ui.MapRenderer.ZoomInCamera(-0.2f); // ZOOM_STEP = 0.2
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/indoor_builder.py:1751-1755
@@ -233,6 +239,28 @@ namespace HolocronToolset.Windows
             Ui.MapRenderer.SetCameraRotation(0.0f); // DEFAULT_CAMERA_ROTATION = 0.0
             // Matching Python: self.ui.mapRenderer.set_camera_zoom(DEFAULT_CAMERA_ZOOM)
             Ui.MapRenderer.SetCameraZoom(1.0f); // DEFAULT_CAMERA_ZOOM = 1.0
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/indoor_builder.py:1775-1782
+        // Original: def center_on_selection(self):
+        public void CenterOnSelection()
+        {
+            // Matching Python line 1776: rooms = self.ui.mapRenderer.selected_rooms()
+            var rooms = Ui.MapRenderer.SelectedRooms();
+            // Matching Python line 1777: if not rooms: return
+            if (rooms == null || rooms.Count == 0)
+            {
+                return;
+            }
+
+            // Matching Python lines 1780-1781: Calculate average position
+            // cx = sum(r.position.x for r in rooms) / len(rooms)
+            // cy = sum(r.position.y for r in rooms) / len(rooms)
+            float cx = rooms.Sum(r => r.Position.X) / rooms.Count;
+            float cy = rooms.Sum(r => r.Position.Y) / rooms.Count;
+
+            // Matching Python line 1782: self.ui.mapRenderer.set_camera_position(cx, cy)
+            Ui.MapRenderer.SetCameraPosition(cx, cy);
         }
     }
 
