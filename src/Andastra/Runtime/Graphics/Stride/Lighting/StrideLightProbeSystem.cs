@@ -1,15 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.Numerics;
-using Microsoft.Xna.Framework;
-using Andastra.Runtime.MonoGame.Spatial;
+using Andastra.Runtime.Stride.Spatial;
 using Andastra.Runtime.Graphics.Common.Lighting;
 using BaseLightProbeSystem = Andastra.Runtime.Graphics.Common.Lighting.BaseLightProbeSystem;
 
-namespace Andastra.Runtime.MonoGame.Lighting
+namespace Andastra.Runtime.Stride.Lighting
 {
     /// <summary>
-    /// MonoGame implementation of light probe system for global illumination approximation.
+    /// Stride implementation of light probe system for global illumination approximation.
     ///
     /// Light probes capture ambient lighting at specific points in the scene,
     /// providing realistic indirect lighting without full global illumination.
@@ -21,10 +20,10 @@ namespace Andastra.Runtime.MonoGame.Lighting
     /// - Dynamic probe updates
     /// - Octree-based spatial acceleration for efficient probe queries
     /// </summary>
-    public class LightProbeSystem : BaseLightProbeSystem
+    public class StrideLightProbeSystem : BaseLightProbeSystem
     {
         /// <summary>
-        /// Light probe data with spherical harmonics (MonoGame Vector3 version).
+        /// Light probe data with spherical harmonics (Stride Vector3 version).
         /// </summary>
         public struct LightProbe
         {
@@ -49,7 +48,7 @@ namespace Andastra.Runtime.MonoGame.Lighting
         /// <summary>
         /// Initializes a new light probe system with default world bounds.
         /// </summary>
-        public LightProbeSystem()
+        public StrideLightProbeSystem()
             : this(new Spatial.BoundingBox(new Vector3(-1000, -1000, -1000), new Vector3(1000, 1000, 1000)), 10.0f)
         {
         }
@@ -59,7 +58,7 @@ namespace Andastra.Runtime.MonoGame.Lighting
         /// </summary>
         /// <param name="worldBounds">Bounding box defining the world space for the octree.</param>
         /// <param name="defaultSearchRadius">Default search radius for probe queries.</param>
-        public LightProbeSystem(Spatial.BoundingBox worldBounds, float defaultSearchRadius)
+        public StrideLightProbeSystem(Spatial.BoundingBox worldBounds, float defaultSearchRadius)
             : base(ConvertBoundingBox(worldBounds), defaultSearchRadius)
         {
             // Initialize octree with reasonable defaults:
@@ -74,39 +73,23 @@ namespace Andastra.Runtime.MonoGame.Lighting
         }
 
         /// <summary>
-        /// Converts System.Numerics.Vector3 to Microsoft.Xna.Framework.Vector3.
-        /// </summary>
-        private static Vector3 ConvertVector3(System.Numerics.Vector3 v)
-        {
-            return new Vector3(v.X, v.Y, v.Z);
-        }
-
-        /// <summary>
-        /// Converts Microsoft.Xna.Framework.Vector3 to System.Numerics.Vector3.
-        /// </summary>
-        private static System.Numerics.Vector3 ConvertVector3(Vector3 v)
-        {
-            return new System.Numerics.Vector3(v.X, v.Y, v.Z);
-        }
-
-        /// <summary>
-        /// Converts base BoundingBox to MonoGame BoundingBox.
+        /// Converts base BoundingBox to Stride BoundingBox.
         /// </summary>
         private static Spatial.BoundingBox ConvertBoundingBox(BoundingBox bb)
         {
-            return new Spatial.BoundingBox(ConvertVector3(bb.Min), ConvertVector3(bb.Max));
+            return new Spatial.BoundingBox(bb.Min, bb.Max);
         }
 
         /// <summary>
-        /// Converts MonoGame BoundingBox to base BoundingBox.
+        /// Converts Stride BoundingBox to base BoundingBox.
         /// </summary>
         private static BoundingBox ConvertBoundingBox(Spatial.BoundingBox bb)
         {
-            return new BoundingBox(ConvertVector3(bb.Min), ConvertVector3(bb.Max));
+            return new BoundingBox(bb.Min, bb.Max);
         }
 
         /// <summary>
-        /// Converts MonoGame LightProbe to base LightProbe.
+        /// Converts Stride LightProbe to base LightProbe.
         /// </summary>
         private static BaseLightProbeSystem.LightProbe ConvertProbe(LightProbe probe)
         {
@@ -116,20 +99,20 @@ namespace Andastra.Runtime.MonoGame.Lighting
                 shCoeffs = new Vector3[probe.SHCoefficients.Length];
                 for (int i = 0; i < probe.SHCoefficients.Length; i++)
                 {
-                    shCoeffs[i] = ConvertVector3(probe.SHCoefficients[i]);
+                    shCoeffs[i] = probe.SHCoefficients[i];
                 }
             }
 
             return new BaseLightProbeSystem.LightProbe
             {
-                Position = ConvertVector3(probe.Position),
+                Position = probe.Position,
                 SHCoefficients = shCoeffs,
                 Radius = probe.Radius
             };
         }
 
         /// <summary>
-        /// Converts base LightProbe to MonoGame LightProbe.
+        /// Converts base LightProbe to Stride LightProbe.
         /// </summary>
         private static LightProbe ConvertProbe(BaseLightProbeSystem.LightProbe probe)
         {
@@ -139,13 +122,13 @@ namespace Andastra.Runtime.MonoGame.Lighting
                 shCoeffs = new Vector3[probe.SHCoefficients.Length];
                 for (int i = 0; i < probe.SHCoefficients.Length; i++)
                 {
-                    shCoeffs[i] = ConvertVector3(probe.SHCoefficients[i]);
+                    shCoeffs[i] = probe.SHCoefficients[i];
                 }
             }
 
             return new LightProbe
             {
-                Position = ConvertVector3(probe.Position),
+                Position = probe.Position,
                 SHCoefficients = shCoeffs,
                 Radius = probe.Radius
             };
@@ -164,8 +147,8 @@ namespace Andastra.Runtime.MonoGame.Lighting
         /// </summary>
         protected override void QueryOctree(BoundingBox bounds, List<LightProbeWrapper> results)
         {
-            Spatial.BoundingBox mgBounds = ConvertBoundingBox(bounds);
-            _probeOctree.Query(mgBounds, results);
+            Spatial.BoundingBox strideBounds = ConvertBoundingBox(bounds);
+            _probeOctree.Query(strideBounds, results);
         }
 
         /// <summary>
@@ -177,7 +160,7 @@ namespace Andastra.Runtime.MonoGame.Lighting
         }
 
         /// <summary>
-        /// Adds a light probe to the system (MonoGame LightProbe overload).
+        /// Adds a light probe to the system (Stride LightProbe overload).
         /// </summary>
         /// <param name="probe">The light probe to add.</param>
         public void AddProbe(LightProbe probe)
@@ -186,7 +169,7 @@ namespace Andastra.Runtime.MonoGame.Lighting
         }
 
         /// <summary>
-        /// Removes a light probe from the system (MonoGame LightProbe overload).
+        /// Removes a light probe from the system (Stride LightProbe overload).
         /// </summary>
         /// <param name="probe">The light probe to remove.</param>
         /// <returns>True if the probe was found and removed, false otherwise.</returns>
@@ -196,7 +179,7 @@ namespace Andastra.Runtime.MonoGame.Lighting
         }
 
         /// <summary>
-        /// Updates an existing light probe in the system (MonoGame LightProbe overload).
+        /// Updates an existing light probe in the system (Stride LightProbe overload).
         /// </summary>
         /// <param name="oldProbe">The existing probe to update.</param>
         /// <param name="newProbe">The updated probe data.</param>
@@ -207,28 +190,28 @@ namespace Andastra.Runtime.MonoGame.Lighting
         }
 
         /// <summary>
-        /// Samples light probes at a position using the default search radius (MonoGame Vector3 overload).
+        /// Samples light probes at a position using the default search radius (Stride Vector3 overload).
         /// </summary>
         /// <param name="position">World space position to sample at.</param>
         /// <returns>Interpolated ambient light color at the position.</returns>
         public Vector3 SampleAmbientLight(Vector3 position)
         {
-            return ConvertVector3(base.SampleAmbientLight(ConvertVector3(position)));
+            return base.SampleAmbientLight(position);
         }
 
         /// <summary>
-        /// Samples light probes at a position using a specified search radius (MonoGame Vector3 overload).
+        /// Samples light probes at a position using a specified search radius (Stride Vector3 overload).
         /// </summary>
         /// <param name="position">World space position to sample at.</param>
         /// <param name="searchRadius">Search radius for finding nearby probes.</param>
         /// <returns>Interpolated ambient light color at the position.</returns>
         public Vector3 SampleAmbientLight(Vector3 position, float searchRadius)
         {
-            return ConvertVector3(base.SampleAmbientLight(ConvertVector3(position), searchRadius));
+            return base.SampleAmbientLight(position, searchRadius);
         }
 
         /// <summary>
-        /// Samples light probes at a position with a specific direction (MonoGame Vector3 overload).
+        /// Samples light probes at a position with a specific direction (Stride Vector3 overload).
         /// </summary>
         /// <param name="position">World space position to sample at.</param>
         /// <param name="direction">Direction vector for spherical harmonics evaluation (should be normalized).</param>
@@ -236,11 +219,11 @@ namespace Andastra.Runtime.MonoGame.Lighting
         /// <returns>Interpolated ambient light color at the position in the specified direction.</returns>
         public Vector3 SampleAmbientLight(Vector3 position, Vector3 direction, float searchRadius)
         {
-            return ConvertVector3(base.SampleAmbientLight(ConvertVector3(position), ConvertVector3(direction), searchRadius));
+            return base.SampleAmbientLight(position, direction, searchRadius);
         }
 
         /// <summary>
-        /// Queries all light probes within a bounding box (MonoGame BoundingBox overload).
+        /// Queries all light probes within a bounding box (Stride BoundingBox overload).
         /// </summary>
         /// <param name="bounds">Bounding box to query.</param>
         /// <param name="results">List to populate with probes within the bounds.</param>
@@ -261,7 +244,7 @@ namespace Andastra.Runtime.MonoGame.Lighting
         }
 
         /// <summary>
-        /// Gets all light probes in the system (MonoGame LightProbe version).
+        /// Gets all light probes in the system (Stride LightProbe version).
         /// </summary>
         /// <returns>Read-only list of all light probes.</returns>
         public new IReadOnlyList<LightProbe> GetAllProbes()
@@ -276,3 +259,4 @@ namespace Andastra.Runtime.MonoGame.Lighting
         }
     }
 }
+
