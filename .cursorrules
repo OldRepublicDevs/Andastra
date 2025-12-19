@@ -92,6 +92,45 @@ When fixing code, convert C# 8+ syntax to C# 7.3 compatible alternatives, includ
 - `using var x = ...` → `using (var x = ...) { }`
 - `namespace SomeNamespace;` → `namespace SomeNamespace { ... }`
 
+## Incomplete/Temporary Code Marking
+
+**CRITICAL: All incomplete code MUST use `TODO: ` prefix for searchability.**
+
+**Marking Patterns:**
+
+- **STUB**: Method signature exists, throws `NotImplementedException` with context
+  ```csharp
+  // TODO: STUB - Implement ProcessData (swkotor2.exe: 0x004eb750)
+  throw new NotImplementedException("ProcessData: Reverse engineering in progress");
+  ```
+
+- **PLACEHOLDER**: Temporary implementation that works but needs replacement
+  ```csharp
+  // TODO: PLACEHOLDER - Replace with full GFF serialization (swkotor2.exe: 0x005ac670)
+  ```
+
+- **SIMPLIFIED**: Working implementation missing features/optimizations
+  ```csharp
+  // TODO: SIMPLIFIED - Add A* pathfinding optimization for large areas
+  ```
+
+- **FIXME**: Known bug or incorrect behavior requiring fix
+  ```csharp
+  // TODO: FIXME - Memory leak when disposing resources, needs investigation
+  ```
+
+- **HACK**: Workaround that should be replaced with proper solution
+  ```csharp
+  // TODO: HACK - Using reflection until API is fixed
+  ```
+
+**Requirements:**
+- ALL incomplete code MUST start with `TODO: ` followed by type (STUB/PLACEHOLDER/SIMPLIFIED/FIXME/HACK)
+- Include context: what needs doing, why incomplete, relevant addresses/refs
+- For reverse-engineered code: include executable and function address
+- Be specific: avoid vague comments like "fix this" or "placeholder"
+- Public APIs: use XML docs (`/// <summary>`) to document incomplete methods
+
 ## NCS/NSS File Operations
 
 The `scripts` directory contains a comprehensive unified PowerShell tool for all NCS/NSS file operations:
