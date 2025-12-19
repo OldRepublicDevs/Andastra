@@ -1224,14 +1224,41 @@ namespace HolocronToolset.Tests.Editors
             throw new NotImplementedException("TestDlgEditorMultipleStunts: Multiple stunts test not yet implemented");
         }
 
-        // TODO: STUB - Implement test_dlg_editor_animation_list_exists (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:1600-1610)
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:1600-1610
         // Original: def test_dlg_editor_animation_list_exists(qtbot, installation: HTInstallation): Test animation list exists
         [Fact]
         public void TestDlgEditorAnimationListExists()
         {
-            // TODO: STUB - Implement animation list exists test
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:1600-1610
-            throw new NotImplementedException("TestDlgEditorAnimationListExists: Animation list exists test not yet implemented");
+            // Get installation if available
+            string k1Path = Environment.GetEnvironmentVariable("K1_PATH");
+            if (string.IsNullOrEmpty(k1Path))
+            {
+                k1Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k1Path) && System.IO.File.Exists(System.IO.Path.Combine(k1Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k1Path, "Test Installation", tsl: false);
+            }
+
+            // Create editor
+            var editor = new DLGEditor(null, installation);
+            editor.Show();
+
+            // Matching Python: assert hasattr(editor.ui, 'animsList')
+            editor.AnimsList.Should().NotBeNull("AnimsList should exist");
+            
+            // Matching Python: assert hasattr(editor.ui, 'addAnimButton')
+            editor.AddAnimButton.Should().NotBeNull("AddAnimButton should exist");
+            
+            // Matching Python: assert hasattr(editor.ui, 'removeAnimButton')
+            editor.RemoveAnimButton.Should().NotBeNull("RemoveAnimButton should exist");
+            
+            // Matching Python: assert hasattr(editor.ui, 'editAnimButton')
+            editor.EditAnimButton.Should().NotBeNull("EditAnimButton should exist");
+
+            editor.Close();
         }
 
         // TODO: STUB - Implement test_dlg_editor_add_animation_programmatically (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:1612-1638)
