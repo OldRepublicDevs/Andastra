@@ -214,6 +214,7 @@ namespace Andastra.Runtime.Content.ResourceProviders
                     string[] packageFiles = Directory.GetFiles(packagesPath, "*." + pkgExt, SearchOption.AllDirectories);
                     foreach (string packageFile in packageFiles)
                     {
+                        var resources = new List<ResourceIdentifier>();
                         try
                         {
                             var pcc = PCCAuto.ReadPcc(packageFile);
@@ -221,7 +222,7 @@ namespace Andastra.Runtime.Content.ResourceProviders
                             {
                                 if (resource.ResType == type)
                                 {
-                                    yield return new ResourceIdentifier(resource.ResRef.ToString(), resource.ResType);
+                                    resources.Add(new ResourceIdentifier(resource.ResRef.ToString(), resource.ResType));
                                 }
                             }
                         }
@@ -229,6 +230,10 @@ namespace Andastra.Runtime.Content.ResourceProviders
                         {
                             // Skip corrupted or invalid package files
                             continue;
+                        }
+                        foreach (var resource in resources)
+                        {
+                            yield return resource;
                         }
                     }
                 }
@@ -239,6 +244,7 @@ namespace Andastra.Runtime.Content.ResourceProviders
             {
                 if (File.Exists(rimPath))
                 {
+                    var resources = new List<ResourceIdentifier>();
                     try
                     {
                         var rim = Andastra.Parsing.Formats.RIM.RIMAuto.ReadRim(rimPath);
@@ -246,7 +252,7 @@ namespace Andastra.Runtime.Content.ResourceProviders
                         {
                             if (resource.ResType == type)
                             {
-                                yield return new ResourceIdentifier(resource.ResRef.ToString(), resource.ResType);
+                                resources.Add(new ResourceIdentifier(resource.ResRef.ToString(), resource.ResType));
                             }
                         }
                     }
@@ -254,6 +260,10 @@ namespace Andastra.Runtime.Content.ResourceProviders
                     {
                         // Skip corrupted or invalid RIM files
                         continue;
+                    }
+                    foreach (var resource in resources)
+                    {
+                        yield return resource;
                     }
                 }
             }
