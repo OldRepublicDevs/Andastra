@@ -81,6 +81,11 @@ namespace Andastra.Runtime.Engines.Common
         Eclipse,
 
         /// <summary>
+        /// Infinity Engine (Baldur's Gate, Icewind Dale, Planescape: Torment)
+        /// </summary>
+        Infinity,
+
+        /// <summary>
         /// Unknown or unsupported engine
         /// </summary>
         Unknown
