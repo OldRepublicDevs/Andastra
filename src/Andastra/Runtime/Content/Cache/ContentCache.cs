@@ -2,10 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.Serialization;
+using System.Runtime.Serialization.Formatters.Binary;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Andastra.Parsing.Resource;
 using Andastra.Runtime.Content.Interfaces;
 
 namespace Andastra.Runtime.Content.Cache
@@ -98,12 +101,56 @@ namespace Andastra.Runtime.Content.Cache
                         return CacheResult<T>.Miss();
                     }
 
-                    // TODO: SIMPLIFIED - For now, just return miss - full implementation would deserialize
-                    // TODO: PLACEHOLDER - This is a placeholder for the cache hit path
-                    return CacheResult<T>.Miss();
+                    // Parse and validate metadata
+                    CacheMetadata metadata = ParseMetadata(metaPath);
+                    if (metadata == null)
+                    {
+                        return CacheResult<T>.Miss();
+                    }
+
+                    // Validate metadata matches cache key
+                    if (!ValidateMetadata(metadata, key))
+                    {
+                        // Metadata mismatch - cache entry is invalid
+                        Invalidate(key);
+                        return CacheResult<T>.Miss();
+                    }
+
+                    // Read cached data file
+                    if (!File.Exists(filePath))
+                    {
+                        return CacheResult<T>.Miss();
+                    }
+
+                    byte[] cachedData = File.ReadAllBytes(filePath);
+                    if (cachedData == null || cachedData.Length == 0)
+                    {
+                        return CacheResult<T>.Miss();
+                    }
+
+                    // Deserialize based on type T
+                    T deserializedItem = DeserializeItem<T>(cachedData, metadata);
+                    if (deserializedItem == null)
+                    {
+                        return CacheResult<T>.Miss();
+                    }
+
+                    // Add to memory cache for faster subsequent access
+                    lock (_lock)
+                    {
+                        _memoryCache[key] = new CacheEntry
+                        {
+                            Value = deserializedItem,
+                            LastAccess = DateTime.UtcNow,
+                            Size = EstimateSize(deserializedItem)
+                        };
+                    }
+
+                    return CacheResult<T>.Hit(deserializedItem);
                 }
-                catch
+                catch (Exception)
                 {
+                    // On any error, return miss (cache corruption, I/O errors, etc.)
                     return CacheResult<T>.Miss();
                 }
             }, ct);
@@ -143,19 +190,31 @@ namespace Andastra.Runtime.Content.Cache
 
                     // Write metadata file
                     string metaPath = filePath + ".meta";
+                    string typeName = typeof(T).AssemblyQualifiedName ?? typeof(T).FullName ?? "Unknown";
                     string metaContent = string.Format(
-                        "game={0}\nresref={1}\ntype={2}\nhash={3}\nversion={4}\ntime={5}",
+                        "game={0}\nresref={1}\ntype={2}\nhash={3}\nversion={4}\ntime={5}\ntypename={6}",
                         key.GameType,
                         key.ResRef,
                         (int)key.ResourceType,
                         key.SourceHash,
                         key.ConverterVersion,
-                        DateTime.UtcNow.ToString("O")
+                        DateTime.UtcNow.ToString("O"),
+                        typeName
                     );
                     File.WriteAllText(metaPath, metaContent);
 
-                    // For complex types, we'd serialize here
-                    // TODO: PLACEHOLDER - This is a placeholder
+                    // Serialize and write cached data file
+                    byte[] serializedData = SerializeItem(item);
+                    if (serializedData != null && serializedData.Length > 0)
+                    {
+                        File.WriteAllBytes(filePath, serializedData);
+                        
+                        // Update cache size tracking
+                        lock (_lock)
+                        {
+                            _totalSize = CalculateCacheSize();
+                        }
+                    }
                 }
                 catch
                 {
@@ -316,11 +375,209 @@ namespace Andastra.Runtime.Content.Cache
             }
         }
 
+        /// <summary>
+        /// Parses cache metadata from a metadata file.
+        /// </summary>
+        private CacheMetadata ParseMetadata(string metaPath)
+        {
+            try
+            {
+                string[] lines = File.ReadAllLines(metaPath);
+                var metadata = new CacheMetadata();
+
+                foreach (string line in lines)
+                {
+                    if (string.IsNullOrWhiteSpace(line))
+                    {
+                        continue;
+                    }
+
+                    int equalsIndex = line.IndexOf('=');
+                    if (equalsIndex < 0)
+                    {
+                        continue;
+                    }
+
+                    string key = line.Substring(0, equalsIndex).Trim().ToLowerInvariant();
+                    string value = line.Substring(equalsIndex + 1).Trim();
+
+                    switch (key)
+                    {
+                        case "game":
+                            if (Enum.TryParse<GameType>(value, true, out GameType gameType))
+                            {
+                                metadata.GameType = gameType;
+                            }
+                            break;
+                        case "resref":
+                            metadata.ResRef = value;
+                            break;
+                        case "type":
+                            if (int.TryParse(value, out int typeInt))
+                            {
+                                metadata.ResourceType = ResourceType.FromId(typeInt);
+                            }
+                            break;
+                        case "hash":
+                            metadata.SourceHash = value;
+                            break;
+                        case "version":
+                            if (int.TryParse(value, out int version))
+                            {
+                                metadata.ConverterVersion = version;
+                            }
+                            break;
+                        case "time":
+                            if (DateTime.TryParse(value, out DateTime timestamp))
+                            {
+                                metadata.Timestamp = timestamp;
+                            }
+                            break;
+                        case "typename":
+                            metadata.TypeName = value;
+                            break;
+                    }
+                }
+
+                return metadata;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Validates that metadata matches the cache key.
+        /// </summary>
+        private bool ValidateMetadata(CacheMetadata metadata, CacheKey key)
+        {
+            if (metadata == null)
+            {
+                return false;
+            }
+
+            return metadata.GameType == key.GameType &&
+                   string.Equals(metadata.ResRef, key.ResRef, StringComparison.OrdinalIgnoreCase) &&
+                   metadata.ResourceType == key.ResourceType &&
+                   string.Equals(metadata.SourceHash, key.SourceHash, StringComparison.Ordinal) &&
+                   metadata.ConverterVersion == key.ConverterVersion;
+        }
+
+        /// <summary>
+        /// Deserializes a cached item from byte array.
+        /// </summary>
+        private T DeserializeItem<T>(byte[] data, CacheMetadata metadata) where T : class
+        {
+            if (data == null || data.Length == 0)
+            {
+                return null;
+            }
+
+            try
+            {
+                // Handle byte[] directly (most common case for cached assets)
+                if (typeof(T) == typeof(byte[]))
+                {
+                    return data as T;
+                }
+
+                // Handle string type
+                if (typeof(T) == typeof(string))
+                {
+                    string str = Encoding.UTF8.GetString(data);
+                    return str as T;
+                }
+
+                // For other types, use BinaryFormatter
+                using (var ms = new MemoryStream(data))
+                {
+                    var formatter = new BinaryFormatter();
+                    object obj = formatter.Deserialize(ms);
+                    
+                    if (obj is T typedObj)
+                    {
+                        return typedObj;
+                    }
+                }
+            }
+            catch (SerializationException)
+            {
+                // BinaryFormatter deserialization failed
+                return null;
+            }
+            catch (Exception)
+            {
+                // Other deserialization errors
+                return null;
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Serializes an item to byte array for caching.
+        /// </summary>
+        private byte[] SerializeItem<T>(T item) where T : class
+        {
+            if (item == null)
+            {
+                return null;
+            }
+
+            try
+            {
+                // Handle byte[] directly (no serialization needed)
+                if (item is byte[] bytes)
+                {
+                    return bytes;
+                }
+
+                // Handle string type
+                if (item is string str)
+                {
+                    return Encoding.UTF8.GetBytes(str);
+                }
+
+                // For other types, use BinaryFormatter
+                using (var ms = new MemoryStream())
+                {
+                    var formatter = new BinaryFormatter();
+                    formatter.Serialize(ms, item);
+                    return ms.ToArray();
+                }
+            }
+            catch (SerializationException)
+            {
+                // BinaryFormatter serialization failed (type may not be serializable)
+                return null;
+            }
+            catch (Exception)
+            {
+                // Other serialization errors
+                return null;
+            }
+        }
+
         private class CacheEntry
         {
             public object Value;
             public DateTime LastAccess;
             public long Size;
+        }
+
+        /// <summary>
+        /// Cache metadata parsed from .meta file.
+        /// </summary>
+        private class CacheMetadata
+        {
+            public GameType GameType { get; set; }
+            public string ResRef { get; set; }
+            public ResourceType ResourceType { get; set; }
+            public string SourceHash { get; set; }
+            public int ConverterVersion { get; set; }
+            public DateTime Timestamp { get; set; }
+            public string TypeName { get; set; }
         }
     }
 }
