@@ -570,15 +570,15 @@ namespace Andastra.Runtime.Engines.Odyssey.Systems
             // - Sounds have a radius
 
             // Check if creature is deafened
-            // Note: There's no explicit "Deafness" effect type in EffectType enum,
-            // but we can check for Silence effect which prevents hearing
-            // If a Deafness effect type is added to EffectType enum in the future, check for it here
-            // TODO: SIMPLIFIED - For now, check if creature has Silence effect (which typically prevents hearing)
-            if (_effectSystem.HasEffect(creature, EffectType.ForceSuppression))
+            // Based on swkotor.exe: EFFECT_TYPE_DEAF = 13 prevents hearing perception
+            // Located via string references: EFFECT_TYPE_DEAF @ ScriptDefs constant 13
+            // Original implementation: Deafness effect blocks hearing perception checks
+            // swkotor.exe: FUN_005afce0 @ 0x005afce0 (perception check function)
+            // swkotor2.exe: FUN_005fb0f0 @ 0x005fb0f0 (perception update system)
+            // Checks for EFFECT_TYPE_DEAF (13) in creature's effect list before allowing hearing perception
+            if (_effectSystem.HasEffect(creature, EffectType.Deafness))
             {
-                // ForceSuppression can represent silence/deafness in some contexts
-                // TODO: SIMPLIFIED - This is a simplified check - a proper Deafness effect type would be ideal
-                return false; // Creature cannot hear due to suppression/silence
+                return false; // Creature cannot hear due to deafness effect
             }
 
             // TODO: SIMPLIFIED - For now, assume creatures are always audible if in range

@@ -35,6 +35,7 @@ namespace Andastra.Runtime.Core.Combat
         MovementSpeedIncrease,
         MovementSpeedDecrease,
         Invisibility,
+        Deafness,
 
         // Damage effects
         DamageResistance,
@@ -485,7 +486,12 @@ namespace Andastra.Runtime.Core.Combat
                 case EffectType.Charmed:
                 case EffectType.Dominated:
                 case EffectType.Knockdown:
-                    // These are handled by other systems (combat, movement, etc.)
+                case EffectType.Deafness:
+                    // These are handled by other systems (combat, movement, perception, etc.)
+                    // Deafness: Prevents hearing perception checks (handled by PerceptionManager)
+                    // Based on swkotor.exe: EFFECT_TYPE_DEAF = 13 prevents hearing perception
+                    // Located via string references: EFFECT_TYPE_DEAF @ ScriptDefs constant 13
+                    // Original implementation: Deafness effect blocks hearing perception checks
                     break;
 
                 // Visual effects don't modify stats
@@ -602,6 +608,27 @@ namespace Andastra.Runtime.Core.Combat
             var effect = new Effect(type);
             effect.SubType = (int)ability;
             effect.Amount = Math.Abs(amount);
+            effect.DurationRounds = rounds;
+            effect.DurationType = rounds > 0 ? EffectDurationType.Temporary : EffectDurationType.Permanent;
+            return effect;
+        }
+
+        /// <summary>
+        /// Creates a deafness effect.
+        /// </summary>
+        /// <param name="rounds">Duration in rounds. If 0, effect is permanent until removed.</param>
+        /// <returns>A deafness effect that prevents hearing perception checks.</returns>
+        /// <remarks>
+        /// Deafness Effect:
+        /// - Based on swkotor.exe: EFFECT_TYPE_DEAF = 13
+        /// - Located via string references: EFFECT_TYPE_DEAF @ ScriptDefs constant 13
+        /// - Original implementation: Deafness effect prevents creature from hearing sounds
+        /// - Used by PerceptionManager to block hearing perception checks
+        /// - Common across all engines: Odyssey (swkotor.exe, swkotor2.exe), Aurora (nwmain.exe), Eclipse (daorigins.exe, DragonAge2.exe), Infinity (MassEffect.exe, MassEffect2.exe)
+        /// </remarks>
+        public static Effect Deafness(int rounds = 0)
+        {
+            var effect = new Effect(EffectType.Deafness);
             effect.DurationRounds = rounds;
             effect.DurationType = rounds > 0 ? EffectDurationType.Temporary : EffectDurationType.Permanent;
             return effect;
