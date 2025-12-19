@@ -2,11 +2,14 @@ using Andastra.Parsing.Common;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Markup.Xaml;
 using Andastra.Parsing;
+using Andastra.Parsing.Extract;
 using Andastra.Parsing.Formats.GFF;
+using Andastra.Parsing.Formats.TwoDA;
 using Andastra.Parsing.Resource.Generics;
 using Andastra.Parsing.Resource;
 using Andastra.Parsing.Resource.Generics.DLG;
@@ -416,7 +419,10 @@ namespace HolocronToolset.Editors
                 openInEditorItem.IsEnabled = !string.IsNullOrWhiteSpace(text);
             };
 
-            contextMenu.Items.AddRange(menuItems);
+            foreach (var item in menuItems)
+            {
+                contextMenu.Items.Add(item);
+            }
             textBox.ContextMenu = contextMenu;
         }
 
@@ -447,7 +453,10 @@ namespace HolocronToolset.Editors
                 openInEditorItem.IsEnabled = !string.IsNullOrWhiteSpace(text);
             };
 
-            contextMenu.Items.AddRange(menuItems);
+            foreach (var item in menuItems)
+            {
+                contextMenu.Items.Add(item);
+            }
             textBox.ContextMenu = contextMenu;
         }
 
@@ -474,7 +483,7 @@ namespace HolocronToolset.Editors
 
             if (search != null)
             {
-                WindowUtils.OpenResourceEditor(search.FilePath, search.ResName, search.ResType, search.GetData(), _installation, this);
+                WindowUtils.OpenResourceEditor(search.FilePath, search.ResName, search.ResType, search.Data, _installation, this);
             }
         }
 
@@ -761,12 +770,12 @@ namespace HolocronToolset.Editors
             // Original: if not resname or not resname.strip():
             if (string.IsNullOrEmpty(resname))
             {
-                var errorBox = MessageBoxManager.GetMessageBoxStandardWindow(
+                var errorBox = MsBox.Avalonia.MessageBoxManager.GetMessageBoxStandard(
                     "Failed to open DLG Editor",
                     "Conversation field cannot be blank.",
                     ButtonEnum.Ok,
-                    Icon.Error);
-                errorBox.ShowDialog(this);
+                    MsBox.Avalonia.Enums.Icon.Error);
+                errorBox.ShowAsync();
                 return;
             }
 
@@ -787,12 +796,12 @@ namespace HolocronToolset.Editors
             {
                 // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utp.py:388-393
                 // Original: msgbox: int = QMessageBox(...).exec()
-                var msgBox = MessageBoxManager.GetMessageBoxStandardWindow(
+                var msgBox = MsBox.Avalonia.MessageBoxManager.GetMessageBoxStandard(
                     "DLG file not found",
                     "Do you wish to create a file in the override?",
                     ButtonEnum.YesNo,
-                    Icon.Question);
-                var result = msgBox.ShowDialog(this).Result;
+                    MsBox.Avalonia.Enums.Icon.Question);
+                var result = msgBox.ShowAsync().Result;
 
                 // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utp.py:394
                 // Original: if QMessageBox.StandardButton.Yes == msgbox:
@@ -813,7 +822,7 @@ namespace HolocronToolset.Editors
                 // Original: resname, restype, filepath, data = search
                 resname = search.ResName;
                 filepath = search.FilePath;
-                data = search.GetData();
+                data = search.Data;
             }
 
             // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utp.py:405-406

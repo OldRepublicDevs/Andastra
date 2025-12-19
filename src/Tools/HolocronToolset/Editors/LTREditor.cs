@@ -9,6 +9,7 @@ using Avalonia.Input;
 using Avalonia.Layout;
 using Avalonia.Markup.Xaml;
 using Avalonia.Media;
+using Avalonia.Styling;
 using Andastra.Parsing.Formats.LTR;
 using Andastra.Parsing.Resource;
 using HolocronToolset.Common;
@@ -22,6 +23,8 @@ namespace HolocronToolset.Editors
     {
         private LTR _ltr;
         private bool _autoResizeEnabled;
+        private bool _alternateRowColorsEnabled;
+        private Style _alternatingRowStyle;
 
         // Data collections for tables
         private ObservableCollection<List<string>> _singlesData;
@@ -613,15 +616,43 @@ namespace HolocronToolset.Editors
         
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/ltr.py:150-156
         // Original: def toggle_alternate_row_colors(self):
+        // Python implementation: Toggles setAlternatingRowColors() on QTableWidget
+        // Avalonia implementation: Uses Style with :nth-child(2n) selector to target even rows
         public void ToggleAlternateRowColors()
         {
+            _alternateRowColorsEnabled = !_alternateRowColorsEnabled;
+
+            // Create alternating row style if it doesn't exist
+            if (_alternatingRowStyle == null)
+            {
+                // Style targets DataGridRow elements that are even children (2n = every 2nd element)
+                // Based on Avalonia Style API: https://docs.avaloniaui.net/docs/guides/styles-and-resources/style-selector-syntax
+                _alternatingRowStyle = new Style(x => x.OfType<DataGridRow>().NthChild(2, 0))
+                {
+                    Setters =
+                    {
+                        new Setter(DataGridRow.BackgroundProperty, new SolidColorBrush(Color.FromRgb(240, 240, 240)))
+                    }
+                };
+            }
+
             foreach (var table in new[] { _tableSingles, _tableDoubles, _tableTriples })
             {
                 if (table != null)
                 {
-                    // TODO: AlternatingRowBackground property removed in newer Avalonia versions
-                    // Use RowBackground property or styling instead
-                    // This functionality is not available in current Avalonia version
+                    if (_alternateRowColorsEnabled)
+                    {
+                        // Add alternating row style
+                        if (!table.Styles.Contains(_alternatingRowStyle))
+                        {
+                            table.Styles.Add(_alternatingRowStyle);
+                        }
+                    }
+                    else
+                    {
+                        // Remove alternating row style
+                        table.Styles.Remove(_alternatingRowStyle);
+                    }
                 }
             }
         }
