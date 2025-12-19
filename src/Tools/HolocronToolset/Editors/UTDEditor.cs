@@ -10,6 +10,7 @@ using Andastra.Parsing.Formats.GFF;
 using Andastra.Parsing.Resource.Generics;
 using Andastra.Parsing.Resource;
 using DLGType = Andastra.Parsing.Resource.Generics.DLG.DLG;
+using DLGHelper = Andastra.Parsing.Resource.Generics.DLG.DLGHelper;
 using HolocronToolset.Data;
 using HolocronToolset.Dialogs;
 using HolocronToolset.Utils;

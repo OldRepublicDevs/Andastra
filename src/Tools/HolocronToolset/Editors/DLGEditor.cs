@@ -10,6 +10,7 @@ using Avalonia.Media;
 using Andastra.Parsing.Common;
 using Andastra.Parsing.Formats.GFF;
 using Andastra.Parsing.Resource;
+using Andastra.Parsing.Resource.Generics.DLG;
 using DLGType = Andastra.Parsing.Resource.Generics.DLG.DLG;
 using DLGLink = Andastra.Parsing.Resource.Generics.DLG.DLGLink;
 using DLGNode = Andastra.Parsing.Resource.Generics.DLG.DLGNode;
