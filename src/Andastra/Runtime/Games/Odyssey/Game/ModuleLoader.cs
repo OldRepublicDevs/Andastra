@@ -1135,7 +1135,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
                     entity.Tag = utd.Tag;
 
                     // Set door component properties
-                    DoorComponent doorComponent = entity.GetComponent<DoorComponent>();
+                    OdysseyDoorComponent doorComponent = entity.GetComponent<OdysseyDoorComponent>();
                     if (doorComponent != null)
                     {
                         doorComponent.GenericType = utd.AppearanceId;

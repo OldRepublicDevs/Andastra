@@ -162,7 +162,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Systems
                     break;
 
                 case ObjectType.Door:
-                    DoorComponent door = entity.GetComponent<DoorComponent>();
+                    OdysseyDoorComponent door = entity.GetComponent<OdysseyDoorComponent>();
                     if (door != null)
                     {
                         return ResolveDoorModel(gameData, door.GenericType);

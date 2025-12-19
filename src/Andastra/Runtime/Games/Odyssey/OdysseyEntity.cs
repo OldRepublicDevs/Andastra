@@ -214,7 +214,7 @@ namespace Andastra.Runtime.Games.Odyssey
             // ComponentInitializer also handles this, but we ensure it's attached here for consistency
             if (!HasComponent<IDoorComponent>())
             {
-                var doorComponent = new DoorComponent();
+                var doorComponent = new OdysseyDoorComponent();
                 doorComponent.Owner = this;
                 AddComponent<IDoorComponent>(doorComponent);
             }

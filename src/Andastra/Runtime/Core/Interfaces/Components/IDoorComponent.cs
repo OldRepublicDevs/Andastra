@@ -5,15 +5,14 @@ namespace Andastra.Runtime.Core.Interfaces.Components
     /// </summary>
     /// <remarks>
     /// Door Component Interface:
-    /// - TODO: lookup data from daorigins.exe/dragonage2.exe/masseffect.exe/masseffect2.exe/swkotor.exe/swkotor2.exe and split into subclass'd inheritence structures appropriately. parent class(es) should contain common code.
-    /// - TODO: this should NOT specify swkotor2.exe unless it specifies the other exes as well!!!
-    /// - Based on swkotor2.exe door system
-    /// - Located via string references: "Door" @ 0x007bc538, "Door List" @ 0x007bd270
-    /// - "LinkedTo" @ 0x007c13a0, "LinkedToModule" @ 0x007bd7bc (door transition links)
-    /// - Object events: "EVENT_OPEN_OBJECT" @ 0x007bcda0, "EVENT_CLOSE_OBJECT" @ 0x007bcdb4
-    /// - "EVENT_LOCK_OBJECT" @ 0x007bcd20, "EVENT_UNLOCK_OBJECT" @ 0x007bcd34
-    /// - Event dispatching: FUN_004dcfb0 @ 0x004dcfb0 handles object events (EVENT_OPEN_OBJECT case 7, EVENT_CLOSE_OBJECT case 6, EVENT_LOCK_OBJECT case 0xd, EVENT_UNLOCK_OBJECT case 0xc)
-    /// - Original implementation: Doors have open/locked states, transitions, HP for bashing
+    /// - Common interface for door functionality across all BioWare engines
+    /// - Base implementation: BaseDoorComponent in Runtime.Games.Common.Components
+    /// - Engine-specific implementations:
+    ///   - Odyssey: OdysseyDoorComponent (swkotor.exe, swkotor2.exe)
+    ///   - Aurora: AuroraDoorComponent (nwmain.exe)
+    ///   - Eclipse: EclipseDoorComponent (daorigins.exe, DragonAge2.exe) - if doors are supported
+    ///   - Infinity: InfinityDoorComponent (MassEffect.exe, MassEffect2.exe) - if doors are supported
+    /// - Common functionality: Open/Closed state, Locking, Hit Points, Transitions, Basic Operations
     /// - OpenState: 0=closed, 1=open, 2=destroyed
     /// - Doors can be locked (IsLocked), require keys (KeyRequired, KeyTag), have lock DC (LockDC)
     /// - Doors can be bashed open (IsBashed) if HP reduced to 0
