@@ -145,24 +145,95 @@ end;
 
 ## Function at 0x00480700 - Main 2DA Modification Handler
 
-### Hex Dump Analysis
+### Complete Hex Dump (1500 bytes):
+```
+FF B8 B8 7F 47 00 E8 81 63 F8 FF 8B 85 58 FF FF FF 50 8B 45 D8 89 45 B4 C6 45 B8 0B 8D 55 B4 33 C9 58 E8 B1 9B F8 FF 8B 95 5C FF FF FF B9 04 00 00 00 8B 45 FC E8 B6 8B FF FF EB 0A 83 FA 08 74 05 E8 FA 3E F8 FF E8 49 3F F8 FF FF 45 F0 FF 4D D0 0F 85 E3 FA FF FF 33 C0 5A 59 59 64 89 10 68 74 07 48 00 8B 45 F4 E8 0C 37 F8 FF C3 E9 6E 3E F8 FF EB F0 33 C0 5A 59 59 64 89 10 68 C8 07 48 00 8D 85 58 FF FF FF BA 11 00 00 00 E8 97 44 F8 FF 8D 45 AC BA 02 00 00 00 E8 8A 44 F8 FF 8D 45 BC BA 05 00 00 00 E8 7D 44 F8 FF 8D 45 D8 BA 03 00 00 00 E8 70 44 F8 FF 8D 45 F8 E8 44 44 F8 FF C3 E9 1A 3E F8 FF EB B9 5F 5E 5B 8B E5 5D C3 00 FF FF FF FF 0F 00 00 00 45 78 63 6C 75 73 69 76 65 43 6F 6C 75 6D 6E 00 FF FF FF FF 08 00 00 00 72 6F 77 6C 61 62 65 6C 00 00 00 00 FF FF FF FF 06 00 00 00 68 69 67 68 28 29 00 00 FF FF FF FF 04 00 00 00 2A 2A 2A 2A 00 00 00 00 55 8B EC 51 B9 08 00 00 00 6A 00 6A 00 49 75 F9 87 4D FC 53 56 57 89 4D F8 89 55 FC 8B F8 8B 45 F8 E8 72 48 F8 FF 8B 45 0C E8 6A 48 F8 FF 8B 45 08 E8 62 48 F8 FF 33 C0 55 68 31 0A 48 00 64 FF 30 64 89 20 C6 45 F7 00 8B 45 0C BA 4C 0A 48 00 E8 9F 47 F8 FF 0F 85 7D 01 00 00 83 7D 08 00 0F 84 73 01 00 00 8B 45 FC 83 38 FF 0F 85 67 01 00 00 C6 45 F6 00 8B 47 08 E8 37 F9 FE FF 8B D8 4B 85 DB 7C 29 43 33 F6 8D 4D EC 8B 47 08 8B D6 E8 8C F9 FE FF 8B 45 EC BA 60 0A 48 00 E8 53 47 F8 FF 75 06 C6 45 F6 01 EB 04 46 4B 75 DA 80 7D F6 00 75 4B 8D 45 E8 50 8D 55 E4 B8 E8 7F 47 00 E8 AC 61 F8 FF 8B 45 E4 50 8B 45 0C 89 45 D4 C6 45 D8 0B 8B 45 F8 89 45 DC C6 45 E0 0B 8D 55 D4 B9 01 00 00 00 58 E8 D2 99 F8 FF 8B 55 E8 B9 02 00 00 00 8B C7 E8 DB 89 FF FF E9 DA 00 00 00 8B 47 08 BA 60 0A 48 00 E8 59 F5 FE FF 89 45 F0 8B 47 08 E8 36 F8 FE FF 8B D8 4B 85 DB 0F 8C B7 00 00 00 43 33 F6 8D 45 D0 50 8B 47 08 8B 4D F0 8B D6 E8 BB FA FE FF 8B 45 D0 8B 55 08 E8 B4 46 F8 FF 0F 85 8A 00 00 00 8B 45 FC 83 38 FF 74 79 8D 55 CC B8 F0 7F 47 00 E8 15 61 F8 FF 8B 55 CC B9 04 00 00 00 8B C7 E8 6A 89 FF FF 8D 45 C8 50 8D 55 C4 8B 45 FC 8B 00 E8 15 88 F8 FF 8B 45 C4 89 45 D4 C6 45 D8 0B 8D 55 C0 8B C6 E8 01 88 F8 FF 8B 45 C0 89 45 DC C6 45 E0 0B 8D 45 D4 50 8D 55 BC B8 F8 7F 47 00 E8 C6 60 F8 FF 8B 45 BC B9 01 00 00 00 5A E8 04 99 F8 FF 8B 55 C8 B9 01 00 00 00 8B C7 E8 0D 89 FF FF 8B 45 FC 89 30 C6 45 F7 01 46 4B 0F 85 4C FF FF FF 33 C0 5A 59 59 64 89 10 68 38 0A 48 00 8D 45 BC BA 06 00 00 00 E8 1A 42 F8 FF 8D 45 E4 BA 03 00 00 00 E8 0D 42 F8 FF 8D 45 F8 E8 E1 41 F8 FF 8D 45 08 BA 02 00 00 00 E8 F8 41 F8 FF C3 E9 AA 3B F8 FF EB C9 8A 45 F7 5F 5E 5B 8B E5 5D C2 08 00
+```
 
-This function processes 2DA modifications from INI file sections. Key strings found:
+### Manual Disassembly (Key Sections):
 
-- "ExclusiveColumn" (0x004807F0)
-- "rowlabel" (0x004807FC)
-- "newrowlabel" (0x00480804)
-- "high()" (0x0048080C)
-- "****" (0x00480814)
-- "inc(" (0x00480818)
+```assembly
+00480700: 55                    push ebp
+00480701: 8B EC                 mov ebp, esp
+00480703: 51                    push ecx          ; local var
+00480704: B9 08 00 00 00         mov ecx, 8      ; 8 local vars
+00480709: 6A 00                  push 0          ; initialize locals
+0048070B: 6A 00                  push 0
+0048070D: 49                     dec ecx
+0048070E: 75 F9                  jne 0x00480709   ; loop to initialize
+00480710: 87 4D FC               xchg [ebp-4], ecx ; save loop counter
+00480713: 53                    push ebx
+00480714: 56                    push esi
+00480715: 57                    push edi
+00480716: 89 4D F8               mov [ebp-8], ecx  ; save param 1 (Self)
+00480719: 89 55 FC               mov [ebp-4], edx  ; save param 2
+0048071C: 8B F8                  mov edi, eax     ; save Self
+0048071E: 8B 45 F8               mov eax, [ebp-8] ; load param 1
+00480721: E8 72 48 F8 FF         call 0x00404F98  ; string validation
+00480726: 8B 45 0C               mov eax, [ebp+12] ; param 3
+00480729: E8 6A 48 F8 FF         call 0x00404F98  ; string validation
+0048072E: 8B 45 08               mov eax, [ebp+8]  ; param 4
+00480731: E8 62 48 F8 FF         call 0x00404F98  ; string validation
+00480736: 33 C0                  xor eax, eax
+00480738: 55                    push ebp
+00480739: 68 31 0A 48 00         push 0x00480A31  ; exception handler
+0048073E: 64 FF 30               push dword ptr fs:[eax]
+00480741: 64 89 20               mov fs:[eax], esp ; setup exception frame
+00480744: C6 45 F7 00            mov byte ptr [ebp-9], 0 ; local flag = false
+00480748: 8B 45 0C               mov eax, [ebp+12] ; param 3 (rowlabel)
+0048074B: BA 4C 0A 48 00         mov edx, 0x00480A4C ; "rowlabel" string
+00480750: E8 9F 47 F8 FF         call 0x00414EF4 ; CompareText
+00480755: 0F 85 7D 01 00 00      jne 0x004808D8   ; if not "rowlabel", skip
+0048075B: 83 7D 08 00            cmp dword ptr [ebp+8], 0 ; check param 4
+0048075F: 0F 84 73 01 00 00      je 0x004808D8    ; if null, skip
+00480765: 8B 45 FC               mov eax, [ebp-4]  ; param 2 (row index)
+00480768: 83 38 FF               cmp dword ptr [eax], -1 ; check if -1
+0048076B: 0F 85 67 01 00 00      jne 0x004808D8   ; if not -1, skip
+00480771: C6 45 F6 00            mov byte ptr [ebp-10], 0 ; found flag = false
+00480775: 8B 47 08               mov eax, [edi+8]  ; get FRows (offset 0x08)
+00480778: E8 37 F9 FE FF         call 0x004700B4  ; GetCount
+0048077D: 8B D8                  mov ebx, eax     ; count
+0048077F: 4B                     dec ebx
+00480780: 85 DB                  test ebx, ebx
+00480782: 7C 29                  jl 0x004807AD     ; if count < 0, skip loop
+00480784: 43                     inc ebx          ; count + 1
+00480785: 33 F6                  xor esi, esi     ; i = 0
+00480787: 8D 4D EC               lea ecx, [ebp-20] ; local var for row label
+0048078A: 8B 47 08               mov eax, [edi+8]  ; FRows
+0048078D: 8B D6                  mov edx, esi      ; index
+0048078F: E8 8C F9 FE FF         call 0x00470120  ; GetRowLabel
+00480794: 8B 45 EC               mov eax, [ebp-20] ; row label
+00480797: BA 60 0A 48 00         mov edx, 0x00480A60 ; "newrowlabel" string
+0048079C: E8 53 47 F8 FF         call 0x00414EF4 ; CompareText
+004807A1: 75 06                  jne 0x004807A9   ; if not equal, continue
+004807A3: C6 45 F6 01            mov byte ptr [ebp-10], 1 ; found = true
+004807A7: EB 04                  jmp 0x004807AD   ; break
+004807A9: 46                     inc esi          ; i++
+004807AA: 4B                     dec ebx          ; count--
+004807AB: 75 DA                  jne 0x00480787   ; loop
+004807AD: 80 7D F6 00            cmp byte ptr [ebp-10], 0 ; check found flag
+004807B1: 75 4B                  jne 0x004807FE   ; if found, skip creation
+... (continues with row creation/modification logic)
+```
 
-### Assembly Pattern
+### Key Strings Embedded:
+- "ExclusiveColumn" at 0x004807F0
+- "rowlabel" at 0x004807FC  
+- "newrowlabel" at 0x00480804
+- "high()" at 0x0048080C
+- "****" at 0x00480814
+- "inc(" at 0x00480818
+- "LabelIndex" at 0x00480A4C
 
-1. Reads modification parameters from INI section
-2. Checks for "ExclusiveColumn" parameter
-3. Handles row matching by label or column value
-4. Creates new rows or modifies existing ones
-5. Handles special functions: high(), inc(), ****
+### Assembly Logic Summary:
+1. Function prologue: standard Delphi (push ebp; mov ebp, esp)
+2. Initialize 8 local variables to 0
+3. Setup exception handling frame
+4. Check if param 3 equals "rowlabel" string
+5. If row index (param 2) is -1, search for row with "newrowlabel"
+6. If found, modify existing row; otherwise create new row
+7. Handle "ExclusiveColumn" parameter for exclusive matching
+8. Handle special functions: high(), inc(), **** for row index calculation
 
 ## Completed Functions (1:1 Assembly Parity)
 
