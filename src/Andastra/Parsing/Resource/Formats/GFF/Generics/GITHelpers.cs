@@ -123,13 +123,13 @@ namespace Andastra.Parsing.Resource.Generics
                     }
                     else
                     {
-                        Logger.RobustLogger.Instance.Warning("Encounter geometry list is empty! Creating a default triangle at its position.");
+                        new Logger.RobustLogger().Warning("Encounter geometry list is empty! Creating a default triangle at its position.");
                         CreateDefaultTriangle(encounter.Geometry, encounter.Position);
                     }
                 }
                 else
                 {
-                    Logger.RobustLogger.Instance.Warning("Encounter geometry list missing! Creating a default triangle at its position.");
+                    new Logger.RobustLogger().Warning("Encounter geometry list missing! Creating a default triangle at its position.");
                     CreateDefaultTriangle(encounter.Geometry, encounter.Position);
                 }
 
@@ -229,13 +229,13 @@ namespace Andastra.Parsing.Resource.Generics
                     }
                     else
                     {
-                        Logger.RobustLogger.Instance.Warning("Trigger geometry list is empty! Creating a default triangle at its position.");
+                        new Logger.RobustLogger().Warning("Trigger geometry list is empty! Creating a default triangle at its position.");
                         CreateDefaultTriangle(trigger.Geometry, trigger.Position);
                     }
                 }
                 else
                 {
-                    Logger.RobustLogger.Instance.Warning("Trigger geometry list missing! Creating a default triangle at its position.");
+                    new Logger.RobustLogger().Warning("Trigger geometry list missing! Creating a default triangle at its position.");
                     CreateDefaultTriangle(trigger.Geometry, trigger.Position);
                 }
                 git.Triggers.Add(trigger);
@@ -258,6 +258,10 @@ namespace Andastra.Parsing.Resource.Generics
                 {
                     waypoint.MapNote = waypointStruct.Acquire<LocalizedString>("MapNote", LocalizedString.FromInvalid());
                     waypoint.MapNoteEnabled = waypointStruct.Acquire<int>("MapNoteEnabled", 0) != 0;
+                }
+                else
+                {
+                    waypoint.MapNote = null; // Explicitly set to null when HasMapNote is false, matching Python behavior
                 }
                 float rotX = waypointStruct.Acquire<float>("XOrientation", 0.0f);
                 float rotY = waypointStruct.Acquire<float>("YOrientation", 0.0f);
@@ -374,7 +378,7 @@ namespace Andastra.Parsing.Resource.Generics
 
                 if (encounter.Geometry == null || encounter.Geometry.Count == 0)
                 {
-                    Logger.RobustLogger.Instance.Warning($"Missing encounter geometry for '{encounter.ResRef}', creating a default triangle at its position...");
+                    new Logger.RobustLogger().Warning($"Missing encounter geometry for '{encounter.ResRef}', creating a default triangle at its position...");
                     var tempGeometry = new List<Vector3>();
                     CreateDefaultTriangle(tempGeometry, encounter.Position);
                     encounter.Geometry = tempGeometry;
@@ -483,7 +487,7 @@ namespace Andastra.Parsing.Resource.Generics
 
                 if (trigger.Geometry == null || trigger.Geometry.Count == 0)
                 {
-                    Logger.RobustLogger.Instance.Warning($"Missing trigger geometry for '{trigger.ResRef}', creating a default triangle at its position...");
+                    new Logger.RobustLogger().Warning($"Missing trigger geometry for '{trigger.ResRef}', creating a default triangle at its position...");
                     var tempGeometry = new List<Vector3>();
                     CreateDefaultTriangle(tempGeometry, trigger.Position);
                     trigger.Geometry = tempGeometry;
@@ -518,7 +522,8 @@ namespace Andastra.Parsing.Resource.Generics
                 waypointStruct.SetSingle("YOrientation", bearing.Y);
                 waypointStruct.SetUInt8("MapNoteEnabled", waypoint.MapNoteEnabled ? (byte)1 : (byte)0);
                 waypointStruct.SetUInt8("HasMapNote", waypoint.HasMapNote ? (byte)1 : (byte)0);
-                waypointStruct.SetLocString("MapNote", waypoint.MapNote ?? LocalizedString.FromInvalid());
+                // Matching PyKotor: LocalizedString.from_invalid() if waypoint.map_note is None else waypoint.map_note
+                waypointStruct.SetLocString("MapNote", waypoint.MapNote == null ? LocalizedString.FromInvalid() : waypoint.MapNote);
 
                 if (useDeprecated)
                 {
