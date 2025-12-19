@@ -5,6 +5,8 @@ using System.Threading.Tasks;
 using Andastra.Parsing.Resource;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Core.Interfaces;
+using Andastra.Runtime.Core.Video.Bink;
+using Andastra.Runtime.Graphics;
 
 namespace Andastra.Runtime.Core.Video
 {
@@ -43,6 +45,7 @@ namespace Andastra.Runtime.Core.Video
     {
         private readonly IWorld _world;
         private readonly IGameResourceProvider _resourceProvider;
+        private readonly IGraphicsDevice _graphicsDevice;
         private bool _isPlaying;
 
         /// <summary>
@@ -50,10 +53,12 @@ namespace Andastra.Runtime.Core.Video
         /// </summary>
         /// <param name="world">World instance for accessing game services.</param>
         /// <param name="resourceProvider">Resource provider for loading movie files.</param>
-        public MoviePlayer(IWorld world, IGameResourceProvider resourceProvider)
+        /// <param name="graphicsDevice">Graphics device for rendering video frames.</param>
+        public MoviePlayer(IWorld world, IGameResourceProvider resourceProvider, IGraphicsDevice graphicsDevice)
         {
             _world = world ?? throw new ArgumentNullException("world");
             _resourceProvider = resourceProvider ?? throw new ArgumentNullException("resourceProvider");
+            _graphicsDevice = graphicsDevice ?? throw new ArgumentNullException("graphicsDevice");
             _isPlaying = false;
         }
 
@@ -169,43 +174,144 @@ namespace Andastra.Runtime.Core.Video
         /// <returns>True if playback completed successfully, false otherwise.</returns>
         private async Task<bool> PlayBikMovie(byte[] movieData, CancellationToken cancellationToken)
         {
-            // TODO: STUB - Implement BIK video playback using Bink decoder
-            // Based on swkotor.exe: FUN_00404c80 @ 0x00404c80 (playback loop)
-            // 
-            // Original implementation sequence:
-            // 1. BinkOpen - Open BIK file (returns BINK handle)
-            // 2. BinkBufferOpen - Create buffer for video frames
-            // 3. Loop until movie complete:
-            //    a. BinkDoFrame - Decode current frame
-            //    b. BinkBufferLock - Lock buffer for writing
-            //    c. BinkCopyToBuffer - Copy decoded frame to buffer
-            //    d. BinkBufferUnlock - Unlock buffer
-            //    e. BinkGetRects - Get destination rectangles
-            //    f. BinkBufferBlit - Blit buffer to screen
-            //    g. BinkNextFrame - Advance to next frame
-            //    h. BinkWait - Wait for frame timing (returns 1 if need to wait more, 0 if ready)
-            //       - If BinkWait returns 1, Sleep(1) and call BinkWait again
-            //    i. Process Windows messages (PeekMessage, GetMessage, TranslateMessage, DispatchMessage)
-            //    j. Check if movie complete (frame count reached)
-            // 4. BinkGetSummary - Get movie summary (optional)
-            // 5. BinkClose - Close BIK file
-            // 6. BinkBufferClose - Close buffer
-            //
-            // Implementation requirements:
-            // - Need BIK decoder library (BINKW32.DLL equivalent for .NET)
-            // - Fullscreen video playback
-            // - Frame timing synchronization
-            // - Windows message processing during playback
-            // - Graceful error handling (continue if playback fails)
-            //
-            // For now, simulate playback delay
-            System.Console.WriteLine("[MoviePlayer] Playing BIK movie (STUB - {0} bytes)", movieData != null ? movieData.Length : 0);
-            
-            // Simulate movie playback (remove when actual playback is implemented)
-            // Original engine: Movies typically play for several seconds
-            await Task.Delay(100, cancellationToken);
+            if (movieData == null || movieData.Length == 0)
+            {
+                return false;
+            }
 
-            return true;
+            // Write movie data to temporary file (BinkOpen requires a file path, not memory)
+            // Based on swkotor.exe: FUN_004053e0 @ 0x004053e0 opens BIK file from path
+            string tempMoviePath = null;
+            try
+            {
+                // Create temporary file for BIK data
+                tempMoviePath = Path.Combine(Path.GetTempPath(), string.Format("andastra_movie_{0}.bik", Guid.NewGuid().ToString("N")));
+                await File.WriteAllBytesAsync(tempMoviePath, movieData);
+
+                // Create BIK decoder
+                // Based on swkotor.exe: FUN_004053e0 @ 0x004053e0 (movie initialization)
+                BikDecoder decoder = null;
+                try
+                {
+                    decoder = new BikDecoder(tempMoviePath, _graphicsDevice);
+                    decoder.Open();
+
+                    // Main playback loop
+                    // Based on swkotor.exe: FUN_00404c80 @ 0x00404c80 (playback loop)
+                    // Loop until movie complete or cancelled
+                    while (!decoder.IsComplete && !cancellationToken.IsCancellationRequested)
+                    {
+                        // Decode current frame
+                        // Based on swkotor.exe: FUN_00404c80 @ 0x00404c80 line 15 calls BinkDoFrame
+                        bool frameDecoded = decoder.DecodeFrame();
+                        if (!frameDecoded)
+                        {
+                            // Frame decode failed or movie complete
+                            break;
+                        }
+
+                        // Wait for frame timing
+                        // Based on swkotor.exe: FUN_00404c80 @ 0x00404c80 line 29-33 (BinkWait with Sleep loop)
+                        decoder.WaitForFrame();
+
+                        // Process Windows messages
+                        // Based on swkotor.exe: FUN_00404c80 @ 0x00404c80 line 35-40
+                        // PeekMessage -> GetMessage -> TranslateMessage -> DispatchMessage
+                        WindowsMessageProcessor.ProcessMessages(cancellationToken);
+
+                        // Render frame to screen
+                        // Based on swkotor.exe: FUN_00404c80 @ 0x00404c80 line 27 calls BinkBufferBlit
+                        // The BinkBufferBlit is handled internally by BikDecoder, but we need to present to screen
+                        RenderFrame(decoder);
+
+                        // Yield to allow other tasks to run
+                        await Task.Yield();
+                    }
+
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    System.Console.WriteLine("[MoviePlayer] Error during BIK playback: {0}", ex.Message);
+                    return false;
+                }
+                finally
+                {
+                    if (decoder != null)
+                    {
+                        decoder.Dispose();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Console.WriteLine("[MoviePlayer] Error writing temporary movie file: {0}", ex.Message);
+                return false;
+            }
+            finally
+            {
+                // Clean up temporary file
+                if (tempMoviePath != null && File.Exists(tempMoviePath))
+                {
+                    try
+                    {
+                        File.Delete(tempMoviePath);
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Console.WriteLine("[MoviePlayer] Error deleting temporary movie file: {0}", ex.Message);
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Renders the current frame to the screen.
+        /// Based on swkotor.exe: FUN_00404c80 @ 0x00404c80 line 27 (BinkBufferBlit)
+        /// </summary>
+        /// <param name="decoder">BIK decoder with current frame.</param>
+        private void RenderFrame(BikDecoder decoder)
+        {
+            if (decoder == null || decoder.FrameTexture == null)
+            {
+                return;
+            }
+
+            // Get viewport dimensions for fullscreen rendering
+            Viewport viewport = _graphicsDevice.Viewport;
+            int screenWidth = viewport.Width;
+            int screenHeight = viewport.Height;
+
+            // Clear screen to black
+            _graphicsDevice.Clear(new Color(0, 0, 0, 255));
+
+            // Render frame texture fullscreen
+            // Based on swkotor.exe: FUN_00404c80 @ 0x00404c80 line 27 calls BinkBufferBlit
+            // Original implementation: Blits buffer directly to screen using BinkBufferBlit
+            // Our implementation: Uses sprite batch to render texture fullscreen
+            ISpriteBatch spriteBatch = _graphicsDevice.CreateSpriteBatch();
+            if (spriteBatch != null)
+            {
+                spriteBatch.Begin();
+                
+                // Calculate scaling to fill screen while maintaining aspect ratio
+                float scaleX = (float)screenWidth / decoder.Width;
+                float scaleY = (float)screenHeight / decoder.Height;
+                float scale = Math.Min(scaleX, scaleY);
+                
+                int scaledWidth = (int)(decoder.Width * scale);
+                int scaledHeight = (int)(decoder.Height * scale);
+                int offsetX = (screenWidth - scaledWidth) / 2;
+                int offsetY = (screenHeight - scaledHeight) / 2;
+
+                // Draw frame texture centered and scaled
+                // Based on swkotor.exe: FUN_00404c80 @ 0x00404c80 line 27 (BinkBufferBlit)
+                // Original: Blits directly to screen, we use sprite batch for abstraction
+                Rectangle destinationRect = new Rectangle(offsetX, offsetY, scaledWidth, scaledHeight);
+                spriteBatch.Draw(decoder.FrameTexture, destinationRect, Color.White);
+                
+                spriteBatch.End();
+            }
         }
     }
 }

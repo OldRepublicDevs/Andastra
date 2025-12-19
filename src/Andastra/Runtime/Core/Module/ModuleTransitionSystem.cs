@@ -10,6 +10,7 @@ using Andastra.Runtime.Core.Interfaces.Components;
 using Andastra.Runtime.Core.Save;
 using Andastra.Runtime.Core.Video;
 using Andastra.Runtime.Content.Interfaces;
+using Andastra.Runtime.Graphics;
 
 namespace Andastra.Runtime.Core.Module
 {
@@ -63,16 +64,16 @@ namespace Andastra.Runtime.Core.Module
         private readonly MoviePlayer _moviePlayer;
         private bool _isTransitioning;
 
-        public ModuleTransitionSystem(IWorld world, SaveSystem saveSystem, IModuleLoader moduleLoader, IGameResourceProvider resourceProvider = null)
+        public ModuleTransitionSystem(IWorld world, SaveSystem saveSystem, IModuleLoader moduleLoader, IGameResourceProvider resourceProvider = null, IGraphicsDevice graphicsDevice = null)
         {
             _world = world ?? throw new ArgumentNullException("world");
             _saveSystem = saveSystem ?? throw new ArgumentNullException("saveSystem");
             _moduleLoader = moduleLoader ?? throw new ArgumentNullException("moduleLoader");
             
-            // Create movie player if resource provider is available
-            if (resourceProvider != null)
+            // Create movie player if resource provider and graphics device are available
+            if (resourceProvider != null && graphicsDevice != null)
             {
-                _moviePlayer = new MoviePlayer(world, resourceProvider);
+                _moviePlayer = new MoviePlayer(world, resourceProvider, graphicsDevice);
             }
             else
             {
