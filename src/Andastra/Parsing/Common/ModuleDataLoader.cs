@@ -130,7 +130,7 @@ namespace Andastra.Parsing.Common
 
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module_loader.py:145-163
             // Original: body_model, body_texture = creature.get_body_model(...)
-            var (bodyModel, bodyTexture) = Creature.GetBodyModel(
+            (string bodyModel, string bodyTexture) = Creature.GetBodyModel(
                 utc,
                 _installation,
                 TableCreatures,
@@ -138,7 +138,7 @@ namespace Andastra.Parsing.Common
             );
 
             // Original: head_model, head_texture = creature.get_head_model(...)
-            var (headModel, headTexture) = Creature.GetHeadModel(
+            (string headModel, string headTexture) = Creature.GetHeadModel(
                 utc,
                 _installation,
                 TableCreatures,
@@ -146,7 +146,7 @@ namespace Andastra.Parsing.Common
             );
 
             // Original: rhand_model, lhand_model = creature.get_weapon_models(...)
-            var (rhandModel, lhandModel) = Creature.GetWeaponModels(
+            (string rhandModel, string lhandModel) = Creature.GetWeaponModels(
                 utc,
                 _installation,
                 TableCreatures,

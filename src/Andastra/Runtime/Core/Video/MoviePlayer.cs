@@ -45,8 +45,10 @@ namespace Andastra.Runtime.Core.Video
     public class MoviePlayer
     {
         private readonly IWorld _world;
-        private readonly Andastra.Runtime.Content.Interfaces.object _resourceProvider;
-        private readonly Andastra.Runtime.Graphics.Common.object _graphicsDevice;
+        // TODO: IGameResourceProvider and IGraphicsDevice are in Content/Graphics - Core cannot depend on them
+        // These should be injected by engine-specific implementations
+        private readonly object _resourceProvider;
+        private readonly object _graphicsDevice;
         private bool _isPlaying;
 
         /// <summary>
@@ -55,7 +57,7 @@ namespace Andastra.Runtime.Core.Video
         /// <param name="world">World instance for accessing game services.</param>
         /// <param name="resourceProvider">Resource provider for loading movie files.</param>
         /// <param name="graphicsDevice">Graphics device for rendering video frames.</param>
-        public MoviePlayer(IWorld world, Andastra.Runtime.Content.Interfaces.object resourceProvider, Andastra.Runtime.Graphics.Common.object graphicsDevice)
+        public MoviePlayer(IWorld world, object resourceProvider, object graphicsDevice)
         {
             _world = world ?? throw new ArgumentNullException("world");
             _resourceProvider = resourceProvider ?? throw new ArgumentNullException("resourceProvider");
@@ -141,12 +143,14 @@ namespace Andastra.Runtime.Core.Video
                 ResourceIdentifier resourceId = new ResourceIdentifier(normalizedResRef, ResourceType.BIK);
 
                 // Check if resource exists
-                bool exists = await _resourceProvider.ExistsAsync(resourceId, cancellationToken);
+                // Use dynamic to call methods on object type (TODO: Replace with proper interface)
+                dynamic resourceProvider = _resourceProvider;
+                bool exists = await resourceProvider.ExistsAsync(resourceId, cancellationToken);
                 if (!exists)
                 {
                     // Try with .bik extension
                     resourceId = new ResourceIdentifier(normalizedResRef + ".bik", ResourceType.BIK);
-                    exists = await _resourceProvider.ExistsAsync(resourceId, cancellationToken);
+                    exists = await resourceProvider.ExistsAsync(resourceId, cancellationToken);
                 }
 
                 if (!exists)
@@ -156,7 +160,7 @@ namespace Andastra.Runtime.Core.Video
                 }
 
                 // Load movie file data
-                byte[] movieData = await _resourceProvider.GetResourceBytesAsync(resourceId, cancellationToken);
+                byte[] movieData = await resourceProvider.GetResourceBytesAsync(resourceId, cancellationToken);
                 return movieData;
             }
             catch (Exception ex)
@@ -279,18 +283,22 @@ namespace Andastra.Runtime.Core.Video
             }
 
             // Get viewport dimensions for fullscreen rendering
-            Viewport viewport = _graphicsDevice.Viewport;
+            // Use dynamic to call methods on object type (TODO: Replace with proper interface)
+            dynamic graphicsDevice = _graphicsDevice;
+            dynamic viewport = graphicsDevice.Viewport;
             int screenWidth = viewport.Width;
             int screenHeight = viewport.Height;
 
             // Clear screen to black
-            _graphicsDevice.Clear(new Color(0, 0, 0, 255));
+            // Use dynamic to call methods (TODO: Replace with proper interface)
+            dynamic clearColor = new { R = 0, G = 0, B = 0, A = 255 };
+            graphicsDevice.Clear(clearColor);
 
             // Render frame texture fullscreen
             // Based on swkotor.exe: FUN_00404c80 @ 0x00404c80 line 27 calls BinkBufferBlit
             // Original implementation: Blits buffer directly to screen using BinkBufferBlit
             // Our implementation: Uses sprite batch to render texture fullscreen
-            ISpriteBatch spriteBatch = _graphicsDevice.CreateSpriteBatch();
+            dynamic spriteBatch = graphicsDevice.CreateSpriteBatch();
             if (spriteBatch != null)
             {
                 spriteBatch.Begin();
@@ -308,8 +316,10 @@ namespace Andastra.Runtime.Core.Video
                 // Draw frame texture centered and scaled
                 // Based on swkotor.exe: FUN_00404c80 @ 0x00404c80 line 27 (BinkBufferBlit)
                 // Original: Blits directly to screen, we use sprite batch for abstraction
-                Rectangle destinationRect = new Rectangle(offsetX, offsetY, scaledWidth, scaledHeight);
-                spriteBatch.Draw(decoder.FrameTexture, destinationRect, Color.White);
+                // Use dynamic to call methods (TODO: Replace with proper interface)
+                dynamic destinationRect = new { X = offsetX, Y = offsetY, Width = scaledWidth, Height = scaledHeight };
+                dynamic whiteColor = new { R = 255, G = 255, B = 255, A = 255 };
+                spriteBatch.Draw(decoder.FrameTexture, destinationRect, whiteColor);
                 
                 spriteBatch.End();
             }

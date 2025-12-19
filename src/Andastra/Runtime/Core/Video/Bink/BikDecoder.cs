@@ -4,7 +4,7 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 // TODO: Core cannot depend on Graphics - this should be injected or removed
-using Andastra.Runtime.Graphics;
+// using Andastra.Runtime.Graphics;
 
 namespace Andastra.Runtime.Core.Video.Bink
 {
@@ -84,7 +84,9 @@ namespace Andastra.Runtime.Core.Video.Bink
             // Parameters: window handle, width, height, flags (0x5d000000)
             // Line 128: _BinkBufferOpen_16(*(undefined4 *)((int)this + 0x50), *puVar8, puVar8[1], 0x5d000000)
             // windowHandle = this + 0x50 (window handle), width = *puVar8 (BINK width), height = puVar8[1] (BINK height)
-            IntPtr windowHandle = _graphicsDevice.NativeHandle; // Get window handle if available (0 if not available)
+            // Use dynamic to call methods on object type (TODO: Replace with proper interface)
+            dynamic graphicsDevice = _graphicsDevice;
+            IntPtr windowHandle = graphicsDevice.NativeHandle; // Get window handle if available (0 if not available)
             const uint BinkBufferFlags = 0x5d000000; // Flags from decompilation
             _bufferHandle = BinkApi.BinkBufferOpen(windowHandle, _frameWidth, _frameHeight, BinkBufferFlags);
             if (_bufferHandle == IntPtr.Zero)
@@ -97,7 +99,7 @@ namespace Andastra.Runtime.Core.Video.Bink
             // Set buffer scale and offset for fullscreen rendering
             // Based on swkotor.exe: FUN_004053e0 @ 0x004053e0 line 154-160
             // BinkBufferSetScale and BinkBufferSetOffset are called to position video
-            Viewport viewport = _graphicsDevice.Viewport;
+            dynamic viewport = graphicsDevice.Viewport;
             int screenWidth = viewport.Width;
             int screenHeight = viewport.Height;
             
@@ -122,7 +124,8 @@ namespace Andastra.Runtime.Core.Video.Bink
             _frameBuffer = new byte[_frameWidth * _frameHeight * 4];
 
             // Create texture for rendering
-            _frameTexture = _graphicsDevice.CreateTexture2D(_frameWidth, _frameHeight, null);
+            // Use dynamic to call methods on object type (TODO: Replace with proper interface)
+            _frameTexture = graphicsDevice.CreateTexture2D(_frameWidth, _frameHeight, null);
         }
 
         /// <summary>
@@ -270,8 +273,9 @@ namespace Andastra.Runtime.Core.Video.Bink
             if (_frameTexture != null && _frameBuffer != null)
             {
                 // Update texture with frame buffer data
-                // object.SetData updates the texture with new pixel data
-                _frameTexture.SetData(_frameBuffer);
+                // Use dynamic to call methods on object type (TODO: Replace with proper interface)
+                dynamic frameTexture = _frameTexture;
+                frameTexture.SetData(_frameBuffer);
             }
 
             // Get destination rectangles for blitting
@@ -347,7 +351,9 @@ namespace Andastra.Runtime.Core.Video.Bink
 
             if (_frameTexture != null)
             {
-                _frameTexture.Dispose();
+                // Use dynamic to call methods on object type (TODO: Replace with proper interface)
+                dynamic frameTexture = _frameTexture;
+                frameTexture.Dispose();
                 _frameTexture = null;
             }
 

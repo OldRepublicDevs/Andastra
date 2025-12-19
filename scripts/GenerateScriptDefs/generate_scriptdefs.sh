@@ -5,7 +5,7 @@
 set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_FILE="$SCRIPT_DIR/GenerateScriptDefs.csproj"
-EXE_PATH="$SCRIPT_DIR/bin/Debug/net8.0/GenerateScriptDefs.exe"
+EXE_PATH="$SCRIPT_DIR/bin/Debug/net9.0.0/GenerateScriptDefs.exe"
 
 if [[ ! -f "$PROJECT_FILE" ]]; then
     echo "Error: GenerateScriptDefs.csproj not found at $PROJECT_FILE" >&2

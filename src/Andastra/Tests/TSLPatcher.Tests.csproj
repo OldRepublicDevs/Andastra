@@ -18,14 +18,14 @@
 
   <!-- Release Configuration -->
   <PropertyGroup Condition="'$(Configuration)' == 'Release'">
-    <TargetFrameworks>net9</TargetFrameworks>
+    <TargetFrameworks>net9.0</TargetFrameworks>
     <EnableNETAnalyzers>true</EnableNETAnalyzers>
     <Nullable>disable</Nullable>
   </PropertyGroup>
 
   <!-- Debug Configuration: Optimized for faster development builds -->
   <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
-    <TargetFrameworks>net9</TargetFrameworks>
+    <TargetFrameworks>net9.0</TargetFrameworks>
     <!-- Disable analyzers in Debug builds for faster compilation -->
     <EnableNETAnalyzers>false</EnableNETAnalyzers>
     <RunAnalyzersDuringBuild>false</RunAnalyzersDuringBuild>

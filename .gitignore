@@ -7,7 +7,6 @@ _ReSharper*/
 !.editorconfig
 !.gitignore
 !.vscode
-!test_*.py
 [Aa][Rr][Mm]/
 [Aa][Rr][Mm]64/
 [Bb]in/
@@ -79,6 +78,8 @@ ScaffoldingReadMe.txt
 temp_*
 temp-*
 test_*
+!test_*.py
+!*.py
 test-*
 TestResult.xml
 TestResults/

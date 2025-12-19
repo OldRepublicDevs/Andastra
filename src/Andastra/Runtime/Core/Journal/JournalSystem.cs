@@ -1,13 +1,14 @@
 using System;
 using System.Collections.Generic;
+using JetBrains.Annotations;
 
 namespace Andastra.Runtime.Core.Journal
 {
     /// <summary>
-    /// Manages the quest/journal system.
+    /// Manages the quest/journal system (Odyssey-specific implementation).
     /// </summary>
     /// <remarks>
-    /// KOTOR Journal System:
+    /// Odyssey Journal System (swkotor.exe, swkotor2.exe):
     /// - Based on swkotor2.exe journal/quest system
     /// - Located via string references: "JOURNAL" @ 0x007bdf44, "NW_JOURNAL" @ 0x007c20e8, "Journal" @ 0x007c2490
     /// - "journal_p" @ 0x007ca9c4, "LBL_JOURNAL" @ 0x007c8c60, "LBL_JOURNAL_DESC" @ 0x007c8c4c
@@ -26,12 +27,19 @@ namespace Andastra.Runtime.Core.Journal
     /// - Plot manager (PTT/PTM) integration for story flags - quest state changes update plot flags
     /// - Quest state changes trigger journal updates and UI notifications
     /// </remarks>
+    /// <summary>
+    /// Odyssey-specific journal system (backward compatibility wrapper).
+    /// </summary>
+    /// <remarks>
+    /// This class is maintained for backward compatibility.
+    /// New code should use OdysseyJournalSystem directly.
+    /// </remarks>
+    // Core cannot depend on Odyssey due to circular dependency, so this is a standalone implementation
     public class JournalSystem
     {
         private readonly Dictionary<string, QuestData> _quests;
         private readonly Dictionary<string, int> _questStates;
         private readonly List<JournalEntry> _entries;
-        [CanBeNull]
         private readonly JRLLoader _jrlLoader;
 
         /// <summary>

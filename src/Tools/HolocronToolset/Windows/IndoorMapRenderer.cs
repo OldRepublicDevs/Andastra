@@ -15,7 +15,7 @@ namespace HolocronToolset.Windows
         private bool _dirty = false;
         private UndoStack _undoStack;
         private KitComponent _cursorComponent;
-        
+
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/indoor_builder.py:2491-2494
         // Original: self.snap_to_grid: bool = False
         // Original: self.snap_to_hooks: bool = True
@@ -25,7 +25,7 @@ namespace HolocronToolset.Windows
         public bool SnapToHooks { get; set; } = true;
         public float GridSize { get; set; } = 1.0f; // DEFAULT_GRID_SIZE = 1.0
         public float RotationSnap { get; set; } = 15.0f; // DEFAULT_ROTATION_SNAP = 15
-        
+
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/indoor_builder.py:2460-2463
         // Original: self._cam_position: Vector2 = Vector2(DEFAULT_CAMERA_POSITION_X, DEFAULT_CAMERA_POSITION_Y)
         // Original: self._cam_scale: float = DEFAULT_CAMERA_ZOOM
@@ -172,7 +172,7 @@ namespace HolocronToolset.Windows
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/indoor_builder.py:2613-2614
         // Original: def set_status_callback(self, callback: Callable[[QPoint | Vector2 | None, set[int | Qt.MouseButton], set[int | Qt.Key]], None] | None) -> None:
         public delegate void StatusCallback(System.Numerics.Vector2? position, System.Collections.Generic.HashSet<int> mouseButtons, System.Collections.Generic.HashSet<int> keys);
-        
+
         private StatusCallback _statusCallback;
 
         public void SetStatusCallback(StatusCallback callback)

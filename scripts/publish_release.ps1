@@ -265,7 +265,7 @@ function Remove-LeftoverFiles {
         }
 
         # Check if this looks like an old build folder (contains framework names)
-        $isOldBuild = $subdir.Name -match "(net48|net9\.0|win7-|linux-|osx-|selfcontained)"
+        $isOldBuild = $subdir.Name -match "(net48|net9.0\.0|win7-|linux-|osx-|selfcontained)"
         if ($isOldBuild) {
             Write-Log "Removing leftover build folder: $($subdir.Name)" -Level "DEBUG" -Variables @{ "Folder" = $subdir.FullName }
             try {
