@@ -8,8 +8,14 @@ namespace Andastra.Runtime.Core.Interfaces
     /// </summary>
     /// <remarks>
     /// Event Bus Interface:
-    /// - TODO: lookup data from daorigins.exe/dragonage2.exe/masseffect.exe/masseffect2.exe/swkotor.exe/swkotor2.exe and split into subclass'd inheritence structures appropriately. parent class(es) should contain common code.
-    /// - Based on swkotor2.exe script event system
+    /// - Common interface for event bus implementations across all BioWare engines
+    /// - Engine-specific implementations:
+    ///   - Odyssey: OdysseyEventBus (Runtime.Games.Odyssey) - based on swkotor.exe/swkotor2.exe
+    ///   - Aurora: AuroraEventBus (Runtime.Games.Aurora) - based on nwmain.exe/nwn2main.exe
+    ///   - Eclipse: EclipseEventBus (Runtime.Games.Eclipse) - based on daorigins.exe/DragonAge2.exe/MassEffect.exe/MassEffect2.exe
+    ///   - Infinity: InfinityEventBus (Runtime.Games.Infinity) - based on Infinity Engine executables
+    /// - All implementations inherit from BaseEventBus (Runtime.Games.Common) which contains common functionality
+    /// - Based on reverse engineering of event systems across all BioWare engines
     /// - Located via string references: Script event constants (EVENT_ON_*, CSWSSCRIPTEVENT_EVENTTYPE_*)
     /// - Subscribe/Unsubscribe: Register/unregister event handlers for specific event types
     /// - Publish: Immediately dispatches event to all subscribers (synchronous)
@@ -18,7 +24,8 @@ namespace Andastra.Runtime.Core.Interfaces
     /// - FireScriptEvent: Fires script event on entity (triggers script hooks like OnHeartbeat, OnAttacked, etc.)
     /// - Script events: Heartbeat, OnNotice, Attacked, Damaged, Death, Dialogue, etc.
     /// - Event system decouples components and allows script-driven behavior
-    /// - Event routing: FUN_004dcfb0 @ 0x004dcfb0 routes script events to entity handlers (case 0xa = OnDeath, case 0x1 = OnHeartbeat, etc.)
+    /// - Event routing: Engine-specific implementations route script events to entity handlers
+    ///   - Odyssey: FUN_004dcfb0 @ 0x004dcfb0 (swkotor2.exe) routes script events to entity handlers
     /// </remarks>
     public interface IEventBus
     {

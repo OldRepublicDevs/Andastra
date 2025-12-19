@@ -1,7 +1,5 @@
 
 _ReSharper*/
-!.vscode/launch.json
-!.vscode/tasks.json
 .backups/
 .DS_Store
 .env
@@ -10,7 +8,6 @@ _ReSharper*/
 .idea/
 .mypy_cache/
 .vs/
-.vscode/
 [Aa][Rr][Mm]/
 [Aa][Rr][Mm]64/
 [Bb]in/

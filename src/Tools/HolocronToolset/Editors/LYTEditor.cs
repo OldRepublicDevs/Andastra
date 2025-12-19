@@ -1,12 +1,17 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Numerics;
+using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
+using Avalonia.Platform.Storage;
 using Andastra.Parsing;
 using Andastra.Parsing.Formats.LYT;
+using Andastra.Parsing.Formats.TPC;
 using Andastra.Parsing.Resource;
+using Andastra.Parsing.Tools;
 using HolocronToolset.Data;
 
 namespace HolocronToolset.Editors
@@ -17,6 +22,7 @@ namespace HolocronToolset.Editors
     {
         private LYT _lyt;
         private LYTEditorSettings _settings;
+        private Dictionary<string, string> _importedTextures = new Dictionary<string, string>(); // Maps texture name to file path
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/lyt.py:32-73
         // Original: def __init__(self, parent, installation):
@@ -209,9 +215,228 @@ namespace HolocronToolset.Editors
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/lyt.py:231-235
         // Original: def import_texture(self):
-        public void ImportTexture()
+        public async void ImportTexture()
         {
-            // TODO: Implement texture import logic
+            var topLevel = TopLevel.GetTopLevel(this);
+            if (topLevel == null)
+            {
+                return;
+            }
+
+            try
+            {
+                var options = new FilePickerOpenOptions
+                {
+                    Title = "Import Texture",
+                    AllowMultiple = true,
+                    FileTypeFilter = new[]
+                    {
+                        new FilePickerFileType("Image Files")
+                        {
+                            Patterns = new[] { "*.tpc", "*.tga", "*.dds", "*.png", "*.jpg", "*.jpeg", "*.bmp" },
+                            MimeTypes = new[] { "image/tga", "image/dds", "image/png", "image/jpeg", "image/bmp" }
+                        },
+                        new FilePickerFileType("TPC Files") { Patterns = new[] { "*.tpc" } },
+                        new FilePickerFileType("TGA Files") { Patterns = new[] { "*.tga" } },
+                        new FilePickerFileType("DDS Files") { Patterns = new[] { "*.dds" } },
+                        new FilePickerFileType("PNG Files") { Patterns = new[] { "*.png" } },
+                        new FilePickerFileType("JPEG Files") { Patterns = new[] { "*.jpg", "*.jpeg" } },
+                        new FilePickerFileType("BMP Files") { Patterns = new[] { "*.bmp" } },
+                        new FilePickerFileType("All Files") { Patterns = new[] { "*.*" } }
+                    }
+                };
+
+                var files = await topLevel.StorageProvider.OpenFilePickerAsync(options);
+                if (files == null || files.Count == 0)
+                {
+                    return;
+                }
+
+                foreach (var file in files)
+                {
+                    string filePath = file.Path.LocalPath;
+                    if (string.IsNullOrEmpty(filePath) || !File.Exists(filePath))
+                    {
+                        continue;
+                    }
+
+                    await ImportTextureFile(filePath);
+                }
+
+                UpdateTextureBrowser();
+            }
+            catch (Exception ex)
+            {
+                System.Console.WriteLine($"Error importing texture: {ex}");
+            }
+        }
+
+        private async Task ImportTextureFile(string filePath)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(filePath) || !File.Exists(filePath))
+                {
+                    System.Console.WriteLine($"Error: Texture file does not exist: {filePath}");
+                    return;
+                }
+
+                string fileName = Path.GetFileNameWithoutExtension(filePath);
+                string extension = Path.GetExtension(filePath).ToLowerInvariant();
+                string targetResref = fileName;
+
+                // Validate file extension
+                string[] supportedExtensions = { ".tpc", ".tga", ".dds", ".png", ".jpg", ".jpeg", ".bmp" };
+                bool isSupported = false;
+                foreach (string ext in supportedExtensions)
+                {
+                    if (extension == ext)
+                    {
+                        isSupported = true;
+                        break;
+                    }
+                }
+
+                if (!isSupported)
+                {
+                    System.Console.WriteLine($"Error: Unsupported texture format: {extension}. Supported formats: TPC, TGA, DDS, PNG, JPG, BMP");
+                    return;
+                }
+
+                // Determine if we need to convert the texture
+                bool needsConversion = extension != ".tpc" && extension != ".tga" && extension != ".dds";
+
+                string overridePath = GetOverrideDirectory();
+                if (string.IsNullOrEmpty(overridePath))
+                {
+                    System.Console.WriteLine("Warning: Could not determine override directory. Texture will not be saved to installation.");
+                    return;
+                }
+
+                // Ensure override/textures directory exists
+                string texturesPath = Path.Combine(overridePath, "textures");
+                if (!Directory.Exists(texturesPath))
+                {
+                    try
+                    {
+                        Directory.CreateDirectory(texturesPath);
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Console.WriteLine($"Error: Could not create textures directory at {texturesPath}: {ex}");
+                        return;
+                    }
+                }
+
+                string outputTpcPath = Path.Combine(texturesPath, $"{targetResref}.tpc");
+                string txiPath = Path.ChangeExtension(filePath, ".txi");
+
+                TPC tpc = null;
+
+                // Read the texture based on its format
+                // TPCAuto.ReadTpc can directly handle TPC, TGA, and DDS formats
+                if (extension == ".tpc" || extension == ".tga" || extension == ".dds")
+                {
+                    try
+                    {
+                        // TPC, TGA, and DDS can be read directly by TPCAuto
+                        tpc = TPCAuto.ReadTpc(filePath, txiSource: File.Exists(txiPath) ? txiPath : null);
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Console.WriteLine($"Error: Failed to read {extension.ToUpperInvariant()} file {filePath}: {ex}");
+                        return;
+                    }
+                }
+                else if (needsConversion)
+                {
+                    // PNG, JPG, BMP formats require conversion to TGA/TPC first
+                    // TPCAuto does not directly support these formats
+                    // In a full implementation, we would:
+                    // 1. Load the image using an image library (e.g., System.Drawing, SkiaSharp, or ImageSharp)
+                    // 2. Convert to RGBA format
+                    // 3. Create a TPC object from the image data
+                    // 4. Write as TPC
+                    // 
+                    // For now, we provide a clear error message indicating this limitation
+                    System.Console.WriteLine($"Error: Direct import of {extension.ToUpperInvariant()} files is not yet supported.");
+                    System.Console.WriteLine($"Please convert {Path.GetFileName(filePath)} to TGA or TPC format first, then import.");
+                    System.Console.WriteLine($"You can use external tools to convert PNG/JPG/BMP to TGA, then import the TGA file.");
+                    return;
+                }
+
+                if (tpc == null)
+                {
+                    System.Console.WriteLine($"Failed to load texture from {filePath}");
+                    return;
+                }
+
+                // Check if output file already exists and handle overwrite
+                if (File.Exists(outputTpcPath))
+                {
+                    System.Console.WriteLine($"Warning: Texture {targetResref}.tpc already exists in override directory. It will be overwritten.");
+                }
+
+                // Write as TPC to override directory
+                try
+                {
+                    TPCAuto.WriteTpc(tpc, outputTpcPath, ResourceType.TPC);
+                }
+                catch (Exception ex)
+                {
+                    System.Console.WriteLine($"Error: Failed to write TPC file to {outputTpcPath}: {ex}");
+                    return;
+                }
+
+                // Write TXI file if it exists
+                if (!string.IsNullOrEmpty(tpc.Txi))
+                {
+                    try
+                    {
+                        string outputTxiPath = Path.ChangeExtension(outputTpcPath, ".txi");
+                        File.WriteAllText(outputTxiPath, tpc.Txi, System.Text.Encoding.ASCII);
+                        System.Console.WriteLine($"Also wrote TXI file: {Path.GetFileName(outputTxiPath)}");
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Console.WriteLine($"Warning: Failed to write TXI file: {ex}");
+                    }
+                }
+
+                // Store the imported texture reference
+                _importedTextures[targetResref] = outputTpcPath;
+
+                System.Console.WriteLine($"Successfully imported texture: {targetResref} -> {outputTpcPath}");
+            }
+            catch (Exception ex)
+            {
+                System.Console.WriteLine($"Error importing texture file {filePath}: {ex}");
+            }
+        }
+
+        private string GetOverrideDirectory()
+        {
+            if (_installation == null)
+            {
+                return null;
+            }
+
+            try
+            {
+                string installPath = _installation.Path;
+                if (string.IsNullOrEmpty(installPath) || !Directory.Exists(installPath))
+                {
+                    return null;
+                }
+
+                // Standard KOTOR override directory is at <installPath>/override
+                string overridePath = Path.Combine(installPath, "override");
+                return overridePath;
+            }
+            catch
+            {
+                return null;
+            }
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/lyt.py:237-241
@@ -225,7 +450,29 @@ namespace HolocronToolset.Editors
         // Original: def update_texture_browser(self):
         public void UpdateTextureBrowser()
         {
-            // TODO: Update texture browser with imported textures
+            // Update texture browser UI with imported textures
+            // This method should refresh any texture browser widget in the UI
+            // For now, we'll ensure the imported textures list is maintained
+            
+            // If there's a texture browser widget, it should be updated here
+            // The actual UI update will depend on the specific texture browser implementation
+            // This is a placeholder for the UI update logic
+            
+            System.Console.WriteLine($"Texture browser updated. {_importedTextures.Count} texture(s) available.");
+            foreach (var kvp in _importedTextures)
+            {
+                System.Console.WriteLine($"  - {kvp.Key}: {kvp.Value}");
+            }
+        }
+
+        public List<string> GetImportedTextures()
+        {
+            return new List<string>(_importedTextures.Keys);
+        }
+
+        public string GetImportedTexturePath(string textureName)
+        {
+            return _importedTextures.TryGetValue(textureName, out string path) ? path : null;
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/lyt.py:247-264

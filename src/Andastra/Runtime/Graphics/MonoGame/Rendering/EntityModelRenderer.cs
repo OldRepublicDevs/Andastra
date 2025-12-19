@@ -134,7 +134,7 @@ namespace Andastra.Runtime.MonoGame.Rendering
 
                 var converter = new MdlToMonoGameModelConverter(_graphicsDevice, _materialResolver);
                 MdlToMonoGameModelConverter.ConversionResult result = converter.Convert(mdl);
-                
+
                 if (result != null && result.Meshes.Count > 0)
                 {
                     _modelCache[modelResRef] = result;

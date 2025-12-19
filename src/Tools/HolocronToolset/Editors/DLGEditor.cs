@@ -76,12 +76,6 @@ namespace HolocronToolset.Editors
         // Flag to track if node is loaded into UI (prevents updates during loading)
         private bool _nodeLoadedIntoUi = false;
 
-        // Reference tracking
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:148-149
-        // Original: self.dialog_references: ReferenceChooserDialog | None = None, self.reference_history: list[tuple[list[weakref.ref[DLGLink]], str]] = []
-        private List<Tuple<List<WeakReference<DLGLink>>, string>> _referenceHistory = new List<Tuple<List<WeakReference<DLGLink>>, string>>();
-        private int _currentReferenceIndex = -1;
-
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:101-177
         // Original: def __init__(self, parent: QWidget | None = None, installation: HTInstallation | None = None):
         public DLGEditor(Window parent = null, HTInstallation installation = null)
@@ -135,17 +129,6 @@ namespace HolocronToolset.Editors
             linkPanel.Children.Add(new TextBlock { Text = "Logic:" });
             linkPanel.Children.Add(_logicSpin);
             panel.Children.Add(linkPanel);
-
-            // Initialize script parameter widgets
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/ui/editors/dlg.ui
-            // Original: QSpinBox script1Param1Spin
-            _script1Param1Spin = new NumericUpDown { Minimum = int.MinValue, Maximum = int.MaxValue, Value = 0 };
-            _script1Param1Spin.ValueChanged += (s, e) => OnNodeUpdate();
-
-            var scriptPanel = new StackPanel();
-            scriptPanel.Children.Add(new TextBlock { Text = "Script1 Param1:" });
-            scriptPanel.Children.Add(_script1Param1Spin);
-            panel.Children.Add(scriptPanel);
 
             // Initialize animation UI controls
             // Matching PyKotor implementation at Tools/HolocronToolset/src/ui/editors/dlg.ui:966-992
@@ -346,10 +329,6 @@ namespace HolocronToolset.Editors
         // Matching PyKotor implementation: editor.ui.questEdit, editor.ui.questEntrySpin
         public TextBox QuestEdit => _questEdit;
         public NumericUpDown QuestEntrySpin => _questEntrySpin;
-        
-        // Expose script widgets for testing
-        // Matching PyKotor implementation: editor.ui.script1Param1Spin
-        public NumericUpDown Script1Param1Spin => _script1Param1Spin;
 
         /// <summary>
         /// Handles selection changes in the dialog tree.
@@ -382,10 +361,6 @@ namespace HolocronToolset.Editors
                 if (_questEntrySpin != null)
                 {
                     _questEntrySpin.Value = 0;
-                }
-                if (_script1Param1Spin != null)
-                {
-                    _script1Param1Spin.Value = 0;
                 }
                 _nodeLoadedIntoUi = true;
                 return;
@@ -448,14 +423,6 @@ namespace HolocronToolset.Editors
             if (_questEntrySpin != null && node != null)
             {
                 _questEntrySpin.Value = node.QuestEntry ?? 0;
-            }
-            
-            // Load script1 param1
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:2410
-            // Original: self.ui.script1Param1Spin.setValue(item.link.node.script1_param1)
-            if (_script1Param1Spin != null && node != null)
-            {
-                _script1Param1Spin.Value = node.Script1Param1;
             }
         }
 
@@ -527,14 +494,6 @@ namespace HolocronToolset.Editors
             if (_questEntrySpin != null && node != null)
             {
                 node.QuestEntry = _questEntrySpin.Value.HasValue ? _questEntrySpin.Value.Value : 0;
-            }
-            
-            // Update script1 param1
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:2499
-            // Original: item.link.node.script1_param1 = self.ui.script1Param1Spin.value()
-            if (_script1Param1Spin != null && node != null)
-            {
-                node.Script1Param1 = _script1Param1Spin.Value.HasValue ? (int)_script1Param1Spin.Value.Value : 0;
             }
         }
 
@@ -951,161 +910,6 @@ namespace HolocronToolset.Editors
         }
 
         /// <summary>
-        /// Finds all references to the specified item's link node.
-        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:1891-1906
-        /// Original: def find_references(self, item: DLGStandardItem | DLGListWidgetItem):
-        /// </summary>
-        /// <param name="item">The DLGStandardItem to find references for</param>
-        public void FindReferences(DLGStandardItem item)
-        {
-            if (item == null)
-            {
-                throw new ArgumentNullException(nameof(item));
-            }
-
-            DLGLink itemLink = item.Link;
-            if (itemLink == null)
-            {
-                throw new InvalidOperationException("Item must have a valid link");
-            }
-
-            // Truncate reference history to current index (for undo/redo)
-            // Matching PyKotor: self.reference_history = self.reference_history[: self.current_reference_index + 1]
-            if (_currentReferenceIndex >= 0 && _currentReferenceIndex < _referenceHistory.Count - 1)
-            {
-                _referenceHistory.RemoveRange(_currentReferenceIndex + 1, _referenceHistory.Count - _currentReferenceIndex - 1);
-            }
-
-            // Get item display text (HTML format in Python, simplified here)
-            string itemHtml = GetItemDisplayText(item);
-
-            // Increment reference index
-            _currentReferenceIndex++;
-
-            // Find all links that reference this link's node
-            // Matching PyKotor: references = [this_item.ref_to_link for link in self.model.link_to_items for this_item in self.model.link_to_items[link] if this_item.link is not None and item.link in this_item.link.node.links]
-            // This finds all items whose link's node contains the target link in its links list
-            var references = new List<WeakReference<DLGLink>>();
-            
-            // Iterate through all links in the model
-            foreach (var kvp in _model.LinkToItems)
-            {
-                DLGLink link = kvp.Key;
-                if (link == null || link.Node == null)
-                {
-                    continue;
-                }
-
-                // Check if this link's node contains the target link in its links list
-                if (link.Node.Links != null && link.Node.Links.Contains(itemLink))
-                {
-                    // Found a reference - add all items that reference this link
-                    foreach (DLGStandardItem thisItem in kvp.Value)
-                    {
-                        if (thisItem.Link != null)
-                        {
-                            references.Add(new WeakReference<DLGLink>(thisItem.Link));
-                        }
-                    }
-                }
-            }
-
-            // Add to reference history
-            _referenceHistory.Add(Tuple.Create(references, itemHtml));
-
-            // Show reference dialog
-            ShowReferenceDialog(references, itemHtml);
-        }
-
-        /// <summary>
-        /// Gets the display text for an item.
-        /// </summary>
-        private string GetItemDisplayText(DLGStandardItem item)
-        {
-            if (item == null)
-            {
-                return "";
-            }
-
-            DLGLink link = item.Link;
-            if (link == null || link.Node == null)
-            {
-                return "";
-            }
-
-            // Simplified display text - in Python this returns HTML
-            if (link.Node is DLGEntry entry)
-            {
-                return $"Entry: {entry.Text}";
-            }
-            else if (link.Node is DLGReply reply)
-            {
-                return $"Reply: {reply.Text}";
-            }
-
-            return "Node";
-        }
-
-        /// <summary>
-        /// Shows the reference dialog with the found references.
-        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:1918-1929
-        /// Original: def show_reference_dialog(self, references: list[weakref.ref[DLGLink]], item_html: str):
-        /// </summary>
-        /// <param name="references">List of weak references to DLGLink objects that reference the target</param>
-        /// <param name="itemHtml">HTML/text description of the item being referenced</param>
-        private void ShowReferenceDialog(List<WeakReference<DLGLink>> references, string itemHtml)
-        {
-            // For now, this is a simplified implementation
-            // In a full implementation, this would show a dialog window with the references
-            // Matching PyKotor: self.dialog_references = ReferenceChooserDialog(references, self, item_html)
-            
-            // Filter out invalid weak references
-            var validReferences = new List<DLGLink>();
-            foreach (var weakRef in references)
-            {
-                if (weakRef != null && weakRef.TryGetTarget(out DLGLink link))
-                {
-                    validReferences.Add(link);
-                }
-            }
-
-            // TODO: PLACEHOLDER - Show reference dialog UI when UI system is fully implemented
-            // For now, this method exists to match the Python API
-            // A full implementation would:
-            // 1. Create or update a ReferenceChooserDialog window
-            // 2. Display the list of references
-            // 3. Allow user to select a reference to jump to
-            // 4. Call JumpToNode when a reference is selected
-        }
-
-        /// <summary>
-        /// Jumps to the specified node/link in the dialog tree.
-        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:1938-1940
-        /// Original: def jump_to_node(self, link: DLGLink | None):
-        /// </summary>
-        /// <param name="link">The link to jump to</param>
-        public void JumpToNode(DLGLink link)
-        {
-            if (link == null)
-            {
-                return;
-            }
-
-            // Find the item in the model that corresponds to this link
-            if (_model.LinkToItems.TryGetValue(link, out var items) && items.Count > 0)
-            {
-                // Select the first item that references this link
-                DLGStandardItem item = items[0];
-                
-                // TODO: PLACEHOLDER - Expand tree and select item when tree view UI is fully implemented
-                // A full implementation would:
-                // 1. Expand all parent items to make the target visible
-                // 2. Select the item in the tree view
-                // 3. Scroll to make it visible
-            }
-        }
-
-        /// <summary>
         /// Pastes an item.
         /// Matching PyKotor implementation: self.model.paste_item(selected_item, as_new_branches=...)
         /// </summary>
@@ -1260,11 +1064,6 @@ namespace HolocronToolset.Editors
         private List<DLGStandardItem> _rootItems = new List<DLGStandardItem>();
         private DLGEditor _editor;
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/model.py:293
-        // Original: self.link_to_items: weakref.WeakKeyDictionary[DLGLink, list[DLGStandardItem]] = weakref.WeakKeyDictionary()
-        // In C#, we use a regular Dictionary and manually manage cleanup
-        private Dictionary<DLGLink, List<DLGStandardItem>> _linkToItems = new Dictionary<DLGLink, List<DLGStandardItem>>();
-
         public DLGModel()
         {
         }
@@ -1275,12 +1074,6 @@ namespace HolocronToolset.Editors
         }
 
         public int RowCount => _rootItems.Count;
-
-        /// <summary>
-        /// Gets the dictionary mapping links to their items.
-        /// Matching PyKotor implementation: self.link_to_items
-        /// </summary>
-        public IReadOnlyDictionary<DLGLink, List<DLGStandardItem>> LinkToItems => _linkToItems;
 
         private int _selectedIndex = -1;
         public int SelectedIndex
@@ -1309,9 +1102,6 @@ namespace HolocronToolset.Editors
             }
             var item = new DLGStandardItem(link);
             _rootItems.Add(item);
-            
-            // Register link in link_to_items dictionary
-            RegisterLinkItem(link, item);
             
             // Also add to CoreDlg.Starters if editor is available
             if (_editor != null && _editor.CoreDlg != null)
@@ -1399,9 +1189,6 @@ namespace HolocronToolset.Editors
             var newItem = new DLGStandardItem(link);
             parentItem.AddChild(newItem);
             
-            // Register link in link_to_items dictionary
-            RegisterLinkItem(link, newItem);
-            
             UpdateItemDisplayText(newItem);
             UpdateItemDisplayText(parentItem);
             
@@ -1465,48 +1252,6 @@ namespace HolocronToolset.Editors
         {
             // This would update the display text in the tree view
             // For now, it's a placeholder
-        }
-
-        /// <summary>
-        /// Registers a link-item mapping in the link_to_items dictionary.
-        /// Matching PyKotor implementation: items are automatically registered when added to model
-        /// </summary>
-        private void RegisterLinkItem(DLGLink link, DLGStandardItem item)
-        {
-            if (link == null || item == null)
-            {
-                return;
-            }
-
-            if (!_linkToItems.ContainsKey(link))
-            {
-                _linkToItems[link] = new List<DLGStandardItem>();
-            }
-
-            if (!_linkToItems[link].Contains(item))
-            {
-                _linkToItems[link].Add(item);
-            }
-        }
-
-        /// <summary>
-        /// Unregisters a link-item mapping from the link_to_items dictionary.
-        /// </summary>
-        private void UnregisterLinkItem(DLGLink link, DLGStandardItem item)
-        {
-            if (link == null || item == null)
-            {
-                return;
-            }
-
-            if (_linkToItems.TryGetValue(link, out var items))
-            {
-                items.Remove(item);
-                if (items.Count == 0)
-                {
-                    _linkToItems.Remove(link);
-                }
-            }
         }
 
         /// <summary>

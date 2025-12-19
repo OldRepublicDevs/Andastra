@@ -437,15 +437,6 @@ namespace Andastra.Parsing.Installation
         }
 
         /// <summary>
-        /// Returns the path to Packages folder of the Installation (Mass Effect games).
-        /// This method maintains the case of the foldername.
-        /// </summary>
-        public string PackagePath()
-        {
-            return GetPackagesPath(_path);
-        }
-
-        /// <summary>
         /// Returns the path to Packages folder of the Installation (Mass Effect series).
         /// This method maintains the case of the foldername.
         /// </summary>

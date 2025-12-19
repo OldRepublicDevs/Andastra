@@ -9,7 +9,11 @@ namespace Andastra.Runtime.Core.Interfaces.Components
     /// Script Hooks Component Interface:
     /// - Common interface for script hooks functionality across all BioWare engines
     /// - Base implementation: BaseScriptHooksComponent in Runtime.Games.Common.Components
-    /// - Engine-specific implementations: OdysseyScriptHooksComponent (inherits from base, no differences)
+    /// - Engine-specific implementations:
+    ///   - Odyssey: ScriptHooksComponent (inherits from base, no differences)
+    ///   - Aurora: Uses BaseScriptHooksComponent directly
+    ///   - Eclipse: EclipseScriptHooksComponent (inherits from base, no differences)
+    ///   - Infinity: InfinityScriptHooksComponent (inherits from base, no differences)
     /// - Cross-engine analysis completed via Ghidra reverse engineering:
     ///   - Odyssey: swkotor.exe, swkotor2.exe
     ///     - swkotor.exe: FUN_004ebf20, FUN_00500610, FUN_0058e660, FUN_0058da80 (script hooks save/load)
