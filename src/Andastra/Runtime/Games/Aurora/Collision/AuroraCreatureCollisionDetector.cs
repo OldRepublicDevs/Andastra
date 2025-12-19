@@ -40,6 +40,8 @@ namespace Andastra.Runtime.Games.Aurora.Collision
     ///   - OdysseyCreatureCollisionDetector (Runtime.Games.Odyssey.Collision): Common Odyssey logic (defaults to K2)
     ///   - K1CreatureCollisionDetector (Runtime.Games.Odyssey.Collision): K1-specific (swkotor.exe: offset 0x340)
     ///   - K2CreatureCollisionDetector (Runtime.Games.Odyssey.Collision): K2-specific (swkotor2.exe: offset 0x380)
+    ///   - K1CreatureCollisionDetector (Runtime.Games.Odyssey.Collision): K1-specific (swkotor.exe: offset 0x340)
+    ///   - K2CreatureCollisionDetector (Runtime.Games.Odyssey.Collision): K2-specific (swkotor2.exe: offset 0x380)
     ///   - EclipseCreatureCollisionDetector (Runtime.Games.Eclipse.Collision): Eclipse-specific bounding box (daorigins.exe, DragonAge2.exe)
     ///   - InfinityCreatureCollisionDetector (Runtime.Games.Infinity.Collision): Infinity-specific bounding box (MassEffect.exe, MassEffect2.exe)
     /// </remarks>
