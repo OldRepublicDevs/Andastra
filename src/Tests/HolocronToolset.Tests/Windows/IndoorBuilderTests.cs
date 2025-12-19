@@ -217,10 +217,11 @@ namespace HolocronToolset.Tests.Windows
         // - test_rotate_rooms_command
         // - test_rotate_rooms_command_wraps_360
         // - test_flip_rooms_command_x
-        // - test_flip_rooms_command_y
-        // - test_flip_rooms_command_both
-        // - test_duplicate_rooms_command
-        // - test_move_warp_command
+        // TODO: STUB - Implement test_flip_rooms_command_x (vendor/PyKotor/Tools/HolocronToolset/tests/gui/windows/test_indoor_builder.py)
+        // TODO: STUB - Implement test_flip_rooms_command_y (vendor/PyKotor/Tools/HolocronToolset/tests/gui/windows/test_indoor_builder.py)
+        // TODO: STUB - Implement test_flip_rooms_command_both (vendor/PyKotor/Tools/HolocronToolset/tests/gui/windows/test_indoor_builder.py)
+        // TODO: STUB - Implement test_duplicate_rooms_command (vendor/PyKotor/Tools/HolocronToolset/tests/gui/windows/test_indoor_builder.py)
+        // TODO: STUB - Implement test_move_warp_command (vendor/PyKotor/Tools/HolocronToolset/tests/gui/windows/test_indoor_builder.py)
         //
         // These will be ported once the IndoorMapBuilder implementation is complete.
         // For now, placeholder tests are created to ensure zero omissions.
@@ -230,7 +231,8 @@ namespace HolocronToolset.Tests.Windows
         [Fact]
         public void TestAddRoomCommandUndoRedo()
         {
-            // Matching Python: Test AddRoomCommand performs undo/redo correctly.
+            // TODO: STUB - Implement test_add_room_command_undo_redo (vendor/PyKotor/Tools/HolocronToolset/tests/gui/windows/test_indoor_builder.py:403-426)
+            // Original: def test_add_room_command_undo_redo(self, qtbot: QtBot, builder_no_kits: IndoorMapBuilder, real_kit_component: KitComponent): Test AddRoomCommand performs undo/redo correctly.
             // NOTE: This test requires full IndoorMapBuilder implementation with:
             // - _map property (IndoorMap)
             // - _undo_stack property (undo/redo system)
@@ -1679,6 +1681,9 @@ namespace HolocronToolset.Tests.Windows
             // Create a minimal image for the component (matching Python lines 72-74)
             // In Python: image = QImage(128, 128, QImage.Format.Format_RGB32); image.fill(0x808080)
             // In C# Avalonia: Use WriteableBitmap or similar
+            // TODO: PLACEHOLDER - Replace with Avalonia image implementation
+            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/windows/test_indoor_builder.py
+            // Original: image = QImage(128, 128, QImage.Format.Format_RGB32)
             object image = new { Width = 128, Height = 128 }; // Placeholder until Avalonia image implementation
 
             // Create minimal BWM with multiple faces (matching Python lines 76-94)
@@ -2422,27 +2427,27 @@ namespace HolocronToolset.Tests.Windows
                 // Since UI controls are not fully implemented yet, we test that the renderer
                 // accepts valid values and that the property can be set
                 // The actual UI spinbox min/max validation will be tested when UI is complete
-                
+
                 var renderer = builder.Ui.MapRenderer;
-                
+
                 // Matching Python line 1015: builder.ui.gridSizeSpin.setValue(0.1)
                 // Try to set below typical minimum (0.1)
                 renderer.SetGridSize(0.1f);
-                
+
                 // Matching Python line 1016: qtbot.wait(10)
                 // Note: In headless tests, operations are synchronous
-                
+
                 // Matching Python line 1018: assert builder.ui.gridSizeSpin.value() >= builder.ui.gridSizeSpin.minimum()
                 // For now, verify the value was set (actual min/max validation will be in UI)
                 renderer.GridSize.Should().BeApproximately(0.1f, 0.001f, "grid_size should accept 0.1");
-                
+
                 // Matching Python line 1021: builder.ui.gridSizeSpin.setValue(100.0)
                 // Try to set above typical maximum (100.0)
                 renderer.SetGridSize(100.0f);
-                
+
                 // Matching Python line 1022: qtbot.wait(10)
                 // Note: In headless tests, operations are synchronous
-                
+
                 // Matching Python line 1024: assert builder.ui.gridSizeSpin.value() <= builder.ui.gridSizeSpin.maximum()
                 // For now, verify the value was set (actual min/max validation will be in UI)
                 renderer.GridSize.Should().BeApproximately(100.0f, 0.001f, "grid_size should accept 100.0");
@@ -2599,18 +2604,26 @@ namespace HolocronToolset.Tests.Windows
                 var builder = new IndoorBuilderWindow(null, _installation);
                 builder.Show();
 
-                // Matching Python test logic:
-                // renderer.set_camera_position(100, 200)
-                // renderer.set_camera_zoom(2.5)
-                // renderer.set_camera_rotation(30.0)
-                // builder.reset_view()
-                // pos = renderer.camera_position()
-                // assert abs(pos.x - 0) < 0.001
-                // assert abs(pos.y - 0) < 0.001
-                // assert abs(renderer.camera_zoom() - 1.0) < 0.001
-                // assert abs(renderer.camera_rotation() - 0.0) < 0.001
+                // Matching Python line 1063: builder = builder_no_kits
+                // Matching Python line 1064: renderer = builder.ui.mapRenderer
+                var renderer = builder.Ui.MapRenderer;
 
-                builder.Should().NotBeNull();
+                // Matching Python lines 1066-1069: Set non-default values
+                renderer.SetCameraPosition(100.0f, 200.0f);
+                renderer.SetCameraZoom(2.5f);
+                renderer.SetCameraRotation(30.0f);
+
+                // Matching Python line 1072: builder.reset_view()
+                builder.ResetView();
+
+                // Matching Python line 1074: pos = renderer.camera_position()
+                var pos = renderer.CameraPosition();
+
+                // Matching Python lines 1075-1078: Assert all values reset to defaults
+                pos.X.Should().BeApproximately(0.0f, 0.001f, "camera position X should be 0 after reset");
+                pos.Y.Should().BeApproximately(0.0f, 0.001f, "camera position Y should be 0 after reset");
+                renderer.CameraZoom().Should().BeApproximately(1.0f, 0.001f, "camera zoom should be 1.0 after reset");
+                renderer.CameraRotation().Should().BeApproximately(0.0f, 0.001f, "camera rotation should be 0.0 after reset");
             }
             finally
             {

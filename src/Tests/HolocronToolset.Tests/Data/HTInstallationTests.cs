@@ -770,5 +770,43 @@ namespace HolocronToolset.Tests.Data
             // Original: assert results[locstring3] == "ERROR: FATAL COMPILER ERROR"
             results[locstring3].Should().Be("ERROR: FATAL COMPILER ERROR");
         }
+
+        // TODO: STUB - Implement test_pickle_unpickle (vendor/PyKotor/Tools/HolocronToolset/tests/test_htinstallation.py:387-391)
+        // Original: def test_pickle_unpickle(self): Test that an Installation object can be pickled and unpickled.
+        // Missing: Pickle serialization/deserialization test - C# equivalent would use BinaryFormatter or similar
+        [Fact]
+        public void TestPickleUnpickle()
+        {
+            // TODO: PLACEHOLDER - C# doesn't have pickle, need to implement equivalent serialization test
+            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/test_htinstallation.py:387-391
+            // Original: pickled_data = pickle.dumps(self.installation)
+            // Original: unpickled_installation: HTInstallation = pickle.loads(pickled_data)
+            // Original: self.assertEqual(self.installation._path, unpickled_installation._path)
+            throw new NotImplementedException("TestPickleUnpickle: C# serialization test not yet implemented - need BinaryFormatter or JSON equivalent");
+        }
+
+        // TODO: STUB - Implement test_pickle_to_file (vendor/PyKotor/Tools/HolocronToolset/tests/test_htinstallation.py:393-399)
+        // Original: def test_pickle_to_file(self): Test pickling to and unpickling from a file.
+        // Missing: File-based serialization test
+        [Fact]
+        public void TestPickleToFile()
+        {
+            // TODO: PLACEHOLDER - C# doesn't have pickle, need to implement equivalent file serialization test
+            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/test_htinstallation.py:393-399
+            // Original: with BytesIO() as file: pickle.dump(self.installation, file); file.seek(0); unpickled_installation: HTInstallation = pickle.load(file)
+            throw new NotImplementedException("TestPickleToFile: C# file serialization test not yet implemented - need BinaryFormatter or JSON equivalent");
+        }
+
+        // TODO: STUB - Implement test_multiple_unpickle (vendor/PyKotor/Tools/HolocronToolset/tests/test_htinstallation.py:401-406)
+        // Original: def test_multiple_unpickle(self): Test that multiple unpickling operations yield consistent results.
+        // Missing: Multiple deserialization consistency test
+        [Fact]
+        public void TestMultipleUnpickle()
+        {
+            // TODO: PLACEHOLDER - C# doesn't have pickle, need to implement equivalent multiple deserialization test
+            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/test_htinstallation.py:401-406
+            // Original: pickled_data = pickle.dumps(self.installation); for _ in range(3): unpickled_installation: HTInstallation = pickle.loads(pickled_data)
+            throw new NotImplementedException("TestMultipleUnpickle: C# multiple deserialization test not yet implemented - need BinaryFormatter or JSON equivalent");
+        }
     }
 }
