@@ -1,6 +1,7 @@
 using System;
 using System.Text;
 using Avalonia.Controls;
+using Avalonia.Input;
 using Avalonia.Markup.Xaml;
 
 namespace HolocronToolset.Widgets
@@ -185,6 +186,25 @@ namespace HolocronToolset.Widgets
         private bool IsWordCharacter(char c)
         {
             return char.IsLetterOrDigit(c) || c == '_';
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:2459-2461
+        // Original: select_next_shortcut = QShortcut(QKeySequence("Ctrl+D"), self)
+        // Original: select_next_shortcut.activated.connect(self.ui.codeEdit.select_next_occurrence)
+        // Handle keyboard shortcuts for word selection (Ctrl+D for select next occurrence)
+        // Based on VS Code behavior: Ctrl+D selects next occurrence of word at cursor
+        protected override void OnKeyDown(KeyEventArgs e)
+        {
+            // Handle Ctrl+D shortcut for select next occurrence
+            // Matching PyKotor implementation: Ctrl+D selects next occurrence of word
+            if (e.KeyModifiers.HasFlag(KeyModifiers.Control) && e.Key == Key.D)
+            {
+                SelectNextOccurrence();
+                e.Handled = true;
+                return;
+            }
+
+            base.OnKeyDown(e);
         }
     }
 }
