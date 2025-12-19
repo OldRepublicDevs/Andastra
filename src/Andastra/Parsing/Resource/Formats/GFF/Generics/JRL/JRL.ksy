@@ -1,44 +1,47 @@
 meta:
-  id: utm
-  title: BioWare UTM (Merchant Template) File Format
+  id: jrl
+  title: BioWare JRL (Journal) File Format
   license: MIT
   endian: le
-  file-extension: utm
+  file-extension: jrl
   xref:
-    pykotor: vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/generics/utm.py
-    reone: vendor/reone/src/libs/resource/parser/gff/utm.cpp
-    wiki: vendor/PyKotor/wiki/GFF-UTM.md
+    pykotor: vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/generics/jrl.py
+    reone: vendor/reone/src/libs/resource/parser/gff/jrl.cpp
+    xoreos: vendor/xoreos/src/aurora/jrlfile.cpp
+    wiki: vendor/PyKotor/wiki/GFF-JRL.md
 doc: |
-  UTM (User Template Merchant) files are GFF-based format files that define merchant/store blueprints.
-  UTM files use the GFF (Generic File Format) binary structure with file type signature "UTM ".
+  JRL (Journal) files are GFF-based format files that store journal/quest data including
+  quest entries, priorities, and planet associations. JRL files use the GFF (Generic File Format)
+  binary structure with file type signature "JRL ".
   
-  UTM files contain:
-  - Root struct with merchant metadata:
-    - ResRef: Merchant template ResRef (unique identifier)
-    - LocName: Localized merchant name (LocalizedString)
-    - Tag: Merchant tag identifier (string)
-    - MarkUp: Markup percentage for selling to player (Int32)
-    - MarkDown: Markdown percentage for buying from player (Int32)
-    - OnOpenStore: Script ResRef executed when store opens (ResRef)
-    - Comment: Developer comment string (string, not used by game engine)
-    - BuySellFlag: Flags for buy/sell capabilities (UInt8)
-      - Bit 0: Can buy items (1 = can buy, 0 = cannot buy)
-      - Bit 1: Can sell items (1 = can sell, 0 = cannot sell)
-    - ID: Deprecated field, not used by game engine (UInt8)
-  - ItemList: Array of UTM_ItemList structs containing merchant inventory items
-    Each item contains:
-    - InventoryRes: Item ResRef (ResRef)
-    - Infinite: Whether item stock is infinite (UInt8, boolean)
-    - Dropable: Whether item is droppable (UInt8, boolean)
-    - Repos_PosX: X position in merchant inventory grid (UInt16)
-    - Repos_PosY: Y position in merchant inventory grid (UInt16)
+  JRL files contain:
+  - Root struct with "Categories" list (array of quests)
+  - Each quest (JRLQuest) contains:
+    - Name (LocalizedString): Quest title
+    - PlanetID (Int32): Planet association (unused)
+    - PlotIndex (Int32): Legacy plot index
+    - Priority (UInt32): Sorting priority (0=Highest, 4=Lowest)
+    - Tag (String): Unique quest identifier
+    - Comment (String): Developer comment (toolset only)
+    - EntryList (List): Array of quest entries (journal states)
+  - Each entry (JRLQuestEntry) contains:
+    - ID (UInt32): State identifier (referenced by scripts/dialogue)
+    - Text (LocalizedString): Journal text displayed for this state
+    - End (UInt16): 1 if this state completes the quest, 0 otherwise
+    - XP_Percentage (Single): XP reward multiplier for reaching this state
+  
+  Priority Levels:
+  - 0 (Highest): Main quest line
+  - 1 (High): Important side quests
+  - 2 (Medium): Standard side quests
+  - 3 (Low): Minor tasks
+  - 4 (Lowest): Completed/Archived
   
   References:
-  - vendor/PyKotor/wiki/GFF-UTM.md
+  - vendor/PyKotor/wiki/GFF-JRL.md
   - vendor/PyKotor/wiki/GFF-File-Format.md
-  - vendor/reone/include/reone/resource/parser/gff/utm.h:35-46 (UTM struct definition)
-  - vendor/reone/src/libs/resource/parser/gff/utm.cpp:37-52 (UTM parsing from GFF)
-  - vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/generics/utm.py:16-223 (PyKotor implementation)
+  - vendor/reone/src/libs/resource/parser/gff/jrl.cpp
+  - vendor/xoreos/src/aurora/jrlfile.cpp
 
 seq:
   - id: gff_header
@@ -88,9 +91,9 @@ types:
         encoding: ASCII
         size: 4
         doc: |
-          File type signature. Must be "UTM " for merchant template files.
-          Other GFF types: "GFF ", "DLG ", "ARE ", "UTC ", "UTI ", etc.
-        valid: "UTM "
+          File type signature. Must be "JRL " for journal files.
+          Other GFF types: "GFF ", "ARE ", "UTC ", "UTI ", "DLG ", etc.
+        valid: "JRL "
       
       - id: file_version
         type: str
@@ -139,7 +142,7 @@ types:
       
       - id: field_indices_count
         type: u4
-        doc: Number of field indices (uint32 values) in the field indices array
+        doc: Number of field indices (uint32 values) in the field_indices array
       
       - id: list_indices_offset
         type: u4
@@ -147,7 +150,7 @@ types:
       
       - id: list_indices_count
         type: u4
-        doc: Number of list indices (uint32 values) in the list indices array
+        doc: Number of list indices (uint32 values) in the list_indices array
   
   # Label Array
   label_array:
@@ -202,8 +205,9 @@ types:
     seq:
       - id: field_type
         type: u4
+        enum: gff_field_type
         doc: |
-          Field data type (see GFFFieldType enum):
+          Field data type (see gff_field_type enum):
           0 = Byte (UInt8)
           1 = Char (Int8)
           2 = UInt16
@@ -264,4 +268,43 @@ types:
         repeat: expr
         repeat-expr: _root.gff_header.list_indices_count
         doc: Array of list indices (uint32 values) for LIST type fields
+
+enums:
+  gff_field_type:
+    0: uint8
+    doc: 8-bit unsigned integer (byte)
+    1: int8
+    doc: 8-bit signed integer (char)
+    2: uint16
+    doc: 16-bit unsigned integer (word)
+    3: int16
+    doc: 16-bit signed integer (short)
+    4: uint32
+    doc: 32-bit unsigned integer (dword)
+    5: int32
+    doc: 32-bit signed integer (int)
+    6: uint64
+    doc: 64-bit unsigned integer (stored in field_data)
+    7: int64
+    doc: 64-bit signed integer (stored in field_data)
+    8: single
+    doc: 32-bit floating point (float)
+    9: double
+    doc: 64-bit floating point (stored in field_data)
+    10: string
+    doc: Null-terminated string (CExoString, stored in field_data)
+    11: resref
+    doc: Resource reference (ResRef, max 16 chars, stored in field_data)
+    12: localized_string
+    doc: Localized string (CExoLocString, stored in field_data)
+    13: binary
+    doc: Binary data blob (Void, stored in field_data)
+    14: struct
+    doc: Nested struct (struct index stored inline)
+    15: list
+    doc: List of structs (offset to list_indices stored inline)
+    16: vector4
+    doc: Quaternion/Orientation (4×float, stored in field_data as Vector4)
+    17: vector3
+    doc: 3D vector (3×float, stored in field_data)
 

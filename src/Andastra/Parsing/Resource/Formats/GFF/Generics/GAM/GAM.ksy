@@ -1,44 +1,67 @@
 meta:
-  id: utm
-  title: BioWare UTM (Merchant Template) File Format
+  id: gam
+  title: BioWare GAM (Game State) File Format
   license: MIT
   endian: le
-  file-extension: utm
+  file-extension: gam
   xref:
-    pykotor: vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/generics/utm.py
-    reone: vendor/reone/src/libs/resource/parser/gff/utm.cpp
-    wiki: vendor/PyKotor/wiki/GFF-UTM.md
+    pykotor: vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/generics/
+    reone: vendor/reone/src/libs/resource/parser/gff/
+    xoreos: vendor/xoreos/src/aurora/
+    wiki: vendor/PyKotor/wiki/Bioware-Aurora-GFF.md
 doc: |
-  UTM (User Template Merchant) files are GFF-based format files that define merchant/store blueprints.
-  UTM files use the GFF (Generic File Format) binary structure with file type signature "UTM ".
+  GAM (Game State) files are GFF-based format files that store game state information
+  including party members, global variables, game time, and time played.
   
-  UTM files contain:
-  - Root struct with merchant metadata:
-    - ResRef: Merchant template ResRef (unique identifier)
-    - LocName: Localized merchant name (LocalizedString)
-    - Tag: Merchant tag identifier (string)
-    - MarkUp: Markup percentage for selling to player (Int32)
-    - MarkDown: Markdown percentage for buying from player (Int32)
-    - OnOpenStore: Script ResRef executed when store opens (ResRef)
-    - Comment: Developer comment string (string, not used by game engine)
-    - BuySellFlag: Flags for buy/sell capabilities (UInt8)
-      - Bit 0: Can buy items (1 = can buy, 0 = cannot buy)
-      - Bit 1: Can sell items (1 = can sell, 0 = cannot sell)
-    - ID: Deprecated field, not used by game engine (UInt8)
-  - ItemList: Array of UTM_ItemList structs containing merchant inventory items
-    Each item contains:
-    - InventoryRes: Item ResRef (ResRef)
-    - Infinite: Whether item stock is infinite (UInt8, boolean)
-    - Dropable: Whether item is droppable (UInt8, boolean)
-    - Repos_PosX: X position in merchant inventory grid (UInt16)
-    - Repos_PosY: Y position in merchant inventory grid (UInt16)
+  GAM files are used by:
+  - Aurora Engine (Neverwinter Nights, Neverwinter Nights 2)
+  - Infinity Engine (Mass Effect, Dragon Age Origins, Dragon Age 2)
+  
+  NOTE: Odyssey Engine (Knights of the Old Republic, Knights of the Old Republic 2)
+  does NOT use GAM format - it uses NFO format for save games instead.
+  
+  GAM files use the GFF (Generic File Format) binary structure with file type signature "GAM ".
+  
+  Root struct fields:
+  - GameTimeHour (Int32): Current game time hour (0-23)
+  - GameTimeMinute (Int32): Current game time minute (0-59)
+  - GameTimeSecond (Int32): Current game time second (0-59)
+  - GameTimeMillisecond (Int32): Current game time millisecond (0-999)
+  - TimePlayed (Int32): Total time played in seconds
+  
+  - PartyList (List): Array of party member structs
+    - PartyMember (ResRef): Resource reference to party member creature file
+  
+  - GlobalBooleans (List): Array of boolean global variable structs
+    - Name (String): Variable name
+    - Value (UInt8): Variable value (0 = false, 1 = true)
+  
+  - GlobalNumbers (List): Array of numeric global variable structs
+    - Name (String): Variable name
+    - Value (Int32): Variable value
+  
+  - GlobalStrings (List): Array of string global variable structs
+    - Name (String): Variable name
+    - Value (String): Variable value
+  
+  Aurora Engine-specific fields (nwmain.exe, nwn2main.exe):
+  - ModuleName (String): Current module name
+  - CurrentArea (ResRef): Resource reference to current area file
+  - PlayerCharacter (ResRef): Resource reference to player character creature file
+  
+  Infinity Engine-specific fields (daorigins.exe, DragonAge2.exe, MassEffect.exe, MassEffect2.exe):
+  - GameName (String): Game name/identifier
+  - Chapter (Int32): Current chapter number
+  - JournalEntries (List): Array of journal entry structs
+    - TextStrRef (Int32): String reference ID for journal entry text
+    - Completed (UInt8): Whether journal entry is completed (0 = false, 1 = true)
+    - Category (Int32): Journal entry category ID
   
   References:
-  - vendor/PyKotor/wiki/GFF-UTM.md
+  - vendor/PyKotor/wiki/Bioware-Aurora-GFF.md
   - vendor/PyKotor/wiki/GFF-File-Format.md
-  - vendor/reone/include/reone/resource/parser/gff/utm.h:35-46 (UTM struct definition)
-  - vendor/reone/src/libs/resource/parser/gff/utm.cpp:37-52 (UTM parsing from GFF)
-  - vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/generics/utm.py:16-223 (PyKotor implementation)
+  - src/Andastra/Parsing/Resource/Formats/GFF/Generics/GAM.cs
+  - src/Andastra/Parsing/Resource/Formats/GFF/Generics/GAMHelpers.cs
 
 seq:
   - id: gff_header
@@ -88,16 +111,16 @@ types:
         encoding: ASCII
         size: 4
         doc: |
-          File type signature. Must be "UTM " for merchant template files.
-          Other GFF types: "GFF ", "DLG ", "ARE ", "UTC ", "UTI ", etc.
-        valid: "UTM "
+          File type signature. Must be "GAM " for game state files.
+          Other GFF types: "GFF ", "ARE ", "UTC ", "UTI ", "DLG ", etc.
+        valid: "GAM "
       
       - id: file_version
         type: str
         encoding: ASCII
         size: 4
         doc: |
-          File format version. Typically "V3.2" for KotOR.
+          File format version. Typically "V3.2" for KotOR-era games.
           Other versions: "V3.3", "V4.0", "V4.1" for other BioWare games.
         valid: ["V3.2", "V3.3", "V4.0", "V4.1"]
       

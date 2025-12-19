@@ -232,10 +232,10 @@ types:
           - List (15): Byte offset into list_indices_array (relative to list_indices_offset)
     instances:
       is_simple_type:
-        value: field_type.value >= 0 && field_type.value <= 5 || field_type.value == 8
+        value: (field_type.value >= 0 && field_type.value <= 5) || field_type.value == 8
         doc: True if field stores data inline (simple types)
       is_complex_type:
-        value: field_type.value >= 6 && field_type.value <= 13 || field_type.value >= 16 && field_type.value <= 17
+        value: (field_type.value >= 6 && field_type.value <= 13) || (field_type.value >= 16 && field_type.value <= 17)
         doc: True if field stores data in field_data section
       is_struct_type:
         value: field_type.value == 14
@@ -291,8 +291,12 @@ types:
         size: _root.header.list_indices_count
         doc: |
           Raw list indices data. List entries are accessed via offsets stored in
-          list-type field entries. Each entry starts with a count (u4), followed
-          by that many struct indices (u4 each).
+          list-type field entries (field_entry.list_indices_offset_value).
+          Each entry starts with a count (u4), followed by that many struct indices (u4 each).
+          
+          Note: This is a raw data block. In practice, list entries are accessed via
+          offsets stored in list-type field entries, not as a sequential array.
+          Use list_entry type to parse individual entries at specific offsets.
       
   
   list_entry:

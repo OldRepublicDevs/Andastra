@@ -26,57 +26,40 @@ doc: |
   - vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/formats/wav/io_wav.py:112-220
 
 seq:
-  - id: header_type_detection
-    type: header_type_detection
-    doc: Detect which type of header is present (SFX, VO, or Standard)
+  - id: first_magic_bytes
+    type: str
+    size: 4
+    doc: |
+      First 4 bytes used to detect file type
+      - 0xFF 0xF3 0x60 0xC4 = SFX header
+      - "RIFF" = Standard or VO header
+      Reference: vendor/reone/src/libs/audio/format/wavreader.cpp:34
   
   - id: sfx_header
     type: sfx_header
-    if: header_type_detection.is_sfx
+    if: first_magic_bytes[0] == 0xFF && first_magic_bytes[1] == 0xF3 && first_magic_bytes[2] == 0x60 && first_magic_bytes[3] == 0xC4
     doc: 470-byte SFX obfuscation header (only present for SFX files)
   
   - id: vo_header
     type: vo_header
-    if: header_type_detection.is_vo
-    doc: 20-byte VO header (only present for VO files)
+    if: first_magic_bytes == "RIFF"
+    doc: |
+      20-byte VO header (only present for VO files)
+      VO files have "RIFF" at offset 0, then again at offset 20
   
   - id: riff_wave
     type: riff_wave
     doc: RIFF/WAVE structure (present in all WAV files, after optional headers)
 
 types:
-  header_type_detection:
-    seq:
-      - id: first_four_bytes
-        type: u4
-        doc: First 4 bytes used to detect file type
-    instances:
-      is_sfx:
-        value: (first_four_bytes & 0xFFFFFFFF) == 0xC460F3FF
-        doc: |
-          SFX files start with magic bytes 0xFF 0xF3 0x60 0xC4 (little-endian u4 = 0xC460F3FF)
-          Reference: vendor/reone/src/libs/audio/format/wavreader.cpp:34
-      
-      is_vo:
-        value: false
-        doc: |
-          VO files have "RIFF" (0x46464952 in little-endian) at offset 0, then again at offset 20.
-          This is detected during riff_wave parsing.
-      
-      is_standard:
-        value: !is_sfx && !is_vo
-        doc: Standard RIFF/WAVE file without any header
-    
-    doc: Detects the type of WAV file based on the first 4 bytes
-  
   sfx_header:
     seq:
       - id: magic
-        type: u4
+        type: str
+        size: 4
         doc: |
-          SFX magic bytes: 0xFF 0xF3 0x60 0xC4 (little-endian u4 = 0xC460F3FF)
+          SFX magic bytes: 0xFF 0xF3 0x60 0xC4
           Reference: vendor/reone/src/libs/audio/format/wavreader.cpp:34
-        valid: 0xC460F3FF
       
       - id: padding
         type: str
@@ -117,22 +100,10 @@ types:
         repeat-until: _io.eof
         doc: |
           RIFF chunks in sequence (fmt, fact, data, etc.)
-          Parsed until end of file or until data chunk is found
+          Parsed until end of file
           Reference: vendor/xoreos/src/sound/decoders/wave.cpp:46-55
     
     instances:
-      format_chunk:
-        value: chunks.first { it.id == "fmt " }?.format_chunk_body
-        doc: Format chunk body (contains audio encoding info)
-      
-      data_chunk:
-        value: chunks.first { it.id == "data" }?.data_body
-        doc: Audio data chunk body
-      
-      fact_chunk:
-        value: chunks.first { it.id == "fact" }?.fact_chunk_body
-        doc: Fact chunk body (sample count for compressed formats)
-      
       is_mp3_in_wav:
         value: riff_header.riff_size == 50
         doc: |
@@ -208,7 +179,7 @@ types:
       
       - id: padding
         type: u1
-        if: size % 2 == 1
+        if: size % 2 == 1 && id != "fmt " && id != "data" && id != "fact"
         doc: |
           Padding byte to align to word boundary (only if chunk size is odd)
           RIFF chunks must be aligned to 2-byte boundaries
@@ -291,6 +262,15 @@ types:
         value: audio_format == 0x55
         doc: True if audio format is MP3
   
+  data_chunk_body:
+    seq:
+      - id: data
+        type: str
+        size: _parent.size
+        doc: |
+          Raw audio data (PCM samples or compressed audio)
+          Reference: vendor/xoreos/src/sound/decoders/wave.cpp:79-80
+  
   fact_chunk_body:
     seq:
       - id: sample_count
@@ -299,4 +279,21 @@ types:
           Sample count (number of samples in compressed audio)
           Used for compressed formats like ADPCM
           Reference: vendor/PyKotor/src/pykotor/resource/formats/wav/io_wav.py:189-192
+  
+  unknown_chunk_body:
+    seq:
+      - id: data
+        type: str
+        size: _parent.size
+        doc: |
+          Unknown chunk body (skip for compatibility)
+          Reference: vendor/xoreos/src/sound/decoders/wave.cpp:53-54
+      
+      - id: padding
+        type: u1
+        if: _parent.size % 2 == 1
+        doc: |
+          Padding byte to align to word boundary (only if chunk size is odd)
+          RIFF chunks must be aligned to 2-byte boundaries
+          Reference: vendor/PyKotor/src/pykotor/resource/formats/wav/io_wav.py:153-156
 
