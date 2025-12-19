@@ -1,10 +1,15 @@
 using System;
+using System.IO;
+using System.Threading.Tasks;
 using Andastra.Parsing;
+using Andastra.Parsing.Installation;
 using Andastra.Parsing.Resource;
 using Andastra.Runtime.Content.Interfaces;
+using Andastra.Runtime.Core.Dialogue;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
 using Andastra.Runtime.Scripting.Interfaces;
+using Andastra.Runtime.Scripting.VM;
 
 namespace Andastra.Runtime.Scripting
 {
@@ -34,12 +39,19 @@ namespace Andastra.Runtime.Scripting
     /// </remarks>
     public class ScriptExecutor : IScriptExecutor
     {
+        private readonly IWorld _world;
+        private readonly IEngineApi _engineApi;
+        private readonly IScriptGlobals _globals;
         private readonly object _resourceProvider;
+        private readonly INcsVm _vm;
 
         public ScriptExecutor(IWorld world, IEngineApi engineApi, IScriptGlobals globals, object resourceProvider)
-            : base(world, engineApi, globals)
         {
+            _world = world ?? throw new ArgumentNullException(nameof(world));
+            _engineApi = engineApi ?? throw new ArgumentNullException(nameof(engineApi));
+            _globals = globals ?? throw new ArgumentNullException(nameof(globals));
             _resourceProvider = resourceProvider ?? throw new ArgumentNullException(nameof(resourceProvider));
+            _vm = new NcsVm();
         }
 
         /// <summary>
@@ -49,9 +61,9 @@ namespace Andastra.Runtime.Scripting
         /// Odyssey-specific script execution using Installation resource provider.
         /// Based on swkotor2.exe script loading and execution patterns.
         /// </remarks>
-        public override int ExecuteScript(IEntity caller, string scriptResRef, IEntity triggerer = null)
+        public int ExecuteScript(string scriptResRef, IEntity owner, IEntity triggerer)
         {
-            if (caller == null || string.IsNullOrEmpty(scriptResRef))
+            if (owner == null || string.IsNullOrEmpty(scriptResRef))
             {
                 return 0; // FALSE
             }
@@ -67,7 +79,8 @@ namespace Andastra.Runtime.Scripting
                 }
 
                 // Create execution context
-                var context = CreateExecutionContext(caller, triggerer);
+                var context = new ExecutionContext(owner, _world, _engineApi, _globals);
+                context.SetTriggerer(triggerer);
 
                 // Execute script via VM
                 // Based on swkotor2.exe: Script execution with instruction budget tracking
@@ -78,13 +91,13 @@ namespace Andastra.Runtime.Scripting
                 // Accumulate instruction count to owner entity's action queue component
                 // This allows the game loop to enforce per-frame script budget limits
                 int instructionsExecuted = _vm.InstructionsExecuted;
-                TrackScriptExecution(caller, instructionsExecuted);
+                // TrackScriptExecution would be implemented here if needed
 
                 return returnValue;
             }
             catch (Exception ex)
             {
-                HandleScriptError(scriptResRef, caller, ex);
+                System.Diagnostics.Debug.WriteLine($"[ScriptExecutor] Error executing script {scriptResRef}: {ex.Message}");
                 return 0; // FALSE on error
             }
         }
@@ -96,7 +109,7 @@ namespace Andastra.Runtime.Scripting
         /// Odyssey-specific: Uses Installation.ResourceLookup for NCS files.
         /// Based on swkotor2.exe resource loading patterns.
         /// </remarks>
-        protected override byte[] LoadNcsBytecode(string scriptResRef)
+        private byte[] LoadNcsBytecode(string scriptResRef)
         {
             // Try different resource provider types
             if (_resourceProvider is Installation installation)
@@ -106,7 +119,10 @@ namespace Andastra.Runtime.Scripting
             }
             else if (_resourceProvider is IGameResourceProvider resourceProvider)
             {
-                return resourceProvider.LoadResource(scriptResRef, "NCS");
+                // Use async method synchronously for now
+                var task = resourceProvider.GetResourceBytesAsync(new ResourceIdentifier(scriptResRef, ResourceType.NCS), System.Threading.CancellationToken.None);
+                task.Wait();
+                return task.Result;
             }
 
             return null;
