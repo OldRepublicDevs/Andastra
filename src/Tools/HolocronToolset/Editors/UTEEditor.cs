@@ -17,6 +17,8 @@ using HolocronToolset.Data;
 using HolocronToolset.Dialogs;
 using HolocronToolset.Widgets;
 using HolocronToolset.Widgets.Edit;
+using MsBox.Avalonia;
+using MsBox.Avalonia.Enums;
 using GFFAuto = Andastra.Parsing.Formats.GFF.GFFAuto;
 
 namespace HolocronToolset.Editors
@@ -1181,12 +1183,19 @@ namespace HolocronToolset.Editors
                     null,
                     null);
 
-                if (locations.Count > 0 && locations.ContainsKey(new ResourceIdentifier(scriptName, ResourceType.NSS)) &&
-                    locations[new ResourceIdentifier(scriptName, ResourceType.NSS)].Count > 0)
+                var nssIdentifier = new ResourceIdentifier(scriptName, ResourceType.NSS);
+                if (locations.Count > 0 && locations.ContainsKey(nssIdentifier) &&
+                    locations[nssIdentifier].Count > 0)
                 {
-                    var location = locations[new ResourceIdentifier(scriptName, ResourceType.NSS)][0];
-                    System.Console.WriteLine($"Script '{scriptName}' found at: {location.FilePath}");
-                    // TODO: Show dialog with resource location details when MessageBox/dialog system is available
+                    var foundLocations = locations[nssIdentifier];
+                    // Show dialog with all found locations
+                    var dialog = new ResourceLocationDialog(
+                        this,
+                        scriptName,
+                        ResourceType.NSS,
+                        foundLocations,
+                        _installation);
+                    dialog.ShowDialog(this);
                 }
                 else
                 {
@@ -1196,17 +1205,29 @@ namespace HolocronToolset.Editors
                         null,
                         null);
 
-                    if (locations.Count > 0 && locations.ContainsKey(new ResourceIdentifier(scriptName, ResourceType.NCS)) &&
-                        locations[new ResourceIdentifier(scriptName, ResourceType.NCS)].Count > 0)
+                    var ncsIdentifier = new ResourceIdentifier(scriptName, ResourceType.NCS);
+                    if (locations.Count > 0 && locations.ContainsKey(ncsIdentifier) &&
+                        locations[ncsIdentifier].Count > 0)
                     {
-                        var location = locations[new ResourceIdentifier(scriptName, ResourceType.NCS)][0];
-                        System.Console.WriteLine($"Compiled script '{scriptName}' found at: {location.FilePath}");
-                        // TODO: Show dialog with resource location details when MessageBox/dialog system is available
+                        var foundLocations = locations[ncsIdentifier];
+                        // Show dialog with all found locations
+                        var dialog = new ResourceLocationDialog(
+                            this,
+                            scriptName,
+                            ResourceType.NCS,
+                            foundLocations,
+                            _installation);
+                        dialog.ShowDialog(this);
                     }
                     else
                     {
-                        System.Console.WriteLine($"Script '{scriptName}' not found in installation.");
-                        // TODO: Show dialog with "not found" message when MessageBox/dialog system is available
+                        // Show "not found" message
+                        var msgBox = MessageBoxManager.GetMessageBoxStandard(
+                            "Resource Not Found",
+                            $"Script '{scriptName}' not found in installation.\n\nSearched for:\n- {scriptName}.nss\n- {scriptName}.ncs",
+                            ButtonEnum.Ok,
+                            MsBox.Avalonia.Enums.Icon.Info);
+                        msgBox.ShowAsync();
                     }
                 }
             }
@@ -1392,22 +1413,34 @@ namespace HolocronToolset.Editors
                 string creatureResRef = resRefValue.ToString().Trim();
 
                 // Find the creature resource location
+                var utpIdentifier = new ResourceIdentifier(creatureResRef, ResourceType.UTP);
                 var locations = _installation.Locations(
-                    new List<ResourceIdentifier> { new ResourceIdentifier(creatureResRef, ResourceType.UTP) },
+                    new List<ResourceIdentifier> { utpIdentifier },
                     null,
                     null);
 
-                if (locations.Count > 0 && locations.ContainsKey(new ResourceIdentifier(creatureResRef, ResourceType.UTP)) &&
-                    locations[new ResourceIdentifier(creatureResRef, ResourceType.UTP)].Count > 0)
+                if (locations.Count > 0 && locations.ContainsKey(utpIdentifier) &&
+                    locations[utpIdentifier].Count > 0)
                 {
-                    var location = locations[new ResourceIdentifier(creatureResRef, ResourceType.UTP)][0];
-                    System.Console.WriteLine($"Creature '{creatureResRef}' found at: {location.FilePath}");
-                    // TODO: Show dialog with resource location details when MessageBox/dialog system is available
+                    var foundLocations = locations[utpIdentifier];
+                    // Show dialog with all found locations
+                    var dialog = new ResourceLocationDialog(
+                        this,
+                        creatureResRef,
+                        ResourceType.UTP,
+                        foundLocations,
+                        _installation);
+                    dialog.ShowDialog(this);
                 }
                 else
                 {
-                    System.Console.WriteLine($"Creature '{creatureResRef}' not found in installation.");
-                    // TODO: Show dialog with "not found" message when MessageBox/dialog system is available
+                    // Show "not found" message
+                    var msgBox = MessageBoxManager.GetMessageBoxStandard(
+                        "Resource Not Found",
+                        $"Creature '{creatureResRef}' not found in installation.\n\nSearched for:\n- {creatureResRef}.utp",
+                        ButtonEnum.Ok,
+                        MsBox.Avalonia.Enums.Icon.Info);
+                    msgBox.ShowAsync();
                 }
             }
             catch (Exception ex)
