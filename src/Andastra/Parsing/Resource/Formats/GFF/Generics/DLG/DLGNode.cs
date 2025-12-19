@@ -586,18 +586,11 @@ namespace Andastra.Parsing.Resource.Generics.DLG
                             {
                                 if (linkObj is Dictionary<string, object> linkDict)
                                 {
-                                    try
+                                    // Temporarily remove try-catch to see actual exceptions
+                                    DLGLink deserializedLink = DLGLink.FromDict(linkDict, nodeMap);
+                                    if (deserializedLink != null)
                                     {
-                                        DLGLink deserializedLink = DLGLink.FromDict(linkDict, nodeMap);
-                                        if (deserializedLink != null)
-                                        {
-                                            links.Add(deserializedLink);
-                                        }
-                                    }
-                                    catch (Exception)
-                                    {
-                                        // Skip invalid links but continue processing
-                                        // This matches PyKotor behavior of continuing on errors
+                                        links.Add(deserializedLink);
                                     }
                                 }
                             }
