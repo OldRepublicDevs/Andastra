@@ -104,6 +104,15 @@ namespace Andastra.Parsing.Resource.Generics
             // Original: are.fog_color = Color.from_rgb_integer(root.acquire("SunFogColor", 0))
             are.FogColor = Color.FromRgbInteger(root.Acquire<int>("SunFogColor", 0));
             
+            // Extract K2-specific dirty formula fields (KotOR 2 Only)
+            // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/are.py:183,191,199
+            // Original: are.dirty_formula_1 = root.acquire("DirtyFormulaOne", 0)
+            are.DirtyFormula1 = root.Acquire<int>("DirtyFormulaOne", 0);
+            // Original: are.dirty_formula_2 = root.acquire("DirtyFormulaTwo", 0)
+            are.DirtyFormula2 = root.Acquire<int>("DirtyFormulaTwo", 0);
+            // Original: are.dirty_formula_3 = root.acquire("DirtyFormulaThre", 0)
+            are.DirtyFormula3 = root.Acquire<int>("DirtyFormulaThre", 0);
+            
             // Extract Comments field (toolset-only, not used by game engine)
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/are.py:356
             // Original: are.comment = root.acquire("Comments", "")
@@ -184,10 +193,10 @@ namespace Andastra.Parsing.Resource.Generics
             if (game.IsK2())
             {
                 root.SetUInt32("Grass_Emissive", (uint)are.GrassEmissive.ToRgbInteger());
-                // TODO: Add K2-specific properties to ARE class (DirtyArgb1-3, ChanceRain/Snow/Lightning, DirtySize/Formula/Func1-3)
                 // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/are.py:635-652
                 // Original: K2-specific fields (DirtyARGB, ChanceRain/Snow/Lightning, DirtySize/Formula/Func)
                 // Note: These fields are only in K2, not in K1, Aurora, or Eclipse
+                // TODO: Add remaining K2-specific properties to ARE class (DirtyArgb1-3, ChanceRain/Snow/Lightning, DirtySize/Func1-3)
                 // When ARE class has these properties, uncomment:
                 // root.SetInt32("DirtyARGBOne", (int)are.DirtyArgb1.ToRgbInteger());
                 // root.SetInt32("DirtyARGBTwo", (int)are.DirtyArgb2.ToRgbInteger());
@@ -196,14 +205,15 @@ namespace Andastra.Parsing.Resource.Generics
                 // root.SetInt32("ChanceSnow", are.ChanceSnow);
                 // root.SetInt32("ChanceLightning", are.ChanceLightning);
                 // root.SetInt32("DirtySizeOne", are.DirtySize1);
-                // root.SetInt32("DirtyFormulaOne", are.DirtyFormula1);
                 // root.SetInt32("DirtyFuncOne", are.DirtyFunc1);
                 // root.SetInt32("DirtySizeTwo", are.DirtySize2);
-                // root.SetInt32("DirtyFormulaTwo", are.DirtyFormula2);
                 // root.SetInt32("DirtyFuncTwo", are.DirtyFunc2);
                 // root.SetInt32("DirtySizeThree", are.DirtySize3);
-                // root.SetInt32("DirtyFormulaThre", are.DirtyFormula3);
                 // root.SetInt32("DirtyFuncThree", are.DirtyFunc3);
+                // Dirty formula fields are now implemented:
+                root.SetInt32("DirtyFormulaOne", are.DirtyFormula1);
+                root.SetInt32("DirtyFormulaTwo", are.DirtyFormula2);
+                root.SetInt32("DirtyFormulaThre", are.DirtyFormula3);
             }
             // Set fog and lighting fields - written for ALL game types
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/are.py:609-614
