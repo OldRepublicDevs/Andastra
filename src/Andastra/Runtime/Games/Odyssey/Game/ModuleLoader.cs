@@ -787,10 +787,68 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
             return new SysVector3(v.X, v.Y, v.Z);
         }
 
+        // Spawn waypoint from GIT instance data
+        // Based on swkotor2.exe waypoint spawning system
+        // Located via string references: "WaypointList" @ 0x007bd060, "Waypoint" @ 0x007bc510
+        // Original implementation: FUN_004e04a0 @ 0x004e04a0 loads waypoint instances from GIT WaypointList
+        // - Reads waypoint struct from GIT WaypointList (StructID 5)
+        // - Creates waypoint entity with ObjectId from GIT
+        // - Loads UTW template if TemplateResRef is provided
+        // - Sets waypoint properties: Tag, LocalizedName, Position, Orientation, MapNote, MapNoteEnabled, HasMapNote
+        // - Adds waypoint to area via AddToArea
+        // Cross-engine analysis:
+        // - Aurora (nwmain.exe): CNWSArea::LoadWaypoints @ 0x140362fc0 loads waypoints from GIT
+        //   - CNWSWaypoint::LoadWaypoint @ 0x140509f80 loads waypoint properties from GIT struct
+        //   - Loads: Tag (CExoString), LocalizedName (CExoLocString), Position, Orientation, HasMapNote, MapNoteEnabled, MapNote
+        // - Eclipse (daorigins.exe): Waypoint system similar, needs verification
+        // - Infinity (MassEffect.exe, MassEffect2.exe): Waypoint system similar, needs verification
         private void SpawnWaypoint(GITWaypoint waypoint, RuntimeArea area)
         {
             IEntity entity = _world.CreateEntity(OdyObjectType.Waypoint, ToSysVector3(waypoint.Position), waypoint.Bearing);
-            entity.Tag = waypoint.Tag;
+            
+            // Initialize waypoint components
+            Systems.ComponentInitializer.InitializeComponents(entity);
+            
+            // Set tag from GIT (GIT tag takes precedence over template tag)
+            if (!string.IsNullOrEmpty(waypoint.Tag))
+            {
+                entity.Tag = waypoint.Tag;
+            }
+            
+            // Set waypoint name from GIT (LocalizedName)
+            if (waypoint.Name != null && !waypoint.Name.IsInvalid)
+            {
+                entity.DisplayName = waypoint.Name.ToString();
+            }
+            
+            // Load waypoint template (UTW) if ResRef is provided
+            // Based on swkotor2.exe: FUN_004e04a0 loads UTW template from TemplateResRef
+            // Original implementation: Loads UTW template, applies properties to waypoint entity
+            if (!string.IsNullOrEmpty(waypoint.ResRef?.ToString()))
+            {
+                LoadWaypointTemplate(entity, waypoint.ResRef.ToString());
+            }
+            
+            // Set waypoint component properties from GIT (GIT values override template values)
+            // Based on swkotor2.exe: GIT waypoint properties override UTW template properties
+            // Original implementation: GIT MapNote, MapNoteEnabled, HasMapNote override template values
+            Components.OdysseyWaypointComponent waypointComponent = entity.GetComponent<Components.OdysseyWaypointComponent>();
+            if (waypointComponent != null)
+            {
+                // Set map note properties from GIT
+                waypointComponent.HasMapNote = waypoint.HasMapNote;
+                if (waypoint.HasMapNote && waypoint.MapNote != null && !waypoint.MapNote.IsInvalid)
+                {
+                    waypointComponent.MapNote = waypoint.MapNote.ToString();
+                    waypointComponent.MapNoteEnabled = waypoint.MapNoteEnabled;
+                }
+                else
+                {
+                    waypointComponent.MapNote = string.Empty;
+                    waypointComponent.MapNoteEnabled = false;
+                }
+            }
+            
             area.AddEntity(entity);
         }
 
@@ -1283,6 +1341,75 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
         }
 
         /// <summary>
+        /// Loads UTW waypoint template and applies properties to entity.
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe waypoint template loading
+        /// Located via string references: "Waypoint template %s doesn't exist.\n" @ 0x007c0f24
+        /// Original implementation: FUN_004e04a0 @ 0x004e04a0 loads UTW template from TemplateResRef
+        /// - Loads UTW GFF file from installation
+        /// - Applies waypoint properties: Tag, Name, AppearanceId, Description, MapNote, MapNoteEnabled, HasMapNote
+        /// - Sets waypoint component properties from UTW template
+        /// - GIT waypoint properties override UTW template properties (handled in SpawnWaypoint)
+        /// </remarks>
+        private void LoadWaypointTemplate(IEntity entity, string utwResRef)
+        {
+            try
+            {
+                InstResourceResult result = _installation.Resource(utwResRef, ResourceType.UTW, null, _currentModuleRoot);
+                if (result != null && result.Data != null)
+                {
+                    var gff = GFF.FromBytes(result.Data);
+                    UTW utw = UTWHelpers.ConstructUtw(gff);
+
+                    // Set entity tag from UTW (only if not already set from GIT)
+                    // Based on swkotor2.exe: GIT tag takes precedence over UTW tag
+                    if (string.IsNullOrEmpty(entity.Tag) && !string.IsNullOrEmpty(utw.Tag))
+                    {
+                        entity.Tag = utw.Tag;
+                    }
+
+                    // Set entity display name from UTW (only if not already set from GIT)
+                    if (string.IsNullOrEmpty(entity.DisplayName) && utw.Name != null && !utw.Name.IsInvalid)
+                    {
+                        entity.DisplayName = utw.Name.ToString();
+                    }
+
+                    // Apply UTW properties to waypoint component
+                    Components.OdysseyWaypointComponent waypointComponent = entity.GetComponent<Components.OdysseyWaypointComponent>();
+                    if (waypointComponent != null)
+                    {
+                        waypointComponent.TemplateResRef = utwResRef;
+                        
+                        // Set map note properties from UTW (only if not already set from GIT)
+                        // Based on swkotor2.exe: GIT MapNote overrides UTW MapNote
+                        if (!waypointComponent.HasMapNote)
+                        {
+                            waypointComponent.HasMapNote = utw.HasMapNote;
+                            if (utw.HasMapNote && utw.MapNote != null && !utw.MapNote.IsInvalid)
+                            {
+                                waypointComponent.MapNote = utw.MapNote.ToString();
+                                waypointComponent.MapNoteEnabled = utw.MapNoteEnabled;
+                            }
+                        }
+                        
+                        // Set Odyssey-specific properties from UTW
+                        waypointComponent.Appearance = utw.AppearanceId;
+                        if (utw.Description != null && !utw.Description.IsInvalid)
+                        {
+                            // Description is a LocalizedString, store as string reference (int)
+                            waypointComponent.Description = utw.Description.StringRef;
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("[ModuleLoader] Failed to load UTW template " + utwResRef + ": " + ex.Message);
+            }
+        }
+
+        /// <summary>
         /// Loads a model by resref.
         /// </summary>
         [CanBeNull]
@@ -1370,10 +1497,31 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
             _world.CurrentArea = runtimeArea;
             _currentArea = runtimeArea;
 
-            // TODO: PLACEHOLDER - Create placeholder waypoint (should load from GIT)
-            IEntity playerSpawn = _world.CreateEntity(OdyObjectType.Waypoint, SysVector3.Zero, 0);
-            playerSpawn.Tag = "wp_player_spawn";
-            runtimeArea.AddEntity(playerSpawn);
+            // Load waypoints from GIT if available (even if installation is null, GIT might have been loaded from another source)
+            // Based on swkotor2.exe: Waypoints are loaded from GIT WaypointList
+            // Original implementation: FUN_004e04a0 @ 0x004e04a0 loads waypoint instances from GIT
+            // If GIT is available, spawn waypoints from GIT instead of creating placeholder
+            if (_currentGit != null && _currentGit.Waypoints.Count > 0)
+            {
+                Console.WriteLine("[ModuleLoader] Loading " + _currentGit.Waypoints.Count + " waypoints from GIT");
+                foreach (GITWaypoint waypoint in _currentGit.Waypoints)
+                {
+                    SpawnWaypoint(waypoint, runtimeArea);
+                }
+            }
+            else
+            {
+                // Fallback: Create minimal placeholder waypoint if GIT is not available
+                // This ensures there's at least one waypoint for module entry positioning
+                Console.WriteLine("[ModuleLoader] WARNING: No GIT data available, creating placeholder waypoint");
+                IEntity playerSpawn = _world.CreateEntity(OdyObjectType.Waypoint, SysVector3.Zero, 0);
+                playerSpawn.Tag = "wp_player_spawn";
+                
+                // Initialize waypoint component
+                Systems.ComponentInitializer.InitializeComponents(playerSpawn);
+                
+                runtimeArea.AddEntity(playerSpawn);
+            }
 
             // TODO: PLACEHOLDER - Create placeholder navmesh (should load from WOK/BWM)
             CreatePlaceholderNavMesh();
