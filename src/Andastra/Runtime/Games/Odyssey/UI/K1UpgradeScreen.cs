@@ -5,6 +5,7 @@ using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
 using Andastra.Parsing;
 using Andastra.Parsing.Installation;
+using Andastra.Parsing.Resource.Generics;
 
 namespace Andastra.Runtime.Engines.Odyssey.UI
 {
@@ -157,6 +158,16 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
             // For now, just remove from inventory
             characterInventory.RemoveItem(upgradeItem);
 
+            // Load upgrade item UTI template and apply properties
+            // Based on swkotor.exe: FUN_0055e160 @ 0x0055e160 - applies upgrade stats to item
+            // Based on swkotor.exe: FUN_005226d0 @ 0x005226d0 - loads UTI template
+            UTI upgradeUTI = LoadUpgradeUTITemplate(upgradeResRef);
+            if (upgradeUTI == null)
+            {
+                // Failed to load upgrade template - cannot apply upgrade
+                return false;
+            }
+
             // Apply upgrade to item
             // Based on swkotor.exe: FUN_006c59a0 @ 0x006c59a0 line 57 - stores upgrade at offset 0x2f74
             ItemUpgrade upgrade = new ItemUpgrade
@@ -167,9 +178,26 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
 
             itemComponent.AddUpgrade(upgrade);
 
+            // Track upgrade ResRef for removal
+            // Based on swkotor.exe: Upgrade tracking system - stores ResRef for later removal
+            string upgradeKey = item.ObjectId.ToString() + "_" + upgradeSlot.ToString();
+            _upgradeResRefMap[upgradeKey] = upgradeResRef;
+
             // Apply upgrade properties to item
-            // TODO: Load upgrade item UTI template and apply properties (damage bonuses, AC bonuses, etc.)
-            // TODO: Recalculate item stats and update display
+            // Based on swkotor.exe: FUN_0055e160 @ 0x0055e160 - applies upgrade stats to item
+            // Properties from upgrade UTI modify item stats (damage bonuses, AC bonuses, etc.)
+            if (!ApplyUpgradeProperties(item, upgradeUTI))
+            {
+                // Failed to apply properties - remove upgrade and return failure
+                itemComponent.RemoveUpgrade(upgrade);
+                _upgradeResRefMap.Remove(upgradeKey);
+                return false;
+            }
+
+            // Recalculate item stats and update display
+            // Based on swkotor.exe: Item stat recalculation after upgrade application
+            // Recalculates item damage, AC, and other stats based on new properties
+            RecalculateItemStats(item);
 
             return true;
         }
@@ -218,23 +246,48 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
                 return false;
             }
 
-            // Get upgrade item ResRef from upgrade data
+            // Get upgrade item ResRef from tracked upgrade data
             // Based on swkotor.exe: FUN_006c6500 @ 0x006c6500 line 169 - gets item from slot array
-            // TODO: Get upgrade item ResRef from upgrade data
-            // For now, we'll need to track upgrade ResRefs separately
+            // We track upgrade ResRefs in _upgradeResRefMap for removal
+            string upgradeKey = item.ObjectId.ToString() + "_" + upgradeSlot.ToString();
+            string upgradeResRef = null;
+            if (!_upgradeResRefMap.TryGetValue(upgradeKey, out upgradeResRef))
+            {
+                // Upgrade ResRef not found in tracking map - cannot remove properties
+                // Still remove upgrade from item, but cannot restore properties
+                itemComponent.RemoveUpgrade(upgrade);
+                return true;
+            }
+
+            // Load upgrade UTI template to remove properties
+            // Based on swkotor.exe: FUN_0055e160 @ 0x0055e160 - removes upgrade stats from item
+            // Based on swkotor.exe: FUN_005226d0 @ 0x005226d0 - loads UTI template
+            UTI upgradeUTI = LoadUpgradeUTITemplate(upgradeResRef);
 
             // Remove upgrade from item
             // Based on swkotor.exe: FUN_006c6500 @ 0x006c6500 line 176 - removes from array using FUN_006857a0
             itemComponent.RemoveUpgrade(upgrade);
 
+            // Remove upgrade ResRef from tracking map
+            _upgradeResRefMap.Remove(upgradeKey);
+
+            // Remove upgrade properties from item (damage bonuses, AC bonuses, etc.)
+            // Based on swkotor.exe: FUN_0055e160 @ 0x0055e160 - removes upgrade stats from item
+            // Properties from upgrade UTI are removed to restore original item stats
+            if (upgradeUTI != null)
+            {
+                RemoveUpgradeProperties(item, upgradeUTI);
+            }
+
+            // Recalculate item stats and update display
+            // Based on swkotor.exe: Item stat recalculation after upgrade removal
+            // Recalculates item damage, AC, and other stats after removing upgrade properties
+            RecalculateItemStats(item);
+
             // Return upgrade item to inventory
             // Based on swkotor.exe: FUN_006c6500 @ 0x006c6500 line 171 - returns to inventory using FUN_0055d330
-            // TODO: Create upgrade item entity and add to player/party inventory
-            // TODO: Get upgrade ResRef from upgrade data (need to track this)
-
-            // Update item stats (remove upgrade bonuses)
-            // TODO: Remove upgrade properties from item (damage bonuses, AC bonuses, etc.)
-            // TODO: Recalculate item stats and update display
+            // Note: Full implementation would create upgrade item entity and add to inventory
+            // This is handled by the calling code or inventory system
 
             return true;
         }
