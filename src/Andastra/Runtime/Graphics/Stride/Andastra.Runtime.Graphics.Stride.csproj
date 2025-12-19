@@ -1,0 +1,34 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <LangVersion>7.3</LangVersion>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <RootNamespace>Andastra.Runtime.Graphics.Stride</RootNamespace>
+    <AssemblyName>Andastra.Runtime.Graphics.Stride</AssemblyName>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <Description>Stride game engine backend for Odyssey Runtime</Description>
+    <Authors>th3w1zard1</Authors>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="JetBrains.Annotations" Version="2025.2.4" />
+    <PackageReference Include="Stride.Engine" Version="4.2.1.2442" />
+    <PackageReference Include="Stride.Audio" Version="4.2.1.2442" />
+    <PackageReference Include="Stride.Graphics" Version="4.2.1.2442" />
+    <PackageReference Include="Stride.Input" Version="4.2.1.2442" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Core\Andastra.Runtime.Core.csproj" />
+    <ProjectReference Include="..\Andastra.Runtime.Graphics.csproj" />
+    <ProjectReference Include="..\Andastra.Runtime.Graphics.Common.csproj" />
+    <ProjectReference Include="..\..\Content\Andastra.Runtime.Content.csproj" />
+  </ItemGroup>
+
+</Project>

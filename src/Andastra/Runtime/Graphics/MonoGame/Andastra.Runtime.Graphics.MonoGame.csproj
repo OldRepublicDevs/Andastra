@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <LangVersion>7.3</LangVersion>
+    <Nullable>disable</Nullable>
+    <OutputType>Library</OutputType>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <RootNamespace>Andastra.Runtime.Graphics.MonoGame</RootNamespace>
+    <AssemblyName>Andastra.Runtime.Graphics.MonoGame</AssemblyName>
+    <Description>MonoGame adapters for Odyssey Engine - cross-platform rendering with support for textures, models, and UI.</Description>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Core\Andastra.Runtime.Core.csproj" />
+    <ProjectReference Include="..\..\Content\Andastra.Runtime.Content.csproj" />
+    <ProjectReference Include="..\..\Games\Kotor\Andastra.Runtime.Games.Kotor.csproj" />
+    <ProjectReference Include="..\Andastra.Runtime.Graphics.csproj" />
+    <ProjectReference Include="..\Andastra.Runtime.Graphics.Common.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="JetBrains.Annotations" Version="2025.2.4" />
+    <!-- MonoGame Framework packages -->
+    <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.1.303" />
+    <!-- Myra UI library for functional text-based menus -->
+    <PackageReference Include="Myra" Version="1.5.7" />
+  </ItemGroup>
+
+</Project>

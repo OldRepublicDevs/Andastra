@@ -1,0 +1,85 @@
+using System;
+using JetBrains.Annotations;
+using Andastra.Runtime.Core.Interfaces;
+using Andastra.Runtime.Games.Common.Dialogue;
+
+namespace Andastra.Runtime.Engines.Odyssey.Dialogue
+{
+    /// <summary>
+    /// Provides context for a dialogue conversation in Odyssey engine (DLG-based).
+    /// </summary>
+    /// <remarks>
+    /// Conversation Context (Odyssey-specific):
+    /// - Based on swkotor2.exe: ExecuteDialogue @ 0x005e9920 (dialogue execution)
+    /// - Located via string references: "Conversation" @ 0x007c1abc, "ConversationType" @ 0x007c38b0, "GetPCSpeaker" @ 0x007c1e98
+    /// - Error: "Error: dialogue can't find object '%s'!" @ 0x007c3730 (dialogue object lookup failure)
+    /// - Cross-engine analysis:
+    ///   - Aurora (nwmain.exe): CNWSDialog class, "ScriptDialogue" @ 0x140dddb80, "BeginConversation" @ ExecuteCommandBeginConversation, "EndConversation" @ 0x140de6f70
+    ///   - Eclipse (daorigins.exe, DragonAge2.exe, MassEffect.exe): "Conversation" class, "ShowConversationGUIMessage", "Conversation.HandleResponseSelection" - UnrealScript-based dialogue system
+    /// - Inheritance: Base class BaseConversationContext (Runtime.Games.Common) - abstract conversation context, Odyssey override (Runtime.Games.Odyssey) - DLG-based dialogue
+    /// - Original implementation: Manages conversation participants and speaker lookup for DLG-based dialogue system
+    /// - Conversation participants: Owner (OBJECT_SELF), PC, PCSpeaker (GetPCSpeaker()), additional participants by tag (Speaker/Listener fields in DLG entries)
+    /// </remarks>
+    public class ConversationContext : BaseConversationContext
+    {
+        public ConversationContext(IEntity owner, IEntity pc, IWorld world)
+            : base(owner, pc, world)
+        {
+        }
+
+        /// <summary>
+        /// Finds a speaker by tag (Odyssey-specific: searches module areas).
+        /// </summary>
+        [CanBeNull]
+        public override IEntity FindSpeaker(string tag)
+        {
+            if (string.IsNullOrEmpty(tag))
+            {
+                return Owner;
+            }
+
+            // Check registered participants first
+            IEntity entity;
+            if (Participants.TryGetValue(tag, out entity))
+            {
+                return entity;
+            }
+
+            // Try to find in world by tag (Odyssey-specific: searches module areas)
+            if (World != null)
+            {
+                IModule module = World.CurrentModule;
+                if (module != null)
+                {
+                    foreach (IArea area in module.Areas)
+                    {
+                        IEntity found = area.GetObjectByTag(tag);
+                        if (found != null)
+                        {
+                            // Cache for future lookups
+                            Participants[tag] = found;
+                            return found;
+                        }
+                    }
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Finds a listener by tag (Odyssey-specific: defaults to PC).
+        /// </summary>
+        [CanBeNull]
+        public override IEntity FindListener(string tag)
+        {
+            if (string.IsNullOrEmpty(tag))
+            {
+                return PC;
+            }
+
+            // Same lookup as speaker
+            return FindSpeaker(tag);
+        }
+    }
+}
