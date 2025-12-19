@@ -92,14 +92,14 @@ namespace HolocronToolset.Utils
             // Check if it's an ERF type file
             if (ext == ".erf" || ext == ".mod" || ext == ".sav" || ext == ".hak")
             {
-                // Use CSharpKOTOR to read ERF
-                // This will be implemented when ERF reading is available
+                // Use Andastra.Parsing to read ERF
+                // TODO: This will be implemented when ERF reading is available
                 throw new NotImplementedException("ERF file reading not yet implemented");
             }
             else if (ext == ".rim")
             {
-                // Use CSharpKOTOR to read RIM
-                // This will be implemented when RIM reading is available
+                // Use Andastra.Parsing to read RIM
+                // TODO: This will be implemented when RIM reading is available
                 throw new NotImplementedException("RIM file reading not yet implemented");
             }
             else

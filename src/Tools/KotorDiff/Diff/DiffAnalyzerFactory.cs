@@ -63,7 +63,7 @@ namespace KotorDiff.Diff
         }
     }
 
-    // Wrapper for TwoDADiffAnalyzer from CSharpKOTOR
+    // Wrapper for TwoDADiffAnalyzer from Andastra.Parsing
     internal class TwoDADiffAnalyzerWrapper : DiffAnalyzer
     {
         public override object Analyze(byte[] leftData, byte[] rightData, string identifier)
@@ -73,7 +73,7 @@ namespace KotorDiff.Diff
         }
     }
 
-    // Wrapper for GFF analyzer - uses CSharpKOTOR's GffDiffAnalyzer
+    // Wrapper for GFF analyzer - uses Andastra.Parsing's GffDiffAnalyzer
     // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/analyzers.py:296-688
     // Original: class GFFDiffAnalyzer(DiffAnalyzer): ...
     internal class GFFDiffAnalyzerWrapper : DiffAnalyzer
@@ -85,7 +85,7 @@ namespace KotorDiff.Diff
         }
     }
 
-    // Wrapper for TLK analyzer - uses CSharpKOTOR's TlkDiff
+    // Wrapper for TLK analyzer - uses Andastra.Parsing's TlkDiff
     internal class TLKDiffAnalyzerWrapper : DiffAnalyzer
     {
         public override object Analyze(byte[] leftData, byte[] rightData, string identifier)
@@ -152,7 +152,7 @@ namespace KotorDiff.Diff
         }
     }
 
-    // Wrapper for SSF analyzer - uses CSharpKOTOR's SsfDiff
+    // Wrapper for SSF analyzer - uses Andastra.Parsing's SsfDiff
     internal class SSFDiffAnalyzerWrapper : DiffAnalyzer
     {
         public override object Analyze(byte[] leftData, byte[] rightData, string identifier)
