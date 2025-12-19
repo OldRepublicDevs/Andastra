@@ -478,8 +478,8 @@ namespace Andastra.Runtime.Games.Odyssey
                         {
                             // Verify it's a valid match (not just a substring in the middle)
                             // Check if next character is underscore, number, or end of string
-                            if (resRefLower.Length == rowLabelLower.Length || 
-                                resRefLower[rowLabelLower.Length] == '_' || 
+                            if (resRefLower.Length == rowLabelLower.Length ||
+                                resRefLower[rowLabelLower.Length] == '_' ||
                                 char.IsDigit(resRefLower[rowLabelLower.Length]))
                             {
                                 return (float)i;
@@ -542,8 +542,8 @@ namespace Andastra.Runtime.Games.Odyssey
                 if (resRefLower.StartsWith(kvp.Key, StringComparison.OrdinalIgnoreCase))
                 {
                     // Verify it's a valid match (not just a substring)
-                    if (resRefLower.Length == kvp.Key.Length || 
-                        resRefLower[kvp.Key.Length] == '_' || 
+                    if (resRefLower.Length == kvp.Key.Length ||
+                        resRefLower[kvp.Key.Length] == '_' ||
                         char.IsDigit(resRefLower[kvp.Key.Length]))
                     {
                         return kvp.Value;
