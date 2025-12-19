@@ -1550,6 +1550,19 @@ namespace HolocronToolset.Editors
 
         public int RowCount => _rootItems.Count;
 
+        /// <summary>
+        /// Gets the item at the specified row and column.
+        /// Matching PyKotor implementation: def item(self, row: int, column: int) -> DLGStandardItem | QStandardItem
+        /// </summary>
+        public DLGStandardItem Item(int row, int column)
+        {
+            if (row < 0 || row >= _rootItems.Count || column != 0)
+            {
+                return null;
+            }
+            return _rootItems[row];
+        }
+
         private int _selectedIndex = -1;
         public int SelectedIndex
         {
