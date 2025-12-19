@@ -32,6 +32,8 @@ namespace Andastra.Runtime.Core.Combat
         Entangle,
         Slow,
         Haste,
+        MovementSpeedIncrease,
+        MovementSpeedDecrease,
         Invisibility,
 
         // Damage effects
@@ -465,10 +467,15 @@ namespace Andastra.Runtime.Core.Combat
                 case EffectType.Entangle:
                 case EffectType.Slow:
                 case EffectType.Haste:
+                case EffectType.MovementSpeedIncrease:
+                case EffectType.MovementSpeedDecrease:
                     // Movement speed modifiers are handled dynamically by StatsComponent
                     // Based on swkotor2.exe: Haste/Slow effects modify movement speed
                     // Located via string references: "Haste" @ routine 119, "Slow" @ routine 120
                     // Original implementation: Haste doubles speed, Slow halves speed
+                    // MovementSpeedIncrease/Decrease: Percentage-based modifiers (EffectMovementSpeedIncrease/Decrease script functions)
+                    // Based on nwmain.exe: GetWalkRate returns GetMovementRateFactor(this) * baseWalkRate * constant
+                    // Located via function: GetWalkRate @ 0x140396730 (nwmain.exe)
                     // StatsComponent.WalkSpeed and RunSpeed properties query EffectSystem for active effects
                     // No direct modification needed here - speed is calculated on-demand
                     break;

@@ -242,29 +242,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Components
         {
             get
             {
-                float speed = _baseWalkSpeed;
-                
-                // Query EffectSystem for speed modifiers (Haste/Slow)
-                if (Owner != null && Owner.World != null && Owner.World.EffectSystem != null)
-                {
-                    foreach (ActiveEffect activeEffect in Owner.World.EffectSystem.GetEffects(Owner))
-                    {
-                        if (activeEffect.Effect.Type == EffectType.Haste)
-                        {
-                            // Haste typically doubles movement speed (100% increase)
-                            speed *= 2.0f;
-                        }
-                        else if (activeEffect.Effect.Type == EffectType.Slow)
-                        {
-                            // Slow typically halves movement speed (50% reduction)
-                            speed *= 0.5f;
-                        }
-                        // Note: Movement speed modifiers beyond Haste/Slow would need to be added to EffectType enum
-                        // TODO: SIMPLIFIED - For now, Haste and Slow cover the main movement speed effects
-                    }
-                }
-                
-                return Math.Max(0.1f, speed); // Minimum speed to prevent zero/negative
+                return CalculateMovementSpeed(_baseWalkSpeed);
             }
             set
             {
@@ -276,29 +254,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Components
         {
             get
             {
-                float speed = _baseRunSpeed;
-                
-                // Query EffectSystem for speed modifiers (Haste/Slow)
-                if (Owner != null && Owner.World != null && Owner.World.EffectSystem != null)
-                {
-                    foreach (ActiveEffect activeEffect in Owner.World.EffectSystem.GetEffects(Owner))
-                    {
-                        if (activeEffect.Effect.Type == EffectType.Haste)
-                        {
-                            // Haste typically doubles movement speed (100% increase)
-                            speed *= 2.0f;
-                        }
-                        else if (activeEffect.Effect.Type == EffectType.Slow)
-                        {
-                            // Slow typically halves movement speed (50% reduction)
-                            speed *= 0.5f;
-                        }
-                        // Note: Movement speed modifiers beyond Haste/Slow would need to be added to EffectType enum
-                        // TODO: SIMPLIFIED - For now, Haste and Slow cover the main movement speed effects
-                    }
-                }
-                
-                return Math.Max(0.1f, speed); // Minimum speed to prevent zero/negative
+                return CalculateMovementSpeed(_baseRunSpeed);
             }
             set
             {
@@ -597,6 +553,118 @@ namespace Andastra.Runtime.Engines.Odyssey.Components
         {
             // Stats are now loaded via SetMaxHP, SetAbility, etc.
             // TODO: PLACEHOLDER - This method is a placeholder for future entity data integration.
+        }
+
+        /// <summary>
+        /// Calculates final movement speed after applying all movement speed modifiers.
+        /// </summary>
+        /// <param name="baseSpeed">Base movement speed before modifiers</param>
+        /// <returns>Final movement speed with all effects applied</returns>
+        /// <remarks>
+        /// Movement Speed Calculation (swkotor2.exe, nwmain.exe):
+        /// - Based on swkotor2.exe: Haste/Slow effects modify movement speed
+        ///   Located via string references: "Haste" @ routine 119, "Slow" @ routine 120
+        ///   Original implementation: Haste doubles speed (2.0x), Slow halves speed (0.5x)
+        /// - Based on nwmain.exe: GetWalkRate returns GetMovementRateFactor(this) * baseWalkRate * constant
+        ///   Located via function: GetWalkRate @ 0x140396730 (nwmain.exe)
+        ///   Movement rate factor accumulates all movement speed modifiers
+        /// - EffectMovementSpeedIncrease (script function 165):
+        ///   If nNewSpeedPercent < 100: final speed = (100 + nNewSpeedPercent)%
+        ///   If nNewSpeedPercent >= 100: final speed = nNewSpeedPercent%
+        ///   Example: 50 -> 150%, 200 -> 200%
+        /// - EffectMovementSpeedDecrease (script function 451):
+        ///   nPercentChange expected to be 1-99 (percentage reduction)
+        ///   If negative: results in speed increase
+        ///   If >= 100: effect is deleted/ignored
+        ///   Example: 50 -> 50% reduction (speed becomes 50% of original)
+        /// - Effects are applied multiplicatively in order:
+        ///   1. Haste/Slow (fixed multipliers)
+        ///   2. MovementSpeedIncrease (percentage-based, replaces speed)
+        ///   3. MovementSpeedDecrease (percentage reduction)
+        /// - Based on original engine behavior: effects stack multiplicatively
+        /// </remarks>
+        private float CalculateMovementSpeed(float baseSpeed)
+        {
+            if (baseSpeed <= 0.0f)
+            {
+                return 0.1f; // Minimum speed
+            }
+
+            float speed = baseSpeed;
+            float speedMultiplier = 1.0f;
+            float speedPercent = 100.0f; // Percentage-based speed (100% = unchanged)
+            bool hasSpeedPercent = false;
+
+            // Query EffectSystem for all movement speed modifiers
+            if (Owner != null && Owner.World != null && Owner.World.EffectSystem != null)
+            {
+                foreach (ActiveEffect activeEffect in Owner.World.EffectSystem.GetEffects(Owner))
+                {
+                    EffectType effectType = activeEffect.Effect.Type;
+                    int effectAmount = activeEffect.Effect.Amount;
+
+                    if (effectType == EffectType.Haste)
+                    {
+                        // Haste doubles movement speed (100% increase = 2.0x multiplier)
+                        // Based on swkotor2.exe: Haste effect @ routine 119
+                        speedMultiplier *= 2.0f;
+                    }
+                    else if (effectType == EffectType.Slow)
+                    {
+                        // Slow halves movement speed (50% reduction = 0.5x multiplier)
+                        // Based on swkotor2.exe: Slow effect @ routine 120
+                        speedMultiplier *= 0.5f;
+                    }
+                    else if (effectType == EffectType.MovementSpeedIncrease)
+                    {
+                        // EffectMovementSpeedIncrease: Percentage-based speed modifier
+                        // Based on script function 165: EffectMovementSpeedIncrease(int nNewSpeedPercent)
+                        // If nNewSpeedPercent < 100: add 100 to get final percentage (e.g., 50 -> 150%)
+                        // If nNewSpeedPercent >= 100: use directly as percentage (e.g., 200 -> 200%)
+                        // This replaces any previous speed percentage (does not stack with other MovementSpeedIncrease)
+                        if (effectAmount < 100)
+                        {
+                            speedPercent = 100.0f + effectAmount;
+                        }
+                        else
+                        {
+                            speedPercent = effectAmount;
+                        }
+                        hasSpeedPercent = true;
+                    }
+                    else if (effectType == EffectType.MovementSpeedDecrease)
+                    {
+                        // EffectMovementSpeedDecrease: Percentage reduction
+                        // Based on script function 451: EffectMovementSpeedDecrease(int nPercentChange)
+                        // Expected to be 1-99 (percentage to reduce by)
+                        // If negative: results in speed increase
+                        // If >= 100: effect is ignored/deleted
+                        if (effectAmount > 0 && effectAmount < 100)
+                        {
+                            // Reduce speed by percentage (e.g., 50 means 50% reduction, speed becomes 50% of current)
+                            speedPercent *= (100.0f - effectAmount) / 100.0f;
+                        }
+                        else if (effectAmount < 0)
+                        {
+                            // Negative values result in speed increase (unusual but documented behavior)
+                            speedPercent *= (100.0f - effectAmount) / 100.0f;
+                        }
+                        // If >= 100, ignore the effect
+                    }
+                }
+            }
+
+            // Apply multipliers first (Haste/Slow)
+            speed = speed * speedMultiplier;
+
+            // Apply percentage-based modifiers (MovementSpeedIncrease/Decrease)
+            if (hasSpeedPercent || speedPercent != 100.0f)
+            {
+                speed = speed * (speedPercent / 100.0f);
+            }
+
+            // Ensure minimum speed to prevent zero/negative values
+            return Math.Max(0.1f, speed);
         }
 
         #endregion
