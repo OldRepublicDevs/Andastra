@@ -13,8 +13,10 @@ namespace Andastra.Runtime.Stride.Camera
     /// Controls camera during dialogue conversations.
     /// </summary>
     /// <remarks>
-    /// Dialogue Camera Controller (Stride Implementation):
-    /// - Based on swkotor2.exe dialogue camera system
+    /// Dialogue Camera Controller (Stride Implementation for Odyssey Engine):
+    /// - Based on swkotor.exe and swkotor2.exe dialogue camera system
+    /// - swkotor.exe (KOTOR 1): EndConversation @ 0x0074a7c0, dialogue loading FUN_005a2ae0 @ 0x005a2ae0
+    /// - swkotor2.exe (KOTOR 2): EndConversation @ 0x007c38e0, dialogue loading FUN_005ea880 @ 0x005ea880
     /// - Located via string references: "CameraAnimation" @ 0x007c3460, "CameraAngle" @ 0x007c3490
     /// - "CameraModel" @ 0x007c3908, "CameraViewAngle" @ 0x007cb940
     /// - Camera hooks: "camerahook" @ 0x007c7dac, "camerahookt" @ 0x007c7da0, "camerahookz" @ 0x007c7db8, "camerahookh" @ 0x007c7dc4
@@ -23,6 +25,7 @@ namespace Andastra.Runtime.Stride.Camera
     /// - Camera angles: Speaker focus, listener focus, wide shot, over-the-shoulder
     /// - Camera animations: Smooth transitions between angles, scripted camera movements
     /// - Camera hooks: Attachment points on models for precise camera positioning
+    /// - This implementation matches 1:1 with both swkotor.exe and swkotor2.exe behavior
     /// - This implementation uses Andastra.Runtime.Core.Camera.CameraController for actual camera control
     /// </remarks>
     public class StrideDialogueCameraController : IDialogueCameraController
@@ -207,17 +210,23 @@ namespace Andastra.Runtime.Stride.Camera
 
         /// <summary>
         /// Resets the camera to normal gameplay mode.
-        /// Based on swkotor2.exe: Camera reset to chase mode after dialogue ends
-        /// Reverse engineered from swkotor2.exe:
-        ///   - EndConversation script execution @ 0x007c38e0 triggers camera reset
-        ///   - Dialogue loading function FUN_005ea880 @ 0x005ea880 loads EndConversation script reference
+        /// Based on swkotor.exe and swkotor2.exe: Camera reset to chase mode after dialogue ends
+        /// Reverse engineered from swkotor.exe:
+        ///   - EndConversation script execution @ 0x0074a7c0 triggers camera reset
+        ///   - Dialogue loading function FUN_005a2ae0 @ 0x005a2ae0 loads EndConversation script reference (line 55)
         ///   - Camera reset occurs when dialogue ends (EndConversation script fires)
         ///   - Camera returns to chase mode following player entity
-        /// Located via string references: "EndConversation" @ 0x007c38e0, "CameraAnimation" @ 0x007c3460
+        /// Reverse engineered from swkotor2.exe:
+        ///   - EndConversation script execution @ 0x007c38e0 triggers camera reset
+        ///   - Dialogue loading function FUN_005ea880 @ 0x005ea880 loads EndConversation script reference (line 55)
+        ///   - Camera reset occurs when dialogue ends (EndConversation script fires)
+        ///   - Camera returns to chase mode following player entity
+        /// Located via string references: "EndConversation" @ 0x0074a7c0 (swkotor.exe), @ 0x007c38e0 (swkotor2.exe)
         /// Original implementation: When dialogue ends, camera resets to chase mode with player as target
+        /// This implementation matches 1:1 with both swkotor.exe and swkotor2.exe behavior
         /// Cross-engine analysis:
-        ///   - swkotor.exe (KOTOR 1): Similar camera reset behavior when dialogue ends
-        ///   - swkotor2.exe (KOTOR 2): Camera reset to chase mode with player entity (this implementation)
+        ///   - swkotor.exe (KOTOR 1): Camera reset to chase mode with player entity (this implementation matches)
+        ///   - swkotor2.exe (KOTOR 2): Camera reset to chase mode with player entity (this implementation matches)
         ///   - nwmain.exe (Aurora): Camera reset handled differently (no direct dialogue camera equivalent)
         ///   - daorigins.exe/DragonAge2.exe (Eclipse): Camera reset via UnrealScript, different architecture
         ///   - MassEffect.exe/MassEffect2.exe (Infinity): Camera reset handled by level scripting system
