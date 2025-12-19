@@ -2420,9 +2420,13 @@ namespace HolocronToolset.Tests.Editors
 
                 editor.Model.PasteItem(items[0], pastedLink);
 
-                // In C#, we need to check if the item was added as a child
-                // This is a simplified check - full implementation would verify child structure
-                editor.Model.RowCount.Should().BeGreaterThan(0);
+                // Matching Python test: pasted_item = items[0].child(0)
+                var pastedItem = items[0].Child(0);
+                pastedItem.Should().NotBeNull();
+                pastedItem.Link.Should().NotBeNull();
+                pastedItem.Link.Node.Should().NotBeNull();
+                items[0].Link.Should().NotBeNull();
+                pastedItem.Link.Should().Be(items[0].Link.Node.Links[0]);
             }
         }
 

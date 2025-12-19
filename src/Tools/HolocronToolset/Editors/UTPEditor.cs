@@ -13,6 +13,7 @@ using Andastra.Parsing.Formats.TwoDA;
 using Andastra.Parsing.Resource.Generics;
 using Andastra.Parsing.Resource;
 using DLGType = Andastra.Parsing.Resource.Generics.DLG.DLG;
+using DLGHelper = Andastra.Parsing.Resource.Generics.DLG.DLGHelper;
 using Andastra.Parsing.Formats.Capsule;
 using HolocronToolset.Data;
 using HolocronToolset.Dialogs;

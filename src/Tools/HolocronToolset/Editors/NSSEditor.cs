@@ -335,8 +335,7 @@ namespace HolocronToolset.Editors
                 "Replace All",
                 $"Replace all occurrences of '{findText}'?",
                 ButtonEnum.YesNo,
-                MsBox.Avalonia.Enums.Icon.Question,
-                defaultButton: ButtonResult.No);
+                MsBox.Avalonia.Enums.Icon.Question);
 
             // Show dialog and wait for result (synchronous for confirmation)
             var result = confirmBox.ShowAsync().GetAwaiter().GetResult();
