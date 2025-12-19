@@ -36,8 +36,7 @@ namespace Andastra.Runtime.Engines.Infinity
                 throw new InvalidOperationException("Engine must be initialized before creating game session");
             }
 
-            // TODO: STUB - Implement InfinityGameSession
-            throw new NotImplementedException("Infinity game session not yet implemented");
+            return new InfinityGameSession(this);
         }
 
         protected override IGameResourceProvider CreateResourceProvider(string installationPath)
