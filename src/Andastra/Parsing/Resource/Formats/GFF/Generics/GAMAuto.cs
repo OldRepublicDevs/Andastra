@@ -56,7 +56,7 @@ namespace Andastra.Parsing.Resource.Generics
                 throw new ArgumentException("Unsupported format specified; use GAM.", nameof(fileFormat));
             }
 
-            // Validate game type - GAM format is only used by Aurora and Infinity, NOT Odyssey
+            // Validate game type - GAM format is only used by Aurora, NOT Odyssey
             if (game.IsOdyssey())
             {
                 throw new ArgumentException(
@@ -105,7 +105,7 @@ namespace Andastra.Parsing.Resource.Generics
                 throw new ArgumentException("Unsupported format specified; use GAM.", nameof(fileFormat));
             }
 
-            // Validate game type - GAM format is only used by Aurora and Infinity, NOT Odyssey
+            // Validate game type - GAM format is only used by Aurora, NOT Odyssey
             if (game.IsOdyssey())
             {
                 throw new ArgumentException(

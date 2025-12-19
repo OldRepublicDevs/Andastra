@@ -176,7 +176,7 @@ namespace Andastra.Parsing.Tools
                 Check("SWRC/Textures/GUIContent.utx"),
             };
 
-            bool[] gaIosChecks2 = new[]
+            bool[] gaK2IosChecks = new[]
             {
                 Check("override/ios_mfi_deu.tga"),
                 Check("override/ios_mfi_eng.tga"),
