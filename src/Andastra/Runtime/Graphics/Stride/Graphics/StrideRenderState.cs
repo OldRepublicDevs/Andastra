@@ -1,5 +1,5 @@
 using System;
-using Stride.Graphics;
+using StrideGraphics = Stride.Graphics;
 using Andastra.Runtime.Graphics;
 
 namespace Andastra.Runtime.Stride.Graphics
@@ -100,56 +100,56 @@ namespace Andastra.Runtime.Stride.Graphics
 
         internal RasterizerStateDescription Description => _description;
 
-        private static Stride.Graphics.CullFaceMode ConvertCullMode(Andastra.Runtime.Graphics.CullMode mode)
+        private static StrideGraphics.CullFaceMode ConvertCullMode(Andastra.Runtime.Graphics.CullMode mode)
         {
             switch (mode)
             {
                 case Andastra.Runtime.Graphics.CullMode.None:
-                    return Stride.Graphics.CullFaceMode.None;
+                    return StrideGraphics.CullFaceMode.None;
                 case Andastra.Runtime.Graphics.CullMode.CullClockwiseFace:
-                    return Stride.Graphics.CullFaceMode.Front;
+                    return StrideGraphics.CullFaceMode.Front;
                 case Andastra.Runtime.Graphics.CullMode.CullCounterClockwiseFace:
-                    return Stride.Graphics.CullFaceMode.Back;
+                    return StrideGraphics.CullFaceMode.Back;
                 default:
-                    return Stride.Graphics.CullFaceMode.Back;
+                    return StrideGraphics.CullFaceMode.Back;
             }
         }
 
-        private static Andastra.Runtime.Graphics.CullMode ConvertCullMode(Stride.Graphics.CullFaceMode mode)
+        private static Andastra.Runtime.Graphics.CullMode ConvertCullMode(StrideGraphics.CullFaceMode mode)
         {
             switch (mode)
             {
-                case Stride.Graphics.CullFaceMode.None:
+                case StrideGraphics.CullFaceMode.None:
                     return Andastra.Runtime.Graphics.CullMode.None;
-                case Stride.Graphics.CullFaceMode.Front:
+                case StrideGraphics.CullFaceMode.Front:
                     return Andastra.Runtime.Graphics.CullMode.CullClockwiseFace;
-                case Stride.Graphics.CullFaceMode.Back:
+                case StrideGraphics.CullFaceMode.Back:
                     return Andastra.Runtime.Graphics.CullMode.CullCounterClockwiseFace;
                 default:
                     return Andastra.Runtime.Graphics.CullMode.CullCounterClockwiseFace;
             }
         }
 
-        private static Stride.Graphics.FillMode ConvertFillMode(Andastra.Runtime.Graphics.FillMode mode)
+        private static StrideGraphics.FillMode ConvertFillMode(Andastra.Runtime.Graphics.FillMode mode)
         {
             switch (mode)
             {
                 case Andastra.Runtime.Graphics.FillMode.Solid:
-                    return Stride.Graphics.FillMode.Solid;
+                    return StrideGraphics.FillMode.Solid;
                 case Andastra.Runtime.Graphics.FillMode.WireFrame:
-                    return Stride.Graphics.FillMode.Wireframe;
+                    return StrideGraphics.FillMode.Wireframe;
                 default:
-                    return Stride.Graphics.FillMode.Solid;
+                    return StrideGraphics.FillMode.Solid;
             }
         }
 
-        private static Andastra.Runtime.Graphics.FillMode ConvertFillMode(Stride.Graphics.FillMode mode)
+        private static Andastra.Runtime.Graphics.FillMode ConvertFillMode(StrideGraphics.FillMode mode)
         {
             switch (mode)
             {
-                case Stride.Graphics.FillMode.Solid:
+                case StrideGraphics.FillMode.Solid:
                     return Andastra.Runtime.Graphics.FillMode.Solid;
-                case Stride.Graphics.FillMode.Wireframe:
+                case StrideGraphics.FillMode.Wireframe:
                     return Andastra.Runtime.Graphics.FillMode.WireFrame;
                 default:
                     return Andastra.Runtime.Graphics.FillMode.Solid;
@@ -316,22 +316,22 @@ namespace Andastra.Runtime.Stride.Graphics
 
         internal DepthStencilStateDescription Description => _description;
 
-        private static Stride.Graphics.CompareFunction ConvertCompareFunction(Andastra.Runtime.Graphics.CompareFunction func)
+        private static StrideGraphics.CompareFunction ConvertCompareFunction(Andastra.Runtime.Graphics.CompareFunction func)
         {
-            return (Stride.Graphics.CompareFunction)(int)func;
+            return (StrideGraphics.CompareFunction)(int)func;
         }
 
-        private static Andastra.Runtime.Graphics.CompareFunction ConvertCompareFunction(Stride.Graphics.CompareFunction func)
+        private static Andastra.Runtime.Graphics.CompareFunction ConvertCompareFunction(StrideGraphics.CompareFunction func)
         {
             return (Andastra.Runtime.Graphics.CompareFunction)(int)func;
         }
 
-        private static Stride.Graphics.StencilOperation ConvertStencilOperation(Andastra.Runtime.Graphics.StencilOperation op)
+        private static StrideGraphics.StencilOperation ConvertStencilOperation(Andastra.Runtime.Graphics.StencilOperation op)
         {
-            return (Stride.Graphics.StencilOperation)(int)op;
+            return (StrideGraphics.StencilOperation)(int)op;
         }
 
-        private static Andastra.Runtime.Graphics.StencilOperation ConvertStencilOperation(Stride.Graphics.StencilOperation op)
+        private static Andastra.Runtime.Graphics.StencilOperation ConvertStencilOperation(StrideGraphics.StencilOperation op)
         {
             return (Andastra.Runtime.Graphics.StencilOperation)(int)op;
         }
@@ -430,7 +430,7 @@ namespace Andastra.Runtime.Stride.Graphics
 
         public Andastra.Runtime.Graphics.ColorWriteChannels ColorWriteChannels1
         {
-            get { return ConvertColorWriteChannels(_description.RenderTargets.Length > 1 ? _description.RenderTargets[1].ColorWriteChannels : Stride.Graphics.ColorWriteChannels.None); }
+            get { return ConvertColorWriteChannels(_description.RenderTargets.Length > 1 ? _description.RenderTargets[1].ColorWriteChannels : StrideGraphics.ColorWriteChannels.None); }
             set
             {
                 if (_description.RenderTargets.Length > 1)
@@ -446,7 +446,7 @@ namespace Andastra.Runtime.Stride.Graphics
 
         public Andastra.Runtime.Graphics.ColorWriteChannels ColorWriteChannels2
         {
-            get { return ConvertColorWriteChannels(_description.RenderTargets.Length > 2 ? _description.RenderTargets[2].ColorWriteChannels : Stride.Graphics.ColorWriteChannels.None); }
+            get { return ConvertColorWriteChannels(_description.RenderTargets.Length > 2 ? _description.RenderTargets[2].ColorWriteChannels : StrideGraphics.ColorWriteChannels.None); }
             set
             {
                 if (_description.RenderTargets.Length > 2)
@@ -462,7 +462,7 @@ namespace Andastra.Runtime.Stride.Graphics
 
         public Andastra.Runtime.Graphics.ColorWriteChannels ColorWriteChannels3
         {
-            get { return ConvertColorWriteChannels(_description.RenderTargets.Length > 3 ? _description.RenderTargets[3].ColorWriteChannels : Stride.Graphics.ColorWriteChannels.None); }
+            get { return ConvertColorWriteChannels(_description.RenderTargets.Length > 3 ? _description.RenderTargets[3].ColorWriteChannels : StrideGraphics.ColorWriteChannels.None); }
             set
             {
                 if (_description.RenderTargets.Length > 3)
@@ -524,28 +524,28 @@ namespace Andastra.Runtime.Stride.Graphics
             return Andastra.Runtime.Graphics.BlendFunction.Add; // Default
         }
 
-        private static Stride.Graphics.Blend ConvertBlendFunction(Andastra.Runtime.Graphics.BlendFunction func)
+        private static StrideGraphics.Blend ConvertBlendFunction(Andastra.Runtime.Graphics.BlendFunction func)
         {
             // TODO: SIMPLIFIED - This is a simplified conversion
-            return Stride.Graphics.Blend.One; // Default
+            return StrideGraphics.Blend.One; // Default
         }
 
-        private static Stride.Graphics.Blend ConvertBlend(Andastra.Runtime.Graphics.Blend blend)
+        private static StrideGraphics.Blend ConvertBlend(Andastra.Runtime.Graphics.Blend blend)
         {
-            return (Stride.Graphics.Blend)(int)blend;
+            return (StrideGraphics.Blend)(int)blend;
         }
 
-        private static Andastra.Runtime.Graphics.Blend ConvertBlend(Stride.Graphics.Blend blend)
+        private static Andastra.Runtime.Graphics.Blend ConvertBlend(StrideGraphics.Blend blend)
         {
             return (Andastra.Runtime.Graphics.Blend)(int)blend;
         }
 
-        private static Stride.Graphics.ColorWriteChannels ConvertColorWriteChannels(Andastra.Runtime.Graphics.ColorWriteChannels channels)
+        private static StrideGraphics.ColorWriteChannels ConvertColorWriteChannels(Andastra.Runtime.Graphics.ColorWriteChannels channels)
         {
-            return (Stride.Graphics.ColorWriteChannels)(int)channels;
+            return (StrideGraphics.ColorWriteChannels)(int)channels;
         }
 
-        private static Andastra.Runtime.Graphics.ColorWriteChannels ConvertColorWriteChannels(Stride.Graphics.ColorWriteChannels channels)
+        private static Andastra.Runtime.Graphics.ColorWriteChannels ConvertColorWriteChannels(StrideGraphics.ColorWriteChannels channels)
         {
             return (Andastra.Runtime.Graphics.ColorWriteChannels)(int)channels;
         }
@@ -657,22 +657,22 @@ namespace Andastra.Runtime.Stride.Graphics
 
         internal SamplerStateDescription Description => _description;
 
-        private static Stride.Graphics.TextureAddressMode ConvertTextureAddressMode(Andastra.Runtime.Graphics.TextureAddressMode mode)
+        private static StrideGraphics.TextureAddressMode ConvertTextureAddressMode(Andastra.Runtime.Graphics.TextureAddressMode mode)
         {
-            return (Stride.Graphics.TextureAddressMode)(int)mode;
+            return (StrideGraphics.TextureAddressMode)(int)mode;
         }
 
-        private static Andastra.Runtime.Graphics.TextureAddressMode ConvertTextureAddressMode(Stride.Graphics.TextureAddressMode mode)
+        private static Andastra.Runtime.Graphics.TextureAddressMode ConvertTextureAddressMode(StrideGraphics.TextureAddressMode mode)
         {
             return (Andastra.Runtime.Graphics.TextureAddressMode)(int)mode;
         }
 
-        private static Stride.Graphics.TextureFilter ConvertTextureFilter(Andastra.Runtime.Graphics.TextureFilter filter)
+        private static StrideGraphics.TextureFilter ConvertTextureFilter(Andastra.Runtime.Graphics.TextureFilter filter)
         {
-            return (Stride.Graphics.TextureFilter)(int)filter;
+            return (StrideGraphics.TextureFilter)(int)filter;
         }
 
-        private static Andastra.Runtime.Graphics.TextureFilter ConvertTextureFilter(Stride.Graphics.TextureFilter filter)
+        private static Andastra.Runtime.Graphics.TextureFilter ConvertTextureFilter(StrideGraphics.TextureFilter filter)
         {
             return (Andastra.Runtime.Graphics.TextureFilter)(int)filter;
         }

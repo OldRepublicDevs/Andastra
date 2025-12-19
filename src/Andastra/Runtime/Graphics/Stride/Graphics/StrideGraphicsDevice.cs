@@ -1,5 +1,5 @@
 using System;
-using Stride.Graphics;
+using StrideGraphics = Stride.Graphics;
 using Stride.Core.Mathematics;
 using Andastra.Runtime.Graphics;
 
@@ -114,13 +114,13 @@ namespace Andastra.Runtime.Stride.Graphics
 
         public IVertexBuffer CreateVertexBuffer<T>(T[] data) where T : struct
         {
-            var buffer = Stride.Graphics.Buffer.Vertex.New(_device, data, Stride.Graphics.GraphicsResourceUsage.Dynamic);
+            var buffer = StrideGraphics.Buffer.Vertex.New(_device, data, StrideGraphics.GraphicsResourceUsage.Dynamic);
             return new StrideVertexBuffer(buffer, data != null ? data.Length : 0, System.Runtime.InteropServices.Marshal.SizeOf<T>());
         }
 
         public IIndexBuffer CreateIndexBuffer(int[] indices, bool isShort = true)
         {
-            Stride.Graphics.Buffer buffer;
+            StrideGraphics.Buffer buffer;
             if (isShort)
             {
                 var shortIndices = new ushort[indices.Length];
@@ -128,11 +128,11 @@ namespace Andastra.Runtime.Stride.Graphics
                 {
                     shortIndices[i] = (ushort)indices[i];
                 }
-                buffer = Stride.Graphics.Buffer.Index.New(_device, shortIndices, Stride.Graphics.GraphicsResourceUsage.Dynamic);
+                buffer = StrideGraphics.Buffer.Index.New(_device, shortIndices, StrideGraphics.GraphicsResourceUsage.Dynamic);
             }
             else
             {
-                buffer = Stride.Graphics.Buffer.Index.New(_device, indices, Stride.Graphics.GraphicsResourceUsage.Dynamic);
+                buffer = StrideGraphics.Buffer.Index.New(_device, indices, StrideGraphics.GraphicsResourceUsage.Dynamic);
             }
             return new StrideIndexBuffer(buffer, indices != null ? indices.Length : 0, isShort);
         }
@@ -292,22 +292,22 @@ namespace Andastra.Runtime.Stride.Graphics
             // GraphicsDevice is managed by Game, don't dispose it
         }
 
-        private static Stride.Graphics.PrimitiveType ConvertPrimitiveType(Andastra.Runtime.Graphics.PrimitiveType type)
+        private static StrideGraphics.PrimitiveType ConvertPrimitiveType(Andastra.Runtime.Graphics.PrimitiveType type)
         {
             switch (type)
             {
                 case Andastra.Runtime.Graphics.PrimitiveType.TriangleList:
-                    return Stride.Graphics.PrimitiveType.TriangleList;
+                    return StrideGraphics.PrimitiveType.TriangleList;
                 case Andastra.Runtime.Graphics.PrimitiveType.TriangleStrip:
-                    return Stride.Graphics.PrimitiveType.TriangleStrip;
+                    return StrideGraphics.PrimitiveType.TriangleStrip;
                 case Andastra.Runtime.Graphics.PrimitiveType.LineList:
-                    return Stride.Graphics.PrimitiveType.LineList;
+                    return StrideGraphics.PrimitiveType.LineList;
                 case Andastra.Runtime.Graphics.PrimitiveType.LineStrip:
-                    return Stride.Graphics.PrimitiveType.LineStrip;
+                    return StrideGraphics.PrimitiveType.LineStrip;
                 case Andastra.Runtime.Graphics.PrimitiveType.PointList:
-                    return Stride.Graphics.PrimitiveType.PointList;
+                    return StrideGraphics.PrimitiveType.PointList;
                 default:
-                    return Stride.Graphics.PrimitiveType.TriangleList;
+                    return StrideGraphics.PrimitiveType.TriangleList;
             }
         }
     }

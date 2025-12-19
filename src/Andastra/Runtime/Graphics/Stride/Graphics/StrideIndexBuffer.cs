@@ -1,5 +1,5 @@
 using System;
-using Stride.Graphics;
+using StrideGraphics = Stride.Graphics;
 using Andastra.Runtime.Graphics;
 
 namespace Andastra.Runtime.Stride.Graphics
@@ -9,13 +9,13 @@ namespace Andastra.Runtime.Stride.Graphics
     /// </summary>
     public class StrideIndexBuffer : IIndexBuffer
     {
-        private readonly Stride.Graphics.Buffer _buffer;
+        private readonly StrideGraphics.Buffer _buffer;
         private readonly int _indexCount;
         private readonly bool _isShort;
 
-        internal Stride.Graphics.Buffer Buffer => _buffer;
+        internal StrideGraphics.Buffer Buffer => _buffer;
 
-        public StrideIndexBuffer(Stride.Graphics.Buffer buffer, int indexCount, bool isShort)
+        public StrideIndexBuffer(StrideGraphics.Buffer buffer, int indexCount, bool isShort)
         {
             _buffer = buffer ?? throw new ArgumentNullException(nameof(buffer));
             _indexCount = indexCount;

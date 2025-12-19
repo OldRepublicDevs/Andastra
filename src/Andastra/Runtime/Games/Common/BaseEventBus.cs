@@ -263,7 +263,7 @@ namespace Andastra.Runtime.Games.Common
         /// Immediate event publishing for time-critical events.
         /// Calls all subscribed handlers synchronously.
         /// </remarks>
-        public virtual void Publish<T>(T gameEvent) where T : IGameEvent
+        public virtual void Publish<T>(T gameEvent) where T : class, IGameEvent
         {
             Fire(gameEvent);
         }
@@ -277,7 +277,7 @@ namespace Andastra.Runtime.Games.Common
         /// Queues events for processing in the next frame or update cycle.
         /// Prevents recursion and ensures proper execution order.
         /// </remarks>
-        public virtual void QueueEvent<T>(T gameEvent) where T : IGameEvent
+        public virtual void QueueEvent<T>(T gameEvent) where T : class, IGameEvent
         {
             Queue(gameEvent);
         }

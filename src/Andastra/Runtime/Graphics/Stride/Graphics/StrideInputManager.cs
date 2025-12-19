@@ -2,6 +2,8 @@ using Stride.Input;
 using Stride.Core.Mathematics;
 using Andastra.Runtime.Graphics;
 using System.Numerics;
+using GraphicsKeys = Andastra.Runtime.Graphics.Keys;
+using GraphicsVector2 = Andastra.Runtime.Graphics.Vector2;
 
 namespace Andastra.Runtime.Stride.Graphics
 {
@@ -55,26 +57,26 @@ namespace Andastra.Runtime.Stride.Graphics
             _inputManager = inputManager;
         }
 
-        public bool IsKeyDown(Keys key)
+        public bool IsKeyDown(GraphicsKeys key)
         {
             var strideKey = ConvertKey(key);
             return _inputManager.IsKeyDown(strideKey);
         }
 
-        public bool IsKeyUp(Keys key)
+        public bool IsKeyUp(GraphicsKeys key)
         {
             var strideKey = ConvertKey(key);
             return _inputManager.IsKeyUp(strideKey);
         }
 
-        public Keys[] GetPressedKeys()
+        public GraphicsKeys[] GetPressedKeys()
         {
             // Stride doesn't have a direct GetPressedKeys method
             // We'll need to check all keys manually
-            var pressedKeys = new System.Collections.Generic.List<Keys>();
-            foreach (Keys key in System.Enum.GetValues(typeof(Keys)))
+            var pressedKeys = new System.Collections.Generic.List<GraphicsKeys>();
+            foreach (GraphicsKeys key in System.Enum.GetValues(typeof(GraphicsKeys)))
             {
-                if (key != Keys.None && IsKeyDown(key))
+                if (key != GraphicsKeys.None && IsKeyDown(key))
                 {
                     pressedKeys.Add(key);
                 }
@@ -82,138 +84,138 @@ namespace Andastra.Runtime.Stride.Graphics
             return pressedKeys.ToArray();
         }
 
-        private Stride.Input.Keys ConvertKey(Keys key)
+        private Stride.Input.Keys ConvertKey(GraphicsKeys key)
         {
             // Map our Keys enum to Stride's Keys enum
             switch (key)
             {
-                case Keys.None:
+                case GraphicsKeys.None:
                     return Stride.Input.Keys.None;
-                case Keys.Back:
+                case GraphicsKeys.Back:
                     return Stride.Input.Keys.Back;
-                case Keys.Tab:
+                case GraphicsKeys.Tab:
                     return Stride.Input.Keys.Tab;
-                case Keys.Enter:
+                case GraphicsKeys.Enter:
                     return Stride.Input.Keys.Enter;
-                case Keys.Escape:
+                case GraphicsKeys.Escape:
                     return Stride.Input.Keys.Escape;
-                case Keys.Space:
+                case GraphicsKeys.Space:
                     return Stride.Input.Keys.Space;
-                case Keys.Up:
+                case GraphicsKeys.Up:
                     return Stride.Input.Keys.Up;
-                case Keys.Down:
+                case GraphicsKeys.Down:
                     return Stride.Input.Keys.Down;
-                case Keys.Left:
+                case GraphicsKeys.Left:
                     return Stride.Input.Keys.Left;
-                case Keys.Right:
+                case GraphicsKeys.Right:
                     return Stride.Input.Keys.Right;
-                case Keys.A:
+                case GraphicsKeys.A:
                     return Stride.Input.Keys.A;
-                case Keys.B:
+                case GraphicsKeys.B:
                     return Stride.Input.Keys.B;
-                case Keys.C:
+                case GraphicsKeys.C:
                     return Stride.Input.Keys.C;
-                case Keys.D:
+                case GraphicsKeys.D:
                     return Stride.Input.Keys.D;
-                case Keys.E:
+                case GraphicsKeys.E:
                     return Stride.Input.Keys.E;
-                case Keys.F:
+                case GraphicsKeys.F:
                     return Stride.Input.Keys.F;
-                case Keys.G:
+                case GraphicsKeys.G:
                     return Stride.Input.Keys.G;
-                case Keys.H:
+                case GraphicsKeys.H:
                     return Stride.Input.Keys.H;
-                case Keys.I:
+                case GraphicsKeys.I:
                     return Stride.Input.Keys.I;
-                case Keys.J:
+                case GraphicsKeys.J:
                     return Stride.Input.Keys.J;
-                case Keys.K:
+                case GraphicsKeys.K:
                     return Stride.Input.Keys.K;
-                case Keys.L:
+                case GraphicsKeys.L:
                     return Stride.Input.Keys.L;
-                case Keys.M:
+                case GraphicsKeys.M:
                     return Stride.Input.Keys.M;
-                case Keys.N:
+                case GraphicsKeys.N:
                     return Stride.Input.Keys.N;
-                case Keys.O:
+                case GraphicsKeys.O:
                     return Stride.Input.Keys.O;
-                case Keys.P:
+                case GraphicsKeys.P:
                     return Stride.Input.Keys.P;
-                case Keys.Q:
+                case GraphicsKeys.Q:
                     return Stride.Input.Keys.Q;
-                case Keys.R:
+                case GraphicsKeys.R:
                     return Stride.Input.Keys.R;
-                case Keys.S:
+                case GraphicsKeys.S:
                     return Stride.Input.Keys.S;
-                case Keys.T:
+                case GraphicsKeys.T:
                     return Stride.Input.Keys.T;
-                case Keys.U:
+                case GraphicsKeys.U:
                     return Stride.Input.Keys.U;
-                case Keys.V:
+                case GraphicsKeys.V:
                     return Stride.Input.Keys.V;
-                case Keys.W:
+                case GraphicsKeys.W:
                     return Stride.Input.Keys.W;
-                case Keys.X:
+                case GraphicsKeys.X:
                     return Stride.Input.Keys.X;
-                case Keys.Y:
+                case GraphicsKeys.Y:
                     return Stride.Input.Keys.Y;
-                case Keys.Z:
+                case GraphicsKeys.Z:
                     return Stride.Input.Keys.Z;
-                case Keys.D0:
+                case GraphicsKeys.D0:
                     return Stride.Input.Keys.D0;
-                case Keys.D1:
+                case GraphicsKeys.D1:
                     return Stride.Input.Keys.D1;
-                case Keys.D2:
+                case GraphicsKeys.D2:
                     return Stride.Input.Keys.D2;
-                case Keys.D3:
+                case GraphicsKeys.D3:
                     return Stride.Input.Keys.D3;
-                case Keys.D4:
+                case GraphicsKeys.D4:
                     return Stride.Input.Keys.D4;
-                case Keys.D5:
+                case GraphicsKeys.D5:
                     return Stride.Input.Keys.D5;
-                case Keys.D6:
+                case GraphicsKeys.D6:
                     return Stride.Input.Keys.D6;
-                case Keys.D7:
+                case GraphicsKeys.D7:
                     return Stride.Input.Keys.D7;
-                case Keys.D8:
+                case GraphicsKeys.D8:
                     return Stride.Input.Keys.D8;
-                case Keys.D9:
+                case GraphicsKeys.D9:
                     return Stride.Input.Keys.D9;
-                case Keys.F1:
+                case GraphicsKeys.F1:
                     return Stride.Input.Keys.F1;
-                case Keys.F2:
+                case GraphicsKeys.F2:
                     return Stride.Input.Keys.F2;
-                case Keys.F3:
+                case GraphicsKeys.F3:
                     return Stride.Input.Keys.F3;
-                case Keys.F4:
+                case GraphicsKeys.F4:
                     return Stride.Input.Keys.F4;
-                case Keys.F5:
+                case GraphicsKeys.F5:
                     return Stride.Input.Keys.F5;
-                case Keys.F6:
+                case GraphicsKeys.F6:
                     return Stride.Input.Keys.F6;
-                case Keys.F7:
+                case GraphicsKeys.F7:
                     return Stride.Input.Keys.F7;
-                case Keys.F8:
+                case GraphicsKeys.F8:
                     return Stride.Input.Keys.F8;
-                case Keys.F9:
+                case GraphicsKeys.F9:
                     return Stride.Input.Keys.F9;
-                case Keys.F10:
+                case GraphicsKeys.F10:
                     return Stride.Input.Keys.F10;
-                case Keys.F11:
+                case GraphicsKeys.F11:
                     return Stride.Input.Keys.F11;
-                case Keys.F12:
+                case GraphicsKeys.F12:
                     return Stride.Input.Keys.F12;
-                case Keys.LeftControl:
+                case GraphicsKeys.LeftControl:
                     return Stride.Input.Keys.LeftCtrl;
-                case Keys.RightControl:
+                case GraphicsKeys.RightControl:
                     return Stride.Input.Keys.RightCtrl;
-                case Keys.LeftShift:
+                case GraphicsKeys.LeftShift:
                     return Stride.Input.Keys.LeftShift;
-                case Keys.RightShift:
+                case GraphicsKeys.RightShift:
                     return Stride.Input.Keys.RightShift;
-                case Keys.LeftAlt:
+                case GraphicsKeys.LeftAlt:
                     return Stride.Input.Keys.LeftAlt;
-                case Keys.RightAlt:
+                case GraphicsKeys.RightAlt:
                     return Stride.Input.Keys.RightAlt;
                 default:
                     return Stride.Input.Keys.None;
@@ -235,7 +237,7 @@ namespace Andastra.Runtime.Stride.Graphics
 
         public int X => (int)_inputManager.MousePosition.X;
         public int Y => (int)_inputManager.MousePosition.Y;
-        public Vector2 Position => new Vector2(_inputManager.MousePosition.X, _inputManager.MousePosition.Y);
+        public GraphicsVector2 Position => new GraphicsVector2(_inputManager.MousePosition.X, _inputManager.MousePosition.Y);
         public int ScrollWheelValue => (int)_inputManager.MouseWheelDelta;
 
         public ButtonState LeftButton => _inputManager.IsMouseButtonDown(Stride.Input.MouseButton.Left) ? ButtonState.Pressed : ButtonState.Released;
