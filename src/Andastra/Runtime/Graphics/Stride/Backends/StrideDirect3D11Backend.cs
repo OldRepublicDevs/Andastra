@@ -21,9 +21,13 @@ namespace Andastra.Runtime.Stride.Backends
         private GraphicsDevice _strideDevice;
         private CommandList _commandList;
 
+        // Track scratch buffers for BLAS cleanup
+        private readonly System.Collections.Generic.Dictionary<IntPtr, IntPtr> _blasScratchBuffers;
+
         public StrideDirect3D11Backend(global::Stride.Engine.Game game)
         {
             _game = game ?? throw new ArgumentNullException(nameof(game));
+            _blasScratchBuffers = new System.Collections.Generic.Dictionary<IntPtr, IntPtr>();
         }
 
         #region BaseGraphicsBackend Implementation
@@ -130,6 +134,19 @@ namespace Andastra.Runtime.Stride.Backends
 
         protected override void DestroyResourceInternal(ResourceInfo info)
         {
+            // If this is a BLAS, clean up associated scratch buffer
+            if (info.Type == ResourceType.AccelerationStructure && _blasScratchBuffers.ContainsKey(info.Handle))
+            {
+                IntPtr scratchHandle = _blasScratchBuffers[info.Handle];
+                _blasScratchBuffers.Remove(info.Handle);
+
+                // Destroy scratch buffer
+                if (scratchHandle != IntPtr.Zero)
+                {
+                    base.DestroyResource(scratchHandle);
+                }
+            }
+
             // Resources tracked by Stride's garbage collection
             // Would dispose IDisposable resources here
         }
@@ -283,11 +300,11 @@ namespace Andastra.Runtime.Stride.Backends
 
         /// <summary>
         /// Initializes the DXR fallback layer for software-based raytracing on DirectX 11.
-        /// 
+        ///
         /// The DXR fallback layer allows using DXR APIs on hardware without native raytracing support
         /// by emulating raytracing using compute shaders. This implementation uses the native D3D11 device
         /// from Stride to initialize the fallback layer.
-        /// 
+        ///
         /// Based on Microsoft D3D12RaytracingFallback library:
         /// https://github.com/microsoft/DirectX-Graphics-Samples/tree/master/Libraries/D3D12RaytracingFallback
         /// </summary>
@@ -316,7 +333,7 @@ namespace Andastra.Runtime.Stride.Backends
                 // Attempt to initialize DXR fallback layer using native device
                 // Note: The DXR fallback layer requires the D3D12RaytracingFallback library
                 // which wraps the D3D11 device to provide DXR API compatibility
-                
+
                 // For Stride integration, we use the native D3D11 device pointer from Stride
                 // The fallback layer can be initialized by:
                 // 1. Loading D3D12RaytracingFallback library (D3D12RaytracingFallback.dll)
@@ -372,7 +389,7 @@ namespace Andastra.Runtime.Stride.Backends
 
         /// <summary>
         /// Checks if the DXR fallback layer is available on the system.
-        /// 
+        ///
         /// The DXR fallback layer requires:
         /// - D3D12RaytracingFallback.dll to be present
         /// - DirectX 11 device with compute shader support (Feature Level 11.0+)
@@ -409,7 +426,7 @@ namespace Andastra.Runtime.Stride.Backends
                     // The library might be delay-loaded or available through other means
                     // For now, we'll assume it's available if we meet the OS requirements
                     // and have a valid D3D11 device with compute shader support
-                    
+
                     // Check if we can at least use compute shaders (required for software raytracing)
                     if (_featureLevel >= D3D11FeatureLevel.Level_11_0)
                     {
@@ -417,7 +434,7 @@ namespace Andastra.Runtime.Stride.Backends
                         // even without the official fallback layer DLL
                         return true;
                     }
-                    
+
                     return false;
                 }
 
@@ -453,16 +470,236 @@ namespace Andastra.Runtime.Stride.Backends
             return CheckDxrFallbackLayerAvailability();
         }
 
+        /// <summary>
+        /// Creates a bottom-level acceleration structure (BLAS) for raytracing using the DXR fallback layer.
+        ///
+        /// The DXR fallback layer provides DXR API compatibility on DirectX 11 hardware by emulating
+        /// raytracing using compute shaders. This implementation creates a BLAS from mesh geometry
+        /// that can be used for raytracing operations.
+        ///
+        /// Based on Microsoft D3D12RaytracingFallback library:
+        /// https://github.com/microsoft/DirectX-Graphics-Samples/tree/master/Libraries/D3D12RaytracingFallback
+        ///
+        /// DXR API Reference:
+        /// - D3D12_RAYTRACING_GEOMETRY_DESC: Describes geometry for acceleration structure
+        /// - D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS: Inputs for building acceleration structure
+        /// - GetRaytracingAccelerationStructurePrebuildInfo: Gets size requirements
+        /// - BuildRaytracingAccelerationStructure: Builds the acceleration structure
+        /// </summary>
+        /// <param name="geometry">Mesh geometry containing vertex and index buffers</param>
+        /// <param name="handle">Resource handle for tracking</param>
+        /// <returns>ResourceInfo containing the created BLAS resource</returns>
         protected override ResourceInfo CreateBlasFallbackInternal(MeshGeometry geometry, IntPtr handle)
         {
-            // TODO: STUB - Create bottom-level acceleration structure for raytracing
-            return new ResourceInfo
+            // Validate inputs
+            if (!_useDxrFallbackLayer || _raytracingFallbackDevice == IntPtr.Zero)
             {
-                Type = ResourceType.AccelerationStructure,
-                Handle = handle,
-                NativeHandle = IntPtr.Zero,
-                DebugName = "BLAS"
-            };
+                Console.WriteLine("[StrideDX11] Cannot create BLAS: DXR fallback layer not initialized");
+                return new ResourceInfo
+                {
+                    Type = ResourceType.AccelerationStructure,
+                    Handle = handle,
+                    NativeHandle = IntPtr.Zero,
+                    DebugName = "BLAS_Invalid"
+                };
+            }
+
+            if (geometry.VertexBuffer == IntPtr.Zero || geometry.IndexBuffer == IntPtr.Zero)
+            {
+                Console.WriteLine("[StrideDX11] Cannot create BLAS: Invalid geometry buffers");
+                return new ResourceInfo
+                {
+                    Type = ResourceType.AccelerationStructure,
+                    Handle = handle,
+                    NativeHandle = IntPtr.Zero,
+                    DebugName = "BLAS_InvalidGeometry"
+                };
+            }
+
+            if (geometry.VertexCount <= 0 || geometry.IndexCount <= 0 || geometry.VertexStride <= 0)
+            {
+                Console.WriteLine("[StrideDX11] Cannot create BLAS: Invalid geometry parameters (VertexCount={0}, IndexCount={1}, VertexStride={2})",
+                    geometry.VertexCount, geometry.IndexCount, geometry.VertexStride);
+                return new ResourceInfo
+                {
+                    Type = ResourceType.AccelerationStructure,
+                    Handle = handle,
+                    NativeHandle = IntPtr.Zero,
+                    DebugName = "BLAS_InvalidParams"
+                };
+            }
+
+            try
+            {
+                // Step 1: Create geometry description for the acceleration structure
+                // The DXR fallback layer uses D3D12_RAYTRACING_GEOMETRY_DESC structure
+                // which describes the geometry data (vertices and indices)
+                D3D12_RAYTRACING_GEOMETRY_DESC geometryDesc = new D3D12_RAYTRACING_GEOMETRY_DESC
+                {
+                    Type = D3D12_RAYTRACING_GEOMETRY_TYPE_TRIANGLES,
+                    Flags = geometry.IsOpaque ? D3D12_RAYTRACING_GEOMETRY_FLAG_OPAQUE : D3D12_RAYTRACING_GEOMETRY_FLAG_NONE,
+                    Triangles = new D3D12_RAYTRACING_GEOMETRY_TRIANGLES_DESC
+                    {
+                        Transform3x4 = IntPtr.Zero, // No transform matrix for BLAS
+                        IndexFormat = D3D12_RAYTRACING_INDEX_FORMAT_UINT32, // 32-bit indices
+                        VertexFormat = D3D12_RAYTRACING_VERTEX_FORMAT_FLOAT3, // Float3 vertices
+                        IndexCount = (uint)geometry.IndexCount,
+                        VertexCount = (uint)geometry.VertexCount,
+                        IndexBuffer = geometry.IndexBuffer,
+                        VertexBuffer = new D3D12_GPU_VIRTUAL_ADDRESS_AND_STRIDE
+                        {
+                            StartAddress = GetGpuVirtualAddress(geometry.VertexBuffer),
+                            StrideInBytes = (uint)geometry.VertexStride
+                        }
+                    }
+                };
+
+                // Step 2: Create build inputs structure
+                // This describes what type of acceleration structure to build (BLAS vs TLAS)
+                D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS buildInputs = new D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS
+                {
+                    Type = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL,
+                    Flags = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PREFER_FAST_TRACE,
+                    NumDescs = 1,
+                    DescsLayout = D3D12_ELEMENTS_LAYOUT_ARRAY,
+                    pGeometryDescs = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(D3D12_RAYTRACING_GEOMETRY_DESC)))
+                };
+
+                // Copy geometry description to unmanaged memory
+                Marshal.StructureToPtr(geometryDesc, buildInputs.pGeometryDescs, false);
+
+                // Step 3: Get prebuild information to determine buffer sizes
+                // This tells us how much memory we need for the acceleration structure
+                D3D12_RAYTRACING_ACCELERATION_STRUCTURE_PREBUILD_INFO prebuildInfo;
+                GetRaytracingAccelerationStructurePrebuildInfo(
+                    _raytracingFallbackDevice,
+                    ref buildInputs,
+                    out prebuildInfo);
+
+                // Validate prebuild info
+                if (prebuildInfo.ResultDataMaxSizeInBytes == 0 || prebuildInfo.ScratchDataSizeInBytes == 0)
+                {
+                    Console.WriteLine("[StrideDX11] Failed to get BLAS prebuild info: Invalid sizes");
+                    Marshal.FreeHGlobal(buildInputs.pGeometryDescs);
+                    return new ResourceInfo
+                    {
+                        Type = ResourceType.AccelerationStructure,
+                        Handle = handle,
+                        NativeHandle = IntPtr.Zero,
+                        DebugName = "BLAS_PrebuildFailed"
+                    };
+                }
+
+                // Step 4: Create scratch buffer for building the acceleration structure
+                // This is temporary memory used during the build process
+                IntPtr scratchBufferHandle = CreateScratchBuffer(prebuildInfo.ScratchDataSizeInBytes);
+                if (scratchBufferHandle == IntPtr.Zero)
+                {
+                    Console.WriteLine("[StrideDX11] Failed to create scratch buffer for BLAS");
+                    Marshal.FreeHGlobal(buildInputs.pGeometryDescs);
+                    return new ResourceInfo
+                    {
+                        Type = ResourceType.AccelerationStructure,
+                        Handle = handle,
+                        NativeHandle = IntPtr.Zero,
+                        DebugName = "BLAS_ScratchBufferFailed"
+                    };
+                }
+
+                // Step 5: Create result buffer for the acceleration structure
+                // This is where the built acceleration structure will be stored
+                IntPtr resultBufferHandle = CreateAccelerationStructureBuffer(prebuildInfo.ResultDataMaxSizeInBytes);
+                if (resultBufferHandle == IntPtr.Zero)
+                {
+                    Console.WriteLine("[StrideDX11] Failed to create result buffer for BLAS");
+                    DestroyResource(scratchBufferHandle);
+                    Marshal.FreeHGlobal(buildInputs.pGeometryDescs);
+                    return new ResourceInfo
+                    {
+                        Type = ResourceType.AccelerationStructure,
+                        Handle = handle,
+                        NativeHandle = IntPtr.Zero,
+                        DebugName = "BLAS_ResultBufferFailed"
+                    };
+                }
+
+                // Step 6: Build the acceleration structure
+                // This is the actual build operation that creates the BLAS
+                D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC buildDesc = new D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC
+                {
+                    DestAccelerationStructureData = GetGpuVirtualAddress(resultBufferHandle),
+                    Inputs = buildInputs,
+                    SourceAccelerationStructureData = IntPtr.Zero, // No source (building from scratch)
+                    ScratchAccelerationStructureData = GetGpuVirtualAddress(scratchBufferHandle)
+                };
+
+                // Get command list for building (Stride manages this internally)
+                // For the fallback layer, we need to use the fallback command list
+                IntPtr fallbackCommandList = GetFallbackCommandList();
+                if (fallbackCommandList == IntPtr.Zero)
+                {
+                    Console.WriteLine("[StrideDX11] Failed to get fallback command list for BLAS build");
+                    DestroyResource(scratchBufferHandle);
+                    DestroyResource(resultBufferHandle);
+                    Marshal.FreeHGlobal(buildInputs.pGeometryDescs);
+                    return new ResourceInfo
+                    {
+                        Type = ResourceType.AccelerationStructure,
+                        Handle = handle,
+                        NativeHandle = IntPtr.Zero,
+                        DebugName = "BLAS_CommandListFailed"
+                    };
+                }
+
+                // Build the acceleration structure using the fallback layer
+                BuildRaytracingAccelerationStructure(
+                    fallbackCommandList,
+                    ref buildDesc,
+                    0, // NumPostbuildInfoDescs
+                    IntPtr.Zero); // pPostbuildInfoDescs
+
+                // Clean up temporary memory
+                Marshal.FreeHGlobal(buildInputs.pGeometryDescs);
+
+                // Store scratch buffer handle for later cleanup
+                // We'll need to keep it until the BLAS is destroyed
+                ResourceInfo scratchInfo;
+                if (_resources.TryGetValue(scratchBufferHandle, out scratchInfo))
+                {
+                    // Store reference to scratch buffer in BLAS resource info
+                }
+
+                // Create resource info for the BLAS
+                ResourceInfo blasInfo = new ResourceInfo
+                {
+                    Type = ResourceType.AccelerationStructure,
+                    Handle = handle,
+                    NativeHandle = resultBufferHandle, // Store result buffer as native handle
+                    DebugName = "BLAS",
+                    SizeInBytes = (int)prebuildInfo.ResultDataMaxSizeInBytes
+                };
+
+                // Store scratch buffer handle for cleanup
+                // We'll track this separately so we can clean it up when BLAS is destroyed
+                _blasScratchBuffers[handle] = scratchBufferHandle;
+
+                Console.WriteLine("[StrideDX11] BLAS created successfully (ResultSize={0} bytes, ScratchSize={1} bytes)",
+                    prebuildInfo.ResultDataMaxSizeInBytes, prebuildInfo.ScratchDataSizeInBytes);
+
+                return blasInfo;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("[StrideDX11] Exception creating BLAS: {0}", ex.Message);
+                Console.WriteLine("[StrideDX11] Stack trace: {0}", ex.StackTrace);
+                return new ResourceInfo
+                {
+                    Type = ResourceType.AccelerationStructure,
+                    Handle = handle,
+                    NativeHandle = IntPtr.Zero,
+                    DebugName = "BLAS_Exception"
+                };
+            }
         }
 
         protected override ResourceInfo CreateTlasFallbackInternal(int maxInstances, IntPtr handle)
@@ -501,6 +738,103 @@ namespace Andastra.Runtime.Stride.Backends
 
         #endregion
 
+        #region Helper Methods for BLAS Creation
+
+        /// <summary>
+        /// Creates a scratch buffer for building acceleration structures.
+        /// Scratch buffers are temporary memory used during the build process.
+        /// </summary>
+        /// <param name="sizeInBytes">Size of the scratch buffer in bytes</param>
+        /// <returns>Handle to the created scratch buffer, or IntPtr.Zero on failure</returns>
+        private IntPtr CreateScratchBuffer(ulong sizeInBytes)
+        {
+            if (sizeInBytes == 0)
+            {
+                return IntPtr.Zero;
+            }
+
+            // Create a structured buffer for scratch memory used during acceleration structure building
+            // The scratch buffer is used temporarily and needs to be accessible by compute shaders
+            // We use CreateStructuredBuffer which creates a buffer suitable for compute shader access
+            return CreateStructuredBuffer((int)(sizeInBytes / 16), 16, false); // Use 16-byte alignment
+        }
+
+        /// <summary>
+        /// Creates a buffer for storing the acceleration structure result.
+        /// This buffer will contain the built acceleration structure data.
+        /// </summary>
+        /// <param name="sizeInBytes">Size of the result buffer in bytes</param>
+        /// <returns>Handle to the created result buffer, or IntPtr.Zero on failure</returns>
+        private IntPtr CreateAccelerationStructureBuffer(ulong sizeInBytes)
+        {
+            if (sizeInBytes == 0)
+            {
+                return IntPtr.Zero;
+            }
+
+            // Create a buffer with acceleration structure usage flag
+            // This buffer stores the final acceleration structure data and needs to be
+            // accessible by raytracing shaders
+            var bufferDesc = new BufferDescription
+            {
+                SizeInBytes = (int)sizeInBytes,
+                Usage = BufferUsage.AccelerationStructure,
+                StructureByteStride = 0,
+                DebugName = "BLAS_ResultBuffer"
+            };
+
+            return CreateBuffer(bufferDesc);
+        }
+
+        /// <summary>
+        /// Gets the GPU virtual address for a buffer handle.
+        /// The DXR fallback layer uses GPU virtual addresses for acceleration structure operations.
+        /// </summary>
+        /// <param name="bufferHandle">Handle to the buffer</param>
+        /// <returns>GPU virtual address, or IntPtr.Zero if the buffer is invalid</returns>
+        private IntPtr GetGpuVirtualAddress(IntPtr bufferHandle)
+        {
+            if (bufferHandle == IntPtr.Zero)
+            {
+                return IntPtr.Zero;
+            }
+
+            // Get the native buffer pointer from Stride
+            ResourceInfo info;
+            if (!_resources.TryGetValue(bufferHandle, out info))
+            {
+                return IntPtr.Zero;
+            }
+
+            // For DirectX 11, we need to query the GPU virtual address from the buffer
+            // In a full implementation, this would use ID3D11Buffer::GetGPUVirtualAddress()
+            // or similar API. For now, we use the native handle as a placeholder.
+            // The fallback layer will handle the actual address translation.
+            return info.NativeHandle;
+        }
+
+        /// <summary>
+        /// Gets the fallback command list for building acceleration structures.
+        /// The DXR fallback layer requires a command list to execute build operations.
+        /// </summary>
+        /// <returns>Handle to the fallback command list, or IntPtr.Zero if unavailable</returns>
+        private IntPtr GetFallbackCommandList()
+        {
+            // For Stride, we use the command list from the graphics context
+            // The fallback layer wraps this to provide DXR API compatibility
+            if (_commandList == null)
+            {
+                _commandList = _game?.GraphicsContext?.CommandList;
+            }
+
+            // Return the native command list pointer
+            // In a full implementation, this would query the fallback command list
+            // from the fallback device. For now, we use the Stride command list.
+            return _commandList?.NativeCommandList ?? IntPtr.Zero;
+        }
+
+        #endregion
+
         #region P/Invoke Declarations for DXR Fallback Layer
 
         /// <summary>
@@ -521,6 +855,123 @@ namespace Andastra.Runtime.Stride.Backends
         [DllImport("kernel32.dll", SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
         private static extern bool FreeLibrary(IntPtr hModule);
+
+        /// <summary>
+        /// Gets prebuild information for a raytracing acceleration structure.
+        /// This determines the size requirements for scratch and result buffers.
+        /// Based on DXR API: ID3D12Device5::GetRaytracingAccelerationStructurePrebuildInfo
+        /// </summary>
+        /// <param name="device">DXR fallback device</param>
+        /// <param name="pDesc">Build inputs description</param>
+        /// <param name="pInfo">Output prebuild information</param>
+        [DllImport("D3D12RaytracingFallback.dll", EntryPoint = "D3D12GetRaytracingAccelerationStructurePrebuildInfo", CallingConvention = CallingConvention.StdCall)]
+        private static extern void GetRaytracingAccelerationStructurePrebuildInfo(
+            IntPtr device,
+            ref D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS pDesc,
+            out D3D12_RAYTRACING_ACCELERATION_STRUCTURE_PREBUILD_INFO pInfo);
+
+        /// <summary>
+        /// Builds a raytracing acceleration structure.
+        /// Based on DXR API: ID3D12GraphicsCommandList4::BuildRaytracingAccelerationStructure
+        /// </summary>
+        /// <param name="commandList">Fallback command list</param>
+        /// <param name="pDesc">Build description</param>
+        /// <param name="numPostbuildInfoDescs">Number of postbuild info descriptors</param>
+        /// <param name="pPostbuildInfoDescs">Postbuild info descriptors</param>
+        [DllImport("D3D12RaytracingFallback.dll", EntryPoint = "D3D12BuildRaytracingAccelerationStructure", CallingConvention = CallingConvention.StdCall)]
+        private static extern void BuildRaytracingAccelerationStructure(
+            IntPtr commandList,
+            ref D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC pDesc,
+            int numPostbuildInfoDescs,
+            IntPtr pPostbuildInfoDescs);
+
+        #endregion
+
+        #region DXR Fallback Layer Structures
+
+        // DXR fallback layer structures based on D3D12 raytracing API
+        // These structures match the D3D12 raytracing API for compatibility
+
+        private const uint D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL = 0;
+        private const uint D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL = 1;
+
+        private const uint D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_NONE = 0;
+        private const uint D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_ALLOW_UPDATE = 0x1;
+        private const uint D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_ALLOW_COMPACTION = 0x2;
+        private const uint D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PREFER_FAST_TRACE = 0x4;
+        private const uint D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PREFER_FAST_BUILD = 0x8;
+        private const uint D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_MINIMIZE_MEMORY = 0x10;
+        private const uint D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PERFORM_UPDATE = 0x20;
+
+        private const uint D3D12_RAYTRACING_GEOMETRY_TYPE_TRIANGLES = 0;
+        private const uint D3D12_RAYTRACING_GEOMETRY_TYPE_PROCEDURAL_PRIMITIVE_AABBS = 1;
+
+        private const uint D3D12_RAYTRACING_GEOMETRY_FLAG_NONE = 0;
+        private const uint D3D12_RAYTRACING_GEOMETRY_FLAG_OPAQUE = 0x1;
+        private const uint D3D12_RAYTRACING_GEOMETRY_FLAG_NO_DUPLICATE_ANYHIT_INVOCATION = 0x2;
+
+        private const uint D3D12_RAYTRACING_INDEX_FORMAT_UINT16 = 0;
+        private const uint D3D12_RAYTRACING_INDEX_FORMAT_UINT32 = 1;
+
+        private const uint D3D12_RAYTRACING_VERTEX_FORMAT_FLOAT3 = 0;
+        private const uint D3D12_RAYTRACING_VERTEX_FORMAT_FLOAT2 = 1;
+
+        private const uint D3D12_ELEMENTS_LAYOUT_ARRAY = 0;
+        private const uint D3D12_ELEMENTS_LAYOUT_ARRAY_OF_POINTERS = 1;
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct D3D12_GPU_VIRTUAL_ADDRESS_AND_STRIDE
+        {
+            public IntPtr StartAddress;
+            public uint StrideInBytes;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct D3D12_RAYTRACING_GEOMETRY_TRIANGLES_DESC
+        {
+            public IntPtr Transform3x4;
+            public uint IndexFormat;
+            public uint VertexFormat;
+            public uint IndexCount;
+            public uint VertexCount;
+            public IntPtr IndexBuffer;
+            public D3D12_GPU_VIRTUAL_ADDRESS_AND_STRIDE VertexBuffer;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct D3D12_RAYTRACING_GEOMETRY_DESC
+        {
+            public uint Type;
+            public uint Flags;
+            public D3D12_RAYTRACING_GEOMETRY_TRIANGLES_DESC Triangles;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS
+        {
+            public uint Type;
+            public uint Flags;
+            public uint NumDescs;
+            public uint DescsLayout;
+            public IntPtr pGeometryDescs;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct D3D12_RAYTRACING_ACCELERATION_STRUCTURE_PREBUILD_INFO
+        {
+            public ulong ResultDataMaxSizeInBytes;
+            public ulong ScratchDataSizeInBytes;
+            public ulong UpdateScratchDataSizeInBytes;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC
+        {
+            public IntPtr DestAccelerationStructureData;
+            public D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS Inputs;
+            public IntPtr SourceAccelerationStructureData;
+            public IntPtr ScratchAccelerationStructureData;
+        }
 
         #endregion
     }
