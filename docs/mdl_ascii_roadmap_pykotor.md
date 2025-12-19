@@ -88,10 +88,11 @@ This document tracks the implementation of ASCII MDL format support in PyKotor, 
 - ✅ Dangly mesh writing (constraints)
 
 #### Missing/Incomplete Features
-- ⏳ Animation writing (newanim blocks) - Not critical for basic functionality
+- ✅ Animation writing (newanim blocks) - COMPLETE
 - ⏳ Some controller formatting edge cases - Most common cases are handled
 - ⏳ Complete emitter flag writing - Basic flags are supported
 - ⏳ Some light flare data writing - Basic flare data is supported
+- ⏳ Animation node parent mapping - Currently skipped (requires model node index mapping)
 
 ## MDLOps Reference Mapping
 
