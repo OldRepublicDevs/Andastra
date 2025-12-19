@@ -95,7 +95,9 @@ namespace HolocronToolset.Windows
             Ui.MapRenderer = new IndoorMapRenderer();
             Ui.MapRenderer.SetMap(Map);
             // Matching Python: self.ui.mapRenderer.set_undo_stack(self._undo_stack)
-            // TODO: STUB - Note: SetUndoStack will be implemented in IndoorMapRenderer when needed
+            Ui.MapRenderer.SetUndoStack(UndoStack);
+            // Matching Python: self.ui.mapRenderer.set_status_callback(self._refresh_status_bar)
+            Ui.MapRenderer.SetStatusCallback(RefreshStatusBar);
 
             // Setup select all action (matching Python: self.ui.actionSelectAll.triggered.connect(self.select_all))
             Ui.ActionSelectAll = SelectAll;
@@ -167,8 +169,17 @@ namespace HolocronToolset.Windows
             //     self._refresh_status_bar()
             var renderer = Ui.MapRenderer;
             renderer.ClearSelectedRooms();
+            // Matching Python line 1758: self.ui.mapRenderer.set_cursor_component(None)
+            renderer.SetCursorComponent(null);
             // Note: Additional UI clearing (componentList, moduleComponentList, preview image, status bar)
-            // TODO: STUB - will be implemented when those UI components are available
+            // These will be implemented when those UI components are available
+            // Matching Python lines 1759-1764:
+            // self.ui.componentList.clearSelection()
+            // self.ui.componentList.setCurrentItem(None)
+            // self.ui.moduleComponentList.clearSelection()
+            // self.ui.moduleComponentList.setCurrentItem(None)
+            // self._set_preview_image(None)
+            // self._refresh_status_bar()
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/indoor_builder.py:1628-1640
@@ -263,6 +274,15 @@ namespace HolocronToolset.Windows
 
             // Matching Python line 1782: self.ui.mapRenderer.set_camera_position(cx, cy)
             Ui.MapRenderer.SetCameraPosition(cx, cy);
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/indoor_builder.py:1249-1256
+        // Original: def _refresh_status_bar(self, mouse_pos: QPoint | Vector2 | None = None, mouse_buttons: set[int | Qt.MouseButton] | None = None, keys: set[int | Qt.Key] | None = None):
+        private void RefreshStatusBar(System.Numerics.Vector2? mousePos, System.Collections.Generic.HashSet<int> mouseButtons, System.Collections.Generic.HashSet<int> keys)
+        {
+            // Matching Python implementation: Update status bar with mouse position, buttons, and keys
+            // This will be fully implemented when status bar UI is available
+            // For now, this is a placeholder that matches the Python interface
         }
     }
 
