@@ -23,18 +23,34 @@ namespace Andastra.Runtime.Stride.Graphics
     /// </summary>
     /// <remarks>
     /// Entity Model Renderer:
-    /// - Based on swkotor.exe and swkotor2.exe entity rendering system
-    /// - Located via string references: Model loading and rendering for entities
-    /// - "ModelResRef" @ 0x007c2f6c (model resource reference field), "Appearance_Type" @ 0x007c40f0 (appearance type field)
-    /// - Model loading: FUN_005261b0 @ 0x005261b0 loads creature model from appearance.2da (swkotor2.exe)
-    /// - "CSWCCreature::LoadModel(): Failed to load creature model '%s'." @ 0x007c82fc (model loading error)
-    /// - Original implementation: Loads MDL models for entities and renders with transforms
-    /// - Models resolved from appearance.2da (creatures), placeables.2da (placeables), genericdoors.2da (doors)
-    /// - Caches loaded models to avoid reloading (model cache dictionary by ResRef)
-    /// - Model conversion: MDL format (KOTOR native) converted to Stride Buffer format for rendering
-    /// - Material resolution: StrideBasicEffect created per texture/material (texture loading from TPC files)
-    /// - Render transform: Entity position/orientation applied via world matrix for rendering
-    /// - Based on swkotor.exe and swkotor2.exe: FUN_005261b0 @ 0x005261b0 (load creature model)
+    /// - Cross-Engine Analysis (Reverse Engineered via Ghidra):
+    ///   - Odyssey (swkotor.exe, swkotor2.exe):
+    ///     - swkotor2.exe: FUN_005261b0 @ 0x005261b0 loads creature model from appearance.2da
+    ///     - swkotor.exe: CSWCCreature::LoadModel() @ 0x0074f85c (similar pattern)
+    ///     - "CSWCCreature::LoadModel(): Failed to load creature model '%s'." @ 0x007c82fc (swkotor2.exe)
+    ///     - "CSWCCreature::LoadModel(): Failed to load creature model '%s'." @ 0x0074f85c (swkotor.exe)
+    ///     - Model loading: Loads UTC (creature template) from resources, resolves model from appearance.2da
+    ///     - Appearance resolution: FUN_005fb0f0 resolves appearance data, FUN_00521d40 loads model
+    ///   - Aurora (nwmain.exe):
+    ///     - LoadModel @ 0x1400a0130 - loads Model objects from file streams
+    ///     - CNWCCreature::LoadModel() - loads creature models via CResRef
+    ///     - CNWCItem::LoadModel, CNWCDoor::LoadModel, CNWCPlaceable::LoadModel - entity-specific loaders
+    ///     - Model caching: Uses global _Models array to cache loaded models
+    ///   - Eclipse (daorigins.exe, DragonAge2.exe):
+    ///     - Model loading patterns differ (uses different file formats)
+    ///     - Entity model rendering handled through different systems
+    /// - Common Patterns (All Engines):
+    ///   - Model resolution from appearance/2DA tables (appearance.2da, placeables.2da, genericdoors.2da)
+    ///   - Model caching to avoid reloading (dictionary/cache by ResRef)
+    ///   - Transform application (position, orientation, scale)
+    ///   - Material/texture resolution from resource files
+    /// - This Implementation:
+    ///   - Based on Odyssey engine patterns (swkotor.exe, swkotor2.exe)
+    ///   - Models resolved from appearance.2da (creatures), placeables.2da (placeables), genericdoors.2da (doors)
+    ///   - Caches loaded models to avoid reloading (model cache dictionary by ResRef)
+    ///   - Model conversion: MDL format (KOTOR native) converted to Stride Buffer format for rendering
+    ///   - Material resolution: StrideBasicEffect created per texture/material (texture loading from TPC files)
+    ///   - Render transform: Entity position/orientation applied via world matrix for rendering
     /// </remarks>
     public class StrideEntityModelRenderer : IEntityModelRenderer
     {

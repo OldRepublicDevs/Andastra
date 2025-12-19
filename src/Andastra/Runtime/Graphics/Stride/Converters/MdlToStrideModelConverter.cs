@@ -16,19 +16,28 @@ namespace Andastra.Runtime.Stride.Converters
     /// </summary>
     /// <remarks>
     /// MDL to Stride Model Converter:
-    /// - Based on swkotor.exe and swkotor2.exe model loading system (modern Stride adaptation)
-    /// - Located via string references: "Model" @ 0x007c1ca8, "ModelName" @ 0x007c1c8c
-    /// - "ModelType" @ 0x007c4568, "MODELTYPE" @ 0x007c036c, "ModelVariation" @ 0x007c0990
-    /// - "ModelPart" @ 0x007bd42c, "ModelPart1" @ 0x007c0acc, "refModel" @ 0x007babe8
-    /// - "DefaultModel" @ 0x007c4530, "VisibleModel" @ 0x007c1c98
-    /// - Model LOD: "MODEL01" @ 0x007c4b48, "MODELMIN01" @ 0x007c4b50
-    /// - "MODEL02" @ 0x007c4b34, "MODELMIN02" @ 0x007c4b3c
-    /// - "MODEL03" @ 0x007c4b20, "MODELMIN03" @ 0x007c4b28
-    /// - Model directories: "SUPERMODELS" @ 0x007c69b0, ".\supermodels" @ 0x007c69bc
-    /// - Special models: "ProjModel" @ 0x007c31c0, "StuntModel" @ 0x007c37e0, "CameraModel" @ 0x007c3908
-    /// - Error messages:
-    ///   - "CSWCCreature::LoadModel(): Failed to load creature model '%s'." @ 0x007c82fc
-    ///   - "Model %s nor the default model %s could be loaded." @ 0x007cad14
+    /// - Cross-Engine Analysis (Reverse Engineered via Ghidra):
+    ///   - Odyssey (swkotor.exe, swkotor2.exe):
+    ///     - Model loading: FUN_005261b0 @ 0x005261b0 (swkotor2.exe) loads creature models
+    ///     - String references: "Model" @ 0x007c1ca8, "ModelName" @ 0x007c1c8c (swkotor2.exe)
+    ///     - "ModelType" @ 0x007c4568, "MODELTYPE" @ 0x007c036c, "ModelVariation" @ 0x007c0990
+    ///     - "ModelPart" @ 0x007bd42c, "ModelPart1" @ 0x007c0acc, "refModel" @ 0x007babe8
+    ///     - "DefaultModel" @ 0x007c4530, "VisibleModel" @ 0x007c1c98
+    ///     - Model LOD: "MODEL01" @ 0x007c4b48, "MODELMIN01" @ 0x007c4b50
+    ///     - "MODEL02" @ 0x007c4b34, "MODELMIN02" @ 0x007c4b3c
+    ///     - "MODEL03" @ 0x007c4b20, "MODELMIN03" @ 0x007c4b28
+    ///     - Model directories: "SUPERMODELS" @ 0x007c69b0, ".\supermodels" @ 0x007c69bc
+    ///     - Special models: "ProjModel" @ 0x007c31c0, "StuntModel" @ 0x007c37e0, "CameraModel" @ 0x007c3908
+    ///     - Error messages:
+    ///       - "CSWCCreature::LoadModel(): Failed to load creature model '%s'." @ 0x007c82fc (swkotor2.exe)
+    ///       - "CSWCCreature::LoadModel(): Failed to load creature model '%s'." @ 0x0074f85c (swkotor.exe)
+    ///       - "Model %s nor the default model %s could be loaded." @ 0x007cad14
+    ///   - Aurora (nwmain.exe):
+    ///     - LoadModel @ 0x1400a0130 - loads Model objects from file streams
+    ///     - Uses MaxTree::AsModel for model conversion
+    ///     - Model caching via global _Models array
+    ///   - Eclipse (daorigins.exe, DragonAge2.exe):
+    ///     - Different model formats (not MDL-based)
     /// - Original implementation: KOTOR loads MDL/MDX files and renders with DirectX 8/9 APIs
     /// - MDL format: Binary model format containing trimesh nodes, bones, animations
     /// - MDX format: Binary geometry format containing vertex positions, normals, UVs, indices
