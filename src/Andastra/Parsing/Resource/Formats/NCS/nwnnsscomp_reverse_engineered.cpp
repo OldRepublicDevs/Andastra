@@ -3231,8 +3231,13 @@ void __thiscall nwnnsscomp_init_parsing_context_data(void* context, int* globalD
 // - nwnnsscomp_finalize_symbol_table (0x00405024) - 32 bytes - Symbol table cleanup
 // - nwnnsscomp_init_parsing_context_data (0x004047a4) - 95 bytes - Context data copying
 //
-// TOTAL: ~6700+ bytes of assembly fully documented with every instruction
-// TOTAL: 3000+ lines of C++ code with complete assembly annotations
+// Utility Functions (COMPLETED):
+// - nwnnsscomp_get_filename_from_path (0x0041bd24) - 86 bytes - Extract filename from path
+// - nwnnsscomp_get_include_registry_entry (0x0041b2e4) - 15 bytes - Get registry entry
+// - nwnnsscomp_read_file_to_memory (0x0041bc8a) - 154 bytes - Read file into memory buffer
+//
+// TOTAL: ~7000+ bytes of assembly fully documented with every instruction
+// TOTAL: 3200+ lines of C++ code with complete assembly annotations
 //
 // REMAINING FUNCTIONS (Less critical, can be expanded as needed):
 //
