@@ -12,7 +12,7 @@ namespace Andastra.Runtime.MonoGame.Rendering
 {
     /// <summary>
     /// Modern rendering pipeline with comprehensive AAA optimizations.
-    /// 
+    ///
     /// Features:
     /// - Frustum culling
     /// - Occlusion culling (Hi-Z)
@@ -25,7 +25,7 @@ namespace Andastra.Runtime.MonoGame.Rendering
     /// - Backface culling (via render state)
     /// - Texture streaming
     /// - Memory pooling
-    /// 
+    ///
     /// This integrates all modern rendering optimizations into a unified pipeline.
     /// </summary>
     /// <remarks>
@@ -179,6 +179,7 @@ namespace Andastra.Runtime.MonoGame.Rendering
             // Begin occlusion culling frame
             if (OcclusionCullingEnabled)
             {
+                _occlusionCuller.UpdateMatrices(viewMatrix, projectionMatrix);
                 _occlusionCuller.BeginFrame();
             }
 
