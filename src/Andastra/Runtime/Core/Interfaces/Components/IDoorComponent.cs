@@ -98,6 +98,16 @@ namespace Andastra.Runtime.Core.Interfaces.Components
         bool IsAreaTransition { get; }
 
         /// <summary>
+        /// Conversation file (dialogue ResRef).
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: FUN_00580330 @ 0x00580330 saves door data including Conversation field
+        /// Located via string reference: "Conversation" @ 0x007c1abc
+        /// Original implementation: Conversation field in UTD template contains dialogue ResRef
+        /// </remarks>
+        string Conversation { get; set; }
+
+        /// <summary>
         /// Opens the door.
         /// </summary>
         void Open();

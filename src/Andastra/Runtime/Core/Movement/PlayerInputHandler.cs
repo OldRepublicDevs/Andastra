@@ -2,6 +2,7 @@ using System;
 using System.Numerics;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
+using Andastra.Runtime.Core.Entities;
 
 namespace Andastra.Runtime.Core.Movement
 {
@@ -10,7 +11,7 @@ namespace Andastra.Runtime.Core.Movement
     /// </summary>
     /// <remarks>
     /// Player Input Handler:
-    /// - Based on swkotor2.exe input system
+    /// - Based on swkotor2.exe input system (TODO: swkotor.exe and subclasses for k1/k2 specifics)
     /// - Located via string references: "Mouse Sensitivity" @ 0x007c85cc, "Mouse Look" @ 0x007c8608, "Reverse Mouse Buttons" @ 0x007c8628
     /// - "EnableHardwareMouse" @ 0x007c71c8, "Enable Mouse Teleporting To Buttons" @ 0x007c85a8
     /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_CLICKED" @ 0x007bc704, "OnClick" @ 0x007c1a20
@@ -431,29 +432,63 @@ namespace Andastra.Runtime.Core.Movement
 
             // Check DoorComponent for conversation
             // Based on swkotor2.exe door system
-            // Located via string references: "Conversation" @ door components
-            // Original implementation: Doors can have conversation scripts
+            // Located via string references: "Conversation" @ 0x007c1abc
+            // Original implementation: FUN_00580330 @ 0x00580330 saves door data including Conversation field
+            // Conversation field in UTD template contains dialogue ResRef
             Interfaces.Components.IDoorComponent door = entity.GetComponent<Interfaces.Components.IDoorComponent>();
             if (door != null)
             {
-                // Doors with OnUsed scripts typically have conversations
-                // TODO: SIMPLIFIED - This is a simplified check - full implementation would check Conversation property
-                // For now, assume doors might have conversations
-                return true;
+                // Check Conversation property from door component
+                if (!string.IsNullOrEmpty(door.Conversation))
+                {
+                    return true;
+                }
             }
 
             // Check PlaceableComponent for conversation
+            // Based on swkotor2.exe placeable system
+            // Located via string references: "Conversation" @ 0x007c1abc
+            // Original implementation: FUN_00588010 @ 0x00588010 loads placeable data including Conversation field
+            // Conversation field in UTP template contains dialogue ResRef
             Interfaces.Components.IPlaceableComponent placeable = entity.GetComponent<Interfaces.Components.IPlaceableComponent>();
             if (placeable != null)
             {
-                // Placeables with OnUsed scripts typically have conversations
-                // TODO: SIMPLIFIED - This is a simplified check - full implementation would check Conversation property
+                // Check Conversation property from placeable component
+                if (!string.IsNullOrEmpty(placeable.Conversation))
+                {
+                    return true;
+                }
+            }
+
+            // Check for creature component conversation
+            // Based on swkotor2.exe creature system
+            // Located via string references: "Conversation" @ 0x007c1abc, "ScriptDialogue" @ 0x007bee40
+            // Original implementation: FUN_0050c510 @ 0x0050c510 loads creature data including ScriptDialogue field
+            // ScriptDialogue field in UTC template contains dialogue ResRef (stored as Conversation property)
+            if (entity.ObjectType == Enums.ObjectType.Creature)
+            {
+                // Try to get conversation from entity data (loaded from UTC template)
+                // This is a fallback for creatures that don't have a component yet
+                if (entity is Entity creatureEntity)
+                {
+                    string conversation = creatureEntity.GetData<string>("Conversation", string.Empty);
+                    if (string.IsNullOrEmpty(conversation))
+                    {
+                        // Also check ScriptDialogue entity data (alternative field name)
+                        conversation = creatureEntity.GetData<string>("ScriptDialogue", string.Empty);
+                    }
+                    if (!string.IsNullOrEmpty(conversation))
+                    {
+                        return true;
+                    }
+                }
+
+                // For creatures, assume they might have conversations (NPCs typically do)
+                // This is a fallback when conversation data is not available
                 return true;
             }
 
-            // For creatures, assume they might have conversations (NPCs typically do)
-            // This is a fallback - ideally conversation would be stored in CreatureComponent
-            return entity.ObjectType == Enums.ObjectType.Creature;
+            return false;
         }
 
         private float GetAttackRange()
