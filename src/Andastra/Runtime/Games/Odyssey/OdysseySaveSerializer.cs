@@ -510,16 +510,173 @@ namespace Andastra.Runtime.Games.Odyssey
         /// - Equipment and inventory
         /// - Active scripts and effects
         /// - AI state and waypoints
+        ///
+        /// Implementation details:
+        /// - Creates GFF with "Creature List" list (swkotor2.exe: 0x007c0c80)
+        /// - For each entity, serializes to GFF and adds root struct to list
+        /// - Each list entry contains ObjectId and all entity component data
+        /// - Based on swkotor2.exe: FUN_004e28c0 creates "Creature List" structure
+        /// - FUN_005226d0 serializes individual entity data into struct
         /// </remarks>
         public override byte[] SerializeEntities(IEnumerable<IEntity> entities)
         {
-            // TODO: Implement entity serialization
-            // Create GFF with Creature List struct
-            // Serialize each entity with ObjectId
-            // Include all components and state
-            // Handle entity references
+            if (entities == null)
+            {
+                // Return empty GFF with empty CreatureList
+                var emptyGff = new GFF(GFFContent.GFF);
+                emptyGff.Root.SetList("Creature List", new GFFList());
+                return emptyGff.ToBytes();
+            }
 
-            throw new NotImplementedException("Odyssey entity serialization not yet implemented");
+            // Create GFF structure for entity collection
+            // Based on swkotor2.exe: FUN_004e28c0 @ 0x004e28c0 creates "Creature List" structure
+            // Located via string reference: "Creature List" @ 0x007c0c80
+            var gff = new GFF(GFFContent.GFF);
+            var root = gff.Root;
+            var creatureList = new GFFList();
+
+            // Serialize each entity
+            foreach (IEntity entity in entities)
+            {
+                if (entity == null || !entity.IsValid)
+                {
+                    continue;
+                }
+
+                // Check if entity is a BaseEntity (has Serialize method)
+                BaseEntity baseEntity = entity as BaseEntity;
+                if (baseEntity == null)
+                {
+                    // For non-BaseEntity IEntity instances, create minimal serialization
+                    var entityStruct = creatureList.Add();
+                    entityStruct.SetUInt32("ObjectId", entity.ObjectId);
+                    entityStruct.SetString("Tag", entity.Tag ?? "");
+                    entityStruct.SetInt32("ObjectType", (int)entity.ObjectType);
+                    entityStruct.SetUInt32("AreaId", entity.AreaId);
+                    continue;
+                }
+
+                // Serialize entity to GFF
+                // Based on swkotor2.exe: FUN_005226d0 @ 0x005226d0 serializes entity to GFF struct
+                byte[] entityData = baseEntity.Serialize();
+                if (entityData == null || entityData.Length == 0)
+                {
+                    continue;
+                }
+
+                // Parse entity's serialized GFF
+                GFF entityGff = GFF.FromBytes(entityData);
+                GFFStruct entityRoot = entityGff.Root;
+
+                // Create struct entry in CreatureList
+                // Based on swkotor2.exe: FUN_00413600 creates struct entry, FUN_00413880 sets ObjectId
+                var listEntry = creatureList.Add();
+
+                // Copy all fields from entity's root struct to list entry
+                // This includes ObjectId, Tag, ObjectType, AreaId, and all component data
+                CopyGffStructFields(entityRoot, listEntry);
+            }
+
+            // Set CreatureList in root
+            root.SetList("Creature List", creatureList);
+
+            // Serialize GFF to bytes
+            return gff.ToBytes();
+        }
+
+        /// <summary>
+        /// Copies all fields from source GFF struct to destination struct.
+        /// </summary>
+        /// <remarks>
+        /// Helper method to merge entity serialization data into list entries.
+        /// Handles all GFF field types including nested structs and lists.
+        /// </remarks>
+        private void CopyGffStructFields(GFFStruct source, GFFStruct destination)
+        {
+            if (source == null || destination == null)
+            {
+                return;
+            }
+
+            // Iterate through all fields in source struct
+            foreach (var (label, fieldType, value) in source)
+            {
+                if (string.IsNullOrEmpty(label))
+                {
+                    continue;
+                }
+
+                // Copy field based on type
+                switch (fieldType)
+                {
+                    case GFFFieldType.UInt8:
+                        destination.SetUInt8(label, source.GetUInt8(label));
+                        break;
+                    case GFFFieldType.Int8:
+                        destination.SetInt8(label, source.GetInt8(label));
+                        break;
+                    case GFFFieldType.UInt16:
+                        destination.SetUInt16(label, source.GetUInt16(label));
+                        break;
+                    case GFFFieldType.Int16:
+                        destination.SetInt16(label, source.GetInt16(label));
+                        break;
+                    case GFFFieldType.UInt32:
+                        destination.SetUInt32(label, source.GetUInt32(label));
+                        break;
+                    case GFFFieldType.Int32:
+                        destination.SetInt32(label, source.GetInt32(label));
+                        break;
+                    case GFFFieldType.UInt64:
+                        destination.SetUInt64(label, source.GetUInt64(label));
+                        break;
+                    case GFFFieldType.Int64:
+                        destination.SetInt64(label, source.GetInt64(label));
+                        break;
+                    case GFFFieldType.Single:
+                        destination.SetSingle(label, source.GetSingle(label));
+                        break;
+                    case GFFFieldType.Double:
+                        destination.SetDouble(label, source.GetDouble(label));
+                        break;
+                    case GFFFieldType.String:
+                        destination.SetString(label, source.GetString(label) ?? "");
+                        break;
+                    case GFFFieldType.ResRef:
+                        destination.SetResRef(label, source.GetResRef(label) ?? "");
+                        break;
+                    case GFFFieldType.LocalizedString:
+                        destination.SetLocString(label, source.GetLocString(label));
+                        break;
+                    case GFFFieldType.Vector3:
+                        destination.SetVector3(label, source.GetVector3(label));
+                        break;
+                    case GFFFieldType.Vector4:
+                        destination.SetVector4(label, source.GetVector4(label));
+                        break;
+                    case GFFFieldType.Binary:
+                        destination.SetBinary(label, source.GetBinary(label));
+                        break;
+                    case GFFFieldType.Struct:
+                        // Recursively copy nested structs
+                        GFFStruct nestedSource = source.GetStruct(label);
+                        if (nestedSource != null)
+                        {
+                            var nestedDest = new GFFStruct();
+                            CopyGffStructFields(nestedSource, nestedDest);
+                            destination.SetStruct(label, nestedDest);
+                        }
+                        break;
+                    case GFFFieldType.List:
+                        // Copy lists (shallow copy - lists are reference types in GFF)
+                        GFFList sourceList = source.GetList(label);
+                        if (sourceList != null)
+                        {
+                            destination.SetList(label, sourceList);
+                        }
+                        break;
+                }
+            }
         }
 
         /// <summary>
@@ -530,16 +687,112 @@ namespace Andastra.Runtime.Games.Odyssey
         /// Recreates entities from save data.
         /// Restores all components and state information.
         /// Handles entity interdependencies.
+        ///
+        /// Implementation details:
+        /// - Parses GFF with "Creature List" list (swkotor2.exe: 0x007c0c80)
+        /// - For each entity struct, creates OdysseyEntity and deserializes data
+        /// - Based on swkotor2.exe: FUN_005fb0f0 loads entities from "Creature List" structure
+        /// - Each list entry contains ObjectId and all entity component data
+        /// - Note: Full deserialization requires OdysseyEntity.Deserialize() to be implemented
         /// </remarks>
         public override IEnumerable<IEntity> DeserializeEntities(byte[] entitiesData)
         {
-            // TODO: Implement entity deserialization
-            // Parse Creature List struct
-            // Create entities with correct types
-            // Restore all components and state
-            // Resolve entity references
+            if (entitiesData == null || entitiesData.Length == 0)
+            {
+                yield break;
+            }
 
-            yield break;
+            // Parse GFF structure
+            GFF gff;
+            try
+            {
+                gff = GFF.FromBytes(entitiesData);
+            }
+            catch (Exception)
+            {
+                // Invalid GFF data
+                yield break;
+            }
+
+            GFFStruct root = gff.Root;
+
+            // Get Creature List
+            if (!root.Exists("Creature List"))
+            {
+                yield break;
+            }
+
+            GFFList creatureList = root.GetList("Creature List");
+            if (creatureList == null)
+            {
+                yield break;
+            }
+
+            // Deserialize each entity
+            foreach (GFFStruct entityStruct in creatureList)
+            {
+                if (entityStruct == null)
+                {
+                    continue;
+                }
+
+                // Read basic entity properties
+                if (!entityStruct.Exists("ObjectId") || !entityStruct.Exists("ObjectType"))
+                {
+                    continue;
+                }
+
+                uint objectId = entityStruct.GetUInt32("ObjectId");
+                int objectTypeInt = entityStruct.GetInt32("ObjectType");
+                ObjectType objectType = (ObjectType)objectTypeInt;
+                string tag = entityStruct.Exists("Tag") ? (entityStruct.GetString("Tag") ?? "") : null;
+
+                // Create entity
+                // Based on swkotor2.exe: Entities are created with ObjectId, ObjectType, Tag
+                // Note: Full entity creation with components requires EntityFactory or World.CreateEntity
+                // For now, create basic OdysseyEntity - caller should register with world and restore components
+                OdysseyEntity entity = new OdysseyEntity(objectId, objectType, tag);
+
+                // Restore AreaId if present
+                if (entityStruct.Exists("AreaId"))
+                {
+                    entity.AreaId = entityStruct.GetUInt32("AreaId");
+                }
+
+                // Convert entity struct to GFF bytes for deserialization
+                // Create a new GFF with this struct as root
+                var entityGff = new GFF(GFFContent.GFF);
+                CopyGffStructFields(entityStruct, entityGff.Root);
+                byte[] entityData = entityGff.ToBytes();
+
+                // Deserialize entity (if Deserialize is implemented)
+                // Note: OdysseyEntity.Deserialize() is not yet fully implemented
+                // This will throw NotImplementedException until that method is implemented
+                try
+                {
+                    entity.Deserialize(entityData);
+                }
+                catch (NotImplementedException)
+                {
+                    // Deserialize not yet implemented - entity has basic properties only
+                    // Restore basic transform if available
+                    if (entityStruct.Exists("X") && entityStruct.Exists("Y") && entityStruct.Exists("Z"))
+                    {
+                        var transformComponent = entity.GetComponent<ITransformComponent>();
+                        if (transformComponent != null)
+                        {
+                            float x = entityStruct.GetSingle("X");
+                            float y = entityStruct.GetSingle("Y");
+                            float z = entityStruct.GetSingle("Z");
+                            float facing = entityStruct.Exists("Facing") ? entityStruct.GetSingle("Facing") : 0.0f;
+                            transformComponent.Position = new System.Numerics.Vector3(x, y, z);
+                            transformComponent.Facing = facing;
+                        }
+                    }
+                }
+
+                yield return entity;
+            }
         }
 
         /// <summary>
