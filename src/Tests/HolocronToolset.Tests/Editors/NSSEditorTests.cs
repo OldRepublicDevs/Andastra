@@ -2,6 +2,7 @@ using System;
 using System.Text;
 using Andastra.Parsing.Resource;
 using FluentAssertions;
+using HolocronToolset.Common.Widgets;
 using HolocronToolset.Data;
 using HolocronToolset.Editors;
 using HolocronToolset.Tests.TestHelpers;
@@ -234,7 +235,7 @@ namespace HolocronToolset.Tests.Editors
                 // Verify content matches
                 var (reloadedBuilt1, _) = editor1Reload.Build();
                 reloadedBuilt1.Should().NotBeNull("Reloaded build should return data");
-                
+
                 // Compare byte arrays for exact match
                 savedData1.Should().BeEquivalentTo(reloadedBuilt1, "Saved and reloaded data should match exactly");
 
@@ -242,12 +243,12 @@ namespace HolocronToolset.Tests.Editors
                 string originalText1 = Encoding.UTF8.GetString(originalData1);
                 string savedText1 = Encoding.UTF8.GetString(savedData1);
                 string reloadedText1 = Encoding.UTF8.GetString(reloadedBuilt1);
-                
+
                 // Normalize line endings for comparison (Windows vs Unix)
                 originalText1 = originalText1.Replace("\r\n", "\n").Replace("\r", "\n");
                 savedText1 = savedText1.Replace("\r\n", "\n").Replace("\r", "\n");
                 reloadedText1 = reloadedText1.Replace("\r\n", "\n").Replace("\r", "\n");
-                
+
                 savedText1.Should().Contain("void main", "Saved text should contain main function");
                 savedText1.Should().Contain("int x = 5", "Saved text should contain original content");
                 reloadedText1.Should().Contain("void main", "Reloaded text should contain main function");
@@ -579,14 +580,54 @@ namespace HolocronToolset.Tests.Editors
             throw new NotImplementedException("TestNssEditorOutlineNavigation: Outline navigation test not yet implemented");
         }
 
-        // TODO: STUB - Implement test_nss_editor_find_replace_setup (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:792-807)
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:792-807
         // Original: def test_nss_editor_find_replace_setup(qtbot, installation: HTInstallation): Test find/replace setup
         [Fact]
         public void TestNssEditorFindReplaceSetup()
         {
-            // TODO: STUB - Implement find/replace setup test
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:792-807
-            throw new NotImplementedException("TestNssEditorFindReplaceSetup: Find/replace setup test not yet implemented");
+            // Get installation if available (K2 preferred for NSS files)
+            string k2Path = Environment.GetEnvironmentVariable("K2_PATH");
+            if (string.IsNullOrEmpty(k2Path))
+            {
+                k2Path = @"C:\Program Files (x86)\Steam\steamapps\common\Knights of the Old Republic II";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k2Path) && System.IO.File.Exists(System.IO.Path.Combine(k2Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k2Path, "Test Installation", tsl: true);
+            }
+            else
+            {
+                // Fallback to K1
+                string k1Path = Environment.GetEnvironmentVariable("K1_PATH");
+                if (string.IsNullOrEmpty(k1Path))
+                {
+                    k1Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor";
+                }
+
+                if (System.IO.Directory.Exists(k1Path) && System.IO.File.Exists(System.IO.Path.Combine(k1Path, "chitin.key")))
+                {
+                    installation = new HTInstallation(k1Path, "Test Installation", tsl: false);
+                }
+            }
+
+            var editor = new NSSEditor(null, installation);
+            editor.New();
+
+            // Find/replace widget should exist
+            // Use reflection to access private field _findReplaceWidget
+            var fieldInfo = typeof(NSSEditor).GetField("_findReplaceWidget",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+
+            fieldInfo.Should().NotBeNull("NSSEditor should have _findReplaceWidget field");
+
+            var findReplaceWidget = fieldInfo.GetValue(editor);
+            findReplaceWidget.Should().NotBeNull("_findReplaceWidget should be initialized");
+
+            // Verify it's a FindReplaceWidget instance
+            findReplaceWidget.Should().BeOfType<HolocronToolset.Common.Widgets.FindReplaceWidget>(
+                "_findReplaceWidget should be an instance of FindReplaceWidget");
         }
 
         // TODO: STUB - Implement test_nss_editor_find_all_references (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:809-827)
@@ -900,11 +941,11 @@ namespace HolocronToolset.Tests.Editors
 
             // Scrollbar filter should be set up
             // Use reflection to access private field _noScrollFilter
-            var fieldInfo = typeof(NSSEditor).GetField("_noScrollFilter", 
+            var fieldInfo = typeof(NSSEditor).GetField("_noScrollFilter",
                 System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-            
+
             fieldInfo.Should().NotBeNull("NSSEditor should have _noScrollFilter field");
-            
+
             var noScrollFilter = fieldInfo.GetValue(editor);
             noScrollFilter.Should().NotBeNull("_noScrollFilter should be initialized");
         }
