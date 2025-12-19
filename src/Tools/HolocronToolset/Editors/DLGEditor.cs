@@ -215,7 +215,7 @@ namespace HolocronToolset.Editors
         /// Loads a dialog tree into the UI view.
         /// Made internal for test access (matching Python _load_dlg which tests access directly).
         /// </summary>
-        internal void LoadDLG(DLGType dlg)
+        public void LoadDLG(DLGType dlg)
         {
             // Matching PyKotor implementation: Reset focus state and background color when loading
             // Original: if "(Light)" in GlobalSettings().selectedTheme or GlobalSettings().selectedTheme == "Native":
@@ -1226,6 +1226,34 @@ namespace HolocronToolset.Editors
         private void JumpToOriginal()
         {
             // TODO: PLACEHOLDER - Implement jump_to_original when reference system is implemented
+        }
+
+        /// <summary>
+        /// Finds references to the specified item.
+        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:1891
+        /// Original: def find_references(self, item: DLGStandardItem | DLGListWidgetItem):
+        /// </summary>
+        public void FindReferences(DLGStandardItem item)
+        {
+            if (item?.Link == null)
+            {
+                return;
+            }
+
+            // TODO: PLACEHOLDER - Full implementation requires reference_history and show_reference_dialog
+            // For now, this is a stub to allow tests to compile
+            // Matching PyKotor: finds all items that link to the same node as item.link
+            var references = new List<DLGStandardItem>();
+            foreach (var kvp in _model.LinkToItems)
+            {
+                foreach (var thisItem in kvp.Value)
+                {
+                    if (thisItem?.Link?.Node != null && thisItem.Link.Node.Links.Contains(item.Link))
+                    {
+                        references.Add(thisItem);
+                    }
+                }
+            }
         }
 
         /// <summary>
