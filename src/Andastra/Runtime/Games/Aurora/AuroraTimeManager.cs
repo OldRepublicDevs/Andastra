@@ -128,10 +128,12 @@ namespace Andastra.Runtime.Games.Aurora
         /// </summary>
         /// <remarks>
         /// Aurora-specific: Updates game time using CWorldTimer system.
-        /// Based on nwmain.exe: CWorldTimer::AddWorldTimes @ 0x140596b40 adds fixed timestep milliseconds to world time.
-        /// Overrides base implementation to add Aurora-specific game time update logic.
+        /// Based on nwmain.exe: CWorldTimer::AddWorldTimes @ 0x140596b40 is a helper function that adds time deltas to world time (for scheduling events, effects, etc.).
+        /// NOTE: AddWorldTimes is NOT the main tick function - it's a helper that takes arbitrary time deltas as parameters.
+        /// The actual time advancement (from real time to world time) happens elsewhere in the main loop.
         /// World time is stored as days and milliseconds in CWorldTimer structure, accessed via CServerExoApp::GetWorldTimer @ 0x14055ba10.
         /// Game time components (hour, minute, second, millisecond) are extracted using GetWorldTimeHour @ 0x140597390, GetWorldTimeMinute @ 0x140597480, etc.
+        /// VERIFIED via Ghidra MCP: AddWorldTimes function signature and logic analyzed - it's a helper function, not the main tick.
         /// </remarks>
         public override void Tick()
         {

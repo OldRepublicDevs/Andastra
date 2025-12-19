@@ -15,7 +15,8 @@ namespace Andastra.Runtime.Games.Odyssey
     /// - Fixed timestep: 60 Hz (1/60s = 0.01667s per tick) - verified in swkotor2.exe
     /// - Game time storage: Stored in module IFO file (GameTime field)
     /// - Time played tracking: TIMEPLAYED field in save game NFO.res file
-    /// - Frame timing: frameStart @ 0x007ba698, frameEnd @ 0x007ba668 (swkotor2.exe)
+    /// - Frame timing: NOTE - Previously documented addresses (frameStart @ 0x007ba698, frameEnd @ 0x007ba668) are string constants, not functions.
+    ///   VERIFIED via Ghidra MCP: These addresses contain string data used in particle system configuration, not frame timing functions.
     /// 
     /// String References (swkotor2.exe):
     /// - "TIME_PAUSETIME" @ 0x007bdf88 (pause time constant)
