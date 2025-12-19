@@ -273,7 +273,7 @@ namespace HolocronToolset.Windows
             Duplicates = new List<IndoorMapRoom>();
             foreach (var room in rooms)
             {
-                // Note: For now, we use the same component reference. Full deep copy of component
+                // TODO: STUB - Note: For now, we use the same component reference. Full deep copy of component
                 // will be implemented when component editing is needed. This matches the basic behavior.
                 var newRoom = new IndoorMapRoom(
                     room.Component, // Component reference (shallow for now)
@@ -286,7 +286,7 @@ namespace HolocronToolset.Windows
                     flipX: room.FlipX,
                     flipY: room.FlipY
                 );
-                // Note: walkmesh_override deep copy will be implemented when needed
+                // TODO: STUB - Note: walkmesh_override deep copy will be implemented when needed
                 // newRoom.walkmesh_override = deepcopy(room.walkmesh_override) if room.walkmesh_override is not None else None
                 Duplicates.Add(newRoom);
             }
@@ -303,7 +303,7 @@ namespace HolocronToolset.Windows
                     _indoorMap.Rooms.Remove(room);
                 }
             }
-            // Note: rebuild_room_connections will be implemented when needed
+            // TODO: STUB - Note: rebuild_room_connections will be implemented when needed
         }
 
         // Matching Python: def redo(self)
@@ -317,7 +317,7 @@ namespace HolocronToolset.Windows
                     _indoorMap.Rooms.Add(room);
                 }
             }
-            // Note: rebuild_room_connections will be implemented when needed
+            // TODO: STUB - Note: rebuild_room_connections will be implemented when needed
         }
     }
 
@@ -352,7 +352,7 @@ namespace HolocronToolset.Windows
             {
                 _rooms[i].Position = _oldPositions[i];
             }
-            // Note: rebuild_room_connections will be implemented when needed
+            // TODO: STUB - Note: rebuild_room_connections will be implemented when needed
         }
 
         // Matching Python: def redo(self)
@@ -363,7 +363,7 @@ namespace HolocronToolset.Windows
             {
                 _rooms[i].Position = _newPositions[i];
             }
-            // Note: rebuild_room_connections will be implemented when needed
+            // TODO: STUB - Note: rebuild_room_connections will be implemented when needed
         }
     }
 
@@ -398,7 +398,7 @@ namespace HolocronToolset.Windows
             {
                 _rooms[i].Rotation = _oldRotations[i];
             }
-            // Note: rebuild_room_connections will be implemented when needed
+            // TODO: STUB - Note: rebuild_room_connections will be implemented when needed
         }
 
         // Matching Python: def redo(self)
@@ -409,7 +409,7 @@ namespace HolocronToolset.Windows
             {
                 _rooms[i].Rotation = _newRotations[i];
             }
-            // Note: rebuild_room_connections will be implemented when needed
+            // TODO: STUB - Note: rebuild_room_connections will be implemented when needed
         }
     }
 
@@ -455,7 +455,7 @@ namespace HolocronToolset.Windows
                 _rooms[i].FlipX = _oldFlipX[i];
                 _rooms[i].FlipY = _oldFlipY[i];
             }
-            // Note: rebuild_room_connections will be implemented when needed
+            // TODO: STUB - Note: rebuild_room_connections will be implemented when needed
         }
 
         // Matching Python: def redo(self)
@@ -473,7 +473,7 @@ namespace HolocronToolset.Windows
                     room.FlipY = !room.FlipY;
                 }
             }
-            // Note: rebuild_room_connections will be implemented when needed
+            // TODO: STUB - Note: rebuild_room_connections will be implemented when needed
         }
     }
 
