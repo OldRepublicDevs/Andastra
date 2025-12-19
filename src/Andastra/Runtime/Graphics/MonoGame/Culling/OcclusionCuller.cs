@@ -8,10 +8,10 @@ namespace Andastra.Runtime.MonoGame.Culling
 {
     /// <summary>
     /// Occlusion culling system using Hi-Z (Hierarchical-Z) buffer.
-    /// 
+    ///
     /// Occlusion culling determines which objects are hidden behind other objects,
     /// allowing us to skip rendering entirely hidden geometry.
-    /// 
+    ///
     /// Features:
     /// - Hi-Z buffer generation from depth buffer
     /// - Hardware occlusion queries
@@ -46,6 +46,16 @@ namespace Andastra.Runtime.MonoGame.Culling
         // Temporal occlusion cache (frame-based)
         private readonly Dictionary<uint, OcclusionInfo> _occlusionCache;
         private int _currentFrame;
+
+        // View and projection matrices for screen space projection
+        private Matrix _viewMatrix;
+        private Matrix _projectionMatrix;
+        private bool _matricesValid;
+
+        // Cached Hi-Z buffer data for CPU-side sampling (updated on demand)
+        private float[] _hiZBufferData;
+        private int _hiZBufferDataMipLevel;
+        private bool _hiZBufferDataValid;
 
         // Statistics
         private OcclusionStats _stats;
@@ -116,7 +126,7 @@ namespace Andastra.Runtime.MonoGame.Culling
         /// Must be called after depth pre-pass or main depth rendering.
         /// Based on MonoGame API: https://docs.monogame.net/api/Microsoft.Xna.Framework.Graphics.SpriteBatch.html
         /// Downsamples depth buffer into mipmap levels where each level stores maximum depth from previous level.
-        /// 
+        ///
         /// Note: This implementation uses point sampling for downsampling. For proper Hi-Z with maximum depth
         /// operations, a custom shader that performs max operations on 2x2 regions would be required.
         /// </summary>
@@ -142,7 +152,7 @@ namespace Andastra.Runtime.MonoGame.Culling
             // Copy level 0 (full resolution) from depth buffer to Hi-Z buffer
             // Store current render target to restore later
             RenderTargetBinding[] previousTargets = _graphicsDevice.GetRenderTargets();
-            RenderTarget2D previousTarget = previousTargets.Length > 0 ? 
+            RenderTarget2D previousTarget = previousTargets.Length > 0 ?
                 previousTargets[0].RenderTarget as RenderTarget2D : null;
 
             try
@@ -178,7 +188,7 @@ namespace Andastra.Runtime.MonoGame.Culling
                         _graphicsDevice.SetRenderTarget(mipTarget);
                         _spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Opaque, SamplerState.PointClamp, DepthStencilState.None, RasterizerState.CullNone);
                         // Draw previous mip level scaled down (point sampling for approximation)
-                        _spriteBatch.Draw(_hiZBuffer, new Rectangle(0, 0, mipWidth, mipHeight), 
+                        _spriteBatch.Draw(_hiZBuffer, new Rectangle(0, 0, mipWidth, mipHeight),
                             new Rectangle(0, 0, prevMipWidth, prevMipHeight), Color.White);
                         _spriteBatch.End();
 
@@ -262,12 +272,25 @@ namespace Andastra.Runtime.MonoGame.Culling
         /// Tests occlusion using Hi-Z buffer hierarchical depth test.
         /// Based on MonoGame API: https://docs.monogame.net/api/Microsoft.Xna.Framework.Graphics.Texture2D.html
         /// Projects AABB to screen space, samples Hi-Z buffer at appropriate mip level, and compares depths.
+        ///
+        /// Implementation based on Hi-Z occlusion culling algorithm:
+        /// 1. Project AABB corners to screen space using view/projection matrices
+        /// 2. Calculate screen space bounding rectangle
+        /// 3. Find appropriate mip level based on screen space size
+        /// 4. Sample Hi-Z buffer at mip level to get maximum depth in region
+        /// 5. Compare AABB minimum depth against Hi-Z maximum depth
+        /// 6. If AABB min depth > Hi-Z max depth, object is occluded
         /// </summary>
         private bool TestOcclusionHiZ(System.Numerics.Vector3 minPoint, System.Numerics.Vector3 maxPoint)
         {
             if (_hiZBuffer == null)
             {
                 return false; // No Hi-Z buffer available, assume visible
+            }
+
+            if (!_matricesValid)
+            {
+                return false; // Matrices not set, assume visible
             }
 
             // Calculate AABB size in world space
@@ -280,39 +303,253 @@ namespace Andastra.Runtime.MonoGame.Culling
                 return false;
             }
 
-            // Calculate AABB center and approximate screen space bounds
-            // TODO: SIMPLIFIED - Note: Full implementation would require view/projection matrices for proper screen space projection
-            // For now, this provides the structure for future enhancement
-            System.Numerics.Vector3 aabbCenter = (minPoint + maxPoint) * 0.5f;
-            float aabbMinDepth = Math.Min(Math.Min(minPoint.Z, maxPoint.Z), Math.Min(minPoint.Y, maxPoint.Y));
-            aabbMinDepth = Math.Min(aabbMinDepth, minPoint.X);
+            // Project AABB corners to screen space
+            // AABB has 8 corners: all combinations of min/max for X, Y, Z
+            System.Numerics.Vector3[] aabbCorners = new System.Numerics.Vector3[8];
+            aabbCorners[0] = new System.Numerics.Vector3(minPoint.X, minPoint.Y, minPoint.Z);
+            aabbCorners[1] = new System.Numerics.Vector3(maxPoint.X, minPoint.Y, minPoint.Z);
+            aabbCorners[2] = new System.Numerics.Vector3(minPoint.X, maxPoint.Y, minPoint.Z);
+            aabbCorners[3] = new System.Numerics.Vector3(maxPoint.X, maxPoint.Y, minPoint.Z);
+            aabbCorners[4] = new System.Numerics.Vector3(minPoint.X, minPoint.Y, maxPoint.Z);
+            aabbCorners[5] = new System.Numerics.Vector3(maxPoint.X, minPoint.Y, maxPoint.Z);
+            aabbCorners[6] = new System.Numerics.Vector3(minPoint.X, maxPoint.Y, maxPoint.Z);
+            aabbCorners[7] = new System.Numerics.Vector3(maxPoint.X, maxPoint.Y, maxPoint.Z);
 
-            // TODO: SIMPLIFIED - Estimate screen space size (simplified - would use actual projection in full implementation)
-            float estimatedScreenSize = aabbSizeMax; // Placeholder
+            // Project all corners to screen space and find bounding rectangle
+            float minScreenX = float.MaxValue;
+            float maxScreenX = float.MinValue;
+            float minScreenY = float.MaxValue;
+            float maxScreenY = float.MinValue;
+            float minDepth = float.MaxValue;
+            bool anyVisible = false;
 
-            // Find appropriate mip level based on AABB screen space size
-            int mipLevel = 0;
-            if (estimatedScreenSize > 0 && _hiZBuffer != null)
+            // Combine view and projection matrices for efficiency
+            Matrix viewProj = _viewMatrix * _projectionMatrix;
+
+            for (int i = 0; i < 8; i++)
             {
-                // Higher mip levels for smaller screen space objects
-                float mipScale = Math.Max(_width, _height) / estimatedScreenSize;
-                mipLevel = (int)Math.Log(mipScale, 2);
+                // Transform to view space
+                Microsoft.Xna.Framework.Vector4 viewPos = Microsoft.Xna.Framework.Vector4.Transform(
+                    new Microsoft.Xna.Framework.Vector4(aabbCorners[i].X, aabbCorners[i].Y, aabbCorners[i].Z, 1.0f),
+                    _viewMatrix);
+
+                // Project to clip space
+                Microsoft.Xna.Framework.Vector4 clipPos = Microsoft.Xna.Framework.Vector4.Transform(viewPos, _projectionMatrix);
+
+                // Perspective divide
+                if (Math.Abs(clipPos.W) > 1e-6f)
+                {
+                    clipPos.X /= clipPos.W;
+                    clipPos.Y /= clipPos.W;
+                    clipPos.Z /= clipPos.W;
+                }
+
+                // Check if corner is behind camera (Z > 1 in clip space means behind far plane, Z < -1 means behind camera)
+                if (clipPos.Z < -1.0f || clipPos.Z > 1.0f)
+                {
+                    continue; // Corner is outside view frustum
+                }
+
+                anyVisible = true;
+
+                // Convert to screen space (0 to width/height)
+                float screenX = (clipPos.X * 0.5f + 0.5f) * _width;
+                float screenY = (1.0f - (clipPos.Y * 0.5f + 0.5f)) * _height;
+
+                // Clamp to viewport bounds
+                screenX = Math.Max(0, Math.Min(screenX, _width - 1));
+                screenY = Math.Max(0, Math.Min(screenY, _height - 1));
+
+                minScreenX = Math.Min(minScreenX, screenX);
+                maxScreenX = Math.Max(maxScreenX, screenX);
+                minScreenY = Math.Min(minScreenY, screenY);
+                maxScreenY = Math.Max(maxScreenY, screenY);
+
+                // Track minimum depth (closest to camera) for occlusion test
+                // In clip space, Z ranges from -1 (near) to 1 (far), but we need depth in view space
+                // For occlusion testing, we use the view space Z (depth from camera)
+                float viewSpaceDepth = viewPos.Z;
+                minDepth = Math.Min(minDepth, viewSpaceDepth);
+            }
+
+            // If no corners are visible, object is outside frustum (not occluded, just culled by frustum)
+            if (!anyVisible)
+            {
+                return false;
+            }
+
+            // Calculate screen space bounding rectangle
+            int screenMinX = (int)Math.Floor(minScreenX);
+            int screenMaxX = (int)Math.Ceiling(maxScreenX);
+            int screenMinY = (int)Math.Floor(minScreenY);
+            int screenMaxY = (int)Math.Ceiling(maxScreenY);
+
+            // Clamp to viewport
+            screenMinX = Math.Max(0, Math.Min(screenMinX, _width - 1));
+            screenMaxX = Math.Max(0, Math.Min(screenMaxX, _width - 1));
+            screenMinY = Math.Max(0, Math.Min(screenMinY, _height - 1));
+            screenMaxY = Math.Max(0, Math.Min(screenMaxY, _height - 1));
+
+            // Calculate screen space size for mip level selection
+            float screenWidth = screenMaxX - screenMinX + 1;
+            float screenHeight = screenMaxY - screenMinY + 1;
+            float screenSize = Math.Max(screenWidth, screenHeight);
+
+            // Find appropriate mip level based on screen space size
+            // Higher mip levels for smaller screen space objects (more aggressive culling)
+            int mipLevel = 0;
+            if (screenSize > 0 && _hiZBuffer != null)
+            {
+                // Select mip level where one texel covers approximately the screen space region
+                // This ensures we sample at a resolution that matches the object size
+                float mipScale = Math.Max(_width, _height) / screenSize;
+                mipLevel = (int)Math.Floor(Math.Log(mipScale, 2));
                 int maxMipLevel = _hiZBuffer.LevelCount - 1;
                 mipLevel = Math.Max(0, Math.Min(mipLevel, maxMipLevel));
             }
 
             // Sample Hi-Z buffer at calculated mip level
-            // Note: MonoGame doesn't provide direct mip level sampling in CPU code
-            // TODO: STUB - Full implementation would require:
-            // 1. View/projection matrices to project AABB corners to screen space
-            // 2. Calculate screen space bounding rectangle
-            // 3. Sample Hi-Z buffer at mip level (would need custom shader or GPU readback)
-            // 4. Compare AABB minimum depth against Hi-Z maximum depth in that region
-            // 5. If AABB min depth > Hi-Z max depth, object is occluded
+            // Get maximum depth in the screen space region
+            float hiZMaxDepth = SampleHiZBufferMaxDepth(screenMinX, screenMinY, screenMaxX, screenMaxY, mipLevel);
 
-            // TODO: SIMPLIFIED - For now, return false (assume visible) until view/projection matrices are available
-            // This provides the structure for proper implementation
-            return false;
+            // If Hi-Z max depth is invalid (no data), assume visible
+            if (hiZMaxDepth <= 0.0f || float.IsInfinity(hiZMaxDepth) || float.IsNaN(hiZMaxDepth))
+            {
+                return false;
+            }
+
+            // Compare AABB minimum depth against Hi-Z maximum depth
+            // In view space, larger Z values are farther from camera
+            // If the AABB's closest point (minDepth) is farther than the Hi-Z max depth,
+            // the entire AABB is behind occluders and can be culled
+            // Note: We add a small bias to prevent false positives from floating point precision
+            const float depthBias = 0.01f;
+            bool occluded = minDepth > (hiZMaxDepth + depthBias);
+
+            return occluded;
+        }
+
+        /// <summary>
+        /// Samples Hi-Z buffer to get maximum depth in a screen space region.
+        /// Uses CPU-side texture readback for sampling.
+        /// </summary>
+        /// <param name="minX">Minimum X coordinate in screen space.</param>
+        /// <param name="minY">Minimum Y coordinate in screen space.</param>
+        /// <param name="maxX">Maximum X coordinate in screen space.</param>
+        /// <param name="maxY">Maximum Y coordinate in screen space.</param>
+        /// <param name="mipLevel">Mip level to sample from.</param>
+        /// <returns>Maximum depth value in the region, or 0 if sampling fails.</returns>
+        private float SampleHiZBufferMaxDepth(int minX, int minY, int maxX, int maxY, int mipLevel)
+        {
+            if (_hiZBuffer == null)
+            {
+                return 0.0f;
+            }
+
+            // Calculate mip level dimensions
+            int mipWidth = Math.Max(1, _width >> mipLevel);
+            int mipHeight = Math.Max(1, _height >> mipLevel);
+
+            // Convert screen space coordinates to mip level coordinates
+            int mipMinX = Math.Max(0, Math.Min(minX >> mipLevel, mipWidth - 1));
+            int mipMaxX = Math.Max(0, Math.Min(maxX >> mipLevel, mipWidth - 1));
+            int mipMinY = Math.Max(0, Math.Min(minY >> mipLevel, mipHeight - 1));
+            int mipMaxY = Math.Max(0, Math.Min(maxY >> mipLevel, mipHeight - 1));
+
+            // Read Hi-Z buffer data if not cached or if mip level changed
+            if (!_hiZBufferDataValid || _hiZBufferDataMipLevel != mipLevel)
+            {
+                // Allocate buffer if needed
+                int pixelCount = mipWidth * mipHeight;
+                if (_hiZBufferData == null || _hiZBufferData.Length < pixelCount)
+                {
+                    _hiZBufferData = new float[pixelCount];
+                }
+
+                // Read texture data from GPU
+                // Note: MonoGame's GetData reads from mip level 0 by default
+                // For other mip levels, we need to read the full texture and manually downsample
+                // or use a render target copy approach
+                // For now, we'll read from mip level 0 and manually sample at the correct resolution
+                try
+                {
+                    // Read full resolution texture (mip 0)
+                    float[] fullResData = new float[_width * _height];
+                    _hiZBuffer.GetData(fullResData);
+
+                    // Downsample to mip level resolution by taking maximum of 2x2 regions
+                    for (int y = 0; y < mipHeight; y++)
+                    {
+                        for (int x = 0; x < mipWidth; x++)
+                        {
+                            // Calculate source region in full resolution
+                            int srcX = x << mipLevel;
+                            int srcY = y << mipLevel;
+                            int srcWidth = Math.Min(1 << mipLevel, _width - srcX);
+                            int srcHeight = Math.Min(1 << mipLevel, _height - srcY);
+
+                            // Find maximum depth in source region
+                            float maxDepth = 0.0f;
+                            for (int sy = 0; sy < srcHeight; sy++)
+                            {
+                                for (int sx = 0; sx < srcWidth; sx++)
+                                {
+                                    int srcIndex = (srcY + sy) * _width + (srcX + sx);
+                                    if (srcIndex < fullResData.Length)
+                                    {
+                                        maxDepth = Math.Max(maxDepth, fullResData[srcIndex]);
+                                    }
+                                }
+                            }
+
+                            // Store in mip level buffer
+                            int mipIndex = y * mipWidth + x;
+                            if (mipIndex < _hiZBufferData.Length)
+                            {
+                                _hiZBufferData[mipIndex] = maxDepth;
+                            }
+                        }
+                    }
+
+                    _hiZBufferDataMipLevel = mipLevel;
+                    _hiZBufferDataValid = true;
+                }
+                catch
+                {
+                    // If readback fails (e.g., render target not readable), return 0 (assume visible)
+                    return 0.0f;
+                }
+            }
+
+            // Sample maximum depth in the region
+            float regionMaxDepth = 0.0f;
+            for (int y = mipMinY; y <= mipMaxY; y++)
+            {
+                for (int x = mipMinX; x <= mipMaxX; x++)
+                {
+                    int index = y * mipWidth + x;
+                    if (index >= 0 && index < _hiZBufferData.Length)
+                    {
+                        regionMaxDepth = Math.Max(regionMaxDepth, _hiZBufferData[index]);
+                    }
+                }
+            }
+
+            return regionMaxDepth;
+        }
+
+        /// <summary>
+        /// Updates view and projection matrices for screen space projection.
+        /// Must be called each frame before occlusion testing.
+        /// </summary>
+        /// <param name="viewMatrix">View matrix (world to camera space).</param>
+        /// <param name="projectionMatrix">Projection matrix (camera to clip space).</param>
+        public void UpdateMatrices(Matrix viewMatrix, Matrix projectionMatrix)
+        {
+            _viewMatrix = viewMatrix;
+            _projectionMatrix = projectionMatrix;
+            _matricesValid = true;
+            _hiZBufferDataValid = false; // Invalidate cached Hi-Z data when matrices change
         }
 
         /// <summary>
