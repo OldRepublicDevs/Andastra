@@ -210,6 +210,34 @@ namespace Andastra.Runtime.Engines.Odyssey.Combat
         }
 
         /// <summary>
+        /// Checks if an entity is in "real" combat (has an active combat round).
+        /// Based on swkotor2.exe: GetIsInCombat with bOnlyCountReal=TRUE checks for active CombatRoundData
+        /// Located via string reference: "CombatRoundData" @ 0x007bf6b4
+        /// Original implementation: FUN_005226d0 @ 0x005226d0 checks if CombatRoundData is active
+        /// (*(int *)(*(void **)((int)this + 0x10dc) + 0xa84) == 1) where 0xa84 is RoundStarted offset
+        /// "Real" combat means actively fighting (has active combat round), vs "fake" combat (just targeted, no active round)
+        /// </summary>
+        /// <param name="entity">The entity to check</param>
+        /// <returns>True if entity has an active combat round (real combat), false otherwise</returns>
+        public bool IsInRealCombat(IEntity entity)
+        {
+            if (entity == null)
+            {
+                return false;
+            }
+
+            // Check if entity has an active combat round
+            // "Real" combat requires an active combat round, not just combat state
+            CombatRound round = GetActiveRound(entity);
+            if (round != null && !round.IsComplete)
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
         /// Gets the active combat round for an entity (Odyssey-specific: CombatRound type).
         /// </summary>
         public CombatRound GetActiveRound(IEntity entity)
