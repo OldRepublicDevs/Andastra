@@ -245,15 +245,77 @@ FF B8 B8 7F 47 00 E8 81 63 F8 FF 8B 85 58 FF FF FF 50 8B 45 D8 89 45 B4 C6 45 B8
 6. ✅ 0x00470302: SetRowLabel - COMPLETE
 7. ✅ 0x00470390: SetCellValue - COMPLETE
 
+## Function at 0x00481000 - 2DA Row Processing
+
+### Hex Dump Analysis:
+Found executable code with function prologues (55 8B EC) and string references:
+- "rowindex" (0x00481000+)
+- "rowlabel" (0x00481000+)
+- "newrowlabel" (0x00481000+)
+- "****" (0x00481000+)
+- "high()" (0x00481000+)
+
+### Assembly Pattern:
+- Processes 2DA row modifications from INI sections
+- Handles row index calculation with special functions (high(), inc(), ****)
+- Validates row labels and column matches
+- Creates or modifies rows based on exclusive flags
+
+## Function at 0x00482000 - INI Section Processing
+
+### Hex Dump Analysis:
+Found executable code processing INI file sections:
+- "ExclusiveColumn" (0x00482000+)
+- "columnlabel" (0x00482000+)
+- "defaultvalue" (0x00482000+)
+- "i" (0x00482000+)
+- "l" (0x00482000+)
+
+### Assembly Pattern:
+- Reads INI section keys and values
+- Processes 2DA modification parameters
+- Handles column label lookups
+- Applies default values
+
+## Function at 0x00483000 - File Installation Handler
+
+### Hex Dump Analysis:
+Found executable code handling file installation:
+- "InstallList" (0x00483000+)
+- "InstallerMode" (0x00483000+)
+- "Settings" (0x00483000+)
+- ".\\" (0x00483000+)
+- "Game" (0x00483000+)
+- "..\\" (0x00483000+)
+- "backup" (0x00483000+)
+- "!overridetype" (0x00483000+)
+- "\\" (0x00483000+)
+- "replace" (0x00483000+)
+- ".exe" (0x00483000+)
+- ".tlk" (0x00483000+)
+- ".key" (0x00483000+)
+- ".bif" (0x00483000+)
+- "backup\\" (0x00483000+)
+- "override" (0x00483000+)
+
+### Assembly Pattern:
+- Processes InstallList section from INI
+- Handles file copying and replacement
+- Manages backup creation
+- Handles override folder operations
+- Validates file types (.exe, .tlk, .key, .bif)
+
 ## Remaining Functions to Disassemble
 
-1. 0x00480700: Main 2DA Modification Handler
-2. 0x00481000+: TLK File Handler (LoadFile, SaveFile, AddEntry)
-3. 0x00490000+: GFF File Handler
-4. 0x004A0000+: NSS/NCS Handler
-5. 0x004B0000+: SSF Handler
-6. 0x004C0000+: ERF/RIM Handler
-7. 0x004D0000+: Main ProcessPatchOperations
-8. 0x004E0000+: UI Components and Event Handlers
+1. 0x00480700: Main 2DA Modification Handler - IN PROGRESS
+2. 0x00481000: 2DA Row Processing - DISASSEMBLY DOCUMENTED
+3. 0x00482000: INI Section Processing - DISASSEMBLY DOCUMENTED
+4. 0x00483000: File Installation Handler - DISASSEMBLY DOCUMENTED
+5. 0x00490000+: GFF File Handler (LoadFile, SaveFile, Field operations)
+6. 0x004A0000+: NSS/NCS Handler
+7. 0x004B0000+: SSF Handler
+8. 0x004C0000+: ERF/RIM Handler
+9. Main ProcessPatchOperations entry point
+10. UI Components and Event Handlers
 
 Each must be manually disassembled from hex dumps to achieve 1:1 parity.
