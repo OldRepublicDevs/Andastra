@@ -13,6 +13,20 @@ namespace HolocronToolset.Widgets.Edit
     // Original: class ComboBox2DA(QComboBox):
     public partial class ComboBox2DA : ComboBox
     {
+        // Item wrapper to store row index and display text
+        // Matching PyKotor: QComboBox.setItemData() stores row index with each item
+        private class ComboBoxItem
+        {
+            public string DisplayText { get; set; }
+            public int RowIndex { get; set; }
+            public string RealText { get; set; }
+
+            public override string ToString()
+            {
+                return DisplayText;
+            }
+        }
+
         private bool _sortAlphabetically = false;
         private object _this2DA; // TODO: Use TwoDA type when available
         private HTInstallation _installation;
@@ -49,17 +63,35 @@ namespace HolocronToolset.Widgets.Edit
                 {
                     return 0;
                 }
-                // TODO: Get row index from item data when available
+                // Get row index from item data (matching PyKotor: itemData(currentIndex))
+                if (currentIndex >= 0 && currentIndex < Items.Count)
+                {
+                    object item = Items[currentIndex];
+                    if (item is ComboBoxItem comboItem)
+                    {
+                        return comboItem.RowIndex;
+                    }
+                }
                 return currentIndex;
             }
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/edit/combobox_2da.py:70-88
         // Original: def setCurrentIndex(self, row_in_2da: int):
+        // Python implementation: Iterates through items, finds one with matching row index via itemData(), sets currentIndex
         public void SetSelectedIndex(int rowIn2DA)
         {
-            // TODO: Find item with matching row index
-            // For now, just set the index directly
+            // Find item with matching row index (matching PyKotor: searches items for matching itemData)
+            for (int i = 0; i < Items.Count; i++)
+            {
+                object item = Items[i];
+                if (item is ComboBoxItem comboItem && comboItem.RowIndex == rowIn2DA)
+                {
+                    base.SelectedIndex = i;
+                    return;
+                }
+            }
+            // If no match found and rowIn2DA is within valid range, set directly (fallback behavior)
             if (rowIn2DA >= 0 && rowIn2DA < Items.Count)
             {
                 base.SelectedIndex = rowIn2DA;
@@ -68,12 +100,19 @@ namespace HolocronToolset.Widgets.Edit
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/edit/combobox_2da.py:90-113
         // Original: def addItem(self, text: str, row: int | None = None):
+        // Python implementation: Stores row index via setItemData(), stores real text separately
         public void AddItem(string text, int? row = null)
         {
             int rowIndex = row ?? Items.Count;
             string displayText = text.StartsWith("[Modded Entry #") ? text : $"{text} [{rowIndex}]";
-            Items.Add(displayText);
-            // TODO: Store row index and real text in item data when available
+            // Store row index and real text in item data (matching PyKotor: setItemData())
+            ComboBoxItem item = new ComboBoxItem
+            {
+                DisplayText = displayText,
+                RowIndex = rowIndex,
+                RealText = text
+            };
+            Items.Add(item);
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/edit/combobox_2da.py:144-165
