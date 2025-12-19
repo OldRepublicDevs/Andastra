@@ -561,7 +561,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Loading
             // Based on swkotor2.exe: Item component creation from UTI template
             // Located via string references: "ItemComponent" @ 0x007c41e4, "BaseItem" @ 0x007c0a78
             // Original implementation: Items loaded from UTI templates have ItemComponent with BaseItem, Properties, Charges, etc.
-            var itemComponent = new ItemComponent
+            var itemComponent = new OdysseyItemComponent
             {
                 BaseItem = GetIntField(root, "BaseItem", 0),
                 StackSize = GetIntField(root, "StackSize", 1),

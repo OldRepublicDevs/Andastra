@@ -4,43 +4,60 @@ using Andastra.Runtime.Core.Interfaces;
 namespace Andastra.Runtime.Core.Interfaces.Components
 {
     /// <summary>
-    /// Component for item entities that stores UTI template data.
+    /// Component for item entities that stores item template data.
     /// </summary>
     /// <remarks>
     /// Item Component Interface:
-    /// - TODO: lookup data from daorigins.exe/dragonage2.exe/masseffect.exe/masseffect2.exe/swkotor.exe/swkotor2.exe and split into subclass'd inheritence structures appropriately. parent class(es) should contain common code.
-    /// - TODO: this should NOT specify swkotor2.exe unless it specifies the other exes as well!!!
-    /// - Based on swkotor2.exe item system
-    /// - Located via string references: "Item" @ 0x007bc550 (item object type), "Item List" @ 0x007bd028 (item list field)
-    /// - "BaseItem" @ 0x007c0a78 (base item ID field), "ItemType" @ 0x007c437c (item type field)
-    /// - "ItemPropertyIndex" @ 0x007beb58 (item property index), "ItemProperty" @ 0x007cb2f8 (item property field)
-    /// - "Item_Property" @ 0x007cb2f8 (item property structure), "ITEMPROPS" @ 0x007caec4 (item properties constant)
-    /// - "StackSize" @ 0x007c0a88 (stack size field), "Charges" @ 0x007c0a94 (charges field)
-    /// - "ItemValue" @ 0x007c4f24 (item value field), "Cost" @ 0x007c0aa0 (item cost field)
-    /// - "Identified" @ 0x007c0aac (identified flag), "ItemComponent" @ 0x007c41e4 (item component field)
-    /// - "ItemClass" @ 0x007c455c (item class field), "BaseItemStatRef" @ 0x007c4428 (base item stat reference)
-    /// - "PoweredItem" @ 0x007c43b0 (powered item flag), "AmmoItem" @ 0x007bf84c (ammo item field)
-    /// - "NewItem" @ 0x007c0930 (new item flag), "ItemCreate" @ 0x007c4f84 (item creation field)
-    /// - "PROTOITEM" @ 0x007b6c0c (prototype item constant), "BASEITEMS" @ 0x007c4594 (base items table)
-    /// - Item fields: "ItemId" @ 0x007bef40 (item ID field), "ItemList" @ 0x007bf580 (item list field)
-    /// - "Equip_ItemList" @ 0x007bf5a4 (equipped item list), "MaxItemPoints" @ 0x007bdb2c (max item points field)
-    /// - "LoseItems" @ 0x007bdaa8 (lose items field), "LoseItemsNum" @ 0x007bda6c (lose items number field)
-    /// - "LoseStolenItems" @ 0x007bdab4 (lose stolen items field), "MAXSINGLEITEMVALUE" @ 0x007c0774 (max single item value constant)
-    /// - Item events: "CSWSSCRIPTEVENT_EVENTTYPE_ON_ACQUIRE_ITEM" @ 0x007bc8c4, "CSWSSCRIPTEVENT_EVENTTYPE_ON_LOSE_ITEM" @ 0x007bc89c
-    /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_ACTIVATE_ITEM" @ 0x007bc8f0, "CSWSSCRIPTEVENT_EVENTTYPE_ON_EQUIP_ITEM" @ 0x007bc594
-    /// - "EVENT_ACQUIRE_ITEM" @ 0x007bcbf4, "EVENT_ITEM_ON_HIT_SPELL_IMPACT" @ 0x007bcc8c
-    /// - "ITEMLOST" @ 0x007bdf4c, "ITEMRECEIVED" @ 0x007bdf58
-    /// - Module item events: "Mod_OnAcquirItem" @ 0x007be7e0, "Mod_OnUnAqreItem" @ 0x007be7cc, "Mod_OnActvtItem" @ 0x007be7f4, "Mod_OnEquipItem" @ 0x007beac8
-    /// - Item types: "PT_ITEM_CHEMICAL" @ 0x007c18d4, "PT_ITEM_COMPONENT" @ 0x007c18e8
-    /// - Error: "Item template %s doesn't exist.\n" @ 0x007c2028
-    /// - Item loading: FUN_005226d0 @ 0x005226d0 (load item from UTI template), FUN_005fb0f0 @ 0x005fb0f0 (item creation)
-    /// - Original implementation: Items have base item ID, properties, upgrades, charges, stack size
-    /// - UTI file format: GFF with "UTI " signature containing item data (BaseItem, Properties, Charges, Cost)
-    /// - Item properties modify item behavior (damage bonuses, AC bonuses, effects, etc.)
-    /// - Upgrades modify item stats (damage, AC, etc.) - crystals, modifications
-    /// - Stack size: Items can stack in inventory (StackSize field, max stack size from baseitems.2da)
-    /// - Charges: Items with charges (potions, grenades, etc.) have Charges field tracking remaining uses
-    /// - Based on UTI file format documentation in vendor/PyKotor/wiki/
+    /// - Common interface for item components across all BioWare engines
+    /// - Base implementation: BaseItemComponent in Runtime.Games.Common.Components
+    /// - Engine-specific implementations: OdysseyItemComponent, AuroraItemComponent, EclipseItemComponent, InfinityItemComponent
+    ///
+    /// Based on reverse engineering of:
+    /// - Odyssey (swkotor.exe, swkotor2.exe): UTI GFF format
+    ///   - swkotor.exe: Item component system with UTI template loading
+    ///   - swkotor2.exe: Enhanced item system with upgrade support
+    ///   - Located via string references: "Item" @ 0x007bc550 (item object type), "Item List" @ 0x007bd028 (item list field)
+    ///   - "BaseItem" @ 0x007c0a78 (base item ID field), "ItemType" @ 0x007c437c (item type field)
+    ///   - "ItemPropertyIndex" @ 0x007beb58 (item property index), "ItemProperty" @ 0x007cb2f8 (item property field)
+    ///   - "StackSize" @ 0x007c0a88 (stack size field), "Charges" @ 0x007c0a94 (charges field)
+    ///   - "Cost" @ 0x007c0aa0 (item cost field), "Identified" @ 0x007c0aac (identified flag)
+    ///   - Item loading: FUN_005226d0 @ 0x005226d0 (load item from UTI template), FUN_005fb0f0 @ 0x005fb0f0 (item creation)
+    ///   - Item events: "CSWSSCRIPTEVENT_EVENTTYPE_ON_ACQUIRE_ITEM" @ 0x007bc8c4, "CSWSSCRIPTEVENT_EVENTTYPE_ON_LOSE_ITEM" @ 0x007bc89c
+    ///   - "CSWSSCRIPTEVENT_EVENTTYPE_ON_ACTIVATE_ITEM" @ 0x007bc8f0, "CSWSSCRIPTEVENT_EVENTTYPE_ON_EQUIP_ITEM" @ 0x007bc594
+    ///   - Module item events: "Mod_OnAcquirItem" @ 0x007be7e0, "Mod_OnUnAqreItem" @ 0x007be7cc, "Mod_OnActvtItem" @ 0x007be7f4, "Mod_OnEquipItem" @ 0x007beac8
+    /// - Aurora (nwmain.exe, nwn2main.exe): UTI GFF format (identical to Odyssey)
+    ///   - Uses same UTI file format as Odyssey engines
+    ///   - Item component system with similar structure to Odyssey
+    ///   - Property system and cost calculation identical to Odyssey
+    /// - Eclipse (daorigins.exe, DragonAge2.exe): Enhanced item system
+    ///   - Item component system with enhanced property calculations
+    ///   - Upgrade system with different mechanics than Odyssey
+    ///   - Item property availability and cost calculations differ from Odyssey/Aurora
+    /// - Infinity (MassEffect.exe, MassEffect2.exe): Modern item system
+    ///   - Item component system with streamlined property system
+    ///   - Different upgrade/modification mechanics
+    ///
+    /// Common functionality across all engines:
+    /// - BaseItem (int): Item type ID from baseitems.2da or equivalent table
+    /// - StackSize (int): Current stack quantity (1 = not stackable)
+    /// - Charges (int): Number of uses remaining (-1 = unlimited)
+    /// - Cost (int): Base item value for trading/selling
+    /// - Identified (bool): Whether item has been identified
+    /// - TemplateResRef (string): Template resource reference
+    /// - Properties (List): Item properties/enchantments that modify behavior
+    /// - Upgrades (List): Item upgrades (engine-specific implementation)
+    ///
+    /// Common item events across engines:
+    /// - OnAcquire: Fired when item is acquired
+    /// - OnLose: Fired when item is lost
+    /// - OnEquip: Fired when item is equipped
+    /// - OnActivate: Fired when item is activated/used
+    ///
+    /// File formats:
+    /// - Odyssey/Aurora: UTI (GFF with "UTI " signature)
+    /// - Eclipse/Infinity: Engine-specific formats (to be reverse engineered)
+    ///
+    /// Based on UTI file format documentation in vendor/PyKotor/wiki/ and Bioware Aurora Item Format specification
     /// </remarks>
     public interface IItemComponent : IComponent
     {
