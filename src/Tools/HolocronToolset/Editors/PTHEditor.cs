@@ -519,6 +519,13 @@ namespace HolocronToolset.Editors
             RenderArea.CenterCamera();
         }
 
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/pth.py:284-286
+        // Original: @status_bar_decorator def pth(self) -> PTH:
+        public PTH Pth()
+        {
+            return _pth;
+        }
+
         public override void SaveAs()
         {
             Save();
