@@ -82,7 +82,37 @@ namespace Andastra.Runtime.Graphics.Common.Enums
         /// Stride (formerly Xenko) - Modern 3D game engine.
         /// Uses DirectX 11/12, Vulkan, or OpenGL depending on platform.
         /// </summary>
-        Stride = 1 << 10
+        Stride = 1 << 10,
+
+        /// <summary>
+        /// Original Engine Backend - Matches original game engine rendering exactly 1:1.
+        /// Uses the same DirectX/OpenGL APIs and rendering pipeline as the original games.
+        /// </summary>
+        OriginalEngine = 1 << 11,
+
+        /// <summary>
+        /// Eclipse Engine - Dragon Age Origins and Dragon Age 2 rendering backend.
+        /// Matches daorigins.exe and DragonAge2.exe rendering implementation exactly.
+        /// </summary>
+        EclipseEngine = 1 << 12,
+
+        /// <summary>
+        /// Odyssey Engine - KOTOR 1 and KOTOR 2 rendering backend.
+        /// Matches swkotor.exe and swkotor2.exe rendering implementation exactly.
+        /// </summary>
+        OdysseyEngine = 1 << 13,
+
+        /// <summary>
+        /// Aurora Engine - Neverwinter Nights Enhanced Edition rendering backend.
+        /// Matches nwmain.exe rendering implementation exactly.
+        /// </summary>
+        AuroraEngine = 1 << 14,
+
+        /// <summary>
+        /// Infinity Engine - Mass Effect 1 and Mass Effect 2 rendering backend.
+        /// Matches MassEffect.exe and MassEffect2.exe rendering implementation exactly.
+        /// </summary>
+        InfinityEngine = 1 << 15
     }
 
     /// <summary>
