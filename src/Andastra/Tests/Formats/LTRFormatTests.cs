@@ -52,7 +52,7 @@ namespace Andastra.Parsing.Tests.Formats
             // Header is 9 bytes: 4 (file_type) + 4 (file_version) + 1 (letter_count)
             const int ExpectedHeaderSize = 9;
             FileInfo fileInfo = new FileInfo(BinaryTestFile);
-            fileInfo.Length.Should().BeGreaterOrEqualTo(ExpectedHeaderSize, "LTR file should have at least 9-byte header as defined in LTR.ksy");
+            fileInfo.Length.Should().BeGreaterThanOrEqualTo(ExpectedHeaderSize, "LTR file should have at least 9-byte header as defined in LTR.ksy");
         }
 
         [Fact(Timeout = 120000)]
@@ -121,12 +121,12 @@ namespace Andastra.Parsing.Tests.Formats
                 float middle = ltr.GetSinglesMiddle(charStr);
                 float end = ltr.GetSinglesEnd(charStr);
 
-                start.Should().BeGreaterOrEqualTo(0.0f, "Start probability should be non-negative");
-                start.Should().BeLessOrEqualTo(1.0f, "Start probability should be <= 1.0");
-                middle.Should().BeGreaterOrEqualTo(0.0f, "Middle probability should be non-negative");
-                middle.Should().BeLessOrEqualTo(1.0f, "Middle probability should be <= 1.0");
-                end.Should().BeGreaterOrEqualTo(0.0f, "End probability should be non-negative");
-                end.Should().BeLessOrEqualTo(1.0f, "End probability should be <= 1.0");
+                start.Should().BeGreaterThanOrEqualTo(0.0f, "Start probability should be non-negative");
+                start.Should().BeLessThanOrEqualTo(1.0f, "Start probability should be <= 1.0");
+                middle.Should().BeGreaterThanOrEqualTo(0.0f, "Middle probability should be non-negative");
+                middle.Should().BeLessThanOrEqualTo(1.0f, "Middle probability should be <= 1.0");
+                end.Should().BeGreaterThanOrEqualTo(0.0f, "End probability should be non-negative");
+                end.Should().BeLessThanOrEqualTo(1.0f, "End probability should be <= 1.0");
             }
         }
 
@@ -157,12 +157,12 @@ namespace Andastra.Parsing.Tests.Formats
                     float middle = ltr.GetDoublesMiddle(prev1Str, charStr);
                     float end = ltr.GetDoublesEnd(prev1Str, charStr);
 
-                    start.Should().BeGreaterOrEqualTo(0.0f, "Start probability should be non-negative");
-                    start.Should().BeLessOrEqualTo(1.0f, "Start probability should be <= 1.0");
-                    middle.Should().BeGreaterOrEqualTo(0.0f, "Middle probability should be non-negative");
-                    middle.Should().BeLessOrEqualTo(1.0f, "Middle probability should be <= 1.0");
-                    end.Should().BeGreaterOrEqualTo(0.0f, "End probability should be non-negative");
-                    end.Should().BeLessOrEqualTo(1.0f, "End probability should be <= 1.0");
+                    start.Should().BeGreaterThanOrEqualTo(0.0f, "Start probability should be non-negative");
+                    start.Should().BeLessThanOrEqualTo(1.0f, "Start probability should be <= 1.0");
+                    middle.Should().BeGreaterThanOrEqualTo(0.0f, "Middle probability should be non-negative");
+                    middle.Should().BeLessThanOrEqualTo(1.0f, "Middle probability should be <= 1.0");
+                    end.Should().BeGreaterThanOrEqualTo(0.0f, "End probability should be non-negative");
+                    end.Should().BeLessThanOrEqualTo(1.0f, "End probability should be <= 1.0");
                 }
             }
         }
@@ -198,12 +198,12 @@ namespace Andastra.Parsing.Tests.Formats
                         float middle = ltr.GetTriplesMiddle(prev2Str, prev1Str, charStr);
                         float end = ltr.GetTriplesEnd(prev2Str, prev1Str, charStr);
 
-                        start.Should().BeGreaterOrEqualTo(0.0f, "Start probability should be non-negative");
-                        start.Should().BeLessOrEqualTo(1.0f, "Start probability should be <= 1.0");
-                        middle.Should().BeGreaterOrEqualTo(0.0f, "Middle probability should be non-negative");
-                        middle.Should().BeLessOrEqualTo(1.0f, "Middle probability should be <= 1.0");
-                        end.Should().BeGreaterOrEqualTo(0.0f, "End probability should be non-negative");
-                        end.Should().BeLessOrEqualTo(1.0f, "End probability should be <= 1.0");
+                        start.Should().BeGreaterThanOrEqualTo(0.0f, "Start probability should be non-negative");
+                        start.Should().BeLessThanOrEqualTo(1.0f, "Start probability should be <= 1.0");
+                        middle.Should().BeGreaterThanOrEqualTo(0.0f, "Middle probability should be non-negative");
+                        middle.Should().BeLessThanOrEqualTo(1.0f, "Middle probability should be <= 1.0");
+                        end.Should().BeGreaterThanOrEqualTo(0.0f, "End probability should be non-negative");
+                        end.Should().BeLessThanOrEqualTo(1.0f, "End probability should be <= 1.0");
                     }
                 }
             }
@@ -514,9 +514,9 @@ namespace Andastra.Parsing.Tests.Formats
             {
                 char c = LTR.CharacterSet[i];
                 string charStr = c.ToString();
-                ltr.GetSinglesStart(charStr).Should().BeGreaterOrEqualTo(0.0f);
-                ltr.GetSinglesMiddle(charStr).Should().BeGreaterOrEqualTo(0.0f);
-                ltr.GetSinglesEnd(charStr).Should().BeGreaterOrEqualTo(0.0f);
+                ltr.GetSinglesStart(charStr).Should().BeGreaterThanOrEqualTo(0.0f);
+                ltr.GetSinglesMiddle(charStr).Should().BeGreaterThanOrEqualTo(0.0f);
+                ltr.GetSinglesEnd(charStr).Should().BeGreaterThanOrEqualTo(0.0f);
             }
 
             // Doubles blocks - 28 blocks
@@ -528,9 +528,9 @@ namespace Andastra.Parsing.Tests.Formats
                 {
                     char c = LTR.CharacterSet[j];
                     string charStr = c.ToString();
-                    ltr.GetDoublesStart(prev1Str, charStr).Should().BeGreaterOrEqualTo(0.0f);
-                    ltr.GetDoublesMiddle(prev1Str, charStr).Should().BeGreaterOrEqualTo(0.0f);
-                    ltr.GetDoublesEnd(prev1Str, charStr).Should().BeGreaterOrEqualTo(0.0f);
+                    ltr.GetDoublesStart(prev1Str, charStr).Should().BeGreaterThanOrEqualTo(0.0f);
+                    ltr.GetDoublesMiddle(prev1Str, charStr).Should().BeGreaterThanOrEqualTo(0.0f);
+                    ltr.GetDoublesEnd(prev1Str, charStr).Should().BeGreaterThanOrEqualTo(0.0f);
                 }
             }
 
@@ -547,9 +547,9 @@ namespace Andastra.Parsing.Tests.Formats
                     {
                         char c = LTR.CharacterSet[k];
                         string charStr = c.ToString();
-                        ltr.GetTriplesStart(prev2Str, prev1Str, charStr).Should().BeGreaterOrEqualTo(0.0f);
-                        ltr.GetTriplesMiddle(prev2Str, prev1Str, charStr).Should().BeGreaterOrEqualTo(0.0f);
-                        ltr.GetTriplesEnd(prev2Str, prev1Str, charStr).Should().BeGreaterOrEqualTo(0.0f);
+                        ltr.GetTriplesStart(prev2Str, prev1Str, charStr).Should().BeGreaterThanOrEqualTo(0.0f);
+                        ltr.GetTriplesMiddle(prev2Str, prev1Str, charStr).Should().BeGreaterThanOrEqualTo(0.0f);
+                        ltr.GetTriplesEnd(prev2Str, prev1Str, charStr).Should().BeGreaterThanOrEqualTo(0.0f);
                     }
                 }
             }
@@ -608,7 +608,7 @@ namespace Andastra.Parsing.Tests.Formats
         {
             // Basic validation
             ltr.Should().NotBeNull("LTR should not be null");
-            
+
             // Validate character set
             LTR.CharacterSet.Should().HaveLength(28, "KotOR uses 28-character alphabet");
             LTR.NumCharacters.Should().Be(28, "KotOR uses 28 characters");
@@ -617,9 +617,9 @@ namespace Andastra.Parsing.Tests.Formats
             foreach (char c in LTR.CharacterSet)
             {
                 string charStr = c.ToString();
-                ltr.GetSinglesStart(charStr).Should().BeGreaterOrEqualTo(0.0f);
-                ltr.GetSinglesMiddle(charStr).Should().BeGreaterOrEqualTo(0.0f);
-                ltr.GetSinglesEnd(charStr).Should().BeGreaterOrEqualTo(0.0f);
+                ltr.GetSinglesStart(charStr).Should().BeGreaterThanOrEqualTo(0.0f);
+                ltr.GetSinglesMiddle(charStr).Should().BeGreaterThanOrEqualTo(0.0f);
+                ltr.GetSinglesEnd(charStr).Should().BeGreaterThanOrEqualTo(0.0f);
             }
         }
 
@@ -682,4 +682,5 @@ namespace Andastra.Parsing.Tests.Formats
         }
     }
 }
+
 
