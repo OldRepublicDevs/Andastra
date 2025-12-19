@@ -21,7 +21,7 @@ namespace Andastra.Parsing.Tests.Formats
         private static readonly string KsyFile = Path.Combine(
             AppContext.BaseDirectory, "..", "..", "..", "..", "..",
             "src", "Andastra", "Parsing", "Resource", "Formats", "LTR", "LTR.ksy");
-        
+
         private static readonly string TestLtrFile = TestFileHelper.GetPath("test.ltr");
         private static readonly string KaitaiOutputDir = Path.Combine(
             AppContext.BaseDirectory, "..", "..", "..", "..", "..",
@@ -55,7 +55,7 @@ namespace Andastra.Parsing.Tests.Formats
             {
                 process.Start();
                 process.WaitForExit(5000);
-                
+
                 if (process.ExitCode == 0)
                 {
                     string version = process.StandardOutput.ReadToEnd();
@@ -86,7 +86,7 @@ namespace Andastra.Parsing.Tests.Formats
                     AppContext.BaseDirectory, "..", "..", "..", "..",
                     "src", "Andastra", "Parsing", "Resource", "Formats", "LTR", "LTR.ksy"));
             }
-            
+
             ksyPath.Exists.Should().BeTrue($"LTR.ksy should exist at {ksyPath.FullName}");
         }
 
@@ -117,7 +117,7 @@ namespace Andastra.Parsing.Tests.Formats
             {
                 process.Start();
                 process.WaitForExit(5000);
-                
+
                 if (process.ExitCode != 0)
                 {
                     Assert.True(true, "Kaitai Struct compiler not available - skipping validation");
@@ -140,11 +140,11 @@ namespace Andastra.Parsing.Tests.Formats
 
                 testProcess.Start();
                 testProcess.WaitForExit(30000);
-                
+
                 // If compilation succeeds, the file is valid
                 // If it fails, we'll get error output
                 string stderr = testProcess.StandardError.ReadToEnd();
-                
+
                 // Compilation might fail due to missing dependencies, but syntax errors would be caught
                 if (testProcess.ExitCode != 0 && stderr.Contains("error") && !stderr.Contains("import"))
                 {
@@ -185,10 +185,10 @@ namespace Andastra.Parsing.Tests.Formats
             {
                 process.Start();
                 process.WaitForExit(60000); // 60 second timeout
-                
+
                 string stdout = process.StandardOutput.ReadToEnd();
                 string stderr = process.StandardError.ReadToEnd();
-                
+
                 // Compilation should succeed
                 // Some languages might not be fully supported, but syntax should be valid
                 if (process.ExitCode != 0)
@@ -241,7 +241,7 @@ namespace Andastra.Parsing.Tests.Formats
             {
                 process.Start();
                 process.WaitForExit(5000);
-                
+
                 if (process.ExitCode != 0)
                 {
                     Assert.True(true, "Kaitai Struct compiler not available - skipping compilation test");
@@ -277,7 +277,7 @@ namespace Andastra.Parsing.Tests.Formats
                 {
                     compileProcess.Start();
                     compileProcess.WaitForExit(60000);
-                    
+
                     if (compileProcess.ExitCode == 0)
                     {
                         successCount++;
@@ -299,13 +299,13 @@ namespace Andastra.Parsing.Tests.Formats
 
             // At least some languages should compile successfully
             results.Should().NotBeEmpty("Should have compilation results");
-            
+
             // Log results
             foreach (string result in results)
             {
                 Console.WriteLine($"  {result}");
             }
-            
+
             // We expect at least a dozen languages to be testable
             // Some may not be supported, but the majority should work
             Assert.True(successCount > 0, $"At least one language should compile successfully. Results: {string.Join(", ", results)}");
@@ -330,16 +330,16 @@ namespace Andastra.Parsing.Tests.Formats
             // 2. Running the generated parsers on the test file
             // 3. Comparing results across languages
             // For now, we validate the structure matches expectations
-            
+
             LTR ltr = new LTRBinaryReader(TestLtrFile).Load();
-            
+
             // Validate structure matches Kaitai Struct definition
             // Header: 9 bytes (4 + 4 + 1)
             // Single block: 336 bytes (28 * 3 * 4)
             // Double blocks: 9,408 bytes (28 * 3 * 28 * 4)
             // Triple blocks: 73,472 bytes (28 * 28 * 3 * 28 * 4)
             // Total: 83,225 bytes
-            
+
             FileInfo fileInfo = new FileInfo(TestLtrFile);
             const int ExpectedFileSize = 9 + 336 + 9408 + 73472;
             fileInfo.Length.Should().Be(ExpectedFileSize, "LTR file size should match Kaitai Struct definition");
@@ -356,7 +356,7 @@ namespace Andastra.Parsing.Tests.Formats
             }
 
             string ksyContent = File.ReadAllText(KsyFile);
-            
+
             // Check for required elements in Kaitai Struct definition
             ksyContent.Should().Contain("meta:", "Should have meta section");
             ksyContent.Should().Contain("id: ltr", "Should have id: ltr");

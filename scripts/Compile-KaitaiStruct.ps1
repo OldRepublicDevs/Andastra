@@ -4,16 +4,16 @@
 param(
     [Parameter(Mandatory=$true)]
     [string]$KsyFile,
-    
+
     [Parameter(Mandatory=$true)]
     [string]$OutputDir,
-    
+
     [Parameter(Mandatory=$false)]
     [string[]]$Languages = @(
         "python", "java", "javascript", "csharp", "cpp_stl", "go", "ruby",
         "php", "rust", "swift", "perl", "nim", "lua", "kotlin", "typescript"
     ),
-    
+
     [switch]$WhatIf
 )
 
@@ -51,7 +51,7 @@ $results = @()
 foreach ($lang in $Languages) {
     $langOutputDir = Join-Path $OutputDir $lang
     Write-Host "`nCompiling to $lang..." -ForegroundColor Cyan
-    
+
     if ($WhatIf) {
         Write-Host "  [WHATIF] Would compile: $compiler -t $lang `"$KsyFile`" -d `"$langOutputDir`""
         $results += [PSCustomObject]@{
@@ -61,14 +61,14 @@ foreach ($lang in $Languages) {
         }
         continue
     }
-    
+
     try {
         # Create language-specific output directory
         New-Item -ItemType Directory -Force -Path $langOutputDir | Out-Null
-        
+
         # Compile
         $process = Start-Process -FilePath $compiler -ArgumentList @("-t", $lang, "`"$KsyFile`"", "-d", "`"$langOutputDir`"") -Wait -NoNewWindow -PassThru -RedirectStandardOutput "$langOutputDir\compile_stdout.txt" -RedirectStandardError "$langOutputDir\compile_stderr.txt"
-        
+
         if ($process.ExitCode -eq 0) {
             Write-Host "  ✓ Successfully compiled to $lang" -ForegroundColor Green
             $successCount++
