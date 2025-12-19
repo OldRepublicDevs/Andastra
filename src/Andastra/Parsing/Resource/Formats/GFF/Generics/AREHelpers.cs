@@ -264,76 +264,29 @@ namespace Andastra.Parsing.Resource.Generics
             // They are preserved for compatibility with existing ARE files
             if (useDeprecated)
             {
-                var areaPropertiesStruct = new GFFStruct();
-                root.SetStruct("AreaProperties", areaPropertiesStruct);
-                
-                // Based on nwmain.exe: CResGFF::ReadFieldINT(param_1, local_res20, "EnvAudio", ...)
-                areaPropertiesStruct.SetInt32("EnvAudio", are.EnvAudio);
-                // Based on nwmain.exe: CResGFF::ReadFieldBYTE(param_1, local_res20, "SkyBox", ...)
-                areaPropertiesStruct.SetUInt8("SkyBox", (byte)are.SkyBox);
-                // Based on nwmain.exe: CResGFF::ReadFieldDWORD(param_1, local_res20, "MoonFogColor", ...)
-                areaPropertiesStruct.SetUInt32("MoonFogColor", (uint)are.MoonFogColor.ToRgbInteger());
-                // Based on nwmain.exe: CResGFF::ReadFieldDWORD(param_1, local_res20, "SunFogColor", ...)
-                areaPropertiesStruct.SetUInt32("SunFogColor", (uint)are.FogColor.ToRgbInteger());
-                // Based on nwmain.exe: CResGFF::ReadFieldBYTE(param_1, local_res20, "MoonFogAmount", ...)
-                areaPropertiesStruct.SetUInt8("MoonFogAmount", are.MoonFogAmount);
-                // Based on nwmain.exe: CResGFF::ReadFieldBYTE(param_1, local_res20, "SunFogAmount", ...)
-                // Note: SunFogAmount would need to be added to ARE class if needed
-                // Based on nwmain.exe: CResGFF::ReadFieldDWORD(param_1, local_res20, "MoonAmbientColor", ...)
-                areaPropertiesStruct.SetUInt32("MoonAmbientColor", (uint)are.MoonAmbientColor.ToRgbInteger());
-                // Based on nwmain.exe: CResGFF::ReadFieldDWORD(param_1, local_res20, "MoonDiffuseColor", ...)
-                areaPropertiesStruct.SetUInt32("MoonDiffuseColor", (uint)are.MoonDiffuseColor.ToRgbInteger());
-                // Based on nwmain.exe: CResGFF::ReadFieldDWORD(param_1, local_res20, "SunAmbientColor", ...)
-                areaPropertiesStruct.SetUInt32("SunAmbientColor", (uint)are.SunAmbient.ToRgbInteger());
-                // Based on nwmain.exe: CResGFF::ReadFieldDWORD(param_1, local_res20, "SunDiffuseColor", ...)
-                areaPropertiesStruct.SetUInt32("SunDiffuseColor", (uint)are.SunDiffuse.ToRgbInteger());
-                // Based on nwmain.exe: CResGFF::ReadFieldCExoString(param_1, local_60, local_res20, "DisplayName", ...)
-                areaPropertiesStruct.SetString("DisplayName", are.DisplayName);
+                // TODO: When ARE class has these deprecated properties, implement:
+                // root.SetInt32("ID", are.UnusedId);
+                // root.SetInt32("Creator_ID", are.CreatorId);
+                // root.SetUInt32("Flags", are.Flags);
+                // root.SetInt32("ModSpotCheck", are.ModSpotCheck);
+                // root.SetInt32("ModListenCheck", are.ModListenCheck);
+                // root.SetUInt32("MoonAmbientColor", (uint)are.MoonAmbient.ToRgbInteger());
+                // root.SetUInt32("MoonDiffuseColor", (uint)are.MoonDiffuse.ToRgbInteger());
+                // root.SetUInt8("MoonFogOn", are.MoonFog ? (byte)1 : (byte)0);
+                // root.SetSingle("MoonFogNear", are.MoonFogNear);
+                // root.SetSingle("MoonFogFar", are.MoonFogFar);
+                // root.SetUInt32("MoonFogColor", (uint)are.MoonFogColor.ToRgbInteger());
+                // root.SetUInt8("MoonShadows", are.MoonShadows ? (byte)1 : (byte)0);
+                // root.SetUInt8("IsNight", are.IsNight ? (byte)1 : (byte)0);
+                // root.SetUInt8("LightingScheme", (byte)are.LightingScheme);
+                // root.SetUInt8("DayNightCycle", are.DayNightCycle ? (byte)1 : (byte)0);
+                // root.SetUInt8("NoRest", are.NoRest ? (byte)1 : (byte)0);
+                // root.SetUInt8("NoHangBack", are.NoHangBack ? (byte)1 : (byte)0);
+                // root.SetUInt8("PlayerOnly", are.PlayerOnly ? (byte)1 : (byte)0);
+                // root.SetUInt8("PlayerVsPlayer", are.PlayerVsPlayer ? (byte)1 : (byte)0);
+                // var expansionList = new GFFList();
+                // root.SetList("Expansion_List", expansionList);
             }
-            else
-            {
-                // For Odyssey (K1/K2) games, AreaProperties struct is used for save game data
-                // Based on swkotor2.exe: LoadAreaProperties @ 0x004e26d0, SaveAreaProperties @ 0x004e11d0
-                // These functions read/write Unescapable, RestrictMode, StealthXP, TransPending, SunFogColor
-                // Note: These are runtime properties saved in save games, not ARE file properties
-                // ARE files themselves don't have AreaProperties struct for Odyssey games
-            }
-
-            // Set rooms list
-            var roomsList = new GFFList();
-            root.SetList("Rooms", roomsList);
-            // foreach (var room in are.Rooms) { ... }
-
-            return gff;
-        }
-
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/are.py:685-700
-        // Original: def read_are(source: SOURCE_TYPES, offset: int = 0, size: int | None = None) -> ARE:
-        public static ARE ReadAre(byte[] data, int offset = 0, int size = -1)
-        {
-            byte[] dataToRead = data;
-            if (size > 0 && offset + size <= data.Length)
-            {
-                dataToRead = new byte[size];
-                System.Array.Copy(data, offset, dataToRead, 0, size);
-            }
-            GFF gff = GFF.FromBytes(dataToRead);
-            return ConstructAre(gff);
-        }
-
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/are.py:742-757
-        // Original: def bytes_are(are: ARE, game: Game = Game.K2, file_format: ResourceType = ResourceType.GFF) -> bytes:
-        public static byte[] BytesAre(ARE are, Game game = Game.K2, ResourceType fileFormat = null)
-        {
-            if (fileFormat == null)
-            {
-                fileFormat = ResourceType.ARE;
-            }
-            GFF gff = DismantleAre(are, game);
-            return GFFAuto.BytesGff(gff, fileFormat);
-        }
-    }
-}
 
             return gff;
         }
