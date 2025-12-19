@@ -401,8 +401,19 @@ namespace Andastra.Runtime.Games.Eclipse
         /// </remarks>
         private void AttachTriggerComponents()
         {
-            // TODO: Attach trigger-specific components
-            // TriggerComponent with enter/exit detection
+            // Attach trigger component if not already present
+            // Based on daorigins.exe and DragonAge2.exe: Trigger component is attached during entity creation
+            // ComponentInitializer also handles this, but we ensure it's attached here for consistency
+            // - TriggerList @ 0x00af5040 (daorigins.exe: trigger list in area)
+            // - CTrigger @ 0x00b0d4a0 (daorigins.exe: trigger class)
+            // - COMMAND_GETTRIGGER* and COMMAND_SETTRIGGER* functions (daorigins.exe: script commands)
+            // - Component provides: Geometry, IsEnabled, TriggerType, LinkedTo, LinkedToModule, IsTrap, TrapActive, TrapDetected, TrapDisarmed, TrapDetectDC, TrapDisarmDC, FireOnce, HasFired, ContainsPoint, ContainsEntity
+            if (!HasComponent<ITriggerComponent>())
+            {
+                var triggerComponent = new Components.EclipseTriggerComponent();
+                triggerComponent.Owner = this;
+                AddComponent<ITriggerComponent>(triggerComponent);
+            }
         }
 
         /// <summary>

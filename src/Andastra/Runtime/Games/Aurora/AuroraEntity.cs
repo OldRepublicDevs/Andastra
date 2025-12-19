@@ -300,11 +300,25 @@ namespace Andastra.Runtime.Games.Aurora
         /// <remarks>
         /// Triggers have enter/exit detection, script firing.
         /// Based on trigger component structure in nwmain.exe.
+        /// - CNWSTrigger::LoadTrigger @ 0x1404c8a00 (nwmain.exe: load trigger data from GFF)
+        /// - CNWSTrigger::SaveTrigger @ 0x1404c9b40 (nwmain.exe: save trigger data to GFF)
+        /// - LoadTriggers @ 0x140362b20 (nwmain.exe: load trigger list from area GIT)
+        /// - SaveTriggers @ 0x1403680a0 (nwmain.exe: save trigger list to area GIT)
+        /// - Located via string reference: "Trigger List" @ 0x140ddb800 (GFF list field in GIT)
+        /// - ComponentInitializer also handles this, but we ensure it's attached here for consistency
+        /// - Component provides: Geometry, IsEnabled, TriggerType, LinkedTo, LinkedToModule, IsTrap, TrapActive, TrapDetected, TrapDisarmed, TrapDetectDC, TrapDisarmDC, FireOnce, HasFired, ContainsPoint, ContainsEntity
         /// </remarks>
         private void AttachTriggerComponents()
         {
-            // TODO: Attach trigger-specific components
-            // TriggerComponent with enter/exit detection
+            // Attach trigger component if not already present
+            // Based on nwmain.exe: Trigger component is attached during entity creation
+            // ComponentInitializer also handles this, but we ensure it's attached here for consistency
+            if (!HasComponent<ITriggerComponent>())
+            {
+                var triggerComponent = new Components.AuroraTriggerComponent();
+                triggerComponent.Owner = this;
+                AddComponent<ITriggerComponent>(triggerComponent);
+            }
         }
 
         /// <summary>
