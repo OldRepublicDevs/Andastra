@@ -92,7 +92,7 @@ namespace HolocronToolset.Widgets
         {
             value = Math.Max(_min, Math.Min(_max, value));
             Value = value;
-            ValueChanged?.Invoke(GetValue());
+            // Note: Setting Value property automatically raises ValueChanged event in Avalonia
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/long_spinbox.py:74-81
