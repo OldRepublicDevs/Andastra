@@ -4,24 +4,26 @@ using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
 using Andastra.Runtime.Engines.Odyssey.Components;
 using Andastra.Runtime.Engines.Odyssey.Data;
+using Andastra.Runtime.Games.Common.Combat;
 
 namespace Andastra.Runtime.Engines.Odyssey.Combat
 {
     /// <summary>
-    /// Calculates weapon damage from equipped items using baseitems.2da.
+    /// Calculates weapon damage from equipped items using baseitems.2da (Odyssey engine).
     /// </summary>
     /// <remarks>
-    /// Weapon Damage Calculator:
+    /// Odyssey Weapon Damage Calculator:
+    /// - TODO: FIXME: based on swkotor2.exe when it should be based on the commonalities in both swkotor.exe and swkotor2.exe.
     /// - Based on swkotor2.exe weapon damage calculation
     /// - Located via string references: "damagedice" @ 0x007c2e60, "damagedie" @ 0x007c2e70, "damagebonus" @ 0x007c2e80
     /// - "DamageDice" @ 0x007c2d3c, "DamageDie" @ 0x007c2d30 (damage dice fields)
     /// - "BaseItem" @ 0x007c2e90 (base item ID in item GFF), "weapontype" @ 0x007c2ea0
     /// - "OnHandDamageMod" @ 0x007c2e40, "OffHandDamageMod" @ 0x007c2e18 (damage modifiers)
     /// - Cross-engine: Similar damage calculation in swkotor.exe (K1), nwmain.exe (Aurora uses different 2DA tables), daorigins.exe (Eclipse uses different damage system)
-    /// - Inheritance: Base class DamageCalculator (Runtime.Games.Common) implements common damage calculation logic
-    ///   - Odyssey: WeaponDamageCalculator (Runtime.Games.Odyssey) - Odyssey-specific baseitems.2da lookup
-    ///   - Aurora: AuroraWeaponDamageCalculator : DamageCalculator (Runtime.Games.Aurora) - Aurora-specific baseitems.2da lookup
-    ///   - Eclipse: EclipseWeaponDamageCalculator : DamageCalculator (Runtime.Games.Eclipse) - Eclipse-specific damage system
+    /// - Inheritance: BaseWeaponDamageCalculator (Runtime.Games.Common.Combat) implements common damage calculation logic
+    ///   - Odyssey: WeaponDamageCalculator : BaseWeaponDamageCalculator (Runtime.Games.Odyssey) - Odyssey-specific baseitems.2da lookup
+    ///   - Aurora: AuroraWeaponDamageCalculator : BaseWeaponDamageCalculator (Runtime.Games.Aurora) - Aurora-specific baseitems.2da lookup
+    ///   - Eclipse: EclipseWeaponDamageCalculator : BaseWeaponDamageCalculator (Runtime.Games.Eclipse) - Eclipse-specific damage system
     /// - Original implementation: FUN_005226d0 @ 0x005226d0 (save item data), FUN_0050c510 @ 0x0050c510 (load item data)
     /// - Damage formula: Roll(damagedice * damagedie) + damagebonus + ability modifier
     /// - Ability modifier: STR for melee (default), DEX for ranged, DEX for finesse melee/lightsabers (if feat)
@@ -32,78 +34,34 @@ namespace Andastra.Runtime.Engines.Odyssey.Combat
     /// - Weapon lookup: Get equipped weapon from inventory (RIGHTWEAPON slot 4, LEFTWEAPON slot 5), get BaseItem ID, lookup in baseitems.2da
     /// - Unarmed damage: 1d3 (1 die, size 3) if no weapon equipped
     /// </remarks>
-    public class WeaponDamageCalculator
+    public class WeaponDamageCalculator : BaseWeaponDamageCalculator
     {
         private readonly TwoDATableManager _tableManager;
-        private readonly Random _random;
+
+        /// <summary>
+        /// Gets the main hand weapon slot number (RIGHTWEAPON = 4 for Odyssey).
+        /// </summary>
+        protected override int MainHandWeaponSlot => 4;
+
+        /// <summary>
+        /// Gets the offhand weapon slot number (LEFTWEAPON = 5 for Odyssey).
+        /// </summary>
+        protected override int OffHandWeaponSlot => 5;
 
         public WeaponDamageCalculator(TwoDATableManager tableManager)
         {
             _tableManager = tableManager ?? throw new ArgumentNullException("tableManager");
-            _random = new Random();
         }
 
         /// <summary>
-        /// Calculates weapon damage for an attack.
+        /// Gets damage dice information from baseitems.2da (Odyssey-specific).
         /// </summary>
-        /// <param name="attacker">The attacking entity.</param>
-        /// <param name="isOffhand">Whether this is an offhand attack.</param>
-        /// <param name="isCritical">Whether this is a critical hit.</param>
-        /// <returns>Total damage amount.</returns>
-        public int CalculateDamage(IEntity attacker, bool isOffhand = false, bool isCritical = false)
+        protected override bool GetDamageDiceFromTable(int baseItemId, out int damageDice, out int damageDie, out int damageBonus)
         {
-            if (attacker == null)
-            {
-                return 0;
-            }
+            damageDice = 1;
+            damageDie = 8;
+            damageBonus = 0;
 
-            // Get equipped weapon
-            IInventoryComponent inventory = attacker.GetComponent<IInventoryComponent>();
-            if (inventory == null)
-            {
-                return 0;
-            }
-
-            // Get weapon from appropriate slot
-            int weaponSlot = isOffhand ? 5 : 4; // LEFTWEAPON = 5, RIGHTWEAPON = 4
-            IEntity weapon = inventory.GetItemInSlot(weaponSlot);
-
-            // If no weapon in main hand and not offhand, try offhand
-            if (weapon == null && !isOffhand)
-            {
-                weapon = inventory.GetItemInSlot(5); // Try left weapon
-            }
-
-            if (weapon == null)
-            {
-                // Unarmed damage (1d3)
-                return RollDice(1, 3);
-            }
-
-            // Get base item ID from weapon
-            // Note: This would come from the weapon's UTI template
-            // TODO: SIMPLIFIED - For now, we'll need to get it from the weapon entity's data
-            int baseItemId = GetBaseItemId(weapon);
-            if (baseItemId < 0)
-            {
-                // Fallback to unarmed
-                return RollDice(1, 3);
-            }
-
-            // Get base item data
-            BaseItemData baseItem = _tableManager.GetBaseItem(baseItemId);
-            if (baseItem == null)
-            {
-                return RollDice(1, 3); // Fallback
-            }
-
-            // Get damage dice from baseitems.2da
-            // Note: Column names may vary - using common names
-            int damageDice = baseItem.BaseItemId; // TODO: PLACEHOLDER - would get from 2DA
-            int damageDie = 8; // TODO: PLACEHOLDER - would get from 2DA
-            int damageBonus = 0; // TODO: PLACEHOLDER - would get from 2DA
-
-            // Try to get from 2DA table directly
             try
             {
                 var twoDARow = _tableManager.GetRow("baseitems", baseItemId);
@@ -118,78 +76,27 @@ namespace Andastra.Runtime.Engines.Odyssey.Combat
                     damageDie = twoDARow.GetInteger("dietoroll", null) ??
                                twoDARow.GetInteger("damagedie", 8) ?? 8;
                     damageBonus = twoDARow.GetInteger("damagebonus", 0) ?? 0;
+                    return true;
                 }
             }
             catch
             {
-                // Fallback values
-                damageDice = 1;
-                damageDie = 8;
-                damageBonus = 0;
+                // Fallback values already set
             }
 
-            // Roll damage dice
-            int rolledDamage = RollDice(damageDice, damageDie);
-
-            // Add damage bonus
-            int totalDamage = rolledDamage + damageBonus;
-
-            // Add ability modifier
-            IStatsComponent stats = attacker.GetComponent<IStatsComponent>();
-            if (stats != null)
-            {
-                // Determine which ability score to use for damage
-                // Based on swkotor2.exe: Ability modifier selection for weapon damage
-                // - Ranged weapons: Always use DEX
-                // - Melee weapons: Use STR by default, DEX if finesse feat applies
-                // - Finesse feats: FEAT_FINESSE_LIGHTSABERS (193) for lightsabers, FEAT_FINESSE_MELEE_WEAPONS (194) for melee weapons
-                // Located via string references: "DEXBONUS" @ 0x007c4320, "DEXAdjust" @ 0x007c2bec
-                // Original implementation: FUN_005226d0 @ 0x005226d0 checks finesse feats for ability modifier selection
-                Ability attackAbility = DetermineDamageAbility(attacker, baseItem, baseItemId);
-
-                int abilityMod = stats.GetAbilityModifier(attackAbility);
-
-                // Offhand attacks get half ability modifier
-                if (isOffhand)
-                {
-                    abilityMod = abilityMod / 2;
-                }
-
-                totalDamage += abilityMod;
-            }
-
-            // Apply critical multiplier
-            if (isCritical)
-            {
-                int critMult = 2; // Default
-                try
-                {
-                    var twoDARow = _tableManager.GetRow("baseitems", baseItemId);
-                    if (twoDARow != null)
-                    {
-                        critMult = twoDARow.GetInteger("crithitmult", 2) ?? 2;
-                    }
-                }
-                catch
-                {
-                    // Use default
-                }
-
-                totalDamage *= critMult;
-            }
-
-            return Math.Max(1, totalDamage); // Minimum 1 damage
+            return false;
         }
 
         /// <summary>
-        /// Determines which ability score to use for weapon damage calculation.
+        /// Determines which ability score to use for weapon damage calculation (Odyssey-specific).
         /// </summary>
         /// <param name="attacker">The attacking entity.</param>
-        /// <param name="baseItem">The base item data for the weapon.</param>
+        /// <param name="weapon">The weapon entity.</param>
         /// <param name="baseItemId">The base item ID.</param>
         /// <returns>The ability score to use (DEX for ranged/finesse, STR otherwise).</returns>
         /// <remarks>
-        /// Ability Score Selection for Weapon Damage:
+        /// Ability Score Selection for Weapon Damage (Odyssey):
+        /// - TODO: FIXME: based on swkotor2.exe when it should be based on the commonalities in both swkotor.exe and swkotor2.exe.
         /// - Based on swkotor2.exe: Ability modifier selection for weapon damage
         /// - Located via string references: "DEXBONUS" @ 0x007c4320, "DEXAdjust" @ 0x007c2bec
         /// - " + %d (Dex Modifier)" @ 0x007c3a84, " + %d (Dex Mod)" @ 0x007c3e54
@@ -202,9 +109,16 @@ namespace Andastra.Runtime.Engines.Odyssey.Combat
         /// - Lightsaber detection: Check baseitems.2da itemclass = 15 or weapontype = 4
         /// - Cross-engine: Similar logic in swkotor.exe (K1), nwmain.exe (Aurora uses different feat system)
         /// </remarks>
-        private Ability DetermineDamageAbility(IEntity attacker, BaseItemData baseItem, int baseItemId)
+        protected override Ability DetermineDamageAbility(IEntity attacker, IEntity weapon, int baseItemId)
         {
-            if (attacker == null || baseItem == null)
+            if (attacker == null || weapon == null)
+            {
+                return Ability.Strength; // Default fallback
+            }
+
+            // Get base item data to check if ranged
+            BaseItemData baseItem = _tableManager.GetBaseItem(baseItemId);
+            if (baseItem == null)
             {
                 return Ability.Strength; // Default fallback
             }
@@ -325,62 +239,31 @@ namespace Andastra.Runtime.Engines.Odyssey.Combat
         }
 
         /// <summary>
-        /// Gets the base item ID from a weapon entity.
+        /// Gets the critical multiplier for a weapon from baseitems.2da (Odyssey-specific).
         /// </summary>
-        private int GetBaseItemId(IEntity weapon)
+        protected override int GetCriticalMultiplier(int baseItemId)
         {
-            if (weapon == null)
+            try
             {
-                return -1;
+                var twoDARow = _tableManager.GetRow("baseitems", baseItemId);
+                if (twoDARow != null)
+                {
+                    return twoDARow.GetInteger("crithitmult", 2) ?? 2;
+                }
+            }
+            catch
+            {
+                // Use default
             }
 
-            // Get BaseItem ID from ItemComponent
-            // Based on swkotor2.exe: BaseItem field in UTI GFF template
-            // Located via string reference: "BaseItem" @ 0x007c2f34
-            var itemComponent = weapon.GetComponent<Andastra.Runtime.Core.Interfaces.Components.IItemComponent>();
-            if (itemComponent != null)
-            {
-                return itemComponent.BaseItem;
-            }
-
-            // Fallback: try entity data
-            if (weapon is Core.Entities.Entity entity)
-            {
-                return entity.GetData<int>("BaseItem", -1);
-            }
-
-            return -1;
+            return 2; // Default
         }
 
         /// <summary>
-        /// Rolls dice (e.g., 2d6 = RollDice(2, 6)).
+        /// Gets the critical threat range from baseitems.2da (Odyssey-specific).
         /// </summary>
-        private int RollDice(int count, int dieSize)
+        protected override int GetCriticalThreatRangeFromTable(int baseItemId)
         {
-            int total = 0;
-            for (int i = 0; i < count; i++)
-            {
-                total += _random.Next(1, dieSize + 1);
-            }
-            return total;
-        }
-
-        /// <summary>
-        /// Gets the critical threat range for a weapon.
-        /// </summary>
-        public int GetCriticalThreatRange(IEntity weapon)
-        {
-            if (weapon == null)
-            {
-                return 20; // Default
-            }
-
-            int baseItemId = GetBaseItemId(weapon);
-            if (baseItemId < 0)
-            {
-                return 20;
-            }
-
             try
             {
                 var twoDARow = _tableManager.GetRow("baseitems", baseItemId);
@@ -394,40 +277,9 @@ namespace Andastra.Runtime.Engines.Odyssey.Combat
                 // Fallback
             }
 
-            return 20;
+            return 20; // Default
         }
 
-        /// <summary>
-        /// Gets the critical multiplier for a weapon.
-        /// </summary>
-        public int GetCriticalMultiplier(IEntity weapon)
-        {
-            if (weapon == null)
-            {
-                return 2; // Default
-            }
-
-            int baseItemId = GetBaseItemId(weapon);
-            if (baseItemId < 0)
-            {
-                return 2;
-            }
-
-            try
-            {
-                var twoDARow = _tableManager.GetRow("baseitems", baseItemId);
-                if (twoDARow != null)
-                {
-                    return twoDARow.GetInteger("crithitmult", 2) ?? 2;
-                }
-            }
-            catch
-            {
-                // Fallback
-            }
-
-            return 2;
-        }
     }
 }
 
