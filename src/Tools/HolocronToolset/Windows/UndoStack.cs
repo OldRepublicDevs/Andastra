@@ -102,7 +102,7 @@ namespace HolocronToolset.Windows
         public void SetClean()
         {
             // In Qt, this marks the current state as "clean" (saved)
-            // For now, we just track the state - full implementation would track clean index
+            // TODO: SIMPLIFIED - For now, we just track the state - full implementation would track clean index
         }
 
         private string GetUndoText()

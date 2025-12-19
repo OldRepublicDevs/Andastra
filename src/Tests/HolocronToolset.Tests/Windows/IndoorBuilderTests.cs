@@ -131,11 +131,11 @@ namespace HolocronToolset.Tests.Windows
                 builder.Map.Should().NotBeNull("Map should be initialized even without installation");
 
                 // Matching Python line 377: assert builder.ui.actionSettings.isEnabled() is False
-                // Note: ActionSettingsEnabled will be implemented when settings UI is complete
+                // TODO: PLACEHOLDER - ActionSettingsEnabled will be implemented when settings UI is complete
                 // For now, verify builder works without installation
 
                 // Matching Python line 378: assert builder._module_kit_manager is None
-                // Note: _module_kit_manager will be implemented when module kit functionality is complete
+                // TODO: PLACEHOLDER - _module_kit_manager will be implemented when module kit functionality is complete
 
                 builder.Should().NotBeNull("Builder should be created without installation");
                 builder.Ui.Should().NotBeNull("UI should be initialized");
@@ -238,7 +238,7 @@ namespace HolocronToolset.Tests.Windows
             // - _undo_stack property (undo/redo system)
             // - AddRoomCommand class
             // - IndoorMapRenderer with selection support
-            // Currently IndoorBuilderWindow is a stub, so this test will fail until implementation is complete.
+            // TODO: STUB - Currently IndoorBuilderWindow is a stub, so this test will fail until implementation is complete.
             // However, per user requirement of "zero omissions", the test is ported with full structure.
 
             string tempPath = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
@@ -450,7 +450,7 @@ namespace HolocronToolset.Tests.Windows
         // NOTE: The Python file has 246 test functions across 56 test classes (7098 lines).
         // To ensure zero omissions per user requirements, ALL 246 tests must be ported with
         // full implementations (no skips/todos/placeholders). Many require full IndoorMapBuilder
-        // implementation which is currently a stub, so tests will fail until implementation is complete.
+        // TODO: STUB - Implementation which is currently a stub, so tests will fail until implementation is complete.
         //
         // Strategy (per user requirement of zero omissions):
         // 1. Port all 246 tests with full test method implementations
@@ -1684,7 +1684,8 @@ namespace HolocronToolset.Tests.Windows
             // TODO: STUB - Replace with Avalonia image implementation
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/windows/test_indoor_builder.py
             // Original: image = QImage(128, 128, QImage.Format.Format_RGB32)
-            object image = new { Width = 128, Height = 128 }; // Placeholder until Avalonia image implementation
+            // TODO: PLACEHOLDER - Placeholder until Avalonia image implementation
+            object image = new { Width = 128, Height = 128 };
 
             // Create minimal BWM with multiple faces (matching Python lines 76-94)
             var bwm = new BWM();
@@ -2270,7 +2271,7 @@ namespace HolocronToolset.Tests.Windows
                 renderer.SnapToHooks.Should().BeTrue("snap_to_hooks should default to True");
 
                 // Matching Python line 970: builder.ui.snapToHooksCheck.setChecked(False)
-                // Note: UI checkbox binding will be implemented when UI is complete
+                // TODO: PLACEHOLDER - UI checkbox binding will be implemented when UI is complete
                 // For now, directly set the property to test the renderer behavior
                 renderer.SetSnapToHooks(false);
 
@@ -2316,7 +2317,7 @@ namespace HolocronToolset.Tests.Windows
                 var renderer = builder.Ui.MapRenderer;
 
                 // Matching Python line 981: builder.ui.gridSizeSpin.setValue(2.5)
-                // Note: UI spinbox binding will be implemented when UI is complete
+                // TODO: PLACEHOLDER - UI spinbox binding will be implemented when UI is complete
                 // For now, directly set the property to test the renderer behavior
                 renderer.SetGridSize(2.5f);
 
@@ -2371,7 +2372,7 @@ namespace HolocronToolset.Tests.Windows
                 var renderer = builder.Ui.MapRenderer;
 
                 // Matching Python line 998: builder.ui.rotSnapSpin.setValue(30)
-                // Note: UI spinbox binding will be implemented when UI is complete
+                // TODO: PLACEHOLDER - UI spinbox binding will be implemented when UI is complete
                 // For now, directly set the property to test the renderer behavior
                 renderer.SetRotationSnap(30.0f);
 
@@ -2424,7 +2425,7 @@ namespace HolocronToolset.Tests.Windows
 
                 // Matching Python line 1012: builder = builder_no_kits
                 // Note: This test verifies UI spinbox min/max constraints
-                // Since UI controls are not fully implemented yet, we test that the renderer
+                // TODO: PLACEHOLDER - Since UI controls are not fully implemented yet, we test that the renderer
                 // accepts valid values and that the property can be set
                 // The actual UI spinbox min/max validation will be tested when UI is complete
 
@@ -5277,7 +5278,7 @@ namespace HolocronToolset.Tests.Windows
                     component.Image.Should().NotBeNull("Component image should not be null");
 
                     // Note: In C#, Image is object type, so we can't check QImage type directly
-                    // The actual image validation will happen when ModuleKit._load_module_components is implemented
+                    // TODO: STUB - The actual image validation will happen when ModuleKit._load_module_components is implemented
                     return; // Found a component with image, test passes
                 }
             }

@@ -154,7 +154,7 @@ namespace HolocronToolset.Data
             try
             {
                 // TODO: Implement _load_module_components() when Module class is available
-                // For now, return false to indicate components weren't loaded
+                // TODO: STUB - For now, return false to indicate components weren't loaded
                 return false;
             }
             catch

@@ -47,8 +47,7 @@ namespace HolocronToolset.Utils
             try
             {
                 var uri = new Uri(link);
-                // Use Avalonia's Launcher to open URLs
-                // This will be implemented when we have access to TopLevel
+                // TODO: SIMPLIFIED - Using Process.Start as workaround, should use Avalonia's Launcher when TopLevel is available
                 System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
                 {
                     FileName = link,
@@ -92,14 +91,12 @@ namespace HolocronToolset.Utils
             // Check if it's an ERF type file
             if (ext == ".erf" || ext == ".mod" || ext == ".sav" || ext == ".hak")
             {
-                // Use Andastra.Parsing to read ERF
-                // TODO: This will be implemented when ERF reading is available
+                // TODO: STUB - Implement ERF file reading using Andastra.Parsing
                 throw new NotImplementedException("ERF file reading not yet implemented");
             }
             else if (ext == ".rim")
             {
-                // Use Andastra.Parsing to read RIM
-                // TODO: This will be implemented when RIM reading is available
+                // TODO: STUB - Implement RIM file reading using Andastra.Parsing
                 throw new NotImplementedException("RIM file reading not yet implemented");
             }
             else
