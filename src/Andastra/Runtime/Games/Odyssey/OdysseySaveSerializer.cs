@@ -164,51 +164,8 @@ namespace Andastra.Runtime.Games.Odyssey
         /// </remarks>
         public override byte[] SerializeParty(IPartyState partyState)
         {
-            // Convert IPartyState to PartyState if possible
-            // The runtime typically passes PartyState instances which contain all the rich data
-            PartyState state = partyState as PartyState;
-            if (state == null)
-            {
-                // Fallback: Create minimal PartyState from IPartyState interface
-                state = new PartyState();
-                if (partyState != null)
-                {
-                    // Extract basic party information from interface
-                    if (partyState.Leader != null)
-                    {
-                        state.LeaderResRef = partyState.Leader.Tag ?? "";
-                        if (state.PlayerCharacter == null)
-                        {
-                            state.PlayerCharacter = new CreatureState();
-                        }
-                        state.PlayerCharacter.Tag = partyState.Leader.Tag ?? "";
-                    }
-
-                    // Extract party members
-                    if (partyState.Members != null)
-                    {
-                        foreach (IEntity member in partyState.Members)
-                        {
-                            if (member != null && !string.IsNullOrEmpty(member.Tag))
-                            {
-                                if (!state.AvailableMembers.ContainsKey(member.Tag))
-                                {
-                                    state.AvailableMembers[member.Tag] = new PartyMemberState
-                                    {
-                                        TemplateResRef = member.Tag,
-                                        IsAvailable = true,
-                                        IsSelectable = true
-                                    };
-                                }
-                                if (!state.SelectedParty.Contains(member.Tag))
-                                {
-                                    state.SelectedParty.Add(member.Tag);
-                                }
-                            }
-                        }
-                    }
-                }
-            }
+            // Use common helper to convert IPartyState to PartyState
+            PartyState state = ConvertToPartyState(partyState);
 
             // Use Andastra.Parsing GFF writer
             // Original creates GFF with "PT  " signature and "V2.0" version
@@ -219,12 +176,8 @@ namespace Andastra.Runtime.Games.Odyssey
             var root = gff.Root;
 
             // PT_PCNAME - Player character name
-            string pcName = "";
-            if (state.PlayerCharacter != null)
-            {
-                pcName = state.PlayerCharacter.Tag ?? "";
-            }
-            root.SetString("PT_PCNAME", pcName);
+            // Use common helper to extract PC name
+            root.SetString("PT_PCNAME", GetPlayerCharacterName(state));
 
             // PT_GOLD - Gold/credits
             root.SetInt32("PT_GOLD", state.Gold);
@@ -256,7 +209,8 @@ namespace Andastra.Runtime.Games.Odyssey
             root.SetUInt8("PT_CHEAT_USED", state.CheatUsed ? (byte)1 : (byte)0);
 
             // PT_NUM_MEMBERS - Number of party members (byte)
-            int numMembers = state.SelectedParty != null ? state.SelectedParty.Count : 0;
+            // Use common helper to get party count
+            int numMembers = GetSelectedPartyCount(state);
             root.SetUInt8("PT_NUM_MEMBERS", (byte)numMembers);
 
             // PT_MEMBERS - List of party members

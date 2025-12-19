@@ -162,10 +162,12 @@ namespace Andastra.Runtime.Games.Eclipse
         public override byte[] SerializeParty(IPartyState partyState)
         {
             // TODO: Implement Eclipse squad serialization
+            // Use ConvertToPartyState(partyState) helper from base class to extract party data
             // Create SQUAD struct with relationships
             // Serialize approval and romance data
             // Include mission performance stats
             // Save tactical AI configurations
+            // Note: Eclipse uses binary format, not GFF like Odyssey
 
             throw new NotImplementedException("Eclipse squad serialization not yet implemented");
         }
