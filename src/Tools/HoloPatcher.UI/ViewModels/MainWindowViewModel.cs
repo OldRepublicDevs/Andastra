@@ -17,7 +17,7 @@ using Andastra.Parsing.Config;
 using Andastra.Parsing.Installation;
 using Andastra.Parsing.Logger;
 using Andastra.Parsing.Namespaces;
-using Andastra.Parsing.Patcher;
+using Andastra.Parsing.TSLPatcher;
 using Andastra.Parsing.Reader;
 using Andastra.Parsing.Uninstall;
 using HoloPatcher.UI;

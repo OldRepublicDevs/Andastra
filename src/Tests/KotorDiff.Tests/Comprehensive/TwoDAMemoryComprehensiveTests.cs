@@ -7,7 +7,7 @@ using System.IO;
 using static Andastra.Parsing.Formats.GFF.GFFAuto;
 using Andastra.Parsing.Formats.GFF;
 using Andastra.Parsing.Formats.TwoDA;
-using Andastra.Parsing.Resources;
+using Andastra.Parsing.Resource;
 using KotorDiff.Tests.Helpers;
 using Xunit;
 

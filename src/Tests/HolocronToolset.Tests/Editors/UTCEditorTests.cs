@@ -1759,13 +1759,12 @@ namespace HolocronToolset.Tests.Editors
 
         // TODO: STUB - Implement test_utc_editor_new_file_creation (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:1502-1534)
         // Original: def test_utc_editor_new_file_creation(qtbot, installation: HTInstallation): Test creating a new UTC file from scratch.
-        [Fact]
-        public void TestUtcEditorNewFileCreation()
-        {
-            // TODO: STUB - Implement new file creation test (already exists as TestUtcEditorNewFileCreation but needs full implementation matching Python)
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:1502-1534
-            // Note: TestUtcEditorNewFileCreation exists but is SIMPLIFIED - needs full field setting and verification
-        }
+        // NOTE: This is a duplicate - the actual implementation is at line 32. This stub is removed to avoid duplicate method error.
+        // [Fact]
+        // public void TestUtcEditorNewFileCreation()
+        // {
+        //     // Implementation exists at line 32
+        // }
 
         // TODO: STUB - Implement test_utc_editor_minimum_values (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:1536-1563)
         // Original: def test_utc_editor_minimum_values(qtbot, installation: HTInstallation, test_files_dir: Path): Test setting all fields to minimum values.
