@@ -312,8 +312,57 @@ namespace HolocronToolset.Windows
                 _specialActionButton.Click += (sender, e) => OpenModuleDesigner();
             }
 
+            // Connect ResourceList events (matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:495-555)
+            ConnectResourceListEvents();
+
             // Connect menu actions from XAML
             ConnectMenuActions();
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:495-555
+        // Original: Connect signals from ResourceList widgets to MainWindow handlers
+        private void ConnectResourceListEvents()
+        {
+            // Connect coreWidget events (matching PyKotor lines 495-497)
+            if (_coreWidget != null)
+            {
+                _coreWidget.RefreshClicked += (sender, e) => OnCoreRefresh();
+                _coreWidget.ResourceDoubleClicked += (sender, e) => OnOpenResources(e.Resources, e.UseSpecializedEditor);
+            }
+
+            // Connect modulesWidget events (matching PyKotor lines 499-503)
+            if (_modulesWidget != null)
+            {
+                _modulesWidget.SectionChanged += (sender, section) => OnModuleChanged(section);
+                _modulesWidget.ReloadClicked += (sender, section) => OnModuleReload(section);
+                _modulesWidget.RefreshClicked += (sender, e) => OnModuleRefresh();
+                _modulesWidget.ResourceDoubleClicked += (sender, e) => OnOpenResources(e.Resources, e.UseSpecializedEditor);
+            }
+
+            // Connect savesWidget events (matching PyKotor lines 506-510)
+            if (_savesWidget != null)
+            {
+                _savesWidget.SectionChanged += (sender, section) => OnSavePathChanged(section);
+                _savesWidget.ReloadClicked += (sender, section) => OnSaveReload(section);
+                _savesWidget.RefreshClicked += (sender, e) => OnSaveRefresh();
+                _savesWidget.ResourceDoubleClicked += (sender, e) => OnOpenResources(e.Resources, e.UseSpecializedEditor);
+            }
+
+            // Connect overrideWidget events (matching PyKotor lines 546-550)
+            if (_overrideWidget != null)
+            {
+                _overrideWidget.SectionChanged += (sender, section) => OnOverrideChanged(section);
+                _overrideWidget.ReloadClicked += (sender, section) => OnOverrideReload(section);
+                _overrideWidget.RefreshClicked += (sender, e) => OnOverrideRefresh();
+                _overrideWidget.ResourceDoubleClicked += (sender, e) => OnOpenResources(e.Resources, e.UseSpecializedEditor);
+            }
+
+            // Connect texturesWidget events (matching PyKotor lines 553-554)
+            if (_texturesWidget != null)
+            {
+                _texturesWidget.SectionChanged += (sender, section) => OnTexturesChanged(section);
+                _texturesWidget.ResourceDoubleClicked += (sender, e) => OnOpenResources(e.Resources, e.UseSpecializedEditor);
+            }
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:485-665
@@ -885,6 +934,48 @@ namespace HolocronToolset.Windows
             RefreshOverrideList(reload: true);
         }
 
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:921-933
+        // Original: def on_savepath_changed(self, new_save_dir: str):
+        public void OnSavePathChanged(string newSaveDir)
+        {
+            if (_active == null || string.IsNullOrWhiteSpace(newSaveDir))
+            {
+                return;
+            }
+
+            try
+            {
+                // Clear the saves widget model (matching PyKotor: self.ui.savesWidget.modules_model.invisibleRootItem().removeRows(...))
+                if (_savesWidget != null)
+                {
+                    _savesWidget.SetResources(new List<FileResource>());
+                }
+
+                // Load saves for the new directory and update the widget
+                // Note: In PyKotor, this calls active.load_saves() and checks if new_save_dir_path is in active.saves
+                // For now, we'll refresh the saves list with the new directory
+                RefreshSavesList(reload: true);
+            }
+            catch (Exception ex)
+            {
+                System.Console.WriteLine($"Failed to change save path to '{newSaveDir}': {ex}");
+            }
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:974-979
+        // Original: def on_save_reload(self, save_dir: str):
+        public void OnSaveReload(string saveDir)
+        {
+            if (string.IsNullOrWhiteSpace(saveDir))
+            {
+                return;
+            }
+
+            System.Console.WriteLine($"Reloading save directory '{saveDir}'");
+            // In PyKotor, this just calls on_savepath_changed
+            OnSavePathChanged(saveDir);
+        }
+
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:1126-1128
         // Original: def on_textures_changed(self, texturepackName: str):
         private void OnTexturesChanged(string texturepackName)
@@ -988,9 +1079,11 @@ namespace HolocronToolset.Windows
             var relevant = journalResources[jrlIdent];
             if (relevant.Count > 1)
             {
-                // Multiple journal files found - use the first one
-                // TODO: Implement FileSelectionWindow dialog for user selection when multiple files exist
-                System.Console.WriteLine($"Multiple global.jrl files found ({relevant.Count}), using the first one.");
+                // Multiple journal files found - show FileSelectionWindow for user selection
+                var selectionWindow = new Dialogs.FileSelectionWindow(relevant, _active, this);
+                selectionWindow.Show();
+                WindowUtils.AddWindow(selectionWindow);
+                return;
             }
 
             // Get the first (or only) journal location result

@@ -349,5 +349,32 @@ namespace HolocronToolset.Common.Widgets
                 OnFindNext();
             }
         }
+
+        // Getter methods for accessing current find/replace parameters
+        // These methods allow the editor to access the current state of the find/replace widget
+        public string GetFindText()
+        {
+            return _findInput?.Text ?? "";
+        }
+
+        public string GetReplaceText()
+        {
+            return _replaceInput?.Text ?? "";
+        }
+
+        public bool GetCaseSensitive()
+        {
+            return _caseSensitiveCheck?.IsChecked == true;
+        }
+
+        public bool GetWholeWords()
+        {
+            return _wholeWordsCheck?.IsChecked == true;
+        }
+
+        public bool GetRegex()
+        {
+            return _regexCheck?.IsChecked == true;
+        }
     }
 }

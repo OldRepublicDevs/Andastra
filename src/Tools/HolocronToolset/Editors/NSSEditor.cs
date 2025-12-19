@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using Andastra.Parsing.Resource;
@@ -145,44 +146,219 @@ namespace HolocronToolset.Editors
             _findReplaceWidget.IsVisible = false;
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:3199-3210
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:3199-3238
         // Original: def _on_find_requested(self, text: str | None = "", case_sensitive: bool = False, whole_words: bool = False, regex: bool = False):
+        /// <summary>
+        /// Handles find request from the find/replace widget.
+        /// Stores the find parameters and performs the initial search.
+        /// </summary>
+        /// <param name="text">The text to search for.</param>
+        /// <param name="caseSensitive">Whether the search should be case-sensitive.</param>
+        /// <param name="wholeWords">Whether to match whole words only.</param>
+        /// <param name="regex">Whether to treat the search text as a regular expression.</param>
         private void OnFindRequested(string text, bool caseSensitive, bool wholeWords, bool regex)
         {
-            // TODO: STUB - Implement find functionality in CodeEditor
-            // This will be implemented when CodeEditor find methods are added
+            if (_codeEdit == null || string.IsNullOrEmpty(text))
+            {
+                return;
+            }
+
+            // Store current find parameters for subsequent find next/previous operations
+            // Matching PyKotor implementation: self._current_find_text = find_text
+            // Note: We'll use the FindNext/FindPrevious methods directly with parameters
+
+            // Perform initial find
+            bool found = _codeEdit.FindNext(text, caseSensitive, wholeWords, regex, backward: false);
+            if (!found)
+            {
+                // Matching PyKotor implementation: Don't show message box, just log to output
+                // Original: self._log_to_output("Find: No more occurrences found")
+                System.Console.WriteLine("Find: No more occurrences found");
+            }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:3228-3238
         // Original: Handle find next request
+        /// <summary>
+        /// Handles find next request from the find/replace widget.
+        /// Finds the next occurrence using the current find parameters.
+        /// </summary>
         private void OnFindNextRequested()
         {
-            // TODO: STUB - Implement find next functionality
-            // This will be implemented when CodeEditor find methods are added
+            if (_codeEdit == null || _findReplaceWidget == null)
+            {
+                return;
+            }
+
+            // Get find parameters from widget
+            string findText = _findReplaceWidget.GetFindText();
+            bool caseSensitive = _findReplaceWidget.GetCaseSensitive();
+            bool wholeWords = _findReplaceWidget.GetWholeWords();
+            bool regex = _findReplaceWidget.GetRegex();
+
+            if (string.IsNullOrEmpty(findText))
+            {
+                return;
+            }
+
+            bool found = _codeEdit.FindNext(findText, caseSensitive, wholeWords, regex, backward: false);
+            if (!found)
+            {
+                // Matching PyKotor implementation: Don't show message box, just log to output
+                System.Console.WriteLine("Find: No more occurrences found");
+            }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:3240-3250
         // Original: Handle find previous request
+        /// <summary>
+        /// Handles find previous request from the find/replace widget.
+        /// Finds the previous occurrence using the current find parameters.
+        /// </summary>
         private void OnFindPreviousRequested()
         {
-            // TODO: STUB - Implement find previous functionality
-            // This will be implemented when CodeEditor find methods are added
+            if (_codeEdit == null || _findReplaceWidget == null)
+            {
+                return;
+            }
+
+            // Get find parameters from widget
+            string findText = _findReplaceWidget.GetFindText();
+            bool caseSensitive = _findReplaceWidget.GetCaseSensitive();
+            bool wholeWords = _findReplaceWidget.GetWholeWords();
+            bool regex = _findReplaceWidget.GetRegex();
+
+            if (string.IsNullOrEmpty(findText))
+            {
+                return;
+            }
+
+            bool found = _codeEdit.FindPrevious(findText, caseSensitive, wholeWords, regex);
+            if (!found)
+            {
+                // Matching PyKotor implementation: Don't show message box, just log to output
+                System.Console.WriteLine("Find: No more occurrences found");
+            }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:3212-3225
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:3252-3265
         // Original: def _on_replace_requested(self, find_text: str, replace_text: str, case_sensitive: bool = False, whole_words: bool = False, regex: bool = False):
+        /// <summary>
+        /// Handles replace request from the find/replace widget.
+        /// Replaces the currently selected text if it matches the find text, then finds the next occurrence.
+        /// </summary>
+        /// <param name="findText">The text to search for.</param>
+        /// <param name="replaceText">The text to replace matches with.</param>
+        /// <param name="caseSensitive">Whether the search should be case-sensitive.</param>
+        /// <param name="wholeWords">Whether to match whole words only.</param>
+        /// <param name="regex">Whether to treat the search text as a regular expression.</param>
         private void OnReplaceRequested(string findText, string replaceText, bool caseSensitive, bool wholeWords, bool regex)
         {
-            // TODO: STUB - Implement replace functionality in CodeEditor
-            // This will be implemented when CodeEditor find/replace methods are added
+            if (_codeEdit == null || string.IsNullOrEmpty(findText))
+            {
+                return;
+            }
+
+            // Check if current selection matches the find text
+            string selectedText = _codeEdit.SelectedText;
+            if (!string.IsNullOrEmpty(selectedText))
+            {
+                // Compare selected text with find text (respecting case sensitivity)
+                bool matches = false;
+                if (regex)
+                {
+                    // For regex, we need to check if the selection matches the pattern
+                    try
+                    {
+                        RegexOptions options = caseSensitive ? RegexOptions.None : RegexOptions.IgnoreCase;
+                        Regex pattern = new Regex(findText, options);
+                        matches = pattern.IsMatch(selectedText);
+                    }
+                    catch (ArgumentException)
+                    {
+                        // Invalid regex - don't replace
+                        return;
+                    }
+                }
+                else
+                {
+                    // For literal text, compare directly
+                    StringComparison comparison = caseSensitive ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase;
+                    matches = string.Equals(selectedText, findText, comparison);
+                }
+
+                if (matches)
+                {
+                    // Replace the selected text
+                    int selectionStart = _codeEdit.SelectionStart;
+                    int selectionLength = _codeEdit.SelectionEnd - _codeEdit.SelectionStart;
+                    string text = _codeEdit.Text;
+                    string newText = text.Substring(0, selectionStart) + (replaceText ?? "") + text.Substring(selectionStart + selectionLength);
+                    _codeEdit.Text = newText;
+
+                    // Set cursor position after replacement
+                    _codeEdit.SelectionStart = selectionStart + (replaceText ?? "").Length;
+                    _codeEdit.SelectionEnd = _codeEdit.SelectionStart;
+                }
+            }
+
+            // Find next occurrence (matching PyKotor behavior)
+            bool found = _codeEdit.FindNext(findText, caseSensitive, wholeWords, regex, backward: false);
+            if (!found)
+            {
+                System.Console.WriteLine("Find: No more occurrences found");
+            }
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:3227-3240
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:3295-3315
         // Original: def _on_replace_all_requested(self, find_text: str, replace_text: str, case_sensitive: bool = False, whole_words: bool = False, regex: bool = False):
+        /// <summary>
+        /// Handles replace all request from the find/replace widget.
+        /// Shows a confirmation dialog before replacing all occurrences, then performs the replacement
+        /// and displays the count of replacements made.
+        /// </summary>
+        /// <param name="findText">The text to search for.</param>
+        /// <param name="replaceText">The text to replace matches with.</param>
+        /// <param name="caseSensitive">Whether the search should be case-sensitive.</param>
+        /// <param name="wholeWords">Whether to match whole words only.</param>
+        /// <param name="regex">Whether to treat the search text as a regular expression.</param>
         private void OnReplaceAllRequested(string findText, string replaceText, bool caseSensitive, bool wholeWords, bool regex)
         {
-            // TODO: STUB - Implement replace all functionality in CodeEditor
-            // This will be implemented when CodeEditor find/replace methods are added
+            if (_codeEdit == null || string.IsNullOrEmpty(findText))
+            {
+                return;
+            }
+
+            // Matching PyKotor implementation: Confirm before replacing all
+            // Original: reply = QMessageBox.question(self, "Replace All", f"Replace all occurrences of '{find_text}'?", ...)
+            var confirmBox = MessageBoxManager.GetMessageBoxStandard(
+                "Replace All",
+                $"Replace all occurrences of '{findText}'?",
+                ButtonEnum.YesNo,
+                Icon.Question,
+                defaultButton: ButtonResult.No);
+
+            // Show dialog and wait for result (synchronous for confirmation)
+            var result = confirmBox.ShowAsync().GetAwaiter().GetResult();
+
+            if (result == ButtonResult.Yes)
+            {
+                // Perform replace all operation
+                int count = _codeEdit.ReplaceAllOccurrences(findText, replaceText ?? "", caseSensitive, wholeWords, regex);
+
+                // Matching PyKotor implementation: Log to output and show information message
+                // Original: self._log_to_output(f"Replace All: Replaced {count} occurrence(s)")
+                // Original: QMessageBox.information(self, "Replace All", f"Replaced {count} occurrence(s)")
+                string message = $"Replace All: Replaced {count} occurrence(s)";
+                System.Console.WriteLine(message);
+
+                var infoBox = MessageBoxManager.GetMessageBoxStandard(
+                    "Replace All",
+                    $"Replaced {count} occurrence(s)",
+                    ButtonEnum.Ok,
+                    Icon.Info);
+                infoBox.ShowAsync();
+            }
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py
