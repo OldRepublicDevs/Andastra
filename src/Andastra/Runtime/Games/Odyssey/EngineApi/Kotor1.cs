@@ -2605,6 +2605,15 @@ namespace Andastra.Runtime.Engines.Odyssey.EngineApi
             return Variable.FromFloat(distance);
         }
 
+        /// <summary>
+        /// GetIsInCombat(object oCreature=OBJECT_SELF, int bOnlyCountReal=FALSE) - Returns TRUE if the creature is in combat
+        /// Based on swkotor2.exe: GetIsInCombat implementation
+        /// Located via string reference: "InCombatHPBase" @ 0x007bf224, "CombatRoundData" @ 0x007bf6b4
+        /// Original implementation: FUN_005119a0 @ 0x005119a0 checks combat state and active combat rounds
+        /// - If bOnlyCountReal=FALSE: Returns true if combat state is InCombat (any combat, including just targeted)
+        /// - If bOnlyCountReal=TRUE: Returns true only if there's an active combat round (real combat, actively fighting)
+        /// Comment from original: "RWT-OEI 09/30/04 - If you pass TRUE in as the second parameter then this function will only return true if the character is in REAL combat. If you don't know what that means, don't pass in TRUE."
+        /// </summary>
         private Variable Func_GetIsInCombat(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             // GetIsInCombat(object oCreature=OBJECT_SELF, int bOnlyCountReal=FALSE)
@@ -2622,9 +2631,19 @@ namespace Andastra.Runtime.Engines.Odyssey.EngineApi
             // Try to get CombatManager from GameServicesContext
             if (ctx is VMExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services && services.CombatManager is CombatManager combatManager)
             {
-                bool inCombat = combatManager.IsInCombat(creature);
-                // TODO: SIMPLIFIED - bOnlyCountReal parameter is not yet implemented - would need to distinguish
-                // between "real" combat (actively fighting) vs "fake" combat (just targeted)
+                bool inCombat;
+                if (onlyCountReal)
+                {
+                    // bOnlyCountReal=TRUE: Only return true if in "real" combat (has active combat round)
+                    // This distinguishes between actively fighting vs just being targeted
+                    inCombat = combatManager.IsInRealCombat(creature);
+                }
+                else
+                {
+                    // bOnlyCountReal=FALSE: Return true if in any combat state (including just targeted)
+                    inCombat = combatManager.IsInCombat(creature);
+                }
+
                 return Variable.FromInt(inCombat ? 1 : 0);
             }
 
