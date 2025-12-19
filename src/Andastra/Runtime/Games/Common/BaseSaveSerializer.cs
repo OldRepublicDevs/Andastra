@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using JetBrains.Annotations;
 using Andastra.Runtime.Core.Interfaces;
+using Andastra.Runtime.Core.Save;
 
 namespace Andastra.Runtime.Games.Common
 {
@@ -173,6 +174,106 @@ namespace Andastra.Runtime.Games.Common
         /// Used for cross-engine compatibility detection.
         /// </remarks>
         protected abstract string EngineIdentifier { get; }
+
+        #region Common Party Serialization Helpers
+
+        /// <summary>
+        /// Converts IPartyState interface to PartyState class.
+        /// </summary>
+        /// <remarks>
+        /// Common helper used by all engines to extract party data.
+        /// The runtime typically passes PartyState instances which contain all the rich data.
+        /// This method provides a fallback for interface-only cases.
+        /// </remarks>
+        protected PartyState ConvertToPartyState(IPartyState partyState)
+        {
+            // Convert IPartyState to PartyState if possible
+            // The runtime typically passes PartyState instances which contain all the rich data
+            PartyState state = partyState as PartyState;
+            if (state == null)
+            {
+                // Fallback: Create minimal PartyState from IPartyState interface
+                state = new PartyState();
+                if (partyState != null)
+                {
+                    // Extract basic party information from interface
+                    if (partyState.Leader != null)
+                    {
+                        state.LeaderResRef = partyState.Leader.Tag ?? "";
+                        if (state.PlayerCharacter == null)
+                        {
+                            state.PlayerCharacter = new CreatureState();
+                        }
+                        state.PlayerCharacter.Tag = partyState.Leader.Tag ?? "";
+                    }
+
+                    // Extract party members
+                    if (partyState.Members != null)
+                    {
+                        foreach (IEntity member in partyState.Members)
+                        {
+                            if (member != null && !string.IsNullOrEmpty(member.Tag))
+                            {
+                                if (!state.AvailableMembers.ContainsKey(member.Tag))
+                                {
+                                    state.AvailableMembers[member.Tag] = new PartyMemberState
+                                    {
+                                        TemplateResRef = member.Tag,
+                                        IsAvailable = true,
+                                        IsSelectable = true
+                                    };
+                                }
+                                if (!state.SelectedParty.Contains(member.Tag))
+                                {
+                                    state.SelectedParty.Add(member.Tag);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            return state;
+        }
+
+        /// <summary>
+        /// Gets the player character name from party state.
+        /// </summary>
+        /// <remarks>
+        /// Common helper used by all engines to extract PC name.
+        /// </remarks>
+        protected string GetPlayerCharacterName(PartyState state)
+        {
+            if (state?.PlayerCharacter != null)
+            {
+                return state.PlayerCharacter.Tag ?? "";
+            }
+            return "";
+        }
+
+        /// <summary>
+        /// Gets the number of selected party members.
+        /// </summary>
+        /// <remarks>
+        /// Common helper used by all engines.
+        /// </remarks>
+        protected int GetSelectedPartyCount(PartyState state)
+        {
+            return state?.SelectedParty != null ? state.SelectedParty.Count : 0;
+        }
+
+        /// <summary>
+        /// Gets the number of available party members.
+        /// </summary>
+        /// <remarks>
+        /// Common helper used by all engines.
+        /// </remarks>
+        protected int GetAvailablePartyMemberCount(PartyState state)
+        {
+            return state?.AvailableMembers != null ? state.AvailableMembers.Count : 0;
+        }
+
+        #endregion
     }
 
     /// <summary>
