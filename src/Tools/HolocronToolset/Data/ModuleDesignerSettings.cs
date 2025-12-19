@@ -1,7 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
 using Avalonia.Input;
 using Andastra.Parsing.Common;
 using KotorColor = Andastra.Parsing.Common.Color;
@@ -22,28 +20,41 @@ namespace HolocronToolset.Data
         // Original: def resetControls3d(self):
         public void ResetControls3d()
         {
-            var properties = GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance);
-            foreach (var prop in properties)
-            {
-                if (prop.Name.EndsWith("3d") || prop.Name.EndsWith("3dBind"))
-                {
-                    var settingsProp = GetType().GetField(prop.Name, BindingFlags.Public | BindingFlags.Static);
-                    if (settingsProp != null && settingsProp.FieldType.IsGenericType && 
-                        settingsProp.FieldType.GetGenericTypeDefinition() == typeof(SettingsProperty<>))
-                    {
-                        var propValue = settingsProp.GetValue(null);
-                        if (propValue != null)
-                        {
-                            var resetMethod = propValue.GetType().GetMethod("ResetToDefault");
-                            if (resetMethod != null)
-                            {
-                                resetMethod.Invoke(propValue, new object[] { this });
-                            }
-                        }
-                    }
-                }
-            }
-            // Also reset toggleLockInstancesBind
+            MoveCameraSensitivity3d.ResetToDefault(this);
+            RotateCameraSensitivity3d.ResetToDefault(this);
+            ZoomCameraSensitivity3d.ResetToDefault(this);
+            BoostedMoveCameraSensitivity3d.ResetToDefault(this);
+            SpeedBoostCamera3dBind.ResetToDefault(this);
+            MoveCameraXY3dBind.ResetToDefault(this);
+            MoveCameraZ3dBind.ResetToDefault(this);
+            MoveCameraPlane3dBind.ResetToDefault(this);
+            RotateCamera3dBind.ResetToDefault(this);
+            ZoomCamera3dBind.ResetToDefault(this);
+            ZoomCameraMM3dBind.ResetToDefault(this);
+            RotateSelected3dBind.ResetToDefault(this);
+            MoveSelectedXY3dBind.ResetToDefault(this);
+            MoveSelectedZ3dBind.ResetToDefault(this);
+            RotateObject3dBind.ResetToDefault(this);
+            SelectObject3dBind.ResetToDefault(this);
+            ToggleFreeCam3dBind.ResetToDefault(this);
+            DeleteObject3dBind.ResetToDefault(this);
+            MoveCameraToSelected3dBind.ResetToDefault(this);
+            MoveCameraToCursor3dBind.ResetToDefault(this);
+            MoveCameraToEntryPoint3dBind.ResetToDefault(this);
+            RotateCameraLeft3dBind.ResetToDefault(this);
+            RotateCameraRight3dBind.ResetToDefault(this);
+            RotateCameraUp3dBind.ResetToDefault(this);
+            RotateCameraDown3dBind.ResetToDefault(this);
+            MoveCameraBackward3dBind.ResetToDefault(this);
+            MoveCameraForward3dBind.ResetToDefault(this);
+            MoveCameraLeft3dBind.ResetToDefault(this);
+            MoveCameraRight3dBind.ResetToDefault(this);
+            MoveCameraUp3dBind.ResetToDefault(this);
+            MoveCameraDown3dBind.ResetToDefault(this);
+            ZoomCameraIn3dBind.ResetToDefault(this);
+            ZoomCameraOut3dBind.ResetToDefault(this);
+            DuplicateObject3dBind.ResetToDefault(this);
+            ResetCameraView3dBind.ResetToDefault(this);
             ToggleLockInstancesBind.ResetToDefault(this);
         }
 
@@ -51,81 +62,68 @@ namespace HolocronToolset.Data
         // Original: def resetControls2d(self):
         public void ResetControls2d()
         {
-            var properties = GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance);
-            foreach (var prop in properties)
-            {
-                if (prop.Name.EndsWith("2d") || prop.Name.EndsWith("2dBind"))
-                {
-                    var settingsProp = GetType().GetField(prop.Name, BindingFlags.Public | BindingFlags.Static);
-                    if (settingsProp != null && settingsProp.FieldType.IsGenericType && 
-                        settingsProp.FieldType.GetGenericTypeDefinition() == typeof(SettingsProperty<>))
-                    {
-                        var propValue = settingsProp.GetValue(null);
-                        if (propValue != null)
-                        {
-                            var resetMethod = propValue.GetType().GetMethod("ResetToDefault");
-                            if (resetMethod != null)
-                            {
-                                resetMethod.Invoke(propValue, new object[] { this });
-                            }
-                        }
-                    }
-                }
-            }
+            MoveCameraSensitivity2d.ResetToDefault(this);
+            RotateCameraSensitivity2d.ResetToDefault(this);
+            ZoomCameraSensitivity2d.ResetToDefault(this);
+            MoveCamera2dBind.ResetToDefault(this);
+            ZoomCamera2dBind.ResetToDefault(this);
+            RotateCamera2dBind.ResetToDefault(this);
+            SelectObject2dBind.ResetToDefault(this);
+            MoveObject2dBind.ResetToDefault(this);
+            RotateObject2dBind.ResetToDefault(this);
+            DeleteObject2dBind.ResetToDefault(this);
+            SnapCameraToSelected2dBind.ResetToDefault(this);
+            DuplicateObject2dBind.ResetToDefault(this);
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/module_designer.py:169-176
         // Original: def resetControlsFc(self):
         public void ResetControlsFc()
         {
-            var properties = GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance);
-            foreach (var prop in properties)
-            {
-                if (prop.Name.EndsWith("FC") || prop.Name.EndsWith("FcBind"))
-                {
-                    var settingsProp = GetType().GetField(prop.Name, BindingFlags.Public | BindingFlags.Static);
-                    if (settingsProp != null && settingsProp.FieldType.IsGenericType && 
-                        settingsProp.FieldType.GetGenericTypeDefinition() == typeof(SettingsProperty<>))
-                    {
-                        var propValue = settingsProp.GetValue(null);
-                        if (propValue != null)
-                        {
-                            var resetMethod = propValue.GetType().GetMethod("ResetToDefault");
-                            if (resetMethod != null)
-                            {
-                                resetMethod.Invoke(propValue, new object[] { this });
-                            }
-                        }
-                    }
-                }
-            }
+            RotateCameraSensitivityFC.ResetToDefault(this);
+            FlyCameraSpeedFC.ResetToDefault(this);
+            BoostedFlyCameraSpeedFC.ResetToDefault(this);
+            SpeedBoostCameraFcBind.ResetToDefault(this);
+            MoveCameraForwardFcBind.ResetToDefault(this);
+            MoveCameraBackwardFcBind.ResetToDefault(this);
+            MoveCameraLeftFcBind.ResetToDefault(this);
+            MoveCameraRightFcBind.ResetToDefault(this);
+            MoveCameraUpFcBind.ResetToDefault(this);
+            MoveCameraDownFcBind.ResetToDefault(this);
+            RotateCameraLeftFcBind.ResetToDefault(this);
+            RotateCameraRightFcBind.ResetToDefault(this);
+            RotateCameraUpFcBind.ResetToDefault(this);
+            RotateCameraDownFcBind.ResetToDefault(this);
+            ZoomCameraInFcBind.ResetToDefault(this);
+            ZoomCameraOutFcBind.ResetToDefault(this);
+            MoveCameraToEntryPointFcBind.ResetToDefault(this);
+            MoveCameraToCursorFcBind.ResetToDefault(this);
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/module_designer.py:177-184
         // Original: def resetMaterialColors(self):
         public void ResetMaterialColors()
         {
-            var properties = GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance);
-            foreach (var prop in properties)
-            {
-                if (prop.Name.EndsWith("Colour"))
-                {
-                    var settingsProp = GetType().GetField(prop.Name, BindingFlags.Public | BindingFlags.Static);
-                    if (settingsProp != null && settingsProp.FieldType.IsGenericType && 
-                        settingsProp.FieldType.GetGenericTypeDefinition() == typeof(SettingsProperty<>))
-                    {
-                        var propValue = settingsProp.GetValue(null);
-                        if (propValue != null)
-                        {
-                            var resetMethod = propValue.GetType().GetMethod("ResetToDefault");
-                            if (resetMethod != null)
-                            {
-                                resetMethod.Invoke(propValue, new object[] { this });
-                            }
-                        }
-                    }
-                }
-            }
+            UndefinedMaterialColour.ResetToDefault(this);
+            DirtMaterialColour.ResetToDefault(this);
+            ObscuringMaterialColour.ResetToDefault(this);
+            GrassMaterialColour.ResetToDefault(this);
+            StoneMaterialColour.ResetToDefault(this);
+            WoodMaterialColour.ResetToDefault(this);
+            WaterMaterialColour.ResetToDefault(this);
+            NonWalkMaterialColour.ResetToDefault(this);
+            TransparentMaterialColour.ResetToDefault(this);
+            CarpetMaterialColour.ResetToDefault(this);
+            MetalMaterialColour.ResetToDefault(this);
+            PuddlesMaterialColour.ResetToDefault(this);
+            SwampMaterialColour.ResetToDefault(this);
+            MudMaterialColour.ResetToDefault(this);
+            LeavesMaterialColour.ResetToDefault(this);
+            DoorMaterialColour.ResetToDefault(this);
+            LavaMaterialColour.ResetToDefault(this);
+            BottomlessPitMaterialColour.ResetToDefault(this);
+            DeepWaterMaterialColour.ResetToDefault(this);
+            NonWalkGrassMaterialColour.ResetToDefault(this);
         }
 
         // Helper method to create default bind tuple
