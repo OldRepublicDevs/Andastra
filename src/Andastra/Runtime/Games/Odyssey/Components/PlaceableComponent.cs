@@ -1,17 +1,19 @@
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
+using Andastra.Runtime.Games.Common.Components;
 
-namespace Andastra.Runtime.Engines.Odyssey.Components
+namespace Andastra.Runtime.Games.Odyssey.Components
 {
     /// <summary>
-    /// Component for placeable entities (containers, furniture, etc.).
+    /// Component for placeable entities (containers, furniture, etc.) in Odyssey engine.
     /// </summary>
     /// <remarks>
-    /// Placeable Component:
-    /// - Based on swkotor2.exe placeable system
-    /// - LoadPlaceableFromGFF @ 0x00588010 - Loads placeable data from GIT GFF into placeable object (located via "Placeable List" @ 0x007bd260)
+    /// Odyssey Placeable Component:
+    /// - Inherits from BasePlaceableComponent (common functionality)
+    /// - Odyssey-specific implementation for swkotor.exe and swkotor2.exe
+    /// - LoadPlaceableFromGFF @ 0x00588010 (swkotor2.exe) - Loads placeable data from GIT GFF into placeable object (located via "Placeable List" @ 0x007bd260)
     ///   - Reads Tag, TemplateResRef, LocName, AutoRemoveKey, Faction, Invulnerable, Plot, NotBlastable, Min1HP, PartyInteract, OpenLockDC, OpenLockDiff, OpenLockDiffMod, KeyName, TrapDisarmable, TrapDetectable, DisarmDC, TrapDetectDC, OwnerDemolitionsSkill, TrapFlag, TrapOneShot, TrapType, Useable, Static, Appearance, UseTweakColor, TweakColor, HP, CurrentHP, and other placeable properties from GFF
-    /// - SavePlaceableToGFF @ 0x00589520 - Saves placeable data to GFF save data (located via "Placeable List" @ 0x007bd260)
+    /// - SavePlaceableToGFF @ 0x00589520 (swkotor2.exe) - Saves placeable data to GFF save data (located via "Placeable List" @ 0x007bd260)
     ///   - Writes Tag, LocName, AutoRemoveKey, Faction, Plot, NotBlastable, Min1HP, OpenLockDC, OpenLockDiff, OpenLockDiffMod, KeyName, TrapDisarmable, TrapDetectable, DisarmDC, TrapDetectDC, OwnerDemolitionsSkill, TrapFlag, TrapOneShot, TrapType, Useable, Static, GroundPile, Appearance, UseTweakColor, TweakColor, HP, CurrentHP, Hardness, Fort, Will, Ref, Lockable, Locked, HasInventory, KeyRequired, CloseLockDC, Open, PartyInteract, Portrait, Conversation, BodyBag, DieWhenEmpty, LightState, Description, OnClosed, OnDamaged, OnDeath, OnDisarm, OnHeartbeat, OnInvDisturbed, OnLock, OnMeleeAttacked, OnOpen, OnSpellCastAt, OnUnlock, OnUsed, OnUserDefined, OnDialog, OnEndDialogue, OnTrapTriggered, OnFailToOpen, Animation, ItemList (ObjectId) for each item in placeable inventory, Bearing, position (X, Y, Z), IsBodyBag, IsBodyBagVisible, IsCorpse, PCLevel
     /// - Located via string references: "Placeable" @ 0x007bc530 (placeable object type), "Placeable List" @ 0x007bd260 (GFF list field in GIT)
     /// - "Placeables" @ 0x007c4bd0 (placeable objects), "placeableobjsnds" @ 0x007c4bf0 (placeable object sounds directory)
@@ -27,18 +29,15 @@ namespace Andastra.Runtime.Engines.Odyssey.Components
     /// - Placeables can have visual effects and lighting attached (fx_placeable01, placeablelight)
     /// - Lock system: KeyRequired flag, KeyName tag, LockDC difficulty class (checked via Security skill)
     /// - Use distance: ~2.0 units (InteractRange), checked before OnUsed script fires
+    /// - Odyssey-specific: Fort/Will/Ref saves, BodyBag, Plot flag, FactionId, AppearanceType, trap system
     /// </remarks>
-    public class PlaceableComponent : IPlaceableComponent
+    public class PlaceableComponent : BasePlaceableComponent
     {
-        public IEntity Owner { get; set; }
-
-        public void OnAttach() { }
-        public void OnDetach() { }
-
         public PlaceableComponent()
         {
             TemplateResRef = string.Empty;
             KeyName = string.Empty;
+            KeyTag = string.Empty;
         }
 
         /// <summary>
@@ -49,147 +48,139 @@ namespace Andastra.Runtime.Engines.Odyssey.Components
         /// <summary>
         /// Appearance type (index into placeables.2da).
         /// </summary>
+        /// <remarks>
+        /// Appearance Type Property:
+        /// - Odyssey-specific: Index into placeables.2da for placeable appearance
+        /// - Based on swkotor2.exe: "Appearance" field in UTP template (FUN_00588010 @ 0x00588010)
+        /// </remarks>
         public int AppearanceType { get; set; }
 
         /// <summary>
-        /// Current hit points.
+        /// Current hit points (Odyssey-specific storage).
         /// </summary>
         public int CurrentHP { get; set; }
 
         /// <summary>
-        /// Maximum hit points.
+        /// Maximum hit points (Odyssey-specific storage).
         /// </summary>
         public int MaxHP { get; set; }
 
         /// <summary>
-        /// Hardness (damage reduction).
+        /// Fortitude save (Odyssey-specific).
         /// </summary>
-        public int Hardness { get; set; }
-
-        /// <summary>
-        /// Fortitude save.
-        /// </summary>
+        /// <remarks>
+        /// Fortitude Save Property:
+        /// - Odyssey-specific: Fortitude save for placeable
+        /// - Based on swkotor2.exe: "Fort" field in UTP template (FUN_00589520 @ 0x00589520)
+        /// </remarks>
         public int Fort { get; set; }
 
         /// <summary>
-        /// Reflex save.
+        /// Reflex save (Odyssey-specific).
         /// </summary>
+        /// <remarks>
+        /// Reflex Save Property:
+        /// - Odyssey-specific: Reflex save for placeable
+        /// - Based on swkotor2.exe: "Ref" field in UTP template (FUN_00589520 @ 0x00589520)
+        /// </remarks>
         public int Reflex { get; set; }
 
         /// <summary>
-        /// Will save.
+        /// Will save (Odyssey-specific).
         /// </summary>
+        /// <remarks>
+        /// Will Save Property:
+        /// - Odyssey-specific: Will save for placeable
+        /// - Based on swkotor2.exe: "Will" field in UTP template (FUN_00589520 @ 0x00589520)
+        /// </remarks>
         public int Will { get; set; }
 
         /// <summary>
-        /// Whether the placeable is useable.
+        /// Whether a key is required (Odyssey-specific).
         /// </summary>
-        public bool IsUseable { get; set; }
-
-        /// <summary>
-        /// Whether the placeable is locked.
-        /// </summary>
-        public bool IsLocked { get; set; }
-
-        /// <summary>
-        /// Lock difficulty class.
-        /// </summary>
-        public int LockDC { get; set; }
-
-        /// <summary>
-        /// Whether a key is required.
-        /// </summary>
+        /// <remarks>
+        /// Key Required Property:
+        /// - Odyssey-specific: Whether a key is required to unlock
+        /// - Based on swkotor2.exe: "KeyRequired" field in UTP template (FUN_00588010 @ 0x00588010)
+        /// </remarks>
         public bool KeyRequired { get; set; }
 
         /// <summary>
-        /// Key tag name.
+        /// Key tag name (Odyssey-specific storage, maps to base KeyTag).
         /// </summary>
-        public string KeyName { get; set; }
+        public string KeyName
+        {
+            get { return KeyTag; }
+            set { KeyTag = value; }
+        }
 
         /// <summary>
-        /// Whether the placeable is a container.
+        /// Whether the placeable is a container (Odyssey-specific).
         /// </summary>
+        /// <remarks>
+        /// Container Property:
+        /// - Odyssey-specific: Whether placeable is a container (synonym for HasInventory)
+        /// - Based on swkotor2.exe: Container flag in placeable system
+        /// </remarks>
         public bool IsContainer { get; set; }
 
         /// <summary>
-        /// Whether the placeable has inventory.
+        /// Faction ID (Odyssey-specific).
         /// </summary>
-        public bool HasInventory { get; set; }
-
-        /// <summary>
-        /// Whether the placeable is static (no interaction).
-        /// </summary>
-        public bool IsStatic { get; set; }
-
-        /// <summary>
-        /// Whether the placeable is currently open.
-        /// </summary>
-        public bool IsOpen { get; set; }
-
-        /// <summary>
-        /// Current animation state.
-        /// </summary>
-        public int AnimationState { get; set; }
-
-        /// <summary>
-        /// Faction ID.
-        /// </summary>
+        /// <remarks>
+        /// Faction ID Property:
+        /// - Odyssey-specific: Faction ID for placeable
+        /// - Based on swkotor2.exe: "Faction" field in UTP template (FUN_00588010 @ 0x00588010, line 77)
+        /// </remarks>
         public int FactionId { get; set; }
 
         /// <summary>
-        /// Conversation file.
+        /// Body bag placeable to spawn on destruction (Odyssey-specific).
         /// </summary>
-        public string Conversation { get; set; }
-
-        /// <summary>
-        /// Body bag placeable to spawn on destruction.
-        /// </summary>
+        /// <remarks>
+        /// Body Bag Property:
+        /// - Odyssey-specific: Body bag placeable to spawn on destruction
+        /// - Based on swkotor2.exe: "BodyBag" field in UTP template (FUN_00589520 @ 0x00589520)
+        /// </remarks>
         public int BodyBag { get; set; }
 
         /// <summary>
-        /// Whether the placeable is plot-critical.
+        /// Whether the placeable is plot-critical (Odyssey-specific).
         /// </summary>
+        /// <remarks>
+        /// Plot Property:
+        /// - Odyssey-specific: Whether placeable is plot-critical
+        /// - Based on swkotor2.exe: "Plot" field in UTP template (FUN_00588010 @ 0x00588010, line 83)
+        /// </remarks>
         public bool Plot { get; set; }
 
         /// <summary>
-        /// Key tag (alias for KeyName for interface compatibility).
+        /// IPlaceableComponent interface property mapping.
         /// </summary>
-        public string KeyTag
+        public override int HitPoints
         {
-            get { return KeyName; }
-            set { KeyName = value; }
+            get { return CurrentHP; }
+            set { CurrentHP = value; }
         }
 
         /// <summary>
-        /// Unlocks the placeable.
+        /// IPlaceableComponent interface property mapping.
         /// </summary>
-        public void Unlock()
+        public override int MaxHitPoints
         {
-            IsLocked = false;
+            get { return MaxHP; }
+            set { MaxHP = value; }
         }
 
         /// <summary>
-        /// Opens the placeable (for containers).
+        /// Activates the placeable (Odyssey-specific override).
         /// </summary>
-        public void Open()
-        {
-            IsOpen = true;
-            AnimationState = 1; // Open state
-        }
-
-        /// <summary>
-        /// Closes the placeable.
-        /// </summary>
-        public void Close()
-        {
-            IsOpen = false;
-            AnimationState = 0; // Closed state
-        }
-
-        /// <summary>
-        /// Activates the placeable.
-        /// </summary>
-        public void Activate()
+        /// <remarks>
+        /// Placeable Activation:
+        /// - Odyssey-specific: Also checks IsContainer flag
+        /// - Based on swkotor2.exe: OnUsed script event handling
+        /// </remarks>
+        public override void Activate()
         {
             // Placeable activation logic
             // For containers, this opens them
@@ -200,28 +191,20 @@ namespace Andastra.Runtime.Engines.Odyssey.Components
         }
 
         /// <summary>
-        /// Deactivates the placeable.
+        /// Deactivates the placeable (Odyssey-specific override).
         /// </summary>
-        public void Deactivate()
+        /// <remarks>
+        /// Placeable Deactivation:
+        /// - Odyssey-specific: Also checks IsContainer flag
+        /// - Based on swkotor2.exe: Placeable deactivation handling
+        /// </remarks>
+        public override void Deactivate()
         {
             // Placeable deactivation logic
             if (HasInventory || IsContainer)
             {
                 Close();
             }
-        }
-
-        // IPlaceableComponent interface properties
-        public int HitPoints
-        {
-            get { return CurrentHP; }
-            set { CurrentHP = value; }
-        }
-
-        public int MaxHitPoints
-        {
-            get { return MaxHP; }
-            set { MaxHP = value; }
         }
     }
 }

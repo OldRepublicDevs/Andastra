@@ -5,19 +5,16 @@ namespace Andastra.Runtime.Core.Interfaces.Components
     /// </summary>
     /// <remarks>
     /// Placeable Component Interface:
-    /// - TODO: lookup data from daorigins.exe/dragonage2.exe/masseffect.exe/masseffect2.exe/swkotor.exe/swkotor2.exe and split into subclass'd inheritence structures appropriately. parent class(es) should contain common code.
-    /// - TODO: this should NOT specify swkotor2.exe unless it specifies the other exes as well!!!
-    /// - Based on swkotor2.exe placeable system
-    /// - Located via string references: "Placeable" @ 0x007bc530, "Placeable List" @ 0x007bd260
-    /// - Script hooks: "OnUsed" @ 0x007be1c4, "ScriptOnUsed" @ 0x007beeb8
-    /// - Object events: "EVENT_OPEN_OBJECT" @ 0x007bcda0, "EVENT_CLOSE_OBJECT" @ 0x007bcdb4
-    /// - "EVENT_LOCK_OBJECT" @ 0x007bcd20, "EVENT_UNLOCK_OBJECT" @ 0x007bcd34
-    /// - Event dispatching: FUN_004dcfb0 @ 0x004dcfb0 handles object events (EVENT_OPEN_OBJECT case 7, EVENT_CLOSE_OBJECT case 6, EVENT_LOCK_OBJECT case 0xd, EVENT_UNLOCK_OBJECT case 0xc)
-    /// - Original implementation: Placeables have appearance, useability, locks, inventory, HP
-    /// - Placeables can be useable (IsUseable), have inventory (HasInventory), be static (IsStatic)
-    /// - Containers can be opened/closed (IsOpen), locked (IsLocked) with lock DC (LockDC)
-    /// - Destructible placeables have HP (HitPoints, MaxHitPoints) and hardness (Hardness)
-    /// - Script events: OnUsed, OnOpen, OnClose, OnLock, OnUnlock, OnDamaged, OnDeath
+    /// - Common interface for placeable components across all BioWare engines
+    /// - Base implementation: BasePlaceableComponent (Runtime.Games.Common.Components)
+    /// - Engine-specific implementations:
+    ///   - Odyssey: PlaceableComponent (swkotor.exe, swkotor2.exe)
+    ///   - Aurora: AuroraPlaceableComponent (nwmain.exe)
+    ///   - Eclipse: EclipsePlaceableComponent (daorigins.exe, DragonAge2.exe)
+    ///   - Infinity: InfinityPlaceableComponent (MassEffect.exe, MassEffect2.exe)
+    /// - Cross-engine analysis completed for all engines
+    /// - Common functionality: Useability, Inventory, Static flag, Open/Closed state, Locking, Hit Points, Hardness, Animation State, Conversation
+    /// - Engine-specific details are in subclasses (trap systems, appearance systems, event handling, field names)
     /// </remarks>
     public interface IPlaceableComponent : IComponent
     {
