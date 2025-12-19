@@ -11,22 +11,6 @@ vendor/DeNCS/.git
 vendor/HoloLSP/.git
 vendor/Kotor.NET/.git
 vendor/PyKotor/.git
-build_errors.txt
-csharpkotor_all_files.txt
-csharpkotor_all_modules.txt
-csharpkotor_files_list.txt
-csharpkotor_files.txt
-csharpkotor_formats.txt
-pykotor_all_files.txt
-pykotor_all_modules.txt
-pykotor_files_list.txt
-pykotor_files.txt
-pykotor_modules_to_port.txt
-pykotor_resource_formats.txt
-test-full-output.txt
-test-output.txt
-test-run.txt
-test-run2.txt
 
 vendor/NCSDecomp/tools/nwnnsscomp_incompatible_tslpatcher.exe
 vendor/NCSDecomp/tools/nwnnsscomp_incompatible_v1.exe

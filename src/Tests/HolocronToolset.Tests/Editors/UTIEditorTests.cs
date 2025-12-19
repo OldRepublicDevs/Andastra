@@ -284,10 +284,18 @@ namespace HolocronToolset.Tests.Editors
                     
                     if (isLeafNode)
                     {
-                        // Simulate double-click by calling the add button (which is what double-click triggers)
-                        int countBefore = editor.AssignedPropertiesListItemCount;
-                        editor.AddPropertyBtn.RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(Avalonia.Controls.Button.ClickEvent));
-                        editor.AssignedPropertiesListItemCount.Should().BeGreaterThan(countBefore, "Double-click should add property");
+                        // Matching Python: qtbot.mouseDClick - simulate double-click by raising DoubleTapped event
+                        // Based on Avalonia API: DoubleTapped event is raised on TreeView when double-clicked
+                        // Create DoubleTappedEventArgs and raise the event to match Python behavior exactly
+                        var doubleTappedEventArgs = new Avalonia.Input.TappedEventArgs
+                        {
+                            RoutedEvent = Avalonia.Input.InputElement.DoubleTappedEvent,
+                            Source = editor.AvailablePropertyList
+                        };
+                        editor.AvailablePropertyList.RaiseEvent(doubleTappedEventArgs);
+                        
+                        // Matching Python: assert editor.ui.assignedPropertiesList.count() > 0
+                        editor.AssignedPropertiesListItemCount.Should().BeGreaterThan(0, "Double-click should add property");
                     }
                 }
             }
@@ -304,6 +312,8 @@ namespace HolocronToolset.Tests.Editors
                 // Dialog should open (we can't easily test dialog without mocking, but button should be enabled)
                 editor.EditPropertyBtn.Should().NotBeNull();
                 // The actual dialog opening requires user interaction or mocking, but we verify the button exists
+                // Note: In Python test, the dialog opening is not fully tested, just that the button click works
+                // We verify the button exists and can be clicked (dialog opening would require mocking ShowDialog)
 
                 // Test remove button
                 // Matching Python: count_before = editor.ui.assignedPropertiesList.count()
@@ -321,9 +331,18 @@ namespace HolocronToolset.Tests.Editors
                 if (editor.AssignedPropertiesListItemCount > 0)
                 {
                     editor.AssignedPropertiesList.SelectedIndex = 0;
-                    // In Avalonia, we can't easily simulate double-click events, so we test the functionality
-                    // by verifying the edit button works (which is what double-click triggers)
-                    editor.EditPropertyBtn.Should().NotBeNull();
+                    // Matching Python: qtbot.mouseDClick - simulate double-click by raising DoubleTapped event
+                    // Based on Avalonia API: DoubleTapped event is raised on ListBox when double-clicked
+                    // Create DoubleTappedEventArgs and raise the event to match Python behavior exactly
+                    var doubleTappedEventArgs = new Avalonia.Input.TappedEventArgs
+                    {
+                        RoutedEvent = Avalonia.Input.InputElement.DoubleTappedEvent,
+                        Source = editor.AssignedPropertiesList
+                    };
+                    editor.AssignedPropertiesList.RaiseEvent(doubleTappedEventArgs);
+                    // Matching Python: # Dialog should open
+                    // Note: Dialog opening is not fully testable without mocking, but the event is raised
+                    // The actual dialog opening would be tested in integration tests
                 }
             }
 
@@ -364,20 +383,20 @@ namespace HolocronToolset.Tests.Editors
                     editor.AssignedPropertiesList.Focus();
                     int countBefore = editor.AssignedPropertiesListItemCount;
                     
-                    // Simulate Delete key press
-                    // In Avalonia, we simulate this by calling the handler directly if available
-                    // The actual Delete key handling is typically done via KeyDown event
+                    // Matching Python: qtbot.keyPress(editor.ui.assignedPropertiesList, Qt.Key.Key_Delete)
+                    // Based on Avalonia API: KeyDown event is raised on Window when key is pressed
+                    // The UTIEditor handles KeyDown on the Window (line 450-457 in UTIEditor.cs)
+                    // Create KeyEventArgs and raise the event on the Window to match Python behavior exactly
                     var keyEventArgs = new Avalonia.Input.KeyEventArgs
                     {
                         Key = Avalonia.Input.Key.Delete,
-                        RoutedEvent = Avalonia.Input.KeyDownEvent
+                        RoutedEvent = Avalonia.Input.InputElement.KeyDownEvent,
+                        Source = editor
                     };
-                    editor.AssignedPropertiesList.RaiseEvent(keyEventArgs);
+                    editor.RaiseEvent(keyEventArgs);
                     
-                    // Verify property was removed (if Delete key handler is implemented)
-                    // Note: This test verifies the Delete key functionality exists
-                    // The actual implementation may vary based on how the editor handles keyboard shortcuts
-                    editor.AssignedPropertiesListItemCount.Should().BeLessThanOrEqualTo(countBefore, "Delete key should remove selected property");
+                    // Matching Python: assert editor.ui.assignedPropertiesList.count() == count_before - 1
+                    editor.AssignedPropertiesListItemCount.Should().Be(countBefore - 1, "Delete key should remove selected property");
                 }
             }
 
