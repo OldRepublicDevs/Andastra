@@ -86,9 +86,10 @@ namespace Andastra.Runtime.Games.Odyssey
         /// </summary>
         /// <param name="realDeltaTime">The real frame time in seconds.</param>
         /// <remarks>
-        /// Odyssey-specific: Frame timing markers for profiling.
-        /// Based on swkotor2.exe: frameStart @ 0x007ba698, frameEnd @ 0x007ba668 (frame timing markers).
-        /// Overrides base implementation to add Odyssey-specific frame timing markers.
+        /// Odyssey-specific: Frame timing markers for profiling (when found).
+        /// NOTE: Previously documented frameStart/frameEnd addresses are string constants, not functions.
+        /// VERIFIED via Ghidra MCP: Addresses 0x007ba698 and 0x007ba668 contain string data, not executable code.
+        /// Overrides base implementation to add Odyssey-specific frame timing markers when actual functions are identified.
         /// Frame timing markers are used for performance profiling in Odyssey engine.
         /// </remarks>
         public override void Update(float realDeltaTime)
