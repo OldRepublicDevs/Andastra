@@ -1136,24 +1136,19 @@ namespace HolocronToolset.Editors
                 return;
             }
 
-            // Add child using the model
-            DLGStandardItem newChildItem = _model.AddChildToItem(selectedItem, null);
-
-            if (newChildItem == null || newChildItem.Link == null)
-            {
-                return;
-            }
-
-            // Create action for undo/redo
-            int childIndex = selectedItem.Link.Node != null ? selectedItem.Link.Node.Links.IndexOf(newChildItem.Link) : -1;
-            var action = new AddChildToItemAction(selectedItem, newChildItem, newChildItem.Link, childIndex);
+            // Create and apply action (the action will perform the operation via the model)
+            int childIndex = selectedItem.Link.Node != null ? selectedItem.Link.Node.Links.Count : -1;
+            var action = new AddChildToItemAction(selectedItem, childIndex);
             _actionHistory.Apply(action);
 
-            // Update tree view to show the new child
-            UpdateTreeView();
+            // Get the newly created child item from the action
+            DLGStandardItem newChildItem = action.ChildItem;
 
-            // Select the newly added child in the tree view
-            SelectTreeViewItem(newChildItem);
+            if (newChildItem != null)
+            {
+                // Select the newly added child in the tree view
+                SelectTreeViewItem(newChildItem);
+            }
         }
 
         /// <summary>
@@ -1292,6 +1287,95 @@ namespace HolocronToolset.Editors
         private void SetExpandRecursively(bool expand, int maxDepth)
         {
             // TODO: PLACEHOLDER - Implement set_expand_recursively when tree view UI is implemented
+        }
+
+        /// <summary>
+        /// Selects a tree view item by its DLGStandardItem.
+        /// Helper method for programmatically selecting items in the tree view.
+        /// </summary>
+        /// <param name="item">The DLGStandardItem to select.</param>
+        private void SelectTreeViewItem(DLGStandardItem item)
+        {
+            if (_dialogTree == null || item == null || _dialogTree.ItemsSource == null)
+            {
+                return;
+            }
+
+            // Recursively search for the tree view item matching the DLGStandardItem
+            TreeViewItem foundItem = FindTreeViewItem(_dialogTree.ItemsSource as System.Collections.IEnumerable, item);
+            if (foundItem != null)
+            {
+                _dialogTree.SelectedItem = foundItem;
+                // Expand parent items to ensure the selected item is visible
+                ExpandParentItems(foundItem);
+            }
+        }
+
+        /// <summary>
+        /// Recursively finds a TreeViewItem by its Tag (DLGStandardItem).
+        /// </summary>
+        /// <param name="items">The items collection to search.</param>
+        /// <param name="targetItem">The DLGStandardItem to find.</param>
+        /// <returns>The TreeViewItem if found, null otherwise.</returns>
+        private TreeViewItem FindTreeViewItem(System.Collections.IEnumerable items, DLGStandardItem targetItem)
+        {
+            if (items == null || targetItem == null)
+            {
+                return null;
+            }
+
+            foreach (TreeViewItem treeItem in items)
+            {
+                if (treeItem == null)
+                {
+                    continue;
+                }
+
+                // Check if this tree item matches the target
+                if (treeItem.Tag == targetItem)
+                {
+                    return treeItem;
+                }
+
+                // Recursively search children
+                if (treeItem.ItemsSource != null)
+                {
+                    TreeViewItem found = FindTreeViewItem(treeItem.ItemsSource as System.Collections.IEnumerable, targetItem);
+                    if (found != null)
+                    {
+                        return found;
+                    }
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Expands all parent items of the specified tree view item to ensure it's visible.
+        /// </summary>
+        /// <param name="item">The tree view item whose parents should be expanded.</param>
+        private void ExpandParentItems(TreeViewItem item)
+        {
+            if (item == null)
+            {
+                return;
+            }
+
+            // Get parent container (TreeViewItem or TreeView)
+            var parent = item.Parent;
+            while (parent != null)
+            {
+                if (parent is TreeViewItem parentTreeItem)
+                {
+                    parentTreeItem.IsExpanded = true;
+                    parent = parentTreeItem.Parent;
+                }
+                else
+                {
+                    break;
+                }
+            }
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:152
