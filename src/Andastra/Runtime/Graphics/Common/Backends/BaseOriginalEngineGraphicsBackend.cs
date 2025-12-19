@@ -26,10 +26,14 @@ namespace Andastra.Runtime.Graphics.Common.Backends
     /// <remarks>
     /// Original Engine Graphics Backend:
     /// - This backend matches the original game engine rendering exactly 1:1
-    /// - Original game graphics system: Primarily DirectX 9 (d3d9.dll) or OpenGL (OPENGL32.dll)
+    /// - Graphics API usage (verified via Ghidra reverse engineering):
+    ///   * Odyssey (KOTOR 1/2): OpenGL ONLY (swkotor.exe/swkotor2.exe import OPENGL32.DLL, GLU32.DLL)
+    ///   * Aurora (NWN:EE): OpenGL ONLY (nwmain.exe imports OPENGL32.DLL, GLU32.DLL)
+    ///   * Eclipse (DA:O): DirectX 9 (daorigins.exe dynamically loads d3d9.dll, Direct3DCreate9)
+    ///   * Eclipse (DA2): DirectX 11 primary with DirectX 9 fallback (DragonAge2.exe loads d3d11.dll/dxgi.dll, UseDirectX11Renderer flag)
+    ///   * Infinity (ME1/ME2): TBD (requires further analysis)
     /// - Graphics initialization: Matches original engine initialization code from game executables
     /// - Located via reverse engineering: DirectX/OpenGL calls, rendering pipeline, shader usage
-    /// - Original game graphics device: DirectX 9 fixed-function pipeline, vertex/pixel shaders
     /// - This implementation: Direct 1:1 match of original engine rendering code
     /// </remarks>
     public abstract class BaseOriginalEngineGraphicsBackend : BaseGraphicsBackend
