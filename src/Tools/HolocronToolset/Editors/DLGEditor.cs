@@ -76,6 +76,12 @@ namespace HolocronToolset.Editors
         // Flag to track if node is loaded into UI (prevents updates during loading)
         private bool _nodeLoadedIntoUi = false;
 
+        // Reference tracking
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:148-149
+        // Original: self.dialog_references: ReferenceChooserDialog | None = None, self.reference_history: list[tuple[list[weakref.ref[DLGLink]], str]] = []
+        private List<Tuple<List<WeakReference<DLGLink>>, string>> _referenceHistory = new List<Tuple<List<WeakReference<DLGLink>>, string>>();
+        private int _currentReferenceIndex = -1;
+
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:101-177
         // Original: def __init__(self, parent: QWidget | None = None, installation: HTInstallation | None = None):
         public DLGEditor(Window parent = null, HTInstallation installation = null)
