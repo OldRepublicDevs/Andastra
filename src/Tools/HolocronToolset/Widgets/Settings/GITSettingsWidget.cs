@@ -1,4 +1,7 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using HolocronToolset.Data;
@@ -10,16 +13,15 @@ namespace HolocronToolset.Widgets.Settings
 {
     // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/git.py:15
     // Original: class GITWidget(SettingsWidget):
-    public partial class GITSettingsWidget : UserControl
+    public partial class GITSettingsWidget : SettingsWidget
     {
-        private GITSettings _settings;
         private Button _coloursResetButton;
         private Button _controlsResetButton;
 
         public GITSettingsWidget()
         {
-            InitializeComponent();
             _settings = new GITSettings();
+            InitializeComponent();
             SetupUI();
             SetupValues();
         }
@@ -46,6 +48,44 @@ namespace HolocronToolset.Widgets.Settings
         private void SetupProgrammaticUI()
         {
             var panel = new StackPanel { Spacing = 10, Margin = new Avalonia.Thickness(10) };
+
+            // Create ColorEdit widgets for all material colors
+            var colorNames = new[]
+            {
+                "UndefinedMaterialColour",
+                "DirtMaterialColour",
+                "ObscuringMaterialColour",
+                "GrassMaterialColour",
+                "StoneMaterialColour",
+                "WoodMaterialColour",
+                "WaterMaterialColour",
+                "NonWalkMaterialColour",
+                "TransparentMaterialColour",
+                "CarpetMaterialColour",
+                "MetalMaterialColour",
+                "PuddlesMaterialColour",
+                "SwampMaterialColour",
+                "MudMaterialColour",
+                "LeavesMaterialColour",
+                "DoorMaterialColour",
+                "LavaMaterialColour",
+                "BottomlessPitMaterialColour",
+                "DeepWaterMaterialColour",
+                "NonWalkGrassMaterialColour"
+            };
+
+            foreach (var colorName in colorNames)
+            {
+                var label = new TextBlock { Text = colorName.Replace("MaterialColour", "").Replace("Colour", "") + ":" };
+                var colorEdit = new ColorEdit(this);
+                colorEdit.AllowAlpha = true;
+                colorEdit.Name = colorName + "Edit";
+                
+                var colorRow = new StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal, Spacing = 5 };
+                colorRow.Children.Add(label);
+                colorRow.Children.Add(colorEdit);
+                panel.Children.Add(colorRow);
+            }
 
             _coloursResetButton = new Button { Content = "Reset Colours" };
             _coloursResetButton.Click += (s, e) => ResetColours();
@@ -77,7 +117,112 @@ namespace HolocronToolset.Widgets.Settings
         // Original: def _setupColourValues(self):
         private void SetupColourValues()
         {
-            // TODO: Setup colour values when GITSettings and ColorEdit widgets are available
+            // Find all ColorEdit widgets in the UI and register them
+            // PyKotor pattern: for colorEdit in [widget for widget in dir(self.ui) if "ColourEdit" in widget]:
+            //                     self._registerColour(getattr(self.ui, colorEdit), colorEdit[:-4])
+            
+            // List of all material color property names from GITSettings
+            var colorPropertyNames = new[]
+            {
+                "UndefinedMaterialColour",
+                "DirtMaterialColour",
+                "ObscuringMaterialColour",
+                "GrassMaterialColour",
+                "StoneMaterialColour",
+                "WoodMaterialColour",
+                "WaterMaterialColour",
+                "NonWalkMaterialColour",
+                "TransparentMaterialColour",
+                "CarpetMaterialColour",
+                "MetalMaterialColour",
+                "PuddlesMaterialColour",
+                "SwampMaterialColour",
+                "MudMaterialColour",
+                "LeavesMaterialColour",
+                "DoorMaterialColour",
+                "LavaMaterialColour",
+                "BottomlessPitMaterialColour",
+                "DeepWaterMaterialColour",
+                "NonWalkGrassMaterialColour"
+            };
+
+            // Try to find ColorEdit widgets from XAML first (naming: "undefinedMaterialColourEdit", etc.)
+            foreach (var colorName in colorPropertyNames)
+            {
+                // Try camelCase version first (PyKotor UI naming convention)
+                var camelCaseName = char.ToLowerInvariant(colorName[0]) + colorName.Substring(1) + "Edit";
+                var colorEdit = this.FindControl<ColorEdit>(camelCaseName);
+                
+                // If not found, try with exact case
+                if (colorEdit == null)
+                {
+                    colorEdit = this.FindControl<ColorEdit>(colorName + "Edit");
+                }
+
+                if (colorEdit != null)
+                {
+                    // Set AllowAlpha = true for all material colors (matching PyKotor lines 28-47)
+                    colorEdit.AllowAlpha = true;
+                    RegisterColour(colorEdit, colorName);
+                }
+            }
+
+            // Also search for any ColorEdit widgets that might be named differently
+            // This handles cases where widgets might be added programmatically or have different naming
+            var allControls = GetAllChildControls(this);
+            foreach (var control in allControls)
+            {
+                if (control is ColorEdit colorEditWidget && !_colours.ContainsValue(colorEditWidget))
+                {
+                    // Try to infer the color name from the widget name
+                    var widgetName = colorEditWidget.Name;
+                    if (!string.IsNullOrEmpty(widgetName) && widgetName.Contains("Colour") && widgetName.EndsWith("Edit"))
+                    {
+                        // Remove "Edit" suffix and convert to property name format
+                        var baseName = widgetName.Substring(0, widgetName.Length - 4);
+                        // Convert camelCase to PascalCase
+                        var propertyName = char.ToUpperInvariant(baseName[0]) + baseName.Substring(1);
+                        
+                        // Check if this property exists in GITSettings
+                        var property = typeof(GITSettings).GetProperty(propertyName, BindingFlags.Public | BindingFlags.Instance);
+                        if (property != null && property.PropertyType == typeof(int))
+                        {
+                            colorEditWidget.AllowAlpha = true;
+                            RegisterColour(colorEditWidget, propertyName);
+                        }
+                    }
+                }
+            }
+        }
+
+        // Helper method to recursively get all child controls
+        private List<Control> GetAllChildControls(Control parent)
+        {
+            var controls = new List<Control>();
+            if (parent == null)
+            {
+                return controls;
+            }
+
+            controls.Add(parent);
+
+            if (parent is Panel panel)
+            {
+                foreach (var child in panel.Children.OfType<Control>())
+                {
+                    controls.AddRange(GetAllChildControls(child));
+                }
+            }
+            else if (parent is ContentControl contentControl && contentControl.Content is Control contentChild)
+            {
+                controls.AddRange(GetAllChildControls(contentChild));
+            }
+            else if (parent is Decorator decorator && decorator.Child is Control decoratorChild)
+            {
+                controls.AddRange(GetAllChildControls(decoratorChild));
+            }
+
+            return controls;
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/widgets/git.py:62-64
@@ -117,9 +262,11 @@ namespace HolocronToolset.Widgets.Settings
             }
         }
 
-        public void Save()
+        public new void Save()
         {
-            // Settings are saved automatically via property setters
+            // Call base Save to save all registered colors and binds
+            base.Save();
+            // Also call settings Save to persist to disk
             if (_settings != null)
             {
                 _settings.Save();
