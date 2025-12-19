@@ -15,9 +15,9 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Core\Andastra.Runtime.Core.csproj" />
     <ProjectReference Include="..\..\Content\Andastra.Runtime.Content.csproj" />
-    <ProjectReference Include="..\..\Games\Kotor\Andastra.Runtime.Games.Kotor.csproj" />
+    <ProjectReference Include="..\..\Games\Odyssey\Andastra.Runtime.Games.Odyssey.csproj" />
     <ProjectReference Include="..\Andastra.Runtime.Graphics.csproj" />
-    <ProjectReference Include="..\Andastra.Runtime.Graphics.Common.csproj" />
+    <ProjectReference Include="..\Common\Andastra.Runtime.Graphics.Common.csproj" />
   </ItemGroup>
 
   <ItemGroup>

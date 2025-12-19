@@ -1,6 +1,6 @@
 using System;
-using Stride.Engine;
-using Stride.Graphics;
+using StrideEngine = Stride.Engine;
+using StrideGraphics = Stride.Graphics;
 using Andastra.Runtime.Graphics;
 
 namespace Andastra.Runtime.Stride.Graphics
@@ -10,11 +10,11 @@ namespace Andastra.Runtime.Stride.Graphics
     /// </summary>
     public class StrideContentManager : IContentManager
     {
-        private readonly ContentManager _contentManager;
+        private readonly StrideEngine.ContentManager _contentManager;
 
-        internal ContentManager ContentManager => _contentManager;
+        internal StrideEngine.ContentManager ContentManager => _contentManager;
 
-        public StrideContentManager(ContentManager contentManager)
+        public StrideContentManager(StrideEngine.ContentManager contentManager)
         {
             _contentManager = contentManager ?? throw new ArgumentNullException(nameof(contentManager));
         }
@@ -29,12 +29,12 @@ namespace Andastra.Runtime.Stride.Graphics
         {
             if (typeof(IFont).IsAssignableFrom(typeof(T)))
             {
-                var spriteFont = _contentManager.Load<SpriteFont>(assetName);
+                var spriteFont = _contentManager.Load<StrideGraphics.SpriteFont>(assetName);
                 return new StrideFont(spriteFont) as T;
             }
             else if (typeof(ITexture2D).IsAssignableFrom(typeof(T)))
             {
-                var texture = _contentManager.Load<Texture2D>(assetName);
+                var texture = _contentManager.Load<StrideGraphics.Texture2D>(assetName);
                 return new StrideTexture2D(texture) as T;
             }
             else

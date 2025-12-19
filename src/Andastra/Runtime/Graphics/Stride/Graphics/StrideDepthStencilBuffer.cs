@@ -1,5 +1,5 @@
 using System;
-using Stride.Graphics;
+using StrideGraphics = Stride.Graphics;
 using Andastra.Runtime.Graphics;
 
 namespace Andastra.Runtime.Stride.Graphics
@@ -9,9 +9,9 @@ namespace Andastra.Runtime.Stride.Graphics
     /// </summary>
     public class StrideDepthStencilBuffer : IDepthStencilBuffer
     {
-        private readonly Stride.Graphics.Texture2D _depthBuffer;
+        private readonly StrideGraphics.Texture2D _depthBuffer;
 
-        public StrideDepthStencilBuffer(Stride.Graphics.Texture2D depthBuffer)
+        public StrideDepthStencilBuffer(StrideGraphics.Texture2D depthBuffer)
         {
             _depthBuffer = depthBuffer ?? throw new ArgumentNullException(nameof(depthBuffer));
         }

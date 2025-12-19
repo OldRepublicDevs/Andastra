@@ -1,5 +1,5 @@
 using System;
-using Stride.Graphics;
+using StrideGraphics = Stride.Graphics;
 using Andastra.Runtime.Graphics;
 
 namespace Andastra.Runtime.Stride.Graphics
@@ -9,10 +9,10 @@ namespace Andastra.Runtime.Stride.Graphics
     /// </summary>
     public class StrideRenderTarget : IRenderTarget
     {
-        internal readonly Stride.Graphics.Texture2D RenderTarget;
-        private readonly Stride.Graphics.Texture2D _depthBuffer;
+        internal readonly StrideGraphics.Texture2D RenderTarget;
+        private readonly StrideGraphics.Texture2D _depthBuffer;
 
-        public StrideRenderTarget(Stride.Graphics.Texture2D renderTarget, Stride.Graphics.Texture2D depthBuffer = null)
+        public StrideRenderTarget(StrideGraphics.Texture2D renderTarget, StrideGraphics.Texture2D depthBuffer = null)
         {
             RenderTarget = renderTarget ?? throw new ArgumentNullException(nameof(renderTarget));
             _depthBuffer = depthBuffer;

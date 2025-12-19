@@ -1,4 +1,4 @@
-using Stride.Graphics;
+using StrideGraphics = Stride.Graphics;
 using Stride.Core.Mathematics;
 using Andastra.Runtime.Graphics;
 using System.Numerics;
@@ -114,7 +114,7 @@ namespace Andastra.Runtime.Stride.Graphics
             }
         }
 
-        private Stride.Graphics.Texture2D GetStrideTexture(ITexture2D texture)
+        private StrideGraphics.Texture2D GetStrideTexture(ITexture2D texture)
         {
             if (texture is StrideTexture2D strideTexture)
             {
@@ -132,10 +132,10 @@ namespace Andastra.Runtime.Stride.Graphics
             throw new System.ArgumentException("Font must be a StrideFont", nameof(font));
         }
 
-        private Stride.Graphics.SpriteSortMode ConvertSortMode(Andastra.Runtime.Graphics.SpriteSortMode sortMode)
+        private StrideGraphics.SpriteSortMode ConvertSortMode(Andastra.Runtime.Graphics.SpriteSortMode sortMode)
         {
             // Stride uses the same enum values, so we can cast directly
-            return (Stride.Graphics.SpriteSortMode)sortMode;
+            return (StrideGraphics.SpriteSortMode)sortMode;
         }
 
         private BlendStateDescription ConvertBlendState(Andastra.Runtime.Graphics.BlendState blendState)
@@ -158,16 +158,16 @@ namespace Andastra.Runtime.Stride.Graphics
             return BlendStateDescription.Default();
         }
 
-        private Stride.Graphics.SpriteEffects ConvertSpriteEffects(Andastra.Runtime.Graphics.SpriteEffects effects)
+        private StrideGraphics.SpriteEffects ConvertSpriteEffects(Andastra.Runtime.Graphics.SpriteEffects effects)
         {
-            Stride.Graphics.SpriteEffects result = Stride.Graphics.SpriteEffects.None;
+            StrideGraphics.SpriteEffects result = StrideGraphics.SpriteEffects.None;
             if ((effects & Andastra.Runtime.Graphics.SpriteEffects.FlipHorizontally) != 0)
             {
-                result |= Stride.Graphics.SpriteEffects.FlipHorizontally;
+                result |= StrideGraphics.SpriteEffects.FlipHorizontally;
             }
             if ((effects & Andastra.Runtime.Graphics.SpriteEffects.FlipVertically) != 0)
             {
-                result |= Stride.Graphics.SpriteEffects.FlipVertically;
+                result |= StrideGraphics.SpriteEffects.FlipVertically;
             }
             return result;
         }
