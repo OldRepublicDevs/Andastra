@@ -265,8 +265,18 @@ namespace Andastra.Runtime.Games.Infinity
         /// </remarks>
         private void AttachTriggerComponents()
         {
-            // TODO: Attach trigger-specific components
-            // TriggerComponent with enter/exit detection
+            // Attach trigger component if not already present
+            // Based on MassEffect.exe and MassEffect2.exe: Trigger component is attached during entity creation
+            // ComponentInitializer also handles this, but we ensure it's attached here for consistency
+            // - Infinity engine uses different trigger system than Odyssey/Aurora/Eclipse
+            // - Note: Infinity engine trigger system is not fully reverse engineered yet
+            // - Component provides: Geometry, IsEnabled, TriggerType, LinkedTo, LinkedToModule, IsTrap, TrapActive, TrapDetected, TrapDisarmed, TrapDetectDC, TrapDisarmDC, FireOnce, HasFired, ContainsPoint, ContainsEntity
+            if (!HasComponent<ITriggerComponent>())
+            {
+                var triggerComponent = new Components.InfinityTriggerComponent();
+                triggerComponent.Owner = this;
+                AddComponent<ITriggerComponent>(triggerComponent);
+            }
         }
 
         /// <summary>

@@ -916,6 +916,167 @@ namespace HolocronToolset.Editors
         }
 
         /// <summary>
+        /// Finds all references to the specified item's link node.
+        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:1891-1906
+        /// Original: def find_references(self, item: DLGStandardItem | DLGListWidgetItem):
+        /// </summary>
+        /// <param name="item">The DLGStandardItem to find references for</param>
+        public void FindReferences(DLGStandardItem item)
+        {
+            if (item == null)
+            {
+                throw new ArgumentNullException(nameof(item));
+            }
+
+            DLGLink itemLink = item.Link;
+            if (itemLink == null)
+            {
+                throw new InvalidOperationException("Item must have a valid link");
+            }
+
+            // Truncate reference history to current index (for undo/redo)
+            // Matching PyKotor: self.reference_history = self.reference_history[: self.current_reference_index + 1]
+            if (_currentReferenceIndex >= 0 && _currentReferenceIndex < _referenceHistory.Count - 1)
+            {
+                _referenceHistory.RemoveRange(_currentReferenceIndex + 1, _referenceHistory.Count - _currentReferenceIndex - 1);
+            }
+
+            // Get item display text (HTML format in Python, simplified here)
+            string itemHtml = GetItemDisplayText(item);
+
+            // Increment reference index
+            _currentReferenceIndex++;
+
+            // Find all links that reference this link's node
+            // Matching PyKotor: references = [this_item.ref_to_link for link in self.model.link_to_items for this_item in self.model.link_to_items[link] if this_item.link is not None and item.link in this_item.link.node.links]
+            var references = new List<WeakReference<DLGLink>>();
+            
+            // Iterate through all links in the model
+            foreach (var kvp in _model.LinkToItems)
+            {
+                DLGLink link = kvp.Key;
+                if (link == null)
+                {
+                    continue;
+                }
+
+                // Check if this link's node contains the target link in its links list
+                if (link.Node != null && link.Node.Links != null)
+                {
+                    foreach (DLGLink nodeLink in link.Node.Links)
+                    {
+                        if (nodeLink == itemLink)
+                        {
+                            // Found a reference - add all items that reference this link
+                            foreach (DLGStandardItem thisItem in kvp.Value)
+                            {
+                                if (thisItem.Link != null)
+                                {
+                                    references.Add(new WeakReference<DLGLink>(thisItem.Link));
+                                }
+                            }
+                            break;
+                        }
+                    }
+                }
+            }
+
+            // Add to reference history
+            _referenceHistory.Add(Tuple.Create(references, itemHtml));
+
+            // Show reference dialog
+            ShowReferenceDialog(references, itemHtml);
+        }
+
+        /// <summary>
+        /// Gets the display text for an item.
+        /// </summary>
+        private string GetItemDisplayText(DLGStandardItem item)
+        {
+            if (item == null)
+            {
+                return "";
+            }
+
+            DLGLink link = item.Link;
+            if (link == null || link.Node == null)
+            {
+                return "";
+            }
+
+            // Simplified display text - in Python this returns HTML
+            if (link.Node is DLGEntry entry)
+            {
+                return $"Entry: {entry.Text}";
+            }
+            else if (link.Node is DLGReply reply)
+            {
+                return $"Reply: {reply.Text}";
+            }
+
+            return "Node";
+        }
+
+        /// <summary>
+        /// Shows the reference dialog with the found references.
+        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:1918-1929
+        /// Original: def show_reference_dialog(self, references: list[weakref.ref[DLGLink]], item_html: str):
+        /// </summary>
+        /// <param name="references">List of weak references to DLGLink objects that reference the target</param>
+        /// <param name="itemHtml">HTML/text description of the item being referenced</param>
+        private void ShowReferenceDialog(List<WeakReference<DLGLink>> references, string itemHtml)
+        {
+            // For now, this is a simplified implementation
+            // In a full implementation, this would show a dialog window with the references
+            // Matching PyKotor: self.dialog_references = ReferenceChooserDialog(references, self, item_html)
+            
+            // Filter out invalid weak references
+            var validReferences = new List<DLGLink>();
+            foreach (var weakRef in references)
+            {
+                if (weakRef != null && weakRef.TryGetTarget(out DLGLink link))
+                {
+                    validReferences.Add(link);
+                }
+            }
+
+            // TODO: PLACEHOLDER - Show reference dialog UI when UI system is fully implemented
+            // For now, this method exists to match the Python API
+            // A full implementation would:
+            // 1. Create or update a ReferenceChooserDialog window
+            // 2. Display the list of references
+            // 3. Allow user to select a reference to jump to
+            // 4. Call JumpToNode when a reference is selected
+        }
+
+        /// <summary>
+        /// Jumps to the specified node/link in the dialog tree.
+        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:1938-1940
+        /// Original: def jump_to_node(self, link: DLGLink | None):
+        /// </summary>
+        /// <param name="link">The link to jump to</param>
+        public void JumpToNode(DLGLink link)
+        {
+            if (link == null)
+            {
+                return;
+            }
+
+            // Find the item in the model that corresponds to this link
+            if (_model.LinkToItems.TryGetValue(link, out var items) && items.Count > 0)
+            {
+                // Select the first item that references this link
+                DLGStandardItem item = items[0];
+                
+                // TODO: PLACEHOLDER - Expand tree and select item when tree view UI is fully implemented
+                // A full implementation would:
+                // 1. Expand all parent items to make the target visible
+                // 2. Select the item in the tree view
+                // 3. Scroll to make it visible
+            }
+        }
+
+        /// <summary>
         /// Pastes an item.
         /// Matching PyKotor implementation: self.model.paste_item(selected_item, as_new_branches=...)
         /// </summary>
