@@ -42,11 +42,19 @@ type
     FFileName: string;
     FColumns: TStringList;
     FRows: TList;
+    FLoaded: Byte;  // Offset 0x18 in assembly: 1 = loaded, 0 = not loaded
     procedure LoadFile;
     procedure SaveFile;
     function FindRowByLabel(const ALabel: string): TTwoDARow;
     function FindRowByColumnMatch(const AColumnName, AValue: string): TTwoDARow;
     function CreateNewRow(const ALabel: string): TTwoDARow;
+    function LookupColumnLabels(const ColumnName: string): Integer;  // 0x00470000
+    function GetRowCount: Integer;  // 0x004700FC
+    function GetColumnCount: Integer;  // 0x00470198
+    function GetCellValue(RowIndex, ColumnIndex: Integer): string;  // 0x00470198+
+    procedure SetColumnLabel(ColumnIndex: Integer; const ALabel: string);  // 0x00470250
+    procedure SetRowLabel(RowIndex: Integer; const ALabel: string);  // 0x00470302
+    procedure SetCellValue(RowIndex, ColumnIndex: Integer; const AValue: string);  // 0x00470390
   public
     constructor Create(const AFileName: string);
     destructor Destroy; override;
@@ -56,6 +64,10 @@ type
     procedure AddColumn(const AColumnName: string);
     procedure ApplyModification(const AModification: TTwoDAModification);
     procedure ApplyModifications(const AModifications: TList);
+    // Methods from assembly disassembly (1:1 parity)
+    function LookupColumnIndex(const ColumnName: string): Integer;
+    property RowCount: Integer read GetRowCount;
+    property ColumnCount: Integer read GetColumnCount;
   end;
 
 implementation
@@ -82,7 +94,9 @@ begin
   FFileName := AFileName;
   FColumns := TStringList.Create;
   FRows := TList.Create;
+  FLoaded := 0;  // Initialize as not loaded
   LoadFile;
+  FLoaded := 1;  // Mark as loaded after successful load (offset 0x18)
 end;
 
 destructor TTwoDAPatcher.Destroy;
@@ -396,6 +410,160 @@ begin
   for I := 0 to AModifications.Count - 1 do
     ApplyModification(TTwoDAModification(AModifications[I]));
   SaveFile;
+end;
+
+{ Methods from assembly disassembly - 1:1 parity with TSLPatcher.exe }
+
+function TTwoDAPatcher.LookupColumnLabels(const ColumnName: string): Integer;
+var
+  I: Integer;
+  Count: Integer;
+  ColName: string;
+begin
+  // Assembly: 0x00470000
+  // Check if file is loaded (offset 0x18: cmp byte ptr [edi+0x18], 1)
+  if FLoaded <> 1 then
+    raise Exception.Create('No 2da file has been loaded. Unable to look up column labels.');
+  
+  // Get column count (offset 0x10 = FColumns)
+  // Assembly: mov eax, [edi+0x10]; call TList.Count
+  Count := FColumns.Count;
+  if Count < 0 then
+    raise Exception.Create('Invalid column count');
+  
+  // Loop through columns (assembly: loop at 0x00470056)
+  Result := -1;
+  for I := 0 to Count - 1 do
+  begin
+    // Assembly: mov eax, [eax+ebx*4] - get FColumns[i]
+    ColName := FColumns[I];
+    // Assembly: call CompareText (case-insensitive compare)
+    if CompareText(ColName, ColumnName) = 0 then
+    begin
+      Result := I;
+      Exit;
+    end;
+  end;
+  
+  // Not found - raise exception (assembly: 0x00470082)
+  raise Exception.CreateFmt('Unable to find a row matching the label "%s" in 2DA file.', [ColumnName]);
+end;
+
+function TTwoDAPatcher.LookupColumnIndex(const ColumnName: string): Integer;
+begin
+  Result := LookupColumnLabels(ColumnName);
+end;
+
+function TTwoDAPatcher.GetRowCount: Integer;
+begin
+  // Assembly: 0x004700FC
+  // Check if loaded: cmp byte ptr [eax+0x18], 1
+  if FLoaded <> 1 then
+    raise Exception.Create('No 2da file has been loaded. Unable to look up row count.');
+  
+  // Assembly: mov eax, [eax+0x08] - get FRows.Count
+  Result := FRows.Count;
+end;
+
+function TTwoDAPatcher.GetColumnCount: Integer;
+begin
+  // Assembly: 0x00470198
+  // Check if loaded: cmp byte ptr [eax+0x18], 1
+  if FLoaded <> 1 then
+    raise Exception.Create('No 2da file has been loaded. Unable to look up column count.');
+  
+  // Assembly: mov eax, [eax+0x04] - get FColumns.Count
+  Result := FColumns.Count;
+end;
+
+function TTwoDAPatcher.GetCellValue(RowIndex, ColumnIndex: Integer): string;
+var
+  Row: TTwoDARow;
+begin
+  // Assembly: 0x00470198+ (GetCellValue)
+  // Check if loaded: cmp byte ptr [ebx+0x18], 1
+  if FLoaded <> 1 then
+    raise Exception.Create('No 2da file has been loaded. Unable to look up cell value.');
+  
+  // Check row index: cmp esi, [ebx+0x08] (FRows.Count)
+  if (RowIndex < 0) or (RowIndex >= FRows.Count) then
+    raise Exception.Create('Invalid row index specified, unable to look up cell value.');
+  
+  // Check column index: cmp esi, [ebx+0x04] (FColumns.Count)
+  if (ColumnIndex < 0) or (ColumnIndex >= FColumns.Count) then
+    raise Exception.Create('Invalid column index specified, unable to look up cell value.');
+  
+  // Assembly: mov eax, [ebx+0x14]; mov eax, [eax+esi*4] - get FRows[RowIndex]
+  Row := TTwoDARow(FRows[RowIndex]);
+  
+  // Assembly: mov eax, [eax+0x0C]; mov eax, [eax+edi*4] - get Row.Values[ColumnIndex]
+  if ColumnIndex < Row.Values.Count then
+    Result := Row.Values[ColumnIndex]
+  else
+    Result := '';
+end;
+
+procedure TTwoDAPatcher.SetColumnLabel(ColumnIndex: Integer; const ALabel: string);
+begin
+  // Assembly: 0x00470250
+  // Check if loaded: cmp byte ptr [ebx+0x18], 1
+  if FLoaded <> 1 then
+    raise Exception.Create('No 2da file has been loaded. Unable to set column label.');
+  
+  // Check column index: cmp esi, [ebx+0x04] (FColumns.Count)
+  if (ColumnIndex < 0) or (ColumnIndex >= FColumns.Count) then
+    raise Exception.Create('Invalid column index specified, unable to set column label.');
+  
+  // Assembly: mov eax, [ebx+0x0C]; mov [eax+esi*4], edx - set FColumns[ColumnIndex]
+  FColumns[ColumnIndex] := ALabel;
+end;
+
+procedure TTwoDAPatcher.SetRowLabel(RowIndex: Integer; const ALabel: string);
+var
+  Row: TTwoDARow;
+begin
+  // Assembly: 0x00470302
+  // Check if loaded: cmp byte ptr [ebx+0x18], 1
+  if FLoaded <> 1 then
+    raise Exception.Create('No 2da file has been loaded. Unable to set row label.');
+  
+  // Check row index: cmp esi, [ebx+0x08] (FRows.Count)
+  if (RowIndex < 0) or (RowIndex >= FRows.Count) then
+    raise Exception.Create('Invalid row index specified, unable to set row label.');
+  
+  // Assembly: mov eax, [ebx+0x14]; mov eax, [eax+esi*4] - get FRows[RowIndex]
+  Row := TTwoDARow(FRows[RowIndex]);
+  
+  // Assembly: set Row.LabelIndex
+  Row.LabelIndex := ALabel;
+end;
+
+procedure TTwoDAPatcher.SetCellValue(RowIndex, ColumnIndex: Integer; const AValue: string);
+var
+  Row: TTwoDARow;
+begin
+  // Assembly: 0x00470390
+  // Check if loaded: cmp byte ptr [ebx+0x18], 1
+  if FLoaded <> 1 then
+    raise Exception.Create('No 2da file has been loaded. Unable to set cell value.');
+  
+  // Check row index: cmp esi, [ebx+0x08] (FRows.Count)
+  if (RowIndex < 0) or (RowIndex >= FRows.Count) then
+    raise Exception.Create('Invalid row index specified, unable to set cell value.');
+  
+  // Check column index: cmp edi, [ebx+0x04] (FColumns.Count)
+  if (ColumnIndex < 0) or (ColumnIndex >= FColumns.Count) then
+    raise Exception.Create('Invalid column index specified, unable to set cell value.');
+  
+  // Assembly: mov eax, [ebx+0x14]; mov eax, [eax+esi*4] - get FRows[RowIndex]
+  Row := TTwoDARow(FRows[RowIndex]);
+  
+  // Ensure row has enough values
+  while Row.Values.Count <= ColumnIndex do
+    Row.Values.Add('');
+  
+  // Assembly: mov eax, [eax+0x14]; mov [eax+edi*4], edx - set Row.Values[ColumnIndex]
+  Row.Values[ColumnIndex] := AValue;
 end;
 
 end.
