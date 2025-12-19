@@ -7,6 +7,7 @@ using Andastra.Runtime.Core.Interfaces.Components;
 using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Games.Infinity.Components;
 using Andastra.Runtime.Games.Common;
+using Andastra.Runtime.Games.Common.Components;
 
 namespace Andastra.Runtime.Games.Infinity
 {
@@ -181,9 +182,24 @@ namespace Andastra.Runtime.Games.Infinity
         /// <summary>
         /// Attaches components common to all entity types.
         /// </summary>
+        /// <remarks>
+        /// Common components attached to all entities:
+        /// - TransformComponent: Position, orientation, scale for all entities
+        /// - ScriptHooksComponent: Script event hooks and local variables for all entities
+        ///
+        /// Based on MassEffect.exe and MassEffect2.exe: All entities have transform and script hooks capability.
+        /// Transform data is loaded from level files and templates.
+        /// </remarks>
         private void AttachCommonComponents()
         {
-            // TODO: Attach transform component
+            // Attach transform component for all entities
+            // Based on MassEffect.exe and MassEffect2.exe: All entities have transform data (position, orientation, scale)
+            if (!HasComponent<ITransformComponent>())
+            {
+                var transformComponent = new InfinityTransformComponent();
+                AddComponent<ITransformComponent>(transformComponent);
+            }
+
             // TODO: Attach script hooks component
             // TODO: Attach any other common components
         }

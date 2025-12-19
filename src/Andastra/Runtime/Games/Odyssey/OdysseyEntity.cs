@@ -201,6 +201,17 @@ namespace Andastra.Runtime.Games.Odyssey
         /// </remarks>
         private void AttachCommonComponents()
         {
+            // Attach transform component for all entities
+            // Based on swkotor.exe and swkotor2.exe: All entities have transform data (position, orientation, scale)
+            // Transform data is loaded from GIT files (FUN_004e08e0 @ 0x004e08e0 loads placeable/door position from GIT)
+            // Position stored as XPosition, YPosition, ZPosition in GFF structures
+            // Orientation stored as XOrientation, YOrientation, ZOrientation in GFF structures
+            if (!HasComponent<ITransformComponent>())
+            {
+                var transformComponent = new TransformComponent();
+                AddComponent<ITransformComponent>(transformComponent);
+            }
+
             // Attach script hooks component for all entities
             // Based on swkotor2.exe: All entities support script hooks (ScriptHeartbeat, ScriptOnNotice, etc.)
             // ComponentInitializer also attaches this, but we ensure it's attached here for consistency
@@ -210,9 +221,6 @@ namespace Andastra.Runtime.Games.Odyssey
                 var scriptHooksComponent = new ScriptHooksComponent();
                 AddComponent<IScriptHooksComponent>(scriptHooksComponent);
             }
-
-            // TODO: Attach transform component
-            // TODO: Attach any other common components
         }
 
         /// <summary>

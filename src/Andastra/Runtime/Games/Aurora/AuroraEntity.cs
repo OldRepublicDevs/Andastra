@@ -191,9 +191,21 @@ namespace Andastra.Runtime.Games.Aurora
         ///
         /// Based on nwmain.exe: All entities have transform and script hooks capability.
         /// Script hooks are loaded from GFF templates and can be set at runtime via SetScript functions.
+        /// Transform component provides position/orientation data loaded from GIT files (XPosition, YPosition, ZPosition, XOrientation, YOrientation, ZOrientation).
         /// </remarks>
         private void AttachCommonComponents()
         {
+            // Attach transform component for all entities
+            // Based on nwmain.exe: All entities have transform data (position, orientation, scale)
+            // Transform data is loaded from GIT files (LoadCreatures @ 0x140360570, LoadWaypoints @ 0x140362fc0, etc.)
+            // Position stored as XPosition, YPosition, ZPosition in GFF structures
+            // Orientation stored as XOrientation, YOrientation, ZOrientation in GFF structures
+            if (!HasComponent<ITransformComponent>())
+            {
+                var transformComponent = new AuroraTransformComponent();
+                AddComponent<ITransformComponent>(transformComponent);
+            }
+
             // Attach script hooks component for all entities
             // Based on nwmain.exe: All entities support script hooks (ScriptHeartbeat, ScriptOnNotice, etc.)
             // Script hooks are loaded from GFF templates and can be set/modified at runtime
@@ -202,9 +214,6 @@ namespace Andastra.Runtime.Games.Aurora
                 var scriptHooksComponent = new BaseScriptHooksComponent();
                 AddComponent<IScriptHooksComponent>(scriptHooksComponent);
             }
-
-            // TODO: Attach transform component
-            // TODO: Attach any other common components
         }
 
         /// <summary>
@@ -226,11 +235,25 @@ namespace Andastra.Runtime.Games.Aurora
         /// <remarks>
         /// Doors have open/close state, lock state, transition logic.
         /// Based on door component structure in nwmain.exe.
+        /// - CNWSDoor constructor @ 0x14041d6b0 (nwmain.exe: create door instance)
+        /// - LoadDoors @ 0x1403608f0 (nwmain.exe: load door list from area GIT)
+        /// - Door component attached during entity creation from GIT door entries
+        /// - Doors support: open/closed states, locks, traps, module/area transitions
+        /// - Component provides: IsOpen, IsLocked, LockDC, KeyName, LinkedTo, LinkedToModule
+        /// - Based on CNWSDoor class structure in nwmain.exe
         /// </remarks>
         private void AttachDoorComponents()
         {
-            // TODO: Attach door-specific components
-            // DoorComponent with open/closed states, locks, transitions
+            // Attach door component if not already present
+            // Based on nwmain.exe: Door component is attached during entity creation
+            // CNWSDoor constructor @ 0x14041d6b0 creates door instances with component initialization
+            // LoadDoors @ 0x1403608f0 loads door list from area GIT and creates entities with door components
+            if (!HasComponent<IDoorComponent>())
+            {
+                var doorComponent = new AuroraDoorComponent();
+                doorComponent.Owner = this;
+                AddComponent<IDoorComponent>(doorComponent);
+            }
         }
 
         /// <summary>
