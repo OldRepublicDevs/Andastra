@@ -1,11 +1,13 @@
 # MDL ASCII Format Implementation Roadmap
 
 ## Overview
+
 This document tracks the implementation of ASCII MDL format support in PyKotor, following MDLOps patterns and conventions.
 
 ## Status: IN PROGRESS
 
 ## Implementation Goals
+
 1. ✅ Ensure `ResourceType.MDL_ASCII` is properly defined with `target_type=ResourceType.MDL`
 2. ✅ Verify `detect_format`, `read_mdl`, `write_mdl`, `bytes_mdl` accept `ResourceType.MDL_ASCII`
 3. ⏳ Complete ASCII reader/writer implementation matching MDLOps 1:1
@@ -14,12 +16,14 @@ This document tracks the implementation of ASCII MDL format support in PyKotor, 
 ## Current Implementation Status
 
 ### ResourceType Definition
+
 - **Status**: ✅ COMPLETE
 - **Location**: `vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/type.py:271`
 - **Definition**: `MDL_ASCII = ResourceTuple(50002, "mdl.ascii", "Models", "plaintext", target_member="MDL")`
 - **Note**: ✅ `target_member="MDL"` has been set correctly
 
 ### Format Detection
+
 - **Status**: ✅ COMPLETE
 - **Location**: `vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/formats/mdl/mdl_auto.py:15-60`
 - **Implementation**: `detect_mdl()` function checks first 4 bytes
@@ -28,6 +32,7 @@ This document tracks the implementation of ASCII MDL format support in PyKotor, 
 - **Matches MDLOps**: ✅ Yes (MDLOpsM.pm:412-435)
 
 ### Read Functions
+
 - **Status**: ✅ COMPLETE
 - **Location**: `vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/formats/mdl/mdl_auto.py:63-106`
 - **Implementation**:
@@ -36,6 +41,7 @@ This document tracks the implementation of ASCII MDL format support in PyKotor, 
   - `read_mdl_fast()` also supports ASCII (falls back to regular loading)
 
 ### Write Functions
+
 - **Status**: ✅ COMPLETE
 - **Location**: `vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/formats/mdl/mdl_auto.py:171-198`
 - **Implementation**:
@@ -44,11 +50,13 @@ This document tracks the implementation of ASCII MDL format support in PyKotor, 
   - `bytes_mdl()` also supports ASCII format
 
 ### ASCII Reader Implementation
+
 - **Status**: ⏳ IN PROGRESS
 - **Location**: `vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/formats/mdl/io_mdl_ascii.py:528-1609`
 - **Reference**: MDLOpsM.pm:3916-5970 (`readasciimdl`)
 
 #### Completed Features
+
 - ✅ Model header parsing (newmodel, setsupermodel, classification, etc.)
 - ✅ Node parsing (dummy, trimesh, light, emitter, reference, aabb, saber)
 - ✅ Mesh data parsing (verts, faces, tverts, bones, weights, constraints)
@@ -62,6 +70,7 @@ This document tracks the implementation of ASCII MDL format support in PyKotor, 
 - ✅ Node hierarchy building
 
 #### Missing/Incomplete Features
+
 - ⏳ Some edge cases in controller parsing (bezier controllers)
 - ⏳ Complete emitter flag handling
 - ⏳ Some light flare data parsing edge cases
@@ -70,11 +79,13 @@ This document tracks the implementation of ASCII MDL format support in PyKotor, 
 - ⏳ Adjacent face calculations
 
 ### ASCII Writer Implementation
+
 - **Status**: ✅ COMPLETE
 - **Location**: `vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/formats/mdl/io_mdl_ascii.py:278-600`
 - **Reference**: MDLOpsM.pm:3004-3900 (`writeasciimdl`)
 
 #### Completed Features
+
 - ✅ Model header writing
 - ✅ Node writing (all node types)
 - ✅ Mesh data writing (verts, faces, tverts)
@@ -88,15 +99,17 @@ This document tracks the implementation of ASCII MDL format support in PyKotor, 
 - ✅ Dangly mesh writing (constraints)
 
 #### Missing/Incomplete Features
+
 - ✅ Animation writing (newanim blocks) - COMPLETE
+- ✅ Animation node parent writing - COMPLETE (uses animation hierarchy)
 - ⏳ Some controller formatting edge cases - Most common cases are handled
 - ⏳ Complete emitter flag writing - Basic flags are supported
 - ⏳ Some light flare data writing - Basic flare data is supported
-- ⏳ Animation node parent mapping - Currently skipped (requires model node index mapping)
 
 ## MDLOps Reference Mapping
 
 ### Key MDLOps Functions
+
 1. **readasciimdl** (MDLOpsM.pm:3916-5970)
    - Main ASCII reading function
    - Handles all node types and data structures
@@ -148,4 +161,3 @@ This document tracks the implementation of ASCII MDL format support in PyKotor, 
 3. Complete any missing writer features
 4. Add comprehensive tests
 5. Compare output with MDLOps for validation
-
