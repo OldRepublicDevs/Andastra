@@ -173,7 +173,7 @@ namespace HolocronToolset.Windows
             if (_indoorMap.Rooms.Contains(_room))
             {
                 _indoorMap.Rooms.Remove(_room);
-                // Note: rebuild_room_connections will be implemented when needed
+                // TODO: STUB - Note: rebuild_room_connections will be implemented when needed
             }
         }
 
@@ -183,7 +183,7 @@ namespace HolocronToolset.Windows
             if (!_indoorMap.Rooms.Contains(_room))
             {
                 _indoorMap.Rooms.Add(_room);
-                // Note: rebuild_room_connections will be implemented when needed
+                // TODO: STUB - Note: rebuild_room_connections will be implemented when needed
             }
         }
     }
