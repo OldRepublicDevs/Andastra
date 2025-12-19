@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Text.RegularExpressions;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Markup.Xaml;
@@ -446,12 +448,106 @@ namespace HolocronToolset.Editors
         }
     }
 
+    /// <summary>
+    /// Represents a standard item in the DLG tree model.
+    /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/model.py:52-100
+    /// Original: class DLGStandardItem(QStandardItem):
+    /// </summary>
+    public class DLGStandardItem
+    {
+        private readonly WeakReference<DLGLink> _linkRef;
+        private readonly List<DLGStandardItem> _children = new List<DLGStandardItem>();
+        private DLGStandardItem _parent;
+
+        /// <summary>
+        /// Gets the link associated with this item, or null if the reference is no longer valid.
+        /// Matching PyKotor implementation: property link(self) -> DLGLink | None
+        /// </summary>
+        public DLGLink Link
+        {
+            get
+            {
+                if (_linkRef != null && _linkRef.TryGetTarget(out DLGLink link))
+                {
+                    return link;
+                }
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Gets the number of child items.
+        /// </summary>
+        public int RowCount => _children.Count;
+
+        /// <summary>
+        /// Gets the parent item, or null if this is a root item.
+        /// </summary>
+        public DLGStandardItem Parent => _parent;
+
+        /// <summary>
+        /// Gets all child items.
+        /// </summary>
+        public IReadOnlyList<DLGStandardItem> Children => _children;
+
+        /// <summary>
+        /// Initializes a new instance of DLGStandardItem with the specified link.
+        /// </summary>
+        public DLGStandardItem(DLGLink link)
+        {
+            if (link == null)
+            {
+                throw new ArgumentNullException(nameof(link));
+            }
+            _linkRef = new WeakReference<DLGLink>(link);
+        }
+
+        /// <summary>
+        /// Adds a child item to this item.
+        /// </summary>
+        public void AddChild(DLGStandardItem child)
+        {
+            if (child == null)
+            {
+                throw new ArgumentNullException(nameof(child));
+            }
+            if (child._parent != null)
+            {
+                child._parent._children.Remove(child);
+            }
+            child._parent = this;
+            _children.Add(child);
+        }
+
+        /// <summary>
+        /// Gets the index of this item in its parent's children list.
+        /// </summary>
+        public int GetIndex()
+        {
+            if (_parent == null)
+            {
+                return -1;
+            }
+            return _parent._children.IndexOf(this);
+        }
+    }
+
     // Simple model class for tests (matching Python DLGStandardItemModel)
     public class DLGModel
     {
-        private List<DLGLink> _starters = new List<DLGLink>();
+        private List<DLGStandardItem> _rootItems = new List<DLGStandardItem>();
+        private DLGEditor _editor;
 
-        public int RowCount => _starters.Count;
+        public DLGModel()
+        {
+        }
+
+        public DLGModel(DLGEditor editor)
+        {
+            _editor = editor;
+        }
+
+        public int RowCount => _rootItems.Count;
 
         private int _selectedIndex = -1;
         public int SelectedIndex
@@ -459,7 +555,7 @@ namespace HolocronToolset.Editors
             get { return _selectedIndex; }
             set
             {
-                if (value >= -1 && value < _starters.Count)
+                if (value >= -1 && value < _rootItems.Count)
                 {
                     _selectedIndex = value;
                 }
@@ -468,13 +564,161 @@ namespace HolocronToolset.Editors
 
         public void ResetModel()
         {
-            _starters.Clear();
+            _rootItems.Clear();
             _selectedIndex = -1;
         }
 
         public void AddStarter(DLGLink link)
         {
-            _starters.Add(link);
+            if (link == null)
+            {
+                return;
+            }
+            var item = new DLGStandardItem(link);
+            _rootItems.Add(item);
+            
+            // Also add to CoreDlg.Starters if editor is available
+            if (_editor != null && _editor.CoreDlg != null)
+            {
+                if (!_editor.CoreDlg.Starters.Contains(link))
+                {
+                    _editor.CoreDlg.Starters.Add(link);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Adds a root node to the dialog graph.
+        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/model.py:846-856
+        /// Original: def add_root_node(self):
+        /// </summary>
+        public DLGStandardItem AddRootNode()
+        {
+            var newEntry = new DLGEntry();
+            newEntry.PlotIndex = -1;
+            var newLink = new DLGLink(newEntry);
+            newLink.Node.ListIndex = GetNewNodeListIndex(newLink.Node);
+            
+            var newItem = new DLGStandardItem(newLink);
+            _rootItems.Add(newItem);
+            
+            // Add to CoreDlg.Starters
+            if (_editor != null && _editor.CoreDlg != null)
+            {
+                _editor.CoreDlg.Starters.Add(newLink);
+            }
+            
+            UpdateItemDisplayText(newItem);
+            return newItem;
+        }
+
+        /// <summary>
+        /// Adds a child node to the specified parent item.
+        /// Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/model.py:858-877
+        /// Original: def add_child_to_item(self, parent_item: DLGStandardItem, link: DLGLink | None = None) -> DLGStandardItem:
+        /// </summary>
+        public DLGStandardItem AddChildToItem(DLGStandardItem parentItem, DLGLink link = null)
+        {
+            if (parentItem == null)
+            {
+                throw new ArgumentNullException(nameof(parentItem));
+            }
+            
+            if (parentItem.Link == null)
+            {
+                throw new InvalidOperationException("Parent item must have a valid link");
+            }
+
+            if (link == null)
+            {
+                // Create new node - if parent is Reply, create Entry; if parent is Entry, create Reply
+                DLGNode newNode;
+                if (parentItem.Link.Node is DLGReply)
+                {
+                    newNode = new DLGEntry();
+                }
+                else
+                {
+                    newNode = new DLGReply();
+                }
+                newNode.PlotIndex = -1;
+                newNode.ListIndex = GetNewNodeListIndex(newNode);
+                link = new DLGLink(newNode);
+            }
+
+            // Link the nodes
+            if (parentItem.Link.Node != null)
+            {
+                link.ListIndex = parentItem.Link.Node.Links.Count;
+                parentItem.Link.Node.Links.Add(link);
+            }
+
+            var newItem = new DLGStandardItem(link);
+            parentItem.AddChild(newItem);
+            
+            UpdateItemDisplayText(newItem);
+            UpdateItemDisplayText(parentItem);
+            
+            return newItem;
+        }
+
+        /// <summary>
+        /// Gets the item at the specified row and column.
+        /// Matching PyKotor implementation: def item(self, row: int, column: int = 0) -> DLGStandardItem | None:
+        /// </summary>
+        public DLGStandardItem Item(int row, int column = 0)
+        {
+            if (row < 0 || row >= _rootItems.Count || column != 0)
+            {
+                return null;
+            }
+            return _rootItems[row];
+        }
+
+        /// <summary>
+        /// Gets a new list index for a node.
+        /// </summary>
+        private int GetNewNodeListIndex(DLGNode node)
+        {
+            if (_editor?.CoreDlg == null)
+            {
+                return 0;
+            }
+
+            if (node is DLGEntry)
+            {
+                int maxIndex = -1;
+                foreach (var entry in _editor.CoreDlg.AllEntries())
+                {
+                    if (entry.ListIndex > maxIndex)
+                    {
+                        maxIndex = entry.ListIndex;
+                    }
+                }
+                return maxIndex + 1;
+            }
+            else if (node is DLGReply)
+            {
+                int maxIndex = -1;
+                foreach (var reply in _editor.CoreDlg.AllReplies())
+                {
+                    if (reply.ListIndex > maxIndex)
+                    {
+                        maxIndex = reply.ListIndex;
+                    }
+                }
+                return maxIndex + 1;
+            }
+            return 0;
+        }
+
+        /// <summary>
+        /// Updates the display text for an item.
+        /// </summary>
+        private void UpdateItemDisplayText(DLGStandardItem item)
+        {
+            // This would update the display text in the tree view
+            // For now, it's a placeholder
         }
 
         /// <summary>
@@ -482,13 +726,18 @@ namespace HolocronToolset.Editors
         /// </summary>
         public void InsertStarter(int index, DLGLink link)
         {
-            if (index < 0 || index > _starters.Count)
+            if (link == null)
             {
-                _starters.Add(link);
+                return;
+            }
+            var item = new DLGStandardItem(link);
+            if (index < 0 || index > _rootItems.Count)
+            {
+                _rootItems.Add(item);
             }
             else
             {
-                _starters.Insert(index, link);
+                _rootItems.Insert(index, item);
             }
         }
 
@@ -497,11 +746,11 @@ namespace HolocronToolset.Editors
         /// </summary>
         public DLGLink GetStarterAt(int index)
         {
-            if (index < 0 || index >= _starters.Count)
+            if (index < 0 || index >= _rootItems.Count)
             {
                 return null;
             }
-            return _starters[index];
+            return _rootItems[index].Link;
         }
 
         // Matching PyKotor implementation
@@ -511,7 +760,14 @@ namespace HolocronToolset.Editors
         /// </summary>
         public void RemoveStarter(DLGLink link)
         {
-            _starters.Remove(link);
+            for (int i = _rootItems.Count - 1; i >= 0; i--)
+            {
+                if (_rootItems[i].Link == link)
+                {
+                    _rootItems.RemoveAt(i);
+                    break;
+                }
+            }
         }
 
         // Matching PyKotor implementation
@@ -521,14 +777,14 @@ namespace HolocronToolset.Editors
         /// </summary>
         public void MoveStarter(int oldIndex, int newIndex)
         {
-            if (oldIndex < 0 || oldIndex >= _starters.Count || newIndex < 0 || newIndex >= _starters.Count)
+            if (oldIndex < 0 || oldIndex >= _rootItems.Count || newIndex < 0 || newIndex >= _rootItems.Count)
             {
                 return;
             }
 
-            var link = _starters[oldIndex];
-            _starters.RemoveAt(oldIndex);
-            _starters.Insert(newIndex, link);
+            var item = _rootItems[oldIndex];
+            _rootItems.RemoveAt(oldIndex);
+            _rootItems.Insert(newIndex, item);
         }
     }
 }
