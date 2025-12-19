@@ -2,7 +2,8 @@
 
 ## Function at 0x00470000 - LookupColumnLabels
 
-### Complete Hex Dump (256 bytes):
+### Complete Hex Dump (256 bytes)
+
 ```
 55 8B EC 33 C9 51 51 51 51 53 56 57 89 55 FC 8B F8 8B 45 FC E8 9B 50 F9 FF 
 33 C0 55 68 D0 00 47 00 64 FF 30 64 89 20 80 7F 18 01 74 18 6A 09 B9 E8 00 
@@ -15,7 +16,7 @@ F9 FF 8B F0 85 F6 7C 2F 46 33 DB 8D 55 F8 8B 47 10 8B 04 98 E8 78 8C F9 FF
 00 00 E8 59 4B F9 FF C3 E9 0B 45 F9 FF EB EB 8B C3 5F 5E 5B 8B E5 5D C3
 ```
 
-### Manual Disassembly:
+### Manual Disassembly
 
 ```assembly
 00470000: 55                    push ebp
@@ -102,11 +103,12 @@ F9 FF 8B F0 85 F6 7C 2F 46 33 DB 8D 55 F8 8B 47 10 8B 04 98 E8 78 8C F9 FF
 004700DF: C3                     ret
 ```
 
-### Delphi Object Layout (inferred from assembly):
+### Delphi Object Layout (inferred from assembly)
+
 - Offset 0x10: FColumns (TList of column names)
 - Offset 0x18: FLoaded (byte, 1 = loaded, 0 = not loaded)
 
-### Exact Delphi Implementation:
+### Exact Delphi Implementation
 
 ```delphi
 function TTwoDAFile.LookupColumnLabels(const ColumnName: string): Integer;
@@ -143,8 +145,10 @@ end;
 
 ## Function at 0x00480700 - Main 2DA Modification Handler
 
-### Hex Dump Analysis:
+### Hex Dump Analysis
+
 This function processes 2DA modifications from INI file sections. Key strings found:
+
 - "ExclusiveColumn" (0x004807F0)
 - "rowlabel" (0x004807FC)
 - "newrowlabel" (0x00480804)
@@ -152,14 +156,15 @@ This function processes 2DA modifications from INI file sections. Key strings fo
 - "****" (0x00480814)
 - "inc(" (0x00480818)
 
-### Assembly Pattern:
+### Assembly Pattern
+
 1. Reads modification parameters from INI section
 2. Checks for "ExclusiveColumn" parameter
 3. Handles row matching by label or column value
 4. Creates new rows or modifies existing ones
 5. Handles special functions: high(), inc(), ****
 
-## Completed Functions (1:1 Assembly Parity):
+## Completed Functions (1:1 Assembly Parity)
 
 1. ✅ 0x00470000: LookupColumnLabels - COMPLETE
 2. ✅ 0x004700FC: GetRowCount - COMPLETE
@@ -169,7 +174,7 @@ This function processes 2DA modifications from INI file sections. Key strings fo
 6. ✅ 0x00470302: SetRowLabel - COMPLETE
 7. ✅ 0x00470390: SetCellValue - COMPLETE
 
-## Remaining Functions to Disassemble:
+## Remaining Functions to Disassemble
 
 1. 0x00480700: Main 2DA Modification Handler
 2. 0x00481000+: TLK File Handler (LoadFile, SaveFile, AddEntry)
@@ -181,4 +186,3 @@ This function processes 2DA modifications from INI file sections. Key strings fo
 8. 0x004E0000+: UI Components and Event Handlers
 
 Each must be manually disassembled from hex dumps to achieve 1:1 parity.
-
