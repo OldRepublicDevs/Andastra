@@ -410,14 +410,118 @@ namespace HolocronToolset.Tests.Editors
             throw new NotImplementedException("TestNssEditorBookmarkAddAndNavigate: Bookmark add and navigate test not yet implemented");
         }
 
-        // TODO: STUB - Implement test_nss_editor_bookmark_remove (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:278-309)
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:278-309
         // Original: def test_nss_editor_bookmark_remove(qtbot, installation: HTInstallation, complex_nss_script: str): Test bookmark remove
         [Fact]
         public void TestNssEditorBookmarkRemove()
         {
-            // TODO: STUB - Implement bookmark remove test
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:278-309
-            throw new NotImplementedException("TestNssEditorBookmarkRemove: Bookmark remove test not yet implemented");
+            // Get installation if available (K2 preferred for NSS files)
+            string k2Path = Environment.GetEnvironmentVariable("K2_PATH");
+            if (string.IsNullOrEmpty(k2Path))
+            {
+                k2Path = @"C:\Program Files (x86)\Steam\steamapps\common\Knights of the Old Republic II";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k2Path) && System.IO.File.Exists(System.IO.Path.Combine(k2Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k2Path, "Test Installation", tsl: true);
+            }
+            else
+            {
+                // Fallback to K1
+                string k1Path = Environment.GetEnvironmentVariable("K1_PATH");
+                if (string.IsNullOrEmpty(k1Path))
+                {
+                    k1Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor";
+                }
+
+                if (System.IO.Directory.Exists(k1Path) && System.IO.File.Exists(System.IO.Path.Combine(k1Path, "chitin.key")))
+                {
+                    installation = new HTInstallation(k1Path, "Test Installation", tsl: false);
+                }
+            }
+
+            // Complex NSS script matching Python fixture
+            string complexNssScript = @"// Global variable
+int g_globalVar = 10;
+
+// Main function
+void main() {
+    int localVar = 20;
+    
+    if (localVar > 10) {
+        SendMessageToPC(GetFirstPC(), ""Condition met"");
+    }
+    
+    for (int i = 0; i < 5; i++) {
+        localVar += i;
+    }
+}
+
+// Helper function
+void helper() {
+    int helperVar = 30;
+}";
+
+            var editor = new NSSEditor(null, installation);
+            editor.New();
+
+            // Set up multi-line script
+            editor.Load("test_script.nss", "test_script", ResourceType.NSS, Encoding.UTF8.GetBytes(complexNssScript));
+
+            // Add multiple bookmarks at different lines
+            int[] bookmarkLines = { 1, 3, 5 };
+            foreach (int lineNum in bookmarkLines)
+            {
+                // Set cursor to the specified line
+                editor.GotoLine(lineNum);
+                
+                // Add bookmark
+                editor.AddBookmark();
+            }
+
+            // Verify bookmarks exist
+            var bookmarkTree = editor.BookmarkTree;
+            bookmarkTree.Should().NotBeNull("BookmarkTree should be initialized");
+
+            var itemsList = bookmarkTree.Items as System.Collections.Generic.IEnumerable<Avalonia.Controls.TreeViewItem> ?? new System.Collections.Generic.List<Avalonia.Controls.TreeViewItem>();
+            int initialCount = itemsList.Count();
+            initialCount.Should().BeGreaterOrEqualTo(3, "At least 3 bookmarks should be added");
+
+            // Remove bookmarks one by one
+            var itemsListMutable = itemsList.ToList();
+            while (itemsListMutable.Count > 0)
+            {
+                var item = itemsListMutable[0];
+                if (item != null)
+                {
+                    // Select the item
+                    bookmarkTree.SelectedItem = item;
+                    
+                    int countBefore = itemsListMutable.Count;
+                    
+                    // Delete bookmark
+                    editor.DeleteBookmark();
+                    
+                    // Verify count decreased
+                    var itemsListAfter = bookmarkTree.Items as System.Collections.Generic.IEnumerable<Avalonia.Controls.TreeViewItem> ?? new System.Collections.Generic.List<Avalonia.Controls.TreeViewItem>();
+                    int countAfter = itemsListAfter.Count();
+                    countAfter.Should().Be(countBefore - 1, $"Bookmark count should decrease from {countBefore} to {countBefore - 1}");
+                    
+                    // Update mutable list for next iteration
+                    itemsListMutable = itemsListAfter.ToList();
+                }
+                else
+                {
+                    break;
+                }
+            }
+
+            // Verify all bookmarks are removed
+            var finalItemsList = bookmarkTree.Items as System.Collections.Generic.IEnumerable<Avalonia.Controls.TreeViewItem> ?? new System.Collections.Generic.List<Avalonia.Controls.TreeViewItem>();
+            int finalCount = finalItemsList.Count();
+            finalCount.Should().Be(0, "All bookmarks should be removed");
         }
 
         // TODO: STUB - Implement test_nss_editor_bookmark_next_previous (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:311-350)

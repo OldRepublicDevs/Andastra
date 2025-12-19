@@ -495,9 +495,11 @@ namespace Andastra.Parsing.Resource
 
         /// <summary>
         /// Automatically saves a resource object to bytes based on its type.
+        /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/resource_auto.py:resource_to_bytes
+        /// Original: def resource_to_bytes(resource: ...) -> bytes:
         /// </summary>
         /// <param name="resource">The resource object.</param>
-        /// <param name="resourceType">The resource type.</param>
+        /// <param name="resourceType">The resource type (used for validation and format-specific handling).</param>
         /// <returns>The resource data as bytes, or null if saving failed.</returns>
         [CanBeNull]
         public static byte[] SaveResource(object resource, ResourceType resourceType)
@@ -509,8 +511,13 @@ namespace Andastra.Parsing.Resource
 
             try
             {
-                // TODO: PLACEHOLDER - Placeholder - full implementation would have save logic for each type
-                // TODO: STUB - This would require implementing write methods for each format
+                // Delegate to ResourceToBytes which handles all resource types by checking the object type
+                // This matches the PyKotor implementation where resource_to_bytes handles all formats
+                return ResourceToBytes(resource);
+            }
+            catch (ArgumentException)
+            {
+                // ResourceToBytes throws ArgumentException for unsupported types
                 return null;
             }
             catch

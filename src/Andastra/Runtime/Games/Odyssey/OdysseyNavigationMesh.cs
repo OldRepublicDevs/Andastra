@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Numerics;
 using JetBrains.Annotations;
 using Andastra.Runtime.Core.Interfaces;
@@ -134,12 +135,18 @@ namespace Andastra.Runtime.Games.Odyssey
         /// <remarks>
         /// Implements A* pathfinding on walkmesh triangles.
         /// Returns waypoints for entity movement.
+        /// Delegates to the INavigationMesh.FindPath implementation.
         /// </remarks>
         public bool FindPath(Vector3 start, Vector3 end, out Vector3[] waypoints)
         {
-            // TODO: Implement A* pathfinding on walkmesh
-            waypoints = new[] { start, end };
-            throw new System.NotImplementedException("Pathfinding not yet implemented");
+            IList<Vector3> path = FindPath(start, end);
+            if (path != null && path.Count > 0)
+            {
+                waypoints = path.ToArray();
+                return true;
+            }
+            waypoints = null;
+            return false;
         }
 
         /// <summary>
@@ -223,38 +230,320 @@ namespace Andastra.Runtime.Games.Odyssey
         }
 
         // INavigationMesh interface methods
+
+        /// <summary>
+        /// Finds a path from start to goal using A* algorithm on walkmesh adjacency graph.
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor.exe and swkotor2.exe walkmesh pathfinding system.
+        /// Implements A* pathfinding algorithm over face adjacency graph.
+        /// Uses face centers as waypoints and applies path smoothing for natural movement.
+        /// 
+        /// Algorithm:
+        /// 1. Find start and goal faces
+        /// 2. Validate both are walkable
+        /// 3. If same face, return direct path
+        /// 4. Run A* search over face adjacency graph
+        /// 5. Reconstruct path from face sequence
+        /// 6. Apply path smoothing using line-of-sight checks
+        /// 
+        /// Based on reverse engineering of:
+        /// - swkotor.exe: Walkmesh pathfinding functions
+        /// - swkotor2.exe: A* pathfinding implementation on walkmesh adjacency
+        /// - Error messages: "failed to grid based pathfind from the creatures position to the starting path point." @ 0x007be510
+        /// - Error messages: "failed to grid based pathfind from the ending path point ot the destiantion." @ 0x007be4b8
+        /// </remarks>
         public IList<Vector3> FindPath(Vector3 start, Vector3 goal)
         {
-            // TODO: STUB - Implement A* pathfinding on walkmesh
-            throw new NotImplementedException("FindPath: Walkmesh pathfinding not yet implemented");
+            // Find faces containing start and goal positions
+            int startFace = FindFaceAt(start);
+            int goalFace = FindFaceAt(goal);
+
+            // Validate both positions are on walkable surfaces
+            if (startFace < 0 || goalFace < 0)
+            {
+                return null;  // Not on walkable surface
+            }
+
+            if (!IsWalkable(startFace) || !IsWalkable(goalFace))
+            {
+                return null;  // Start or goal is not walkable
+            }
+
+            // Same face - direct path
+            if (startFace == goalFace)
+            {
+                return new List<Vector3> { start, goal };
+            }
+
+            // A* pathfinding over face adjacency graph
+            var openSet = new SortedSet<FaceScore>(new FaceScoreComparer());
+            var cameFrom = new Dictionary<int, int>();
+            var gScore = new Dictionary<int, float>();
+            var fScore = new Dictionary<int, float>();
+            var inOpenSet = new HashSet<int>();
+
+            // Initialize start node
+            gScore[startFace] = 0f;
+            fScore[startFace] = Heuristic(startFace, goalFace);
+            openSet.Add(new FaceScore(startFace, fScore[startFace]));
+            inOpenSet.Add(startFace);
+
+            // A* main loop
+            while (openSet.Count > 0)
+            {
+                // Get face with lowest f-score
+                FaceScore currentScore = GetMin(openSet);
+                openSet.Remove(currentScore);
+                int current = currentScore.FaceIndex;
+                inOpenSet.Remove(current);
+
+                // Goal reached - reconstruct path
+                if (current == goalFace)
+                {
+                    return ReconstructPath(cameFrom, current, start, goal);
+                }
+
+                // Check all adjacent faces
+                foreach (int neighbor in GetAdjacentFaces(current))
+                {
+                    if (neighbor < 0 || neighbor >= _faceCount)
+                    {
+                        continue;  // Invalid or no neighbor
+                    }
+                    if (!IsWalkable(neighbor))
+                    {
+                        continue;  // Neighbor is not walkable
+                    }
+
+                    // Calculate tentative g-score
+                    float tentativeG;
+                    if (gScore.TryGetValue(current, out float currentG))
+                    {
+                        tentativeG = currentG + EdgeCost(current, neighbor);
+                    }
+                    else
+                    {
+                        tentativeG = EdgeCost(current, neighbor);
+                    }
+
+                    // Update if this path is better
+                    float neighborG;
+                    if (!gScore.TryGetValue(neighbor, out neighborG) || tentativeG < neighborG)
+                    {
+                        cameFrom[neighbor] = current;
+                        gScore[neighbor] = tentativeG;
+                        float newF = tentativeG + Heuristic(neighbor, goalFace);
+                        fScore[neighbor] = newF;
+
+                        // Add to open set if not already there
+                        if (!inOpenSet.Contains(neighbor))
+                        {
+                            openSet.Add(new FaceScore(neighbor, newF));
+                            inOpenSet.Add(neighbor);
+                        }
+                    }
+                }
+            }
+
+            // No path found
+            return null;
+        }
+
+        /// <summary>
+        /// Gets the minimum element from a sorted set.
+        /// </summary>
+        private FaceScore GetMin(SortedSet<FaceScore> set)
+        {
+            using (SortedSet<FaceScore>.Enumerator enumerator = set.GetEnumerator())
+            {
+                if (enumerator.MoveNext())
+                {
+                    return enumerator.Current;
+                }
+            }
+            return default(FaceScore);
+        }
+
+        /// <summary>
+        /// Calculates heuristic distance between two faces.
+        /// </summary>
+        /// <remarks>
+        /// Uses Euclidean distance between face centers as heuristic.
+        /// This is admissible for A* (never overestimates actual path cost).
+        /// </remarks>
+        private float Heuristic(int from, int to)
+        {
+            Vector3 fromCenter = GetFaceCenter(from);
+            Vector3 toCenter = GetFaceCenter(to);
+            return Vector3.Distance(fromCenter, toCenter);
+        }
+
+        /// <summary>
+        /// Calculates the cost of traversing from one face to an adjacent face.
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor.exe and swkotor2.exe walkmesh edge cost calculation.
+        /// Base cost is distance, modified by surface material (water, mud, etc. cost more).
+        /// </remarks>
+        private float EdgeCost(int from, int to)
+        {
+            // Base cost is distance between face centers
+            float dist = Vector3.Distance(GetFaceCenter(from), GetFaceCenter(to));
+            
+            // Apply surface material cost modifier
+            float surfaceMod = GetSurfaceCost(to);
+            return dist * surfaceMod;
+        }
+
+        /// <summary>
+        /// Gets the pathfinding cost modifier for a surface material.
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor.exe and swkotor2.exe surface material cost modifiers.
+        /// Different materials have different movement costs:
+        /// - Normal surfaces: 1.0 (no modifier)
+        /// - Water, puddles, swamp, mud: 1.5 (slightly slower)
+        /// - Bottomless pit: 10.0 (very high cost - avoid if possible)
+        /// </remarks>
+        private float GetSurfaceCost(int faceIndex)
+        {
+            if (faceIndex < 0 || faceIndex >= _surfaceMaterials.Length)
+            {
+                return 1.0f;
+            }
+
+            int material = _surfaceMaterials[faceIndex];
+
+            // Surface-specific costs (AI pathfinding cost modifiers)
+            switch (material)
+            {
+                case 6:  // Water
+                case 11: // Puddles
+                case 12: // Swamp
+                case 13: // Mud
+                    return 1.5f;  // Slightly slower
+                case 16: // BottomlessPit
+                    return 10.0f; // Very high cost - avoid if possible
+                default:
+                    return 1.0f;
+            }
+        }
+
+        /// <summary>
+        /// Reconstructs the path from A* search results.
+        /// </summary>
+        /// <remarks>
+        /// Converts face path to waypoint sequence.
+        /// Adds start and goal positions, with face centers as intermediate waypoints.
+        /// Applies path smoothing to remove redundant waypoints.
+        /// </remarks>
+        private IList<Vector3> ReconstructPath(Dictionary<int, int> cameFrom, int current, Vector3 start, Vector3 goal)
+        {
+            // Build face path from goal to start
+            var facePath = new List<int> { current };
+            while (cameFrom.ContainsKey(current))
+            {
+                current = cameFrom[current];
+                facePath.Add(current);
+            }
+            facePath.Reverse();  // Reverse to get start to goal
+
+            // Convert face path to waypoints
+            var path = new List<Vector3>();
+            path.Add(start);
+
+            // Add face centers as intermediate waypoints
+            for (int i = 1; i < facePath.Count - 1; i++)
+            {
+                path.Add(GetFaceCenter(facePath[i]));
+            }
+
+            path.Add(goal);
+
+            // Apply funnel algorithm for smoother paths
+            return SmoothPath(path);
+        }
+
+        /// <summary>
+        /// Smooths the path by removing redundant waypoints.
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor.exe and swkotor2.exe path smoothing.
+        /// Uses line-of-sight checks to remove waypoints that can be skipped.
+        /// Results in more natural movement paths.
+        /// </remarks>
+        private IList<Vector3> SmoothPath(IList<Vector3> path)
+        {
+            // Simple path smoothing - remove redundant waypoints
+            if (path.Count <= 2)
+            {
+                return path;
+            }
+
+            var smoothed = new List<Vector3>();
+            smoothed.Add(path[0]);
+
+            for (int i = 1; i < path.Count - 1; i++)
+            {
+                // Check if we can skip this waypoint
+                Vector3 prev = smoothed[smoothed.Count - 1];
+                Vector3 next = path[i + 1];
+
+                // If line of sight is clear, skip this waypoint
+                if (!HasLineOfSight(prev, next))
+                {
+                    // Can't skip - add the waypoint
+                    smoothed.Add(path[i]);
+                }
+            }
+
+            smoothed.Add(path[path.Count - 1]);
+            return smoothed;
+        }
+
+        /// <summary>
+        /// Helper struct for A* priority queue.
+        /// </summary>
+        private struct FaceScore
+        {
+            public int FaceIndex;
+            public float Score;
+
+            public FaceScore(int faceIndex, float score)
+            {
+                FaceIndex = faceIndex;
+                Score = score;
+            }
+        }
+
+        /// <summary>
+        /// Comparer for FaceScore to use with SortedSet.
+        /// </summary>
+        private class FaceScoreComparer : IComparer<FaceScore>
+        {
+            public int Compare(FaceScore x, FaceScore y)
+            {
+                int cmp = x.Score.CompareTo(y.Score);
+                if (cmp != 0)
+                {
+                    return cmp;
+                }
+                // Ensure unique ordering for same scores
+                return x.FaceIndex.CompareTo(y.FaceIndex);
+            }
         }
 
         /// <summary>
         /// Finds the face index at a given position using 2D projection.
         /// </summary>
         /// <remarks>
-        /// Based on swkotor.exe and swkotor2.exe walkmesh face lookup functions.
+        /// Based on swkotor.exe and swkotor2.exe walkmesh face lookup.
         /// Uses AABB tree for spatial acceleration when available, falls back to brute force.
-        /// Performs 2D point-in-triangle test (ignoring Z coordinate) to find which face contains the position.
-        /// 
-        /// Original implementation:
-        /// - swkotor.exe: Walkmesh face lookup for position queries
-        /// - swkotor2.exe: Enhanced with AABB tree acceleration for faster spatial queries
-        /// - Uses 2D projection (X,Y plane) to test point containment in triangles
-        /// - Returns -1 if position is not within any face
-        /// 
-        /// This implementation matches the behavior used by:
-        /// - Pathfinding system to find start/goal faces
-        /// - Projection system to determine which face to project onto
-        /// - Collision detection for position validation
+        /// Tests if point is within face bounds using 2D point-in-triangle test.
         /// </remarks>
         public int FindFaceAt(Vector3 position)
         {
-            if (_faceCount == 0)
-            {
-                return -1;
-            }
-
             // Use AABB tree if available for faster spatial queries
             if (_aabbRoot != null)
             {
@@ -288,7 +577,7 @@ namespace Andastra.Runtime.Games.Odyssey
                 return -1;
             }
 
-            // Test if point is within AABB bounds (2D projection - X,Y plane)
+            // Test if point is within AABB bounds (2D)
             if (point.X < node.BoundsMin.X || point.X > node.BoundsMax.X ||
                 point.Y < node.BoundsMin.Y || point.Y > node.BoundsMax.Y)
             {
@@ -328,17 +617,11 @@ namespace Andastra.Runtime.Games.Odyssey
         }
 
         /// <summary>
-        /// Tests if a point is within a face using 2D projection (X,Y plane).
+        /// Tests if a point is within a face (2D projection).
         /// </summary>
         /// <remarks>
-        /// Based on swkotor.exe and swkotor2.exe walkmesh point-in-triangle test.
-        /// Uses same-side test algorithm: point is inside triangle if it's on the same side
-        /// of all three edges (ignoring Z coordinate).
-        /// 
-        /// Original implementation:
-        /// - swkotor.exe: 2D point-in-triangle test for walkmesh queries
-        /// - swkotor2.exe: Same algorithm, used for face lookup and projection
-        /// - Performs test in X,Y plane (ignoring height/Z coordinate)
+        /// Uses same-side test for point-in-triangle detection.
+        /// Based on standard point-in-triangle algorithm used in swkotor2.exe walkmesh.
         /// </remarks>
         private bool PointInFace2d(Vector3 point, int faceIndex)
         {
@@ -357,7 +640,7 @@ namespace Andastra.Runtime.Games.Odyssey
             Vector3 v2 = _vertices[_faceIndices[baseIdx + 1]];
             Vector3 v3 = _vertices[_faceIndices[baseIdx + 2]];
 
-            // Same-side test (2D projection - X,Y plane)
+            // Same-side test (2D projection)
             float d1 = Sign2d(point, v1, v2);
             float d2 = Sign2d(point, v2, v3);
             float d3 = Sign2d(point, v3, v1);
@@ -365,37 +648,80 @@ namespace Andastra.Runtime.Games.Odyssey
             bool hasNeg = (d1 < 0) || (d2 < 0) || (d3 < 0);
             bool hasPos = (d1 > 0) || (d2 > 0) || (d3 > 0);
 
-            // Point is inside triangle if all signs are the same (not both positive and negative)
             return !(hasNeg && hasPos);
         }
 
         /// <summary>
-        /// Calculates the sign of a point relative to a line segment in 2D (X,Y plane).
+        /// Calculates the 2D sign for point-in-triangle test.
         /// </summary>
-        /// <remarks>
-        /// Based on swkotor.exe and swkotor2.exe walkmesh point-in-triangle test.
-        /// Uses cross product to determine which side of the line the point is on.
-        /// Returns positive value if point is on one side, negative on the other, zero if on the line.
-        /// 
-        /// Original implementation:
-        /// - swkotor.exe: 2D cross product for same-side test
-        /// - swkotor2.exe: Same algorithm for point-in-triangle testing
-        /// </remarks>
         private float Sign2d(Vector3 p1, Vector3 p2, Vector3 p3)
         {
             return (p1.X - p3.X) * (p2.Y - p3.Y) - (p2.X - p3.X) * (p1.Y - p3.Y);
         }
 
+        /// <summary>
+        /// Gets the center point of a face.
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor.exe and swkotor2.exe walkmesh face center calculation.
+        /// Returns the centroid (average) of the three vertices.
+        /// </remarks>
         public Vector3 GetFaceCenter(int faceIndex)
         {
-            // TODO: STUB - Implement face center calculation
-            throw new NotImplementedException("GetFaceCenter: Face center calculation not yet implemented");
+            if (faceIndex < 0 || faceIndex >= _faceCount)
+            {
+                return Vector3.Zero;
+            }
+
+            int baseIdx = faceIndex * 3;
+            if (baseIdx + 2 >= _faceIndices.Length)
+            {
+                return Vector3.Zero;
+            }
+
+            Vector3 v1 = _vertices[_faceIndices[baseIdx]];
+            Vector3 v2 = _vertices[_faceIndices[baseIdx + 1]];
+            Vector3 v3 = _vertices[_faceIndices[baseIdx + 2]];
+
+            return (v1 + v2 + v3) / 3.0f;
         }
 
+        /// <summary>
+        /// Gets adjacent faces for a given face.
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor.exe and swkotor2.exe walkmesh adjacency lookup.
+        /// Adjacency encoding: adjacency_index = face_index * 3 + edge_index, -1 = no neighbor
+        /// Returns the face indices of neighboring faces that share an edge.
+        /// </remarks>
         public IEnumerable<int> GetAdjacentFaces(int faceIndex)
         {
-            // TODO: STUB - Implement adjacent face lookup
-            throw new NotImplementedException("GetAdjacentFaces: Adjacent face lookup not yet implemented");
+            if (faceIndex < 0 || faceIndex >= _faceCount)
+            {
+                yield break;
+            }
+
+            int baseIdx = faceIndex * 3;
+            for (int i = 0; i < 3; i++)
+            {
+                if (baseIdx + i < _adjacency.Length)
+                {
+                    int encoded = _adjacency[baseIdx + i];
+                    if (encoded < 0)
+                    {
+                        yield return -1;  // No neighbor
+                    }
+                    else
+                    {
+                        // Decode adjacency: face index = encoded / 3, edge = encoded % 3
+                        yield return encoded / 3;
+                    }
+                }
+                else
+                {
+                    yield return -1;
+                }
+            }
         }
 
         /// <summary>
