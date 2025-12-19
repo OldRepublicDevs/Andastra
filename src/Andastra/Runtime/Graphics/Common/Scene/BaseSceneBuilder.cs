@@ -30,7 +30,9 @@ namespace Andastra.Runtime.Graphics.Common.Scene
     ///
     /// Inheritance Structure:
     /// - BaseSceneBuilder (this class) - Common functionality only
-    ///   - OdysseySceneBuilder : BaseSceneBuilder (swkotor.exe, swkotor2.exe) - LYT/VIS files
+    ///   - Odyssey (swkotor.exe, swkotor2.exe) - LYT/VIS files:
+    ///     - MonoGame: OdysseySceneBuilder : BaseSceneBuilder (Runtime.MonoGame.Scene)
+    ///     - Stride: StrideOdysseySceneBuilder : BaseSceneBuilder (Runtime.Stride.Scene)
     ///   - AuroraSceneBuilder : BaseSceneBuilder (nwmain.exe) - ARE tile-based layout
     ///   - EclipseSceneBuilder : BaseSceneBuilder (daorigins.exe, DragonAge2.exe, MassEffect.exe, MassEffect2.exe) - Advanced ARE features
     ///   - InfinitySceneBuilder : BaseSceneBuilder (Baldur's Gate, Icewind Dale, Planescape: Torment) - ARE/WED files
