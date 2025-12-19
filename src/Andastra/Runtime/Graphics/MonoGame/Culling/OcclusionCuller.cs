@@ -57,6 +57,12 @@ namespace Andastra.Runtime.MonoGame.Culling
         private int _hiZBufferDataMipLevel;
         private bool _hiZBufferDataValid;
 
+        // CPU-side mip level cache for proper max depth calculations
+        // Since MonoGame doesn't support writing to specific mip levels,
+        // we maintain a CPU-side cache of all mip levels with proper max depth values
+        private float[][] _mipLevelCache;
+        private bool _mipLevelCacheValid;
+
         // Statistics
         private OcclusionStats _stats;
 
@@ -164,8 +170,10 @@ namespace Andastra.Runtime.MonoGame.Culling
 
                 // Generate mipmap levels by downsampling with max depth operation
                 // Each mip level stores the maximum depth from 2x2 region of previous level
-                // TODO: SIMPLIFIED - Note: Point sampling provides a simplified approximation. For accurate Hi-Z,
-                // a custom shader performing max operations on 2x2 regions would be required.
+                // Uses CPU-side max depth calculation for accurate Hi-Z generation
+                // Note: MonoGame doesn't support rendering directly to specific mip levels,
+                // so we maintain a CPU-side cache of mip levels with proper max depth values
+                _mipLevelCacheValid = false;
                 int maxMipLevels = _hiZBuffer != null ? _hiZBuffer.LevelCount : 1;
                 for (int mip = 1; mip < maxMipLevels; mip++)
                 {
@@ -174,34 +182,8 @@ namespace Andastra.Runtime.MonoGame.Culling
                     int prevMipWidth = Math.Max(1, _width >> (mip - 1));
                     int prevMipHeight = Math.Max(1, _height >> (mip - 1));
 
-                    // Create temporary render target for this mip level
-                    using (RenderTarget2D mipTarget = new RenderTarget2D(
-                        _graphicsDevice,
-                        mipWidth,
-                        mipHeight,
-                        false,
-                        SurfaceFormat.Single,
-                        DepthFormat.None,
-                        0,
-                        RenderTargetUsage.DiscardContents))
-                    {
-                        _graphicsDevice.SetRenderTarget(mipTarget);
-                        _spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Opaque, SamplerState.PointClamp, DepthStencilState.None, RasterizerState.CullNone);
-                        // Draw previous mip level scaled down (point sampling for approximation)
-                        _spriteBatch.Draw(_hiZBuffer, new Rectangle(0, 0, mipWidth, mipHeight),
-                            new Rectangle(0, 0, prevMipWidth, prevMipHeight), Color.White);
-                        _spriteBatch.End();
-
-                        // Copy back to Hi-Z buffer mip level
-                        // Note: MonoGame doesn't directly support rendering to specific mip levels,
-                        // TODO: HACK - so we use a workaround by rendering to a temporary target and copying
-                        // In a full implementation, this would use compute shaders or custom effects
-                        // with proper max depth operations
-                        _graphicsDevice.SetRenderTarget(_hiZBuffer);
-                        _spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Opaque, SamplerState.PointClamp, DepthStencilState.None, RasterizerState.CullNone);
-                        _spriteBatch.Draw(mipTarget, new Rectangle(0, 0, mipWidth, mipHeight), Color.White);
-                        _spriteBatch.End();
-                    }
+                    // Generate mip level using proper max depth calculation
+                    GenerateMipLevelWithMaxDepth(mip, mipWidth, mipHeight, prevMipWidth, prevMipHeight);
                 }
             }
             finally
@@ -466,58 +448,69 @@ namespace Andastra.Runtime.MonoGame.Culling
                     _hiZBufferData = new float[pixelCount];
                 }
 
-                // Read texture data from GPU
-                // Note: MonoGame's GetData reads from mip level 0 by default
-                // For other mip levels, we need to read the full texture and manually downsample
-                // or use a render target copy approach
-                // For now, we'll read from mip level 0 and manually sample at the correct resolution
-                try
+                // Use CPU-side mip level cache if available (contains proper max depth values)
+                if (_mipLevelCacheValid && _mipLevelCache != null && mipLevel < _mipLevelCache.Length && _mipLevelCache[mipLevel] != null)
                 {
-                    // Read full resolution texture (mip 0)
-                    float[] fullResData = new float[_width * _height];
-                    _hiZBuffer.GetData(fullResData);
-
-                    // Downsample to mip level resolution by taking maximum of 2x2 regions
-                    for (int y = 0; y < mipHeight; y++)
-                    {
-                        for (int x = 0; x < mipWidth; x++)
-                        {
-                            // Calculate source region in full resolution
-                            int srcX = x << mipLevel;
-                            int srcY = y << mipLevel;
-                            int srcWidth = Math.Min(1 << mipLevel, _width - srcX);
-                            int srcHeight = Math.Min(1 << mipLevel, _height - srcY);
-
-                            // Find maximum depth in source region
-                            float maxDepth = 0.0f;
-                            for (int sy = 0; sy < srcHeight; sy++)
-                            {
-                                for (int sx = 0; sx < srcWidth; sx++)
-                                {
-                                    int srcIndex = (srcY + sy) * _width + (srcX + sx);
-                                    if (srcIndex < fullResData.Length)
-                                    {
-                                        maxDepth = Math.Max(maxDepth, fullResData[srcIndex]);
-                                    }
-                                }
-                            }
-
-                            // Store in mip level buffer
-                            int mipIndex = y * mipWidth + x;
-                            if (mipIndex < _hiZBufferData.Length)
-                            {
-                                _hiZBufferData[mipIndex] = maxDepth;
-                            }
-                        }
-                    }
-
+                    // Copy from cache
+                    float[] cachedData = _mipLevelCache[mipLevel];
+                    int copyCount = Math.Min(cachedData.Length, _hiZBufferData.Length);
+                    Array.Copy(cachedData, _hiZBufferData, copyCount);
                     _hiZBufferDataMipLevel = mipLevel;
                     _hiZBufferDataValid = true;
                 }
-                catch
+                else
                 {
-                    // If readback fails (e.g., render target not readable), return 0 (assume visible)
-                    return 0.0f;
+                    // Fallback: Read from GPU and manually downsample
+                    // Note: MonoGame's GetData reads from mip level 0 by default
+                    // For other mip levels, we need to read the full texture and manually downsample
+                    try
+                    {
+                        // Read full resolution texture (mip 0)
+                        float[] fullResData = new float[_width * _height];
+                        _hiZBuffer.GetData(fullResData);
+
+                        // Downsample to mip level resolution by taking maximum of 2x2 regions
+                        for (int y = 0; y < mipHeight; y++)
+                        {
+                            for (int x = 0; x < mipWidth; x++)
+                            {
+                                // Calculate source region in full resolution
+                                int srcX = x << mipLevel;
+                                int srcY = y << mipLevel;
+                                int srcWidth = Math.Min(1 << mipLevel, _width - srcX);
+                                int srcHeight = Math.Min(1 << mipLevel, _height - srcY);
+
+                                // Find maximum depth in source region
+                                float maxDepth = 0.0f;
+                                for (int sy = 0; sy < srcHeight; sy++)
+                                {
+                                    for (int sx = 0; sx < srcWidth; sx++)
+                                    {
+                                        int srcIndex = (srcY + sy) * _width + (srcX + sx);
+                                        if (srcIndex < fullResData.Length)
+                                        {
+                                            maxDepth = Math.Max(maxDepth, fullResData[srcIndex]);
+                                        }
+                                    }
+                                }
+
+                                // Store in mip level buffer
+                                int mipIndex = y * mipWidth + x;
+                                if (mipIndex < _hiZBufferData.Length)
+                                {
+                                    _hiZBufferData[mipIndex] = maxDepth;
+                                }
+                            }
+                        }
+
+                        _hiZBufferDataMipLevel = mipLevel;
+                        _hiZBufferDataValid = true;
+                    }
+                    catch
+                    {
+                        // If readback fails (e.g., render target not readable), return 0 (assume visible)
+                        return 0.0f;
+                    }
                 }
             }
 
@@ -550,6 +543,7 @@ namespace Andastra.Runtime.MonoGame.Culling
             _projectionMatrix = projectionMatrix;
             _matricesValid = true;
             _hiZBufferDataValid = false; // Invalidate cached Hi-Z data when matrices change
+            _mipLevelCacheValid = false; // Invalidate mip level cache when matrices change
         }
 
         /// <summary>
@@ -608,6 +602,76 @@ namespace Andastra.Runtime.MonoGame.Culling
 
             // Recreate buffer with new dimensions (mip levels calculated dynamically)
             CreateHiZBuffer();
+
+            // Invalidate mip level cache when resizing
+            _mipLevelCache = null;
+            _mipLevelCacheValid = false;
+        }
+
+        /// <summary>
+        /// Generates all mip levels by calculating maximum depth from 2x2 regions.
+        /// Uses CPU-side calculation for accurate max depth operations.
+        /// Stores results in CPU-side cache since MonoGame doesn't support writing to specific mip levels.
+        /// </summary>
+        private void GenerateMipLevelWithMaxDepth(int mipLevel, int mipWidth, int mipHeight, int prevMipWidth, int prevMipHeight)
+        {
+            // Initialize mip level cache if needed
+            if (_mipLevelCache == null)
+            {
+                int maxMipLevels = _hiZBuffer != null ? _hiZBuffer.LevelCount : 1;
+                _mipLevelCache = new float[maxMipLevels][];
+
+                // Read mip level 0 (full resolution) from Hi-Z buffer
+                float[] mip0Data = new float[_width * _height];
+                _hiZBuffer.GetData(mip0Data);
+                _mipLevelCache[0] = mip0Data;
+            }
+
+            // Get previous mip level data from cache
+            float[] prevMipData = _mipLevelCache[mipLevel - 1];
+            if (prevMipData == null)
+            {
+                // Previous mip level not cached, need to generate it first
+                // This shouldn't happen if we generate mip levels in order, but handle it gracefully
+                return;
+            }
+
+            // Calculate max depth values for current mip level from previous mip level
+            // Each texel in current mip level is the maximum of a 2x2 region in previous level
+            float[] mipData = new float[mipWidth * mipHeight];
+            for (int y = 0; y < mipHeight; y++)
+            {
+                for (int x = 0; x < mipWidth; x++)
+                {
+                    // Calculate source region in previous mip level (2x2 region)
+                    int srcX = x << 1;
+                    int srcY = y << 1;
+
+                    // Sample 2x2 region and find maximum depth
+                    float maxDepth = 0.0f;
+                    for (int sy = 0; sy < 2 && (srcY + sy) < prevMipHeight; sy++)
+                    {
+                        for (int sx = 0; sx < 2 && (srcX + sx) < prevMipWidth; sx++)
+                        {
+                            int srcIndex = (srcY + sy) * prevMipWidth + (srcX + sx);
+                            if (srcIndex >= 0 && srcIndex < prevMipData.Length)
+                            {
+                                maxDepth = Math.Max(maxDepth, prevMipData[srcIndex]);
+                            }
+                        }
+                    }
+
+                    int mipIndex = y * mipWidth + x;
+                    if (mipIndex < mipData.Length)
+                    {
+                        mipData[mipIndex] = maxDepth;
+                    }
+                }
+            }
+
+            // Store in cache for future use
+            _mipLevelCache[mipLevel] = mipData;
+            _mipLevelCacheValid = true;
         }
 
         private void CreateHiZBuffer()
