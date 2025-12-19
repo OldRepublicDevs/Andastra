@@ -254,11 +254,19 @@ namespace HolocronToolset.Editors
                     {
                         // Attempt decompilation using DeNCS (matching Python _decompile_ncs_dencs)
                         string source = DecompileNcsDencs(data);
-                        if (_codeEdit != null)
+                        if (string.IsNullOrEmpty(source))
                         {
-                            _codeEdit.SetPlainText(source);
+                            // Decompilation failed - show error dialog (matching Python ValueError handling)
+                            errorOccurred = HandleExceptionDebugMode("Decompilation/Download Failed", new InvalidOperationException("Decompilation failed: decompile_ncs returned None or empty string"));
                         }
-                        _isDecompiled = true;
+                        else
+                        {
+                            if (_codeEdit != null)
+                            {
+                                _codeEdit.SetPlainText(source);
+                            }
+                            _isDecompiled = true;
+                        }
                     }
                     else
                     {
@@ -285,9 +293,26 @@ namespace HolocronToolset.Editors
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:2196-2246
         // Original: def _decompile_ncs_dencs(self, ncs_data: bytes) -> str:
+        /// <summary>
+        /// Decompiles NCS bytecode using the DeNCS decompiler.
+        /// Matches PyKotor implementation which loads nwscript.nss from override folder for ActionsData,
+        /// creates ActionsData from it (or uses empty ActionsData if not found), and decompiles using decompile_ncs.
+        /// </summary>
+        /// <param name="ncsData">The bytes of the compiled NCS script.</param>
+        /// <returns>The decompiled NSS source code string, or empty string if decompilation fails.</returns>
         private string DecompileNcsDencs(byte[] ncsData)
         {
-            // Use ScriptDecompiler to decompile NCS
+            if (ncsData == null || ncsData.Length == 0)
+            {
+                // Return empty string for invalid input (matching TODO requirement)
+                return "";
+            }
+
+            // ScriptDecompiler.HtDecompileScript already implements the full PyKotor logic:
+            // 1. Tries to load nwscript.nss from override folder (installationPath/override/nwscript.nss)
+            // 2. Creates FileDecompiler with nwscript.nss if found, or without if not found
+            // 3. Decompiles using DecompileNcsObject with proper ActionsData handling
+            // 4. Returns decompiled source or throws on failure
             if (_installation != null)
             {
                 try
@@ -297,19 +322,28 @@ namespace HolocronToolset.Editors
                     {
                         return decompiled;
                     }
+                    // If decompilation returned null or empty, return empty string (matching TODO requirement)
+                    // Python implementation raises ValueError, but TODO explicitly requests returning empty string
+                    System.Console.WriteLine("Decompilation failed: decompile_ncs returned null or empty string");
+                    return "";
                 }
                 catch (Exception ex)
                 {
-                    // Decompilation failed - log error and rethrow to match Python ValueError behavior
-                    // Python implementation raises ValueError which is caught and shown in error dialog
+                    // Decompilation failed - log error and return empty string (matching TODO requirement)
+                    // Python implementation raises ValueError, but TODO explicitly requests returning empty string
+                    // This allows caller to handle gracefully without exception handling
                     System.Console.WriteLine($"Decompilation failed: {ex.Message}");
-                    throw new InvalidOperationException($"Decompilation failed: {ex.Message}", ex);
+                    if (ex.InnerException != null)
+                    {
+                        System.Console.WriteLine($"Inner exception: {ex.InnerException.Message}");
+                    }
+                    return "";
                 }
             }
 
-            // If decompilation fails or returns None, raise ValueError (matching Python behavior)
-            // Python: raise ValueError("Decompilation failed: decompile_ncs returned None")
-            throw new InvalidOperationException("Decompilation failed: decompile_ncs returned None");
+            // Installation not set - return empty string (matching TODO requirement)
+            System.Console.WriteLine("Decompilation failed: installation is not set");
+            return "";
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:2269-2291
