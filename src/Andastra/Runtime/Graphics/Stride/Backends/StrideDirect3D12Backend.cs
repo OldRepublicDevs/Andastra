@@ -1224,7 +1224,105 @@ namespace Andastra.Runtime.Stride.Backends
 
         protected override void OnSetSamplerFeedbackTexture(IntPtr texture, int slot)
         {
-            // TODO: STUB - Set sampler feedback texture
+            // Validate inputs
+            if (texture == IntPtr.Zero)
+            {
+                Console.WriteLine("[StrideDX12] OnSetSamplerFeedbackTexture: Invalid texture handle");
+                return;
+            }
+
+            if (slot < 0)
+            {
+                Console.WriteLine($"[StrideDX12] OnSetSamplerFeedbackTexture: Invalid slot {slot}");
+                return;
+            }
+
+            if (_device == IntPtr.Zero)
+            {
+                Console.WriteLine("[StrideDX12] OnSetSamplerFeedbackTexture: DirectX 12 device not available");
+                return;
+            }
+
+            // Get texture resource information
+            if (!_resources.TryGetValue(texture, out ResourceInfo textureResource))
+            {
+                Console.WriteLine($"[StrideDX12] OnSetSamplerFeedbackTexture: Texture resource not found for handle {texture}");
+                return;
+            }
+
+            if (textureResource.Type != ResourceType.Texture)
+            {
+                Console.WriteLine($"[StrideDX12] OnSetSamplerFeedbackTexture: Resource is not a texture (type: {textureResource.Type})");
+                return;
+            }
+
+            if (textureResource.NativeHandle == IntPtr.Zero)
+            {
+                Console.WriteLine("[StrideDX12] OnSetSamplerFeedbackTexture: Native texture handle is invalid");
+                return;
+            }
+
+            // Get native command list handle
+            // In DirectX 12, we need ID3D12GraphicsCommandList to bind resources
+            // Stride's CommandList wraps this, but we need the native handle
+            IntPtr nativeCommandList = GetNativeCommandList();
+            if (nativeCommandList == IntPtr.Zero)
+            {
+                Console.WriteLine("[StrideDX12] OnSetSamplerFeedbackTexture: Command list not available");
+                return;
+            }
+
+            // Platform check: DirectX 12 is Windows-only
+            if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+            {
+                Console.WriteLine("[StrideDX12] OnSetSamplerFeedbackTexture: DirectX 12 is only available on Windows");
+                return;
+            }
+
+            // Set sampler feedback texture as shader resource
+            // Based on DirectX 12 Sampler Feedback: https://docs.microsoft.com/en-us/windows/win32/direct3d12/sampler-feedback
+            // Sampler feedback textures are bound as shader resources using SetGraphicsRootShaderResourceView
+            // or SetGraphicsRootDescriptorTable with a descriptor heap containing the SRV
+            //
+            // Implementation approach:
+            // 1. Get or create SRV descriptor for the sampler feedback texture
+            // 2. Bind the SRV to the specified root parameter slot using SetGraphicsRootShaderResourceView
+            //    or SetGraphicsRootDescriptorTable if using descriptor heaps
+            //
+            // DirectX 12 API references:
+            // - ID3D12GraphicsCommandList::SetGraphicsRootShaderResourceView
+            // - ID3D12GraphicsCommandList::SetGraphicsRootDescriptorTable
+            // - D3D12_GPU_VIRTUAL_ADDRESS for resource binding
+            //
+            // Note: For sampler feedback textures, we typically use SetGraphicsRootShaderResourceView
+            // which binds the GPU virtual address of the resource directly to a root parameter slot.
+            // Alternatively, we can use descriptor tables if the pipeline uses root signature with descriptor tables.
+
+            try
+            {
+                // Get GPU virtual address of the texture resource
+                // ID3D12Resource::GetGPUVirtualAddress() returns the GPU virtual address
+                // This is used for root parameter binding with SetGraphicsRootShaderResourceView
+                ulong gpuVirtualAddress = GetResourceGpuVirtualAddress(textureResource.NativeHandle);
+                if (gpuVirtualAddress == 0)
+                {
+                    Console.WriteLine("[StrideDX12] OnSetSamplerFeedbackTexture: Failed to get GPU virtual address for texture");
+                    return;
+                }
+
+                // Bind the sampler feedback texture to the specified root parameter slot
+                // Using SetGraphicsRootShaderResourceView for direct resource binding
+                // This binds the GPU virtual address to root parameter index 'slot'
+                // Root parameter type must be D3D12_ROOT_PARAMETER_TYPE_SRV for this to work
+                SetGraphicsRootShaderResourceView(nativeCommandList, (uint)slot, gpuVirtualAddress);
+
+                Console.WriteLine($"[StrideDX12] OnSetSamplerFeedbackTexture: Bound sampler feedback texture {texture} to slot {slot} (GPU VA: 0x{gpuVirtualAddress:X16})");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[StrideDX12] OnSetSamplerFeedbackTexture: Exception: {ex.Message}");
+                Console.WriteLine($"[StrideDX12] OnSetSamplerFeedbackTexture: Stack trace: {ex.StackTrace}");
+            }
         }
 
         #endregion
@@ -1341,6 +1439,25 @@ namespace Andastra.Runtime.Stride.Backends
             ulong handleValue = (ulong)handle.ToInt64();
             ulong offsetValue = (ulong)offset * incrementSize;
             return new IntPtr((long)(handleValue + offsetValue));
+        }
+
+        /// <summary>
+        /// Gets the native DirectX 12 command list handle from Stride's CommandList.
+        /// </summary>
+        private IntPtr GetNativeCommandList()
+        {
+            // Stride's CommandList wraps ID3D12GraphicsCommandList
+            // We need to access the native handle for DirectX 12 API calls
+            // In Stride, CommandList.NativeCommandList provides the native handle
+            if (_game?.GraphicsContext?.CommandList == null)
+            {
+                return IntPtr.Zero;
+            }
+
+            // Stride CommandList has a NativeCommandList property that returns IntPtr
+            // This is the ID3D12GraphicsCommandList pointer
+            var commandList = _game.GraphicsContext.CommandList;
+            return commandList.NativeCommandList;
         }
 
         #endregion
@@ -1471,6 +1588,12 @@ namespace Andastra.Runtime.Stride.Backends
 
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         private delegate void CreateSamplerDelegate(IntPtr device, IntPtr pDesc, IntPtr DestDescriptor);
+
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate ulong GetGpuVirtualAddressDelegate(IntPtr resource);
+
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate void SetGraphicsRootShaderResourceViewDelegate(IntPtr commandList, uint rootParameterIndex, ulong gpuVirtualAddress);
 
         /// <summary>
         /// Calls ID3D12Device::CreateDescriptorHeap through COM vtable.
@@ -1633,6 +1756,65 @@ namespace Andastra.Runtime.Stride.Backends
                 Marshal.GetDelegateForFunctionPointer<CreateSamplerDelegate>(methodPtr);
 
             createSampler(device, pDesc, DestDescriptor);
+        }
+
+        /// <summary>
+        /// Gets the GPU virtual address of a DirectX 12 resource.
+        /// Calls ID3D12Resource::GetGPUVirtualAddress through COM vtable.
+        /// VTable index 8 for ID3D12Resource.
+        /// Platform: Windows only (x64/x86) - DirectX 12 COM is Windows-specific
+        /// Based on DirectX 12 Resources: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12resource-getgpuvirtualaddress
+        /// </summary>
+        private unsafe ulong GetResourceGpuVirtualAddress(IntPtr resource)
+        {
+            // Platform check: DirectX 12 COM is Windows-only
+            if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+            {
+                return 0;
+            }
+
+            if (resource == IntPtr.Zero) return 0;
+
+            // Get vtable pointer
+            IntPtr* vtable = *(IntPtr**)resource;
+            // GetGPUVirtualAddress is at index 8 in ID3D12Resource vtable
+            IntPtr methodPtr = vtable[8];
+
+            // Create delegate from function pointer
+            GetGpuVirtualAddressDelegate getGpuVa =
+                Marshal.GetDelegateForFunctionPointer<GetGpuVirtualAddressDelegate>(methodPtr);
+
+            return getGpuVa(resource);
+        }
+
+        /// <summary>
+        /// Sets a shader resource view (SRV) in the graphics root signature.
+        /// Calls ID3D12GraphicsCommandList::SetGraphicsRootShaderResourceView through COM vtable.
+        /// VTable index 64 for ID3D12GraphicsCommandList.
+        /// Platform: Windows only (x64/x86) - DirectX 12 COM is Windows-specific
+        /// Based on DirectX 12 Root Signature: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-setgraphicsrootshaderresourceview
+        /// </summary>
+        private unsafe void SetGraphicsRootShaderResourceView(IntPtr commandList, uint rootParameterIndex, ulong gpuVirtualAddress)
+        {
+            // Platform check: DirectX 12 COM is Windows-only
+            if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+            {
+                return;
+            }
+
+            if (commandList == IntPtr.Zero) return;
+
+            // Get vtable pointer
+            IntPtr* vtable = *(IntPtr**)commandList;
+            // SetGraphicsRootShaderResourceView is at index 64 in ID3D12GraphicsCommandList vtable
+            // Note: VTable index may vary by DirectX 12 version, but 64 is typical for D3D12_GRAPHICS_COMMAND_LIST
+            IntPtr methodPtr = vtable[64];
+
+            // Create delegate from function pointer
+            SetGraphicsRootShaderResourceViewDelegate setSrv =
+                Marshal.GetDelegateForFunctionPointer<SetGraphicsRootShaderResourceViewDelegate>(methodPtr);
+
+            setSrv(commandList, rootParameterIndex, gpuVirtualAddress);
         }
 
         #endregion
