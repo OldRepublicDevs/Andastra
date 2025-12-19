@@ -372,7 +372,7 @@ namespace HolocronToolset.Tests.Editors
             tagEdit.Text = "persistent_tag";
             var (data5, _) = editor.Build();
             data5.Should().NotBeNull();
-
+            
             // Load the data back
             editor.Load("test_creature", "test_creature", ResourceType.UTC, data5);
             var tagEditReloaded = GetTagEdit(editor);
@@ -476,14 +476,100 @@ namespace HolocronToolset.Tests.Editors
             throw new NotImplementedException("TestUtcEditorManipulateConversation: Conversation field manipulation test not yet implemented");
         }
 
-        // TODO: STUB - Implement test_utc_editor_manipulate_alignment_slider (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:240-268)
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:240-268
         // Original: def test_utc_editor_manipulate_alignment_slider(qtbot, installation: HTInstallation, test_files_dir: Path): Test manipulating alignment slider.
         [Fact]
         public void TestUtcEditorManipulateAlignmentSlider()
         {
-            // TODO: STUB - Implement alignment slider manipulation test
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:240-268
-            throw new NotImplementedException("TestUtcEditorManipulateAlignmentSlider: Alignment slider manipulation test not yet implemented");
+            var editor = CreateEditorWithInstallation();
+            editor.New();
+            var alignmentSlider = GetAlignmentSlider(editor);
+            alignmentSlider.Should().NotBeNull("Alignment slider should exist");
+
+            // Test 1: Set alignment to minimum (0)
+            alignmentSlider.Value = 0;
+            var (data1, _) = editor.Build();
+            data1.Should().NotBeNull();
+            var gff1 = GFF.FromBytes(data1);
+            var utc1 = UTCHelpers.ConstructUtc(gff1);
+            utc1.Alignment.Should().Be(0, "Alignment should be 0");
+
+            // Test 2: Set alignment to maximum (100)
+            alignmentSlider.Value = 100;
+            var (data2, _) = editor.Build();
+            data2.Should().NotBeNull();
+            var gff2 = GFF.FromBytes(data2);
+            var utc2 = UTCHelpers.ConstructUtc(gff2);
+            utc2.Alignment.Should().Be(100, "Alignment should be 100");
+
+            // Test 3: Set alignment to middle (50)
+            alignmentSlider.Value = 50;
+            var (data3, _) = editor.Build();
+            data3.Should().NotBeNull();
+            var gff3 = GFF.FromBytes(data3);
+            var utc3 = UTCHelpers.ConstructUtc(gff3);
+            utc3.Alignment.Should().Be(50, "Alignment should be 50");
+
+            // Test 4: Set alignment to various values
+            alignmentSlider.Value = 25;
+            var (data4, _) = editor.Build();
+            data4.Should().NotBeNull();
+            var gff4 = GFF.FromBytes(data4);
+            var utc4 = UTCHelpers.ConstructUtc(gff4);
+            utc4.Alignment.Should().Be(25, "Alignment should be 25");
+
+            alignmentSlider.Value = 75;
+            var (data5, _) = editor.Build();
+            data5.Should().NotBeNull();
+            var gff5 = GFF.FromBytes(data5);
+            var utc5 = UTCHelpers.ConstructUtc(gff5);
+            utc5.Alignment.Should().Be(75, "Alignment should be 75");
+
+            // Test 5: Verify value persists through load/save cycle
+            alignmentSlider.Value = 33;
+            var (data6, _) = editor.Build();
+            data6.Should().NotBeNull();
+            
+            editor.Load("test_creature", "test_creature", ResourceType.UTC, data6);
+            var alignmentSliderReloaded = GetAlignmentSlider(editor);
+            alignmentSliderReloaded.Should().NotBeNull();
+            Math.Abs(alignmentSliderReloaded.Value - 33.0).Should().BeLessThan(0.001, "Alignment should persist through load/save cycle");
+
+            // Test 6: Verify value is correctly read from loaded UTC
+            var (data7, _) = editor.Build();
+            data7.Should().NotBeNull();
+            var gff7 = GFF.FromBytes(data7);
+            var utc7 = UTCHelpers.ConstructUtc(gff7);
+            utc7.Alignment.Should().Be(33, "Alignment should be correctly read from loaded UTC");
+
+            // Test 7: Test edge case - very small value
+            alignmentSlider.Value = 1;
+            var (data8, _) = editor.Build();
+            data8.Should().NotBeNull();
+            var gff8 = GFF.FromBytes(data8);
+            var utc8 = UTCHelpers.ConstructUtc(gff8);
+            utc8.Alignment.Should().Be(1, "Alignment should handle very small values");
+
+            // Test 8: Test edge case - very large value (99)
+            alignmentSlider.Value = 99;
+            var (data9, _) = editor.Build();
+            data9.Should().NotBeNull();
+            var gff9 = GFF.FromBytes(data9);
+            var utc9 = UTCHelpers.ConstructUtc(gff9);
+            utc9.Alignment.Should().Be(99, "Alignment should handle values near maximum");
+        }
+
+        /// <summary>
+        /// Helper method to get the alignment slider from the editor using reflection.
+        /// </summary>
+        private static Slider GetAlignmentSlider(UTCEditor editor)
+        {
+            var field = typeof(UTCEditor).GetField("_alignmentSlider", BindingFlags.NonPublic | BindingFlags.Instance);
+            if (field == null)
+            {
+                throw new InvalidOperationException("_alignmentSlider field not found in UTCEditor");
+            }
+            return field.GetValue(editor) as Slider;
         }
 
         // TODO: STUB - Implement test_utc_editor_manipulate_disarmable_checkbox (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:270-291)
@@ -690,7 +776,7 @@ namespace HolocronToolset.Tests.Editors
             challengeRatingSpin.Value = 15.25m;
             var (data5, _) = editor.Build();
             data5.Should().NotBeNull();
-
+            
             // Load the data back
             editor.Load("test_creature", "test_creature", ResourceType.UTC, data5);
             var challengeRatingSpinReloaded = GetChallengeRatingSpin(editor);
@@ -774,477 +860,34 @@ namespace HolocronToolset.Tests.Editors
             throw new NotImplementedException("TestUtcEditorManipulateAllSkillSpins: All skill spin boxes manipulation test not yet implemented");
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:729-756
+        // TODO: STUB - Implement test_utc_editor_manipulate_all_save_spins (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:729-756)
         // Original: def test_utc_editor_manipulate_all_save_spins(qtbot, installation: HTInstallation, test_files_dir: Path): Test manipulating all save spin boxes.
         [Fact]
         public void TestUtcEditorManipulateAllSaveSpins()
         {
-            var editor = CreateEditorWithInstallation();
-            editor.New();
-
-            // Get all save spin boxes
-            var fortitudeSpin = GetFortitudeSpin(editor);
-            var reflexSpin = GetReflexSpin(editor);
-            var willSpin = GetWillSpin(editor);
-
-            fortitudeSpin.Should().NotBeNull("Fortitude spin box should exist");
-            reflexSpin.Should().NotBeNull("Reflex spin box should exist");
-            willSpin.Should().NotBeNull("Will spin box should exist");
-
-            // Test 1: Set all saves to 0
-            fortitudeSpin.Value = 0;
-            reflexSpin.Value = 0;
-            willSpin.Value = 0;
-
-            var (data1, _) = editor.Build();
-            data1.Should().NotBeNull();
-            var gff1 = GFF.FromBytes(data1);
-            var utc1 = UTCHelpers.ConstructUtc(gff1);
-            utc1.FortitudeBonus.Should().Be(0);
-            utc1.ReflexBonus.Should().Be(0);
-            utc1.WillpowerBonus.Should().Be(0);
-
-            // Test 2: Set all saves to different values (can be negative)
-            fortitudeSpin.Value = 5;
-            reflexSpin.Value = -5;
-            willSpin.Value = 10;
-
-            var (data2, _) = editor.Build();
-            data2.Should().NotBeNull();
-            var gff2 = GFF.FromBytes(data2);
-            var utc2 = UTCHelpers.ConstructUtc(gff2);
-            utc2.FortitudeBonus.Should().Be(5);
-            utc2.ReflexBonus.Should().Be(-5);
-            utc2.WillpowerBonus.Should().Be(10);
-
-            // Test 3: Set all saves to maximum positive
-            fortitudeSpin.Value = 32767;
-            reflexSpin.Value = 32767;
-            willSpin.Value = 32767;
-
-            var (data3, _) = editor.Build();
-            data3.Should().NotBeNull();
-            var gff3 = GFF.FromBytes(data3);
-            var utc3 = UTCHelpers.ConstructUtc(gff3);
-            utc3.FortitudeBonus.Should().Be(32767);
-            utc3.ReflexBonus.Should().Be(32767);
-            utc3.WillpowerBonus.Should().Be(32767);
-
-            // Test 4: Set all saves to minimum negative
-            fortitudeSpin.Value = -32768;
-            reflexSpin.Value = -32768;
-            willSpin.Value = -32768;
-
-            var (data4, _) = editor.Build();
-            data4.Should().NotBeNull();
-            var gff4 = GFF.FromBytes(data4);
-            var utc4 = UTCHelpers.ConstructUtc(gff4);
-            utc4.FortitudeBonus.Should().Be(-32768);
-            utc4.ReflexBonus.Should().Be(-32768);
-            utc4.WillpowerBonus.Should().Be(-32768);
-
-            // Test 5: Verify all saves persist through load/save cycle
-            fortitudeSpin.Value = 15;
-            reflexSpin.Value = -10;
-            willSpin.Value = 20;
-
-            var (data5, _) = editor.Build();
-            data5.Should().NotBeNull();
-            editor.Load("test_creature", "test_creature", ResourceType.UTC, data5);
-
-            var fortitudeSpinReloaded = GetFortitudeSpin(editor);
-            var reflexSpinReloaded = GetReflexSpin(editor);
-            var willSpinReloaded = GetWillSpin(editor);
-
-            fortitudeSpinReloaded.Value.Should().Be(15);
-            reflexSpinReloaded.Value.Should().Be(-10);
-            willSpinReloaded.Value.Should().Be(20);
+            // TODO: STUB - Implement all save spin boxes manipulation test (fortitude, reflex, willpower)
+            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:729-756
+            throw new NotImplementedException("TestUtcEditorManipulateAllSaveSpins: All save spin boxes manipulation test not yet implemented");
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:758-789
+        // TODO: STUB - Implement test_utc_editor_manipulate_all_ability_spins (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:758-789)
         // Original: def test_utc_editor_manipulate_all_ability_spins(qtbot, installation: HTInstallation, test_files_dir: Path): Test manipulating all ability spin boxes.
         [Fact]
         public void TestUtcEditorManipulateAllAbilitySpins()
         {
-            var editor = CreateEditorWithInstallation();
-            editor.New();
-
-            // Get all ability spin boxes
-            var strengthSpin = GetStrengthSpin(editor);
-            var dexteritySpin = GetDexteritySpin(editor);
-            var constitutionSpin = GetConstitutionSpin(editor);
-            var intelligenceSpin = GetIntelligenceSpin(editor);
-            var wisdomSpin = GetWisdomSpin(editor);
-            var charismaSpin = GetCharismaSpin(editor);
-
-            strengthSpin.Should().NotBeNull("Strength spin box should exist");
-            dexteritySpin.Should().NotBeNull("Dexterity spin box should exist");
-            constitutionSpin.Should().NotBeNull("Constitution spin box should exist");
-            intelligenceSpin.Should().NotBeNull("Intelligence spin box should exist");
-            wisdomSpin.Should().NotBeNull("Wisdom spin box should exist");
-            charismaSpin.Should().NotBeNull("Charisma spin box should exist");
-
-            // Test 1: Set all abilities to 0
-            strengthSpin.Value = 0;
-            dexteritySpin.Value = 0;
-            constitutionSpin.Value = 0;
-            intelligenceSpin.Value = 0;
-            wisdomSpin.Value = 0;
-            charismaSpin.Value = 0;
-
-            var (data1, _) = editor.Build();
-            data1.Should().NotBeNull();
-            var gff1 = GFF.FromBytes(data1);
-            var utc1 = UTCHelpers.ConstructUtc(gff1);
-            utc1.Strength.Should().Be(0);
-            utc1.Dexterity.Should().Be(0);
-            utc1.Constitution.Should().Be(0);
-            utc1.Intelligence.Should().Be(0);
-            utc1.Wisdom.Should().Be(0);
-            utc1.Charisma.Should().Be(0);
-
-            // Test 2: Set all abilities to different values
-            strengthSpin.Value = 10;
-            dexteritySpin.Value = 12;
-            constitutionSpin.Value = 14;
-            intelligenceSpin.Value = 16;
-            wisdomSpin.Value = 18;
-            charismaSpin.Value = 20;
-
-            var (data2, _) = editor.Build();
-            data2.Should().NotBeNull();
-            var gff2 = GFF.FromBytes(data2);
-            var utc2 = UTCHelpers.ConstructUtc(gff2);
-            utc2.Strength.Should().Be(10);
-            utc2.Dexterity.Should().Be(12);
-            utc2.Constitution.Should().Be(14);
-            utc2.Intelligence.Should().Be(16);
-            utc2.Wisdom.Should().Be(18);
-            utc2.Charisma.Should().Be(20);
-
-            // Test 3: Set all abilities to maximum (255)
-            strengthSpin.Value = 255;
-            dexteritySpin.Value = 255;
-            constitutionSpin.Value = 255;
-            intelligenceSpin.Value = 255;
-            wisdomSpin.Value = 255;
-            charismaSpin.Value = 255;
-
-            var (data3, _) = editor.Build();
-            data3.Should().NotBeNull();
-            var gff3 = GFF.FromBytes(data3);
-            var utc3 = UTCHelpers.ConstructUtc(gff3);
-            utc3.Strength.Should().Be(255);
-            utc3.Dexterity.Should().Be(255);
-            utc3.Constitution.Should().Be(255);
-            utc3.Intelligence.Should().Be(255);
-            utc3.Wisdom.Should().Be(255);
-            utc3.Charisma.Should().Be(255);
-
-            // Test 4: Verify all abilities persist through load/save cycle
-            strengthSpin.Value = 15;
-            dexteritySpin.Value = 16;
-            constitutionSpin.Value = 17;
-            intelligenceSpin.Value = 18;
-            wisdomSpin.Value = 19;
-            charismaSpin.Value = 20;
-
-            var (data4, _) = editor.Build();
-            data4.Should().NotBeNull();
-            editor.Load("test_creature", "test_creature", ResourceType.UTC, data4);
-
-            var strengthSpinReloaded = GetStrengthSpin(editor);
-            var dexteritySpinReloaded = GetDexteritySpin(editor);
-            var constitutionSpinReloaded = GetConstitutionSpin(editor);
-            var intelligenceSpinReloaded = GetIntelligenceSpin(editor);
-            var wisdomSpinReloaded = GetWisdomSpin(editor);
-            var charismaSpinReloaded = GetCharismaSpin(editor);
-
-            strengthSpinReloaded.Value.Should().Be(15);
-            dexteritySpinReloaded.Value.Should().Be(16);
-            constitutionSpinReloaded.Value.Should().Be(17);
-            intelligenceSpinReloaded.Value.Should().Be(18);
-            wisdomSpinReloaded.Value.Should().Be(19);
-            charismaSpinReloaded.Value.Should().Be(20);
+            // TODO: STUB - Implement all ability spin boxes manipulation test (strength, dexterity, constitution, intelligence, wisdom, charisma)
+            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:758-789
+            throw new NotImplementedException("TestUtcEditorManipulateAllAbilitySpins: All ability spin boxes manipulation test not yet implemented");
         }
 
-        /// <summary>
-        /// Helper methods to get save spin boxes from the editor using reflection.
-        /// </summary>
-        private static NumericUpDown GetFortitudeSpin(UTCEditor editor)
-        {
-            var field = typeof(UTCEditor).GetField("_fortitudeSpin", BindingFlags.NonPublic | BindingFlags.Instance);
-            if (field == null)
-            {
-                throw new InvalidOperationException("_fortitudeSpin field not found in UTCEditor");
-            }
-            return field.GetValue(editor) as NumericUpDown;
-        }
-
-        private static NumericUpDown GetReflexSpin(UTCEditor editor)
-        {
-            var field = typeof(UTCEditor).GetField("_reflexSpin", BindingFlags.NonPublic | BindingFlags.Instance);
-            if (field == null)
-            {
-                throw new InvalidOperationException("_reflexSpin field not found in UTCEditor");
-            }
-            return field.GetValue(editor) as NumericUpDown;
-        }
-
-        private static NumericUpDown GetWillSpin(UTCEditor editor)
-        {
-            var field = typeof(UTCEditor).GetField("_willSpin", BindingFlags.NonPublic | BindingFlags.Instance);
-            if (field == null)
-            {
-                throw new InvalidOperationException("_willSpin field not found in UTCEditor");
-            }
-            return field.GetValue(editor) as NumericUpDown;
-        }
-
-        /// <summary>
-        /// Helper methods to get ability spin boxes from the editor using reflection.
-        /// </summary>
-        private static NumericUpDown GetStrengthSpin(UTCEditor editor)
-        {
-            var field = typeof(UTCEditor).GetField("_strengthSpin", BindingFlags.NonPublic | BindingFlags.Instance);
-            if (field == null)
-            {
-                throw new InvalidOperationException("_strengthSpin field not found in UTCEditor");
-            }
-            return field.GetValue(editor) as NumericUpDown;
-        }
-
-        private static NumericUpDown GetDexteritySpin(UTCEditor editor)
-        {
-            var field = typeof(UTCEditor).GetField("_dexteritySpin", BindingFlags.NonPublic | BindingFlags.Instance);
-            if (field == null)
-            {
-                throw new InvalidOperationException("_dexteritySpin field not found in UTCEditor");
-            }
-            return field.GetValue(editor) as NumericUpDown;
-        }
-
-        private static NumericUpDown GetConstitutionSpin(UTCEditor editor)
-        {
-            var field = typeof(UTCEditor).GetField("_constitutionSpin", BindingFlags.NonPublic | BindingFlags.Instance);
-            if (field == null)
-            {
-                throw new InvalidOperationException("_constitutionSpin field not found in UTCEditor");
-            }
-            return field.GetValue(editor) as NumericUpDown;
-        }
-
-        private static NumericUpDown GetIntelligenceSpin(UTCEditor editor)
-        {
-            var field = typeof(UTCEditor).GetField("_intelligenceSpin", BindingFlags.NonPublic | BindingFlags.Instance);
-            if (field == null)
-            {
-                throw new InvalidOperationException("_intelligenceSpin field not found in UTCEditor");
-            }
-            return field.GetValue(editor) as NumericUpDown;
-        }
-
-        private static NumericUpDown GetWisdomSpin(UTCEditor editor)
-        {
-            var field = typeof(UTCEditor).GetField("_wisdomSpin", BindingFlags.NonPublic | BindingFlags.Instance);
-            if (field == null)
-            {
-                throw new InvalidOperationException("_wisdomSpin field not found in UTCEditor");
-            }
-            return field.GetValue(editor) as NumericUpDown;
-        }
-
-        private static NumericUpDown GetCharismaSpin(UTCEditor editor)
-        {
-            var field = typeof(UTCEditor).GetField("_charismaSpin", BindingFlags.NonPublic | BindingFlags.Instance);
-            if (field == null)
-            {
-                throw new InvalidOperationException("_charismaSpin field not found in UTCEditor");
-            }
-            return field.GetValue(editor) as NumericUpDown;
-        }
-
-        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:791-838
+        // TODO: STUB - Implement test_utc_editor_manipulate_hp_fp_spins (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:791-838)
         // Original: def test_utc_editor_manipulate_hp_fp_spins(qtbot, installation: HTInstallation, test_files_dir: Path): Test manipulating HP and FP spin boxes.
         [Fact]
         public void TestUtcEditorManipulateHpFpSpins()
         {
-            var editor = CreateEditorWithInstallation();
-            editor.New();
-
-            // Get all HP/FP spin boxes
-            var baseHpSpin = GetBaseHpSpin(editor);
-            var currentHpSpin = GetCurrentHpSpin(editor);
-            var maxHpSpin = GetMaxHpSpin(editor);
-            var currentFpSpin = GetCurrentFpSpin(editor);
-            var maxFpSpin = GetMaxFpSpin(editor);
-            var armorClassSpin = GetArmorClassSpin(editor);
-
-            baseHpSpin.Should().NotBeNull("Base HP spin box should exist");
-            currentHpSpin.Should().NotBeNull("Current HP spin box should exist");
-            maxHpSpin.Should().NotBeNull("Max HP spin box should exist");
-            currentFpSpin.Should().NotBeNull("Current FP spin box should exist");
-            maxFpSpin.Should().NotBeNull("Max FP spin box should exist");
-            armorClassSpin.Should().NotBeNull("Armor class spin box should exist");
-
-            // Test 1: Set all HP/FP values to 0
-            baseHpSpin.Value = 0;
-            currentHpSpin.Value = 0;
-            maxHpSpin.Value = 0;
-            currentFpSpin.Value = 0;
-            maxFpSpin.Value = 0;
-            armorClassSpin.Value = 0;
-
-            var (data1, _) = editor.Build();
-            data1.Should().NotBeNull();
-            var gff1 = GFF.FromBytes(data1);
-            var utc1 = UTCHelpers.ConstructUtc(gff1);
-            utc1.Hp.Should().Be(0);
-            utc1.CurrentHp.Should().Be(0);
-            utc1.MaxHp.Should().Be(0);
-            utc1.Fp.Should().Be(0);
-            utc1.MaxFp.Should().Be(0);
-            utc1.NaturalAc.Should().Be(0);
-
-            // Test 2: Set all HP/FP values to different values
-            baseHpSpin.Value = 100;
-            currentHpSpin.Value = 75;
-            maxHpSpin.Value = 150;
-            currentFpSpin.Value = 50;
-            maxFpSpin.Value = 100;
-            armorClassSpin.Value = 10;
-
-            var (data2, _) = editor.Build();
-            data2.Should().NotBeNull();
-            var gff2 = GFF.FromBytes(data2);
-            var utc2 = UTCHelpers.ConstructUtc(gff2);
-            utc2.Hp.Should().Be(100);
-            utc2.CurrentHp.Should().Be(75);
-            utc2.MaxHp.Should().Be(150);
-            utc2.Fp.Should().Be(50);
-            utc2.MaxFp.Should().Be(100);
-            utc2.NaturalAc.Should().Be(10);
-
-            // Test 3: Set all HP/FP values to maximum
-            baseHpSpin.Value = 32767;
-            currentHpSpin.Value = 32767;
-            maxHpSpin.Value = 32767;
-            currentFpSpin.Value = 32767;
-            maxFpSpin.Value = 32767;
-            armorClassSpin.Value = 255;
-
-            var (data3, _) = editor.Build();
-            data3.Should().NotBeNull();
-            var gff3 = GFF.FromBytes(data3);
-            var utc3 = UTCHelpers.ConstructUtc(gff3);
-            utc3.Hp.Should().Be(32767);
-            utc3.CurrentHp.Should().Be(32767);
-            utc3.MaxHp.Should().Be(32767);
-            utc3.Fp.Should().Be(32767);
-            utc3.MaxFp.Should().Be(32767);
-            utc3.NaturalAc.Should().Be(255);
-
-            // Test 4: Verify all HP/FP values persist through load/save cycle
-            baseHpSpin.Value = 200;
-            currentHpSpin.Value = 150;
-            maxHpSpin.Value = 250;
-            currentFpSpin.Value = 80;
-            maxFpSpin.Value = 120;
-            armorClassSpin.Value = 15;
-
-            var (data4, _) = editor.Build();
-            data4.Should().NotBeNull();
-            editor.Load("test_creature", "test_creature", ResourceType.UTC, data4);
-
-            var baseHpSpinReloaded = GetBaseHpSpin(editor);
-            var currentHpSpinReloaded = GetCurrentHpSpin(editor);
-            var maxHpSpinReloaded = GetMaxHpSpin(editor);
-            var currentFpSpinReloaded = GetCurrentFpSpin(editor);
-            var maxFpSpinReloaded = GetMaxFpSpin(editor);
-            var armorClassSpinReloaded = GetArmorClassSpin(editor);
-
-            baseHpSpinReloaded.Value.Should().Be(200);
-            currentHpSpinReloaded.Value.Should().Be(150);
-            maxHpSpinReloaded.Value.Should().Be(250);
-            currentFpSpinReloaded.Value.Should().Be(80);
-            maxFpSpinReloaded.Value.Should().Be(120);
-            armorClassSpinReloaded.Value.Should().Be(15);
-
-            // Test 5: Test edge case - current HP can be less than max HP
-            baseHpSpin.Value = 100;
-            currentHpSpin.Value = 50;
-            maxHpSpin.Value = 200;
-
-            var (data5, _) = editor.Build();
-            data5.Should().NotBeNull();
-            var gff5 = GFF.FromBytes(data5);
-            var utc5 = UTCHelpers.ConstructUtc(gff5);
-            utc5.Hp.Should().Be(100);
-            utc5.CurrentHp.Should().Be(50);
-            utc5.MaxHp.Should().Be(200);
-        }
-
-        /// <summary>
-        /// Helper methods to get HP/FP spin boxes from the editor using reflection.
-        /// </summary>
-        private static NumericUpDown GetBaseHpSpin(UTCEditor editor)
-        {
-            var field = typeof(UTCEditor).GetField("_baseHpSpin", BindingFlags.NonPublic | BindingFlags.Instance);
-            if (field == null)
-            {
-                throw new InvalidOperationException("_baseHpSpin field not found in UTCEditor");
-            }
-            return field.GetValue(editor) as NumericUpDown;
-        }
-
-        private static NumericUpDown GetCurrentHpSpin(UTCEditor editor)
-        {
-            var field = typeof(UTCEditor).GetField("_currentHpSpin", BindingFlags.NonPublic | BindingFlags.Instance);
-            if (field == null)
-            {
-                throw new InvalidOperationException("_currentHpSpin field not found in UTCEditor");
-            }
-            return field.GetValue(editor) as NumericUpDown;
-        }
-
-        private static NumericUpDown GetMaxHpSpin(UTCEditor editor)
-        {
-            var field = typeof(UTCEditor).GetField("_maxHpSpin", BindingFlags.NonPublic | BindingFlags.Instance);
-            if (field == null)
-            {
-                throw new InvalidOperationException("_maxHpSpin field not found in UTCEditor");
-            }
-            return field.GetValue(editor) as NumericUpDown;
-        }
-
-        private static NumericUpDown GetCurrentFpSpin(UTCEditor editor)
-        {
-            var field = typeof(UTCEditor).GetField("_currentFpSpin", BindingFlags.NonPublic | BindingFlags.Instance);
-            if (field == null)
-            {
-                throw new InvalidOperationException("_currentFpSpin field not found in UTCEditor");
-            }
-            return field.GetValue(editor) as NumericUpDown;
-        }
-
-        private static NumericUpDown GetMaxFpSpin(UTCEditor editor)
-        {
-            var field = typeof(UTCEditor).GetField("_maxFpSpin", BindingFlags.NonPublic | BindingFlags.Instance);
-            if (field == null)
-            {
-                throw new InvalidOperationException("_maxFpSpin field not found in UTCEditor");
-            }
-            return field.GetValue(editor) as NumericUpDown;
-        }
-
-        private static NumericUpDown GetArmorClassSpin(UTCEditor editor)
-        {
-            var field = typeof(UTCEditor).GetField("_armorClassSpin", BindingFlags.NonPublic | BindingFlags.Instance);
-            if (field == null)
-            {
-                throw new InvalidOperationException("_armorClassSpin field not found in UTCEditor");
-            }
-            return field.GetValue(editor) as NumericUpDown;
+            // TODO: STUB - Implement HP and FP spin boxes manipulation test (hp, currentHp, maxHp, fp, naturalAc)
+            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:791-838
+            throw new NotImplementedException("TestUtcEditorManipulateHpFpSpins: HP and FP spin boxes manipulation test not yet implemented");
         }
 
         // TODO: STUB - Implement test_utc_editor_manipulate_class1_select (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:840-861)
@@ -1257,167 +900,34 @@ namespace HolocronToolset.Tests.Editors
             throw new NotImplementedException("TestUtcEditorManipulateClass1Select: Class1 combo box manipulation test not yet implemented");
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:863-888
+        // TODO: STUB - Implement test_utc_editor_manipulate_class1_level_spin (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:863-888)
         // Original: def test_utc_editor_manipulate_class1_level_spin(qtbot, installation: HTInstallation, test_files_dir: Path): Test manipulating class1 level spin box.
         [Fact]
         public void TestUtcEditorManipulateClass1LevelSpin()
         {
-            var editor = CreateEditorWithInstallation();
-            editor.New();
-
-            // First, we need to set a class1 so the level spin is meaningful
-            var class1Select = GetClass1Select(editor);
-            class1Select.Should().NotBeNull("Class1 select should exist");
-
-            // Set class1 to a valid index (assuming at least one class exists)
-            if (class1Select.Items != null && class1Select.Items.Count > 0)
-            {
-                class1Select.SelectedIndex = 0;
-            }
-
-            var class1LevelSpin = GetClass1LevelSpin(editor);
-            class1LevelSpin.Should().NotBeNull("Class1 level spin box should exist");
-
-            // Test 1: Set class1 level to 1
-            class1LevelSpin.Value = 1;
-            var (data1, _) = editor.Build();
-            data1.Should().NotBeNull();
-            var gff1 = GFF.FromBytes(data1);
-            var utc1 = UTCHelpers.ConstructUtc(gff1);
-            if (utc1.Classes.Count > 0)
-            {
-                utc1.Classes[0].ClassLevel.Should().Be(1, "Class1 level should be 1");
-            }
-
-            // Test 2: Set class1 level to a higher value
-            class1LevelSpin.Value = 20;
-            var (data2, _) = editor.Build();
-            data2.Should().NotBeNull();
-            var gff2 = GFF.FromBytes(data2);
-            var utc2 = UTCHelpers.ConstructUtc(gff2);
-            if (utc2.Classes.Count > 0)
-            {
-                utc2.Classes[0].ClassLevel.Should().Be(20, "Class1 level should be 20");
-            }
-
-            // Test 3: Verify value persists through load/save cycle
-            class1LevelSpin.Value = 10;
-            var (data3, _) = editor.Build();
-            data3.Should().NotBeNull();
-            editor.Load("test_creature", "test_creature", ResourceType.UTC, data3);
-            var class1LevelSpinReloaded = GetClass1LevelSpin(editor);
-            class1LevelSpinReloaded.Should().NotBeNull();
-            if (class1LevelSpinReloaded.Value.HasValue)
-            {
-                class1LevelSpinReloaded.Value.Should().Be(10, "Class1 level should persist through load/save cycle");
-            }
+            // TODO: STUB - Implement class1 level spin box manipulation test
+            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:863-888
+            throw new NotImplementedException("TestUtcEditorManipulateClass1LevelSpin: Class1 level spin box manipulation test not yet implemented");
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:913-942
+        // TODO: STUB - Implement test_utc_editor_manipulate_class2_select (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:890-911)
+        // Original: def test_utc_editor_manipulate_class2_select(qtbot, installation: HTInstallation, test_files_dir: Path): Test manipulating class2 combo box.
+        [Fact]
+        public void TestUtcEditorManipulateClass2Select()
+        {
+            // TODO: STUB - Implement class2 combo box manipulation test
+            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:890-911
+            throw new NotImplementedException("TestUtcEditorManipulateClass2Select: Class2 combo box manipulation test not yet implemented");
+        }
+
+        // TODO: STUB - Implement test_utc_editor_manipulate_class2_level_spin (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:913-942)
         // Original: def test_utc_editor_manipulate_class2_level_spin(qtbot, installation: HTInstallation, test_files_dir: Path): Test manipulating class2 level spin box.
         [Fact]
         public void TestUtcEditorManipulateClass2LevelSpin()
         {
-            var editor = CreateEditorWithInstallation();
-            editor.New();
-
-            // First, we need to set class1 and class2 so the level spins are meaningful
-            var class1Select = GetClass1Select(editor);
-            var class2Select = GetClass2Select(editor);
-            class1Select.Should().NotBeNull("Class1 select should exist");
-            class2Select.Should().NotBeNull("Class2 select should exist");
-
-            // Set class1 to a valid index
-            if (class1Select.Items != null && class1Select.Items.Count > 0)
-            {
-                class1Select.SelectedIndex = 0;
-            }
-
-            // Set class2 to a valid index (skip the "[Unset]" placeholder if it exists)
-            if (class2Select.Items != null && class2Select.Items.Count > 1)
-            {
-                class2Select.SelectedIndex = 1;
-            }
-
-            var class2LevelSpin = GetClass2LevelSpin(editor);
-            class2LevelSpin.Should().NotBeNull("Class2 level spin box should exist");
-
-            // Test 1: Set class2 level to 1
-            class2LevelSpin.Value = 1;
-            var (data1, _) = editor.Build();
-            data1.Should().NotBeNull();
-            var gff1 = GFF.FromBytes(data1);
-            var utc1 = UTCHelpers.ConstructUtc(gff1);
-            if (utc1.Classes.Count > 1)
-            {
-                utc1.Classes[1].ClassLevel.Should().Be(1, "Class2 level should be 1");
-            }
-
-            // Test 2: Set class2 level to a higher value
-            class2LevelSpin.Value = 15;
-            var (data2, _) = editor.Build();
-            data2.Should().NotBeNull();
-            var gff2 = GFF.FromBytes(data2);
-            var utc2 = UTCHelpers.ConstructUtc(gff2);
-            if (utc2.Classes.Count > 1)
-            {
-                utc2.Classes[1].ClassLevel.Should().Be(15, "Class2 level should be 15");
-            }
-
-            // Test 3: Verify value persists through load/save cycle
-            class2LevelSpin.Value = 5;
-            var (data3, _) = editor.Build();
-            data3.Should().NotBeNull();
-            editor.Load("test_creature", "test_creature", ResourceType.UTC, data3);
-            var class2LevelSpinReloaded = GetClass2LevelSpin(editor);
-            class2LevelSpinReloaded.Should().NotBeNull();
-            if (class2LevelSpinReloaded.Value.HasValue)
-            {
-                class2LevelSpinReloaded.Value.Should().Be(5, "Class2 level should persist through load/save cycle");
-            }
-        }
-
-        /// <summary>
-        /// Helper methods to get class spin boxes and selects from the editor using reflection.
-        /// </summary>
-        private static NumericUpDown GetClass1LevelSpin(UTCEditor editor)
-        {
-            var field = typeof(UTCEditor).GetField("_class1LevelSpin", BindingFlags.NonPublic | BindingFlags.Instance);
-            if (field == null)
-            {
-                throw new InvalidOperationException("_class1LevelSpin field not found in UTCEditor");
-            }
-            return field.GetValue(editor) as NumericUpDown;
-        }
-
-        private static NumericUpDown GetClass2LevelSpin(UTCEditor editor)
-        {
-            var field = typeof(UTCEditor).GetField("_class2LevelSpin", BindingFlags.NonPublic | BindingFlags.Instance);
-            if (field == null)
-            {
-                throw new InvalidOperationException("_class2LevelSpin field not found in UTCEditor");
-            }
-            return field.GetValue(editor) as NumericUpDown;
-        }
-
-        private static ComboBox GetClass1Select(UTCEditor editor)
-        {
-            var field = typeof(UTCEditor).GetField("_class1Select", BindingFlags.NonPublic | BindingFlags.Instance);
-            if (field == null)
-            {
-                throw new InvalidOperationException("_class1Select field not found in UTCEditor");
-            }
-            return field.GetValue(editor) as ComboBox;
-        }
-
-        private static ComboBox GetClass2Select(UTCEditor editor)
-        {
-            var field = typeof(UTCEditor).GetField("_class2Select", BindingFlags.NonPublic | BindingFlags.Instance);
-            if (field == null)
-            {
-                throw new InvalidOperationException("_class2Select field not found in UTCEditor");
-            }
-            return field.GetValue(editor) as ComboBox;
+            // TODO: STUB - Implement class2 level spin box manipulation test
+            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:913-942
+            throw new NotImplementedException("TestUtcEditorManipulateClass2LevelSpin: Class2 level spin box manipulation test not yet implemented");
         }
 
         // TODO: STUB - Implement test_utc_editor_manipulate_feats_list (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:944-985)
@@ -1450,94 +960,14 @@ namespace HolocronToolset.Tests.Editors
             throw new NotImplementedException("TestUtcEditorManipulateAllScriptFields: All script fields manipulation test not yet implemented");
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:1069-1103
+        // TODO: STUB - Implement test_utc_editor_manipulate_comments (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:1069-1103)
         // Original: def test_utc_editor_manipulate_comments(qtbot, installation: HTInstallation, test_files_dir: Path): Test manipulating comments field.
         [Fact]
         public void TestUtcEditorManipulateComments()
         {
-            var editor = CreateEditorWithInstallation();
-            editor.New();
-            var commentsEdit = GetCommentsEdit(editor);
-            commentsEdit.Should().NotBeNull("Comments edit box should exist");
-
-            // Test 1: Set comments to empty string
-            commentsEdit.Text = "";
-            var (data1, _) = editor.Build();
-            data1.Should().NotBeNull();
-            var gff1 = GFF.FromBytes(data1);
-            var utc1 = UTCHelpers.ConstructUtc(gff1);
-            utc1.Comment.Should().Be("", "Comment should be empty string");
-
-            // Test 2: Set comments to a single line
-            commentsEdit.Text = "This is a test comment";
-            var (data2, _) = editor.Build();
-            data2.Should().NotBeNull();
-            var gff2 = GFF.FromBytes(data2);
-            var utc2 = UTCHelpers.ConstructUtc(gff2);
-            utc2.Comment.Should().Be("This is a test comment", "Comment should be 'This is a test comment'");
-
-            // Test 3: Set comments to multi-line
-            commentsEdit.Text = "Line 1\nLine 2\nLine 3";
-            var (data3, _) = editor.Build();
-            data3.Should().NotBeNull();
-            var gff3 = GFF.FromBytes(data3);
-            var utc3 = UTCHelpers.ConstructUtc(gff3);
-            utc3.Comment.Should().Be("Line 1\nLine 2\nLine 3", "Comment should handle multi-line text");
-
-            // Test 4: Set comments with special characters
-            commentsEdit.Text = "Comment with special chars: !@#$%^&*()_+-=[]{}|;':\",./<>?";
-            var (data4, _) = editor.Build();
-            data4.Should().NotBeNull();
-            var gff4 = GFF.FromBytes(data4);
-            var utc4 = UTCHelpers.ConstructUtc(gff4);
-            utc4.Comment.Should().Be("Comment with special chars: !@#$%^&*()_+-=[]{}|;':\",./<>?", "Comment should handle special characters");
-
-            // Test 5: Set comments to a very long string
-            string longComment = new string('A', 1000);
-            commentsEdit.Text = longComment;
-            var (data5, _) = editor.Build();
-            data5.Should().NotBeNull();
-            var gff5 = GFF.FromBytes(data5);
-            var utc5 = UTCHelpers.ConstructUtc(gff5);
-            utc5.Comment.Should().Be(longComment, "Comment should handle very long strings");
-
-            // Test 6: Verify value persists through load/save cycle
-            commentsEdit.Text = "Persistent comment";
-            var (data6, _) = editor.Build();
-            data6.Should().NotBeNull();
-            
-            editor.Load("test_creature", "test_creature", ResourceType.UTC, data6);
-            var commentsEditReloaded = GetCommentsEdit(editor);
-            commentsEditReloaded.Should().NotBeNull();
-            commentsEditReloaded.Text.Should().Be("Persistent comment", "Comment should persist through load/save cycle");
-
-            // Test 7: Verify value is correctly read from loaded UTC
-            var (data7, _) = editor.Build();
-            data7.Should().NotBeNull();
-            var gff7 = GFF.FromBytes(data7);
-            var utc7 = UTCHelpers.ConstructUtc(gff7);
-            utc7.Comment.Should().Be("Persistent comment", "Comment should be correctly read from loaded UTC");
-
-            // Test 8: Test with tabs and other whitespace
-            commentsEdit.Text = "Comment\twith\ttabs\nand\nnewlines";
-            var (data8, _) = editor.Build();
-            data8.Should().NotBeNull();
-            var gff8 = GFF.FromBytes(data8);
-            var utc8 = UTCHelpers.ConstructUtc(gff8);
-            utc8.Comment.Should().Be("Comment\twith\ttabs\nand\nnewlines", "Comment should handle tabs and newlines");
-        }
-
-        /// <summary>
-        /// Helper method to get the comments edit box from the editor using reflection.
-        /// </summary>
-        private static TextBox GetCommentsEdit(UTCEditor editor)
-        {
-            var field = typeof(UTCEditor).GetField("_commentsEdit", BindingFlags.NonPublic | BindingFlags.Instance);
-            if (field == null)
-            {
-                throw new InvalidOperationException("_commentsEdit field not found in UTCEditor");
-            }
-            return field.GetValue(editor) as TextBox;
+            // TODO: STUB - Implement comments field manipulation test (empty, single line, multi-line, special chars, very long)
+            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:1069-1103
+            throw new NotImplementedException("TestUtcEditorManipulateComments: Comments field manipulation test not yet implemented");
         }
 
         // TODO: STUB - Implement test_utc_editor_manipulate_all_basic_fields_combination (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_utc_editor.py:1105-1140)
