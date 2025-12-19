@@ -7,6 +7,7 @@ using System.Linq;
 using System.Numerics;
 using System.Text;
 using Andastra.Parsing;
+using Andastra.Parsing.Common;
 using Andastra.Parsing.Formats.GFF;
 using static Andastra.Parsing.Formats.GFF.GFFAuto;
 using Andastra.Parsing.Formats.SSF;
@@ -15,7 +16,7 @@ using Andastra.Parsing.Formats.TwoDA;
 using static Andastra.Parsing.Formats.TwoDA.TwoDAAuto;
 using Andastra.Parsing.Formats.TLK;
 using static Andastra.Parsing.Formats.TLK.TLKAuto;
-using Andastra.Parsing.Resources;
+using Andastra.Parsing.Resource;
 using KotorDiff.App;
 
 namespace KotorDiff.Tests.Helpers

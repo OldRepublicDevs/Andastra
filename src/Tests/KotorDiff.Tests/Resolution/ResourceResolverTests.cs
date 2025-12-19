@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using Andastra.Parsing.Installation;
-using Andastra.Parsing.Resources;
+using Andastra.Parsing.Resource;
 using KotorDiff.Resolution;
 using Xunit;
 
