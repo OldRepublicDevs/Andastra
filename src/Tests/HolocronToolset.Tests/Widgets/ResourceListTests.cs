@@ -90,7 +90,7 @@ namespace HolocronToolset.Tests.Widgets
         {
             var resourceList = new ResourceList();
             string receivedSection = null;
-            
+
             resourceList.SectionChanged += (sender, section) =>
             {
                 receivedSection = section;
@@ -99,7 +99,7 @@ namespace HolocronToolset.Tests.Widgets
             // Set sections and trigger selection change
             var sections = new List<string> { "Section1", "Section2" };
             resourceList.SetSections(sections);
-            
+
             // Manually trigger the event by simulating selection change
             if (resourceList.Ui.SectionCombo != null && resourceList.Ui.SectionCombo.Items.Count > 0)
             {
@@ -116,7 +116,7 @@ namespace HolocronToolset.Tests.Widgets
         {
             var resourceList = new ResourceList();
             string receivedSection = null;
-            
+
             resourceList.ReloadClicked += (sender, section) =>
             {
                 receivedSection = section;
@@ -125,7 +125,7 @@ namespace HolocronToolset.Tests.Widgets
             // Set sections
             var sections = new List<string> { "Module1", "Module2" };
             resourceList.SetSections(sections);
-            
+
             // Trigger reload button click
             if (resourceList.Ui.ReloadButton != null)
             {
@@ -146,7 +146,7 @@ namespace HolocronToolset.Tests.Widgets
         {
             var resourceList = new ResourceList();
             bool eventFired = false;
-            
+
             resourceList.RefreshClicked += (sender, e) =>
             {
                 eventFired = true;
@@ -169,7 +169,7 @@ namespace HolocronToolset.Tests.Widgets
             var resourceList = new ResourceList();
             List<FileResource> receivedResources = null;
             bool? receivedUseSpecializedEditor = null;
-            
+
             resourceList.ResourceDoubleClicked += (sender, e) =>
             {
                 receivedResources = e.Resources;

@@ -400,6 +400,36 @@ namespace HolocronToolset.Tests.Formats
             data.Should().NotBeNull();
             data.Should().ContainKey("links");
             
+            // Debug: Inspect the links structure
+            var linksValue = data["links"] as System.Collections.Generic.Dictionary<string, object>;
+            linksValue.Should().NotBeNull();
+            linksValue.Should().ContainKey("value");
+            linksValue.Should().ContainKey("py_type");
+            linksValue["py_type"].Should().Be("list");
+            
+            // Check actual type of linksList - it might be List<Dictionary<string, object>> not List<object>
+            var linksListValue = linksValue["value"];
+            linksListValue.Should().NotBeNull();
+            
+            // Try to cast to IEnumerable to iterate
+            if (linksListValue is System.Collections.IEnumerable linksEnumerable)
+            {
+                int count = 0;
+                foreach (var item in linksEnumerable)
+                {
+                    count++;
+                    if (item is System.Collections.Generic.Dictionary<string, object> linkDict)
+                    {
+                        linkDict.Should().ContainKey("type");
+                        linkDict.Should().ContainKey("key");
+                        linkDict.Should().ContainKey("node");
+                        linkDict.Should().ContainKey("link_list_index");
+                        linkDict.Should().ContainKey("data");
+                    }
+                }
+                count.Should().Be(1);
+            }
+            
             var deserializedNode = DLGNode.FromDict(serialized);
             var deserialized = deserializedNode as DLGEntry;
             deserialized.Should().NotBeNull();
