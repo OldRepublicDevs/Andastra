@@ -1,6 +1,7 @@
 using Andastra.Parsing.Common;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
@@ -9,6 +10,7 @@ using Avalonia.Markup.Xaml;
 using Andastra.Parsing;
 using Andastra.Parsing.Extract;
 using Andastra.Parsing.Formats.GFF;
+using Andastra.Parsing.Formats.TwoDA;
 using Andastra.Parsing.Resource.Generics;
 using Andastra.Parsing.Resource;
 using HolocronToolset.Data;
@@ -23,10 +25,22 @@ namespace HolocronToolset.Editors
     // Original: class UTEEditor(Editor):
     public class UTEEditor : Editor
     {
+        // Data model for creature table rows
+        // Matching PyKotor implementation: creature table uses widgets in cells
+        // C# uses DataGrid with bindings, so we need a proper data model
+        private class CreatureRow
+        {
+            public bool SingleSpawn { get; set; }
+            public float CR { get; set; }
+            public int Appearance { get; set; }
+            public string ResRef { get; set; }
+        }
+
         private UTE _ute;
         private HTInstallation _installation;
         private List<string> _relevantCreatureResnames;
         private List<string> _relevantScriptResnames;
+        private ObservableCollection<CreatureRow> _creatureRows;
 
         // UI Controls - Basic
         private LocalizedStringEdit _nameEdit;
@@ -76,6 +90,7 @@ namespace HolocronToolset.Editors
             _ute = new UTE();
             _relevantCreatureResnames = new List<string>();
             _relevantScriptResnames = new List<string>();
+            _creatureRows = new ObservableCollection<CreatureRow>();
 
             InitializeComponent();
             SetupSignals();
@@ -184,29 +199,46 @@ namespace HolocronToolset.Editors
             }
 
             // Matching PyKotor implementation: difficulties: TwoDA | None = installation.ht_get_cache_2da(HTInstallation.TwoDA_ENC_DIFFICULTIES)
-            // TODO: Get TwoDA when available
+            TwoDA difficulties = installation.HtGetCache2DA(HTInstallation.TwoDAEncDifficulties);
             if (_difficultySelect != null)
             {
-                // TODO: Get difficulties from installation when TwoDA is available
-                // For now, just clear and set up empty
                 _difficultySelect.Items.Clear();
+                if (difficulties != null)
+                {
+                    List<string> difficultyLabels = difficulties.GetColumn("label");
+                    _difficultySelect.SetItems(difficultyLabels, sortAlphabetically: false);
+                    _difficultySelect.SetContext(difficulties, installation, HTInstallation.TwoDAEncDifficulties);
+                }
             }
 
             // Matching PyKotor implementation: factions: TwoDA | None = installation.ht_get_cache_2da(HTInstallation.TwoDA_FACTIONS)
+            TwoDA factions = installation.HtGetCache2DA(HTInstallation.TwoDAFactions);
             if (_factionSelect != null)
             {
-                // TODO: Get factions from installation when TwoDA is available
-                // For now, just clear and set up empty
                 _factionSelect.Items.Clear();
+                if (factions != null)
+                {
+                    List<string> factionLabels = factions.GetColumn("label");
+                    _factionSelect.SetItems(factionLabels, sortAlphabetically: false);
+                    _factionSelect.SetContext(factions, installation, HTInstallation.TwoDAFactions);
+                }
             }
 
             // Matching PyKotor implementation: self._installation.setup_file_context_menu(...)
-            // TODO: Setup file context menus when available
+            SetupFileContextMenus();
 
             // Matching PyKotor implementation: self.relevant_creature_resnames = sorted(...)
             if (installation != null && !string.IsNullOrEmpty(base._filepath))
             {
-                // TODO: Get relevant creature resources when get_relevant_resources is available
+                HashSet<FileResource> creatureResources = installation.GetRelevantResources(ResourceType.UTC, base._filepath);
+                _relevantCreatureResnames = creatureResources
+                    .Select(r => r.ResName.ToLowerInvariant())
+                    .Distinct()
+                    .OrderBy(r => r)
+                    .ToList();
+            }
+            else
+            {
                 _relevantCreatureResnames = new List<string>();
             }
         }
@@ -338,11 +370,14 @@ namespace HolocronToolset.Editors
                 SelectionMode = DataGridSelectionMode.Single
             };
 
-            // Add columns
+            // Add columns with proper bindings
             _creatureTable.Columns.Add(new DataGridCheckBoxColumn { Header = "SingleSpawn", Binding = new Avalonia.Data.Binding("SingleSpawn") });
             _creatureTable.Columns.Add(new DataGridTextColumn { Header = "CR", Binding = new Avalonia.Data.Binding("CR") });
             _creatureTable.Columns.Add(new DataGridTextColumn { Header = "Appearance", Binding = new Avalonia.Data.Binding("Appearance") });
             _creatureTable.Columns.Add(new DataGridTextColumn { Header = "ResRef", Binding = new Avalonia.Data.Binding("ResRef") });
+
+            // Set ItemsSource to ObservableCollection for proper binding
+            _creatureTable.ItemsSource = _creatureRows;
 
             var creatureButtonsPanel = new StackPanel { Orientation = Orientation.Horizontal };
             _removeCreatureButton = new Button { Content = "Remove" };
@@ -441,6 +476,8 @@ namespace HolocronToolset.Editors
             if (_spawnSelect != null)
             {
                 // Matching PyKotor implementation: self.ui.spawnSelect.setCurrentIndex(int(ute.single_shot))
+                // Python: 0 = Single Shot, 1 = Continuous
+                // C#: 0 = Single Shot, 1 = Continuous
                 _spawnSelect.SelectedIndex = ute.SingleShot ? 1 : 0;
             }
             if (_minCreatureSpin != null)
@@ -486,12 +523,12 @@ namespace HolocronToolset.Editors
 
             // Creatures
             // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/ute.py:181-190
-            if (_creatureTable != null)
+            if (_creatureTable != null && _creatureRows != null)
             {
-                var creatureList = new List<object>();
+                _creatureRows.Clear();
                 foreach (var creature in ute.Creatures)
                 {
-                    creatureList.Add(new
+                    _creatureRows.Add(new CreatureRow
                     {
                         SingleSpawn = creature.SingleSpawnBool,
                         CR = creature.ChallengeRating,
@@ -499,7 +536,6 @@ namespace HolocronToolset.Editors
                         ResRef = creature.ResRef.ToString()
                     });
                 }
-                _creatureTable.ItemsSource = creatureList;
             }
 
             // Scripts
@@ -529,10 +565,17 @@ namespace HolocronToolset.Editors
             // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/ute.py:199-214
             if (_installation != null && !string.IsNullOrEmpty(base._filepath))
             {
-                // TODO: Get relevant script resources when get_relevant_resources is available
-                _relevantScriptResnames = new List<string>();
+                HashSet<FileResource> scriptResources = _installation.GetRelevantResources(ResourceType.NCS, base._filepath);
+                _relevantScriptResnames = scriptResources
+                    .Select(r => r.ResName.ToLowerInvariant())
+                    .Distinct()
+                    .OrderBy(r => r)
+                    .ToList();
+
+                // Populate all script combo boxes with relevant script resources
                 if (_onEnterSelect != null)
                 {
+                    _onEnterSelect.Items.Clear();
                     foreach (var resname in _relevantScriptResnames)
                     {
                         _onEnterSelect.Items.Add(resname);
@@ -540,6 +583,7 @@ namespace HolocronToolset.Editors
                 }
                 if (_onExitSelect != null)
                 {
+                    _onExitSelect.Items.Clear();
                     foreach (var resname in _relevantScriptResnames)
                     {
                         _onExitSelect.Items.Add(resname);
@@ -547,6 +591,7 @@ namespace HolocronToolset.Editors
                 }
                 if (_onExhaustedEdit != null)
                 {
+                    _onExhaustedEdit.Items.Clear();
                     foreach (var resname in _relevantScriptResnames)
                     {
                         _onExhaustedEdit.Items.Add(resname);
@@ -554,6 +599,7 @@ namespace HolocronToolset.Editors
                 }
                 if (_onHeartbeatSelect != null)
                 {
+                    _onHeartbeatSelect.Items.Clear();
                     foreach (var resname in _relevantScriptResnames)
                     {
                         _onHeartbeatSelect.Items.Add(resname);
@@ -561,6 +607,7 @@ namespace HolocronToolset.Editors
                 }
                 if (_onUserDefinedSelect != null)
                 {
+                    _onUserDefinedSelect.Items.Clear();
                     foreach (var resname in _relevantScriptResnames)
                     {
                         _onUserDefinedSelect.Items.Add(resname);
@@ -608,60 +655,20 @@ namespace HolocronToolset.Editors
             // Creatures
             // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/ute.py:253-269
             ute.Creatures.Clear();
-            if (_creatureTable?.ItemsSource != null)
+            if (_creatureRows != null)
             {
-                foreach (var item in (System.Collections.IEnumerable)_creatureTable.ItemsSource)
+                foreach (var row in _creatureRows)
                 {
-                    // Extract creature data from DataGrid row
-                    // Use reflection to get properties from anonymous type
                     var creature = new UTECreature();
-                    var itemType = item.GetType();
-                    var resRefProp = itemType.GetProperty("ResRef");
-                    var appearanceProp = itemType.GetProperty("Appearance");
-                    var crProp = itemType.GetProperty("CR");
-                    var singleSpawnProp = itemType.GetProperty("SingleSpawn");
-
-                    if (resRefProp != null)
-                    {
-                        var resRefValue = resRefProp.GetValue(item);
-                        if (resRefValue != null)
-                        {
-                            creature.ResRef = new ResRef(resRefValue.ToString());
-                        }
-                    }
-                    if (appearanceProp != null)
-                    {
-                        var appearanceValue = appearanceProp.GetValue(item);
-                        if (appearanceValue != null && int.TryParse(appearanceValue.ToString(), out int appearance))
-                        {
-                            creature.Appearance = appearance;
-                        }
-                    }
-                    if (crProp != null)
-                    {
-                        var crValue = crProp.GetValue(item);
-                        if (crValue != null)
-                        {
-                            if (float.TryParse(crValue.ToString(), out float cr))
-                            {
-                                creature.CR = (int)cr;
-                            }
-                        }
-                    }
-                    if (singleSpawnProp != null)
-                    {
-                        var singleSpawnValue = singleSpawnProp.GetValue(item);
-                        if (singleSpawnValue != null && bool.TryParse(singleSpawnValue.ToString(), out bool singleSpawn))
-                        {
-                            creature.SingleSpawn = singleSpawn ? 1 : 0;
-                        }
-                    }
-
+                    creature.ResRef = !string.IsNullOrEmpty(row.ResRef) ? new ResRef(row.ResRef) : ResRef.FromBlank();
+                    creature.Appearance = row.Appearance;
+                    creature.CR = (int)row.CR;
+                    creature.SingleSpawn = row.SingleSpawn ? 1 : 0;
                     ute.Creatures.Add(creature);
                 }
             }
             // If table is empty or not set up, preserve existing creatures from _ute
-            if (ute.Creatures.Count == 0)
+            if (ute.Creatures.Count == 0 && _ute != null)
             {
                 foreach (var creature in _ute.Creatures)
                 {
@@ -786,7 +793,8 @@ namespace HolocronToolset.Editors
         private void ChangeName()
         {
             if (_installation == null) return;
-            var dialog = new LocalizedStringDialog(this, _installation, _ute.Name);
+            LocalizedString currentName = _nameEdit?.GetLocString() ?? _ute?.Name ?? LocalizedString.FromInvalid();
+            var dialog = new LocalizedStringDialog(this, _installation, currentName);
             if (dialog.ShowDialog())
             {
                 _ute.Name = dialog.LocString;
@@ -874,10 +882,13 @@ namespace HolocronToolset.Editors
         // Original: def add_creature(self, *args, resname: str = "", appearance_id: int = 0, challenge: float = 0.0, single: bool = False):
         private void AddCreature(string resname = "", int appearanceId = 0, float challenge = 0.0f, bool single = false)
         {
-            if (_creatureTable == null) return;
+            if (_creatureRows == null)
+            {
+                _creatureRows = new ObservableCollection<CreatureRow>();
+            }
 
-            // Create a simple object to represent the creature row
-            var creatureRow = new
+            // Create a new creature row
+            var creatureRow = new CreatureRow
             {
                 SingleSpawn = single,
                 CR = challenge,
@@ -885,43 +896,29 @@ namespace HolocronToolset.Editors
                 ResRef = resname
             };
 
-            // Add to ItemsSource
-            var currentList = _creatureTable.ItemsSource as System.Collections.IList;
-            if (currentList == null)
-            {
-                var newList = new List<object>();
-                if (_creatureTable.ItemsSource != null)
-                {
-                    foreach (var item in (System.Collections.IEnumerable)_creatureTable.ItemsSource)
-                    {
-                        newList.Add(item);
-                    }
-                }
-                newList.Add(creatureRow);
-                _creatureTable.ItemsSource = newList;
-            }
-            else
-            {
-                currentList.Add(creatureRow);
-            }
-
-            // Note: Creatures are stored in DataGrid ItemsSource, Build() will read from there
+            // Add to ObservableCollection (DataGrid is bound to this)
+            _creatureRows.Add(creatureRow);
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/ute.py:378-392
         // Original: def remove_selected_creature(self):
         private void RemoveSelectedCreature()
         {
-            if (_creatureTable == null) return;
+            if (_creatureTable == null || _creatureRows == null) return;
 
             // Try to get selected item
             var selectedItem = _creatureTable.SelectedItem;
-            if (selectedItem != null)
+            if (selectedItem is CreatureRow creatureRow)
             {
-                var currentList = _creatureTable.ItemsSource as System.Collections.IList;
-                if (currentList != null)
+                _creatureRows.Remove(creatureRow);
+            }
+            else if (selectedItem != null)
+            {
+                // Fallback: try to find by index
+                int selectedIndex = _creatureTable.SelectedIndex;
+                if (selectedIndex >= 0 && selectedIndex < _creatureRows.Count)
                 {
-                    currentList.Remove(selectedItem);
+                    _creatureRows.RemoveAt(selectedIndex);
                 }
             }
         }
@@ -1310,7 +1307,7 @@ namespace HolocronToolset.Editors
                 HolocronToolset.Utils.WindowUtils.AddWindow(utpEditor, show: true);
 
                 // Optionally add the new creature to the encounter table
-                // TODO: SIMPLIFIED - This would require updating the table's ItemsSource
+                // User can manually add it via the Add button after creating
             }
             catch (Exception ex)
             {
