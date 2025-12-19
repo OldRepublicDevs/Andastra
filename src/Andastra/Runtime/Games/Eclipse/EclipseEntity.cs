@@ -225,11 +225,22 @@ namespace Andastra.Runtime.Games.Eclipse
         /// <remarks>
         /// Doors have open/close state, lock state, transition logic.
         /// Based on door component structure in daorigins.exe and DragonAge2.exe.
+        /// - Note: Eclipse engines may not have traditional door systems like Odyssey/Aurora
+        /// - If doors are supported, they would use Eclipse-specific file formats and systems
+        /// - Original implementation: Needs reverse engineering from daorigins.exe and DragonAge2.exe
+        /// - Door component attached during entity creation if door support exists
         /// </remarks>
         private void AttachDoorComponents()
         {
-            // TODO: Attach door-specific components
-            // DoorComponent with open/closed states, locks, transitions
+            // Attach door component if not already present
+            // Based on Eclipse engine: Door component attachment (if doors are supported)
+            // Note: Eclipse engines may not support traditional doors, but component exists for compatibility
+            if (!HasComponent<IDoorComponent>())
+            {
+                var doorComponent = new EclipseDoorComponent();
+                doorComponent.Owner = this;
+                AddComponent<IDoorComponent>(doorComponent);
+            }
         }
 
         /// <summary>
@@ -238,11 +249,34 @@ namespace Andastra.Runtime.Games.Eclipse
         /// <remarks>
         /// Placeables have interaction state, inventory, use logic.
         /// Based on placeable component structure in daorigins.exe and DragonAge2.exe.
+        /// - PlaceableList @ 0x00af5028 (daorigins.exe) - Placeable list in area data
+        /// - CPlaceable @ 0x00b0d488 (daorigins.exe) - Placeable class name
+        /// - CCPlaceable class (daorigins.exe, DragonAge2.exe) - Placeable class implementation
+        /// - COMMAND_GETPLACEABLE* and COMMAND_SETPLACEABLE* functions (daorigins.exe) - Placeable property access
+        /// - Eclipse uses UnrealScript message passing system instead of direct function calls
+        /// - Placeables have appearance, useability, locks, inventory, HP, physics-based interactions
+        /// - Script events: OnUsed, OnOpen, OnClose, OnLock, OnUnlock, OnDamaged, OnDeath
+        /// - Containers (HasInventory=true) can store items, open/close states
+        /// - Lock system: KeyRequired flag, KeyName tag, LockDC difficulty class
+        /// - Eclipse-specific: Physics-based placeables, state-based system, different trap system, treasure categories
+        /// 
+        /// Component attachment pattern:
+        /// - Based on daorigins.exe: Placeable components are attached during entity creation from area templates
+        /// - Component provides: IsUseable, HasInventory, IsStatic, IsOpen, IsLocked, LockDC, KeyTag, HitPoints, MaxHitPoints, Hardness, AnimationState, Conversation
+        /// - Eclipse-specific properties: BaseType, Action, State, TreasureCategory, TreasureRank, PickLockLevel, AutoRemoveKey, PopupText
+        /// - Component initialization: Properties loaded from area template files and can be modified at runtime
         /// </remarks>
         private void AttachPlaceableComponents()
         {
-            // TODO: Attach placeable-specific components
-            // PlaceableComponent with use/interaction state
+            // Attach placeable component if not already present
+            // Based on daorigins.exe and DragonAge2.exe: Placeable component is attached during entity creation
+            // ComponentInitializer also handles this, but we ensure it's attached here for consistency
+            if (!HasComponent<IPlaceableComponent>())
+            {
+                var placeableComponent = new EclipsePlaceableComponent();
+                placeableComponent.Owner = this;
+                AddComponent<IPlaceableComponent>(placeableComponent);
+            }
         }
 
         /// <summary>

@@ -262,11 +262,36 @@ namespace Andastra.Runtime.Games.Aurora
         /// <remarks>
         /// Placeables have interaction state, inventory, use logic.
         /// Based on placeable component structure in nwmain.exe.
+        /// - CNWSPlaceable::LoadPlaceable @ 0x1404b4900 (nwmain.exe) - Loads placeable data from GFF
+        /// - CNWSPlaceable::SavePlaceable @ 0x1404b6a60 (nwmain.exe) - Saves placeable data to GFF
+        /// - LoadPlaceables @ 0x1403619e0 (nwmain.exe) - Loads placeable list from GIT
+        /// - SavePlaceables @ 0x140367260 (nwmain.exe) - Saves placeable list to GIT
+        /// - Located via string reference: "Placeable List" @ 0x140ddb7c0 (GFF list field in GIT)
+        /// - Based on UTP file format (GFF with "UTP " signature), similar to Odyssey
+        /// - Placeables have appearance, useability, locks, inventory, HP, traps, lighting
+        /// - Script events: OnUsed, OnOpen, OnClose, OnLock, OnUnlock, OnDamaged, OnDeath
+        /// - Containers (HasInventory=true) can store items, open/close states
+        /// - Lock system: KeyRequired flag, KeyName tag, LockDC difficulty class
+        /// - Aurora-specific: GroundPile, Portrait, LightState, Description, Portal, trap system differences
+        /// 
+        /// Component attachment pattern:
+        /// - Based on nwmain.exe: Placeable components are attached during entity creation from GIT templates
+        /// - CNWSPlaceable constructor creates placeable instances with component initialization
+        /// - Component provides: IsUseable, HasInventory, IsStatic, IsOpen, IsLocked, LockDC, KeyTag, HitPoints, MaxHitPoints, Hardness, AnimationState, Conversation
+        /// - Aurora-specific properties: GroundPile, Portrait, LightState, Description, Portal, KeyRequired, CloseLockDC
         /// </remarks>
         private void AttachPlaceableComponents()
         {
-            // TODO: Attach placeable-specific components
-            // PlaceableComponent with use/interaction state
+            // Attach placeable component if not already present
+            // Based on nwmain.exe: Placeable component is attached during entity creation
+            // CNWSPlaceable constructor creates placeable instances with component initialization
+            // LoadPlaceables @ 0x1403619e0 loads placeable list from area GIT and creates entities with placeable components
+            if (!HasComponent<IPlaceableComponent>())
+            {
+                var placeableComponent = new AuroraPlaceableComponent();
+                placeableComponent.Owner = this;
+                AddComponent<IPlaceableComponent>(placeableComponent);
+            }
         }
 
         /// <summary>
