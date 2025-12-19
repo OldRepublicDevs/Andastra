@@ -194,17 +194,61 @@ namespace Andastra.Runtime.Games.Aurora
         /// Checks line of sight between two points.
         /// </summary>
         /// <remarks>
+        /// Based on nwmain.exe: Aurora line of sight implementation.
         /// Aurora line of sight works across tile boundaries.
         /// Checks visibility through tile portals and terrain.
         /// More complex than Odyssey due to tile-based geometry.
+        /// 
+        /// Algorithm:
+        /// 1. Handle edge case: same point (always has line of sight)
+        /// 2. Perform raycast from start to end
+        /// 3. If raycast hits something, check if hit is close to destination (within tolerance)
+        /// 4. If hit is at destination or very close, line of sight is clear
+        /// 5. If hit blocks the path, line of sight is obstructed
+        /// 
+        /// This implementation matches the behavior used by:
+        /// - Perception system for AI visibility checks
+        /// - Projectile collision detection
+        /// - Movement collision detection
         /// </remarks>
         public bool HasLineOfSight(Vector3 start, Vector3 end)
         {
-            // TODO: Implement Aurora line of sight
-            // Check within-tile visibility
-            // Check inter-tile visibility through portals
-            // Handle terrain occlusion
-            throw new System.NotImplementedException("Aurora line of sight testing not yet implemented");
+            // Handle edge case: same point
+            Vector3 direction = end - start;
+            float distance = direction.Length();
+            if (distance < 1e-6f)
+            {
+                return true; // Same point, line of sight is clear
+            }
+
+            // Normalize direction for raycast
+            Vector3 normalizedDir = direction / distance;
+
+            // Perform raycast to check for obstructions
+            Vector3 hitPoint;
+            int hitFace;
+            if (Raycast(start, normalizedDir, distance, out hitPoint, out hitFace))
+            {
+                // A hit was found - check if it blocks line of sight
+                
+                // Calculate distances
+                float distToHit = Vector3.Distance(start, hitPoint);
+                float distToDest = distance;
+                
+                // If hit is very close to destination (within tolerance), consider line of sight clear
+                // This handles cases where the raycast hits the destination tile itself
+                const float tolerance = 0.5f; // 0.5 unit tolerance for tile precision
+                if (distToDest - distToHit < tolerance)
+                {
+                    return true; // Hit is at or very close to destination, line of sight is clear
+                }
+                
+                // Hit a blocking tile that obstructs line of sight
+                return false;
+            }
+
+            // No hit found - line of sight is clear
+            return true;
         }
 
         /// <summary>
@@ -224,38 +268,32 @@ namespace Andastra.Runtime.Games.Aurora
             // Lines 19-20: Convert X coordinate to tile index
             // Lines 30-31: Convert Y coordinate to tile index
             // TileSize is 10.0f units per tile (DAT_140dc2df4)
+            // Formula: tileX = floor(worldX / TileSize), tileY = floor(worldZ / TileSize)
 
             tileX = -1;
             tileY = -1;
 
-            // Convert world coordinates to tile grid coordinates
-            // Based on GetTile lines 19-20: if ((float)iVar2 * DAT_140dc2df4 <= *param_2) && (*param_2 < (float)(iVar2 + 1) * DAT_140dc2df4)
-            // This finds which tile contains the point by checking if point is within tile bounds
-            for (int x = 0; x < 32; x++) // Max 32 tiles per dimension (0x20 = 32)
+            // Handle empty tile grid
+            if (_tileWidth <= 0 || _tileHeight <= 0)
             {
-                float tileMinX = x * TileSize;
-                float tileMaxX = (x + 1) * TileSize;
-                if (tileMinX <= point.X && point.X < tileMaxX)
-                {
-                    tileX = x;
-                    break;
-                }
+                return false;
             }
 
-            // Based on GetTile lines 30-31: Same logic for Y coordinate
-            for (int y = 0; y < 32; y++)
+            // Convert world coordinates to tile grid coordinates using floor division
+            // Based on GetTile: tileX = floor(worldX / TileSize)
+            tileX = (int)Math.Floor(point.X / TileSize);
+            tileY = (int)Math.Floor(point.Z / TileSize); // Aurora uses Z for vertical, Y for depth
+
+            // Validate tile coordinates are within bounds
+            // Based on nwmain.exe: CNWSArea::GetTile bounds checking
+            if (tileX < 0 || tileX >= _tileWidth || tileY < 0 || tileY >= _tileHeight)
             {
-                float tileMinZ = y * TileSize;
-                float tileMaxZ = (y + 1) * TileSize;
-                if (tileMinZ <= point.Z && point.Z < tileMaxZ)
-                {
-                    tileY = y;
-                    break;
-                }
+                tileX = -1;
+                tileY = -1;
+                return false;
             }
 
-            // Return true if both coordinates were found
-            return tileX >= 0 && tileY >= 0;
+            return true;
         }
 
         /// <summary>
@@ -350,6 +388,17 @@ namespace Andastra.Runtime.Games.Aurora
         }
 
         /// <summary>
+        /// Finds a path from start to goal while avoiding obstacles.
+        /// Based on nwmain.exe: Similar obstacle avoidance to Odyssey engine
+        /// </summary>
+        public IList<Vector3> FindPathAroundObstacles(Vector3 start, Vector3 goal, IList<Interfaces.ObstacleInfo> obstacles)
+        {
+            // TODO: Implement Aurora obstacle avoidance pathfinding
+            // When FindPath is implemented, add obstacle blocking logic similar to Odyssey
+            throw new NotImplementedException("Aurora obstacle avoidance pathfinding not yet implemented");
+        }
+
+        /// <summary>
         /// Finds the face index at a given position.
         /// </summary>
         public int FindFaceAt(Vector3 position)
@@ -399,24 +448,226 @@ namespace Andastra.Runtime.Games.Aurora
         /// <summary>
         /// Performs a raycast against the mesh.
         /// </summary>
+        /// <remarks>
+        /// Based on nwmain.exe: Aurora tile-based raycast implementation.
+        /// Uses Digital Differential Analyzer (DDA) algorithm to traverse tiles along the ray.
+        /// Checks each tile the ray passes through for walkability and occlusion.
+        /// 
+        /// Algorithm:
+        /// 1. Normalize direction vector
+        /// 2. Convert origin to tile coordinates
+        /// 3. Use DDA to step through tiles along the ray
+        /// 4. Check each tile for walkability (non-walkable tiles block the ray)
+        /// 5. Return first blocking tile or end point if no obstruction
+        /// 
+        /// Note: This is a simplified implementation that uses tile walkability flags.
+        /// A full implementation would test against per-tile walkmesh geometry when available.
+        /// </remarks>
         public bool Raycast(Vector3 origin, Vector3 direction, float maxDistance, out Vector3 hitPoint, out int hitFace)
         {
-            // TODO: Implement Aurora raycast
             hitPoint = origin;
             hitFace = -1;
-            throw new NotImplementedException("Aurora raycast not yet implemented");
+
+            // Handle empty tile grid
+            if (_tileWidth <= 0 || _tileHeight <= 0 || _tiles == null || _tiles.Length == 0)
+            {
+                return false;
+            }
+
+            // Normalize direction
+            float dirLength = direction.Length();
+            if (dirLength < 1e-6f)
+            {
+                return false;
+            }
+            Vector3 normalizedDir = direction / dirLength;
+
+            // Calculate end point
+            Vector3 endPoint = origin + normalizedDir * maxDistance;
+
+            // Get starting tile coordinates
+            int startTileX, startTileY;
+            if (!GetTileCoordinates(origin, out startTileX, out startTileY))
+            {
+                // Origin is outside tile grid - start from edge
+                // Clamp to grid bounds
+                startTileX = (int)Math.Max(0, Math.Min(_tileWidth - 1, (int)Math.Floor(origin.X / TileSize)));
+                startTileY = (int)Math.Max(0, Math.Min(_tileHeight - 1, (int)Math.Floor(origin.Z / TileSize)));
+            }
+
+            // Get ending tile coordinates
+            int endTileX, endTileY;
+            GetTileCoordinates(endPoint, out endTileX, out endTileY);
+            // Clamp to grid bounds if outside
+            endTileX = Math.Max(0, Math.Min(_tileWidth - 1, endTileX));
+            endTileY = Math.Max(0, Math.Min(_tileHeight - 1, endTileY));
+
+            // DDA algorithm for tile traversal
+            int currentTileX = startTileX;
+            int currentTileY = startTileY;
+
+            // Step sizes for DDA (distance along ray to cross one tile in each direction)
+            float stepX = normalizedDir.X != 0 ? Math.Abs(TileSize / normalizedDir.X) : float.MaxValue;
+            float stepY = normalizedDir.Z != 0 ? Math.Abs(TileSize / normalizedDir.Z) : float.MaxValue;
+
+            // Calculate initial distance to next tile boundary in X and Z directions
+            float deltaX, deltaZ;
+            if (normalizedDir.X > 0)
+            {
+                float tileMaxX = (currentTileX + 1) * TileSize;
+                deltaX = (tileMaxX - origin.X) / normalizedDir.X;
+            }
+            else if (normalizedDir.X < 0)
+            {
+                float tileMinX = currentTileX * TileSize;
+                deltaX = (tileMinX - origin.X) / normalizedDir.X;
+            }
+            else
+            {
+                deltaX = float.MaxValue;
+            }
+
+            if (normalizedDir.Z > 0)
+            {
+                float tileMaxZ = (currentTileY + 1) * TileSize;
+                deltaZ = (tileMaxZ - origin.Z) / normalizedDir.Z;
+            }
+            else if (normalizedDir.Z < 0)
+            {
+                float tileMinZ = currentTileY * TileSize;
+                deltaZ = (tileMinZ - origin.Z) / normalizedDir.Z;
+            }
+            else
+            {
+                deltaZ = float.MaxValue;
+            }
+
+            // Track visited tiles to avoid infinite loops
+            HashSet<(int x, int y)> visitedTiles = new HashSet<(int x, int y)>();
+            const int maxIterations = 1000; // Safety limit
+            int iterations = 0;
+
+            // Traverse tiles along the ray
+            while (iterations < maxIterations)
+            {
+                iterations++;
+
+                // Check if we've reached the end tile
+                if (currentTileX == endTileX && currentTileY == endTileY)
+                {
+                    // Check final tile
+                    if (IsTileValid(currentTileX, currentTileY))
+                    {
+                        AuroraTile tile = _tiles[currentTileY, currentTileX];
+                        // If tile is not walkable, it blocks the ray
+                        if (!tile.IsWalkable)
+                        {
+                            // Calculate hit point at tile boundary
+                            float distToEnd = Vector3.Distance(origin, endPoint);
+                            hitPoint = origin + normalizedDir * distToEnd;
+                            hitFace = -1; // Tile-based, no face index
+                            return true;
+                        }
+                    }
+                    // Reached end without obstruction
+                    hitPoint = endPoint;
+                    hitFace = -1;
+                    return false;
+                }
+
+                // Check current tile
+                if (IsTileValid(currentTileX, currentTileY))
+                {
+                    AuroraTile tile = _tiles[currentTileY, currentTileX];
+                    // Non-walkable tiles block the ray
+                    if (!tile.IsWalkable)
+                    {
+                        // Calculate hit point at current position
+                        float currentDist = 0f;
+                        if (normalizedDir.X != 0)
+                        {
+                            float tileCenterX = (currentTileX + 0.5f) * TileSize;
+                            currentDist = Math.Abs((tileCenterX - origin.X) / normalizedDir.X);
+                        }
+                        else if (normalizedDir.Z != 0)
+                        {
+                            float tileCenterZ = (currentTileY + 0.5f) * TileSize;
+                            currentDist = Math.Abs((tileCenterZ - origin.Z) / normalizedDir.Z);
+                        }
+                        currentDist = Math.Min(currentDist, maxDistance);
+                        hitPoint = origin + normalizedDir * currentDist;
+                        hitFace = -1; // Tile-based, no face index
+                        return true;
+                    }
+                }
+                else
+                {
+                    // Invalid tile blocks the ray (out of bounds or not loaded)
+                    float currentDist = 0f;
+                    if (normalizedDir.X != 0)
+                    {
+                        float tileCenterX = (currentTileX + 0.5f) * TileSize;
+                        currentDist = Math.Abs((tileCenterX - origin.X) / normalizedDir.X);
+                    }
+                    else if (normalizedDir.Z != 0)
+                    {
+                        float tileCenterZ = (currentTileY + 0.5f) * TileSize;
+                        currentDist = Math.Abs((tileCenterZ - origin.Z) / normalizedDir.Z);
+                    }
+                    currentDist = Math.Min(currentDist, maxDistance);
+                    hitPoint = origin + normalizedDir * currentDist;
+                    hitFace = -1;
+                    return true;
+                }
+
+                // Check for infinite loop
+                if (visitedTiles.Contains((currentTileX, currentTileY)))
+                {
+                    break;
+                }
+                visitedTiles.Add((currentTileX, currentTileY));
+
+                // Move to next tile using DDA
+                // Choose the direction with the smaller delta (closer boundary)
+                if (deltaX < deltaZ)
+                {
+                    // Step in X direction
+                    deltaX += stepX; // Increment by step size for next boundary
+                    currentTileX += normalizedDir.X > 0 ? 1 : -1;
+                }
+                else
+                {
+                    // Step in Z direction
+                    deltaZ += stepY; // Increment by step size for next boundary
+                    currentTileY += normalizedDir.Z > 0 ? 1 : -1;
+                }
+
+                // Check bounds
+                if (currentTileX < 0 || currentTileX >= _tileWidth || currentTileY < 0 || currentTileY >= _tileHeight)
+                {
+                    // Ray exited tile grid
+                    hitPoint = endPoint;
+                    hitFace = -1;
+                    return false;
+                }
+            }
+
+            // Reached iteration limit or exited grid - no hit
+            hitPoint = endPoint;
+            hitFace = -1;
+            return false;
         }
 
         /// <summary>
-        /// Tests line of sight between two points.
+        /// Tests line of sight between two points (INavigationMesh interface).
         /// </summary>
+        /// <remarks>
+        /// Wrapper around HasLineOfSight for INavigationMesh interface compatibility.
+        /// Based on nwmain.exe: Aurora line of sight testing.
+        /// </remarks>
         public bool TestLineOfSight(Vector3 from, Vector3 to)
         {
-            // TODO: Implement Aurora line of sight
-            // Check within-tile visibility
-            // Check inter-tile visibility through portals
-            // Handle terrain occlusion
-            throw new NotImplementedException("Aurora line of sight testing not yet implemented");
+            return HasLineOfSight(from, to);
         }
 
         /// <summary>
