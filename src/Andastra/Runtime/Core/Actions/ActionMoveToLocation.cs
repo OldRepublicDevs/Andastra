@@ -46,17 +46,9 @@ namespace Andastra.Runtime.Core.Actions
         {
             _destination = destination;
             _run = run;
-            _collisionDetector = CreateCollisionDetector();
-        }
-
-        /// <summary>
-        /// Creates the appropriate collision detector for the current engine.
-        /// </summary>
-        private BaseCreatureCollisionDetector CreateCollisionDetector()
-        {
-            // Factory method: Create engine-specific collision detector
-            // For now, default to Odyssey detector (can be made engine-agnostic via world type checking)
-            return new Games.Odyssey.Collision.OdysseyCreatureCollisionDetector();
+            // TODO: Collision detector should be injected by game-specific runtime
+            // Andastra.Runtime.Core cannot depend on Andastra.Runtime.Games.Odyssey
+            _collisionDetector = null;
         }
 
         protected override ActionStatus ExecuteInternal(IEntity actor, float deltaTime)
@@ -253,8 +245,8 @@ namespace Andastra.Runtime.Core.Actions
                 //   - swkotor.exe: FindPathAroundObstacle @ 0x005d0840 (called from UpdateCreatureMovement @ 0x00516630, line 254)
                 //   - nwmain.exe: CPathfindInformation class with obstacle avoidance in pathfinding system
                 //   - daorigins.exe/DragonAge2.exe: Advanced dynamic obstacle system (different architecture)
-                IArea currentArea = actor.World.CurrentArea;
-                if (currentArea != null && currentArea.NavigationMesh != null)
+                IArea area = actor.World.CurrentArea;
+                if (area != null && area.NavigationMesh != null)
                 {
                     // Get blocking creature's position and bounding box
                     IEntity blockingCreature = actor.World.GetEntity(blockingCreatureId);
@@ -278,7 +270,7 @@ namespace Andastra.Runtime.Core.Actions
                             };
 
                             // Try to find path around obstacle from current position to destination
-                            IList<Vector3> newPath = currentArea.NavigationMesh.FindPathAroundObstacles(
+                            IList<Vector3> newPath = area.NavigationMesh.FindPathAroundObstacles(
                                 transform.Position,
                                 _destination,
                                 obstacles);

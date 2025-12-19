@@ -32,9 +32,6 @@
       <Setter Property="Foreground" Value="{DynamicResource ThemeAccentBrush}"/>
       <Setter Property="Height" Value="4"/>
     </Style>
-    <Style Selector="Slider:pointerover /template/ Track">
-      <Setter Property="Background" Value="{DynamicResource ThemeControlHighlightLowBrush}"/>
-    </Style>
     <Style Selector="TextBlock.timeLabel">
       <Setter Property="FontFamily" Value="Segoe UI, sans-serif"/>
       <Setter Property="FontSize" Value="12"/>
