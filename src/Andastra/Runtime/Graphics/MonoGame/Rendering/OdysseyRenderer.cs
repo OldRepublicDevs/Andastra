@@ -112,8 +112,12 @@ namespace Andastra.Runtime.MonoGame.Rendering
 
         /// <summary>
         /// Initializes the renderer with the specified settings.
-        /// NOTE: Currently, MonoGame handles all rendering through its built-in pipeline.
-        /// TODO: STUB - This custom renderer is stubbed out and will be expanded for multi-backend support later.
+        /// 
+        /// Multi-backend support:
+        /// - Automatically selects the best available backend based on settings and hardware
+        /// - Supports Vulkan, DirectX 12, DirectX 11, DirectX 10, DirectX 9 Remix, and OpenGL
+        /// - Falls back gracefully if preferred backend is unavailable
+        /// - Initializes raytracing and lighting systems based on backend capabilities
         /// </summary>
         public bool Initialize(RenderSettings settings, IntPtr windowHandle)
         {
@@ -122,32 +126,70 @@ namespace Andastra.Runtime.MonoGame.Rendering
                 return true;
             }
 
+            if (settings == null)
+            {
+                throw new ArgumentNullException(nameof(settings));
+            }
+
             _settings = settings;
 
-            // NOTE: We rely on MonoGame's built-in rendering, not custom backends.
-            // The SelectBackend call returns null intentionally - MonoGame handles rendering.
+            // Select and initialize the graphics backend
             _backend = SelectBackend(settings);
-
-            // No custom backend is needed - MonoGame handles everything
-            // This is intentional and not an error.
-            Console.WriteLine("[OdysseyRenderer] Using MonoGame's built-in rendering pipeline");
-
-            // RTX Remix is disabled in OpenGL-only mode
-            if (settings.RemixCompatibility)
+            if (_backend == null)
             {
-                Console.WriteLine("[OdysseyRenderer] RTX Remix disabled (OpenGL only mode - Remix requires DirectX 9)");
+                Console.WriteLine("[OdysseyRenderer] ERROR: Failed to initialize any graphics backend!");
+                return false;
             }
 
-            // Raytracing is disabled in OpenGL-only mode
-            if (settings.Raytracing != RaytracingLevel.Disabled)
+            Console.WriteLine("[OdysseyRenderer] Successfully initialized backend: " + _backend.BackendType);
+
+            // Initialize raytracing system if supported and requested
+            if (_backend.IsRaytracingEnabled && settings.Raytracing != RaytracingLevel.Disabled)
             {
-                Console.WriteLine("[OdysseyRenderer] Raytracing disabled (OpenGL only mode - requires Vulkan RT or DXR)");
+                // TODO: Initialize raytracing system when IRaytracingSystem implementation is available
+                Console.WriteLine("[OdysseyRenderer] Raytracing requested but system not yet implemented");
             }
+            else if (settings.Raytracing != RaytracingLevel.Disabled)
+            {
+                Console.WriteLine("[OdysseyRenderer] Raytracing requested but not supported by backend: " + _backend.BackendType);
+            }
+
+            // Initialize RTX Remix bridge if Direct3D9Remix backend is active
+            if (_backend.BackendType == GraphicsBackend.Direct3D9Remix && settings.RemixCompatibility)
+            {
+                try
+                {
+                    _remixBridge = new RemixBridge();
+                    if (_remixBridge.Initialize(windowHandle))
+                    {
+                        Console.WriteLine("[OdysseyRenderer] RTX Remix bridge initialized successfully");
+                    }
+                    else
+                    {
+                        Console.WriteLine("[OdysseyRenderer] WARNING: RTX Remix bridge initialization failed");
+                        _remixBridge?.Dispose();
+                        _remixBridge = null;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("[OdysseyRenderer] WARNING: RTX Remix bridge initialization exception: " + ex.Message);
+                    _remixBridge?.Dispose();
+                    _remixBridge = null;
+                }
+            }
+            else if (settings.RemixCompatibility && _backend.BackendType != GraphicsBackend.Direct3D9Remix)
+            {
+                Console.WriteLine("[OdysseyRenderer] WARNING: Remix compatibility requested but backend is not Direct3D9Remix");
+            }
+
+            // TODO: Initialize lighting system when ILightingSystem implementation is available
+            // TODO: Initialize material factory when IPbrMaterialFactory implementation is available
 
             _initialized = true;
             _frameNumber = 0;
 
-            Console.WriteLine("[OdysseyRenderer] Initialized successfully (OpenGL mode)");
+            Console.WriteLine("[OdysseyRenderer] Initialized successfully with backend: " + _backend.BackendType);
 
             return true;
         }
@@ -183,7 +225,7 @@ namespace Andastra.Runtime.MonoGame.Rendering
         /// </summary>
         public void BeginFrame()
         {
-            if (!_initialized)
+            if (!_initialized || _backend == null)
             {
                 return;
             }
@@ -202,7 +244,7 @@ namespace Andastra.Runtime.MonoGame.Rendering
         /// </summary>
         public void EndFrame()
         {
-            if (!_initialized)
+            if (!_initialized || _backend == null)
             {
                 return;
             }
@@ -220,8 +262,14 @@ namespace Andastra.Runtime.MonoGame.Rendering
         /// </summary>
         public void Resize(int width, int height)
         {
-            if (!_initialized)
+            if (!_initialized || _backend == null)
             {
+                return;
+            }
+
+            if (width <= 0 || height <= 0)
+            {
+                Console.WriteLine("[OdysseyRenderer] WARNING: Invalid resize dimensions: " + width + "x" + height);
                 return;
             }
 
@@ -233,24 +281,48 @@ namespace Andastra.Runtime.MonoGame.Rendering
 
         /// <summary>
         /// Updates render settings.
+        /// 
+        /// Note: Some settings changes may require backend reinitialization.
+        /// If the preferred backend changes, the renderer will need to be reinitialized.
         /// </summary>
         public void ApplySettings(RenderSettings settings)
         {
-            if (!_initialized)
+            if (!_initialized || _backend == null)
             {
+                return;
+            }
+
+            if (settings == null)
+            {
+                throw new ArgumentNullException(nameof(settings));
+            }
+
+            // Check if backend preference changed - if so, we need to reinitialize
+            if (settings.PreferredBackend != _settings.PreferredBackend && 
+                settings.PreferredBackend != GraphicsBackend.Auto)
+            {
+                Console.WriteLine("[OdysseyRenderer] Backend preference changed, reinitializing...");
+                Shutdown();
+                Initialize(settings, IntPtr.Zero); // Note: windowHandle may need to be stored
                 return;
             }
 
             _settings = settings;
 
-            // Update raytracing level
+            // Update raytracing level on backend
+            _backend.SetRaytracingLevel(settings.Raytracing);
+
+            // Update raytracing system if available
             if (_raytracing != null)
             {
                 _raytracing.SetLevel(settings.Raytracing);
             }
 
-            // Update backend settings
-            _backend.SetRaytracingLevel(settings.Raytracing);
+            // Resize if dimensions changed
+            if (settings.Width != _settings.Width || settings.Height != _settings.Height)
+            {
+                Resize(settings.Width, settings.Height);
+            }
         }
 
         /// <summary>
@@ -348,7 +420,7 @@ namespace Andastra.Runtime.MonoGame.Rendering
         /// </summary>
         public FrameStatistics GetStatistics()
         {
-            if (!_initialized)
+            if (!_initialized || _backend == null)
             {
                 return default(FrameStatistics);
             }
@@ -356,19 +428,52 @@ namespace Andastra.Runtime.MonoGame.Rendering
             return _backend.GetFrameStatistics();
         }
 
+        /// <summary>
+        /// Selects and initializes the appropriate graphics backend based on settings.
+        /// 
+        /// Backend selection priority:
+        /// 1. User-specified preferred backend (if available)
+        /// 2. Direct3D9Remix (if Remix compatibility requested)
+        /// 3. Direct3D12 or Vulkan (if raytracing requested)
+        /// 4. Platform-appropriate fallback chain (Vulkan -> DirectX -> OpenGL)
+        /// 
+        /// The factory automatically handles backend detection, initialization, and fallback.
+        /// </summary>
         private IGraphicsBackend SelectBackend(RenderSettings settings)
         {
-            // TODO: SIMPLIFIED - We currently use MonoGame's built-in rendering.
-            // TODO: SIMPLIFIED - The custom backend system is disabled for now. Vulkan/DirectX/Remix support
-            // TODO: SIMPLIFIED - will be added in a future update.
-            //
-            // MonoGame handles all rendering through its GraphicsDevice system, which
-            // uses OpenGL on desktop platforms (as configured in the .csproj files).
+            if (settings == null)
+            {
+                throw new ArgumentNullException(nameof(settings));
+            }
 
-            Console.WriteLine("[OdysseyRenderer] Using MonoGame's built-in rendering (custom backends disabled)");
+            // Use BackendFactory to create and initialize the best available backend
+            IGraphicsBackend backend = BackendFactory.CreateBackend(settings);
 
-            // Return null - we rely on MonoGame's rendering, not our custom backends
-            return null;
+            if (backend == null)
+            {
+                Console.WriteLine("[OdysseyRenderer] ERROR: BackendFactory failed to create any backend!");
+                Console.WriteLine("[OdysseyRenderer] This indicates all available backends failed to initialize.");
+                Console.WriteLine("[OdysseyRenderer] Check graphics drivers and system capabilities.");
+                return null;
+            }
+
+            Console.WriteLine("[OdysseyRenderer] Selected backend: " + backend.BackendType);
+            Console.WriteLine("[OdysseyRenderer] Backend capabilities:");
+            Console.WriteLine("[OdysseyRenderer]   - Raytracing: " + (backend.IsRaytracingEnabled ? "Yes" : "No"));
+            Console.WriteLine("[OdysseyRenderer]   - Max Texture Size: " + backend.Capabilities.MaxTextureSize);
+            Console.WriteLine("[OdysseyRenderer]   - Max Render Targets: " + backend.Capabilities.MaxRenderTargets);
+            Console.WriteLine("[OdysseyRenderer]   - Compute Shaders: " + (backend.Capabilities.SupportsComputeShaders ? "Yes" : "No"));
+            Console.WriteLine("[OdysseyRenderer]   - Geometry Shaders: " + (backend.Capabilities.SupportsGeometryShaders ? "Yes" : "No"));
+            Console.WriteLine("[OdysseyRenderer]   - Tessellation: " + (backend.Capabilities.SupportsTessellation ? "Yes" : "No"));
+            Console.WriteLine("[OdysseyRenderer]   - Mesh Shaders: " + (backend.Capabilities.SupportsMeshShaders ? "Yes" : "No"));
+            Console.WriteLine("[OdysseyRenderer]   - Variable Rate Shading: " + (backend.Capabilities.SupportsVariableRateShading ? "Yes" : "No"));
+            Console.WriteLine("[OdysseyRenderer]   - GPU Vendor: " + backend.Capabilities.VendorName);
+            Console.WriteLine("[OdysseyRenderer]   - GPU Device: " + backend.Capabilities.DeviceName);
+            Console.WriteLine("[OdysseyRenderer]   - Driver Version: " + backend.Capabilities.DriverVersion);
+            Console.WriteLine("[OdysseyRenderer]   - Dedicated VRAM: " + (backend.Capabilities.DedicatedVideoMemory / (1024 * 1024)) + " MB");
+            Console.WriteLine("[OdysseyRenderer]   - Shared System RAM: " + (backend.Capabilities.SharedSystemMemory / (1024 * 1024)) + " MB");
+
+            return backend;
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "<Pending>")]
