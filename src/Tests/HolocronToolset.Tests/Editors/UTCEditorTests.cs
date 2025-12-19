@@ -444,7 +444,8 @@ namespace HolocronToolset.Tests.Editors
             tagEdit.Text.Should().Be("test_resref", "Tag should be updated to match resref after generate button click");
 
             // Test 2: Verify the generated tag is saved correctly
-            var (data1, _) = editor.Build();
+            Tuple<byte[], byte[]> buildResult1 = editor.Build();
+            byte[] data1 = buildResult1.Item1;
             data1.Should().NotBeNull();
             var gff1 = GFF.FromBytes(data1);
             var utc1 = UTCHelpers.ConstructUtc(gff1);
@@ -464,7 +465,8 @@ namespace HolocronToolset.Tests.Editors
             // Test 5: Verify generated tag persists through build/load cycle
             resrefEdit.Text = "persistent_resref";
             tagGenerateBtn.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
-            var (data2, _) = editor.Build();
+            Tuple<byte[], byte[]> buildResult2 = editor.Build();
+            byte[] data2 = buildResult2.Item1;
             data2.Should().NotBeNull();
 
             editor.Load("test_creature", "test_creature", ResourceType.UTC, data2);
