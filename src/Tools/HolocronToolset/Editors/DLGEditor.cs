@@ -1231,6 +1231,11 @@ namespace HolocronToolset.Editors
         private List<DLGStandardItem> _rootItems = new List<DLGStandardItem>();
         private DLGEditor _editor;
 
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/model.py:293
+        // Original: self.link_to_items: weakref.WeakKeyDictionary[DLGLink, list[DLGStandardItem]] = weakref.WeakKeyDictionary()
+        // In C#, we use a regular Dictionary and manually manage cleanup
+        private Dictionary<DLGLink, List<DLGStandardItem>> _linkToItems = new Dictionary<DLGLink, List<DLGStandardItem>>();
+
         public DLGModel()
         {
         }
@@ -1241,6 +1246,12 @@ namespace HolocronToolset.Editors
         }
 
         public int RowCount => _rootItems.Count;
+
+        /// <summary>
+        /// Gets the dictionary mapping links to their items.
+        /// Matching PyKotor implementation: self.link_to_items
+        /// </summary>
+        public IReadOnlyDictionary<DLGLink, List<DLGStandardItem>> LinkToItems => _linkToItems;
 
         private int _selectedIndex = -1;
         public int SelectedIndex
