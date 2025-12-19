@@ -80,18 +80,29 @@ namespace HolocronToolset.Dialogs
         /// <returns>The main window, or null if not found.</returns>
         private static Window GetMainWindow()
         {
-            // Try to find the main window from the application's window collection
-            if (Avalonia.Application.Current != null)
+            // Try to find the main window from the application
+            // Avalonia doesn't have Application.Windows, so we use a different approach
+            if (Avalonia.Application.Current != null && Avalonia.Application.Current.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop)
             {
-                var windows = Avalonia.Application.Current.Windows;
-                if (windows != null)
+                // Return the main window if available
+                if (desktop.MainWindow != null)
                 {
-                    // Return the first visible window, or the first window if none are visible
-                    Window mainWindow = windows.FirstOrDefault(w => w.IsVisible) ?? windows.FirstOrDefault();
-                    if (mainWindow != null)
+                    return desktop.MainWindow;
+                }
+
+                // Otherwise, try to find the first visible window
+                foreach (var window in desktop.Windows)
+                {
+                    if (window.IsVisible)
                     {
-                        return mainWindow;
+                        return window;
                     }
+                }
+
+                // Return the first window if any exist
+                if (desktop.Windows.Count > 0)
+                {
+                    return desktop.Windows[0];
                 }
             }
 

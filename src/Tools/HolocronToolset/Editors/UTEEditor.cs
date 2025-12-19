@@ -7,6 +7,7 @@ using Avalonia.Controls.Primitives;
 using Avalonia.Layout;
 using Avalonia.Markup.Xaml;
 using Andastra.Parsing;
+using Andastra.Parsing.Extract;
 using Andastra.Parsing.Formats.GFF;
 using Andastra.Parsing.Resource.Generics;
 using Andastra.Parsing.Resource;
@@ -973,9 +974,12 @@ namespace HolocronToolset.Editors
             menuItems.Add(openInEditorItem);
 
             // Enable/disable based on whether script name is set
-            comboBox.TextChanged += (sender, e) =>
+            // Note: ComboBox in Avalonia doesn't have TextChanged, use SelectionChanged or TextBox instead
+            // For ComboBox, we'll use SelectionChanged and also check Text property if available
+            comboBox.SelectionChanged += (sender, e) =>
             {
-                openInEditorItem.IsEnabled = !string.IsNullOrWhiteSpace(comboBox.Text);
+                string text = comboBox.SelectedItem?.ToString() ?? comboBox.Text ?? string.Empty;
+                openInEditorItem.IsEnabled = !string.IsNullOrWhiteSpace(text);
             };
 
             // "Create New Script" menu item - creates a new NSS file
@@ -985,9 +989,6 @@ namespace HolocronToolset.Editors
             };
             createNewItem.Click += (sender, e) => CreateNewScript(comboBox, scriptTypeName);
             menuItems.Add(createNewItem);
-
-            // Separator
-            menuItems.Add(new Separator());
 
             // "View Resource Location" menu item - shows where the script is located
             var viewLocationItem = new MenuItem
@@ -999,12 +1000,21 @@ namespace HolocronToolset.Editors
             menuItems.Add(viewLocationItem);
 
             // Enable/disable based on whether script name is set
-            comboBox.TextChanged += (sender, e) =>
+            // Note: ComboBox in Avalonia doesn't have TextChanged, use SelectionChanged or TextBox instead
+            comboBox.SelectionChanged += (sender, e) =>
             {
-                viewLocationItem.IsEnabled = !string.IsNullOrWhiteSpace(comboBox.Text);
+                string text = comboBox.SelectedItem?.ToString() ?? comboBox.Text ?? string.Empty;
+                viewLocationItem.IsEnabled = !string.IsNullOrWhiteSpace(text);
             };
 
-            contextMenu.Items.AddRange(menuItems);
+            // AddRange doesn't exist in Avalonia ItemCollection, use a loop instead
+            foreach (var item in menuItems)
+            {
+                contextMenu.Items.Add(item);
+            }
+            // Add separator after first menu items (Separator is not a MenuItem, so add directly to Items collection)
+            contextMenu.Items.Insert(menuItems.Count - 1, new Separator());
+            
             comboBox.ContextMenu = contextMenu;
         }
 
@@ -1189,9 +1199,6 @@ namespace HolocronToolset.Editors
             createNewCreatureItem.Click += (sender, e) => CreateNewCreature();
             menuItems.Add(createNewCreatureItem);
 
-            // Separator
-            menuItems.Add(new Separator());
-
             // "View Creature Resource Location" menu item
             var viewCreatureLocationItem = new MenuItem
             {
@@ -1201,7 +1208,13 @@ namespace HolocronToolset.Editors
             viewCreatureLocationItem.Click += (sender, e) => ViewCreatureResourceLocation();
             menuItems.Add(viewCreatureLocationItem);
 
-            contextMenu.Items.AddRange(menuItems);
+            // AddRange doesn't exist in Avalonia ItemCollection, use a loop instead
+            foreach (var item in menuItems)
+            {
+                contextMenu.Items.Add(item);
+            }
+            // Add separator after first menu items (Separator is not a MenuItem, so add directly to Items collection)
+            contextMenu.Items.Insert(menuItems.Count - 1, new Separator());
             _creatureTable.ContextMenu = contextMenu;
 
             // Update menu enabled state when selection changes

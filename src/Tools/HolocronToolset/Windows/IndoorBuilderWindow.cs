@@ -303,6 +303,14 @@ namespace HolocronToolset.Windows
         // Matching PyKotor implementation - mapRenderer widget
         // Original: self.ui.mapRenderer
         public IndoorMapRenderer MapRenderer { get; set; }
+
+        // Matching PyKotor implementation - actionZoomIn menu action
+        // Original: self.ui.actionZoomIn.triggered.connect(lambda: self.ui.mapRenderer.zoom_in_camera(ZOOM_STEP))
+        public Action ActionZoomIn { get; set; }
+
+        // Matching PyKotor implementation - actionZoomOut menu action
+        // Original: self.ui.actionZoomOut.triggered.connect(lambda: self.ui.mapRenderer.zoom_in_camera(-ZOOM_STEP))
+        public Action ActionZoomOut { get; set; }
     }
 
 }

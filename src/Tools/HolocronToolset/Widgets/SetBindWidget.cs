@@ -12,6 +12,7 @@ namespace HolocronToolset.Widgets
     public partial class SetBindWidget : UserControl
     {
         private HashSet<Key> _keybind = new HashSet<Key>();
+        private HashSet<PointerUpdateKind> _mouseButtons = new HashSet<PointerUpdateKind>();
         private bool _recordBind = false;
         private ComboBox _mouseCombo;
         private TextBox _setKeysEdit;
