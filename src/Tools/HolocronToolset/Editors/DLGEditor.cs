@@ -693,7 +693,8 @@ namespace HolocronToolset.Editors
             base.OnKeyDown(e);
 
             Key key = e.Key;
-            bool isAutoRepeat = e.IsRepeat;
+            // Avalonia doesn't have IsRepeat property - track manually via _keysDown
+            bool isAutoRepeat = _keysDown.Contains(key);
 
             // Matching PyKotor implementation: if not is_tree_view_call: check focus
             // For now, we handle all key events at the window level
@@ -901,7 +902,7 @@ namespace HolocronToolset.Editors
             }
 
             // Matching PyKotor implementation: handle Shift+Up/Down combinations
-            if (_keysDown.Contains(Key.Shift))
+            if (e.KeyModifiers.HasFlag(KeyModifiers.Shift))
             {
                 if (key == Key.Up)
                 {
@@ -1015,7 +1016,7 @@ namespace HolocronToolset.Editors
                 {
                     // Set light yellow background (#FFFFEE) for focus mode
                     _dialogTree.Background = new SolidColorBrush(
-                        Color.FromRgb(0xFF, 0xFF, 0xEE));
+                        Avalonia.Media.Color.FromRgb(0xFF, 0xFF, 0xEE));
                 }
             }
 

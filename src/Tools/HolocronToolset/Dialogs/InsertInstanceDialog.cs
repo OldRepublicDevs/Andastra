@@ -307,7 +307,7 @@ namespace HolocronToolset.Dialogs
                 }
 
                 string fileName = Path.GetFileName(filepath);
-                if (Misc.IsAnyErfTypeFile(fileName))
+                if (Andastra.Parsing.Tools.Misc.IsAnyErfTypeFile(fileName))
                 {
                     // Handle ERF/MOD/SAV files
                     ERF erf;
@@ -341,7 +341,7 @@ namespace HolocronToolset.Dialogs
                     // Write ERF to file
                     ERFAuto.WriteErf(erf, filepath, outputFormat);
                 }
-                else if (Misc.IsRimFile(fileName))
+                else if (Andastra.Parsing.Common.Misc.IsRimFile(fileName))
                 {
                     // Handle RIM files
                     RIM rim;

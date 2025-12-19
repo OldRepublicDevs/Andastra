@@ -399,14 +399,9 @@ namespace HolocronToolset.Editors
                 Tag = new BookmarkData { LineNumber = lineNumber, Description = defaultDescription }
             };
 
-            if (_bookmarkTree.Items == null)
-            {
-                _bookmarkTree.Items = new List<TreeViewItem>();
-            }
-
-            var itemsList = _bookmarkTree.Items as List<TreeViewItem> ?? new List<TreeViewItem>();
+            var itemsList = _bookmarkTree.ItemsSource as List<TreeViewItem> ?? new List<TreeViewItem>();
             itemsList.Add(item);
-            _bookmarkTree.Items = itemsList;
+            _bookmarkTree.ItemsSource = itemsList;
 
             SaveBookmarks();
             UpdateBookmarkVisualization();
@@ -432,7 +427,7 @@ namespace HolocronToolset.Editors
                 return;
             }
 
-            var itemsList = _bookmarkTree.Items as List<TreeViewItem> ?? new List<TreeViewItem>();
+            var itemsList = _bookmarkTree.ItemsSource as List<TreeViewItem> ?? new List<TreeViewItem>();
             foreach (var item in selectedItems)
             {
                 if (item != null)
@@ -440,7 +435,7 @@ namespace HolocronToolset.Editors
                     itemsList.Remove(item);
                 }
             }
-            _bookmarkTree.Items = itemsList;
+            _bookmarkTree.ItemsSource = itemsList;
 
             SaveBookmarks();
             UpdateBookmarkVisualization();
@@ -556,12 +551,12 @@ namespace HolocronToolset.Editors
             {
                 // For testing, we'll start with empty bookmarks
                 // In production, this would load from persistent storage
-                _bookmarkTree.Items = new List<TreeViewItem>();
+                _bookmarkTree.ItemsSource = new List<TreeViewItem>();
             }
             catch
             {
                 // Ignore load errors in test environment
-                _bookmarkTree.Items = new List<TreeViewItem>();
+                _bookmarkTree.ItemsSource = new List<TreeViewItem>();
             }
         }
 
