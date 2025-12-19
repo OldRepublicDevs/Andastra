@@ -9,26 +9,38 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey.Culling
     /// Hi-Z occlusion culling implementation for KOTOR2 graphics backend (swkotor2.exe).
     /// Uses OpenGL for depth buffer access and Hi-Z mipmap generation.
     /// 
+    /// IMPORTANT: This is a MODERN ENHANCEMENT - the original swkotor2.exe does NOT implement Hi-Z occlusion culling.
+    /// The original engine uses VIS files for room-to-room visibility (portal-based culling).
+    /// 
     /// Matches swkotor2.exe OpenGL usage patterns exactly:
-    /// - Uses glReadPixels for depth buffer reading (swkotor2.exe: glReadPixels @ 0x0080a978)
+    /// - Uses glCopyTexImage2D for framebuffer-to-texture copy (swkotor2.exe: FUN_0042a100 @ 0x0042a100, line 29)
     /// - Uses glDepthFunc, glDepthMask for depth testing (swkotor2.exe: glDepthFunc @ 0x0080ad96, glDepthMask @ 0x0080aa38)
     /// - OpenGL context: Created via wglCreateContext (swkotor2.exe: FUN_00461c50 @ 0x00461c50)
     /// - Texture operations: glGenTextures, glBindTexture, glTexImage2D (swkotor2.exe: FUN_0042a100 @ 0x0042a100)
+    /// - NOTE: glReadPixels exists in swkotor2.exe @ 0x0080a978 but is NEVER CALLED (no cross-references found)
     /// </summary>
     /// <remarks>
     /// KOTOR2-Specific OpenGL Implementation (swkotor2.exe):
     /// - OpenGL context: HGLRC created via wglCreateContext
     /// - Device context: HDC from GetDC(windowHandle)
-    /// - Depth buffer: GL_DEPTH_COMPONENT format, read via glReadPixels
+    /// - Depth buffer: Copied via glCopyTexImage2D (matches swkotor2.exe: FUN_0042a100 line 29 pattern)
     /// - Hi-Z buffer: GL_TEXTURE_2D with GL_R32F format (single-channel float for depth)
     /// - Mipmap generation: CPU-side max depth calculation (OpenGL 1.x/2.x doesn't support compute shaders)
     /// - Global variables: DAT_0080c994, DAT_0080cafc (KOTOR2-specific texture flags)
     /// - Helper functions: FUN_00475760, FUN_0076dba0 (KOTOR2-specific texture setup)
     /// - Display mode handling: FUN_00462560 @ 0x00462560 (has floating-point refresh rate comparison)
+    /// - Original engine occlusion: VIS files for room visibility, NOT Hi-Z buffers
+    /// 
+    /// Original Engine Behavior (swkotor2.exe):
+    /// - Uses VIS files for room-to-room visibility culling (portal-based)
+    /// - Uses frustum culling for geometry outside view
+    /// - Uses glDepthFunc/glDepthMask for depth testing during rendering
+    /// - Does NOT read depth buffers back from GPU
+    /// - Does NOT implement Hi-Z occlusion culling
     /// 
     /// Inheritance Structure:
     /// - BaseOcclusionCuller (Runtime.Graphics.Common.Culling) - Common occlusion culling logic
-    ///   - Kotor2OcclusionCuller (this class) - KOTOR2 OpenGL-specific implementation
+    ///   - Kotor2OcclusionCuller (this class) - KOTOR2 OpenGL-specific implementation (modern enhancement)
     /// </remarks>
     public class Kotor2OcclusionCuller : BaseOcclusionCuller
     {
@@ -64,17 +76,19 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey.Culling
 
         /// <summary>
         /// Generates Hi-Z buffer from depth buffer using OpenGL.
-        /// Matches swkotor2.exe OpenGL depth buffer reading pattern.
+        /// Matches swkotor2.exe OpenGL framebuffer-to-texture copy pattern.
         /// </summary>
         /// <param name="depthBuffer">Depth buffer object (not used directly, reads from current OpenGL framebuffer).</param>
         /// <remarks>
         /// KOTOR2 Implementation (swkotor2.exe):
-        /// - Reads depth buffer using glReadPixels (swkotor2.exe: glReadPixels @ 0x0080a978)
-        /// - Format: GL_DEPTH_COMPONENT, Type: GL_FLOAT
-        /// - Copies to Hi-Z buffer mip level 0 using glTexImage2D
+        /// - Copies depth buffer using glCopyTexImage2D (swkotor2.exe: FUN_0042a100 @ 0x0042a100, line 29)
+        /// - Pattern: glCopyTexImage2D(0x84f5, 0, 0x8058, 0, 0, width, height, 0) - matches original exactly
+        /// - 0x84f5 = GL_TEXTURE_RECTANGLE_NV, 0x8058 = GL_RGBA8 (original engine uses RGBA, we use depth)
+        /// - Then reads back via glGetTexImage for CPU-side processing
         /// - Generates subsequent mip levels using CPU-side max depth calculation
         /// - Matches FUN_0042a100 @ 0x0042a100 texture initialization pattern
         /// - Display mode handling: FUN_00462560 @ 0x00462560 (floating-point refresh rate comparison)
+        /// - NOTE: Original engine does NOT implement this - this is a modern enhancement
         /// </remarks>
         protected override void GenerateHiZBufferInternal(object depthBuffer)
         {
@@ -83,7 +97,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey.Culling
                 return;
             }
 
-            // Make OpenGL context current (required for glReadPixels)
+            // Make OpenGL context current (required for glCopyTexImage2D)
             // Matches swkotor2.exe: wglMakeCurrent(hdc, hglrc) pattern from FUN_00461c50
             if (!wglMakeCurrent(_glDevice, _glContext))
             {
@@ -92,15 +106,17 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey.Culling
 
             try
             {
-                // Read depth buffer from current framebuffer
-                // Matches swkotor2.exe: glReadPixels usage pattern
-                float[] depthData = new float[_width * _height];
-                glReadPixels(0, 0, _width, _height, GL_DEPTH_COMPONENT, GL_FLOAT, depthData);
-
-                // Copy depth data to Hi-Z buffer mip level 0
-                // Matches swkotor2.exe: glTexImage2D pattern from FUN_0042a100
+                // Copy depth buffer from framebuffer to texture using glCopyTexImage2D
+                // Matches swkotor2.exe: glCopyTexImage2D pattern from FUN_0042a100 line 29
+                // Original: glCopyTexImage2D(0x84f5, 0, 0x8058, 0, 0, width, height, 0)
+                // We use GL_TEXTURE_2D and GL_DEPTH_COMPONENT for depth buffer
                 glBindTexture(GL_TEXTURE_2D, _hiZBufferTexture);
-                glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, _width, _height, 0, GL_RED, GL_FLOAT, depthData);
+                glCopyTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, 0, 0, _width, _height, 0);
+
+                // Read depth data back from texture for CPU-side processing
+                // Original engine doesn't do this, but we need it for Hi-Z mipmap generation
+                float[] depthData = new float[_width * _height];
+                glGetTexImage(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, GL_FLOAT, depthData);
 
                 // Populate mip level 0 in cache
                 if (_mipLevelCache == null)
@@ -158,6 +174,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey.Culling
         /// - Uses CPU-side cache for accurate max depth values (primary method)
         /// - Falls back to glGetTexImage if cache is invalid (slower, but accurate)
         /// - Matches FUN_0042a100 @ 0x0042a100 texture access pattern
+        /// - NOTE: Original engine does NOT implement this - this is a modern enhancement
         /// </remarks>
         protected override float SampleHiZBufferMaxDepthInternal(int minX, int minY, int maxX, int maxY, int mipLevel)
         {
@@ -319,9 +336,11 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey.Culling
         private const string OPENGL32_DLL = "opengl32.dll";
         private const string GDI32_DLL = "gdi32.dll";
 
-        // OpenGL Function Declarations (matches swkotor2.exe: glReadPixels @ 0x0080a978, glDepthFunc @ 0x0080ad96, etc.)
-        [DllImport(OPENGL32_DLL, EntryPoint = "glReadPixels", CallingConvention = CallingConvention.Cdecl)]
-        private static extern void glReadPixels(int x, int y, int width, int height, uint format, uint type, float[] pixels);
+        // OpenGL Function Declarations (matches swkotor2.exe: FUN_0042a100 @ 0x0042a100)
+        // NOTE: glReadPixels exists @ 0x0080a978 but is NEVER CALLED in original engine (no cross-references)
+        // Original engine uses glCopyTexImage2D instead (FUN_0042a100 line 29)
+        [DllImport(OPENGL32_DLL, EntryPoint = "glCopyTexImage2D", CallingConvention = CallingConvention.Cdecl)]
+        private static extern void glCopyTexImage2D(uint target, int level, uint internalFormat, int x, int y, int width, int height, int border);
 
         [DllImport(OPENGL32_DLL, EntryPoint = "glGenTextures", CallingConvention = CallingConvention.Cdecl)]
         private static extern void glGenTextures(int n, uint[] textures);
