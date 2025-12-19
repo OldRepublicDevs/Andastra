@@ -23,7 +23,7 @@ namespace Andastra.Runtime.Games.Common
     /// - swkotor2.exe: DispatchScriptEvent @ 0x004dd730, script budget tracking
     /// - nwmain.exe: ExecuteCommandExecuteScript @ 0x14051d5c0, CNWSVirtualMachineCommands class
     /// - daorigins.exe: Eclipse script execution enhancements
-    /// - DragonAge2.exe/MassEffect.exe/MassEffect2.exe: Advanced script systems
+    /// - DragonAge2.exe//: Advanced script systems
     ///
     /// Common script execution features:
     /// - NCS bytecode interpretation via NcsVm
@@ -216,8 +216,8 @@ namespace Andastra.Runtime.Games.Common
         /// - nwmain.exe: DelayCommand implementation
         /// - daorigins.exe: DelayCommand implementation
         /// - DragonAge2.exe: DelayCommand implementation
-        /// - MassEffect.exe: DelayCommand implementation
-        /// - MassEffect2.exe: DelayCommand implementation
+        /// - : DelayCommand implementation
+        /// - : DelayCommand implementation
         /// 
         /// Implementation flow:
         /// 1. Create ActionDoCommand that executes the script with captured context

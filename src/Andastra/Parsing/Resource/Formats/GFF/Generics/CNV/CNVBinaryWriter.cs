@@ -15,7 +15,7 @@ namespace Andastra.Parsing.Resource.Generics.CNV
     /// <remarks>
     /// CNV Binary Writer:
     /// - Writes GFF format files with "CNV " signature
-    /// - Used by Eclipse Engine games (Dragon Age, Mass Effect)
+    /// - Used by Eclipse Engine games (Dragon Age, )
     /// - Dismantles CNV objects to GFF structures
     /// </remarks>
     public class CNVBinaryWriter
@@ -42,7 +42,7 @@ namespace Andastra.Parsing.Resource.Generics.CNV
             if (!game.IsEclipse())
             {
                 throw new ArgumentException(
-                    $"CNV format is only supported for Eclipse Engine games (Dragon Age, Mass Effect). " +
+                    $"CNV format is only supported for Eclipse Engine games (Dragon Age, ). " +
                     $"Provided game: {game}",
                     nameof(game));
             }
@@ -64,7 +64,7 @@ namespace Andastra.Parsing.Resource.Generics.CNV
             if (!game.IsEclipse())
             {
                 throw new ArgumentException(
-                    $"CNV format is only supported for Eclipse Engine games (Dragon Age, Mass Effect). " +
+                    $"CNV format is only supported for Eclipse Engine games (Dragon Age, ). " +
                     $"Provided game: {game}",
                     nameof(game));
             }
@@ -84,7 +84,7 @@ namespace Andastra.Parsing.Resource.Generics.CNV
             if (!game.IsEclipse())
             {
                 throw new ArgumentException(
-                    $"CNV format is only supported for Eclipse Engine games (Dragon Age, Mass Effect). " +
+                    $"CNV format is only supported for Eclipse Engine games (Dragon Age, ). " +
                     $"Provided game: {game}",
                     nameof(game));
             }

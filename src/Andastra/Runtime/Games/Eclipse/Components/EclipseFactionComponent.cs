@@ -6,7 +6,7 @@ using Andastra.Runtime.Engines.Eclipse.Systems;
 namespace Andastra.Runtime.Games.Eclipse.Components
 {
     /// <summary>
-    /// Eclipse engine-specific implementation of faction component for Dragon Age and Mass Effect.
+    /// Eclipse engine-specific implementation of faction component for Dragon Age and .
     /// </summary>
     /// <remarks>
     /// Eclipse Faction Component:

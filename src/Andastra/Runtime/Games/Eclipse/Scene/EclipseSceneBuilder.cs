@@ -10,13 +10,13 @@ using JetBrains.Annotations;
 namespace Andastra.Runtime.Games.Eclipse.Scene
 {
     /// <summary>
-    /// Eclipse engine (Dragon Age Origins, Dragon Age 2, Mass Effect, Mass Effect 2) scene builder (graphics-backend agnostic).
+    /// Eclipse engine (Dragon Age Origins, Dragon Age 2, ,  2) scene builder (graphics-backend agnostic).
     /// Builds abstract rendering structures from ARE (area) files with advanced features.
     /// Works with both MonoGame and Stride backends.
     /// </summary>
     /// <remarks>
     /// Eclipse Scene Builder:
-    /// - Based on daorigins.exe, DragonAge2.exe, MassEffect.exe, MassEffect2.exe area loading system
+    /// - Based on daorigins.exe, DragonAge2.exe, ,  area loading system
     /// - TODO: STUB - Reverse engineer Eclipse area loading (search for "BioWare::Area", "Level" strings in executables)
     /// - Original implementation: Builds rendering structures from ARE with advanced features (dynamic geometry, physics)
     /// - ARE file format: Contains area geometry, dynamic objects, physics meshes, environmental effects
@@ -51,7 +51,7 @@ namespace Andastra.Runtime.Games.Eclipse.Scene
         /// Scene Building Process (Eclipse engines):
         /// - TODO: STUB - Reverse engineer Eclipse engine area loading
         /// - daorigins.exe: Search for "BioWare::Area::Load"
-        /// - MassEffect.exe: Search for "Level::Load", "ULevel"
+        /// - : Search for "Level::Load", "ULevel"
         /// - Original implementation: Builds rendering structures from ARE with dynamic systems
         /// - Process:
         ///   1. Parse ARE area geometry (static meshes, terrain)
@@ -68,7 +68,7 @@ namespace Andastra.Runtime.Games.Eclipse.Scene
             }
 
             // TODO: STUB - Implement BuildScene when Eclipse ARE parser is complete
-            throw new NotImplementedException("Eclipse BuildScene: ARE parser integration needed (daorigins.exe, MassEffect.exe area loading)");
+            throw new NotImplementedException("Eclipse BuildScene: ARE parser integration needed (daorigins.exe,  area loading)");
 
             /*
             var sceneData = new EclipseSceneData();
@@ -147,7 +147,7 @@ namespace Andastra.Runtime.Games.Eclipse.Scene
     }
 
     /// <summary>
-    /// Scene data for Eclipse engine (daorigins.exe, DragonAge2.exe, MassEffect.exe, MassEffect2.exe).
+    /// Scene data for Eclipse engine (daorigins.exe, DragonAge2.exe, , ).
     /// Contains area sections and current section tracking.
     /// Graphics-backend agnostic.
     /// </summary>

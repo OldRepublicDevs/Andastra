@@ -18,7 +18,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Profiles
     ///   - KOTOR 2 / TSL (Odyssey) - K2GameProfile
     ///   - Jade Empire (Odyssey variant) - future
     ///   - NWN (Aurora - future)
-    ///   - Mass Effect (Eclipse/Unreal - future)
+    ///   -  (Eclipse/Unreal - future)
     /// - Each game profile provides:
     ///   - Resource layout specifics (chitin.key, texture packs, modules directory)
     ///   - Script function sets (NWScript with game-specific variations, K1 ~850 functions, K2 ~950 functions)
@@ -81,7 +81,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Profiles
         Odyssey,
         
         /// <summary>
-        /// Eclipse/Unreal Engine (Mass Effect series)
+        /// Eclipse/Unreal Engine ( series)
         /// </summary>
         Eclipse,
         

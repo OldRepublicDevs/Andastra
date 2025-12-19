@@ -624,7 +624,7 @@ namespace Andastra.Runtime.Core.Combat
         /// - Located via string references: EFFECT_TYPE_DEAF @ ScriptDefs constant 13
         /// - Original implementation: Deafness effect prevents creature from hearing sounds
         /// - Used by PerceptionManager to block hearing perception checks
-        /// - Common across all engines: Odyssey (swkotor.exe, swkotor2.exe), Aurora (nwmain.exe), Eclipse (daorigins.exe, DragonAge2.exe), Infinity (MassEffect.exe, MassEffect2.exe)
+        /// - Common across all engines: Odyssey (swkotor.exe, swkotor2.exe), Aurora (nwmain.exe), Eclipse (daorigins.exe, DragonAge2.exe), Infinity (, )
         /// </remarks>
         public static Effect Deafness(int rounds = 0)
         {

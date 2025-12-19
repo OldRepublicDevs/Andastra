@@ -11,7 +11,7 @@ namespace Andastra.Runtime.Core.Interfaces.Components
     ///   - Odyssey: OdysseyWaypointComponent (swkotor.exe, swkotor2.exe)
     ///   - Aurora: AuroraWaypointComponent (nwmain.exe)
     ///   - Eclipse: EclipseWaypointComponent (daorigins.exe, DragonAge2.exe) - if waypoints are supported
-    ///   - Infinity: InfinityWaypointComponent (MassEffect.exe, MassEffect2.exe) - if waypoints are supported
+    ///   - Infinity: InfinityWaypointComponent (, ) - if waypoints are supported
     /// - Common functionality: Template reference, Map notes, Basic waypoint operations
     /// - Waypoints are invisible markers used for scripting and navigation
     /// - Waypoints can have map notes for player reference (displayed on minimap when MapNoteEnabled is true)

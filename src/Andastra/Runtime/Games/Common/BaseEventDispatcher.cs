@@ -17,7 +17,7 @@ namespace Andastra.Runtime.Games.Common
     /// - swkotor2.exe: DispatchEvent @ 0x004dcfb0 with comprehensive event mapping
     /// - nwmain.exe: Aurora event system
     /// - daorigins.exe: Eclipse event system with additional events
-    /// - DragonAge2.exe/MassEffect.exe/MassEffect2.exe: Enhanced event systems
+    /// - DragonAge2.exe//: Enhanced event systems
     ///
     /// Common event types across engines:
     /// - Area events: AREA_TRANSITION, REMOVE_FROM_AREA

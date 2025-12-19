@@ -46,7 +46,7 @@ namespace Andastra.Parsing.Tools
             }
 
             // Checks for each game
-            bool[] game1PcChecks = new[]
+            bool[] gaPcChecks = new[]
             {
                 Check("streamwaves"),
                 Check("swkotor.exe"),
@@ -63,7 +63,7 @@ namespace Andastra.Parsing.Tools
                 Check("modules/mainmenu.mod"),
             };
 
-            bool[] game1XboxChecks = new[]
+            bool[] gaXboxChecks = new[]
             {
                 Check("01_SS_Repair01.ini"),
                 Check("swpatch.ini"),
@@ -86,7 +86,7 @@ namespace Andastra.Parsing.Tools
                 Check("rimsxbox/manm28ad_adx.rim"),
             };
 
-            bool[] game1IosChecks = new[]
+            bool[] gaIosChecks = new[]
             {
                 Check("override/ios_action_bg.tga"),
                 Check("override/ios_action_bg2.tga"),
@@ -124,10 +124,7 @@ namespace Andastra.Parsing.Tools
                 Check("AppIcon50x50~ipad.png"),
             };
 
-            // Android checks not yet implemented - requires Android-specific file path knowledge
-            bool[] game1AndroidChecks = new bool[0];
-
-            bool[] game2PcChecks = new[]
+            bool[] gaPcChecks = new[]
             {
                 Check("streamvoice"),
                 Check("swkotor2.exe"),
@@ -142,7 +139,7 @@ namespace Andastra.Parsing.Tools
                 Check("data/Dialogs.bif"),
             };
 
-            bool[] game2XboxChecks = new[]
+            bool[] gaXboxChecks = new[]
             {
                 Check("combat.erf"),
                 Check("effects.erf"),
@@ -179,7 +176,7 @@ namespace Andastra.Parsing.Tools
                 Check("SWRC/Textures/GUIContent.utx"),
             };
 
-            bool[] game2IosChecks = new[]
+            bool[] gaIosChecks = new[]
             {
                 Check("override/ios_mfi_deu.tga"),
                 Check("override/ios_mfi_eng.tga"),
@@ -208,66 +205,66 @@ namespace Andastra.Parsing.Tools
             };
 
             // Android checks not yet implemented - requires Android-specific file path knowledge
-            bool[] game2AndroidChecks = new bool[0];
+            bool[] gaAndroidChecks = new bool[0];
 
             // Determine the game with the most checks passed
-            int game1Score = game1PcChecks.Count(x => x);
-            int game2Score = game2PcChecks.Count(x => x);
-            int game1XboxScore = game1XboxChecks.Count(x => x);
-            int game2XboxScore = game2XboxChecks.Count(x => x);
-            int game1IosScore = game1IosChecks.Count(x => x);
-            int game2IosScore = game2IosChecks.Count(x => x);
-            int game1AndroidScore = game1AndroidChecks.Count(x => x);
-            int game2AndroidScore = game2AndroidChecks.Count(x => x);
+            int gaScore = gaPcChecks.Count(x => x);
+            int gaScore = gaPcChecks.Count(x => x);
+            int gaXboxScore = gaXboxChecks.Count(x => x);
+            int gaXboxScore = gaXboxChecks.Count(x => x);
+            int gaIosScore = gaIosChecks.Count(x => x);
+            int gaIosScore = gaIosChecks.Count(x => x);
+            int gaAndroidScore = gaAndroidChecks.Count(x => x);
+            int gaAndroidScore = gaAndroidChecks.Count(x => x);
 
             Game? highestScoringGame = null;
             int highestScore = 0;
 
-            if (game1Score > highestScore)
+            if (gaScore > highestScore)
             {
-                highestScore = game1Score;
+                highestScore = gaScore;
                 highestScoringGame = Game.K1;
             }
 
-            if (game2Score > highestScore)
+            if (gaScore > highestScore)
             {
-                highestScore = game2Score;
+                highestScore = gaScore;
                 highestScoringGame = Game.K2;
             }
 
-            if (game1XboxScore > highestScore)
+            if (gaXboxScore > highestScore)
             {
-                highestScore = game1XboxScore;
+                highestScore = gaXboxScore;
                 highestScoringGame = Game.K1_XBOX;
             }
 
-            if (game2XboxScore > highestScore)
+            if (gaXboxScore > highestScore)
             {
-                highestScore = game2XboxScore;
+                highestScore = gaXboxScore;
                 highestScoringGame = Game.K2_XBOX;
             }
 
-            if (game1IosScore > highestScore)
+            if (gaIosScore > highestScore)
             {
-                highestScore = game1IosScore;
+                highestScore = gaIosScore;
                 highestScoringGame = Game.K1_IOS;
             }
 
-            if (game2IosScore > highestScore)
+            if (gaIosScore > highestScore)
             {
-                highestScore = game2IosScore;
+                highestScore = gaIosScore;
                 highestScoringGame = Game.K2_IOS;
             }
 
-            if (game1AndroidScore > highestScore)
+            if (gaAndroidScore > highestScore)
             {
-                highestScore = game1AndroidScore;
+                highestScore = gaAndroidScore;
                 highestScoringGame = Game.K1_ANDROID;
             }
 
-            if (game2AndroidScore > highestScore)
+            if (gaAndroidScore > highestScore)
             {
-                highestScore = game2AndroidScore;
+                highestScore = gaAndroidScore;
                 highestScoringGame = Game.K2_ANDROID;
             }
 

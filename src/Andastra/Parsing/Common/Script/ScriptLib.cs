@@ -13995,12 +13995,12 @@ void SetPazzakLastGameLostLocal(int bValue)
     }
     return;
 }
-int GetPazzakGame1WonLocal()
+int GetPazzakGaWonLocal()
 {
     // This uses SW_PLOT_BOOLEAN_02 for Pazzak on Furko Nellis in the area tat_m17af.
     return UT_GetPlotBooleanFlag(OBJECT_SELF, SW_PLOT_BOOLEAN_02);
 }
-void SetPazzakGame1WonLocal(int bValue)
+void SetPazzakGaWonLocal(int bValue)
 {
     // This uses SW_PLOT_BOOLEAN_02 for Pazzak on Furko Nellis in the area tat_m17af.
     if (bValue == TRUE || bValue == FALSE)
@@ -14009,12 +14009,12 @@ void SetPazzakGame1WonLocal(int bValue)
     }
     return;
 }
-int GetPazzakGame2WonLocal()
+int GetPazzakGaWonLocal()
 {
     // This uses SW_PLOT_BOOLEAN_03 for Pazzak on Furko Nellis in the area tat_m17af.
     return UT_GetPlotBooleanFlag(OBJECT_SELF, SW_PLOT_BOOLEAN_03);
 }
-void SetPazzakGame2WonLocal(int bValue)
+void SetPazzakGaWonLocal(int bValue)
 {
     // This uses SW_PLOT_BOOLEAN_03 for Pazzak on Furko Nellis in the area tat_m17af.
     if (bValue == TRUE || bValue == FALSE)

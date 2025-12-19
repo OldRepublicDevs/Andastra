@@ -1,13 +1,13 @@
 
 _ReSharper*/
-.backups/
-.DS_Store
-.env
-.gitignore
-.history/
-.idea/
-.mypy_cache/
-.vs/
+.*
+!.cursor
+!.cursorignore
+!.cursorrules
+!.editorconfig
+!.gitignore
+!.vscode
+!test_*.py
 [Aa][Rr][Mm]/
 [Aa][Rr][Mm]64/
 [Bb]in/
@@ -79,11 +79,11 @@ ScaffoldingReadMe.txt
 temp_*
 temp-*
 test_*
-!test_*.py
 test-*
 TestResult.xml
 TestResults/
 Thumbs.db
 x64/
 x86/
-vendor/PyKotor/vendor/KotORModSync/
+DELETEME_TEST_COMP4
+DELETEME_TEST_SAFETY_539905882

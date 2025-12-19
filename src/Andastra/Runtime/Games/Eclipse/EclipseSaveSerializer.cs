@@ -15,11 +15,11 @@ using Andastra.Runtime.Games.Common;
 namespace Andastra.Runtime.Games.Eclipse
 {
     /// <summary>
-    /// Eclipse Engine (Mass Effect/Dragon Age) save game serializer implementation.
+    /// Eclipse Engine (/Dragon Age) save game serializer implementation.
     /// </summary>
     /// <remarks>
     /// Eclipse Save Serializer Implementation:
-    /// - Based on daorigins.exe, DragonAge2.exe, MassEffect.exe, MassEffect2.exe
+    /// - Based on daorigins.exe, DragonAge2.exe, , 
     /// - Most complex save system with physics state, destruction, modifications
     /// - Handles real-time area changes, destructible environments
     ///
@@ -47,10 +47,10 @@ namespace Andastra.Runtime.Games.Eclipse
         /// Gets the save file format version for Eclipse engine.
         /// </summary>
         /// <remarks>
-        /// Dragon Age Origins: 1, Dragon Age 2: 2, Mass Effect: 3, Mass Effect 2: 4.
+        /// Dragon Age Origins: 1, Dragon Age 2: 2, : 3,  2: 4.
         /// Higher versions include more complex state tracking.
         /// </remarks>
-        protected override int SaveVersion => 4; // Mass Effect 2 version
+        protected override int SaveVersion => 4; //  2 version
 
         /// <summary>
         /// Gets the engine identifier.
@@ -79,7 +79,7 @@ namespace Andastra.Runtime.Games.Eclipse
         ///
         /// Binary format structure:
         /// - Signature (4 bytes): "DAS ", "DAS2", "MES ", or "MES2" based on game
-        /// - Version (int32): Save format version (1=DAO, 2=DA2, 3=ME1, 4=ME2)
+        /// - Version (int32): Save format version (1=DAO, 2=DA2, 3=, 4=)
         /// - Engine identifier length (int32) + Engine identifier string
         /// - Save name (string)
         /// - Current area name (string)
@@ -101,8 +101,8 @@ namespace Andastra.Runtime.Games.Eclipse
         /// Based on reverse engineering of:
         /// - daorigins.exe: Save metadata serialization functions
         /// - DragonAge2.exe: Enhanced save metadata serialization
-        /// - MassEffect.exe: Save metadata serialization
-        /// - MassEffect2.exe: Advanced save metadata with relationships
+        /// - : Save metadata serialization
+        /// - : Advanced save metadata with relationships
         /// </remarks>
         public override byte[] SerializeSaveNfo(SaveGameData saveData)
         {
@@ -115,7 +115,7 @@ namespace Andastra.Runtime.Games.Eclipse
             using (var writer = new BinaryWriter(stream, Encoding.UTF8))
             {
                 // Determine signature based on save version
-                // Version 1 = DAO ("DAS "), Version 2 = DA2 ("DAS2"), Version 3 = ME1 ("MES "), Version 4 = ME2 ("MES2")
+                // Version 1 = DAO ("DAS "), Version 2 = DA2 ("DAS2"), Version 3 =  ("MES "), Version 4 =  ("MES2")
                 string signature;
                 switch (SaveVersion)
                 {
@@ -470,8 +470,8 @@ namespace Andastra.Runtime.Games.Eclipse
         /// Based on reverse engineering of:
         /// - daorigins.exe: Save metadata deserialization functions
         /// - DragonAge2.exe: Enhanced save metadata deserialization
-        /// - MassEffect.exe: Save metadata deserialization
-        /// - MassEffect2.exe: Advanced save metadata with relationships
+        /// - : Save metadata deserialization
+        /// - : Advanced save metadata with relationships
         /// </remarks>
         public override SaveGameMetadata DeserializeSaveNfo(byte[] nfoData)
         {
@@ -527,7 +527,7 @@ namespace Andastra.Runtime.Games.Eclipse
                 {
                     // Check if it's a compatible Eclipse variant
                     if (!engineIdentifier.StartsWith("Eclipse", StringComparison.OrdinalIgnoreCase) &&
-                        engineIdentifier != "DragonAge" && engineIdentifier != "MassEffect")
+                        engineIdentifier != "DragonAge" && engineIdentifier != "")
                     {
                         throw new InvalidDataException($"Save file created with incompatible engine: {engineIdentifier}");
                     }
@@ -664,8 +664,8 @@ namespace Andastra.Runtime.Games.Eclipse
         /// Based on reverse engineering of:
         /// - daorigins.exe: Global variable serialization functions
         /// - DragonAge2.exe: Enhanced global variable serialization
-        /// - MassEffect.exe: UBioGlobalVariableTable serialization
-        /// - MassEffect2.exe: Advanced global variable state with relationships
+        /// - : UBioGlobalVariableTable serialization
+        /// - : Advanced global variable state with relationships
         ///
         /// Binary format:
         /// - Boolean count (int32) + [name (string) + value (bool)] pairs
@@ -865,8 +865,8 @@ namespace Andastra.Runtime.Games.Eclipse
         /// Based on reverse engineering of:
         /// - daorigins.exe: Global variable deserialization functions
         /// - DragonAge2.exe: Enhanced global variable deserialization
-        /// - MassEffect.exe: UBioGlobalVariableTable deserialization
-        /// - MassEffect2.exe: Advanced global variable state restoration
+        /// - : UBioGlobalVariableTable deserialization
+        /// - : Advanced global variable state restoration
         ///
         /// Binary format (matches SerializeGlobals):
         /// - Boolean count (int32) + [name (string) + value (bool)] pairs
@@ -974,8 +974,8 @@ namespace Andastra.Runtime.Games.Eclipse
         /// Based on reverse engineering of:
         /// - daorigins.exe: Squad state serialization functions
         /// - DragonAge2.exe: Enhanced squad state serialization
-        /// - MassEffect.exe: Squad state serialization (intABioPlayerSquadexec serialization)
-        /// - MassEffect2.exe: Advanced squad state with relationships
+        /// - : Squad state serialization (intABioPlayerSquadexec serialization)
+        /// - : Advanced squad state with relationships
         ///
         /// Binary format structure:
         /// - Has player character (int32): 0 or 1
@@ -1260,8 +1260,8 @@ namespace Andastra.Runtime.Games.Eclipse
         /// Based on reverse engineering of:
         /// - daorigins.exe: Squad state deserialization functions
         /// - DragonAge2.exe: Enhanced squad state deserialization
-        /// - MassEffect.exe: Squad state deserialization
-        /// - MassEffect2.exe: Advanced squad state with relationships
+        /// - : Squad state deserialization
+        /// - : Advanced squad state with relationships
         ///
         /// Binary format structure (matches SerializeParty):
         /// - Has player character (int32): 0 or 1
@@ -1562,8 +1562,8 @@ namespace Andastra.Runtime.Games.Eclipse
         /// Based on reverse engineering of:
         /// - daorigins.exe: Area state deserialization functions
         /// - DragonAge2.exe: Enhanced area state restoration
-        /// - MassEffect.exe: Area deserialization with physics state
-        /// - MassEffect2.exe: Advanced area state restoration with relationships
+        /// - : Area deserialization with physics state
+        /// - : Advanced area state restoration with relationships
         ///
         /// Binary format (matches SerializeArea):
         /// - Has area state flag (int32)
@@ -1631,8 +1631,8 @@ namespace Andastra.Runtime.Games.Eclipse
         /// Based on reverse engineering of:
         /// - daorigins.exe: Entity serialization functions
         /// - DragonAge2.exe: Enhanced entity state serialization
-        /// - MassEffect.exe: Squad member entity serialization
-        /// - MassEffect2.exe: Advanced entity state with relationships
+        /// - : Squad member entity serialization
+        /// - : Advanced entity state with relationships
         /// </remarks>
         public override byte[] SerializeEntities(IEnumerable<IEntity> entities)
         {
@@ -1669,8 +1669,8 @@ namespace Andastra.Runtime.Games.Eclipse
         /// Based on reverse engineering of:
         /// - daorigins.exe: Entity deserialization functions
         /// - DragonAge2.exe: Enhanced entity state restoration
-        /// - MassEffect.exe: Squad member entity restoration
-        /// - MassEffect2.exe: Advanced entity state with relationships
+        /// - : Squad member entity restoration
+        /// - : Advanced entity state with relationships
         /// </remarks>
         public override IEnumerable<IEntity> DeserializeEntities(byte[] entitiesData)
         {
@@ -1706,8 +1706,8 @@ namespace Andastra.Runtime.Games.Eclipse
         /// Based on reverse engineering of:
         /// - daorigins.exe: Area state deserialization
         /// - DragonAge2.exe: Enhanced area state deserialization
-        /// - MassEffect.exe: Area state deserialization
-        /// - MassEffect2.exe: Advanced area state deserialization
+        /// - : Area state deserialization
+        /// - : Advanced area state deserialization
         /// </remarks>
         private Core.Save.AreaState DeserializeAreaState(BinaryReader reader)
         {
@@ -1771,8 +1771,8 @@ namespace Andastra.Runtime.Games.Eclipse
         /// Based on reverse engineering of:
         /// - daorigins.exe: Entity state list deserialization
         /// - DragonAge2.exe: Enhanced entity state list deserialization
-        /// - MassEffect.exe: Entity state list deserialization
-        /// - MassEffect2.exe: Advanced entity state list deserialization
+        /// - : Entity state list deserialization
+        /// - : Advanced entity state list deserialization
         /// </remarks>
         private List<Core.Save.EntityState> DeserializeEntityStateList(BinaryReader reader)
         {
@@ -1796,8 +1796,8 @@ namespace Andastra.Runtime.Games.Eclipse
         /// Based on reverse engineering of:
         /// - daorigins.exe: Entity state deserialization
         /// - DragonAge2.exe: Enhanced entity state deserialization
-        /// - MassEffect.exe: Entity state deserialization
-        /// - MassEffect2.exe: Advanced entity state deserialization
+        /// - : Entity state deserialization
+        /// - : Advanced entity state deserialization
         /// </remarks>
         private void DeserializeEntityState(BinaryReader reader, Core.Save.EntityState entity)
         {
@@ -1843,8 +1843,8 @@ namespace Andastra.Runtime.Games.Eclipse
         /// Based on reverse engineering of:
         /// - daorigins.exe: Object value deserialization
         /// - DragonAge2.exe: Enhanced object value deserialization
-        /// - MassEffect.exe: Object value deserialization
-        /// - MassEffect2.exe: Advanced object value deserialization
+        /// - : Object value deserialization
+        /// - : Advanced object value deserialization
         /// </remarks>
         private object DeserializeObjectValue(BinaryReader reader)
         {
@@ -1875,8 +1875,8 @@ namespace Andastra.Runtime.Games.Eclipse
         /// Based on reverse engineering of:
         /// - daorigins.exe: Local variable set deserialization
         /// - DragonAge2.exe: Enhanced local variable set deserialization
-        /// - MassEffect.exe: Local variable set deserialization
-        /// - MassEffect2.exe: Advanced local variable set deserialization
+        /// - : Local variable set deserialization
+        /// - : Advanced local variable set deserialization
         /// </remarks>
         private Core.Save.LocalVariableSet DeserializeLocalVariableSet(BinaryReader reader)
         {
@@ -1943,8 +1943,8 @@ namespace Andastra.Runtime.Games.Eclipse
         /// Based on reverse engineering of:
         /// - daorigins.exe: Saved location deserialization
         /// - DragonAge2.exe: Enhanced saved location deserialization
-        /// - MassEffect.exe: Saved location deserialization
-        /// - MassEffect2.exe: Advanced saved location deserialization
+        /// - : Saved location deserialization
+        /// - : Advanced saved location deserialization
         /// </remarks>
         private Core.Save.SavedLocation DeserializeSavedLocation(BinaryReader reader)
         {
@@ -1969,8 +1969,8 @@ namespace Andastra.Runtime.Games.Eclipse
         /// Based on reverse engineering of:
         /// - daorigins.exe: Saved effect deserialization
         /// - DragonAge2.exe: Enhanced saved effect deserialization
-        /// - MassEffect.exe: Saved effect deserialization
-        /// - MassEffect2.exe: Advanced saved effect deserialization
+        /// - : Saved effect deserialization
+        /// - : Advanced saved effect deserialization
         /// </remarks>
         private Core.Save.SavedEffect DeserializeSavedEffect(BinaryReader reader)
         {
@@ -2025,8 +2025,8 @@ namespace Andastra.Runtime.Games.Eclipse
         /// Based on reverse engineering of:
         /// - daorigins.exe: Area state application to area objects
         /// - DragonAge2.exe: Enhanced area state application
-        /// - MassEffect.exe: Area state application with physics restoration
-        /// - MassEffect2.exe: Advanced area state application with relationships
+        /// - : Area state application with physics restoration
+        /// - : Advanced area state application with relationships
         /// </remarks>
         private void ApplyAreaStateToArea(Core.Save.AreaState areaState, IArea area)
         {
@@ -2082,8 +2082,8 @@ namespace Andastra.Runtime.Games.Eclipse
         /// Based on reverse engineering of:
         /// - daorigins.exe: Entity state application
         /// - DragonAge2.exe: Enhanced entity state application
-        /// - MassEffect.exe: Entity state application
-        /// - MassEffect2.exe: Advanced entity state application
+        /// - : Entity state application
+        /// - : Advanced entity state application
         /// </remarks>
         private void ApplyEntityStatesToArea(List<Core.Save.EntityState> entityStates, IArea area, ObjectType objectType)
         {
@@ -2122,8 +2122,8 @@ namespace Andastra.Runtime.Games.Eclipse
         /// Based on reverse engineering of:
         /// - daorigins.exe: Creature state serialization functions
         /// - DragonAge2.exe: Enhanced creature state serialization
-        /// - MassEffect.exe: Creature state serialization
-        /// - MassEffect2.exe: Advanced creature state with relationships
+        /// - : Creature state serialization
+        /// - : Advanced creature state with relationships
         /// </summary>
         private void SerializeCreatureState(BinaryWriter writer, CreatureState creature)
         {
@@ -2236,8 +2236,8 @@ namespace Andastra.Runtime.Games.Eclipse
         /// Based on reverse engineering of:
         /// - daorigins.exe: Creature state deserialization functions
         /// - DragonAge2.exe: Enhanced creature state deserialization
-        /// - MassEffect.exe: Creature state deserialization
-        /// - MassEffect2.exe: Advanced creature state with relationships
+        /// - : Creature state deserialization
+        /// - : Advanced creature state with relationships
         /// </summary>
         private CreatureState DeserializeCreatureState(BinaryReader reader)
         {
@@ -2332,8 +2332,8 @@ namespace Andastra.Runtime.Games.Eclipse
         /// Based on reverse engineering of:
         /// - daorigins.exe: Entity state serialization functions
         /// - DragonAge2.exe: Enhanced entity state serialization
-        /// - MassEffect.exe: Entity state serialization
-        /// - MassEffect2.exe: Advanced entity state with relationships
+        /// - : Entity state serialization
+        /// - : Advanced entity state with relationships
         /// </summary>
         private void SerializeEntityState(BinaryWriter writer, EntityState entity)
         {
@@ -2381,8 +2381,8 @@ namespace Andastra.Runtime.Games.Eclipse
         /// Based on reverse engineering of:
         /// - daorigins.exe: Entity state deserialization functions
         /// - DragonAge2.exe: Enhanced entity state deserialization
-        /// - MassEffect.exe: Entity state deserialization
-        /// - MassEffect2.exe: Advanced entity state with relationships
+        /// - : Entity state deserialization
+        /// - : Advanced entity state with relationships
         /// </summary>
         private void DeserializeEntityState(BinaryReader reader, EntityState entity)
         {
@@ -2425,8 +2425,8 @@ namespace Andastra.Runtime.Games.Eclipse
         /// Based on reverse engineering of:
         /// - daorigins.exe: Equipment state serialization functions
         /// - DragonAge2.exe: Enhanced equipment state serialization
-        /// - MassEffect.exe: Equipment state serialization
-        /// - MassEffect2.exe: Advanced equipment state
+        /// - : Equipment state serialization
+        /// - : Advanced equipment state
         /// </summary>
         private void SerializeEquipmentState(BinaryWriter writer, EquipmentState equipment)
         {
@@ -2454,8 +2454,8 @@ namespace Andastra.Runtime.Games.Eclipse
         /// Based on reverse engineering of:
         /// - daorigins.exe: Equipment state deserialization functions
         /// - DragonAge2.exe: Enhanced equipment state deserialization
-        /// - MassEffect.exe: Equipment state deserialization
-        /// - MassEffect2.exe: Advanced equipment state
+        /// - : Equipment state deserialization
+        /// - : Advanced equipment state
         /// </summary>
         private EquipmentState DeserializeEquipmentState(BinaryReader reader)
         {
@@ -2484,8 +2484,8 @@ namespace Andastra.Runtime.Games.Eclipse
         /// Based on reverse engineering of:
         /// - daorigins.exe: Item state serialization functions
         /// - DragonAge2.exe: Enhanced item state serialization
-        /// - MassEffect.exe: Item state serialization
-        /// - MassEffect2.exe: Advanced item state
+        /// - : Item state serialization
+        /// - : Advanced item state
         /// </summary>
         private void SerializeItemState(BinaryWriter writer, ItemState item)
         {
@@ -2520,8 +2520,8 @@ namespace Andastra.Runtime.Games.Eclipse
         /// Based on reverse engineering of:
         /// - daorigins.exe: Item state deserialization functions
         /// - DragonAge2.exe: Enhanced item state deserialization
-        /// - MassEffect.exe: Item state deserialization
-        /// - MassEffect2.exe: Advanced item state
+        /// - : Item state deserialization
+        /// - : Advanced item state
         /// </summary>
         private ItemState DeserializeItemState(BinaryReader reader)
         {
@@ -2558,8 +2558,8 @@ namespace Andastra.Runtime.Games.Eclipse
         /// Based on reverse engineering of:
         /// - daorigins.exe: Local variable serialization functions
         /// - DragonAge2.exe: Enhanced local variable serialization
-        /// - MassEffect.exe: Local variable serialization
-        /// - MassEffect2.exe: Advanced local variable state
+        /// - : Local variable serialization
+        /// - : Advanced local variable state
         /// </summary>
         private void SerializeLocalVariableSet(BinaryWriter writer, LocalVariableSet localVars)
         {
@@ -2637,8 +2637,8 @@ namespace Andastra.Runtime.Games.Eclipse
         /// Based on reverse engineering of:
         /// - daorigins.exe: Local variable deserialization functions
         /// - DragonAge2.exe: Enhanced local variable deserialization
-        /// - MassEffect.exe: Local variable deserialization
-        /// - MassEffect2.exe: Advanced local variable state
+        /// - : Local variable deserialization
+        /// - : Advanced local variable state
         /// </summary>
         private LocalVariableSet DeserializeLocalVariableSet(BinaryReader reader)
         {
@@ -2703,8 +2703,8 @@ namespace Andastra.Runtime.Games.Eclipse
         /// Based on reverse engineering of:
         /// - daorigins.exe: Effect serialization functions
         /// - DragonAge2.exe: Enhanced effect serialization
-        /// - MassEffect.exe: Effect serialization
-        /// - MassEffect2.exe: Advanced effect state
+        /// - : Effect serialization
+        /// - : Advanced effect state
         /// </summary>
         private void SerializeSavedEffect(BinaryWriter writer, SavedEffect effect)
         {
@@ -2770,8 +2770,8 @@ namespace Andastra.Runtime.Games.Eclipse
         /// Based on reverse engineering of:
         /// - daorigins.exe: Effect deserialization functions
         /// - DragonAge2.exe: Enhanced effect deserialization
-        /// - MassEffect.exe: Effect deserialization
-        /// - MassEffect2.exe: Advanced effect state
+        /// - : Effect deserialization
+        /// - : Advanced effect state
         /// </summary>
         private SavedEffect DeserializeSavedEffect(BinaryReader reader)
         {
@@ -2824,8 +2824,8 @@ namespace Andastra.Runtime.Games.Eclipse
         /// Based on reverse engineering of:
         /// - daorigins.exe: Location serialization functions
         /// - DragonAge2.exe: Enhanced location serialization
-        /// - MassEffect.exe: Location serialization
-        /// - MassEffect2.exe: Advanced location state
+        /// - : Location serialization
+        /// - : Advanced location state
         /// </summary>
         private void SerializeSavedLocation(BinaryWriter writer, SavedLocation location)
         {
@@ -2849,8 +2849,8 @@ namespace Andastra.Runtime.Games.Eclipse
         /// Based on reverse engineering of:
         /// - daorigins.exe: Location deserialization functions
         /// - DragonAge2.exe: Enhanced location deserialization
-        /// - MassEffect.exe: Location deserialization
-        /// - MassEffect2.exe: Advanced location state
+        /// - : Location deserialization
+        /// - : Advanced location state
         /// </summary>
         private SavedLocation DeserializeSavedLocation(BinaryReader reader)
         {
@@ -3383,8 +3383,8 @@ namespace Andastra.Runtime.Games.Eclipse
         /// Based on reverse engineering of:
         /// - daorigins.exe: Save validation functions
         /// - DragonAge2.exe: Enhanced save validation
-        /// - MassEffect.exe: Save compatibility checking
-        /// - MassEffect2.exe: Advanced save validation with DLC checks
+        /// - : Save compatibility checking
+        /// - : Advanced save validation with DLC checks
         /// </remarks>
         public override SaveCompatibility CheckCompatibility(string savePath)
         {
@@ -3452,7 +3452,7 @@ namespace Andastra.Runtime.Games.Eclipse
 
                         // Validate signature matches known Eclipse save formats
                         // Known signatures: "DAS " (Dragon Age: Origins), "DAS2" (Dragon Age 2),
-                        // "MES " (Mass Effect), "MES2" (Mass Effect 2)
+                        // "MES " (), "MES2" ( 2)
                         bool isValidSignature = signature == "DAS " || signature == "DAS2" ||
                                                 signature == "MES " || signature == "MES2";
                         if (!isValidSignature)
@@ -3470,8 +3470,8 @@ namespace Andastra.Runtime.Games.Eclipse
                         int saveVersion = reader.ReadInt32();
 
                         // Validate version compatibility
-                        // Eclipse save versions: DAO=1, DA2=2, ME1=3, ME2=4
-                        // Current implementation supports version 4 (ME2) as maximum
+                        // Eclipse save versions: DAO=1, DA2=2, =3, =4
+                        // Current implementation supports version 4 () as maximum
                         if (saveVersion < 1 || saveVersion > SaveVersion)
                         {
                             if (saveVersion > SaveVersion)
@@ -3510,7 +3510,7 @@ namespace Andastra.Runtime.Games.Eclipse
                                     {
                                         // Check if it's a compatible Eclipse variant
                                         if (engineIdentifier.StartsWith("Eclipse", StringComparison.OrdinalIgnoreCase) ||
-                                            engineIdentifier == "DragonAge" || engineIdentifier == "MassEffect")
+                                            engineIdentifier == "DragonAge" || engineIdentifier == "")
                                         {
                                             warnings.Add($"Save file created with different Eclipse variant: {engineIdentifier}");
                                         }
@@ -3744,11 +3744,11 @@ namespace Andastra.Runtime.Games.Eclipse
         /// </summary>
         /// <remarks>
         /// Eclipse supports save migration between games.
-        /// Handles Mass Effect 1 to 2 imports, DLC additions.
+        /// Handles  1 to 2 imports, DLC additions.
         /// Migrates morality, romance, and relationship data.
         ///
         /// Based on reverse engineering of:
-        /// - MassEffect2.exe: Save import system for ME1->ME2 migration
+        /// - : Save import system for -> migration
         /// - daorigins.exe: Save version migration functions
         /// - DragonAge2.exe: Enhanced save migration with DLC support
         ///
@@ -3858,11 +3858,11 @@ namespace Andastra.Runtime.Games.Eclipse
 
         /// <summary>
         /// Detects the source game and version from save file signature.
-        /// Based on MassEffect2.exe: Save file signature detection @ 0x11800ca0
+        /// Based on : Save file signature detection @ 0x11800ca0
         /// </summary>
         private bool DetectSourceGame(string savePath, out EclipseGame game, out int version, out string signature)
         {
-            game = EclipseGame.MassEffect;
+            game = EclipseGame.;
             version = 1;
             signature = "";
 
@@ -3912,12 +3912,12 @@ namespace Andastra.Runtime.Games.Eclipse
                             break;
                         case "MES ":
                         case "MES1":
-                            game = EclipseGame.MassEffect;
-                            if (version == 0) version = 3; // Default version for ME1
+                            game = EclipseGame.;
+                            if (version == 0) version = 3; // Default version for 
                             break;
                         case "MES2":
-                            game = EclipseGame.MassEffect2;
-                            if (version == 0) version = 4; // Default version for ME2
+                            game = EclipseGame.2;
+                            if (version == 0) version = 4; // Default version for 
                             break;
                         default:
                             return false;
@@ -3943,18 +3943,18 @@ namespace Andastra.Runtime.Games.Eclipse
                     return 1;
                 case EclipseGame.DragonAge2:
                     return 2;
-                case EclipseGame.MassEffect:
+                case EclipseGame.:
                     return 3;
-                case EclipseGame.MassEffect2:
+                case EclipseGame.2:
                     return 4;
                 default:
-                    return 4; // Default to ME2 version
+                    return 4; // Default to  version
             }
         }
 
         /// <summary>
         /// Loads source save data using the appropriate serializer.
-        /// Based on MassEffect2.exe: Save loading functions
+        /// Based on : Save loading functions
         /// </summary>
         private SaveGameData LoadSourceSave(string sourcePath, EclipseGame sourceGame, int sourceVersion)
         {
@@ -4024,10 +4024,10 @@ namespace Andastra.Runtime.Games.Eclipse
                             case EclipseGame.DragonAge2:
                                 archivePath = Path.Combine(sourcePath, "save.das2");
                                 break;
-                            case EclipseGame.MassEffect:
+                            case EclipseGame.:
                                 archivePath = Path.Combine(sourcePath, "save.pcsave");
                                 break;
-                            case EclipseGame.MassEffect2:
+                            case EclipseGame.2:
                                 archivePath = Path.Combine(sourcePath, "save.pcsave2");
                                 break;
                         }
@@ -4100,14 +4100,14 @@ namespace Andastra.Runtime.Games.Eclipse
             // In a full implementation, this would instantiate:
             // - DragonAgeOriginsSaveSerializer for DragonAgeOrigins
             // - DragonAge2SaveSerializer for DragonAge2
-            // - MassEffectSaveSerializer for MassEffect
-            // - MassEffect2SaveSerializer for MassEffect2
+            // - SaveSerializer for 
+            // - 2SaveSerializer for 2
             return this; // Use current instance for now
         }
 
         /// <summary>
         /// Migrates save data from source format to target format.
-        /// Based on MassEffect2.exe: ME1->ME2 save import system
+        /// Based on : -> save import system
         /// </summary>
         private SaveGameData MigrateSaveData(SaveGameData sourceData, EclipseGame sourceGame, int sourceVersion, EclipseGame targetGame, SaveMigrationResult result)
         {
@@ -4165,7 +4165,7 @@ namespace Andastra.Runtime.Games.Eclipse
 
         /// <summary>
         /// Migrates global variables between games/versions.
-        /// Based on MassEffect2.exe: Global variable migration for ME1->ME2
+        /// Based on : Global variable migration for ->
         /// </summary>
         private GlobalVariableState MigrateGlobalVariables(GlobalVariableState sourceGlobals, EclipseGame sourceGame, EclipseGame targetGame, SaveMigrationResult result)
         {
@@ -4201,11 +4201,7 @@ namespace Andastra.Runtime.Games.Eclipse
             }
 
             // Handle cross-game migrations
-            if (sourceGame == EclipseGame.MassEffect && targetGame == EclipseGame.MassEffect2)
-            {
-                MigrateME1ToME2Globals(sourceGlobals, targetGlobals, result);
-            }
-            else if (sourceGame == EclipseGame.DragonAgeOrigins && targetGame == EclipseGame.DragonAge2)
+            if (sourceGame == EclipseGame.DragonAgeOrigins && targetGame == EclipseGame.DragonAge2)
             {
                 MigrateDAOToDA2Globals(sourceGlobals, targetGlobals, result);
             }
@@ -4213,96 +4209,6 @@ namespace Andastra.Runtime.Games.Eclipse
             return targetGlobals;
         }
 
-        /// <summary>
-        /// Migrates Mass Effect 1 globals to Mass Effect 2 format.
-        /// Based on MassEffect2.exe: ME1->ME2 global variable conversion @ 0x11800ca0
-        /// </summary>
-        private void MigrateME1ToME2Globals(GlobalVariableState source, GlobalVariableState target, SaveMigrationResult result)
-        {
-            result.MigrationNotes.Add("Migrating Mass Effect 1 globals to Mass Effect 2 format");
-
-            // Migrate morality system (Paragon/Renegade)
-            // ME1 uses separate Paragon/Renegade scores, ME2 uses combined morality
-            if (source.Numbers.ContainsKey("Paragon"))
-            {
-                int paragon = source.Numbers["Paragon"];
-                int renegade = source.Numbers.ContainsKey("Renegade") ? source.Numbers["Renegade"] : 0;
-                
-                // Calculate morality ratio for ME2
-                int total = paragon + renegade;
-                if (total > 0)
-                {
-                    int morality = (int)((paragon / (float)total) * 100.0f);
-                    target.Numbers["MORALITY_SCORE"] = morality;
-                    target.Numbers["PARAGON_POINTS"] = paragon;
-                    target.Numbers["RENEGADE_POINTS"] = renegade;
-                }
-
-                result.MigrationNotes.Add($"Migrated morality: Paragon={paragon}, Renegade={renegade}");
-            }
-
-            // Migrate romance flags
-            // ME1 romance flags: ROMANCE_ASHLEY, ROMANCE_LIARA, ROMANCE_KAIDAN
-            // ME2 romance flags: ROMANCE_MIRANDA, ROMANCE_JACK, ROMANCE_TALI, ROMANCE_GARRUS, ROMANCE_THANE, ROMANCE_SAMARA, ROMANCE_KASUMI, ROMANCE_ASHLEY, ROMANCE_LIARA, ROMANCE_KELLY
-            string[] me1Romances = { "ROMANCE_ASHLEY", "ROMANCE_LIARA", "ROMANCE_KAIDAN" };
-            foreach (string romance in me1Romances)
-            {
-                if (source.Booleans.ContainsKey(romance) && source.Booleans[romance])
-                {
-                    target.Booleans[romance] = true; // Preserve ME1 romances
-                    result.MigrationNotes.Add($"Preserved ME1 romance: {romance}");
-                }
-            }
-
-            // Migrate relationship data
-            // ME1 uses simple approval, ME2 uses more complex relationship system
-            if (source.Numbers.ContainsKey("ASHLEY_APPROVAL"))
-            {
-                int approval = source.Numbers["ASHLEY_APPROVAL"];
-                target.Numbers["ASHLEY_RELATIONSHIP"] = approval;
-                result.MigrationNotes.Add($"Migrated Ashley relationship: {approval}");
-            }
-
-            if (source.Numbers.ContainsKey("LIARA_APPROVAL"))
-            {
-                int approval = source.Numbers["LIARA_APPROVAL"];
-                target.Numbers["LIARA_RELATIONSHIP"] = approval;
-                result.MigrationNotes.Add($"Migrated Liara relationship: {approval}");
-            }
-
-            if (source.Numbers.ContainsKey("KAIDAN_APPROVAL"))
-            {
-                int approval = source.Numbers["KAIDAN_APPROVAL"];
-                target.Numbers["KAIDAN_RELATIONSHIP"] = approval;
-                result.MigrationNotes.Add($"Migrated Kaidan relationship: {approval}");
-            }
-
-            // Migrate major choices
-            // ME1 choices that affect ME2: Virmire survivor, Council decision, etc.
-            string[] me1Choices = { "VIRMIRE_SURVIVOR", "COUNCIL_DECISION", "RACHNI_QUEEN", "WREX_ALIVE", "ROMANCE_CHOICE" };
-            foreach (string choice in me1Choices)
-            {
-                if (source.Booleans.ContainsKey(choice))
-                {
-                    target.Booleans[choice] = source.Booleans[choice];
-                    result.MigrationNotes.Add($"Migrated choice: {choice} = {source.Booleans[choice]}");
-                }
-                else if (source.Numbers.ContainsKey(choice))
-                {
-                    target.Numbers[choice] = source.Numbers[choice];
-                    result.MigrationNotes.Add($"Migrated choice: {choice} = {source.Numbers[choice]}");
-                }
-                else if (source.Strings.ContainsKey(choice))
-                {
-                    target.Strings[choice] = source.Strings[choice];
-                    result.MigrationNotes.Add($"Migrated choice: {choice} = {source.Strings[choice]}");
-                }
-            }
-
-            // Mark as imported from ME1
-            target.Booleans["IMPORTED_FROM_ME1"] = true;
-            target.Numbers["IMPORT_VERSION"] = 1;
-        }
 
         /// <summary>
         /// Migrates Dragon Age: Origins globals to Dragon Age 2 format.
@@ -4445,36 +4351,6 @@ namespace Andastra.Runtime.Games.Eclipse
                 });
             }
 
-            // Handle cross-game party migrations
-            if (sourceGame == EclipseGame.MassEffect && targetGame == EclipseGame.MassEffect2)
-            {
-                // ME1->ME2: Some party members may not be available in ME2
-                // Filter out unavailable members
-                string[] me2AvailableMembers = { "MIRANDA", "JACK", "TALI", "GARRUS", "THANE", "SAMARA", "MORDIN", "GRUNT", "LEGION", "KASUMI", "ZAEED", "JACOB" };
-                var membersToRemove = new List<string>();
-                foreach (var memberKey in targetParty.AvailableMembers.Keys)
-                {
-                    bool isAvailable = false;
-                    foreach (string available in me2AvailableMembers)
-                    {
-                        if (memberKey.Contains(available, StringComparison.OrdinalIgnoreCase))
-                        {
-                            isAvailable = true;
-                            break;
-                        }
-                    }
-                    if (!isAvailable && !memberKey.Contains("SHEPARD", StringComparison.OrdinalIgnoreCase))
-                    {
-                        membersToRemove.Add(memberKey);
-                    }
-                }
-                foreach (string memberKey in membersToRemove)
-                {
-                    targetParty.AvailableMembers.Remove(memberKey);
-                    targetParty.SelectedParty.Remove(memberKey);
-                    result.MigrationNotes.Add($"Removed ME1 party member not available in ME2: {memberKey}");
-                }
-            }
 
             return targetParty;
         }
@@ -4598,29 +4474,29 @@ namespace Andastra.Runtime.Games.Eclipse
         }
 
         /// <summary>
-        /// Handles cross-game data migrations (ME1->ME2, DAO->DA2).
+        /// Handles cross-game data migrations (->, DAO->DA2).
         /// </summary>
         private void MigrateCrossGameData(SaveGameData targetData, EclipseGame sourceGame, EclipseGame targetGame, SaveMigrationResult result)
         {
             result.MigrationNotes.Add($"Performing cross-game migration: {sourceGame} -> {targetGame}");
 
-            if (sourceGame == EclipseGame.MassEffect && targetGame == EclipseGame.MassEffect2)
+            if (sourceGame == EclipseGame. && targetGame == EclipseGame.2)
             {
-                // ME1->ME2 specific migrations
-                result.MigrationNotes.Add("Applying Mass Effect 1 to 2 cross-game migrations");
+                // -> specific migrations
+                result.MigrationNotes.Add("Applying  1 to 2 cross-game migrations");
 
-                // Update player level if needed (ME2 has different leveling)
+                // Update player level if needed ( has different leveling)
                 if (targetData.PartyState?.PlayerCharacter != null)
                 {
-                    // ME2 starts at level 1 regardless of ME1 level, but imports some progression
+                    //  starts at level 1 regardless of  level, but imports some progression
                     // Preserve level but note it may be adjusted
-                    result.MigrationNotes.Add($"Player level: {targetData.PartyState.PlayerCharacter.Level} (may be adjusted in ME2)");
+                    result.MigrationNotes.Add($"Player level: {targetData.PartyState.PlayerCharacter.Level} (may be adjusted in )");
                 }
 
-                // Update area references (ME2 uses different area names)
+                // Update area references ( uses different area names)
                 if (!string.IsNullOrEmpty(targetData.CurrentAreaName))
                 {
-                    result.MigrationNotes.Add($"Current area: {targetData.CurrentAreaName} (may need updating for ME2)");
+                    result.MigrationNotes.Add($"Current area: {targetData.CurrentAreaName} (may need updating for )");
                 }
             }
             else if (sourceGame == EclipseGame.DragonAgeOrigins && targetGame == EclipseGame.DragonAge2)
@@ -4716,10 +4592,10 @@ namespace Andastra.Runtime.Games.Eclipse
                     return "DragonAgeOrigins 1.0";
                 case EclipseGame.DragonAge2:
                     return "DragonAge2 1.0";
-                case EclipseGame.MassEffect:
-                    return "MassEffect 1.0";
-                case EclipseGame.MassEffect2:
-                    return "MassEffect2 1.0";
+                case EclipseGame.:
+                    return " 1.0";
+                case EclipseGame.2:
+                    return "2 1.0";
                 default:
                     return "Eclipse 1.0";
             }
@@ -4868,14 +4744,14 @@ namespace Andastra.Runtime.Games.Eclipse
         DragonAge2,
 
         /// <summary>
-        /// Mass Effect
+        /// 
         /// </summary>
-        MassEffect,
+        ,
 
         /// <summary>
-        /// Mass Effect 2
+        ///  2
         /// </summary>
-        MassEffect2
+        2
     }
 
     /// <summary>

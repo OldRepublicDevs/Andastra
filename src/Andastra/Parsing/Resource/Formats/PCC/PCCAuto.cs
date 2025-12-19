@@ -13,7 +13,7 @@ namespace Andastra.Parsing.Formats.PCC
     /// - Provides convenience methods for reading and writing PCC/UPK files
     /// - Follows the same pattern as ERFAuto and RIMAuto
     /// - Supports both PCC and UPK formats (same structure, different extensions)
-    /// - Used by Eclipse Engine games (Dragon Age, Mass Effect)
+    /// - Used by Eclipse Engine games (Dragon Age, )
     /// </remarks>
     public static class PCCAuto
     {

@@ -21,7 +21,7 @@ namespace Andastra.Runtime.Games.Common.Components
     ///     - String references: "WaypointList" @ 0x140ddb7a0, "Tag" @ 0x140dca0f0, "LocalizedName", "MapNote", "MapNoteEnabled"
     ///     - LoadWaypoint loads: Tag (CExoString at this+0x20), LocalizedName (CExoLocString at this+800), Position, Orientation, HasMapNote (bool at this+0x308), MapNoteEnabled (bool at this+0x30c), MapNote (CExoLocString at this+0x310)
     ///   - Eclipse: daorigins.exe, DragonAge2.exe (waypoint system similar, needs verification)
-    ///   - Infinity: MassEffect.exe, MassEffect2.exe (waypoint system similar, needs verification)
+    ///   - Infinity: ,  (waypoint system similar, needs verification)
     ///
     /// Common functionality across all engines:
     /// - Template resource reference: TemplateResRef identifies the UTW template used

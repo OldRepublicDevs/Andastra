@@ -23,7 +23,7 @@ namespace Andastra.Runtime.Core.Interfaces.Components
     ///     - SaveCreature @ 0x1403a0a60, LoadFromTemplate @ 0x140501c90, SaveTrigger @ 0x140504290
     ///     - String references: "ScriptHeartbeat" @ 0x140dddb10, "ScriptOnNotice" @ 0x140dddb20, "ScriptAttacked" @ 0x140dddb40
     ///   - Eclipse: daorigins.exe, DragonAge2.exe (script hooks system similar, needs verification)
-    ///   - Infinity: MassEffect.exe, MassEffect2.exe (script hooks system similar, needs verification)
+    ///   - Infinity: ,  (script hooks system similar, needs verification)
     /// - Script events: Stored as script ResRef strings in GFF structures (UTC, UTD, UTP, etc.)
     /// - GetScript/SetScript: Manages script ResRefs for event types (OnHeartbeat, OnAttacked, etc.)
     /// - Local variables: Per-entity local variables (int, float, string) stored in GFF LocalVars structure

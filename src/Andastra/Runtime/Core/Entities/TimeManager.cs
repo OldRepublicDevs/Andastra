@@ -1,6 +1,5 @@
 using System;
 using Andastra.Runtime.Core.Interfaces;
-using Andastra.Runtime.Games.Odyssey;
 
 namespace Andastra.Runtime.Core.Entities
 {
@@ -13,9 +12,9 @@ namespace Andastra.Runtime.Core.Entities
     /// - New code should use engine-specific implementations:
     ///   - OdysseyTimeManager (Runtime.Games.Odyssey) for KOTOR 1/2
     ///   - AuroraTimeManager (Runtime.Games.Aurora) for NWN/NWN2
-    ///   - EclipseTimeManager (Runtime.Games.Eclipse) for Dragon Age/Mass Effect
-    ///   - InfinityTimeManager (Runtime.Games.Infinity) for Infinity Engine games
-    /// - This class currently wraps OdysseyTimeManager for backward compatibility.
+    ///   - EclipseTimeManager (Runtime.Games.Eclipse) for Dragon Age/
+    ///   - InfinityTimeManager (Runtime.Games.Infinity) for  games
+    /// - This class throws NotSupportedException since Core cannot depend on Games.
     /// - Based on swkotor2.exe time management system
     /// - Located via string references: "TIME_PAUSETIME" @ 0x007bdf88 (pause time constant), "TIME_PAUSEDAY" @ 0x007bdf98 (pause day constant), "TIME_MILLISECOND" @ 0x007bdfa8 (millisecond constant)
     /// - Time unit constants: "TIME_SECOND" @ 0x007bdfbc (second constant), "TIME_MINUTE" @ 0x007bdfc8 (minute constant), "TIME_HOUR" @ 0x007bdfd4 (hour constant)
@@ -61,88 +60,86 @@ namespace Andastra.Runtime.Core.Entities
     [System.Obsolete("Use engine-specific time manager implementations (OdysseyTimeManager, AuroraTimeManager, etc.) instead.")]
     public class TimeManager : ITimeManager
     {
-        private readonly OdysseyTimeManager _odysseyTimeManager;
-
         public TimeManager()
         {
-            _odysseyTimeManager = new OdysseyTimeManager();
+            throw new NotSupportedException("TimeManager is obsolete. Use engine-specific time manager implementations instead.");
         }
 
         public float FixedTimestep
         {
-            get { return _odysseyTimeManager.FixedTimestep; }
+            get { throw new NotSupportedException("TimeManager is obsolete. Use engine-specific time manager implementations instead."); }
         }
 
         public float SimulationTime
         {
-            get { return _odysseyTimeManager.SimulationTime; }
+            get { throw new NotSupportedException("TimeManager is obsolete. Use engine-specific time manager implementations instead."); }
         }
 
         public float RealTime
         {
-            get { return _odysseyTimeManager.RealTime; }
+            get { throw new NotSupportedException("TimeManager is obsolete. Use engine-specific time manager implementations instead."); }
         }
 
         public float TimeScale
         {
-            get { return _odysseyTimeManager.TimeScale; }
-            set { _odysseyTimeManager.TimeScale = value; }
+            get { throw new NotSupportedException("TimeManager is obsolete. Use engine-specific time manager implementations instead."); }
+            set { throw new NotSupportedException("TimeManager is obsolete. Use engine-specific time manager implementations instead."); }
         }
 
         public bool IsPaused
         {
-            get { return _odysseyTimeManager.IsPaused; }
-            set { _odysseyTimeManager.IsPaused = value; }
+            get { throw new NotSupportedException("TimeManager is obsolete. Use engine-specific time manager implementations instead."); }
+            set { throw new NotSupportedException("TimeManager is obsolete. Use engine-specific time manager implementations instead."); }
         }
 
         public float DeltaTime
         {
-            get { return _odysseyTimeManager.DeltaTime; }
+            get { throw new NotSupportedException("TimeManager is obsolete. Use engine-specific time manager implementations instead."); }
         }
 
         public float InterpolationAlpha
         {
-            get { return _odysseyTimeManager.InterpolationAlpha; }
+            get { throw new NotSupportedException("TimeManager is obsolete. Use engine-specific time manager implementations instead."); }
         }
 
         public int GameTimeHour
         {
-            get { return _odysseyTimeManager.GameTimeHour; }
+            get { throw new NotSupportedException("TimeManager is obsolete. Use engine-specific time manager implementations instead."); }
         }
 
         public int GameTimeMinute
         {
-            get { return _odysseyTimeManager.GameTimeMinute; }
+            get { throw new NotSupportedException("TimeManager is obsolete. Use engine-specific time manager implementations instead."); }
         }
 
         public int GameTimeSecond
         {
-            get { return _odysseyTimeManager.GameTimeSecond; }
+            get { throw new NotSupportedException("TimeManager is obsolete. Use engine-specific time manager implementations instead."); }
         }
 
         public int GameTimeMillisecond
         {
-            get { return _odysseyTimeManager.GameTimeMillisecond; }
+            get { throw new NotSupportedException("TimeManager is obsolete. Use engine-specific time manager implementations instead."); }
         }
 
         public void SetGameTime(int hour, int minute, int second, int millisecond)
         {
-            _odysseyTimeManager.SetGameTime(hour, minute, second, millisecond);
+            throw new NotSupportedException("TimeManager is obsolete. Use engine-specific time manager implementations instead.");
         }
 
         public void Update(float realDeltaTime)
         {
-            _odysseyTimeManager.Update(realDeltaTime);
+            throw new NotSupportedException("TimeManager is obsolete. Use engine-specific time manager implementations instead.");
         }
 
         public bool HasPendingTicks()
         {
-            return _odysseyTimeManager.HasPendingTicks();
+            throw new NotSupportedException("TimeManager is obsolete. Use engine-specific time manager implementations instead.");
         }
 
         public void Tick()
         {
-            _odysseyTimeManager.Tick();
+            throw new NotSupportedException("TimeManager is obsolete. Use engine-specific time manager implementations instead.");
         }
 
         /// <summary>
@@ -150,7 +147,7 @@ namespace Andastra.Runtime.Core.Entities
         /// </summary>
         public void Reset()
         {
-            _odysseyTimeManager.Reset();
+            throw new NotSupportedException("TimeManager is obsolete. Use engine-specific time manager implementations instead.");
         }
     }
 }

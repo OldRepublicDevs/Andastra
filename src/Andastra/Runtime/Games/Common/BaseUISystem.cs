@@ -23,7 +23,7 @@ namespace Andastra.Runtime.Games.Common
     /// - Eclipse (daorigins.exe, DragonAge2.exe): Advanced UI system
     ///   - Crafting screens, inventory management, character progression
     ///   - Enhanced screen management with transitions
-    /// - Infinity (MassEffect.exe, MassEffect2.exe): Modern UI system
+    /// - Infinity (, ): Modern UI system
     ///   - Cinematic overlays, dialogue system, inventory screens
     ///
     /// Common functionality across engines:

@@ -18,7 +18,7 @@ namespace Andastra.Parsing.Formats.PCC
     /// - Reads package header, name table, import table, export table
     /// - Extracts resources from export table entries
     /// - Supports both PCC (cooked) and UPK (package) formats
-    /// - Used by Eclipse Engine games (Dragon Age, Mass Effect)
+    /// - Used by Eclipse Engine games (Dragon Age, )
     /// </remarks>
     public class PCCBinaryReader : BinaryFormatReaderBase
     {

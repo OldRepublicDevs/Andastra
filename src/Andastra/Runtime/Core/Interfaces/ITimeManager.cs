@@ -9,8 +9,8 @@ namespace Andastra.Runtime.Core.Interfaces
     /// - Implementations: BaseTimeManager (Runtime.Games.Common) provides base functionality
     ///   - OdysseyTimeManager (Runtime.Games.Odyssey) for swkotor.exe, swkotor2.exe
     ///   - AuroraTimeManager (Runtime.Games.Aurora) for nwmain.exe, nwn2main.exe
-    ///   - EclipseTimeManager (Runtime.Games.Eclipse) for daorigins.exe, DragonAge2.exe, MassEffect.exe, MassEffect2.exe
-    ///   - InfinityTimeManager (Runtime.Games.Infinity) for Infinity Engine executables
+    ///   - EclipseTimeManager (Runtime.Games.Eclipse) for daorigins.exe, DragonAge2.exe, , 
+    ///   - InfinityTimeManager (Runtime.Games.Infinity) for  executables
     /// - Fixed timestep: Typically 1/60 second (60 Hz) for deterministic physics and gameplay (common across all engines)
     /// - SimulationTime: Accumulated fixed timestep time (advances only during simulation ticks)
     /// - RealTime: Total elapsed real-world time (continuous)

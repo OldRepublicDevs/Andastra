@@ -23,11 +23,11 @@ using Andastra.Runtime.Core.Module;
 namespace Andastra.Runtime.Games.Eclipse
 {
     /// <summary>
-    /// Eclipse Engine (Mass Effect/Dragon Age) specific area implementation.
+    /// Eclipse Engine (Dragon Age) specific area implementation.
     /// </summary>
     /// <remarks>
     /// Eclipse Area Implementation:
-    /// - Based on daorigins.exe, DragonAge2.exe, MassEffect.exe, MassEffect2.exe
+        /// - Based on daorigins.exe, DragonAge2.exe
     /// - Most advanced area system of the BioWare engines
     /// - Complex lighting, physics, and environmental simulation
     /// - Real-time area effects and dynamic weather
@@ -35,7 +35,6 @@ namespace Andastra.Runtime.Games.Eclipse
     /// Based on reverse engineering of:
     /// - daorigins.exe: Dragon Age Origins area systems
     /// - DragonAge2.exe: Enhanced Dragon Age 2 areas
-    /// - MassEffect.exe/MassEffect2.exe: Mass Effect area implementations
     /// - Eclipse engine area properties and entity management
     ///
     /// Eclipse-specific features:
@@ -115,7 +114,7 @@ namespace Andastra.Runtime.Games.Eclipse
         /// </summary>
         /// <param name="module">The Module instance for resource access.</param>
         /// <remarks>
-        /// Based on daorigins.exe/DragonAge2.exe/MassEffect.exe/MassEffect2.exe: Module reference is required for loading WOK files.
+        /// Based on daorigins.exe/DragonAge2.exe: Module reference is required for loading WOK files.
         /// Call this method if Module was not available at construction time.
         /// If rooms are already set, this will trigger walkmesh loading.
         /// </remarks>
@@ -378,13 +377,11 @@ namespace Andastra.Runtime.Games.Eclipse
         /// Loads area geometry and navigation data.
         /// </summary>
         /// <remarks>
-        /// Based on ARE file loading in daorigins.exe, DragonAge2.exe, MassEffect.exe, MassEffect2.exe.
+        /// Based on ARE file loading in daorigins.exe, DragonAge2.exe.
         /// 
         /// Function addresses (require Ghidra verification):
         /// - daorigins.exe: Area geometry loading functions (search for ARE file parsing)
         /// - DragonAge2.exe: Enhanced area geometry loading with physics integration
-        /// - MassEffect.exe: Area geometry loading functions
-        /// - MassEffect2.exe: Advanced area geometry loading with destructible elements
         /// 
         /// Eclipse ARE file structure (GFF with "ARE " signature):
         /// - Root struct contains: Tag, Name, ResRef, lighting, fog, grass properties
@@ -514,13 +511,11 @@ namespace Andastra.Runtime.Games.Eclipse
         /// Loads walkmeshes from WOK files for all rooms and combines them into a single navigation mesh.
         /// </summary>
         /// <remarks>
-        /// Based on daorigins.exe/DragonAge2.exe/MassEffect.exe/MassEffect2.exe walkmesh loading system.
+        /// Based on daorigins.exe/DragonAge2.exe walkmesh loading system.
         /// 
         /// Function addresses (require Ghidra verification):
         /// - daorigins.exe: Walkmesh loading from WOK files
         /// - DragonAge2.exe: Enhanced walkmesh loading with physics integration
-        /// - MassEffect.exe: Walkmesh loading functions
-        /// - MassEffect2.exe: Advanced walkmesh loading with destructible elements
         /// 
         /// Walkmesh loading process:
         /// 1. For each room in _rooms, load corresponding WOK file (room.ModelName = WOK resref)
@@ -643,7 +638,6 @@ namespace Andastra.Runtime.Games.Eclipse
         /// Based on reverse engineering of:
         /// - daorigins.exe: Environmental system initialization (weather, particles, audio zones)
         /// - DragonAge2.exe: Enhanced environmental systems with dynamic effects
-        /// - MassEffect.exe/MassEffect2.exe: Advanced environmental simulation
         ///
         /// Initialization sequence:
         /// 1. Initialize weather system (rain, snow, fog, wind, storms)
@@ -772,7 +766,6 @@ namespace Andastra.Runtime.Games.Eclipse
         /// Based on reverse engineering of:
         /// - daorigins.exe: Physics state preservation during area transitions
         /// - DragonAge2.exe: Enhanced physics state transfer
-        /// - MassEffect.exe/MassEffect2.exe: Complex physics continuity
         /// </remarks>
         protected override void OnBeforeTransition(IEntity entity, IArea currentArea)
         {
@@ -1085,7 +1078,6 @@ namespace Andastra.Runtime.Games.Eclipse
         /// Based on reverse engineering of:
         /// - daorigins.exe: Area update function (updates all systems each frame)
         /// - DragonAge2.exe: Enhanced area update with environmental systems
-        /// - MassEffect.exe/MassEffect2.exe: Advanced area simulation updates
         ///
         /// Update sequence:
         /// 1. Update lighting system (dynamic lights, shadows, global illumination)
@@ -1170,7 +1162,6 @@ namespace Andastra.Runtime.Games.Eclipse
         /// Based on reverse engineering of:
         /// - daorigins.exe: Advanced area rendering with dynamic lighting and shadows
         /// - DragonAge2.exe: Enhanced rendering with post-processing effects
-        /// - MassEffect.exe/MassEffect2.exe: Complex material and lighting systems
         ///
         /// Eclipse rendering pipeline:
         /// 1. Pre-render: Update lighting system, prepare shadow maps
@@ -1486,7 +1477,7 @@ namespace Andastra.Runtime.Games.Eclipse
         /// Unloads the area and cleans up resources.
         /// </summary>
         /// <remarks>
-        /// Based on daorigins.exe/DragonAge2.exe/MassEffect.exe/MassEffect2.exe: Area unloading functions
+        /// Based on daorigins.exe/DragonAge2.exe: Area unloading functions
         /// Comprehensive cleanup of Eclipse systems.
         /// Destroys physics world, lighting, effects, entities.
         ///
@@ -1691,7 +1682,6 @@ namespace Andastra.Runtime.Games.Eclipse
         /// Based on reverse engineering of:
         /// - daorigins.exe: Dynamic area modification system for destructible environments
         /// - DragonAge2.exe: Enhanced area modification with physics integration
-        /// - MassEffect.exe/MassEffect2.exe: Runtime area property and entity modifications
         ///
         /// Eclipse area modifications support:
         /// - Entity addition/removal (creatures, placeables, doors, triggers, waypoints, sounds)

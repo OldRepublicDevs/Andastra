@@ -10,7 +10,7 @@ namespace Andastra.Runtime.Graphics.Common.Scene
     /// </summary>
     /// <remarks>
     /// Base Scene Builder:
-    /// - Common scene building patterns shared across Odyssey, Aurora, Eclipse, Infinity engines
+    /// - Common scene building patterns shared across Odyssey, Aurora, Eclipse, s
     /// - Provides base functionality for organizing area geometry into renderable scenes
     /// - Handles common scene management: visibility culling, scene clearing, resource disposal
     /// - Engine-specific implementations handle file format differences (LYT/VIS, ARE tiles, WED, etc.)
@@ -26,14 +26,12 @@ namespace Andastra.Runtime.Graphics.Common.Scene
     /// - Odyssey: LYT (layout) and VIS (visibility) files, room-based rendering
     /// - Aurora: ARE tile-based layout, tile visibility and culling
     /// - Eclipse: ARE with advanced features, dynamic geometry, physics-aware rendering
-    /// - Infinity: ARE/WED files, area-based rendering
     ///
     /// Inheritance Structure (Graphics-Backend Agnostic):
     /// - BaseSceneBuilder (this class) - Common functionality only
     ///   - OdysseySceneBuilder : BaseSceneBuilder (Runtime.Games.Odyssey.Scene) - LYT/VIS files (swkotor.exe, swkotor2.exe)
     ///   - AuroraSceneBuilder : BaseSceneBuilder (Runtime.Games.Aurora.Scene) - ARE tile-based layout (nwmain.exe)
-    ///   - EclipseSceneBuilder : BaseSceneBuilder (Runtime.Games.Eclipse.Scene) - Advanced ARE features (daorigins.exe, DragonAge2.exe, MassEffect.exe, MassEffect2.exe)
-    ///   - InfinitySceneBuilder : BaseSceneBuilder (Runtime.Games.Infinity.Scene) - ARE/WED files (Baldur's Gate, Icewind Dale, Planescape: Torment)
+    ///   - EclipseSceneBuilder : BaseSceneBuilder (Runtime.Games.Eclipse.Scene) - Advanced ARE features (daorigins.exe, DragonAge2.exe)
     ///
     /// Graphics Backend Rendering:
     /// - Scene builders are graphics-backend agnostic (work with MonoGame, Stride, etc.)
@@ -59,7 +57,6 @@ namespace Andastra.Runtime.Graphics.Common.Scene
         /// - Odyssey: VIS file format (room visibility graph)
         /// - Aurora: Tile-based visibility (tile adjacency and portals)
         /// - Eclipse: Advanced visibility with dynamic obstacles
-        /// - Infinity: Area-based visibility (simpler system)
         /// </remarks>
         public abstract bool IsAreaVisible(string currentArea, string targetArea);
 
@@ -92,7 +89,6 @@ namespace Andastra.Runtime.Graphics.Common.Scene
         /// - Odyssey: BuildScene(LYT lyt, VIS vis)
         /// - Aurora: BuildScene(ARE areData) - tile-based layout
         /// - Eclipse: BuildScene(ARE areData) - advanced features
-        /// - Infinity: BuildScene(ARE areData, WED wedData)
         /// </remarks>
         protected abstract void BuildSceneInternal(object areaData);
 
@@ -134,7 +130,6 @@ namespace Andastra.Runtime.Graphics.Common.Scene
     /// - Odyssey: SceneRoom with LYT room data
     /// - Aurora: SceneTile with ARE tile data
     /// - Eclipse: SceneArea with advanced features
-    /// - Infinity: SceneArea with ARE/WED data
     /// </remarks>
     public interface ISceneRoom
     {

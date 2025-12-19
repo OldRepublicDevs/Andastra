@@ -12,7 +12,7 @@ namespace Andastra.Runtime.Core.Actions
     /// - OdysseyDelayScheduler for Odyssey engine (Runtime.Games.Odyssey)
     /// - AuroraDelayScheduler for Aurora engine (Runtime.Games.Aurora)
     /// - EclipseDelayScheduler for Eclipse engine (Runtime.Games.Eclipse)
-    /// - InfinityDelayScheduler for Infinity engine (Runtime.Games.Infinity)
+    /// - InfinityDelayScheduler for  (Runtime.Games.Infinity)
     /// 
     /// This implementation uses Odyssey-style delay scheduling (float-based time).
     /// Based on swkotor.exe and swkotor2.exe DelayCommand system.

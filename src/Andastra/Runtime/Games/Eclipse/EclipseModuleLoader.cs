@@ -19,7 +19,7 @@ namespace Andastra.Runtime.Engines.Eclipse
     /// - Eclipse uses UnrealScript message passing (LoadModuleMessage) vs Odyssey direct file loading
     /// - Module system uses MODULES/WRITE_MODULES strings similar to Odyssey but different implementation
     /// - Architecture: Message-based module loading vs Odyssey direct file I/O
-    /// - Game-specific implementations: DragonAgeOriginsModuleLoader, DragonAge2ModuleLoader, MassEffectModuleLoader, MassEffect2ModuleLoader
+    /// - Game-specific implementations: DragonAgeOriginsModuleLoader, DragonAge2ModuleLoader, ModuleLoader, 2ModuleLoader
     /// </remarks>
     public abstract class EclipseModuleLoader : BaseEngineModule
     {
@@ -87,7 +87,7 @@ namespace Andastra.Runtime.Engines.Eclipse
             try
             {
                 // Eclipse games may use packages or modules directory
-                // Check packages directory first (Dragon Age, Mass Effect)
+                // Check packages directory first (Dragon Age, )
                 string packagesPath = _eclipseResourceProvider.PackagePath();
                 if (System.IO.Directory.Exists(packagesPath))
                 {

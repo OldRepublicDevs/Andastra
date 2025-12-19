@@ -229,7 +229,7 @@ namespace Andastra.Runtime.Stride.Camera
         ///   - swkotor2.exe (KOTOR 2): Camera reset to chase mode with player entity (this implementation matches)
         ///   - nwmain.exe (Aurora): Camera reset handled differently (no direct dialogue camera equivalent)
         ///   - daorigins.exe/DragonAge2.exe (Eclipse): Camera reset via UnrealScript, different architecture
-        ///   - MassEffect.exe/MassEffect2.exe (Infinity): Camera reset handled by level scripting system
+        ///   - / (Infinity): Camera reset handled by level scripting system
         /// </summary>
         public void Reset()
         {

@@ -12,21 +12,21 @@ using Andastra.Runtime.Games.Common;
 namespace Andastra.Runtime.Engines.Eclipse.Systems
 {
     /// <summary>
-    /// AI controller system for NPCs in Eclipse engine (Dragon Age series, Mass Effect series).
+    /// AI controller system for NPCs in Eclipse engine (Dragon Age series,  series).
     /// Handles perception, combat behavior, and action queue management for non-player creatures.
     /// </summary>
     /// <remarks>
     /// Eclipse AI Controller System:
-    /// - Based on daorigins.exe/DragonAge2.exe/MassEffect.exe/MassEffect2.exe AI systems
+    /// - Based on daorigins.exe/DragonAge2.exe// AI systems
     /// - Located via string references: "OnHeartbeat" @ 0x00af4fd4 (daorigins.exe)
-    /// - Original implementation: Reverse engineered from daorigins.exe/DragonAge2.exe/MassEffect.exe/MassEffect2.exe
+    /// - Original implementation: Reverse engineered from daorigins.exe/DragonAge2.exe//
     /// - AI operates through action queue population based on perception and scripts
     /// - Heartbeat scripts: Fire every 6 seconds (HeartbeatInterval), can queue actions, check conditions
     /// - Perception system: Detects enemies via sight/hearing, fires OnPerception events
     /// - Perception update: Checks every 0.5 seconds (PerceptionUpdateInterval) for efficiency
     /// - Combat behavior: Complex tactical AI with positioning and abilities
     /// - Action queue: FIFO queue per entity, current action executes until complete or interrupted
-    /// - Based on Dragon Age/Mass Effect AI behavior from reverse engineering
+    /// - Based on Dragon Age/ AI behavior from reverse engineering
     /// - Eclipse uses UnrealScript message passing system instead of direct script execution
     /// - UnrealScript events: OnHeartbeat, OnPerception, OnCombatRoundEnd, OnDamaged, OnDeath
     /// - Event processing: Events routed through UnrealScript's native event dispatcher system
@@ -74,8 +74,8 @@ namespace Andastra.Runtime.Engines.Eclipse.Systems
         /// - Event data structures (from reverse engineering):
         ///   - daorigins.exe: "EventListeners" @ 0x00ae8194, "EventId" @ 0x00ae81a4, "EventScripts" @ 0x00ae81bc
         ///   - DragonAge2.exe: "EventListeners" @ 0x00bf543c, "EventId" @ 0x00bf544c, "EventScripts" @ 0x00bf5464
-        ///   - MassEffect.exe: Uses UnrealScript BioEventDispatcher interface
-        ///   - MassEffect2.exe: Uses UnrealScript BioEventDispatcher interface
+        ///   - : Uses UnrealScript BioEventDispatcher interface
+        ///   - : Uses UnrealScript BioEventDispatcher interface
         /// - Command processing: "COMMAND_SIGNALEVENT" @ 0x00af4180 (daorigins.exe) handles event commands
         /// - UnrealScript integration: Events routed through UnrealScript's native event dispatcher system
         /// - Event queuing: Events are queued and processed at frame boundaries to prevent re-entrancy
@@ -110,7 +110,7 @@ namespace Andastra.Runtime.Engines.Eclipse.Systems
         /// </summary>
         /// <remarks>
         /// Eclipse Perception System:
-        /// - Based on daorigins.exe/DragonAge2.exe/MassEffect.exe/MassEffect2.exe perception systems
+        /// - Based on daorigins.exe/DragonAge2.exe// perception systems
         /// - Eclipse uses UnrealScript-based perception with different architecture than Odyssey/Aurora
         /// - Perception checks:
         ///   1. Get all creatures in perception range (sight/hearing)
@@ -243,7 +243,7 @@ namespace Andastra.Runtime.Engines.Eclipse.Systems
         /// </summary>
         /// <remarks>
         /// Eclipse Combat AI:
-        /// - Based on daorigins.exe/DragonAge2.exe/MassEffect.exe/MassEffect2.exe combat systems
+        /// - Based on daorigins.exe/DragonAge2.exe// combat systems
         /// - Eclipse uses complex tactical AI with abilities, positioning, and party coordination
         /// - Combat behavior:
         ///   1. Find nearest enemy within combat range
@@ -372,7 +372,7 @@ namespace Andastra.Runtime.Engines.Eclipse.Systems
         /// </summary>
         /// <remarks>
         /// Eclipse Idle Behavior:
-        /// - Based on daorigins.exe/DragonAge2.exe/MassEffect.exe/MassEffect2.exe idle behavior systems
+        /// - Based on daorigins.exe/DragonAge2.exe// idle behavior systems
         /// - Eclipse uses simpler idle behavior than Odyssey/Aurora (no patrol routes in base implementation)
         /// - Idle behavior:
         ///   1. Random wandering within spawn radius using ActionMoveToLocation

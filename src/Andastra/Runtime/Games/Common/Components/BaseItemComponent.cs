@@ -23,7 +23,7 @@ namespace Andastra.Runtime.Games.Common.Components
     /// - nwmain.exe: Aurora item system using identical UTI format to Odyssey
     /// - daorigins.exe: Eclipse item system with enhanced property system
     /// - DragonAge2.exe: Enhanced Eclipse item system
-    /// - MassEffect.exe/MassEffect2.exe: Infinity item system
+    /// - /: Infinity item system
     ///
     /// Common structure across engines:
     /// - BaseItem (int): Item type ID from baseitems.2da or equivalent table

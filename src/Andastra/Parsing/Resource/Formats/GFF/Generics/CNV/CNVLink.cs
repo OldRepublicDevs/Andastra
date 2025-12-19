@@ -11,7 +11,7 @@ namespace Andastra.Parsing.Resource.Generics.CNV
     /// </summary>
     /// <remarks>
     /// CNV Link:
-    /// - Eclipse Engine conversation format (Dragon Age, Mass Effect)
+    /// - Eclipse Engine conversation format (Dragon Age, )
     /// - Links conversation nodes together (entries to replies, replies to entries)
     /// - Contains conditional logic for link availability
     /// - Similar structure to DLG links but adapted for Eclipse conversation system

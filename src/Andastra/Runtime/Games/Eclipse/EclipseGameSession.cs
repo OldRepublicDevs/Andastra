@@ -17,7 +17,7 @@ namespace Andastra.Runtime.Engines.Eclipse
     /// - Based on Eclipse/Unreal Engine game session management
     /// - Eclipse uses UnrealScript message passing system
     /// - Architecture: Message-based game state management vs Odyssey direct state management
-    /// - Game-specific implementations: DragonAgeOriginsGameSession, DragonAge2GameSession, MassEffectGameSession, MassEffect2GameSession
+    /// - Game-specific implementations: DragonAgeOriginsGameSession, DragonAge2GameSession, GameSession, 2GameSession
     /// </remarks>
     public abstract class EclipseGameSession : BaseEngineGame
     {

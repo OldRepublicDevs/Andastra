@@ -8,14 +8,14 @@ using Andastra.Parsing.Installation;
 namespace Andastra.Runtime.Engines.Eclipse
 {
     /// <summary>
-    /// Abstract base class for Eclipse Engine implementations (Dragon Age and Mass Effect series).
+    /// Abstract base class for Eclipse Engine implementations (Dragon Age series).
     /// </summary>
     /// <remarks>
     /// Eclipse Engine Base:
-    /// - Based on Eclipse/Unreal Engine architecture (Dragon Age, Mass Effect)
+    /// - Based on Eclipse engine architecture (Dragon Age)
     /// - UnrealScript-based: Uses message passing system instead of direct function calls
     /// - Architecture: Different from Odyssey/Aurora (NCS VM) - uses UnrealScript bytecode
-    /// - Game-specific implementations: DragonAgeOriginsEngine, DragonAge2Engine, MassEffectEngine, MassEffect2Engine
+    /// - Game-specific implementations: DragonAgeOriginsEngine, DragonAge2Engine
     ///
     /// Dragon Age: Origins (daorigins.exe):
     /// - Save/Load: SaveGameMessage @ 0x00ae6276, LoadGameMessage @ 0x00ae9f9c, DeleteSaveGameMessage @ 0x00aec46c
@@ -69,41 +69,6 @@ namespace Andastra.Runtime.Engines.Eclipse
     ///   SkipConversationMessage @ 0x00be2f60, Conversation.PushResponseButtonFromGame @ 0x00be83b0
     /// - Combat: GameModeCombat @ 0x00beaf3c, InCombat @ 0x00bf4c10, CombatTarget @ 0x00bf4dc0
     ///   Combat_%u @ 0x00be0ba4, BInCombatMode @ 0x00beeed2, AutoPauseCombat @ 0x00bf6f9c
-    ///
-    /// Mass Effect (MassEffect.exe):
-    /// - Save/Load: intABioWorldInfoexecBioSaveGame @ 0x11800ca0
-    ///   intABioWorldInfoexecSaveGamesExist @ 0x117fef90
-    ///   intABioWorldInfoexecOnSaveGameNotFound @ 0x117fefd8
-    ///   intABioWorldInfoexecSetDisplayRealSaveGameNames @ 0x117ff320
-    ///   intABioWorldInfoexecGetDisplayRealSaveGameNames @ 0x117ff380
-    ///   intUBioSFHandler_PCSaveGameexecSaveComplete @ 0x11811870
-    ///   intUBioSFHandler_SaveGameexecSaveComplete @ 0x11812920
-    ///   intUBioSFHandler_SaveGameexecSaveGameConfirm @ 0x11812978
-    ///   intUBioSaveGameexecApplyGameOptions @ 0x11813c38
-    ///   intUBioSaveGameexecSetGameOptions @ 0x11813c80
-    ///   intUBioSaveGameexecNativeReset @ 0x11813cc4
-    ///   intUBioSaveGameexecGetTimePlayed @ 0x11813d08
-    ///   intUBioSaveGameexecGetStorageDevice @ 0x11813d50
-    ///   intUBioSaveGameexecSaveCharacter @ 0x11813d98
-    ///   intUBioSaveGameexecClearWorldSaveObject @ 0x11813de0
-    ///   intUBioSaveGameexecEmptySavedMaps @ 0x11813e30
-    ///   intUBioSaveGameexecShowSavingMessageBox @ 0x11813e78
-    ///   intUBioSaveGameexecIsAutoSaveComplete @ 0x11813ec8
-    ///   intUBioSaveGameexecAutoSaveDelegate @ 0x11813f18
-    ///   intUBioSaveGameexecTryAutoSaving @ 0x11813f60
-    /// - Dialogue: intUBioConversationexecStartConversation @ 0x117fb620, intUBioConversationexecEndConversation @ 0x117fb5d0
-    ///   intUBioConversationexecGetReplyText @ 0x117fb1a0, intUBioConversationexecGetEntryText @ 0x117fb1e8
-    ///   intUBioConversationexecGetSpeaker @ 0x117fb230, intUBioConversationexecSelectReply @ 0x117fb530
-    ///   intUBioConversationexecUpdateConversation @ 0x117fb578, intUBioConversationexecIsAmbient @ 0x117fb3b8
-    ///   intABioWorldInfoexecStartConversation @ 0x117ffa78, intABioWorldInfoexecEndCurrentConversation @ 0x117ffa20
-    ///   intABioWorldInfoexecInterruptConversation @ 0x117ff970, intUMassEffectGuiManagerexecIsInConversation @ 0x11813280
-    /// - Combat: intUBioActorBehaviorexecEnterCombatStasis @ 0x117ed418, intUBioActorBehaviorexecExitCombatStasis @ 0x117ed3c0
-    ///   intABioPlayerSquadexecIsInCombat @ 0x11809418, intABioPlayerSquadexecProbeOnCombatBegin @ 0x118093c0
-    ///   intABioPlayerSquadexecProbeOnCombatEnd @ 0x11809370, intUBioGamerProfileexecGetCombatDifficulty @ 0x117e7fe8
-    ///   intUBioGamerProfileexecSetCombatDifficulty @ 0x117e8040, intUBioProbeCombatexecStart @ 0x11813920
-    ///   intUBioProbeCombatexecStop @ 0x118138e8, intUBioProbeCombatexecReset @ 0x118138b0
-    /// - Module/Package: intABioSPGameexecPreloadPackage @ 0x117fede8, Engine.StartupPackages @ 0x11849d54
-    ///   Package @ 0x11849d84, intUBioMorphFaceFrontEndexecPreload2DAPackage @ 0x1180ecc0
     ///
     /// Cross-engine notes:
     /// - Eclipse uses UnrealScript message passing (SaveGameMessage, LoadGameMessage) vs Odyssey GFF serialization
@@ -173,12 +138,10 @@ namespace Andastra.Runtime.Engines.Eclipse
         /// <returns>The detected game type, or Unknown if detection fails.</returns>
         /// <remarks>
         /// Eclipse Engine Game Detection:
-        /// - Based on Eclipse Engine game detection patterns (Dragon Age series, Mass Effect series)
+        /// - Based on Eclipse Engine game detection patterns (Dragon Age series)
         /// - Detection method: Uses Game enum from profile, with fallback to executable detection
         /// - Dragon Age: Origins: Game.DA or Game.DA_ORIGINS, checks for "daorigins.exe"
         /// - Dragon Age 2: Game.DA2 or Game.DRAGON_AGE_2, checks for "DragonAge2.exe"
-        /// - Mass Effect: Game.ME or Game.MASS_EFFECT or Game.ME1, checks for "MassEffect.exe"
-        /// - Mass Effect 2: Game.ME2 or Game.MASS_EFFECT_2, checks for "MassEffect2.exe"
         /// - Similar to Odyssey Engine detection pattern (swkotor.exe/swkotor2.exe detection)
         /// - Original implementation: Eclipse Engine executables identify themselves via executable name
         /// - Cross-engine: Similar detection pattern across all BioWare engines (executable name + fallback file checks)
@@ -211,30 +174,6 @@ namespace Andastra.Runtime.Engines.Eclipse
                 if (System.IO.File.Exists(da2Exe) || System.IO.File.Exists(da2ExeUpper))
                 {
                     // GameType enum doesn't have Dragon Age games yet, return Unknown for now
-                    // TODO: Extend GameType enum to support Eclipse Engine games
-                    return GameType.Unknown;
-                }
-            }
-            else if (game.IsMassEffect1())
-            {
-                // Verify with executable check
-                string meExe = System.IO.Path.Combine(installationPath, "MassEffect.exe");
-                string meExeUpper = System.IO.Path.Combine(installationPath, "MASSEFFECT.EXE");
-                if (System.IO.File.Exists(meExe) || System.IO.File.Exists(meExeUpper))
-                {
-                    // GameType enum doesn't have Mass Effect games yet, return Unknown for now
-                    // TODO: Extend GameType enum to support Eclipse Engine games
-                    return GameType.Unknown;
-                }
-            }
-            else if (game.IsMassEffect2())
-            {
-                // Verify with executable check
-                string me2Exe = System.IO.Path.Combine(installationPath, "MassEffect2.exe");
-                string me2ExeUpper = System.IO.Path.Combine(installationPath, "MASSEFFECT2.EXE");
-                if (System.IO.File.Exists(me2Exe) || System.IO.File.Exists(me2ExeUpper))
-                {
-                    // GameType enum doesn't have Mass Effect games yet, return Unknown for now
                     // TODO: Extend GameType enum to support Eclipse Engine games
                     return GameType.Unknown;
                 }

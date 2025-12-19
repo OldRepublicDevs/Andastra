@@ -15,8 +15,8 @@ namespace Andastra.Runtime.Engines.Common
     /// - Cross-engine analysis:
     ///   - Odyssey (swkotor.exe, swkotor2.exe): FUN_006caab0 @ 0x006caab0 (swkotor2.exe) - server command parser, manages module state flags
     ///   - Aurora (nwmain.exe): Similar module state management (module loading/unloading, state flags)
-    ///   - Eclipse (daorigins.exe, DragonAge2.exe, MassEffect.exe, MassEffect2.exe): Similar module state management
-    ///   - Infinity (BaldurGate.exe, IcewindDale.exe, PlanescapeTorment.exe): Similar module state management (ARE/GAM file-based)
+    ///   - Eclipse (daorigins.exe, DragonAge2.exe, , ): Similar module state management
+    ///   - Infinity (.exe, .exe, .exe): Similar module state management (ARE/GAM file-based)
     /// - Inheritance: Base class BaseEngineGame (Runtime.Games.Common) implements common module state management
     ///   - Odyssey: OdysseyGameSession : BaseEngineGame (Runtime.Games.Odyssey)
     ///   - Aurora: AuroraGameSession : BaseEngineGame (Runtime.Games.Aurora)

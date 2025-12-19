@@ -22,7 +22,7 @@ namespace Andastra.Runtime.Games.Common.Components
     ///     - SaveCreature @ 0x1403a0a60, LoadFromTemplate @ 0x140501c90, SaveTrigger @ 0x140504290
     ///     - String references: "ScriptHeartbeat" @ 0x140dddb10, "ScriptOnNotice" @ 0x140dddb20, "ScriptAttacked" @ 0x140dddb40
     ///   - Eclipse: daorigins.exe, DragonAge2.exe (script hooks system similar, needs verification)
-    ///   - Infinity: MassEffect.exe, MassEffect2.exe (script hooks system similar, needs verification)
+    ///   - Infinity: ,  (script hooks system similar, needs verification)
     ///
     /// Common functionality across all engines:
     /// - Script ResRef storage: Maps ScriptEvent enum to script resource reference strings

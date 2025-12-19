@@ -12,7 +12,7 @@ namespace Andastra.Runtime.Engines.Common
     /// </summary>
     /// <remarks>
     /// Engine Interface:
-    /// - Common contract shared across all BioWare engines (Odyssey, Aurora, Eclipse, Infinity)
+    /// - Common contract shared across all BioWare engines (Odyssey, Aurora, Eclipse)
     /// - Defines the interface that all engine implementations must provide
     /// - Engine-specific implementations must be in concrete classes (OdysseyEngine, AuroraEngine, EclipseEngine)
     /// - TODO: Complete cross-engine reverse engineering to identify common interface patterns
@@ -76,14 +76,9 @@ namespace Andastra.Runtime.Engines.Common
         Odyssey,
 
         /// <summary>
-        /// Eclipse/Unreal Engine (Mass Effect series, Dragon Age)
+        /// Eclipse Engine (Dragon Age Origins, Dragon Age 2)
         /// </summary>
         Eclipse,
-
-        /// <summary>
-        /// Infinity Engine (Baldur's Gate, Icewind Dale, Planescape: Torment)
-        /// </summary>
-        Infinity,
 
         /// <summary>
         /// Unknown or unsupported engine

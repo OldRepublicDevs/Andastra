@@ -28,7 +28,7 @@ namespace Andastra.Runtime.Games.Common
     /// - Odyssey: swkotor.exe/swkotor2.exe specific AI behavior
     /// - Aurora: nwmain.exe specific AI behavior
     /// - Eclipse: daorigins.exe/DragonAge2.exe specific AI behavior
-    /// - Infinity: MassEffect.exe/MassEffect2.exe specific AI behavior
+    /// - Infinity: / specific AI behavior
     /// </remarks>
     [PublicAPI]
     public abstract class BaseAIControllerSystem
@@ -175,7 +175,7 @@ namespace Andastra.Runtime.Games.Common
         /// - Odyssey: swkotor.exe/swkotor2.exe use perception-based combat detection
         /// - Aurora: nwmain.exe uses similar perception-based detection
         /// - Eclipse: daorigins.exe uses perception and combat state tracking
-        /// - Infinity: MassEffect.exe uses perception and threat assessment
+        /// - Infinity:  uses perception and threat assessment
         /// </remarks>
         protected virtual bool IsInCombat(IEntity creature)
         {

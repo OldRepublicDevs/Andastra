@@ -19,8 +19,8 @@ namespace Andastra.Runtime.Core.Interfaces
     /// - Engine-specific details (file formats, loading functions, etc.) are in implementation classes:
     ///   - Odyssey (swkotor.exe, swkotor2.exe): IFO file format, FUN_00708990 @ 0x00708990 (swkotor2.exe)
     ///   - Aurora (nwmain.exe): Module.ifo format, CNWSModule::LoadModule
-    ///   - Eclipse (daorigins.exe, DragonAge2.exe, MassEffect.exe, MassEffect2.exe): UnrealScript-based module loading
-    ///   - Infinity (BaldurGate.exe, IcewindDale.exe, PlanescapeTorment.exe): ARE/WED/GAM file formats
+    ///   - Eclipse (daorigins.exe, DragonAge2.exe, , ): UnrealScript-based module loading
+    ///   - Infinity (.exe, .exe, .exe): ARE/WED/GAM file formats
     /// - Based on cross-engine analysis of module systems in all BioWare engines
     /// </remarks>
     public interface IModule

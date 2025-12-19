@@ -245,7 +245,7 @@ namespace Andastra.Runtime.Games.Eclipse
         /// - Aurora (nwmain.exe, nwn2main.exe): Similar component structure with AuroraCreatureComponent, StatsComponent, InventoryComponent, AuroraFactionComponent
         /// - Eclipse (daorigins.exe, DragonAge2.exe): Enhanced component system with StatsComponent, InventoryComponent, EclipseFactionComponent, EclipseAnimationComponent
         ///   - Eclipse-specific: Talents/abilities system, different property calculations, enhanced component interactions
-        /// - Infinity (MassEffect.exe, MassEffect2.exe): Streamlined component system (to be reverse engineered)
+        /// - Infinity (, ): Streamlined component system (to be reverse engineered)
         /// 
         /// Note: Currently using Odyssey StatsComponent and InventoryComponent implementations as they implement the common interfaces.
         /// TODO: Create Eclipse-specific StatsComponent and InventoryComponent implementations if Eclipse-specific behavior is needed.

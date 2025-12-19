@@ -15,11 +15,11 @@ using JetBrains.Annotations;
 namespace Andastra.Runtime.Games.Eclipse.Fonts
 {
     /// <summary>
-    /// Eclipse engine (Dragon Age, Mass Effect) bitmap font implementation.
+    /// Eclipse engine (Dragon Age, ) bitmap font implementation.
     /// Loads texture-based fonts with engine-specific formats.
     /// </summary>
     /// <remarks>
-    /// Eclipse Bitmap Font (daorigins.exe, DragonAge2.exe, MassEffect.exe, MassEffect2.exe):
+    /// Eclipse Bitmap Font (daorigins.exe, DragonAge2.exe, , ):
     /// - Font textures: TEX/DDS formats (currently using TGA/TPC as fallback until TEX/DDS support is added)
     /// - Font metrics: TXI files or embedded font data (similar to Odyssey/Aurora)
     /// - Character rendering: Uses texture sampling with character coordinates
@@ -30,8 +30,8 @@ namespace Andastra.Runtime.Games.Eclipse.Fonts
     /// Ghidra Reverse Engineering Analysis:
     /// - daorigins.exe: Font loading functions (address verification pending Ghidra analysis)
     /// - DragonAge2.exe: Font loading functions (address verification pending Ghidra analysis)
-    /// - MassEffect.exe: Font loading functions (address verification pending Ghidra analysis)
-    /// - MassEffect2.exe: Font loading functions (address verification pending Ghidra analysis)
+    /// - : Font loading functions (address verification pending Ghidra analysis)
+    /// - : Font loading functions (address verification pending Ghidra analysis)
     /// - Font format: TEX/DDS formats (needs proper format support implementation)
     /// 
     /// Original implementation: Uses engine-specific rendering systems

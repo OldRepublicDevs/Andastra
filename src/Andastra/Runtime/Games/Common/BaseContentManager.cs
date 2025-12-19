@@ -20,8 +20,8 @@ namespace Andastra.Runtime.Games.Common
     /// - nwmain.exe: Aurora resource system (Neverwinter Nights)
     /// - daorigins.exe: Eclipse resource management (Dragon Age: Origins)
     /// - DragonAge2.exe: Eclipse resource management (Dragon Age 2) - Enhanced ERF/DAZIP support, RIM file handling
-    /// - MassEffect.exe: Eclipse resource management (Mass Effect) - PCC/UPK package format, streaming resources
-    /// - MassEffect2.exe: Eclipse resource management (Mass Effect 2) - Enhanced PCC/UPK support, cook package format
+    /// - : Eclipse resource management () - PCC/UPK package format, streaming resources
+    /// - : Eclipse resource management ( 2) - Enhanced PCC/UPK support, cook package format
     /// - Common concepts: Resource caching, format conversion, dependency management
     ///
     /// Common functionality across engines:

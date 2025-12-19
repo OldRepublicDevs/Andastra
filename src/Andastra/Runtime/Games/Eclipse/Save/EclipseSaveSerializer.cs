@@ -16,7 +16,7 @@ namespace Andastra.Runtime.Engines.Eclipse.Save
     /// - Based on Eclipse/Unreal Engine save system
     /// - Eclipse uses UnrealScript message passing system - save format is different from Odyssey GFF/ERF
     /// - Architecture: Message-based (SaveGameMessage) vs Odyssey direct file I/O
-    /// - Game-specific implementations: DragonAgeOriginsSaveSerializer, DragonAge2SaveSerializer, MassEffectSaveSerializer, MassEffect2SaveSerializer
+    /// - Game-specific implementations: DragonAgeOriginsSaveSerializer, DragonAge2SaveSerializer, SaveSerializer, 2SaveSerializer
     /// - Common functionality: Binary serialization helpers, signature validation, version checking
     /// </remarks>
     public abstract class EclipseSaveSerializer : ISaveSerializer
@@ -137,8 +137,8 @@ namespace Andastra.Runtime.Engines.Eclipse.Save
         /// Based on common global variable serialization patterns across:
         /// - Dragon Age: Origins (daorigins.exe)
         /// - Dragon Age 2 (DragonAge2.exe)
-        /// - Mass Effect (MassEffect.exe)
-        /// - Mass Effect 2 (MassEffect2.exe)
+        /// -  ()
+        /// -  2 ()
         /// </remarks>
         protected void SerializeGlobalVariables(BinaryWriter writer, GlobalVariableState globals)
         {
@@ -271,7 +271,7 @@ namespace Andastra.Runtime.Engines.Eclipse.Save
         /// </summary>
         /// <remarks>
         /// Based on Dragon Age: Origins and Dragon Age 2 party serialization.
-        /// Mass Effect uses a more comprehensive party state serialization.
+        ///  uses a more comprehensive party state serialization.
         /// </remarks>
         protected void SerializeSelectedParty(BinaryWriter writer, PartyState partyState)
         {
@@ -320,7 +320,7 @@ namespace Andastra.Runtime.Engines.Eclipse.Save
         /// </summary>
         /// <remarks>
         /// Based on Dragon Age: Origins and Dragon Age 2 inventory serialization.
-        /// Mass Effect uses a more comprehensive item state serialization.
+        ///  uses a more comprehensive item state serialization.
         /// </remarks>
         protected void SerializeBasicInventory(BinaryWriter writer, List<ItemState> inventory)
         {

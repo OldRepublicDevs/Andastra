@@ -45,15 +45,15 @@ namespace Andastra.Runtime.MonoGame.GUI
     /// - nwmain.exe: Aurora engine GUI system and font rendering (needs Ghidra analysis for equivalent implementation)
     /// - daorigins.exe: Eclipse engine GUI system and font rendering (needs Ghidra analysis for equivalent implementation)
     /// - DragonAge2.exe: Eclipse engine GUI system and font rendering (needs Ghidra analysis for equivalent implementation)
-    /// - MassEffect.exe: Infinity engine GUI system and font rendering (needs Ghidra analysis for equivalent implementation)
-    /// - MassEffect2.exe: Infinity engine GUI system and font rendering (needs Ghidra analysis for equivalent implementation)
+    /// - :  GUI system and font rendering (needs Ghidra analysis for equivalent implementation)
+    /// - :  GUI system and font rendering (needs Ghidra analysis for equivalent implementation)
     /// 
     /// Cross-Engine Inheritance Structure (to be implemented after Ghidra analysis):
     /// - Base Class: BaseGuiManager (Runtime.Games.Common) - Common GUI loading/rendering patterns
     ///   - Odyssey: KotorGuiManager : BaseGuiManager (swkotor.exe: 0x..., swkotor2.exe: 0x0070a2e0)
     ///   - Aurora: AuroraGuiManager : BaseGuiManager (nwmain.exe: 0x...)
     ///   - Eclipse: EclipseGuiManager : BaseGuiManager (daorigins.exe: 0x..., DragonAge2.exe: 0x...)
-    ///   - Infinity: InfinityGuiManager : BaseGuiManager (MassEffect.exe: 0x..., MassEffect2.exe: 0x...)
+    ///   - Infinity: InfinityGuiManager : BaseGuiManager (: 0x..., : 0x...)
     /// 
     /// Note: Original engine used DirectX GUI rendering, this is a modern MonoGame adaptation
     /// </remarks>

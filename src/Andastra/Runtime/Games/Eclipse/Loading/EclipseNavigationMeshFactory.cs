@@ -17,7 +17,7 @@ namespace Andastra.Runtime.Games.Eclipse.Loading
     /// </summary>
     /// <remarks>
     /// Eclipse Navigation Mesh Factory:
-    /// - Based on daorigins.exe/DragonAge2.exe/MassEffect.exe/MassEffect2.exe navigation systems
+    /// - Based on daorigins.exe/DragonAge2.exe// navigation systems
     /// - Eclipse uses BWM format similar to Odyssey but with additional features
     /// - Supports dynamic obstacles, destructible terrain, and multi-level navigation
     /// - Physics-aware navigation with collision avoidance

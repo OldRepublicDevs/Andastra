@@ -39,7 +39,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
     /// - Located via string references: "GAMEINPROGRESS" @ 0x007c15c8, "ModuleLoaded" @ 0x007bdd70, "ModuleRunning" @ 0x007bdd58
     /// - Cross-engine analysis:
     ///   - Aurora (nwmain.exe): CServerExoApp::LoadModule, CNWSModule::LoadModule - similar module loading system, different file formats
-    ///   - Eclipse (daorigins.exe, DragonAge2.exe, MassEffect.exe): "LoadModule" - UnrealScript-based module loading, different architecture
+    ///   - Eclipse (daorigins.exe, DragonAge2.exe, ): "LoadModule" - UnrealScript-based module loading, different architecture
     /// - Inheritance: Base class BaseGameSession (Runtime.Games.Common) - abstract game session, Odyssey override (Runtime.Games.Odyssey) - Odyssey-specific game session
     /// - Original implementation: Coordinates module loading, entity management, script execution, combat, AI, triggers, dialogue, party
     /// - Module state: FUN_006caab0 sets module state flags (0=Idle, 1=ModuleLoaded, 2=ModuleRunning) in DAT_008283d4 structure

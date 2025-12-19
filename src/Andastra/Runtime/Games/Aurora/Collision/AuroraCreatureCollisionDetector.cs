@@ -30,8 +30,8 @@ namespace Andastra.Runtime.Games.Aurora.Collision
     ///   - Aurora (nwmain.exe, nwn2main.exe): CNWSArea::NoCreaturesOnLine @ 0x14036ec90, CNWSCreature::GetIsCreatureBumpable @ 0x140391100, CNWSCreature::BumpFriends @ 0x140385130, C2DA::GetFloatingPoint (appearance.2da lookup), bounding box at offset 0x530
     ///   - Eclipse DAO (daorigins.exe): PhysX-based collision, collision masks (TAG_COLLISIONMASK_CREATURES @ 0x00b14c40), appearance.2da hitradius, "BoundingBox" @ 0x00b13674, "CollisionGroup" @ 0x00b13aa8
     ///   - Eclipse DA2 (DragonAge2.exe): PhysX-based collision, similar collision masks, appearance.2da hitradius, "Appearance_Type" @ 0x00bf0b9c, "TargetRadius" @ 0x00be1314
-    ///   - Infinity ME1 (MassEffect.exe): Unreal Engine collision, UnrealScript functions (GetDefaultCollisionRadius @ 0x117eb988), appearance.2da hitradius
-    ///   - Infinity ME2 (MassEffect2.exe): Unreal Engine collision, similar UnrealScript functions, appearance.2da hitradius
+    ///   - Infinity  (): Unreal Engine collision, UnrealScript functions (GetDefaultCollisionRadius @ 0x117eb988), appearance.2da hitradius
+    ///   - Infinity  (): Unreal Engine collision, similar UnrealScript functions, appearance.2da hitradius
     /// - Common pattern: All engines use appearance.2da hitradius column for creature collision radius
     /// - Bounding box structure: CNWSCreature stores bounding box pointer at offset 0x530, radius at offset +8 from pointer
     ///   - Radius is used for collision detection in NoCreaturesOnLine: *(float *)(*(longlong *)(creature + 0x530) + 8)
@@ -46,9 +46,9 @@ namespace Andastra.Runtime.Games.Aurora.Collision
     ///   - EclipseCreatureCollisionDetector (Runtime.Games.Eclipse.Collision): Common Eclipse logic (defaults to DA2)
     ///   - DAOCreatureCollisionDetector (Runtime.Games.Eclipse.Collision): DAO-specific (daorigins.exe: PhysX-based)
     ///   - DA2CreatureCollisionDetector (Runtime.Games.Eclipse.Collision): DA2-specific (DragonAge2.exe: PhysX-based)
-    ///   - InfinityCreatureCollisionDetector (Runtime.Games.Infinity.Collision): Common Infinity logic (defaults to ME2)
-    ///   - ME1CreatureCollisionDetector (Runtime.Games.Infinity.Collision): ME1-specific (MassEffect.exe: Unreal Engine)
-    ///   - ME2CreatureCollisionDetector (Runtime.Games.Infinity.Collision): ME2-specific (MassEffect2.exe: Unreal Engine)
+    ///   - InfinityCreatureCollisionDetector (Runtime.Games.Infinity.Collision): Common Infinity logic (defaults to )
+    ///   - CreatureCollisionDetector (Runtime.Games.Infinity.Collision): -specific (: Unreal Engine)
+    ///   - CreatureCollisionDetector (Runtime.Games.Infinity.Collision): -specific (: Unreal Engine)
     /// </remarks>
     public class AuroraCreatureCollisionDetector : BaseCreatureCollisionDetector
     {

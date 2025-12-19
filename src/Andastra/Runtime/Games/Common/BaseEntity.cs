@@ -29,7 +29,7 @@ namespace Andastra.Runtime.Games.Common
     /// - Odyssey (swkotor.exe, swkotor2.exe): OdysseyEntity - ObjectId at offset +4, GFF-based serialization
     /// - Aurora (nwmain.exe, nwn2main.exe): AuroraEntity - CExoString-based Tag, similar structure
     /// - Eclipse (daorigins.exe, DragonAge2.exe): EclipseEntity - Enhanced component system
-    /// - Infinity (MassEffect.exe, MassEffect2.exe): InfinityEntity - Streamlined entity system
+    /// - Infinity (, ): InfinityEntity - Streamlined entity system
     /// 
     /// All engine-specific details (function addresses, offsets, implementation specifics) are in subclasses.
     /// This base class contains only functionality that is identical across ALL engines.

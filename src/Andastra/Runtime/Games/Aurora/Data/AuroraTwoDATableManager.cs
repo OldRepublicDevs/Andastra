@@ -15,7 +15,7 @@ namespace Andastra.Runtime.Games.Aurora.Data
     /// - Error messages: "Already loaded Appearance.2DA!" @ 0x140dc5dd8, "Failed to load Appearance.2DA!" @ 0x140dc5e08
     /// - Cross-engine analysis:
     ///   - Odyssey (swkotor.exe, swkotor2.exe): Similar 2DA loading via resource system
-    ///   - Eclipse (daorigins.exe, DragonAge2.exe, MassEffect.exe): 2DA system is UnrealScript-based (different architecture)
+    ///   - Eclipse (daorigins.exe, DragonAge2.exe, ): 2DA system is UnrealScript-based (different architecture)
     /// - Original implementation: Loads 2DA files from installation archives (hak files, module files, etc.) via resource system
     /// - Resource precedence: override → module → hak → base game archives
     /// - Table lookup: Uses row label (string) or row index (int) to access data

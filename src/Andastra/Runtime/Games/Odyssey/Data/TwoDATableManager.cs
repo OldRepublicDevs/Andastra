@@ -20,7 +20,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Data
     /// - Error messages: "CSWClass::LoadFeatGain: can't load featgain.2da" @ 0x007c46bc, "CSWClass::LoadFeatTable: Can't load feat.2da" @ 0x007c4720
     /// - Cross-engine analysis:
     ///   - Aurora (nwmain.exe): C2DA::Load2DArray @ 0x1401a73a0, Load2DArrays @ 0x1402b3920 - loads 2DA files via C2DA class
-    ///   - Eclipse (daorigins.exe, DragonAge2.exe, MassEffect.exe): 2DA system is UnrealScript-based (different architecture), uses "Get2DAValue", "GetNum2DARows" functions
+    ///   - Eclipse (daorigins.exe, DragonAge2.exe, ): 2DA system is UnrealScript-based (different architecture), uses "Get2DAValue", "GetNum2DARows" functions
     /// - Inheritance: Base class BaseTwoDATableManager (Runtime.Games.Common) - abstract 2DA loading, Odyssey override (Runtime.Games.Odyssey) - resource-based 2DA loading
     /// - Original implementation: Loads 2DA files from chitin.key or module archives via resource system, caches loaded tables for performance
     /// - Resource precedence: override → module → chitin (via IGameResourceProvider)

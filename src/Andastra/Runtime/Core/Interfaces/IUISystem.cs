@@ -17,7 +17,7 @@ namespace Andastra.Runtime.Core.Interfaces
     /// - Odyssey (swkotor.exe, swkotor2.exe): GUI panel-based UI system with upgrade screens
     /// - Aurora (nwmain.exe): Scene-based GUI system with multiple panel types
     /// - Eclipse (daorigins.exe, DragonAge2.exe): Advanced UI system with crafting and inventory screens
-    /// - Infinity (MassEffect.exe, MassEffect2.exe): Modern UI system with cinematic overlays
+    /// - Infinity (, ): Modern UI system with cinematic overlays
     /// </remarks>
     public interface IUISystem
     {

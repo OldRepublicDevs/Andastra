@@ -18,7 +18,7 @@ namespace Andastra.Runtime.Core.Interfaces
     /// - Odyssey: OdysseyDelayScheduler (swkotor.exe, swkotor2.exe) - float-based time
     /// - Aurora: AuroraDelayScheduler (nwmain.exe) - calendar day/time of day system
     /// - Eclipse: EclipseDelayScheduler (daorigins.exe, DragonAge2.exe) - float-based time
-    /// - Infinity: InfinityDelayScheduler (MassEffect.exe, MassEffect2.exe) - float-based time
+    /// - Infinity: InfinityDelayScheduler (, ) - float-based time
     /// 
     /// Base implementation: BaseDelayScheduler (Runtime.Games.Common) provides common functionality.
     /// </remarks>

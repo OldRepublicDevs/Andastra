@@ -17,7 +17,7 @@ namespace Andastra.Parsing.Formats.PCC
     /// - Writes package header, name table, import table, export table
     /// - Creates package structure from PCC resources
     /// - Supports both PCC (cooked) and UPK (package) formats
-    /// - Used by Eclipse Engine games (Dragon Age, Mass Effect)
+    /// - Used by Eclipse Engine games (Dragon Age, )
     /// - Note: Full package writing is complex and may not preserve all Unreal Engine metadata
     /// </remarks>
     public class PCCBinaryWriter

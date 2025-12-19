@@ -33,7 +33,7 @@ namespace Andastra.Runtime.Core.Interfaces.Components
     ///   - Item component system with enhanced property calculations
     ///   - Upgrade system with different mechanics than Odyssey
     ///   - Item property availability and cost calculations differ from Odyssey/Aurora
-    /// - Infinity (MassEffect.exe, MassEffect2.exe): Modern item system
+    /// - Infinity (, ): Modern item system
     ///   - Item component system with streamlined property system
     ///   - Different upgrade/modification mechanics
     ///

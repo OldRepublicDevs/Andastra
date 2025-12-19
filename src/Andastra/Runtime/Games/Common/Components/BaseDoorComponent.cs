@@ -23,7 +23,7 @@ namespace Andastra.Runtime.Games.Common.Components
     /// - nwmain.exe: Aurora door system using CNWSDoor class (LoadDoor @ 0x1404208a0, SaveDoor @ 0x1404228e0)
     /// - daorigins.exe: Eclipse engine (door functionality may differ or be absent)
     /// - DragonAge2.exe: Enhanced Eclipse engine (door functionality may differ or be absent)
-    /// - MassEffect.exe/MassEffect2.exe: Infinity engine (door functionality may differ or be absent)
+    /// - /:  (door functionality may differ or be absent)
     ///
     /// Common structure across engines:
     /// - IsOpen (bool): Whether door is currently open

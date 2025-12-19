@@ -40,7 +40,6 @@
     <ProjectReference Include="..\..\Runtime\Games\Odyssey\Andastra.Runtime.Games.Odyssey.csproj" />
     <ProjectReference Include="..\..\Runtime\Games\Aurora\Andastra.Runtime.Games.Aurora.csproj" />
     <ProjectReference Include="..\..\Runtime\Games\Eclipse\Andastra.Runtime.Games.Eclipse.csproj" />
-    <ProjectReference Include="..\..\Runtime\Games\Infinity\Andastra.Runtime.Games.Infinity.csproj" />
     <ProjectReference Include="..\..\Parsing\Andastra.Parsing.csproj" />
     <ProjectReference Include="..\..\Game\Andastra.Game.csproj" />
   </ItemGroup>

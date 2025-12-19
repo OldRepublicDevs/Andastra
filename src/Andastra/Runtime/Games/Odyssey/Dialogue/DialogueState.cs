@@ -16,7 +16,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Dialogue
     /// - Error: "Error: dialogue can't find object '%s'!" @ 0x007c3730, "CONVERSATION ERROR: Last Conversation Node Contains Either an END NODE or CONTINUE NODE" @ 0x007c3768
     /// - Cross-engine analysis:
     ///   - Aurora (nwmain.exe): CNWSDialog class, "ScriptDialogue" @ 0x140dddb80, "EndConversation" @ 0x140de6f70, RunEndConversationScript
-    ///   - Eclipse (daorigins.exe, DragonAge2.exe, MassEffect.exe): "Conversation" class, "Conversation.HandleResponseSelection", "Conversation.OnNPCLineFinished" - UnrealScript-based dialogue system
+    ///   - Eclipse (daorigins.exe, DragonAge2.exe, ): "Conversation" class, "Conversation.HandleResponseSelection", "Conversation.OnNPCLineFinished" - UnrealScript-based dialogue system
     /// - Inheritance: Base class BaseDialogueState (Runtime.Games.Common) - abstract dialogue state, Odyssey override (Runtime.Games.Odyssey) - DLG-based dialogue state
     /// - Original implementation: Tracks current conversation state and node traversal for DLG-based dialogue system
     /// - Dialogue state: StartingList -> DLGEntry (NPC) -> DLGReply options -> DLGEntry (next NPC) -> repeat until no more links or aborted

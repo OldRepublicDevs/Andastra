@@ -33,7 +33,7 @@ namespace Andastra.Runtime.Games.Common.Components
     ///   - TriggerList @ 0x00af5040, CTrigger @ 0x00b0d4a0
     ///   - COMMAND_GETTRIGGER* and COMMAND_SETTRIGGER* functions
     /// - DragonAge2.exe: Enhanced Eclipse engine (similar to daorigins.exe)
-    /// - MassEffect.exe/MassEffect2.exe: Infinity engine (different trigger system, not fully reverse engineered)
+    /// - /:  (different trigger system, not fully reverse engineered)
     ///
     /// Common structure across engines:
     /// - Geometry (IList&lt;Vector3&gt;): Polygon vertices defining trigger volume

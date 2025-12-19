@@ -37,7 +37,7 @@ namespace Andastra.Runtime.Core.Interfaces
     /// - "Area_RecomputeStaticLighting" @ 0x140dca340, "Area_ChangeDayNight" @ 0x140dca360
     /// - Tile-based area construction with enhanced weather and environmental systems
     /// 
-    /// Eclipse Engine (daorigins.exe, DragonAge2.exe, MassEffect.exe, MassEffect2.exe):
+    /// Eclipse Engine (daorigins.exe, DragonAge2.exe, , ):
     /// - CArea class: Area management with advanced physics and lighting systems
     /// - String references: "CArea" @ 0x00b0d500, "AreaTransition" @ 0x00b1ad60
     /// - "Mod_Entry_Area" @ 0x00ae821c, "AreaEffectList" @ 0x00af4ea0
@@ -64,7 +64,7 @@ namespace Andastra.Runtime.Core.Interfaces
     /// - Base Class: BaseArea (Runtime.Games.Common) - Contains common functionality
     ///   - Odyssey: OdysseyArea : BaseArea (swkotor.exe, swkotor2.exe)
     ///   - Aurora: AuroraArea : BaseArea (nwmain.exe)
-    ///   - Eclipse: EclipseArea : BaseArea (daorigins.exe, DragonAge2.exe, MassEffect.exe, MassEffect2.exe)
+    ///   - Eclipse: EclipseArea : BaseArea (daorigins.exe, DragonAge2.exe, , )
     /// 
     /// Based on ARE/GIT file format documentation in vendor/PyKotor/wiki/
     /// </remarks>

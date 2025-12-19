@@ -22,7 +22,7 @@ namespace Andastra.Runtime.Games.Common.Components
     /// - nwmain.exe: Aurora animation system using Gob::PlayAnimation (0x140052580) with Animation class hierarchy
     /// - daorigins.exe: Eclipse animation system with animation tree support
     /// - DragonAge2.exe: Enhanced Eclipse animation system
-    /// - MassEffect.exe/MassEffect2.exe: Infinity animation system with animation state tracking
+    /// - /: Infinity animation system with animation state tracking
     ///
     /// Common structure across engines:
     /// - CurrentAnimation (int): Currently playing animation ID (-1 = no animation, idle state)

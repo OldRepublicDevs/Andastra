@@ -91,7 +91,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
             RegisterFunctionName(681, "GetLocalFloat");
             RegisterFunctionName(682, "SetLocalFloat");
             
-            // Eclipse-specific functions (common patterns across Dragon Age and Mass Effect)
+            // Eclipse-specific functions (common patterns across Dragon Age and )
             RegisterFunctionName(100, "SpawnCreature");
             RegisterFunctionName(101, "CreateItem");
             RegisterFunctionName(102, "DestroyObject");
@@ -326,7 +326,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
         /// </summary>
         /// <remarks>
         /// Based on Eclipse engine: GetPosition implementation
-        /// Eclipse engines (Dragon Age, Mass Effect) use 3D position vectors for object placement
+        /// Eclipse engines (Dragon Age, ) use 3D position vectors for object placement
         /// Returns Vector3 with X, Y, Z coordinates
         /// </remarks>
         private Variable Func_GetPosition(IReadOnlyList<Variable> args, IExecutionContext ctx)
@@ -1406,7 +1406,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
         /// </summary>
         /// <remarks>
         /// Based on Eclipse engine: GetPlayerCharacter implementation
-        /// Eclipse engines (Dragon Age, Mass Effect) return the player-controlled character object
+        /// Eclipse engines (Dragon Age, ) return the player-controlled character object
         /// Located via string reference: "PlayerCharacter" @ 0x00b08188 (daorigins.exe)
         /// Original implementation: Returns the player character entity, typically the party leader
         /// Implementation strategy:

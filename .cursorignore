@@ -4,10 +4,8 @@
 !.cursorignore
 !.cursorrules
 !.editorconfig
-!.env
 !.gitignore
 !.vscode
-.history
 *.exe
 vendor/DeNCS/
 vendor/HoloLSP/

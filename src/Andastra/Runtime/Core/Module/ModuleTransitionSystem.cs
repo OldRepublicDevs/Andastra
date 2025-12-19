@@ -9,7 +9,8 @@ using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
 using Andastra.Runtime.Core.Save;
 using Andastra.Runtime.Core.Video;
-using Andastra.Runtime.Content.Interfaces;
+// TODO: Core cannot depend on Content or Graphics - these should be injected or removed
+// using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Graphics;
 
 namespace Andastra.Runtime.Core.Module
@@ -64,7 +65,9 @@ namespace Andastra.Runtime.Core.Module
         private readonly MoviePlayer _moviePlayer;
         private bool _isTransitioning;
 
-        public ModuleTransitionSystem(IWorld world, SaveSystem saveSystem, IModuleLoader moduleLoader, IGameResourceProvider resourceProvider = null, IGraphicsDevice graphicsDevice = null)
+        // TODO: IGameResourceProvider and IGraphicsDevice are in Content/Graphics - Core cannot depend on them
+        // These should be injected by engine-specific implementations
+        public ModuleTransitionSystem(IWorld world, SaveSystem saveSystem, IModuleLoader moduleLoader, object resourceProvider = null, object graphicsDevice = null)
         {
             _world = world ?? throw new ArgumentNullException("world");
             _saveSystem = saveSystem ?? throw new ArgumentNullException("saveSystem");

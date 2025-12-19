@@ -12,7 +12,8 @@ using Andastra.Runtime.Core.Perception;
 using Andastra.Runtime.Core.Save;
 using Andastra.Runtime.Core.Triggers;
 using Andastra.Runtime.Core.Templates;
-using Andastra.Runtime.Games.Common;
+// TODO: IGameDataProvider moved to Games.Common - Core cannot depend on Games
+// using Andastra.Runtime.Games.Common;
 
 namespace Andastra.Runtime.Core.Entities
 {
@@ -256,7 +257,9 @@ namespace Andastra.Runtime.Core.Entities
         public AIController AIController { get; }
         public AnimationSystem AnimationSystem { get; }
         public ModuleTransitionSystem ModuleTransitionSystem { get; }
-        public IGameDataProvider GameDataProvider { get; set; }
+        // TODO: IGameDataProvider is in Games.Common - Core cannot depend on Games
+        // This property should be set by engine-specific implementations
+        public object GameDataProvider { get; set; }
 
         public IEntity CreateEntity(IEntityTemplate template, Vector3 position, float facing)
         {

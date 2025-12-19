@@ -18,7 +18,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Dialogue
     /// - LIP directories: ".\lips" @ 0x007c6838, "d:\lips" @ 0x007c6840 (LIP file search directories)
     /// - Cross-engine analysis:
     ///   - Aurora (nwmain.exe): No LIP file support found - uses different lip sync system (if any)
-    ///   - Eclipse (daorigins.exe, DragonAge2.exe, MassEffect.exe): No LIP file support found - uses UnrealScript-based lip sync system
+    ///   - Eclipse (daorigins.exe, DragonAge2.exe, ): No LIP file support found - uses UnrealScript-based lip sync system
     /// - Inheritance: Base class BaseLipDataLoader (Runtime.Games.Common) - abstract lip sync loading, Odyssey override (Runtime.Games.Odyssey) - LIP file format
     /// - Original implementation: Loads LIP files from resource system (LIPS directory or module archives)
     /// - LIP file format: "LIP V1.0" signature, duration (float), keyframe count (uint32), keyframes (time + shape)

@@ -10,7 +10,7 @@ namespace Andastra.Runtime.Games.Eclipse.Components
     /// <remarks>
     /// Eclipse Placeable Component:
     /// - Inherits from BasePlaceableComponent (common functionality)
-    /// - Eclipse-specific implementation for daorigins.exe, DragonAge2.exe, MassEffect.exe, MassEffect2.exe
+    /// - Eclipse-specific implementation for daorigins.exe, DragonAge2.exe, , 
     /// - Based on CCPlaceable class (daorigins.exe, DragonAge2.exe)
     /// - PlaceableList @ 0x00af5028 (daorigins.exe) - Placeable list in area data
     /// - CPlaceable @ 0x00b0d488 (daorigins.exe) - Placeable class name

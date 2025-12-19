@@ -42,8 +42,8 @@ namespace Andastra.Runtime.Games.Common
     /// - BaseTimeManager (this class) - Common functionality only
     ///   - OdysseyTimeManager : BaseTimeManager (swkotor.exe, swkotor2.exe)
     ///   - AuroraTimeManager : BaseTimeManager (nwmain.exe, nwn2main.exe)
-    ///   - EclipseTimeManager : BaseTimeManager (daorigins.exe, DragonAge2.exe, MassEffect.exe, MassEffect2.exe)
-    ///   - InfinityTimeManager : BaseTimeManager (BaldurGate.exe, IcewindDale.exe, PlanescapeTorment.exe)
+    ///   - EclipseTimeManager : BaseTimeManager (daorigins.exe, DragonAge2.exe, , )
+    ///   - InfinityTimeManager : BaseTimeManager (.exe, .exe, .exe)
     /// 
     /// NOTE: This base class contains ONLY functionality verified as identical across ALL engines.
     /// All engine-specific function addresses, memory offsets, and implementation details are in subclasses.
