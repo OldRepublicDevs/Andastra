@@ -6,10 +6,10 @@ using Andastra.Runtime.Core.Interfaces;
 namespace Andastra.Runtime.Core.Entities
 {
     /// <summary>
-    /// Event bus implementation for routing entity and world events.
+    /// Odyssey Engine event bus implementation.
     /// </summary>
     /// <remarks>
-    /// Event Bus System:
+    /// Odyssey Event Bus System:
     /// - Based on swkotor2.exe event system
     /// - Event dispatching: FUN_004dcfb0 @ 0x004dcfb0 handles all object event dispatching
     /// - Located via string references: "EventQueue" @ 0x007bce74, "EventId" @ 0x007bce48, "EventData" @ 0x007bce3c
@@ -48,6 +48,7 @@ namespace Andastra.Runtime.Core.Entities
     ///      - Case 1: "CSWSSCRIPTEVENT_EVENTTYPE_ON_PERCEPTION"
     ///      - Case 2: "CSWSSCRIPTEVENT_EVENTTYPE_ON_SPELLCASTAT"
     ///      - Case 4: "CSWSSCRIPTEVENT_EVENTTYPE_ON_DAMAGED"
+    /// - Inheritance: Inherits from BaseEventBus (Runtime.Games.Common) with Odyssey-specific event handling
     ///      - Case 5: "CSWSSCRIPTEVENT_EVENTTYPE_ON_DISTURBED"
     ///      - Case 7: "CSWSSCRIPTEVENT_EVENTTYPE_ON_DIALOGUE"
     ///      - Case 8: "CSWSSCRIPTEVENT_EVENTTYPE_ON_SPAWN_IN"

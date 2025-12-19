@@ -16,10 +16,10 @@ using Andastra.Runtime.Core.Templates;
 namespace Andastra.Runtime.Core.Entities
 {
     /// <summary>
-    /// Core world implementation - entity container and state manager.
+    /// Odyssey Engine world implementation.
     /// </summary>
     /// <remarks>
-    /// World/Entity Management:
+    /// Odyssey World/Entity Management:
     /// - Based on swkotor2.exe world management system
     /// - Located via string references: "ObjectId" @ 0x007bce5c, "ObjectIDList" @ 0x007bfd7c
     /// - "AreaId" @ 0x007bef48 (entity area association), "Area" @ 0x007be340 (area name)
@@ -44,10 +44,13 @@ namespace Andastra.Runtime.Core.Entities
     /// - Area management: Entities belong to areas (AreaId field), areas contain entity lists by type
     /// - Module management: "ModuleList" @ 0x007bdd3c, "ModuleName" @ 0x007bde2c, "LASTMODULE" @ 0x007be1d0
     /// - Module events: "CSWSSCRIPTEVENT_EVENTTYPE_ON_MODULE_LOAD" @ 0x007bc91c, "CSWSSCRIPTEVENT_EVENTTYPE_ON_MODULE_START" @ 0x007bc948
+    /// - Note: This is a standalone implementation in Core. Engine-specific implementations
+    ///   (e.g., OdysseyWorld) should inherit from BaseWorld in Runtime.Games.Common
     /// </remarks>
     public class World : IWorld
     {
         private readonly Dictionary<uint, IEntity> _entitiesById;
+        private readonly Dictionary<uint, IArea> _areasById;
         private readonly Dictionary<string, List<IEntity>> _entitiesByTag;
         private readonly Dictionary<ObjectType, List<IEntity>> _entitiesByType;
         
