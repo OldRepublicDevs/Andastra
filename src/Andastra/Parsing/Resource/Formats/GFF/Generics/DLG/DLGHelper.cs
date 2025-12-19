@@ -275,14 +275,44 @@ namespace Andastra.Parsing.Resource.Generics.DLG
             root.SetResRef("EndConverAbort", dlg.OnAbort);
             root.SetResRef("EndConversation", dlg.OnEnd);
             root.SetUInt8("Skippable", dlg.Skippable ? (byte)1 : (byte)0);
-            root.SetResRef("AmbientTrack", dlg.AmbientTrack);
-            root.SetUInt32("AnimatedCut", (uint)dlg.AnimatedCut);
+            // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/dlg/io/gff.py:500-515
+            // Original: if str(dlg.ambient_track): root.set_resref("AmbientTrack", ...)
+            // Only write optional fields if they have non-default values
+            if (dlg.AmbientTrack != null && !string.IsNullOrEmpty(dlg.AmbientTrack.ToString()))
+            {
+                root.SetResRef("AmbientTrack", dlg.AmbientTrack);
+            }
+            // Original: if dlg.animated_cut: root.set_uint8("AnimatedCut", ...)
+            if (dlg.AnimatedCut != 0)
+            {
+                root.SetUInt8("AnimatedCut", (byte)dlg.AnimatedCut);
+            }
             root.SetResRef("CameraModel", dlg.CameraModel);
-            root.SetUInt32("ComputerType", (uint)dlg.ComputerType);
-            root.SetUInt32("ConversationType", (uint)dlg.ConversationType);
-            root.SetUInt8("OldHitCheck", dlg.OldHitCheck ? (byte)1 : (byte)0);
-            root.SetUInt8("UnequipHItem", dlg.UnequipHands ? (byte)1 : (byte)0);
-            root.SetUInt8("UnequipItems", dlg.UnequipItems ? (byte)1 : (byte)0);
+            // Original: if dlg.computer_type: root.set_uint8("ComputerType", ...)
+            if (dlg.ComputerType != DLGComputerType.Modern)
+            {
+                root.SetUInt8("ComputerType", (byte)dlg.ComputerType);
+            }
+            // Original: if dlg.conversation_type: root.set_int32("ConversationType", ...)
+            if (dlg.ConversationType != DLGConversationType.Human)
+            {
+                root.SetInt32("ConversationType", (int)dlg.ConversationType);
+            }
+            // Original: if dlg.old_hit_check: root.set_uint8("OldHitCheck", ...)
+            if (dlg.OldHitCheck)
+            {
+                root.SetUInt8("OldHitCheck", (byte)1);
+            }
+            // Original: if dlg.unequip_hands: root.set_uint8("UnequipHItem", ...)
+            if (dlg.UnequipHands)
+            {
+                root.SetUInt8("UnequipHItem", (byte)1);
+            }
+            // Original: if dlg.unequip_items: root.set_uint8("UnequipItems", ...)
+            if (dlg.UnequipItems)
+            {
+                root.SetUInt8("UnequipItems", (byte)1);
+            }
             root.SetString("VO_ID", dlg.VoId);
             // K2-specific root fields - only write for K2
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/dlg/io/gff.py:516-520
@@ -318,7 +348,7 @@ namespace Andastra.Parsing.Resource.Generics.DLG
                 GFFStruct linkStruct = startingList.Add(i);
                 int entryIndex = allEntries.IndexOf(link.Node as DLGEntry);
                 linkStruct.SetUInt32("Index", entryIndex >= 0 ? (uint)entryIndex : 0);
-                DismantleLink(linkStruct, link, game);
+                DismantleLink(linkStruct, link, game, "StartingList");
             }
 
             // EntryList
@@ -479,19 +509,28 @@ namespace Andastra.Parsing.Resource.Generics.DLG
                     nodeIndex = allReplies.IndexOf(reply);
                 }
                 linkStruct.SetUInt32("Index", nodeIndex >= 0 ? (uint)nodeIndex : 0);
-                linkStruct.SetUInt8("IsChild", link.IsChild ? (byte)1 : (byte)0);
-                linkStruct.SetString("LinkComment", link.Comment);
-                DismantleLink(linkStruct, link, game);
+                DismantleLink(linkStruct, link, game, listName);
             }
         }
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/dlg/io/gff.py:334-385
         // Original: def dismantle_link(gff_struct: GFFStruct, link: DLGLink, nodes: list, list_name: str):
         // Note: PyKotor's dismantle_link is nested inside dismantle_dlg and has access to game parameter
-        private static void DismantleLink(GFFStruct gffStruct, DLGLink link, Game game)
+        private static void DismantleLink(GFFStruct gffStruct, DLGLink link, Game game, string listName)
         {
             // Basic link fields - written for all games
+            // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/dlg/io/gff.py:363-367
+            // Original: if list_name != "StartingList": gff_struct.set_uint8("IsChild", ...)
+            if (listName != "StartingList")
+            {
+                gffStruct.SetUInt8("IsChild", link.IsChild ? (byte)1 : (byte)0);
+            }
             gffStruct.SetResRef("Active", link.Active1);
+            // Original: if link.comment and link.comment.strip(): gff_struct.set_string("LinkComment", ...)
+            if (!string.IsNullOrWhiteSpace(link.Comment))
+            {
+                gffStruct.SetString("LinkComment", link.Comment);
+            }
             
             // K2-specific link fields - only write for K2
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/dlg/io/gff.py:368-384
@@ -500,7 +539,7 @@ namespace Andastra.Parsing.Resource.Generics.DLG
             if (game.IsK2())
             {
                 gffStruct.SetResRef("Active2", link.Active2);
-                gffStruct.SetUInt8("Logic", link.Logic ? (byte)1 : (byte)0);
+                gffStruct.SetInt32("Logic", link.Logic ? 1 : 0);
                 gffStruct.SetUInt8("Not", link.Active1Not ? (byte)1 : (byte)0);
                 gffStruct.SetUInt8("Not2", link.Active2Not ? (byte)1 : (byte)0);
                 gffStruct.SetInt32("Param1", link.Active1Param1);
