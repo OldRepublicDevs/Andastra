@@ -67,7 +67,6 @@ namespace Andastra.Parsing.Formats.NCS
 
             return includes;
         }
-    {
 
         /// <summary>
         /// Returns an NCS instance from the source.
@@ -232,6 +231,10 @@ namespace Andastra.Parsing.Formats.NCS
             // If no library provided, use selective loading from nwscript.nss only
             if (library == null)
             {
+                // Old pykotor logic: includes the whole library
+                //library = game.IsK1() ? ScriptLib.KOTOR_LIBRARY : ScriptLib.TSL_LIBRARY;
+
+                // nwnnsscomp.exe logic: only includes functions/constants that are actually referenced
                 // Parse #include directives from source to determine what needs to be loaded
                 var includeFiles = ParseIncludeDirectives(source);
                 var selectiveLibrary = new Dictionary<string, byte[]>();

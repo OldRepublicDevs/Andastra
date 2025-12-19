@@ -9,40 +9,17 @@ using Andastra.Runtime.Scripting.EngineApi;
 using Andastra.Parsing.Installation;
 using Andastra.Parsing.Resource;
 
-namespace Andastra.Runtime.Engines.Odyssey.Game
+namespace Andastra.Runtime.Games.Odyssey
 {
     /// <summary>
-    /// Executes NCS scripts using the NCS VM.
+    /// Odyssey Engine script executor implementation.
     /// </summary>
     /// <remarks>
-    /// Script Executor:
-    /// - Based on swkotor2.exe script execution system
-    /// - Located via string references: Script loading and execution functions handle NCS bytecode files
-    /// - "ObjectId" @ 0x007bce5c (object ID field), "ObjectIDList" @ 0x007bfd7c (object ID list)
-    /// - Script event types: "CSWSSCRIPTEVENT_EVENTTYPE_ON_HEARTBEAT" @ 0x007bcb90 (0x0), "CSWSSCRIPTEVENT_EVENTTYPE_ON_PERCEPTION" @ 0x007bcb68 (0x1)
-    /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_DAMAGED" @ 0x007bcb14 (0x4), "CSWSSCRIPTEVENT_EVENTTYPE_ON_DISTURBED" @ 0x007bcaec (0x5)
-    /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_SPELLCASTAT" @ 0x007bcb3c (0x6), "CSWSSCRIPTEVENT_EVENTTYPE_ON_ATTACKED" (0x7)
-    /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_DEATH" @ 0x007bca54 (0x8), "CSWSSCRIPTEVENT_EVENTTYPE_ON_DIALOGUE" @ 0x007bcac4 (0x9)
-    /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_SPAWN_IN" @ 0x007bca9c (0xa), "CSWSSCRIPTEVENT_EVENTTYPE_ON_RESTED" @ 0x007bca78 (0xb)
-    /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_USER_DEFINED_EVENT" @ 0x007bca24 (0xc), "CSWSSCRIPTEVENT_EVENTTYPE_ON_OBJECT_ENTER" @ 0x007bc9f8 (0xd)
-    /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_OBJECT_EXIT" @ 0x007bc9cc (0xe), "CSWSSCRIPTEVENT_EVENTTYPE_ON_PLAYER_ENTER" @ 0x007bc9a0 (0xf)
-    /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_PLAYER_EXIT" @ 0x007bc974 (0x10), "CSWSSCRIPTEVENT_EVENTTYPE_ON_MODULE_START" @ 0x007bc948 (0x15)
-    /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_MODULE_LOAD" @ 0x007bc91c (0x14), "CSWSSCRIPTEVENT_EVENTTYPE_ON_ACQUIRE_ITEM" @ 0x007bc8c4 (0x1d)
-    /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_LOSE_ITEM" @ 0x007bc89c (0x1e), "CSWSSCRIPTEVENT_EVENTTYPE_ON_ACTIVATE_ITEM" @ 0x007bc8f0 (0x1f)
-    /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_ENCOUNTER_EXHAUSTED" @ 0x007bc868 (0x10), "CSWSSCRIPTEVENT_EVENTTYPE_ON_OPEN" @ 0x007bc844 (0x16)
-    /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_CLOSE" @ 0x007bc820 (0x17), "CSWSSCRIPTEVENT_EVENTTYPE_ON_USED" @ 0x007bc7d8 (0x19)
-    /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_DISARM" @ 0x007bc7fc (0x18), "CSWSSCRIPTEVENT_EVENTTYPE_ON_MINE_TRIGGERED" @ 0x007bc7ac (0x1a)
-    /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_INVENTORY_DISTURBED" @ 0x007bc778 (0x1b), "CSWSSCRIPTEVENT_EVENTTYPE_ON_LOCKED" @ 0x007bc754 (0x1c)
-    /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_UNLOCKED" @ 0x007bc72c (0x1d), "CSWSSCRIPTEVENT_EVENTTYPE_ON_CLICKED" @ 0x007bc704 (0x1e)
-    /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_PATH_BLOCKED" @ 0x007bc6d8 (0x1f), "CSWSSCRIPTEVENT_EVENTTYPE_ON_PLAYER_DYING" @ 0x007bc6ac (0x20)
-    /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_RESPAWN_BUTTON_PRESSED" @ 0x007bc678 (0x21), "CSWSSCRIPTEVENT_EVENTTYPE_ON_PLAYER_REST" @ 0x007bc620 (0x22)
-    /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_FAIL_TO_OPEN" @ 0x007bc64c (0x23), "CSWSSCRIPTEVENT_EVENTTYPE_ON_PLAYER_LEVEL_UP" @ 0x007bc5bc (0x24)
-    /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_EQUIP_ITEM" @ 0x007bc594 (0x25), "CSWSSCRIPTEVENT_EVENTTYPE_ON_DESTROYPLAYERCREATURE" @ 0x007bc5ec (0x26)
-    /// - Script hook fields: "ScriptHeartbeat" @ 0x007beeb0, "ScriptOnNotice" @ 0x007beea0, "ScriptSpellAt" @ 0x007bee90
-    /// - "ScriptAttacked" @ 0x007bee80, "ScriptDamaged" @ 0x007bee70, "ScriptDisturbed" @ 0x007bee60, "ScriptEndRound" @ 0x007bee50
-    /// - "ScriptDialogue" @ 0x007bee40, "ScriptSpawn" @ 0x007bee34, "ScriptRested" @ 0x007bee24, "ScriptDeath" @ 0x007bee18
-    /// - "ScriptUserDefine" @ 0x007bee04, "ScriptOnBlocked" @ 0x007bedf4, "ScriptEndDialogue" @ 0x007bede0
-    /// - "ScriptOnEnter" @ 0x007c1d40, "ScriptOnExit" @ 0x007c1d30 (trigger scripts)
+    /// Odyssey Script Executor:
+    /// - Inherits from BaseScriptExecutor (Runtime.Games.Common) with Odyssey-specific resource loading
+    /// - Based on swkotor2.exe script execution system with comprehensive event type mappings
+    /// - Located via string references: Extensive script event type definitions
+    /// - Script hook fields: Complete mapping of script event handlers
     /// - NCS file format: Compiled NWScript bytecode with "NCS " signature, "V1.0" version string
     /// - Script loading: Loads NCS files from installation via ResourceLookup (ResourceType.NCS)
     /// - Execution context: Creates ExecutionContext with owner (OBJECT_SELF), world, engine API, globals
@@ -61,34 +38,29 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
     ///   - Executes script with owner as OBJECT_SELF, triggerer as OBJECT_TRIGGERER
     ///   - Returns script return value (0 = FALSE, non-zero = TRUE)
     /// - Based on NCS VM execution in vendor/PyKotor/wiki/NCS-File-Format.md
+    /// - Event types: Comprehensive mapping from 0x0 (ON_HEARTBEAT) to 0x26 (ON_DESTROYPLAYERCREATURE)
+    /// - Inheritance: Extends BaseScriptExecutor with Odyssey-specific Installation resource loading
     /// </remarks>
-    public class ScriptExecutor : IScriptExecutor
+    public class OdysseyScriptExecutor : BaseScriptExecutor
     {
-        private readonly NcsVm _vm;
-        private readonly IWorld _world;
-        private readonly IScriptGlobals _globals;
         private readonly Installation _installation;
-        private readonly IEngineApi _engineApi;
         private readonly IGameServicesContext _servicesContext;
 
-        public ScriptExecutor([NotNull] NcsVm vm, [NotNull] IWorld world, [NotNull] IScriptGlobals globals, [NotNull] Installation installation, [NotNull] IEngineApi engineApi, [CanBeNull] IGameServicesContext servicesContext = null)
+        public OdysseyScriptExecutor([NotNull] IWorld world, [NotNull] IEngineApi engineApi, [NotNull] IScriptGlobals globals, [NotNull] Installation installation, [CanBeNull] IGameServicesContext servicesContext = null)
+            : base(world, engineApi, globals)
         {
-            _vm = vm ?? throw new ArgumentNullException("vm");
-            _world = world ?? throw new ArgumentNullException("world");
-            _globals = globals ?? throw new ArgumentNullException("globals");
-            _installation = installation ?? throw new ArgumentNullException("installation");
-            _engineApi = engineApi ?? throw new ArgumentNullException("engineApi");
+            _installation = installation ?? throw new ArgumentNullException(nameof(installation));
             _servicesContext = servicesContext;
         }
 
         /// <summary>
-        /// Executes a script.
+        /// Executes a script with Odyssey-specific resource loading.
         /// </summary>
-        /// <param name="scriptResRef">The script resource reference.</param>
-        /// <param name="owner">The owner entity (OBJECT_SELF).</param>
-        /// <param name="triggerer">The triggering entity.</param>
-        /// <returns>The script return value (0 = FALSE, non-zero = TRUE).</returns>
-        public int ExecuteScript(string scriptResRef, IEntity owner, IEntity triggerer)
+        /// <remarks>
+        /// Based on swkotor2.exe script execution with Installation resource loading.
+        /// Includes GameServicesContext for enhanced script context.
+        /// </remarks>
+        public override int ExecuteScript(IEntity caller, string scriptResRef, IEntity triggerer = null)
         {
             if (string.IsNullOrEmpty(scriptResRef))
             {
@@ -97,21 +69,19 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
 
             try
             {
-                // Load NCS file from installation
-                Andastra.Parsing.Installation.ResourceResult resource = _installation.Resources.LookupResource(scriptResRef, ResourceType.NCS);
-                if (resource == null || resource.Data == null)
+                // Load NCS bytecode using Odyssey resource system
+                byte[] bytecode = LoadNcsBytecode(scriptResRef);
+                if (bytecode == null || bytecode.Length == 0)
                 {
-                    Console.WriteLine("[ScriptExecutor] Script not found: " + scriptResRef);
+                    Console.WriteLine("[OdysseyScriptExecutor] Script not found: " + scriptResRef);
                     return 0; // FALSE
                 }
 
-                // Create execution context
-                var context = new Andastra.Runtime.Scripting.VM.ExecutionContext(owner, _world, _engineApi, _globals);
-                if (triggerer != null)
-                {
-                    context.SetTriggerer(triggerer);
-                }
+                // Create execution context with Odyssey-specific enhancements
+                var context = CreateExecutionContext(caller, triggerer);
+
                 // Set additional context (GameServicesContext) if available
+                // Odyssey-specific: Enhanced script context for game services
                 if (_servicesContext != null)
                 {
                     context.AdditionalContext = _servicesContext;
@@ -121,27 +91,32 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
                 // Based on swkotor2.exe: Script execution with instruction budget tracking
                 // Located via string references: Script execution budget limits per frame
                 // Original implementation: Tracks instruction count per entity for budget enforcement
-                int returnValue = _vm.Execute(resource.Data, context);
-                
+                int returnValue = _vm.Execute(bytecode, context);
+
                 // Accumulate instruction count to owner entity's action queue component
                 // This allows the game loop to enforce per-frame script budget limits
-                int instructionsExecuted = _vm.InstructionsExecuted;
-                if (instructionsExecuted > 0 && owner != null)
-                {
-                    IActionQueueComponent actionQueue = owner.GetComponent<IActionQueueComponent>();
-                    if (actionQueue != null)
-                    {
-                        actionQueue.AddInstructionCount(instructionsExecuted);
-                    }
-                }
+                TrackScriptExecution(caller, _vm.InstructionsExecuted);
 
                 return returnValue;
             }
             catch (Exception ex)
             {
-                Console.WriteLine("[ScriptExecutor] Error executing script " + scriptResRef + ": " + ex.Message);
+                HandleScriptError(scriptResRef, caller, ex);
                 return 0; // FALSE on error
             }
+        }
+
+        /// <summary>
+        /// Loads NCS bytecode using Odyssey Installation resource system.
+        /// </summary>
+        /// <remarks>
+        /// Odyssey-specific: Uses Installation.ResourceLookup for NCS files.
+        /// Based on swkotor2.exe resource loading patterns.
+        /// </remarks>
+        protected override byte[] LoadNcsBytecode(string scriptResRef)
+        {
+            var resource = _installation.Resources.LookupResource(scriptResRef, ResourceType.NCS);
+            return resource?.Data;
         }
     }
 }

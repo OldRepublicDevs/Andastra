@@ -96,38 +96,44 @@ When fixing code, convert C# 8+ syntax to C# 7.3 compatible alternatives, includ
 
 ## Incomplete/Temporary Code Marking
 
-**CRITICAL: All incomplete code MUST use `TODO: ` prefix for searchability.**
+**CRITICAL: All incomplete code MUST use `TODO:` prefix for searchability.**
 
 **Marking Patterns:**
 
 - **STUB**: Method signature exists, throws `NotImplementedException` with context
+
   ```csharp
   // TODO: STUB - Implement ProcessData (swkotor2.exe: 0x004eb750)
   throw new NotImplementedException("ProcessData: Reverse engineering in progress");
   ```
 
 - **PLACEHOLDER**: Temporary implementation that works but needs replacement
+
   ```csharp
   // TODO: PLACEHOLDER - Replace with full GFF serialization (swkotor2.exe: 0x005ac670)
   ```
 
 - **SIMPLIFIED**: Working implementation missing features/optimizations
+
   ```csharp
   // TODO: SIMPLIFIED - Add A* pathfinding optimization for large areas
   ```
 
 - **FIXME**: Known bug or incorrect behavior requiring fix
+
   ```csharp
   // TODO: FIXME - Memory leak when disposing resources, needs investigation
   ```
 
 - **HACK**: Workaround that should be replaced with proper solution
+
   ```csharp
   // TODO: HACK - Using reflection until API is fixed
   ```
 
 **Requirements:**
-- ALL incomplete code MUST start with `TODO: ` followed by type (STUB/PLACEHOLDER/SIMPLIFIED/FIXME/HACK)
+
+- ALL incomplete code MUST start with `TODO:` followed by type (STUB/PLACEHOLDER/SIMPLIFIED/FIXME/HACK)
 - Include context: what needs doing, why incomplete, relevant addresses/refs
 - For reverse-engineered code: include executable and function address
 - Be specific: avoid vague comments like "fix this" or "placeholder"
@@ -179,9 +185,6 @@ The tool supports `-WhatIf` for dry-run testing, `-Verbose` for detailed output,
 When working on Andastra Engine code (anything in `src/Andastra/`), AI agents MUST:
 
 1. **Use Ghidra MCP** for understanding original engine behavior:
-   - **ALL executables loaded in Ghidra** are assumed to be BioWare engine games and are necessary for reverse engineering
-   - Use `mcp_ghidra_*` tools to discover, search, and analyze functions across ALL loaded executables
-   - Search for relevant strings to locate engine functions (e.g., "BWM", "pathfind", "walkmesh", "GLOBALVARS", "PARTYTABLE")
    - Verify implementation faithfulness against original engine behavior
    - **MANDATORY: Cross-Engine Analysis and Inheritance Structure**:
      - **NEVER document a function without specifying which .exe it's from** (e.g., `swkotor2.exe: 0x004eb750`, `nwmain.exe: 0x14051d5c0`)
@@ -217,13 +220,11 @@ When working on Andastra Engine code (anything in `src/Andastra/`), AI agents MU
           - Create engine-specific implementations in `Runtime.Games.{Engine}` that inherit from base classes
           - Document which functions map to base class methods vs. engine-specific overrides
        5. Document inheritance structure in roadmap with format (example):
-
-          ```
-          Base Class: `CommonScriptExecutor` (Runtime.Games.Common)
-          - Odyssey: `OdysseyScriptExecutor : CommonScriptExecutor` (swkotor.exe: 0x..., swkotor2.exe: 0x...)
-          - Aurora: `AuroraScriptExecutor : CommonScriptExecutor` (nwmain.exe: 0x...)
-          - Eclipse: `EclipseScriptExecutor : CommonScriptExecutor` (daorigins.exe: 0x..., DragonAge2.exe: 0x...)
-          ```
+          - Base Class: `CommonScriptExecutor` (Runtime.Games.Common)
+            - Odyssey: `OdysseyScriptExecutor : CommonScriptExecutor` (swkotor.exe: 0x..., swkotor2.exe: 0x...)
+            - Aurora: `AuroraScriptExecutor : CommonScriptExecutor` (nwmain.exe: 0x...)
+            - Eclipse: `EclipseScriptExecutor : CommonScriptExecutor` (daorigins.exe: 0x..., DragonAge2.exe: 0x...)
+            - Infinity: `InfinityScriptExecutor : CommonScriptExecutor` (MassEffect.exe: 0x..., MassEffect2.exe: 0x...)
 
      - **MANDATORY**: When modifying ANY code in `src/Andastra/`, AI agents MUST:
        - **For base classes (Runtime.Games.Common)**:
@@ -238,36 +239,13 @@ When working on Andastra Engine code (anything in `src/Andastra/`), AI agents MU
          - Use consistent comment format matching the MonoGame API documentation pattern
          - **ALWAYS specify the source executable** in comments (e.g., `swkotor2.exe: 0x004eb750`)
        - **PRIORITY**: When working on base classes, prioritize reverse engineering Aurora and Eclipse engines FIRST (they are less documented than Odyssey)
-   - **MANDATORY: In-Ghidra Documentation**: AI agents MUST document findings directly within Ghidra using Ghidra MCP tools:
-     - Use `mcp_ghidra_set_decompiler_comment` to add comments to decompiled code
-     - Use `mcp_ghidra_set_disassembly_comment` to add comments to assembly code
-     - Use `mcp_ghidra_rename_function` and `mcp_ghidra_rename_function_by_address` to give functions intuitive, descriptive names
-     - Use `mcp_ghidra_rename_data` to rename data labels with meaningful names
-     - Use `mcp_ghidra_rename_variable` to rename local variables for clarity
-     - Use `mcp_ghidra_set_function_prototype` to set accurate function signatures
-     - Use `mcp_ghidra_set_local_variable_type` to set correct variable types
+   - **MANDATORY: In-Ghidra Documentation**: AI agents MUST document findings directly within Ghidra
      - **Documentation must be comprehensive**: Every analyzed function should have:
        - Descriptive function name (not `FUN_004eb750`, but `SaveGlobalVariables` or similar)
        - Function prototype with correct parameter types and return types
        - Comments explaining what the function does, its purpose, and key implementation details
        - Renamed variables and data labels that reflect their actual purpose
        - Cross-references documented where relevant
-   - **MANDATORY: Progress Tracking in Ghidra**: AI agents MUST track reverse engineering progress directly within Ghidra:
-     - Use comments to mark functions as "ANALYZED", "PARTIALLY_ANALYZED", "TODO", or "IMPLEMENTED"
-     - Document what has been implemented in C# code and what remains to be done
-     - Use consistent comment prefixes for tracking (e.g., `[STATUS: ANALYZED]`, `[STATUS: TODO]`, `[C#: IMPLEMENTED]`)
-     - Document relationships between functions (call chains, data flow, etc.) in comments
-     - Track which functions are critical vs. auxiliary
-     - Document any deviations or improvements made in the C# implementation compared to the original
-   - **Optimal Ghidra Usage**: AI agents MUST use Ghidra tools canonically and optimally:
-     - Always rename functions with descriptive, intuitive names that reflect their purpose
-     - Set accurate function prototypes to improve decompilation quality
-     - Use proper data types for variables and parameters
-     - Create bookmarks or use comments to organize related functions
-     - Document string references and their usage patterns
-     - Track cross-references (xrefs) to understand function relationships
-     - Use Ghidra's analysis features to their fullest potential
-     - Maintain consistency in naming conventions across all analyzed executables
 
 2. **Reference Documentation**:
    - Primary: `vendor/PyKotor/wiki/` for file format documentation
@@ -275,242 +253,16 @@ When working on Andastra Engine code (anything in `src/Andastra/`), AI agents MU
    - Implementation plan: `.cursor/plans/monogame_odyssey_engine_e8927e4a.plan.md`
    - Roadmap: `docs/engine_roadmap.md`
 
-3. **CRITICAL: External API Documentation Research**:
-   When implementing ANY external API usage (MonoGame, .NET Framework, third-party libraries) in `src/Andastra/`, AI agents MUST:
-
-   **Required Workflow**:
-   1. **Search**: Use `mcp_context7_get-library-docs`, `mcp_firecrawl_firecrawl_search`, `mcp_tavily_tavily-search`, or `web_search` to find official API documentation
-   2. **Verify**: Cross-reference with at least one additional authoritative source (official docs, GitHub, Stack Overflow with verified answers)
-   3. **Document**: Add comments above the code with:
-      - Clear explanation of what the code does
-      - Exact API method signature/parameters
-      - Full URL to official documentation
-      - Any relevant implementation notes
-
-   **Comment Format**:
-
-   ```csharp
-   // Brief description of operation
-   // Based on [Library] API: [Full URL to official documentation]
-   // Method signature: MethodName(ParamType1, ParamType2, ...)
-   // Implementation note: [if applicable]
-   actualCodeHere();
-   ```
-
-   **Example**:
-
-   ```csharp
-   // Begin sprite batch
-   // Based on MonoGame API: https://docs.monogame.net/api/Microsoft.Xna.Framework.Graphics.SpriteBatch.html
-   // Begin(SpriteSortMode, BlendState, SamplerState, DepthStencilState, RasterizerState, Effect, Matrix?)
-   // SpriteSortMode.Deferred batches all draw calls for efficiency
-   _spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend);
-
-   // Access viewport from GraphicsDevice.Viewport
-   // Based on MonoGame documentation: https://docs.monogame.net/api/Microsoft.Xna.Framework.Graphics.Viewport.html
-   var viewport = GraphicsDevice.Viewport;
-   ```
-
-   **Requirements**:
-   - ALL URLs must be verified and accessible (test before committing)
-   - URLs must point to official documentation, not third-party tutorials
-   - Comments must explain the "what" and "why", not just reference the URL
-   - Use Context7 for library docs, Firecrawl/Tavily for web search, web_search as fallback
-
-4. **CRITICAL: Ghidra MCP Documentation for Engine Code**:
-   When implementing or modifying ANY code in `src/Andastra/`, AI agents MUST:
-
-   **Required Workflow**:
-   1. **Search**: Use `mcp_ghidra_list_strings`, `mcp_ghidra_search_functions_by_name`, `mcp_ghidra_list_functions`, or `mcp_ghidra_get_xrefs_to` to find relevant engine functions across ALL loaded executables
-   2. **Decompile**: Use `mcp_ghidra_decompile_function_by_address` or `mcp_ghidra_decompile_function` to understand original implementation
-   3. **Document IN GHIDRA FIRST**: Before documenting in C# code, AI agents MUST:
-      - Rename functions in Ghidra with descriptive names using `mcp_ghidra_rename_function` or `mcp_ghidra_rename_function_by_address`
-      - Set function prototypes using `mcp_ghidra_set_function_prototype` with accurate parameter and return types
-      - Rename variables and data labels using `mcp_ghidra_rename_variable` and `mcp_ghidra_rename_data`
-      - Set variable types using `mcp_ghidra_set_local_variable_type`
-      - Add comprehensive comments in Ghidra using `mcp_ghidra_set_decompiler_comment` and `mcp_ghidra_set_disassembly_comment`
-      - Document function purpose, parameters, return values, and key implementation details
-      - Track analysis status and implementation progress in comments
-      - Document relationships and cross-references
-   4. **Document in C# Code**: After documenting in Ghidra, add comments above the C# code with:
-      - Clear explanation of what the code does
-      - Ghidra executable name and function address (hex format, e.g., `swkotor2.exe: 0x004eb750`)
-      - Function name from Ghidra (should be descriptive, not `FUN_004eb750`)
-      - Key implementation details from decompiled code
-      - String references used to locate the function (e.g., "GLOBALVARS", "PARTYTABLE")
-
-   **Comment Format**:
-
-   ```csharp
-   // Brief description of operation
-   // Based on swkotor2.exe: SerializeSaveNfo @ 0x004eb750
-   // Located via string reference: "savenfo" @ 0x007be1f0
-   // Cross-engine: Similar functions in swkotor.exe: 0x..., nwmain.exe: 0x..., daorigins.exe: 0x...
-   // Inheritance: Base class SaveSerializer (Runtime.Games.Common), Odyssey override (Runtime.Games.Odyssey)
-   // Original implementation: [key detail from decompiled code]
-   actualCodeHere();
-   ```
-
-   **Example Workflow**:
-
-   **Step 1: Search and Analyze in Ghidra**
-   - Use `mcp_ghidra_list_strings` with filter "GLOBALVARS" to find string references
-   - Use `mcp_ghidra_get_xrefs_to` to find functions that reference the string
-   - Decompile the function to understand its implementation
-
-   **Step 2: Document in Ghidra**
-   - Rename function: `mcp_ghidra_rename_function_by_address("0x005ac670", "SaveGlobalVariables")`
-   - Set prototype: `mcp_ghidra_set_function_prototype("0x005ac670", "void SaveGlobalVariables(char* saveName)")`
-   - Add comment: `mcp_ghidra_set_decompiler_comment("0x005ac670", "[STATUS: ANALYZED]\n[C#: IMPLEMENTED]\nSaves global variables to GFF format.\nConstructs path 'SAVES:\\{saveName}\\GLOBALVARS', writes GFF with global variable state.\nLocated via string reference: 'GLOBALVARS' @ 0x007c27bc")`
-   - Rename variables and data labels as needed
-
-   **Step 3: Document in C# Code**
-
-   ```csharp
-   // Save global variables to GFF format
-   // Based on swkotor2.exe: SaveGlobalVariables @ 0x005ac670
-   // Located via string reference: "GLOBALVARS" @ 0x007c27bc
-   // Original implementation: Constructs path "SAVES:\{saveName}\GLOBALVARS", writes GFF with global variable state
-   private void SaveGlobalVariables(SaveGameData saveData)
-   {
-       // Implementation...
-   }
-
-   // Serialize save metadata to NFO GFF format
-   // Based on swkotor2.exe: SerializeSaveNfo @ 0x004eb750
-   // Located via string reference: "savenfo" @ 0x007be1f0
-   // Original implementation: Creates GFF with "NFO " signature, writes SAVEGAMENAME, TIMEPLAYED, AREANAME, etc.
-   public byte[] SerializeSaveNfo(SaveGameData saveData)
-   {
-       // Implementation...
-   }
-   ```
-
-   **Requirements**:
-   - ALL function addresses must be verified in Ghidra (use `mcp_ghidra_decompile_function_by_address`)
-   - Functions MUST be renamed in Ghidra with descriptive names before documenting in C# code
-   - Function prototypes MUST be set in Ghidra for accurate decompilation
-   - Comprehensive comments MUST be added in Ghidra before documenting in C# code
-   - Include string references that were used to locate the function
-   - Include key implementation details from decompiled code
-   - Track analysis and implementation status in Ghidra comments
-   - Comments must explain the "what" and "why", not just reference the address
-   - Use natural language and intuitive terminology relevant to the task
-   - Be concise but thorough - provide enough context to find the function in Ghidra
-   - C# code comments should reference the renamed function name from Ghidra, not generic names like `FUN_004eb750`
-   - **ALWAYS specify the source executable** in all documentation (roadmap, comments, etc.)
-   - **ALWAYS establish inheritance structure** when documenting functions across multiple engines
-
-5. **Clean-Room Process**:
-   - Derive behavior from observation and specs, not code copying
-   - Match original engine behavior exactly where documented
-   - Document any deviations or improvements
-
-6. **Code Organization**:
-   - `Runtime.Core` - Pure domain, no MonoGame dependency
-   - `Runtime.Content` - Asset conversion/caching
-   - `Runtime.Scripting` - NCS VM + NWScript API
-   - `Runtime.Games.Common` - Common abstractions for all engines
-   - `Runtime.Games.{Engine}` - Engine-specific implementations (Odyssey, Aurora, Eclipse, Infinity)
-   - `Runtime.Graphics` - MonoGame rendering adapters
-   - `Game` - Executable launcher
-
-7. **Maintain C# 7.3 Compatibility**: Even in Andastra projects
-
 ### Engine Architecture Principles
 
-**Layered Architecture** (strict separation):
-
-```text
-┌─────────────────────────────────────────────────────────────┐
-│                    Game (Executable)                         │
-├─────────────────────────────────────────────────────────────┤
-│  Graphics   │  Games.{Engine}      │  Content                │
-│  (Rendering)│  (Engine Rules)      │  (Asset Pipeline)       │
-├─────────────────────────────────────────────────────────────┤
-│                    Scripting (NCS VM)                       │
-├─────────────────────────────────────────────────────────────┤
-│                    Core (Domain)                             │
-├─────────────────────────────────────────────────────────────┤
-│                    Parsing (File Formats)                   │
-└─────────────────────────────────────────────────────────────┘
-```
-
-**Dependency Rules**:
-
-- `Runtime.Core` MUST NOT reference MonoGame, Parsing, or engine-specific code
-- `Runtime.Scripting` MUST NOT reference MonoGame
-- `Runtime.Content` may reference Parsing for format parsing
-- `Runtime.Graphics` may reference MonoGame and Runtime.Core
-- `Runtime.Games.{Engine}` may reference Core, Content, Scripting, Games.Common
-- `Runtime.Games.Common` may reference Core only
-
-**Dependency Direction**:
-
-- Core → (nothing external)
-- Content → Core, Parsing
-- Scripting → Core
-- Games.Common → Core
-- Games.{Engine} → Core, Content, Scripting, Games.Common
-- Graphics → Core, Content, Games.Common
-- Game → All
-
 **No Game Assets**: Runtime loads from user-provided game installations. Never ship game assets.
-
-### Implementation Order (Dependency-First)
-
-When implementing features, follow this order to avoid rework:
-
-1. Foundation: projects, config, MonoGame window
-2. Resource provider: wrap Andastra.Installation
-3. Content cache: texture/model decode
-4. Area rendering: LYT + VIS + room meshes
-5. Walkmesh: collision + navigation
-6. Entity spawn: GIT parsing
-7. NCS VM: script execution
-8. Engine API: NWScript function implementations
-9. Transitions: doors, triggers, modules
-10. Dialogue: DLG/TLK/VO
-11. Combat: attack resolution, HP
-12. Save/Load: state persistence
-
-### Game Loop Implementation
-
-Follow this fixed-timestep game loop pattern (60 Hz simulation):
-
-```csharp
-// Per-frame phases (execute in order)
-1. Input Phase      // Collect input, update camera, click-to-move
-2. Script Phase     // Process delay wheel, heartbeats, action queues
-3. Simulation Phase // Entity positions, perception, combat rounds
-4. Animation Phase  // Skeletal animations, particles, lip sync
-5. Scene Sync Phase // Runtime transforms → MonoGame rendering structures
-6. Render Phase     // VIS culling, transparency sort, draw calls
-7. Audio Phase      // Spatial audio positions, trigger one-shots
-```
-
-### NCS VM Implementation Requirements
-
-When implementing NCS VM features:
-
-- **Header validation**: `"NCS "` + `"V1.0"` signature, `0x42` marker at offset 8
-- **Instructions start**: At offset `0x0D`
-- **Endianness**: All multi-byte values are **big-endian**
-- **Stack alignment**: 4-byte aligned, vectors are 12 bytes (3 floats)
-- **Jump offsets**: Relative to **instruction start**, not next instruction
-- **ACTION arguments**: `uint16 routineId` + `uint8 argCount` (stack elements, not bytes)
-- **STORE_STATE**: Stores stack/locals bytes for DelayCommand semantics
 
 ### Engine API Implementation
 
 When implementing NWScript engine functions:
 
 1. **Use ScriptDefs**: Reference `Andastra.Common.Script.ScriptDefs` for function signatures
-2. **Profile separation**: K1 has ~850 functions, K2 has ~950 functions
-3. **Incremental coverage**: Start with minimal set for boot/movement, expand by feature
-4. **Return conventions**: Follow exact return type semantics (void, int, float, object, etc.)
-
-Design for extensibility across engine families (Odyssey, Aurora, Eclipse, Infinity):
+2. **Profile separation**: K1 has ~850 functions, K2 has ~950 functions. dragon age origins/dragon age 2/mass effect 1/2 and nwn: ee are unfinished and HIGH priorities.
 
 ### Clean-Room Process
 
