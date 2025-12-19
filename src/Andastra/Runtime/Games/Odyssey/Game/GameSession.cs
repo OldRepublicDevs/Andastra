@@ -198,7 +198,12 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
             // Initialize game systems
             _factionManager = new FactionManager(_world);
             _perceptionManager = new PerceptionManager(_world, _world.EffectSystem);
-            _partySystem = new PartySystem(_world);
+            
+            // Create entity template factory for party system
+            // Factory will be updated when module is loaded (see LoadModuleAsync)
+            // For now, create without module (will be updated later)
+            IEntityTemplateFactory templateFactory = null;
+            _partySystem = new PartySystem(_world, templateFactory);
             _combatManager = new CombatManager(_world, _factionManager, _partySystem);
 
             // Initialize engine API (Kotor1 or TheSithLords based on settings)
@@ -389,19 +394,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
                     if (parsingModule != null)
                     {
                         var templateFactory = new Loading.OdysseyEntityTemplateFactory(_moduleLoader.EntityFactory, parsingModule);
-                        // Update party system with template factory
-                        // Note: PartySystem doesn't have a setter, so we need to recreate it or add a method
-                        // For now, we'll create a new PartySystem with the factory
-                        // In a full implementation, we might want to add SetTemplateFactory method to PartySystem
-                        // But for backward compatibility, we'll keep the existing PartySystem and update it via reflection or add a method
-                        // Actually, we can't easily update it - we'll need to handle this differently
-                        // The factory will be used when spawning party members, so we need to store it somewhere accessible
-                        // For now, we'll store it in the world or create a new PartySystem
-                        // Since PartySystem is already created, we'll need to add a method to update the factory
-                        // But that would require changing PartySystem - let's use a different approach
-                        // We'll store the factory in the world's data or create a service locator
-                        // Actually, the simplest approach is to recreate PartySystem with the factory
-                        // But that would break references - let's add a method to PartySystem to set the factory
+                        _partySystem?.SetTemplateFactory(templateFactory);
                     }
                 }
 

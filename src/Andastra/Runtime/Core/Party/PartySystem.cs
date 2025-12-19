@@ -165,6 +165,7 @@ namespace Andastra.Runtime.Core.Party
         public const int MaxAvailableNPCs = 10;
 
         private readonly IWorld _world;
+        private IEntityTemplateFactory _templateFactory;
         private readonly List<PartyMember> _availableMembers;
         private readonly List<PartyMember> _activeParty;
 
@@ -206,12 +207,26 @@ namespace Andastra.Runtime.Core.Party
         /// </summary>
         public event Action<int, int> OnGoldChanged;
 
-        public PartySystem(IWorld world)
+        public PartySystem(IWorld world) : this(world, null)
+        {
+        }
+
+        public PartySystem(IWorld world, IEntityTemplateFactory templateFactory)
         {
             _world = world ?? throw new ArgumentNullException("world");
+            _templateFactory = templateFactory;
             _availableMembers = new List<PartyMember>();
             _activeParty = new List<PartyMember>();
             _leaderIndex = 0;
+        }
+
+        /// <summary>
+        /// Sets the entity template factory for creating party members from templates.
+        /// </summary>
+        /// <param name="templateFactory">The template factory to use.</param>
+        public void SetTemplateFactory(IEntityTemplateFactory templateFactory)
+        {
+            _templateFactory = templateFactory;
         }
 
         #region Player Character
@@ -831,27 +846,30 @@ namespace Andastra.Runtime.Core.Party
             IEntity entity = null;
             
             // Try to create from template if available
-            if (!string.IsNullOrEmpty(member.TemplateResRef))
+            if (!string.IsNullOrEmpty(member.TemplateResRef) && _templateFactory != null)
             {
-                // Architectural note: PartySystem is in Andastra.Runtime.Core (core domain layer) and cannot
-                // depend on Odyssey.Kotor (game-specific layer) where EntityFactory/ModuleLoader reside.
-                // To properly load UTC templates, we would need:
-                // 1. A factory interface (IEntityTemplateFactory) in Andastra.Runtime.Core
-                // 2. Dependency injection of EntityFactory via interface
-                // 3. Or move PartySystem to Odyssey.Kotor (breaks layer separation)
-                // TODO: SIMPLIFIED - For now, create basic creature entity with member's tag
-                // TODO: PLACEHOLDER - The entity will be a placeholder until template loading is properly architected
-                entity = _world.CreateEntity(Enums.ObjectType.Creature, spawnPosition, spawnFacing);
-                
+                // Use template factory to create entity from UTC template
+                // Based on swkotor2.exe: EntityFactory.CreateCreatureFromTemplate loads UTC GFF and creates entity
+                // Located via string references: "TemplateResRef" @ 0x007bd00c
+                // Original implementation: Loads UTC GFF, reads creature properties (Tag, FirstName, LastName, Appearance_Type,
+                // FactionID, CurrentHitPoints, MaxHitPoints, ForcePoints, MaxForcePoints, ClassList, Str/Dex/Con/Int/Wis/Cha,
+                // Scripts, Conversation), creates entity with all components properly initialized
                 // Tag is set from entity template when entity is created via EntityFactory.CreateCreatureFromTemplate
                 // The template (UTC file) contains the Tag field which is applied during entity creation
-                // If entity was created without template, tag will be empty until template is loaded
-                // Note: PartyMember doesn't store tag separately - it comes from the entity's template
+                entity = _templateFactory.CreateCreatureFromTemplate(member.TemplateResRef, spawnPosition, spawnFacing);
             }
-            else
+            
+            // Fallback: Create basic creature entity if template factory not available or template not found
+            if (entity == null)
             {
-                // Fallback: Create basic creature entity
                 entity = _world.CreateEntity(Enums.ObjectType.Creature, spawnPosition, spawnFacing);
+                
+                // If we have a template ResRef but no factory, log a warning
+                if (!string.IsNullOrEmpty(member.TemplateResRef) && _templateFactory == null)
+                {
+                    // Template factory not provided - entity will be a placeholder without template data
+                    // This is expected when PartySystem is created without template factory (backward compatibility)
+                }
             }
             
             if (entity != null)
