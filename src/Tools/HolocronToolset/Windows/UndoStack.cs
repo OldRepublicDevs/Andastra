@@ -229,7 +229,7 @@ namespace HolocronToolset.Windows
                     _indoorMap.Rooms.Insert(pair.idx, pair.room);
                 }
             }
-            // Note: rebuild_room_connections will be implemented when needed
+            // TODO: STUB - Note: rebuild_room_connections will be implemented when needed
         }
 
         // Matching Python: def redo(self)
@@ -243,7 +243,7 @@ namespace HolocronToolset.Windows
                     _indoorMap.Rooms.Remove(room);
                 }
             }
-            // Note: rebuild_room_connections will be implemented when needed
+            // TODO: STUB - Note: rebuild_room_connections will be implemented when needed
         }
     }
 
