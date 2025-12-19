@@ -19,6 +19,8 @@ using Andastra.Runtime.Engines.Odyssey.Loading;
 using Andastra.Runtime.Engines.Odyssey.EngineApi;
 using Andastra.Runtime.Scripting.VM;
 using Andastra.Runtime.Scripting.Interfaces;
+using Andastra.Runtime.Core.Dialogue;
+using Andastra.Runtime.Games.Odyssey;
 using Andastra.Parsing;
 using Andastra.Parsing.Installation;
 using Andastra.Parsing.Resource;
@@ -61,7 +63,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
         private readonly PerceptionManager _perceptionManager;
         private readonly CombatManager _combatManager;
         private readonly PartySystem _partySystem;
-        private readonly ScriptExecutor _scriptExecutor;
+        private readonly IScriptExecutor _scriptExecutor;
         private readonly IEngineApi _engineApi;
         private readonly Systems.EncounterSystem _encounterSystem;
         private readonly JournalSystem _journalSystem;
@@ -198,7 +200,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
             // Initialize game systems
             _factionManager = new FactionManager(_world);
             _perceptionManager = new PerceptionManager(_world, _world.EffectSystem);
-            
+
             // Create entity template factory for party system
             // Factory will be updated when module is loaded (see LoadModuleAsync)
             // For now, create without module (will be updated later)
@@ -211,7 +213,11 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
                 ? (IEngineApi)new Andastra.Runtime.Engines.Odyssey.EngineApi.Kotor1()
                 : (IEngineApi)new Andastra.Runtime.Engines.Odyssey.EngineApi.TheSithLords();
 
-            _scriptExecutor = new ScriptExecutor(_vm, _world, _globals, _installation, _engineApi);
+            // Initialize script executor with game-specific subclass
+            // Based on swkotor.exe (KOTOR1) vs swkotor2.exe (KOTOR2) script execution differences
+            _scriptExecutor = _settings.Game == KotorGame.K1
+                ? (OdysseyScriptExecutor)new Kotor1ScriptExecutor(_world, _engineApi, _globals, _installation)
+                : (OdysseyScriptExecutor)new Kotor2ScriptExecutor(_world, _engineApi, _globals, _installation);
 
             // Initialize trigger system with script firing callback
             _triggerSystem = new TriggerSystem(_world, FireScriptEvent);
@@ -382,7 +388,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
                 _currentModuleName = moduleName;
                 _world.SetCurrentModule(module);
                 _moduleTransitionSystem?.SetCurrentModule(moduleName);
-                
+
                 // Update party system with template factory for current module
                 // Based on swkotor2.exe: Party members are created from UTC templates stored in module
                 // Located via string references: "TemplateResRef" @ 0x007bd00c
@@ -390,7 +396,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
                 // Create template factory with current module for party member spawning
                 if (_moduleLoader != null && _moduleLoader.EntityFactory != null)
                 {
-                    Andastra.Parsing.Common.Module parsingModule = _moduleLoader.GetParsingModule();
+                    Andastra.Parsing.Common.Module parsingModule = _moduleLoader.GetCurrentModule();
                     if (parsingModule != null)
                     {
                         var templateFactory = new Loading.OdysseyEntityTemplateFactory(_moduleLoader.EntityFactory, parsingModule);
