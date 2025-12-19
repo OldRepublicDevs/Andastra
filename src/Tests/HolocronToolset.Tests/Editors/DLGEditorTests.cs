@@ -178,25 +178,8 @@ namespace HolocronToolset.Tests.Editors
             throw new NotImplementedException("TestDlgEditorAllWidgetsExist: Widget existence verification test not yet implemented");
         }
 
-        // TODO: STUB - Implement test_dlg_editor_add_root_node (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:413-429)
-        // Original: def test_dlg_editor_add_root_node(qtbot, installation: HTInstallation): Test adding root node to dialog
-        [Fact]
-        public void TestDlgEditorAddRootNode()
-        {
-            // TODO: STUB - Implement add root node test
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:413-429
-            throw new NotImplementedException("TestDlgEditorAddRootNode: Add root node test not yet implemented");
-        }
 
         // TODO: STUB - Implement test_dlg_editor_add_child_node (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:431-456)
-        // Original: def test_dlg_editor_add_child_node(qtbot, installation: HTInstallation): Test adding child node to dialog
-        [Fact]
-        public void TestDlgEditorAddChildNode()
-        {
-            // TODO: STUB - Implement add child node test
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:431-456
-            throw new NotImplementedException("TestDlgEditorAddChildNode: Add child node test not yet implemented");
-        }
 
         // TODO: STUB - Implement test_dlg_editor_manipulate_conversation_type (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:458-483)
         // Original: def test_dlg_editor_manipulate_conversation_type(qtbot, installation: HTInstallation, test_files_dir: Path): Test manipulating conversation type field

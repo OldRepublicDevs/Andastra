@@ -46,17 +46,9 @@ namespace Andastra.Runtime.Core.Actions
             _targetObjectId = targetObjectId;
             _run = run;
             _range = range;
-            _collisionDetector = CreateCollisionDetector();
-        }
-
-        /// <summary>
-        /// Creates the appropriate collision detector for the current engine.
-        /// </summary>
-        private BaseCreatureCollisionDetector CreateCollisionDetector()
-        {
-            // Factory method: Create engine-specific collision detector
-            // For now, default to Odyssey detector (can be made engine-agnostic via world type checking)
-            return new Games.Odyssey.Collision.OdysseyCreatureCollisionDetector();
+            // TODO: Collision detector should be injected by game-specific runtime
+            // Andastra.Runtime.Core cannot depend on Andastra.Runtime.Games.Odyssey
+            _collisionDetector = null;
         }
 
         protected override ActionStatus ExecuteInternal(IEntity actor, float deltaTime)

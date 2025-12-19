@@ -1515,6 +1515,28 @@ namespace HolocronToolset.Editors
             }
             return _parent._children.IndexOf(this);
         }
+
+        /// <summary>
+        /// Gets the child item at the specified row and column.
+        /// Matching PyKotor implementation: def child(self, row: int, column: int = 0) -> QStandardItem | None
+        /// </summary>
+        public DLGStandardItem Child(int row, int column = 0)
+        {
+            if (row < 0 || row >= _children.Count || column != 0)
+            {
+                return null;
+            }
+            return _children[row];
+        }
+
+        /// <summary>
+        /// Gets whether this item has children.
+        /// Matching PyKotor implementation: def hasChildren(self) -> bool
+        /// </summary>
+        public bool HasChildren()
+        {
+            return _children.Count > 0;
+        }
     }
 
     // Simple model class for tests (matching Python DLGStandardItemModel)

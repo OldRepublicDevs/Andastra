@@ -593,5 +593,248 @@ namespace HolocronToolset.Tests.Formats
             deserialized.StuntModel.Should().Be(stunt.StuntModel);
         }
     }
+
+    // Matching PyKotor implementation at Libraries/PyKotor/tests/resource/generics/test_dlg.py:1433
+    // Original: class TestDLGGraphUtilities(unittest.TestCase):
+    public class TestDLGGraphUtilities
+    {
+        private Tuple<DLG, DLGEntry, DLGReply, DLGEntry, DLGLink, DLGLink, DLGLink, DLGLink> BuildSimpleGraph()
+        {
+            var dlg = new DLG();
+
+            var entry0 = new DLGEntry { Comment = "start", ListIndex = 0 };
+            var entry1 = new DLGEntry { Comment = "leaf", ListIndex = 1 };
+            var reply0 = new DLGReply { Text = LocalizedString.FromEnglish("middle"), ListIndex = 0 };
+
+            var startLink0 = new DLGLink(entry0, 0);
+            var startLink1 = new DLGLink(entry1, 1);
+            var linkEntry0Reply = new DLGLink(reply0, 0);
+            var linkReply0Entry1 = new DLGLink(entry1, 0);
+
+            entry0.Links.Add(linkEntry0Reply);
+            reply0.Links.Add(linkReply0Entry1);
+            dlg.Starters.AddRange(new[] { startLink0, startLink1 });
+
+            return Tuple.Create(dlg, entry0, reply0, entry1, startLink0, startLink1, linkEntry0Reply, linkReply0Entry1);
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/tests/resource/generics/test_dlg.py:1456
+        // Original: def test_find_paths_for_nodes_and_links(self):
+        [Fact]
+        public void TestFindPathsForNodesAndLinks()
+        {
+            var (dlg, entry0, reply0, entry1, startLink0, startLink1, linkEntry0Reply, linkReply0Entry1) = BuildSimpleGraph();
+
+            var pathsEntry = dlg.FindPaths(entry1);
+            var pathsReply = dlg.FindPaths(reply0);
+            var pathsStartLink = dlg.FindPaths(startLink0);
+            var pathsChildLink = dlg.FindPaths(linkReply0Entry1);
+
+            pathsEntry.Should().Contain("EntryList\\1");
+            pathsReply.Should().Contain("ReplyList\\0");
+            pathsStartLink.Should().Contain("StartingList\\0");
+            pathsChildLink.Should().Contain("ReplyList\\0\\EntriesList\\0");
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/tests/resource/generics/test_dlg.py:1469
+        // Original: def test_get_link_parent_and_partial_path(self):
+        [Fact]
+        public void TestGetLinkParentAndPartialPath()
+        {
+            var (dlg, entry0, reply0, entry1, startLink0, startLink1, linkEntry0Reply, linkReply0Entry1) = BuildSimpleGraph();
+
+            // Note: In C#, we can't directly check if parent is dlg (DLG is not a DLGNode)
+            // Python version checks: dlg.get_link_parent(start_link0) is dlg
+            // We'll check that starter links have no parent node instead
+            dlg.GetLinkParent(startLink0).Should().BeNull(); // Starter links have no parent node
+            dlg.GetLinkParent(linkEntry0Reply).Should().Be(entry0);
+            dlg.GetLinkParent(linkReply0Entry1).Should().Be(reply0);
+            startLink0.PartialPath(isStarter: true).Should().Be("StartingList\\0");
+            linkEntry0Reply.PartialPath(isStarter: false).Should().Be("RepliesList\\0");
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/tests/resource/generics/test_dlg.py:1478
+        // Original: def test_all_entries_and_replies_sorted_and_unique(self):
+        [Fact]
+        public void TestAllEntriesAndRepliesSortedAndUnique()
+        {
+            var (dlg, entry0, reply0, entry1, startLink0, startLink1, linkEntry0Reply, linkReply0Entry1) = BuildSimpleGraph();
+            var entry2 = new DLGEntry { Comment = "late", ListIndex = -1 };
+            var reply1 = new DLGReply { Text = LocalizedString.FromEnglish("shared"), ListIndex = 5 };
+
+            // Create additional shared references
+            reply1.Links.Add(new DLGLink(entry2, 0));
+            entry1.Links.Add(new DLGLink(reply1, 1));
+            reply1.Links.Add(new DLGLink(entry0, 1));
+
+            var entriesUnsorted = dlg.AllEntries();
+            var repliesUnsorted = dlg.AllReplies();
+            var entriesSorted = dlg.AllEntries(asSorted: true);
+            var repliesSorted = dlg.AllReplies(asSorted: true);
+
+            entriesUnsorted.Should().HaveCount(3);
+            repliesUnsorted.Should().HaveCount(2);
+            entriesSorted[0].ListIndex.Should().Be(0);
+            entriesSorted[1].ListIndex.Should().Be(1);
+            entriesSorted[entriesSorted.Count - 1].ListIndex.Should().Be(-1);
+            repliesSorted[0].ListIndex.Should().Be(0);
+            repliesSorted[1].ListIndex.Should().Be(5);
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/tests/resource/generics/test_dlg.py:1503
+        // Original: def test_calculate_links_and_nodes_counts_cycles_included(self):
+        [Fact]
+        public void TestCalculateLinksAndNodesCountsCyclesIncluded()
+        {
+            var (dlg, entry0, reply0, entry1, startLink0, startLink1, linkEntry0Reply, linkReply0Entry1) = BuildSimpleGraph();
+            // Introduce an explicit cycle entry1 -> entry0
+            entry1.Links.Add(new DLGLink(entry0, 2));
+
+            var (numLinks, numNodes) = entry0.CalculateLinksAndNodes();
+            // entry0 -> reply0, reply0 -> entry1, entry1 -> entry0 (cycle) => 3 links, 3 nodes
+            numLinks.Should().Be(3);
+            numNodes.Should().Be(3);
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/tests/resource/generics/test_dlg.py:1513
+        // Original: def test_shift_item_and_bounds(self):
+        [Fact]
+        public void TestShiftItemAndBounds()
+        {
+            var (dlg, entry0, reply0, entry1, startLink0, startLink1, linkEntry0Reply, linkReply0Entry1) = BuildSimpleGraph();
+            entry0.ShiftItem(entry0.Links, 0, 0); // no-op allowed
+            entry0.ShiftItem(entry0.Links, 0, 0); // idempotent
+            // Add second link for ordering
+            entry0.Links.Add(new DLGLink(entry1, 1));
+            entry0.ShiftItem(entry0.Links, 1, 0);
+            entry0.Links[0].Node.Should().Be(entry1);
+            entry0.Links[1].Node.Should().Be(reply0);
+            
+            // Test bounds checking
+            Action act = () => entry0.ShiftItem(entry0.Links, 0, 5);
+            act.Should().Throw<IndexOutOfRangeException>();
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/tests/resource/generics/test_dlg.py:1525
+        // Original: def test_node_dict_roundtrip_preserves_metadata(self):
+        [Fact]
+        public void TestNodeDictRoundtripPreservesMetadata()
+        {
+            var entry = new DLGEntry
+            {
+                Comment = "deep node",
+                Speaker = "Carth",
+                CameraAngle = 33,
+                CameraAnim = 77,
+                CameraId = 9,
+                CameraEffect = -3,
+                CameraFov = 90.5f,
+                CameraHeight = 1.25f,
+                TargetHeight = 0.5f,
+                FadeType = 2,
+                FadeColor = new Color(0.1f, 0.2f, 0.3f, 1.0f),
+                FadeDelay = 0.25f,
+                FadeLength = 1.5f,
+                Quest = "quest_flag",
+                QuestEntry = 4,
+                Script1 = new ResRef("script_a"),
+                Script2 = new ResRef("script_b"),
+                Script1Param1 = 11,
+                Script2Param6 = "str",
+                WaitFlags = 3,
+                SoundExists = 1,
+                VoResRef = new ResRef("vo"),
+                Sound = new ResRef("snd"),
+                EmotionId = 12,
+                FacialId = 7,
+                NodeId = 42,
+                PostProcNode = 17,
+                RecordNoVoOverride = true,
+                RecordVo = true,
+                VoTextChanged = true,
+                Unskippable = true
+            };
+            entry.Text.SetString(Language.ENGLISH, Gender.MALE, "Line");
+            entry.Text.SetString(Language.FRENCH, Gender.FEMALE, "Ligne");
+            var animation = new DLGAnimation { Participant = "p1", AnimationId = 123 };
+            entry.Animations.Add(animation);
+
+            var reply = new DLGReply { Text = LocalizedString.FromEnglish("reply"), CameraAnim = 55, FadeType = 9 };
+            entry.Links.Add(new DLGLink(reply, 0));
+            reply.Links.Add(new DLGLink(entry, 0));
+
+            var serialized = entry.ToDict();
+            var restored = DLGEntry.FromDict(serialized);
+
+            restored.CameraAngle.Should().Be(33);
+            restored.CameraAnim.Should().Be(77);
+            restored.CameraId.Should().Be(9);
+            restored.CameraEffect.Should().Be(-3);
+            restored.CameraFov.Should().BeApproximately(90.5f, 0.01f);
+            restored.CameraHeight.Should().BeApproximately(1.25f, 0.01f);
+            restored.TargetHeight.Should().BeApproximately(0.5f, 0.01f);
+            restored.FadeType.Should().Be(2);
+            restored.FadeColor.Should().NotBeNull();
+            restored.FadeColor.R.Should().BeApproximately(0.1f, 0.005f);
+            restored.FadeColor.G.Should().BeApproximately(0.2f, 0.005f);
+            restored.FadeColor.B.Should().BeApproximately(0.3f, 0.005f);
+            restored.FadeColor.A.Should().BeApproximately(1.0f, 0.005f);
+            restored.FadeDelay.Should().BeApproximately(0.25f, 0.01f);
+            restored.FadeLength.Should().BeApproximately(1.5f, 0.01f);
+            restored.Quest.Should().Be("quest_flag");
+            restored.QuestEntry.Should().Be(4);
+            restored.Script1.Should().Be(new ResRef("script_a"));
+            restored.Script2.Should().Be(new ResRef("script_b"));
+            restored.Script1Param1.Should().Be(11);
+            restored.Script2Param6.Should().Be("str");
+            restored.WaitFlags.Should().Be(3);
+            restored.SoundExists.Should().Be(1);
+            restored.VoResRef.Should().Be(new ResRef("vo"));
+            restored.Sound.Should().Be(new ResRef("snd"));
+            restored.EmotionId.Should().Be(12);
+            restored.FacialId.Should().Be(7);
+            restored.NodeId.Should().Be(42);
+            restored.PostProcNode.Should().Be(17);
+            restored.RecordNoVoOverride.Should().BeTrue();
+            restored.RecordVo.Should().BeTrue();
+            restored.VoTextChanged.Should().BeTrue();
+            restored.Unskippable.Should().BeTrue();
+            restored.Text.GetString(Language.FRENCH, Gender.FEMALE).Should().Be("Ligne");
+            restored.Animations[0].AnimationId.Should().Be(123);
+            restored.Links[0].Node.Links[0].Node.Comment.Should().Be("deep node");
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/tests/resource/generics/test_dlg.py:1612
+        // Original: def test_find_paths_respects_multiple_starters_and_link_parenting(self):
+        [Fact]
+        public void TestFindPathsRespectsMultipleStartersAndLinkParenting()
+        {
+            var dlg = new DLG
+            {
+                ConversationType = DLGConversationType.Computer,
+                ComputerType = DLGComputerType.Ancient
+            };
+
+            var entryA = new DLGEntry { Comment = "A", ListIndex = 2 };
+            var entryB = new DLGEntry { Comment = "B", ListIndex = 3 };
+            var replyA = new DLGReply { Text = LocalizedString.FromEnglish("R"), ListIndex = 4 };
+
+            var starterA = new DLGLink(entryA, 0);
+            var starterB = new DLGLink(entryB, 1);
+            dlg.Starters.AddRange(new[] { starterA, starterB });
+
+            entryA.Links.Add(new DLGLink(replyA, 0));
+            replyA.Links.Add(new DLGLink(entryB, 0));
+
+            var pathsReplyA = dlg.FindPaths(replyA);
+            var pathsEntryB = dlg.FindPaths(entryB);
+
+            // replyA should be reachable from starterA
+            pathsReplyA.Should().Contain(p => p.Contains("StartingList\\0") && p.Contains("RepliesList\\0"));
+            // entryB should be reachable from both starters
+            pathsEntryB.Should().Contain(p => p.Contains("StartingList\\0") && p.Contains("RepliesList\\0") && p.Contains("EntriesList\\0"));
+            pathsEntryB.Should().Contain(p => p.Contains("StartingList\\1") && p.Contains("EntriesList\\1"));
+        }
+    }
 }
 
