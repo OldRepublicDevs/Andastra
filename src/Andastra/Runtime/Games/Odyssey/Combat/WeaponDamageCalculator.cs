@@ -24,8 +24,8 @@ namespace Andastra.Runtime.Engines.Odyssey.Combat
     ///   - Aurora: AuroraWeaponDamageCalculator : BaseWeaponDamageCalculator (Runtime.Games.Aurora) - Aurora-specific baseitems.2da lookup
     ///   - Eclipse: EclipseWeaponDamageCalculator : BaseWeaponDamageCalculator (Runtime.Games.Eclipse) - Eclipse-specific damage system
     /// - Original implementation: Both swkotor.exe and swkotor2.exe use identical weapon damage calculation logic
-    ///   - swkotor2.exe: Weapon damage calculation functions (addresses to be verified via Ghidra MCP)
-    ///   - swkotor.exe: Weapon damage calculation functions (addresses to be verified via Ghidra MCP - expected to match K2 logic)
+    ///   - swkotor2.exe: FUN_005d7fc0 @ 0x005d7fc0 (saves DamageDice/DamageDie to GFF), FUN_005d9670 @ 0x005d9670 (loads OnHandDamageMod/OffHandDamageMod from GFF)
+    ///   - swkotor.exe: FUN_00550f30 @ 0x00550f30 (saves DamageDice/DamageDie to GFF), FUN_00552350 @ 0x00552350 (loads OnHandDamageMod/OffHandDamageMod from GFF) - identical structure
     /// - Damage formula (common to K1 and K2): Roll(damagedice * damagedie) + damagebonus + ability modifier
     /// - Ability modifier (common to K1 and K2): STR for melee (default), DEX for ranged, DEX for finesse melee/lightsabers (if feat)
     /// - Finesse feats (common to K1 and K2): FEAT_FINESSE_LIGHTSABERS (193) for lightsabers, FEAT_FINESSE_MELEE_WEAPONS (194) for melee
@@ -101,8 +101,8 @@ namespace Andastra.Runtime.Engines.Odyssey.Combat
         /// - Located via string references in swkotor2.exe: "DEXBONUS" @ 0x007c4320, "DEXAdjust" @ 0x007c2bec
         /// - " + %d (Dex Modifier)" @ 0x007c3a84, " + %d (Dex Mod)" @ 0x007c3e54 (swkotor2.exe string references)
         /// - Original implementation: Both swkotor.exe and swkotor2.exe use identical ability modifier selection logic
-        ///   - swkotor2.exe: Ability modifier selection functions (addresses to be verified via Ghidra MCP)
-        ///   - swkotor.exe: Ability modifier selection functions (addresses to be verified via Ghidra MCP - expected to match K2 logic)
+        ///   - swkotor2.exe: FUN_005ff170 @ 0x005ff170 (uses DEXBONUS string), FUN_005113f0 @ 0x005113f0 (checks FEAT_FINESSE_LIGHTSABERS 193), FUN_005116a0 @ 0x005116a0 (checks FEAT_FINESSE_MELEE_WEAPONS 194), FUN_00511850 @ 0x00511850 (checks FEAT_FINESSE_MELEE_WEAPONS 194)
+        ///   - swkotor.exe: FUN_005b31d0 @ 0x005b31d0 (uses DEXBONUS string), FUN_004f0420 @ 0x004f0420 (checks FEAT_FINESSE_LIGHTSABERS 193), FUN_004f06d0 @ 0x004f06d0 (checks FEAT_FINESSE_MELEE_WEAPONS 194), FUN_004f0840 @ 0x004f0840 (checks FEAT_FINESSE_MELEE_WEAPONS 194) - identical logic
         /// - Ranged weapons (common to K1 and K2): Always use DEX modifier
         /// - Melee weapons (common to K1 and K2): Use STR by default, DEX if appropriate finesse feat is present
         /// - Finesse feats (common to K1 and K2):
@@ -220,8 +220,8 @@ namespace Andastra.Runtime.Engines.Odyssey.Combat
         /// - Based on common feat checking system shared between swkotor.exe (K1) and swkotor2.exe (K2)
         /// - Located via string references: Feat list in creature component (UTC GFF - identical structure in both executables)
         /// - Original implementation: Both swkotor.exe and swkotor2.exe use identical feat checking logic
-        ///   - swkotor2.exe: Feat checking functions (addresses to be verified via Ghidra MCP)
-        ///   - swkotor.exe: Feat checking functions (addresses to be verified via Ghidra MCP - expected to match K2 logic)
+        ///   - swkotor2.exe: FUN_0050e980 @ 0x0050e980 (feat application function called from FUN_005113f0/FUN_005116a0/FUN_00511850)
+        ///   - swkotor.exe: FUN_004ede10 @ 0x004ede10 (feat application function called from FUN_004f0420/FUN_004f06d0/FUN_004f0840) - identical logic
         /// - Feats stored in CreatureComponent.FeatList (common structure in K1 and K2)
         /// - Cross-engine: Identical feat system in swkotor.exe (K1) and swkotor2.exe (K2), different feat system in nwmain.exe (Aurora)
         /// </remarks>
