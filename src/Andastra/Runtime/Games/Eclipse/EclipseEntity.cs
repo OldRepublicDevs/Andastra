@@ -8,6 +8,7 @@ using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Games.Eclipse.Components;
 using Andastra.Runtime.Games.Common;
 using Andastra.Runtime.Games.Common.Components;
+using Andastra.Runtime.Engines.Odyssey.Components;
 
 namespace Andastra.Runtime.Games.Eclipse
 {
@@ -189,19 +190,35 @@ namespace Andastra.Runtime.Games.Eclipse
         ///
         /// Based on daorigins.exe and DragonAge2.exe: All entities have transform and script hooks capability.
         /// Transform data is loaded from area files and templates.
+        /// Script hooks are loaded from entity templates and can be set/modified at runtime.
+        /// Event system uses UnrealScript-based event dispatching through BioEventDispatcher interface.
         /// </remarks>
         private void AttachCommonComponents()
         {
             // Attach transform component for all entities
             // Based on daorigins.exe and DragonAge2.exe: All entities have transform data (position, orientation, scale)
+            // Transform data is loaded from area files and templates
+            // XPosition @ 0x00af4f68, YPosition @ 0x00af4f5c, ZPosition @ 0x00af4f50 (daorigins.exe)
+            // XOrientation @ 0x00af4f40, YOrientation @ 0x00af4f30, ZOrientation @ 0x00af4f20 (daorigins.exe)
             if (!HasComponent<ITransformComponent>())
             {
                 var transformComponent = new EclipseTransformComponent();
                 AddComponent<ITransformComponent>(transformComponent);
             }
 
-            // TODO: Attach script hooks component
-            // TODO: Attach any other common components
+            // Attach script hooks component for all entities
+            // Based on daorigins.exe and DragonAge2.exe: All entities support script hooks
+            // Script hooks are loaded from entity templates and can be set/modified at runtime
+            // Event system: "EventListeners" @ 0x00ae8194 (daorigins.exe), 0x00bf543c (DragonAge2.exe)
+            // Event scripts: "EventScripts" @ 0x00ae81bc (daorigins.exe), 0x00bf5464 (DragonAge2.exe)
+            // Command processing: "COMMAND_SIGNALEVENT" @ 0x00af4180 (daorigins.exe) processes event commands
+            // UnrealScript event dispatcher: Uses BioEventDispatcher interface for event routing
+            // ComponentInitializer also handles this, but we ensure it's attached here for consistency
+            if (!HasComponent<IScriptHooksComponent>())
+            {
+                var scriptHooksComponent = new EclipseScriptHooksComponent();
+                AddComponent<IScriptHooksComponent>(scriptHooksComponent);
+            }
         }
 
         /// <summary>
