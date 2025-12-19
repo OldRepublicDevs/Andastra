@@ -5,6 +5,7 @@ using System.Text.RegularExpressions;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Markup.Xaml;
+
 using Avalonia.Media;
 using Andastra.Parsing.Common;
 using Andastra.Parsing.Formats.GFF;
@@ -21,7 +22,8 @@ namespace HolocronToolset.Editors
     // DLG (Dialogue) format is Aurora Engine format used by:
     // - Neverwinter Nights (Aurora)
     // - KotOR 1/2 (Odyssey, which uses Aurora engine)
-    // Note: Eclipse Engine (Dragon Age/Mass Effect) may use different conversation formats
+    // - Dragon Age Origins / Dragon Age 2 (Eclipse Engine - uses DLG format with K1-style fields, no K2-specific fields)
+    // Note: Eclipse games use DLG format but with K1-style field structure (no K2-specific fields like ActionParam1-5, Script2, etc.)
     public class DLGEditor : Editor
     {
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:116
@@ -218,6 +220,9 @@ namespace HolocronToolset.Editors
         // Original: def build(self) -> tuple[bytes, bytes]:
         public override Tuple<byte[], byte[]> Build()
         {
+            // Detect game from installation - supports all engines (Odyssey K1/K2, Aurora NWN, Eclipse DA/DA2)
+            // Eclipse games (DA, DA2) use K1-style DLG format (no K2-specific fields)
+            // Default to K2 if no installation is provided (for backward compatibility)
             Game gameToUse = _installation?.Game ?? Game.K2;
             byte[] data = DLGHelper.BytesDlg(_coreDlg, gameToUse, ResourceType.DLG);
             return Tuple.Create(data, new byte[0]);
