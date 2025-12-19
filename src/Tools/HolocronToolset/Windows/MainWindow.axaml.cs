@@ -4,6 +4,8 @@ using System.IO;
 using System.Linq;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
+using Andastra.Parsing.Extract;
+using Andastra.Parsing.Installation;
 using Andastra.Parsing.Resource;
 using HolocronToolset.Data;
 using HolocronToolset.Editors;
@@ -970,8 +972,56 @@ namespace HolocronToolset.Windows
                 return;
             }
 
-            // TODO: Implement journal opening when JRL editor is available
-            System.Console.WriteLine("Journal editor not yet implemented");
+            // Search for global.jrl in OVERRIDE and CHITIN locations
+            var jrlIdent = new ResourceIdentifier("global", ResourceType.JRL);
+            var journalResources = _active.Locations(
+                new List<ResourceIdentifier> { jrlIdent },
+                new[] { SearchLocation.OVERRIDE, SearchLocation.CHITIN });
+
+            if (journalResources == null || !journalResources.ContainsKey(jrlIdent) || journalResources[jrlIdent].Count == 0)
+            {
+                // TODO: Show MessageBox when MessageBox.Avalonia is available
+                System.Console.WriteLine("Could not open the journal editor: 'global.jrl' not found.");
+                return;
+            }
+
+            var relevant = journalResources[jrlIdent];
+            if (relevant.Count > 1)
+            {
+                // Multiple journal files found - use the first one
+                // TODO: Implement FileSelectionWindow dialog for user selection when multiple files exist
+                System.Console.WriteLine($"Multiple global.jrl files found ({relevant.Count}), using the first one.");
+            }
+
+            // Get the first (or only) journal location result
+            var locationResult = relevant[0];
+            
+            // Ensure FileResource is set on LocationResult
+            FileResource fileResource = locationResult.FileResource;
+            if (fileResource == null)
+            {
+                // Create FileResource from LocationResult
+                if (!File.Exists(locationResult.FilePath))
+                {
+                    System.Console.WriteLine($"Journal file not found at path: {locationResult.FilePath}");
+                    return;
+                }
+
+                var fileInfo = new FileInfo(locationResult.FilePath);
+                fileResource = new FileResource(
+                    jrlIdent.ResName,
+                    jrlIdent.ResType,
+                    (int)fileInfo.Length,
+                    locationResult.Offset,
+                    locationResult.FilePath);
+                locationResult.SetFileResource(fileResource);
+            }
+
+            // Open the journal editor with the resource
+            WindowUtils.OpenResourceEditor(
+                fileResource,
+                _active,
+                this);
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:1508-1514
