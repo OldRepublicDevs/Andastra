@@ -143,9 +143,9 @@ namespace HolocronToolset.Tests.Editors
 
             // Test baseSelect - ComboBox
             // Matching Python: for i in range(min(10, editor.ui.baseSelect.count())):
-            if (editor.BaseSelect.ItemCount > 0)
+            if (editor.BaseSelectItemCount > 0)
             {
-                int maxIndex = Math.Min(10, editor.BaseSelect.ItemCount);
+                int maxIndex = Math.Min(10, editor.BaseSelectItemCount);
                 for (int i = 0; i < maxIndex; i++)
                 {
                     // Matching Python: editor.ui.baseSelect.setCurrentIndex(i)
@@ -400,7 +400,7 @@ namespace HolocronToolset.Tests.Editors
             editor.New();
 
             // Matching Python: if editor.ui.baseSelect.count() > 0:
-            if (editor.BaseSelect != null && editor.BaseSelect.ItemCount > 0)
+            if (editor.BaseSelect != null && editor.BaseSelectItemCount > 0)
             {
                 // Test icon updates when base changes
                 // Matching Python: editor.ui.baseSelect.setCurrentIndex(0)
@@ -570,7 +570,7 @@ namespace HolocronToolset.Tests.Editors
 
             // Test context menu setup (if icon label exists)
             // Matching Python: if editor.ui.baseSelect.count() > 0:
-            if (editor.BaseSelect != null && editor.BaseSelect.ItemCount > 0)
+            if (editor.BaseSelect != null && editor.BaseSelectItemCount > 0)
             {
                 editor.BaseSelect.SelectedIndex = 0;
                 System.Threading.Thread.Sleep(10);

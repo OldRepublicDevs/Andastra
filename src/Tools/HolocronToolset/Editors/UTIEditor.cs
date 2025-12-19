@@ -60,6 +60,28 @@ namespace HolocronToolset.Editors
         public TextBox TagEdit => _tagEdit;
         public TextBox ResrefEdit => _resrefEdit;
         public ComboBox BaseSelect => _baseSelect;
+        // Property to expose ItemCount for testing (matching Python's count())
+        public int BaseSelectItemCount
+        {
+            get
+            {
+                if (_baseSelect?.Items == null)
+                {
+                    return 0;
+                }
+                if (_baseSelect.Items is System.Collections.ICollection collection)
+                {
+                    return collection.Count;
+                }
+                // Fallback: count items manually
+                int count = 0;
+                foreach (var item in _baseSelect.Items)
+                {
+                    count++;
+                }
+                return count;
+            }
+        }
         public NumericUpDown CostSpin => _costSpin;
         public NumericUpDown AdditionalCostSpin => _additionalCostSpin;
         public NumericUpDown UpgradeSpin => _upgradeSpin;
@@ -73,10 +95,50 @@ namespace HolocronToolset.Editors
         public Button ResrefGenerateBtn => _resrefGenerateBtn;
         public TreeView AvailablePropertyList => _availablePropertyList;
         // Property to expose ItemCount for testing (matching Python's topLevelItemCount())
-        public int AvailablePropertyListItemCount => _availablePropertyList?.Items?.Count ?? 0;
+        public int AvailablePropertyListItemCount
+        {
+            get
+            {
+                if (_availablePropertyList?.Items == null)
+                {
+                    return 0;
+                }
+                if (_availablePropertyList.Items is System.Collections.ICollection collection)
+                {
+                    return collection.Count;
+                }
+                // Fallback: count items manually
+                int count = 0;
+                foreach (var item in _availablePropertyList.Items)
+                {
+                    count++;
+                }
+                return count;
+            }
+        }
         public ListBox AssignedPropertiesList => _assignedPropertiesList;
         // Property to expose ItemCount for testing (matching Python's count())
-        public int AssignedPropertiesListItemCount => _assignedPropertiesList?.Items?.Count ?? 0;
+        public int AssignedPropertiesListItemCount
+        {
+            get
+            {
+                if (_assignedPropertiesList?.Items == null)
+                {
+                    return 0;
+                }
+                if (_assignedPropertiesList.Items is System.Collections.ICollection collection)
+                {
+                    return collection.Count;
+                }
+                // Fallback: count items manually
+                int count = 0;
+                foreach (var item in _assignedPropertiesList.Items)
+                {
+                    count++;
+                }
+                return count;
+            }
+        }
         public Button AddPropertyBtn => _addPropertyBtn;
         public Button RemovePropertyBtn => _removePropertyBtn;
         public Button EditPropertyBtn => _editPropertyBtn;
@@ -369,6 +431,30 @@ namespace HolocronToolset.Editors
             {
                 _descEditBtn.Click += (s, e) => EditDescription();
             }
+            
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uti.py:98-99
+            // Original: self.ui.availablePropertyList.doubleClicked.connect(self.on_available_property_list_double_clicked)
+            // Original: self.ui.assignedPropertiesList.doubleClicked.connect(self.on_assigned_property_list_double_clicked)
+            if (_availablePropertyList != null)
+            {
+                _availablePropertyList.DoubleTapped += (s, e) => OnAvailablePropertyListDoubleClicked();
+            }
+            if (_assignedPropertiesList != null)
+            {
+                _assignedPropertiesList.DoubleTapped += (s, e) => OnAssignedPropertyListDoubleClicked();
+            }
+            
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uti.py:82
+            // Original: QShortcut("Del", self).activated.connect(self.on_del_shortcut)
+            // Note: In Avalonia, we handle KeyDown event instead of QShortcut
+            this.KeyDown += (s, e) =>
+            {
+                if (e.Key == Avalonia.Input.Key.Delete && _assignedPropertiesList != null && _assignedPropertiesList.IsFocused)
+                {
+                    OnDelShortcut();
+                    e.Handled = true;
+                }
+            };
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uti.py:167-196
@@ -804,8 +890,40 @@ namespace HolocronToolset.Editors
         // Original: def property_summary(self, uti_property):
         private string PropertySummary(UTIProperty prop)
         {
-            // Simplified property summary - full implementation would use installation to get names from 2DA files
-            return $"Property {prop.PropertyName}: Subtype {prop.Subtype}";
+            if (_installation == null)
+            {
+                return $"Property {prop.PropertyName}: Subtype {prop.Subtype}";
+            }
+
+            // Matching PyKotor implementation: prop_name: str = UTIEditor.property_name(self._installation, uti_property.property_name)
+            string propName = GetPropertyName(_installation, prop.PropertyName);
+            
+            // Matching PyKotor implementation: subprop_name: str | None = UTIEditor.subproperty_name(self._installation, uti_property.property_name, uti_property.subtype)
+            string subpropName = GetSubpropertyName(_installation, prop.PropertyName, prop.Subtype);
+            
+            // Matching PyKotor implementation: cost_name: str | None = UTIEditor.cost_name(self._installation, uti_property.cost_table, uti_property.cost_value)
+            string costName = CostName(_installation, prop.CostTable, prop.CostValue);
+
+            // Matching PyKotor implementation: if cost_name and subprop_name: return f"{prop_name}: {subprop_name} [{cost_name}]"
+            if (!string.IsNullOrEmpty(costName) && !string.IsNullOrEmpty(subpropName))
+            {
+                return $"{propName}: {subpropName} [{costName}]";
+            }
+            
+            // Matching PyKotor implementation: if subprop_name: return f"{prop_name}: {subprop_name}"
+            if (!string.IsNullOrEmpty(subpropName))
+            {
+                return $"{propName}: {subpropName}";
+            }
+            
+            // Matching PyKotor implementation: if cost_name: return f"{prop_name}: [{cost_name}]"
+            if (!string.IsNullOrEmpty(costName))
+            {
+                return $"{propName}: [{costName}]";
+            }
+            
+            // Matching PyKotor implementation: return f"{prop_name}"
+            return propName;
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uti.py:488-514
@@ -1192,6 +1310,46 @@ namespace HolocronToolset.Editors
             public override string ToString()
             {
                 return Text;
+            }
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uti.py:437-441
+        // Original: def on_available_property_list_double_clicked(self):
+        private void OnAvailablePropertyListDoubleClicked()
+        {
+            // Matching PyKotor implementation: for item in self.ui.availablePropertyList.selectedItems():
+            // Matching PyKotor implementation:     if item.childCount() != 0: continue
+            // Matching PyKotor implementation:     self.add_selected_property()
+            if (_availablePropertyList?.SelectedItem is TreeViewItem selectedItem)
+            {
+                // Check if it's a leaf node (no children)
+                bool isLeafNode = selectedItem.ItemsSource == null || 
+                                  (selectedItem.ItemsSource is System.Collections.IList list && list.Count == 0);
+                
+                if (isLeafNode)
+                {
+                    AddSelectedProperty();
+                }
+            }
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uti.py:443-444
+        // Original: def on_assigned_property_list_double_clicked(self):
+        private void OnAssignedPropertyListDoubleClicked()
+        {
+            // Matching PyKotor implementation: self.edit_selected_property()
+            EditSelectedProperty();
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uti.py:446-449
+        // Original: def on_del_shortcut(self):
+        private void OnDelShortcut()
+        {
+            // Matching PyKotor implementation: if not self.ui.assignedPropertiesList.hasFocus(): return
+            // Matching PyKotor implementation: self.remove_selected_property()
+            if (_assignedPropertiesList != null && _assignedPropertiesList.IsFocused)
+            {
+                RemoveSelectedProperty();
             }
         }
 
