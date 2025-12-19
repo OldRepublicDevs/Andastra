@@ -93,7 +93,7 @@ namespace HolocronToolset.Windows
             Ui.MapRenderer = new IndoorMapRenderer();
             Ui.MapRenderer.SetMap(Map);
             // Matching Python: self.ui.mapRenderer.set_undo_stack(self._undo_stack)
-            // Note: SetUndoStack will be implemented in IndoorMapRenderer when needed
+            // TODO: STUB - Note: SetUndoStack will be implemented in IndoorMapRenderer when needed
 
             // Setup select all action (matching Python: self.ui.actionSelectAll.triggered.connect(self.select_all))
             Ui.ActionSelectAll = SelectAll;
@@ -166,7 +166,7 @@ namespace HolocronToolset.Windows
             var renderer = Ui.MapRenderer;
             renderer.ClearSelectedRooms();
             // Note: Additional UI clearing (componentList, moduleComponentList, preview image, status bar)
-            // will be implemented when those UI components are available
+            // TODO: STUB - will be implemented when those UI components are available
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/indoor_builder.py:1628-1640

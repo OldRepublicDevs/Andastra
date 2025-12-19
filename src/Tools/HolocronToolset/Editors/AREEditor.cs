@@ -76,7 +76,7 @@ namespace HolocronToolset.Editors
 
         private void SetupUI()
         {
-            // Setup UI elements - will be implemented when UI controls are created
+            // TODO: STUB - Setup UI elements - will be implemented when UI controls are created
             var panel = new StackPanel();
 
             // Name field - matching Python: self.ui.nameEdit
