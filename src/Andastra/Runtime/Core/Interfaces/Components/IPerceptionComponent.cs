@@ -7,16 +7,18 @@ namespace Andastra.Runtime.Core.Interfaces.Components
     /// </summary>
     /// <remarks>
     /// Perception Component Interface:
-    /// - TODO: lookup data from daorigins.exe/dragonage2.exe/masseffect.exe/masseffect2.exe/swkotor.exe/swkotor2.exe and split into subclass'd inheritence structures appropriately. parent class(es) should contain common code.
-    /// - TODO: this should NOT specify swkotor2.exe unless it specifies the other exes as well!!!
-    /// - Based on swkotor2.exe perception system
-    /// - Located via string references: "PERCEPTIONDIST" @ 0x007c4070, "CSWSSCRIPTEVENT_EVENTTYPE_ON_PERCEPTION" @ 0x007bcb68
-    /// - Original implementation: FUN_005fb0f0 @ 0x005fb0f0 (perception update)
+    /// - Common interface for perception systems across all BioWare engines
+    /// - Cross-engine analysis:
+    ///   - Odyssey (swkotor.exe, swkotor2.exe): PerceptionData/PerceptionList structures, FUN_005fb0f0 @ 0x005fb0f0 (swkotor2.exe), FUN_005afce0 @ 0x005afce0 (swkotor.exe)
+    ///   - Aurora (nwmain.exe): DoPerceptionUpdateOnCreature @ 0x14038b0c0, PerceptionList/PerceptionData structures
+    ///   - Eclipse (daorigins.exe, DragonAge2.exe): PerceptionClass found, uses different AI system
+    ///   - Infinity (MassEffect.exe, MassEffect2.exe): DisplayPerceptionList found, squad-based perception system
     /// - Each creature has sight and hearing ranges (SightRange, HearingRange)
     /// - Perception is updated periodically (not every frame)
     /// - Events fire when perception state changes: OnPerceive (new object seen/heard), OnVanish (object no longer seen)
     /// - Sight checks: Distance within sight range, line of sight (optional raycasting), not invisible
     /// - Hearing checks: Distance within hearing range, sound source is active, not silenced
+    /// - Engine-specific implementations inherit from BasePerceptionComponent in Runtime.Games.Common.Components
     /// </remarks>
     public interface IPerceptionComponent : IComponent
     {
