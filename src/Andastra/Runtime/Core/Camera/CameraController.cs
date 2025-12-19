@@ -700,14 +700,23 @@ namespace Andastra.Runtime.Core.Camera
                 return false;
             }
 
-            // Try to get camera hook position from entity
-            // Camera hooks are typically stored as attachment points on the model
-            // For now, we'll use a fallback approach: calculate hook position based on entity position and orientation
-            // Full implementation would query the loaded MDL model for nodes named "camerahook{N}"
-            // and transform their local positions to world space using the entity's transform
-
+            // TODO: PLACEHOLDER - Full MDL node lookup implementation needed
+            // Based on swkotor2.exe: FUN_006c6020 @ 0x006c6020 searches MDL node tree for "camerahook" nodes
+            // Located via string references: "camerahook" @ 0x007c7dac, "camerahook%d" @ 0x007d0448
+            // Original implementation: 
+            //   - Searches MDL model node tree recursively for nodes named "camerahook{N}" (e.g., "camerahook1", "camerahook2")
+            //   - Uses format string "camerahook%d" to construct node name from hookIndex
+            //   - Queries model via FUN_006c21c0 @ 0x006c21c0 to get node by index
+            //   - Calls virtual function at offset 0x10c with "camerahook" string to find node by name
+            //   - Transforms node's local position to world space using entity's transform matrix
+            //   - Returns world-space position of the camera hook node
+            // Current implementation: Fallback approximation based on entity facing
+            // Full implementation requires:
+            //   1. Access to MDL model cache/loader (dependency injection into CameraController)
+            //   2. Recursive node search function (search MDLNodeData tree by name)
+            //   3. World-space transform calculation (combine node local transform with entity transform)
+            //   4. Support for animated nodes (query current animation frame transform if node has controllers)
             // Fallback: Calculate approximate hook position based on entity facing
-            // This is a simplified implementation - full version would query MDL node tree
             Vector3 entityPos = transform.Position;
             Vector3 entityForward = GetEntityForward(transform);
             Vector3 entityRight = GetEntityRight(transform);
