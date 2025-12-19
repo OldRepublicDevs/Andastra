@@ -39,12 +39,14 @@ namespace Andastra.Runtime.Stride.Backends
         // Bindless resource tracking
         private readonly Dictionary<IntPtr, BindlessHeapInfo> _bindlessHeaps;
         private readonly Dictionary<IntPtr, int> _textureToHeapIndex; // texture handle -> heap index
+        private readonly Dictionary<IntPtr, int> _samplerToHeapIndex; // sampler handle -> heap index
 
         public StrideDirect3D12Backend(global::Stride.Engine.Game game)
         {
             _game = game ?? throw new ArgumentNullException(nameof(game));
             _bindlessHeaps = new Dictionary<IntPtr, BindlessHeapInfo>();
             _textureToHeapIndex = new Dictionary<IntPtr, int>();
+            _samplerToHeapIndex = new Dictionary<IntPtr, int>();
         }
 
         #region BaseGraphicsBackend Implementation
@@ -906,8 +908,141 @@ namespace Andastra.Runtime.Stride.Backends
 
         protected override int OnAddBindlessSampler(IntPtr heap, IntPtr sampler)
         {
-            // TODO: STUB - Add sampler to bindless heap
-            return 0;
+            // Validate inputs
+            if (heap == IntPtr.Zero)
+            {
+                Console.WriteLine("[StrideDX12] OnAddBindlessSampler: Invalid heap handle");
+                return -1;
+            }
+
+            if (sampler == IntPtr.Zero)
+            {
+                Console.WriteLine("[StrideDX12] OnAddBindlessSampler: Invalid sampler handle");
+                return -1;
+            }
+
+            if (_device == IntPtr.Zero)
+            {
+                Console.WriteLine("[StrideDX12] OnAddBindlessSampler: DirectX 12 device not available");
+                return -1;
+            }
+
+            // Get heap information
+            if (!_bindlessHeaps.TryGetValue(heap, out BindlessHeapInfo heapInfo))
+            {
+                Console.WriteLine($"[StrideDX12] OnAddBindlessSampler: Heap not found for handle {heap}");
+                return -1;
+            }
+
+            // Verify this is a sampler heap (not a texture heap)
+            // Sampler heaps use D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER
+            // We can verify by checking if the heap was created with sampler type
+            // For now, we'll assume if it's in _bindlessHeaps and not a texture heap, it's a sampler heap
+
+            // Check if sampler is already in the heap
+            if (_samplerToHeapIndex.TryGetValue(sampler, out int existingIndex))
+            {
+                // Check if this index is still valid in the heap
+                if (existingIndex >= 0 && existingIndex < heapInfo.Capacity && !heapInfo.FreeIndices.Contains(existingIndex))
+                {
+                    Console.WriteLine($"[StrideDX12] OnAddBindlessSampler: Sampler already in heap at index {existingIndex}");
+                    return existingIndex;
+                }
+            }
+
+            // Find next available index
+            int index = -1;
+            if (heapInfo.FreeIndices.Count > 0)
+            {
+                // Reuse a free index
+                var enumerator = heapInfo.FreeIndices.GetEnumerator();
+                enumerator.MoveNext();
+                index = enumerator.Current;
+                heapInfo.FreeIndices.Remove(index);
+            }
+            else if (heapInfo.NextIndex < heapInfo.Capacity)
+            {
+                // Use next available index
+                index = heapInfo.NextIndex;
+                heapInfo.NextIndex++;
+            }
+            else
+            {
+                Console.WriteLine($"[StrideDX12] OnAddBindlessSampler: Heap is full (capacity: {heapInfo.Capacity})");
+                return -1;
+            }
+
+            // Create sampler descriptor for DirectX 12
+            // Based on DirectX 12 Samplers: https://docs.microsoft.com/en-us/windows/win32/direct3d12/descriptors-overview
+            // D3D12_SAMPLER_DESC structure
+            // Note: In DirectX 12, samplers are descriptors created directly in descriptor heaps
+            // The sampler parameter is a handle to sampler state information
+            // For now, we'll use default sampler settings; in a full implementation,
+            // we would extract the sampler description from the sampler handle
+            try
+            {
+                // Calculate CPU descriptor handle for this index
+                IntPtr cpuDescriptorHandle = OffsetDescriptorHandle(heapInfo.CpuHandle, index, heapInfo.DescriptorIncrementSize);
+
+                // Create D3D12_SAMPLER_DESC structure with default settings
+                // Default sampler: Linear filtering, wrap addressing, no comparison
+                var samplerDesc = new D3D12_SAMPLER_DESC
+                {
+                    Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR,
+                    AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP,
+                    AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP,
+                    AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP,
+                    MipLODBias = 0.0f,
+                    MaxAnisotropy = 1,
+                    ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER,
+                    BorderColor = new float[] { 0.0f, 0.0f, 0.0f, 0.0f },
+                    MinLOD = 0.0f,
+                    MaxLOD = D3D12_FLOAT32_MAX
+                };
+
+                // Allocate memory for the sampler descriptor structure
+                int samplerDescSize = Marshal.SizeOf(typeof(D3D12_SAMPLER_DESC));
+                IntPtr samplerDescPtr = Marshal.AllocHGlobal(samplerDescSize);
+                try
+                {
+                    Marshal.StructureToPtr(samplerDesc, samplerDescPtr, false);
+
+                    // Call ID3D12Device::CreateSampler
+                    // void CreateSampler(
+                    //   const D3D12_SAMPLER_DESC *pDesc,
+                    //   D3D12_CPU_DESCRIPTOR_HANDLE DestDescriptor
+                    // );
+                    CreateSampler(_device, samplerDescPtr, cpuDescriptorHandle);
+
+                    // Track sampler to index mapping
+                    _samplerToHeapIndex[sampler] = index;
+
+                    Console.WriteLine($"[StrideDX12] OnAddBindlessSampler: Added sampler {sampler} to heap {heap} at index {index}");
+
+                    return index;
+                }
+                finally
+                {
+                    Marshal.FreeHGlobal(samplerDescPtr);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[StrideDX12] OnAddBindlessSampler: Exception: {ex.Message}");
+                Console.WriteLine($"[StrideDX12] OnAddBindlessSampler: Stack trace: {ex.StackTrace}");
+
+                // If we allocated an index, mark it as free again
+                if (index >= 0)
+                {
+                    heapInfo.FreeIndices.Add(index);
+                    if (index == heapInfo.NextIndex - 1)
+                    {
+                        heapInfo.NextIndex--;
+                    }
+                }
+
+                return -1;
+            }
         }
 
         protected override void OnRemoveBindlessTexture(IntPtr heap, int index)
@@ -1232,20 +1367,6 @@ namespace Andastra.Runtime.Stride.Backends
         private const uint D3D12_DXGI_FORMAT_UNKNOWN = 0;
 
         /// <summary>
-        /// Bindless heap state information.
-        /// </summary>
-        private struct BindlessHeapInfo
-        {
-            public IntPtr DescriptorHeap; // ID3D12DescriptorHeap*
-            public IntPtr CpuHandle; // D3D12_CPU_DESCRIPTOR_HANDLE
-            public IntPtr GpuHandle; // D3D12_GPU_DESCRIPTOR_HANDLE
-            public int Capacity;
-            public uint DescriptorIncrementSize;
-            public int NextIndex;
-            public HashSet<int> FreeIndices; // Indices that have been freed and can be reused
-        }
-
-        /// <summary>
         /// D3D12_DESCRIPTOR_HEAP_DESC structure.
         /// </summary>
         [StructLayout(LayoutKind.Sequential)]
@@ -1281,6 +1402,57 @@ namespace Andastra.Runtime.Stride.Backends
             public float ResourceMinLODClamp;
         }
 
+        // DirectX 12 Filter Types
+        private const uint D3D12_FILTER_MIN_MAG_MIP_POINT = 0x00000000;
+        private const uint D3D12_FILTER_MIN_MAG_POINT_MIP_LINEAR = 0x00000001;
+        private const uint D3D12_FILTER_MIN_POINT_MAG_LINEAR_MIP_POINT = 0x00000004;
+        private const uint D3D12_FILTER_MIN_POINT_MAG_MIP_LINEAR = 0x00000005;
+        private const uint D3D12_FILTER_MIN_LINEAR_MAG_MIP_POINT = 0x00000010;
+        private const uint D3D12_FILTER_MIN_LINEAR_MAG_POINT_MIP_LINEAR = 0x00000011;
+        private const uint D3D12_FILTER_MIN_MAG_LINEAR_MIP_POINT = 0x00000014;
+        private const uint D3D12_FILTER_MIN_MAG_MIP_LINEAR = 0x00000015;
+        private const uint D3D12_FILTER_ANISOTROPIC = 0x00000055;
+
+        // DirectX 12 Texture Address Modes
+        private const uint D3D12_TEXTURE_ADDRESS_MODE_WRAP = 1;
+        private const uint D3D12_TEXTURE_ADDRESS_MODE_MIRROR = 2;
+        private const uint D3D12_TEXTURE_ADDRESS_MODE_CLAMP = 3;
+        private const uint D3D12_TEXTURE_ADDRESS_MODE_BORDER = 4;
+        private const uint D3D12_TEXTURE_ADDRESS_MODE_MIRROR_ONCE = 5;
+
+        // DirectX 12 Comparison Functions
+        private const uint D3D12_COMPARISON_FUNC_NEVER = 1;
+        private const uint D3D12_COMPARISON_FUNC_LESS = 2;
+        private const uint D3D12_COMPARISON_FUNC_EQUAL = 3;
+        private const uint D3D12_COMPARISON_FUNC_LESS_EQUAL = 4;
+        private const uint D3D12_COMPARISON_FUNC_GREATER = 5;
+        private const uint D3D12_COMPARISON_FUNC_NOT_EQUAL = 6;
+        private const uint D3D12_COMPARISON_FUNC_GREATER_EQUAL = 7;
+        private const uint D3D12_COMPARISON_FUNC_ALWAYS = 8;
+
+        // DirectX 12 Float Constants
+        private const float D3D12_FLOAT32_MAX = 3.402823466e+38f;
+
+        /// <summary>
+        /// D3D12_SAMPLER_DESC structure.
+        /// Based on DirectX 12 Sampler Descriptors: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/ns-d3d12-d3d12_sampler_desc
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        private struct D3D12_SAMPLER_DESC
+        {
+            public uint Filter; // D3D12_FILTER
+            public uint AddressU; // D3D12_TEXTURE_ADDRESS_MODE
+            public uint AddressV; // D3D12_TEXTURE_ADDRESS_MODE
+            public uint AddressW; // D3D12_TEXTURE_ADDRESS_MODE
+            public float MipLODBias;
+            public uint MaxAnisotropy;
+            public uint ComparisonFunc; // D3D12_COMPARISON_FUNC
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 4)]
+            public float[] BorderColor; // float[4] for RGBA border color
+            public float MinLOD;
+            public float MaxLOD;
+        }
+
         // COM interface method delegates for C# 7.3 compatibility
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         private delegate int CreateDescriptorHeapDelegate(IntPtr device, IntPtr pDescriptorHeapDesc, ref Guid riid, IntPtr ppvHeap);
@@ -1296,6 +1468,9 @@ namespace Andastra.Runtime.Stride.Backends
 
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         private delegate void CreateShaderResourceViewDelegate(IntPtr device, IntPtr pResource, IntPtr pDesc, IntPtr DestDescriptor);
+
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate void CreateSamplerDelegate(IntPtr device, IntPtr pDesc, IntPtr DestDescriptor);
 
         /// <summary>
         /// Calls ID3D12Device::CreateDescriptorHeap through COM vtable.
@@ -1345,7 +1520,7 @@ namespace Andastra.Runtime.Stride.Backends
             IntPtr methodPtr = vtable[9];
 
             // Create delegate from function pointer
-            GetCPUDescriptorHandleForHeapStartDelegate getCpuHandle = 
+            GetCPUDescriptorHandleForHeapStartDelegate getCpuHandle =
                 (GetCPUDescriptorHandleForHeapStartDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(GetCPUDescriptorHandleForHeapStartDelegate));
 
             return getCpuHandle(descriptorHeap);
@@ -1372,7 +1547,7 @@ namespace Andastra.Runtime.Stride.Backends
             IntPtr methodPtr = vtable[10];
 
             // Create delegate from function pointer
-            GetGPUDescriptorHandleForHeapStartDelegate getGpuHandle = 
+            GetGPUDescriptorHandleForHeapStartDelegate getGpuHandle =
                 (GetGPUDescriptorHandleForHeapStartDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(GetGPUDescriptorHandleForHeapStartDelegate));
 
             return getGpuHandle(descriptorHeap);
@@ -1399,7 +1574,7 @@ namespace Andastra.Runtime.Stride.Backends
             IntPtr methodPtr = vtable[28];
 
             // Create delegate from function pointer
-            GetDescriptorHandleIncrementSizeDelegate getIncrementSize = 
+            GetDescriptorHandleIncrementSizeDelegate getIncrementSize =
                 Marshal.GetDelegateForFunctionPointer<GetDescriptorHandleIncrementSizeDelegate>(methodPtr);
 
             return getIncrementSize(device, DescriptorHeapType);
@@ -1426,10 +1601,38 @@ namespace Andastra.Runtime.Stride.Backends
             IntPtr methodPtr = vtable[33];
 
             // Create delegate from function pointer
-            CreateShaderResourceViewDelegate createSrv = 
+            CreateShaderResourceViewDelegate createSrv =
                 Marshal.GetDelegateForFunctionPointer<CreateShaderResourceViewDelegate>(methodPtr);
 
             createSrv(device, pResource, pDesc, DestDescriptor);
+        }
+
+        /// <summary>
+        /// Calls ID3D12Device::CreateSampler through COM vtable.
+        /// VTable index 34 for ID3D12Device.
+        /// Platform: Windows only (x64/x86) - DirectX 12 COM is Windows-specific
+        /// Based on DirectX 12 Samplers: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12device-createsampler
+        /// </summary>
+        private unsafe void CreateSampler(IntPtr device, IntPtr pDesc, IntPtr DestDescriptor)
+        {
+            // Platform check: DirectX 12 COM is Windows-only
+            if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+            {
+                return;
+            }
+
+            if (device == IntPtr.Zero || pDesc == IntPtr.Zero || DestDescriptor == IntPtr.Zero) return;
+
+            // Get vtable pointer
+            IntPtr* vtable = *(IntPtr**)device;
+            // CreateSampler is at index 34 in ID3D12Device vtable
+            IntPtr methodPtr = vtable[34];
+
+            // Create delegate from function pointer
+            CreateSamplerDelegate createSampler =
+                Marshal.GetDelegateForFunctionPointer<CreateSamplerDelegate>(methodPtr);
+
+            createSampler(device, pDesc, DestDescriptor);
         }
 
         #endregion
