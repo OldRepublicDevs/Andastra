@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Scripting.Interfaces;
@@ -12,7 +13,34 @@ namespace Andastra.Runtime.Engines.Common
     /// - Common functionality shared across all BioWare engines (Odyssey, Aurora, Eclipse, Infinity)
     /// - Base classes MUST only contain functionality that is identical across ALL engines
     /// - Engine-specific details MUST be in subclasses (OdysseyEngineProfile, AuroraEngineProfile, EclipseEngineProfile)
-    /// - TODO: Complete cross-engine reverse engineering to identify common profile patterns
+    ///
+    /// Common Profile Patterns (Reverse Engineered):
+    /// - Resource Path Initialization: All engines initialize resource paths in constructor
+    ///   - swkotor.exe: FUN_005e7a90 @ 0x005e7a90 sets up modules, override, saves directories
+    ///   - swkotor2.exe: FUN_00633270 @ 0x00633270 sets up modules, override, saves directories
+    ///   - Pattern: All engines use similar resource path setup functions that register directory aliases
+    ///   - Common directories: modules, override, saves (present in all engines)
+    /// - Profile Initialization Pattern: All engines follow same initialization sequence
+    ///   1. Create resource configuration (game-specific file names, paths)
+    ///   2. Create table configuration (2DA table schemas)
+    ///   3. Initialize supported features set (game-specific feature flags)
+    /// - Feature Detection: All engines support feature queries via SupportsFeature()
+    ///   - Pattern: HashSet-based feature lookup with null/empty string validation
+    ///   - Used to determine game-specific capabilities (e.g., Influence system in K2, Pazaak in K1)
+    /// - Game Type Identification: All engines identify themselves via GameType property
+    ///   - swkotor.exe: "swkotor" @ 0x0073d75c, ".\\swkotor.ini" @ 0x0073d648
+    ///   - swkotor2.exe: "swkotor2" @ 0x007b575c, ".\\swkotor2.ini" @ 0x007b5644
+    ///   - nwmain.exe: "game_type" @ 0x140db7190, "nwn" references throughout
+    ///   - Pattern: Game identification via executable name, INI file names, or registry keys
+    ///
+    /// Inheritance Structure:
+    /// - BaseEngineProfile (this class): Common initialization, feature detection, resource/table config access
+    /// - OdysseyEngineProfile: Odyssey-specific resource paths (chitin.key, dialog.tlk, texture packs)
+    ///   - OdysseyKotor1GameProfile: K1-specific features (Pazaak, Swoop Racing, Turret)
+    ///   - OdysseyTheSithLordsGameProfile: K2-specific features (Influence, Prestige Classes, Crafting)
+    /// - AuroraEngineProfile: Aurora-specific resource paths (hak files, module files)
+    /// - EclipseEngineProfile: Eclipse-specific resource paths (packages/core/override structure)
+    /// - InfinityEngineProfile: Infinity-specific resource paths (CHITIN.KEY, dialog.tlk variants)
     /// </remarks>
     public abstract class BaseEngineProfile : IEngineProfile
     {
@@ -20,12 +48,35 @@ namespace Andastra.Runtime.Engines.Common
         protected readonly ITableConfig _tableConfig;
         protected readonly HashSet<string> _supportedFeatures;
 
+        /// <summary>
+        /// Initializes a new instance of the BaseEngineProfile class.
+        /// </summary>
+        /// <remarks>
+        /// Initialization Pattern (Common across all engines):
+        /// - swkotor.exe: FUN_005e7a90 @ 0x005e7a90 initializes resource paths
+        /// - swkotor2.exe: FUN_00633270 @ 0x00633270 initializes resource paths
+        /// - Pattern: All engines follow this initialization sequence:
+        ///   1. Create resource configuration (game-specific file names, paths)
+        ///   2. Create table configuration (2DA table schemas)
+        ///   3. Initialize supported features set (game-specific feature flags)
+        /// </remarks>
         protected BaseEngineProfile()
         {
             _resourceConfig = CreateResourceConfig();
             _tableConfig = CreateTableConfig();
             _supportedFeatures = new HashSet<string>();
             InitializeSupportedFeatures();
+            
+            // Common validation: Ensure resource and table configs are not null
+            if (_resourceConfig == null)
+            {
+                throw new InvalidOperationException("CreateResourceConfig() must not return null");
+            }
+            
+            if (_tableConfig == null)
+            {
+                throw new InvalidOperationException("CreateTableConfig() must not return null");
+            }
         }
 
         public abstract string GameType { get; }

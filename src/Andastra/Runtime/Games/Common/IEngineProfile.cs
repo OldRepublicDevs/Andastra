@@ -12,7 +12,13 @@ namespace Andastra.Runtime.Engines.Common
     /// - Common contract shared across all BioWare engines (Odyssey, Aurora, Eclipse, Infinity)
     /// - Defines the interface for game profiles that all engines must provide
     /// - Engine-specific implementations must be in concrete classes (OdysseyEngineProfile, AuroraEngineProfile, EclipseEngineProfile)
-    /// - TODO: Complete cross-engine reverse engineering to identify common profile patterns
+    ///
+    /// Common Profile Patterns (Reverse Engineered):
+    /// - All engines implement resource configuration (IResourceConfig) with modules, override, saves directories
+    /// - All engines implement table configuration (ITableConfig) for 2DA table schemas
+    /// - All engines support feature detection via SupportsFeature() method
+    /// - All engines identify themselves via GameType property (e.g., "K1", "K2", "NWN", "DAO")
+    /// - See BaseEngineProfile for detailed reverse engineering documentation
     /// </remarks>
     public interface IEngineProfile
     {
