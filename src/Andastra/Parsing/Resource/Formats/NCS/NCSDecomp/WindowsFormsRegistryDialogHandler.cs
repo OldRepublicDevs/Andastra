@@ -129,11 +129,16 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
                 SetProperty(buttonPanel, "Height", 30);
 
                 // Add controls to panels
-                InvokeMethod(buttonPanel, "Controls.Add", okButton);
-                InvokeMethod(contentPanel, "Controls.Add", messageLabel);
-                InvokeMethod(contentPanel, "Controls.Add", dontShowCheckBox);
-                InvokeMethod(contentPanel, "Controls.Add", buttonPanel);
-                InvokeMethod(dialog, "Controls.Add", contentPanel);
+                // Controls is a property that returns a ControlCollection, and Add is a method on that collection
+                object buttonPanelControls = GetProperty(buttonPanel, "Controls");
+                object contentPanelControls = GetProperty(contentPanel, "Controls");
+                object dialogControls = GetProperty(dialog, "Controls");
+                
+                InvokeMethod(buttonPanelControls, "Add", okButton);
+                InvokeMethod(contentPanelControls, "Add", messageLabel);
+                InvokeMethod(contentPanelControls, "Add", dontShowCheckBox);
+                InvokeMethod(contentPanelControls, "Add", buttonPanel);
+                InvokeMethod(dialogControls, "Add", contentPanel);
 
                 // Set OK button as default
                 SetProperty(dialog, "AcceptButton", okButton);
