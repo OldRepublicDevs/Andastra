@@ -449,6 +449,20 @@ namespace Andastra.Runtime.Games.Infinity
         /// Serializes ObjectId, Tag, components, and custom data.
         /// Uses Infinity-specific binary save format (similar to Eclipse engine).
         ///
+        /// Reverse Engineering Notes:
+        /// - MassEffect.exe: Entity serialization uses UnrealScript packages (not in executable)
+        ///   - String reference: "intUBioBaseSaveObjectexecSaveBaseObjectInfo" @ 0x11879f28
+        ///   - String reference: "intABioWorldInfoexecBioSaveGame" @ 0x11800ca0
+        ///   - Save system: UBioSaveGame class in UnrealScript packages
+        ///   - Entity serialization follows Eclipse binary format pattern
+        /// - MassEffect2.exe: Similar entity serialization system to ME1
+        ///   - Enhanced save system with relationships and squad state
+        ///   - Binary format compatible with ME1 but with additional fields
+        /// - Implementation follows EclipseSaveSerializer.SerializeEntity() pattern
+        ///   - Binary format: Basic properties, component flags, component data, custom data
+        ///   - String encoding: UTF-8 with length prefix (int32)
+        ///   - Component serialization: Optional components with presence flags
+        ///
         /// Binary format structure:
         /// - Basic entity properties (ObjectId: uint32, Tag: string, ObjectType: int32, AreaId: uint32, IsValid: int32)
         /// - Transform component (if present: flag int32, then Position: 3 floats, Facing: float, Scale: 3 floats, ParentObjectId: uint32)
@@ -816,6 +830,19 @@ namespace Andastra.Runtime.Games.Infinity
         /// Based on Infinity entity deserialization functions in MassEffect.exe and MassEffect2.exe.
         /// Restores ObjectId, Tag, components, and custom data.
         /// Recreates component attachments and state.
+        ///
+        /// Reverse Engineering Notes:
+        /// - MassEffect.exe: Entity deserialization uses UnrealScript packages (not in executable)
+        ///   - String reference: "intUBioBaseSaveObjectexecSaveBaseObjectInfo" @ 0x11879f28
+        ///   - Load system: UBioSaveGame class in UnrealScript packages
+        ///   - Entity deserialization follows Eclipse binary format pattern
+        /// - MassEffect2.exe: Similar entity deserialization system to ME1
+        ///   - Enhanced load system with relationships and squad state restoration
+        ///   - Binary format compatible with ME1 but with additional fields
+        /// - Implementation follows EclipseSaveSerializer.DeserializeEntity() pattern
+        ///   - Binary format: Basic properties, component flags, component data, custom data
+        ///   - String encoding: UTF-8 with length prefix (int32)
+        ///   - Component deserialization: Recreates components based on presence flags
         ///
         /// Binary format structure (matches Serialize):
         /// - Basic entity properties (ObjectId: uint32, Tag: string, ObjectType: int32, AreaId: uint32, IsValid: int32)
