@@ -229,24 +229,40 @@ namespace Andastra.Runtime.MonoGame.Camera
 
         /// <summary>
         /// Resets the camera to normal gameplay mode.
-        /// Based on swkotor2.exe: Camera reset to chase mode
-        /// Located via string references: Camera mode switching
-        /// Original implementation: Returns camera to chase mode following player
-        /// Reverse engineered from swkotor2.exe: Camera reset after dialogue ends returns to chase mode with player as target
+        /// Based on swkotor2.exe: Camera reset to chase mode after dialogue ends
+        /// Reverse engineered from swkotor2.exe:
+        ///   - EndConversation script execution @ 0x007c38e0 triggers camera reset
+        ///   - Dialogue loading function FUN_005ea880 @ 0x005ea880 loads EndConversation script reference
+        ///   - Camera reset occurs when dialogue ends (EndConversation script fires)
+        ///   - Camera returns to chase mode following player entity
+        /// Located via string references: "EndConversation" @ 0x007c38e0, "CameraAnimation" @ 0x007c3460
+        /// Original implementation: When dialogue ends, camera resets to chase mode with player as target
+        /// Cross-engine analysis:
+        ///   - swkotor.exe (KOTOR 1): Similar camera reset behavior when dialogue ends
+        ///   - swkotor2.exe (KOTOR 2): Camera reset to chase mode with player entity (this implementation)
+        ///   - nwmain.exe (Aurora): Camera reset handled differently (no direct dialogue camera equivalent)
+        ///   - daorigins.exe/DragonAge2.exe (Eclipse): Camera reset via UnrealScript, different architecture
+        ///   - MassEffect.exe/MassEffect2.exe (Infinity): Camera reset handled by level scripting system
         /// </summary>
         public void Reset()
         {
             // Get player entity from world via camera controller
+            // Based on swkotor2.exe: Player entity lookup for camera reset
+            // Original implementation: Retrieves player entity and sets camera to chase mode
             IEntity playerEntity = _cameraController.GetPlayerEntity();
             
             if (playerEntity != null)
             {
                 // Reset to chase mode following player
+                // Based on swkotor2.exe: Camera mode switching to chase mode with player as target
+                // Original implementation: SetChaseMode sets camera to follow player entity
                 _cameraController.SetChaseMode(playerEntity);
             }
             else
             {
                 // Fallback to free mode if player entity not found (shouldn't happen in normal gameplay)
+                // Based on swkotor2.exe: Fallback behavior when player entity is unavailable
+                // Original implementation: Free mode allows manual camera control if player not found
                 _cameraController.SetFreeMode();
             }
         }

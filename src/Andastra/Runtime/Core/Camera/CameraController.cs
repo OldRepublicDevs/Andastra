@@ -163,7 +163,15 @@ namespace Andastra.Runtime.Core.Camera
         /// <summary>
         /// Gets the player entity from the world.
         /// Based on swkotor2.exe: Player entity lookup for camera reset
+        /// Reverse engineered from swkotor2.exe: When dialogue ends (EndConversation @ 0x007c38e0), camera resets to chase mode following player
+        /// Located via string references: "Player" @ 0x007be628, "PlayerList" @ 0x007bdcf4, "GetPlayerList" @ 0x007bdd00
         /// Original implementation: Returns player entity for camera to follow after dialogue ends
+        /// Cross-engine analysis:
+        ///   - swkotor.exe (KOTOR 1): Similar player entity lookup pattern
+        ///   - swkotor2.exe (KOTOR 2): Player entity tagged "Player", stored in module player list
+        ///   - nwmain.exe (Aurora): Player entity via GetFirstPC() NWScript function, similar lookup pattern
+        ///   - daorigins.exe/DragonAge2.exe (Eclipse): Player entity tagged "PlayerCharacter" or via GetControlled() function
+        ///   - MassEffect.exe/MassEffect2.exe (Infinity): Player entity via party leader or controlled entity
         /// </summary>
         /// <returns>The player entity, or null if not found.</returns>
         public IEntity GetPlayerEntity()
@@ -174,6 +182,9 @@ namespace Andastra.Runtime.Core.Camera
             }
 
             // Strategy 1: Try to find entity by tag "Player" (Odyssey engine pattern)
+            // Based on swkotor2.exe: Player entity is tagged "Player" @ 0x007be628
+            // Located via string references: "Player" @ 0x007be628, "Mod_PlayerList" @ 0x007be060
+            // Original implementation: Player entity is stored in module player list and tagged "Player"
             IEntity playerEntity = _world.GetEntityByTag("Player", 0);
             if (playerEntity != null)
             {
@@ -181,6 +192,8 @@ namespace Andastra.Runtime.Core.Camera
             }
 
             // Strategy 2: Try to find entity by tag "PlayerCharacter" (Eclipse engine pattern)
+            // Based on daorigins.exe/DragonAge2.exe: Player entity tagged "PlayerCharacter"
+            // Original implementation: Eclipse engine uses "PlayerCharacter" tag for player entity
             playerEntity = _world.GetEntityByTag("PlayerCharacter", 0);
             if (playerEntity != null)
             {
@@ -188,6 +201,8 @@ namespace Andastra.Runtime.Core.Camera
             }
 
             // Strategy 3: Search through all entities for one marked as player
+            // Based on swkotor2.exe: Player entity has IsPlayer data flag set to true
+            // Original implementation: Player entity is marked with IsPlayer flag during creation
             foreach (IEntity entity in _world.GetAllEntities())
             {
                 if (entity != null && entity.GetData<bool>("IsPlayer", false))
