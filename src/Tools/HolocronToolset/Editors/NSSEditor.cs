@@ -4,6 +4,7 @@ using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using Andastra.Parsing.Resource;
 using HolocronToolset.Common;
+using HolocronToolset.Common.Widgets;
 using HolocronToolset.Data;
 using HolocronToolset.Utils;
 using HolocronToolset.Widgets;
@@ -18,6 +19,7 @@ namespace HolocronToolset.Editors
         private TerminalWidget _terminalWidget;
         private bool _isDecompiled;
         private NoScrollEventFilter _noScrollFilter;
+        private FindReplaceWidget _findReplaceWidget;
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:119-199
         // Original: def __init__(self, parent: QWidget | None = None, installation: HTInstallation | None = None):
@@ -34,6 +36,7 @@ namespace HolocronToolset.Editors
             SetupUI();
             SetupTerminal();
             SetupSignals();
+            SetupFindReplaceWidget();
             AddHelpAction();
 
             // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:145-148
@@ -90,7 +93,7 @@ namespace HolocronToolset.Editors
             // Initialize terminal widget for script execution and debugging
             // Terminal allows users to run scripts, view compilation output, and execute commands
             _terminalWidget = new TerminalWidget();
-            
+
             // Terminal widget is available but not automatically visible
             // Users can toggle terminal visibility via View menu or keyboard shortcut
             // This follows common IDE patterns (VS Code, Visual Studio, etc.)
@@ -105,6 +108,75 @@ namespace HolocronToolset.Editors
         private void SetupSignals()
         {
             // TODO: STUB - Signals setup - will be implemented as needed
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:3060-3117
+        // Original: def _setup_find_replace_widget(self):
+        private void SetupFindReplaceWidget()
+        {
+            // Create find/replace widget
+            _findReplaceWidget = new FindReplaceWidget();
+
+            // Connect signals/events
+            _findReplaceWidget.FindRequested += OnFindRequested;
+            _findReplaceWidget.FindNextRequested += OnFindNextRequested;
+            _findReplaceWidget.FindPreviousRequested += OnFindPreviousRequested;
+            _findReplaceWidget.ReplaceRequested += OnReplaceRequested;
+            _findReplaceWidget.ReplaceAllRequested += OnReplaceAllRequested;
+            _findReplaceWidget.CloseRequested += OnFindReplaceClose;
+
+            // Initially hidden
+            _findReplaceWidget.IsVisible = false;
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:3199-3210
+        // Original: def _on_find_requested(self, text: str | None = "", case_sensitive: bool = False, whole_words: bool = False, regex: bool = False):
+        private void OnFindRequested(string text, bool caseSensitive, bool wholeWords, bool regex)
+        {
+            // TODO: STUB - Implement find functionality in CodeEditor
+            // This will be implemented when CodeEditor find methods are added
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py
+        // Original: Handle find next request
+        private void OnFindNextRequested()
+        {
+            // TODO: STUB - Implement find next functionality
+            // This will be implemented when CodeEditor find methods are added
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py
+        // Original: Handle find previous request
+        private void OnFindPreviousRequested()
+        {
+            // TODO: STUB - Implement find previous functionality
+            // This will be implemented when CodeEditor find methods are added
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:3212-3225
+        // Original: def _on_replace_requested(self, find_text: str, replace_text: str, case_sensitive: bool = False, whole_words: bool = False, regex: bool = False):
+        private void OnReplaceRequested(string findText, string replaceText, bool caseSensitive, bool wholeWords, bool regex)
+        {
+            // TODO: STUB - Implement replace functionality in CodeEditor
+            // This will be implemented when CodeEditor find/replace methods are added
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:3227-3240
+        // Original: def _on_replace_all_requested(self, find_text: str, replace_text: str, case_sensitive: bool = False, whole_words: bool = False, regex: bool = False):
+        private void OnReplaceAllRequested(string findText, string replaceText, bool caseSensitive, bool wholeWords, bool regex)
+        {
+            // TODO: STUB - Implement replace all functionality in CodeEditor
+            // This will be implemented when CodeEditor find/replace methods are added
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py
+        // Original: Handle find/replace close request
+        private void OnFindReplaceClose()
+        {
+            if (_findReplaceWidget != null)
+            {
+                _findReplaceWidget.IsVisible = false;
+            }
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:2121-2162
