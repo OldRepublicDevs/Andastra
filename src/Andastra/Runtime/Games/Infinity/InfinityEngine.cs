@@ -87,8 +87,6 @@ namespace Andastra.Runtime.Engines.Infinity
         /// - Similar to Odyssey Engine detection pattern (swkotor.exe/swkotor2.exe detection)
         /// - Original implementation: Infinity Engine executables identify themselves via executable name
         /// - Cross-engine: Similar detection pattern across all BioWare engines (executable name + fallback file checks)
-        /// - Note: GameType enum currently only supports K1/K2 (Odyssey games), so returns Unknown for Infinity games
-        ///   - Future: Extend GameType enum to support Infinity Engine games (Baldur's Gate, Icewind Dale, Planescape: Torment)
         /// </remarks>
         private static GameType DetectInfinityGameType(string installationPath)
         {
@@ -97,31 +95,57 @@ namespace Andastra.Runtime.Engines.Infinity
                 return GameType.Unknown;
             }
 
-            // Check for Infinity Engine executables
-            // Note: GameType enum currently only supports K1/K2, so we return Unknown
-            // Future: Extend GameType enum to support Infinity Engine games
+            // Check for Baldur's Gate executable
             string baldurGateExe = System.IO.Path.Combine(installationPath, "BaldurGate.exe");
             string baldurGateExeUpper = System.IO.Path.Combine(installationPath, "BALDURGATE.EXE");
-            string icewindDaleExe = System.IO.Path.Combine(installationPath, "IcewindDale.exe");
-            string icewindDaleExeUpper = System.IO.Path.Combine(installationPath, "ICEWINDDALE.EXE");
-            string planescapeExe = System.IO.Path.Combine(installationPath, "PlanescapeTorment.exe");
-            string planescapeExeUpper = System.IO.Path.Combine(installationPath, "PLANESCAPETORMENT.EXE");
-
-            if (System.IO.File.Exists(baldurGateExe) || System.IO.File.Exists(baldurGateExeUpper) ||
-                System.IO.File.Exists(icewindDaleExe) || System.IO.File.Exists(icewindDaleExeUpper) ||
-                System.IO.File.Exists(planescapeExe) || System.IO.File.Exists(planescapeExeUpper))
+            if (System.IO.File.Exists(baldurGateExe) || System.IO.File.Exists(baldurGateExeUpper))
             {
-                // Infinity Engine game detected, but GameType enum doesn't support it yet
-                // Return Unknown for now - can be extended when GameType enum is updated
-                return GameType.Unknown;
+                return GameType.BaldursGate;
             }
 
-            // Fallback: Check for KEY file (indicates Infinity Engine installation)
+            // Check for Icewind Dale executable
+            string icewindDaleExe = System.IO.Path.Combine(installationPath, "IcewindDale.exe");
+            string icewindDaleExeUpper = System.IO.Path.Combine(installationPath, "ICEWINDDALE.EXE");
+            if (System.IO.File.Exists(icewindDaleExe) || System.IO.File.Exists(icewindDaleExeUpper))
+            {
+                return GameType.IcewindDale;
+            }
+
+            // Check for Planescape: Torment executable
+            string planescapeExe = System.IO.Path.Combine(installationPath, "PlanescapeTorment.exe");
+            string planescapeExeUpper = System.IO.Path.Combine(installationPath, "PLANESCAPETORMENT.EXE");
+            if (System.IO.File.Exists(planescapeExe) || System.IO.File.Exists(planescapeExeUpper))
+            {
+                return GameType.PlanescapeTorment;
+            }
+
+            // Fallback: Check for KEY file and game-specific module files
             string keyFilePath = System.IO.Path.Combine(installationPath, "chitin.key");
             if (System.IO.File.Exists(keyFilePath))
             {
-                // Infinity Engine installation detected via KEY file
-                return GameType.Unknown; // GameType enum doesn't support Infinity games yet
+                // Try to detect based on module files or other game-specific files
+                string dataPath = System.IO.Path.Combine(installationPath, "data");
+                if (System.IO.Directory.Exists(dataPath))
+                {
+                    // Check for game-specific GAM files or other indicators
+                    string baldurGam = System.IO.Path.Combine(dataPath, "Baldur.gam");
+                    if (System.IO.File.Exists(baldurGam))
+                    {
+                        return GameType.BaldursGate;
+                    }
+
+                    string icewindGam = System.IO.Path.Combine(dataPath, "Icewind.gam");
+                    if (System.IO.File.Exists(icewindGam))
+                    {
+                        return GameType.IcewindDale;
+                    }
+
+                    string tormentGam = System.IO.Path.Combine(dataPath, "Torment.gam");
+                    if (System.IO.File.Exists(tormentGam))
+                    {
+                        return GameType.PlanescapeTorment;
+                    }
+                }
             }
 
             return GameType.Unknown;
