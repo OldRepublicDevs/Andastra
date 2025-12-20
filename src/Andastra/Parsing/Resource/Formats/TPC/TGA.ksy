@@ -221,5 +221,5 @@ types:
         type: u1
         repeat: expr
         repeat-expr: 2
-        doc: Binary terminator (period and null character: ".\\0")
+        doc: 'Binary terminator (period and null character: ".\\0")'
         valid: [0x2E, 0x00]
