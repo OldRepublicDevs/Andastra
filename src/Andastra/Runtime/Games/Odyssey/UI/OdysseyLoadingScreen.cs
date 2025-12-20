@@ -190,6 +190,8 @@ namespace Andastra.Runtime.Games.Odyssey.UI
         /// - Image is loaded from TPC texture resource
         /// - Set as background or border fill on loading screen panel
         /// - Original implementation: FUN_006cff90 @ 0x006cff90 sets loading screen image
+        /// - Based on reone implementation: Loading screen image is set on root control's border fill
+        /// - This matches the original engine behavior where the loading screen image is the background of the entire GUI panel
         /// </summary>
         /// <param name="imageResRef">Resource reference for the loading screen image (TPC format).</param>
         private void UpdateLoadingScreenImage(string imageResRef)
@@ -199,12 +201,24 @@ namespace Andastra.Runtime.Games.Odyssey.UI
                 return;
             }
 
-            // Update the loading screen image
-            // Based on swkotor2.exe: Loading screen image is set on the GUI panel
-            // The image would typically be set as a background texture or border fill
-            // This would be handled by the GUI manager when loading the GUI
-            // For now, the image loading is handled by the GUI system when the GUI is loaded
-            // TODO: If GUI manager exposes image update method, call it here to update the loading screen image
+            // Update the loading screen image on the root control's border fill
+            // Based on swkotor2.exe: Loading screen image is set on the GUI panel root control
+            // Based on reone implementation: _gui->rootControl().setBorderFill(resRef)
+            // The root control represents the entire loading screen panel, and its border fill
+            // is used as the background image for the loading screen
+            if (_guiManager is Runtime.Graphics.MonoGame.GUI.KotorGuiManager kotorGuiManager)
+            {
+                // Set the texture on the root control (null tag means root control)
+                bool updated = kotorGuiManager.SetControlTexture(null, imageResRef);
+                if (!updated)
+                {
+                    System.Console.WriteLine($"[OdysseyLoadingScreen] WARNING: Failed to update loading screen image: {imageResRef}");
+                }
+            }
+            else
+            {
+                System.Console.WriteLine("[OdysseyLoadingScreen] WARNING: GUI manager is not KotorGuiManager, cannot update loading screen image");
+            }
         }
     }
 }
