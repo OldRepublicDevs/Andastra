@@ -9,9 +9,6 @@ using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
 using Andastra.Runtime.Core.Save;
 using Andastra.Runtime.Core.Video;
-// TODO: Core cannot depend on Content or Graphics - these should be injected or removed
-// using Andastra.Runtime.Content.Interfaces;
-// using Andastra.Runtime.Graphics;
 
 namespace Andastra.Runtime.Core.Module
 {
@@ -63,15 +60,30 @@ namespace Andastra.Runtime.Core.Module
         private readonly SaveSystem _saveSystem;
         private readonly IModuleLoader _moduleLoader;
         private readonly MoviePlayer _moviePlayer;
+        private readonly ILoadingScreen _loadingScreen;
         private bool _isTransitioning;
 
-        // TODO: IGameResourceProvider and IGraphicsDevice are in Content/Graphics - Core cannot depend on them
-        // These should be injected by engine-specific implementations
-        public ModuleTransitionSystem(IWorld world, SaveSystem saveSystem, IModuleLoader moduleLoader, object resourceProvider = null, object graphicsDevice = null)
+        /// <summary>
+        /// Initializes a new instance of the ModuleTransitionSystem.
+        /// </summary>
+        /// <param name="world">World instance.</param>
+        /// <param name="saveSystem">Save system for module state persistence.</param>
+        /// <param name="moduleLoader">Module loader for loading modules.</param>
+        /// <param name="loadingScreen">Loading screen interface for displaying loading screens during transitions. If null, uses NullLoadingScreen.</param>
+        /// <param name="resourceProvider">Optional resource provider for movie playback.</param>
+        /// <param name="graphicsDevice">Optional graphics device for movie playback.</param>
+        /// <remarks>
+        /// Based on swkotor2.exe: Module transition system initialization
+        /// - Loading screen is injected to avoid Core depending on Graphics/Content
+        /// - Movie player is created if resource provider and graphics device are available
+        /// - Original implementation: Module transition system handles loading screens, movies, and module state
+        /// </remarks>
+        public ModuleTransitionSystem(IWorld world, SaveSystem saveSystem, IModuleLoader moduleLoader, ILoadingScreen loadingScreen = null, object resourceProvider = null, object graphicsDevice = null)
         {
             _world = world ?? throw new ArgumentNullException("world");
             _saveSystem = saveSystem ?? throw new ArgumentNullException("saveSystem");
             _moduleLoader = moduleLoader ?? throw new ArgumentNullException("moduleLoader");
+            _loadingScreen = loadingScreen ?? new NullLoadingScreen();
             
             // Create movie player if resource provider and graphics device are available
             if (resourceProvider != null && graphicsDevice != null)
@@ -606,18 +618,35 @@ namespace Andastra.Runtime.Core.Module
 
         /// <summary>
         /// Shows loading screen.
+        /// Based on swkotor2.exe: Loading screen display during module transitions
+        /// Located via string references: "loadscreen_p" @ 0x007cbe40 (loading screen GUI panel)
+        /// Original implementation: FUN_006cff90 @ 0x006cff90 initializes and shows loading screen GUI
+        /// - Loads "loadscreen_p" GUI panel with progress bar, hints, and logo
+        /// - Sets loading screen image via LoadScreenResRef (TPC texture)
+        /// - Displays loading screen during module transitions
         /// </summary>
+        /// <param name="imageResRef">Resource reference for the loading screen image (TPC format).</param>
         private void ShowLoadingScreen(string imageResRef)
         {
-            // TODO: Show loading screen UI
+            if (_loadingScreen != null)
+            {
+                _loadingScreen.Show(imageResRef);
+            }
         }
 
         /// <summary>
         /// Hides loading screen.
+        /// Based on swkotor2.exe: Loading screen is hidden after module load completes
+        /// Original implementation: Loading screen is hidden after module transition completes
+        /// - Hides "loadscreen_p" GUI panel
+        /// - Clears loading screen state
         /// </summary>
         private void HideLoadingScreen()
         {
-            // TODO: Hide loading screen UI
+            if (_loadingScreen != null)
+            {
+                _loadingScreen.Hide();
+            }
         }
 
         /// <summary>
