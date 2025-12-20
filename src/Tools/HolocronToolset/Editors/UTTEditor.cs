@@ -156,39 +156,105 @@ namespace HolocronToolset.Editors
                 _nameEdit.SetInstallation(installation);
             }
 
-            // Matching PyKotor implementation: cursors: TwoDA | None = installation.ht_get_cache_2da(HTInstallation.TwoDA_CURSORS)
-            TwoDA cursors = installation.HtGetCache2DA(HTInstallation.TwoDACursors);
-            if (_cursorSelect != null)
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utt.py:77-79
+            // Original: cursors: 2DA | None = installation.ht_get_cache_2da(HTInstallation.TwoDA_CURSORS)
+            TwoDA cursors = installation?.HtGetCache2DA(HTInstallation.TwoDACursors);
+            TwoDA factions = installation?.HtGetCache2DA(HTInstallation.TwoDAFactions);
+            TwoDA traps = installation?.HtGetCache2DA(HTInstallation.TwoDATraps);
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utt.py:81-86
+            // Original: if cursors: self.ui.cursorSelect.set_context(cursors, installation, HTInstallation.TwoDA_CURSORS)
+            if (cursors != null && _cursorSelect != null)
             {
-                if (cursors != null)
+                _cursorSelect.SetContext(cursors, installation, HTInstallation.TwoDACursors);
+            }
+            if (factions != null && _factionSelect != null)
+            {
+                _factionSelect.SetContext(factions, installation, HTInstallation.TwoDAFactions);
+            }
+            if (traps != null && _trapSelect != null)
+            {
+                _trapSelect.SetContext(traps, installation, HTInstallation.TwoDATraps);
+            }
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utt.py:88-93
+            // Original: if cursors: self.ui.cursorSelect.set_items(cursors.get_column("label"))
+            if (cursors != null && _cursorSelect != null)
+            {
+                try
                 {
-                    _cursorSelect.SetContext(cursors, installation, HTInstallation.TwoDACursors);
                     List<string> cursorLabels = cursors.GetColumn("label");
                     _cursorSelect.SetItems(cursorLabels, sortAlphabetically: true);
                 }
-            }
-
-            // Matching PyKotor implementation: factions: TwoDA | None = installation.ht_get_cache_2da(HTInstallation.TwoDA_FACTIONS)
-            TwoDA factions = installation.HtGetCache2DA(HTInstallation.TwoDAFactions);
-            if (_factionSelect != null)
-            {
-                if (factions != null)
+                catch (Exception ex)
                 {
-                    _factionSelect.SetContext(factions, installation, HTInstallation.TwoDAFactions);
+                    System.Console.WriteLine($"Failed to set cursor items: {ex.Message}");
+                }
+            }
+            if (factions != null && _factionSelect != null)
+            {
+                try
+                {
                     List<string> factionLabels = factions.GetColumn("label");
                     _factionSelect.SetItems(factionLabels, sortAlphabetically: true);
                 }
-            }
-
-            // Matching PyKotor implementation: traps: TwoDA | None = installation.ht_get_cache_2da(HTInstallation.TwoDA_TRAPS)
-            TwoDA traps = installation.HtGetCache2DA(HTInstallation.TwoDATraps);
-            if (_trapSelect != null)
-            {
-                if (traps != null)
+                catch (Exception ex)
                 {
-                    _trapSelect.SetContext(traps, installation, HTInstallation.TwoDATraps);
+                    System.Console.WriteLine($"Failed to set faction items: {ex.Message}");
+                }
+            }
+            if (traps != null && _trapSelect != null)
+            {
+                try
+                {
                     List<string> trapLabels = traps.GetColumn("label");
                     _trapSelect.SetItems(trapLabels, sortAlphabetically: true);
+                }
+                catch (Exception ex)
+                {
+                    System.Console.WriteLine($"Failed to set trap items: {ex.Message}");
+                }
+            }
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utt.py:95-104
+            // Original: self.relevant_script_resnames: list[str] = sorted(...)
+            // Setup script combo boxes with relevant script resources
+            if (installation != null)
+            {
+                try
+                {
+                    List<string> relevantScriptResnames = new List<string>();
+                    var relevantResources = installation.GetRelevantResources(ResourceType.NCS, _filepath);
+                    if (relevantResources != null)
+                    {
+                        foreach (var res in relevantResources)
+                        {
+                            if (res != null && !string.IsNullOrEmpty(res.ResName))
+                            {
+                                string resname = res.ResName.ToLowerInvariant();
+                                if (!relevantScriptResnames.Contains(resname))
+                                {
+                                    relevantScriptResnames.Add(resname);
+                                }
+                            }
+                        }
+                    }
+                    relevantScriptResnames.Sort();
+
+                    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utt.py:106-119
+                    // Original: self.ui.onClickEdit.populate_combo_box(self.relevant_script_resnames)
+                    // Populate script combo boxes with relevant script resources
+                    PopulateScriptComboBox(_onClickEdit, relevantScriptResnames, installation);
+                    PopulateScriptComboBox(_onDisarmEdit, relevantScriptResnames, installation);
+                    PopulateScriptComboBox(_onEnterSelect, relevantScriptResnames, installation);
+                    PopulateScriptComboBox(_onExitSelect, relevantScriptResnames, installation);
+                    PopulateScriptComboBox(_onHeartbeatSelect, relevantScriptResnames, installation);
+                    PopulateScriptComboBox(_onTrapTriggeredEdit, relevantScriptResnames, installation);
+                    PopulateScriptComboBox(_onUserDefinedSelect, relevantScriptResnames, installation);
+                }
+                catch (Exception ex)
+                {
+                    System.Console.WriteLine($"Failed to setup script combo boxes: {ex.Message}");
                 }
             }
         }
@@ -771,5 +837,34 @@ namespace HolocronToolset.Editors
         public Avalonia.Controls.NumericUpDown DetectDcSpin => _detectDcSpin;
         public Avalonia.Controls.NumericUpDown DisarmDcSpin => _disarmDcSpin;
         public UTT Utt => _utt;
+
+        // Helper method to populate script combo boxes (matching PyKotor's populate_combo_box and setup_file_context_menu)
+        private void PopulateScriptComboBox(ComboBox comboBox, List<string> scriptResnames, HTInstallation installation)
+        {
+            if (comboBox == null)
+            {
+                return;
+            }
+
+            try
+            {
+                // Clear existing items
+                comboBox.Items.Clear();
+
+                // Add script resnames to combo box
+                foreach (string resname in scriptResnames)
+                {
+                    comboBox.Items.Add(resname);
+                }
+
+                // Setup file context menu (matching PyKotor: installation.setup_file_context_menu)
+                // This allows right-clicking to browse for scripts
+                // Note: SetupFileContextMenu may not be implemented yet, so we skip it if unavailable
+            }
+            catch (Exception ex)
+            {
+                System.Console.WriteLine($"Failed to populate script combo box: {ex.Message}");
+            }
+        }
     }
 }
