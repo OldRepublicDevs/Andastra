@@ -376,13 +376,6 @@ namespace HolocronToolset.Editors
 
                 _panelTabs.IsVisible = true;
 
-                // Add grid splitter for resizing
-                if (_gridSplitter != null && !_mainSplitter.Children.Contains(_gridSplitter))
-                {
-                    _mainSplitter.Children.Add(_gridSplitter);
-                    Grid.SetRow(_gridSplitter, 0);
-                }
-
                 // Switch to output tab if available
                 if (_outputTab != null && _panelTabs.Items.Contains(_outputTab))
                 {
@@ -4131,6 +4124,8 @@ namespace HolocronToolset.Editors
             if (Directory.Exists(pathText))
             {
                 _fileSystemModel.SetRootPath(pathText);
+                // Update TreeView to show new path
+                UpdateFileExplorerTreeView();
             }
             else
             {
@@ -4327,6 +4322,9 @@ namespace HolocronToolset.Editors
             _fileSystemModel.SetRootPath(""); // Reset model
             _fileSystemModel.SetRootPath(currentRoot); // Reload
             _fileExplorerAddressBar.Text = currentRoot;
+
+            // Refresh the TreeView
+            UpdateFileExplorerTreeView();
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:1492-1500
