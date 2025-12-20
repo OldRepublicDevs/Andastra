@@ -261,8 +261,28 @@ namespace Andastra.Runtime.Games.Common.Components
         /// - When CurrentHP <= 0, door is marked as bashed, unlocked, and opened
         /// - Engine-specific: Damage calculation, script event firing
         /// - Engine-specific subclasses override this to provide correct implementation
+        /// - Defaults to Physical damage type (bashing)
         /// </remarks>
         public virtual void ApplyDamage(int damage)
+        {
+            // Default to Physical damage type for bashing
+            ApplyDamage(damage, Core.Combat.DamageType.Physical);
+        }
+
+        /// <summary>
+        /// Applies damage to the door with a specific damage type.
+        /// </summary>
+        /// <param name="damage">The amount of damage to apply.</param>
+        /// <param name="damageType">The type of damage being applied.</param>
+        /// <remarks>
+        /// Door Damage Application with Type:
+        /// - Common behavior across all engines: Applies damage minus hardness, destroys door when HP reaches 0
+        /// - Hardness reduces damage taken (minimum 1 damage per hit)
+        /// - When CurrentHP <= 0, door is marked as bashed, unlocked, and opened
+        /// - Engine-specific: Damage type checking (e.g., NotBlastable flag in KOTOR 2), script event firing
+        /// - Engine-specific subclasses override this to provide damage type-specific checks
+        /// </remarks>
+        public virtual void ApplyDamage(int damage, Core.Combat.DamageType damageType)
         {
             if (damage <= 0)
             {

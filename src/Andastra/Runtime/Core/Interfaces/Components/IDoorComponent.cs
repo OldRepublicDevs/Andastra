@@ -147,7 +147,23 @@ namespace Andastra.Runtime.Core.Interfaces.Components
         /// Reduces HP by damage amount (minus hardness), destroys door if HP reaches 0.
         /// Based on swkotor2.exe: Door bashing damage application
         /// </summary>
+        /// <param name="damage">The amount of damage to apply.</param>
         void ApplyDamage(int damage);
+
+        /// <summary>
+        /// Applies damage to the door with a specific damage type.
+        /// Reduces HP by damage amount (minus hardness), destroys door if HP reaches 0.
+        /// Based on swkotor2.exe: Door bashing damage application with damage type checking
+        /// </summary>
+        /// <param name="damage">The amount of damage to apply.</param>
+        /// <param name="damageType">The type of damage being applied.</param>
+        /// <remarks>
+        /// Damage Type Application:
+        /// - Allows damage type-specific checks (e.g., NotBlastable flag in KOTOR 2)
+        /// - Default implementation treats all damage as Physical (bashing)
+        /// - Engine-specific implementations can override to check damage type flags
+        /// </remarks>
+        void ApplyDamage(int damage, Core.Combat.DamageType damageType);
     }
 }
 
