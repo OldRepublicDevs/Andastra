@@ -6,6 +6,9 @@ using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using Andastra.Parsing.Extract;
 using Andastra.Parsing.Resource;
+using HolocronToolset.Data;
+using HolocronToolset.Utils;
+using MsBox.Avalonia;
 
 namespace HolocronToolset.Dialogs
 {
@@ -18,21 +21,33 @@ namespace HolocronToolset.Dialogs
         private Button _openButton;
         private Button _extractButton;
         private List<FileResource> _resources;
+        private HTInstallation _installation;
+        
+        // Helper class to store resource data with reference to FileResource
+        private class ResourceItem
+        {
+            public string ResRef { get; set; }
+            public string Type { get; set; }
+            public string Path { get; set; }
+            public FileResource Resource { get; set; }
+        }
 
         // Public parameterless constructor for XAML
-        public LoadFromLocationResultDialog() : this(null, null)
+        public LoadFromLocationResultDialog() : this(null, null, null)
         {
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/load_from_location_result.py
         // Original: def __init__(self, parent, resources):
-        public LoadFromLocationResultDialog(Window parent, List<FileResource> resources)
+        // Updated to include HTInstallation parameter matching ResourceLocationDialog pattern
+        public LoadFromLocationResultDialog(Window parent, List<FileResource> resources, HTInstallation installation = null)
         {
             InitializeComponent();
             Title = "Load From Location Result";
             Width = 1000;
             Height = 700;
             _resources = resources ?? new List<FileResource>();
+            _installation = installation;
             SetupUI();
             PopulateResources();
         }
@@ -126,11 +141,14 @@ namespace HolocronToolset.Dialogs
         {
             if (_tableWidget != null)
             {
-                var items = _resources.Select(r => new
+                // Create ResourceItem objects that include both display data and FileResource reference
+                // This allows us to map selected items back to FileResource objects
+                var items = _resources.Select(r => new ResourceItem
                 {
                     ResRef = r.ResName,
                     Type = r.ResType.Extension,
-                    Path = r.FilePath
+                    Path = r.FilePath,
+                    Resource = r
                 }).ToList();
                 _tableWidget.ItemsSource = items;
             }
@@ -141,10 +159,49 @@ namespace HolocronToolset.Dialogs
             // TODO: Filter resources based on search text
         }
 
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/load_from_location_result.py:927-936
+        // Original: def open_selected_resource(self, resources, installation, gff_specialized=None):
+        // This method opens the selected resources in appropriate editors
         private void OpenSelected()
         {
-            // TODO: Open selected resource in editor
-            System.Console.WriteLine("Open selected not yet implemented");
+            var selectedResources = SelectedResources();
+            if (selectedResources == null || selectedResources.Count == 0)
+            {
+                return;
+            }
+
+            try
+            {
+                // Get parent window for editor dialogs
+                var parentWindow = this.Parent as Window ?? this;
+
+                // Open each selected resource in the appropriate editor
+                // Matching PyKotor: open_resource_editor(resource, installation, gff_specialized=gff_specialized)
+                foreach (var resource in selectedResources)
+                {
+                    WindowUtils.OpenResourceEditor(resource, _installation, parentWindow);
+                }
+            }
+            catch (Exception ex)
+            {
+                // Log error and show message to user
+                System.Console.WriteLine($"Error opening selected resources: {ex}");
+                
+                // Show error dialog if MessageBox is available
+                try
+                {
+                    var msgBox = MsBox.Avalonia.MessageBoxManager.GetMessageBoxStandard(
+                        "Error",
+                        $"Failed to open selected resources:\n{ex.Message}",
+                        MsBox.Avalonia.Enums.ButtonEnum.Ok,
+                        MsBox.Avalonia.Enums.Icon.Error);
+                    msgBox.ShowAsync();
+                }
+                catch
+                {
+                    // MessageBox not available, just log to console
+                }
+            }
         }
 
         private void ExtractSelected()
@@ -153,10 +210,35 @@ namespace HolocronToolset.Dialogs
             System.Console.WriteLine("Extract selected not yet implemented");
         }
 
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/load_from_location_result.py:689-690
+        // Original: def selectedItems(self) -> list[ResourceTableWidgetItem]:
+        // This method retrieves the selected resources from the DataGrid and maps them back to FileResource objects
         public List<FileResource> SelectedResources()
         {
-            // TODO: Get selected resources from table
-            return new List<FileResource>();
+            var selectedResources = new List<FileResource>();
+
+            if (_tableWidget == null)
+            {
+                return selectedResources;
+            }
+
+            // Get selected items from DataGrid
+            var selectedItems = _tableWidget.SelectedItems;
+            if (selectedItems == null)
+            {
+                return selectedResources;
+            }
+
+            // Map selected ResourceItem objects back to FileResource objects
+            foreach (var item in selectedItems)
+            {
+                if (item is ResourceItem resourceItem && resourceItem.Resource != null)
+                {
+                    selectedResources.Add(resourceItem.Resource);
+                }
+            }
+
+            return selectedResources;
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/load_from_location_result.py:1089-1105
