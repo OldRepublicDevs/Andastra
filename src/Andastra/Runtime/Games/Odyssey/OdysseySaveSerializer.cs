@@ -360,14 +360,181 @@ namespace Andastra.Runtime.Games.Odyssey
         /// Restores global variables from save data.
         /// Updates quest states and player choice consequences.
         /// Validates variable integrity and types.
+        ///
+        /// Based on swkotor2.exe: FUN_005ac740 @ 0x005ac740 (global variables deserialization)
+        /// Located via string reference: "GLOBALVARS" @ 0x007c27bc
+        /// Original implementation: Reads GFF file from save game ERF archive, restores all global int/bool/string variables
+        /// GFF structure: VariableList array with VariableName, VariableType, VariableValue fields
+        /// VariableType values: 0 = BOOLEAN, 1 = INT, 3 = STRING
         /// </remarks>
         public override void DeserializeGlobals(byte[] globalsData, IGameState gameState)
         {
-            // TODO: Implement global variable deserialization
-            // Parse GFF GLOBALS struct
-            // Restore variables by category
-            // Validate data types and ranges
-            // Update game state accordingly
+            if (globalsData == null || globalsData.Length == 0)
+            {
+                // Empty or null globals data - nothing to deserialize
+                return;
+            }
+
+            if (gameState == null)
+            {
+                throw new ArgumentNullException(nameof(gameState), "GameState cannot be null for global variable deserialization");
+            }
+
+            // Parse GFF from byte array
+            // Based on swkotor2.exe: FUN_005ac540 @ 0x005ac540 loads GFF with "GVT " signature
+            // However, save game GLOBALVARS uses "GLOB" signature with VariableList format
+            GFF gff;
+            try
+            {
+                gff = GFF.FromBytes(globalsData);
+            }
+            catch (Exception ex)
+            {
+                // Invalid GFF structure - log error but don't throw to allow save loading to continue
+                System.Diagnostics.Debug.WriteLine($"[OdysseySaveSerializer] Failed to parse GLOBALVARS GFF: {ex.Message}");
+                return;
+            }
+
+            if (gff == null || gff.Root == null)
+            {
+                // Invalid or empty GFF structure
+                return;
+            }
+
+            // Extract VariableList from GFF root
+            // Based on swkotor2.exe: VariableList contains all global variables with their types and values
+            var varList = gff.Root.GetList("VariableList");
+            if (varList == null)
+            {
+                // No VariableList found - empty globals
+                return;
+            }
+
+            // Iterate through each variable in the list
+            // Based on swkotor2.exe: FUN_005abbe0 @ 0x005abbe0 processes each variable type
+            foreach (GFFStruct varStruct in varList)
+            {
+                if (varStruct == null)
+                {
+                    continue;
+                }
+
+                // Extract variable name
+                string varName = GetStringField(varStruct, "VariableName", null);
+                if (string.IsNullOrEmpty(varName))
+                {
+                    // Skip variables without names
+                    continue;
+                }
+
+                // Extract variable type
+                // VariableType: 0 = BOOLEAN, 1 = INT, 3 = STRING
+                int varType = GetIntField(varStruct, "VariableType", -1);
+
+                // Process variable based on type
+                // Based on swkotor2.exe: Different handling for each variable type
+                switch (varType)
+                {
+                    case 0: // BOOLEAN
+                        {
+                            // Boolean variables stored as int (0 = false, non-zero = true)
+                            int boolVal = GetIntField(varStruct, "VariableValue", 0);
+                            bool boolValue = boolVal != 0;
+                            
+                            // Update game state with boolean global
+                            try
+                            {
+                                gameState.SetGlobal(varName, boolValue);
+                            }
+                            catch (Exception ex)
+                            {
+                                System.Diagnostics.Debug.WriteLine($"[OdysseySaveSerializer] Failed to set boolean global '{varName}': {ex.Message}");
+                            }
+                            break;
+                        }
+
+                    case 1: // INT
+                        {
+                            // Integer variables stored as int32
+                            int intVal = GetIntField(varStruct, "VariableValue", 0);
+                            
+                            // Update game state with integer global
+                            try
+                            {
+                                gameState.SetGlobal(varName, intVal);
+                            }
+                            catch (Exception ex)
+                            {
+                                System.Diagnostics.Debug.WriteLine($"[OdysseySaveSerializer] Failed to set integer global '{varName}': {ex.Message}");
+                            }
+                            break;
+                        }
+
+                    case 3: // STRING
+                        {
+                            // String variables stored as string field
+                            string strVal = GetStringField(varStruct, "VariableValue", string.Empty);
+                            
+                            // Update game state with string global
+                            try
+                            {
+                                gameState.SetGlobal(varName, strVal ?? string.Empty);
+                            }
+                            catch (Exception ex)
+                            {
+                                System.Diagnostics.Debug.WriteLine($"[OdysseySaveSerializer] Failed to set string global '{varName}': {ex.Message}");
+                            }
+                            break;
+                        }
+
+                    default:
+                        {
+                            // Unknown variable type - log warning but continue processing other variables
+                            System.Diagnostics.Debug.WriteLine($"[OdysseySaveSerializer] Unknown variable type {varType} for global '{varName}', skipping");
+                            break;
+                        }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Helper method to safely get string field from GFF struct.
+        /// </summary>
+        private string GetStringField(GFFStruct gffStruct, string fieldName, string defaultValue)
+        {
+            if (gffStruct == null || string.IsNullOrEmpty(fieldName))
+            {
+                return defaultValue;
+            }
+
+            try
+            {
+                return gffStruct.GetString(fieldName) ?? defaultValue;
+            }
+            catch
+            {
+                return defaultValue;
+            }
+        }
+
+        /// <summary>
+        /// Helper method to safely get integer field from GFF struct.
+        /// </summary>
+        private int GetIntField(GFFStruct gffStruct, string fieldName, int defaultValue)
+        {
+            if (gffStruct == null || string.IsNullOrEmpty(fieldName))
+            {
+                return defaultValue;
+            }
+
+            try
+            {
+                return gffStruct.GetInt32(fieldName);
+            }
+            catch
+            {
+                return defaultValue;
+            }
         }
 
         /// <summary>
