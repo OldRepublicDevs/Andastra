@@ -200,16 +200,21 @@ namespace Andastra.Runtime.Games.Odyssey.Kotor2.Components
         }
 
         /// <summary>
-        /// Applies damage to the door (KOTOR 2 specific implementation for bashing).
+        /// Applies damage to the door with a specific damage type (KOTOR 2 specific implementation).
         /// </summary>
         /// <param name="damage">The amount of damage to apply.</param>
+        /// <param name="damageType">The type of damage being applied.</param>
         /// <remarks>
-        /// KOTOR 2 Door Bashing:
-        /// - Based on swkotor2.exe door bashing system
+        /// KOTOR 2 Door Damage Application:
+        /// - Based on swkotor2.exe door damage system
         /// - Located via string references: "gui_mp_bashdp" @ 0x007b5e04, "gui_mp_bashup" @ 0x007b5e14 (door bash GUI panels)
         /// - "gui_mp_bashd" @ 0x007b5e24, "gui_mp_bashu" @ 0x007b5e34 (door bash GUI elements)
-        /// - swkotor2.exe: FUN_00584f40 @ 0x00584f40 loads Min1HP from UTD template
+        /// - swkotor2.exe: FUN_00584f40 @ 0x00584f40 loads Min1HP and NotBlastable from UTD template
         /// - TSL-specific behavior: Min1HP flag prevents door from dropping below 1 HP
+        /// - TSL-specific behavior: NotBlastable flag prevents explosive/force power damage
+        /// - Original implementation: If NotBlastable is true, door cannot be damaged by explosives, grenades, or force powers
+        /// - Blast damage types: Fire (explosives/grenades), DarkSide (dark side force powers), LightSide (light side force powers)
+        /// - If NotBlastable is true and damage type is blast-type, damage is rejected (no HP reduction)
         /// - Original implementation: If Min1HP is true, door HP is clamped to minimum of 1
         /// - Plot doors: Min1HP=1 makes door effectively indestructible (cannot be bashed open)
         /// - Hardness reduces damage taken (minimum 1 damage per hit, even if hardness exceeds damage)
@@ -218,7 +223,7 @@ namespace Andastra.Runtime.Games.Odyssey.Kotor2.Components
         /// - Open state: Set to 2 (destroyed state) when door is bashed open (only if Min1HP is false)
         /// - Function: DoorEventHandling @ 0x004dcfb0 processes door bash damage events
         /// </remarks>
-        public override void ApplyDamage(int damage)
+        public override void ApplyDamage(int damage, Core.Combat.DamageType damageType)
         {
             if (damage <= 0)
             {
@@ -228,9 +233,29 @@ namespace Andastra.Runtime.Games.Odyssey.Kotor2.Components
             // TSL-specific: NotBlastable prevents explosive/force power damage
             // Based on swkotor2.exe: FUN_00584f40 @ 0x00584f40 loads NotBlastable from UTD template
             // Original implementation: If NotBlastable is true, door cannot be damaged by explosives, grenades, or force powers
-            // Note: This requires damage type system to be fully implemented to distinguish blast damage from normal bashing
-            // For now, NotBlastable is loaded and stored, but damage type checking will be added when damage type system is implemented
-            // TODO: When damage type system is implemented, check NotBlastable flag and reject blast-type damage if flag is true
+            // Blast damage types include: Fire (explosives/grenades), Sonic (sonic grenades), Electrical (electrical force powers),
+            // DarkSide (dark side force powers), LightSide (light side force powers)
+            // Physical damage (bashing/melee) is not blocked by NotBlastable flag
+            // If NotBlastable is true and damage is blast-type, reject the damage completely
+            if (NotBlastable)
+            {
+                // Check if damage type is blast-type (explosives/grenades/force powers)
+                // Physical damage is explicitly allowed (bashing damage should always work)
+                bool isBlastDamage = damageType == Core.Combat.DamageType.Fire ||  // Explosives/grenades
+                                     damageType == Core.Combat.DamageType.Sonic ||  // Sonic grenades
+                                     damageType == Core.Combat.DamageType.Electrical ||  // Electrical force powers
+                                     damageType == Core.Combat.DamageType.DarkSide ||  // Dark side force powers
+                                     damageType == Core.Combat.DamageType.LightSide;  // Light side force powers
+
+                if (isBlastDamage)
+                {
+                    // Reject blast-type damage if NotBlastable flag is set
+                    // Based on swkotor2.exe: NotBlastable flag prevents door from being damaged by blast-type damage
+                    // Original implementation: Door takes no damage from explosives, grenades, or force powers when NotBlastable is true
+                    // Physical damage (bashing) is not affected by NotBlastable flag
+                    return;
+                }
+            }
 
             // Apply hardness reduction (minimum 1 damage)
             int actualDamage = System.Math.Max(1, damage - Hardness);
