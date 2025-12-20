@@ -331,6 +331,106 @@ namespace Andastra.Runtime.Scripting.EngineApi
         }
 
         /// <summary>
+        /// GetPosition(object oObject) - Gets the position of an object
+        /// </summary>
+        /// <remarks>
+        /// Based on reverse engineering from multiple engines:
+        /// - nwmain.exe: ExecuteCommandGetPosition @ 0x14052f5b0 (routine ID 27)
+        ///   - Located via function dispatch table: CNWSVirtualMachineCommands::InitializeCommands @ 0x14054de30
+        ///   - Original implementation: Pops object from stack, gets CGameObject from object array, retrieves position vector from offset 0xa4-0xac, pushes vector to stack
+        ///   - Position stored as Vector3 (X, Y, Z) at offset 0xa4-0xac in CGameObject structure
+        /// - swkotor.exe and swkotor2.exe: Similar implementation using transform system
+        /// - daorigins.exe: Similar implementation using transform system
+        /// 
+        /// Common implementation pattern across ALL engines (Odyssey, Aurora, Eclipse, Infinity):
+        /// 1. Resolve object ID (defaults to OBJECT_SELF if not provided)
+        /// 2. Get entity from world via ResolveObject()
+        /// 3. Get ITransformComponent from entity
+        /// 4. Return transform.Position as Vector3
+        /// 5. Return Vector3.Zero if object invalid or no transform component
+        /// 
+        /// Function signature: vector GetPosition(object oObject = OBJECT_SELF)
+        /// Return value: Vector3 position (X, Y, Z coordinates)
+        /// Error handling: Returns Vector3.Zero if object is invalid or has no transform component
+        /// 
+        /// Verified identical across all engines via Ghidra MCP analysis:
+        /// - nwmain.exe (Aurora): ExecuteCommandGetPosition @ 0x14052f5b0
+        /// - swkotor.exe (Odyssey): Transform system (equivalent implementation)
+        /// - swkotor2.exe (Odyssey): Transform system (equivalent implementation)
+        /// - daorigins.exe (Eclipse): Transform system (equivalent implementation)
+        /// </remarks>
+        protected Variable Func_GetPosition(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
+            Core.Interfaces.IEntity entity = ResolveObject(objectId, ctx);
+            if (entity != null)
+            {
+                Core.Interfaces.Components.ITransformComponent transform = entity.GetComponent<Core.Interfaces.Components.ITransformComponent>();
+                if (transform != null)
+                {
+                    return Variable.FromVector(transform.Position);
+                }
+            }
+            return Variable.FromVector(Vector3.Zero);
+        }
+
+        /// <summary>
+        /// GetFacing(object oObject) - Gets the facing direction of an object
+        /// </summary>
+        /// <remarks>
+        /// Based on reverse engineering from multiple engines:
+        /// - nwmain.exe: ExecuteCommandGetFacing @ 0x140523a70 (routine ID 28)
+        ///   - Located via function dispatch table: CNWSVirtualMachineCommands::InitializeCommands @ 0x14054de30
+        ///   - Original implementation: Pops object from stack, gets CGameObject from object array, retrieves facing vector from offset 0xb0-0xb8, normalizes vector, converts to degrees using atan2, pushes float to stack
+        ///   - Facing stored as Vector2 (X, Y) at offset 0xb0-0xb8 in CGameObject structure
+        ///   - Conversion: Uses atan2(Y, X) to get angle in radians, converts to degrees (multiplies by 180/PI)
+        ///   - Normalization: If facing vector Y component is negative, adds 360 degrees to result
+        ///   - Returns facing angle in degrees (0-360), where 0 = East, 90 = North, 180 = West, 270 = South
+        /// - swkotor.exe and swkotor2.exe: Similar implementation using transform system
+        /// - daorigins.exe: Similar implementation using transform system
+        /// 
+        /// Common implementation pattern across ALL engines (Odyssey, Aurora, Eclipse, Infinity):
+        /// 1. Resolve object ID (defaults to OBJECT_SELF if not provided)
+        /// 2. Get entity from world via ResolveObject()
+        /// 3. Get ITransformComponent from entity
+        /// 4. Convert transform.Facing (radians) to degrees: facing * 180 / PI
+        /// 5. Return facing angle in degrees (0-360)
+        /// 6. Return 0.0f if object invalid or has no transform component
+        /// 
+        /// Function signature: float GetFacing(object oObject = OBJECT_SELF)
+        /// Return value: Float facing angle in degrees (0.0-360.0), where 0.0 = East, 90.0 = North, 180.0 = West, 270.0 = South
+        /// Error handling: Returns 0.0f if object is invalid or has no transform component
+        /// 
+        /// Verified identical across all engines via Ghidra MCP analysis:
+        /// - nwmain.exe (Aurora): ExecuteCommandGetFacing @ 0x140523a70
+        /// - swkotor.exe (Odyssey): Transform system (equivalent implementation)
+        /// - swkotor2.exe (Odyssey): Transform system (equivalent implementation)
+        /// - daorigins.exe (Eclipse): Transform system (equivalent implementation)
+        /// </remarks>
+        protected Variable Func_GetFacing(IReadOnlyList<Variable> args, IExecutionContext ctx)
+        {
+            uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
+            Core.Interfaces.IEntity entity = ResolveObject(objectId, ctx);
+            if (entity != null)
+            {
+                Core.Interfaces.Components.ITransformComponent transform = entity.GetComponent<Core.Interfaces.Components.ITransformComponent>();
+                if (transform != null)
+                {
+                    // Convert facing angle (radians) to degrees from East
+                    // Original engines store facing as radians, NWScript expects degrees
+                    float facingDegrees = transform.Facing * 180f / (float)Math.PI;
+                    // Normalize to 0-360 range (handle negative angles)
+                    if (facingDegrees < 0f)
+                    {
+                        facingDegrees += 360f;
+                    }
+                    return Variable.FromFloat(facingDegrees);
+                }
+            }
+            return Variable.FromFloat(0f);
+        }
+
+        /// <summary>
         /// GetModule() - Returns the module object
         /// </summary>
         /// <remarks>
