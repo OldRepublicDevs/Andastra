@@ -22,6 +22,9 @@ using HolocronToolset.Data;
 using HolocronToolset.Dialogs;
 using GFFAuto = Andastra.Parsing.Formats.GFF.GFFAuto;
 using UTC = Andastra.Parsing.Resource.Generics.UTC.UTC;
+using MsBox.Avalonia;
+using MsBox.Avalonia.Enums;
+using Andastra.Parsing.Formats.Capsule;
 
 namespace HolocronToolset.Editors
 {
@@ -612,19 +615,136 @@ namespace HolocronToolset.Editors
             }
 
             // Feats
-            if (_featList != null)
+            if (_featList != null && _installation != null)
             {
                 _featList.Items.Clear();
-                // Feats would be loaded from 2DA and checked based on utc.Feats
-                // Simplified for now - full implementation would populate from installation
+                // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utc.py:316-329
+                // Original: feats: TwoDA | None = installation.ht_get_cache_2da(HTInstallation.TwoDA_FEATS)
+                TwoDA feats = _installation.HtGetCache2DA(HTInstallation.TwoDAFeats);
+                if (feats != null)
+                {
+                    // First, uncheck all existing items
+                    foreach (var existingItem in _featList.Items)
+                    {
+                        if (existingItem is CheckableListItem item)
+                        {
+                            item.IsChecked = false;
+                        }
+                    }
+
+                    // Add all feats from 2DA
+                    for (int i = 0; i < feats.RowCount; i++)
+                    {
+                        int featId = i;
+                        int stringRef = feats.GetCellInt(i, "name", 0);
+                        string text;
+                        if (stringRef != 0 && _installation.Talktable() != null)
+                        {
+                            text = _installation.Talktable().String(stringRef);
+                        }
+                        else
+                        {
+                            text = feats.GetCellString(i, "label");
+                        }
+                        if (string.IsNullOrEmpty(text))
+                        {
+                            text = $"[Unused Feat ID: {featId}]";
+                        }
+
+                        var item = new CheckableListItem(text, featId);
+                        _featList.Items.Add(item);
+                    }
+
+                    // Check feats that are in utc.Feats
+                    if (utc.Feats != null)
+                    {
+                        foreach (int featId in utc.Feats)
+                        {
+                            var item = GetFeatItem(featId);
+                            if (item == null)
+                            {
+                                // Modded feat not in 2DA - add it
+                                item = new CheckableListItem($"[Modded Feat ID: {featId}]", featId);
+                                _featList.Items.Add(item);
+                            }
+                            item.IsChecked = true;
+                        }
+                    }
+                }
             }
 
             // Powers
-            if (_powerList != null)
+            if (_powerList != null && _installation != null)
             {
                 _powerList.Items.Clear();
-                // Powers would be loaded from 2DA and checked based on utc.Classes powers
-                // Simplified for now - full implementation would populate from installation
+                // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utc.py:331-345
+                // Original: powers: TwoDA | None = installation.ht_get_cache_2da(HTInstallation.TwoDA_POWERS)
+                TwoDA powers = _installation.HtGetCache2DA(HTInstallation.TwoDAPowers);
+                if (powers != null)
+                {
+                    // First, uncheck all existing items
+                    foreach (var existingItem in _powerList.Items)
+                    {
+                        if (existingItem is CheckableListItem item)
+                        {
+                            item.IsChecked = false;
+                        }
+                    }
+
+                    // Add all powers from 2DA
+                    for (int i = 0; i < powers.RowCount; i++)
+                    {
+                        int powerId = i;
+                        int stringRef = powers.GetCellInt(i, "name", 0);
+                        string text;
+                        if (stringRef != 0 && _installation.Talktable() != null)
+                        {
+                            text = _installation.Talktable().String(stringRef);
+                        }
+                        else
+                        {
+                            text = powers.GetCellString(i, "label");
+                        }
+                        if (!string.IsNullOrEmpty(text))
+                        {
+                            text = text.Replace("_", " ").Replace("XXX", "").Replace("\n", "");
+                            // Title case
+                            if (text.Length > 0)
+                            {
+                                text = char.ToUpper(text[0]) + (text.Length > 1 ? text.Substring(1).ToLower() : "");
+                            }
+                        }
+                        if (string.IsNullOrEmpty(text))
+                        {
+                            text = $"[Unused Power ID: {powerId}]";
+                        }
+
+                        var item = new CheckableListItem(text, powerId);
+                        _powerList.Items.Add(item);
+                    }
+
+                    // Check powers that are in utc.Classes powers
+                    if (utc.Classes != null)
+                    {
+                        foreach (var utcClass in utc.Classes)
+                        {
+                            if (utcClass.Powers != null)
+                            {
+                                foreach (int powerId in utcClass.Powers)
+                                {
+                                    var item = GetPowerItem(powerId);
+                                    if (item == null)
+                                    {
+                                        // Modded power not in 2DA - add it
+                                        item = new CheckableListItem($"[Modded Power ID: {powerId}]", powerId);
+                                        _powerList.Items.Add(item);
+                                    }
+                                    item.IsChecked = true;
+                                }
+                            }
+                        }
+                    }
+                }
             }
 
             // Scripts
@@ -745,14 +865,46 @@ namespace HolocronToolset.Editors
                 utc.Classes.Add(new UTCClass(classId, classLevel));
             }
 
-            // Feats - would need to be populated from checked items in _featList
-            // Simplified for now - full implementation would read from list
+            // Feats - read from checked items in _featList
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utc.py:640-646
+            // Original: utc.feats = []; for i in range(self.ui.featList.count()): ... if item.checkState() == Qt.CheckState.Checked: utc.feats.append(item.data(Qt.ItemDataRole.UserRole))
+            utc.Feats.Clear();
+            if (_featList != null)
+            {
+                foreach (var item in _featList.Items)
+                {
+                    if (item is CheckableListItem checkableItem && checkableItem.IsChecked)
+                    {
+                        utc.Feats.Add(checkableItem.Id);
+                    }
+                }
+            }
 
-            // Powers - would need to be populated from checked items in _powerList
-            // Simplified for now - full implementation would read from list
+            // Powers - read from checked items in _powerList and add to last class
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utc.py:647-653
+            // Original: powers: list[int] = utc.classes[-1].powers; for i in range(self.ui.powerList.count()): ... if item.checkState() == Qt.CheckState.Checked: powers.append(item.data(Qt.ItemDataRole.UserRole))
             if (utc.Classes.Count > 0)
             {
-                // Powers would be added to the last class
+                var lastClass = utc.Classes[utc.Classes.Count - 1];
+                if (lastClass.Powers == null)
+                {
+                    lastClass.Powers = new List<int>();
+                }
+                else
+                {
+                    lastClass.Powers.Clear();
+                }
+
+                if (_powerList != null)
+                {
+                    foreach (var item in _powerList.Items)
+                    {
+                        if (item is CheckableListItem checkableItem && checkableItem.IsChecked)
+                        {
+                            lastClass.Powers.Add(checkableItem.Id);
+                        }
+                    }
+                }
             }
 
             // Scripts - read from UI controls
@@ -1225,20 +1377,214 @@ namespace HolocronToolset.Editors
         // Original: def edit_conversation(self):
         private void EditConversation()
         {
-            // Placeholder for conversation editor
-            // Will be implemented when DLG editor is available
-            System.Console.WriteLine("Conversation editor not yet implemented");
+            if (_installation == null)
+            {
+                System.Console.WriteLine("Installation is not set");
+                return;
+            }
+
+            string resname = _conversationEdit?.Text ?? "";
+            if (string.IsNullOrEmpty(resname))
+            {
+                // Matching PyKotor: QMessageBox(QMessageBox.Icon.Critical, "Invalid Dialog Reference", "Conversation field cannot be blank.").exec()
+                var messageBox = MessageBoxManager.GetMessageBoxStandard(
+                    "Invalid Dialog Reference",
+                    "Conversation field cannot be blank.",
+                    ButtonEnum.Ok,
+                    Icon.Error);
+                messageBox.ShowAsync();
+                return;
+            }
+
+            // Search for the DLG resource
+            ResourceResult search = _installation.Resource(resname, ResourceType.DLG);
+            string filepath = null;
+            byte[] data = null;
+
+            if (search == null)
+            {
+                // DLG not found - ask to create new
+                // Matching PyKotor: QMessageBox asking "Do you wish to create a new dialog in the 'Override' folder?"
+                var createDialog = MessageBoxManager.GetMessageBoxStandard(
+                    "DLG file not found",
+                    "Do you wish to create a new dialog in the 'Override' folder?",
+                    ButtonEnum.YesNo,
+                    Icon.Question);
+                var result = createDialog.ShowAsync().GetAwaiter().GetResult();
+                
+                if (result == ButtonResult.Yes)
+                {
+                    // Create blank DLG file in override folder
+                    string overridePath = _installation.OverridePath();
+                    if (!string.IsNullOrEmpty(overridePath))
+                    {
+                        filepath = System.IO.Path.Combine(overridePath, $"{resname}.dlg");
+                        Game game = _installation.Game;
+                        var blankDlg = new Andastra.Parsing.Resource.Generics.DLG.DLG();
+                        var gff = Andastra.Parsing.Resource.Generics.DLG.DLGHelpers.DismantleDlg(blankDlg, game);
+                        data = GFFAuto.BytesGff(gff, ResourceType.DLG);
+                        System.IO.File.WriteAllBytes(filepath, data);
+                    }
+                }
+                else
+                {
+                    return;
+                }
+            }
+            else
+            {
+                filepath = search.Filepath;
+                if (search.Data != null)
+                {
+                    data = search.Data;
+                }
+                else if (!string.IsNullOrEmpty(filepath) && System.IO.File.Exists(filepath))
+                {
+                    data = System.IO.File.ReadAllBytes(filepath);
+                }
+            }
+
+            if (data == null || string.IsNullOrEmpty(filepath))
+            {
+                System.Console.WriteLine($"Data/filepath cannot be null in EditConversation() (resname={resname}, filepath={filepath})");
+                return;
+            }
+
+            // Open DLG editor
+            // Matching PyKotor: open_resource_editor(filepath, resname, ResourceType.DLG, data, self._installation, self)
+            HolocronToolset.Utils.WindowUtils.OpenResourceEditor(
+                new ResourceResult(resname, ResourceType.DLG, filepath, data),
+                _installation,
+                this);
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utc.py:801-835
         // Original: def open_inventory(self):
         private void OpenInventory()
         {
-            // Placeholder for inventory editor
-            // Will be implemented when InventoryEditor dialog is available
-            System.Console.WriteLine("Inventory editor not yet implemented");
-            // For now, just update the count
-            UpdateItemCount();
+            if (_installation == null || _utc == null)
+            {
+                System.Console.WriteLine("Installation or UTC is not set");
+                return;
+            }
+
+            // Determine if droid (race ID 0 = Droid)
+            bool droid = _raceSelect?.SelectedIndex == 0;
+
+            // Load capsules to search
+            // Matching PyKotor: capsules_to_search based on filepath type
+            List<Andastra.Parsing.Formats.Capsule.Capsule> capsulesToSearch = new List<Andastra.Parsing.Formats.Capsule.Capsule>();
+            
+            if (_filepath != null)
+            {
+                if (Andastra.Parsing.Formats.Capsule.Capsule.IsSavFile(_filepath))
+                {
+                    // Search capsules inside the .sav outer capsule
+                    // Matching PyKotor: capsules_to_search = [Capsule(res.filepath()) for res in Capsule(self._filepath) if is_capsule_file(res.filename()) and res.inside_capsule]
+                    try
+                    {
+                        var outerCapsule = new Andastra.Parsing.Formats.Capsule.Capsule(_filepath);
+                        foreach (var res in outerCapsule)
+                        {
+                            if (Andastra.Parsing.Formats.Capsule.Capsule.IsCapsuleFile(res.Filename) && res.InsideCapsule)
+                            {
+                                try
+                                {
+                                    capsulesToSearch.Add(new Andastra.Parsing.Formats.Capsule.Capsule(res.Filepath));
+                                }
+                                catch
+                                {
+                                    // Skip invalid capsules
+                                }
+                            }
+                        }
+                    }
+                    catch
+                    {
+                        // Failed to load outer capsule
+                    }
+                }
+                else if (Andastra.Parsing.Formats.Capsule.Capsule.IsCapsuleFile(_filepath))
+                {
+                    // Get capsules matching the module
+                    // Matching PyKotor: capsules_to_search = Module.get_capsules_tuple_matching(self._installation, self._filepath.name)
+                    // This finds all capsules in the module that match the current file's module
+                    try
+                    {
+                        string root = null;
+                        if (!string.IsNullOrEmpty(_filepath))
+                        {
+                            // Extract root from filepath (similar to Module.filepath_to_root)
+                            string filename = System.IO.Path.GetFileName(_filepath);
+                            if (filename.Contains("_"))
+                            {
+                                root = filename.Substring(0, filename.IndexOf('_'));
+                            }
+                            else if (filename.Contains("."))
+                            {
+                                root = filename.Substring(0, filename.IndexOf('.'));
+                            }
+                        }
+
+                        if (root != null)
+                        {
+                            string caseRoot = root.ToLowerInvariant();
+                            var moduleNames = _installation.ModuleNames();
+                            string filepathFilename = System.IO.Path.GetFileName(_filepath) ?? "";
+
+                            foreach (var kvp in moduleNames)
+                            {
+                                string moduleFilename = kvp.Key;
+                                string moduleFilenameLower = moduleFilename.ToLowerInvariant();
+
+                                // Check if root is contained in module filename and it's not the same as the current filepath
+                                if (moduleFilenameLower.Contains(caseRoot) && moduleFilename != filepathFilename)
+                                {
+                                    string fullModulePath = System.IO.Path.Combine(_installation.ModulePath(), moduleFilename);
+                                    if (System.IO.File.Exists(fullModulePath))
+                                    {
+                                        try
+                                        {
+                                            var capsule = new Andastra.Parsing.Formats.Capsule.Capsule(fullModulePath, createIfNotExist: false);
+                                            capsulesToSearch.Add(capsule);
+                                        }
+                                        catch
+                                        {
+                                            // Skip invalid capsule files
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    catch
+                    {
+                        // Failed to get module capsules - continue with empty list
+                    }
+                }
+            }
+
+            // Create inventory dialog
+            // Matching PyKotor: InventoryEditor(self, self._installation, capsules_to_search, [], self._utc.inventory, self._utc.equipment, droid=droid)
+            var inventoryDialog = new InventoryDialog(
+                this,
+                _installation,
+                capsulesToSearch,
+                new List<string>(), // folders - not used in UTC editor
+                _utc.Inventory ?? new List<InventoryItem>(),
+                _utc.Equipment ?? new Dictionary<EquipmentSlot, InventoryItem>(),
+                droid: droid);
+
+            // Show dialog and update if OK was clicked
+            // Matching PyKotor: if inventory_editor.exec(): self._utc.inventory = inventory_editor.inventory; self._utc.equipment = inventory_editor.equipment; self.update_item_count(); self.update3dPreview()
+            bool result = inventoryDialog.ShowDialog();
+            if (result)
+            {
+                _utc.Inventory = inventoryDialog.Inventory;
+                _utc.Equipment = inventoryDialog.Equipment;
+                UpdateItemCount();
+                // Note: update3dPreview() would be called here if 3D preview is implemented
+            }
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utc.py:837-838
@@ -1252,6 +1598,44 @@ namespace HolocronToolset.Editors
             }
         }
 
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utc.py:840-851
+        // Original: def get_feat_item(self, feat_id: int) -> QListWidgetItem | None:
+        private CheckableListItem GetFeatItem(int featId)
+        {
+            if (_featList == null)
+            {
+                return null;
+            }
+
+            foreach (var item in _featList.Items)
+            {
+                if (item is CheckableListItem checkableItem && checkableItem.Id == featId)
+                {
+                    return checkableItem;
+                }
+            }
+            return null;
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utc.py:853-864
+        // Original: def get_power_item(self, power_id: int) -> QListWidgetItem | None:
+        private CheckableListItem GetPowerItem(int powerId)
+        {
+            if (_powerList == null)
+            {
+                return null;
+            }
+
+            foreach (var item in _powerList.Items)
+            {
+                if (item is CheckableListItem checkableItem && checkableItem.Id == powerId)
+                {
+                    return checkableItem;
+                }
+            }
+            return null;
+        }
+
         public override void SaveAs()
         {
             Save();
@@ -1262,6 +1646,81 @@ namespace HolocronToolset.Editors
 
         // Expose GlobalSettings for testing (matching Python implementation)
         public GlobalSettings GlobalSettings => _globalSettings;
+    }
+
+    // Helper class for checkable list items in Avalonia ListBox
+    // Matching PyKotor QListWidgetItem with checkable state and UserRole data
+    public class CheckableListItem : Avalonia.Controls.ContentControl
+    {
+        private CheckBox _checkBox;
+        private TextBlock _textBlock;
+        private int _id;
+        private bool _isChecked;
+
+        public int Id
+        {
+            get { return _id; }
+            set { _id = value; }
+        }
+
+        public bool IsChecked
+        {
+            get { return _isChecked; }
+            set
+            {
+                if (_isChecked != value)
+                {
+                    _isChecked = value;
+                    if (_checkBox != null)
+                    {
+                        _checkBox.IsChecked = value;
+                    }
+                }
+            }
+        }
+
+        public string Text
+        {
+            get { return _textBlock?.Text ?? ""; }
+            set
+            {
+                if (_textBlock != null)
+                {
+                    _textBlock.Text = value ?? "";
+                }
+            }
+        }
+
+        public CheckableListItem(string text, int id)
+        {
+            _id = id;
+            _isChecked = false;
+
+            var panel = new StackPanel
+            {
+                Orientation = Orientation.Horizontal,
+                Margin = new Thickness(2)
+            };
+
+            _checkBox = new CheckBox
+            {
+                IsChecked = false,
+                VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center
+            };
+            _checkBox.Checked += (s, e) => { _isChecked = true; };
+            _checkBox.Unchecked += (s, e) => { _isChecked = false; };
+
+            _textBlock = new TextBlock
+            {
+                Text = text ?? "",
+                VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center,
+                Margin = new Thickness(5, 0, 0, 0)
+            };
+
+            panel.Children.Add(_checkBox);
+            panel.Children.Add(_textBlock);
+            Content = panel;
+        }
     }
 }
 

@@ -12,10 +12,12 @@ using Andastra.Parsing.Resource.Generics.GUI;
 using Andastra.Parsing.Common;
 using Andastra.Parsing.Formats.DDS;
 using Andastra.Parsing.Resource.Formats.TEX;
+using Andastra.Parsing.Formats.TPC;
 using Andastra.Runtime.Games.Common;
 using Andastra.Runtime.Games.Eclipse.Fonts;
 using Andastra.Runtime.Graphics;
 using Andastra.Runtime.MonoGame.Graphics;
+using Andastra.Runtime.MonoGame.Converters;
 using JetBrains.Annotations;
 
 namespace Andastra.Runtime.Games.Eclipse.GUI
@@ -649,14 +651,107 @@ namespace Andastra.Runtime.Games.Eclipse.GUI
 
             // Try loading as TPC format (KotOR texture format, for compatibility)
             // Based on Eclipse engine: Some textures may use TPC format for compatibility
+            // TPC (Texture Pack Container) format is BioWare's native texture format used in KotOR games
+            // Eclipse engine (Dragon Age Origins, Dragon Age 2, Mass Effect 1/2) primarily uses TEX/DDS,
+            // but may include TPC textures for compatibility or cross-engine asset sharing
+            // Format specification: vendor/PyKotor/wiki/TPC-File-Format.md
+            // Reference implementations:
+            // - vendor/xoreos/src/graphics/images/tpc.cpp (generic Aurora TPC implementation)
+            // - vendor/reone/src/libs/graphics/format/tpcreader.cpp (complete C++ TPC decoder with DXT decompression)
+            // - Libraries/PyKotor/src/pykotor/resource/formats/tpc/io_tpc.py (Python TPC reader/writer)
             var tpcResult = _installation.Resources.LookupResource(textureName, ResourceType.TPC, null, null);
             if (tpcResult != null && tpcResult.Data != null && tpcResult.Data.Length > 0)
             {
-                // TPC format parsing requires TPC format parser implementation
-                // Note: Full implementation would parse TPC header to get width/height, then create texture
-                // TODO: Implement TPC format parser to extract width/height and pixel data
-                // Then use: texture = _graphicsDevice.CreateTexture2D(width, height, pixelData);
-                System.Diagnostics.Debug.WriteLine($"[EclipseGuiManager] TPC texture found but parsing not yet implemented: {textureName}");
+                try
+                {
+                    // Parse TPC format to extract width/height and pixel data
+                    // TPC format structure (from vendor/PyKotor/wiki/TPC-File-Format.md):
+                    // - Offset 0x00: data size (uint32, 0 for uncompressed)
+                    // - Offset 0x04: alpha test/threshold (float32)
+                    // - Offset 0x08: width (uint16)
+                    // - Offset 0x0A: height (uint16)
+                    // - Offset 0x0C: pixel encoding (uint8): 0x01=Greyscale, 0x02=RGB, 0x04=RGBA, 0x0C=BGRA, DXT1/DXT5 for compressed
+                    // - Offset 0x0D: mipmap count (uint8)
+                    // - Offset 0x0E: 114 bytes reserved/padding
+                    // - Offset 0x80: texture data (per layer, per mipmap)
+                    // - Optional: ASCII TXI footer for metadata
+                    // Supported formats: DXT1/DXT3/DXT5 (compressed), RGB/RGBA/BGRA (uncompressed), Greyscale
+                    // Cube maps: Detected when height == width * 6 for compressed textures
+                    // Mipmaps: Multiple mip levels supported, stored sequentially after base level
+                    // Based on Eclipse engine: TPC parsing follows same format specification as Odyssey engine (KotOR)
+                    // Located via codebase analysis: TPCBinaryReader handles TPC format parsing
+                    // Located via vendor references: xoreos and reone implementations confirm format structure
+                    using (TPCBinaryReader parser = new TPCBinaryReader(tpcResult.Data))
+                    {
+                        TPC tpc = parser.Load();
+                        
+                        if (tpc == null || tpc.Layers.Count == 0 || tpc.Layers[0].Mipmaps.Count == 0)
+                        {
+                            System.Diagnostics.Debug.WriteLine($"[EclipseGuiManager] ERROR: Failed to parse TPC texture {textureName}: Invalid TPC structure");
+                        }
+                        else
+                        {
+                            // Get texture dimensions from first layer, first mipmap
+                            // TPC.Dimensions() returns (width, height) tuple from base mipmap
+                            (int width, int height) = tpc.Dimensions();
+                            
+                            if (width <= 0 || height <= 0)
+                            {
+                                System.Diagnostics.Debug.WriteLine($"[EclipseGuiManager] ERROR: Invalid TPC texture dimensions {textureName}: {width}x{height}");
+                            }
+                            else
+                            {
+                                // Convert TPC texture to RGBA format for IGraphicsDevice.CreateTexture2D
+                                // TpcToMonoGameTextureConverter.ConvertToRgba handles all TPC formats:
+                                // - Uncompressed: RGBA, BGRA, RGB, BGR, Greyscale
+                                // - Compressed: DXT1, DXT3, DXT5 (decompressed to RGBA)
+                                // Conversion logic:
+                                // - RGBA: Direct copy (already in RGBA format)
+                                // - BGRA: Swizzles B<->R channels
+                                // - RGB/BGR: Expands to RGBA with alpha=255, swizzles if BGR
+                                // - Greyscale: Expands to RGBA (R=G=B=greyscale value, A=255)
+                                // - DXT1/DXT3/DXT5: Decompresses block-compressed data to RGBA
+                                // Based on TpcToMonoGameTextureConverter: ConvertToRgba extracts first layer, first mipmap
+                                // Located via codebase analysis: TpcToMonoGameTextureConverter.ConvertToRgba is public API
+                                // Located via vendor references: DXT decompression algorithms match xoreos/reone implementations
+                                byte[] rgbaData = TpcToMonoGameTextureConverter.ConvertToRgba(tpc);
+                                
+                                if (rgbaData == null || rgbaData.Length == 0)
+                                {
+                                    System.Diagnostics.Debug.WriteLine($"[EclipseGuiManager] ERROR: Failed to convert TPC texture {textureName} to RGBA");
+                                }
+                                else if (rgbaData.Length != width * height * 4)
+                                {
+                                    System.Diagnostics.Debug.WriteLine($"[EclipseGuiManager] ERROR: TPC texture {textureName} RGBA data size mismatch: expected {width * height * 4}, got {rgbaData.Length}");
+                                }
+                                else
+                                {
+                                    // Create texture from parsed TPC RGBA data
+                                    // IGraphicsDevice.CreateTexture2D accepts RGBA byte array (width * height * 4 bytes)
+                                    // Format: RGBA interleaved, row-major order (top-left to bottom-right)
+                                    // Based on Eclipse engine: Creates DirectX texture from TPC pixel data
+                                    // Located via codebase analysis: IGraphicsDevice.CreateTexture2D signature and usage patterns
+                                    texture = _graphicsDevice.CreateTexture2D(width, height, rgbaData);
+                                    
+                                    if (texture != null)
+                                    {
+                                        _textureCache[key] = texture;
+                                        System.Diagnostics.Debug.WriteLine($"[EclipseGuiManager] Successfully loaded TPC texture: {textureName} ({width}x{height}, format: {tpc.Format()})");
+                                    }
+                                    else
+                                    {
+                                        System.Diagnostics.Debug.WriteLine($"[EclipseGuiManager] ERROR: Failed to create texture from TPC data {textureName}");
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[EclipseGuiManager] ERROR: Exception parsing TPC texture {textureName}: {ex.Message}");
+                    System.Diagnostics.Debug.WriteLine($"[EclipseGuiManager] Stack trace: {ex.StackTrace}");
+                }
             }
 
             // Texture not found or format parsing not yet implemented

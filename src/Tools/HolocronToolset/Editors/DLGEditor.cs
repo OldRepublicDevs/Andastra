@@ -74,7 +74,7 @@ namespace HolocronToolset.Editors
         /// <summary>
         /// Gets the copy link (for testing).
         /// </summary>
-        internal DLGLink GetCopyLink()
+        public DLGLink GetCopyLink()
         {
             return _copy;
         }

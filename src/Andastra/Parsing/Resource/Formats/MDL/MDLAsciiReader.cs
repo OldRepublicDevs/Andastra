@@ -28,6 +28,9 @@ namespace Andastra.Parsing.Formats.MDL
         private string _task;
         private int _taskCount;
         private int _taskTotal;
+        // Track animation nodes separately from geometry nodes
+        private List<MDLNode> _animNodes;
+        private Dictionary<string, int> _animNodeIndex;
 
         // Controller name mappings (matching Python _CONTROLLER_NAMES)
         private static readonly Dictionary<int, Dictionary<int, string>> ControllerNames = new Dictionary<int, Dictionary<int, string>>
@@ -203,6 +206,8 @@ namespace Andastra.Parsing.Formats.MDL
                 _mdl = new MDLData.MDL();
                 _nodeIndex = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase) { ["null"] = -1 };
                 _nodes = new List<MDLNode>();
+                _animNodes = new List<MDLNode>();
+                _animNodeIndex = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase) { ["null"] = -1 };
                 _currentNode = null;
                 _isGeometry = false;
                 _isAnimation = false;
@@ -320,6 +325,14 @@ namespace Andastra.Parsing.Formats.MDL
 
                     if (Regex.IsMatch(line, @"^\s*doneanim", RegexOptions.IgnoreCase))
                     {
+                        // Build animation node hierarchy before ending animation
+                        if (_isAnimation && _mdl.Anims.Count > _currentAnimNum && _animNodes.Count > 0)
+                        {
+                            BuildAnimationNodeHierarchy(_mdl.Anims[_currentAnimNum]);
+                        }
+                        _animNodes.Clear();
+                        _animNodeIndex.Clear();
+                        _animNodeIndex["null"] = -1;
                         _isAnimation = false;
                         continue;
                     }
@@ -396,8 +409,11 @@ namespace Andastra.Parsing.Formats.MDL
                     }
                 }
 
-                // Build node hierarchy
+                // Build node hierarchy for geometry nodes
                 BuildNodeHierarchy();
+                
+                // Animation node hierarchies are built immediately after each "doneanim" directive
+                // so they're already built at this point
 
                 return _mdl;
             }
@@ -495,8 +511,17 @@ namespace Andastra.Parsing.Formats.MDL
                     break;
             }
 
-            _nodes.Add(node);
-            _nodeIndex[nodeName.ToLowerInvariant()] = _nodes.Count - 1;
+            // Add to appropriate list based on whether we're in an animation section
+            if (_isAnimation)
+            {
+                _animNodes.Add(node);
+                _animNodeIndex[nodeName.ToLowerInvariant()] = _animNodes.Count - 1;
+            }
+            else
+            {
+                _nodes.Add(node);
+                _nodeIndex[nodeName.ToLowerInvariant()] = _nodes.Count - 1;
+            }
             _currentNode = node;
             _inNode = true;
             _task = "";
@@ -524,7 +549,31 @@ namespace Andastra.Parsing.Formats.MDL
             if (match.Success)
             {
                 var parentName = match.Groups[1].Value.ToLowerInvariant();
-                _currentNode.ParentId = _nodeIndex.ContainsKey(parentName) ? _nodeIndex[parentName] : -1;
+                // For animation nodes, parent can be either an animation node or a model node
+                // Check animation node index first, then model node index
+                if (_isAnimation)
+                {
+                    if (_animNodeIndex.ContainsKey(parentName))
+                    {
+                        _currentNode.ParentId = _animNodeIndex[parentName];
+                    }
+                    else if (_nodeIndex.ContainsKey(parentName))
+                    {
+                        // Parent is a model node - store as negative to distinguish from animation nodes
+                        // Actually, we need to handle this differently - animation nodes reference model nodes by name,
+                        // but we can't use indices across different lists. For now, use -1 and handle in hierarchy building.
+                        // TODO: Properly handle model node parents in animation nodes
+                        _currentNode.ParentId = -1; // Will need special handling
+                    }
+                    else
+                    {
+                        _currentNode.ParentId = -1;
+                    }
+                }
+                else
+                {
+                    _currentNode.ParentId = _nodeIndex.ContainsKey(parentName) ? _nodeIndex[parentName] : -1;
+                }
                 return;
             }
 
@@ -717,7 +766,7 @@ namespace Andastra.Parsing.Formats.MDL
 
                         var singleController = new MDLController
                         {
-                            Type = controllerType,
+                            ControllerType = controllerType,
                             Rows = new List<MDLControllerRow> { new MDLControllerRow { Time = 0.0f, Data = data } },
                             IsBezier = false
                         };
@@ -847,13 +896,10 @@ namespace Andastra.Parsing.Formats.MDL
                 return ParseTaskData(line);
             }
 
-            // Parse skin data
-            if (mesh.Skin != null)
+            // Parse skin data (check for bones/weights declarations to detect skin meshes)
+            if (ParseSkinData(line))
             {
-                if (ParseSkinData(line))
-                {
-                    return true;
-                }
+                return true;
             }
 
             // Parse dangly data
@@ -954,8 +1000,8 @@ namespace Andastra.Parsing.Formats.MDL
                     face.V1 = v1;
                     face.V2 = v2;
                     face.V3 = v3;
-                    var packedMaterial = MDLAsciiHelpers.PackFaceMaterial(surfaceMaterial, smoothingGroup);
-                    face.Material = (SurfaceMaterial)(packedMaterial & 0x1F);
+                    // Store surface material (0-31) and smoothing group separately
+                    face.Material = (SurfaceMaterial)(surfaceMaterial & 0x1F);
                     face.SmoothingGroup = smoothingGroup;
 
                     mesh.Faces.Add(face);
@@ -1021,9 +1067,15 @@ namespace Andastra.Parsing.Formats.MDL
 
         private bool ParseSkinData(string line)
         {
-            if (_currentNode == null || _currentNode.Mesh == null || _currentNode.Mesh.Skin == null)
+            if (_currentNode == null || _currentNode.Mesh == null)
             {
                 return false;
+            }
+            
+            // Create Skin object if it doesn't exist (when we encounter bones/weights)
+            if (_currentNode.Mesh.Skin == null)
+            {
+                _currentNode.Mesh.Skin = new MDLSkin();
             }
             var skin = _currentNode.Mesh.Skin;
 
@@ -1314,9 +1366,12 @@ namespace Andastra.Parsing.Formats.MDL
             if (_task == "flarecolorshifts")
             {
                 var parts = line.Split(new[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
-                if (parts.Length >= 1)
+                if (parts.Length >= 3)
                 {
+                    // Python stores as list of [r, g, b] lists; C# stores as flat list [r, g, b, r, g, b, ...]
                     light.FlareColorShifts.Add(float.Parse(parts[0]));
+                    light.FlareColorShifts.Add(float.Parse(parts[1]));
+                    light.FlareColorShifts.Add(float.Parse(parts[2]));
                     _taskCount++;
                     if (_taskCount >= _taskTotal)
                     {
@@ -1637,6 +1692,64 @@ namespace Andastra.Parsing.Formats.MDL
             }
 
             return false;
+        }
+
+        private void BuildAnimationNodeHierarchy(MDLAnimation anim)
+        {
+            // Animation nodes are stored in _animNodes during parsing
+            // Build the hierarchy similar to the main model hierarchy
+            if (_animNodes.Count == 0)
+            {
+                anim.Root = new MDLNode();
+                return;
+            }
+
+            // Find root animation node (parent_id == -1)
+            MDLNode animRootNode = null;
+            foreach (var node in _animNodes)
+            {
+                if (node.ParentId == -1)
+                {
+                    animRootNode = node;
+                    break;
+                }
+            }
+
+            if (animRootNode == null && _animNodes.Count > 0)
+            {
+                animRootNode = _animNodes[0];
+                animRootNode.ParentId = -1;
+            }
+
+            if (animRootNode != null)
+            {
+                anim.Root = animRootNode;
+            }
+            else
+            {
+                anim.Root = new MDLNode();
+            }
+
+            // Build parent-child relationships (same logic as BuildNodeHierarchy)
+            foreach (var node in _animNodes)
+            {
+                if (node.ParentId == -1)
+                {
+                    // Attach to root (but not if it IS the root)
+                    if (anim.Root != null && node != anim.Root)
+                    {
+                        anim.Root.Children.Add(node);
+                    }
+                }
+                else if (node.ParentId >= 0 && node.ParentId < _animNodes.Count)
+                {
+                    // Parent is an animation node (by index)
+                    var parent = _animNodes[node.ParentId];
+                    parent.Children.Add(node);
+                }
+                // Note: Parent references in animation nodes use names, but we resolve them to indices
+                // during parsing in ParseNodeData, so by the time we build the hierarchy, we have indices
+            }
         }
 
         private void BuildNodeHierarchy()

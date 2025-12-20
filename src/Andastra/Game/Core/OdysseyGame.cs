@@ -261,7 +261,7 @@ namespace Andastra.Runtime.Game.Core
                         // Subscribe to button click events
                         // Based on swkotor.exe FUN_0067c4c0: Button event handlers (0x27 hover, 0x2d leave, 0 click, 1 release)
                         // Based on swkotor2.exe FUN_006d2350: Button event handlers
-                        //_guiManager.OnButtonClicked += HandleGuiButtonClick;
+                        _guiManager.OnButtonClicked += HandleGuiButtonClick;
                         
                         Console.WriteLine("[Odyssey] GUI manager initialized successfully");
                     }

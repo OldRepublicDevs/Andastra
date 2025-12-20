@@ -69,10 +69,10 @@ namespace Andastra.Parsing.Resource.Generics.ARE
             // Engine default: Invalid LocalizedString (swkotor.exe: 0x00508c50 line 152, swkotor2.exe: 0x004e3ff0 line 152)
             are.Name = root.Acquire<LocalizedString>("Name", LocalizedString.FromInvalid());
             // Engine default: 0.2 (swkotor.exe: 0x00508c50 line 303, swkotor2.exe: 0x004e3ff0 line 307)
-            // NOTE: Engine uses 0.2 as default (float), but ARE class stores as int.
-            // Engine reads as float, so we read as float and cast to int (0.2 -> 0).
-            // TODO: Consider changing ARE.AlphaTest to float to match engine behavior.
-            are.AlphaTest = (int)root.Acquire<float>("AlphaTest", 0.2f);
+            // Engine reads and stores AlphaTest as float (verified from Ghidra decompilation)
+            // Line 303-304 in swkotor.exe: fVar14 = FUN_00411d00(..., "AlphaTest", ..., 0.2); *(float *)((int)this + 0xfc) = (float)fVar14;
+            // Line 307-308 in swkotor2.exe: fVar14 = FUN_00412e20(..., "AlphaTest", ..., 0.2); *(float *)((int)this + 0x100) = (float)fVar14;
+            are.AlphaTest = root.Acquire<float>("AlphaTest", 0.2f);
             // Engine default: 0 (swkotor.exe: 0x00508c50 line 174, swkotor2.exe: 0x004e3ff0 line 174)
             are.CameraStyle = root.Acquire<int>("CameraStyle", 0);
             // Engine default: "" (swkotor.exe: 0x00508c50 line 177-179, swkotor2.exe: 0x004e3ff0 line 177-179)
@@ -124,9 +124,9 @@ namespace Andastra.Parsing.Resource.Generics.ARE
             // Engine default: 0 (swkotor.exe: 0x00508c50 line 206, swkotor2.exe: 0x004e3ff0 line 208)
             are.WindPower = root.Acquire<int>("WindPower", 0);
             // Engine default: Uses existing value if field missing (swkotor.exe: 0x00508c50 line 265-267, swkotor2.exe: 0x004e3ff0 line 267-269)
-            // NOTE: Engine uses existing value as default, but for new ARE objects, default is blank ResRef
-            // Also note: Engine reads ShadowOpacity as UInt8, not ResRef - this may be a type mismatch in our implementation
-            are.ShadowOpacity = root.Acquire<ResRef>("ShadowOpacity", ResRef.FromBlank());
+            // NOTE: Engine reads ShadowOpacity as UInt8 (0-255), default is 0 for new ARE objects
+            // Aurora uses 0-100 range, Eclipse uses 0-255 range
+            are.ShadowOpacity = root.Acquire<byte>("ShadowOpacity", 0);
             // Weather fields (K2-specific) - all optional
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/are.py:131-134
             // Original: are.chance_lightning = root.acquire("ChanceLightning", 0)
@@ -223,35 +223,6 @@ namespace Andastra.Parsing.Resource.Generics.ARE
             // Original: are.dirty_func_3 = root.acquire("DirtyFuncThree", 0)
             // Engine default: 0 (swkotor2.exe: 0x004e3ff0 line 580)
             are.DirtyFunc3 = root.Acquire<int>("DirtyFuncThree", 0);
-            // Extract K2-specific dirty ARGB, Size, and Func fields (KotOR 2 Only) - all optional
-            // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/are.py:472-480,510-512
-            // Original: are.dirty_size_1 = root.acquire("DirtySizeOne", 0)
-            // Engine default: 0 (swkotor2.exe: 0x004e3ff0) - K2 only, not in K1
-            are.DirtySize1 = root.Acquire<int>("DirtySizeOne", 0);
-            // Original: are.dirty_func_1 = root.acquire("DirtyFuncOne", 0)
-            // Engine default: 0 (swkotor2.exe: 0x004e3ff0) - K2 only, not in K1
-            are.DirtyFunc1 = root.Acquire<int>("DirtyFuncOne", 0);
-            // Original: are.dirty_size_2 = root.acquire("DirtySizeTwo", 0)
-            // Engine default: 0 (swkotor2.exe: 0x004e3ff0) - K2 only, not in K1
-            are.DirtySize2 = root.Acquire<int>("DirtySizeTwo", 0);
-            // Original: are.dirty_func_2 = root.acquire("DirtyFuncTwo", 0)
-            // Engine default: 0 (swkotor2.exe: 0x004e3ff0) - K2 only, not in K1
-            are.DirtyFunc2 = root.Acquire<int>("DirtyFuncTwo", 0);
-            // Original: are.dirty_size_3 = root.acquire("DirtySizeThree", 0)
-            // Engine default: 0 (swkotor2.exe: 0x004e3ff0) - K2 only, not in K1
-            are.DirtySize3 = root.Acquire<int>("DirtySizeThree", 0);
-            // Original: are.dirty_func_3 = root.acquire("DirtyFuncThree", 0)
-            // Engine default: 0 (swkotor2.exe: 0x004e3ff0) - K2 only, not in K1
-            are.DirtyFunc3 = root.Acquire<int>("DirtyFuncThree", 0);
-            // Original: are.dirty_argb_1 = Color.from_rgb_integer(root.acquire("DirtyARGBOne", 0))
-            // Engine default: 0 (swkotor2.exe: 0x004e3ff0) - K2 only, not in K1
-            are.DirtyArgb1 = Color.FromRgbInteger(root.Acquire<int>("DirtyARGBOne", 0));
-            // Original: are.dirty_argb_2 = Color.from_rgb_integer(root.acquire("DirtyARGBTwo", 0))
-            // Engine default: 0 (swkotor2.exe: 0x004e3ff0) - K2 only, not in K1
-            are.DirtyArgb2 = Color.FromRgbInteger(root.Acquire<int>("DirtyARGBTwo", 0));
-            // Original: are.dirty_argb_3 = Color.from_rgb_integer(root.acquire("DirtyARGBThree", 0))
-            // Engine default: 0 (swkotor2.exe: 0x004e3ff0) - K2 only, not in K1
-            are.DirtyArgb3 = Color.FromRgbInteger(root.Acquire<int>("DirtyARGBThree", 0));
 
             // Extract Comments field (toolset-only, not used by game engine)
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/are.py:356
@@ -448,10 +419,10 @@ namespace Andastra.Parsing.Resource.Generics.ARE
             root.SetSingle("SunFogNear", are.FogNear);
             root.SetSingle("SunFogFar", are.FogFar);
             root.SetInt32("WindPower", are.WindPower);
-            // Note: ShadowOpacity in Python is int (shadow_opacity), but C# ARE class uses ResRef
-            // This may need to be fixed if ShadowOpacity should be int instead of ResRef
-            // For now, writing as ResRef to match current ARE class definition
-            root.SetResRef("ShadowOpacity", are.ShadowOpacity);
+            // ShadowOpacity is UInt8 (0-255) in GFF format
+            // Engine reads as UInt8 (swkotor.exe: 0x00508c50, swkotor2.exe: 0x004e3ff0)
+            // Aurora uses 0-100 range, Eclipse uses 0-255 range
+            root.SetUInt8("ShadowOpacity", are.ShadowOpacity);
 
             // Set script hooks - written for ALL game types
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/are.py:620-623

@@ -120,6 +120,24 @@ namespace Andastra.Parsing.Formats.MDL
             }
             throw new ArgumentException("Source must be string, byte[], or Stream for MDL ASCII");
         }
+
+        /// <summary>
+        /// Returns the MDL data in the specified format (MDL or MDL_ASCII) as a byte array.
+        /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/mdl/mdl_auto.py:201-224
+        /// </summary>
+        public static byte[] BytesMdl(MDLData.MDL mdl, ResourceType fileFormat = null)
+        {
+            var fmt = fileFormat ?? ResourceType.MDL;
+            if (fmt == ResourceType.MDL || fmt == ResourceType.MDL_ASCII)
+            {
+                using (var ms = new MemoryStream())
+                {
+                    WriteMdl(mdl, ms, fmt);
+                    return ms.ToArray();
+                }
+            }
+            throw new ArgumentException("Unsupported format specified; use MDL or MDL_ASCII.");
+        }
     }
 }
 
