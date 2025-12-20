@@ -56,11 +56,17 @@ namespace Andastra.Parsing.Uninstall
             var hashes = new Dictionary<Game, string>
             {
                 // K1 vanilla dialog.tlk SHA1 hash
-                // This should be calculated from a verified vanilla K1 installation
+                // This will be automatically calculated from a verified vanilla K1 installation if found
                 // Format: SHA1 hash as lowercase hex string
-                // Use scripts/Calculate-VanillaTlkHash.ps1 to calculate from a vanilla dialog.tlk
+                // Use scripts/Calculate-VanillaTlkHash.ps1 to manually calculate from a vanilla dialog.tlk if automatic detection fails
                 // Expected vanilla entry count: 49,265 entries
-                { Game.K1, null }, // TODO: Calculate and set actual vanilla K1 TLK SHA1 hash
+                // The hash is automatically calculated by TryCalculateVanillaK1TlkHash() which:
+                // - Searches common installation paths (registry, Steam, GOG, common paths)
+                // - Verifies the installation is vanilla (override folder empty or only Aspyr patch files)
+                // - Verifies entry count matches expected vanilla count (49,265)
+                // - Calculates and returns the SHA1 hash
+                // If automatic detection fails, manually calculate using the helper script and set the value here
+                { Game.K1, null },
                 
                 // TSL vanilla dialog.tlk SHA1 hash
                 // Calculated from verified vanilla TSL installation with exactly 136,329 entries
@@ -79,6 +85,14 @@ namespace Andastra.Parsing.Uninstall
                 { Game.TSL, null }
             };
 
+            // Attempt to calculate K1 hash from vanilla file if available
+            // This can be extended to check common installation paths
+            string k1Hash = TryCalculateVanillaK1TlkHash();
+            if (!string.IsNullOrEmpty(k1Hash))
+            {
+                hashes[Game.K1] = k1Hash;
+            }
+
             // Attempt to calculate TSL hash from vanilla file if available
             // This can be extended to check common installation paths
             string tslHash = TryCalculateVanillaTslTlkHash();
@@ -88,6 +102,85 @@ namespace Andastra.Parsing.Uninstall
             }
 
             return hashes;
+        }
+
+        /// <summary>
+        /// Attempts to calculate the SHA1 hash of a vanilla K1 dialog.tlk file.
+        /// 
+        /// This method attempts to locate and verify a vanilla K1 dialog.tlk file, then calculates its SHA1 hash.
+        /// It checks common installation paths (registry, Steam, GOG) and verifies the file is vanilla before calculating.
+        /// 
+        /// If a vanilla file cannot be found or verified, returns null and the system
+        /// will fall back to entry count-based detection.
+        /// 
+        /// The hash is calculated from a verified vanilla K1 dialog.tlk file with:
+        /// - Exactly 49,265 entries
+        /// - No modifications from mods (override folder empty or only Aspyr patch files)
+        /// - Original game installation (not patched with content mods)
+        /// 
+        /// Verification process:
+        /// 1. Check common installation paths (registry, Steam, GOG, common paths)
+        /// 2. Verify dialog.tlk exists at installation root
+        /// 3. Verify entry count matches expected vanilla count (49,265)
+        /// 4. Verify override folder is empty or only contains Aspyr patch files
+        /// 5. Calculate and return the SHA1 hash
+        /// 
+        /// If automatic detection fails, use scripts/Calculate-VanillaTlkHash.ps1 to manually calculate the hash.
+        /// </summary>
+        /// <returns>SHA1 hash as lowercase hex string, or null if hash cannot be calculated automatically</returns>
+        private static string TryCalculateVanillaK1TlkHash()
+        {
+            try
+            {
+                // Try to find K1 installation paths
+                List<string> installationPaths = FindK1InstallationPaths();
+                
+                foreach (string installPath in installationPaths)
+                {
+                    if (string.IsNullOrEmpty(installPath) || !Directory.Exists(installPath))
+                    {
+                        continue;
+                    }
+
+                    string dialogTlkPath = Path.Combine(installPath, "dialog.tlk");
+                    if (!File.Exists(dialogTlkPath))
+                    {
+                        continue;
+                    }
+
+                    // Verify this is a vanilla installation
+                    if (!IsVanillaInstallation(installPath, Game.K1))
+                    {
+                        continue;
+                    }
+
+                    // Verify entry count matches expected vanilla count
+                    try
+                    {
+                        TLK tlk = new TLKBinaryReader(File.ReadAllBytes(dialogTlkPath)).Load();
+                        if (tlk.Entries.Count != 49265)
+                        {
+                            // Entry count doesn't match vanilla - skip this installation
+                            continue;
+                        }
+                    }
+                    catch
+                    {
+                        // Failed to read TLK - skip this installation
+                        continue;
+                    }
+
+                    // Calculate and return SHA1 hash
+                    return CalculateFileSha1(dialogTlkPath);
+                }
+            }
+            catch
+            {
+                // Silently fail - return null to use fallback detection
+            }
+
+            // No vanilla installation found - return null to use entry count fallback
+            return null;
         }
 
         /// <summary>
@@ -167,6 +260,153 @@ namespace Andastra.Parsing.Uninstall
 
             // No vanilla installation found - return null to use entry count fallback
             return null;
+        }
+
+        /// <summary>
+        /// Finds potential K1 installation paths from common locations.
+        /// Checks registry, Steam paths, GOG paths, and common installation directories.
+        /// </summary>
+        /// <returns>List of potential K1 installation paths</returns>
+        private static List<string> FindK1InstallationPaths()
+        {
+            var paths = new List<string>();
+
+            // Try registry paths
+            try
+            {
+                // Check both 32-bit and 64-bit registry locations
+                string[] registryKeys = new[]
+                {
+                    @"SOFTWARE\LucasArts\Star Wars - Knights of the Old Republic",
+                    @"SOFTWARE\LucasArts\KOTOR",
+                    @"SOFTWARE\LucasArts\SWKotOR",
+                    @"SOFTWARE\WOW6432Node\LucasArts\Star Wars - Knights of the Old Republic",
+                    @"SOFTWARE\WOW6432Node\LucasArts\KOTOR",
+                    @"SOFTWARE\WOW6432Node\LucasArts\SWKotOR"
+                };
+
+                foreach (string keyPath in registryKeys)
+                {
+                    try
+                    {
+                        using (RegistryKey key = Registry.LocalMachine.OpenSubKey(keyPath))
+                        {
+                            if (key != null)
+                            {
+                                object pathValue = key.GetValue("Path");
+                                if (pathValue is string path && Directory.Exists(path))
+                                {
+                                    paths.Add(path);
+                                }
+                            }
+                        }
+                    }
+                    catch
+                    {
+                        // Continue to next registry key
+                    }
+                }
+            }
+            catch
+            {
+                // Registry access failed - continue to other methods
+            }
+
+            // Try Steam paths
+            try
+            {
+                using (RegistryKey steamKey = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Valve\Steam"))
+                {
+                    if (steamKey != null)
+                    {
+                        object installPath = steamKey.GetValue("InstallPath");
+                        if (installPath is string steamInstallPath && Directory.Exists(steamInstallPath))
+                        {
+                            // Check common Steam library locations
+                            string[] steamLibraryPaths = new[]
+                            {
+                                Path.Combine(steamInstallPath, "steamapps", "common", "Knights of the Old Republic"),
+                                Path.Combine(steamInstallPath, "steamapps", "common", "Star Wars Knights of the Old Republic"),
+                                Path.Combine(steamInstallPath, "steamapps", "common", "swkotor")
+                            };
+
+                            foreach (string libraryPath in steamLibraryPaths)
+                            {
+                                if (Directory.Exists(libraryPath))
+                                {
+                                    paths.Add(libraryPath);
+                                }
+                            }
+
+                            // Check additional library folders (libraryfolders.vdf)
+                            string libraryFoldersPath = Path.Combine(steamInstallPath, "steamapps", "libraryfolders.vdf");
+                            if (File.Exists(libraryFoldersPath))
+                            {
+                                // Parse libraryfolders.vdf to find additional library paths
+                                // For simplicity, check common alternate locations
+                                string[] commonAltPaths = new[]
+                                {
+                                    Path.Combine("D:", "SteamLibrary", "steamapps", "common", "Knights of the Old Republic"),
+                                    Path.Combine("E:", "SteamLibrary", "steamapps", "common", "Knights of the Old Republic"),
+                                    Path.Combine("F:", "SteamLibrary", "steamapps", "common", "Knights of the Old Republic")
+                                };
+
+                                foreach (string altPath in commonAltPaths)
+                                {
+                                    if (Directory.Exists(altPath))
+                                    {
+                                        paths.Add(altPath);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            catch
+            {
+                // Steam detection failed - continue to other methods
+            }
+
+            // Try GOG paths
+            string[] gogPaths = new[]
+            {
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "GOG Galaxy", "Games", "Knights of the Old Republic"),
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "GOG Galaxy", "Games", "Knights of the Old Republic"),
+                Path.Combine("C:", "GOG Games", "Knights of the Old Republic"),
+                Path.Combine("D:", "GOG Games", "Knights of the Old Republic")
+            };
+
+            foreach (string gogPath in gogPaths)
+            {
+                if (Directory.Exists(gogPath))
+                {
+                    paths.Add(gogPath);
+                }
+            }
+
+            // Try common installation paths
+            string[] commonPaths = new[]
+            {
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "LucasArts", "SWKotOR"),
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "LucasArts", "SWKotOR"),
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "LucasArts", "KOTOR"),
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "LucasArts", "KOTOR"),
+                Path.Combine("C:", "Games", "KOTOR"),
+                Path.Combine("D:", "Games", "KOTOR"),
+                Path.Combine("C:", "Games", "SWKotOR"),
+                Path.Combine("D:", "Games", "SWKotOR")
+            };
+
+            foreach (string commonPath in commonPaths)
+            {
+                if (Directory.Exists(commonPath))
+                {
+                    paths.Add(commonPath);
+                }
+            }
+
+            return paths;
         }
 
         /// <summary>
