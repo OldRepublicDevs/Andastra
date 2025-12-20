@@ -708,7 +708,6 @@ namespace Andastra.Runtime.Game.Core
                     // Based on swkotor2.exe: CSWGuiOptionsMain @ 0x006e3e80 (constructor), loads "optionsmain" GUI
                     Console.WriteLine("[Odyssey] Options button clicked - opening options menu");
                     _currentState = GameState.OptionsMenu;
-                    InitializeOptionsMenu();
                     break;
                 
                 case "BTN_BACK":

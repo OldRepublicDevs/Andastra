@@ -250,7 +250,16 @@ namespace Andastra.Runtime.Game.GUI
             var audioOptions = new List<OptionItem>
             {
                 new OptionItem("Master Volume", OptionType.Numeric, () => settings.MasterVolume * 100, v => settings.MasterVolume = (float)v / 100.0f, 0, 100),
-                new OptionItem("Music Volume", OptionType.Numeric, () => settings.MusicVolume * 100, v => settings.MusicVolume = (float)v / 100.0f, 0, 100),
+                new OptionItem("Music Volume", OptionType.Numeric, () => (int)(settings.Audio.MusicVolume * 100.0f), v => 
+                { 
+                    float volume = (float)v / 100.0f;
+                    settings.Audio.MusicVolume = volume;
+                    // Apply volume to music player immediately if available
+                    if (musicPlayer != null)
+                    {
+                        musicPlayer.Volume = volume;
+                    }
+                }, 0, 100),
                 new OptionItem("SFX Volume", OptionType.Numeric, () => settings.EffectsVolume * 100, v => settings.EffectsVolume = (float)v / 100.0f, 0, 100),
                 new OptionItem("Voice Volume", OptionType.Numeric, () => settings.VoiceVolume * 100, v => settings.VoiceVolume = (float)v / 100.0f, 0, 100)
             };
@@ -286,13 +295,34 @@ namespace Andastra.Runtime.Game.GUI
             };
             options[OptionsCategory.Graphics] = graphicsOptions;
 
-            // Audio options (placeholder for future audio system)
+            // Audio options
             var audioOptions = new List<OptionItem>
             {
-                new OptionItem("Master Volume", OptionType.Numeric, () => 100, v => { /* TODO: Implement audio volume */ }, 0, 100),
-                new OptionItem("Music Volume", OptionType.Numeric, () => 80, v => { /* TODO: Implement music volume */ }, 0, 100),
-                new OptionItem("SFX Volume", OptionType.Numeric, () => (int)(settings.EffectsVolume * 100), v => settings.EffectsVolume = v / 100.0f, 0, 100),
-                new OptionItem("Voice Volume", OptionType.Numeric, () => 100, v => { /* TODO: Implement voice volume */ }, 0, 100)
+                new OptionItem("Master Volume", OptionType.Numeric, () => (int)(settings.MasterVolume * 100),
+                    v => {
+                        settings.MasterVolume = v / 100.0f;
+                        if (soundPlayer != null) soundPlayer.SetMasterVolume(settings.MasterVolume);
+                    }, 0, 100),
+                new OptionItem("Music Volume", OptionType.Numeric, () => (int)(settings.MusicVolume * 100),
+                    v => {
+                        float volume = (float)v / 100.0f;
+                        settings.Audio.MusicVolume = volume;
+                        // Apply volume to music player immediately if available
+                        if (musicPlayer != null)
+                        {
+                            musicPlayer.Volume = volume;
+                        }
+                    }, 0, 100),
+                new OptionItem("SFX Volume", OptionType.Numeric, () => (int)(settings.EffectsVolume * 100),
+                    v => {
+                        settings.EffectsVolume = v / 100.0f;
+                        if (soundPlayer != null) soundPlayer.SetMasterVolume(settings.EffectsVolume);
+                    }, 0, 100),
+                new OptionItem("Voice Volume", OptionType.Numeric, () => (int)(settings.VoiceVolume * 100),
+                    v => {
+                        settings.VoiceVolume = v / 100.0f;
+                        // TODO: Implement voice volume control (requires IVoicePlayer interface)
+                    }, 0, 100)
             };
             options[OptionsCategory.Audio] = audioOptions;
 
