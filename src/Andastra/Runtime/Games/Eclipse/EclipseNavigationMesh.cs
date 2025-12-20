@@ -64,6 +64,14 @@ namespace Andastra.Runtime.Games.Eclipse
         // Multi-level navigation surfaces (ground, platforms, elevated surfaces)
         private readonly List<NavigationLevel> _navigationLevels;
 
+        // Cover point system
+        private readonly List<CoverPoint> _coverPoints;
+        private bool _coverPointsDirty;
+        private const float CoverPointGenerationSpacing = 2.0f; // Minimum spacing between cover points
+        private const float CoverPointMinWallHeight = 0.8f; // Minimum wall height to provide cover
+        private const float CoverPointMaxWallAngle = 0.707f; // cos(45 degrees) - walls steeper than this provide cover
+        private const float CoverPointQualityRadius = 5.0f; // Radius for cover quality assessment
+
         // Projection search parameters
         private const float MaxProjectionDistance = 100.0f;
         private const float MinProjectionDistance = 0.01f;
@@ -94,6 +102,8 @@ namespace Andastra.Runtime.Games.Eclipse
             _destructibleModifications = new List<DestructibleModification>();
             _modificationByFaceId = new Dictionary<int, DestructibleModification>();
             _navigationLevels = new List<NavigationLevel>();
+            _coverPoints = new List<CoverPoint>();
+            _coverPointsDirty = true;
         }
 
         /// <summary>
@@ -127,6 +137,8 @@ namespace Andastra.Runtime.Games.Eclipse
             _destructibleModifications = new List<DestructibleModification>();
             _modificationByFaceId = new Dictionary<int, DestructibleModification>();
             _navigationLevels = new List<NavigationLevel>();
+            _coverPoints = new List<CoverPoint>();
+            _coverPointsDirty = true;
 
             // Initialize default ground level
             _navigationLevels.Add(new NavigationLevel
@@ -1894,20 +1906,458 @@ namespace Andastra.Runtime.Games.Eclipse
 
 
         /// <summary>
+        /// Ensures cover points are generated and up to date.
+        /// </summary>
+        /// <remarks>
+        /// Lazy generation of cover points from static geometry and dynamic obstacles.
+        /// Regenerates if mesh has been modified or obstacles have changed.
+        /// </remarks>
+        private void EnsureCoverPointsGenerated()
+        {
+            if (!_coverPointsDirty && !_meshNeedsRebuild)
+            {
+                return; // Cover points are up to date
+            }
+
+            _coverPoints.Clear();
+
+            // Generate cover points from static geometry
+            GenerateCoverPointsFromStaticGeometry();
+
+            // Generate cover points from dynamic obstacles
+            GenerateCoverPointsFromDynamicObstacles();
+
+            // Second pass: Update quality ratings with nearby support information
+            UpdateCoverPointQualityWithNearbySupport();
+
+            _coverPointsDirty = false;
+        }
+
+        /// <summary>
+        /// Generates cover points from static geometry (walls, edges, corners).
+        /// </summary>
+        /// <remarks>
+        /// Based on reverse engineering of:
+        /// - daorigins.exe: Static geometry cover point generation
+        /// - DragonAge2.exe: Enhanced static cover point system
+        ///
+        /// Algorithm:
+        /// 1. Iterate through all static faces
+        /// 2. Identify vertical or near-vertical faces (walls) that can provide cover
+        /// 3. Generate cover points along edges of these faces
+        /// 4. Rate cover quality based on height, angle, and nearby geometry
+        /// 5. Filter out low-quality or redundant cover points
+        /// </remarks>
+        private void GenerateCoverPointsFromStaticGeometry()
+        {
+            if (_staticFaceCount == 0)
+            {
+                return;
+            }
+
+            // Iterate through all static faces
+            for (int faceIndex = 0; faceIndex < _staticFaceCount; faceIndex++)
+            {
+                int baseIdx = faceIndex * 3;
+                if (baseIdx + 2 >= _staticFaceIndices.Length)
+                {
+                    continue;
+                }
+
+                Vector3 v1 = _staticVertices[_staticFaceIndices[baseIdx]];
+                Vector3 v2 = _staticVertices[_staticFaceIndices[baseIdx + 1]];
+                Vector3 v3 = _staticVertices[_staticFaceIndices[baseIdx + 2]];
+
+                // Calculate face normal
+                Vector3 edge1 = v2 - v1;
+                Vector3 edge2 = v3 - v1;
+                Vector3 normal = Vector3.Cross(edge1, edge2);
+                float normalLength = normal.Length();
+                if (normalLength < 1e-6f)
+                {
+                    continue; // Degenerate face
+                }
+                normal = normal / normalLength;
+
+                // Check if face is vertical or near-vertical (can provide cover)
+                // Vertical faces have normal pointing mostly horizontally
+                float verticalComponent = Math.Abs(normal.Z);
+                if (verticalComponent < CoverPointMaxWallAngle)
+                {
+                    // Face is vertical enough to provide cover
+                    // Calculate face height (Z range)
+                    float minZ = Math.Min(Math.Min(v1.Z, v2.Z), v3.Z);
+                    float maxZ = Math.Max(Math.Max(v1.Z, v2.Z), v3.Z);
+                    float faceHeight = maxZ - minZ;
+
+                    if (faceHeight >= CoverPointMinWallHeight)
+                    {
+                        // Generate cover points along edges
+                        GenerateCoverPointsFromFaceEdges(faceIndex, v1, v2, v3, normal, minZ, maxZ);
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Generates cover points along the edges of a face.
+        /// </summary>
+        private void GenerateCoverPointsFromFaceEdges(int faceIndex, Vector3 v1, Vector3 v2, Vector3 v3, Vector3 normal, float minZ, float maxZ)
+        {
+            // Generate cover points along each edge
+            Vector3[][] edges = new Vector3[][]
+            {
+                new Vector3[] { v1, v2 },
+                new Vector3[] { v2, v3 },
+                new Vector3[] { v3, v1 }
+            };
+
+            foreach (Vector3[] edge in edges)
+            {
+                Vector3 edgeStart = edge[0];
+                Vector3 edgeEnd = edge[1];
+                Vector3 edgeDir = edgeEnd - edgeStart;
+                float edgeLength = edgeDir.Length();
+                if (edgeLength < 1e-6f)
+                {
+                    continue;
+                }
+                edgeDir = edgeDir / edgeLength;
+
+                // Generate points along edge with spacing
+                int numPoints = (int)(edgeLength / CoverPointGenerationSpacing) + 1;
+                for (int i = 0; i <= numPoints; i++)
+                {
+                    float t = i / (float)numPoints;
+                    Vector3 edgePoint = edgeStart + edgeDir * (edgeLength * t);
+
+                    // Project to walkable surface below
+                    Vector3 coverPosition;
+                    float coverHeight;
+                    if (ProjectToWalkmesh(edgePoint, out coverPosition, out coverHeight))
+                    {
+                        // Calculate cover quality
+                        float quality = CalculateCoverQuality(coverPosition, normal, maxZ - coverHeight, faceIndex, -1);
+
+                        // Only add if quality is above threshold
+                        if (quality > 0.3f)
+                        {
+                            // Check if too close to existing cover point
+                            bool tooClose = false;
+                            int existingIndex = -1;
+                            for (int i = 0; i < _coverPoints.Count; i++)
+                            {
+                                CoverPoint existing = _coverPoints[i];
+                                float dist = Vector3Extensions.Distance2D(coverPosition, existing.Position);
+                                if (dist < CoverPointGenerationSpacing * 0.5f)
+                                {
+                                    // Too close, keep the one with better quality
+                                    if (quality <= existing.Quality)
+                                    {
+                                        tooClose = true;
+                                        break;
+                                    }
+                                    // Mark existing lower quality point for removal
+                                    existingIndex = i;
+                                    break;
+                                }
+                            }
+
+                            if (existingIndex >= 0)
+                            {
+                                // Remove existing lower quality point
+                                _coverPoints.RemoveAt(existingIndex);
+                            }
+
+                            if (!tooClose)
+                            {
+                                _coverPoints.Add(new CoverPoint
+                                {
+                                    Position = coverPosition,
+                                    CoverNormal = normal,
+                                    Quality = quality,
+                                    CoverHeight = maxZ - coverHeight,
+                                    FaceIndex = faceIndex,
+                                    ObstacleId = -1
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Generates cover points from dynamic obstacles.
+        /// </summary>
+        /// <remarks>
+        /// Based on reverse engineering of:
+        /// - daorigins.exe: Dynamic obstacle cover point generation
+        /// - DragonAge2.exe: Enhanced dynamic cover point system
+        ///
+        /// Algorithm:
+        /// 1. Iterate through active dynamic obstacles
+        /// 2. For non-walkable obstacles, generate cover points around their perimeter
+        /// 3. Rate cover quality based on obstacle size and position
+        /// 4. Filter out low-quality or redundant cover points
+        /// </remarks>
+        private void GenerateCoverPointsFromDynamicObstacles()
+        {
+            foreach (DynamicObstacle obstacle in _dynamicObstacles)
+            {
+                if (!obstacle.IsActive || obstacle.IsWalkable)
+                {
+                    continue; // Skip inactive or walkable obstacles
+                }
+
+                // Generate cover points around obstacle perimeter
+                Vector3 obstacleCenter = (obstacle.BoundsMin + obstacle.BoundsMax) * 0.5f;
+                Vector3 obstacleSize = obstacle.BoundsMax - obstacle.BoundsMin;
+                float obstacleHeight = obstacleSize.Z;
+
+                if (obstacleHeight < CoverPointMinWallHeight)
+                {
+                    continue; // Obstacle too short to provide cover
+                }
+
+                // Generate points around perimeter (8 directions)
+                Vector3[] directions = new Vector3[]
+                {
+                    new Vector3(1.0f, 0.0f, 0.0f),
+                    new Vector3(-1.0f, 0.0f, 0.0f),
+                    new Vector3(0.0f, 1.0f, 0.0f),
+                    new Vector3(0.0f, -1.0f, 0.0f),
+                    new Vector3(0.707f, 0.707f, 0.0f),
+                    new Vector3(-0.707f, 0.707f, 0.0f),
+                    new Vector3(0.707f, -0.707f, 0.0f),
+                    new Vector3(-0.707f, -0.707f, 0.0f)
+                };
+
+                float perimeterDistance = Math.Max(obstacleSize.X, obstacleSize.Y) * 0.5f + 0.5f; // Slightly outside obstacle
+
+                foreach (Vector3 dir in directions)
+                {
+                    Vector3 coverCandidate = obstacleCenter + dir * perimeterDistance;
+
+                    // Project to walkable surface
+                    Vector3 coverPosition;
+                    float coverHeight;
+                    if (ProjectToWalkmesh(coverCandidate, out coverPosition, out coverHeight))
+                    {
+                        // Calculate cover normal (away from obstacle)
+                        Vector3 coverNormal = Vector3.Normalize(coverPosition - obstacleCenter);
+                        coverNormal = new Vector3(coverNormal.X, coverNormal.Y, 0.0f); // Horizontal only
+                        if (coverNormal.Length() < 1e-6f)
+                        {
+                            coverNormal = new Vector3(1.0f, 0.0f, 0.0f);
+                        }
+                        else
+                        {
+                            coverNormal = Vector3.Normalize(coverNormal);
+                        }
+
+                        // Calculate cover quality
+                        float quality = CalculateCoverQuality(coverPosition, coverNormal, obstacleHeight, -1, obstacle.ObstacleId);
+
+                        // Only add if quality is above threshold
+                        if (quality > 0.3f)
+                        {
+                            // Check if too close to existing cover point
+                            bool tooClose = false;
+                            int existingIndex = -1;
+                            for (int i = 0; i < _coverPoints.Count; i++)
+                            {
+                                CoverPoint existing = _coverPoints[i];
+                                float dist = Vector3Extensions.Distance2D(coverPosition, existing.Position);
+                                if (dist < CoverPointGenerationSpacing * 0.5f)
+                                {
+                                    // Too close, keep the one with better quality
+                                    if (quality <= existing.Quality)
+                                    {
+                                        tooClose = true;
+                                        break;
+                                    }
+                                    // Mark existing lower quality point for removal
+                                    existingIndex = i;
+                                    break;
+                                }
+                            }
+
+                            if (existingIndex >= 0)
+                            {
+                                // Remove existing lower quality point
+                                _coverPoints.RemoveAt(existingIndex);
+                            }
+
+                            if (!tooClose)
+                            {
+                                _coverPoints.Add(new CoverPoint
+                                {
+                                    Position = coverPosition,
+                                    CoverNormal = coverNormal,
+                                    Quality = quality,
+                                    CoverHeight = obstacleHeight,
+                                    FaceIndex = -1,
+                                    ObstacleId = obstacle.ObstacleId
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Calculates the quality rating for a cover point.
+        /// </summary>
+        /// <remarks>
+        /// Quality is based on:
+        /// - Cover height (taller is better)
+        /// - Cover angle (more vertical is better)
+        /// - Nearby geometry support (more nearby cover is better)
+        /// - Walkable surface availability
+        ///
+        /// Note: Nearby geometry support is calculated after all cover points are generated,
+        /// so this method is called in two phases - first without nearby support, then with a second pass.
+        /// </remarks>
+        private float CalculateCoverQuality(Vector3 position, Vector3 coverNormal, float coverHeight, int faceIndex, int obstacleId)
+        {
+            return CalculateCoverQuality(position, coverNormal, coverHeight, faceIndex, obstacleId, 0);
+        }
+
+        /// <summary>
+        /// Calculates the quality rating for a cover point with nearby support count.
+        /// </summary>
+        private float CalculateCoverQuality(Vector3 position, Vector3 coverNormal, float coverHeight, int faceIndex, int obstacleId, int nearbyCoverCount)
+        {
+            float quality = 0.0f;
+
+            // Height factor (0.0 to 0.4)
+            float normalizedHeight = Math.Min(coverHeight / 2.0f, 1.0f); // 2.0m is considered full height
+            quality += normalizedHeight * 0.4f;
+
+            // Angle factor (0.0 to 0.3) - more vertical is better
+            float verticalComponent = Math.Abs(coverNormal.Z);
+            float angleFactor = 1.0f - verticalComponent; // Horizontal normal = better cover
+            quality += angleFactor * 0.3f;
+
+            // Nearby geometry support (0.0 to 0.2)
+            float supportFactor = Math.Min(nearbyCoverCount / 5.0f, 1.0f); // Up to 5 nearby points is ideal
+            quality += supportFactor * 0.2f;
+
+            // Walkable surface factor (0.0 to 0.1)
+            if (IsPointWalkable(position))
+            {
+                quality += 0.1f;
+            }
+
+            return Math.Min(quality, 1.0f);
+        }
+
+        /// <summary>
+        /// Updates cover point quality ratings with nearby support information.
+        /// </summary>
+        /// <remarks>
+        /// Second pass after initial generation to incorporate nearby cover point density
+        /// into quality ratings. This improves the tactical value assessment.
+        /// </remarks>
+        private void UpdateCoverPointQualityWithNearbySupport()
+        {
+            // Create a list of updated cover points
+            var updatedCoverPoints = new List<CoverPoint>(_coverPoints.Count);
+
+            for (int i = 0; i < _coverPoints.Count; i++)
+            {
+                CoverPoint point = _coverPoints[i];
+
+                // Count nearby cover points
+                int nearbyCoverCount = 0;
+                for (int j = 0; j < _coverPoints.Count; j++)
+                {
+                    if (i != j)
+                    {
+                        CoverPoint other = _coverPoints[j];
+                        float dist = Vector3Extensions.Distance2D(point.Position, other.Position);
+                        if (dist > 0.1f && dist < CoverPointQualityRadius)
+                        {
+                            nearbyCoverCount++;
+                        }
+                    }
+                }
+
+                // Recalculate quality with nearby support
+                float updatedQuality = CalculateCoverQuality(
+                    point.Position,
+                    point.CoverNormal,
+                    point.CoverHeight,
+                    point.FaceIndex,
+                    point.ObstacleId,
+                    nearbyCoverCount);
+
+                // Update cover point with new quality
+                point.Quality = updatedQuality;
+                updatedCoverPoints.Add(point);
+            }
+
+            // Replace the list with updated points
+            _coverPoints.Clear();
+            _coverPoints.AddRange(updatedCoverPoints);
+        }
+
+        /// <summary>
         /// Finds nearby cover points.
         /// </summary>
         /// <remarks>
         /// Eclipse-specific tactical feature.
         /// Identifies cover positions for combat AI.
         /// Considers cover quality and positioning.
+        ///
+        /// Based on reverse engineering of:
+        /// - daorigins.exe: Cover point query system
+        /// - DragonAge2.exe: Enhanced cover point query with quality sorting
+        ///
+        /// Algorithm:
+        /// 1. Ensure cover points are generated and up to date
+        /// 2. Query cover points within radius
+        /// 3. Sort by quality and distance
+        /// 4. Return sorted cover points
         /// </remarks>
         public IEnumerable<Vector3> FindCoverPoints(Vector3 position, float radius)
         {
-            // TODO: Implement cover point finding
-            // Analyze geometry for cover positions
-            // Rate cover quality
-            // Return sorted cover points
-            yield break;
+            // Ensure cover points are generated
+            EnsureCoverPointsGenerated();
+
+            // Query cover points within radius
+            var nearbyCoverPoints = new List<CoverPoint>();
+            float radiusSq = radius * radius;
+
+            foreach (CoverPoint coverPoint in _coverPoints)
+            {
+                float distSq = Vector3Extensions.DistanceSquared2D(position, coverPoint.Position);
+                if (distSq <= radiusSq)
+                {
+                    nearbyCoverPoints.Add(coverPoint);
+                }
+            }
+
+            // Sort by quality (descending), then by distance (ascending)
+            nearbyCoverPoints.Sort((a, b) =>
+            {
+                int qualityCompare = b.Quality.CompareTo(a.Quality);
+                if (qualityCompare != 0)
+                {
+                    return qualityCompare;
+                }
+                float distA = Vector3Extensions.DistanceSquared2D(position, a.Position);
+                float distB = Vector3Extensions.DistanceSquared2D(position, b.Position);
+                return distA.CompareTo(distB);
+            });
+
+            // Return positions
+            foreach (CoverPoint coverPoint in nearbyCoverPoints)
+            {
+                yield return coverPoint.Position;
+            }
         }
 
         /// <summary>
@@ -2020,6 +2470,7 @@ namespace Andastra.Runtime.Games.Eclipse
             if (changedObstacles.Count > 0 || removedObstacles.Count > 0 || addedObstacles.Count > 0)
             {
                 _meshNeedsRebuild = true;
+                _coverPointsDirty = true; // Cover points need regeneration when obstacles change
             }
 
             // Step 6: Clear invalidated faces if update is complete
@@ -2326,6 +2777,7 @@ namespace Andastra.Runtime.Games.Eclipse
 
             // Mark for update
             _meshNeedsRebuild = true;
+            _coverPointsDirty = true; // Cover points need regeneration when obstacles are added
         }
 
         /// <summary>
@@ -2380,6 +2832,7 @@ namespace Andastra.Runtime.Games.Eclipse
 
             // Mark for update
             _meshNeedsRebuild = true;
+            _coverPointsDirty = true; // Cover points need regeneration when obstacles are updated
         }
 
         /// <summary>
@@ -2400,6 +2853,7 @@ namespace Andastra.Runtime.Games.Eclipse
 
                 // Mark for update
                 _meshNeedsRebuild = true;
+                _coverPointsDirty = true; // Cover points need regeneration when obstacles are removed
             }
         }
 
@@ -2579,11 +3033,14 @@ namespace Andastra.Runtime.Games.Eclipse
                 }
             }
 
+            // Ensure cover points are generated to get accurate count
+            EnsureCoverPointsGenerated();
+
             return new NavigationStats
             {
                 TriangleCount = _staticFaceCount,
                 DynamicObstacleCount = activeObstacleCount,
-                CoverPointCount = 0, // TODO: Implement cover point counting when cover system is implemented
+                CoverPointCount = _coverPoints.Count,
                 LastUpdateTime = _meshNeedsRebuild ? 1.0f : 0.0f // Simple flag-based tracking
             };
         }
@@ -2652,6 +3109,57 @@ namespace Andastra.Runtime.Games.Eclipse
         public int FaceIndex;
         public int ObstacleId;
         public int LevelId;
+    }
+
+    /// <summary>
+    /// Represents a cover point for tactical positioning.
+    /// </summary>
+    /// <remarks>
+    /// Cover points are positions where characters can take cover from enemy fire.
+    /// Based on reverse engineering of:
+    /// - daorigins.exe: Cover point generation from static geometry and dynamic obstacles
+    /// - DragonAge2.exe: Enhanced cover point system with quality rating
+    /// </remarks>
+    internal struct CoverPoint
+    {
+        /// <summary>
+        /// Position of the cover point (on walkable surface).
+        /// </summary>
+        public Vector3 Position;
+
+        /// <summary>
+        /// Normal vector of the cover surface (direction cover faces).
+        /// </summary>
+        public Vector3 CoverNormal;
+
+        /// <summary>
+        /// Quality rating (0.0 to 1.0, higher is better).
+        /// Based on cover height, angle, and nearby geometry.
+        /// </summary>
+        public float Quality;
+
+        /// <summary>
+        /// Height of the cover at this point.
+        /// </summary>
+        public float CoverHeight;
+
+        /// <summary>
+        /// Face index if cover is from static geometry, -1 if from dynamic obstacle.
+        /// </summary>
+        public int FaceIndex;
+
+        /// <summary>
+        /// Obstacle ID if cover is from dynamic obstacle, -1 if from static geometry.
+        /// </summary>
+        public int ObstacleId;
+
+        /// <summary>
+        /// Whether this cover point is from static geometry.
+        /// </summary>
+        public bool IsStaticCover
+        {
+            get { return FaceIndex >= 0; }
+        }
     }
 
     /// <summary>
