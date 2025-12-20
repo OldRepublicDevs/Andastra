@@ -12,6 +12,9 @@ using Andastra.Parsing.Formats.ERF;
 using Andastra.Parsing.Formats.RIM;
 using Andastra.Parsing.Tools;
 using HolocronToolset.Data;
+using HolocronToolset.Common;
+using MsBox.Avalonia;
+using MsBox.Avalonia.Enums;
 using FileResource = Andastra.Parsing.Extract.FileResource;
 using Module = Andastra.Parsing.Common.Module;
 
@@ -358,11 +361,32 @@ namespace HolocronToolset.Dialogs
             }
 
             // Add to module
-            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/insert_instance.py:181
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/insert_instance.py:180-181
+            // Original: assert self.filepath is not None
             // Original: self._module.add_locations(self.resname, self._restype, [self.filepath])
+            // Ensure filepath is set (should always be set at this point, but defensive check)
             if (_module != null && !string.IsNullOrEmpty(_resname) && !string.IsNullOrEmpty(_filepath))
             {
-                _module.AddLocations(_resname, _restype, new[] { _filepath });
+                // Convert filepath to absolute path if it's relative (matching PyKotor Path behavior)
+                // PyKotor uses Path objects which are typically absolute when created from full paths
+                string absoluteFilepath = _filepath;
+                try
+                {
+                    if (!Path.IsPathRooted(_filepath))
+                    {
+                        absoluteFilepath = Path.GetFullPath(_filepath);
+                    }
+                }
+                catch
+                {
+                    // If path resolution fails, use the original filepath
+                    // This can happen in edge cases, but the original path should still be valid
+                    absoluteFilepath = _filepath;
+                }
+                
+                // Add location to module resource (creates ModuleResource if it doesn't exist)
+                // Matching PyKotor: module_resource.add_locations(locations) is called internally
+                _module.AddLocations(_resname, _restype, new[] { absoluteFilepath });
             }
 
             Close();
