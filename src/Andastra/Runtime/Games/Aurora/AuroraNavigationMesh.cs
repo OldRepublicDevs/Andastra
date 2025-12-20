@@ -1409,10 +1409,73 @@ namespace Andastra.Runtime.Games.Aurora
         /// <summary>
         /// Gets the center point of a face.
         /// </summary>
+        /// <remarks>
+        /// Based on nwmain.exe: Aurora tile-based face center calculation.
+        /// In Aurora, faces map to tiles in the tile grid. Each face index corresponds to a unique tile.
+        /// The face center is the center point of the corresponding tile.
+        /// 
+        /// Algorithm:
+        /// 1. Validate face index is within expected range (0 to tileHeight * tileWidth - 1)
+        /// 2. Convert face index to tile coordinates: tileY = faceIndex / tileWidth, tileX = faceIndex % tileWidth
+        /// 3. Validate tile coordinates are within bounds
+        /// 4. Use GetTileCenter to get the tile center point (world coordinates)
+        /// 5. Return Vector3.Zero for invalid face indices
+        /// 
+        /// Based on reverse engineering of:
+        /// - nwmain.exe: CNWSArea::GetTile @ 0x14035edc0 - Converts world coordinates to tile coordinates
+        /// - nwmain.exe: CNWTile::GetLocation @ 0x1402c55a0 - Gets tile grid coordinates (X, Y) from tile structure
+        /// - Tile center calculation: centerX = (tileX + 0.5) * TileSize, centerZ = (tileY + 0.5) * TileSize
+        /// - Tile size constant: DAT_140dc2df4 (10.0f units per tile)
+        /// - Face index calculation: faceIndex = tileY * tileWidth + tileX (from FindFaceAt)
+        /// - Tile array indexing pattern: width * y + x (matches face index calculation)
+        /// 
+        /// Tile center calculation (from GetTileCenter):
+        /// - X coordinate: (tileX + 0.5) * TileSize (center of tile in X direction)
+        /// - Z coordinate: (tileY + 0.5) * TileSize (center of tile in Z direction)
+        /// - Y coordinate: Sampled from tile height data using GetTileHeight
+        /// 
+        /// Note: Unlike Odyssey's triangle-based walkmesh where faces are actual triangles and the center
+        /// is the centroid of the three vertices, Aurora uses a tile-based system where each face index
+        /// maps to a tile in the grid. The face center is simply the center point of the corresponding tile,
+        /// which is at (tileX + 0.5) * TileSize for X/Z coordinates and sampled height for Y coordinate.
+        /// </remarks>
         public Vector3 GetFaceCenter(int faceIndex)
         {
-            // TODO: Implement Aurora face center calculation
-            throw new NotImplementedException("Aurora face center calculation not yet implemented");
+            // Handle empty tile grid
+            if (_tileWidth <= 0 || _tileHeight <= 0 || _tiles == null || _tiles.Length == 0)
+            {
+                return Vector3.Zero;
+            }
+
+            // Validate face index is within expected range
+            // Maximum face index should be (tileHeight - 1) * tileWidth + (tileWidth - 1) = tileHeight * tileWidth - 1
+            int maxFaceIndex = _tileHeight * _tileWidth - 1;
+            if (faceIndex < 0 || faceIndex > maxFaceIndex)
+            {
+                // Face index is out of bounds - return zero vector
+                return Vector3.Zero;
+            }
+
+            // Convert face index to tile coordinates
+            // Based on FindFaceAt: faceIndex = tileY * tileWidth + tileX
+            // Reverse: tileY = faceIndex / tileWidth, tileX = faceIndex % tileWidth
+            int tileY = faceIndex / _tileWidth;
+            int tileX = faceIndex % _tileWidth;
+
+            // Validate tile coordinates are within bounds
+            // This should always be true if faceIndex is valid, but check for safety
+            if (tileX < 0 || tileX >= _tileWidth || tileY < 0 || tileY >= _tileHeight)
+            {
+                // Invalid tile coordinates - return zero vector
+                return Vector3.Zero;
+            }
+
+            // Get the tile center point
+            // Based on nwmain.exe: CNWTile::GetLocation @ 0x1402c55a0 - Gets tile grid coordinates
+            // Tile center calculation: centerX = (tileX + 0.5) * TileSize, centerZ = (tileY + 0.5) * TileSize
+            // Height is sampled from tile data using GetTileHeight
+            // This matches the implementation in GetTileCenter method
+            return GetTileCenter(tileX, tileY);
         }
 
         /// <summary>
