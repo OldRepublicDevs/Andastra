@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Andastra.Parsing;
 using Andastra.Parsing.Formats.GFF;
 using Andastra.Parsing.Resource;
@@ -119,9 +120,26 @@ namespace Andastra.Parsing.Resource.Generics
             are.Comment = root.Acquire<string>("Comments", "");
 
             // Extract rooms list
+            // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/are.py:514-521
+            // Original: rooms_list = root.acquire("Rooms", GFFList())
+            // Original: for room_struct in rooms_list: ... are.rooms.append(ARERoom(...))
             var roomsList = root.Acquire<GFFList>("Rooms", new GFFList());
-            // are.Rooms would need to be a List<ARERoom> in ARE class
-            // foreach (GFFStruct roomStruct in roomsList) { ... }
+            are.Rooms = new List<ARERoom>();
+            foreach (GFFStruct roomStruct in roomsList)
+            {
+                // Matching Python: ambient_scale = room_struct.acquire("AmbientScale", 0.0)
+                float ambientScale = roomStruct.Acquire<float>("AmbientScale", 0.0f);
+                // Matching Python: env_audio = room_struct.acquire("EnvAudio", 0)
+                int envAudio = roomStruct.Acquire<int>("EnvAudio", 0);
+                // Matching Python: room_name = room_struct.acquire("RoomName", "")
+                string roomName = roomStruct.Acquire<string>("RoomName", "");
+                // Matching Python: disable_weather = bool(room_struct.acquire("DisableWeather", 0))
+                bool disableWeather = roomStruct.Acquire<int>("DisableWeather", 0) != 0;
+                // Matching Python: force_rating = room_struct.acquire("ForceRating", 0)
+                int forceRating = roomStruct.Acquire<int>("ForceRating", 0);
+                // Matching Python: are.rooms.append(ARERoom(room_name, disable_weather, env_audio, force_rating, ambient_scale))
+                are.Rooms.Add(new ARERoom(roomName, disableWeather, envAudio, forceRating, ambientScale));
+            }
 
             return are;
         }
@@ -235,21 +253,29 @@ namespace Andastra.Parsing.Resource.Generics
             
             // Set rooms list - written for ALL game types, but with K2-specific fields conditionally
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/are.py:625-633
+            // Original: rooms_list = root.set_list("Rooms", GFFList())
+            // Original: for room in are.rooms: ... room_struct.set_*("...", room.*)
             var roomsList = new GFFList();
             root.SetList("Rooms", roomsList);
-            // TODO: When ARE class has Rooms property (List<ARERoom>), implement room serialization:
-            // foreach (var room in are.Rooms)
-            // {
-            //     var roomStruct = roomsList.Add(0);
-            //     roomStruct.SetSingle("AmbientScale", room.AmbientScale);
-            //     roomStruct.SetInt32("EnvAudio", room.EnvAudio);
-            //     roomStruct.SetString("RoomName", room.Name);
-            //     if (game.IsK2())
-            //     {
-            //         roomStruct.SetUInt8("DisableWeather", room.Weather ? (byte)1 : (byte)0);
-            //         roomStruct.SetInt32("ForceRating", room.ForceRating);
-            //     }
-            // }
+            foreach (var room in are.Rooms)
+            {
+                // Matching Python: room_struct = rooms_list.add(0)
+                var roomStruct = roomsList.Add(0);
+                // Matching Python: room_struct.set_single("AmbientScale", room.ambient_scale)
+                roomStruct.SetSingle("AmbientScale", room.AmbientScale);
+                // Matching Python: room_struct.set_int32("EnvAudio", room.env_audio)
+                roomStruct.SetInt32("EnvAudio", room.EnvAudio);
+                // Matching Python: room_struct.set_string("RoomName", room.name)
+                roomStruct.SetString("RoomName", room.Name);
+                // Matching Python: if game.is_k2(): ... room_struct.set_uint8("DisableWeather", room.weather) ... room_struct.set_int32("ForceRating", room.force_rating)
+                // K2-specific fields should only be written for K2 games (K2, K2_XBOX, K2_IOS, K2_ANDROID)
+                // Aurora (NWN) and Eclipse engines use ARE files but don't have K2-specific fields
+                if (game.IsK2())
+                {
+                    roomStruct.SetUInt8("DisableWeather", room.Weather ? (byte)1 : (byte)0);
+                    roomStruct.SetInt32("ForceRating", room.ForceRating);
+                }
+            }
             
             // Set load screen ID - written for ALL game types
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/are.py:673
