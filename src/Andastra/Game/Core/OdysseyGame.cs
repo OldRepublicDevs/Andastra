@@ -103,7 +103,9 @@ namespace Andastra.Runtime.Game.Core
 
         // Audio system
         private Andastra.Runtime.Core.Audio.IMusicPlayer _musicPlayer;
+        private Andastra.Runtime.Core.Audio.ISoundPlayer _soundPlayer;
         private bool _musicStarted = false;
+        private bool _musicEnabled = true; // Music enabled by default (can be toggled by BTN_MUSIC in K2)
 
         // GUI system for main menu
         private Andastra.Runtime.Graphics.MonoGame.GUI.KotorGuiManager _guiManager;
@@ -374,8 +376,9 @@ namespace Andastra.Runtime.Game.Core
                 }
 
                 // Start main menu music if not already started and music is enabled
-                // Based on swkotor.exe FUN_005f9af0: Plays "mus_theme_cult" for K1 main menu
-                // Based on swkotor2.exe FUN_006456b0: Plays "mus_sion" for K2 main menu
+                // Based on swkotor.exe FUN_005f9af0 @ 0x005f9af0: Plays "mus_theme_cult" for K1 main menu
+                // Based on swkotor2.exe FUN_006456b0 @ 0x006456b0: Plays "mus_sion" for K2 main menu
+                // Music starts immediately when entering main menu (no delay)
                 if (!_musicStarted && _musicPlayer != null && _musicEnabled)
                 {
                     string musicResRef = _settings.Game == Andastra.Runtime.Core.KotorGame.K1 ? "mus_theme_cult" : "mus_sion";
@@ -623,35 +626,16 @@ namespace Andastra.Runtime.Game.Core
 
                 // Check for button hover sound effects
                 // Based on swkotor.exe and swkotor2.exe: Button hover plays sound effect
-                // Original implementation: Button hover triggers "gui_actscroll" or "gui_actscroll1" sound effect
-                // Sound files: "gui_actscroll" (primary), "gui_actscroll1" (alternate) - button hover/scroll sound
-                // Located via string references: "gui_actscroll" @ 0x007b5f7c (GUI sound effects)
-                // Sound is played when mouse enters a button (highlighted button changes from null/other to current button)
-                string currentHighlightedTag = _guiManager.HighlightedButtonTag;
-                if (currentHighlightedTag != _previousHighlightedButton && !string.IsNullOrEmpty(currentHighlightedTag))
+                // Based on xoreos WidgetButton::enter() - plays "gui_actscroll" on button hover
+                // Sound file: "gui_actscroll" (button hover sound)
+                // Original implementation: Button hover triggers sound when mouse enters button
+                string currentHighlightedButton = _guiManager.HighlightedButtonTag;
+                if (currentHighlightedButton != _previousHighlightedButton && !string.IsNullOrEmpty(currentHighlightedButton))
                 {
-                    // Button hover state changed - play hover sound effect
-                    // Based on swkotor.exe and swkotor2.exe: GUI button hover sound playback
-                    // Try "gui_actscroll" first, fall back to "gui_actscroll1" if not found
-                    if (_soundPlayer != null)
-                    {
-                        try
-                        {
-                            // Try primary hover sound
-                            uint soundId = _soundPlayer.PlaySound("gui_actscroll", null, 1.0f, 0.0f, 0.0f);
-                            if (soundId == 0)
-                            {
-                                // Fall back to alternate hover sound if primary not found
-                                _soundPlayer.PlaySound("gui_actscroll1", null, 1.0f, 0.0f, 0.0f);
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            Console.WriteLine($"[Odyssey] WARNING: Failed to play button hover sound: {ex.Message}");
-                        }
-                    }
+                    // Button hover changed - play hover sound effect
+                    PlayButtonSound("gui_actscroll");
                 }
-                _previousHighlightedButton = currentHighlightedTag;
+                _previousHighlightedButton = currentHighlightedButton;
 
                 // Update previous mouse/keyboard state for fallback input handling if needed
                 _previousMenuMouseState = mouseState;
@@ -759,6 +743,29 @@ namespace Andastra.Runtime.Game.Core
         }
 
         /// <summary>
+        /// Plays a button sound effect.
+        /// Based on swkotor.exe and swkotor2.exe: Button interactions play sound effects
+        /// </summary>
+        private void PlayButtonSound(string soundResRef)
+        {
+            try
+            {
+                // Get sound player from graphics backend audio manager
+                var soundPlayer = _graphicsBackend.AudioManager?.SoundPlayer;
+                if (soundPlayer != null)
+                {
+                    // Play sound at full volume, non-positional (2D sound)
+                    soundPlayer.PlaySound(soundResRef, 1.0f, false, System.Numerics.Vector3.Zero);
+                }
+            }
+            catch (Exception ex)
+            {
+                // Silently fail - sound is not critical
+                Console.WriteLine($"[Odyssey] WARNING: Failed to play button sound {soundResRef}: {ex.Message}");
+            }
+        }
+
+        /// <summary>
         /// Handles GUI button clicks from the main menu GUI.
         /// Based on swkotor.exe FUN_0067afb0 @ 0x0067afb0 (New Game button handler)
         /// Based on swkotor2.exe FUN_006d0b00 @ 0x006d0b00 (New Game button handler)
@@ -767,6 +774,11 @@ namespace Andastra.Runtime.Game.Core
         {
             string buttonTag = e.ButtonTag;
             Console.WriteLine($"[Odyssey] GUI button clicked: {buttonTag} (ID: {e.ButtonId})");
+
+            // Play button click sound
+            // Based on swkotor.exe and swkotor2.exe: Button clicks play sound effect
+            // Sound file: "gui_actscroll" or "gui_actscroll1" (button click sound)
+            PlayButtonSound("gui_actscroll");
 
             // Handle button clicks based on button tag
             // Based on swkotor.exe FUN_0067ace0: Button tags (BTN_NEWGAME, BTN_LOADGAME, BTN_OPTIONS, BTN_EXIT)
