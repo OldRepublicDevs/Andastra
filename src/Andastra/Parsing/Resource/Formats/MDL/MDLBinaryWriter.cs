@@ -30,6 +30,16 @@ namespace Andastra.Parsing.Formats.MDL
         private List<_Animation> _binAnims;
         private ModelHeader _fileHeader;
 
+        // MDX data flags (matching PyKotor _MDXDataFlags and MDLBinaryReader.MDXDataFlags)
+        private static class MDXDataFlags
+        {
+            public const int VERTEX = 0x0001;
+            public const int TEXTURE1 = 0x0002;
+            public const int TEXTURE2 = 0x0004;
+            public const int NORMAL = 0x0020;
+            public const int BUMPMAP = 0x0080;
+        }
+
         // Internal binary structure classes (matching PyKotor _ModelHeader, _GeometryHeader, etc.)
         private class ModelHeader
         {
@@ -819,43 +829,22 @@ namespace Andastra.Parsing.Formats.MDL
             binNode.Header.NodeId = (ushort)_GetNodeId(binNode);
 
             // Determine function pointers based on game version
-            bool isK2 = _game.IsK2();
             uint fp0, fp1;
-            if (_game.IsK1())
-            {
+            bool isK2 = _game.IsK2();
             if (mdlNode.Skin != null)
             {
-                    fp0 = TrimeshHeader.K1_SKIN_FUNCTION_POINTER0;
-                    fp1 = TrimeshHeader.K1_SKIN_FUNCTION_POINTER1;
+                fp0 = isK2 ? TrimeshHeader.K2_SKIN_FUNCTION_POINTER0 : TrimeshHeader.K1_SKIN_FUNCTION_POINTER0;
+                fp1 = isK2 ? TrimeshHeader.K2_SKIN_FUNCTION_POINTER1 : TrimeshHeader.K1_SKIN_FUNCTION_POINTER1;
             }
             else if (mdlNode.Dangly != null)
             {
-                    fp0 = TrimeshHeader.K1_DANGLY_FUNCTION_POINTER0;
-                    fp1 = TrimeshHeader.K1_DANGLY_FUNCTION_POINTER1;
+                fp0 = isK2 ? TrimeshHeader.K2_DANGLY_FUNCTION_POINTER0 : TrimeshHeader.K1_DANGLY_FUNCTION_POINTER0;
+                fp1 = isK2 ? TrimeshHeader.K2_DANGLY_FUNCTION_POINTER1 : TrimeshHeader.K1_DANGLY_FUNCTION_POINTER1;
             }
             else
             {
-                    fp0 = TrimeshHeader.K1_FUNCTION_POINTER0;
-                    fp1 = TrimeshHeader.K1_FUNCTION_POINTER1;
-                }
-            }
-            else
-            {
-                if (mdlNode.Skin != null)
-                {
-                    fp0 = TrimeshHeader.K2_SKIN_FUNCTION_POINTER0;
-                    fp1 = TrimeshHeader.K2_SKIN_FUNCTION_POINTER1;
-                }
-                else if (mdlNode.Dangly != null)
-                {
-                    fp0 = TrimeshHeader.K2_DANGLY_FUNCTION_POINTER0;
-                    fp1 = TrimeshHeader.K2_DANGLY_FUNCTION_POINTER1;
-                }
-                else
-                {
-                    fp0 = TrimeshHeader.K2_FUNCTION_POINTER0;
-                    fp1 = TrimeshHeader.K2_FUNCTION_POINTER1;
-                }
+                fp0 = isK2 ? TrimeshHeader.K2_FUNCTION_POINTER0 : TrimeshHeader.K1_FUNCTION_POINTER0;
+                fp1 = isK2 ? TrimeshHeader.K2_FUNCTION_POINTER1 : TrimeshHeader.K1_FUNCTION_POINTER1;
             }
 
             if (mdlNode.Mesh != null)
@@ -878,7 +867,38 @@ namespace Andastra.Parsing.Formats.MDL
                 Vector3 ambient = mdlNode.Mesh.Ambient;
                 binNode.Trimesh.Ambient = new Vector3(ambient.Z, ambient.Y, ambient.X);
                 binNode.Trimesh.TransparencyHint = (uint)mdlNode.Mesh.TransparencyHint;
-                // TODO: Set other trimesh properties
+                
+                // Set rendering flags and properties (matching PyKotor reference: io_mdl.py:2019-2030)
+                binNode.Trimesh.Render = (byte)(mdlNode.Mesh.Render != 0 ? 1 : 0);
+                binNode.Trimesh.HasLightmap = (byte)(mdlNode.Mesh.HasLightmap ? 1 : 0);
+                binNode.Trimesh.HasShadow = (byte)(mdlNode.Mesh.Shadow != 0.0f ? 1 : 0);
+                binNode.Trimesh.Beaming = (byte)(mdlNode.Mesh.Beaming != 0 ? 1 : 0);
+                
+                // UV animation properties (default to 0 if not available in MDLMesh)
+                // These properties may not be in MDLMesh yet, so use defaults matching PyKotor _TrimeshHeader initialization
+                binNode.Trimesh.UvJitter = 0.0f;  // Default from PyKotor _TrimeshHeader.__init__
+                binNode.Trimesh.UvSpeed = 0.0f;   // Default from PyKotor _TrimeshHeader.__init__
+                binNode.Trimesh.UvDirection = new Vector2(0.0f, 0.0f);  // Default from PyKotor Vector2.from_null()
+                
+                // Texture and background properties (defaults matching PyKotor)
+                binNode.Trimesh.RotateTexture = 0;  // Default from PyKotor _TrimeshHeader.__init__
+                binNode.Trimesh.Background = 0;     // Default from PyKotor _TrimeshHeader.__init__
+                
+                // Texture count: typically 1 for primary texture, 2 if lightmap is present
+                binNode.Trimesh.TextureCount = (ushort)(mdlNode.Mesh.HasLightmap ? 2 : 1);
+                
+                // TotalArea2 is a duplicate of TotalArea (matching PyKotor behavior)
+                binNode.Trimesh.TotalArea2 = binNode.Trimesh.TotalArea;
+                
+                // Saber unknowns: default to (3, 0, 0, 0, 0, 0, 0, 0) matching PyKotor MDLMesh.__init__
+                // Note: In PyKotor, this comes from mdl_node.mesh.saber_unknowns, but MDLMesh in C# doesn't have this property yet
+                // So we use the default values matching PyKotor's default
+                binNode.Trimesh.SaberUnknowns[0] = 3;
+                for (int i = 1; i < 8; i++)
+                {
+                    binNode.Trimesh.SaberUnknowns[i] = 0;
+                }
+                
                 binNode.Trimesh.VertexCount = (ushort)mdlNode.Mesh.Vertices.Count;
                 binNode.Trimesh.Vertices.Clear();
                 binNode.Trimesh.Vertices.AddRange(mdlNode.Mesh.Vertices);
@@ -1172,7 +1192,104 @@ namespace Andastra.Parsing.Formats.MDL
 
         private void _UpdateMdx(_Node binNode, MDLData.MDLNode mdlNode)
         {
-            // TODO: Update MDX data (vertex normals, UVs, skinning)
+            if (binNode.Trimesh == null || mdlNode.Mesh == null)
+            {
+                return;
+            }
+
+            // Set MDX data offset to current writer position (matching PyKotor _update_mdx)
+            binNode.Trimesh.MdxDataOffset = (uint)_mdxWriter.Position();
+
+            // Initialize all MDX offsets to 0xFFFFFFFF (invalid offset)
+            binNode.Trimesh.MdxVertexOffset = 0xFFFFFFFF;
+            binNode.Trimesh.MdxNormalOffset = 0xFFFFFFFF;
+            binNode.Trimesh.MdxTexture1Offset = 0xFFFFFFFF;
+            binNode.Trimesh.MdxTexture2Offset = 0xFFFFFFFF;
+            binNode.Trimesh.MdxDataBitmap = 0;
+
+            // Calculate suboffsets based on available data types
+            int suboffset = 0;
+
+            // Check for vertex positions
+            if (mdlNode.Mesh.Vertices != null && mdlNode.Mesh.Vertices.Count > 0)
+            {
+                binNode.Trimesh.MdxVertexOffset = (uint)suboffset;
+                binNode.Trimesh.MdxDataBitmap |= (uint)MDLBinaryReader.MDXDataFlags.VERTEX;
+                suboffset += 12; // 3 floats * 4 bytes each
+            }
+
+            // Check for vertex normals
+            if (mdlNode.Mesh.Normals != null && mdlNode.Mesh.Normals.Count > 0)
+            {
+                binNode.Trimesh.MdxNormalOffset = (uint)suboffset;
+                binNode.Trimesh.MdxDataBitmap |= (uint)MDLBinaryReader.MDXDataFlags.NORMAL;
+                suboffset += 12; // 3 floats * 4 bytes each
+            }
+
+            // Check for primary UV coordinates
+            if (mdlNode.Mesh.UV1 != null && mdlNode.Mesh.UV1.Count > 0)
+            {
+                binNode.Trimesh.MdxTexture1Offset = (uint)suboffset;
+                binNode.Trimesh.MdxDataBitmap |= (uint)MDLBinaryReader.MDXDataFlags.TEXTURE1;
+                suboffset += 8; // 2 floats * 4 bytes each
+            }
+
+            // Check for secondary UV coordinates
+            if (mdlNode.Mesh.UV2 != null && mdlNode.Mesh.UV2.Count > 0)
+            {
+                binNode.Trimesh.MdxTexture2Offset = (uint)suboffset;
+                binNode.Trimesh.MdxDataBitmap |= (uint)MDLBinaryReader.MDXDataFlags.TEXTURE2;
+                suboffset += 8; // 2 floats * 4 bytes each
+            }
+
+            binNode.Trimesh.MdxDataSize = (uint)suboffset;
+
+            // Write interleaved vertex data for each vertex (matching PyKotor implementation)
+            int vertexCount = mdlNode.Mesh.Vertices?.Count ?? 0;
+            for (int i = 0; i < vertexCount; i++)
+            {
+                // Write vertex position if available
+                if (mdlNode.Mesh.Vertices != null && i < mdlNode.Mesh.Vertices.Count)
+                {
+                    _mdxWriter.WriteVector3(mdlNode.Mesh.Vertices[i]);
+                }
+
+                // Write vertex normal if available
+                if (mdlNode.Mesh.Normals != null && i < mdlNode.Mesh.Normals.Count)
+                {
+                    _mdxWriter.WriteVector3(mdlNode.Mesh.Normals[i]);
+                }
+
+                // Write primary UV coordinates if available
+                if (mdlNode.Mesh.UV1 != null && i < mdlNode.Mesh.UV1.Count)
+                {
+                    _mdxWriter.WriteVector2(mdlNode.Mesh.UV1[i]);
+                }
+
+                // Write secondary UV coordinates if available
+                if (mdlNode.Mesh.UV2 != null && i < mdlNode.Mesh.UV2.Count)
+                {
+                    _mdxWriter.WriteVector2(mdlNode.Mesh.UV2[i]);
+                }
+            }
+
+            // Write dummy entry at the end (matching PyKotor "Why does the mdl/mdx format have this?")
+            if (mdlNode.Mesh.Vertices != null && mdlNode.Mesh.Vertices.Count > 0)
+            {
+                _mdxWriter.WriteVector3(new Vector3(10000000.0f, 10000000.0f, 10000000.0f));
+            }
+            if (mdlNode.Mesh.Normals != null && mdlNode.Mesh.Normals.Count > 0)
+            {
+                _mdxWriter.WriteVector3(Vector3.Zero);
+            }
+            if (mdlNode.Mesh.UV1 != null && mdlNode.Mesh.UV1.Count > 0)
+            {
+                _mdxWriter.WriteVector2(Vector2.Zero);
+            }
+            if (mdlNode.Mesh.UV2 != null && mdlNode.Mesh.UV2.Count > 0)
+            {
+                _mdxWriter.WriteVector2(Vector2.Zero);
+            }
         }
 
         private void _WriteAll()
@@ -1216,460 +1333,3 @@ namespace Andastra.Parsing.Formats.MDL
                 foreach (var name in _names)
                 {
                     mdlBuffer.WriteString(name + "\0", name.Length + 1, '\0', "ascii");
-                }
-
-                // Write animation offsets
-                foreach (var animOffset in _animOffsets)
-                {
-                    mdlBuffer.WriteUInt32((uint)animOffset);
-                }
-
-                // Write animations
-                bool isK2Write = _game.IsK2();
-                foreach (var binAnim in _binAnims)
-                {
-                    binAnim.Write(mdlBuffer, isK2Write);
-                }
-
-                // Write nodes
-                foreach (var binNode in _binNodes)
-                {
-                    binNode.Write(mdlBuffer, isK2Write);
-                }
-
-                // Get MDL and MDX sizes
-                uint mdlSize = (uint)mdlBuffer.Position();
-                uint mdxSize = (uint)_mdxWriter.Position();
-
-                // Update MDX size in file header (already written, but we'll overwrite)
-                _fileHeader.MdxSize = mdxSize;
-
-                // Write file header (12 bytes: unused, mdl_size, mdx_size)
-                _writer.WriteUInt32(0); // Unused
-                _writer.WriteUInt32(mdlSize);
-                _writer.WriteUInt32(mdxSize);
-
-                // Write MDL data
-                byte[] mdlData = mdlBuffer.Data();
-                _writer.WriteBytes(mdlData);
-            }
-
-            // MDX data is already written to _mdxWriter, no need to write again
-        }
-
-        public void Dispose()
-        {
-            _writer?.Dispose();
-            _mdxWriter?.Dispose();
-        }
-    }
-}
-
-            {
-                if (_names.IndexOf(_mdlNodes[i].Name) == nameId)
-                {
-                    mdlNode = _mdlNodes[i];
-                    break;
-                }
-            }
-            if (mdlNode == null)
-            {
-                throw new InvalidOperationException("MDL node not found");
-            }
-
-            List<int> childNameIds = new List<int>();
-            foreach (var child in mdlNode.Children)
-            {
-                int childNameId = _names.IndexOf(child.Name);
-                childNameIds.Add(childNameId);
-            }
-
-            List<_Node> binChildren = new List<_Node>();
-            foreach (var childNameId in childNameIds)
-            {
-                foreach (var bn in allNodes)
-                {
-                    if (bn.Header.NameId == childNameId)
-                    {
-                        binChildren.Add(bn);
-                    }
-                }
-            }
-            return binChildren;
-        }
-
-        private int _NodeType(MDLData.MDLNode node)
-        {
-            int typeId = 1;
-            if (node.Mesh != null)
-            {
-                typeId |= (int)MDLNodeFlags.MESH;
-            }
-            // TODO: Add other node type flags (SKIN, DANGLY, SABER, AABB, EMITTER, LIGHT, REFERENCE)
-            return typeId;
-        }
-
-        private void _UpdateMdx(_Node binNode, MDLData.MDLNode mdlNode)
-        {
-            // TODO: Update MDX data (vertex normals, UVs, skinning)
-        }
-
-        private void _WriteAll()
-        {
-            // Update MDX data for all nodes with meshes
-            for (int i = 0; i < _binNodes.Count; i++)
-            {
-                if (_binNodes[i].Trimesh != null)
-                {
-                    _UpdateMdx(_binNodes[i], _mdlNodes[i]);
-                }
-            }
-
-            // Set file header properties based on game version
-            bool isK2 = _game.IsK2();
-            _fileHeader.Geometry.FunctionPointer0 = isK2 ? GeometryHeader.K2_FUNCTION_POINTER0 : GeometryHeader.K1_FUNCTION_POINTER0;
-            _fileHeader.Geometry.FunctionPointer1 = isK2 ? GeometryHeader.K2_FUNCTION_POINTER1 : GeometryHeader.K1_FUNCTION_POINTER1;
-            _fileHeader.Geometry.ModelName = _mdl.Name;
-            _fileHeader.Geometry.NodeCount = (uint)_mdlNodes.Count;
-            _fileHeader.Geometry.GeometryType = GeometryHeader.GEOM_TYPE_ROOT;
-            _fileHeader.OffsetToSuperRoot = _fileHeader.Geometry.RootNodeOffset;
-            _fileHeader.AnimationCount = (uint)_mdl.Anims.Count;
-            _fileHeader.AnimationCount2 = (uint)_mdl.Anims.Count;
-            _fileHeader.Supermodel = _mdl.Supermodel ?? "";
-            _fileHeader.NameOffsetsCount = (uint)_names.Count;
-            _fileHeader.NameOffsetsCount2 = (uint)_names.Count;
-
-            // Write MDL data to memory buffer first
-            using (var mdlBuffer = RawBinaryWriter.ToByteArray())
-            {
-                // Write file header
-                _fileHeader.Write(mdlBuffer);
-
-                // Write name offsets
-                foreach (var nameOffset in _nameOffsets)
-                {
-                    mdlBuffer.WriteUInt32((uint)nameOffset);
-                }
-
-                // Write names
-                foreach (var name in _names)
-                {
-                    mdlBuffer.WriteString(name + "\0", name.Length + 1, '\0', "ascii");
-                }
-
-                // Write animation offsets
-                foreach (var animOffset in _animOffsets)
-                {
-                    mdlBuffer.WriteUInt32((uint)animOffset);
-                }
-
-                // Write animations
-                bool isK2Write = _game.IsK2();
-                foreach (var binAnim in _binAnims)
-                {
-                    binAnim.Write(mdlBuffer, isK2Write);
-                }
-
-                // Write nodes
-                foreach (var binNode in _binNodes)
-                {
-                    binNode.Write(mdlBuffer, isK2Write);
-                }
-
-                // Get MDL and MDX sizes
-                uint mdlSize = (uint)mdlBuffer.Position();
-                uint mdxSize = (uint)_mdxWriter.Position();
-
-                // Update MDX size in file header (already written, but we'll overwrite)
-                _fileHeader.MdxSize = mdxSize;
-
-                // Write file header (12 bytes: unused, mdl_size, mdx_size)
-                _writer.WriteUInt32(0); // Unused
-                _writer.WriteUInt32(mdlSize);
-                _writer.WriteUInt32(mdxSize);
-
-                // Write MDL data
-                byte[] mdlData = mdlBuffer.Data();
-                _writer.WriteBytes(mdlData);
-            }
-
-            // MDX data is already written to _mdxWriter, no need to write again
-        }
-
-        public void Dispose()
-        {
-            _writer?.Dispose();
-            _mdxWriter?.Dispose();
-        }
-    }
-}
-
-            {
-                throw new InvalidOperationException("MDL node not found");
-            }
-
-            List<int> childNameIds = new List<int>();
-            foreach (var child in mdlNode.Children)
-            {
-                int childNameId = _names.IndexOf(child.Name);
-                childNameIds.Add(childNameId);
-            }
-
-            List<_Node> binChildren = new List<_Node>();
-            foreach (var childNameId in childNameIds)
-            {
-                foreach (var bn in allNodes)
-                {
-                    if (bn.Header.NameId == childNameId)
-                    {
-                        binChildren.Add(bn);
-                    }
-                }
-            }
-            return binChildren;
-        }
-
-        private int _NodeType(MDLData.MDLNode node)
-        {
-            int typeId = 1;
-            if (node.Mesh != null)
-            {
-                typeId |= (int)MDLNodeFlags.MESH;
-            }
-            // TODO: Add other node type flags (SKIN, DANGLY, SABER, AABB, EMITTER, LIGHT, REFERENCE)
-            return typeId;
-        }
-
-        private void _UpdateMdx(_Node binNode, MDLData.MDLNode mdlNode)
-        {
-            // TODO: Update MDX data (vertex normals, UVs, skinning)
-        }
-
-        private void _WriteAll()
-        {
-            // Update MDX data for all nodes with meshes
-            for (int i = 0; i < _binNodes.Count; i++)
-            {
-                if (_binNodes[i].Trimesh != null)
-                {
-                    _UpdateMdx(_binNodes[i], _mdlNodes[i]);
-                }
-            }
-
-            // Set file header properties based on game version
-            bool isK2 = _game.IsK2();
-            _fileHeader.Geometry.FunctionPointer0 = isK2 ? GeometryHeader.K2_FUNCTION_POINTER0 : GeometryHeader.K1_FUNCTION_POINTER0;
-            _fileHeader.Geometry.FunctionPointer1 = isK2 ? GeometryHeader.K2_FUNCTION_POINTER1 : GeometryHeader.K1_FUNCTION_POINTER1;
-            _fileHeader.Geometry.ModelName = _mdl.Name;
-            _fileHeader.Geometry.NodeCount = (uint)_mdlNodes.Count;
-            _fileHeader.Geometry.GeometryType = GeometryHeader.GEOM_TYPE_ROOT;
-            _fileHeader.OffsetToSuperRoot = _fileHeader.Geometry.RootNodeOffset;
-            _fileHeader.AnimationCount = (uint)_mdl.Anims.Count;
-            _fileHeader.AnimationCount2 = (uint)_mdl.Anims.Count;
-            _fileHeader.Supermodel = _mdl.Supermodel ?? "";
-            _fileHeader.NameOffsetsCount = (uint)_names.Count;
-            _fileHeader.NameOffsetsCount2 = (uint)_names.Count;
-
-            // Write MDL data to memory buffer first
-            using (var mdlBuffer = RawBinaryWriter.ToByteArray())
-            {
-                // Write file header
-                _fileHeader.Write(mdlBuffer);
-
-                // Write name offsets
-                foreach (var nameOffset in _nameOffsets)
-                {
-                    mdlBuffer.WriteUInt32((uint)nameOffset);
-                }
-
-                // Write names
-                foreach (var name in _names)
-                {
-                    mdlBuffer.WriteString(name + "\0", name.Length + 1, '\0', "ascii");
-                }
-
-                // Write animation offsets
-                foreach (var animOffset in _animOffsets)
-                {
-                    mdlBuffer.WriteUInt32((uint)animOffset);
-                }
-
-                // Write animations
-                bool isK2Write = _game.IsK2();
-                foreach (var binAnim in _binAnims)
-                {
-                    binAnim.Write(mdlBuffer, isK2Write);
-                }
-
-                // Write nodes
-                foreach (var binNode in _binNodes)
-                {
-                    binNode.Write(mdlBuffer, isK2Write);
-                }
-
-                // Get MDL and MDX sizes
-                uint mdlSize = (uint)mdlBuffer.Position();
-                uint mdxSize = (uint)_mdxWriter.Position();
-
-                // Update MDX size in file header (already written, but we'll overwrite)
-                _fileHeader.MdxSize = mdxSize;
-
-                // Write file header (12 bytes: unused, mdl_size, mdx_size)
-                _writer.WriteUInt32(0); // Unused
-                _writer.WriteUInt32(mdlSize);
-                _writer.WriteUInt32(mdxSize);
-
-                // Write MDL data
-                byte[] mdlData = mdlBuffer.Data();
-                _writer.WriteBytes(mdlData);
-            }
-
-            // MDX data is already written to _mdxWriter, no need to write again
-        }
-
-        public void Dispose()
-        {
-            _writer?.Dispose();
-            _mdxWriter?.Dispose();
-        }
-    }
-}
-
-            {
-                if (_names.IndexOf(_mdlNodes[i].Name) == nameId)
-                {
-                    mdlNode = _mdlNodes[i];
-                    break;
-                }
-            }
-            if (mdlNode == null)
-            {
-                throw new InvalidOperationException("MDL node not found");
-            }
-
-            List<int> childNameIds = new List<int>();
-            foreach (var child in mdlNode.Children)
-            {
-                int childNameId = _names.IndexOf(child.Name);
-                childNameIds.Add(childNameId);
-            }
-
-            List<_Node> binChildren = new List<_Node>();
-            foreach (var childNameId in childNameIds)
-            {
-                foreach (var bn in allNodes)
-                {
-                    if (bn.Header.NameId == childNameId)
-                    {
-                        binChildren.Add(bn);
-                    }
-                }
-            }
-            return binChildren;
-        }
-
-        private int _NodeType(MDLData.MDLNode node)
-        {
-            int typeId = 1;
-            if (node.Mesh != null)
-            {
-                typeId |= (int)MDLNodeFlags.MESH;
-            }
-            // TODO: Add other node type flags (SKIN, DANGLY, SABER, AABB, EMITTER, LIGHT, REFERENCE)
-            return typeId;
-        }
-
-        private void _UpdateMdx(_Node binNode, MDLData.MDLNode mdlNode)
-        {
-            // TODO: Update MDX data (vertex normals, UVs, skinning)
-        }
-
-        private void _WriteAll()
-        {
-            // Update MDX data for all nodes with meshes
-            for (int i = 0; i < _binNodes.Count; i++)
-            {
-                if (_binNodes[i].Trimesh != null)
-                {
-                    _UpdateMdx(_binNodes[i], _mdlNodes[i]);
-                }
-            }
-
-            // Set file header properties based on game version
-            bool isK2 = _game.IsK2();
-            _fileHeader.Geometry.FunctionPointer0 = isK2 ? GeometryHeader.K2_FUNCTION_POINTER0 : GeometryHeader.K1_FUNCTION_POINTER0;
-            _fileHeader.Geometry.FunctionPointer1 = isK2 ? GeometryHeader.K2_FUNCTION_POINTER1 : GeometryHeader.K1_FUNCTION_POINTER1;
-            _fileHeader.Geometry.ModelName = _mdl.Name;
-            _fileHeader.Geometry.NodeCount = (uint)_mdlNodes.Count;
-            _fileHeader.Geometry.GeometryType = GeometryHeader.GEOM_TYPE_ROOT;
-            _fileHeader.OffsetToSuperRoot = _fileHeader.Geometry.RootNodeOffset;
-            _fileHeader.AnimationCount = (uint)_mdl.Anims.Count;
-            _fileHeader.AnimationCount2 = (uint)_mdl.Anims.Count;
-            _fileHeader.Supermodel = _mdl.Supermodel ?? "";
-            _fileHeader.NameOffsetsCount = (uint)_names.Count;
-            _fileHeader.NameOffsetsCount2 = (uint)_names.Count;
-
-            // Write MDL data to memory buffer first
-            using (var mdlBuffer = RawBinaryWriter.ToByteArray())
-            {
-                // Write file header
-                _fileHeader.Write(mdlBuffer);
-
-                // Write name offsets
-                foreach (var nameOffset in _nameOffsets)
-                {
-                    mdlBuffer.WriteUInt32((uint)nameOffset);
-                }
-
-                // Write names
-                foreach (var name in _names)
-                {
-                    mdlBuffer.WriteString(name + "\0", name.Length + 1, '\0', "ascii");
-                }
-
-                // Write animation offsets
-                foreach (var animOffset in _animOffsets)
-                {
-                    mdlBuffer.WriteUInt32((uint)animOffset);
-                }
-
-                // Write animations
-                bool isK2Write = _game.IsK2();
-                foreach (var binAnim in _binAnims)
-                {
-                    binAnim.Write(mdlBuffer, isK2Write);
-                }
-
-                // Write nodes
-                foreach (var binNode in _binNodes)
-                {
-                    binNode.Write(mdlBuffer, isK2Write);
-                }
-
-                // Get MDL and MDX sizes
-                uint mdlSize = (uint)mdlBuffer.Position();
-                uint mdxSize = (uint)_mdxWriter.Position();
-
-                // Update MDX size in file header (already written, but we'll overwrite)
-                _fileHeader.MdxSize = mdxSize;
-
-                // Write file header (12 bytes: unused, mdl_size, mdx_size)
-                _writer.WriteUInt32(0); // Unused
-                _writer.WriteUInt32(mdlSize);
-                _writer.WriteUInt32(mdxSize);
-
-                // Write MDL data
-                byte[] mdlData = mdlBuffer.Data();
-                _writer.WriteBytes(mdlData);
-            }
-
-            // MDX data is already written to _mdxWriter, no need to write again
-        }
-
-        public void Dispose()
-        {
-            _writer?.Dispose();
-            _mdxWriter?.Dispose();
-        }
-    }
-}
