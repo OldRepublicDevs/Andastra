@@ -770,6 +770,7 @@ namespace HolocronToolset.Tests.Formats
             deserializedReply3.Text.GetString(Language.English, Gender.Male).Should().Be("R249");
 
             // Traverse the deserialized graph to ensure all expected nodes survived
+            // Matching Python: assert {"E248", "E221", "E250", "E224"}.issubset(entry_comments)
             var entryComments = new HashSet<string>();
             var replyTexts = new HashSet<string>();
             var stack = new Stack<DLGNode>();
@@ -791,14 +792,11 @@ namespace HolocronToolset.Tests.Formats
                 }
             }
 
-            entryComments.Should().Contain("E248");
-            entryComments.Should().Contain("E221");
-            entryComments.Should().Contain("E250");
-            entryComments.Should().Contain("E224");
-            replyTexts.Should().Contain("R222");
-            replyTexts.Should().Contain("R223");
-            replyTexts.Should().Contain("R249");
-            replyTexts.Should().Contain("R225");
+            // Verify all expected entries and replies are present
+            var expectedEntries = new HashSet<string> { "E248", "E221", "E250", "E224" };
+            var expectedReplies = new HashSet<string> { "R222", "R223", "R249", "R225" };
+            expectedEntries.IsSubsetOf(entryComments).Should().BeTrue($"Expected entries {string.Join(", ", expectedEntries)} but found {string.Join(", ", entryComments)}");
+            expectedReplies.IsSubsetOf(replyTexts).Should().BeTrue($"Expected replies {string.Join(", ", expectedReplies)} but found {string.Join(", ", replyTexts)}");
         }
 
         [Fact]
