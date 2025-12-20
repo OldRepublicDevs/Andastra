@@ -11,21 +11,47 @@ namespace Andastra.Runtime.Engines.Common
     /// <remarks>
     /// Base Engine Game:
     /// - Common game session management pattern across all BioWare engines
-    /// - Cross-engine analysis shows similar module state management patterns:
-    ///   - Odyssey: Server command parser, manages module state flags
-    ///   - Aurora: Similar module state management (module loading/unloading, state flags)
-    ///   - Eclipse: Similar module state management
-    ///   - Infinity: Similar module state management (ARE/GAM file-based)
-    /// - Inheritance: Base class BaseEngineGame (Runtime.Games.Common) implements common module state management
-    ///   - Odyssey: OdysseyGameSession : BaseEngineGame (Runtime.Games.Odyssey)
-    ///   - Aurora: AuroraGameSession : BaseEngineGame (Runtime.Games.Aurora)
-    ///   - Eclipse: EclipseGameSession : BaseEngineGame (Runtime.Games.Eclipse)
-    ///   - Infinity: InfinityGameSession : BaseEngineGame (Runtime.Games.Infinity)
-    /// - Common module state management:
-    ///   - State 0 = Idle (no module loaded)
-    ///   - State 1 = ModuleLoaded (module loaded but not running)
-    ///   - State 2 = ModuleRunning (module loaded and running)
-    /// - Game session: Manages current module, player entity, world state, module transitions
+    /// - Provides default implementations for common IEngineGame functionality
+    /// - Implements shared module state management logic verified across engines
+    /// 
+    /// Cross-Engine Reverse Engineering Analysis:
+    /// 
+    /// Common Module State Management Pattern (VERIFIED across Odyssey and Aurora):
+    /// - Based on swkotor2.exe: FUN_006caab0 @ 0x006caab0 (server command parser)
+    ///   - Located via string references: "ModuleLoaded" @ 0x007bdd70, "ModuleRunning" @ 0x007bdd58
+    ///   - Decompiled code shows three distinct module states:
+    ///     - State 0 = Idle (no module loaded) - Line 181: ":: Server mode: Idle.\n"
+    ///     - State 1 = ModuleLoaded (module loaded but not running) - Line 190: ":: Server mode: Module Loaded.\n"
+    ///     - State 2 = ModuleRunning (module loaded and running) - Line 202: ":: Server mode: Module Running.\n"
+    ///   - Module state stored in DAT_008283d4 structure accessed via FUN_00638850
+    /// - Based on nwmain.exe: CServerExoAppInternal::LoadModule @ 0x140565c50, UnloadModule @ 0x14056df00
+    ///   - LoadModule clears module state flags (sets to 0xffffffffffffffff for invalid state) before loading
+    ///   - UnloadModule performs extensive cleanup sequence common to all engines
+    /// - Common pattern: All engines maintain module state flags and perform similar initialization/cleanup sequences
+    /// 
+    /// Implementation Details:
+    /// - Initialization: Requires IEngine instance (provides World and ResourceProvider access)
+    /// - Module State Tracking: CurrentModuleName property tracks loaded module (null when idle)
+    /// - Player Entity Management: PlayerEntity property tracks current player (null when no module loaded)
+    /// - World Integration: Delegates to IWorld for entity and system management
+    /// - Update Loop: Default implementation calls World.Update(deltaTime) every frame
+    /// - Shutdown: Default implementation calls UnloadModule() to clean up current module
+    /// 
+    /// Virtual Methods (Engine-Specific Overrides):
+    /// - LoadModuleAsync: Abstract - must be implemented by engine subclasses (format-specific loading)
+    /// - OnUnloadModule: Abstract - must be implemented by engine subclasses (format-specific cleanup)
+    /// - UnloadModule: Virtual - default implementation handles common cleanup, calls OnUnloadModule()
+    /// - Update: Virtual - default implementation updates world, can be overridden for engine-specific update logic
+    /// - Shutdown: Virtual - default implementation unloads module, can be overridden for engine-specific shutdown
+    /// 
+    /// Inheritance Hierarchy:
+    /// - BaseEngineGame (Runtime.Games.Common) - common implementation
+    ///   - OdysseyGameSession : BaseEngineGame (Runtime.Games.Odyssey) - Odyssey-specific module loading
+    ///   - AuroraGameSession : BaseEngineGame (Runtime.Games.Aurora) - Aurora-specific module loading
+    ///   - EclipseGameSession : BaseEngineGame (Runtime.Games.Eclipse) - Eclipse-specific base class
+    ///     - DragonAgeOriginsGameSession : EclipseGameSession - DAO-specific implementation
+    ///     - DragonAge2GameSession : EclipseGameSession - DA2-specific implementation
+    ///   - InfinityGameSession : BaseEngineGame (Runtime.Games.Infinity) - Infinity-specific module loading
     /// </remarks>
     public abstract class BaseEngineGame : IEngineGame
     {
