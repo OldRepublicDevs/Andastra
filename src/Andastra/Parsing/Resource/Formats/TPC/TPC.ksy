@@ -129,12 +129,13 @@ types:
       - id: data
         type: u1
         repeat: until
-        repeat-until: _io.pos >= _io.size || (_root.txi_footer != null && _io.pos >= (_io.size - _root.txi_footer._io.size))
+        repeat-until: _io.pos >= _io.size
         doc: |
           Pixel data bytes (size calculated based on format and mipmap level).
           For DXT: block-compressed data (8 bytes per 4x4 block for DXT1, 16 for DXT3/DXT5).
           For uncompressed: raw pixel data (1 byte per pixel for greyscale, 3 for RGB, 4 for RGBA/BGRA).
           Note: Actual size should be calculated in application code based on format, width, height, and mip level.
+          The data section continues until end of file or until TXI footer starts (if present).
 
   txi_footer_section:
     seq:
