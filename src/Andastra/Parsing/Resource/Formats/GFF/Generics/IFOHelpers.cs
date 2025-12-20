@@ -11,24 +11,51 @@ namespace Andastra.Parsing.Resource.Generics
     {
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/ifo.py:127-182
         // Original: def construct_ifo(gff: GFF) -> IFO:
+        // Engine references: swkotor2.exe:0x00501fa0, swkotor.exe:0x004c9050
         public static IFO ConstructIfo(GFF gff)
         {
             var ifo = new IFO();
             var root = gff.Root;
 
             // Extract basic fields (matching Python field names)
+            // Engine default: 16-byte array (swkotor2.exe:0x00501fa0 line 119, swkotor.exe:0x004c9050 line 110)
             ifo.ModId = root.Acquire<byte[]>("Mod_ID", new byte[16]);
+            
+            // Engine default: LocalizedString (swkotor2.exe:0x00501fa0 line 129, swkotor.exe:0x004c9050 line 120)
             ifo.ModName = root.Acquire<LocalizedString>("Mod_Name", LocalizedString.FromInvalid());
             ifo.Name = ifo.ModName; // Alias
+            
+            // Engine default: "" (swkotor2.exe:0x00501fa0 line 152, swkotor.exe:0x004c9050 line 143)
             ifo.Tag = root.Acquire<string>("Mod_Tag", "");
+            
+            // Engine default: "" (swkotor2.exe:0x00500290 line 57, swkotor.exe:0x004c7050 line 57)
+            // Note: Mod_VO_ID is written but not read in loading function - optional field
             ifo.VoId = root.Acquire<string>("Mod_VO_ID", "");
+            
+            // Engine default: "" (swkotor2.exe:0x00501fa0 line 160, swkotor.exe:0x004c9050 line 151)
             ifo.ResRef = root.Acquire<ResRef>("Mod_Entry_Area", ResRef.FromBlank());
             ifo.EntryArea = ifo.ResRef; // Alias
+            
+            // Engine default: 0.0 (swkotor2.exe:0x00501fa0 line 163, swkotor.exe:0x004c9050 line 154)
             ifo.EntryX = root.Acquire<float>("Mod_Entry_X", 0.0f);
+            // Engine default: 0.0 (swkotor2.exe:0x00501fa0 line 165, swkotor.exe:0x004c9050 line 156)
             ifo.EntryY = root.Acquire<float>("Mod_Entry_Y", 0.0f);
+            // Engine default: 0.0 (swkotor2.exe:0x00501fa0 line 167, swkotor.exe:0x004c9050 line 158)
             ifo.EntryZ = root.Acquire<float>("Mod_Entry_Z", 0.0f);
+            
+            // Engine default: 0.0, but if field not found, defaults to 1.0 (swkotor2.exe:0x00501fa0 lines 169, 174, swkotor.exe:0x004c9050 lines 160, 165)
             float dirX = root.Acquire<float>("Mod_Entry_Dir_X", 0.0f);
+            // Engine default: 0.0, but if field not found, defaults to 0.0 (swkotor2.exe:0x00501fa0 lines 171, 175, swkotor.exe:0x004c9050 lines 162, 166)
             float dirY = root.Acquire<float>("Mod_Entry_Dir_Y", 0.0f);
+            
+            // Engine behavior: If Mod_Entry_Dir_X/Y fields are missing, engine sets dirX=1.0, dirY=0.0
+            // We check if both are 0.0 (likely means fields were missing) and apply engine default
+            if (dirX == 0.0f && dirY == 0.0f && !root.Exists("Mod_Entry_Dir_X") && !root.Exists("Mod_Entry_Dir_Y"))
+            {
+                dirX = 1.0f;
+                dirY = 0.0f;
+            }
+            
             // Store direction components (Python calculates angle, but we store X/Y/Z separately)
             ifo.EntryDirectionX = dirX;
             ifo.EntryDirectionY = dirY;
@@ -37,6 +64,8 @@ namespace Andastra.Parsing.Resource.Generics
             ifo.EntryDirection = (float)System.Math.Atan2(dirY, dirX);
 
             // Extract script hooks (using Python field names)
+            // All script hooks default to "" (empty ResRef) in engine
+            // Engine references: swkotor2.exe:0x00501fa0 lines 340-427, swkotor.exe:0x004c9050 lines 331-418
             ifo.OnClientEnter = root.Acquire<ResRef>("Mod_OnClientEntr", ResRef.FromBlank());
             ifo.OnClientLeave = root.Acquire<ResRef>("Mod_OnClientLeav", ResRef.FromBlank());
             ifo.OnHeartbeat = root.Acquire<ResRef>("Mod_OnHeartbeat", ResRef.FromBlank());
@@ -49,18 +78,22 @@ namespace Andastra.Parsing.Resource.Generics
             ifo.OnPlayerRespawn = root.Acquire<ResRef>("Mod_OnSpawnBtnDn", ResRef.FromBlank());
             ifo.OnPlayerRest = root.Acquire<ResRef>("Mod_OnPlrRest", ResRef.FromBlank());
             ifo.OnPlayerLevelUp = root.Acquire<ResRef>("Mod_OnPlrLvlUp", ResRef.FromBlank());
+            // Note: Mod_OnPlrCancelCutscene is not found in engine loading functions - K2-only field, optional
             ifo.OnPlayerCancelCutscene = root.Acquire<ResRef>("Mod_OnPlrCancelCutscene", ResRef.FromBlank());
             ifo.OnLoad = root.Acquire<ResRef>("Mod_OnModLoad", ResRef.FromBlank());
             ifo.OnStart = root.Acquire<ResRef>("Mod_OnModStart", ResRef.FromBlank());
+            // Engine default: "" (swkotor2.exe:0x00501fa0 line 147, swkotor.exe:0x004c9050 line 138)
             ifo.StartMovie = root.Acquire<ResRef>("Mod_StartMovie", ResRef.FromBlank());
 
             // Extract area list
+            // Engine reference: swkotor2.exe:0x00501fa0 line 428, swkotor.exe:0x004c9050 line 419
             var areaList = root.Acquire<GFFList>("Mod_Area_list", new GFFList());
             if (areaList != null && areaList.Count > 0)
             {
                 var firstArea = areaList.At(0);
                 if (firstArea != null)
                 {
+                    // Engine default: "" (swkotor2.exe:0x00501fa0 line 432, swkotor.exe:0x004c9050 line 423)
                     var areaName = firstArea.Acquire<ResRef>("Area_Name", ResRef.FromBlank());
                     // Store first area name (Python stores in ifo.area_name)
                     // ifo.AreaName would need to be added to IFO class
@@ -73,19 +106,38 @@ namespace Andastra.Parsing.Resource.Generics
             }
 
             // Extract other fields
+            // Engine default: 0 (swkotor2.exe:0x00501fa0 line 276, swkotor.exe:0x004c9050 line 267)
+            // Note: Expansion_Pack is read from Mod_Expan_List, not directly - optional field
             ifo.ExpansionPack = root.Acquire<int>("Expansion_Pack", 0);
+            
+            // Engine default: LocalizedString (swkotor2.exe:0x00501fa0 line 138, swkotor.exe:0x004c9050 line 129)
             ifo.Description = root.Acquire<LocalizedString>("Mod_Description", LocalizedString.FromInvalid());
+            
+            // Engine default: 0 (swkotor2.exe:0x00501fa0 line 123, swkotor.exe:0x004c9050 line 114)
             ifo.ModVersion = root.Acquire<int>("Mod_Version", 0);
+            
+            // Engine default: "" (swkotor2.exe:0x00500290 line 57, swkotor.exe:0x004c7050 line 57)
+            // Note: Mod_Hak is written but not read in loading function - optional field
             ifo.Hak = root.Acquire<string>("Mod_Hak", "");
+            
+            // Engine default: 0 (swkotor2.exe:0x00501fa0 line 179, swkotor.exe:0x004c9050 line 170)
             ifo.DawnHour = root.Acquire<int>("Mod_DawnHour", 0);
+            // Engine default: 0 (swkotor2.exe:0x00501fa0 line 181, swkotor.exe:0x004c9050 line 172)
             ifo.DuskHour = root.Acquire<int>("Mod_DuskHour", 0);
+            // Engine default: 0 (swkotor2.exe:0x00501fa0 line 177, swkotor.exe:0x004c9050 line 168)
             ifo.TimeScale = root.Acquire<int>("Mod_MinPerHour", 0);
+            
+            // Engine default: Uses DAT_* constants if param_2 != 0, otherwise 0 (swkotor2.exe:0x00501fa0 lines 192-202, swkotor.exe:0x004c9050 lines 183-193)
+            // For normal module loading (param_2 == 0), engine uses current time - we default to 0
             ifo.StartMonth = root.Acquire<int>("Mod_StartMonth", 0);
             ifo.StartDay = root.Acquire<int>("Mod_StartDay", 0);
             ifo.StartHour = root.Acquire<int>("Mod_StartHour", 0);
             ifo.StartYear = root.Acquire<int>("Mod_StartYear", 0);
-            ifo.XpScale = root.Acquire<int>("Mod_XPScale", 0);
-            // VaultId may not exist in Python version
+            
+            // Engine default: 10 (swkotor2.exe:0x00501fa0 line 274, swkotor.exe:0x004c9050 line 265)
+            ifo.XpScale = root.Acquire<int>("Mod_XPScale", 10);
+            
+            // VaultId may not exist in Python version - optional field, not found in engine loading
 
             return ifo;
         }
