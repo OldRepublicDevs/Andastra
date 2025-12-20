@@ -740,6 +740,42 @@ namespace HolocronToolset.Editors
             }
         }
 
+        /// <summary>
+        /// Shows the documentation dialog with the main documentation file.
+        /// Opens README.md from the wiki directory, or falls back to other common documentation files.
+        /// Matching PyKotor help/documentation behavior.
+        /// </summary>
+        private void ShowDocumentation()
+        {
+            // Try common documentation file names in order of preference
+            string[] documentationFiles = { "README.md", "index.md", "documentation.md", "help.md" };
+            
+            // Get wiki path to check if files exist
+            string wikiPath = Dialogs.EditorHelpDialog.GetWikiPath();
+            
+            // Find the first existing documentation file
+            string wikiFile = null;
+            foreach (string filename in documentationFiles)
+            {
+                string filePath = System.IO.Path.Combine(wikiPath, filename);
+                if (System.IO.File.Exists(filePath))
+                {
+                    wikiFile = filename;
+                    break;
+                }
+            }
+            
+            // If no documentation file found, use README.md as default (EditorHelpDialog will show error if missing)
+            if (wikiFile == null)
+            {
+                wikiFile = "README.md";
+            }
+            
+            // Show help dialog with the documentation file
+            // NSSEditor inherits from Editor, which has ShowHelpDialog method
+            ShowHelpDialog(wikiFile);
+        }
+
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:685
         // Original: def go_to_definition(self):
         /// <summary>
@@ -1362,29 +1398,54 @@ namespace HolocronToolset.Editors
             else
             {
                 // Navigate to first result
-                if (results.Count > 0)
+                if (results.Count > 0 && _codeEdit != null)
                 {
                     var firstResult = results[0];
-                    GotoLine(firstResult.Line);
                     
-                    // Set cursor to the column position
-                    if (_codeEdit != null)
+                    // Calculate absolute position in text
+                    string[] fileLines = _codeEdit.Text.Split(new[] { "\r\n", "\n", "\r" }, StringSplitOptions.None);
+                    if (firstResult.Line > 0 && firstResult.Line <= fileLines.Length)
                     {
-                        string[] fileLines = _codeEdit.Text.Split(new[] { '\n', '\r' }, StringSplitOptions.None);
-                        if (firstResult.Line > 0 && firstResult.Line <= fileLines.Length)
+                        int lineIndex = firstResult.Line - 1;
+                        int position = 0;
+                        
+                        // Sum lengths of previous lines with newline characters
+                        for (int i = 0; i < lineIndex; i++)
                         {
-                            int lineIndex = firstResult.Line - 1;
-                            int position = 0;
-                            for (int i = 0; i < lineIndex; i++)
+                            position += fileLines[i].Length;
+                            // Add newline length (check what newline was actually used)
+                            if (i < fileLines.Length - 1)
                             {
-                                position += fileLines[i].Length + 1; // +1 for newline
+                                // Try to determine actual newline from original text
+                                int nextLineStart = position;
+                                if (nextLineStart < _codeEdit.Text.Length)
+                                {
+                                    if (_codeEdit.Text.Length > nextLineStart + 1 && 
+                                        _codeEdit.Text[nextLineStart] == '\r' && 
+                                        _codeEdit.Text[nextLineStart + 1] == '\n')
+                                    {
+                                        position += 2; // \r\n
+                                    }
+                                    else if (_codeEdit.Text[nextLineStart] == '\n' || 
+                                             _codeEdit.Text[nextLineStart] == '\r')
+                                    {
+                                        position += 1; // \n or \r
+                                    }
+                                }
                             }
-                            position += firstResult.Column - 1; // -1 because column is 1-indexed
-                            if (position < _codeEdit.Text.Length)
-                            {
-                                _codeEdit.SelectionStart = position;
-                                _codeEdit.SelectionEnd = position + word.Length;
-                            }
+                        }
+                        
+                        // Add column offset (convert from 1-indexed to 0-indexed)
+                        int columnOffset = firstResult.Column - 1;
+                        position += columnOffset;
+                        
+                        // Ensure position is within bounds
+                        if (position >= 0 && position < _codeEdit.Text.Length)
+                        {
+                            // Set selection to highlight the word
+                            _codeEdit.SelectionStart = position;
+                            _codeEdit.SelectionEnd = position + word.Length;
+                            _codeEdit.CaretIndex = position;
                         }
                     }
                 }
@@ -1812,9 +1873,9 @@ namespace HolocronToolset.Editors
                 goToDefItem.Click += (s, e) => { /* TODO: Implement go to definition */ };
                 contextMenu.Items.Add(goToDefItem);
 
-                // Find All References (Shift+F12) - placeholder for now
+                // Find All References (Shift+F12)
                 var findRefsItem = new MenuItem { Header = "Find All References", HotKey = new KeyGesture(Key.F12, KeyModifiers.Shift) };
-                findRefsItem.Click += (s, e) => { /* TODO: Implement find all references */ };
+                findRefsItem.Click += (s, e) => { FindAllReferencesAtCursor(); };
                 contextMenu.Items.Add(findRefsItem);
 
                 contextMenu.Items.Add(new Separator());
@@ -2431,7 +2492,7 @@ namespace HolocronToolset.Editors
             _commandPalette.RegisterCommand("bookmark.previous", "Previous Bookmark", () => GotoPreviousBookmark(), "Bookmarks");
 
             // Help
-            _commandPalette.RegisterCommand("help.documentation", "Show Documentation", () => { /* TODO: Implement */ }, "Help");
+            _commandPalette.RegisterCommand("help.documentation", "Show Documentation", () => ShowDocumentation(), "Help");
             _commandPalette.RegisterCommand("help.shortcuts", "Show Keyboard Shortcuts", () => { /* TODO: Implement */ }, "Help");
         }
 
