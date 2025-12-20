@@ -249,7 +249,7 @@ namespace Andastra.Runtime.Game.GUI
             // Audio options - based on swkotor2.exe audio configuration system
             var audioOptions = new List<OptionItem>
             {
-                new OptionItem("Master Volume", OptionType.Numeric, () => settings.MasterVolume * 100, v => settings.MasterVolume = (float)v / 100.0f, 0, 100),
+                new OptionItem("Master Volume", OptionType.Numeric, () => settings.Audio.MasterVolume * 100, v => settings.Audio.MasterVolume = (float)v / 100.0f, 0, 100),
                 new OptionItem("Music Volume", OptionType.Numeric, () => (int)(settings.Audio.MusicVolume * 100.0f), v => 
                 { 
                     float volume = (float)v / 100.0f;
@@ -261,7 +261,7 @@ namespace Andastra.Runtime.Game.GUI
                     }
                 }, 0, 100),
                 new OptionItem("SFX Volume", OptionType.Numeric, () => settings.Audio.SfxVolume * 100, v => settings.Audio.SfxVolume = (float)v / 100.0f, 0, 100),
-                new OptionItem("Voice Volume", OptionType.Numeric, () => settings.Audio.VoiceVolume * 100, v => settings.Audio.VoiceVolume = (float)v / 100.0f, 0, 100)
+                new OptionItem("Voice Volume", OptionType.Numeric, () => settings.VoiceVolume * 100, v => settings.VoiceVolume = (float)v / 100.0f, 0, 100)
             };
             options[OptionsCategory.Audio] = audioOptions;
 
@@ -275,7 +275,7 @@ namespace Andastra.Runtime.Game.GUI
             // Controls options (placeholder for future controls system)
             var controlsOptions = new List<OptionItem>
             {
-                new OptionItem("Mouse Sensitivity", OptionType.Numeric, () => 50, v => { /* TODO: Implement mouse sensitivity */ }, 1, 100),
+                new OptionItem("Mouse Sensitivity", OptionType.Numeric, () => (int)(settings.MouseSensitivity * 100), v => settings.MouseSensitivity = v / 100.0f, 1, 100),
                 new OptionItem("Invert Mouse Y", OptionType.Boolean, () => settings.InvertMouseY ? 1 : 0, v => settings.InvertMouseY = v > 0, 0, 1)
             };
             options[OptionsCategory.Controls] = controlsOptions;
