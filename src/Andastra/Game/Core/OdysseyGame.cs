@@ -742,13 +742,12 @@ namespace Andastra.Runtime.Game.Core
                     break;
                 
                 case "BTN_GAMEPLAY":
-                    // Gameplay options button - switch to gameplay options tab
+                    // Gameplay options button - open gameplay options submenu
                     // Based on swkotor2.exe: CSWGuiOptionsMain::OnGameplayOpt @ 0x006de240
                     if (_currentState == GameState.OptionsMenu)
                     {
-                        Console.WriteLine("[Odyssey] Gameplay options button clicked - switching to gameplay tab");
-                        _optionsTab = Andastra.Runtime.Game.GUI.OptionsMenu.OptionsTab.Gameplay;
-                        _optionsSelectedIndex = 0;
+                        Console.WriteLine("[Odyssey] Gameplay options button clicked - opening gameplay options submenu");
+                        OpenGameplayOptionsMenu();
                     }
                     break;
                 
@@ -757,8 +756,10 @@ namespace Andastra.Runtime.Game.Core
                     // Based on swkotor2.exe: CSWGuiOptionsMain::OnFeedbackOpt @ 0x006e2df0
                     if (_currentState == GameState.OptionsMenu)
                     {
-                        Console.WriteLine("[Odyssey] Feedback options button clicked - feedback options submenu not yet implemented");
-                        // TODO: Implement feedback options submenu
+                        // Navigate to Feedback category in options menu
+                        _selectedOptionsCategoryIndex = (int)Andastra.Runtime.Game.GUI.OptionsMenu.OptionsCategory.Feedback;
+                        _selectedOptionsItemIndex = 0; // Reset to first option in Feedback category
+                        Console.WriteLine("[Odyssey] Feedback options submenu opened - navigating to Feedback category");
                     }
                     break;
                 
