@@ -122,11 +122,69 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
 
             // Get character inventory to find and remove upgrade item
             // Based on swkotor2.exe: FUN_00729640 @ 0x00729640 line 24 - gets character from DAT_008283d4
+            // DAT_008283d4 is a global structure that stores the current player character pointer
+            // The function accesses the character at offset 0x18a8 within the upgrade screen object structure
+            // Character retrieval follows the same pattern as GetCharacterInventoryResRefs in BaseUpgradeScreen
             IEntity character = _character;
             if (character == null)
             {
-                // TODO: Get player character from world
-                return false;
+                // Get player character from world using multiple fallback strategies
+                // Based on swkotor2.exe: Player entity lookup patterns from multiple functions
+                // Strategy 1: Try to find entity by tag "Player" (Odyssey engine pattern)
+                // Based on swkotor2.exe: Player entity is tagged "Player" @ 0x007be628
+                // Located via string references: "Player" @ 0x007be628, "Mod_PlayerList" @ 0x007be060
+                // Original implementation: Player entity is stored in module player list and tagged "Player"
+                character = _world.GetEntityByTag("Player", 0);
+
+                if (character == null)
+                {
+                    // Strategy 2: Try to find entity by tag "PlayerCharacter" (Eclipse engine pattern, fallback)
+                    // Based on daorigins.exe/DragonAge2.exe: Player entity tagged "PlayerCharacter"
+                    // This is a cross-engine compatibility fallback
+                    character = _world.GetEntityByTag("PlayerCharacter", 0);
+                }
+
+                if (character == null)
+                {
+                    // Strategy 3: Search through all entities for one marked as player
+                    // Based on swkotor2.exe: Player entity has IsPlayer data flag set to true
+                    // Original implementation: Player entity is marked with IsPlayer flag during creation
+                    // This matches the pattern used in CameraController.GetPlayerEntity() and BaseUpgradeScreen.GetCharacterInventoryResRefs()
+                    foreach (IEntity entity in _world.GetAllEntities())
+                    {
+                        if (entity == null)
+                        {
+                            continue;
+                        }
+
+                        // Check tag-based identification
+                        string tag = entity.Tag;
+                        if (!string.IsNullOrEmpty(tag))
+                        {
+                            if (string.Equals(tag, "Player", StringComparison.OrdinalIgnoreCase) ||
+                                string.Equals(tag, "PlayerCharacter", StringComparison.OrdinalIgnoreCase) ||
+                                string.Equals(tag, "player", StringComparison.OrdinalIgnoreCase))
+                            {
+                                character = entity;
+                                break;
+                            }
+                        }
+
+                        // Check IsPlayer data flag
+                        object isPlayerData = entity.GetData("IsPlayer");
+                        if (isPlayerData is bool && (bool)isPlayerData)
+                        {
+                            character = entity;
+                            break;
+                        }
+                    }
+                }
+
+                // If still no character found, cannot proceed with upgrade
+                if (character == null)
+                {
+                    return false;
+                }
             }
 
             IInventoryComponent characterInventory = character.GetComponent<IInventoryComponent>();
