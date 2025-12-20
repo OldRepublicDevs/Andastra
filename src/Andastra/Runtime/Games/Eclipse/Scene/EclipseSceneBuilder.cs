@@ -1,12 +1,15 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Numerics;
+using System.Threading.Tasks;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Graphics;
 using Andastra.Runtime.Graphics.Common.Scene;
 using Andastra.Parsing;
 using Andastra.Parsing.Formats.GFF;
+using Andastra.Parsing.Formats.VIS;
 using Andastra.Parsing.Resource;
 using Andastra.Parsing.Resource.Generics;
 using JetBrains.Annotations;
@@ -190,9 +193,15 @@ namespace Andastra.Runtime.Games.Eclipse.Scene
         /// Area Section Visibility (Eclipse engines - daorigins.exe, DragonAge2.exe):
         /// - Based on Eclipse engine room-based visibility system
         /// - Rooms are audio zones that can have visibility relationships
-        /// - For now, all sections are visible (simplified implementation)
-        /// - Full implementation would use VIS files or physics-based culling
+        /// - Uses VIS files (room visibility graph) for static visibility determination
+        /// - Falls back to all visible if VIS data is unavailable (physics-based culling can be added later)
         /// - Based on Eclipse engine: Room visibility determined by VIS files or dynamic obstacles
+        /// 
+        /// Implementation details:
+        /// - If VIS data is available, uses VIS.GetVisible() to check room-to-room visibility
+        /// - Room names are matched case-insensitively (VIS stores lowercase)
+        /// - If VIS data is unavailable or rooms don't exist in VIS, defaults to visible (render all)
+        /// - Physics-based culling for dynamic obstacles can be added as enhancement
         /// </remarks>
         public override bool IsAreaVisible(string currentArea, string targetArea)
         {
@@ -201,14 +210,23 @@ namespace Andastra.Runtime.Games.Eclipse.Scene
                 return false;
             }
 
-            // TODO: SIMPLIFIED - Implement proper physics-based visibility culling
-            // Full implementation would:
-            // 1. Load VIS file if available (room visibility graph)
-            // 2. Check if target room is visible from current room using VIS data
-            // 3. Use physics-based culling for dynamic obstacles
-            // 4. Consider distance-based culling for performance
-            // For now, all sections are visible (simplified)
-            // Based on Eclipse engine: Room visibility determined by VIS files or dynamic obstacles
+            // Check VIS data for visibility (if available)
+            if (RootEntity is EclipseSceneData sceneData && sceneData.VisibilityGraph != null)
+            {
+                try
+                {
+                    // VIS.GetVisible() throws if rooms don't exist, catch and default to visible
+                    return sceneData.VisibilityGraph.GetVisible(currentArea, targetArea);
+                }
+                catch (ArgumentException)
+                {
+                    // Room doesn't exist in VIS data - default to visible (render all)
+                    return true;
+                }
+            }
+
+            // No VIS data available - default to visible (all sections rendered)
+            // Future enhancement: Add physics-based culling for dynamic obstacles
             return true;
         }
 
@@ -220,18 +238,19 @@ namespace Andastra.Runtime.Games.Eclipse.Scene
         /// Area Section Visibility Culling (Eclipse engines - daorigins.exe, DragonAge2.exe):
         /// - Based on Eclipse engine room-based visibility system
         /// - Sets current section and updates visibility for all sections
-        /// - For now, all sections remain visible (simplified implementation)
-        /// - Full implementation would:
-        ///   1. Load VIS file if available (room visibility graph)
-        ///   2. Mark sections as visible if they are visible from current section (using VIS data)
-        ///   3. Use physics-based culling for dynamic obstacles
-        ///   4. Consider distance-based culling for performance
-        /// - Process:
+        /// - Uses VIS files (room visibility graph) for static visibility determination
+        /// - Falls back to all visible if VIS data is unavailable (physics-based culling can be added later)
+        /// 
+        /// Process:
         ///   1. Set current section identifier
-        ///   2. Iterate through all sections in scene
-        ///   3. Mark sections as visible if visible from current section
+        ///   2. If VIS data is available, iterate through all sections in scene
+        ///   3. Mark sections as visible if they are visible from current section (using VIS.GetVisible())
         ///   4. Mark all other sections as not visible
-        /// - Based on Eclipse engine: Room visibility determined by VIS files or dynamic obstacles
+        ///   5. If VIS data is unavailable, mark all sections as visible (render all)
+        ///   
+        /// Based on Eclipse engine: Room visibility determined by VIS files or dynamic obstacles
+        /// - VIS files define static room-to-room visibility relationships
+        /// - Physics-based culling for dynamic obstacles can be added as enhancement
         /// </remarks>
         public override void SetCurrentArea(string areaIdentifier)
         {
@@ -239,19 +258,43 @@ namespace Andastra.Runtime.Games.Eclipse.Scene
             {
                 sceneData.CurrentSection = areaIdentifier;
 
-                // TODO: SIMPLIFIED - Update section visibility based on physics culling
-                // Full implementation would:
-                // 1. Load VIS file if available (room visibility graph)
-                // 2. Check visibility for each section using VIS data or physics culling
-                // 3. Update IsVisible flag for each section based on visibility from current section
-                // For now, all sections remain visible (simplified)
-                // Based on Eclipse engine: Room visibility determined by VIS files or dynamic obstacles
+                // Update section visibility based on VIS data (if available)
                 if (sceneData.AreaSections != null)
                 {
-                    foreach (var section in sceneData.AreaSections)
+                    // If VIS data is available, use it for visibility culling
+                    if (sceneData.VisibilityGraph != null && !string.IsNullOrEmpty(areaIdentifier))
                     {
-                        // For now, all sections visible - full implementation would check VIS data
-                        section.IsVisible = true;
+                        // Use VIS data to determine which sections are visible from current section
+                        foreach (var section in sceneData.AreaSections)
+                        {
+                            if (string.IsNullOrEmpty(section.ModelResRef))
+                            {
+                                // Skip sections without model reference (invalid section)
+                                section.IsVisible = false;
+                                continue;
+                            }
+
+                            // Check visibility using VIS data
+                            // VIS.GetVisible() throws if rooms don't exist, catch and default to visible
+                            try
+                            {
+                                section.IsVisible = sceneData.VisibilityGraph.GetVisible(areaIdentifier, section.ModelResRef);
+                            }
+                            catch (ArgumentException)
+                            {
+                                // Room doesn't exist in VIS data - default to visible (render section)
+                                section.IsVisible = true;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        // No VIS data available - mark all sections as visible (render all)
+                        // Future enhancement: Add physics-based culling for dynamic obstacles
+                        foreach (var section in sceneData.AreaSections)
+                        {
+                            section.IsVisible = true;
+                        }
                     }
                 }
             }
@@ -285,6 +328,123 @@ namespace Andastra.Runtime.Games.Eclipse.Scene
         {
             BuildScene(areaData);
         }
+
+        /// <summary>
+        /// Builds a scene from ARE area data with optional VIS visibility data (Eclipse-specific).
+        /// </summary>
+        /// <param name="areData">ARE area data containing advanced features. Can be byte[] (raw ARE file), GFF object, or ARE object.</param>
+        /// <param name="visData">Optional VIS visibility data for room-to-room visibility culling. If null, all rooms are visible.</param>
+        /// <returns>Scene data structure with all area sections configured for rendering.</returns>
+        /// <remarks>
+        /// Enhanced scene building with VIS data support (Eclipse engines - daorigins.exe, DragonAge2.exe):
+        /// - Based on Eclipse engine area loading system with VIS culling support
+        /// - VIS data defines static room-to-room visibility relationships
+        /// - If VIS data is provided, visibility culling will be used in SetCurrentArea()
+        /// - If VIS data is null, all sections remain visible (no culling)
+        /// 
+        /// This overload allows explicit VIS data to be provided, similar to OdysseySceneBuilder pattern.
+        /// </remarks>
+        public EclipseSceneData BuildScene([NotNull] object areData, [CanBeNull] VIS visData)
+        {
+            EclipseSceneData sceneData = BuildScene(areData);
+            
+            // Set VIS data for visibility culling
+            if (sceneData != null)
+            {
+                sceneData.VisibilityGraph = visData;
+            }
+            
+            return sceneData;
+        }
+
+        /// <summary>
+        /// Attempts to load VIS file for the specified area resref and sets it in the current scene data.
+        /// </summary>
+        /// <param name="areaResRef">Area resource reference (resref) to load VIS file for. VIS file is typically named "{areaResRef}.vis".</param>
+        /// <remarks>
+        /// VIS File Loading (Eclipse engines - daorigins.exe, DragonAge2.exe):
+        /// - Based on Eclipse engine VIS file loading system
+        /// - VIS files define static room-to-room visibility relationships
+        /// - VIS file naming convention: "{areaResRef}.vis" (e.g., "ar_m01aa.vis")
+        /// - If VIS file cannot be loaded, scene continues without VIS data (all rooms visible)
+        /// - This method is asynchronous and should be awaited
+        /// 
+        /// Usage:
+        /// - Call this method after BuildScene() to load VIS data if available
+        /// - If VIS loading fails, visibility culling falls back to all visible
+        /// </remarks>
+        public async Task LoadVISDataAsync(string areaResRef)
+        {
+            if (string.IsNullOrEmpty(areaResRef) || _resourceProvider == null)
+            {
+                return;
+            }
+
+            if (!(RootEntity is EclipseSceneData sceneData))
+            {
+                return;
+            }
+
+            try
+            {
+                // Attempt to load VIS file from resource provider
+                ResourceIdentifier visResourceId = new ResourceIdentifier(areaResRef, ResourceType.VIS);
+                bool exists = await _resourceProvider.ExistsAsync(visResourceId, System.Threading.CancellationToken.None);
+                
+                if (exists)
+                {
+                    using (var stream = await _resourceProvider.OpenResourceAsync(visResourceId, System.Threading.CancellationToken.None))
+                    {
+                        if (stream != null && stream.Length > 0)
+                        {
+                            // Read entire VIS file data into memory
+                            // Use MemoryStream for efficient reading
+                            using (var memoryStream = new MemoryStream())
+                            {
+                                await stream.CopyToAsync(memoryStream);
+                                byte[] visData = memoryStream.ToArray();
+                                
+                                if (visData.Length > 0)
+                                {
+                                    // Parse VIS file using VISAuto
+                                    VIS vis = VISAuto.ReadVis(visData);
+                                    if (vis != null)
+                                    {
+                                        sceneData.VisibilityGraph = vis;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception)
+            {
+                // VIS file loading failed - continue without VIS data (all rooms will be visible)
+                // This is acceptable behavior - not all areas have VIS files
+            }
+        }
+
+        /// <summary>
+        /// Sets the VIS visibility data for the current scene.
+        /// </summary>
+        /// <param name="visData">VIS visibility data for room-to-room visibility culling. Can be null to disable VIS culling.</param>
+        /// <remarks>
+        /// Sets VIS data for visibility culling (Eclipse engines - daorigins.exe, DragonAge2.exe):
+        /// - Based on Eclipse engine VIS data management
+        /// - VIS data defines static room-to-room visibility relationships
+        /// - If VIS data is set, visibility culling will be used in SetCurrentArea()
+        /// - If VIS data is null, all sections remain visible (no culling)
+        /// 
+        /// This method allows VIS data to be set manually (e.g., from ModuleLoader or cached data).
+        /// </remarks>
+        public void SetVISData([CanBeNull] VIS visData)
+        {
+            if (RootEntity is EclipseSceneData sceneData)
+            {
+                sceneData.VisibilityGraph = visData;
+            }
+        }
     }
 
     /// <summary>
@@ -297,6 +457,7 @@ namespace Andastra.Runtime.Games.Eclipse.Scene
     /// - Based on Eclipse engine area structure
     /// - AreaSections: Complex 3D area sections with dynamic features
     /// - CurrentSection: Currently active section for visibility determination
+    /// - VisibilityGraph: VIS data for room-to-room visibility culling (optional)
     /// - Graphics-agnostic: Can be rendered by any graphics backend
     /// </remarks>
     public class EclipseSceneData
@@ -311,6 +472,20 @@ namespace Andastra.Runtime.Games.Eclipse.Scene
         /// </summary>
         [CanBeNull]
         public string CurrentSection { get; set; }
+
+        /// <summary>
+        /// Gets or sets the visibility graph (VIS data) for room-to-room visibility culling.
+        /// </summary>
+        /// <remarks>
+        /// VIS Data (Eclipse engines - daorigins.exe, DragonAge2.exe):
+        /// - Based on Eclipse engine VIS file format
+        /// - Defines static room-to-room visibility relationships
+        /// - Used by SetCurrentArea() to determine which sections are visible
+        /// - If null, all sections remain visible (no culling)
+        /// - VIS files are optional - not all areas have VIS data
+        /// </remarks>
+        [CanBeNull]
+        public VIS VisibilityGraph { get; set; }
     }
 
     /// <summary>
