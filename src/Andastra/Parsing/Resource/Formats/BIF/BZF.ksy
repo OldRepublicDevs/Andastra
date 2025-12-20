@@ -45,3 +45,4 @@ seq:
       This field contains the raw compressed bytes. Decompression must be
       performed by the application using an LZMA library before parsing as BIF.
 
+

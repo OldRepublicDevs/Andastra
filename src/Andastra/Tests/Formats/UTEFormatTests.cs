@@ -534,7 +534,7 @@ namespace Andastra.Parsing.Tests.Formats
                 var gff = new GFF(GFFContent.UTE);
                 var root = gff.Root;
                 root.SetString("Tag", "test");
-                
+
                 // Manually write invalid version (this is a simplified test)
                 // In practice, GFFBinaryWriter would handle this
                 using (var writer = new GFFBinaryWriter(gff))

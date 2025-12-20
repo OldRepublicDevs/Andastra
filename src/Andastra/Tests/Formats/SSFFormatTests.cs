@@ -216,7 +216,7 @@ namespace Andastra.Parsing.Tests.Formats
         {
             // Test that all SSFSound enum values map correctly to array indices
             var ssf = new SSF();
-            
+
             // Set each sound to a unique value based on its enum index
             ssf.SetData(SSFSound.BATTLE_CRY_1, 0);
             ssf.SetData(SSFSound.BATTLE_CRY_2, 1);

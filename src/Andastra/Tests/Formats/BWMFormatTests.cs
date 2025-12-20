@@ -2,7 +2,7 @@ using System;
 using System.IO;
 using System.Numerics;
 using System.Linq;
-using Andastra.Parsing.Resource.Formats.BWM;
+using Andastra.Parsing.Formats.BWM;
 using Andastra.Parsing.Resource;
 using Andastra.Parsing.Common;
 using Andastra.Parsing.Tests.Common;
@@ -106,7 +106,7 @@ namespace Andastra.Parsing.Tests.Formats
             BWM bwm = new BWMBinaryReader(BinaryTestFile).Load();
 
             // Validate walkmesh properties structure
-            bwm.WalkmeshType.Should().BeOneOf(BWMType.AreaModel, BWMType.PlaceableOrDoor, "Walkmesh type should be valid");
+            bwm.WalkmeshType.Should().BeOneOf(new[] { BWMType.AreaModel, BWMType.PlaceableOrDoor }, "Walkmesh type should be valid");
             bwm.Position.Should().NotBeNull("Position should not be null");
             bwm.RelativeHook1.Should().NotBeNull("RelativeHook1 should not be null");
             bwm.RelativeHook2.Should().NotBeNull("RelativeHook2 should not be null");
@@ -126,7 +126,7 @@ namespace Andastra.Parsing.Tests.Formats
 
             // Validate vertices array structure
             bwm.Faces.Should().NotBeNull("Faces should not be null");
-            bwm.Faces.Count.Should().BeGreaterOrEqualTo(0, "Face count should be non-negative");
+            bwm.Faces.Count.Should().BeGreaterThanOrEqualTo(0, "Face count should be non-negative");
 
             // Each face should have valid vertices
             foreach (var face in bwm.Faces)
@@ -139,7 +139,7 @@ namespace Andastra.Parsing.Tests.Formats
             // Validate unique vertices
             var vertices = bwm.Vertices();
             vertices.Should().NotBeNull("Vertices list should not be null");
-            vertices.Count.Should().BeGreaterOrEqualTo(0, "Vertex count should be non-negative");
+            vertices.Count.Should().BeGreaterThanOrEqualTo(0, "Vertex count should be non-negative");
         }
 
         [Fact(Timeout = 120000)]
@@ -193,7 +193,7 @@ namespace Andastra.Parsing.Tests.Formats
             // Validate walkable faces
             var walkableFaces = bwm.WalkableFaces();
             walkableFaces.Should().NotBeNull("Walkable faces should not be null");
-            walkableFaces.Count.Should().BeGreaterOrEqualTo(0, "Walkable face count should be non-negative");
+            walkableFaces.Count.Should().BeGreaterThanOrEqualTo(0, "Walkable face count should be non-negative");
 
             // All walkable faces should have walkable materials
             foreach (var face in walkableFaces)
@@ -215,7 +215,7 @@ namespace Andastra.Parsing.Tests.Formats
             // Validate unwalkable faces
             var unwalkableFaces = bwm.UnwalkableFaces();
             unwalkableFaces.Should().NotBeNull("Unwalkable faces should not be null");
-            unwalkableFaces.Count.Should().BeGreaterOrEqualTo(0, "Unwalkable face count should be non-negative");
+            unwalkableFaces.Count.Should().BeGreaterThanOrEqualTo(0, "Unwalkable face count should be non-negative");
 
             // All unwalkable faces should have non-walkable materials
             foreach (var face in unwalkableFaces)
@@ -293,9 +293,9 @@ namespace Andastra.Parsing.Tests.Formats
                     aabb.BbMax.Should().NotBeNull("AABB BbMax should not be null");
 
                     // Validate bounding box bounds
-                    aabb.BbMin.X.Should().BeLessOrEqualTo(aabb.BbMax.X, "BbMin.X should be <= BbMax.X");
-                    aabb.BbMin.Y.Should().BeLessOrEqualTo(aabb.BbMax.Y, "BbMin.Y should be <= BbMax.Y");
-                    aabb.BbMin.Z.Should().BeLessOrEqualTo(aabb.BbMax.Z, "BbMin.Z should be <= BbMax.Z");
+                    aabb.BbMin.X.Should().BeLessThanOrEqualTo(aabb.BbMax.X, "BbMin.X should be <= BbMax.X");
+                    aabb.BbMin.Y.Should().BeLessThanOrEqualTo(aabb.BbMax.Y, "BbMin.Y should be <= BbMax.Y");
+                    aabb.BbMin.Z.Should().BeLessThanOrEqualTo(aabb.BbMax.Z, "BbMin.Z should be <= BbMax.Z");
                 }
             }
         }
@@ -320,9 +320,19 @@ namespace Andastra.Parsing.Tests.Formats
                     adjacencies.Should().NotBeNull("Adjacencies should not be null");
 
                     // Each face should have 3 adjacency entries (one per edge)
-                    adjacencies.Item1.Should().BeAssignableTo<BWMAdjacency>("Edge 0 adjacency should be BWMAdjacency or null");
-                    adjacencies.Item2.Should().BeAssignableTo<BWMAdjacency>("Edge 1 adjacency should be BWMAdjacency or null");
-                    adjacencies.Item3.Should().BeAssignableTo<BWMAdjacency>("Edge 2 adjacency should be BWMAdjacency or null");
+                    // Adjacencies can be null or BWMAdjacency
+                    if (adjacencies.Item1 != null)
+                    {
+                        adjacencies.Item1.Should().BeOfType<BWMAdjacency>("Edge 0 adjacency should be BWMAdjacency or null");
+                    }
+                    if (adjacencies.Item2 != null)
+                    {
+                        adjacencies.Item2.Should().BeOfType<BWMAdjacency>("Edge 1 adjacency should be BWMAdjacency or null");
+                    }
+                    if (adjacencies.Item3 != null)
+                    {
+                        adjacencies.Item3.Should().BeOfType<BWMAdjacency>("Edge 2 adjacency should be BWMAdjacency or null");
+                    }
                 }
             }
         }
@@ -346,8 +356,8 @@ namespace Andastra.Parsing.Tests.Formats
                 foreach (var edge in edges)
                 {
                     edge.Face.Should().NotBeNull("Edge face should not be null");
-                    edge.Index.Should().BeInRange(0, 2, "Edge index should be 0, 1, or 2");
-                    edge.Transition.Should().BeGreaterOrEqualTo(-1, "Edge transition should be >= -1");
+                    edge.Index.Should().BeGreaterThanOrEqualTo(0).And.BeLessThanOrEqualTo(2, "Edge index should be 0, 1, or 2");
+                    edge.Transition.Should().BeGreaterThanOrEqualTo(-1, "Edge transition should be >= -1");
                 }
             }
         }
@@ -435,7 +445,7 @@ namespace Andastra.Parsing.Tests.Formats
             var v1 = new Vector3(0, 0, 0);
             var v2 = new Vector3(1, 0, 0);
             var v3 = new Vector3(0, 1, 0);
-            bwm.Faces.Add(new BWMFace(v1, v2, v3) { Material = SurfaceMaterial.Nonwalk });
+            bwm.Faces.Add(new BWMFace(v1, v2, v3) { Material = SurfaceMaterial.NonWalk });
 
             using (var writer = new BWMBinaryWriter(bwm))
             {
@@ -655,7 +665,7 @@ namespace Andastra.Parsing.Tests.Formats
             var v3 = new Vector3(0, 1, 0);
 
             // Add non-walkable face first
-            bwm.Faces.Add(new BWMFace(v1, v2, v3) { Material = SurfaceMaterial.Nonwalk });
+            bwm.Faces.Add(new BWMFace(v1, v2, v3) { Material = SurfaceMaterial.NonWalk });
             // Add walkable face second
             bwm.Faces.Add(new BWMFace(v1, v3, v2) { Material = SurfaceMaterial.Dirt });
 
@@ -720,7 +730,7 @@ namespace Andastra.Parsing.Tests.Formats
             var v1 = new Vector3(0, 0, 0);
             var v2 = new Vector3(1, 0, 0);
             var v3 = new Vector3(0, 1, 0);
-            bwm.Faces.Add(new BWMFace(v1, v2, v3) { Material = SurfaceMaterial.Nonwalk });
+            bwm.Faces.Add(new BWMFace(v1, v2, v3) { Material = SurfaceMaterial.NonWalk });
 
             Directory.CreateDirectory(Path.GetDirectoryName(path));
             using (var writer = new BWMBinaryWriter(bwm, path))
@@ -730,4 +740,5 @@ namespace Andastra.Parsing.Tests.Formats
         }
     }
 }
+
 

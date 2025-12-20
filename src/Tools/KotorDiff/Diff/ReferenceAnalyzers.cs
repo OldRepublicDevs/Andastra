@@ -24,6 +24,7 @@ using Andastra.Parsing.Mods.TwoDA;
 using Andastra.Parsing.Memory;
 using Andastra.Parsing.Resource;
 using Andastra.Parsing.Tools;
+using Andastra.Parsing.TSLPatcher.Diff;
 using JetBrains.Annotations;
 
 namespace KotorDiff.Diff
@@ -772,7 +773,7 @@ namespace KotorDiff.Diff
                                         {
                                             store2daForToken = copyRowMod.Store2DA;
                                         }
-                                        
+
                                         if (store2daForToken != null)
                                         {
                                             foreach (int existingTokenId in store2daForToken.Keys)
@@ -786,7 +787,7 @@ namespace KotorDiff.Diff
                                     }
                                 }
                                 tokenId = maxTokenId + 1;
-                                
+
                                 // Add token to Store2DA dictionary (dictionary is mutable)
                                 addRow.Store2DA[tokenId] = new RowValueRowIndex();
                                 logFunc($"Assigned 2DAMEMORY token {tokenId} to AddRow2DA in {twodaFilename} (row {newRowIndex.Value})");
@@ -946,7 +947,7 @@ namespace KotorDiff.Diff
                         try
                         {
                             byte[] data = resource.GetData();
-                            
+
                             // Validate GFF file size before attempting to parse
                             // GFF files must have at least a 56-byte header
                             if (data == null || data.Length < 56)
@@ -954,7 +955,7 @@ namespace KotorDiff.Diff
                                 logFunc($"  [WARNING] GFF file {filename} is too small ({data?.Length ?? 0} bytes), skipping");
                                 continue;
                             }
-                            
+
                             // Validate GFF signature
                             if (data.Length >= 4)
                             {
@@ -965,7 +966,7 @@ namespace KotorDiff.Diff
                                     continue;
                                 }
                             }
-                            
+
                             GFF gffObj = new GFFBinaryReader(data).Load();
 
                             // Search for fields matching this 2DA reference
@@ -1072,7 +1073,7 @@ namespace KotorDiff.Diff
                     {
                         numericValue = (int)sbyteVal;
                     }
-                    
+
                     bool matchesTarget = numericValue.HasValue && numericValue.Value == targetValue;
                     if (matchesTarget)
                     {

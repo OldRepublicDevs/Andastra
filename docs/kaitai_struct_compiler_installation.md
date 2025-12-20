@@ -11,6 +11,7 @@ The Kaitai Struct compiler requires **Java Runtime Environment (JRE) 8 or later*
 - **macOS**: `brew install openjdk` or download from Adoptium
 
 Verify Java is installed:
+
 ```bash
 java -version
 ```
@@ -30,26 +31,31 @@ java -version
 3. (Optional) Create a wrapper script for easier use:
 
    **Windows (`kaitai-struct-compiler.bat`)**:
+
    ```batch
    @echo off
    java -jar "%~dp0kaitai-struct-compiler.jar" %*
    ```
 
    **Linux/macOS (`kaitai-struct-compiler`)**:
+
    ```bash
    #!/bin/bash
    java -jar "$(dirname "$0")/kaitai-struct-compiler.jar" "$@"
    ```
+
    Make it executable: `chmod +x kaitai-struct-compiler`
 
 ### Method 2: Package Manager Installation
 
 #### Windows (via Chocolatey)
+
 ```powershell
 choco install kaitai-struct-compiler
 ```
 
 #### Windows (via Scoop)
+
 ```powershell
 scoop install kaitai-struct-compiler
 ```
@@ -57,18 +63,21 @@ scoop install kaitai-struct-compiler
 #### Linux (via Package Manager)
 
 **Debian/Ubuntu** (if available in repositories):
+
 ```bash
 sudo apt update
 sudo apt install kaitai-struct-compiler
 ```
 
 **Manual Debian Package Installation**:
+
 ```bash
 wget https://packages.kaitai.io/dists/unstable/main/binary-amd64/kaitai-struct-compiler_0.10_all.deb
 sudo dpkg -i kaitai-struct-compiler_0.10_all.deb
 ```
 
 #### macOS (via Homebrew)
+
 ```bash
 brew install kaitai-struct-compiler
 ```
@@ -78,12 +87,14 @@ brew install kaitai-struct-compiler
 If you need the latest development version:
 
 1. Clone the repository:
+
    ```bash
    git clone https://github.com/kaitai-io/kaitai_struct_compiler.git
    cd kaitai_struct_compiler
    ```
 
 2. Build using Gradle:
+
    ```bash
    ./gradlew build
    ```
@@ -99,6 +110,7 @@ kaitai-struct-compiler --version
 ```
 
 Or if using the JAR directly:
+
 ```bash
 java -jar kaitai-struct-compiler.jar --version
 ```
@@ -110,11 +122,13 @@ Expected output should show the compiler version (e.g., `0.10`).
 If you installed the JAR in a custom location, you can set an environment variable:
 
 **Windows**:
+
 ```powershell
 [System.Environment]::SetEnvironmentVariable('KAITAI_COMPILER_JAR', 'C:\path\to\kaitai-struct-compiler.jar', 'User')
 ```
 
 **Linux/macOS**:
+
 ```bash
 export KAITAI_COMPILER_JAR=/path/to/kaitai-struct-compiler.jar
 echo 'export KAITAI_COMPILER_JAR=/path/to/kaitai-struct-compiler.jar' >> ~/.bashrc  # or ~/.zshrc
@@ -129,6 +143,7 @@ dotnet test src/Andastra/Tests/TSLPatcher.Tests.csproj --filter "FullyQualifiedN
 ```
 
 The tests check for the compiler in these locations (in order):
+
 1. `kaitai-struct-compiler` command in PATH
 2. `KAITAI_COMPILER_JAR` environment variable
 3. Common installation locations:
@@ -165,4 +180,3 @@ The tests check for the compiler in these locations (in order):
 - [Kaitai Struct Documentation](https://doc.kaitai.io/)
 - [Kaitai Struct Compiler GitHub](https://github.com/kaitai-io/kaitai_struct_compiler)
 - [Kaitai Struct Web IDE](https://ide.kaitai.io/) - Test .ksy files online without installation
-

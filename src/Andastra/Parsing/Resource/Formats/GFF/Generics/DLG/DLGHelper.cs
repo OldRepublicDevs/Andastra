@@ -45,7 +45,16 @@ namespace Andastra.Parsing.Resource.Generics.DLG
             dlg.OnEnd = root.Acquire("EndConversation", ResRef.FromBlank());
             dlg.Skippable = root.Acquire("Skippable", (byte)0) != 0;
             dlg.AmbientTrack = root.Acquire("AmbientTrack", ResRef.FromBlank());
-            dlg.AnimatedCut = root.Acquire("AnimatedCut", 0);
+            // Matching PyKotor implementation: AnimatedCut is stored as uint8 in GFF
+            // Python uses root.acquire("AnimatedCut", 0) which returns int, but GFF stores as byte
+            if (root.Exists("AnimatedCut"))
+            {
+                dlg.AnimatedCut = root.GetUInt8("AnimatedCut");
+            }
+            else
+            {
+                dlg.AnimatedCut = 0;
+            }
             dlg.CameraModel = root.Acquire("CameraModel", ResRef.FromBlank());
             dlg.ComputerType = (DLGComputerType)root.Acquire("ComputerType", (uint)0);
             dlg.ConversationType = (DLGConversationType)root.Acquire("ConversationType", (uint)0);

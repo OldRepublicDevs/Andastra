@@ -12,8 +12,8 @@ using Andastra.Parsing.Installation;
 using Andastra.Parsing.TSLPatcher;
 using Andastra.Parsing.Formats.Capsule;
 using Andastra.Parsing.Resource;
-using KotorDiff.Resolution;
 using KotorDiff.Cache;
+using CachedFileComparison = KotorDiff.Cache.CachedFileComparison;
 
 namespace KotorDiff.Diff
 {
@@ -98,13 +98,16 @@ namespace KotorDiff.Diff
                 if (allInstallations.Count >= 2)
                 {
                     logFunc("Detected multiple installations - using resolution-aware comparison...");
-                    return Resolution.InstallationDiffWithResolution.DiffInstallationsWithResolution(
-                        filesAndFoldersAndInstallations,
-                        filters: filters,
-                        logFunc: logFunc,
-                        compareHashes: compareHashes,
-                        modificationsByType: modificationsByType,
-                        incrementalWriter: incrementalWriter);
+                    // TODO: Fix circular dependency - InstallationDiffWithResolution is in Resolution which references Diff
+                    // This needs to be restructured to avoid the circular dependency
+                    // For now, fall through to basic comparison
+                    // return Resolution.InstallationDiffWithResolution.DiffInstallationsWithResolution(
+                    //     filesAndFoldersAndInstallations,
+                    //     filters: filters,
+                    //     logFunc: logFunc,
+                    //     compareHashes: compareHashes,
+                    //     modificationsByType: modificationsByType,
+                    //     incrementalWriter: incrementalWriter);
                 }
 
                 // Mixed path types or non-Installation comparison

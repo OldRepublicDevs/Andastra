@@ -2,7 +2,7 @@
 // Original: class CachedFileComparison: ...
 using JetBrains.Annotations;
 
-namespace KotorDiff.Diff
+namespace KotorDiff.Cache
 {
     /// <summary>
     /// Represents a single file comparison for caching.

@@ -444,8 +444,6 @@ namespace Andastra.Runtime.Graphics.Common.Backends
         protected const int WGL_ACCUM_GREEN_BITS_ARB = 0x201F;
         protected const int WGL_ACCUM_BLUE_BITS_ARB = 0x2020;
         protected const int WGL_ACCUM_ALPHA_BITS_ARB = 0x2021;
-        protected const int WGL_DEPTH_BITS_ARB = 0x2022;
-        protected const int WGL_STENCIL_BITS_ARB = 0x2023;
         protected const int WGL_AUX_BUFFERS_ARB = 0x2024;
         protected const int WGL_NO_ACCELERATION_ARB = 0x2025;
         protected const int WGL_GENERIC_ACCELERATION_ARB = 0x2026;

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Andastra.Runtime.Scripting.Types;
 
 namespace Andastra.Runtime.Scripting.VM
 {

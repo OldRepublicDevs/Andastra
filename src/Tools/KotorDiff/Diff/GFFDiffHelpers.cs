@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Andastra.Parsing.Diff;
+using GffCompareResult = Andastra.Parsing.Diff.GffCompareResult;
 
 namespace KotorDiff.Diff
 {

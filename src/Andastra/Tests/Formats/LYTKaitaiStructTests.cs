@@ -12,146 +12,166 @@ using Xunit;
 namespace Andastra.Parsing.Tests.Formats
 {
     /// <summary>
-    /// Comprehensive tests for LYT format using Kaitai Struct definition.
-    /// Tests validate that the LYT.ksy definition is complete, compiles correctly,
-    /// and that the format structure matches the definition.
+    /// Comprehensive tests for LYT.ksy Kaitai Struct compiler functionality.
+    /// Tests compile LYT.ksy to multiple languages and validate the generated parsers work correctly.
+    ///
+    /// Supported languages tested (at least 12 as required):
+    /// - Python, Java, JavaScript, C#, C++, Ruby, PHP, Go, Rust, Swift, Perl, Lua, Nim, VisualBasic
     /// </summary>
     public class LYTKaitaiStructTests
     {
-        private static readonly string KsyFile = Path.Combine(
-            AppContext.BaseDirectory, "..", "..", "..", "..", "..",
-            "src", "Andastra", "Parsing", "Resource", "Formats", "LYT", "LYT.ksy");
+        private static readonly string LytKsyPath = Path.GetFullPath(Path.Combine(
+            AppContext.BaseDirectory,
+            "..", "..", "..", "..", "..",
+            "src", "Andastra", "Parsing", "Resource", "Formats", "LYT", "LYT.ksy"
+        ));
 
         private static readonly string TestLytFile = TestFileHelper.GetPath("test.lyt");
-        private static readonly string KaitaiOutputDir = Path.Combine(
-            AppContext.BaseDirectory, "..", "..", "..", "..", "..",
-            "kaitai_compiled", "lyt");
+        private static readonly string TestOutputDir = Path.Combine(
+            AppContext.BaseDirectory,
+            "test_files", "kaitai_lyt_compiled"
+        );
 
-        // Languages supported by Kaitai Struct (at least a dozen)
+        // Supported languages in Kaitai Struct (at least 12 as required)
         private static readonly string[] SupportedLanguages = new[]
         {
-            "python", "java", "javascript", "csharp", "cpp_stl", "go", "ruby",
-            "php", "rust", "swift", "perl", "nim", "lua", "kotlin", "typescript"
+            "python",
+            "java",
+            "javascript",
+            "csharp",
+            "cpp_stl",
+            "go",
+            "ruby",
+            "php",
+            "rust",
+            "swift",
+            "lua",
+            "nim",
+            "perl",
+            "visualbasic"
         };
 
-        [Fact(Timeout = 300000)]
+        static LYTKaitaiStructTests()
+        {
+            // Normalize LYT.ksy path
+            LytKsyPath = Path.GetFullPath(LytKsyPath);
+        }
+
+        [Fact(Timeout = 300000)] // 5 minutes timeout for compilation
         public void TestKaitaiStructCompilerAvailable()
         {
-            // Check if kaitai-struct-compiler is available
-            var process = new Process
+            // Test that kaitai-struct-compiler is available
+            string compilerPath = FindKaitaiCompiler();
+            compilerPath.Should().NotBeNullOrEmpty("kaitai-struct-compiler should be available in PATH or common locations");
+
+            // Test compiler version
+            var processInfo = new ProcessStartInfo
             {
-                StartInfo = new ProcessStartInfo
-                {
-                    FileName = "kaitai-struct-compiler",
-                    Arguments = "--version",
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true,
-                    UseShellExecute = false,
-                    CreateNoWindow = true
-                }
+                FileName = compilerPath,
+                Arguments = "--version",
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true
             };
 
-            try
+            using (var process = Process.Start(processInfo))
             {
-                process.Start();
-                process.WaitForExit(5000);
-
-                if (process.ExitCode == 0)
+                if (process != null)
                 {
-                    string version = process.StandardOutput.ReadToEnd();
-                    version.Should().NotBeNullOrEmpty("Kaitai Struct compiler should return version");
+                    process.WaitForExit(10000);
+                    process.ExitCode.Should().Be(0, "kaitai-struct-compiler should execute successfully");
                 }
-                else
-                {
-                    // Compiler not found - skip tests that require it
-                    Assert.True(true, "Kaitai Struct compiler not available - skipping compiler tests");
-                }
-            }
-            catch (System.ComponentModel.Win32Exception)
-            {
-                // Compiler not installed - skip tests
-                Assert.True(true, "Kaitai Struct compiler not installed - skipping compiler tests");
             }
         }
 
         [Fact(Timeout = 300000)]
-        public void TestKsyFileExists()
+        public void TestLytKsyFileExists()
         {
-            // Ensure LYT.ksy file exists
-            var ksyPath = new FileInfo(KsyFile);
-            if (!ksyPath.Exists)
-            {
-                // Try alternative path
-                ksyPath = new FileInfo(Path.Combine(
-                    AppContext.BaseDirectory, "..", "..", "..", "..",
-                    "src", "Andastra", "Parsing", "Resource", "Formats", "LYT", "LYT.ksy"));
-            }
+            File.Exists(LytKsyPath).Should().BeTrue($"LYT.ksy should exist at {LytKsyPath}");
 
-            ksyPath.Exists.Should().BeTrue($"LYT.ksy should exist at {ksyPath.FullName}");
+            // Validate it's a valid Kaitai Struct file
+            string content = File.ReadAllText(LytKsyPath);
+            content.Should().Contain("meta:", "LYT.ksy should contain meta section");
+            content.Should().Contain("id: lyt", "LYT.ksy should have id: lyt");
+            content.Should().Contain("file-extension: lyt", "LYT.ksy should specify lyt file extension");
         }
 
-        [Fact(Timeout = 300000)]
-        public void TestKsyFileValid()
+        [Fact(Timeout = 600000)] // 10 minute timeout for compiling all languages
+        public void TestCompileLytToAllLanguages()
         {
-            // Validate that LYT.ksy is valid YAML and can be parsed by compiler
-            if (!File.Exists(KsyFile))
+            var normalizedKsyPath = Path.GetFullPath(LytKsyPath);
+            if (!File.Exists(normalizedKsyPath))
             {
-                Assert.True(true, "LYT.ksy not found - skipping validation");
+                // Skip if .ksy file doesn't exist
                 return;
             }
 
-            var process = new Process
+            // Check if Java/Kaitai compiler is available
+            var javaCheck = RunCommand("java", "-version");
+            if (javaCheck.ExitCode != 0)
             {
-                StartInfo = new ProcessStartInfo
-                {
-                    FileName = "kaitai-struct-compiler",
-                    Arguments = $"--version",
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true,
-                    UseShellExecute = false,
-                    CreateNoWindow = true
-                }
-            };
+                // Skip test if Java is not available
+                return;
+            }
 
-            try
+            Directory.CreateDirectory(TestOutputDir);
+
+            var results = new Dictionary<string, CompileResult>();
+
+            foreach (var language in SupportedLanguages)
             {
-                process.Start();
-                process.WaitForExit(5000);
-
-                if (process.ExitCode != 0)
+                try
                 {
-                    Assert.True(true, "Kaitai Struct compiler not available - skipping validation");
-                    return;
+                    var result = CompileToLanguage(normalizedKsyPath, language);
+                    results[language] = result;
                 }
-
-                // Try to compile to a test language to validate syntax
-                var testProcess = new Process
+                catch (Exception ex)
                 {
-                    StartInfo = new ProcessStartInfo
+                    results[language] = new CompileResult
                     {
-                        FileName = "kaitai-struct-compiler",
-                        Arguments = $"-t python \"{KsyFile}\" -d \"{Path.GetTempPath()}\"",
-                        RedirectStandardOutput = true,
-                        RedirectStandardError = true,
-                        UseShellExecute = false,
-                        CreateNoWindow = true
-                    }
-                };
-
-                testProcess.Start();
-                testProcess.WaitForExit(30000);
-
-                string stderr = testProcess.StandardError.ReadToEnd();
-
-                // Compilation might fail due to missing dependencies, but syntax errors would be caught
-                if (testProcess.ExitCode != 0 && stderr.Contains("error") && !stderr.Contains("import"))
-                {
-                    Assert.True(false, $"LYT.ksy has syntax errors: {stderr}");
+                        Success = false,
+                        ErrorMessage = ex.Message,
+                        Output = ex.ToString()
+                    };
                 }
             }
-            catch (System.ComponentModel.Win32Exception)
+
+            // Report results
+            var successful = results.Where(r => r.Value.Success).ToList();
+            var failed = results.Where(r => !r.Value.Success).ToList();
+
+            // At least 12 languages should compile successfully
+            successful.Count.Should().BeGreaterOrEqualTo(12,
+                $"At least 12 languages should compile successfully. " +
+                $"Successful ({successful.Count}): {string.Join(", ", successful.Select(s => s.Key))}. " +
+                $"Failed ({failed.Count}): {string.Join(", ", failed.Select(f => $"{f.Key}: {f.Value.ErrorMessage}"))}");
+
+            // Log successful compilations and verify output files
+            foreach (var success in successful)
             {
-                Assert.True(true, "Kaitai Struct compiler not installed - skipping validation");
+                // Verify output files were created
+                var outputDir = Path.Combine(TestOutputDir, success.Key);
+                if (Directory.Exists(outputDir))
+                {
+                    var files = Directory.GetFiles(outputDir, "*", SearchOption.AllDirectories)
+                        .Where(f => !f.EndsWith("compile_output.txt") && !f.EndsWith("compile_error.txt"))
+                        .ToList();
+                    files.Count.Should().BeGreaterThan(0,
+                        $"Language {success.Key} should generate output files. Found: {string.Join(", ", files.Select(Path.GetFileName))}");
+
+                    // Verify at least one parser file was generated (language-specific patterns)
+                    var hasParserFile = files.Any(f =>
+                        f.Contains("lyt") || f.Contains("Lyt") || f.Contains("LYT") ||
+                        f.EndsWith(".py") || f.EndsWith(".java") || f.EndsWith(".js") ||
+                        f.EndsWith(".cs") || f.EndsWith(".cpp") || f.EndsWith(".h") ||
+                        f.EndsWith(".go") || f.EndsWith(".rb") || f.EndsWith(".php") ||
+                        f.EndsWith(".rs") || f.EndsWith(".swift") || f.EndsWith(".lua") ||
+                        f.EndsWith(".nim") || f.EndsWith(".pm") || f.EndsWith(".vb"));
+
+                    hasParserFile.Should().BeTrue(
+                        $"Language {success.Key} should generate parser files. Files: {string.Join(", ", files.Select(Path.GetFileName))}");
+                }
             }
         }
 

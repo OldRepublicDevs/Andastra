@@ -591,3 +591,4 @@ types:
           Perimeter loops are closed chains of perimeter edges forming walkable boundaries.
           Values are typically 1-based (marking end of loop), but may be 0-based depending on implementation.
 
+
