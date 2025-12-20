@@ -1764,5 +1764,121 @@ namespace HolocronToolset.Data
                 return false;
             }
         }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/installation.py
+        // Serialization support for pickle-equivalent functionality
+        // Original: Python pickle serializes the object state including _path, name, and _tsl
+        
+        /// <summary>
+        /// Serializes the HTInstallation to a byte array (equivalent to pickle.dumps).
+        /// </summary>
+        /// <returns>Serialized byte array containing the installation data.</returns>
+        public byte[] Serialize()
+        {
+            using (var stream = new MemoryStream())
+            using (var writer = new BinaryWriter(stream))
+            {
+                // Write version for future compatibility
+                writer.Write(1);
+                
+                // Write path (the main field checked in Python tests)
+                writer.Write(Path ?? string.Empty);
+                
+                // Write name
+                writer.Write(Name ?? string.Empty);
+                
+                // Write _tsl (nullable bool: 0 = null, 1 = false, 2 = true)
+                if (!_tsl.HasValue)
+                {
+                    writer.Write((byte)0);
+                }
+                else
+                {
+                    writer.Write(_tsl.Value ? (byte)2 : (byte)1);
+                }
+                
+                return stream.ToArray();
+            }
+        }
+
+        /// <summary>
+        /// Deserializes an HTInstallation from a byte array (equivalent to pickle.loads).
+        /// </summary>
+        /// <param name="data">Serialized byte array.</param>
+        /// <returns>Deserialized HTInstallation instance.</returns>
+        public static HTInstallation Deserialize(byte[] data)
+        {
+            if (data == null || data.Length == 0)
+            {
+                throw new ArgumentException("Data cannot be null or empty", nameof(data));
+            }
+
+            using (var stream = new MemoryStream(data))
+            using (var reader = new BinaryReader(stream))
+            {
+                // Read version
+                int version = reader.ReadInt32();
+                if (version != 1)
+                {
+                    throw new InvalidOperationException($"Unsupported serialization version: {version}");
+                }
+
+                // Read path
+                string path = reader.ReadString();
+                
+                // Read name
+                string name = reader.ReadString();
+                
+                // Read _tsl
+                byte tslByte = reader.ReadByte();
+                bool? tsl = null;
+                if (tslByte == 1)
+                {
+                    tsl = false;
+                }
+                else if (tslByte == 2)
+                {
+                    tsl = true;
+                }
+
+                // Reconstruct HTInstallation
+                return new HTInstallation(path, name, tsl);
+            }
+        }
+
+        /// <summary>
+        /// Serializes the HTInstallation to a stream (equivalent to pickle.dump).
+        /// </summary>
+        /// <param name="stream">Stream to write to.</param>
+        public void SerializeToStream(Stream stream)
+        {
+            if (stream == null)
+            {
+                throw new ArgumentNullException(nameof(stream));
+            }
+
+            byte[] data = Serialize();
+            stream.Write(data, 0, data.Length);
+        }
+
+        /// <summary>
+        /// Deserializes an HTInstallation from a stream (equivalent to pickle.load).
+        /// </summary>
+        /// <param name="stream">Stream to read from.</param>
+        /// <returns>Deserialized HTInstallation instance.</returns>
+        public static HTInstallation DeserializeFromStream(Stream stream)
+        {
+            if (stream == null)
+            {
+                throw new ArgumentNullException(nameof(stream));
+            }
+
+            // Read all data from stream
+            using (var memoryStream = new MemoryStream())
+            {
+                stream.CopyTo(memoryStream);
+                return Deserialize(memoryStream.ToArray());
+            }
+        }
     }
 }

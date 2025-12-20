@@ -771,42 +771,88 @@ namespace HolocronToolset.Tests.Data
             results[locstring3].Should().Be("ERROR: FATAL COMPILER ERROR");
         }
 
-        // TODO: STUB - Implement test_pickle_unpickle (vendor/PyKotor/Tools/HolocronToolset/tests/test_htinstallation.py:387-391)
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/test_htinstallation.py:387-391
         // Original: def test_pickle_unpickle(self): Test that an Installation object can be pickled and unpickled.
-        // Missing: Pickle serialization/deserialization test - C# equivalent would use BinaryFormatter or similar
         [Fact]
         public void TestPickleUnpickle()
         {
-            // TODO: STUB - C# doesn't have pickle, need to implement equivalent serialization test
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/test_htinstallation.py:387-391
+            if (_installation == null)
+            {
+                return; // Skip if K1_PATH not set
+            }
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/test_htinstallation.py:389
             // Original: pickled_data = pickle.dumps(self.installation)
+            byte[] serializedData = _installation.Serialize();
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/test_htinstallation.py:390
             // Original: unpickled_installation: HTInstallation = pickle.loads(pickled_data)
+            HTInstallation deserializedInstallation = HTInstallation.Deserialize(serializedData);
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/test_htinstallation.py:391
             // Original: self.assertEqual(self.installation._path, unpickled_installation._path)
-            throw new NotImplementedException("TestPickleUnpickle: C# serialization test not yet implemented - need BinaryFormatter or JSON equivalent");
+            deserializedInstallation.Path.Should().Be(_installation.Path);
+            deserializedInstallation.Name.Should().Be(_installation.Name);
+            deserializedInstallation.Tsl.Should().Be(_installation.Tsl);
         }
 
-        // TODO: STUB - Implement test_pickle_to_file (vendor/PyKotor/Tools/HolocronToolset/tests/test_htinstallation.py:393-399)
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/test_htinstallation.py:393-399
         // Original: def test_pickle_to_file(self): Test pickling to and unpickling from a file.
-        // Missing: File-based serialization test
         [Fact]
         public void TestPickleToFile()
         {
-            // TODO: STUB - C# doesn't have pickle, need to implement equivalent file serialization test
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/test_htinstallation.py:393-399
+            if (_installation == null)
+            {
+                return; // Skip if K1_PATH not set
+            }
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/test_htinstallation.py:395-398
             // Original: with BytesIO() as file: pickle.dump(self.installation, file); file.seek(0); unpickled_installation: HTInstallation = pickle.load(file)
-            throw new NotImplementedException("TestPickleToFile: C# file serialization test not yet implemented - need BinaryFormatter or JSON equivalent");
+            using (var stream = new MemoryStream())
+            {
+                // Serialize to stream (equivalent to pickle.dump)
+                _installation.SerializeToStream(stream);
+
+                // Reset stream position (equivalent to file.seek(0))
+                stream.Position = 0;
+
+                // Deserialize from stream (equivalent to pickle.load)
+                HTInstallation deserializedInstallation = HTInstallation.DeserializeFromStream(stream);
+
+                // Matching PyKotor implementation at Tools/HolocronToolset/tests/test_htinstallation.py:399
+                // Original: self.assertEqual(self.installation._path, unpickled_installation._path)
+                deserializedInstallation.Path.Should().Be(_installation.Path);
+                deserializedInstallation.Name.Should().Be(_installation.Name);
+                deserializedInstallation.Tsl.Should().Be(_installation.Tsl);
+            }
         }
 
-        // TODO: STUB - Implement test_multiple_unpickle (vendor/PyKotor/Tools/HolocronToolset/tests/test_htinstallation.py:401-406)
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/test_htinstallation.py:401-406
         // Original: def test_multiple_unpickle(self): Test that multiple unpickling operations yield consistent results.
-        // Missing: Multiple deserialization consistency test
         [Fact]
         public void TestMultipleUnpickle()
         {
-            // TODO: STUB - C# doesn't have pickle, need to implement equivalent multiple deserialization test
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/test_htinstallation.py:401-406
-            // Original: pickled_data = pickle.dumps(self.installation); for _ in range(3): unpickled_installation: HTInstallation = pickle.loads(pickled_data)
-            throw new NotImplementedException("TestMultipleUnpickle: C# multiple deserialization test not yet implemented - need BinaryFormatter or JSON equivalent");
+            if (_installation == null)
+            {
+                return; // Skip if K1_PATH not set
+            }
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/test_htinstallation.py:403
+            // Original: pickled_data = pickle.dumps(self.installation)
+            byte[] serializedData = _installation.Serialize();
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/test_htinstallation.py:404-405
+            // Original: for _ in range(3): unpickled_installation: HTInstallation = pickle.loads(pickled_data)
+            for (int i = 0; i < 3; i++)
+            {
+                HTInstallation deserializedInstallation = HTInstallation.Deserialize(serializedData);
+
+                // Matching PyKotor implementation at Tools/HolocronToolset/tests/test_htinstallation.py:406
+                // Original: self.assertEqual(self.installation._path, unpickled_installation._path)
+                deserializedInstallation.Path.Should().Be(_installation.Path);
+                deserializedInstallation.Name.Should().Be(_installation.Name);
+                deserializedInstallation.Tsl.Should().Be(_installation.Tsl);
+            }
         }
     }
 }
