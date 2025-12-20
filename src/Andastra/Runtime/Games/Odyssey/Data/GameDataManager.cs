@@ -229,6 +229,12 @@ namespace Andastra.Runtime.Engines.Odyssey.Data
                 PrereqFeat2 = row.GetInteger("prereqfeat2") ?? -1,
                 MinLevel = row.GetInteger("minlevel") ?? 1,
                 MinLevelClass = row.GetInteger("minlevelclass") ?? -1,
+                MinStr = row.GetInteger("minstr") ?? 0,
+                MinDex = row.GetInteger("mindex") ?? 0,
+                MinInt = row.GetInteger("minint") ?? 0,
+                MinWis = row.GetInteger("minwis") ?? 0,
+                MinCon = row.GetInteger("mincon") ?? 0,
+                MinCha = row.GetInteger("mincha") ?? 0,
                 Selectable = row.GetInteger("allclassescanuse") == 1 || row.GetInteger("selectable") == 1,
                 UsesPerDay = usesPerDay ?? -1 // -1 = unlimited or special handling, 0+ = daily limit
             };
@@ -286,6 +292,12 @@ namespace Andastra.Runtime.Engines.Odyssey.Data
                 PrereqFeat2 = row.GetInteger("prereqfeat2") ?? -1,
                 MinLevel = row.GetInteger("minlevel") ?? 1,
                 MinLevelClass = row.GetInteger("minlevelclass") ?? -1,
+                MinStr = row.GetInteger("minstr") ?? 0,
+                MinDex = row.GetInteger("mindex") ?? 0,
+                MinInt = row.GetInteger("minint") ?? 0,
+                MinWis = row.GetInteger("minwis") ?? 0,
+                MinCon = row.GetInteger("mincon") ?? 0,
+                MinCha = row.GetInteger("mincha") ?? 0,
                 Selectable = row.GetInteger("allclassescanuse") == 1 || row.GetInteger("selectable") == 1,
                 UsesPerDay = usesPerDay ?? -1 // -1 = unlimited or special handling, 0+ = daily limit
             };
@@ -813,6 +825,110 @@ namespace Andastra.Runtime.Engines.Odyssey.Data
         }
 
         #endregion
+
+        #region Skill Data
+
+        /// <summary>
+        /// Gets skill data from skills.2da.
+        /// </summary>
+        /// <remarks>
+        /// Skill Data Access:
+        /// - Based on swkotor.exe and swkotor2.exe: Skills are loaded from skills.2da
+        /// - Located via string references: "skills.2da" in resource system
+        /// - Original implementation: Loads skill data from skills.2da for skill names and descriptions
+        /// - Skill ID is row index in skills.2da (0-7 for KOTOR: COMPUTER_USE, DEMOLITIONS, STEALTH, AWARENESS, PERSUADE, REPAIR, SECURITY, TREAT_INJURY)
+        /// - Based on skills.2da format documentation
+        /// </remarks>
+        [CanBeNull]
+        public SkillData GetSkill(int skillId)
+        {
+            TwoDA table = GetTable("skills");
+            if (table == null || skillId < 0 || skillId >= table.GetHeight())
+            {
+                return null;
+            }
+
+            TwoDARow row = table.GetRow(skillId);
+            return new SkillData
+            {
+                RowIndex = skillId,
+                SkillId = skillId,
+                Label = row.Label(),
+                Name = row.GetString("name"),
+                Description = row.GetString("description"),
+                DescriptionStrRef = row.GetInteger("description") ?? -1
+            };
+        }
+
+        /// <summary>
+        /// Gets all available skills from skills.2da.
+        /// </summary>
+        /// <returns>List of all skill data entries.</returns>
+        public List<SkillData> GetAllSkills()
+        {
+            List<SkillData> skills = new List<SkillData>();
+            TwoDA table = GetTable("skills");
+            if (table == null)
+            {
+                return skills;
+            }
+
+            for (int i = 0; i < table.GetHeight(); i++)
+            {
+                SkillData skill = GetSkill(i);
+                if (skill != null)
+                {
+                    skills.Add(skill);
+                }
+            }
+
+            return skills;
+        }
+
+        /// <summary>
+        /// Checks if a skill is a class skill for the given class.
+        /// </summary>
+        /// <param name="skillId">The skill ID (0-7).</param>
+        /// <param name="classId">The class ID (0=Soldier, 1=Scout, 2=Scoundrel, 3=JediGuardian, 4=JediConsular, 5=JediSentinel).</param>
+        /// <returns>True if the skill is a class skill for this class, false otherwise.</returns>
+        /// <remarks>
+        /// Class Skill Check:
+        /// - Based on swkotor.exe and swkotor2.exe: Class skills are determined by classes.2da skill columns
+        /// - Original implementation: Checks if skill is listed in class's skill columns in classes.2da
+        /// - Class skills cost 1 point per rank, cross-class skills cost 2 points per rank
+        /// - Class skills can be raised to rank 4 at level 1, cross-class skills can be raised to rank 2
+        /// - Based on classes.2da structure: Each class has skill columns (e.g., "skill0", "skill1", etc.) listing class skills
+        /// </remarks>
+        public bool IsClassSkill(int skillId, int classId)
+        {
+            TwoDA classesTable = GetTable("classes");
+            if (classesTable == null || classId < 0 || classId >= classesTable.GetHeight())
+            {
+                return false;
+            }
+
+            TwoDARow classRow = classesTable.GetRow(classId);
+            if (classRow == null)
+            {
+                return false;
+            }
+
+            // Check skill columns in classes.2da (skill0, skill1, skill2, etc.)
+            // Based on classes.2da structure: Class skills are listed in skill columns
+            for (int i = 0; i < 20; i++) // Check up to 20 skill columns
+            {
+                string columnName = "skill" + i;
+                int? listedSkillId = classRow.GetInteger(columnName);
+                if (listedSkillId.HasValue && listedSkillId.Value == skillId)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        #endregion
     }
 
     #region Data Structures
@@ -907,6 +1023,12 @@ namespace Andastra.Runtime.Engines.Odyssey.Data
         public int PrereqFeat2 { get; set; }
         public int MinLevel { get; set; }
         public int MinLevelClass { get; set; }
+        public int MinStr { get; set; }
+        public int MinDex { get; set; }
+        public int MinInt { get; set; }
+        public int MinWis { get; set; }
+        public int MinCon { get; set; }
+        public int MinCha { get; set; }
         public bool Selectable { get; set; }
         public bool RequiresAction { get; set; }
         /// <summary>
@@ -987,6 +1109,19 @@ namespace Andastra.Runtime.Engines.Odyssey.Data
         public int ConjRange { get; set; }
         public int Innate { get; set; }
         public int FeatId { get; set; }
+    }
+
+    /// <summary>
+    /// Skill data from skills.2da.
+    /// </summary>
+    public class SkillData
+    {
+        public int RowIndex { get; set; }
+        public int SkillId { get { return RowIndex; } set { RowIndex = value; } }
+        public string Label { get; set; }
+        public string Name { get; set; }
+        public string Description { get; set; }
+        public int DescriptionStrRef { get; set; }
     }
 
     #endregion

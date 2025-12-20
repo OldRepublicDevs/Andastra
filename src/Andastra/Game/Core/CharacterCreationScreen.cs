@@ -66,6 +66,12 @@ namespace Andastra.Runtime.Game.Core
         private int _selectedFeatIndex = 0;
         private int _featScrollOffset = 0;
         
+        // Skill selection state
+        private List<int> _availableSkillIds = new List<int>(); // Skill IDs 0-7
+        private int _selectedSkillIndex = 0;
+        private int _skillScrollOffset = 0;
+        private int _availableSkillPoints = 0;
+        
         /// <summary>
         /// Character creation steps.
         /// </summary>
@@ -136,11 +142,24 @@ namespace Andastra.Runtime.Game.Core
                 Intelligence = 12,
                 Wisdom = 12,
                 Charisma = 12,
-                SelectedFeats = new List<int>()
+                SelectedFeats = new List<int>(),
+                SkillRanks = new Dictionary<int, int>()
             };
+            
+            // Initialize all skills to 0 (untrained)
+            for (int i = 0; i < 8; i++)
+            {
+                _characterData.SkillRanks[i] = 0;
+            }
+            
+            // Initialize available skills (all 8 skills in KOTOR)
+            _availableSkillIds = new List<int> { 0, 1, 2, 3, 4, 5, 6, 7 };
             
             // Initialize available feats for the default class
             UpdateAvailableFeats();
+            
+            // Initialize skill points
+            UpdateSkillPoints();
             
             // Load the maincg GUI panel
             // Based on swkotor.exe and swkotor2.exe: Character creation uses "maincg" GUI panel
@@ -276,6 +295,7 @@ namespace Andastra.Runtime.Game.Core
                 _selectedClassIndex = (_selectedClassIndex - 1 + availableClasses.Length) % availableClasses.Length;
                 _characterData.Class = availableClasses[_selectedClassIndex];
                 UpdateAvailableFeats();
+                UpdateSkillPoints();
                 _needsModelUpdate = true;
             }
             else if (IsKeyPressed(keyboardState, _previousKeyboardState, Keys.Down) || IsKeyPressed(keyboardState, _previousKeyboardState, Keys.Right))
@@ -283,6 +303,7 @@ namespace Andastra.Runtime.Game.Core
                 _selectedClassIndex = (_selectedClassIndex + 1) % availableClasses.Length;
                 _characterData.Class = availableClasses[_selectedClassIndex];
                 UpdateAvailableFeats();
+                UpdateSkillPoints();
                 _needsModelUpdate = true;
             }
             
@@ -397,6 +418,12 @@ namespace Andastra.Runtime.Game.Core
             
             // Apply change
             SetAttributeValue(attributeIndex, newValue);
+            
+            // Update skill points if Intelligence changed
+            if (attributeIndex == 3) // Intelligence
+            {
+                UpdateSkillPoints();
+            }
         }
         
         /// <summary>
@@ -434,11 +461,57 @@ namespace Andastra.Runtime.Game.Core
         
         /// <summary>
         /// Handles input for skills step.
+        /// Based on swkotor.exe and swkotor2.exe: Skill selection allows adjusting skill ranks with available skill points
+        /// - Original implementation: Up/Down arrows navigate skill list, Left/Right adjusts skill rank, Enter/Space continues
+        /// - Skill points are calculated based on class and Intelligence modifier
+        /// - Class skills cost 1 point per rank, cross-class skills cost 2 points per rank
+        /// - Class skills can be raised to rank 4 at level 1, cross-class skills can be raised to rank 2
         /// </summary>
         private void HandleSkillsInput(IKeyboardState keyboardState, IMouseState mouseState)
         {
-            // Skills are typically auto-calculated based on class and INT, but allow manual adjustment
-            // For now, just allow navigation
+            // Skill list navigation
+            if (IsKeyPressed(keyboardState, _previousKeyboardState, Keys.Up))
+            {
+                if (_selectedSkillIndex > 0)
+                {
+                    _selectedSkillIndex--;
+                    // Auto-scroll if selection is above visible area
+                    if (_selectedSkillIndex < _skillScrollOffset)
+                    {
+                        _skillScrollOffset = _selectedSkillIndex;
+                    }
+                }
+            }
+            else if (IsKeyPressed(keyboardState, _previousKeyboardState, Keys.Down))
+            {
+                if (_selectedSkillIndex < _availableSkillIds.Count - 1)
+                {
+                    _selectedSkillIndex++;
+                    // Auto-scroll if selection is below visible area (assuming ~8 visible items)
+                    int maxVisible = 8;
+                    if (_selectedSkillIndex >= _skillScrollOffset + maxVisible)
+                    {
+                        _skillScrollOffset = _selectedSkillIndex - maxVisible + 1;
+                    }
+                }
+            }
+            
+            // Skill rank adjustment
+            if (_selectedSkillIndex >= 0 && _selectedSkillIndex < _availableSkillIds.Count)
+            {
+                int skillId = _availableSkillIds[_selectedSkillIndex];
+                
+                // Increase skill rank
+                if (IsKeyPressed(keyboardState, _previousKeyboardState, Keys.Right))
+                {
+                    AdjustSkillRank(skillId, 1);
+                }
+                // Decrease skill rank
+                else if (IsKeyPressed(keyboardState, _previousKeyboardState, Keys.Left))
+                {
+                    AdjustSkillRank(skillId, -1);
+                }
+            }
             
             // Next/Back
             if (IsKeyPressed(keyboardState, _previousKeyboardState, Keys.Enter) || IsKeyPressed(keyboardState, _previousKeyboardState, Keys.Space))
@@ -449,6 +522,101 @@ namespace Andastra.Runtime.Game.Core
             {
                 GoToPreviousStep();
             }
+        }
+        
+        /// <summary>
+        /// Adjusts a skill rank with validation.
+        /// Based on swkotor.exe and swkotor2.exe: Skill rank adjustment validates point costs and maximum ranks
+        /// - Original implementation: Checks if skill is class skill (1 point) or cross-class (2 points)
+        /// - Validates maximum rank: class skills can go to 4, cross-class to 2 at level 1
+        /// - Updates available skill points when rank changes
+        /// </summary>
+        private void AdjustSkillRank(int skillId, int delta)
+        {
+            if (skillId < 0 || skillId >= 8)
+            {
+                return;
+            }
+            
+            int currentRank = _characterData.SkillRanks.ContainsKey(skillId) ? _characterData.SkillRanks[skillId] : 0;
+            int newRank = currentRank + delta;
+            
+            // Validate: ranks cannot be negative
+            if (newRank < 0)
+            {
+                return;
+            }
+            
+            // Get class ID
+            int classId = GetClassId(_characterData.Class);
+            
+            // Check if skill is class skill
+            bool isClassSkill = _gameDataManager.IsClassSkill(skillId, classId);
+            
+            // Determine maximum rank and point cost
+            int maxRank = isClassSkill ? 4 : 2; // Class skills: 4, cross-class: 2 at level 1
+            int pointCost = isClassSkill ? 1 : 2; // Class skills: 1 point, cross-class: 2 points
+            
+            // Validate: check maximum rank
+            if (newRank > maxRank)
+            {
+                return;
+            }
+            
+            // Validate: check available points
+            int pointsNeeded = delta > 0 ? pointCost : -pointCost;
+            if (delta > 0 && _availableSkillPoints < pointCost)
+            {
+                return; // Not enough points to increase
+            }
+            
+            // Apply change
+            _characterData.SkillRanks[skillId] = newRank;
+            _availableSkillPoints -= pointsNeeded;
+        }
+        
+        /// <summary>
+        /// Updates available skill points based on class and Intelligence.
+        /// Based on swkotor.exe and swkotor2.exe: Skill points = (class skill point base + INT modifier) / 2, multiplied by 4 for level 1
+        /// - Original implementation: Calculates skill points from class data (skillpointbase from classes.2da) and Intelligence modifier
+        /// - Level 1 characters get 4x the normal skill points
+        /// - Formula: points = max(1, (skillpointbase + INT_modifier) / 2) * 4
+        /// </summary>
+        private void UpdateSkillPoints()
+        {
+            // Get class data
+            int classId = GetClassId(_characterData.Class);
+            ClassData classData = _gameDataManager.GetClass(classId);
+            if (classData == null)
+            {
+                _availableSkillPoints = 0;
+                return;
+            }
+            
+            // Calculate Intelligence modifier: (INT - 10) / 2
+            int intModifier = (_characterData.Intelligence - 10) / 2;
+            
+            // Calculate base skill points: (class skill point base + INT modifier) / 2, minimum 1
+            int baseSkillPoints = classData.SkillsPerLevel + intModifier;
+            int skillPointsPerLevel = Math.Max(1, baseSkillPoints / 2);
+            
+            // Level 1 characters get 4x skill points
+            int totalSkillPoints = skillPointsPerLevel * 4;
+            
+            // Calculate points already spent
+            int pointsSpent = 0;
+            for (int i = 0; i < 8; i++)
+            {
+                int rank = _characterData.SkillRanks.ContainsKey(i) ? _characterData.SkillRanks[i] : 0;
+                if (rank > 0)
+                {
+                    bool isClassSkill = _gameDataManager.IsClassSkill(i, classId);
+                    int pointCost = isClassSkill ? 1 : 2;
+                    pointsSpent += rank * pointCost;
+                }
+            }
+            
+            _availableSkillPoints = totalSkillPoints - pointsSpent;
         }
         
         /// <summary>
@@ -972,6 +1140,8 @@ namespace Andastra.Runtime.Game.Core
         /// Based on swkotor.exe and swkotor2.exe: Skills are displayed with current ranks and available points
         /// - Skills are based on class and Intelligence modifier
         /// - Available skill points are calculated and displayed
+        /// - Each skill shows name, current rank, and adjustment controls
+        /// - Class skills are highlighted differently from cross-class skills
         /// </summary>
         private void RenderSkillsUI(ISpriteBatch spriteBatch, IFont font)
         {
@@ -981,11 +1151,181 @@ namespace Andastra.Runtime.Game.Core
             }
             
             // Render step title
-            spriteBatch.DrawString(font, "Skills", new Vector2(50, 100), Color.White);
-            spriteBatch.DrawString(font, "Skills are calculated based on class and Intelligence.", new Vector2(50, 150), Color.Gray);
+            spriteBatch.DrawString(font, "Allocate Skill Points", new Vector2(50, 50), Color.White);
             
-            // TODO: PLACEHOLDER - Implement full skills UI with skill list and ranks
-            // This requires skill system integration
+            // Render instruction text
+            string instructionText = "Use Up/Down to navigate, Left/Right to adjust ranks, Enter/Space to continue";
+            spriteBatch.DrawString(font, instructionText, new Vector2(50, 80), Color.Gray);
+            
+            // Render available skill points
+            string pointsText = $"Available Skill Points: {_availableSkillPoints}";
+            Color pointsColor = _availableSkillPoints > 0 ? Color.Cyan : Color.Red;
+            spriteBatch.DrawString(font, pointsText, new Vector2(50, 105), pointsColor);
+            
+            // Get class ID for class skill checking
+            int classId = GetClassId(_characterData.Class);
+            
+            // Render skill list
+            int listStartY = 135;
+            int itemHeight = 30;
+            int maxVisibleItems = 8;
+            int listWidth = 500;
+            
+            // Calculate visible range
+            int visibleStart = _skillScrollOffset;
+            int visibleEnd = Math.Min(visibleStart + maxVisibleItems, _availableSkillIds.Count);
+            
+            // Render visible skills
+            for (int i = visibleStart; i < visibleEnd; i++)
+            {
+                int skillId = _availableSkillIds[i];
+                SkillData skillData = _gameDataManager.GetSkill(skillId);
+                if (skillData == null)
+                {
+                    continue;
+                }
+                
+                bool isSelected = (i == _selectedSkillIndex);
+                int currentRank = _characterData.SkillRanks.ContainsKey(skillId) ? _characterData.SkillRanks[skillId] : 0;
+                bool isClassSkill = _gameDataManager.IsClassSkill(skillId, classId);
+                int maxRank = isClassSkill ? 4 : 2;
+                int pointCost = isClassSkill ? 1 : 2;
+                bool canIncrease = _availableSkillPoints >= pointCost && currentRank < maxRank;
+                bool canDecrease = currentRank > 0;
+                
+                int y = listStartY + ((i - visibleStart) * itemHeight);
+                
+                // Draw selection indicator background
+                if (isSelected)
+                {
+                    DrawRectangle(spriteBatch, new Rectangle(45, y - 2, listWidth, itemHeight), new Color(100, 100, 100, 150));
+                }
+                
+                // Draw class skill indicator (different background for class skills)
+                if (isClassSkill)
+                {
+                    DrawRectangle(spriteBatch, new Rectangle(45, y - 2, 20, itemHeight), new Color(40, 80, 120, 200));
+                }
+                
+                // Determine text color based on state
+                Color textColor = Color.White;
+                if (isSelected)
+                {
+                    textColor = Color.Yellow;
+                }
+                else if (isClassSkill)
+                {
+                    textColor = new Color(144, 200, 238, 255); // Light blue for class skills
+                }
+                
+                // Render skill name
+                string skillName = skillData.Name ?? $"Skill {skillId}";
+                if (skillName.Length > 25)
+                {
+                    skillName = skillName.Substring(0, 22) + "...";
+                }
+                
+                // Render class skill indicator
+                string classSkillIndicator = isClassSkill ? "[C]" : "[X]";
+                Color indicatorColor = isClassSkill ? new Color(144, 200, 238, 255) : Color.Gray;
+                spriteBatch.DrawString(font, classSkillIndicator, new Vector2(50, y), indicatorColor);
+                
+                // Render skill name
+                spriteBatch.DrawString(font, skillName, new Vector2(90, y), textColor);
+                
+                // Render rank display
+                string rankText = $"Rank: {currentRank}/{maxRank}";
+                spriteBatch.DrawString(font, rankText, new Vector2(280, y), textColor);
+                
+                // Render adjustment controls
+                if (isSelected)
+                {
+                    // Render decrease button indicator
+                    if (canDecrease)
+                    {
+                        spriteBatch.DrawString(font, "<", new Vector2(380, y), Color.White);
+                    }
+                    else
+                    {
+                        spriteBatch.DrawString(font, "<", new Vector2(380, y), Color.DarkGray);
+                    }
+                    
+                    // Render increase button indicator
+                    if (canIncrease)
+                    {
+                        spriteBatch.DrawString(font, ">", new Vector2(400, y), Color.White);
+                    }
+                    else
+                    {
+                        spriteBatch.DrawString(font, ">", new Vector2(400, y), Color.DarkGray);
+                    }
+                    
+                    // Render point cost
+                    string costText = $"({pointCost} pt)";
+                    spriteBatch.DrawString(font, costText, new Vector2(420, y), Color.Gray);
+                }
+            }
+            
+            // Render detailed description for selected skill
+            if (_selectedSkillIndex >= 0 && _selectedSkillIndex < _availableSkillIds.Count)
+            {
+                int selectedSkillId = _availableSkillIds[_selectedSkillIndex];
+                SkillData selectedSkillData = _gameDataManager.GetSkill(selectedSkillId);
+                if (selectedSkillData != null)
+                {
+                    int descriptionX = 560;
+                    int descriptionY = 135;
+                    int descriptionWidth = 220;
+                    
+                    // Draw description panel background
+                    DrawRectangle(spriteBatch, new Rectangle(descriptionX - 5, descriptionY - 5, descriptionWidth + 10, 200), new Color(30, 30, 30, 220));
+                    DrawRectangleOutline(spriteBatch, new Rectangle(descriptionX - 5, descriptionY - 5, descriptionWidth + 10, 200), Color.White, 2);
+                    
+                    // Render skill name
+                    string descSkillName = selectedSkillData.Name ?? $"Skill {selectedSkillId}";
+                    spriteBatch.DrawString(font, descSkillName, new Vector2(descriptionX, descriptionY), Color.White);
+                    descriptionY += 25;
+                    
+                    // Render description
+                    string description = selectedSkillData.Description ?? "No description available.";
+                    // Word wrap description (simple implementation)
+                    string[] words = description.Split(' ');
+                    string currentLine = string.Empty;
+                    int lineHeight = 18;
+                    int maxCharsPerLine = descriptionWidth / 7; // Rough estimate
+                    
+                    foreach (string word in words)
+                    {
+                        string testLine = currentLine + (currentLine.Length > 0 ? " " : "") + word;
+                        if (testLine.Length > maxCharsPerLine && currentLine.Length > 0)
+                        {
+                            spriteBatch.DrawString(font, currentLine, new Vector2(descriptionX, descriptionY), new Color(211, 211, 211, 255)); // Light gray
+                            descriptionY += lineHeight;
+                            currentLine = word;
+                        }
+                        else
+                        {
+                            currentLine = testLine;
+                        }
+                        
+                        if (descriptionY > 135 + 170) // Stop if we run out of space
+                        {
+                            break;
+                        }
+                    }
+                    if (currentLine.Length > 0 && descriptionY <= 135 + 170)
+                    {
+                        spriteBatch.DrawString(font, currentLine, new Vector2(descriptionX, descriptionY), new Color(211, 211, 211, 255)); // Light gray
+                    }
+                    
+                    // Render class skill info
+                    descriptionY += 20;
+                    bool isClassSkill = _gameDataManager.IsClassSkill(selectedSkillId, classId);
+                    string classSkillText = isClassSkill ? "Class Skill (1 point per rank)" : "Cross-Class Skill (2 points per rank)";
+                    Color classSkillColor = isClassSkill ? new Color(144, 200, 238, 255) : Color.Gray;
+                    spriteBatch.DrawString(font, classSkillText, new Vector2(descriptionX, descriptionY), classSkillColor);
+                }
+            }
         }
         
         /// <summary>
@@ -1273,6 +1613,22 @@ namespace Andastra.Runtime.Game.Core
             spriteBatch.DrawString(font, $"  CHA: {_characterData.Charisma}", new Vector2(70, y), Color.White);
             y += lineHeight * 2;
             
+            // Render skills
+            spriteBatch.DrawString(font, "Skills:", new Vector2(50, y), Color.Cyan);
+            y += lineHeight;
+            
+            int classId = GetClassId(_characterData.Class);
+            string[] skillNames = { "Computer Use", "Demolitions", "Stealth", "Awareness", "Persuade", "Repair", "Security", "Treat Injury" };
+            for (int i = 0; i < 8; i++)
+            {
+                int rank = _characterData.SkillRanks.ContainsKey(i) ? _characterData.SkillRanks[i] : 0;
+                bool isClassSkill = _gameDataManager.IsClassSkill(i, classId);
+                string classSkillIndicator = isClassSkill ? " [C]" : " [X]";
+                spriteBatch.DrawString(font, $"  {skillNames[i]}: {rank}{classSkillIndicator}", new Vector2(70, y), Color.White);
+                y += lineHeight;
+            }
+            y += lineHeight;
+            
             // Render completion hint
             spriteBatch.DrawString(font, "Press Enter to finish character creation", new Vector2(50, y), Color.Yellow);
         }
@@ -1439,9 +1795,33 @@ namespace Andastra.Runtime.Game.Core
                 return false;
             }
             
-            // TODO: Check attribute requirements (minstr, mindex, minint, minwis, mincon, mincha)
-            // This would require reading these fields from feat.2da which may not be in FeatData structure yet
-            // For now, we skip attribute requirement checking
+            // Check attribute requirements (minstr, mindex, minint, minwis, mincon, mincha)
+            // Based on swkotor.exe and swkotor2.exe: Attribute requirements checked during feat selection
+            // Original implementation: Compares character attributes against feat.2da minstr/mindex/etc. columns
+            if (featData.MinStr > 0 && _characterData.Strength < featData.MinStr)
+            {
+                return false;
+            }
+            if (featData.MinDex > 0 && _characterData.Dexterity < featData.MinDex)
+            {
+                return false;
+            }
+            if (featData.MinInt > 0 && _characterData.Intelligence < featData.MinInt)
+            {
+                return false;
+            }
+            if (featData.MinWis > 0 && _characterData.Wisdom < featData.MinWis)
+            {
+                return false;
+            }
+            if (featData.MinCon > 0 && _characterData.Constitution < featData.MinCon)
+            {
+                return false;
+            }
+            if (featData.MinCha > 0 && _characterData.Charisma < featData.MinCha)
+            {
+                return false;
+            }
             
             return true;
         }
@@ -1518,6 +1898,14 @@ namespace Andastra.Runtime.Game.Core
         /// - Feats are added to creature's FeatList when character is created
         /// </summary>
         public List<int> SelectedFeats { get; set; }
+        /// <summary>
+        /// Skill ranks allocated during character creation.
+        /// Based on swkotor.exe and swkotor2.exe: Character creation stores skill ranks in character data
+        /// - Original implementation: Skill ranks are stored as dictionary mapping skill ID (0-7) to rank value
+        /// - Skills are set on creature's StatsComponent when character is created
+        /// - Skill ranks: 0 = untrained, 1-4 for class skills, 1-2 for cross-class skills at level 1
+        /// </summary>
+        public Dictionary<int, int> SkillRanks { get; set; }
     }
     
     /// <summary>
