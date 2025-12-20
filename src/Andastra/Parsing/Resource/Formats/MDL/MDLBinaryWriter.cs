@@ -845,7 +845,34 @@ namespace Andastra.Parsing.Formats.MDL
                 Vector3 ambient = mdlNode.Mesh.Ambient;
                 binNode.Trimesh.Ambient = new Vector3(ambient.Z, ambient.Y, ambient.X);
                 binNode.Trimesh.TransparencyHint = (uint)mdlNode.Mesh.TransparencyHint;
-                // TODO: Set other trimesh properties
+                
+                // Reference: vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/formats/mdl/io_mdl.py:2019-2033
+                // Set rendering and material properties
+                binNode.Trimesh.Render = (byte)(mdlNode.Mesh.Render != 0 ? 1 : 0);
+                binNode.Trimesh.Beaming = (byte)(mdlNode.Mesh.Beaming != 0 ? 1 : 0);
+                binNode.Trimesh.HasShadow = (byte)(mdlNode.Mesh.Shadow != 0.0f ? 1 : 0);
+                binNode.Trimesh.HasLightmap = (byte)(mdlNode.Mesh.HasLightmap ? 1 : 0);
+                binNode.Trimesh.RotateTexture = (byte)(mdlNode.Mesh.Rotational != 0 ? 1 : 0);
+                
+                // Background geometry flag (not available in MDLMesh, default to 0)
+                // Reference: PyKotor mdl_data.py:MDLMesh.background_geometry
+                binNode.Trimesh.Background = 0;
+                
+                // UV animation properties (not available in MDLMesh, default to 0)
+                // Reference: PyKotor mdl_data.py:MDLMesh.uv_jitter, uv_jitter_speed, uv_direction_x/y
+                binNode.Trimesh.UvJitter = 0.0f;
+                binNode.Trimesh.UvSpeed = 0.0f;
+                binNode.Trimesh.UvDirection = Vector2.Zero;
+                
+                // Texture count: 1 if texture2 is present and not "NULL", otherwise 0
+                // Reference: PyKotor io_mdl.py:2035 (texture_count calculation)
+                binNode.Trimesh.TextureCount = (ushort)(!string.IsNullOrEmpty(mdlNode.Mesh.Texture2) && mdlNode.Mesh.Texture2 != "NULL" ? 1 : 0);
+                
+                // Saber unknowns (default initialized in TrimeshHeader constructor)
+                // Reference: PyKotor mdl_data.py:MDLMesh.saber_unknowns (tuple of 8 ints, default: (3, 0, 0, 0, 0, 0, 0, 0))
+                // Note: SaberUnknowns is already initialized to 8 zero bytes in TrimeshHeader constructor
+                // If mesh has saber data, we could set it here, but saber_unknowns is not available in MDLMesh
+                
                 binNode.Trimesh.VertexCount = (ushort)mdlNode.Mesh.Vertices.Count;
                 binNode.Trimesh.Vertices.Clear();
                 binNode.Trimesh.Vertices.AddRange(mdlNode.Mesh.Vertices);
@@ -1502,4 +1529,6 @@ namespace Andastra.Parsing.Formats.MDL
             _mdxWriter?.Dispose();
         }
     }
+}
+
 }
