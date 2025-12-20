@@ -80,14 +80,14 @@ namespace Andastra.Parsing.Tests.Formats
             uint listIndicesOffset = BitConverter.ToUInt32(header, 48);
             uint listIndicesCount = BitConverter.ToUInt32(header, 52);
 
-            structArrayOffset.Should().BeGreaterOrEqualTo(56, "Struct array offset should be >= 56 (after header)");
-            fieldArrayOffset.Should().BeGreaterOrEqualTo(56, "Field array offset should be >= 56 (after header)");
-            labelArrayOffset.Should().BeGreaterOrEqualTo(56, "Label array offset should be >= 56 (after header)");
-            fieldDataOffset.Should().BeGreaterOrEqualTo(56, "Field data offset should be >= 56 (after header)");
-            fieldIndicesOffset.Should().BeGreaterOrEqualTo(56, "Field indices offset should be >= 56 (after header)");
-            listIndicesOffset.Should().BeGreaterOrEqualTo(56, "List indices offset should be >= 56 (after header)");
+            structArrayOffset.Should().BeGreaterThanOrEqualTo(56, "Struct array offset should be >= 56 (after header)");
+            fieldArrayOffset.Should().BeGreaterThanOrEqualTo(56, "Field array offset should be >= 56 (after header)");
+            labelArrayOffset.Should().BeGreaterThanOrEqualTo(56, "Label array offset should be >= 56 (after header)");
+            fieldDataOffset.Should().BeGreaterThanOrEqualTo(56, "Field data offset should be >= 56 (after header)");
+            fieldIndicesOffset.Should().BeGreaterThanOrEqualTo(56, "Field indices offset should be >= 56 (after header)");
+            listIndicesOffset.Should().BeGreaterThanOrEqualTo(56, "List indices offset should be >= 56 (after header)");
 
-            structCount.Should().BeGreaterOrEqualTo(1, "Struct count should be >= 1 (root struct always present)");
+            structCount.Should().BeGreaterThanOrEqualTo(1, "Struct count should be >= 1 (root struct always present)");
         }
 
         [Fact(Timeout = 120000)]
@@ -489,17 +489,17 @@ namespace Andastra.Parsing.Tests.Formats
             // HP fields should be Int16
             if (root.Exists("HP"))
             {
-                root.GetInt16("HP").Should().BeGreaterOrEqualTo((short)0, "HP should be Int16");
+                root.GetInt16("HP").Should().BeGreaterThanOrEqualTo((short)0, "HP should be Int16");
             }
             if (root.Exists("CurrentHP"))
             {
-                root.GetInt16("CurrentHP").Should().BeGreaterOrEqualTo((short)0, "CurrentHP should be Int16");
+                root.GetInt16("CurrentHP").Should().BeGreaterThanOrEqualTo((short)0, "CurrentHP should be Int16");
             }
 
             // Faction should be UInt32
             if (root.Exists("Faction"))
             {
-                root.GetUInt32("Faction").Should().BeGreaterOrEqualTo(0u, "Faction should be UInt32");
+                root.GetUInt32("Faction").Should().BeGreaterThanOrEqualTo(0u, "Faction should be UInt32");
             }
         }
 
