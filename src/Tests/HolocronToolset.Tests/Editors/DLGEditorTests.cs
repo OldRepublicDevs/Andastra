@@ -1796,14 +1796,42 @@ namespace HolocronToolset.Tests.Editors
             editor.CoreDlg.Starters.Count.Should().Be(4, "CoreDlg starters count should remain 4");
         }
 
-        // TODO: STUB - Implement test_dlg_editor_delete_node_everywhere (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:1367-1392)
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:1367-1392
         // Original: def test_dlg_editor_delete_node_everywhere(qtbot, installation: HTInstallation): Test deleting node everywhere
         [Fact]
         public void TestDlgEditorDeleteNodeEverywhere()
         {
-            // TODO: STUB - Implement delete node everywhere test
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:1367-1392
-            throw new NotImplementedException("TestDlgEditorDeleteNodeEverywhere: Delete node everywhere test not yet implemented");
+            // Get installation if available (matching Python: installation parameter)
+            HTInstallation installation = CreateTestInstallation();
+
+            // Matching Python: editor = DLGEditor(None, installation)
+            var editor = new DLGEditor(null, installation);
+
+            // Matching Python: editor.show()
+            // Note: In C#/Avalonia, we don't need to explicitly show the window for tests
+
+            // Matching Python: editor.new()
+            editor.New();
+
+            // Matching Python: editor.model.add_root_node()
+            // Create structure with multiple references
+            var rootItem = editor.Model.AddRootNode();
+            rootItem.Should().NotBeNull("Root item should be created");
+            rootItem.Should().BeOfType<DLGStandardItem>("Root item should be a DLGStandardItem");
+
+            // Matching Python: child = editor.model.add_child_to_item(root_item)
+            var child = editor.Model.AddChildToItem(rootItem);
+            child.Should().NotBeNull("Child item should be created");
+
+            // Matching Python: initial_count = editor.model.rowCount()
+            int initialCount = editor.Model.RowCount;
+
+            // Matching Python: editor.model.delete_node_everywhere(root_item.link.node)
+            editor.Model.DeleteNodeEverywhere(rootItem.Link.Node);
+
+            // Matching Python: assert editor.model.rowCount() < initial_count or editor.model.rowCount() == 0
+            // Should have fewer items
+            editor.Model.RowCount.Should().BeLessThan(initialCount).Or.Be(0, "Row count should be less than initial count or zero after deleting node everywhere");
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:1394-1409
@@ -2747,14 +2775,88 @@ namespace HolocronToolset.Tests.Editors
             throw new NotImplementedException("TestDlgEditorAlternatingNodeTypes: Alternating node types test not yet implemented");
         }
 
-        // TODO: STUB - Implement test_dlg_editor_build_all_file_properties (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:1996-2041)
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:1996-2041
         // Original: def test_dlg_editor_build_all_file_properties(qtbot, installation: HTInstallation): Test build all file properties
         [Fact]
         public void TestDlgEditorBuildAllFileProperties()
         {
-            // TODO: STUB - Implement build all file properties test
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:1996-2041
-            throw new NotImplementedException("TestDlgEditorBuildAllFileProperties: Build all file properties test not yet implemented");
+            // Matching PyKotor: editor = DLGEditor(None, installation)
+            var installation = CreateTestInstallation();
+            var editor = new DLGEditor(null, installation);
+            editor.New();
+
+            // Matching PyKotor: Set all file-level properties
+            // Original: editor.ui.conversationSelect.setCurrentIndex(2)
+            editor.ConversationSelect.SelectedIndex = 2;
+            // Original: editor.ui.computerSelect.setCurrentIndex(1)
+            editor.ComputerSelect.SelectedIndex = 1;
+            // Original: editor.ui.skippableCheckbox.setChecked(True)
+            editor.SkippableCheckbox.IsChecked = true;
+            // Original: editor.ui.animatedCutCheckbox.setChecked(True)
+            editor.AnimatedCutCheckbox.IsChecked = true;
+            // Original: editor.ui.oldHitCheckbox.setChecked(True)
+            editor.OldHitCheckbox.IsChecked = true;
+            // Original: editor.ui.unequipHandsCheckbox.setChecked(True)
+            editor.UnequipHandsCheckbox.IsChecked = true;
+            // Original: editor.ui.unequipAllCheckbox.setChecked(True)
+            editor.UnequipAllCheckbox.IsChecked = true;
+            // Original: editor.ui.entryDelaySpin.setValue(123)
+            editor.EntryDelaySpin.Value = 123;
+            // Original: editor.ui.replyDelaySpin.setValue(456)
+            editor.ReplyDelaySpin.Value = 456;
+            // Original: editor.ui.voIdEdit.setText("test_vo_id")
+            editor.VoIdEdit.Text = "test_vo_id";
+            // Original: editor.ui.onAbortCombo.set_combo_box_text("abort_scr")
+            editor.OnAbortCombo.Text = "abort_scr";
+            // Original: editor.ui.onEndEdit.set_combo_box_text("end_script")
+            editor.OnEndEdit.Text = "end_script";
+            // Original: editor.ui.ambientTrackCombo.set_combo_box_text("ambient")
+            editor.AmbientTrackCombo.Text = "ambient";
+            // Original: editor.ui.cameraModelSelect.set_combo_box_text("cam_mdl")
+            editor.CameraModelSelect.Text = "cam_mdl";
+
+            // Matching PyKotor: Add at least one node
+            // Original: editor.model.add_root_node()
+            editor.Model.AddRootNode();
+
+            // Matching PyKotor: Build
+            // Original: data, _ = editor.build()
+            var (data, _) = editor.Build();
+            data.Should().NotBeNull("Build should return data");
+
+            // Matching PyKotor: dlg = read_dlg(data)
+            DLG dlg = DLGHelper.ReadDlg(data);
+            dlg.Should().NotBeNull("DLG should be readable");
+
+            // Matching PyKotor: Verify all properties
+            // Original: assert dlg.conversation_type == DLGConversationType(2)
+            dlg.ConversationType.Should().Be(DLGConversationType.Other, "ConversationType should be Other (index 2)");
+            // Original: assert dlg.computer_type == DLGComputerType(1)
+            dlg.ComputerType.Should().Be(DLGComputerType.Ancient, "ComputerType should be Ancient (index 1)");
+            // Original: assert dlg.skippable
+            dlg.Skippable.Should().BeTrue("Skippable should be true");
+            // Original: assert dlg.animated_cut
+            dlg.AnimatedCut.Should().Be(1, "AnimatedCut should be 1 (true)");
+            // Original: assert dlg.old_hit_check
+            dlg.OldHitCheck.Should().BeTrue("OldHitCheck should be true");
+            // Original: assert dlg.unequip_hands
+            dlg.UnequipHands.Should().BeTrue("UnequipHands should be true");
+            // Original: assert dlg.unequip_items
+            dlg.UnequipItems.Should().BeTrue("UnequipItems should be true");
+            // Original: assert dlg.delay_entry == 123
+            dlg.DelayEntry.Should().Be(123, "DelayEntry should be 123");
+            // Original: assert dlg.delay_reply == 456
+            dlg.DelayReply.Should().Be(456, "DelayReply should be 456");
+            // Original: assert dlg.vo_id == "test_vo_id"
+            dlg.VoId.Should().Be("test_vo_id", "VoId should be 'test_vo_id'");
+            // Original: assert str(dlg.on_abort) == "abort_scr"
+            dlg.OnAbort.ToString().Should().Be("abort_scr", "OnAbort should be 'abort_scr'");
+            // Original: assert str(dlg.on_end) == "end_script"
+            dlg.OnEnd.ToString().Should().Be("end_script", "OnEnd should be 'end_script'");
+            // Original: assert str(dlg.ambient_track) == "ambient"
+            dlg.AmbientTrack.ToString().Should().Be("ambient", "AmbientTrack should be 'ambient'");
+            // Original: assert str(dlg.camera_model) == "cam_mdl"
+            dlg.CameraModel.ToString().Should().Be("cam_mdl", "CameraModel should be 'cam_mdl'");
         }
 
         // TODO: STUB - Implement test_dlg_editor_build_all_node_properties (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:2043-2132)
