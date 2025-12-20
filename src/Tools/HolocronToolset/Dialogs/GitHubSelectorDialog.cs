@@ -247,7 +247,7 @@ namespace HolocronToolset.Dialogs
                             "Using Fork",
                             $"The main repository is not available. Using the fork: {firstFork}",
                             ButtonEnum.Ok,
-                            MsBox.Avalonia.Enums.Icon.Information);
+                            MsBox.Avalonia.Enums.Icon.Info);
                         await infoMsgBox.ShowAsync();
 
                         string[] forkParts = firstFork.Split('/');
@@ -502,19 +502,11 @@ namespace HolocronToolset.Dialogs
                 if (pathToItem.ContainsKey(parentPath))
                 {
                     TreeViewItem parentItem = pathToItem[parentPath];
-                    if (parentItem.Items == null)
-                    {
-                        parentItem.Items = new Avalonia.Controls.ItemsControl.Items();
-                    }
                     parentItem.Items.Add(treeItem);
                 }
                 else
                 {
                     // Top-level item
-                    if (_repoTreeWidget.Items == null)
-                    {
-                        _repoTreeWidget.Items = new Avalonia.Controls.ItemsControl.Items();
-                    }
                     _repoTreeWidget.Items.Add(treeItem);
                 }
             }

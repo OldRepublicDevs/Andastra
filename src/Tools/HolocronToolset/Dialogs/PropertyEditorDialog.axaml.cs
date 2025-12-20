@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Interactivity;
@@ -405,7 +406,8 @@ namespace HolocronToolset.Dialogs
             {
                 // ShowDialogAsync will handle setting the parent relationship
                 // The result will be the value passed to Close() when the dialog closes
-                bool result = await ShowDialogAsync<bool>(parent);
+                var resultObj = await ShowDialogAsync(parent);
+                bool result = resultObj is bool b ? b : false;
                 DialogResult = result;
                 return result;
             }
@@ -421,7 +423,8 @@ namespace HolocronToolset.Dialogs
                 
                 if (mainWindow != null)
                 {
-                    bool result = await ShowDialogAsync<bool>(mainWindow);
+                    var resultObj = await ShowDialogAsync(mainWindow);
+                    bool result = resultObj is bool b ? b : false;
                     DialogResult = result;
                     return result;
                 }
@@ -430,7 +433,7 @@ namespace HolocronToolset.Dialogs
                     // Fallback: show non-modally and track result via Closed event
                     // This should rarely happen, but provides a fallback
                     bool result = false;
-                    EventHandler<WindowEventArgs> closedHandler = null;
+                    EventHandler closedHandler = null;
                     closedHandler = (s, e) =>
                     {
                         this.Closed -= closedHandler;
