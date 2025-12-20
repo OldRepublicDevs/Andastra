@@ -1262,14 +1262,227 @@ namespace Andastra.Runtime.Stride.Backends
 
         protected override ResourceInfo CreateSamplerFeedbackTextureInternal(int width, int height, TextureFormat format, IntPtr handle)
         {
-            // TODO: STUB - Create sampler feedback texture
-            return new ResourceInfo
+            // Validate inputs
+            if (width <= 0 || height <= 0)
             {
-                Type = ResourceType.Texture,
-                Handle = handle,
-                NativeHandle = IntPtr.Zero,
-                DebugName = "SamplerFeedbackTexture"
-            };
+                Console.WriteLine($"[StrideDX12] CreateSamplerFeedbackTexture: Invalid dimensions {width}x{height}");
+                return new ResourceInfo
+                {
+                    Type = ResourceType.Texture,
+                    Handle = IntPtr.Zero,
+                    NativeHandle = IntPtr.Zero,
+                    DebugName = "SamplerFeedbackTexture"
+                };
+            }
+
+            // Platform check: DirectX 12 is Windows-only
+            if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+            {
+                Console.WriteLine("[StrideDX12] CreateSamplerFeedbackTexture: DirectX 12 is only available on Windows");
+                return new ResourceInfo
+                {
+                    Type = ResourceType.Texture,
+                    Handle = IntPtr.Zero,
+                    NativeHandle = IntPtr.Zero,
+                    DebugName = "SamplerFeedbackTexture"
+                };
+            }
+
+            if (_device == IntPtr.Zero)
+            {
+                Console.WriteLine("[StrideDX12] CreateSamplerFeedbackTexture: DirectX 12 device not available");
+                return new ResourceInfo
+                {
+                    Type = ResourceType.Texture,
+                    Handle = IntPtr.Zero,
+                    NativeHandle = IntPtr.Zero,
+                    DebugName = "SamplerFeedbackTexture"
+                };
+            }
+
+            // Create sampler feedback texture using DirectX 12 COM interop
+            // Based on DirectX 12 Sampler Feedback: https://docs.microsoft.com/en-us/windows/win32/direct3d12/sampler-feedback
+            // Sampler feedback textures track which mip levels are accessed during texture sampling
+            // Format: Typically DXGI_FORMAT_SAMPLER_FEEDBACK_MIN_MIP_OPAQUE or DXGI_FORMAT_SAMPLER_FEEDBACK_MIP_REGION_USED_OPAQUE
+            // Dimensions: Width and height are in tiles (8x8 texel tiles per feedback tile)
+            // Flags: Requires D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS and D3D12_RESOURCE_FLAG_SAMPLER_FEEDBACK
+            //
+            // DirectX 12 API references:
+            // - ID3D12Device::CreateCommittedResource for texture creation
+            // - D3D12_RESOURCE_DESC for texture description
+            // - D3D12_HEAP_TYPE_DEFAULT for GPU-accessible memory
+            // - D3D12_RESOURCE_STATE_UNORDERED_ACCESS as initial state
+            // - D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS for UAV access
+            // - D3D12_RESOURCE_FLAG_SAMPLER_FEEDBACK for sampler feedback capability
+            //
+            // Sampler feedback format mapping:
+            // - DXGI_FORMAT_SAMPLER_FEEDBACK_MIN_MIP_OPAQUE = 189 (0xBD) - tracks minimum mip level accessed
+            // - DXGI_FORMAT_SAMPLER_FEEDBACK_MIP_REGION_USED_OPAQUE = 190 (0xBE) - tracks which mip regions are used
+            // Each tile stores feedback data as uint8_t per 8x8 texel tile
+
+            try
+            {
+                // Convert TextureFormat to DXGI_FORMAT
+                // For sampler feedback, we use specialized formats that aren't in the standard enum
+                // Default to DXGI_FORMAT_SAMPLER_FEEDBACK_MIN_MIP_OPAQUE if format doesn't specify
+                uint dxgiFormat = ConvertFormatToDxgiFormatForSamplerFeedback(format);
+
+                // Create D3D12_RESOURCE_DESC structure for sampler feedback texture
+                // Based on DirectX 12 Resource Description: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/ns-d3d12-d3d12_resource_desc
+                var resourceDesc = new D3D12_RESOURCE_DESC
+                {
+                    Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D, // 2D texture
+                    Alignment = 0, // Use default alignment (64KB for textures)
+                    Width = (ulong)width, // Width in tiles
+                    Height = (uint)height, // Height in tiles
+                    DepthOrArraySize = 1, // Single texture, not array
+                    MipLevels = 1, // Single mip level (sampler feedback textures are typically single-mip)
+                    Format = dxgiFormat, // DXGI_FORMAT for sampler feedback
+                    SampleDesc = new D3D12_SAMPLE_DESC
+                    {
+                        Count = 1, // No multisampling
+                        Quality = 0
+                    },
+                    Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN, // Standard texture layout
+                    Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS | D3D12_RESOURCE_FLAG_SAMPLER_FEEDBACK
+                };
+
+                // Create D3D12_HEAP_PROPERTIES structure
+                // Use D3D12_HEAP_TYPE_DEFAULT for GPU-accessible memory
+                var heapProps = new D3D12_HEAP_PROPERTIES
+                {
+                    Type = D3D12_HEAP_TYPE_DEFAULT,
+                    CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN,
+                    MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN,
+                    CreationNodeMask = 0,
+                    VisibleNodeMask = 0
+                };
+
+                // Create D3D12_CLEAR_VALUE structure (optional, but good practice for textures)
+                // For sampler feedback textures, we can initialize to zero
+                var clearValue = new D3D12_CLEAR_VALUE
+                {
+                    Format = dxgiFormat,
+                    Color = new float[] { 0.0f, 0.0f, 0.0f, 0.0f } // Zero-initialize feedback data
+                };
+
+                // Allocate memory for structures
+                int resourceDescSize = Marshal.SizeOf(typeof(D3D12_RESOURCE_DESC));
+                IntPtr resourceDescPtr = Marshal.AllocHGlobal(resourceDescSize);
+                try
+                {
+                    int heapPropsSize = Marshal.SizeOf(typeof(D3D12_HEAP_PROPERTIES));
+                    IntPtr heapPropsPtr = Marshal.AllocHGlobal(heapPropsSize);
+                    try
+                    {
+                        int clearValueSize = Marshal.SizeOf(typeof(D3D12_CLEAR_VALUE));
+                        IntPtr clearValuePtr = Marshal.AllocHGlobal(clearValueSize);
+                        try
+                        {
+                            Marshal.StructureToPtr(resourceDesc, resourceDescPtr, false);
+                            Marshal.StructureToPtr(heapProps, heapPropsPtr, false);
+                            Marshal.StructureToPtr(clearValue, clearValuePtr, false);
+
+                            // Allocate memory for the output resource pointer
+                            IntPtr resourcePtr = Marshal.AllocHGlobal(IntPtr.Size);
+                            try
+                            {
+                                // Call ID3D12Device::CreateCommittedResource
+                                // HRESULT CreateCommittedResource(
+                                //   const D3D12_HEAP_PROPERTIES *pHeapProperties,
+                                //   D3D12_HEAP_FLAGS HeapFlags,
+                                //   const D3D12_RESOURCE_DESC *pDesc,
+                                //   D3D12_RESOURCE_STATES InitialResourceState,
+                                //   const D3D12_CLEAR_VALUE *pOptimizedClearValue,
+                                //   REFIID riidResource,
+                                //   void **ppvResource
+                                // );
+                                Guid iidResource = new Guid("696442be-a72e-4059-bc79-5b5c98040fad"); // IID_ID3D12Resource
+
+                                int hr = CreateCommittedResource(
+                                    _device,
+                                    heapPropsPtr,
+                                    D3D12_HEAP_FLAG_NONE,
+                                    resourceDescPtr,
+                                    D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
+                                    clearValuePtr,
+                                    ref iidResource,
+                                    resourcePtr);
+
+                                if (hr < 0)
+                                {
+                                    Console.WriteLine($"[StrideDX12] CreateSamplerFeedbackTexture: CreateCommittedResource failed with HRESULT 0x{hr:X8}");
+                                    return new ResourceInfo
+                                    {
+                                        Type = ResourceType.Texture,
+                                        Handle = IntPtr.Zero,
+                                        NativeHandle = IntPtr.Zero,
+                                        DebugName = "SamplerFeedbackTexture"
+                                    };
+                                }
+
+                                // Get the resource pointer
+                                IntPtr nativeResource = Marshal.ReadIntPtr(resourcePtr);
+                                if (nativeResource == IntPtr.Zero)
+                                {
+                                    Console.WriteLine("[StrideDX12] CreateSamplerFeedbackTexture: Resource pointer is null");
+                                    return new ResourceInfo
+                                    {
+                                        Type = ResourceType.Texture,
+                                        Handle = IntPtr.Zero,
+                                        NativeHandle = IntPtr.Zero,
+                                        DebugName = "SamplerFeedbackTexture"
+                                    };
+                                }
+
+                                // Calculate size in bytes
+                                // Sampler feedback textures store one byte per 8x8 tile
+                                // Size = width * height * 1 byte per tile
+                                long sizeInBytes = (long)width * height * 1;
+
+                                Console.WriteLine($"[StrideDX12] CreateSamplerFeedbackTexture: Created sampler feedback texture {width}x{height}, format 0x{dxgiFormat:X}, size {sizeInBytes} bytes");
+
+                                return new ResourceInfo
+                                {
+                                    Type = ResourceType.Texture,
+                                    Handle = handle,
+                                    NativeHandle = nativeResource,
+                                    DebugName = $"SamplerFeedbackTexture_{width}x{height}",
+                                    SizeInBytes = sizeInBytes
+                                };
+                            }
+                            finally
+                            {
+                                Marshal.FreeHGlobal(resourcePtr);
+                            }
+                        }
+                        finally
+                        {
+                            Marshal.FreeHGlobal(clearValuePtr);
+                        }
+                    }
+                    finally
+                    {
+                        Marshal.FreeHGlobal(heapPropsPtr);
+                    }
+                }
+                finally
+                {
+                    Marshal.FreeHGlobal(resourceDescPtr);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[StrideDX12] CreateSamplerFeedbackTexture: Exception: {ex.Message}");
+                Console.WriteLine($"[StrideDX12] CreateSamplerFeedbackTexture: Stack trace: {ex.StackTrace}");
+                return new ResourceInfo
+                {
+                    Type = ResourceType.Texture,
+                    Handle = IntPtr.Zero,
+                    NativeHandle = IntPtr.Zero,
+                    DebugName = "SamplerFeedbackTexture"
+                };
+            }
         }
 
         protected override void OnReadSamplerFeedback(IntPtr texture, byte[] data, int dataSize)
@@ -2106,6 +2319,215 @@ namespace Andastra.Runtime.Stride.Backends
 
             setTable(commandList, rootParameterIndex, baseDescriptorHandle);
         }
+
+        /// <summary>
+        /// Creates a committed resource (texture, buffer, etc.) in DirectX 12.
+        /// Calls ID3D12Device::CreateCommittedResource through COM vtable.
+        /// VTable index 10 for ID3D12Device.
+        /// Platform: Windows only (x64/x86) - DirectX 12 COM is Windows-specific
+        /// Based on DirectX 12 Resources: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12device-createcommittedresource
+        /// </summary>
+        private unsafe int CreateCommittedResource(
+            IntPtr device,
+            IntPtr pHeapProperties,
+            uint HeapFlags,
+            IntPtr pDesc,
+            uint InitialResourceState,
+            IntPtr pOptimizedClearValue,
+            ref Guid riidResource,
+            IntPtr ppvResource)
+        {
+            // Platform check: DirectX 12 COM is Windows-only
+            if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+            {
+                return unchecked((int)0x80004001); // E_NOTIMPL - Not implemented on this platform
+            }
+
+            if (device == IntPtr.Zero || pHeapProperties == IntPtr.Zero || pDesc == IntPtr.Zero || ppvResource == IntPtr.Zero)
+            {
+                return unchecked((int)0x80070057); // E_INVALIDARG
+            }
+
+            // Get vtable pointer
+            IntPtr* vtable = *(IntPtr**)device;
+            // CreateCommittedResource is at index 10 in ID3D12Device vtable
+            IntPtr methodPtr = vtable[10];
+
+            // Create delegate from function pointer
+            CreateCommittedResourceDelegate createResource =
+                (CreateCommittedResourceDelegate)Marshal.GetDelegateForFunctionPointer(methodPtr, typeof(CreateCommittedResourceDelegate));
+
+            return createResource(device, pHeapProperties, HeapFlags, pDesc, InitialResourceState, pOptimizedClearValue, ref riidResource, ppvResource);
+        }
+
+        /// <summary>
+        /// Converts TextureFormat to DXGI_FORMAT for sampler feedback textures.
+        /// Sampler feedback textures use specialized formats that track mip level access.
+        /// </summary>
+        private uint ConvertFormatToDxgiFormatForSamplerFeedback(TextureFormat format)
+        {
+            // Sampler feedback formats are DirectX 12 Ultimate features:
+            // - DXGI_FORMAT_SAMPLER_FEEDBACK_MIN_MIP_OPAQUE = 189 (0xBD) - tracks minimum mip level accessed
+            // - DXGI_FORMAT_SAMPLER_FEEDBACK_MIP_REGION_USED_OPAQUE = 190 (0xBE) - tracks which mip regions are used
+            //
+            // Default to MIN_MIP_OPAQUE format, which is the most commonly used sampler feedback format
+            // The format parameter could be extended in the future to specify which feedback type to use
+            switch (format)
+            {
+                // For now, we map standard formats to the default sampler feedback format
+                // In the future, TextureFormat enum could include specific sampler feedback format types
+                default:
+                    // DXGI_FORMAT_SAMPLER_FEEDBACK_MIN_MIP_OPAQUE = 189
+                    // This format stores the minimum mip level that was accessed per 8x8 tile
+                    return 189;
+            }
+        }
+
+        #endregion
+
+        #region DirectX 12 Structures for Sampler Feedback
+
+        // DirectX 12 Resource Dimension
+        private const uint D3D12_RESOURCE_DIMENSION_UNKNOWN = 0;
+        private const uint D3D12_RESOURCE_DIMENSION_BUFFER = 1;
+        private const uint D3D12_RESOURCE_DIMENSION_TEXTURE1D = 2;
+        private const uint D3D12_RESOURCE_DIMENSION_TEXTURE2D = 3;
+        private const uint D3D12_RESOURCE_DIMENSION_TEXTURE3D = 4;
+
+        // DirectX 12 Resource Flags
+        private const uint D3D12_RESOURCE_FLAG_NONE = 0x0;
+        private const uint D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET = 0x1;
+        private const uint D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL = 0x2;
+        private const uint D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS = 0x4;
+        private const uint D3D12_RESOURCE_FLAG_DENY_SHADER_RESOURCE = 0x8;
+        private const uint D3D12_RESOURCE_FLAG_ALLOW_CROSS_ADAPTER = 0x10;
+        private const uint D3D12_RESOURCE_FLAG_ALLOW_SIMULTANEOUS_ACCESS = 0x20;
+        private const uint D3D12_RESOURCE_FLAG_VIDEO_DECODE_REFERENCE_ONLY = 0x40;
+        private const uint D3D12_RESOURCE_FLAG_SAMPLER_FEEDBACK = 0x800;
+
+        // DirectX 12 Resource States
+        private const uint D3D12_RESOURCE_STATE_COMMON = 0x0;
+        private const uint D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER = 0x1;
+        private const uint D3D12_RESOURCE_STATE_INDEX_BUFFER = 0x2;
+        private const uint D3D12_RESOURCE_STATE_RENDER_TARGET = 0x4;
+        private const uint D3D12_RESOURCE_STATE_UNORDERED_ACCESS = 0x8;
+        private const uint D3D12_RESOURCE_STATE_DEPTH_WRITE = 0x10;
+        private const uint D3D12_RESOURCE_STATE_DEPTH_READ = 0x20;
+        private const uint D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE = 0x40;
+        private const uint D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE = 0x80;
+        private const uint D3D12_RESOURCE_STATE_STREAM_OUT = 0x100;
+        private const uint D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT = 0x200;
+        private const uint D3D12_RESOURCE_STATE_COPY_DEST = 0x400;
+        private const uint D3D12_RESOURCE_STATE_COPY_SOURCE = 0x800;
+        private const uint D3D12_RESOURCE_STATE_RESOLVE_DEST = 0x1000;
+        private const uint D3D12_RESOURCE_STATE_RESOLVE_SOURCE = 0x2000;
+        private const uint D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE = 0x400000;
+        private const uint D3D12_RESOURCE_STATE_SHADING_RATE_SOURCE = 0x1000000;
+
+        // DirectX 12 Heap Types
+        private const uint D3D12_HEAP_TYPE_DEFAULT = 1;
+        private const uint D3D12_HEAP_TYPE_UPLOAD = 2;
+        private const uint D3D12_HEAP_TYPE_READBACK = 3;
+        private const uint D3D12_HEAP_TYPE_CUSTOM = 4;
+
+        // DirectX 12 Heap Flags
+        private const uint D3D12_HEAP_FLAG_NONE = 0x0;
+        private const uint D3D12_HEAP_FLAG_SHARED = 0x1;
+        private const uint D3D12_HEAP_FLAG_DENY_BUFFERS = 0x4;
+        private const uint D3D12_HEAP_FLAG_ALLOW_DISPLAY = 0x8;
+        private const uint D3D12_HEAP_FLAG_SHARED_CROSS_ADAPTER = 0x20;
+        private const uint D3D12_HEAP_FLAG_DENY_RT_DS_TEXTURES = 0x40;
+        private const uint D3D12_HEAP_FLAG_DENY_NON_RT_DS_TEXTURES = 0x80;
+        private const uint D3D12_HEAP_FLAG_HARDWARE_PROTECTED = 0x100;
+        private const uint D3D12_HEAP_FLAG_ALLOW_WRITE_WATCH = 0x200;
+        private const uint D3D12_HEAP_FLAG_ALLOW_SHADER_ATOMICS = 0x400;
+        private const uint D3D12_HEAP_FLAG_CREATE_NOT_RESIDENT = 0x800;
+        private const uint D3D12_HEAP_FLAG_CREATE_NOT_ZEROED = 0x1000;
+
+        // DirectX 12 CPU Page Property
+        private const uint D3D12_CPU_PAGE_PROPERTY_UNKNOWN = 0;
+        private const uint D3D12_CPU_PAGE_PROPERTY_NOT_AVAILABLE = 1;
+        private const uint D3D12_CPU_PAGE_PROPERTY_WRITE_COMBINE = 2;
+        private const uint D3D12_CPU_PAGE_PROPERTY_WRITE_BACK = 3;
+
+        // DirectX 12 Memory Pool
+        private const uint D3D12_MEMORY_POOL_UNKNOWN = 0;
+        private const uint D3D12_MEMORY_POOL_L0 = 1;
+        private const uint D3D12_MEMORY_POOL_L1 = 2;
+
+        // DirectX 12 Texture Layout
+        private const uint D3D12_TEXTURE_LAYOUT_UNKNOWN = 0;
+        private const uint D3D12_TEXTURE_LAYOUT_ROW_MAJOR = 1;
+        private const uint D3D12_TEXTURE_LAYOUT_64KB_UNDEFINED_SWIZZLE = 2;
+        private const uint D3D12_TEXTURE_LAYOUT_64KB_STANDARD_SWIZZLE = 3;
+
+        /// <summary>
+        /// D3D12_RESOURCE_DESC structure.
+        /// Based on DirectX 12 Resource Description: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/ns-d3d12-d3d12_resource_desc
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        private struct D3D12_RESOURCE_DESC
+        {
+            public uint Dimension; // D3D12_RESOURCE_DIMENSION
+            public ulong Alignment; // UINT64
+            public ulong Width; // UINT64
+            public uint Height; // UINT
+            public ushort DepthOrArraySize; // UINT16
+            public ushort MipLevels; // UINT16
+            public uint Format; // DXGI_FORMAT
+            public D3D12_SAMPLE_DESC SampleDesc;
+            public uint Layout; // D3D12_TEXTURE_LAYOUT
+            public uint Flags; // D3D12_RESOURCE_FLAGS
+        }
+
+        /// <summary>
+        /// D3D12_SAMPLE_DESC structure.
+        /// Based on DirectX 12 Sample Description: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/ns-d3d12-d3d12_sample_desc
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        private struct D3D12_SAMPLE_DESC
+        {
+            public uint Count; // UINT
+            public uint Quality; // UINT
+        }
+
+        /// <summary>
+        /// D3D12_HEAP_PROPERTIES structure.
+        /// Based on DirectX 12 Heap Properties: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/ns-d3d12-d3d12_heap_properties
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        private struct D3D12_HEAP_PROPERTIES
+        {
+            public uint Type; // D3D12_HEAP_TYPE
+            public uint CPUPageProperty; // D3D12_CPU_PAGE_PROPERTY
+            public uint MemoryPoolPreference; // D3D12_MEMORY_POOL
+            public uint CreationNodeMask; // UINT
+            public uint VisibleNodeMask; // UINT
+        }
+
+        /// <summary>
+        /// D3D12_CLEAR_VALUE structure.
+        /// Based on DirectX 12 Clear Value: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/ns-d3d12-d3d12_clear_value
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        private struct D3D12_CLEAR_VALUE
+        {
+            public uint Format; // DXGI_FORMAT
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 4)]
+            public float[] Color; // float[4] for RGBA color
+        }
+
+        // COM interface method delegate for CreateCommittedResource
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate int CreateCommittedResourceDelegate(
+            IntPtr device,
+            IntPtr pHeapProperties,
+            uint HeapFlags,
+            IntPtr pDesc,
+            uint InitialResourceState,
+            IntPtr pOptimizedClearValue,
+            ref Guid riidResource,
+            IntPtr ppvResource);
 
         #endregion
     }
