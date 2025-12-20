@@ -5,6 +5,7 @@ using System.Linq;
 using System.Reflection;
 using Avalonia.Controls;
 using Avalonia.Controls.Documents;
+using Avalonia.Markup.Xaml;
 using Avalonia.Threading;
 using AvRichTextBox;
 using HoloPatcher.UI.Rte;
@@ -28,6 +29,11 @@ namespace HoloPatcher.UI.Views
             _logScrollViewer = this.FindControl<ScrollViewer>("LogScrollViewer");
             _rtfRichTextBox = this.FindControl<RichTextBox>("RtfRichTextBox");
             _logTextBlock = this.FindControl<Avalonia.Controls.TextBlock>("LogTextBlock");
+        }
+
+        private void InitializeComponent()
+        {
+            AvaloniaXamlLoader.Load(this);
 
             // Subscribe to data context changes to set up auto-scroll and log formatting
             DataContextChanged += OnDataContextChanged;

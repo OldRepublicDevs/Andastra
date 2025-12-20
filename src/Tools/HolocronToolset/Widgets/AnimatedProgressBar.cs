@@ -134,12 +134,12 @@ namespace HolocronToolset.Widgets
             // setColorAt(0, QColor(255, 255, 255, 0))  # Transparent at the edges
             // setColorAt(0.5, QColor(255, 255, 255, 150))  # Semi-transparent white in the center
             // setColorAt(1, QColor(255, 255, 255, 0))  # Transparent at the edges
-            var gradientStops = new GradientStops
-            {
-                new GradientStop(0.0, Color.FromArgb(0, 255, 255, 255)), // Transparent at the edges
-                new GradientStop(0.5, Color.FromArgb(150, 255, 255, 255)), // Semi-transparent white in the center
-                new GradientStop(1.0, Color.FromArgb(0, 255, 255, 255)) // Transparent at the edges
-            };
+            var gradientStops = new GradientStops();
+            // GradientStop constructor: (double offset, Color color) - offset first, then color
+            // Color constructor: Color(byte a, byte r, byte g, byte b) - ARGB format
+            gradientStops.Add(new GradientStop(0.0, new Avalonia.Media.Color(0, 255, 255, 255))); // Transparent at the edges (A=0)
+            gradientStops.Add(new GradientStop(0.5, new Avalonia.Media.Color(150, 255, 255, 255))); // Semi-transparent white in the center (A=150)
+            gradientStops.Add(new GradientStop(1.0, new Avalonia.Media.Color(0, 255, 255, 255))); // Transparent at the edges (A=0)
 
             // Create the linear gradient brush with absolute coordinates
             // Matching PyKotor: QLinearGradient(light_rect.left(), 0, light_rect.right(), 0)
@@ -208,7 +208,8 @@ namespace HolocronToolset.Widgets
             {
                 // Draw the shimmering effect with the gradient brush
                 // Matching PyKotor: painter.setPen(QtCore.Qt.PenStyle.NoPen) - no pen, just fill
-                context.FillGeometry(gradientBrush, null, geometry);
+                // In Avalonia, we use DrawGeometry with a brush to fill the geometry
+                context.DrawGeometry(gradientBrush, null, geometry);
             }
         }
     }

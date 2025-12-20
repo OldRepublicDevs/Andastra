@@ -746,8 +746,8 @@ namespace HolocronToolset.Dialogs
                 try
                 {
                     var logger = new Andastra.Parsing.Logger.PatchLogger();
-                    var configReader = Andastra.Parsing.Reader.ConfigReader.FromFilepath(iniPath, logger, _tslpatchdataPath);
-                    var config = new Andastra.Parsing.PatcherConfig();
+                    var configReader = Andastra.Parsing.Reader.ConfigReader.FromFilePath(iniPath, logger, _tslpatchdataPath);
+                    var config = configReader.Config ?? new Andastra.Parsing.Config.PatcherConfig();
                     config = configReader.Load(config);
 
                     // Load general settings
@@ -869,17 +869,13 @@ namespace HolocronToolset.Dialogs
             }
 
             // Try to get a string representation of the value
-            if (value is Andastra.Parsing.Mods.FieldValueConstant constant)
+            if (value is Andastra.Parsing.Mods.GFF.FieldValueConstant constant)
             {
                 return constant.Value?.ToString() ?? "";
             }
-            else if (value is Andastra.Parsing.Mods.FieldValue2DAMemory mem2DA)
+            else if (value is Andastra.Parsing.Mods.GFF.FieldValue2DAMemory mem2DA)
             {
                 return $"2DAMEMORY{mem2DA.TokenId}";
-            }
-            else if (value is Andastra.Parsing.Mods.FieldValueTLKStrRef tlkStrRef)
-            {
-                return $"TLK StrRef: {tlkStrRef.StrRef}";
             }
 
             return value.ToString();
@@ -944,7 +940,7 @@ namespace HolocronToolset.Dialogs
                     var resource = _installation.Resource(selectedItem, ResourceType.GFF);
                     if (resource != null)
                     {
-                        filePath = resource.Filepath;
+                        filePath = resource.FilePath;
                     }
                 }
             }
@@ -1252,7 +1248,7 @@ namespace HolocronToolset.Dialogs
                 return;
             }
             
-            string tlkPath = Path.Combine(_installation.Path(), "dialog.tlk");
+            string tlkPath = Path.Combine(_installation.Path, "dialog.tlk");
             if (File.Exists(tlkPath))
             {
                 try
@@ -1643,7 +1639,7 @@ namespace HolocronToolset.Dialogs
                                 var resource = _installation.Resource(modGff.SourceFile, ResourceType.GFF);
                                 if (resource != null)
                                 {
-                                    gffSourcePath = resource.Filepath;
+                                    gffSourcePath = resource.FilePath;
                                 }
                             }
                             catch
@@ -1701,7 +1697,7 @@ namespace HolocronToolset.Dialogs
                     // Generate append.tlk file for non-replacement entries
                     if (appendEntries.Count > 0)
                     {
-                        var appendTlk = new Formats.TLK.TLK();
+                        var appendTlk = new Andastra.Parsing.Formats.TLK.TLK();
                         appendTlk.Resize(appendEntries.Count);
                         
                         // Sort by token ID for consistent ordering
@@ -1858,7 +1854,7 @@ namespace HolocronToolset.Dialogs
                     $"- {_scriptPaths.Count} script(s)\n\n" +
                     $"You can now distribute this folder with HoloPatcher/TSLPatcher.",
                     ButtonEnum.Ok,
-                    Icon.Success);
+                    MsBox.Avalonia.Enums.Icon.Success);
                 await successBox.ShowAsync();
             }
             catch (Exception ex)

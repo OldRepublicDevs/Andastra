@@ -1439,7 +1439,7 @@ namespace KotorDiff.Diff
             }
 
             // Add to install folder (will also create patch if supported)
-            Resolution.InstallationDiffHelpers.AddToInstallFolder(
+            InstallationDiffHelpers.AddToInstallFolder(
                 modificationsByType,
                 destination,
                 filename,
