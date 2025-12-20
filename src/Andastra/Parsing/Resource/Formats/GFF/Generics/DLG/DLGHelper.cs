@@ -587,6 +587,26 @@ namespace Andastra.Parsing.Resource.Generics.DLG
             return ConstructDlg(gff);
         }
 
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/dlg/io/gff.py:578-603
+        // Original: def write_dlg(dlg: DLG, target: TARGET_TYPES, game: Game = Game.K2, file_format: ResourceType = ResourceType.GFF, *, use_deprecated: bool = True):
+        /// <summary>
+        /// Writes a dialogue to a target file format.
+        /// </summary>
+        /// <param name="dlg">Dialogue to write</param>
+        /// <param name="target">Target file path or stream to write to</param>
+        /// <param name="game">Game the dialogue is for (default K2)</param>
+        /// <param name="fileFormat">Format to write as (default GFF)</param>
+        /// <param name="useDeprecated">Use deprecated fields (default True)</param>
+        public static void WriteDlg(DLG dlg, object target, Game game = Game.K2, ResourceType fileFormat = null, bool useDeprecated = true)
+        {
+            if (fileFormat == null)
+            {
+                fileFormat = ResourceType.DLG;
+            }
+            GFF gff = DismantleDlg(dlg, game);
+            GFFAuto.WriteGff(gff, target, fileFormat);
+        }
+
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/dlg/io/gff.py:606-633
         // Original: def bytes_dlg(dlg: DLG, game: Game = Game.K2, file_format: ResourceType = ResourceType.GFF) -> bytes:
         public static byte[] BytesDlg(DLG dlg, Game game = Game.K2, ResourceType fileFormat = null)
