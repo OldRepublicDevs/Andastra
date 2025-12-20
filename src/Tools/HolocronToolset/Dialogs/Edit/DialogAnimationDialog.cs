@@ -1,8 +1,11 @@
 using System;
+using System.Collections.Generic;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
+using Andastra.Parsing.Formats.TwoDA;
 using Andastra.Parsing.Resource.Generics.DLG;
 using HolocronToolset.Data;
+using HolocronToolset.Widgets.Edit;
 
 namespace HolocronToolset.Dialogs.Edit
 {
@@ -12,7 +15,7 @@ namespace HolocronToolset.Dialogs.Edit
     {
         private HTInstallation _installation;
         private DLGAnimation _animation;
-        private ComboBox _animationSelect;
+        private ComboBox2DA _animationSelect;
         private TextBox _participantEdit;
         private Button _okButton;
         private Button _cancelButton;
@@ -60,7 +63,7 @@ namespace HolocronToolset.Dialogs.Edit
 
             var panel = new StackPanel { Margin = new Avalonia.Thickness(10), Spacing = 10 };
             var animationLabel = new TextBlock { Text = "Animation:" };
-            _animationSelect = new ComboBox();
+            _animationSelect = new ComboBox2DA();
             var participantLabel = new TextBlock { Text = "Participant:" };
             _participantEdit = new TextBox();
             var okButton = new Button { Content = "OK" };
@@ -80,7 +83,7 @@ namespace HolocronToolset.Dialogs.Edit
         private void SetupUI()
         {
             // Find controls from XAML
-            _animationSelect = this.FindControl<ComboBox>("animationSelect");
+            _animationSelect = this.FindControl<ComboBox2DA>("animationSelect");
             _participantEdit = this.FindControl<TextBox>("participantEdit");
             _okButton = this.FindControl<Button>("okButton");
             _cancelButton = this.FindControl<Button>("cancelButton");
@@ -104,8 +107,30 @@ namespace HolocronToolset.Dialogs.Edit
                 return;
             }
 
-            // TODO: Load animation list from 2DA when HTInstallation.ht_get_cache_2da is available
-            // For now, just set the current values
+            // Matching PyKotor: anim_list: TwoDA | None = installation.ht_get_cache_2da(HTInstallation.TwoDA_DIALOG_ANIMS)
+            TwoDA animList = _installation.HtGetCache2DA(HTInstallation.TwoDADialogAnims);
+            if (animList == null)
+            {
+                System.Console.WriteLine($"LoadAnimationData: {HTInstallation.TwoDADialogAnims} not found, the Animation List will not function!!");
+                // Set participant even if 2DA is not available
+                if (_participantEdit != null)
+                {
+                    _participantEdit.Text = _animation.Participant ?? "";
+                }
+                return;
+            }
+
+            // Matching PyKotor: self.ui.animationSelect.set_items(anim_list.get_column("name"), sort_alphabetically=True, cleanup_strings=True, ignore_blanks=True)
+            List<string> nameColumn = animList.GetColumn("name");
+            _animationSelect.SetItems(nameColumn, sortAlphabetically: true, cleanupStrings: true, ignoreBlanks: true);
+
+            // Matching PyKotor: self.ui.animationSelect.setCurrentIndex(animation.animation_id)
+            _animationSelect.SetSelectedIndex(_animation.AnimationId);
+
+            // Matching PyKotor: self.ui.animationSelect.set_context(anim_list, installation, HTInstallation.TwoDA_DIALOG_ANIMS)
+            _animationSelect.SetContext(animList, _installation, HTInstallation.TwoDADialogAnims);
+
+            // Matching PyKotor: self.ui.participantEdit.setText(animation.participant)
             if (_participantEdit != null)
             {
                 _participantEdit.Text = _animation.Participant ?? "";
@@ -119,6 +144,8 @@ namespace HolocronToolset.Dialogs.Edit
             var animation = new DLGAnimation();
             if (_animationSelect != null)
             {
+                // Matching PyKotor: animation.animation_id = self.ui.animationSelect.currentIndex()
+                // ComboBox2DA.SelectedIndex returns the 2DA row index (not the combo box item index)
                 animation.AnimationId = _animationSelect.SelectedIndex;
             }
             if (_participantEdit != null)
