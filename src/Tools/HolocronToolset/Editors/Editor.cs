@@ -32,6 +32,10 @@ namespace HolocronToolset.Editors
         // Expose filepath for derived classes
         protected string Filepath => _filepath;
 
+        // Expose installation for widgets and derived classes
+        // Matching PyKotor: widgets access editor._installation directly
+        internal HTInstallation Installation => _installation;
+
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editor.py:303-350
         // Original: def __init__(self, parent, title, iconName, readSupported, writeSupported, installation):
         protected Editor(

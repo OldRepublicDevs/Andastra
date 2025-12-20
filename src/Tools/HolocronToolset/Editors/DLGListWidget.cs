@@ -103,9 +103,37 @@ namespace HolocronToolset.Editors
             item.SetData(2, hoverDisplay); // ExtraDisplayRole
 
             // Get tooltip text
-            string text = item.Link.Node?.ToString() ?? "";
-            // Note: Installation access would require a public property or method on DLGEditor
-            // For now, we'll use the node's ToString representation
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/list_widget_base.py:172
+            // Original: text: str = repr(item.link.node) if self.editor._installation is None else self.editor._installation.string(item.link.node.text)
+            string text;
+            if (_editor?.Installation == null)
+            {
+                // When installation is not available, use a proper string representation similar to Python's repr()
+                // Format: "DLGEntry(ListIndex=0)" or "DLGReply(ListIndex=1)"
+                DLGNode node = item.Link?.Node;
+                if (node == null)
+                {
+                    text = "";
+                }
+                else
+                {
+                    string nodeType = node is DLGEntry ? "DLGEntry" : "DLGReply";
+                    text = $"{nodeType}(ListIndex={node.ListIndex})";
+                }
+            }
+            else
+            {
+                // When installation is available, use it to get the localized string from TLK
+                DLGNode node = item.Link?.Node;
+                if (node?.Text != null)
+                {
+                    text = _editor.Installation.String(node.Text, "");
+                }
+                else
+                {
+                    text = "";
+                }
+            }
             item.TooltipText = $"{text}\n\n<i>Right click for more options</i>";
         }
 
