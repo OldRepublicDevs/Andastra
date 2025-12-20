@@ -240,11 +240,11 @@ namespace HolocronToolset.Tests.Editors
             var editorType = typeof(DLGEditor);
             var findBarField = editorType.GetField("_findBar", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
             findBarField.Should().NotBeNull("_findBar field should exist");
-            
+
             var findInputField = editorType.GetField("_findInput", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
             findInputField.Should().NotBeNull("_findInput field should exist");
             findInputField.GetValue(editor).Should().NotBeNull("findInput should be initialized");
-            
+
             var resultsLabelField = editorType.GetField("_resultsLabel", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
             resultsLabelField.Should().NotBeNull("_resultsLabel field should exist");
             resultsLabelField.GetValue(editor).Should().NotBeNull("resultsLabel should be initialized");
@@ -352,16 +352,49 @@ namespace HolocronToolset.Tests.Editors
             }
         }
 
-        // TODO: STUB - Implement test_dlg_editor_manipulate_vo_id_edit (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:557-578)
-        // Original: def test_dlg_editor_manipulate_vo_id_edit(qtbot, installation: HTInstallation, test_files_dir: Path): Test manipulating VO ID edit field
         // Matching PyKotor implementation at vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:557-578
         // Original: def test_dlg_editor_manipulate_vo_id_edit(qtbot, installation: HTInstallation, test_files_dir: Path): Test manipulating voiceover ID field
-        [Fact(Skip = "Requires test file and widget access - voIdEdit not accessible")]
+        [Fact]
         public void TestDlgEditorManipulateVoIdEdit()
         {
-            // TODO: Requires test file (ORIHA.dlg) and widget access (voIdEdit)
-            // Python test manipulates editor.ui.voIdEdit.setText(vo_id) and verifies via build/load
-            // C# widgets are private, would need public properties or test helpers
+            // Get test files directory
+            string testFilesDir = System.IO.Path.Combine(
+                System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+
+            // Try to find ORIHA.dlg
+            string dlgFile = System.IO.Path.Combine(testFilesDir, "ORIHA.dlg");
+            if (!System.IO.File.Exists(dlgFile))
+            {
+                // Try alternative location
+                testFilesDir = System.IO.Path.Combine(
+                    System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                    "..", "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+                dlgFile = System.IO.Path.Combine(testFilesDir, "ORIHA.dlg");
+            }
+
+            if (!System.IO.File.Exists(dlgFile))
+            {
+                // Skip if test file not found (matching Python: pytest.skip("ORIHA.dlg not found"))
+                return;
+            }
+
+            var editor = new DLGEditor(null, null);
+            byte[] originalData = System.IO.File.ReadAllBytes(dlgFile);
+            editor.Load(dlgFile, "ORIHA", ResourceType.DLG, originalData);
+
+            // Test various VO IDs (matching Python: test_vo_ids = ["", "vo_001", "vo_test_123", "vo_long_name"])
+            string[] testVoIds = { "", "vo_001", "vo_test_123", "vo_long_name" };
+            foreach (string voId in testVoIds)
+            {
+                // Set VO ID via UI widget (matching Python: editor.ui.voIdEdit.setText(vo_id))
+                editor.VoIdEdit.Text = voId;
+
+                // Save and verify (matching Python: data, _ = editor.build(), modified_dlg = read_dlg(data), assert modified_dlg.vo_id == vo_id)
+                var (savedData, _) = editor.Build();
+                DLG modifiedDlg = DLGHelper.ReadDlg(savedData);
+                modifiedDlg.VoId.Should().Be(voId, $"VO ID should be '{voId}'");
+            }
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:580-599
@@ -541,14 +574,61 @@ namespace HolocronToolset.Tests.Editors
             modifiedDlg.CameraModel.ToString().Should().Be("test_camera", "CameraModel should be saved correctly");
         }
 
-        // TODO: STUB - Implement test_dlg_editor_manipulate_ambient_track_combo (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:643-662)
-        // Original: def test_dlg_editor_manipulate_ambient_track_combo(qtbot, installation: HTInstallation, test_files_dir: Path): Test manipulating ambient track combo
         [Fact]
         public void TestDlgEditorManipulateAmbientTrackCombo()
         {
-            // TODO: STUB - Implement ambient track combo manipulation test
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:643-662
-            throw new NotImplementedException("TestDlgEditorManipulateAmbientTrackCombo: Ambient track combo manipulation test not yet implemented");
+            // Get test files directory (matching Python: test_files_dir: Path)
+            string testFilesDir = System.IO.Path.Combine(
+                System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+
+            // Try to find ORIHA.dlg (matching Python: dlg_file = test_files_dir / "ORIHA.dlg")
+            string dlgFile = System.IO.Path.Combine(testFilesDir, "ORIHA.dlg");
+            if (!System.IO.File.Exists(dlgFile))
+            {
+                // Try alternative location
+                testFilesDir = System.IO.Path.Combine(
+                    System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                    "..", "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+                dlgFile = System.IO.Path.Combine(testFilesDir, "ORIHA.dlg");
+            }
+
+            if (!System.IO.File.Exists(dlgFile))
+            {
+                // Skip if test file not available (matching Python pytest.skip behavior)
+                // Original: if not dlg_file.exists(): pytest.skip("ORIHA.dlg not found")
+                Assert.True(false, "ORIHA.dlg not found - skipping test");
+                return;
+            }
+
+            // Get K1 installation path (matching Python: installation: HTInstallation)
+            string k1Path = Environment.GetEnvironmentVariable("KOTOR_K1_PATH") ?? @"C:\Program Files (x86)\Steam\steamapps\common\swkotor";
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k1Path) && System.IO.File.Exists(System.IO.Path.Combine(k1Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k1Path, "Test Installation", tsl: false);
+            }
+
+            // Create DLG editor (matching Python: editor = DLGEditor(None, installation))
+            var editor = new DLGEditor(null, installation);
+
+            // Load DLG file (matching Python: editor.load(dlg_file, "ORIHA", ResourceType.DLG, original_data))
+            byte[] originalData = System.IO.File.ReadAllBytes(dlgFile);
+            editor.Load(dlgFile, "ORIHA", ResourceType.DLG, originalData);
+
+            // Modify ambient track (matching Python: editor.ui.ambientTrackCombo.set_combo_box_text("test_ambient"))
+            // Since UI controls are not exposed yet, we modify the CoreDlg directly
+            // This tests that the Build() method properly saves the AmbientTrack field
+            ResRef testAmbientTrack = new ResRef("test_ambient");
+            editor.CoreDlg.AmbientTrack = testAmbientTrack;
+
+            // Save and verify (matching Python: data, _ = editor.build())
+            var (savedData, _) = editor.Build();
+
+            // Verify the change was saved (matching Python: assert str(modified_dlg.ambient_track) == "test_ambient")
+            DLG modifiedDlg = DLGHelper.ReadDlg(savedData);
+            modifiedDlg.AmbientTrack.ToString().Should().Be("test_ambient", "AmbientTrack should be saved correctly");
         }
 
         // TODO: STUB - Implement test_dlg_editor_manipulate_file_level_checkboxes (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:664-734)
@@ -616,7 +696,7 @@ namespace HolocronToolset.Tests.Editors
         // Original: def test_dlg_editor_condition_params_full(qtbot, installation: HTInstallation): Test condition parameters fully
         /// <summary>
         /// Test all condition parameters for both conditions (TSL-specific).
-        /// 
+        ///
         /// Note: Condition params are TSL-only features. This test checks that the UI
         /// correctly updates the in-memory model. The params will only persist when
         /// saving if the installation is TSL.
@@ -731,14 +811,127 @@ namespace HolocronToolset.Tests.Editors
             }
         }
 
-        // TODO: STUB - Implement test_dlg_editor_help_dialog_opens_correct_file (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:1025-1052)
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:1025-1052
         // Original: def test_dlg_editor_help_dialog_opens_correct_file(qtbot, installation: HTInstallation): Test help dialog opens correct file
         [Fact]
         public void TestDlgEditorHelpDialogOpensCorrectFile()
         {
-            // TODO: STUB - Implement help dialog opens correct file test
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:1025-1052
-            throw new NotImplementedException("TestDlgEditorHelpDialogOpensCorrectFile: Help dialog opens correct file test not yet implemented");
+            // Matching Python: Test that DLGEditor help dialog opens and displays the correct help file (not 'Help File Not Found').
+            HTInstallation installation = CreateTestInstallation();
+
+            // Matching Python line 1029: editor = DLGEditor(None, installation)
+            var editor = new DLGEditor(null, installation);
+
+            // Matching Python line 1033: editor._show_help_dialog("GFF-DLG.md")
+            // Create the dialog directly to test it (matching the behavior of ShowHelpDialog)
+            var dialog = new HolocronToolset.Dialogs.EditorHelpDialog(editor, "GFF-DLG.md");
+
+            // Matching Python line 1034: qtbot.wait(200) - Wait for dialog to be created/loaded
+            System.Threading.Thread.Sleep(200);
+
+            // Matching Python line 1044: html = dialog.text_browser.toHtml()
+            // Extract text content from the dialog's HTML container
+            string dialogText = ExtractTextFromDialog(dialog);
+
+            // Matching Python lines 1047-1048: Assert that "Help File Not Found" error is NOT shown
+            dialogText.Should().NotContain("Help File Not Found",
+                $"Help file 'GFF-DLG.md' should be found, but error was shown. Content: {dialogText.Length > 500 ? dialogText.Substring(0, 500) : dialogText}");
+
+            // Matching Python line 1051: Assert that some content is present (file was loaded successfully)
+            dialogText.Length.Should().BeGreaterThan(100, "Help dialog should contain content");
+        }
+
+        /// <summary>
+        /// Helper method to extract text content from EditorHelpDialog for testing.
+        /// Extracts all text from the dialog's HTML container to verify content was loaded.
+        /// </summary>
+        private string ExtractTextFromDialog(HolocronToolset.Dialogs.EditorHelpDialog dialog)
+        {
+            var textBuilder = new System.Text.StringBuilder();
+
+            // Access the HTML container directly (exposed for testing)
+            var htmlContainer = dialog.HtmlContainer;
+            if (htmlContainer != null)
+            {
+                ExtractTextFromControl(htmlContainer, textBuilder);
+            }
+            else
+            {
+                // Fallback: extract from the entire dialog
+                ExtractTextFromControl(dialog, textBuilder);
+            }
+
+            return textBuilder.ToString();
+        }
+
+        /// <summary>
+        /// Recursively extract text from Avalonia controls.
+        /// </summary>
+        private void ExtractTextFromControl(Avalonia.Controls.Control control, System.Text.StringBuilder builder)
+        {
+            if (control == null)
+            {
+                return;
+            }
+
+            // Extract text from TextBlock
+            if (control is Avalonia.Controls.TextBlock textBlock)
+            {
+                if (!string.IsNullOrEmpty(textBlock.Text))
+                {
+                    builder.Append(textBlock.Text);
+                    builder.Append(" ");
+                }
+
+                // Also extract from Inlines collection (for formatted text)
+                if (textBlock.Inlines != null && textBlock.Inlines.Count > 0)
+                {
+                    foreach (var inline in textBlock.Inlines)
+                    {
+                        if (inline is Avalonia.Controls.Documents.Run run && !string.IsNullOrEmpty(run.Text))
+                        {
+                            builder.Append(run.Text);
+                            builder.Append(" ");
+                        }
+                    }
+                }
+            }
+
+            // Recursively process child controls
+            if (control is Avalonia.Controls.Panel panel)
+            {
+                foreach (var child in panel.Children)
+                {
+                    if (child is Avalonia.Controls.Control childControl)
+                    {
+                        ExtractTextFromControl(childControl, builder);
+                    }
+                }
+            }
+            else if (control is Avalonia.Controls.ContentControl contentControl)
+            {
+                if (contentControl.Content is Avalonia.Controls.Control content)
+                {
+                    ExtractTextFromControl(content, builder);
+                }
+            }
+
+            // Also check visual children for nested controls
+            try
+            {
+                var visualChildren = Avalonia.VisualTree.VisualExtensions.GetVisualChildren(control);
+                foreach (var child in visualChildren)
+                {
+                    if (child is Avalonia.Controls.Control childControl)
+                    {
+                        ExtractTextFromControl(childControl, builder);
+                    }
+                }
+            }
+            catch
+            {
+                // Ignore errors accessing visual children
+            }
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:1054-1103
@@ -794,7 +987,7 @@ namespace HolocronToolset.Tests.Editors
             // Create a test entry with all script parameters
             // In DLG files, script parameters are stored as Script1Param1, Script1Param2, etc.
             var testEntry = new GFFStruct();
-            
+
             // Set Script1 with all parameters (Script1Param1 through Script1Param5)
             testEntry.SetResRef("Script1", new ResRef("test_script1"));
             testEntry.SetString("Script1Param1", "script1_param1_value");
@@ -848,7 +1041,7 @@ namespace HolocronToolset.Tests.Editors
             {
                 var savedEntryList = savedGff.Root.GetList("EntryList");
                 savedEntryList.Should().NotBeNull("Saved EntryList should not be null");
-                
+
                 if (savedEntryList.Count > 0)
                 {
                     var savedEntry = savedEntryList[0];
@@ -945,7 +1138,7 @@ namespace HolocronToolset.Tests.Editors
                 if (secondEntryList != null && secondEntryList.Count > 0)
                 {
                     var secondEntry = secondEntryList[0];
-                    
+
                     // Verify Script1 still exists after second roundtrip
                     if (secondEntry.Exists("Script1"))
                     {
@@ -1005,7 +1198,7 @@ namespace HolocronToolset.Tests.Editors
                             {
                                 var origScript1 = originalEntry.GetResRef("Script1");
                                 var savedScript1 = savedEntry.GetResRef("Script1");
-                                if (origScript1 != null && savedScript1 != null && 
+                                if (origScript1 != null && savedScript1 != null &&
                                     origScript1.ToString() == savedScript1.ToString())
                                 {
                                     scriptParamsPreserved = true;
@@ -1069,7 +1262,7 @@ namespace HolocronToolset.Tests.Editors
             }
 
             var editor = new DLGEditor(null, installation);
-            
+
             // Matching PyKotor implementation: editor.new()
             editor.New();
 
@@ -1082,13 +1275,13 @@ namespace HolocronToolset.Tests.Editors
 
             // Matching PyKotor implementation: editor.show_find_bar()
             // Use reflection to call private ShowFindBar method
-            var showFindBarMethod = typeof(DLGEditor).GetMethod("ShowFindBar", 
+            var showFindBarMethod = typeof(DLGEditor).GetMethod("ShowFindBar",
                 System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
             showFindBarMethod?.Invoke(editor, null);
 
             // Matching PyKotor implementation: editor.find_input.setText("")  # Empty search finds all
             // Use reflection to access private _findInput field
-            var findInputField = typeof(DLGEditor).GetField("_findInput", 
+            var findInputField = typeof(DLGEditor).GetField("_findInput",
                 System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
             var findInput = findInputField?.GetValue(editor) as TextBox;
             if (findInput != null)
@@ -1098,13 +1291,13 @@ namespace HolocronToolset.Tests.Editors
 
             // Matching PyKotor implementation: editor.handle_find()
             // Use reflection to call private HandleFind method
-            var handleFindMethod = typeof(DLGEditor).GetMethod("HandleFind", 
+            var handleFindMethod = typeof(DLGEditor).GetMethod("HandleFind",
                 System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
             handleFindMethod?.Invoke(editor, null);
 
             // Matching PyKotor implementation: if editor.search_results:
             // Use reflection to access private _searchResults field
-            var searchResultsField = typeof(DLGEditor).GetField("_searchResults", 
+            var searchResultsField = typeof(DLGEditor).GetField("_searchResults",
                 System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
             var searchResults = searchResultsField?.GetValue(editor) as List<DLGStandardItem>;
 
@@ -1112,7 +1305,7 @@ namespace HolocronToolset.Tests.Editors
             {
                 // Matching PyKotor implementation: initial_index = editor.current_result_index
                 // Use reflection to access private _currentResultIndex field
-                var currentResultIndexField = typeof(DLGEditor).GetField("_currentResultIndex", 
+                var currentResultIndexField = typeof(DLGEditor).GetField("_currentResultIndex",
                     System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
                 int initialIndex = currentResultIndexField != null ? (int)currentResultIndexField.GetValue(editor) : 0;
 
@@ -1127,7 +1320,7 @@ namespace HolocronToolset.Tests.Editors
 
                 // Matching PyKotor implementation: editor.handle_back()  # Move back
                 // Use reflection to call private HandleBack method
-                var handleBackMethod = typeof(DLGEditor).GetMethod("HandleBack", 
+                var handleBackMethod = typeof(DLGEditor).GetMethod("HandleBack",
                     System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
                 handleBackMethod?.Invoke(editor, null);
 
@@ -1155,25 +1348,25 @@ namespace HolocronToolset.Tests.Editors
         {
             // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:1255-1290
             var installation = CreateTestInstallation();
-            
+
             // Matching Python: editor = DLGEditor(None, installation)
             var editor = new DLGEditor(null, installation);
-            
+
             // Matching Python: editor.new()
             editor.New();
-            
+
             // Matching Python: editor.model.add_root_node()
             var rootItem = editor.Model.AddRootNode();
             rootItem.Should().NotBeNull("Root item should be created");
             rootItem.Link.Should().NotBeNull("Root item should have a link");
-            
+
             // Matching Python: Set some data
             // Matching Python: editor.ui.speakerEdit.setText("TestSpeaker")
             if (editor.SpeakerEdit != null)
             {
                 editor.SpeakerEdit.Text = "TestSpeaker";
             }
-            
+
             // Matching Python: Test text editing via UI dialog
             // Matching Python: set_text_via_ui_dialog(qtbot, editor, root_item, "Test Text")
             // For C# test, we'll directly set the text on the node instead of using UI dialog
@@ -1181,13 +1374,13 @@ namespace HolocronToolset.Tests.Editors
             {
                 rootItem.Link.Node.Text = LocalizedString.FromEnglish("Test Text");
             }
-            
+
             // Matching Python: editor.on_node_update()
             editor.OnNodeUpdate();
-            
+
             // Matching Python: editor.model.copy_link_and_node(root_item.link)
             await editor.Model.CopyLinkAndNode(rootItem.Link, editor);
-            
+
             // Matching Python: Verify clipboard has data
             // Matching Python: clipboard = QApplication.clipboard()
             // Matching Python: assert clipboard is not None
@@ -1199,27 +1392,51 @@ namespace HolocronToolset.Tests.Editors
                 var clipboardText = await topLevel.Clipboard.GetTextAsync();
                 clipboardText.Should().NotBeNullOrEmpty("Clipboard should contain copied data");
             }
-            
+
             // Matching Python: Verify _copy is set
             // Matching Python: assert editor._copy is not None
             editor.GetCopyLink().Should().NotBeNull("Editor's _copy should be set after copying");
-            
+
             // Matching Python: Paste into model
             // Matching Python: editor.model.paste_item(None, editor._copy)
             editor.Model.PasteItem(null, editor.GetCopyLink());
-            
+
             // Matching Python: assert editor.model.rowCount() == 2  # Original + pasted
             editor.Model.RowCount.Should().Be(2, "Model should have 2 rows after pasting (original + pasted)");
         }
 
-        // TODO: STUB - Implement test_dlg_editor_delete_node (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:1292-1310)
+        // Matching PyKotor implementation: test_dlg_editor_delete_node (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:1292-1310)
         // Original: def test_dlg_editor_delete_node(qtbot, installation: HTInstallation): Test deleting node
         [Fact]
         public void TestDlgEditorDeleteNode()
         {
-            // TODO: STUB - Implement delete node test
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:1292-1310
-            throw new NotImplementedException("TestDlgEditorDeleteNode: Delete node test not yet implemented");
+            // Matching Python: editor = DLGEditor(None, installation)
+            var installation = CreateTestInstallation();
+            var editor = new DLGEditor(null, installation);
+
+            // Matching Python: editor.new()
+            editor.New();
+
+            // Matching Python: editor.model.add_root_node()
+            editor.Model.AddRootNode();
+
+            // Matching Python: assert editor.model.rowCount() == 1
+            editor.Model.RowCount.Should().Be(1, "Model should have 1 root node after adding");
+
+            // Matching Python: root_item = editor.model.item(0, 0)
+            // Matching Python: assert isinstance(root_item, DLGStandardItem)
+            var rootItem = editor.Model.Item(0, 0);
+            rootItem.Should().NotBeNull("Root item should exist");
+            rootItem.Should().BeOfType<DLGStandardItem>("Root item should be DLGStandardItem");
+
+            // Matching Python: editor.model.delete_node(root_item)
+            editor.Model.DeleteNode(rootItem);
+
+            // Matching Python: assert editor.model.rowCount() == 0
+            editor.Model.RowCount.Should().Be(0, "Model should have 0 root nodes after deletion");
+
+            // Matching Python: assert len(editor.core_dlg.starters) == 0
+            editor.CoreDlg.Starters.Count.Should().Be(0, "CoreDlg should have 0 starters after deletion");
         }
 
         // TODO: STUB - Implement test_dlg_editor_tree_expansion (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:1312-1334)
@@ -1656,24 +1873,114 @@ namespace HolocronToolset.Tests.Editors
             throw new NotImplementedException("TestDlgEditorAddStuntProgrammatically: Add stunt programmatically test not yet implemented");
         }
 
-        // TODO: STUB - Implement test_dlg_editor_remove_stunt (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:1549-1571)
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:1549-1571
         // Original: def test_dlg_editor_remove_stunt(qtbot, installation: HTInstallation): Test removing stunt
         [Fact]
         public void TestDlgEditorRemoveStunt()
         {
-            // TODO: STUB - Implement remove stunt test
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:1549-1571
-            throw new NotImplementedException("TestDlgEditorRemoveStunt: Remove stunt test not yet implemented");
+            // Get installation if available
+            var installation = CreateTestInstallation();
+
+            // Create editor
+            // Matching PyKotor: editor = DLGEditor(None, installation)
+            var editor = new DLGEditor(null, installation);
+            editor.Show();
+
+            // Matching PyKotor: editor.new()
+            editor.New();
+
+            // Add stunt
+            // Matching PyKotor: stunt = DLGStunt()
+            // Matching PyKotor: stunt.stunt_model = ResRef("test_model")
+            // Matching PyKotor: stunt.participant = "PLAYER"
+            // Matching PyKotor: editor.core_dlg.stunts.append(stunt)
+            var stunt = new DLGStunt();
+            stunt.StuntModel = new ResRef("test_model");
+            stunt.Participant = "PLAYER";
+            editor.CoreDlg.Stunts.Add(stunt);
+
+            // Matching PyKotor: editor.refresh_stunt_list()
+            editor.RefreshStuntList();
+
+            // Matching PyKotor: assert editor.ui.stuntList.count() == 1
+            editor.StuntList.Items.Count.Should().Be(1, "Stunt list should have 1 item after adding stunt");
+
+            // Select and remove
+            // Matching PyKotor: editor.ui.stuntList.setCurrentRow(0)
+            if (editor.StuntList.Items.Count > 0)
+            {
+                editor.StuntList.SelectedIndex = 0;
+            }
+
+            // Matching PyKotor: editor.core_dlg.stunts.remove(stunt)
+            editor.CoreDlg.Stunts.Remove(stunt);
+
+            // Matching PyKotor: editor.refresh_stunt_list()
+            editor.RefreshStuntList();
+
+            // Matching PyKotor: assert editor.ui.stuntList.count() == 0
+            editor.StuntList.Items.Count.Should().Be(0, "Stunt list should be empty after removing stunt");
         }
 
-        // TODO: STUB - Implement test_dlg_editor_multiple_stunts (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:1573-1598)
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:1573-1598
         // Original: def test_dlg_editor_multiple_stunts(qtbot, installation: HTInstallation): Test multiple stunts
         [Fact]
         public void TestDlgEditorMultipleStunts()
         {
-            // TODO: STUB - Implement multiple stunts test
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:1573-1598
-            throw new NotImplementedException("TestDlgEditorMultipleStunts: Multiple stunts test not yet implemented");
+            // Get installation if available
+            string k1Path = Environment.GetEnvironmentVariable("K1_PATH");
+            if (string.IsNullOrEmpty(k1Path))
+            {
+                k1Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k1Path) && System.IO.File.Exists(System.IO.Path.Combine(k1Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k1Path, "Test Installation", tsl: false);
+            }
+
+            // Matching PyKotor: editor = DLGEditor(None, installation)
+            var editor = new DLGEditor(null, installation);
+            editor.Show();
+
+            // Matching PyKotor: editor.new()
+            editor.New();
+
+            // Matching PyKotor: Add multiple stunts
+            // Original: for i in range(5):
+            //           stunt = DLGStunt()
+            //           stunt.stunt_model = ResRef(f"model_{i}")
+            //           stunt.participant = f"PARTICIPANT_{i}"
+            //           editor.core_dlg.stunts.append(stunt)
+            for (int i = 0; i < 5; i++)
+            {
+                var stunt = new DLGStunt();
+                stunt.StuntModel = new ResRef($"model_{i}");
+                stunt.Participant = $"PARTICIPANT_{i}";
+                editor.CoreDlg.Stunts.Add(stunt);
+            }
+
+            // Matching PyKotor: editor.refresh_stunt_list()
+            editor.RefreshStuntList();
+
+            // Matching PyKotor: assert editor.ui.stuntList.count() == 5
+            editor.StuntList.Items.Count.Should().Be(5, "StuntList should have 5 items after adding 5 stunts");
+
+            // Matching PyKotor: Build and verify
+            // Original: data, _ = editor.build()
+            // Original: dlg = read_dlg(data)
+            // Original: assert len(dlg.stunts) == 5
+            var (savedData, _) = editor.Build();
+            DLG modifiedDlg = DLGHelper.ReadDlg(savedData);
+            modifiedDlg.Stunts.Count.Should().Be(5, "Deserialized DLG should have 5 stunts");
+
+            // Verify each stunt has correct model and participant
+            for (int i = 0; i < 5; i++)
+            {
+                modifiedDlg.Stunts[i].StuntModel.ToString().Should().Be($"model_{i}", $"Stunt {i} should have model_{i}");
+                modifiedDlg.Stunts[i].Participant.Should().Be($"PARTICIPANT_{i}", $"Stunt {i} should have PARTICIPANT_{i}");
+            }
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:1600-1610
@@ -1700,13 +2007,13 @@ namespace HolocronToolset.Tests.Editors
 
             // Matching Python: assert hasattr(editor.ui, 'animsList')
             editor.AnimsList.Should().NotBeNull("AnimsList should exist");
-            
+
             // Matching Python: assert hasattr(editor.ui, 'addAnimButton')
             editor.AddAnimButton.Should().NotBeNull("AddAnimButton should exist");
-            
+
             // Matching Python: assert hasattr(editor.ui, 'removeAnimButton')
             editor.RemoveAnimButton.Should().NotBeNull("RemoveAnimButton should exist");
-            
+
             // Matching Python: assert hasattr(editor.ui, 'editAnimButton')
             editor.EditAnimButton.Should().NotBeNull("EditAnimButton should exist");
 
@@ -1833,7 +2140,7 @@ namespace HolocronToolset.Tests.Editors
 
             // Verify second load preserves data
             editor2.CoreDlg.Should().NotBeNull("CoreDlg should not be null after second load");
-            editor2.Model.RowCount.Should().Be(editor.Model.RowCount, 
+            editor2.Model.RowCount.Should().Be(editor.Model.RowCount,
                 "Second load should have same number of starter nodes as first load");
 
             // Perform second roundtrip: save again and compare
@@ -1985,7 +2292,7 @@ namespace HolocronToolset.Tests.Editors
             // Verify that OnKeyDown and OnKeyUp methods exist by testing key handling
             // We can't directly call protected methods, but we can verify the behavior
             // by checking that KeysDown is updated when keys are pressed/released
-            
+
             // Note: In a full UI test environment, we would simulate key events
             // For now, we verify that the infrastructure exists
             Assert.True(true, "Key press handling infrastructure verified - OnKeyDown and OnKeyUp methods exist");
@@ -1999,24 +2306,24 @@ namespace HolocronToolset.Tests.Editors
             var installation = CreateTestInstallation();
             var editor = new DLGEditor(null, installation);
             editor.New();
-            
+
             // Create structure: root -> child
             var rootItem = editor.Model.AddRootNode();
             var childItem = editor.Model.AddChildToItem(rootItem);
-            
+
             // Verify initial state: not focused
             editor.Focused.Should().BeFalse("Editor should not be in focus mode initially");
-            
+
             // Focus on child's link
             var result = editor.FocusOnNode(childItem.Link);
-            
+
             // Should return focused item
             result.Should().NotBeNull("FocusOnNode should return the focused item");
             result.Link.Should().BeEquivalentTo(childItem.Link, "Focused item should have the correct link");
-            
+
             // Should be in focus mode
             editor.Focused.Should().BeTrue("Editor should be in focus mode after focusing on a node");
-            
+
             // Model should only contain the focused item
             var rootItems = editor.Model.GetRootItems();
             rootItems.Count.Should().Be(1, "Model should contain only the focused item");
@@ -2080,23 +2387,23 @@ namespace HolocronToolset.Tests.Editors
             // Matching PyKotor implementation: editor = DLGEditor(None, installation)
             var editor = new DLGEditor(null, null);
             editor.Show();
-            
+
             // Matching PyKotor implementation: editor.new()
             editor.New();
-            
+
             // Matching PyKotor implementation: editor.model.add_root_node()
             editor.Model.AddRootNode();
-            
+
             // Matching PyKotor implementation: root_item = editor.model.item(0, 0)
             var rootItem = editor.Model.Item(0, 0);
             rootItem.Should().NotBeNull("Root item should be created");
             rootItem.Link.Should().NotBeNull("Root item should have a link");
             rootItem.Link.Node.Should().BeOfType<DLGEntry>("Root item should be an Entry");
-            
+
             // Matching PyKotor implementation: editor.ui.dialogTree.setCurrentIndex(root_item.index())
             var treeItem = new Avalonia.Controls.TreeViewItem { Tag = rootItem };
             editor.DialogTree.SelectedItem = treeItem;
-            
+
             // Matching PyKotor implementation: assert editor.ui.speakerEdit.isVisible()
             // Matching PyKotor implementation: assert editor.ui.speakerEditLabel.isVisible()
             editor.SpeakerEdit.IsVisible.Should().BeTrue("Speaker edit should be visible for Entry nodes");
@@ -2111,27 +2418,27 @@ namespace HolocronToolset.Tests.Editors
             // Matching PyKotor implementation: editor = DLGEditor(None, installation)
             var editor = new DLGEditor(null, null);
             editor.Show();
-            
+
             // Matching PyKotor implementation: editor.new()
             editor.New();
-            
+
             // Matching PyKotor implementation: editor.model.add_root_node()
             // Create Entry -> Reply
             var rootItem = editor.Model.AddRootNode();
             rootItem.Should().NotBeNull("Root item should be created");
             rootItem.Link.Should().NotBeNull("Root item should have a link");
             rootItem.Link.Node.Should().BeOfType<DLGEntry>("Root item should be an Entry");
-            
+
             // Matching PyKotor implementation: child = editor.model.add_child_to_item(root_item)
             var child = editor.Model.AddChildToItem(rootItem);
             child.Should().NotBeNull("Child item should be created");
             child.Link.Should().NotBeNull("Child item should have a link");
             child.Link.Node.Should().BeOfType<DLGReply>("Child item should be a Reply");
-            
+
             // Matching PyKotor implementation: editor.ui.dialogTree.setCurrentIndex(child.index())
             var treeItem = new Avalonia.Controls.TreeViewItem { Tag = child };
             editor.DialogTree.SelectedItem = treeItem;
-            
+
             // Matching PyKotor implementation: assert not editor.ui.speakerEdit.isVisible()
             // Matching PyKotor implementation: assert not editor.ui.speakerEditLabel.isVisible()
             editor.SpeakerEdit.IsVisible.Should().BeFalse("Speaker edit should be hidden for Reply nodes");
@@ -2182,7 +2489,7 @@ namespace HolocronToolset.Tests.Editors
 
             HTInstallation installation = null;
             bool isTsl = false;
-            
+
             // Try K2 first (TSL)
             if (System.IO.Directory.Exists(k2Path) && System.IO.File.Exists(System.IO.Path.Combine(k2Path, "chitin.key")))
             {
@@ -2213,13 +2520,13 @@ namespace HolocronToolset.Tests.Editors
             // Matching Python: editor = DLGEditor(None, installation)
             var editor = new DLGEditor(null, installation);
             editor.Show();
-            
+
             // Matching Python: editor.new()
             editor.New();
-            
+
             // Matching Python: editor.model.add_root_node()
             editor.Model.AddRootNode();
-            
+
             // Matching Python: root_item = editor.model.item(0, 0)
             // Matching Python: editor.ui.dialogTree.setCurrentIndex(root_item.index())
             var rootItems = editor.Model.GetRootItems();
@@ -2228,19 +2535,19 @@ namespace HolocronToolset.Tests.Editors
                 return; // Skip if no root items
             }
             var rootItem = rootItems[0];
-            
+
             // Select the root item in the tree
             // In Avalonia, we need to set the SelectedItem on the TreeView
             // For testing, we'll directly call LoadLinkIntoUI or trigger selection
             // Since we can't easily set TreeView.SelectedItem without the actual tree structure,
             // we'll manually trigger the load by calling OnNodeUpdate after setting UI values
-            
+
             // Matching Python: editor.ui.condition1ResrefEdit.set_combo_box_text("cond1")
             if (editor.Condition1ResrefEdit != null)
             {
                 editor.Condition1ResrefEdit.Text = "cond1";
             }
-            
+
             // Matching Python: if is_tsl: set all TSL-specific params
             if (isTsl)
             {
@@ -2273,7 +2580,7 @@ namespace HolocronToolset.Tests.Editors
                 {
                     editor.Condition1NotCheckbox.IsChecked = true;
                 }
-                
+
                 // Matching Python: editor.ui.condition2ResrefEdit.set_combo_box_text("cond2")
                 if (editor.Condition2ResrefEdit != null)
                 {
@@ -2312,7 +2619,7 @@ namespace HolocronToolset.Tests.Editors
                     editor.LogicSpin.Value = 1;
                 }
             }
-            
+
             // Manually set the link properties since we can't easily trigger selection in tests
             // We'll directly update the link object to match what OnNodeUpdate would do
             var link = rootItem.Link;
@@ -2339,24 +2646,24 @@ namespace HolocronToolset.Tests.Editors
                     link.Logic = true;
                 }
             }
-            
+
             // Matching Python: editor.on_node_update()
             // We'll call OnNodeUpdate to ensure UI values are synced to link
             editor.OnNodeUpdate();
-            
+
             // Matching Python: data, _ = editor.build()
             var (data, _) = editor.Build();
-            
+
             // Matching Python: dlg = read_dlg(data)
             var dlg = DLGHelper.ReadDlg(data);
-            
+
             // Matching Python: link = dlg.starters[0]
             dlg.Starters.Should().NotBeEmpty("DLG should have at least one starter");
             var savedLink = dlg.Starters[0];
-            
+
             // Matching Python: assert str(link.active1) == "cond1"
             savedLink.Active1?.ToString().Should().Be("cond1", "Active1 should be saved correctly");
-            
+
             // Matching Python: Verify TSL-specific link properties
             if (isTsl)
             {
@@ -2368,7 +2675,7 @@ namespace HolocronToolset.Tests.Editors
                 savedLink.Active1Param5.Should().Be(105, "Active1Param5 should be saved correctly");
                 savedLink.Active1Param6.Should().Be("cond1str", "Active1Param6 should be saved correctly");
                 savedLink.Active1Not.Should().BeTrue("Active1Not should be saved correctly");
-                
+
                 // Matching Python: assert str(link.active2) == "cond2"
                 savedLink.Active2?.ToString().Should().Be("cond2", "Active2 should be saved correctly");
                 savedLink.Active2Param1.Should().Be(201, "Active2Param1 should be saved correctly");
@@ -2380,7 +2687,7 @@ namespace HolocronToolset.Tests.Editors
                 savedLink.Active2Not.Should().BeTrue("Active2Not should be saved correctly");
                 savedLink.Logic.Should().BeTrue("Logic should be saved correctly");
             }
-            
+
             editor.Close();
         }
 
@@ -2531,14 +2838,116 @@ namespace HolocronToolset.Tests.Editors
             // C# widgets are private, would need public properties or test helpers
         }
 
-        // TODO: STUB - Implement test_dlg_editor_manipulate_speaker_roundtrip (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:2368-2404)
+        // Matching PyKotor implementation at vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:2368-2404
         // Original: def test_dlg_editor_manipulate_speaker_roundtrip(qtbot, installation: HTInstallation, test_files_dir: Path): Test speaker roundtrip
         [Fact]
         public void TestDlgEditorManipulateSpeakerRoundtrip()
         {
-            // TODO: STUB - Implement speaker roundtrip test
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:2368-2404
-            throw new NotImplementedException("TestDlgEditorManipulateSpeakerRoundtrip: Speaker roundtrip test not yet implemented");
+            // Get test files directory
+            // Matching PyKotor implementation: dlg_file = test_files_dir / "ORIHA.dlg"
+            string testFilesDir = System.IO.Path.Combine(
+                System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+
+            // Try to find a DLG file
+            string dlgFile = System.IO.Path.Combine(testFilesDir, "ORIHA.dlg");
+            if (!System.IO.File.Exists(dlgFile))
+            {
+                // Try alternative location
+                testFilesDir = System.IO.Path.Combine(
+                    System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                    "..", "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+                dlgFile = System.IO.Path.Combine(testFilesDir, "ORIHA.dlg");
+            }
+
+            if (!System.IO.File.Exists(dlgFile))
+            {
+                // Skip if no DLG files available for testing (matching Python pytest.skip behavior)
+                // Matching PyKotor implementation: if not dlg_file.exists(): pytest.skip("ORIHA.dlg not found")
+                return;
+            }
+
+            // Get installation if available
+            string k1Path = Environment.GetEnvironmentVariable("K1_PATH");
+            if (string.IsNullOrEmpty(k1Path))
+            {
+                k1Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k1Path) && System.IO.File.Exists(System.IO.Path.Combine(k1Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k1Path, "Test Installation", tsl: false);
+            }
+
+            // Matching PyKotor implementation: editor = DLGEditor(None, installation)
+            var editor = new DLGEditor(null, installation);
+            editor.Show();
+
+            // Matching PyKotor implementation: original_data = dlg_file.read_bytes()
+            byte[] originalData = System.IO.File.ReadAllBytes(dlgFile);
+            // Matching PyKotor implementation: editor.load(dlg_file, "ORIHA", ResourceType.DLG, original_data)
+            editor.Load(dlgFile, "ORIHA", ResourceType.DLG, originalData);
+            // Matching PyKotor implementation: original_dlg = read_dlg(original_data)
+            var originalDlg = DLGHelper.ReadDlg(originalData);
+
+            // Find first Entry node
+            // Matching PyKotor implementation: if editor.model.rowCount() > 0:
+            if (editor.Model.RowCount > 0)
+            {
+                // Matching PyKotor implementation: first_item = editor.model.item(0, 0)
+                var firstItem = editor.Model.Item(0, 0);
+                // Matching PyKotor implementation: if isinstance(first_item, DLGStandardItem) and isinstance(first_item.link.node, DLGEntry):
+                if (firstItem != null && firstItem.Link != null && firstItem.Link.Node is DLGEntry)
+                {
+                    // Select the first item in the tree view
+                    // Matching PyKotor implementation: editor.ui.dialogTree.setCurrentIndex(first_item.index())
+                    SelectTreeViewItem(editor, firstItem);
+
+                    // Modify speaker
+                    // Matching PyKotor implementation: editor.ui.speakerEdit.setText("ModifiedSpeaker")
+                    const string modifiedSpeaker = "ModifiedSpeaker";
+                    editor.SpeakerEdit.Text = modifiedSpeaker;
+                    // Matching PyKotor implementation: editor.on_node_update()
+                    editor.OnNodeUpdate();
+
+                    // Save and verify
+                    // Matching PyKotor implementation: data, _ = editor.build()
+                    var (data, _) = editor.Build();
+                    // Matching PyKotor implementation: modified_dlg = read_dlg(data)
+                    var modifiedDlg = DLGHelper.ReadDlg(data);
+
+                    // Find the modified node
+                    // Matching PyKotor implementation: modified_node = modified_dlg.starters[0].node if modified_dlg.starters else None
+                    // Matching PyKotor implementation: if modified_node and isinstance(modified_node, DLGEntry):
+                    if (modifiedDlg.Starters != null && modifiedDlg.Starters.Count > 0)
+                    {
+                        var modifiedNode = modifiedDlg.Starters[0].Node;
+                        if (modifiedNode is DLGEntry modifiedEntry)
+                        {
+                            // Matching PyKotor implementation: assert modified_node.speaker == "ModifiedSpeaker"
+                            modifiedEntry.Speaker.Should().Be(modifiedSpeaker, "Speaker should be 'ModifiedSpeaker' after save");
+                            // Matching PyKotor implementation: assert modified_node.speaker != original_dlg.starters[0].node.speaker if original_dlg.starters and isinstance(original_dlg.starters[0].node, DLGEntry) else True
+                            if (originalDlg.Starters != null && originalDlg.Starters.Count > 0 && originalDlg.Starters[0].Node is DLGEntry originalEntry)
+                            {
+                                modifiedEntry.Speaker.Should().NotBe(originalEntry.Speaker, "Modified speaker should differ from original");
+                            }
+
+                            // Load back and verify
+                            // Matching PyKotor implementation: editor.load(dlg_file, "ORIHA", ResourceType.DLG, data)
+                            editor.Load(dlgFile, "ORIHA", ResourceType.DLG, data);
+                            // Matching PyKotor implementation: editor.ui.dialogTree.setCurrentIndex(first_item.index())
+                            var reloadedFirstItem = editor.Model.Item(0, 0);
+                            if (reloadedFirstItem != null)
+                            {
+                                SelectTreeViewItem(editor, reloadedFirstItem);
+                                // Matching PyKotor implementation: assert editor.ui.speakerEdit.text() == "ModifiedSpeaker"
+                                editor.SpeakerEdit.Text.Should().Be(modifiedSpeaker, "SpeakerEdit should show 'ModifiedSpeaker' after reload");
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:2406-2438
@@ -2726,7 +3135,7 @@ namespace HolocronToolset.Tests.Editors
                     // Select the first item (simulate tree selection)
                     // In a full implementation, we would set the tree view selection
                     // For now, we'll directly test the UI controls
-                    
+
                     // Test various param1 values (TSL only, but test that UI updates in-memory model)
                     // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:2490-2496
                     // Original: test_values = [0, 1, 42, 100, -1]
@@ -2736,7 +3145,7 @@ namespace HolocronToolset.Tests.Editors
                         // Set param1 value in UI
                         editor.Script1Param1Spin.Value = val;
                         editor.OnNodeUpdate();
-                        
+
                         // Verify in-memory model updated (always works)
                         // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:2496
                         // Original: assert first_item.link.node.script1_param1 == val
@@ -2819,23 +3228,23 @@ namespace HolocronToolset.Tests.Editors
                     var modifiedDlg = DLGHelper.ReadDlg(data);
                     if (modifiedDlg.Starters != null && modifiedDlg.Starters.Count > 0)
                     {
-                        modifiedDlg.Starters[0].Active1.ToString().Should().Be("test_condition1", 
+                        modifiedDlg.Starters[0].Active1.ToString().Should().Be("test_condition1",
                             "Condition1 should be saved correctly after modification");
 
                         // Load back and verify
                         // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:2526-2528
                         // Original: editor.load(dlg_file, "ORIHA", ResourceType.DLG, data); editor.ui.dialogTree.setCurrentIndex(first_item.index()); assert editor.ui.condition1ResrefEdit.currentText() == "test_condition1"
                         editor.Load(dlgFile, "ORIHA", ResourceType.DLG, data);
-                        
+
                         // Select the first item again after reload
                         var reloadedFirstItem = editor.Model.Item(0, 0);
                         if (reloadedFirstItem != null)
                         {
                             var reloadedTreeItem = new Avalonia.Controls.TreeViewItem { Tag = reloadedFirstItem };
                             editor.DialogTree.SelectedItem = reloadedTreeItem;
-                            
+
                             // Verify condition1 is loaded back correctly
-                            editor.Condition1ResrefEdit.Text.Should().Be("test_condition1", 
+                            editor.Condition1ResrefEdit.Text.Should().Be("test_condition1",
                                 "Condition1 should be loaded back correctly after roundtrip");
                         }
                     }
@@ -2863,14 +3272,90 @@ namespace HolocronToolset.Tests.Editors
             throw new NotImplementedException("TestDlgEditorManipulateEmotionRoundtrip: Emotion roundtrip test not yet implemented");
         }
 
-        // TODO: STUB - Implement test_dlg_editor_manipulate_expression_roundtrip (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:2594-2621)
+        // Matching PyKotor implementation: test_dlg_editor_manipulate_expression_roundtrip (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:2594-2621)
         // Original: def test_dlg_editor_manipulate_expression_roundtrip(qtbot, installation: HTInstallation, test_files_dir: Path): Test expression roundtrip
         [Fact]
         public void TestDlgEditorManipulateExpressionRoundtrip()
         {
-            // TODO: STUB - Implement expression roundtrip test
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:2594-2621
-            throw new NotImplementedException("TestDlgEditorManipulateExpressionRoundtrip: Expression roundtrip test not yet implemented");
+            // Get test files directory
+            string testFilesDir = System.IO.Path.Combine(
+                System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+
+            // Try to find ORIHA.dlg
+            string dlgFile = System.IO.Path.Combine(testFilesDir, "ORIHA.dlg");
+            if (!System.IO.File.Exists(dlgFile))
+            {
+                // Try alternative location
+                testFilesDir = System.IO.Path.Combine(
+                    System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                    "..", "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+                dlgFile = System.IO.Path.Combine(testFilesDir, "ORIHA.dlg");
+            }
+
+            if (!System.IO.File.Exists(dlgFile))
+            {
+                // Skip if test file not available
+                return;
+            }
+
+            // Matching Python: editor = DLGEditor(None, installation)
+            var installation = CreateTestInstallation();
+            if (installation == null)
+            {
+                // Skip if installation is not available
+                return;
+            }
+
+            var editor = new DLGEditor(null, installation);
+            editor.Show();
+
+            // Matching Python: original_data = dlg_file.read_bytes()
+            // Matching Python: editor.load(dlg_file, "ORIHA", ResourceType.DLG, original_data)
+            byte[] originalData = System.IO.File.ReadAllBytes(dlgFile);
+            editor.Load(dlgFile, "ORIHA", ResourceType.DLG, originalData);
+
+            // Matching Python: if editor.model.rowCount() > 0:
+            if (editor.Model.RowCount > 0)
+            {
+                // Matching Python: first_item = editor.model.item(0, 0)
+                // Matching Python: if isinstance(first_item, DLGStandardItem):
+                var firstItem = editor.Model.Item(0, 0);
+                if (firstItem != null && firstItem.Link != null && firstItem.Link.Node != null)
+                {
+                    // Matching Python: editor.ui.dialogTree.setCurrentIndex(first_item.index())
+                    // Select the first item in the model
+                    editor.Model.SelectedIndex = 0;
+
+                    // Matching Python: if editor.ui.expressionSelect.count() > 0:
+                    // Matching Python: for i in range(min(5, editor.ui.expressionSelect.count())):
+                    // Test expression values 0-4 (facial_id can be 0-4 typically)
+                    for (int i = 0; i < 5; i++)
+                    {
+                        // Matching Python: editor.ui.expressionSelect.setCurrentIndex(i)
+                        // Matching Python: editor.on_node_update()
+                        // Set facial_id directly on the node and call OnNodeUpdate
+                        firstItem.Link.Node.FacialId = i;
+                        editor.OnNodeUpdate();
+
+                        // Matching Python: data, _ = editor.build()
+                        // Matching Python: modified_dlg = read_dlg(data)
+                        // Matching Python: if modified_dlg.starters:
+                        // Matching Python: assert modified_dlg.starters[0].node.facial_id == i
+                        var (savedData, _) = editor.Build();
+                        var modifiedDlg = DLGHelper.ReadDlg(savedData);
+
+                        if (modifiedDlg != null && modifiedDlg.Starters != null && modifiedDlg.Starters.Count > 0)
+                        {
+                            var firstStarter = modifiedDlg.Starters[0];
+                            if (firstStarter?.Node != null)
+                            {
+                                firstStarter.Node.FacialId.Should().Be(i, $"FacialId should be {i} after setting expression to {i}");
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         // TODO: STUB - Implement test_dlg_editor_manipulate_sound_roundtrip (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:2623-2655)
@@ -2948,7 +3433,7 @@ namespace HolocronToolset.Tests.Editors
                     // Select the first item (simulate tree selection)
                     // In a full implementation, we would set the tree view selection
                     // For now, we'll directly test the UI controls
-                    
+
                     // Test quest values
                     string[] testQuests = { "test_quest", "quest_001", "" };
                     foreach (string quest in testQuests)
@@ -2972,7 +3457,7 @@ namespace HolocronToolset.Tests.Editors
 
                                 // Load back and verify
                                 editor.Load(dlgFile, "ORIHA", ResourceType.DLG, data);
-                                
+
                                 // Verify quest value is loaded back
                                 // Note: In a full implementation, we would select the item in the tree view
                                 // For now, we verify the node directly
@@ -3011,14 +3496,102 @@ namespace HolocronToolset.Tests.Editors
             throw new NotImplementedException("TestDlgEditorManipulatePlotXpRoundtrip: Plot XP roundtrip test not yet implemented");
         }
 
-        // TODO: STUB - Implement test_dlg_editor_manipulate_comments_roundtrip (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:2794-2832)
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:2794-2832
         // Original: def test_dlg_editor_manipulate_comments_roundtrip(qtbot, installation: HTInstallation, test_files_dir: Path): Test comments roundtrip
         [Fact]
         public void TestDlgEditorManipulateCommentsRoundtrip()
         {
-            // TODO: STUB - Implement comments roundtrip test
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:2794-2832
-            throw new NotImplementedException("TestDlgEditorManipulateCommentsRoundtrip: Comments roundtrip test not yet implemented");
+            // Get test files directory
+            string testFilesDir = System.IO.Path.Combine(
+                System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+
+            // Try to find a DLG file
+            string dlgFile = System.IO.Path.Combine(testFilesDir, "ORIHA.dlg");
+            if (!System.IO.File.Exists(dlgFile))
+            {
+                // Try alternative location
+                testFilesDir = System.IO.Path.Combine(
+                    System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                    "..", "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+                dlgFile = System.IO.Path.Combine(testFilesDir, "ORIHA.dlg");
+            }
+
+            if (!System.IO.File.Exists(dlgFile))
+            {
+                // Skip if no DLG files available for testing (matching Python pytest.skip behavior)
+                return;
+            }
+
+            // Get installation if available
+            string k1Path = Environment.GetEnvironmentVariable("K1_PATH");
+            if (string.IsNullOrEmpty(k1Path))
+            {
+                k1Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k1Path) && System.IO.File.Exists(System.IO.Path.Combine(k1Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k1Path, "Test Installation", tsl: false);
+            }
+
+            var editor = new DLGEditor(null, installation);
+            editor.Show();
+
+            // Load the DLG file (matching Python: editor.load(dlg_file, "ORIHA", ResourceType.DLG, original_data))
+            byte[] originalData = System.IO.File.ReadAllBytes(dlgFile);
+            editor.Load(dlgFile, "ORIHA", ResourceType.DLG, originalData);
+
+            // Ensure we have at least one starter node
+            var starters = editor.Model.GetRootItems();
+            starters.Should().NotBeEmpty("DLG file should have at least one starter node");
+
+            var firstItem = starters[0];
+            firstItem.Should().NotBeNull("First starter item should not be null");
+
+            // Select the first item in the tree (matching Python: editor.ui.dialogTree.setCurrentIndex(first_item.index()))
+            var treeItem = new Avalonia.Controls.TreeViewItem { Tag = firstItem };
+            editor.DialogTree.SelectedItem = treeItem;
+
+            // Test various comment texts (matching Python: test_comments = ["", "Test comment", "Multi\nline\ncomment", "Comment with special chars !@#$%^&*()"])
+            string[] testComments = new string[]
+            {
+                "",
+                "Test comment",
+                "Multi\nline\ncomment",
+                "Comment with special chars !@#$%^&*()"
+            };
+
+            foreach (string comment in testComments)
+            {
+                // Set comment in UI (matching Python: editor.ui.commentsEdit.setPlainText(comment))
+                if (editor.CommentsEdit != null)
+                {
+                    editor.CommentsEdit.Text = comment;
+                }
+
+                // Trigger node update (matching Python: editor.on_node_update())
+                editor.OnNodeUpdate();
+
+                // Save and verify (matching Python: data, _ = editor.build(), modified_dlg = read_dlg(data), if modified_dlg.starters: assert modified_dlg.starters[0].node.comment == comment)
+                var (savedData, _) = editor.Build();
+                DLG modifiedDlg = DLGHelper.ReadDlg(savedData);
+                if (modifiedDlg != null && modifiedDlg.Starters != null && modifiedDlg.Starters.Count > 0)
+                {
+                    modifiedDlg.Starters[0].Node.Comment.Should().Be(comment, $"Comment should be '{comment}' after saving");
+                }
+
+                // Load back and verify (matching Python: editor.load(dlg_file, "ORIHA", ResourceType.DLG, data), editor.ui.dialogTree.setCurrentIndex(first_item.index()), assert editor.ui.commentsEdit.toPlainText() == comment)
+                editor.Load(dlgFile, "ORIHA", ResourceType.DLG, savedData);
+                treeItem = new Avalonia.Controls.TreeViewItem { Tag = firstItem };
+                editor.DialogTree.SelectedItem = treeItem;
+
+                if (editor.CommentsEdit != null)
+                {
+                    editor.CommentsEdit.Text.Should().Be(comment, $"Comment should be '{comment}' after loading back");
+                }
+            }
         }
 
         // TODO: STUB - Implement test_dlg_editor_manipulate_camera_id_roundtrip (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:2834-2866)
@@ -3076,7 +3649,7 @@ namespace HolocronToolset.Tests.Editors
 
             // Matching PyKotor: original_data = dlg_file.read_bytes()
             byte[] originalData = System.IO.File.ReadAllBytes(dlgFile);
-            
+
             // Matching PyKotor: editor.load(dlg_file, "ORIHA", ResourceType.DLG, original_data)
             editor.Load(dlgFile, "ORIHA", ResourceType.DLG, originalData);
 
@@ -3124,7 +3697,7 @@ namespace HolocronToolset.Tests.Editors
 
                                 // Matching PyKotor: editor.load(dlg_file, "ORIHA", ResourceType.DLG, data)
                                 editor.Load(dlgFile, "ORIHA", ResourceType.DLG, data);
-                                
+
                                 // Matching PyKotor: editor.ui.dialogTree.setCurrentIndex(first_item.index())
                                 editor.DialogTree.SelectedItem = treeItem;
 
@@ -3226,7 +3799,7 @@ namespace HolocronToolset.Tests.Editors
                             var firstStarter = modifiedDlg.Starters[0];
                             if (firstStarter.Node != null)
                             {
-                                firstStarter.Node.WaitFlags.Should().Be(val, 
+                                firstStarter.Node.WaitFlags.Should().Be(val,
                                     $"WaitFlags should be {val} after setting waitFlagSpin to {val} and calling OnNodeUpdate");
                             }
                         }
@@ -3314,7 +3887,7 @@ namespace HolocronToolset.Tests.Editors
                         {
                             string expectedVoice = string.IsNullOrEmpty(voice) ? "" : voice;
                             string actualVoice = modifiedDlg.Starters[0].Node.VoResRef?.ToString() ?? "";
-                            actualVoice.Should().Be(expectedVoice, 
+                            actualVoice.Should().Be(expectedVoice,
                                 $"Voice ResRef should be saved correctly. Expected: '{expectedVoice}', Actual: '{actualVoice}'");
                         }
                     }
@@ -3350,7 +3923,7 @@ namespace HolocronToolset.Tests.Editors
             var editor = new DLGEditor(null, null);
             var dlg = CreateComplexTree();
             editor.LoadDLG(dlg);
-            
+
             var items = new List<DLGStandardItem>();
             foreach (var link in dlg.Starters)
             {
@@ -3379,7 +3952,7 @@ namespace HolocronToolset.Tests.Editors
             var editor = new DLGEditor(null, null);
             var dlg = CreateComplexTree();
             editor.LoadDLG(dlg);
-            
+
             var items = new List<DLGStandardItem>();
             foreach (var link in dlg.Starters)
             {
@@ -3410,7 +3983,7 @@ namespace HolocronToolset.Tests.Editors
                 {
                     seenNodes = new HashSet<DLGNode>();
                 }
-                
+
                 for (int i = 0; i < node.Links.Count; i++)
                 {
                     var link = node.Links[i];
@@ -3465,7 +4038,7 @@ namespace HolocronToolset.Tests.Editors
             var editor = new DLGEditor(null, null);
             var dlg = CreateComplexTree();
             editor.LoadDLG(dlg);
-            
+
             var itemsBefore = new List<DLGStandardItem>();
             foreach (var link in dlg.Starters)
             {
@@ -3504,7 +4077,7 @@ namespace HolocronToolset.Tests.Editors
             var editor = new DLGEditor(null, null);
             var dlg = CreateComplexTree();
             editor.LoadDLG(dlg);
-            
+
             var items = new List<DLGStandardItem>();
             foreach (var link in dlg.Starters)
             {
