@@ -590,6 +590,56 @@ namespace Andastra.Parsing.Tests.Formats
             ksyContent.Should().Contain("doc:", "Should have documentation section");
         }
 
+        [Fact(Timeout = 300000)]
+        public void TestKaitaiStructCompilesToAtLeastDozenLanguages()
+        {
+            // Ensure we test at least a dozen languages (12 languages)
+            var normalizedKsyPath = Path.GetFullPath(KsyFile);
+            if (!File.Exists(normalizedKsyPath))
+            {
+                Assert.True(true, "UTE.ksy not found - skipping compilation test");
+                return;
+            }
+
+            SupportedLanguages.Length.Should().BeGreaterThanOrEqualTo(12,
+                "Should support at least a dozen languages for testing");
+
+            // Check if Java is available (required for Kaitai Struct compiler)
+            var javaCheck = RunCommand("java", "-version");
+            if (javaCheck.ExitCode != 0)
+            {
+                Assert.True(true, "Java not available - skipping compilation test");
+                return;
+            }
+
+            Directory.CreateDirectory(KaitaiOutputDir);
+
+            int compiledCount = 0;
+            var compiledLanguages = new List<string>();
+
+            foreach (var lang in SupportedLanguages)
+            {
+                try
+                {
+                    var result = CompileToLanguage(normalizedKsyPath, lang);
+                    if (result.Success)
+                    {
+                        compiledCount++;
+                        compiledLanguages.Add(lang);
+                    }
+                }
+                catch
+                {
+                    // Ignore individual failures
+                }
+            }
+
+            // We should be able to compile to at least a dozen languages
+            compiledCount.Should().BeGreaterThanOrEqualTo(12,
+                $"Should successfully compile UTE.ksy to at least 12 languages (a dozen). " +
+                $"Compiled to {compiledCount} languages: {string.Join(", ", compiledLanguages)}");
+        }
+
         public static IEnumerable<object[]> GetSupportedLanguages()
         {
             return SupportedLanguages.Select(lang => new object[] { lang });
