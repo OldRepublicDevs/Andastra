@@ -619,16 +619,57 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
 
             // Check if data is TGA format (TGA files have specific header structure)
             // TGA format detection: Check for TGA signature or file extension
-            if (path.EndsWith(".tga", StringComparison.OrdinalIgnoreCase) || path.EndsWith(".TGA", StringComparison.OrdinalIgnoreCase))
+            // Based on daorigins.exe: TGA textures are converted to DDS format for DirectX 9
+            // D3DXCreateTextureFromFileInMemoryEx can handle TGA directly, but we convert to DDS
+            // for consistency with the TPC conversion path
+            if (path.EndsWith(".tga", StringComparison.OrdinalIgnoreCase) || path.EndsWith(".TGA", StringComparison.OrdinalIgnoreCase) || IsTgaFormat(textureData))
             {
-                // TGA format: For now, we'll need to convert TGA to DDS
-                // This is a simplified implementation - full TGA to DDS conversion would require parsing TGA header
-                // and converting pixel data to DDS format
-                // TODO: SIMPLIFIED - Add full TGA to DDS conversion when needed
-                System.Console.WriteLine($"[DragonAgeOriginsGraphicsBackend] ConvertTextureDataToDDS: TGA to DDS conversion not yet fully implemented for '{path}'");
-                // For now, return null to indicate conversion not supported
-                // In a full implementation, this would parse TGA header and convert to DDS
-                return null;
+                // TGA format: Parse TGA and convert to DDS format
+                // Based on daorigins.exe: TGA textures are loaded and converted to DDS for DirectX 9
+                try
+                {
+                    // Parse TGA file using existing TGA parsing code
+                    TGAImage tgaImage;
+                    using (MemoryStream tgaStream = new MemoryStream(textureData))
+                    {
+                        tgaImage = TGA.ReadTga(tgaStream);
+                    }
+
+                    if (tgaImage == null)
+                    {
+                        System.Console.WriteLine($"[DragonAgeOriginsGraphicsBackend] ConvertTextureDataToDDS: Failed to parse TGA file '{path}'");
+                        return null;
+                    }
+
+                    int width = tgaImage.Width;
+                    int height = tgaImage.Height;
+                    byte[] rgbaData = tgaImage.Data; // RGBA8888 format
+
+                    // Convert TGA RGBA8888 data to DDS A8R8G8B8 format (BGRA order for DDS)
+                    // Based on daorigins.exe: TGA pixel data is converted to DDS format
+                    // DDS uses BGRA byte order, TGA uses RGBA byte order
+                    byte[] bgraData = ConvertRgbaToBgra(rgbaData, width, height);
+
+                    // Determine if texture has alpha channel
+                    bool hasAlpha = HasAlphaChannel(rgbaData);
+
+                    // Create DDS file from TGA data
+                    // Based on daorigins.exe: DDS format is used for DirectX 9 texture creation
+                    byte[] ddsData = CreateDDSFromRgbaData(width, height, bgraData, hasAlpha);
+                    if (ddsData == null)
+                    {
+                        System.Console.WriteLine($"[DragonAgeOriginsGraphicsBackend] ConvertTextureDataToDDS: Failed to create DDS from TGA for '{path}'");
+                        return null;
+                    }
+
+                    System.Console.WriteLine($"[DragonAgeOriginsGraphicsBackend] ConvertTextureDataToDDS: Successfully converted TGA to DDS for '{path}' ({width}x{height}, {(hasAlpha ? "RGBA" : "RGB")})");
+                    return ddsData;
+                }
+                catch (Exception ex)
+                {
+                    System.Console.WriteLine($"[DragonAgeOriginsGraphicsBackend] ConvertTextureDataToDDS: Exception converting TGA to DDS for '{path}': {ex.Message}");
+                    return null;
+                }
             }
 
             // Assume TPC format (primary format for Dragon Age Origins)
@@ -686,6 +727,226 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
             {
                 System.Console.WriteLine($"[DragonAgeOriginsGraphicsBackend] ConvertTextureDataToDDS: Exception converting TPC to DDS for '{path}': {ex.Message}");
                 return null;
+            }
+        }
+
+        /// <summary>
+        /// Checks if texture data is in TGA format by examining the header.
+        /// Based on daorigins.exe: TGA format detection for texture loading.
+        /// </summary>
+        /// <param name="data">Texture file data to check.</param>
+        /// <returns>True if data appears to be TGA format, false otherwise.</returns>
+        private bool IsTgaFormat(byte[] data)
+        {
+            if (data == null || data.Length < 18)
+            {
+                return false;
+            }
+
+            // TGA header structure (first 18 bytes):
+            // - Byte 0: ID length
+            // - Byte 1: Color map type (0 = no color map)
+            // - Byte 2: Image type (2 = uncompressed true color, 3 = grayscale, 10 = RLE true color)
+            // - Bytes 3-7: Color map specification
+            // - Bytes 8-11: Image specification (x origin, y origin)
+            // - Bytes 12-13: Width (little-endian)
+            // - Bytes 14-15: Height (little-endian)
+            // - Byte 16: Pixel depth (8, 16, 24, 32)
+            // - Byte 17: Image descriptor
+
+            byte colorMapType = data[1];
+            byte imageType = data[2];
+
+            // Valid TGA image types: 2 (uncompressed true color), 3 (grayscale), 10 (RLE true color)
+            if (imageType != 2 && imageType != 3 && imageType != 10)
+            {
+                return false;
+            }
+
+            // Color-mapped TGAs are not commonly used in game engines
+            if (colorMapType != 0)
+            {
+                return false;
+            }
+
+            // Check for reasonable dimensions (width and height should be > 0)
+            ushort width = BitConverter.ToUInt16(data, 12);
+            ushort height = BitConverter.ToUInt16(data, 14);
+            if (width == 0 || height == 0)
+            {
+                return false;
+            }
+
+            // Check pixel depth (should be 8, 16, 24, or 32)
+            byte pixelDepth = data[16];
+            if (pixelDepth != 8 && pixelDepth != 16 && pixelDepth != 24 && pixelDepth != 32)
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Converts RGBA8888 pixel data to BGRA8888 format for DDS.
+        /// Based on daorigins.exe: DDS format uses BGRA byte order.
+        /// </summary>
+        /// <param name="rgbaData">RGBA8888 pixel data (row-major, top-left origin).</param>
+        /// <param name="width">Texture width.</param>
+        /// <param name="height">Texture height.</param>
+        /// <returns>BGRA8888 pixel data as byte array.</returns>
+        private byte[] ConvertRgbaToBgra(byte[] rgbaData, int width, int height)
+        {
+            if (rgbaData == null || rgbaData.Length != width * height * 4)
+            {
+                throw new ArgumentException("Invalid RGBA data size");
+            }
+
+            byte[] bgraData = new byte[rgbaData.Length];
+            for (int i = 0; i < width * height; i++)
+            {
+                int offset = i * 4;
+                bgraData[offset] = rgbaData[offset + 2];     // B = R
+                bgraData[offset + 1] = rgbaData[offset + 1]; // G = G
+                bgraData[offset + 2] = rgbaData[offset];     // R = B
+                bgraData[offset + 3] = rgbaData[offset + 3]; // A = A
+            }
+
+            return bgraData;
+        }
+
+        /// <summary>
+        /// Checks if texture data has an alpha channel (non-opaque pixels).
+        /// Based on daorigins.exe: Alpha channel detection for texture format selection.
+        /// </summary>
+        /// <param name="rgbaData">RGBA8888 pixel data.</param>
+        /// <returns>True if texture has alpha channel, false otherwise.</returns>
+        private bool HasAlphaChannel(byte[] rgbaData)
+        {
+            if (rgbaData == null || rgbaData.Length < 4)
+            {
+                return false;
+            }
+
+            // Check alpha channel (every 4th byte starting at index 3)
+            // Early exit on first non-opaque pixel
+            for (int i = 3; i < rgbaData.Length; i += 4)
+            {
+                if (rgbaData[i] != 0xFF)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Creates DDS file data from RGBA8888 pixel data.
+        /// Based on daorigins.exe: DDS format creation for DirectX 9 texture loading.
+        /// </summary>
+        /// <remarks>
+        /// Dragon Age Origins DDS Creation:
+        /// - Based on reverse engineering of daorigins.exe texture loading functions
+        /// - DDS format: A8R8G8B8 (32-bit uncompressed) for textures with alpha
+        /// - DDS format: X8R8G8B8 (32-bit uncompressed, alpha ignored) for textures without alpha
+        /// - DDS header: 128 bytes (magic + 124 byte header)
+        /// - Pixel data: BGRA8888 format (DDS uses BGRA byte order)
+        /// </remarks>
+        /// <param name="width">Texture width.</param>
+        /// <param name="height">Texture height.</param>
+        /// <param name="bgraData">BGRA8888 pixel data (row-major, top-left origin).</param>
+        /// <param name="hasAlpha">Whether texture has alpha channel.</param>
+        /// <returns>DDS file data as byte array, or null on failure.</returns>
+        private byte[] CreateDDSFromRgbaData(int width, int height, byte[] bgraData, bool hasAlpha)
+        {
+            if (bgraData == null || bgraData.Length != width * height * 4)
+            {
+                System.Console.WriteLine($"[DragonAgeOriginsGraphicsBackend] CreateDDSFromRgbaData: Invalid BGRA data size (expected {width * height * 4}, got {(bgraData?.Length ?? 0)})");
+                return null;
+            }
+
+            // DDS file structure
+            // Header: 128 bytes
+            // Pixel data: Variable size based on format and dimensions
+
+            using (MemoryStream ms = new MemoryStream())
+            {
+                using (BinaryWriter writer = new BinaryWriter(ms))
+                {
+                    // Write DDS magic number
+                    writer.Write(System.Text.Encoding.ASCII.GetBytes("DDS "));
+
+                    // Write DDS header size (124 bytes, not including magic number)
+                    writer.Write(124);
+
+                    // Write DDS header flags
+                    // DDSD_CAPS | DDSD_HEIGHT | DDSD_WIDTH | DDSD_PIXELFORMAT | DDSD_PITCH
+                    uint flags = 0x1 | 0x2 | 0x4 | 0x1000 | 0x8;
+                    writer.Write(flags);
+
+                    // Write height
+                    writer.Write((uint)height);
+
+                    // Write width
+                    writer.Write((uint)width);
+
+                    // Write pitch (bytes per scanline for uncompressed formats)
+                    // For A8R8G8B8 format: pitch = width * 4 bytes per pixel
+                    uint pitch = (uint)(width * 4);
+                    writer.Write(pitch);
+
+                    // Write depth (0 for 2D textures)
+                    writer.Write(0u);
+
+                    // Write mipmap count (1 for now, can be extended later)
+                    writer.Write(1u);
+
+                    // Write reserved data (11 DWORDs = 44 bytes)
+                    for (int i = 0; i < 11; i++)
+                    {
+                        writer.Write(0u);
+                    }
+
+                    // Write DDS pixel format
+                    // DDPF_ALPHAPIXELS | DDPF_RGB for A8R8G8B8 format
+                    // DDPF_RGB for X8R8G8B8 format (no alpha)
+                    writer.Write(32u); // dwSize of DDS_PIXELFORMAT structure
+
+                    uint pixelFormatFlags = 0x40; // DDPF_RGB
+                    if (hasAlpha)
+                    {
+                        pixelFormatFlags |= 0x1; // DDPF_ALPHAPIXELS
+                    }
+
+                    writer.Write(pixelFormatFlags);
+                    writer.Write(0u); // dwFourCC (0 for uncompressed formats)
+                    writer.Write(32u); // dwRGBBitCount (32 bits per pixel)
+                    writer.Write(0x00FF0000u); // dwRBitMask (R channel mask)
+                    writer.Write(0x0000FF00u); // dwGBitMask (G channel mask)
+                    writer.Write(0x000000FFu); // dwBBitMask (B channel mask)
+                    if (hasAlpha)
+                    {
+                        writer.Write(0xFF000000u); // dwABitMask (A channel mask)
+                    }
+                    else
+                    {
+                        writer.Write(0x00000000u); // dwABitMask (no alpha)
+                    }
+
+                    // Write DDS caps
+                    // DDSCAPS_TEXTURE
+                    writer.Write(0x1000);
+                    writer.Write(0u); // dwCaps2
+                    writer.Write(0u); // dwCaps3
+                    writer.Write(0u); // dwCaps4
+                    writer.Write(0u); // dwReserved2
+
+                    // Write pixel data (BGRA8888 format)
+                    writer.Write(bgraData);
+
+                    return ms.ToArray();
+                }
             }
         }
 
