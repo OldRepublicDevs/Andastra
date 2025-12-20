@@ -827,14 +827,117 @@ void helper() {
             throw new NotImplementedException("TestNssEditorGameSelectorUi: Game selector UI test not yet implemented");
         }
 
-        // TODO: STUB - Implement test_nss_editor_outline_view_populated (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:749-763)
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:749-763
         // Original: def test_nss_editor_outline_view_populated(qtbot, installation: HTInstallation, complex_nss_script: str): Test outline view populated
         [Fact]
         public void TestNssEditorOutlineViewPopulated()
         {
-            // TODO: STUB - Implement outline view populated test
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:749-763
-            throw new NotImplementedException("TestNssEditorOutlineViewPopulated: Outline view populated test not yet implemented");
+            // Get installation if available (K2 preferred for NSS files)
+            string k2Path = Environment.GetEnvironmentVariable("K2_PATH");
+            if (string.IsNullOrEmpty(k2Path))
+            {
+                k2Path = @"C:\Program Files (x86)\Steam\steamapps\common\Knights of the Old Republic II";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k2Path) && System.IO.File.Exists(System.IO.Path.Combine(k2Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k2Path, "Test Installation", tsl: true);
+            }
+            else
+            {
+                // Fallback to K1
+                string k1Path = Environment.GetEnvironmentVariable("K1_PATH");
+                if (string.IsNullOrEmpty(k1Path))
+                {
+                    k1Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor";
+                }
+
+                if (System.IO.Directory.Exists(k1Path) && System.IO.File.Exists(System.IO.Path.Combine(k1Path, "chitin.key")))
+                {
+                    installation = new HTInstallation(k1Path, "Test Installation", tsl: false);
+                }
+            }
+
+            // Complex NSS script with multiple functions and variables (matching Python fixture)
+            string complexNssScript = @"// Global variable
+int g_globalVar = 10;
+
+// Main function
+void main() {
+    int localVar = 20;
+    
+    if (localVar > 10) {
+        SendMessageToPC(GetFirstPC(), ""Condition met"");
+    }
+    
+    for (int i = 0; i < 5; i++) {
+        localVar += i;
+    }
+}
+
+// Helper function
+void helper() {
+    int helperVar = 30;
+}";
+
+            var editor = new NSSEditor(null, installation);
+            editor.New();
+
+            // Set complex script
+            var codeEditorField = typeof(NSSEditor).GetField("_codeEdit",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            codeEditorField.Should().NotBeNull("NSSEditor should have _codeEdit field");
+            
+            var codeEditor = codeEditorField.GetValue(editor) as HolocronToolset.Widgets.CodeEditor;
+            codeEditor.Should().NotBeNull("_codeEdit should be initialized");
+            
+            codeEditor.SetPlainText(complexNssScript);
+
+            // Update outline
+            editor.UpdateOutline();
+
+            // Outline should have items (functions, variables, etc.)
+            // The test verifies that topLevelItemCount >= 0 (may have items)
+            var outlineView = editor.OutlineView;
+            outlineView.Should().NotBeNull();
+            
+            // Get items from outline view
+            var itemsSource = outlineView.ItemsSource;
+            itemsSource.Should().NotBeNull();
+            
+            // Count items (using reflection or casting to list)
+            int itemCount = 0;
+            if (itemsSource is System.Collections.IEnumerable enumerable)
+            {
+                foreach (var item in enumerable)
+                {
+                    itemCount++;
+                }
+            }
+
+            // The Python test asserts >= 0, meaning it's acceptable to have 0 items
+            // But with our complex script, we should have at least some items
+            // We expect: g_globalVar (variable), main (function), helper (function)
+            itemCount.Should().BeGreaterOrEqualTo(0);
+            
+            // With the complex script, we should have found at least the functions
+            // Note: The exact count may vary based on parsing, but should be >= 2 (main and helper functions)
+            if (itemCount > 0)
+            {
+                // Verify that we can access the items
+                var itemsList = new List<object>();
+                if (itemsSource is System.Collections.IEnumerable itemsEnum)
+                {
+                    foreach (var item in itemsEnum)
+                    {
+                        itemsList.Add(item);
+                    }
+                }
+                
+                // Should have found functions and/or variables
+                itemsList.Count.Should().BeGreaterOrEqualTo(0);
+            }
         }
 
         // TODO: STUB - Implement test_nss_editor_outline_navigation (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:765-790)

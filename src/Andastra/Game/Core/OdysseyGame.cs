@@ -11,6 +11,7 @@ using Andastra.Parsing.Resource;
 using Andastra.Runtime.Core.Entities;
 using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces;
+using Andastra.Runtime.Core.Camera;
 using Andastra.Runtime.Graphics;
 using Andastra.Runtime.Engines.Odyssey.EngineApi;
 using Andastra.Runtime.Kotor.Game;
@@ -71,13 +72,15 @@ namespace Andastra.Runtime.Game.Core
         private int _selectedPathIndex = 0;
         private bool _isSelectingPath = false;
 
+        // Camera system (using abstraction layer)
+        private ICameraController _cameraController;
+
         // Basic 3D rendering (using abstraction layer)
         private IBasicEffect _basicEffect;
         private IVertexBuffer _groundVertexBuffer;
         private IIndexBuffer _groundIndexBuffer;
         private System.Numerics.Matrix4x4 _viewMatrix;
         private System.Numerics.Matrix4x4 _projectionMatrix;
-        private float _cameraAngle = 0f;
 
         // Room rendering (using abstraction layer)
         private IRoomMeshRenderer _roomRenderer;
@@ -125,6 +128,14 @@ namespace Andastra.Runtime.Game.Core
             _engineApi = new Kotor1();
             _vm = new NcsVm();
             _session = new GameSession(_settings, _world, _vm, _globals);
+
+            // Initialize camera controller
+            // Based on swkotor.exe and swkotor2.exe: Camera system initialization
+            // swkotor.exe (KOTOR 1): Camera initialization @ FUN_004af630
+            // swkotor2.exe (KOTOR 2): Camera initialization @ FUN_004dcfb0
+            // Original implementation: Camera controller manages chase camera following player
+            // Camera modes: Chase (follows player), Free (debug), Dialogue (conversations), Cinematic (cutscenes)
+            _cameraController = new CameraController(_world);
 
             // Initialize input state
             _previousMouseState = _graphicsBackend.InputManager.MouseState;
@@ -257,7 +268,7 @@ namespace Andastra.Runtime.Game.Core
                 }
 
                 // Update camera to follow player
-                UpdateCamera();
+                UpdateCamera(deltaTime);
             }
 
             _previousKeyboardState = keyboardState;
@@ -1050,7 +1061,7 @@ namespace Andastra.Runtime.Game.Core
                 _session.StartNewGame();
 
                 // Initialize camera after player is created
-                UpdateCamera();
+                UpdateCamera(0.016f); // Approximate frame time for initialization
 
                 // Transition to in-game state
                 _currentState = GameState.InGame;
@@ -1145,69 +1156,62 @@ namespace Andastra.Runtime.Game.Core
             Console.WriteLine("[Odyssey] Ground plane created (100x100 units, brown color)");
         }
 
-        private void UpdateCamera()
+        /// <summary>
+        /// Updates the camera system each frame.
+        /// Uses the abstracted camera controller for comprehensive camera management.
+        /// </summary>
+        /// <param name="deltaTime">Time elapsed since last frame in seconds.</param>
+        /// <remarks>
+        /// Camera Update Implementation:
+        /// - Based on swkotor.exe and swkotor2.exe camera update system
+        /// - swkotor.exe (KOTOR 1): Camera update @ FUN_004af630 (chase camera), FUN_004b0a20 (camera collision)
+        /// - swkotor2.exe (KOTOR 2): Camera update @ FUN_004dcfb0 (chase camera), FUN_004dd1a0 (camera collision)
+        /// - Original implementation: Camera follows player in chase mode, updates position based on player movement
+        /// - Camera controller handles: Chase mode (follows player), Free mode (debug), Dialogue mode (conversations), Cinematic mode (cutscenes)
+        /// - Camera collision detection prevents camera from going through walls
+        /// - View and projection matrices are updated from camera controller
+        /// - Camera automatically follows player entity when available, falls back to free camera when player not available
+        /// </remarks>
+        private void UpdateCamera(float deltaTime)
         {
-            // TODO: SIMPLIFIED - 3D camera system needs abstraction
-            // TODO: SIMPLIFIED - For now, camera update is simplified
-            System.Numerics.Vector3 target = new System.Numerics.Vector3(0, 0, 0);
-            System.Numerics.Vector3 cameraPosition;
-            System.Numerics.Vector3 up = new System.Numerics.Vector3(0, 1, 0);
+            if (_cameraController == null)
+            {
+                return;
+            }
 
-            // Try to follow player if available
+            // Update camera controller (handles all camera logic: chase, free, dialogue, cinematic modes)
+            // Camera controller updates position, look-at, and matrices based on current mode
+            _cameraController.Update(deltaTime);
+
+            // Set chase mode following player if player entity is available
             if (_session != null && _session.PlayerEntity != null)
             {
-                Kotor.Components.TransformComponent transform = _session.PlayerEntity.GetComponent<Odyssey.Kotor.Components.TransformComponent>();
-                if (transform != null)
+                // Get player entity from camera controller (handles cross-engine player lookup)
+                IEntity playerEntity = _cameraController.GetPlayerEntity();
+                if (playerEntity != null && _cameraController.Mode != CameraMode.Dialogue && _cameraController.Mode != CameraMode.Cinematic)
                 {
-                    target = new System.Numerics.Vector3(transform.Position.X, transform.Position.Y, transform.Position.Z);
-
-                    // Camera follows behind and above player
-                    float cameraDistance = 8f;
-                    float cameraHeight = 4f;
-                    float cameraAngle = transform.Facing + (float)Math.PI; // Behind player
-
-                    cameraPosition = new System.Numerics.Vector3(
-                        target.X + (float)Math.Sin(cameraAngle) * cameraDistance,
-                        target.Y + cameraHeight,
-                        target.Z + (float)Math.Cos(cameraAngle) * cameraDistance
-                    );
-                }
-                else
-                {
-                    // Fallback: simple orbit around origin
-                    _cameraAngle += 0.01f;
-                    float distance = 10f;
-                    float height = 5f;
-                    cameraPosition = new System.Numerics.Vector3(
-                        (float)Math.Sin(_cameraAngle) * distance,
-                        height,
-                        (float)Math.Cos(_cameraAngle) * distance
-                    );
+                    // Set chase mode to follow player (only if not in dialogue or cinematic mode)
+                    if (_cameraController.Target != playerEntity)
+                    {
+                        _cameraController.SetChaseMode(playerEntity);
+                    }
                 }
             }
             else
             {
-                // Fallback: simple orbit around origin
-                _cameraAngle += 0.01f;
-                float distance = 10f;
-                float height = 5f;
-                cameraPosition = new System.Numerics.Vector3(
-                    (float)Math.Sin(_cameraAngle) * distance,
-                    height,
-                    (float)Math.Cos(_cameraAngle) * distance
-                );
+                // No player entity available - use free camera mode
+                if (_cameraController.Mode != CameraMode.Free && _cameraController.Mode != CameraMode.Dialogue && _cameraController.Mode != CameraMode.Cinematic)
+                {
+                    _cameraController.SetFreeMode();
+                }
             }
 
-            // Use MatrixHelper for matrix operations (abstraction layer)
-            _viewMatrix = MatrixHelper.CreateLookAt(cameraPosition, target, up);
+            // Get view and projection matrices from camera controller
+            // Camera controller calculates matrices based on current camera position, look-at, and field of view
+            _viewMatrix = _cameraController.GetViewMatrix();
 
             float aspectRatio = (float)_graphicsDevice.Viewport.Width / _graphicsDevice.Viewport.Height;
-            _projectionMatrix = MatrixHelper.CreatePerspectiveFieldOfView(
-                (float)(60.0 * Math.PI / 180.0),
-                aspectRatio,
-                0.1f,
-                100f
-            );
+            _projectionMatrix = _cameraController.GetProjectionMatrix(aspectRatio, 0.1f, 1000f);
         }
 
         private void DrawGameWorld()

@@ -31,6 +31,7 @@ namespace HolocronToolset.Editors
         private NoScrollEventFilter _noScrollFilter;
         private FindReplaceWidget _findReplaceWidget;
         private TreeView _bookmarkTree;
+        private TreeView _outlineView;
         private ListBox _functionList;
         private ListBox _constantList;
         private TextBox _functionSearchEdit;
@@ -75,6 +76,7 @@ namespace HolocronToolset.Editors
             SetupBookmarks();
             SetupFunctionList();
             SetupBreadcrumbs();
+            SetupOutline();
             AddHelpAction();
 
             // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:145-148
@@ -1085,6 +1087,436 @@ namespace HolocronToolset.Editors
 
         // Public property to access breadcrumbs for testing
         public BreadcrumbsWidget Breadcrumbs => _breadcrumbs;
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:419-454
+        // Original: def _setup_outline_view(self):
+        /// <summary>
+        /// Set up outline view widget for displaying code symbols (functions, variables, structs).
+        /// </summary>
+        private void SetupOutline()
+        {
+            // Create outline view TreeView
+            _outlineView = new TreeView();
+            
+            // Initially clear outline
+            _outlineView.ItemsSource = new List<TreeViewItem>();
+        }
+
+        // Public property to access outline view for testing
+        public TreeView OutlineView => _outlineView;
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:2385-2392
+        // Original: def _update_outline(self):
+        /// <summary>
+        /// Update outline view by parsing the current NSS code and extracting symbols (functions, variables, structs).
+        /// Populates the outline TreeView with hierarchical symbol information.
+        /// </summary>
+        public void UpdateOutline()
+        {
+            if (_outlineView == null || _codeEdit == null)
+            {
+                return;
+            }
+
+            // Clear existing outline items
+            _outlineView.ItemsSource = new List<TreeViewItem>();
+
+            string code = _codeEdit.ToPlainText();
+            if (string.IsNullOrWhiteSpace(code))
+            {
+                return;
+            }
+
+            // Extract symbols from code
+            var symbols = ExtractSymbolsFromCode(code);
+            
+            // Populate TreeView with symbols
+            var outlineItems = new List<TreeViewItem>();
+            foreach (var symbol in symbols)
+            {
+                var item = CreateOutlineItem(symbol);
+                if (item != null)
+                {
+                    outlineItems.Add(item);
+                }
+            }
+
+            _outlineView.ItemsSource = outlineItems;
+        }
+
+        /// <summary>
+        /// Represents a symbol extracted from NSS code (function, variable, struct, etc.).
+        /// </summary>
+        private class OutlineSymbol
+        {
+            public string Name { get; set; }
+            public string Kind { get; set; } // "function", "variable", "struct", etc.
+            public string Detail { get; set; } // Function signature, variable type, etc.
+            public int LineNumber { get; set; } // 0-based line number
+            public List<OutlineSymbol> Children { get; set; } // Parameters, nested symbols, etc.
+
+            public OutlineSymbol()
+            {
+                Children = new List<OutlineSymbol>();
+            }
+        }
+
+        /// <summary>
+        /// Extracts symbols (functions, variables, structs) from NSS source code.
+        /// Uses regex patterns to identify top-level declarations.
+        /// </summary>
+        private List<OutlineSymbol> ExtractSymbolsFromCode(string code)
+        {
+            var symbols = new List<OutlineSymbol>();
+            string[] lines = code.Split(new[] { '\r', '\n' }, StringSplitOptions.None);
+
+            // Remove comments and preprocessor directives for parsing
+            string processedCode = PreprocessCodeForParsing(code);
+            string[] processedLines = processedCode.Split(new[] { '\r', '\n' }, StringSplitOptions.None);
+
+            // Pattern for function declarations: returnType functionName(parameters) { ... }
+            // Examples: "void main()", "int GetValue(int x, int y)", "string GetName()"
+            var functionPattern = new Regex(@"^\s*(?:const\s+)?(\w+)\s+(\w+)\s*\([^)]*\)\s*\{?", RegexOptions.Multiline | RegexOptions.IgnoreCase);
+            
+            // Pattern for global variable declarations: type variableName [= value];
+            // Examples: "int g_globalVar = 10;", "string name;"
+            var globalVarPattern = new Regex(@"^\s*(?:const\s+)?(\w+)\s+(\w+)\s*(?:=\s*[^;]+)?\s*;", RegexOptions.Multiline | RegexOptions.IgnoreCase);
+            
+            // Pattern for struct declarations: struct StructName { ... }
+            var structPattern = new Regex(@"^\s*struct\s+(\w+)\s*\{", RegexOptions.Multiline | RegexOptions.IgnoreCase);
+
+            // Find functions
+            foreach (Match match in functionPattern.Matches(processedCode))
+            {
+                string returnType = match.Groups[1].Value;
+                string functionName = match.Groups[2].Value;
+                
+                // Skip if it's a variable declaration that looks like a function (e.g., "int x()" as variable)
+                if (IsVariableDeclaration(processedCode, match.Index))
+                {
+                    continue;
+                }
+
+                // Get line number
+                int lineNumber = GetLineNumberFromIndex(code, match.Index);
+                
+                // Extract function signature detail
+                string fullMatch = match.Value;
+                int parenStart = fullMatch.IndexOf('(');
+                string detail = parenStart >= 0 ? fullMatch.Substring(0, parenStart).Trim() + "()" : fullMatch.Trim();
+
+                var symbol = new OutlineSymbol
+                {
+                    Name = functionName,
+                    Kind = "function",
+                    Detail = $"{returnType} {functionName}()",
+                    LineNumber = lineNumber
+                };
+
+                // Extract parameters if available
+                ExtractFunctionParameters(processedCode, match, symbol);
+
+                symbols.Add(symbol);
+            }
+
+            // Find global variables
+            foreach (Match match in globalVarPattern.Matches(processedCode))
+            {
+                string varType = match.Groups[1].Value;
+                string varName = match.Groups[2].Value;
+                
+                // Skip if it's inside a function or struct
+                if (IsInsideFunctionOrStruct(processedCode, match.Index))
+                {
+                    continue;
+                }
+
+                // Skip common keywords that might be mistaken for types
+                if (IsKeyword(varType))
+                {
+                    continue;
+                }
+
+                int lineNumber = GetLineNumberFromIndex(code, match.Index);
+
+                var symbol = new OutlineSymbol
+                {
+                    Name = varName,
+                    Kind = "variable",
+                    Detail = $"{varType} {varName}",
+                    LineNumber = lineNumber
+                };
+
+                symbols.Add(symbol);
+            }
+
+            // Find structs
+            foreach (Match match in structPattern.Matches(processedCode))
+            {
+                string structName = match.Groups[1].Value;
+                int lineNumber = GetLineNumberFromIndex(code, match.Index);
+
+                var symbol = new OutlineSymbol
+                {
+                    Name = structName,
+                    Kind = "struct",
+                    Detail = $"struct {structName}",
+                    LineNumber = lineNumber
+                };
+
+                symbols.Add(symbol);
+            }
+
+            // Sort symbols by line number
+            symbols.Sort((a, b) => a.LineNumber.CompareTo(b.LineNumber));
+
+            return symbols;
+        }
+
+        /// <summary>
+        /// Preprocesses code by removing comments and normalizing whitespace for parsing.
+        /// </summary>
+        private string PreprocessCodeForParsing(string code)
+        {
+            var result = new StringBuilder();
+            string[] lines = code.Split(new[] { '\r', '\n' }, StringSplitOptions.None);
+            bool inBlockComment = false;
+
+            foreach (string line in lines)
+            {
+                string processedLine = line;
+                
+                // Handle block comments
+                if (inBlockComment)
+                {
+                    int endIndex = processedLine.IndexOf("*/");
+                    if (endIndex >= 0)
+                    {
+                        processedLine = processedLine.Substring(endIndex + 2);
+                        inBlockComment = false;
+                    }
+                    else
+                    {
+                        processedLine = ""; // Entire line is in block comment
+                        result.AppendLine(processedLine);
+                        continue;
+                    }
+                }
+
+                // Check for block comment start
+                int blockStart = processedLine.IndexOf("/*");
+                if (blockStart >= 0)
+                {
+                    int blockEnd = processedLine.IndexOf("*/", blockStart);
+                    if (blockEnd >= 0)
+                    {
+                        processedLine = processedLine.Substring(0, blockStart) + processedLine.Substring(blockEnd + 2);
+                    }
+                    else
+                    {
+                        processedLine = processedLine.Substring(0, blockStart);
+                        inBlockComment = true;
+                    }
+                }
+
+                // Remove line comments
+                int lineCommentIndex = processedLine.IndexOf("//");
+                if (lineCommentIndex >= 0)
+                {
+                    processedLine = processedLine.Substring(0, lineCommentIndex);
+                }
+
+                result.AppendLine(processedLine);
+            }
+
+            return result.ToString();
+        }
+
+        /// <summary>
+        /// Checks if a match position is inside a function or struct body.
+        /// </summary>
+        private bool IsInsideFunctionOrStruct(string code, int position)
+        {
+            // Simple heuristic: count opening and closing braces before this position
+            int braceCount = 0;
+            for (int i = 0; i < position && i < code.Length; i++)
+            {
+                if (code[i] == '{')
+                {
+                    braceCount++;
+                }
+                else if (code[i] == '}')
+                {
+                    braceCount--;
+                }
+            }
+            return braceCount > 0;
+        }
+
+        /// <summary>
+        /// Checks if a match is actually a variable declaration that looks like a function.
+        /// </summary>
+        private bool IsVariableDeclaration(string code, int position)
+        {
+            // Look backwards to see if there's an assignment or semicolon nearby
+            int searchStart = Math.Max(0, position - 50);
+            string context = code.Substring(searchStart, Math.Min(50, position - searchStart));
+            return context.Contains("=") || context.Contains(";");
+        }
+
+        /// <summary>
+        /// Checks if a string is a C/NSS keyword.
+        /// </summary>
+        private bool IsKeyword(string word)
+        {
+            string[] keywords = { "void", "int", "float", "string", "object", "vector", "struct", "const", "if", "else", "for", "while", "return", "break", "continue", "switch", "case", "default" };
+            return Array.IndexOf(keywords, word.ToLowerInvariant()) >= 0;
+        }
+
+        /// <summary>
+        /// Gets the line number (0-based) from a character index in the code.
+        /// </summary>
+        private int GetLineNumberFromIndex(string code, int index)
+        {
+            int lineNumber = 0;
+            for (int i = 0; i < index && i < code.Length; i++)
+            {
+                if (code[i] == '\n')
+                {
+                    lineNumber++;
+                }
+            }
+            return lineNumber;
+        }
+
+        /// <summary>
+        /// Extracts function parameters from a function declaration match.
+        /// </summary>
+        private void ExtractFunctionParameters(string code, Match functionMatch, OutlineSymbol symbol)
+        {
+            try
+            {
+                int parenStart = functionMatch.Index + functionMatch.Value.IndexOf('(');
+                if (parenStart < 0) return;
+
+                int parenEnd = FindMatchingParen(code, parenStart);
+                if (parenEnd < 0) return;
+
+                string paramString = code.Substring(parenStart + 1, parenEnd - parenStart - 1).Trim();
+                if (string.IsNullOrEmpty(paramString))
+                {
+                    return; // No parameters
+                }
+
+                // Parse parameters (simple approach: split by comma)
+                string[] paramsArray = paramString.Split(',');
+                foreach (string param in paramsArray)
+                {
+                    string trimmedParam = param.Trim();
+                    if (string.IsNullOrEmpty(trimmedParam))
+                    {
+                        continue;
+                    }
+
+                    // Extract parameter name and type
+                    string[] parts = trimmedParam.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                    if (parts.Length >= 2)
+                    {
+                        string paramType = parts[parts.Length - 2];
+                        string paramName = parts[parts.Length - 1];
+                        
+                        var paramSymbol = new OutlineSymbol
+                        {
+                            Name = paramName,
+                            Kind = "parameter",
+                            Detail = $"{paramType} {paramName}",
+                            LineNumber = symbol.LineNumber
+                        };
+                        symbol.Children.Add(paramSymbol);
+                    }
+                }
+            }
+            catch
+            {
+                // Ignore parameter extraction errors
+            }
+        }
+
+        /// <summary>
+        /// Finds the matching closing parenthesis for an opening parenthesis.
+        /// </summary>
+        private int FindMatchingParen(string code, int openParenIndex)
+        {
+            int depth = 1;
+            for (int i = openParenIndex + 1; i < code.Length; i++)
+            {
+                if (code[i] == '(')
+                {
+                    depth++;
+                }
+                else if (code[i] == ')')
+                {
+                    depth--;
+                    if (depth == 0)
+                    {
+                        return i;
+                    }
+                }
+            }
+            return -1; // Not found
+        }
+
+        /// <summary>
+        /// Creates a TreeViewItem from an OutlineSymbol.
+        /// </summary>
+        private TreeViewItem CreateOutlineItem(OutlineSymbol symbol)
+        {
+            string displayText = GetSymbolDisplayText(symbol);
+            
+            var item = new TreeViewItem
+            {
+                Header = displayText,
+                Tag = symbol
+            };
+
+            // Add children (parameters, etc.)
+            if (symbol.Children != null && symbol.Children.Count > 0)
+            {
+                var childItems = new List<TreeViewItem>();
+                foreach (var child in symbol.Children)
+                {
+                    var childItem = new TreeViewItem
+                    {
+                        Header = GetSymbolDisplayText(child),
+                        Tag = child
+                    };
+                    childItems.Add(childItem);
+                }
+                item.ItemsSource = childItems;
+            }
+
+            return item;
+        }
+
+        /// <summary>
+        /// Gets the display text for a symbol based on its kind.
+        /// </summary>
+        private string GetSymbolDisplayText(OutlineSymbol symbol)
+        {
+            switch (symbol.Kind)
+            {
+                case "function":
+                    return $"🔷 {symbol.Name}";
+                case "struct":
+                    return $"📦 {symbol.Name}";
+                case "variable":
+                    return $"🌐 {symbol.Name}";
+                case "parameter":
+                    return $"  📝 {symbol.Name}: {symbol.Detail}";
+                default:
+                    return symbol.Name;
+            }
+        }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:2663-2671
         // Original: def _update_breadcrumbs(self):
