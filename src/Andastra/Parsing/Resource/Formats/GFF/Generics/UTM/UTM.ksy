@@ -368,7 +368,7 @@ types:
     instances:
       data_trimmed:
         value: data.rstrip('\x00')
-        doc: String data with trailing nulls removed
+        doc: "String data with trailing nulls removed"
   
   # Field Indices Array (MultiMap)
   field_indices_array:
