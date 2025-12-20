@@ -13,11 +13,7 @@ namespace Andastra.Runtime.Games.Common.Journal
     /// - Base classes MUST only contain functionality that is identical across ALL engines
     /// - Engine-specific details MUST be in subclasses (OdysseyJournalSystem, AuroraJournalSystem, EclipseJournalSystem)
     /// 
-    /// Based on reverse engineering of:
-    /// - swkotor.exe: Quest processing (FUN_0059f5f0 @ 0x0059f5f0, "Quest" @ 0x0074a5dc, "QuestEntry" @ 0x0074a5d0)
-    /// - swkotor2.exe: Journal system ("JOURNAL" @ 0x007bdf44, "Quest" @ 0x007c35e4, "QuestEntry" @ 0x007c35d8)
-    /// - nwmain.exe: CNWSJournal, AddJournalEntry, GetJournal, ReloadJournalEntries ("Journal" @ 0x140dc9e38, "Quest" @ 0x140de6ff8, "QuestEntry" @ 0x140de7000)
-    /// - daorigins.exe: Quest system ("Quest" @ 0x00b0849c, "QuestCompleted" @ 0x00b0847c, "QuestName" @ 0x00b0849c, "QuestResRef" @ 0x00b084b0)
+    /// Based on reverse engineering of journal/quest systems across multiple BioWare engines.
     /// 
     /// Common functionality across engines:
     /// - Quest registration and lookup by tag

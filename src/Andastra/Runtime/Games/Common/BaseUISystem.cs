@@ -14,17 +14,10 @@ namespace Andastra.Runtime.Games.Common
     /// - Engine-specific subclasses implement engine-specific UI features
     ///
     /// Based on reverse engineering of UI systems across engines:
-    /// - Odyssey (swkotor.exe, swkotor2.exe): GUI panel-based UI system
-    ///   - swkotor2.exe: ShowUpgradeScreen @ 0x00680cb0 creates upgrade selection and upgrade items screens
-    ///   - GUI panels managed via GUI manager with screen stack
-    /// - Aurora (nwmain.exe): Scene-based GUI system
-    ///   - Multiple panel types: inventory, character sheet, dialogue, etc.
-    ///   - GUI message system for screen transitions
-    /// - Eclipse (daorigins.exe, DragonAge2.exe): Advanced UI system
-    ///   - Crafting screens, inventory management, character progression
-    ///   - Enhanced screen management with transitions
-    /// - Infinity (, ): Modern UI system
-    ///   - Cinematic overlays, dialogue system, inventory screens
+    /// - Odyssey: GUI panel-based UI system with screen stack
+    /// - Aurora: Scene-based GUI system with message-based transitions
+    /// - Eclipse: Advanced UI system with crafting and character progression screens
+    /// - Infinity: Modern UI system with cinematic overlays
     ///
     /// Common functionality across engines:
     /// - Screen visibility tracking

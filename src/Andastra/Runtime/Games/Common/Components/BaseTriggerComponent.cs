@@ -17,23 +17,7 @@ namespace Andastra.Runtime.Games.Common.Components
     /// - Common functionality: Geometry, IsEnabled, TriggerType, LinkedTo, LinkedToModule, IsTrap, TrapActive, TrapDetected, TrapDisarmed, TrapDetectDC, TrapDisarmDC, FireOnce, HasFired, ContainsPoint, ContainsEntity
     /// - Engine-specific: File format details, event handling, field names, transition systems, trap systems
     ///
-    /// Based on reverse engineering of:
-    /// - swkotor.exe: Trigger system with UTT template loading
-    /// - swkotor2.exe: Enhanced trigger system (FUN_004e5920 @ 0x004e5920)
-    ///   - Located via string references: "Trigger" @ 0x007bc51c, "TriggerList" @ 0x007bd254
-    ///   - "EVENT_ENTERED_TRIGGER" @ 0x007bce08, "EVENT_LEFT_TRIGGER" @ 0x007bcdf4
-    ///   - "OnTrapTriggered" @ 0x007c1a34, "CSWSSCRIPTEVENT_EVENTTYPE_ON_MINE_TRIGGERED" @ 0x007bc7ac
-    ///   - Transition fields: "LinkedTo" @ 0x007bd798, "LinkedToModule" @ 0x007bd7bc, "LinkedToFlags" @ 0x007bd788
-    ///   - "TransitionDestination" @ 0x007bd7a4
-    /// - nwmain.exe: Aurora trigger system using CNWSTrigger class
-    ///   - CNWSTrigger::LoadTrigger @ 0x1404c8a00, CNWSTrigger::SaveTrigger @ 0x1404c9b40
-    ///   - LoadTriggers @ 0x140362b20, SaveTriggers @ 0x1403680a0
-    ///   - Located via string reference: "Trigger List" @ 0x140ddb800
-    /// - daorigins.exe: Eclipse engine trigger system (CCTrigger class)
-    ///   - TriggerList @ 0x00af5040, CTrigger @ 0x00b0d4a0
-    ///   - COMMAND_GETTRIGGER* and COMMAND_SETTRIGGER* functions
-    /// - DragonAge2.exe: Enhanced Eclipse engine (similar to daorigins.exe)
-    /// - /:  (different trigger system, not fully reverse engineered)
+    /// Based on reverse engineering of trigger systems across multiple BioWare engines.
     ///
     /// Common structure across engines:
     /// - Geometry (IList&lt;Vector3&gt;): Polygon vertices defining trigger volume
@@ -68,8 +52,6 @@ namespace Andastra.Runtime.Games.Common.Components
         /// <remarks>
         /// Geometry Property:
         /// - Common across all engines: Polygon vertices defining trigger volume
-        /// - Based on swkotor2.exe: Geometry field in UTT template (FUN_004e5920 @ 0x004e5920)
-        /// - Based on nwmain.exe: Geometry field in CNWSTrigger (LoadTrigger @ 0x1404c8a00)
         /// - Engine-specific: Field names and storage may differ, but concept is common
         /// </remarks>
         protected List<Vector3> _vertices;

@@ -46,21 +46,9 @@ namespace Andastra.Runtime.Engines.Common
     ///    - Eclipse: Check for module package/rim file existence
     ///    - Infinity: Check for ARE file existence
     /// 
-    /// Ghidra Reverse Engineering Requirements:
-    /// - Odyssey: swkotor.exe, swkotor2.exe - Module loading functions, state flags, resource loading
-    ///   - swkotor2.exe: FUN_006caab0 @ 0x006caab0 (module loading command handler)
-    ///   - swkotor2.exe: String references "MODULES:" @ 0x007b58b4, "ModuleLoaded" @ 0x007bdd70, "ModuleRunning" @ 0x007bdd58
-    ///   - swkotor2.exe: FUN_00633270 @ 0x00633270 (directory alias setup)
-    /// - Aurora: nwmain.exe, nwn2main.exe - CNWSModule::LoadModule, module state management
-    ///   - nwmain.exe: CNWSModule::LoadModule (needs Ghidra address verification)
-    ///   - nwmain.exe: CServerExoApp::LoadModule (needs Ghidra address verification)
-    ///   - nwmain.exe: Module state flags and resource loading (needs Ghidra analysis)
-    /// - Eclipse: daorigins.exe, DragonAge2.exe, ,  - UnrealScript module loading
-    ///   - daorigins.exe: LoadModuleMessage handling (needs Ghidra address verification)
-    ///   - Eclipse: Module package loading and area streaming (needs Ghidra analysis)
-    /// - Infinity: .exe, .exe, .exe - ARE/WED/GAM loading
-    ///   - Infinity: Module loading functions (needs Ghidra address verification)
-    ///   - Infinity: ARE file parsing and entity spawning (needs Ghidra analysis)
+    /// Reverse Engineering Notes:
+    /// - Engine-specific implementations document executable-specific addresses and details.
+    /// - Base interface documents only common patterns across all engines.
     /// 
     /// Inheritance Structure:
     /// - BaseEngineModule (Runtime.Games.Common): Common module loading/unloading, state management, resource tracking

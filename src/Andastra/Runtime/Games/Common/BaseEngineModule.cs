@@ -36,37 +36,22 @@ namespace Andastra.Runtime.Engines.Common
     ///    - Module state synchronization with world state
     /// 
     /// Cross-Engine Analysis (Reverse Engineered Patterns):
-    /// - Odyssey (swkotor.exe, swkotor2.exe): IFO/LYT/VIS/GIT/ARE file formats, module state flags
-    ///   - swkotor2.exe: FUN_006caab0 @ 0x006caab0 (module loading command handler)
-    ///   - swkotor2.exe: String references "MODULES:" @ 0x007b58b4, "ModuleLoaded" @ 0x007bdd70, "ModuleRunning" @ 0x007bdd58
-    ///   - Module state flags: ModuleLoaded (bit 0x200), ModuleRunning (separate flag)
-    /// - Aurora (nwmain.exe, nwn2main.exe): Module.ifo format, area files, entity spawning
-    ///   - nwmain.exe: CNWSModule::LoadModule (needs Ghidra address verification)
-    ///   - nwmain.exe: CServerExoApp::LoadModule (needs Ghidra address verification)
-    ///   - Module state management similar to Odyssey with Aurora-specific file formats
-    /// - Eclipse (daorigins.exe, DragonAge2.exe, , ): UnrealScript-based module loading
-    ///   - daorigins.exe: LoadModuleMessage handling (needs Ghidra address verification)
-    ///   - Eclipse: Module package loading and area streaming (needs Ghidra analysis)
-    ///   - Different architecture (message-based) but similar state management patterns
-    /// - Infinity (.exe, .exe, .exe): ARE/WED/GAM file formats
-    ///   - Infinity: Module loading functions (needs Ghidra address verification)
-    ///   - Infinity: ARE file parsing and entity spawning (needs Ghidra analysis)
-    ///   - Simpler module system but follows same state management patterns
+    /// - Odyssey: IFO/LYT/VIS/GIT/ARE file formats, module state flags
+    /// - Aurora: Module.ifo format, area files, entity spawning
+    /// - Eclipse: UnrealScript-based module loading (message-based architecture)
+    /// - Infinity: ARE/WED/GAM file formats
+    /// Common patterns: Module state flags, loading sequences, entity spawning
     /// 
     /// Inheritance Structure:
     /// - BaseEngineModule (Runtime.Games.Common): Common module state management, unloading sequence, resource provider integration
     ///   - OdysseyModuleLoader : BaseEngineModule (Runtime.Games.Odyssey)
     ///     - Engine-specific: IFO/LYT/VIS/GIT/ARE file loading, Odyssey module state flags
-    ///     - Ghidra addresses: swkotor2.exe: FUN_006caab0 @ 0x006caab0, FUN_00633270 @ 0x00633270
     ///   - AuroraModuleLoader : BaseEngineModule (Runtime.Games.Aurora)
     ///     - Engine-specific: Module.ifo, HAK files, Aurora module formats
-    ///     - Ghidra addresses: nwmain.exe: CNWSModule::LoadModule (needs verification)
     ///   - EclipseModuleLoader : BaseEngineModule (Runtime.Games.Eclipse)
     ///     - Engine-specific: UnrealScript packages, .rim files, message-based loading
-    ///     - Ghidra addresses: daorigins.exe: LoadModuleMessage (needs verification)
     ///   - InfinityModuleLoader : BaseEngineModule (Runtime.Games.Infinity)
     ///     - Engine-specific: ARE/WED/GAM file formats, BIF archives
-    ///     - Ghidra addresses: Infinity executables (needs verification)
     /// 
     /// Ghidra Reverse Engineering Requirements:
     /// - Verify module state flag addresses and bit patterns across all engines

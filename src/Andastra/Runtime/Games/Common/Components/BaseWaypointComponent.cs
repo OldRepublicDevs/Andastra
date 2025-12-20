@@ -11,17 +11,7 @@ namespace Andastra.Runtime.Games.Common.Components
     /// - Common waypoint functionality shared across all engines
     /// - Base classes MUST only contain functionality that is identical across ALL engines
     /// - Engine-specific details MUST be in subclasses (if any differences exist)
-    /// - Cross-engine analysis:
-    ///   - Odyssey: swkotor.exe, swkotor2.exe
-    ///     - swkotor2.exe: FUN_004e08e0 @ 0x004e08e0 loads waypoint instances from GIT
-    ///     - String references: "WaypointList" @ 0x007bd288, "Waypoint" @ 0x007bc510, "STARTWAYPOINT" @ 0x007be034
-    ///     - "MapNote" @ 0x007bd10c, "MapNoteEnabled" @ 0x007bd118
-    ///   - Aurora: nwmain.exe
-    ///     - CNWSWaypoint constructor @ 0x140508d60, LoadWaypoint @ 0x140509f80, SaveWaypoint @ 0x14050a4d0
-    ///     - String references: "WaypointList" @ 0x140ddb7a0, "Tag" @ 0x140dca0f0, "LocalizedName", "MapNote", "MapNoteEnabled"
-    ///     - LoadWaypoint loads: Tag (CExoString at this+0x20), LocalizedName (CExoLocString at this+800), Position, Orientation, HasMapNote (bool at this+0x308), MapNoteEnabled (bool at this+0x30c), MapNote (CExoLocString at this+0x310)
-    ///   - Eclipse: daorigins.exe, DragonAge2.exe (waypoint system similar, needs verification)
-    ///   - Infinity: ,  (waypoint system similar, needs verification)
+    /// - Cross-engine analysis shows common waypoint component patterns across all engines.
     ///
     /// Common functionality across all engines:
     /// - Template resource reference: TemplateResRef identifies the UTW template used
