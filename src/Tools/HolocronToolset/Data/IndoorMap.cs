@@ -608,8 +608,108 @@ namespace HolocronToolset.Data
         private void GenerateAndSetMinimap()
         {
             var minimap = GenerateMipmap();
-            // TODO: Implement minimap TPC generation from QImage
-            // This requires image manipulation utilities
+            
+            // Extract pixel data from minimap image (matching Python lines 625-628)
+            // Python: for y, x in itertools.product(range(256), range(512)):
+            //         pixel: QColor = QColor(minimap.image.pixel(x, y))
+            //         tpc_data.extend([pixel.red(), pixel.green(), pixel.blue(), 255])
+            var tpcData = new List<byte>();
+            
+            // The minimap image is 512x256 (width x height)
+            // We need to extract pixels in row-major order (y, x) matching Python's itertools.product(range(256), range(512))
+            var bitmap = minimap.Image;
+            
+            // Check if bitmap is a WriteableBitmap (which it should be from GenerateMipmap)
+            if (bitmap is WriteableBitmap writeableBitmap)
+            {
+                using (var lockedBitmap = writeableBitmap.Lock())
+                {
+                    int width = lockedBitmap.Size.Width;  // Should be 512
+                    int height = lockedBitmap.Size.Height; // Should be 256
+                    
+                    unsafe
+                    {
+                        byte* pixelPtr = (byte*)lockedBitmap.Address;
+                        int rowStride = lockedBitmap.RowBytes;
+                        
+                        // Iterate in row-major order (y, x) matching Python: itertools.product(range(256), range(512))
+                        for (int y = 0; y < height; y++)
+                        {
+                            for (int x = 0; x < width; x++)
+                            {
+                                // Calculate pixel offset (RGBA format, 4 bytes per pixel)
+                                int pixelOffset = y * rowStride + x * 4;
+                                
+                                // Extract RGBA values (matching Python: [pixel.red(), pixel.green(), pixel.blue(), 255])
+                                byte r = pixelPtr[pixelOffset];
+                                byte g = pixelPtr[pixelOffset + 1];
+                                byte b = pixelPtr[pixelOffset + 2];
+                                byte a = pixelPtr[pixelOffset + 3];
+                                
+                                // Add to TPC data array (always use 255 for alpha as per Python implementation)
+                                tpcData.Add(r);
+                                tpcData.Add(g);
+                                tpcData.Add(b);
+                                tpcData.Add(255);
+                            }
+                        }
+                    }
+                }
+            }
+            else
+            {
+                // Fallback: if bitmap is not WriteableBitmap, convert it
+                // This shouldn't happen based on GenerateMipmap implementation, but handle it gracefully
+                var convertedBitmap = new WriteableBitmap(
+                    new PixelSize(bitmap.PixelSize.Width, bitmap.PixelSize.Height),
+                    new Vector(96, 96),
+                    PixelFormat.Rgba8888,
+                    AlphaFormat.Premul);
+                
+                using (var destContext = convertedBitmap.CreateDrawingContext())
+                {
+                    destContext.DrawImage(bitmap, new Rect(0, 0, bitmap.PixelSize.Width, bitmap.PixelSize.Height));
+                }
+                
+                using (var lockedBitmap = convertedBitmap.Lock())
+                {
+                    int width = lockedBitmap.Size.Width;
+                    int height = lockedBitmap.Size.Height;
+                    
+                    unsafe
+                    {
+                        byte* pixelPtr = (byte*)lockedBitmap.Address;
+                        int rowStride = lockedBitmap.RowBytes;
+                        
+                        for (int y = 0; y < height; y++)
+                        {
+                            for (int x = 0; x < width; x++)
+                            {
+                                int pixelOffset = y * rowStride + x * 4;
+                                byte r = pixelPtr[pixelOffset];
+                                byte g = pixelPtr[pixelOffset + 1];
+                                byte b = pixelPtr[pixelOffset + 2];
+                                
+                                tpcData.Add(r);
+                                tpcData.Add(g);
+                                tpcData.Add(b);
+                                tpcData.Add(255);
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // Create TPC from pixel data (matching Python lines 629-630)
+            // Python: minimap_tpc: TPC = TPC()
+            //         minimap_tpc.set_single(tpc_data, TPCTextureFormat.RGBA, 512, 256)
+            var minimapTpc = new TPC();
+            minimapTpc.SetSingle(tpcData.ToArray(), TPCTextureFormat.RGBA, 512, 256);
+            
+            // Convert TPC to TGA bytes and set in module (matching Python line 631)
+            // Python: self.mod.set_data(f"lbl_map{self.module_id}", ResourceType.TGA, bytes_tpc(minimap_tpc, ResourceType.TGA))
+            byte[] tgaData = TPCAuto.BytesTpc(minimapTpc, ResourceType.TGA);
+            _mod.SetData($"lbl_map{ModuleId}", ResourceType.TGA, tgaData);
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/indoormap.py:633-653
