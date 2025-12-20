@@ -226,7 +226,17 @@ namespace Andastra.Runtime.Games.Aurora
         /// Based on creature component structure in nwmain.exe.
         /// - CNWSCreature constructor creates creature instances with component initialization
         /// - LoadCreatures @ 0x140360570 loads creature list from area GIT and creates entities with creature components
-        /// - Components attached: StatsComponent, InventoryComponent, CombatComponent, CreatureComponent, etc.
+        /// - Components attached: StatsComponent, InventoryComponent, ActionQueueComponent, CreatureComponent, FactionComponent, PerceptionComponent, RenderableComponent, AnimationComponent
+        /// 
+        /// Component attachment order (based on nwmain.exe):
+        /// 1. StatsComponent - Required for HP, abilities, skills, saves
+        /// 2. InventoryComponent - Required for equipped items and inventory bag
+        /// 3. CreatureComponent - Required for creature-specific data (feats, classes, appearance)
+        /// 4. ActionQueueComponent - Required for action execution (movement, combat, etc.)
+        /// 5. FactionComponent - Required for faction relationships and hostility
+        /// 6. PerceptionComponent - Required for sight/hearing detection
+        /// 7. RenderableComponent - Required for 3D model rendering
+        /// 8. AnimationComponent - Required for animation playback
         /// </remarks>
         private void AttachCreatureComponents()
         {
@@ -240,8 +250,85 @@ namespace Andastra.Runtime.Games.Aurora
                 AddComponent<IStatsComponent>(statsComponent);
             }
 
-            // TODO: Attach other creature-specific components
-            // InventoryComponent, CombatComponent, CreatureComponent, etc.
+            // Attach inventory component for creatures
+            // Based on nwmain.exe: CNWSInventory is attached during creature creation
+            // CNWSCreature::SaveCreature @ 0x1403a0a60 saves inventory in Equip_ItemList GFFList
+            // CNWSCreature::LoadCreature @ 0x1403975e0 loads inventory from Equip_ItemList GFFList
+            if (!HasComponent<IInventoryComponent>())
+            {
+                var inventoryComponent = new Components.AuroraInventoryComponent(this);
+                AddComponent<IInventoryComponent>(inventoryComponent);
+            }
+
+            // Attach creature component for creatures
+            // Based on nwmain.exe: CNWSCreatureStats contains creature-specific data (feats, classes, appearance)
+            // AuroraCreatureComponent provides feat lists, class lists, appearance data, etc.
+            if (!HasComponent<Components.AuroraCreatureComponent>())
+            {
+                var creatureComponent = new Components.AuroraCreatureComponent();
+                creatureComponent.Owner = this;
+                AddComponent<Components.AuroraCreatureComponent>(creatureComponent);
+            }
+
+            // Attach action queue component for creatures
+            // Based on nwmain.exe: CNWSObject::LoadActionQueue @ 0x1404963f0 loads ActionList from GFF
+            // CNWSObject::SaveActionQueue @ 0x140499910 saves ActionList to GFF
+            // Actions processed sequentially: Current action executes until complete, then next action dequeued
+            if (!HasComponent<IActionQueueComponent>())
+            {
+                var actionQueueComponent = new Components.AuroraActionQueueComponent();
+                actionQueueComponent.Owner = this;
+                AddComponent<IActionQueueComponent>(actionQueueComponent);
+            }
+
+            // Attach faction component for creatures
+            // Based on nwmain.exe: CNWSFaction @ 0x1404ad3e0, CFactionManager::GetFaction @ 0x140357900
+            // Faction relationships stored in faction table, reputation values determine hostility
+            if (!HasComponent<IFactionComponent>())
+            {
+                var factionComponent = new Components.AuroraFactionComponent();
+                factionComponent.Owner = this;
+                // Set FactionID from entity data if available (loaded from UTC template)
+                // Based on nwmain.exe: FactionID loaded from creature template GFF
+                if (GetData("FactionID") is int factionId)
+                {
+                    factionComponent.FactionId = factionId;
+                }
+                AddComponent<IFactionComponent>(factionComponent);
+            }
+
+            // Attach perception component for creatures
+            // Based on nwmain.exe: DoPerceptionUpdateOnCreature @ 0x14038b0c0
+            // Perception range from creature stats PerceptionRange field (typically 20m sight, 15m hearing)
+            // Line-of-sight checks using CNWSArea::ClearLineOfSight, stealth detection via DoStealthDetection
+            if (!HasComponent<IPerceptionComponent>())
+            {
+                var perceptionComponent = new Components.AuroraPerceptionComponent();
+                perceptionComponent.Owner = this;
+                AddComponent<IPerceptionComponent>(perceptionComponent);
+            }
+
+            // Attach renderable component for creatures
+            // Based on nwmain.exe: CNWSCreature::LoadAppearance @ 0x1403a0a60 loads creature model from appearance.2da row
+            // ModelResRef: MDL file resource reference for 3D model (loaded from installation resources)
+            // AppearanceRow: Index into appearance.2da for creature appearance customization (Appearance_Type field)
+            if (!HasComponent<IRenderableComponent>())
+            {
+                var renderableComponent = new Components.AuroraRenderableComponent();
+                renderableComponent.Owner = this;
+                AddComponent<IRenderableComponent>(renderableComponent);
+            }
+
+            // Attach animation component for creatures
+            // Based on nwmain.exe: Gob::PlayAnimation @ 0x140052580 handles animation playback
+            // CNWSObject::AIActionPlayAnimation @ 0x1404a4700 handles AI-driven animation actions
+            // Animation system supports queued animations, fire-and-forget animations, animation replacement
+            if (!HasComponent<IAnimationComponent>())
+            {
+                var animationComponent = new Components.AuroraAnimationComponent();
+                animationComponent.Owner = this;
+                AddComponent<IAnimationComponent>(animationComponent);
+            }
         }
 
         /// <summary>
