@@ -4027,6 +4027,84 @@ namespace Andastra.Runtime.Game.Core
             _spriteBatch.End();
         }
 
+        /// <summary>
+        /// Initializes the options menu.
+        /// </summary>
+        private void InitializeOptionsMenu()
+        {
+            _optionsByCategory = Andastra.Runtime.Game.GUI.OptionsMenu.CreateDefaultOptions(_settings);
+            _selectedOptionsCategoryIndex = 0;
+            _selectedOptionsItemIndex = 0;
+            _isEditingOptionValue = false;
+            _editingOptionValue = string.Empty;
+        }
+
+        /// <summary>
+        /// Updates the options menu.
+        /// </summary>
+        private void UpdateOptionsMenu(float deltaTime, IKeyboardState keyboardState, IMouseState mouseState)
+        {
+            var inputManager = _graphicsBackend.InputManager;
+            var currentKeyboard = inputManager.KeyboardState;
+            var currentMouse = inputManager.MouseState;
+
+            Andastra.Runtime.Game.GUI.OptionsMenu.UpdateOptionsMenu(
+                deltaTime,
+                currentKeyboard,
+                _previousKeyboardState,
+                currentMouse,
+                _previousMouseState,
+                ref _selectedOptionsCategoryIndex,
+                ref _selectedOptionsItemIndex,
+                ref _isEditingOptionValue,
+                ref _editingOptionValue,
+                _settings,
+                _optionsByCategory,
+                (updatedSettings) =>
+                {
+                    // Settings applied - return to main menu
+                    Console.WriteLine("[Odyssey] Options applied, returning to main menu");
+                    _currentState = GameState.MainMenu;
+                },
+                () =>
+                {
+                    // Cancel - return to main menu without applying
+                    Console.WriteLine("[Odyssey] Options cancelled, returning to main menu");
+                    _currentState = GameState.MainMenu;
+                });
+
+            _previousKeyboardState = currentKeyboard;
+            _previousMouseState = currentMouse;
+        }
+
+        /// <summary>
+        /// Draws the options menu.
+        /// </summary>
+        private void DrawOptionsMenu()
+        {
+            if (_spriteBatch == null || _font == null || _menuTexture == null || _optionsByCategory == null)
+            {
+                _graphicsDevice.Clear(new Color(20, 20, 30, 255));
+                return;
+            }
+
+            int viewportWidth = _graphicsDevice.Viewport.Width;
+            int viewportHeight = _graphicsDevice.Viewport.Height;
+
+            Andastra.Runtime.Game.GUI.OptionsMenu.DrawOptionsMenu(
+                _spriteBatch,
+                _font,
+                _menuTexture,
+                _graphicsDevice,
+                viewportWidth,
+                viewportHeight,
+                _selectedOptionsCategoryIndex,
+                _selectedOptionsItemIndex,
+                _isEditingOptionValue,
+                _editingOptionValue,
+                _optionsByCategory);
+        }
+
         #region Movies Menu
 
         /// <summary>
