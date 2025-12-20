@@ -127,14 +127,63 @@ namespace Andastra.Runtime.Games.Aurora
         /// Based on Aurora tile-based walkmesh system.
         /// Checks tile validity and walkable surfaces within tiles.
         /// More complex than Odyssey due to tile boundaries.
+        /// 
+        /// Algorithm:
+        /// 1. Convert world coordinates to tile coordinates using GetTileCoordinates
+        /// 2. Validate tile is loaded and exists using IsTileValid
+        /// 3. Check if tile has walkable surfaces using IsWalkable property
+        /// 4. Handle boundary cases: points on tile edges check the containing tile
+        /// 
+        /// Based on reverse engineering of:
+        /// - nwmain.exe: CNWSArea::GetTile @ 0x14035edc0 - Converts world coordinates to tile coordinates
+        /// - nwmain.exe: CNWTile walkability checks - Tiles have walkable surface flags
+        /// - Tile size constant: DAT_140dc2df4 (10.0f units per tile)
+        /// - Tile validation: Checks if tile is loaded and has valid tile ID
+        /// - Walkability: Tiles with IsWalkable flag set to true are walkable
+        /// 
+        /// Note: Unlike Odyssey's face-based system, Aurora uses tile-based walkability.
+        /// Each tile represents a walkable surface area, and points are tested against
+        /// the containing tile's walkability flag.
         /// </remarks>
         public bool IsPointWalkable(Vector3 point)
         {
-            // TODO: Implement Aurora point testing
-            // Determine which tile contains the point
-            // Check walkability within that tile
-            // Handle tile boundary cases
-            throw new System.NotImplementedException("Aurora walkmesh point testing not yet implemented");
+            // Handle empty tile grid
+            if (_tileWidth <= 0 || _tileHeight <= 0 || _tiles == null || _tiles.Length == 0)
+            {
+                return false;
+            }
+
+            // Step 1: Convert world coordinates to tile coordinates
+            // Based on nwmain.exe: CNWSArea::GetTile @ 0x14035edc0
+            int tileX, tileY;
+            if (!GetTileCoordinates(point, out tileX, out tileY))
+            {
+                // Point is outside tile grid bounds - not walkable
+                return false;
+            }
+
+            // Step 2: Validate tile is loaded and exists
+            // Based on nwmain.exe: CNWSArea::GetTile validation checks
+            if (!IsTileValid(tileX, tileY))
+            {
+                // Tile is not valid (not loaded, out of bounds, or invalid tile ID) - not walkable
+                return false;
+            }
+
+            // Step 3: Get tile and check walkability
+            // Based on nwmain.exe: CNWTile walkability checks
+            AuroraTile tile = _tiles[tileY, tileX];
+
+            // Tile must be loaded to be walkable
+            if (!tile.IsLoaded)
+            {
+                return false;
+            }
+
+            // Step 4: Check if tile has walkable surfaces
+            // Based on nwmain.exe: Tile walkability flag checks
+            // Tiles with IsWalkable set to true have walkable surfaces
+            return tile.IsWalkable;
         }
 
         /// <summary>
