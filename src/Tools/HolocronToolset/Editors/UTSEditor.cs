@@ -84,7 +84,7 @@ namespace HolocronToolset.Editors
         private NumericUpDown _eastRandomSpin;
 
         // UI Controls - Comments
-        private TextBlock _commentsEdit;
+        private TextBox _commentsEdit;
 
         // Sound playback - Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uts.py:55-56
         // Original: self.player = QMediaPlayer(self), self.buffer = QBuffer(self)
