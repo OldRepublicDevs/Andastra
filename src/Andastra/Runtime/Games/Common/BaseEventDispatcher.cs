@@ -82,11 +82,15 @@ namespace Andastra.Runtime.Games.Common
         /// <summary>
         /// Handles combat-related events.
         /// </summary>
+        /// <param name="entity">The entity receiving the combat event.</param>
+        /// <param name="eventType">The combat event type (EVENT_ON_MELEE_ATTACKED, EVENT_DESTROY_OBJECT, etc.).</param>
+        /// <param name="sourceEntity">The entity that triggered the combat event (attacker, damager, etc.). May be null if not available.</param>
         /// <remarks>
         /// ON_DAMAGED (4), ON_DEATH (10), ON_ATTACKED (0xf), etc.
         /// Triggers combat scripts and AI behaviors.
+        /// Based on swkotor2.exe: DispatchEvent @ 0x004dcfb0 handles combat events by firing appropriate script events.
         /// </remarks>
-        protected abstract void HandleCombatEvent(IEntity entity, int eventType);
+        protected abstract void HandleCombatEvent(IEntity entity, int eventType, IEntity sourceEntity = null);
 
         /// <summary>
         /// Handles script hook events.
