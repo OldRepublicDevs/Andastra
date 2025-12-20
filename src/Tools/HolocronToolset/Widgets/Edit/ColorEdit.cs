@@ -1,8 +1,11 @@
 using System;
+using System.Threading.Tasks;
 using Avalonia.Controls;
+using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using Avalonia.Media;
 using Andastra.Parsing.Common;
+using HolocronToolset.Dialogs;
 using KotorColor = Andastra.Parsing.Common.Color;
 
 namespace HolocronToolset.Widgets.Edit
@@ -100,11 +103,78 @@ namespace HolocronToolset.Widgets.Edit
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/edit/color.py:23-37
         // Original: def open_color_dialog(self):
-        private void OpenColorDialog()
+        private async void OpenColorDialog()
         {
-            // TODO: Implement color dialog when Avalonia color picker is available
-            // For now, just update the color
-            System.Console.WriteLine("Color dialog not yet implemented");
+            // Matching PyKotor: init_color: Color = Color.from_rgba_integer(self.ui.colorSpin.value())
+            KotorColor initColor = KotorColor.FromRgbaInteger((int)(_colorSpin?.Value ?? 0));
+
+            // Matching PyKotor: init_qcolor: QColor = QColor(int(init_color.r * 255), int(init_color.g * 255), int(init_color.b * 255), int(init_color.a * 255))
+            // Convert KotorColor (0.0-1.0 float) to Avalonia Color (0-255 byte)
+            Avalonia.Media.Color initAvaloniaColor = Avalonia.Media.Color.FromArgb(
+                (byte)(initColor.A * 255),
+                (byte)(initColor.R * 255),
+                (byte)(initColor.G * 255),
+                (byte)(initColor.B * 255)
+            );
+
+            // Get parent window for dialog
+            Window parentWindow = null;
+            Control current = this;
+            while (current != null)
+            {
+                if (current is Window window)
+                {
+                    parentWindow = window;
+                    break;
+                }
+                current = current.Parent;
+            }
+
+            // If no parent found, try to get main window
+            if (parentWindow == null && Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+            {
+                parentWindow = desktop.MainWindow;
+            }
+
+            // Matching PyKotor: dialog: QColorDialog = QColorDialog(QColor(...))
+            // Matching PyKotor: dialog.setOption(QColorDialog.ColorDialogOption.ShowAlphaChannel, on=self.allow_alpha)
+            var dialog = new ColorPickerDialog(parentWindow, initAvaloniaColor, _allowAlpha);
+
+            // Matching PyKotor: if dialog.exec():
+            bool result = await dialog.ShowDialogAsync(parentWindow);
+            if (result)
+            {
+                // Matching PyKotor: qcolor = dialog.selectedColor()
+                Avalonia.Media.Color selectedAvaloniaColor = dialog.GetSelectedColor();
+
+                // Matching PyKotor: color: Color = Color(qcolor.redF(), qcolor.greenF(), qcolor.blueF())
+                // Create KotorColor with RGB from Avalonia Color (alpha defaults to 1.0, matching PyKotor behavior)
+                KotorColor selectedColor = new KotorColor(
+                    selectedAvaloniaColor.R / 255f,
+                    selectedAvaloniaColor.G / 255f,
+                    selectedAvaloniaColor.B / 255f
+                );
+
+                // Matching PyKotor: if self.allow_alpha:
+                //     self.ui.colorSpin.setValue(color.rgb_integer() + (qcolor.alpha() << 24))
+                // else:
+                //     self.ui.colorSpin.setValue(color.rgb_integer())
+                if (_allowAlpha)
+                {
+                    if (_colorSpin != null)
+                    {
+                        // Add alpha channel from Avalonia Color manually (matching PyKotor: qcolor.alpha() << 24)
+                        _colorSpin.Value = selectedColor.ToRgbInteger() + (selectedAvaloniaColor.A << 24);
+                    }
+                }
+                else
+                {
+                    if (_colorSpin != null)
+                    {
+                        _colorSpin.Value = selectedColor.ToRgbInteger();
+                    }
+                }
+            }
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/edit/color.py:39-50
