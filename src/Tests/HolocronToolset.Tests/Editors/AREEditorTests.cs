@@ -1817,14 +1817,86 @@ namespace HolocronToolset.Tests.Editors
             throw new NotImplementedException("TestAreEditorManipulateWeatherCheckboxes: Weather checkbox manipulation tests not yet implemented (TSL-only features)");
         }
 
-        // TODO: STUB - Implement test_are_editor_manipulate_shadows_checkbox (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:654-675)
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:654-675
         // Original: def test_are_editor_manipulate_shadows_checkbox(qtbot: QtBot, installation: HTInstallation, test_files_dir: Path): Test manipulating shadows checkbox.
         [Fact]
         public void TestAreEditorManipulateShadowsCheckbox()
         {
-            // TODO: STUB - Implement shadows checkbox manipulation test
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:654-675
-            throw new NotImplementedException("TestAreEditorManipulateShadowsCheckbox: Shadows checkbox manipulation test not yet implemented");
+            string k1Path = Environment.GetEnvironmentVariable("K1_PATH");
+            if (string.IsNullOrEmpty(k1Path))
+            {
+                k1Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k1Path) && System.IO.File.Exists(System.IO.Path.Combine(k1Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k1Path, "Test Installation", tsl: false);
+            }
+
+            if (installation == null)
+            {
+                return; // Skip if no installation available
+            }
+
+            string testFilesDir = System.IO.Path.Combine(
+                System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+
+            string areFile = System.IO.Path.Combine(testFilesDir, "tat001.are");
+            if (!System.IO.File.Exists(areFile))
+            {
+                testFilesDir = System.IO.Path.Combine(
+                    System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                    "..", "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+                areFile = System.IO.Path.Combine(testFilesDir, "tat001.are");
+            }
+
+            if (!System.IO.File.Exists(areFile))
+            {
+                return; // Skip if test file not available
+            }
+
+            // Matching Python: editor = AREEditor(None, installation)
+            var editor = new AREEditor(null, installation);
+
+            // Matching Python: original_data = are_file.read_bytes()
+            byte[] originalData = System.IO.File.ReadAllBytes(areFile);
+
+            // Matching Python: editor.load(are_file, "tat001", ResourceType.ARE, original_data)
+            editor.Load(areFile, "tat001", ResourceType.ARE, originalData);
+
+            // Matching Python: editor.ui.shadowsCheck.setChecked(True)
+            if (editor.ShadowsCheck != null)
+            {
+                editor.ShadowsCheck.IsChecked = true;
+            }
+
+            // Matching Python: data, _ = editor.build()
+            var (data, _) = editor.Build();
+
+            // Matching Python: modified_are = read_are(data)
+            var modifiedAre = AREHelpers.ReadAre(data);
+
+            // Matching Python: assert modified_are.shadows
+            // Note: Shadows are enabled when ShadowOpacity > 0
+            modifiedAre.ShadowOpacity.Should().BeGreaterThan(0);
+
+            // Matching Python: editor.ui.shadowsCheck.setChecked(False)
+            if (editor.ShadowsCheck != null)
+            {
+                editor.ShadowsCheck.IsChecked = false;
+            }
+
+            // Matching Python: data, _ = editor.build()
+            var (data2, _) = editor.Build();
+
+            // Matching Python: modified_are = read_are(data)
+            var modifiedAre2 = AREHelpers.ReadAre(data2);
+
+            // Matching Python: assert not modified_are.shadows
+            // Note: Shadows are disabled when ShadowOpacity == 0
+            modifiedAre2.ShadowOpacity.Should().Be(0);
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:677-697
@@ -2344,14 +2416,69 @@ namespace HolocronToolset.Tests.Editors
             throw new NotImplementedException("TestAreEditorManipulateOnHeartbeatScript: On heartbeat script manipulation test not yet implemented");
         }
 
-        // TODO: STUB - Implement test_are_editor_manipulate_on_user_defined_script (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:1015-1033)
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:1015-1033
         // Original: def test_are_editor_manipulate_on_user_defined_script(qtbot: QtBot, installation: HTInstallation, test_files_dir: Path): Test manipulating on user defined script field.
         [Fact]
         public void TestAreEditorManipulateOnUserDefinedScript()
         {
-            // TODO: STUB - Implement on user defined script field manipulation test
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:1015-1033
-            throw new NotImplementedException("TestAreEditorManipulateOnUserDefinedScript: On user defined script manipulation test not yet implemented");
+            string k1Path = Environment.GetEnvironmentVariable("K1_PATH");
+            if (string.IsNullOrEmpty(k1Path))
+            {
+                k1Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k1Path) && System.IO.File.Exists(System.IO.Path.Combine(k1Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k1Path, "Test Installation", tsl: false);
+            }
+
+            if (installation == null)
+            {
+                return; // Skip if no installation available
+            }
+
+            string testFilesDir = System.IO.Path.Combine(
+                System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+
+            string areFile = System.IO.Path.Combine(testFilesDir, "tat001.are");
+            if (!System.IO.File.Exists(areFile))
+            {
+                testFilesDir = System.IO.Path.Combine(
+                    System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                    "..", "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+                areFile = System.IO.Path.Combine(testFilesDir, "tat001.are");
+            }
+
+            if (!System.IO.File.Exists(areFile))
+            {
+                return; // Skip if test file not available
+            }
+
+            // Matching Python: editor = AREEditor(None, installation)
+            var editor = new AREEditor(null, installation);
+
+            // Matching Python: original_data = are_file.read_bytes()
+            byte[] originalData = System.IO.File.ReadAllBytes(areFile);
+
+            // Matching Python: editor.load(are_file, "tat001", ResourceType.ARE, original_data)
+            editor.Load(areFile, "tat001", ResourceType.ARE, originalData);
+
+            // Matching Python: editor.ui.onUserDefinedSelect.set_combo_box_text("test_on_user")
+            if (editor.OnUserDefinedSelect != null)
+            {
+                editor.OnUserDefinedSelect.Text = "test_on_user";
+            }
+
+            // Matching Python: data, _ = editor.build()
+            var (data, _) = editor.Build();
+
+            // Matching Python: modified_are = read_are(data)
+            var modifiedAre = AREHelpers.ReadAre(data);
+
+            // Matching Python: assert str(modified_are.on_user_defined) == "test_on_user"
+            modifiedAre.OnUserDefined.ToString().Should().Be("test_on_user");
         }
 
         // TODO: STUB - Implement test_are_editor_manipulate_comments (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:1039-1070)
@@ -2364,14 +2491,163 @@ namespace HolocronToolset.Tests.Editors
             throw new NotImplementedException("TestAreEditorManipulateComments: Comments field manipulation test not yet implemented");
         }
 
-        // TODO: STUB - Implement test_are_editor_manipulate_all_basic_fields_combination (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:1076-1113)
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:1076-1113
         // Original: def test_are_editor_manipulate_all_basic_fields_combination(qtbot: QtBot, installation: HTInstallation, test_files_dir: Path): Test manipulating all basic fields simultaneously.
         [Fact]
         public void TestAreEditorManipulateAllBasicFieldsCombination()
         {
-            // TODO: STUB - Implement combination test for all basic fields manipulated simultaneously
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:1076-1113
-            throw new NotImplementedException("TestAreEditorManipulateAllBasicFieldsCombination: All basic fields combination test not yet implemented");
+            // Get installation if available
+            string k1Path = Environment.GetEnvironmentVariable("K1_PATH");
+            if (string.IsNullOrEmpty(k1Path))
+            {
+                k1Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k1Path) && System.IO.File.Exists(System.IO.Path.Combine(k1Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k1Path, "Test Installation", tsl: false);
+            }
+
+            if (installation == null)
+            {
+                return; // Skip if no installation available
+            }
+
+            // Get test files directory
+            string testFilesDir = System.IO.Path.Combine(
+                System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+
+            string areFile = System.IO.Path.Combine(testFilesDir, "tat001.are");
+            if (!System.IO.File.Exists(areFile))
+            {
+                testFilesDir = System.IO.Path.Combine(
+                    System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                    "..", "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+                areFile = System.IO.Path.Combine(testFilesDir, "tat001.are");
+            }
+
+            if (!System.IO.File.Exists(areFile))
+            {
+                return; // Skip if test file not available
+            }
+
+            // Matching Python: editor = AREEditor(None, installation)
+            var editor = new AREEditor(null, installation);
+
+            // Matching Python: are_file = test_files_dir / "tat001.are"
+            // Matching Python: original_data = are_file.read_bytes()
+            byte[] originalData = System.IO.File.ReadAllBytes(areFile);
+
+            // Matching Python: editor.load(are_file, "tat001", ResourceType.ARE, original_data)
+            editor.Load(areFile, "tat001", ResourceType.ARE, originalData);
+
+            // Matching Python: Modify ALL basic fields
+            // Matching Python: editor.ui.nameEdit.set_locstring(LocalizedString.from_english("Combined Test Area"))
+            if (editor.NameEdit != null)
+            {
+                editor.NameEdit.SetLocString(LocalizedString.FromEnglish("Combined Test Area"));
+            }
+
+            // Matching Python: editor.ui.tagEdit.setText("combined_test")
+            if (editor.TagEdit != null)
+            {
+                editor.TagEdit.Text = "combined_test";
+            }
+
+            // Matching Python: if editor.ui.cameraStyleSelect.count() > 0: editor.ui.cameraStyleSelect.setCurrentIndex(1)
+            if (editor.CameraStyleSelect != null && editor.CameraStyleSelect.ItemCount > 0)
+            {
+                editor.CameraStyleSelect.SelectedIndex = 1;
+            }
+
+            // Matching Python: editor.ui.envmapEdit.setText("test_envmap")
+            if (editor.EnvmapEdit != null)
+            {
+                editor.EnvmapEdit.Text = "test_envmap";
+            }
+
+            // Matching Python: editor.ui.disableTransitCheck.setChecked(True)
+            if (editor.DisableTransitCheck != null)
+            {
+                editor.DisableTransitCheck.IsChecked = true;
+            }
+
+            // Matching Python: editor.ui.unescapableCheck.setChecked(True)
+            if (editor.UnescapableCheck != null)
+            {
+                editor.UnescapableCheck.IsChecked = true;
+            }
+
+            // Matching Python: editor.ui.alphaTestSpin.setValue(128)
+            // Note: In Python, the value is 128 (0-255 range), but in C# the NumericUpDown uses decimal
+            // The ARE format stores alpha_test as a float (0.0-1.0), so 128/255 = 0.502
+            if (editor.AlphaTestSpin != null)
+            {
+                editor.AlphaTestSpin.Value = 128;
+            }
+
+            // Matching Python: editor.ui.stealthCheck.setChecked(True)
+            if (editor.StealthCheck != null)
+            {
+                editor.StealthCheck.IsChecked = true;
+            }
+
+            // Matching Python: editor.ui.stealthMaxSpin.setValue(500)
+            if (editor.StealthMaxSpin != null)
+            {
+                editor.StealthMaxSpin.Value = 500;
+            }
+
+            // Matching Python: editor.ui.stealthLossSpin.setValue(25)
+            if (editor.StealthLossSpin != null)
+            {
+                editor.StealthLossSpin.Value = 25;
+            }
+
+            // Matching Python: Save and verify all
+            // Matching Python: data, _ = editor.build()
+            var (data, _) = editor.Build();
+
+            // Matching Python: modified_are = read_are(data)
+            var modifiedAre = AREHelpers.ReadAre(data);
+
+            // Matching Python: assert modified_are.name.get(Language.ENGLISH, Gender.MALE) == "Combined Test Area"
+            modifiedAre.Name.Get(Language.English, Gender.Male).Should().Be("Combined Test Area");
+
+            // Matching Python: assert modified_are.tag == "combined_test"
+            modifiedAre.Tag.Should().Be("combined_test");
+
+            // Matching Python: assert modified_are.default_envmap == ResRef("test_envmap")
+            modifiedAre.DefaultEnvMap.ToString().Should().Be("test_envmap");
+
+            // Matching Python: assert modified_are.disable_transit
+            modifiedAre.DisableTransit.Should().BeTrue();
+
+            // Matching Python: assert modified_are.unescapable
+            modifiedAre.Unescapable.Should().BeTrue();
+
+            // Matching Python: assert modified_are.alpha_test == 128
+            // The editor directly assigns the NumericUpDown value to ARE.AlphaTest without conversion
+            // So setting 128 stores 128.0f in the ARE file
+            modifiedAre.AlphaTest.Should().BeApproximately(128.0f, 0.001f);
+
+            // Matching Python: assert modified_are.stealth_xp
+            modifiedAre.StealthXp.Should().BeTrue();
+
+            // Matching Python: assert modified_are.stealth_xp_max == 500
+            modifiedAre.StealthXpMax.Should().Be(500);
+
+            // Matching Python: assert modified_are.stealth_xp_loss == 25
+            modifiedAre.StealthXpLoss.Should().Be(25);
+
+            // Verify camera style if it was set
+            if (editor.CameraStyleSelect != null && editor.CameraStyleSelect.ItemCount > 0)
+            {
+                // Matching Python: assert modified_are.camera_style == 1 (implicitly verified by setting SelectedIndex = 1)
+                modifiedAre.CameraStyle.Should().Be(1);
+            }
         }
 
         // TODO: STUB - Implement test_are_editor_manipulate_all_weather_fields_combination (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:1115-1163)
@@ -2548,14 +2824,107 @@ namespace HolocronToolset.Tests.Editors
             savedAre2.Comment.Should().Be(savedAre1.Comment);
         }
 
-        // TODO: STUB - Implement test_are_editor_multiple_save_load_cycles (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:1290-1321)
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:1290-1321
         // Original: def test_are_editor_multiple_save_load_cycles(qtbot: QtBot, installation: HTInstallation, test_files_dir: Path): Test multiple save/load cycles preserve data correctly.
         [Fact]
         public void TestAreEditorMultipleSaveLoadCycles()
         {
-            // TODO: STUB - Implement multiple save/load cycles test (5 cycles with different modifications each time)
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:1290-1321
-            throw new NotImplementedException("TestAreEditorMultipleSaveLoadCycles: Multiple save/load cycles test not yet implemented");
+            // Get K1 installation path
+            string k1Path = Environment.GetEnvironmentVariable("K1_PATH");
+            if (string.IsNullOrEmpty(k1Path))
+            {
+                k1Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k1Path) && System.IO.File.Exists(System.IO.Path.Combine(k1Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k1Path, "Test Installation", tsl: false);
+            }
+
+            if (installation == null)
+            {
+                return; // Skip if no installation available
+            }
+
+            // Get test files directory
+            string testFilesDir = System.IO.Path.Combine(
+                System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+
+            string areFile = System.IO.Path.Combine(testFilesDir, "tat001.are");
+            if (!System.IO.File.Exists(areFile))
+            {
+                testFilesDir = System.IO.Path.Combine(
+                    System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                    "..", "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+                areFile = System.IO.Path.Combine(testFilesDir, "tat001.are");
+            }
+
+            if (!System.IO.File.Exists(areFile))
+            {
+                return; // Skip if test file not available
+            }
+
+            // Matching Python: editor = AREEditor(None, installation)
+            var editor = new AREEditor(null, installation);
+
+            // Matching Python: original_data = are_file.read_bytes()
+            byte[] originalData = System.IO.File.ReadAllBytes(areFile);
+
+            // Matching Python: editor.load(are_file, "tat001", ResourceType.ARE, original_data)
+            editor.Load(areFile, "tat001", ResourceType.ARE, originalData);
+
+            // Matching Python: Perform multiple cycles
+            // Matching Python: for cycle in range(5):
+            for (int cycle = 0; cycle < 5; cycle++)
+            {
+                // Matching Python: Modify
+                // Matching Python: editor.ui.tagEdit.setText(f"cycle_{cycle}")
+                if (editor.TagEdit != null)
+                {
+                    editor.TagEdit.Text = $"cycle_{cycle}";
+                }
+
+                // Matching Python: editor.ui.alphaTestSpin.setValue(50 + cycle * 10)
+                // Values will be: 50, 60, 70, 80, 90
+                if (editor.AlphaTestSpin != null)
+                {
+                    editor.AlphaTestSpin.Value = 50 + cycle * 10;
+                }
+
+                // Matching Python: Save
+                // Matching Python: data, _ = editor.build()
+                var (data, _) = editor.Build();
+
+                // Matching Python: saved_are = read_are(data)
+                var savedAre = AREHelpers.ReadAre(data);
+
+                // Matching Python: Verify
+                // Matching Python: assert saved_are.tag == f"cycle_{cycle}"
+                savedAre.Tag.Should().Be($"cycle_{cycle}");
+
+                // Matching Python: assert saved_are.alpha_test == 50 + cycle * 10
+                // Using approximate comparison for float values
+                savedAre.AlphaTest.Should().BeApproximately(50.0f + cycle * 10.0f, 0.001f);
+
+                // Matching Python: Load back
+                // Matching Python: editor.load(are_file, "tat001", ResourceType.ARE, data)
+                editor.Load(areFile, "tat001", ResourceType.ARE, data);
+
+                // Matching Python: Verify loaded
+                // Matching Python: assert editor.ui.tagEdit.text() == f"cycle_{cycle}"
+                if (editor.TagEdit != null)
+                {
+                    editor.TagEdit.Text.Should().Be($"cycle_{cycle}");
+                }
+
+                // Matching Python: assert editor.ui.alphaTestSpin.value() == 50 + cycle * 10
+                if (editor.AlphaTestSpin != null && editor.AlphaTestSpin.Value.HasValue)
+                {
+                    ((float)editor.AlphaTestSpin.Value.Value).Should().BeApproximately(50.0f + cycle * 10.0f, 0.001f);
+                }
+            }
         }
 
         // TODO: STUB - Implement test_are_editor_minimum_values (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:1327-1364)
@@ -2588,14 +2957,135 @@ namespace HolocronToolset.Tests.Editors
             throw new NotImplementedException("TestAreEditorEmptyStrings: Empty strings edge case test not yet implemented");
         }
 
-        // TODO: STUB - Implement test_are_editor_special_characters_in_text_fields (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:1434-1458)
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:1434-1458
         // Original: def test_are_editor_special_characters_in_text_fields(qtbot: QtBot, installation: HTInstallation, test_files_dir: Path): Test handling of special characters in text fields.
         [Fact]
         public void TestAreEditorSpecialCharactersInTextFields()
         {
-            // TODO: STUB - Implement special characters edge case test (newlines, tabs, etc. in text fields)
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:1434-1458
-            throw new NotImplementedException("TestAreEditorSpecialCharactersInTextFields: Special characters edge case test not yet implemented");
+            // Get test files directory
+            string testFilesDir = System.IO.Path.Combine(
+                System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+
+            string areFile = System.IO.Path.Combine(testFilesDir, "tat001.are");
+            if (!System.IO.File.Exists(areFile))
+            {
+                testFilesDir = System.IO.Path.Combine(
+                    System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                    "..", "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+                areFile = System.IO.Path.Combine(testFilesDir, "tat001.are");
+            }
+
+            if (!System.IO.File.Exists(areFile))
+            {
+                return; // Skip if test file not available (matching Python pytest.skip behavior)
+            }
+
+            // Get installation if available
+            string k1Path = Environment.GetEnvironmentVariable("K1_PATH");
+            if (string.IsNullOrEmpty(k1Path))
+            {
+                k1Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k1Path) && System.IO.File.Exists(System.IO.Path.Combine(k1Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k1Path, "Test Installation", tsl: false);
+            }
+
+            // Matching Python: editor = AREEditor(None, installation)
+            var editor = new AREEditor(null, installation);
+
+            // Matching Python: original_data = are_file.read_bytes()
+            byte[] originalData = System.IO.File.ReadAllBytes(areFile);
+
+            // Matching Python: editor.load(are_file, "tat001", ResourceType.ARE, original_data)
+            editor.Load(areFile, "tat001", ResourceType.ARE, originalData);
+
+            // Test comprehensive special characters in all text fields
+            // Matching Python: special_tag = "test_tag_123"
+            // Expanding to test more special characters comprehensively
+            string specialTag = "test_tag_123\nwith\ttabs\r\nand\rcarriage\nreturns";
+            if (editor.TagEdit != null)
+            {
+                editor.TagEdit.Text = specialTag;
+            }
+
+            // Matching Python: special_comment = "Comment with\nnewlines\tand\ttabs"
+            // Expanding to test comprehensive special characters
+            string specialComment = "Comment with\nnewlines\tand\ttabs\r\nand\r\ncarriage returns\u0000null\u0001control\u00A0non-breaking space\u200Bzero-width space\uFEFFBOM";
+            if (editor.CommentsEdit != null)
+            {
+                editor.CommentsEdit.Text = specialComment;
+            }
+
+            // Test special characters in envmap field (ResRef field, but should handle special chars)
+            string specialEnvmap = "envmap_test\nwith\tnewlines";
+            if (editor.EnvmapEdit != null)
+            {
+                editor.EnvmapEdit.Text = specialEnvmap;
+            }
+
+            // Test special characters in grass texture field (ResRef field)
+            string specialGrassTexture = "grass_tex\nwith\tspecial";
+            if (editor.GrassTextureEdit != null)
+            {
+                editor.GrassTextureEdit.Text = specialGrassTexture;
+            }
+
+            // Matching Python: Save and verify
+            // Matching Python: data, _ = editor.build()
+            var (data, _) = editor.Build();
+
+            // Matching Python: modified_are = read_are(data)
+            var modifiedAre = AREHelpers.ReadAre(data);
+
+            // Matching Python: assert modified_are.tag == special_tag
+            modifiedAre.Tag.Should().Be(specialTag, "Tag field should preserve special characters exactly");
+
+            // Matching Python: assert modified_are.comment == special_comment
+            modifiedAre.Comment.Should().Be(specialComment, "Comment field should preserve special characters exactly");
+
+            // Verify envmap field preserves special characters
+            modifiedAre.DefaultEnvMap.ToString().Should().Be(specialEnvmap, "Envmap field should preserve special characters exactly");
+
+            // Verify grass texture field preserves special characters
+            modifiedAre.GrassTexture.ToString().Should().Be(specialGrassTexture, "Grass texture field should preserve special characters exactly");
+
+            // Additional comprehensive verification: Load back into editor and verify UI fields
+            // Matching Python behavior: Load the saved data back into editor
+            editor.Load(areFile, "tat001", ResourceType.ARE, data);
+
+            // Verify UI fields show the special characters correctly
+            if (editor.TagEdit != null)
+            {
+                editor.TagEdit.Text.Should().Be(specialTag, "TagEdit should display special characters correctly after load");
+            }
+
+            if (editor.CommentsEdit != null)
+            {
+                editor.CommentsEdit.Text.Should().Be(specialComment, "CommentsEdit should display special characters correctly after load");
+            }
+
+            if (editor.EnvmapEdit != null)
+            {
+                editor.EnvmapEdit.Text.Should().Be(specialEnvmap, "EnvmapEdit should display special characters correctly after load");
+            }
+
+            if (editor.GrassTextureEdit != null)
+            {
+                editor.GrassTextureEdit.Text.Should().Be(specialGrassTexture, "GrassTextureEdit should display special characters correctly after load");
+            }
+
+            // Final roundtrip verification: Save again and verify data is still correct
+            var (data2, _) = editor.Build();
+            var modifiedAre2 = AREHelpers.ReadAre(data2);
+
+            modifiedAre2.Tag.Should().Be(specialTag, "Tag should be preserved through multiple roundtrips");
+            modifiedAre2.Comment.Should().Be(specialComment, "Comment should be preserved through multiple roundtrips");
+            modifiedAre2.DefaultEnvMap.ToString().Should().Be(specialEnvmap, "Envmap should be preserved through multiple roundtrips");
+            modifiedAre2.GrassTexture.ToString().Should().Be(specialGrassTexture, "Grass texture should be preserved through multiple roundtrips");
         }
 
         // TODO: STUB - Implement test_are_editor_gff_roundtrip_comparison (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:1464-1497)
@@ -2694,14 +3184,26 @@ namespace HolocronToolset.Tests.Editors
             modifiedAre.FogEnabled.Should().BeTrue();
         }
 
-        // TODO: STUB - Implement test_are_editor_new_file_all_defaults (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:1562-1578)
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:1562-1578
         // Original: def test_are_editor_new_file_all_defaults(qtbot: QtBot, installation: HTInstallation): Test new file has correct defaults.
         [Fact]
         public void TestAreEditorNewFileAllDefaults()
         {
-            // TODO: STUB - Implement new file defaults test (verifies correct defaults for new ARE file)
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:1562-1578
-            throw new NotImplementedException("TestAreEditorNewFileAllDefaults: New file defaults test not yet implemented");
+            // Create new AREEditor (installation can be null for new file creation)
+            var editor = new AREEditor(null, null);
+
+            // Create new file
+            editor.New();
+
+            // Build and verify defaults
+            var (data, _) = editor.Build();
+            var newAre = Andastra.Parsing.Resource.Generics.ARE.AREHelpers.ReadAre(data);
+
+            // Verify defaults (may vary, but should be consistent)
+            newAre.Tag.Should().BeOfType(typeof(string));
+            newAre.CameraStyle.Should().BeOfType(typeof(int));
+            // alpha_test is stored as float in ARE class, but should be numeric
+            (newAre.AlphaTest is int || newAre.AlphaTest is float).Should().BeTrue();
         }
 
         // TODO: STUB - Implement test_are_editor_minimap_redo_on_map_axis_change (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_are_editor.py:1584-1600)
@@ -2903,7 +3405,7 @@ namespace HolocronToolset.Tests.Editors
             // Test that all color fields (SunAmbient, SunDiffuse, DynamicLight, FogColor, GrassAmbient, GrassDiffuse)
             // are correctly written and read for ALL game types
             var are = new ARE();
-            
+
             // Set all color fields
             are.SunAmbient = new Color(0.8f, 0.6f, 0.4f);
             are.SunDiffuse = new Color(0.9f, 0.7f, 0.5f);
@@ -2915,31 +3417,31 @@ namespace HolocronToolset.Tests.Editors
 
             // Dismantle ARE with specific game type
             var bytes = AREHelpers.BytesAre(are, game);
-            
+
             // Reconstruct ARE
             var reconstructedAre = AREHelpers.ReadAre(bytes);
-            
+
             // Verify all color fields are preserved (written for ALL game types)
             System.Math.Abs(reconstructedAre.SunAmbient.R - are.SunAmbient.R).Should().BeLessThan(0.01f);
             System.Math.Abs(reconstructedAre.SunAmbient.G - are.SunAmbient.G).Should().BeLessThan(0.01f);
             System.Math.Abs(reconstructedAre.SunAmbient.B - are.SunAmbient.B).Should().BeLessThan(0.01f);
-            
+
             System.Math.Abs(reconstructedAre.SunDiffuse.R - are.SunDiffuse.R).Should().BeLessThan(0.01f);
             System.Math.Abs(reconstructedAre.SunDiffuse.G - are.SunDiffuse.G).Should().BeLessThan(0.01f);
             System.Math.Abs(reconstructedAre.SunDiffuse.B - are.SunDiffuse.B).Should().BeLessThan(0.01f);
-            
+
             System.Math.Abs(reconstructedAre.DynamicLight.R - are.DynamicLight.R).Should().BeLessThan(0.01f);
             System.Math.Abs(reconstructedAre.DynamicLight.G - are.DynamicLight.G).Should().BeLessThan(0.01f);
             System.Math.Abs(reconstructedAre.DynamicLight.B - are.DynamicLight.B).Should().BeLessThan(0.01f);
-            
+
             System.Math.Abs(reconstructedAre.FogColor.R - are.FogColor.R).Should().BeLessThan(0.01f);
             System.Math.Abs(reconstructedAre.FogColor.G - are.FogColor.G).Should().BeLessThan(0.01f);
             System.Math.Abs(reconstructedAre.FogColor.B - are.FogColor.B).Should().BeLessThan(0.01f);
-            
+
             System.Math.Abs(reconstructedAre.GrassAmbient.R - are.GrassAmbient.R).Should().BeLessThan(0.01f);
             System.Math.Abs(reconstructedAre.GrassAmbient.G - are.GrassAmbient.G).Should().BeLessThan(0.01f);
             System.Math.Abs(reconstructedAre.GrassAmbient.B - are.GrassAmbient.B).Should().BeLessThan(0.01f);
-            
+
             System.Math.Abs(reconstructedAre.GrassDiffuse.R - are.GrassDiffuse.R).Should().BeLessThan(0.01f);
             System.Math.Abs(reconstructedAre.GrassDiffuse.G - are.GrassDiffuse.G).Should().BeLessThan(0.01f);
             System.Math.Abs(reconstructedAre.GrassDiffuse.B - are.GrassDiffuse.B).Should().BeLessThan(0.01f);
@@ -2963,13 +3465,13 @@ namespace HolocronToolset.Tests.Editors
             // Test that Grass_Emissive is NOT written for non-K2 games
             var are = new ARE();
             are.GrassEmissive = new Color(1.0f, 1.0f, 1.0f); // Set to non-default value
-            
+
             // Dismantle ARE with non-K2 game type
             var bytes = AREHelpers.BytesAre(are, game);
-            
+
             // Reconstruct ARE
             var reconstructedAre = AREHelpers.ReadAre(bytes);
-            
+
             // For non-K2 games, GrassEmissive should be default (0,0,0) because it wasn't written
             // Note: This test verifies that K2-specific fields are conditionally written
             // The field may still be read as 0 if not present in the GFF
@@ -2993,13 +3495,13 @@ namespace HolocronToolset.Tests.Editors
             // Test that Grass_Emissive IS written for K2 games
             var are = new ARE();
             are.GrassEmissive = new Color(0.7f, 0.8f, 0.9f);
-            
+
             // Dismantle ARE with K2 game type
             var bytes = AREHelpers.BytesAre(are, game);
-            
+
             // Reconstruct ARE
             var reconstructedAre = AREHelpers.ReadAre(bytes);
-            
+
             // For K2 games, GrassEmissive should be preserved
             System.Math.Abs(reconstructedAre.GrassEmissive.R - are.GrassEmissive.R).Should().BeLessThan(0.01f);
             System.Math.Abs(reconstructedAre.GrassEmissive.G - are.GrassEmissive.G).Should().BeLessThan(0.01f);
@@ -3021,7 +3523,7 @@ namespace HolocronToolset.Tests.Editors
             foreach (var game in gameTypes)
             {
                 var are = new ARE();
-                
+
                 // Set all basic fields
                 are.Tag = "test_tag_" + game.ToString();
                 are.Name = LocalizedString.FromEnglish("Test Area " + game.ToString());
@@ -3051,7 +3553,7 @@ namespace HolocronToolset.Tests.Editors
                 are.OnUserDefined = new ResRef("onuserdefined");
                 are.LoadScreenID = 5;
                 are.Comment = "Test comment for " + game.ToString();
-                
+
                 // Set all color fields
                 are.SunAmbient = new Color(0.8f, 0.6f, 0.4f);
                 are.SunDiffuse = new Color(0.9f, 0.7f, 0.5f);
@@ -3060,7 +3562,7 @@ namespace HolocronToolset.Tests.Editors
                 are.GrassAmbient = new Color(0.4f, 0.5f, 0.6f);
                 are.GrassDiffuse = new Color(0.5f, 0.6f, 0.7f);
                 are.GrassEmissive = new Color(0.0f, 0.0f, 0.0f);
-                
+
                 // Map fields
                 are.NorthAxis = ARENorthAxis.PositiveY;
                 are.MapZoom = 2;
@@ -3069,11 +3571,11 @@ namespace HolocronToolset.Tests.Editors
                 are.MapPoint2 = new System.Numerics.Vector2(0.9f, 0.8f);
                 are.WorldPoint1 = new System.Numerics.Vector2(100.0f, 200.0f);
                 are.WorldPoint2 = new System.Numerics.Vector2(300.0f, 400.0f);
-                
+
                 // Roundtrip
                 var bytes = AREHelpers.BytesAre(are, game);
                 var reconstructedAre = AREHelpers.ReadAre(bytes);
-                
+
                 // Verify all basic fields are preserved
                 reconstructedAre.Tag.Should().Be(are.Tag);
                 reconstructedAre.AlphaTest.Should().Be(are.AlphaTest);
@@ -3089,7 +3591,7 @@ namespace HolocronToolset.Tests.Editors
                 reconstructedAre.WindPower.Should().Be(are.WindPower);
                 reconstructedAre.LoadScreenID.Should().Be(are.LoadScreenID);
                 reconstructedAre.Comment.Should().Be(are.Comment);
-                
+
                 // Verify map fields
                 reconstructedAre.NorthAxis.Should().Be(are.NorthAxis);
                 reconstructedAre.MapZoom.Should().Be(are.MapZoom);
@@ -3128,14 +3630,14 @@ namespace HolocronToolset.Tests.Editors
                 are.FogColor = testCase.Color;
                 are.GrassAmbient = testCase.Color;
                 are.GrassDiffuse = testCase.Color;
-                
+
                 // Test for all game types
                 foreach (var game in new[] { Game.K1, Game.K2, Game.NWN, Game.DA })
                 {
                     var bytes = AREHelpers.BytesAre(are, game);
                     var reconstructedAre = AREHelpers.ReadAre(bytes);
-                    
-                    System.Math.Abs(reconstructedAre.SunAmbient.R - testCase.Color.R).Should().BeLessThan(0.01f, 
+
+                    System.Math.Abs(reconstructedAre.SunAmbient.R - testCase.Color.R).Should().BeLessThan(0.01f,
                         $"SunAmbient {testCase.Name} failed for {game}");
                     System.Math.Abs(reconstructedAre.SunDiffuse.R - testCase.Color.R).Should().BeLessThan(0.01f,
                         $"SunDiffuse {testCase.Name} failed for {game}");
@@ -3156,12 +3658,12 @@ namespace HolocronToolset.Tests.Editors
         {
             // Test that default ARE values are correctly handled
             var are = new ARE(); // All defaults
-            
+
             foreach (var game in new[] { Game.K1, Game.K2, Game.NWN, Game.DA })
             {
                 var bytes = AREHelpers.BytesAre(are, game);
                 var reconstructedAre = AREHelpers.ReadAre(bytes);
-                
+
                 // Verify defaults are preserved
                 reconstructedAre.Tag.Should().BeEmpty();
                 reconstructedAre.AlphaTest.Should().BeApproximately(0.2f, 0.001f); // Engine default is 0.2: swkotor.exe: 0x00508c50 line 303, swkotor2.exe: 0x004e3ff0 line 307
@@ -3172,7 +3674,7 @@ namespace HolocronToolset.Tests.Editors
                 reconstructedAre.FogEnabled.Should().BeFalse();
                 reconstructedAre.WindPower.Should().Be(0);
                 reconstructedAre.LoadScreenID.Should().Be(0);
-                
+
                 // Color defaults should be black (0,0,0)
                 reconstructedAre.SunAmbient.R.Should().Be(0.0f);
                 reconstructedAre.SunAmbient.G.Should().Be(0.0f);
