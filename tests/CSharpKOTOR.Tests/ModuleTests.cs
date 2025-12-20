@@ -1,11 +1,15 @@
 ﻿using System;
 using System.IO;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using Andastra.Parsing.Common;
 using Andastra.Parsing.Installation;
 using InstallationClass = Andastra.Parsing.Installation.Installation;
 using Andastra.Parsing.Resource;
-using static NUnit.Framework.Assert;
+using Andastra.Parsing.Resource.Generics;
+using Andastra.Parsing.Resource.Formats.LYT;
+using Andastra.Parsing.Resource.Formats.VIS;
+using Assert = NUnit.Framework.Legacy.ClassicAssert;
 
 namespace AuroraEngine.Common.Tests
 {
@@ -37,8 +41,8 @@ namespace AuroraEngine.Common.Tests
             // Test module creation with a dummy module name
             var module = new Module("test", installation, true);
 
-            IsNotNull(module);
-            AreEqual("test", module.Root);
+            Assert.IsTrue(module != null);
+            Assert.IsTrue(module.Root == "test");
         }
 
         [Test]
@@ -69,55 +73,55 @@ namespace AuroraEngine.Common.Tests
 
             var moduleResource = new ModuleResource<object>("testres", ResourceType.GIT, installation, "testmodule");
 
-            Assert.IsNotNull(moduleResource);
-            Assert.AreEqual("testres", moduleResource.ResName);
-            Assert.AreEqual(ResourceType.GIT, moduleResource.ResType);
+            Assert.IsTrue(moduleResource != null);
+            Assert.IsTrue(moduleResource.ResName == "testres");
+            Assert.IsTrue(moduleResource.ResType == ResourceType.GIT);
         }
 
         [Test]
         public void TestGITCreation()
         {
             // Test GIT class creation and basic functionality
-            var git = new AuroraEngine.Common.Resource.Generics.GIT();
+            var git = new GIT();
 
-            Assert.IsNotNull(git);
-            Assert.IsNotNull(git.Cameras);
-            Assert.IsNotNull(git.Creatures);
-            Assert.IsNotNull(git.Doors);
-            Assert.IsNotNull(git.Encounters);
-            Assert.IsNotNull(git.Placeables);
-            Assert.IsNotNull(git.Sounds);
-            Assert.IsNotNull(git.Stores);
-            Assert.IsNotNull(git.Triggers);
-            Assert.IsNotNull(git.Waypoints);
+            Assert.IsTrue(git != null);
+            Assert.IsTrue(git.Cameras != null);
+            Assert.IsTrue(git.Creatures != null);
+            Assert.IsTrue(git.Doors != null);
+            Assert.IsTrue(git.Encounters != null);
+            Assert.IsTrue(git.Placeables != null);
+            Assert.IsTrue(git.Sounds != null);
+            Assert.IsTrue(git.Stores != null);
+            Assert.IsTrue(git.Triggers != null);
+            Assert.IsTrue(git.Waypoints != null);
 
             // Test resource identifier iteration
             var identifiers = git.GetResourceIdentifiers();
-            Assert.IsNotNull(identifiers);
+            Assert.IsTrue(identifiers != null);
         }
 
         [Test]
         public void TestLYTCreation()
         {
             // Test LYT class creation
-            var lyt = new AuroraEngine.Common.Resource.Formats.LYT.LYT();
+            var lyt = new LYT();
 
-            Assert.IsNotNull(lyt);
-            Assert.IsNotNull(lyt.Rooms);
-            Assert.IsNotNull(lyt.Tracks);
-            Assert.IsNotNull(lyt.Obstacles);
-            Assert.IsNotNull(lyt.DoorHooks);
+            Assert.IsTrue(lyt != null);
+            Assert.IsTrue(lyt.Rooms != null);
+            Assert.IsTrue(lyt.Tracks != null);
+            Assert.IsTrue(lyt.Obstacles != null);
+            Assert.IsTrue(lyt.DoorHooks != null);
         }
 
         [Test]
         public void TestVISCreation()
         {
             // Test VIS class creation
-            var vis = new AuroraEngine.Common.Resource.Formats.VIS.VIS();
+            var vis = new VIS();
 
-            Assert.IsNotNull(vis);
+            Assert.IsTrue(vis != null);
             var rooms = vis.AllRooms();
-            Assert.IsNotNull(rooms);
+            Assert.IsTrue(rooms != null);
 
             // Test adding rooms
             vis.AddRoom("testroom1");
@@ -132,30 +136,30 @@ namespace AuroraEngine.Common.Tests
         public void TestUTCCreation()
         {
             // Test UTC class creation
-            var utc = new AuroraEngine.Common.Resource.Generics.UTC();
+            var utc = new UTC();
 
-            Assert.IsNotNull(utc);
-            Assert.AreEqual(AuroraEngine.Common.Resource.Generics.UTC.BinaryType, ResourceType.UTC);
+            Assert.IsTrue(utc != null);
+            Assert.IsTrue(UTC.BinaryType == ResourceType.UTC);
         }
 
         [Test]
         public void TestUTDCreation()
         {
             // Test UTD class creation
-            var utd = new AuroraEngine.Common.Resource.Generics.UTD();
+            var utd = new UTD();
 
-            Assert.IsNotNull(utd);
-            Assert.AreEqual(AuroraEngine.Common.Resource.Generics.UTD.BinaryType, ResourceType.UTD);
+            Assert.IsTrue(utd != null);
+            Assert.IsTrue(UTD.BinaryType == ResourceType.UTD);
         }
 
         [Test]
         public void TestUTPCreation()
         {
             // Test UTP class creation
-            var utp = new AuroraEngine.Common.Resource.Generics.UTP();
+            var utp = new UTP();
 
-            Assert.IsNotNull(utp);
-            Assert.AreEqual(AuroraEngine.Common.Resource.Generics.UTP.BinaryType, ResourceType.UTP);
+            Assert.IsTrue(utp != null);
+            Assert.IsTrue(UTP.BinaryType == ResourceType.UTP);
         }
 
         [Test]
@@ -168,10 +172,10 @@ namespace AuroraEngine.Common.Tests
 
             var archiveResource = new ArchiveResource(resRef, resType, data);
 
-            Assert.IsNotNull(archiveResource);
-            Assert.AreEqual(resRef, archiveResource.ResRef);
-            Assert.AreEqual(resType, archiveResource.ResType);
-            Assert.AreEqual(data, archiveResource.Data);
+            Assert.IsTrue(archiveResource != null);
+            Assert.IsTrue(archiveResource.ResRef == resRef);
+            Assert.IsTrue(archiveResource.ResType == resType);
+            Assert.IsTrue(archiveResource.Data == data);
         }
 
         [Test]
@@ -179,11 +183,11 @@ namespace AuroraEngine.Common.Tests
         {
             // Test ResourceAuto loading with null data
             var result = ResourceAuto.LoadResource(null, ResourceType.GIT);
-            Assert.IsNull(result);
+            Assert.IsTrue(result == null);
 
             // Test with empty data
             result = ResourceAuto.LoadResource(new byte[0], ResourceType.GIT);
-            Assert.IsNull(result);
+            Assert.IsTrue(result == null);
         }
 
         [Test]
@@ -191,7 +195,7 @@ namespace AuroraEngine.Common.Tests
         {
             // Test Salvage.ValidateResourceFile with null
             var result = Salvage.ValidateResourceFile(null);
-            Assert.IsFalse(result);
+            Assert.IsTrue(result == false);
         }
     }
 }
