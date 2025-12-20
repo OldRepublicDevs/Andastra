@@ -441,31 +441,27 @@ namespace Andastra.Parsing.Tests.Formats
             {
                 try
                 {
-                    var processInfo = new ProcessStartInfo
+                    var result = RunCommand(path, "--version");
+                    if (result.ExitCode == 0)
                     {
-                        FileName = path,
-                        Arguments = "--version",
-                        RedirectStandardOutput = true,
-                        RedirectStandardError = true,
-                        UseShellExecute = false,
-                        CreateNoWindow = true
-                    };
-
-                    using (var process = Process.Start(processInfo))
-                    {
-                        if (process != null)
-                        {
-                            process.WaitForExit(5000);
-                            if (process.ExitCode == 0)
-                            {
-                                return path;
-                            }
-                        }
+                        return path;
                     }
                 }
                 catch
                 {
                     // Continue searching
+                }
+            }
+
+            // Try as Java JAR
+            var jarPath = FindKaitaiCompilerJar();
+            if (!string.IsNullOrEmpty(jarPath) && File.Exists(jarPath))
+            {
+                var result = RunCommand("java", $"-jar \"{jarPath}\" --version");
+                if (result.ExitCode == 0)
+                {
+                    // Return special marker for JAR - caller needs to use java -jar
+                    return jarPath;
                 }
             }
 
@@ -545,7 +541,7 @@ namespace Andastra.Parsing.Tests.Formats
                     string stdout = process.StandardOutput.ReadToEnd();
                     string stderr = process.StandardError.ReadToEnd();
                     process.WaitForExit(60000);
-                    
+
                     // Compilation should succeed - syntax errors would cause failure
                     process.ExitCode.Should().Be(0,
                         $"LYT.ksy should have valid syntax. STDOUT: {stdout}, STDERR: {stderr}");
