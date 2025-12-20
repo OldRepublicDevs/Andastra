@@ -70,19 +70,19 @@ namespace HolocronToolset.Utils
                     
                     if (isUrl)
                     {
-                        // Handle URLs using Launcher.LaunchUriAsync
+                        // Handle URLs using StorageProvider.LaunchUriAsync
                         // This matches PyKotor's QDesktopServices.openUrl behavior
                         if (Uri.TryCreate(link, UriKind.Absolute, out Uri uri))
                         {
-                            // Use Avalonia's Launcher API for URLs
-                            // This provides cross-platform support and proper integration with Avalonia
-                            var launcher = Avalonia.Application.Current?.ApplicationLifetime as Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime;
+                            // Get TopLevel from application for Avalonia's StorageProvider API
+                            // This provides proper integration with Avalonia's windowing system
+                            TopLevel topLevel = GetTopLevel();
                             
-                            if (launcher != null && launcher.MainWindow != null && launcher.MainWindow.Launcher != null)
+                            if (topLevel != null)
                             {
-                                // Use TopLevel-aware Launcher when available
+                                // Use TopLevel-aware StorageProvider when available
                                 // This is the recommended way to use Avalonia's Launcher API
-                                await launcher.MainWindow.Launcher.LaunchUriAsync(uri);
+                                await topLevel.StorageProvider.LaunchUriAsync(uri);
                             }
                             else
                             {
@@ -99,7 +99,7 @@ namespace HolocronToolset.Utils
                     }
                     else
                     {
-                        // Handle file paths using Launcher.LaunchFileAsync
+                        // Handle file paths using StorageProvider.LaunchFileAsync
                         await OpenFileAsync(link);
                     }
                 }
@@ -159,18 +159,19 @@ namespace HolocronToolset.Utils
                     ? filePath 
                     : Path.GetFullPath(filePath);
 
+                // Get TopLevel from application for Avalonia's StorageProvider API
+                TopLevel topLevel = GetTopLevel();
+                
                 // Check if file exists
                 if (!File.Exists(absolutePath) && !Directory.Exists(absolutePath))
                 {
                     // File doesn't exist, try opening as URL anyway (might be a protocol handler)
                     if (Uri.TryCreate(filePath, UriKind.Absolute, out Uri uri))
                     {
-                        var launcher = Avalonia.Application.Current?.ApplicationLifetime as Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime;
-                        
-                        if (launcher != null && launcher.MainWindow != null && launcher.MainWindow.Launcher != null)
+                        if (topLevel != null)
                         {
-                            // Use TopLevel-aware Launcher when available
-                            await launcher.MainWindow.Launcher.LaunchUriAsync(uri);
+                            // Use TopLevel-aware StorageProvider when available
+                            await topLevel.StorageProvider.LaunchUriAsync(uri);
                         }
                         else
                         {
@@ -181,32 +182,29 @@ namespace HolocronToolset.Utils
                     return;
                 }
 
-                // Create FileInfo for the file
-                var fileInfo = new FileInfo(absolutePath);
-                
-                // Use Avalonia's Launcher API for files
+                // Use Avalonia's StorageProvider API for files
                 // This provides cross-platform support and proper integration with Avalonia
-                var launcher = Avalonia.Application.Current?.ApplicationLifetime as Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime;
-                
-                if (launcher != null && launcher.MainWindow != null && launcher.MainWindow.Launcher != null)
+                if (topLevel != null)
                 {
-                    // Use TopLevel-aware Launcher when available
-                    // Create IStorageFile from FileInfo using StorageProvider
-                    var storageFile = await launcher.MainWindow.StorageProvider.TryGetFileFromPathAsync(absolutePath);
+                    // Use TopLevel-aware StorageProvider when available (recommended approach)
+                    // Create IStorageFile from path using StorageProvider
+                    var storageFile = await topLevel.StorageProvider.TryGetFileFromPathAsync(absolutePath);
                     if (storageFile != null)
                     {
-                        // Use Launcher API from TopLevel (recommended approach)
-                        await launcher.MainWindow.Launcher.LaunchFileAsync(storageFile);
+                        // Use StorageProvider.LaunchFileAsync from TopLevel (recommended approach)
+                        await topLevel.StorageProvider.LaunchFileAsync(storageFile);
                     }
                     else
                     {
-                        // Fallback: Use static Launcher API with FileInfo
+                        // If TryGetFileFromPathAsync fails, fallback to static Launcher API
+                        var fileInfo = new FileInfo(absolutePath);
                         await Avalonia.Platform.Storage.Launcher.LaunchFileAsync(fileInfo);
                     }
                 }
                 else
                 {
                     // Fallback: Use static Launcher API when TopLevel is not available
+                    var fileInfo = new FileInfo(absolutePath);
                     await Avalonia.Platform.Storage.Launcher.LaunchFileAsync(fileInfo);
                 }
             }
@@ -351,6 +349,44 @@ namespace HolocronToolset.Utils
         public static bool IsModifierKey(Key key)
         {
             return ModifierKeyNames.ContainsKey(key);
+        }
+
+        /// <summary>
+        /// Gets the TopLevel window from the current Avalonia application.
+        /// This is used to access StorageProvider for launching URIs and files.
+        /// </summary>
+        /// <returns>The TopLevel window if available, null otherwise</returns>
+        private static TopLevel GetTopLevel()
+        {
+            // Try to get TopLevel from Application.Current
+            var app = Avalonia.Application.Current;
+            if (app == null)
+            {
+                return null;
+            }
+
+            // Try to get TopLevel from application lifetime
+            if (app.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktopLifetime)
+            {
+                // Return the main window (which is a TopLevel)
+                return desktopLifetime.MainWindow;
+            }
+
+            // Try to get TopLevel from any active window
+            // This handles cases where MainWindow might not be set yet
+            if (app.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IControlledApplicationLifetime controlledLifetime)
+            {
+                // Look for any active window in the application
+                foreach (var window in app.Windows)
+                {
+                    if (window is TopLevel topLevel && topLevel.IsVisible)
+                    {
+                        return topLevel;
+                    }
+                }
+            }
+
+            return null;
         }
     }
 }
