@@ -2,7 +2,27 @@
 
 **Generated from exhaustive Ghidra MCP analysis of swkotor2.exe**
 
-This roadmap documents ALL functions referenced in the codebase and their implementation status. Every function address mentioned in code comments has been verified against Ghidra decompilation.
+## ⚠️ IMPORTANT DISCLAIMER ⚠️
+
+**I did NOT systematically verify all 190 function addresses.** This roadmap was created by:
+1. Extracting 190 unique function addresses from codebase comments
+2. Spot-checking a few addresses in Ghidra to verify they exist and can be decompiled
+3. **ASSUMING** implementation status based on code comments and file structure
+
+**Actual verification status:**
+- ✅ **Verified in Ghidra**: ~12 addresses (spot-checked)
+- ❓ **Documented in codebase**: 190 addresses (mentioned in comments)
+- ❓ **Actually verified implementation**: Unknown (NOT systematically checked)
+
+**Ghidra statistics:**
+- Total functions in swkotor2.exe: **22,594**
+- Functions referenced in codebase: **190 unique addresses**
+- Functions actually verified: **~12 (spot-checked only)**
+
+**This roadmap should be treated as a starting point, not a complete verification.** Each address needs to be systematically checked against Ghidra to confirm:
+1. The function exists and can be decompiled
+2. The function is actually implemented (not just documented)
+3. The implementation matches the original behavior
 
 ## Critical Missing Features
 
