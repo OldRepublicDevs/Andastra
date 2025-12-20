@@ -19,6 +19,7 @@ using Andastra.Parsing.Resource;
 using Andastra.Runtime.Content.Converters;
 using Andastra.Runtime.Games.Eclipse.Loading;
 using Andastra.Runtime.Core.Module;
+using Andastra.Runtime.Games.Eclipse.Lighting;
 
 namespace Andastra.Runtime.Games.Eclipse
 {
@@ -78,6 +79,9 @@ namespace Andastra.Runtime.Games.Eclipse
         // Room information (if available from LYT or similar layout files)
         private List<RoomInfo> _rooms;
 
+        // Area data for lighting system initialization
+        private byte[] _areaData;
+
         /// <summary>
         /// Creates a new Eclipse area.
         /// </summary>
@@ -101,6 +105,9 @@ namespace Andastra.Runtime.Games.Eclipse
 
             // Initialize collections
             _rooms = new List<RoomInfo>();
+
+            // Store area data for lighting system initialization
+            _areaData = areaData;
 
             LoadAreaGeometry(areaData);
             LoadAreaProperties(areaData);
@@ -898,11 +905,151 @@ namespace Andastra.Runtime.Games.Eclipse
         /// <remarks>
         /// Eclipse-specific advanced lighting initialization.
         /// Sets up dynamic lights, shadows, global illumination.
+        /// 
+        /// Based on reverse engineering of:
+        /// - daorigins.exe: Lighting system initialization from ARE file data
+        /// - DragonAge2.exe: Enhanced lighting initialization with shadow mapping
+        /// 
+        /// Parses ARE file to extract lighting properties:
+        /// - Sun/Moon ambient and diffuse colors
+        /// - Dynamic ambient color
+        /// - Shadow settings (enabled/disabled, opacity)
+        /// - Fog settings (enabled, color, near/far distances)
+        /// - Day/night cycle state
         /// </remarks>
         private void InitializeLightingSystem()
         {
-            // TODO: Initialize Eclipse lighting system
+            // Create lighting system instance
             _lightingSystem = new EclipseLightingSystem();
+
+            // Parse ARE file to extract lighting properties
+            if (_areaData != null && _areaData.Length > 0)
+            {
+                try
+                {
+                    // Parse GFF from byte array
+                    GFF gff = GFF.FromBytes(_areaData);
+                    if (gff != null && gff.Root != null)
+                    {
+                        GFFStruct root = gff.Root;
+
+                        // Read sun lighting properties from ARE file
+                        // Based on ARE format specification and Aurora/Odyssey implementations
+                        uint sunAmbientColor = 0x80808080; // Default: gray ambient
+                        if (root.Exists("SunAmbientColor"))
+                        {
+                            sunAmbientColor = root.GetUInt32("SunAmbientColor");
+                        }
+
+                        uint sunDiffuseColor = 0xFFFFFFFF; // Default: white diffuse
+                        if (root.Exists("SunDiffuseColor"))
+                        {
+                            sunDiffuseColor = root.GetUInt32("SunDiffuseColor");
+                        }
+
+                        // Read moon lighting properties from ARE file
+                        // Eclipse supports separate moon lighting like Aurora
+                        uint moonAmbientColor = 0x40404040; // Default: darker gray for moon
+                        if (root.Exists("MoonAmbientColor"))
+                        {
+                            moonAmbientColor = root.GetUInt32("MoonAmbientColor");
+                        }
+
+                        uint moonDiffuseColor = 0x8080FFFF; // Default: slightly blue for moon
+                        if (root.Exists("MoonDiffuseColor"))
+                        {
+                            moonDiffuseColor = root.GetUInt32("MoonDiffuseColor");
+                        }
+
+                        // Read dynamic ambient color
+                        uint dynAmbientColor = 0x80808080; // Default: gray
+                        if (root.Exists("DynAmbientColor"))
+                        {
+                            dynAmbientColor = root.GetUInt32("DynAmbientColor");
+                        }
+
+                        // Read shadow settings
+                        bool sunShadows = false;
+                        if (root.Exists("SunShadows"))
+                        {
+                            sunShadows = root.GetUInt8("SunShadows") != 0;
+                        }
+
+                        bool moonShadows = false;
+                        if (root.Exists("MoonShadows"))
+                        {
+                            moonShadows = root.GetUInt8("MoonShadows") != 0;
+                        }
+
+                        byte shadowOpacity = 255; // Default: fully opaque
+                        if (root.Exists("ShadowOpacity"))
+                        {
+                            shadowOpacity = root.GetUInt8("ShadowOpacity");
+                        }
+
+                        // Read fog settings
+                        bool fogEnabled = false;
+                        if (root.Exists("SunFogOn"))
+                        {
+                            fogEnabled = root.GetUInt8("SunFogOn") != 0;
+                        }
+
+                        uint fogColor = 0x80808080; // Default: gray fog
+                        if (root.Exists("SunFogColor"))
+                        {
+                            fogColor = root.GetUInt32("SunFogColor");
+                        }
+                        else if (root.Exists("FogColor"))
+                        {
+                            fogColor = root.GetUInt32("FogColor");
+                        }
+
+                        float fogNear = 0.0f;
+                        if (root.Exists("SunFogNear"))
+                        {
+                            fogNear = root.GetSingle("SunFogNear");
+                        }
+
+                        float fogFar = 1000.0f;
+                        if (root.Exists("SunFogFar"))
+                        {
+                            fogFar = root.GetSingle("SunFogFar");
+                        }
+
+                        // Read day/night cycle state
+                        bool isNight = false;
+                        if (root.Exists("IsNight"))
+                        {
+                            isNight = root.GetUInt8("IsNight") != 0;
+                        }
+
+                        // Initialize lighting system with ARE file data
+                        EclipseLightingSystem eclipseLighting = _lightingSystem as EclipseLightingSystem;
+                        if (eclipseLighting != null)
+                        {
+                            eclipseLighting.InitializeFromAreaData(
+                                sunAmbientColor,
+                                sunDiffuseColor,
+                                moonAmbientColor,
+                                moonDiffuseColor,
+                                dynAmbientColor,
+                                sunShadows,
+                                moonShadows,
+                                shadowOpacity,
+                                fogEnabled,
+                                fogColor,
+                                fogNear,
+                                fogFar,
+                                isNight);
+                        }
+                    }
+                }
+                catch (Exception)
+                {
+                    // If ARE file parsing fails, lighting system will use defaults
+                    // This ensures the area can still be created even with invalid/corrupt ARE data
+                }
+            }
         }
 
         /// <summary>
@@ -1253,7 +1400,12 @@ namespace Andastra.Runtime.Games.Eclipse
             // Based on lighting system update in daorigins.exe, DragonAge2.exe
             if (_lightingSystem != null)
             {
-                _lightingSystem.Update(deltaTime);
+                // EclipseLightingSystem has an Update method for per-frame updates
+                EclipseLightingSystem eclipseLighting = _lightingSystem as EclipseLightingSystem;
+                if (eclipseLighting != null)
+                {
+                    eclipseLighting.Update(deltaTime);
+                }
             }
 
             // Step physics simulation
