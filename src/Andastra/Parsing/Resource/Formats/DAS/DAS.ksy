@@ -1,6 +1,6 @@
 meta:
   id: das
-  title: BioWare DAS (Dragon Age: Origins Save) File Format
+  title: 'BioWare DAS (Dragon Age: Origins Save) File Format'
   license: MIT
   endian: le
   file-extension: das

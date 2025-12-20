@@ -13,33 +13,46 @@ doc: |
   JRL (Journal) files are GFF-based format files that store journal/quest data including
   quest entries, priorities, and planet associations. JRL files use the GFF (Generic File Format)
   binary structure with file type signature "JRL ".
-  
-  JRL files contain:
-  - Root struct with "Categories" list (array of quests)
-  - Each quest (JRLQuest) contains:
-    - Name (LocalizedString): Quest title
-    - PlanetID (Int32): Planet association (unused)
-    - PlotIndex (Int32): Legacy plot index
+
+  JRL files are used by BioWare games (KotOR, KotOR 2, Neverwinter Nights) to define quest
+  journal entries. The journal system tracks player progress through quests, displaying
+  appropriate text entries based on quest state.
+
+  File Structure:
+  JRL files follow the standard GFF binary format with the following logical structure:
+  - Root struct contains a "Categories" field (List type) containing quest definitions
+  - Each quest category (JRLQuest) is a struct in the Categories list with fields:
+    - Name (CExoLocString): Quest title displayed in journal
+    - PlanetID (Int32): Planet association (legacy field, typically unused)
+    - PlotIndex (Int32): Legacy plot index for sorting
     - Priority (UInt32): Sorting priority (0=Highest, 4=Lowest)
-    - Tag (String): Unique quest identifier
-    - Comment (String): Developer comment (toolset only)
-    - EntryList (List): Array of quest entries (journal states)
-  - Each entry (JRLQuestEntry) contains:
-    - ID (UInt32): State identifier (referenced by scripts/dialogue)
-    - Text (LocalizedString): Journal text displayed for this state
-    - End (UInt16): 1 if this state completes the quest, 0 otherwise
-    - XP_Percentage (Single): XP reward multiplier for reaching this state
-  
+    - Tag (CExoString): Unique quest identifier (used by scripts/dialogue)
+    - Comment (CExoString): Developer comment (toolset only, not shown in game)
+    - EntryList (List): Array of quest entry structs (journal states)
+  - Each quest entry (JRLQuestEntry) is a struct in EntryList with fields:
+    - ID (UInt32): State identifier (referenced by AddJournalQuestEntry script function)
+    - Text (CExoLocString): Journal text displayed for this quest state
+    - End (UInt16): 1 if this state completes the quest (moves to Completed tab), 0 otherwise
+    - XP_Percentage (Single): XP reward multiplier (scales journal.2da XP value)
+
   Priority Levels:
-  - 0 (Highest): Main quest line
+  - 0 (Highest): Main quest line (always shown at top)
   - 1 (High): Important side quests
   - 2 (Medium): Standard side quests
   - 3 (Low): Minor tasks
-  - 4 (Lowest): Completed/Archived
-  
+  - 4 (Lowest): Completed/Archived quests (moved to Completed tab)
+
+  Usage:
+  - Scripts use AddJournalQuestEntry("Tag", ID) to update quest states
+  - Dialogues use Quest and QuestEntry fields to trigger journal updates
+  - Only the highest ID reached is typically displayed (unless AllowOverrideHigher is set)
+  - End=1 moves the quest to the "Completed" tab
+  - global.jrl is the master journal file for the entire game
+
   References:
   - vendor/PyKotor/wiki/GFF-JRL.md
   - vendor/PyKotor/wiki/GFF-File-Format.md
+  - vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/generics/jrl.py
   - vendor/reone/src/libs/resource/parser/gff/jrl.cpp
   - vendor/xoreos/src/aurora/jrlfile.cpp
 
@@ -47,35 +60,35 @@ seq:
   - id: gff_header
     type: gff_header
     doc: GFF file header (56 bytes)
-  
+
   - id: label_array
     type: label_array
     if: gff_header.label_count > 0
     pos: gff_header.label_array_offset
     doc: Array of field name labels (16-byte null-terminated strings)
-  
+
   - id: struct_array
     type: struct_array
     pos: gff_header.struct_array_offset
     doc: Array of struct entries (12 bytes each)
-  
+
   - id: field_array
     type: field_array
     pos: gff_header.field_array_offset
     doc: Array of field entries (12 bytes each)
-  
+
   - id: field_data
     type: field_data_section
     if: gff_header.field_data_count > 0
     pos: gff_header.field_data_offset
     doc: Field data section for complex types (strings, ResRefs, LocalizedStrings, etc.)
-  
+
   - id: field_indices
     type: field_indices_array
     if: gff_header.field_indices_count > 0
     pos: gff_header.field_indices_offset
     doc: Field indices array (MultiMap) for structs with multiple fields
-  
+
   - id: list_indices
     type: list_indices_array
     if: gff_header.list_indices_count > 0
@@ -94,7 +107,7 @@ types:
           File type signature. Must be "JRL " for journal files.
           Other GFF types: "GFF ", "ARE ", "UTC ", "UTI ", "DLG ", etc.
         valid: "JRL "
-      
+
       - id: file_version
         type: str
         encoding: ASCII
@@ -103,55 +116,55 @@ types:
           File format version. Typically "V3.2" for KotOR.
           Other versions: "V3.3", "V4.0", "V4.1" for other BioWare games.
         valid: ["V3.2", "V3.3", "V4.0", "V4.1"]
-      
+
       - id: struct_array_offset
         type: u4
         doc: Byte offset to struct array from the beginning of the file
-      
+
       - id: struct_count
         type: u4
         doc: Number of structs in the struct array
-      
+
       - id: field_array_offset
         type: u4
         doc: Byte offset to field array from the beginning of the file
-      
+
       - id: field_count
         type: u4
         doc: Number of fields in the field array
-      
+
       - id: label_array_offset
         type: u4
         doc: Byte offset to label array from the beginning of the file
-      
+
       - id: label_count
         type: u4
         doc: Number of labels in the label array
-      
+
       - id: field_data_offset
         type: u4
         doc: Byte offset to field data section from the beginning of the file
-      
+
       - id: field_data_count
         type: u4
         doc: Size of field data section in bytes
-      
+
       - id: field_indices_offset
         type: u4
         doc: Byte offset to field indices array from the beginning of the file
-      
+
       - id: field_indices_count
         type: u4
         doc: Number of field indices (uint32 values) in the field_indices array
-      
+
       - id: list_indices_offset
         type: u4
         doc: Byte offset to list indices array from the beginning of the file
-      
+
       - id: list_indices_count
         type: u4
         doc: Number of list indices (uint32 values) in the list_indices array
-  
+
   # Label Array
   label_array:
     seq:
@@ -162,7 +175,7 @@ types:
         repeat: expr
         repeat-expr: _root.gff_header.label_count
         doc: Array of 16-byte null-terminated field name labels
-  
+
   # Struct Array
   struct_array:
     seq:
@@ -171,7 +184,7 @@ types:
         repeat: expr
         repeat-expr: _root.gff_header.struct_count
         doc: Array of struct entries
-  
+
   struct_entry:
     seq:
       - id: struct_id
@@ -180,18 +193,18 @@ types:
           Structure type identifier.
           Root struct always has struct_id = 0xFFFFFFFF (-1).
           Other structs have programmer-defined IDs.
-      
+
       - id: data_or_offset
         type: u4
         doc: |
           If field_count = 1: Direct field index into field_array.
           If field_count > 1: Byte offset into field_indices array.
           If field_count = 0: Unused (empty struct).
-      
+
       - id: field_count
         type: u4
         doc: Number of fields in this struct (0, 1, or >1)
-  
+
   # Field Array
   field_array:
     seq:
@@ -200,7 +213,7 @@ types:
         repeat: expr
         repeat-expr: _root.gff_header.field_count
         doc: Array of field entries
-  
+
   field_entry:
     seq:
       - id: field_type
@@ -226,11 +239,11 @@ types:
           15 = List
           16 = Vector3
           17 = Vector4
-      
+
       - id: label_index
         type: u4
         doc: Index into label_array for field name
-      
+
       - id: data_or_offset
         type: u4
         doc: |
@@ -242,7 +255,7 @@ types:
             Struct index into struct_array
           For List type:
             Byte offset into list_indices array
-  
+
   # Field Data Section
   field_data_section:
     seq:
@@ -250,7 +263,7 @@ types:
         type: str
         size: _root.gff_header.field_data_count
         doc: Raw field data bytes for complex types
-  
+
   # Field Indices Array (MultiMap)
   field_indices_array:
     seq:
@@ -259,7 +272,7 @@ types:
         repeat: expr
         repeat-expr: _root.gff_header.field_indices_count
         doc: Array of field indices (uint32 values) for structs with multiple fields
-  
+
   # List Indices Array
   list_indices_array:
     seq:
