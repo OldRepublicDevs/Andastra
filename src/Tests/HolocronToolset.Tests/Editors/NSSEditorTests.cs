@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -921,14 +922,104 @@ void helper() {
             throw new NotImplementedException("TestNssEditorSnippetFilter: Snippet filter test not yet implemented");
         }
 
-        // TODO: STUB - Implement test_nss_editor_snippet_persistence (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:488-518)
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:488-518
         // Original: def test_nss_editor_snippet_persistence(qtbot, installation: HTInstallation): Test snippet persistence
         [Fact]
         public void TestNssEditorSnippetPersistence()
         {
-            // TODO: STUB - Implement snippet persistence test
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:488-518
-            throw new NotImplementedException("TestNssEditorSnippetPersistence: Snippet persistence test not yet implemented");
+            // Get installation if available (K2 preferred for NSS files)
+            string k2Path = Environment.GetEnvironmentVariable("K2_PATH");
+            if (string.IsNullOrEmpty(k2Path))
+            {
+                k2Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor2";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k2Path) && System.IO.File.Exists(System.IO.Path.Combine(k2Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k2Path, "Test Installation", tsl: true);
+            }
+
+            // If K2 not available, try K1
+            if (installation == null)
+            {
+                string k1Path = Environment.GetEnvironmentVariable("K1_PATH");
+                if (string.IsNullOrEmpty(k1Path))
+                {
+                    k1Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor";
+                }
+
+                if (System.IO.Directory.Exists(k1Path) && System.IO.File.Exists(System.IO.Path.Combine(k1Path, "chitin.key")))
+                {
+                    installation = new HTInstallation(k1Path, "Test Installation", tsl: false);
+                }
+            }
+
+            // Matching Python: editor = NSSEditor(None, installation)
+            var editor = new NSSEditor(null, installation);
+
+            // Matching Python: editor.new()
+            editor.New();
+
+            // Verify snippet list is initialized
+            var snippetList = editor.SnippetList;
+            snippetList.Should().NotBeNull("SnippetList should be initialized");
+
+            // Matching Python: snippets = [("Test 1", "code1"), ("Test 2", "code2")]
+            var testSnippets = new[]
+            {
+                ("Test 1", "code1"),
+                ("Test 2", "code2")
+            };
+
+            // Matching Python: for name, code in snippets:
+            // Matching Python: item = QListWidgetItem(name)
+            // Matching Python: item.setData(Qt.ItemDataRole.UserRole, code)
+            // Matching Python: editor.ui.snippetList.addItem(item)
+            foreach (var (name, code) in testSnippets)
+            {
+                var item = new Avalonia.Controls.ListBoxItem
+                {
+                    Content = name,
+                    Tag = code
+                };
+                snippetList.Items.Add(item);
+            }
+
+            // Verify snippets were added
+            snippetList.Items.Count.Should().Be(2, "Two snippets should be added");
+
+            // Matching Python: editor._save_snippets()
+            editor.SaveSnippets();
+
+            // Matching Python: editor.ui.snippetList.clear()
+            snippetList.Items.Clear();
+
+            // Verify list is cleared
+            snippetList.Items.Count.Should().Be(0, "Snippet list should be cleared");
+
+            // Matching Python: editor.load_snippets()
+            editor.LoadSnippets();
+
+            // Matching Python: assert editor.ui.snippetList.count() >= 0  # At least 0 (may have previous snippets)
+            // Note: The Python test allows for existing snippets, but we want to verify our snippets were restored
+            snippetList.Items.Count.Should().BeGreaterThanOrEqualTo(2, "At least 2 snippets should be restored (may have existing snippets from settings)");
+
+            // Verify that our test snippets are present
+            var restoredSnippets = new List<(string name, string content)>();
+            foreach (var itemObj in snippetList.Items)
+            {
+                if (itemObj is Avalonia.Controls.ListBoxItem item && item != null)
+                {
+                    string name = item.Content?.ToString() ?? "";
+                    string content = item.Tag as string ?? "";
+                    restoredSnippets.Add((name, content));
+                }
+            }
+
+            // Verify our test snippets are in the restored list
+            restoredSnippets.Should().Contain(s => s.name == "Test 1" && s.content == "code1", "Test snippet 1 should be restored");
+            restoredSnippets.Should().Contain(s => s.name == "Test 2" && s.content == "code2", "Test snippet 2 should be restored");
         }
 
         // TODO: STUB - Implement test_nss_editor_syntax_highlighting_setup (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:520-545)
@@ -1316,14 +1407,109 @@ void helper() {
             }
         }
 
-        // TODO: STUB - Implement test_nss_editor_insert_constant (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:667-695)
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:667-695
         // Original: def test_nss_editor_insert_constant(qtbot, installation: HTInstallation): Test insert constant
         [Fact]
         public void TestNssEditorInsertConstant()
         {
-            // TODO: STUB - Implement insert constant test
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:667-695
-            throw new NotImplementedException("TestNssEditorInsertConstant: Insert constant test not yet implemented");
+            // Matching Python: Test inserting a constant from the constants list.
+            // Get installation if available (K2 preferred for NSS files)
+            string k2Path = Environment.GetEnvironmentVariable("K2_PATH");
+            if (string.IsNullOrEmpty(k2Path))
+            {
+                k2Path = @"C:\Program Files (x86)\Steam\steamapps\common\Knights of the Old Republic II";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k2Path) && System.IO.File.Exists(System.IO.Path.Combine(k2Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k2Path, "Test Installation", tsl: true);
+            }
+            else
+            {
+                // Fallback to K1
+                string k1Path = Environment.GetEnvironmentVariable("K1_PATH");
+                if (string.IsNullOrEmpty(k1Path))
+                {
+                    k1Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor";
+                }
+
+                if (System.IO.Directory.Exists(k1Path) && System.IO.File.Exists(System.IO.Path.Combine(k1Path, "chitin.key")))
+                {
+                    installation = new HTInstallation(k1Path, "Test Installation", tsl: false);
+                }
+            }
+
+            // Matching Python: editor = NSSEditor(None, installation)
+            var editor = new NSSEditor(null, installation);
+            // Matching Python: editor.new()
+            editor.New();
+
+            // Matching Python: editor._update_game_specific_data()
+            editor.UpdateGameSpecificData();
+
+            // Matching Python: # Find a constant
+            // Matching Python: constant_item = None
+            // Matching Python: for i in range(editor.ui.constantList.count()):
+            // Matching Python:     item = editor.ui.constantList.item(i)
+            // Matching Python:     if item:
+            // Matching Python:         constant_item = item
+            // Matching Python:         break
+            Avalonia.Controls.ListBoxItem constantItem = null;
+            var constantList = editor.ConstantList;
+            if (constantList != null && constantList.Items != null)
+            {
+                foreach (var item in constantList.Items)
+                {
+                    var listBoxItem = item as Avalonia.Controls.ListBoxItem;
+                    if (listBoxItem != null && listBoxItem.Content != null)
+                    {
+                        constantItem = listBoxItem;
+                        break;
+                    }
+                }
+            }
+
+            // Matching Python: if constant_item:
+            if (constantItem != null)
+            {
+                // Matching Python: editor.ui.constantList.setCurrentItem(constant_item)
+                constantList.SelectedItem = constantItem;
+                // Matching Python: constant_name = constant_item.text()
+                string constantName = constantItem.Content?.ToString();
+
+                // Matching Python: editor.insert_selected_constant()
+                editor.InsertSelectedConstant();
+
+                // Matching Python: # Constant should be inserted in code
+                // Matching Python: code_text = editor.ui.codeEdit.toPlainText()
+                // Matching Python: assert constant_name in code_text or len(code_text) > 0
+                var codeEditor = typeof(NSSEditor).GetField("_codeEdit",
+                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                if (codeEditor != null)
+                {
+                    var editorInstance = codeEditor.GetValue(editor) as HolocronToolset.Widgets.CodeEditor;
+                    if (editorInstance != null)
+                    {
+                        string codeText = editorInstance.ToPlainText();
+                        // The constant should be inserted in format "ConstantName = value" or just the constant name
+                        // Python test checks: constant_name in code_text or len(code_text) > 0
+                        if (!string.IsNullOrEmpty(constantName))
+                        {
+                            codeText.Should().Contain(constantName, "Constant should be inserted in code");
+                        }
+                        else
+                        {
+                            codeText.Length.Should().BeGreaterThan(0, "Code should have content after inserting constant");
+                        }
+                    }
+                }
+            }
+            else
+            {
+                // If no constants found, skip test (matching Python behavior where test would pass if no constants)
+                // This is acceptable - the test verifies the insertion mechanism works when constants are available
+            }
         }
 
         // TODO: STUB - Implement test_nss_editor_game_selector_switch (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:697-717)

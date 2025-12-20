@@ -36,6 +36,7 @@ namespace HolocronToolset.Editors
         private TreeView _outlineView;
         private ListBox _functionList;
         private ListBox _constantList;
+        private ListBox _snippetList;
         private TextBox _functionSearchEdit;
         private TextBox _constantSearchEdit;
         private ComboBox _gameSelector;
@@ -127,6 +128,7 @@ namespace HolocronToolset.Editors
             SetupSignals();
             SetupFindReplaceWidget();
             SetupBookmarks();
+            SetupSnippets();
             SetupFunctionList();
             SetupBreadcrumbs();
             SetupOutline();
@@ -945,6 +947,155 @@ namespace HolocronToolset.Editors
             LoadBookmarks();
         }
 
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:327-347
+        // Original: def load_snippets(self):
+        /// <summary>
+        /// Sets up the snippet list widget and loads snippets from settings.
+        /// </summary>
+        private void SetupSnippets()
+        {
+            _snippetList = new ListBox();
+
+            // Load snippets when editor is initialized
+            LoadSnippets();
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:327-347
+        // Original: def load_snippets(self):
+        /// <summary>
+        /// Loads snippets from QSettings into the list widget.
+        /// </summary>
+        internal void LoadSnippets()
+        {
+            if (_snippetList == null)
+            {
+                return;
+            }
+
+            // Matching Python: settings = QSettings("HolocronToolsetV3", "NSSEditor")
+            var settings = new Settings("NSSEditor");
+
+            // Matching Python: snippets_json = settings.value("nss_editor/snippets", "[]")
+            string snippetsJson = settings.GetValue("nss_editor/snippets", "[]");
+
+            // Matching Python: snippets = json.loads(snippets_json) if isinstance(snippets_json, str) else []
+            List<Dictionary<string, object>> snippets = new List<Dictionary<string, object>>();
+
+            try
+            {
+                if (!string.IsNullOrEmpty(snippetsJson) && snippetsJson != "[]")
+                {
+                    // Parse JSON array of snippet dictionaries
+                    using (JsonDocument doc = JsonDocument.Parse(snippetsJson))
+                    {
+                        if (doc.RootElement.ValueKind == JsonValueKind.Array)
+                        {
+                            foreach (JsonElement element in doc.RootElement.EnumerateArray())
+                            {
+                                if (element.ValueKind == JsonValueKind.Object)
+                                {
+                                    var snippet = new Dictionary<string, object>();
+                                    foreach (JsonProperty prop in element.EnumerateObject())
+                                    {
+                                        if (prop.Value.ValueKind == JsonValueKind.String)
+                                        {
+                                            snippet[prop.Name] = prop.Value.GetString();
+                                        }
+                                    }
+                                    // Matching Python: if isinstance(snippet, dict) and "name" in snippet and "content" in snippet:
+                                    if (snippet.ContainsKey("name") && snippet.ContainsKey("content"))
+                                    {
+                                        snippets.Add(snippet);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            catch
+            {
+                // If parsing fails, use empty list
+                snippets = new List<Dictionary<string, object>>();
+            }
+
+            // Matching Python: self.ui.snippetList.clear()
+            _snippetList.Items.Clear();
+
+            // Matching Python: for snippet in snippets:
+            foreach (var snippet in snippets)
+            {
+                // Matching Python: item = QListWidgetItem(snippet["name"])
+                // Matching Python: item.setData(Qt.ItemDataRole.UserRole, snippet["content"])
+                string name = snippet.ContainsKey("name") ? (snippet["name"] as string ?? "") : "";
+                string content = snippet.ContainsKey("content") ? (snippet["content"] as string ?? "") : "";
+
+                if (!string.IsNullOrEmpty(name))
+                {
+                    // In Avalonia, ListBoxItem is created automatically, but we can use Tag for content
+                    var item = new ListBoxItem
+                    {
+                        Content = name,
+                        Tag = content
+                    };
+                    _snippetList.Items.Add(item);
+                }
+            }
+
+            // Matching Python: self._filter_snippets() - would be called if filtering is implemented
+            // For now, we just load the snippets
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:349-360
+        // Original: def _save_snippets(self):
+        /// <summary>
+        /// Saves snippets to QSettings.
+        /// </summary>
+        internal void SaveSnippets()
+        {
+            if (_snippetList == null)
+            {
+                return;
+            }
+
+            // Matching Python: snippets = []
+            var snippets = new List<Dictionary<string, object>>();
+
+            // Matching Python: for i in range(self.ui.snippetList.count()):
+            foreach (var itemObj in _snippetList.Items)
+            {
+                if (itemObj is ListBoxItem item && item != null)
+                {
+                    // Matching Python: name = item.text() or ""
+                    string name = item.Content?.ToString() ?? "";
+
+                    // Matching Python: content = item.data(Qt.ItemDataRole.UserRole) or ""
+                    string content = item.Tag as string ?? "";
+
+                    // Matching Python: snippets.append({"name": name, "content": content})
+                    snippets.Add(new Dictionary<string, object>
+                    {
+                        { "name", name },
+                        { "content", content }
+                    });
+                }
+            }
+
+            // Matching Python: settings = QSettings("HolocronToolsetV3", "NSSEditor")
+            try
+            {
+                var settings = new Settings("NSSEditor");
+                // Matching Python: settings.setValue("nss_editor/snippets", json.dumps(snippets))
+                string json = JsonSerializer.Serialize(snippets);
+                settings.SetValue("nss_editor/snippets", json);
+                // Matching Python: settings.sync() - Save() is called automatically in SetValue
+            }
+            catch
+            {
+                // Ignore save errors
+            }
+        }
+
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:234-253
         // Original: def add_bookmark(self):
         public void AddBookmark()
@@ -1348,6 +1499,10 @@ namespace HolocronToolset.Editors
         // Public property to access bookmark tree for testing
         public TreeView BookmarkTree => _bookmarkTree;
 
+        // Public property to access snippet list for testing
+        // Matching PyKotor: editor.ui.snippetList in test_nss_editor_snippet_persistence
+        public ListBox SnippetList => _snippetList;
+
         // Public property to access resname for testing
         // Matching PyKotor: editor._resname in test_nss_editor_bookmark_persistence
         public string Resname => _resname;
@@ -1712,6 +1867,9 @@ namespace HolocronToolset.Editors
 
         // Public property to access function list for testing
         public ListBox FunctionList => _functionList;
+
+        // Public property to access constant list for testing
+        public ListBox ConstantList => _constantList;
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py
         // Original: Status bar is set up in UI setup, accessible via statusBar() method
