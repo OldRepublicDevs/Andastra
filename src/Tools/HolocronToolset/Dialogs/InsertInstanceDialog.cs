@@ -95,6 +95,7 @@ namespace HolocronToolset.Dialogs
             _resourceList = new ListBox();
             _okButton = new Button { Content = "OK" };
             _cancelButton = new Button { Content = "Cancel" };
+            _dynamicTextLabel = new TextBlock { Text = "No resource selected", TextWrapping = Avalonia.Media.TextWrapping.Wrap };
 
             // Connect events
             _reuseResourceRadio.IsCheckedChanged += (s, e) => OnResourceRadioToggled();
@@ -116,6 +117,7 @@ namespace HolocronToolset.Dialogs
             panel.Children.Add(_resourceList);
             panel.Children.Add(_okButton);
             panel.Children.Add(_cancelButton);
+            panel.Children.Add(_dynamicTextLabel);
             Content = panel;
         }
 
@@ -128,6 +130,7 @@ namespace HolocronToolset.Dialogs
         private ListBox _resourceList;
         private Button _okButton;
         private Button _cancelButton;
+        private TextBlock _dynamicTextLabel;
 
         private void SetupUI()
         {
@@ -144,6 +147,8 @@ namespace HolocronToolset.Dialogs
                 _resourceList = this.FindControl<ListBox>("resourceList");
                 _okButton = this.FindControl<Button>("okButton");
                 _cancelButton = this.FindControl<Button>("cancelButton");
+                _previewRenderer = this.FindControl<Widgets.ModelRenderer>("previewRenderer");
+                _dynamicTextLabel = this.FindControl<TextBlock>("dynamicTextLabel");
             }
             catch
             {
@@ -183,6 +188,14 @@ namespace HolocronToolset.Dialogs
             if (_cancelButton != null)
             {
                 _cancelButton.Click += (s, e) => Close();
+            }
+
+            // Initialize preview renderer with installation
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/insert_instance.py:67
+            // Original: self.ui.previewRenderer.installation = installation
+            if (_previewRenderer != null && _installation != null)
+            {
+                _previewRenderer.Installation = _installation;
             }
         }
 
@@ -484,11 +497,285 @@ namespace HolocronToolset.Dialogs
             if (_resourceList?.SelectedItem is FileResource resource)
             {
                 // Update dynamic text label
-                // TODO: Implement when UI controls are available
+                // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/insert_instance.py:207-209
+                // Original: summary_text: str = self.generate_resource_summary(resource)
+                // Original: self.ui.dynamicTextLabel.setText(summary_text)
+                string summaryText = GenerateResourceSummary(resource);
+                if (_dynamicTextLabel != null)
+                {
+                    _dynamicTextLabel.Text = summaryText;
+                }
 
                 // Update preview
-                // TODO: Implement when preview renderer is available
+                // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/insert_instance.py:210-262
+                if (resource.ResType == ResourceType.UTC && _globalSettings.ShowPreviewUTC)
+                {
+                    // Original: self.ui.previewRenderer.set_creature(read_utc(resource.data()))
+                    var utc = ResourceAutoHelpers.ReadUtc(resource.GetData());
+                    if (_previewRenderer != null)
+                    {
+                        _previewRenderer.SetCreature(utc);
+                    }
+                }
+                else
+                {
+                    byte[] mdlData = null;
+                    byte[] mdxData = null;
+
+                    if (resource.ResType == ResourceType.UTD && _globalSettings.ShowPreviewUTD)
+                    {
+                        // Original: modelname: str = door.get_model(read_utd(resource.data()), self._installation)
+                        // Original: self.set_render_model(modelname)
+                        var utd = ResourceAutoHelpers.ReadUtd(resource.GetData());
+                        string modelName = Andastra.Parsing.Tools.Door.GetModel(utd, _installation.Installation);
+                        SetRenderModel(modelName);
+                    }
+                    else if (resource.ResType == ResourceType.UTP && _globalSettings.ShowPreviewUTP)
+                    {
+                        // Original: modelname: str = placeable.get_model(read_utp(resource.data()), self._installation)
+                        // Original: self.set_render_model(modelname)
+                        var utp = ResourceAutoHelpers.ReadUtp(resource.GetData());
+                        string modelName = Andastra.Parsing.Tools.Placeable.GetModel(utp, _installation.Installation);
+                        SetRenderModel(modelName);
+                    }
+                    else if ((resource.ResType == ResourceType.MDL || resource.ResType == ResourceType.MDX) &&
+                             (_globalSettings.ShowPreviewUTC || _globalSettings.ShowPreviewUTD || _globalSettings.ShowPreviewUTP))
+                    {
+                        // Original: data = resource.data()
+                        byte[] data = resource.GetData();
+                        if (resource.ResType == ResourceType.MDL)
+                        {
+                            mdlData = data;
+                            // Try to get MDX from same container
+                            string fileName = Path.GetFileName(resource.FilePath);
+                            if (Andastra.Parsing.Tools.FileHelpers.IsAnyErfTypeFile(fileName))
+                            {
+                                // Original: erf = read_erf(resource.filepath())
+                                // Original: mdx_data = erf.get(resource.resname(), ResourceType.MDX)
+                                var erf = ERFAuto.ReadErf(resource.FilePath);
+                                mdxData = erf.GetData(resource.ResName, ResourceType.MDX);
+                            }
+                            else if (Andastra.Parsing.Tools.FileHelpers.IsRimFile(fileName))
+                            {
+                                // Original: rim = read_rim(resource.filepath())
+                                // Original: mdx_data = rim.get(resource.resname(), ResourceType.MDX)
+                                var rim = RIMAuto.ReadRim(resource.FilePath);
+                                mdxData = rim.GetData(resource.ResName, ResourceType.MDX);
+                            }
+                            else if (Andastra.Parsing.Tools.FileHelpers.IsBifFile(fileName))
+                            {
+                                // Original: mdx_res: ResourceResult | None = self._installation.resource(resource.resname(), ResourceType.MDX)
+                                // Original: if mdx_res is not None: mdx_data = mdx_res.data
+                                var mdxRes = _installation.Installation.Resources.LookupResource(resource.ResName, ResourceType.MDX);
+                                if (mdxRes != null && mdxRes.Data != null)
+                                {
+                                    mdxData = mdxRes.Data;
+                                }
+                            }
+                            else
+                            {
+                                // Original: mdx_data = resource.filepath().with_suffix(".mdx").read_bytes()
+                                string mdxPath = Path.ChangeExtension(resource.FilePath, ".mdx");
+                                if (File.Exists(mdxPath))
+                                {
+                                    mdxData = File.ReadAllBytes(mdxPath);
+                                }
+                            }
+                        }
+                        else if (resource.ResType == ResourceType.MDX)
+                        {
+                            mdxData = data;
+                            // Try to get MDL from same container
+                            string fileName = Path.GetFileName(resource.FilePath);
+                            if (Andastra.Parsing.Tools.FileHelpers.IsAnyErfTypeFile(fileName))
+                            {
+                                // Original: erf = read_erf(resource.filepath())
+                                // Original: mdl_data = erf.get(resource.resname(), ResourceType.MDL)
+                                var erf = ERFAuto.ReadErf(resource.FilePath);
+                                mdlData = erf.GetData(resource.ResName, ResourceType.MDL);
+                            }
+                            else if (Andastra.Parsing.Tools.FileHelpers.IsRimFile(fileName))
+                            {
+                                // Original: rim = read_rim(resource.filepath())
+                                // Original: mdl_data = rim.get(resource.resname(), ResourceType.MDL)
+                                var rim = RIMAuto.ReadRim(resource.FilePath);
+                                mdlData = rim.GetData(resource.ResName, ResourceType.MDL);
+                            }
+                            else if (Andastra.Parsing.Tools.FileHelpers.IsBifFile(fileName))
+                            {
+                                // Original: mdl_res: ResourceResult | None = self._installation.resource(resource.resname(), ResourceType.MDL)
+                                // Original: if mdl_res is not None: mdl_data = mdl_res.data
+                                var mdlRes = _installation.Installation.Resources.LookupResource(resource.ResName, ResourceType.MDL);
+                                if (mdlRes != null && mdlRes.Data != null)
+                                {
+                                    mdlData = mdlRes.Data;
+                                }
+                            }
+                            else
+                            {
+                                // Original: mdl_data = resource.filepath().with_suffix(".mdl").read_bytes()
+                                string mdlPath = Path.ChangeExtension(resource.FilePath, ".mdl");
+                                if (File.Exists(mdlPath))
+                                {
+                                    mdlData = File.ReadAllBytes(mdlPath);
+                                }
+                            }
+                        }
+
+                        // Original: if mdl_data is not None and mdx_data is not None:
+                        // Original:     self.ui.previewRenderer.setModel(mdl_data, mdx_data)
+                        // Original: else:
+                        // Original:     self.ui.previewRenderer.clearModel()
+                        if (mdlData != null && mdxData != null && _previewRenderer != null)
+                        {
+                            _previewRenderer.SetModel(mdlData, mdxData);
+                        }
+                        else if (_previewRenderer != null)
+                        {
+                            _previewRenderer.ClearModel();
+                        }
+                    }
+                    else
+                    {
+                        // Clear preview if preview is not enabled for this resource type
+                        if (_previewRenderer != null)
+                        {
+                            _previewRenderer.ClearModel();
+                        }
+                    }
+                }
             }
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/insert_instance.py:264-277
+        // Original: def set_render_model(self, modelname: str):
+        private void SetRenderModel(string modelName)
+        {
+            if (string.IsNullOrEmpty(modelName) || _installation == null || _previewRenderer == null)
+            {
+                return;
+            }
+
+            // Original: mdl: ResourceResult | None = self._installation.resource(modelname, ResourceType.MDL)
+            // Original: mdx: ResourceResult | None = self._installation.resource(modelname, ResourceType.MDX)
+            var mdlRes = _installation.Installation.Resources.LookupResource(modelName, ResourceType.MDL);
+            var mdxRes = _installation.Installation.Resources.LookupResource(modelName, ResourceType.MDX);
+
+            // Original: if mdl is not None and mdx is not None:
+            // Original:     self.ui.previewRenderer.setModel(mdl.data, mdx.data)
+            // Original: else:
+            // Original:     self.ui.previewRenderer.clearModel()
+            if (mdlRes != null && mdlRes.Data != null && mdxRes != null && mdxRes.Data != null)
+            {
+                _previewRenderer.SetModel(mdlRes.Data, mdxRes.Data);
+            }
+            else
+            {
+                _previewRenderer.ClearModel();
+            }
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/insert_instance.py:279-289
+        // Original: def generate_resource_summary(self, resource: FileResource) -> str:
+        private string GenerateResourceSummary(FileResource resource)
+        {
+            if (resource == null)
+            {
+                return "";
+            }
+
+            // Original: summary: list[str] = [
+            // Original:     f"Name: {resource.resname()}",
+            // Original:     f"Type: {resource.restype().name}",
+            // Original:     f"Size: {len(resource.data())} bytes",
+            // Original:     f"Path: {resource.filepath().relative_to(self._installation.path())}"
+            // Original: ]
+            // Original: return "\n".join(summary)
+            var summary = new System.Collections.Generic.List<string>
+            {
+                $"Name: {resource.ResName}",
+                $"Type: {resource.ResType.Name}",
+                $"Size: {resource.GetData().Length} bytes"
+            };
+
+            // Get relative path if installation path is available
+            if (_installation != null && !string.IsNullOrEmpty(_installation.Path) && !string.IsNullOrEmpty(resource.FilePath))
+            {
+                try
+                {
+                    string installationPath = _installation.Path;
+                    string resourcePath = resource.FilePath;
+                    if (resourcePath.StartsWith(installationPath, StringComparison.OrdinalIgnoreCase))
+                    {
+                        string relativePath = resourcePath.Substring(installationPath.Length).TrimStart(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+                        summary.Add($"Path: {relativePath}");
+                    }
+                    else
+                    {
+                        summary.Add($"Path: {resourcePath}");
+                    }
+                }
+                catch
+                {
+                    summary.Add($"Path: {resource.FilePath}");
+                }
+            }
+            else
+            {
+                summary.Add($"Path: {resource.FilePath}");
+            }
+
+            return string.Join("\n", summary);
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/insert_instance.py:279-289
+        // Original: def generate_resource_summary(self, resource: FileResource) -> str:
+        private string GenerateResourceSummary(FileResource resource)
+        {
+            if (resource == null)
+            {
+                return "No resource selected";
+            }
+
+            var summary = new System.Collections.Generic.List<string>
+            {
+                $"Name: {resource.ResName}",
+                $"Type: {resource.ResType.Name}",
+                $"Size: {resource.GetData().Length} bytes"
+            };
+
+            // Calculate relative path from installation path
+            if (_installation != null && !string.IsNullOrEmpty(_installation.Path) && !string.IsNullOrEmpty(resource.FilePath))
+            {
+                try
+                {
+                    string installationPath = Path.GetFullPath(_installation.Path);
+                    string resourcePath = Path.GetFullPath(resource.FilePath);
+                    
+                    // Check if resource path is within installation path
+                    if (resourcePath.StartsWith(installationPath, StringComparison.OrdinalIgnoreCase))
+                    {
+                        string relativePath = Path.GetRelativePath(installationPath, resourcePath);
+                        summary.Add($"Path: {relativePath}");
+                    }
+                    else
+                    {
+                        // If not relative, show full path
+                        summary.Add($"Path: {resource.FilePath}");
+                    }
+                }
+                catch
+                {
+                    // If path calculation fails, just show the file path
+                    summary.Add($"Path: {resource.FilePath}");
+                }
+            }
+            else
+            {
+                summary.Add($"Path: {resource.FilePath}");
+            }
+
+            return string.Join("\n", summary);
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/insert_instance.py:291-297

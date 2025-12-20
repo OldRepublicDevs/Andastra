@@ -1,5 +1,6 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:Widgets="clr-namespace:HolocronToolset.Widgets;assembly=HolocronToolset"
         x:Class="HolocronToolset.Dialogs.InsertInstanceDialog"
         Title="Insert Instance"
         Width="800" Height="600"
@@ -12,8 +13,7 @@
                 <Grid RowDefinitions="Auto,*">
                     <TextBlock Grid.Row="0" Text="Preview" FontWeight="Bold" Margin="5" />
                     <Border Grid.Row="1" MinWidth="250" MinHeight="250" Background="LightGray" Margin="5">
-                        <!-- Preview renderer will be added here when available -->
-                        <TextBlock Text="Preview" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        <Widgets:ModelRenderer Name="previewRenderer" />
                     </Border>
                 </Grid>
             </Border>
