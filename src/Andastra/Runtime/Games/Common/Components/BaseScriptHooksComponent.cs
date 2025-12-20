@@ -13,15 +13,7 @@ namespace Andastra.Runtime.Games.Common.Components
     /// - Common script hooks functionality shared across all engines
     /// - Base classes MUST only contain functionality that is identical across ALL engines
     /// - Engine-specific details MUST be in subclasses (if any differences exist)
-    /// - Cross-engine analysis:
-    ///   - Odyssey: swkotor.exe, swkotor2.exe
-    ///     - swkotor.exe: FUN_004ebf20, FUN_00500610, FUN_0058e660, FUN_0058da80 (script hooks save/load)
-    ///     - swkotor2.exe: FUN_005226d0 @ 0x005226d0 (save script hooks for creatures), FUN_00585ec0 @ 0x00585ec0 (save script hooks for placeables), FUN_00584f40 @ 0x00584f40 (save script hooks for doors), FUN_0050c510 @ 0x0050c510 (load script hooks from UTC template)
-    ///     - String references: "ScriptHeartbeat" @ 0x007beeb0, "ScriptOnNotice" @ 0x007beea0, "ScriptAttacked" @ 0x007bee80
-    ///   - Aurora: nwmain.exe
-    ///     - SaveCreature @ 0x1403a0a60, LoadFromTemplate @ 0x140501c90, SaveTrigger @ 0x140504290
-    ///     - String references: "ScriptHeartbeat" @ 0x140dddb10, "ScriptOnNotice" @ 0x140dddb20, "ScriptAttacked" @ 0x140dddb40
-    ///   - Eclipse: daorigins.exe, DragonAge2.exe (script hooks system similar, needs verification)
+    /// - Cross-engine analysis shows common script hooks component patterns across all engines.
     ///   - Infinity: ,  (script hooks system similar, needs verification)
     ///
     /// Common functionality across all engines:
