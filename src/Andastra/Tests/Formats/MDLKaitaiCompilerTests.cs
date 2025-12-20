@@ -381,7 +381,36 @@ namespace Andastra.Parsing.Tests.Formats
             {
                 if (File.Exists(jarPath))
                 {
-                    // Use Java to run the JAR
+                    // Use Java to run the JAR with main class
+                    // Try both methods: with -jar and with -cp + main class
+                    try
+                    {
+                        // First try with -cp and main class (more reliable)
+                        var testProcess = new ProcessStartInfo
+                        {
+                            FileName = "java",
+                            Arguments = $"-cp \"{jarPath}\" io.kaitai.struct.Main --version",
+                            RedirectStandardOutput = true,
+                            RedirectStandardError = true,
+                            UseShellExecute = false,
+                            CreateNoWindow = true
+                        };
+                        using (var testProc = Process.Start(testProcess))
+                        {
+                            if (testProc != null)
+                            {
+                                testProc.WaitForExit(5000);
+                                if (testProc.ExitCode == 0)
+                                {
+                                    return $"java -cp \"{jarPath}\" io.kaitai.struct.Main";
+                                }
+                            }
+                        }
+                    }
+                    catch
+                    {
+                        // Fall back to -jar method
+                    }
                     return $"java -jar \"{jarPath}\"";
                 }
             }
