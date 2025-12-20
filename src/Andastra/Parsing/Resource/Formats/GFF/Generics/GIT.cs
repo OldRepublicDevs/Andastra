@@ -384,10 +384,13 @@ namespace Andastra.Parsing.Resource.Generics
     {
         public const int GffStructId = 14;
         public int CameraId { get; set; }
-        public float Fov { get; set; } = 45.0f;
+        // Engine default: 55.0 (swkotor2.exe: 0x004e0ff0 line 57)
+        // NOTE: Engine uses 55.0 as default, not 45.0. This is the field of view angle.
+        public float Fov { get; set; } = 55.0f;
         public float Height { get; set; }
         public float MicRange { get; set; }
-        public Vector4 Orientation { get; set; } = new Vector4();
+        // Engine default: (0, 0, 0, 1) - quaternion identity (swkotor2.exe: 0x004e0ff0 line 52)
+        public Vector4 Orientation { get; set; } = new Vector4(0, 0, 0, 1);
         public Vector3 Position { get; set; } = new Vector3();
         public float Pitch { get; set; }
         public ResRef ResRef { get; set; } = ResRef.FromBlank();
