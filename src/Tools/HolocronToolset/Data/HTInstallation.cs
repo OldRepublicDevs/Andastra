@@ -439,7 +439,7 @@ namespace HolocronToolset.Data
         // Original: def to_qimage(self) -> QImage:
         // Converts TPC mipmap to Avalonia Bitmap for display
         [CanBeNull]
-        private static Avalonia.Media.Imaging.Bitmap ConvertTpcMipmapToAvaloniaBitmap(TPCMipmap mipmap)
+        internal static Avalonia.Media.Imaging.Bitmap ConvertTpcMipmapToAvaloniaBitmap(TPCMipmap mipmap)
         {
             if (mipmap == null || mipmap.Data == null || mipmap.Width <= 0 || mipmap.Height <= 0)
             {

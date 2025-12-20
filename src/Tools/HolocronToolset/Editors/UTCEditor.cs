@@ -651,6 +651,9 @@ namespace HolocronToolset.Editors
 
             // Comments
             if (_commentsEdit != null) _commentsEdit.Text = utc.Comment;
+            
+            // Update portrait preview after loading all data
+            PortraitChanged();
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utc.py:545-663
@@ -937,9 +940,279 @@ namespace HolocronToolset.Editors
         // Original: def portrait_changed(self, _actual_combo_index):
         private void PortraitChanged()
         {
-            // Placeholder for portrait preview update
-            // Will be implemented when portrait loading is available
-            System.Console.WriteLine("Portrait update not yet implemented");
+            if (_portraitPicture == null)
+            {
+                return;
+            }
+
+            int index = _portraitSelect?.SelectedIndex ?? 0;
+            
+            // Matching Python: if index == 0, create blank image
+            if (index == 0)
+            {
+                // Create blank 64x64 RGB image (black)
+                var blankBitmap = new WriteableBitmap(
+                    new PixelSize(64, 64),
+                    new Vector(96, 96),
+                    PixelFormat.Rgba8888,
+                    AlphaFormat.Premul);
+                using (var lockedBitmap = blankBitmap.Lock())
+                {
+                    // Fill with black (zeros)
+                    System.Runtime.InteropServices.Marshal.Copy(
+                        new byte[64 * 64 * 4], 0, lockedBitmap.Address, 64 * 64 * 4);
+                }
+                _portraitPicture.Source = blankBitmap;
+                ToolTip.SetTip(_portraitPicture, GeneratePortraitTooltip());
+                return;
+            }
+
+            // Build pixmap from index
+            var bitmap = BuildPortraitBitmap(index);
+            if (bitmap != null)
+            {
+                _portraitPicture.Source = bitmap;
+            }
+            else
+            {
+                // Fallback to blank image if build failed
+                var blankBitmap = new WriteableBitmap(
+                    new PixelSize(64, 64),
+                    new Vector(96, 96),
+                    PixelFormat.Rgba8888,
+                    AlphaFormat.Premul);
+                using (var lockedBitmap = blankBitmap.Lock())
+                {
+                    System.Runtime.InteropServices.Marshal.Copy(
+                        new byte[64 * 64 * 4], 0, lockedBitmap.Address, 64 * 64 * 4);
+                }
+                _portraitPicture.Source = blankBitmap;
+            }
+            
+            // Set tooltip
+            ToolTip.SetTip(_portraitPicture, GeneratePortraitTooltip());
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utc.py:712-756
+        // Original: def _build_pixmap(self, index: int) -> QPixmap:
+        /// <summary>
+        /// Builds a portrait bitmap based on character alignment.
+        /// 
+        /// Builds the portrait bitmap by:
+        ///     1. Getting the character's alignment value
+        ///     2. Looking up the character's portrait reference in the portraits 2DA based on alignment
+        ///     3. Loading the texture for the portrait reference
+        ///     4. Converting the texture to a Bitmap.
+        /// </summary>
+        /// <param name="index">The character index to build a portrait for.</param>
+        /// <returns>A Bitmap of the character portrait, or null if loading fails.</returns>
+        private Bitmap BuildPortraitBitmap(int index)
+        {
+            if (_installation == null)
+            {
+                return null;
+            }
+
+            // Get alignment value
+            int alignment = (int)(_alignmentSlider?.Value ?? 50);
+
+            // Get portraits 2DA
+            TwoDA portraits = _installation.HtGetCache2DA(HTInstallation.TwoDAPortraits);
+            if (portraits == null)
+            {
+                System.Console.WriteLine("Cannot build portrait: portraits.2da not found");
+                return null;
+            }
+
+            // Get base portrait resref
+            string portrait = portraits.GetCell(index, "baseresref");
+            if (string.IsNullOrEmpty(portrait))
+            {
+                System.Console.WriteLine($"Cannot build portrait: baseresref not found for index {index}");
+                return null;
+            }
+
+            // Check alignment-based variants (matching Python logic)
+            // Python: if 40 >= alignment > 30 and portraits.get_cell(index, "baseresrefe"):
+            if (alignment <= 40 && alignment > 30)
+            {
+                string variant = portraits.GetCell(index, "baseresrefe");
+                if (!string.IsNullOrEmpty(variant))
+                {
+                    portrait = variant;
+                }
+            }
+            // Python: elif 30 >= alignment > 20 and portraits.get_cell(index, "baseresrefve"):
+            else if (alignment <= 30 && alignment > 20)
+            {
+                string variant = portraits.GetCell(index, "baseresrefve");
+                if (!string.IsNullOrEmpty(variant))
+                {
+                    portrait = variant;
+                }
+            }
+            // Python: elif 20 >= alignment > 10 and portraits.get_cell(index, "baseresrefvve"):
+            else if (alignment <= 20 && alignment > 10)
+            {
+                string variant = portraits.GetCell(index, "baseresrefvve");
+                if (!string.IsNullOrEmpty(variant))
+                {
+                    portrait = variant;
+                }
+            }
+            // Python: elif alignment <= 10 and portraits.get_cell(index, "baseresrefvvve"):
+            else if (alignment <= 10)
+            {
+                string variant = portraits.GetCell(index, "baseresrefvvve");
+                if (!string.IsNullOrEmpty(variant))
+                {
+                    portrait = variant;
+                }
+            }
+
+            // Load texture from installation
+            // Matching Python: texture: TPC | None = self._installation.texture(portrait, [SearchLocation.TEXTURES_GUI])
+            TPC texture = _installation.Texture(portrait, new[] { SearchLocation.TEXTURES_GUI });
+            if (texture == null)
+            {
+                System.Console.WriteLine($"Cannot build portrait: texture '{portrait}' not found");
+                // Return blank image on failure (matching Python behavior)
+                var blankBitmap = new WriteableBitmap(
+                    new PixelSize(64, 64),
+                    new Vector(96, 96),
+                    PixelFormat.Rgba8888,
+                    AlphaFormat.Premul);
+                using (var lockedBitmap = blankBitmap.Lock())
+                {
+                    System.Runtime.InteropServices.Marshal.Copy(
+                        new byte[64 * 64 * 4], 0, lockedBitmap.Address, 64 * 64 * 4);
+                }
+                return blankBitmap;
+            }
+
+            // Get first mipmap from first layer
+            // Note: DXT decompression is handled automatically by ConvertTpcMipmapToAvaloniaBitmap
+            // Matching Python: mipmap: TPCMipmap = texture.get(0, 0)
+            if (texture.Layers == null || texture.Layers.Count == 0 ||
+                texture.Layers[0].Mipmaps == null || texture.Layers[0].Mipmaps.Count == 0)
+            {
+                System.Console.WriteLine($"Cannot build portrait: texture '{portrait}' has no mipmaps");
+                var blankBitmap = new WriteableBitmap(
+                    new PixelSize(64, 64),
+                    new Vector(96, 96),
+                    PixelFormat.Rgba8888,
+                    AlphaFormat.Premul);
+                using (var lockedBitmap = blankBitmap.Lock())
+                {
+                    System.Runtime.InteropServices.Marshal.Copy(
+                        new byte[64 * 64 * 4], 0, lockedBitmap.Address, 64 * 64 * 4);
+                }
+                return blankBitmap;
+            }
+
+            TPCMipmap mipmap = texture.Layers[0].Mipmaps[0];
+
+            // Convert TPC mipmap to Avalonia Bitmap
+            // Matching Python: image = QImage(bytes(mipmap.data), mipmap.width, mipmap.height, texture.format().to_qimage_format())
+            // Matching Python: return QPixmap.fromImage(image).transformed(QTransform().scale(1, -1))
+            // Note: Python flips vertically with scale(1, -1), but Avalonia handles this differently
+            var bitmap = HTInstallation.ConvertTpcMipmapToAvaloniaBitmap(mipmap);
+            if (bitmap == null)
+            {
+                System.Console.WriteLine($"Cannot build portrait: failed to convert texture '{portrait}' to bitmap");
+                var blankBitmap = new WriteableBitmap(
+                    new PixelSize(64, 64),
+                    new Vector(96, 96),
+                    PixelFormat.Rgba8888,
+                    AlphaFormat.Premul);
+                using (var lockedBitmap = blankBitmap.Lock())
+                {
+                    System.Runtime.InteropServices.Marshal.Copy(
+                        new byte[64 * 64 * 4], 0, lockedBitmap.Address, 64 * 64 * 4);
+                }
+                return blankBitmap;
+            }
+
+            return bitmap;
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utc.py:112-120
+        // Original: def _generate_portrait_tooltip(self, *, as_html: bool = False) -> str:
+        /// <summary>
+        /// Generates a detailed tooltip for the portrait picture.
+        /// </summary>
+        /// <returns>The tooltip text.</returns>
+        private string GeneratePortraitTooltip()
+        {
+            string portrait = GetPortraitResref();
+            // Matching Python: tooltip = f"<b>Portrait:</b> {portrait}<br>" "<br><i>Right-click for more options.</i>"
+            // For Avalonia, we use plain text (HTML not supported in standard tooltips)
+            return $"Portrait: {portrait}\n\nRight-click for more options.";
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utc.py:146-160
+        // Original: def _get_portrait_resref(self) -> str:
+        /// <summary>
+        /// Gets the portrait resref based on the selected index and alignment.
+        /// </summary>
+        /// <returns>The portrait resref string.</returns>
+        private string GetPortraitResref()
+        {
+            if (_installation == null)
+            {
+                return "Unknown";
+            }
+
+            int index = _portraitSelect?.SelectedIndex ?? 0;
+            int alignment = (int)(_alignmentSlider?.Value ?? 50);
+
+            TwoDA portraits = _installation.HtGetCache2DA(HTInstallation.TwoDAPortraits);
+            if (portraits == null)
+            {
+                return "Unknown";
+            }
+
+            string result = portraits.GetCell(index, "baseresref");
+            if (string.IsNullOrEmpty(result))
+            {
+                return "Unknown";
+            }
+
+            // Check alignment-based variants (matching Python logic)
+            if (alignment <= 40 && alignment > 30)
+            {
+                string variant = portraits.GetCell(index, "baseresrefe");
+                if (!string.IsNullOrEmpty(variant))
+                {
+                    result = variant;
+                }
+            }
+            else if (alignment <= 30 && alignment > 20)
+            {
+                string variant = portraits.GetCell(index, "baseresrefve");
+                if (!string.IsNullOrEmpty(variant))
+                {
+                    result = variant;
+                }
+            }
+            else if (alignment <= 20 && alignment > 10)
+            {
+                string variant = portraits.GetCell(index, "baseresrefvve");
+                if (!string.IsNullOrEmpty(variant))
+                {
+                    result = variant;
+                }
+            }
+            else if (alignment <= 10)
+            {
+                string variant = portraits.GetCell(index, "baseresrefvvve");
+                if (!string.IsNullOrEmpty(variant))
+                {
+                    result = variant;
+                }
+            }
+
+            return result;
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utc.py:758-799
