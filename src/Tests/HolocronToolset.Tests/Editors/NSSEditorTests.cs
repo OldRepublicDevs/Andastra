@@ -747,14 +747,61 @@ void helper() {
             }
         }
 
-        // TODO: STUB - Implement test_nss_editor_autocompletion_setup (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:575-590)
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:575-590
         // Original: def test_nss_editor_autocompletion_setup(qtbot, installation: HTInstallation): Test autocompletion setup
         [Fact]
         public void TestNssEditorAutocompletionSetup()
         {
-            // TODO: STUB - Implement autocompletion setup test
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:575-590
-            throw new NotImplementedException("TestNssEditorAutocompletionSetup: Autocompletion setup test not yet implemented");
+            // Get installation if available (K2 preferred for NSS files)
+            string k2Path = Environment.GetEnvironmentVariable("K2_PATH");
+            string k1Path = Environment.GetEnvironmentVariable("K1_PATH");
+
+            HTInstallation installation = null;
+            if (!string.IsNullOrEmpty(k2Path) && Directory.Exists(k2Path))
+            {
+                installation = new HTInstallation(k2Path, "Test Installation", tsl: true);
+            }
+            else if (!string.IsNullOrEmpty(k1Path) && Directory.Exists(k1Path))
+            {
+                installation = new HTInstallation(k1Path, "Test Installation", tsl: false);
+            }
+
+            // Create editor with installation
+            var editor = new NSSEditor(null, installation);
+            editor.New();
+
+            // Matching Python: assert editor.completer is not None
+            editor.Completer.Should().NotBeNull("Completer should exist");
+
+            // Matching Python: assert editor.completer.widget() == editor.ui.codeEdit
+            // Get code editor using reflection (matching pattern from other tests)
+            var codeEditField = editor.GetType().GetField("_codeEdit", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            codeEditField.Should().NotBeNull("_codeEdit field should exist");
+            var codeEdit = codeEditField.GetValue(editor) as HolocronToolset.Widgets.CodeEditor;
+            codeEdit.Should().NotBeNull("Code editor should exist");
+
+            // Verify completer widget is set to code editor
+            editor.Completer.Widget().Should().BeSameAs(codeEdit, "Completer widget should be set to code editor");
+
+            // Matching Python: editor._update_completer_model(editor.constants, editor.functions)
+            // Get constants and functions using reflection
+            var constantsField = editor.GetType().GetField("_constants", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            var functionsField = editor.GetType().GetField("_functions", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            constantsField.Should().NotBeNull("_constants field should exist");
+            functionsField.Should().NotBeNull("_functions field should exist");
+
+            var constants = constantsField.GetValue(editor) as System.Collections.Generic.List<Andastra.Parsing.Common.Script.ScriptConstant>;
+            var functions = functionsField.GetValue(editor) as System.Collections.Generic.List<Andastra.Parsing.Common.Script.ScriptFunction>;
+            constants.Should().NotBeNull("Constants list should exist");
+            functions.Should().NotBeNull("Functions list should exist");
+
+            // Update completer model
+            editor.UpdateCompleterModel(constants, functions);
+
+            // Matching Python: assert editor.completer.model() is not None
+            var model = editor.Completer.Model();
+            model.Should().NotBeNull("Completer model should exist after update");
+            model.Count.Should().BeGreaterThan(0, "Completer model should have items");
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:592-615
