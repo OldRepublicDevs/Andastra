@@ -2211,7 +2211,7 @@ namespace HolocronToolset.Editors
             _commandPalette.RegisterCommand("code.compile", "Compile Script", () => CompileCurrentScript(), "Code");
             // Note: Format and Analyze would need implementation
             _commandPalette.RegisterCommand("code.format", "Format Document", () => { /* TODO: Implement */ }, "Code");
-            _commandPalette.RegisterCommand("code.analyze", "Analyze Code", () => { /* TODO: Implement */ }, "Code");
+            _commandPalette.RegisterCommand("code.analyze", "Analyze Code", () => AnalyzeCode(), "Code");
 
             // Bookmarks
             _commandPalette.RegisterCommand("bookmark.toggle", "Toggle Bookmark", () => ToggleBookmarkAtCursor(), "Bookmarks");
@@ -3269,6 +3269,91 @@ namespace HolocronToolset.Editors
                     MsBox.Avalonia.Enums.Icon.Error);
                 errorBox.ShowAsync();
             }
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:3347-3378
+        // Original: def _analyze_code(self):
+        /// <summary>
+        /// Analyzes the current code for potential issues like missing semicolons and empty blocks.
+        /// </summary>
+        public async void AnalyzeCode()
+        {
+            if (_codeEdit == null)
+            {
+                return;
+            }
+
+            string text = _codeEdit.Text;
+            if (string.IsNullOrWhiteSpace(text))
+            {
+                var infoBox = MessageBoxManager.GetMessageBoxStandard(
+                    "Analyze Code",
+                    "No code to analyze.",
+                    ButtonEnum.Ok,
+                    MsBox.Avalonia.Enums.Icon.Info);
+                await infoBox.ShowAsync();
+                return;
+            }
+
+            var issues = new List<string>();
+            string[] lines = text.Split(new[] { '\r', '\n' }, StringSplitOptions.None);
+
+            for (int i = 0; i < lines.Length; i++)
+            {
+                string line = lines[i];
+                string stripped = line.Trim();
+
+                // Skip empty lines and comments
+                if (string.IsNullOrEmpty(stripped) || stripped.StartsWith("//"))
+                {
+                    continue;
+                }
+
+                int lineNumber = i + 1;
+
+                // Check for missing semicolons after return/break/continue (heuristic)
+                if (stripped.Contains("return") || stripped.Contains("break") || stripped.Contains("continue"))
+                {
+                    if (!stripped.EndsWith(";") && !stripped.EndsWith("{") && !stripped.EndsWith("}"))
+                    {
+                        issues.Add($"Line {lineNumber}: Possible missing semicolon");
+                    }
+                }
+
+                // Check for empty if/while/for blocks
+                if (stripped.Contains("if") || stripped.Contains("while") || stripped.Contains("for"))
+                {
+                    if (stripped.EndsWith("{") && i + 1 < lines.Length)
+                    {
+                        string nextLine = lines[i + 1].Trim();
+                        if (nextLine == "}")
+                        {
+                            issues.Add($"Line {lineNumber}: Empty block detected");
+                        }
+                    }
+                }
+            }
+
+            string message;
+            if (issues.Count > 0)
+            {
+                message = "Code Analysis Results:\n\n" + string.Join("\n", issues.Take(20));
+                if (issues.Count > 20)
+                {
+                    message += $"\n\n... and {issues.Count - 20} more issues";
+                }
+            }
+            else
+            {
+                message = "No issues found!";
+            }
+
+            var resultBox = MessageBoxManager.GetMessageBoxStandard(
+                "Code Analysis",
+                message,
+                ButtonEnum.Ok,
+                issues.Count > 0 ? MsBox.Avalonia.Enums.Icon.Warning : MsBox.Avalonia.Enums.Icon.Info);
+            await resultBox.ShowAsync();
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:2349-2354
