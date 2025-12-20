@@ -227,6 +227,12 @@ When working on Andastra Engine code (anything in `src/Andastra/`), AI agents MU
      - **MUST NOT contain**:
        - Game-specific differences (e.g., KOTOR 1 vs KOTOR 2 specific code paths)
        - Any details that are unique to a single game within the engine family
+       - **CRITICAL**: NEVER implement fallbacks that guess game version or use hardcoded mappings that differ between games
+       - **CRITICAL**: If functionality differs between games in the same engine family, it MUST be in Tier 3 subclasses, NOT in Tier 2
+       - **CRITICAL**: If you cannot determine game version and behavior differs, either:
+         1. Move the code to Tier 3 game-specific subclasses, OR
+         2. Detect the game version from available data (save file version, partytable.2da height, etc.) and branch accordingly
+         3. NEVER implement "best guess" fallbacks that pick one game's behavior over another
      
      **Tier 3: Game Subclasses (`Runtime.Games.{Engine}.{Game}`)**
      - **Purpose**: Contains functionality that is specific to individual games within an engine family
@@ -315,6 +321,13 @@ When working on Andastra Engine code (anything in `src/Andastra/`), AI agents MU
          - MUST document engine-common functionality with addresses from ALL games in the family
          - MUST NOT include game-specific differences (those belong in Tier 3)
          - MUST specify which executables the addresses come from (e.g., "swkotor.exe and swkotor2.exe")
+         - **CRITICAL ANTI-PATTERN**: NEVER implement code that has different behavior for different games in the same engine family
+         - **CRITICAL ANTI-PATTERN**: NEVER use hardcoded fallbacks that pick one game's behavior (e.g., "try K1 first, then K2")
+         - **CRITICAL ANTI-PATTERN**: NEVER implement "best guess" logic when game version cannot be determined
+         - **IF YOU ENCOUNTER GAME-SPECIFIC DIFFERENCES**:
+           1. **FIRST OPTION (PREFERRED)**: Create Tier 3 game-specific subclasses and move the differing code there
+           2. **SECOND OPTION**: Detect game version from available context (save file version, data file structure, etc.) and branch accordingly
+           3. **NEVER**: Implement fallbacks that guess or default to one game's behavior
        
        - **For Tier 3 (Game Subclasses)**:
          - MUST search Ghidra for functions in the specific game executable
@@ -322,8 +335,16 @@ When working on Andastra Engine code (anything in `src/Andastra/`), AI agents MU
          - MUST use consistent comment format matching the MonoGame API documentation pattern
          - MUST ALWAYS specify the source executable in comments (e.g., `swkotor.exe: 0x004af630` or `swkotor2.exe: 0x004dcfb0`)
          - MUST override engine subclass methods only when game-specific behavior is required
+         - **PURPOSE**: Tier 3 exists specifically to handle discrepancies and differences between games in the same engine family
+         - **WHEN TO USE**: Any time behavior, constants, addresses, or data structures differ between games (K1 vs K2, DAO vs DA2, etc.)
        
        - **PRIORITY**: When working on Tier 1 (base classes), prioritize reverse engineering Aurora and Eclipse engines FIRST (they are less documented than Odyssey)
+       
+       - **THE GOLDEN RULE**: 
+         - **Parent classes (Tier 1 & 2)**: Common logic that is IDENTICAL across engines or games
+         - **Subclasses (Tier 3)**: ANY discrepancy, difference, or individualism between games
+         - **If it differs, it goes in a subclass. Period.**
+         - **If you can't determine which game, detect it or move to subclasses. Never guess.**
    - **MANDATORY: In-Ghidra Documentation**: AI agents MUST document findings directly within Ghidra
      - **Documentation must be comprehensive**: Every analyzed function should have:
        - Descriptive function name (not `FUN_004eb750`, but `SaveGlobalVariables` or similar)
