@@ -9,6 +9,7 @@ using Avalonia.Markup.Xaml;
 using Avalonia.Platform.Storage;
 using Andastra.Parsing;
 using Andastra.Parsing.Formats.LYT;
+using Andastra.Parsing.Formats.MDL;
 using Andastra.Parsing.Formats.TPC;
 using Andastra.Parsing.Resource;
 using Andastra.Parsing.Tools;
@@ -23,6 +24,7 @@ namespace HolocronToolset.Editors
         private LYT _lyt;
         private LYTEditorSettings _settings;
         private Dictionary<string, string> _importedTextures = new Dictionary<string, string>(); // Maps texture name to file path
+        private Dictionary<string, string> _importedModels = new Dictionary<string, string>(); // Maps model name (ResRef) to MDL file path
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/lyt.py:32-73
         // Original: def __init__(self, parent, installation):
@@ -441,9 +443,274 @@ namespace HolocronToolset.Editors
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/lyt.py:237-241
         // Original: def import_model(self):
-        public void ImportModel()
+        public async void ImportModel()
         {
-            // TODO: Implement model import logic
+            var topLevel = TopLevel.GetTopLevel(this);
+            if (topLevel == null)
+            {
+                return;
+            }
+
+            try
+            {
+                var options = new FilePickerOpenOptions
+                {
+                    Title = "Import Model",
+                    AllowMultiple = true,
+                    FileTypeFilter = new[]
+                    {
+                        new FilePickerFileType("Model Files")
+                        {
+                            Patterns = new[] { "*.mdl", "*.mdx" },
+                            MimeTypes = new[] { "application/x-binary" }
+                        },
+                        new FilePickerFileType("MDL Files") { Patterns = new[] { "*.mdl" } },
+                        new FilePickerFileType("MDX Files") { Patterns = new[] { "*.mdx" } },
+                        new FilePickerFileType("All Files") { Patterns = new[] { "*.*" } }
+                    }
+                };
+
+                var files = await topLevel.StorageProvider.OpenFilePickerAsync(options);
+                if (files == null || files.Count == 0)
+                {
+                    return;
+                }
+
+                foreach (var file in files)
+                {
+                    string filePath = file.Path.LocalPath;
+                    if (string.IsNullOrEmpty(filePath) || !File.Exists(filePath))
+                    {
+                        continue;
+                    }
+
+                    await ImportModelFile(filePath);
+                }
+
+                UpdateModelBrowser();
+            }
+            catch (Exception ex)
+            {
+                System.Console.WriteLine($"Error importing model: {ex}");
+            }
+        }
+
+        private async Task ImportModelFile(string filePath)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(filePath) || !File.Exists(filePath))
+                {
+                    System.Console.WriteLine($"Error: Model file does not exist: {filePath}");
+                    return;
+                }
+
+                string fileName = Path.GetFileNameWithoutExtension(filePath);
+                string extension = Path.GetExtension(filePath).ToLowerInvariant();
+                string targetResref = fileName;
+
+                // Validate file extension
+                bool isMdl = extension == ".mdl";
+                bool isMdx = extension == ".mdx";
+
+                if (!isMdl && !isMdx)
+                {
+                    System.Console.WriteLine($"Error: Unsupported model format: {extension}. Supported formats: MDL, MDX");
+                    return;
+                }
+
+                string overridePath = GetOverrideDirectory();
+                if (string.IsNullOrEmpty(overridePath))
+                {
+                    System.Console.WriteLine("Warning: Could not determine override directory. Model will not be saved to installation.");
+                    return;
+                }
+
+                // Ensure override/models directory exists
+                string modelsPath = Path.Combine(overridePath, "models");
+                if (!Directory.Exists(modelsPath))
+                {
+                    try
+                    {
+                        Directory.CreateDirectory(modelsPath);
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Console.WriteLine($"Error: Could not create models directory at {modelsPath}: {ex}");
+                        return;
+                    }
+                }
+
+                string sourceMdlPath = null;
+                string sourceMdxPath = null;
+                string outputMdlPath = null;
+                string outputMdxPath = null;
+
+                if (isMdl)
+                {
+                    // User selected MDL file
+                    sourceMdlPath = filePath;
+                    outputMdlPath = Path.Combine(modelsPath, $"{targetResref}.mdl");
+
+                    // Look for corresponding MDX file in the same directory
+                    string sourceMdxPathCandidate = Path.ChangeExtension(filePath, ".mdx");
+                    if (File.Exists(sourceMdxPathCandidate))
+                    {
+                        sourceMdxPath = sourceMdxPathCandidate;
+                        outputMdxPath = Path.Combine(modelsPath, $"{targetResref}.mdx");
+                    }
+                    else
+                    {
+                        System.Console.WriteLine($"Warning: MDX file not found for {Path.GetFileName(filePath)}. MDX files contain geometry data and are typically required.");
+                    }
+                }
+                else if (isMdx)
+                {
+                    // User selected MDX file
+                    sourceMdxPath = filePath;
+                    outputMdxPath = Path.Combine(modelsPath, $"{targetResref}.mdx");
+
+                    // Look for corresponding MDL file in the same directory
+                    string sourceMdlPathCandidate = Path.ChangeExtension(filePath, ".mdl");
+                    if (File.Exists(sourceMdlPathCandidate))
+                    {
+                        sourceMdlPath = sourceMdlPathCandidate;
+                        outputMdlPath = Path.Combine(modelsPath, $"{targetResref}.mdl");
+                    }
+                    else
+                    {
+                        System.Console.WriteLine($"Warning: MDL file not found for {Path.GetFileName(filePath)}. MDL files contain model structure and are required.");
+                        // We can still copy the MDX, but it won't be usable without an MDL
+                    }
+                }
+
+                // Validate MDL format if we have an MDL file
+                if (!string.IsNullOrEmpty(sourceMdlPath))
+                {
+                    try
+                    {
+                        ResourceType detectedFormat = MDLAuto.DetectMdl(sourceMdlPath);
+                        if (detectedFormat != ResourceType.MDL && detectedFormat != ResourceType.MDL_ASCII)
+                        {
+                            System.Console.WriteLine($"Warning: Could not detect valid MDL format for {Path.GetFileName(sourceMdlPath)}. File may be corrupted.");
+                            // Continue anyway - the user might know what they're doing
+                        }
+                        else
+                        {
+                            System.Console.WriteLine($"Detected MDL format: {detectedFormat}");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Console.WriteLine($"Warning: Failed to validate MDL file {Path.GetFileName(sourceMdlPath)}: {ex}");
+                        // Continue anyway - file might still be valid
+                    }
+                }
+
+                // Copy MDL file
+                if (!string.IsNullOrEmpty(sourceMdlPath) && !string.IsNullOrEmpty(outputMdlPath))
+                {
+                    try
+                    {
+                        if (File.Exists(outputMdlPath))
+                        {
+                            System.Console.WriteLine($"Warning: Model {targetResref}.mdl already exists in override directory. It will be overwritten.");
+                        }
+
+                        File.Copy(sourceMdlPath, outputMdlPath, overwrite: true);
+                        System.Console.WriteLine($"Copied MDL: {targetResref}.mdl -> {outputMdlPath}");
+
+                        // Store the imported model reference
+                        _importedModels[targetResref] = outputMdlPath;
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Console.WriteLine($"Error: Failed to copy MDL file to {outputMdlPath}: {ex}");
+                        return;
+                    }
+                }
+
+                // Copy MDX file
+                if (!string.IsNullOrEmpty(sourceMdxPath) && !string.IsNullOrEmpty(outputMdxPath))
+                {
+                    try
+                    {
+                        if (File.Exists(outputMdxPath))
+                        {
+                            System.Console.WriteLine($"Warning: Model geometry {targetResref}.mdx already exists in override directory. It will be overwritten.");
+                        }
+
+                        File.Copy(sourceMdxPath, outputMdxPath, overwrite: true);
+                        System.Console.WriteLine($"Copied MDX: {targetResref}.mdx -> {outputMdxPath}");
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Console.WriteLine($"Error: Failed to copy MDX file to {outputMdxPath}: {ex}");
+                        // Don't return - MDL was copied successfully, MDX is supplementary
+                    }
+                }
+
+                // Optionally add a room entry to the LYT using the imported model
+                // This matches PyKotor behavior where importing a model makes it available for use
+                // The user can then add it as a room manually or we could prompt them
+                if (!string.IsNullOrEmpty(sourceMdlPath) && _lyt != null)
+                {
+                    // Check if a room with this model already exists
+                    bool modelExists = false;
+                    foreach (var room in _lyt.Rooms)
+                    {
+                        if (room.Model.Equals(targetResref, StringComparison.OrdinalIgnoreCase))
+                        {
+                            modelExists = true;
+                            break;
+                        }
+                    }
+
+                    if (!modelExists)
+                    {
+                        // Add a new room entry with the imported model at origin
+                        // User can reposition it later in the editor
+                        var newRoom = new LYTRoom(targetResref, new Vector3(0, 0, 0));
+                        _lyt.Rooms.Add(newRoom);
+                        System.Console.WriteLine($"Added room entry for imported model: {targetResref} at position (0, 0, 0)");
+                        UpdateScene();
+                    }
+                }
+
+                System.Console.WriteLine($"Successfully imported model: {targetResref}");
+            }
+            catch (Exception ex)
+            {
+                System.Console.WriteLine($"Error importing model file {filePath}: {ex}");
+            }
+        }
+
+        // Update model browser with imported models (similar to UpdateTextureBrowser)
+        public void UpdateModelBrowser()
+        {
+            // Update model browser UI with imported models
+            // This method should refresh any model browser widget in the UI
+            // For now, we'll ensure the imported models list is maintained
+            
+            // If there's a model browser widget, it should be updated here
+            // The actual UI update will depend on the specific model browser implementation
+            // This is a placeholder for the UI update logic
+            
+            System.Console.WriteLine($"Model browser updated. {_importedModels.Count} model(s) available.");
+            foreach (var kvp in _importedModels)
+            {
+                System.Console.WriteLine($"  - {kvp.Key}: {kvp.Value}");
+            }
+        }
+
+        public List<string> GetImportedModels()
+        {
+            return new List<string>(_importedModels.Keys);
+        }
+
+        public string GetImportedModelPath(string modelName)
+        {
+            return _importedModels.TryGetValue(modelName, out string path) ? path : null;
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/lyt.py:243-245

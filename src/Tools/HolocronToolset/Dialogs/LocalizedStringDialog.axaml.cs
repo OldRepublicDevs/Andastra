@@ -1,6 +1,8 @@
 using Andastra.Parsing.Common;
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using Andastra.Parsing;
@@ -83,6 +85,7 @@ namespace HolocronToolset.Dialogs
         private TextBox _stringEdit;
         private Button _okButton;
         private Button _cancelButton;
+        private List<Language> _orderedLanguages;
 
         private void SetupUI()
         {
@@ -132,6 +135,32 @@ namespace HolocronToolset.Dialogs
             if (_stringEdit != null)
             {
                 _stringEdit.TextChanged += (s, e) => StringEdited();
+            }
+
+            // Populate language combo box with all Language enum values
+            // Matching PyKotor: languages are ordered by their enum values (0 = English, 1 = French, etc.)
+            // The combo box index directly maps to the Language enum value
+            if (_languageSelect != null)
+            {
+                _languageSelect.Items.Clear();
+                // Get all Language enum values, excluding Unknown, and sort by their integer values
+                // Store the ordered list for later lookup
+                _orderedLanguages = Enum.GetValues(typeof(Language))
+                    .Cast<Language>()
+                    .Where(lang => lang != Language.Unknown)
+                    .OrderBy(lang => (int)lang)
+                    .ToList();
+                
+                foreach (var language in _orderedLanguages)
+                {
+                    _languageSelect.Items.Add(language.ToString());
+                }
+                
+                // Set default selection to English (index 0)
+                if (_languageSelect.Items.Count > 0)
+                {
+                    _languageSelect.SelectedIndex = 0;
+                }
             }
 
             // Load current locstring values
@@ -213,8 +242,32 @@ namespace HolocronToolset.Dialogs
                 return;
             }
 
-            // TODO: Implement language/gender selection when Language/Gender enums are available
-            var text = LocString.ToString();
+            // Get selected language from combo box index
+            // Matching PyKotor: language: Language = Language(self.ui.languageSelect.currentIndex())
+            int languageIndex = _languageSelect.SelectedIndex;
+            if (languageIndex < 0 || _orderedLanguages == null || languageIndex >= _orderedLanguages.Count)
+            {
+                return;
+            }
+
+            Language selectedLanguage = _orderedLanguages[languageIndex];
+
+            // Get selected gender from radio buttons
+            // Matching PyKotor: gender: Gender = Gender(int(self.ui.femaleRadio.isChecked()))
+            Gender selectedGender = Gender.Male;
+            if (_femaleRadio != null && _femaleRadio.IsChecked == true)
+            {
+                selectedGender = Gender.Female;
+            }
+
+            // Get text from locstring for the selected language/gender combination
+            // Matching PyKotor: text: str = self.locstring.get(language, gender) or ""
+            string text = LocString.Get(selectedLanguage, selectedGender, false);
+            if (text == null)
+            {
+                text = "";
+            }
+
             _stringEdit.Text = text;
         }
 
@@ -227,8 +280,28 @@ namespace HolocronToolset.Dialogs
                 return;
             }
 
-            // TODO: Update locstring with edited text when language/gender selection is implemented
-            // For now, just store the text
+            // Get selected language from combo box index
+            // Matching PyKotor: language: Language = Language(self.ui.languageSelect.currentIndex())
+            int languageIndex = _languageSelect != null ? _languageSelect.SelectedIndex : -1;
+            if (languageIndex < 0 || _orderedLanguages == null || languageIndex >= _orderedLanguages.Count)
+            {
+                return;
+            }
+
+            Language selectedLanguage = _orderedLanguages[languageIndex];
+
+            // Get selected gender from radio buttons
+            // Matching PyKotor: gender: Gender = Gender(int(self.ui.femaleRadio.isChecked()))
+            Gender selectedGender = Gender.Male;
+            if (_femaleRadio != null && _femaleRadio.IsChecked == true)
+            {
+                selectedGender = Gender.Female;
+            }
+
+            // Update locstring with edited text for the selected language/gender combination
+            // Matching PyKotor: self.locstring.set_data(language, gender, self.ui.stringEdit.toPlainText())
+            string editedText = _stringEdit.Text ?? "";
+            LocString.SetData(selectedLanguage, selectedGender, editedText);
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/edit/locstring.py:62-70
