@@ -9,7 +9,9 @@ namespace Andastra.Runtime.Core.Camera
     /// </summary>
     /// <remarks>
     /// KOTOR Camera System:
-    /// - Based on swkotor2.exe camera system
+    /// - Based on swkotor.exe and swkotor2.exe camera system
+    /// - swkotor.exe (KOTOR 1): Camera system @ FUN_004af630 (chase camera update), FUN_004b0a20 (camera collision)
+    /// - swkotor2.exe (KOTOR 2): Camera system @ FUN_004dcfb0 (chase camera update), FUN_004dd1a0 (camera collision)
     /// - Located via string references: "camera" @ 0x007b63fc, "CameraID" @ 0x007bd160, "CameraList" @ 0x007bd16c
     /// - "CameraStyle" @ 0x007bd6e0, "CameraAnimation" @ 0x007c3460, "CameraAngle" @ 0x007c3490
     /// - "CameraModel" @ 0x007c3908, "CameraViewAngle" @ 0x007cb940, "Camera" @ 0x007cb350
@@ -27,7 +29,7 @@ namespace Andastra.Runtime.Core.Camera
     /// - Camera hooks: Attachment points on models for cinematic camera positioning (camerahook%d format)
     /// - Free camera for debug/editor mode
     /// </remarks>
-    public class CameraController
+    public class CameraController : ICameraController
     {
         private readonly IWorld _world;
 
@@ -136,10 +138,11 @@ namespace Andastra.Runtime.Core.Camera
             _world = world ?? throw new ArgumentNullException("world");
 
             // Default values (KOTOR-style)
+            // Based on swkotor.exe and swkotor2.exe: Y-up coordinate system (Y is vertical axis)
             Mode = CameraMode.Chase;
-            Position = new Vector3(0, -10, 5);
+            Position = new Vector3(0, 5, -10); // Y-up: Y is height, Z is depth
             LookAtPosition = Vector3.Zero;
-            Up = Vector3.UnitZ;
+            Up = Vector3.UnitY; // Y-up coordinate system
 
             Yaw = 0;
             Pitch = 0.4f; // Slightly looking down
@@ -376,16 +379,18 @@ namespace Andastra.Runtime.Core.Camera
             }
 
             Vector3 targetPos = targetTransform.Position;
-            targetPos.Z += HeightOffset;
+            // Y-up coordinate system: Y is vertical axis
+            targetPos.Y += HeightOffset;
 
             // Calculate ideal camera position
             float horizontalDistance = Distance * (float)Math.Cos(Pitch);
             float verticalDistance = Distance * (float)Math.Sin(Pitch);
 
+            // Y-up coordinate system: X and Z are horizontal, Y is vertical
             var idealPosition = new Vector3(
                 targetPos.X - horizontalDistance * (float)Math.Cos(Yaw),
-                targetPos.Y - horizontalDistance * (float)Math.Sin(Yaw),
-                targetPos.Z + verticalDistance
+                targetPos.Y + verticalDistance, // Y is vertical
+                targetPos.Z - horizontalDistance * (float)Math.Sin(Yaw)
             );
 
             // Apply collision detection
@@ -496,15 +501,17 @@ namespace Andastra.Runtime.Core.Camera
                 return Vector3.Zero;
             }
 
-            // Add head height offset
-            return transform.Position + new Vector3(0, 0, 1.7f);
+            // Add head height offset (Y-up coordinate system: Y is vertical)
+            return transform.Position + new Vector3(0, 1.7f, 0);
         }
 
         private Vector3 CalculateDialogueCameraPosition(Vector3 subject, Vector3 other, bool leftSide)
         {
             // Camera positioned to the side of the conversation
+            // Y-up coordinate system: Y is vertical, X and Z are horizontal
             var direction = Vector3.Normalize(other - subject);
-            var perpendicular = new Vector3(-direction.Y, direction.X, 0);
+            // Perpendicular in XZ plane (Y-up: horizontal plane is XZ)
+            var perpendicular = new Vector3(-direction.Z, 0, direction.X);
             
             if (!leftSide)
             {
@@ -515,31 +522,36 @@ namespace Andastra.Runtime.Core.Camera
             float forwardOffset = 2.0f;
             float heightOffset = 0.2f;
 
-            return subject + perpendicular * sideOffset - direction * forwardOffset + new Vector3(0, 0, heightOffset);
+            // Y-up: height offset is in Y direction
+            return subject + perpendicular * sideOffset - direction * forwardOffset + new Vector3(0, heightOffset, 0);
         }
 
         private Vector3 CalculateWideShotPosition(Vector3 pos1, Vector3 pos2)
         {
             Vector3 center = (pos1 + pos2) * 0.5f;
             var direction = Vector3.Normalize(pos2 - pos1);
-            var perpendicular = new Vector3(-direction.Y, direction.X, 0);
+            // Perpendicular in XZ plane (Y-up: horizontal plane is XZ)
+            var perpendicular = new Vector3(-direction.Z, 0, direction.X);
 
             float distance = Vector3.Distance(pos1, pos2);
             float cameraDistance = distance * 0.8f + 2.0f;
 
-            return center + perpendicular * cameraDistance + new Vector3(0, 0, 0.5f);
+            // Y-up: height offset is in Y direction
+            return center + perpendicular * cameraDistance + new Vector3(0, 0.5f, 0);
         }
 
         private Vector3 CalculateOverShoulderPosition(Vector3 shoulder, Vector3 subject)
         {
             var direction = Vector3.Normalize(subject - shoulder);
-            var perpendicular = new Vector3(-direction.Y, direction.X, 0);
+            // Perpendicular in XZ plane (Y-up: horizontal plane is XZ)
+            var perpendicular = new Vector3(-direction.Z, 0, direction.X);
 
             float behindOffset = 0.5f;
             float sideOffset = 0.4f;
             float heightOffset = 0.3f;
 
-            return shoulder - direction * behindOffset + perpendicular * sideOffset + new Vector3(0, 0, heightOffset);
+            // Y-up: height offset is in Y direction
+            return shoulder - direction * behindOffset + perpendicular * sideOffset + new Vector3(0, heightOffset, 0);
         }
 
         #endregion
@@ -604,7 +616,7 @@ namespace Andastra.Runtime.Core.Camera
                     if (distance > 0.1f)
                     {
                         direction = Vector3.Normalize(direction);
-                        
+
                         Vector3 hitPoint;
                         int hitFace;
                         if (navMesh.Raycast(target, direction, distance, out hitPoint, out hitFace))
@@ -624,7 +636,7 @@ namespace Andastra.Runtime.Core.Camera
                     }
                 }
             }
-            
+
             return idealPosition;
         }
 
@@ -643,7 +655,7 @@ namespace Andastra.Runtime.Core.Camera
             {
                 // Set yaw to match facing direction
                 Yaw = facing;
-                
+
                 // Normalize yaw to [-PI, PI]
                 const float TwoPi = (float)(Math.PI * 2);
                 while (Yaw > Math.PI) Yaw -= TwoPi;
@@ -654,15 +666,16 @@ namespace Andastra.Runtime.Core.Camera
                 // For free camera, rotate look-at position around current position
                 Vector3 direction = LookAtPosition - Position;
                 float distance = direction.Length();
-                
+
                 if (distance > 0.001f)
                 {
                     direction = Vector3.Normalize(direction);
-                    // Calculate new direction based on facing
+                    // Calculate new direction based on facing (Y-up: X and Z are horizontal, Y is vertical)
+                    // Preserve vertical component (Y) and update horizontal direction (X, Z) from facing angle
                     var newDirection = new Vector3(
                         (float)Math.Cos(facing),
-                        (float)Math.Sin(facing),
-                        direction.Z
+                        direction.Y, // Preserve vertical component (Y-up)
+                        (float)Math.Sin(facing)
                     );
                     LookAtPosition = Position + newDirection * distance;
                 }
@@ -703,7 +716,7 @@ namespace Andastra.Runtime.Core.Camera
             // TODO: PLACEHOLDER - Full MDL node lookup implementation needed
             // Based on swkotor2.exe: FUN_006c6020 @ 0x006c6020 searches MDL node tree for "camerahook" nodes
             // Located via string references: "camerahook" @ 0x007c7dac, "camerahook%d" @ 0x007d0448
-            // Original implementation: 
+            // Original implementation:
             //   - Searches MDL model node tree recursively for nodes named "camerahook{N}" (e.g., "camerahook1", "camerahook2")
             //   - Uses format string "camerahook%d" to construct node name from hookIndex
             //   - Queries model via FUN_006c21c0 @ 0x006c21c0 to get node by index
@@ -748,7 +761,7 @@ namespace Andastra.Runtime.Core.Camera
                 default:
                     // For other hook indices, use a generic position
                     float angle = (hookIndex - 1) * (float)(Math.PI * 2 / 8); // 8 hooks around entity
-                    hookPosition = entityPos + 
+                    hookPosition = entityPos +
                         entityForward * hookDistance * (float)Math.Cos(angle) +
                         entityRight * hookDistance * (float)Math.Sin(angle) +
                         entityUp * hookHeight;
