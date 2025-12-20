@@ -1240,9 +1240,156 @@ namespace Andastra.Runtime.Stride.Backends
             };
         }
 
+        /// <summary>
+        /// Dispatches raytracing work using the DXR fallback layer.
+        ///
+        /// The DXR fallback layer provides DXR API compatibility on DirectX 11 hardware by emulating
+        /// raytracing using compute shaders. This implementation dispatches raytracing work using
+        /// shader binding tables (SBT) that contain shader identifiers and resources.
+        ///
+        /// Based on DXR API: ID3D12GraphicsCommandList4::DispatchRays
+        /// DXR API Reference:
+        /// - D3D12_DISPATCH_RAYS_DESC: Describes the raytracing dispatch parameters
+        /// - D3D12_GPU_VIRTUAL_ADDRESS_RANGE: GPU virtual address ranges for shader binding tables
+        /// - DispatchRays: Executes the raytracing work on the GPU
+        ///
+        /// Microsoft D3D12RaytracingFallback library:
+        /// https://github.com/microsoft/DirectX-Graphics-Samples/tree/master/Libraries/D3D12RaytracingFallback
+        ///
+        /// The shader binding tables (SBT) contain:
+        /// - RayGenShaderTable: Shader identifiers for ray generation shaders
+        /// - MissShaderTable: Shader identifiers for miss shaders
+        /// - HitGroupTable: Shader identifiers for hit group shaders (closest hit, any hit, intersection)
+        ///
+        /// Each shader binding table entry contains:
+        /// - Shader identifier (32 bytes): Unique identifier for the shader
+        /// - Optional root arguments: Resource bindings for the shader
+        /// </summary>
+        /// <param name="desc">Dispatch rays description containing SBT handles and dispatch dimensions</param>
         protected override void OnDispatchRaysFallback(DispatchRaysDesc desc)
         {
-            // TODO: STUB - Dispatch raytracing work
+            // Validate inputs
+            if (!_useDxrFallbackLayer || _raytracingFallbackDevice == IntPtr.Zero)
+            {
+                Console.WriteLine("[StrideDX11] Cannot dispatch rays: DXR fallback layer not initialized");
+                return;
+            }
+
+            if (_commandList == null)
+            {
+                Console.WriteLine("[StrideDX11] Cannot dispatch rays: Command list not available");
+                return;
+            }
+
+            // Validate dispatch dimensions
+            if (desc.Width <= 0 || desc.Height <= 0 || desc.Depth <= 0)
+            {
+                Console.WriteLine("[StrideDX11] Cannot dispatch rays: Invalid dispatch dimensions (Width={0}, Height={1}, Depth={2})",
+                    desc.Width, desc.Height, desc.Depth);
+                return;
+            }
+
+            // Validate shader binding table handles
+            // At minimum, we need a ray generation shader table
+            if (desc.RayGenShaderTable == IntPtr.Zero)
+            {
+                Console.WriteLine("[StrideDX11] Cannot dispatch rays: RayGen shader table is required");
+                return;
+            }
+
+            try
+            {
+                // Step 1: Get fallback command list
+                // The DXR fallback layer requires a command list to execute raytracing operations
+                IntPtr fallbackCommandList = GetFallbackCommandList();
+                if (fallbackCommandList == IntPtr.Zero)
+                {
+                    Console.WriteLine("[StrideDX11] Failed to get fallback command list for raytracing dispatch");
+                    return;
+                }
+
+                // Step 2: Get GPU virtual addresses for shader binding tables
+                // The DXR fallback layer uses GPU virtual addresses to reference shader binding tables
+                IntPtr rayGenGpuAddress = GetGpuVirtualAddress(desc.RayGenShaderTable);
+                IntPtr missGpuAddress = GetGpuVirtualAddress(desc.MissShaderTable);
+                IntPtr hitGroupGpuAddress = GetGpuVirtualAddress(desc.HitGroupTable);
+
+                // Validate ray generation shader table address (required)
+                if (rayGenGpuAddress == IntPtr.Zero)
+                {
+                    Console.WriteLine("[StrideDX11] Cannot dispatch rays: Failed to get GPU virtual address for RayGen shader table");
+                    return;
+                }
+
+                // Step 3: Get shader binding table sizes
+                // Each SBT entry is typically 32 bytes (shader identifier) plus optional root arguments
+                // We need to determine the size of each table to set up the GPU virtual address ranges
+                uint rayGenTableSize = GetShaderBindingTableSize(desc.RayGenShaderTable);
+                uint missTableSize = GetShaderBindingTableSize(desc.MissShaderTable);
+                uint hitGroupTableSize = GetShaderBindingTableSize(desc.HitGroupTable);
+
+                // Validate ray generation shader table size (required)
+                if (rayGenTableSize == 0)
+                {
+                    Console.WriteLine("[StrideDX11] Cannot dispatch rays: RayGen shader table size is zero");
+                    return;
+                }
+
+                // Step 4: Create D3D12_DISPATCH_RAYS_DESC structure
+                // This structure describes the raytracing dispatch parameters
+                D3D12_DISPATCH_RAYS_DESC dispatchRaysDesc = new D3D12_DISPATCH_RAYS_DESC
+                {
+                    // Ray generation shader table (required)
+                    RayGenerationShaderRecord = new D3D12_GPU_VIRTUAL_ADDRESS_RANGE
+                    {
+                        StartAddress = rayGenGpuAddress,
+                        SizeInBytes = rayGenTableSize
+                    },
+
+                    // Miss shader table (optional, but typically provided)
+                    MissShaderTable = new D3D12_GPU_VIRTUAL_ADDRESS_RANGE_AND_STRIDE
+                    {
+                        StartAddress = missGpuAddress,
+                        SizeInBytes = missTableSize,
+                        StrideInBytes = missTableSize > 0 ? GetShaderBindingTableStride(desc.MissShaderTable) : 0
+                    },
+
+                    // Hit group shader table (optional, but typically provided)
+                    HitGroupTable = new D3D12_GPU_VIRTUAL_ADDRESS_RANGE_AND_STRIDE
+                    {
+                        StartAddress = hitGroupGpuAddress,
+                        SizeInBytes = hitGroupTableSize,
+                        StrideInBytes = hitGroupTableSize > 0 ? GetShaderBindingTableStride(desc.HitGroupTable) : 0
+                    },
+
+                    // Callable shader table (optional, not used in basic raytracing)
+                    CallableShaderTable = new D3D12_GPU_VIRTUAL_ADDRESS_RANGE_AND_STRIDE
+                    {
+                        StartAddress = IntPtr.Zero,
+                        SizeInBytes = 0,
+                        StrideInBytes = 0
+                    },
+
+                    // Dispatch dimensions
+                    Width = (uint)desc.Width,
+                    Height = (uint)desc.Height,
+                    Depth = (uint)desc.Depth
+                };
+
+                // Step 5: Dispatch raytracing work using the fallback layer
+                // The DXR fallback layer translates this to compute shader dispatches
+                DispatchRaysFallback(
+                    fallbackCommandList,
+                    ref dispatchRaysDesc);
+
+                Console.WriteLine("[StrideDX11] Dispatched raytracing work (Width={0}, Height={1}, Depth={2}, RayGenTable={3} bytes, MissTable={4} bytes, HitGroupTable={5} bytes)",
+                    desc.Width, desc.Height, desc.Depth, rayGenTableSize, missTableSize, hitGroupTableSize);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("[StrideDX11] Exception dispatching rays: {0}", ex.Message);
+                Console.WriteLine("[StrideDX11] Stack trace: {0}", ex.StackTrace);
+            }
         }
 
         /// <summary>
@@ -1631,6 +1778,58 @@ namespace Andastra.Runtime.Stride.Backends
             return _commandList?.NativeCommandList ?? IntPtr.Zero;
         }
 
+        /// <summary>
+        /// Gets the size of a shader binding table in bytes.
+        /// Shader binding tables contain shader identifiers (32 bytes each) plus optional root arguments.
+        /// </summary>
+        /// <param name="sbtHandle">Handle to the shader binding table buffer</param>
+        /// <returns>Size of the shader binding table in bytes, or 0 if invalid</returns>
+        private uint GetShaderBindingTableSize(IntPtr sbtHandle)
+        {
+            if (sbtHandle == IntPtr.Zero)
+            {
+                return 0;
+            }
+
+            // Get the resource info for the shader binding table
+            ResourceInfo info;
+            if (!_resources.TryGetValue(sbtHandle, out info))
+            {
+                return 0;
+            }
+
+            // Return the size in bytes
+            return (uint)info.SizeInBytes;
+        }
+
+        /// <summary>
+        /// Gets the stride (size per entry) of a shader binding table in bytes.
+        /// The stride is the size of each shader binding table entry, which includes
+        /// the shader identifier (32 bytes) plus any root arguments.
+        /// </summary>
+        /// <param name="sbtHandle">Handle to the shader binding table buffer</param>
+        /// <returns>Stride of each shader binding table entry in bytes, or 0 if invalid</returns>
+        private uint GetShaderBindingTableStride(IntPtr sbtHandle)
+        {
+            if (sbtHandle == IntPtr.Zero)
+            {
+                return 0;
+            }
+
+            // Get the resource info for the shader binding table
+            ResourceInfo info;
+            if (!_resources.TryGetValue(sbtHandle, out info))
+            {
+                return 0;
+            }
+
+            // Default stride is 32 bytes (shader identifier size)
+            // In a full implementation, we would query the actual stride from the SBT structure
+            // For now, we use a standard stride of 32 bytes (D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES)
+            const uint D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES = 32;
+            return D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES;
+        }
+
         #endregion
 
         #region P/Invoke Declarations for DXR Fallback Layer
@@ -1698,6 +1897,20 @@ namespace Andastra.Runtime.Stride.Backends
             ref D3D12_STATE_OBJECT_DESC pDesc,
             [MarshalAs(UnmanagedType.LPStruct)] System.Guid riid,
             out IntPtr ppStateObject);
+
+        /// <summary>
+        /// Dispatches raytracing work using the DXR fallback layer.
+        /// Based on DXR API: ID3D12GraphicsCommandList4::DispatchRays
+        ///
+        /// The DXR fallback layer translates this call to compute shader dispatches that emulate
+        /// raytracing behavior on hardware without native raytracing support.
+        /// </summary>
+        /// <param name="commandList">Fallback command list</param>
+        /// <param name="pDesc">Dispatch rays description containing SBT addresses and dispatch dimensions</param>
+        [DllImport("D3D12RaytracingFallback.dll", EntryPoint = "D3D12DispatchRays", CallingConvention = CallingConvention.StdCall)]
+        private static extern void DispatchRaysFallback(
+            IntPtr commandList,
+            ref D3D12_DISPATCH_RAYS_DESC pDesc);
 
         #endregion
 
@@ -1959,6 +2172,115 @@ namespace Andastra.Runtime.Stride.Backends
         {
             // This is a marker interface for type identification
             // The actual COM interface methods are not needed for P/Invoke
+        }
+
+        #endregion
+
+        #region D3D12 Dispatch Rays Structures
+
+        /// <summary>
+        /// GPU virtual address range.
+        /// Describes a contiguous range of GPU virtual addresses.
+        /// Based on D3D12 API: D3D12_GPU_VIRTUAL_ADDRESS_RANGE
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        private struct D3D12_GPU_VIRTUAL_ADDRESS_RANGE
+        {
+            /// <summary>
+            /// Starting GPU virtual address.
+            /// </summary>
+            public IntPtr StartAddress;
+
+            /// <summary>
+            /// Size of the range in bytes.
+            /// </summary>
+            public ulong SizeInBytes;
+        }
+
+        /// <summary>
+        /// GPU virtual address range with stride.
+        /// Describes a range of GPU virtual addresses with a stride between entries.
+        /// Used for shader binding tables that contain multiple entries.
+        /// Based on D3D12 API: D3D12_GPU_VIRTUAL_ADDRESS_RANGE_AND_STRIDE
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        private struct D3D12_GPU_VIRTUAL_ADDRESS_RANGE_AND_STRIDE
+        {
+            /// <summary>
+            /// Starting GPU virtual address.
+            /// </summary>
+            public IntPtr StartAddress;
+
+            /// <summary>
+            /// Size of the range in bytes.
+            /// </summary>
+            public ulong SizeInBytes;
+
+            /// <summary>
+            /// Stride between entries in bytes.
+            /// For shader binding tables, this is typically 32 bytes (shader identifier size)
+            /// plus the size of any root arguments.
+            /// </summary>
+            public ulong StrideInBytes;
+        }
+
+        /// <summary>
+        /// Dispatch rays description.
+        /// Describes the parameters for dispatching raytracing work.
+        /// Based on D3D12 API: D3D12_DISPATCH_RAYS_DESC
+        ///
+        /// The shader binding tables (SBT) contain shader identifiers and optional root arguments:
+        /// - RayGenerationShaderRecord: Single entry for the ray generation shader (required)
+        /// - MissShaderTable: Table of miss shader entries (optional)
+        /// - HitGroupTable: Table of hit group entries (optional)
+        /// - CallableShaderTable: Table of callable shader entries (optional, advanced feature)
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        private struct D3D12_DISPATCH_RAYS_DESC
+        {
+            /// <summary>
+            /// GPU virtual address range for the ray generation shader record.
+            /// This is a single entry containing the ray generation shader identifier.
+            /// Required for all raytracing dispatches.
+            /// </summary>
+            public D3D12_GPU_VIRTUAL_ADDRESS_RANGE RayGenerationShaderRecord;
+
+            /// <summary>
+            /// GPU virtual address range and stride for the miss shader table.
+            /// Contains shader identifiers for miss shaders (one per entry).
+            /// Optional, but typically provided for proper raytracing behavior.
+            /// </summary>
+            public D3D12_GPU_VIRTUAL_ADDRESS_RANGE_AND_STRIDE MissShaderTable;
+
+            /// <summary>
+            /// GPU virtual address range and stride for the hit group shader table.
+            /// Contains shader identifiers for hit groups (closest hit, any hit, intersection shaders).
+            /// Optional, but typically provided for proper raytracing behavior.
+            /// </summary>
+            public D3D12_GPU_VIRTUAL_ADDRESS_RANGE_AND_STRIDE HitGroupTable;
+
+            /// <summary>
+            /// GPU virtual address range and stride for the callable shader table.
+            /// Contains shader identifiers for callable shaders (advanced feature).
+            /// Optional, rarely used in basic raytracing scenarios.
+            /// </summary>
+            public D3D12_GPU_VIRTUAL_ADDRESS_RANGE_AND_STRIDE CallableShaderTable;
+
+            /// <summary>
+            /// Width of the dispatch (number of rays in X dimension).
+            /// </summary>
+            public uint Width;
+
+            /// <summary>
+            /// Height of the dispatch (number of rays in Y dimension).
+            /// </summary>
+            public uint Height;
+
+            /// <summary>
+            /// Depth of the dispatch (number of rays in Z dimension).
+            /// Typically 1 for 2D raytracing (screen-space rays).
+            /// </summary>
+            public uint Depth;
         }
 
         #endregion
