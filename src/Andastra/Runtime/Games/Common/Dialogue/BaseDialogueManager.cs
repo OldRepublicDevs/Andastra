@@ -16,9 +16,7 @@ namespace Andastra.Runtime.Games.Common.Dialogue
     /// - Engine-specific details MUST be in subclasses (OdysseyDialogueManager, AuroraDialogueManager, EclipseDialogueManager)
     /// - Common: Conversation state management, pause/resume, abort, update loop, execution context creation
     /// - Execution context creation: Common across all engines - requires caller, world, engine API, and globals
-    ///   - Based on swkotor2.exe: Script execution context for dialogue scripts (ExecuteDialogue @ 0x005e9920)
-    ///   - Based on nwmain.exe: CNWSDialog script execution context (CNWSDialog::RunScript @ 0x140dddb80)
-    ///   - Based on daorigins.exe: Conversation script execution context (Conversation::ExecuteScript)
+    ///   - Common pattern: Script execution context for dialogue scripts across all engines
     /// </remarks>
     public abstract class BaseDialogueManager
     {
@@ -133,9 +131,7 @@ namespace Andastra.Runtime.Games.Common.Dialogue
         /// <remarks>
         /// Common across all engines: Execution context provides script access to game systems.
         /// Engine API varies by game but context structure is common.
-        /// Based on swkotor2.exe: Script execution context for dialogue scripts (ExecuteDialogue @ 0x005e9920)
-        /// Based on nwmain.exe: CNWSDialog script execution context (CNWSDialog::RunScript @ 0x140dddb80)
-        /// Based on daorigins.exe: Conversation script execution context (Conversation::ExecuteScript)
+        /// Common pattern: Script execution context for dialogue scripts across all engines.
         /// </remarks>
         protected IExecutionContext CreateExecutionContext(IEntity caller, IEntity triggerer = null)
         {

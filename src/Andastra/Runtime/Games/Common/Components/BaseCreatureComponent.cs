@@ -223,8 +223,8 @@ namespace Andastra.Runtime.Games.Common.Components
         /// <returns>True if the creature has the feat, false otherwise.</returns>
         /// <remarks>
         /// Engine-specific implementations:
-        /// - Odyssey: Checks single FeatList (swkotor.exe, swkotor2.exe)
-        /// - Aurora: Checks FeatList and BonusFeatList (nwmain.exe: CNWSCreatureStats::HasFeat @ 0x14040b900)
+        /// - Odyssey: Checks single FeatList
+        /// - Aurora: Checks FeatList and BonusFeatList
         /// </remarks>
         public abstract bool HasFeat(int featId);
 

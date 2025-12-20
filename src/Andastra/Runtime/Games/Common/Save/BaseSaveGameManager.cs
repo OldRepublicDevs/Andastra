@@ -17,10 +17,7 @@ namespace Andastra.Runtime.Games.Common.Save
     /// - Directory name formatting and parsing
     /// - Common across engines: Odyssey (swkotor.exe, swkotor2.exe) and Aurora (nwmain.exe)
     ///
-    /// Based on reverse engineering of:
-    /// - swkotor.exe: FUN_004b58a0 @ 0x004b58a0 uses format string "SAVES:%06d - %s" @ 0x007454d4
-    /// - swkotor2.exe: FUN_00708990 @ 0x00708990 uses format string "SAVES:%06d - %s" @ 0x007be298
-    /// - nwmain.exe: Function @ 0x14056ab4e uses format string "SAVES:%06d - %s" @ 0x140dfd418
+    /// Based on reverse engineering of save game management across multiple BioWare engines.
     ///
     /// Common functionality:
     /// - Save directory naming: "%06d - %s" format (6-digit zero-padded number, " - ", save name)
@@ -65,9 +62,6 @@ namespace Andastra.Runtime.Games.Common.Save
         /// </summary>
         /// <remarks>
         /// Common format across Odyssey and Aurora engines:
-        /// - swkotor.exe: Format string "SAVES:%06d - %s" @ 0x007454d4
-        /// - swkotor2.exe: Format string "SAVES:%06d - %s" @ 0x007be298
-        /// - nwmain.exe: Format string "SAVES:%06d - %s" @ 0x140dfd418
         /// Format: 6-digit zero-padded save number, followed by " - ", followed by save name
         /// Example: "000001 - MySave" for save number 1 with name "MySave"
         /// </remarks>
