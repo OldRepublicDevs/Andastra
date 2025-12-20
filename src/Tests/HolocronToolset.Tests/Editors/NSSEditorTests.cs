@@ -2746,14 +2746,105 @@ void helper() {
             currentLine.Should().Be(5, "Cursor should be at line 5 after calling GotoLine(5)");
         }
 
-        // TODO: STUB - Implement test_nss_editor_foldable_regions_detection (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1261-1286)
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1261-1286
         // Original: def test_nss_editor_foldable_regions_detection(qtbot, installation: HTInstallation, foldable_nss_script: str): Test foldable regions detection
         [Fact]
         public void TestNssEditorFoldableRegionsDetection()
         {
-            // TODO: STUB - Implement foldable regions detection test
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1261-1286
-            throw new NotImplementedException("TestNssEditorFoldableRegionsDetection: Foldable regions detection test not yet implemented");
+            // Get installation if available (K2 preferred for NSS files)
+            string k2Path = Environment.GetEnvironmentVariable("K2_PATH");
+            if (string.IsNullOrEmpty(k2Path))
+            {
+                k2Path = @"C:\Program Files (x86)\Steam\steamapps\common\Knights of the Old Republic II";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k2Path) && System.IO.File.Exists(System.IO.Path.Combine(k2Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k2Path, "Test Installation", tsl: true);
+            }
+            else
+            {
+                // Fallback to K1
+                string k1Path = Environment.GetEnvironmentVariable("K1_PATH");
+                if (string.IsNullOrEmpty(k1Path))
+                {
+                    k1Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor";
+                }
+                if (System.IO.Directory.Exists(k1Path) && System.IO.File.Exists(System.IO.Path.Combine(k1Path, "chitin.key")))
+                {
+                    installation = new HTInstallation(k1Path, "Test Installation", tsl: false);
+                }
+            }
+
+            // NSS script with multiple foldable regions (matching PyKotor fixture)
+            string foldableNssScript = @"// Global variable
+int g_var = 10;
+
+void main() {
+    int local = 5;
+
+    if (local > 0) {
+        int nested = 10;
+        if (nested > 5) {
+            // Nested block
+            local += nested;
+        }
+    }
+
+    for (int i = 0; i < 10; i++) {
+        local += i;
+    }
+}
+";
+
+            // Create editor and initialize
+            var editor = new NSSEditor(null, installation);
+            editor.New();
+
+            // Get the code editor using reflection (matching pattern used in other tests)
+            var codeEditField = typeof(NSSEditor).GetField("_codeEdit", BindingFlags.NonPublic | BindingFlags.Instance);
+            codeEditField.Should().NotBeNull("_codeEdit field should exist");
+            var codeEdit = codeEditField.GetValue(editor) as HolocronToolset.Widgets.CodeEditor;
+            codeEdit.Should().NotBeNull("Code editor should be initialized");
+
+            // Set the foldable NSS script content
+            codeEdit.Text = foldableNssScript;
+
+            // Manually trigger foldable regions update (matching Python test behavior)
+            // Access private method via reflection since it's internal to CodeEditor
+            var updateFoldableRegionsMethod = typeof(HolocronToolset.Widgets.CodeEditor)
+                .GetMethod("UpdateFoldableRegions", BindingFlags.NonPublic | BindingFlags.Instance);
+            updateFoldableRegionsMethod?.Invoke(codeEdit, null);
+
+            // Check that foldable regions exist (matching Python: assert hasattr(editor.ui.codeEdit, '_foldable_regions'))
+            var foldableRegionsField = typeof(HolocronToolset.Widgets.CodeEditor)
+                .GetField("_foldableRegions", BindingFlags.NonPublic | BindingFlags.Instance);
+            foldableRegionsField.Should().NotBeNull("_foldableRegions field should exist");
+
+            var foldableRegions = (Dictionary<int, int>)foldableRegionsField?.GetValue(codeEdit);
+            foldableRegions.Should().NotBeNull("Foldable regions dictionary should exist");
+            foldableRegions.Should().NotBeEmpty("Foldable regions should be detected");
+
+            // Verify main function block is foldable (matching Python test)
+            // Main function should start around line 3-4
+            string[] lines = foldableNssScript.Split('\n');
+            int mainLine = -1;
+            for (int i = 0; i < lines.Length; i++)
+            {
+                if (lines[i].Contains("void main()"))
+                {
+                    mainLine = i;
+                    break;
+                }
+            }
+
+            if (mainLine >= 0)
+            {
+                // Check if this line is in foldable regions (matching Python: assert any(start <= main_line <= end for start, end in foldable_regions.items()))
+                bool mainLineIsFoldable = foldableRegions.Any(kvp => kvp.Key <= mainLine && mainLine <= kvp.Value);
+                mainLineIsFoldable.Should().BeTrue($"Main function at line {mainLine} should be within a foldable region");
+            }
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1288-1322
