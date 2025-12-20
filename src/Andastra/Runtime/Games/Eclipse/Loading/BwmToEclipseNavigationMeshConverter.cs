@@ -9,29 +9,164 @@ namespace Andastra.Runtime.Games.Eclipse.Loading
     /// Converts Andastra.Parsing BWM walkmesh data to EclipseNavigationMesh.
     /// </summary>
     /// <remarks>
-    /// BWM to EclipseNavigationMesh Converter:
-    /// - Based on daorigins.exe/DragonAge2.exe// navigation systems
-    /// - Eclipse uses BWM format similar to Odyssey but with additional features
-    /// - Supports dynamic obstacles, destructible terrain, and multi-level navigation
-    /// - Physics-aware navigation with collision avoidance
-    ///
-    /// Eclipse-specific features:
-    /// - Multi-level navigation surfaces (ground, platforms, elevated surfaces)
-    /// - Dynamic obstacle support (added at runtime)
-    /// - Destructible terrain modifications (applied at runtime)
-    /// - Physics-aware navigation with collision avoidance
-    ///
-    /// BWM file format (same as Odyssey):
-    /// - Header: "BWM V1.0" signature (8 bytes)
+    /// <para>
+    /// WHAT THIS CONVERTER DOES:
+    /// 
+    /// This converter takes a BWM (BioWare Walkmesh) file that has been parsed from a game file
+    /// and converts it into an EclipseNavigationMesh. The EclipseNavigationMesh is a special type
+    /// of navigation mesh used by the Eclipse engine (Dragon Age: Origins, Dragon Age 2) that
+    /// supports advanced features like dynamic obstacles, destructible terrain, and multi-level
+    /// navigation surfaces.
+    /// 
+    /// The conversion process:
+    /// 1. Extracts all vertices from the BWM faces
+    /// 2. Builds face indices (which vertices belong to which triangles)
+    /// 3. Converts surface materials (what kind of surface each triangle is)
+    /// 4. Computes adjacency (which triangles share edges)
+    /// 5. Builds an AABB tree (for fast spatial queries)
+    /// 
+    /// CRITICAL: The walkmesh type must be AreaModel (WOK) for the AABB tree to be built. If the
+    /// walkmesh type is PlaceableOrDoor (PWK/DWK), the AABB tree will not be built, and the
+    /// navigation mesh will not work correctly for pathfinding and spatial queries.
+    /// </para>
+    /// 
+    /// <para>
+    /// ECLIPSE-SPECIFIC FEATURES:
+    /// 
+    /// The Eclipse engine has more advanced navigation features than the Odyssey engine:
+    /// 
+    /// 1. MULTI-LEVEL NAVIGATION:
+    ///    - Supports navigation on multiple height levels (ground, platforms, elevated surfaces)
+    ///    - Characters can navigate on different floors of a building
+    ///    - Pathfinding considers all levels when finding routes
+    /// 
+    /// 2. DYNAMIC OBSTACLES:
+    ///    - Objects can be moved or destroyed at runtime
+    ///    - The navigation mesh updates to reflect these changes
+    ///    - Pathfinding avoids dynamic obstacles automatically
+    /// 
+    /// 3. DESTRUCTIBLE TERRAIN:
+    ///    - Terrain can be destroyed (walls, floors, etc.)
+    ///    - Destroyed terrain becomes non-walkable
+    ///    - The navigation mesh updates to reflect destroyed areas
+    /// 
+    /// 4. PHYSICS-AWARE NAVIGATION:
+    ///    - Considers physics objects when pathfinding
+    ///    - Avoids collisions with moving objects
+    ///    - Integrates with the physics engine for accurate collision detection
+    /// </para>
+    /// 
+    /// <para>
+    /// BWM FILE FORMAT:
+    /// 
+    /// The BWM file format is the same across all BioWare engines (Odyssey, Aurora, Eclipse):
+    /// 
+    /// - Header: "BWM V1.0" signature (8 bytes) - identifies the file as a BWM
     /// - Walkmesh type: 0 = PWK/DWK (placeable/door), 1 = WOK (area walkmesh)
-    /// - Vertices: Array of float3 (x, y, z) positions
-    /// - Faces: Array of uint32 triplets (vertex indices per triangle)
-    /// - Materials: Array of uint32 (SurfaceMaterial ID per face)
-    /// - Adjacency: Array of int32 triplets (face/edge pairs, -1 = no neighbor)
-    /// - AABB tree: Spatial acceleration structure for efficient queries
-    ///
+    /// - Vertices: Array of float3 (x, y, z) positions - all the points that make up triangles
+    /// - Faces: Array of uint32 triplets (vertex indices per triangle) - which vertices form triangles
+    /// - Materials: Array of uint32 (SurfaceMaterial ID per face) - what kind of surface each triangle is
+    /// - Adjacency: Array of int32 triplets (face/edge pairs, -1 = no neighbor) - which triangles share edges
+    /// - AABB tree: Spatial acceleration structure for efficient queries - only for WOK files
+    /// 
+    /// The converter reads this data and converts it into the format needed by EclipseNavigationMesh.
+    /// </para>
+    /// 
+    /// <para>
+    /// VERTEX DEDUPLICATION:
+    /// 
+    /// When converting, the converter deduplicates vertices. This means if multiple triangles share
+    /// the same vertex position, only one copy of that vertex is stored. This saves memory and
+    /// makes the data structure more efficient.
+    /// 
+    /// HOW IT WORKS:
+    /// - For each face, get its three vertices
+    /// - Check if we've seen this vertex position before (using a dictionary)
+    /// - If yes, use the existing vertex index
+    /// - If no, add the vertex to the list and use the new index
+    /// 
+    /// This ensures that each unique vertex position is stored only once, even if it's used by
+    /// multiple triangles.
+    /// </para>
+    /// 
+    /// <para>
+    /// ADJACENCY COMPUTATION:
+    /// 
+    /// Adjacency tells which triangles share edges. This is critical for pathfinding because the
+    /// pathfinding algorithm needs to know which triangles can be reached from the current triangle.
+    /// 
+    /// HOW IT WORKS:
+    /// 1. Get all walkable faces from the BWM
+    /// 2. For each face, check each of its three edges
+    /// 3. Find other faces that share the same edge (same two vertices)
+    /// 4. Store the adjacency information: faceIndex * 3 + edgeIndex
+    /// 
+    /// The adjacency array has one entry per edge (3 per face). Each entry contains:
+    /// - The index of the adjacent face's edge (if there is one)
+    /// - -1 if there is no adjacent face (edge is on the perimeter)
+    /// </para>
+    /// 
+    /// <para>
+    /// AABB TREE BUILDING:
+    /// 
+    /// The AABB tree is a spatial acceleration structure that makes it fast to find which triangles
+    /// contain a point or which triangles a ray might hit. Without it, we would have to check every
+    /// triangle, which is very slow when there are thousands of triangles.
+    /// 
+    /// HOW IT WORKS:
+    /// 1. If the BWM already has an AABB tree, convert it to EclipseNavigationMesh format
+    /// 2. If not, build one from the face data
+    /// 3. The tree organizes triangles into boxes (AABBs)
+    /// 4. Each box contains smaller boxes, which contain even smaller boxes, and so on
+    /// 5. At the bottom, each box contains just one triangle
+    /// 
+    /// CRITICAL: The AABB tree is only built if the walkmesh type is AreaModel (WOK). If the
+    /// walkmesh type is PlaceableOrDoor (PWK/DWK), the AABB tree is not built. This is because
+    /// placeable/door walkmeshes are small and can be checked directly without needing a tree.
+    /// </para>
+    /// 
+    /// <para>
+    /// MERGING MULTIPLE MESHES:
+    /// 
+    /// The Merge() function combines multiple EclipseNavigationMesh instances into a single mesh.
+    /// This is used when building a complete area from multiple room walkmeshes.
+    /// 
+    /// HOW IT WORKS:
+    /// 1. Combine all vertices from all meshes into one array
+    /// 2. Reindex faces to use the combined vertex array
+    /// 3. Preserve internal adjacencies (reindex to new face indices)
+    /// 4. Detect and connect cross-mesh adjacencies (edges shared between different meshes)
+    /// 5. Combine materials from all meshes
+    /// 6. Build a new AABB tree from the combined geometry
+    /// 
+    /// CROSS-MESH ADJACENCY DETECTION:
+    /// 
+    /// When merging meshes, we need to find edges that are shared between different meshes and
+    /// link them in the adjacency array. This allows pathfinding to cross room boundaries.
+    /// 
+    /// HOW IT WORKS:
+    /// 1. Build a map of all edges to the faces that contain them
+    /// 2. Find edges that appear in multiple faces (potential cross-mesh connections)
+    /// 3. For each such edge, check if the faces are from different meshes
+    /// 4. If yes, and both faces are walkable, connect them in the adjacency array
+    /// 5. Only connect walkable faces to ensure proper pathfinding
+    /// </para>
+    /// 
+    /// <para>
+    /// MATERIAL PRESERVATION:
+    /// 
+    /// CRITICAL: Surface materials must be preserved during conversion. If materials are lost or
+    /// changed, faces that should be walkable might become non-walkable, causing the bug where
+    /// "levels/modules are NOT walkable despite having the right surface material."
+    /// 
+    /// The converter explicitly copies the Material property from each BWMFace to the surface
+    /// materials array. This ensures that walkability is maintained during conversion.
+    /// </para>
+    /// 
+    /// <para>
     /// Based on BWM file format documentation:
     /// - vendor/PyKotor/wiki/BWM-File-Format.md
+    /// </para>
     /// </remarks>
     public static class BwmToEclipseNavigationMeshConverter
     {

@@ -3400,7 +3400,100 @@ namespace Andastra.Runtime.Core.Navigation
 
         /// <summary>
         /// Tests line of sight between two points.
+        /// Determines if there's a clear, unobstructed path between two positions.
         /// </summary>
+        /// <remarks>
+        /// WHAT THIS FUNCTION DOES:
+        /// 
+        /// This function checks if you can see from one point to another without anything blocking
+        /// the view. It's like drawing an invisible line between two points and checking if anything
+        /// is in the way. If something is in the way, it checks if that thing blocks your view.
+        /// 
+        /// HOW IT WORKS:
+        /// 
+        /// STEP 1: Calculate Direction and Distance
+        /// - Takes two points: "from" (where you're looking from) and "to" (where you're looking to)
+        /// - Calculates the direction vector: direction = to - from
+        /// - Calculates the distance: distance = length of direction vector
+        /// - If distance is very small (less than 0.000001), the points are the same, so return true
+        ///   (you can always see yourself)
+        /// 
+        /// STEP 2: Normalize Direction
+        /// - Normalizes the direction vector (makes it length 1)
+        /// - This is needed for the raycast function, which expects a normalized direction
+        /// - Normalizing means: direction = direction / distance
+        /// 
+        /// STEP 3: Perform Raycast
+        /// - Shoots an invisible ray from "from" point in the direction of "to" point
+        /// - The ray travels up to "distance" units away
+        /// - If the ray hits something, Raycast returns true and tells us what was hit
+        /// - If the ray doesn't hit anything, Raycast returns false
+        /// 
+        /// STEP 4: Check if Hit Blocks Line of Sight
+        /// - If something was hit, we check if it blocks your view
+        /// - Walkable faces (ground, floors) do NOT block line of sight - you can see over them
+        /// - Non-walkable faces (walls, obstacles) DO block line of sight - you can't see through them
+        /// - We use IsWalkable(hitFace) to check if the hit face is walkable
+        /// - If the hit face is walkable, return true (line of sight is clear)
+        /// - If the hit face is not walkable, return false (line of sight is blocked)
+        /// 
+        /// STEP 5: Return Result
+        /// - If nothing was hit, return true (clear line of sight)
+        /// - If something was hit and it's walkable, return true (clear line of sight)
+        /// - If something was hit and it's not walkable, return false (line of sight blocked)
+        /// 
+        /// WHY WALKABLE FACES DON'T BLOCK:
+        /// 
+        /// Walkable faces are things like floors and ground. These are flat surfaces that characters
+        /// can stand on. They don't block your view because:
+        /// - They're horizontal (flat on the ground)
+        /// - You're usually looking from above them (your eyes are higher than the ground)
+        /// - Even if you're looking at the same level, you can see across flat surfaces
+        /// 
+        /// Non-walkable faces are things like walls and obstacles. These block your view because:
+        /// - They're vertical (standing up)
+        /// - They're solid objects that light and vision can't pass through
+        /// - They're explicitly marked as non-walkable (material 2 = Obscuring, material 7 = NonWalk, etc.)
+        /// 
+        /// EXAMPLES:
+        /// 
+        /// Example 1: Looking across an open field
+        /// - From point: (0, 0, 1.5) - character's eye height
+        /// - To point: (10, 0, 1.5) - another character's eye height
+        /// - Raycast hits: Ground (walkable, material 4 = Stone)
+        /// - Result: true (ground doesn't block, you can see across it)
+        /// 
+        /// Example 2: Looking through a wall
+        /// - From point: (0, 0, 1.5)
+        /// - To point: (10, 0, 1.5)
+        /// - Raycast hits: Wall (non-walkable, material 2 = Obscuring)
+        /// - Result: false (wall blocks line of sight)
+        /// 
+        /// Example 3: Looking at same point
+        /// - From point: (5, 5, 1.5)
+        /// - To point: (5, 5, 1.5)
+        /// - Distance: 0 (same point)
+        /// - Result: true (you can always see yourself)
+        /// 
+        /// PERFORMANCE:
+        /// 
+        /// - Time complexity: O(log n) with AABB tree, O(n) without tree
+        /// - Uses Raycast internally, which is optimized with AABB tree traversal
+        /// - Called frequently during AI perception checks (every frame for nearby creatures)
+        /// 
+        /// ORIGINAL IMPLEMENTATION:
+        /// 
+        /// Based on swkotor2.exe: Line of sight checks are performed during perception updates.
+        /// The original engine uses walkmesh raycasting to determine if creatures can see each other.
+        /// Non-walkable faces (walls, obstacles) block line of sight, while walkable faces (ground)
+        /// do not block line of sight.
+        /// 
+        /// Located via cross-reference: Perception systems use TestLineOfSight to check visibility
+        /// between creatures. The original engine performs similar checks during AI perception updates.
+        /// </remarks>
+        /// <param name="from">Starting point (where you're looking from)</param>
+        /// <param name="to">Ending point (where you're looking to)</param>
+        /// <returns>True if there's a clear line of sight, false if something blocks the view</returns>
         public bool TestLineOfSight(Vector3 from, Vector3 to)
         {
             Vector3 direction = to - from;
@@ -3417,6 +3510,8 @@ namespace Andastra.Runtime.Core.Navigation
             if (Raycast(from, direction, distance, out hitPoint, out hitFace))
             {
                 // Something is in the way - check if it's a non-walkable face
+                // Walkable faces (ground, floors) don't block line of sight
+                // Non-walkable faces (walls, obstacles) do block line of sight
                 return IsWalkable(hitFace);
             }
 

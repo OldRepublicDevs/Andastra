@@ -17,7 +17,6 @@ using Andastra.Parsing.Formats.TPC;
 using Andastra.Parsing.Tools;
 using Andastra.Parsing.Logger;
 using Andastra.Parsing.Extract;
-using Andastra.Parsing.Resource.Generics;
 using Avalonia;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
@@ -28,6 +27,42 @@ using Vector4 = Andastra.Utility.Geometry.Quaternion;
 
 namespace HolocronToolset.Data
 {
+    // Helper class for BWM deep copy operations (must be defined before IndoorMapRoom uses it)
+    internal static class IndoorMapRoomHelper
+    {
+        public static BWM DeepCopyBwm(BWM original)
+        {
+            if (original == null)
+            {
+                return null;
+            }
+
+            var copy = new BWM
+            {
+                WalkmeshType = original.WalkmeshType,
+                Position = original.Position,
+                RelativeHook1 = original.RelativeHook1,
+                RelativeHook2 = original.RelativeHook2,
+                AbsoluteHook1 = original.AbsoluteHook1,
+                AbsoluteHook2 = original.AbsoluteHook2
+            };
+
+            foreach (var face in original.Faces)
+            {
+                var newFace = new BWMFace(face.V1, face.V2, face.V3)
+                {
+                    Material = face.Material,
+                    Trans1 = face.Trans1,
+                    Trans2 = face.Trans2,
+                    Trans3 = face.Trans3
+                };
+                copy.Faces.Add(newFace);
+            }
+
+            return copy;
+        }
+    }
+
     // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/indoormap.py:66
     // Original: class IndoorMap:
     public class IndoorMap
@@ -265,9 +300,13 @@ namespace HolocronToolset.Data
             byte[] mdl = room.Component.Mdl;
             byte[] mdx = room.Component.Mdx;
 
-            // TODO: Implement model.transform() - requires model manipulation utilities
+            // Apply model transformation (rotation)
+            // Matching Python: mdl_transformed: bytes = model.transform(mdl, Vector3.from_null(), room.rotation)
+            // Vector3.from_null() is Vector3(0, 0, 0) - no translation, only rotation
+            mdl = ModelTools.Transform(mdl, System.Numerics.Vector3.Zero, room.Rotation);
+
             // TODO: Implement model.convert_to_k1/k2() - requires model manipulation utilities
-            // For now, use the original model data as-is
+            // For now, use the transformed model data as-is
 
             return (mdl, mdx);
         }
@@ -1030,38 +1069,10 @@ namespace HolocronToolset.Data
             bbmax.Z = Math.Max(bbmax.Z, vertex.Z);
         }
 
-        // Helper method to deep copy a BWM
-        // Made public static for use by IndoorMapRoom
+        // Helper method to deep copy a BWM (delegates to IndoorMapRoomHelper)
         public static BWM DeepCopyBwm(BWM original)
         {
-            if (original == null)
-            {
-                return null;
-            }
-
-            var copy = new BWM
-            {
-                WalkmeshType = original.WalkmeshType,
-                Position = original.Position,
-                RelativeHook1 = original.RelativeHook1,
-                RelativeHook2 = original.RelativeHook2,
-                AbsoluteHook1 = original.AbsoluteHook1,
-                AbsoluteHook2 = original.AbsoluteHook2
-            };
-
-            foreach (var face in original.Faces)
-            {
-                var newFace = new BWMFace(face.V1, face.V2, face.V3)
-                {
-                    Material = face.Material,
-                    Trans1 = face.Trans1,
-                    Trans2 = face.Trans2,
-                    Trans3 = face.Trans3
-                };
-                copy.Faces.Add(newFace);
-            }
-
-            return copy;
+            return IndoorMapRoomHelper.DeepCopyBwm(original);
         }
 
         // Helper class for comparing byte arrays in HashSet
@@ -1246,7 +1257,7 @@ namespace HolocronToolset.Data
         // Original: def walkmesh(self) -> BWM:
         public BWM Walkmesh()
         {
-            var bwm = IndoorMap.DeepCopyBwm(BaseWalkmesh());
+            var bwm = IndoorMapRoomHelper.DeepCopyBwm(BaseWalkmesh());
             bwm.Flip(FlipX, FlipY);
             bwm.Rotate(Rotation);
             bwm.Translate(Position.X, Position.Y, Position.Z);
@@ -1266,7 +1277,7 @@ namespace HolocronToolset.Data
         {
             if (WalkmeshOverride == null)
             {
-                WalkmeshOverride = IndoorMap.DeepCopyBwm(Component.Bwm);
+                WalkmeshOverride = IndoorMapRoomHelper.DeepCopyBwm(Component.Bwm);
             }
             return WalkmeshOverride;
         }
