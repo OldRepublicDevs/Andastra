@@ -411,10 +411,66 @@ namespace Andastra.Game.GUI
                            File.Exists(Path.Combine(path, "swkotor2.exe"));
 
                 case Game.NWN:
+                    // Validate Neverwinter Nights installation
+                    // Based on xoreos/src/engines/nwn/nwn.cpp:213-268
+                    // Required files:
+                    // - chitin.key: Main KEY file containing resource mappings (mandatory)
+                    // - nwmain.exe: Game executable (mandatory)
+                    // - gui_32bit.erf: GUI texture archive (mandatory)
+                    // - data directory: Contains game data files (mandatory)
+                    // Optional but commonly present:
+                    // - modules directory: User-created modules
+                    // - hak directory: Hakpak files
+                    // - override directory: Override files
+                    // - nwm directory: Neverwinter Nights module files
+                    // - texturepacks directory: Texture pack files
+                    string nwnChitinKey = Path.Combine(path, "chitin.key");
+                    string nwnExe = Path.Combine(path, "nwmain.exe");
+                    string nwnExeUpper = Path.Combine(path, "NWMAIN.EXE");
+                    string nwnGuiErf = Path.Combine(path, "gui_32bit.erf");
+                    string nwnDataDir = Path.Combine(path, "data");
+                    
+                    // All mandatory files/directories must exist
+                    bool hasChitinKey = File.Exists(nwnChitinKey);
+                    bool hasExe = File.Exists(nwnExe) || File.Exists(nwnExeUpper);
+                    bool hasGuiErf = File.Exists(nwnGuiErf);
+                    bool hasDataDir = Directory.Exists(nwnDataDir);
+                    
+                    return hasChitinKey && hasExe && hasGuiErf && hasDataDir;
+                    
                 case Game.NWN2:
-                    // TODO: Validate NWN installation
-                    return Directory.Exists(Path.Combine(path, "data")) ||
-                           Directory.Exists(Path.Combine(path, "override"));
+                    // Validate Neverwinter Nights 2 installation
+                    // Based on xoreos/src/engines/nwn2/nwn2.cpp:214-300
+                    // Required files:
+                    // - nwn2main.exe: Game executable (mandatory)
+                    // - data directory: Contains game data files (mandatory)
+                    // - 2da.zip: 2DA table archive (mandatory)
+                    // - actors.zip: Actor models archive (mandatory)
+                    // - nwn2_models.zip: Model archive (mandatory)
+                    // - scripts.zip: Script archive (mandatory)
+                    // Optional but commonly present:
+                    // - modules directory: User-created modules
+                    // - hak directory: Hakpak files
+                    // - override directory: Override files
+                    // Note: NWN2 uses ZIP archives instead of KEY files like NWN
+                    string nwn2Exe = Path.Combine(path, "nwn2main.exe");
+                    string nwn2ExeUpper = Path.Combine(path, "NWN2MAIN.EXE");
+                    string nwn2DataDir = Path.Combine(path, "data");
+                    string nwn2TwoDaZip = Path.Combine(path, "2da.zip");
+                    string nwn2ActorsZip = Path.Combine(path, "actors.zip");
+                    string nwn2ModelsZip = Path.Combine(path, "nwn2_models.zip");
+                    string nwn2ScriptsZip = Path.Combine(path, "scripts.zip");
+                    
+                    // All mandatory files/directories must exist
+                    bool hasNwn2Exe = File.Exists(nwn2Exe) || File.Exists(nwn2ExeUpper);
+                    bool hasNwn2DataDir = Directory.Exists(nwn2DataDir);
+                    bool hasNwn2TwoDaZip = File.Exists(nwn2TwoDaZip);
+                    bool hasNwn2ActorsZip = File.Exists(nwn2ActorsZip);
+                    bool hasNwn2ModelsZip = File.Exists(nwn2ModelsZip);
+                    bool hasNwn2ScriptsZip = File.Exists(nwn2ScriptsZip);
+                    
+                    return hasNwn2Exe && hasNwn2DataDir && hasNwn2TwoDaZip && 
+                           hasNwn2ActorsZip && hasNwn2ModelsZip && hasNwn2ScriptsZip;
 
                 case Game.DA:
                 case Game.DA2:
