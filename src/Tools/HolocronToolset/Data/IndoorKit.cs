@@ -735,7 +735,8 @@ namespace HolocronToolset.Data
         // Original: def _create_component_from_lyt_room(...) -> KitComponent | None:
         private KitComponent _CreateComponentFromLytRoom(LYTRoom lytRoom, int roomIdx, KitDoor defaultDoor)
         {
-            string modelName = !string.IsNullOrEmpty(lytRoom.Model) ? lytRoom.Model.ToLowerInvariant() : $"room{roomIdx}";
+            string model = lytRoom.Model ?? "";
+            string modelName = !string.IsNullOrEmpty(model) ? model.ToLowerInvariant() : $"room{roomIdx}";
 
             // Try to get the walkmesh (WOK) for this room
             BWM bwm = _GetRoomWalkmesh(modelName);
