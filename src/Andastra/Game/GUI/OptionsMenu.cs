@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using Andastra.Runtime.Core;
+using Andastra.Runtime.Core.Audio;
+using Andastra.Runtime.Core.Dialogue;
 using Andastra.Runtime.Graphics;
 using Vector2 = Odyssey.Graphics.Vector2;
 using Rectangle = Odyssey.Graphics.Rectangle;
@@ -232,7 +234,19 @@ namespace Andastra.Runtime.Game.GUI
         /// <summary>
         /// Creates default options structure.
         /// </summary>
-        public static Dictionary<OptionsCategory, List<OptionItem>> CreateDefaultOptions(GameSettings settings, Andastra.Runtime.Core.Audio.ISoundPlayer soundPlayer = null, Andastra.Runtime.Core.Audio.IMusicPlayer musicPlayer = null)
+        /// <summary>
+        /// Creates default options structure.
+        /// </summary>
+        /// <remarks>
+        /// Audio Volume Implementation:
+        /// - Master Volume: Applied to all audio via ISoundPlayer.SetMasterVolume() and IMusicPlayer.Volume
+        /// - Music Volume: Stored in GameSettings.Audio.MusicVolume (applied when music is played)
+        /// - Effects Volume: Stored in GameSettings.Audio.SfxVolume (applied when sounds are played)
+        /// - Voice Volume: Stored in GameSettings.Audio.VoiceVolume (applied when voice-overs are played)
+        /// - Based on swkotor2.exe: FUN_00631ff0 @ 0x00631ff0 (writes INI values for audio settings)
+        /// - Based on swkotor2.exe: FUN_00633270 @ 0x00633270 (loads audio settings from INI file)
+        /// </remarks>
+        public static Dictionary<OptionsCategory, List<OptionItem>> CreateDefaultOptions(GameSettings settings, ISoundPlayer soundPlayer = null, IMusicPlayer musicPlayer = null, IVoicePlayer voicePlayer = null)
         {
             var options = new Dictionary<OptionsCategory, List<OptionItem>>();
 
@@ -249,7 +263,20 @@ namespace Andastra.Runtime.Game.GUI
             // Audio options - based on swkotor2.exe audio configuration system
             var audioOptions = new List<OptionItem>
             {
-                new OptionItem("Master Volume", OptionType.Numeric, () => settings.Audio.MasterVolume * 100, v => settings.Audio.MasterVolume = (float)v / 100.0f, 0, 100),
+                new OptionItem("Master Volume", OptionType.Numeric, () => (int)(settings.MasterVolume * 100.0f),
+                    v =>
+                    {
+                        settings.MasterVolume = (float)v / 100.0f;
+                        // Apply master volume to all audio systems immediately if available
+                        if (soundPlayer != null)
+                        {
+                            soundPlayer.Volume = settings.MasterVolume;
+                        }
+                        if (musicPlayer != null)
+                        {
+                            musicPlayer.Volume = settings.MasterVolume * settings.Audio.MusicVolume;
+                        }
+                    }, 0, 100),
                 new OptionItem("Music Volume", OptionType.Numeric, () => (int)(settings.Audio.MusicVolume * 100.0f), v => 
                 { 
                     float volume = (float)v / 100.0f;
@@ -260,8 +287,26 @@ namespace Andastra.Runtime.Game.GUI
                         musicPlayer.Volume = volume;
                     }
                 }, 0, 100),
-                new OptionItem("SFX Volume", OptionType.Numeric, () => settings.Audio.SfxVolume * 100, v => settings.Audio.SfxVolume = (float)v / 100.0f, 0, 100),
-                new OptionItem("Voice Volume", OptionType.Numeric, () => settings.VoiceVolume * 100, v => settings.VoiceVolume = (float)v / 100.0f, 0, 100)
+                new OptionItem("SFX Volume", OptionType.Numeric, () => (int)(settings.Audio.SfxVolume * 100.0f),
+                    v => 
+                    {
+                        float volume = (float)v / 100.0f;
+                        settings.Audio.SfxVolume = volume;
+                        // Note: SFX volume is applied per-sound when playing, not as a master volume
+                        // The sound player's SetMasterVolume is controlled by Master Volume
+                    }, 0, 100),
+                new OptionItem("Voice Volume", OptionType.Numeric, () => (int)(settings.Audio.VoiceVolume * 100.0f),
+                    v => 
+                    {
+                        float volume = (float)v / 100.0f;
+                        settings.Audio.VoiceVolume = volume;
+                        // Apply voice volume to voice player immediately if available
+                        // Based on swkotor2.exe: VoiceVolume setting applied to voice-over playback
+                        if (voicePlayer != null)
+                        {
+                            voicePlayer.Volume = volume;
+                        }
+                    }, 0, 100)
             };
             options[OptionsCategory.Audio] = audioOptions;
 
@@ -271,6 +316,19 @@ namespace Andastra.Runtime.Game.GUI
                 new OptionItem("Skip Intro", OptionType.Boolean, () => settings.SkipIntro ? 1 : 0, v => settings.SkipIntro = v > 0, 0, 1)
             };
             options[OptionsCategory.Game] = gameOptions;
+
+            // Autopause options - based on swkotor2.exe autopause system
+            var autopauseOptions = new List<OptionItem>
+            {
+                new OptionItem("Pause on Lost Focus", OptionType.Boolean, () => settings.Autopause.PauseOnLostFocus ? 1 : 0, v => settings.Autopause.PauseOnLostFocus = v > 0, 0, 1),
+                new OptionItem("Pause on Conversation", OptionType.Boolean, () => settings.Autopause.PauseOnConversation ? 1 : 0, v => settings.Autopause.PauseOnConversation = v > 0, 0, 1),
+                new OptionItem("Pause on Container", OptionType.Boolean, () => settings.Autopause.PauseOnContainer ? 1 : 0, v => settings.Autopause.PauseOnContainer = v > 0, 0, 1),
+                new OptionItem("Pause on Corpse", OptionType.Boolean, () => settings.Autopause.PauseOnCorpse ? 1 : 0, v => settings.Autopause.PauseOnCorpse = v > 0, 0, 1),
+                new OptionItem("Pause on Area Transition", OptionType.Boolean, () => settings.Autopause.PauseOnAreaTransition ? 1 : 0, v => settings.Autopause.PauseOnAreaTransition = v > 0, 0, 1),
+                new OptionItem("Pause on Party Death", OptionType.Boolean, () => settings.Autopause.PauseOnPartyDeath ? 1 : 0, v => settings.Autopause.PauseOnPartyDeath = v > 0, 0, 1),
+                new OptionItem("Pause on Player Death", OptionType.Boolean, () => settings.Autopause.PauseOnPlayerDeath ? 1 : 0, v => settings.Autopause.PauseOnPlayerDeath = v > 0, 0, 1)
+            };
+            options[OptionsCategory.Autopause] = autopauseOptions;
 
             // Controls options (placeholder for future controls system)
             var controlsOptions = new List<OptionItem>
