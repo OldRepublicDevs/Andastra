@@ -318,6 +318,20 @@ namespace Andastra.Runtime.Games.Odyssey
         }
 
         /// <summary>
+        /// Public method to trigger area transition for an entity.
+        /// </summary>
+        /// <param name="entity">Entity to transition.</param>
+        /// <param name="targetAreaResRef">Target area ResRef.</param>
+        /// <remarks>
+        /// Based on swkotor2.exe: HandleAreaTransition processes entity movement between areas.
+        /// This public wrapper allows areas and other systems to trigger transitions directly.
+        /// </remarks>
+        public void TransitionEntityToArea(IEntity entity, string targetAreaResRef)
+        {
+            HandleAreaTransition(entity, targetAreaResRef);
+        }
+
+        /// <summary>
         /// Gets the area transition bitmap stored on the entity.
         /// Based on swkotor.exe: SetAreaTransitionBMP stores bitmap on player entity
         /// Original implementation: Bitmap is retrieved from entity data during area transitions
