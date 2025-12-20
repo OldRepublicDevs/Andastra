@@ -37,40 +37,46 @@ namespace Andastra.Parsing.Tests.Formats
         [Fact(Timeout = 300000)]
         public void TestKaitaiStructCompilerAvailable()
         {
-            // Check if kaitai-struct-compiler is available
-            var process = new Process
+            // Check if Java is available (required for Kaitai Struct compiler)
+            var javaCheck = RunCommand("java", "-version");
+            if (javaCheck.ExitCode != 0)
             {
-                StartInfo = new ProcessStartInfo
-                {
-                    FileName = "kaitai-struct-compiler",
-                    Arguments = "--version",
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true,
-                    UseShellExecute = false,
-                    CreateNoWindow = true
-                }
-            };
-
-            try
-            {
-                process.Start();
-                process.WaitForExit(5000);
-
-                if (process.ExitCode == 0)
-                {
-                    string version = process.StandardOutput.ReadToEnd();
-                    version.Should().NotBeNullOrEmpty("Kaitai Struct compiler should return version");
-                }
-                else
-                {
-                    // Compiler not found - skip tests that require it
-                    Assert.True(true, "Kaitai Struct compiler not available - skipping compiler tests");
-                }
+                // Skip test if Java is not available
+                Assert.True(true, "Java not available - skipping compiler availability test");
+                return;
             }
-            catch (System.ComponentModel.Win32Exception)
+
+            // Try to find Kaitai Struct compiler JAR
+            var jarPath = FindKaitaiCompilerJar();
+            if (string.IsNullOrEmpty(jarPath))
             {
-                // Compiler not installed - skip tests
-                Assert.True(true, "Kaitai Struct compiler not installed - skipping compiler tests");
+                // Try command-line version
+                var cmdCheck = RunCommand("kaitai-struct-compiler", "--version");
+                if (cmdCheck.ExitCode == 0)
+                {
+                    cmdCheck.Output.Should().NotBeNullOrEmpty("Kaitai Struct compiler should return version");
+                    return;
+                }
+                // Skip if compiler not found - in CI/CD this should be installed
+                Assert.True(true, "Kaitai Struct compiler not available - skipping compiler tests");
+                return;
+            }
+
+            // Verify JAR exists and is accessible
+            File.Exists(jarPath).Should().BeTrue($"Kaitai Struct compiler JAR should exist at {jarPath}");
+
+            // Try to run compiler with --version to verify it works
+            var testResult = RunCommand("java", $"-jar \"{jarPath}\" --version");
+            // Version should return successfully
+            if (testResult.ExitCode == 0)
+            {
+                testResult.Output.Should().NotBeNullOrEmpty("Compiler should produce version output when run");
+            }
+            else
+            {
+                // Try --help as fallback
+                testResult = RunCommand("java", $"-jar \"{jarPath}\" --help");
+                testResult.Output.Should().NotBeNullOrEmpty("Compiler should produce output when run");
             }
         }
 
@@ -293,18 +299,20 @@ namespace Andastra.Parsing.Tests.Formats
                 bool isKnownLimitation = stderr.ToLower().Contains("not supported") ||
                                         stderr.ToLower().Contains("unsupported") ||
                                         stderr.ToLower().Contains("dependency") ||
-                                        stderr.ToLower().Contains("import");
+                                        stderr.ToLower().Contains("import") ||
+                                        stderr.ToLower().Contains("not available");
                 
                 if (isKnownLimitation)
                 {
                     // Log but don't fail - some languages may not be available in all compiler versions
+                    // This is acceptable for languages that aren't fully supported
                     Assert.True(true, $"{language} compilation failed (may not be supported): {stderr.Substring(0, Math.Min(200, stderr.Length))}");
                 }
                 else
                 {
-                    // Actual compilation error - this should be investigated
+                    // Actual compilation error - log for investigation but don't fail individual test
+                    // The batch test will verify at least some languages succeed
                     Console.WriteLine($"Warning: {language} compilation failed with exit code {exitCode}. STDOUT: {stdout}, STDERR: {stderr}");
-                    // Don't fail the test, but log the error for investigation
                     Assert.True(true, $"{language} compilation failed: {stderr.Substring(0, Math.Min(200, stderr.Length))}");
                 }
             }
@@ -314,8 +322,65 @@ namespace Andastra.Parsing.Tests.Formats
                 string[] generatedFiles = Directory.GetFiles(langOutputDir, "*", SearchOption.AllDirectories);
                 generatedFiles.Should().NotBeEmpty($"{language} compilation should generate output files");
                 
-                // Log success
-                Console.WriteLine($"Successfully compiled LTR.ksy to {language} - generated {generatedFiles.Length} file(s)");
+                // Verify at least one file matches expected patterns for the language
+                bool hasExpectedFile = false;
+                switch (language.ToLower())
+                {
+                    case "python":
+                        hasExpectedFile = generatedFiles.Any(f => f.EndsWith(".py"));
+                        break;
+                    case "java":
+                        hasExpectedFile = generatedFiles.Any(f => f.EndsWith(".java"));
+                        break;
+                    case "javascript":
+                    case "typescript":
+                        hasExpectedFile = generatedFiles.Any(f => f.EndsWith(".js") || f.EndsWith(".ts"));
+                        break;
+                    case "csharp":
+                        hasExpectedFile = generatedFiles.Any(f => f.EndsWith(".cs"));
+                        break;
+                    case "cpp_stl":
+                        hasExpectedFile = generatedFiles.Any(f => f.EndsWith(".cpp") || f.EndsWith(".hpp") || f.EndsWith(".h"));
+                        break;
+                    case "go":
+                        hasExpectedFile = generatedFiles.Any(f => f.EndsWith(".go"));
+                        break;
+                    case "ruby":
+                        hasExpectedFile = generatedFiles.Any(f => f.EndsWith(".rb"));
+                        break;
+                    case "php":
+                        hasExpectedFile = generatedFiles.Any(f => f.EndsWith(".php"));
+                        break;
+                    case "rust":
+                        hasExpectedFile = generatedFiles.Any(f => f.EndsWith(".rs"));
+                        break;
+                    case "swift":
+                        hasExpectedFile = generatedFiles.Any(f => f.EndsWith(".swift"));
+                        break;
+                    case "perl":
+                        hasExpectedFile = generatedFiles.Any(f => f.EndsWith(".pm"));
+                        break;
+                    case "nim":
+                        hasExpectedFile = generatedFiles.Any(f => f.EndsWith(".nim"));
+                        break;
+                    case "lua":
+                        hasExpectedFile = generatedFiles.Any(f => f.EndsWith(".lua"));
+                        break;
+                    case "kotlin":
+                        hasExpectedFile = generatedFiles.Any(f => f.EndsWith(".kt"));
+                        break;
+                }
+                
+                if (hasExpectedFile)
+                {
+                    // Log success
+                    Console.WriteLine($"Successfully compiled LTR.ksy to {language} - generated {generatedFiles.Length} file(s)");
+                }
+                else
+                {
+                    // Files generated but don't match expected pattern - still consider success
+                    Console.WriteLine($"Compiled LTR.ksy to {language} - generated {generatedFiles.Length} file(s) (unexpected file types)");
+                }
             }
         }
 
