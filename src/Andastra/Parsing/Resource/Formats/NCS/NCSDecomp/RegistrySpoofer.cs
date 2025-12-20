@@ -629,15 +629,57 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
         // Original: private boolean attemptElevatedRegistryWrite()
         private bool AttemptElevatedRegistryWrite()
         {
-            // TODO: SIMPLIFIED - Show prompt to user (simplified for C# - UI layer should handle this)
+            // Show elevation prompt to user before attempting elevation
+            string title = "Administrator Privileges Required";
             string message = "NCSDecomp needs administrator privileges to set a Windows registry key.\n\n" +
                 "This is required for the " + (registryPath.Contains("KotOR2") ? "KotOR 2" : "KotOR 1") +
                 " compiler (nwnnsscomp_ktool.exe or nwnnsscomp_kscript.exe) to work correctly.\n\n" +
                 "The registry key will be temporarily set to:\n" +
                 registryPath + "\\" + keyName + " = " + spoofedPath + "\n\n" +
-                "Please run as administrator or allow elevation when prompted.";
+                "Do you want to proceed with elevation? You will be prompted by Windows UAC.";
 
-            Debug("[INFO] RegistrySpoofer: " + message);
+            bool userWantsElevation = false;
+            bool dialogShown = false;
+
+            // Try to show dialog if handler is available
+            if (this.dialogHandler != null)
+            {
+                try
+                {
+                    dialogShown = this.dialogHandler.ShowYesNoDialog(title, message, out userWantsElevation);
+                    if (dialogShown)
+                    {
+                        Debug("[INFO] RegistrySpoofer: Elevation dialog shown successfully, userWantsElevation=" + userWantsElevation);
+                    }
+                    else
+                    {
+                        Debug("[INFO] RegistrySpoofer: Dialog handler failed to show elevation dialog, falling back to logging");
+                    }
+                }
+                catch (Exception e)
+                {
+                    Debug("[INFO] RegistrySpoofer: Exception while showing elevation dialog: " + e.Message);
+                    dialogShown = false;
+                }
+            }
+
+            // If dialog wasn't shown (headless mode or handler unavailable), log the message
+            // and default to attempting elevation for backward compatibility
+            if (!dialogShown)
+            {
+                Debug("[INFO] RegistrySpoofer: " + message);
+                Debug("[INFO] RegistrySpoofer: No dialog handler available, proceeding with elevation attempt");
+                userWantsElevation = true; // Default to attempting elevation in headless mode
+            }
+
+            // If user chose not to proceed with elevation, return false
+            if (!userWantsElevation)
+            {
+                Debug("[INFO] RegistrySpoofer: User chose not to proceed with elevation");
+                return false;
+            }
+
+            Debug("[INFO] RegistrySpoofer: User chose to proceed with elevation, attempting elevated registry write...");
 
             // Parse registry path for reg.exe
             int firstBackslash = registryPath.IndexOf('\\');
