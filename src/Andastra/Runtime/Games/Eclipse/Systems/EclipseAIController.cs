@@ -17,9 +17,12 @@ namespace Andastra.Runtime.Engines.Eclipse.Systems
     /// </summary>
     /// <remarks>
     /// Eclipse AI Controller System:
-    /// - Based on daorigins.exe/DragonAge2.exe// AI systems
+    /// - Based on daorigins.exe/DragonAge2.exe AI systems
     /// - Located via string references: "OnHeartbeat" @ 0x00af4fd4 (daorigins.exe)
-    /// - Original implementation: Reverse engineered from daorigins.exe/DragonAge2.exe//
+    /// - DragonAge2.exe string references: "PackageAI" @ 0x00bf468c, "SetBehaviourMessage" @ 0x00bfc8b4
+    /// - DragonAge2.exe combat strings: "CombatTarget" @ 0x00bf4dc0, "InCombat" @ 0x00bf4c10, "Combatant" @ 0x00bf4664
+    /// - DragonAge2.exe game mode: "GameModeCombat" @ 0x00beaf3c, "BInCombatMode" @ 0x00beeed2
+    /// - Original implementation: Reverse engineered from daorigins.exe/DragonAge2.exe
     /// - AI operates through action queue population based on perception and scripts
     /// - Heartbeat scripts: Fire every 6 seconds (HeartbeatInterval), can queue actions, check conditions
     /// - Perception system: Detects enemies via sight/hearing, fires OnPerception events
@@ -110,7 +113,8 @@ namespace Andastra.Runtime.Engines.Eclipse.Systems
         /// </summary>
         /// <remarks>
         /// Eclipse Perception System:
-        /// - Based on daorigins.exe/DragonAge2.exe// perception systems
+        /// - Based on daorigins.exe/DragonAge2.exe perception systems
+        /// - DragonAge2.exe: Enhanced perception with improved line-of-sight calculations
         /// - Eclipse uses UnrealScript-based perception with different architecture than Odyssey/Aurora
         /// - Perception checks:
         ///   1. Get all creatures in perception range (sight/hearing)
@@ -243,7 +247,9 @@ namespace Andastra.Runtime.Engines.Eclipse.Systems
         /// </summary>
         /// <remarks>
         /// Eclipse Combat AI:
-        /// - Based on daorigins.exe/DragonAge2.exe// combat systems
+        /// - Based on daorigins.exe/DragonAge2.exe combat systems
+        /// - DragonAge2.exe: Enhanced combat AI with improved party coordination and ability selection
+        /// - DragonAge2.exe combat strings: "CombatTarget" @ 0x00bf4dc0, "InCombat" @ 0x00bf4c10, "Combatant" @ 0x00bf4664
         /// - Eclipse uses complex tactical AI with abilities, positioning, and party coordination
         /// - Combat behavior:
         ///   1. Find nearest enemy within combat range
@@ -372,7 +378,8 @@ namespace Andastra.Runtime.Engines.Eclipse.Systems
         /// </summary>
         /// <remarks>
         /// Eclipse Idle Behavior:
-        /// - Based on daorigins.exe/DragonAge2.exe// idle behavior systems
+        /// - Based on daorigins.exe/DragonAge2.exe idle behavior systems
+        /// - DragonAge2.exe: Uses same idle behavior patterns as daorigins.exe with UnrealScript integration
         /// - Eclipse uses simpler idle behavior than Odyssey/Aurora (no patrol routes in base implementation)
         /// - Idle behavior:
         ///   1. Random wandering within spawn radius using ActionMoveToLocation
