@@ -42,7 +42,7 @@ namespace HolocronToolset.Editors
         private NumericUpDown _modelVarSpin;
         private NumericUpDown _bodyVarSpin;
         private NumericUpDown _textureVarSpin;
-        private Avalonia.Controls.Image _iconLabel;
+        private Image _iconLabel;
 
         // UI Controls - Properties
         private TreeView _availablePropertyList;
@@ -143,7 +143,7 @@ namespace HolocronToolset.Editors
         public Button RemovePropertyBtn => _removePropertyBtn;
         public Button EditPropertyBtn => _editPropertyBtn;
         public TextBox CommentsEdit => _commentsEdit;
-        public Avalonia.Controls.Image IconLabel => _iconLabel;
+        public Image IconLabel => _iconLabel;
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uti.py:46-87
         // Original: def __init__(self, parent, installation):
@@ -191,7 +191,7 @@ namespace HolocronToolset.Editors
                 _modelVarSpin = this.FindControl<NumericUpDown>("modelVarSpin");
                 _bodyVarSpin = this.FindControl<NumericUpDown>("bodyVarSpin");
                 _textureVarSpin = this.FindControl<NumericUpDown>("textureVarSpin");
-                _iconLabel = this.FindControl<Avalonia.Controls.Image>("iconLabel");
+                _iconLabel = this.FindControl<Image>("iconLabel");
                 _availablePropertyList = this.FindControl<TreeView>("availablePropertyList");
                 _assignedPropertiesList = this.FindControl<ListBox>("assignedPropertiesList");
                 _addPropertyBtn = this.FindControl<Button>("addPropertyBtn");
@@ -277,7 +277,7 @@ namespace HolocronToolset.Editors
             basicPanel.Children.Add(_baseSelect);
 
             // Icon Label (shows item icon based on base item and variations)
-            _iconLabel = new Avalonia.Controls.Image
+            _iconLabel = new Image
             {
                 Width = 32,
                 Height = 32,
@@ -551,6 +551,9 @@ namespace HolocronToolset.Editors
             {
                 _commentsEdit.Text = uti.Comment;
             }
+
+            // Update icon display after loading UTI data
+            UpdateIcon();
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uti.py:197-230
@@ -1044,18 +1047,17 @@ namespace HolocronToolset.Editors
             
             // Matching PyKotor implementation: if pixmap is not None:
             // Matching PyKotor implementation: self.ui.iconLabel.setPixmap(pixmap)
-            // Note: In Avalonia, we would set the bitmap on an Image control if one exists
-            // For now, we just call the method - the icon display would be implemented when an iconLabel control is added
-            if (bitmap != null)
+            if (bitmap != null && _iconLabel != null)
             {
-                // TODO: Set bitmap on iconLabel Image control when it's added to the UI
-                // iconLabel.Source = bitmap;
+                _iconLabel.Source = bitmap;
             }
             
             // Matching PyKotor implementation: self.ui.iconLabel.setToolTip(self._generate_icon_tooltip(as_html=True))
-            // Note: Tooltip would be set on iconLabel when it's added
-            // string tooltip = GenerateIconTooltip(true);
-            // if (iconLabel != null) iconLabel.ToolTip.SetValue(Avalonia.Controls.ToolTip.TipProperty, tooltip);
+            if (_iconLabel != null)
+            {
+                string tooltip = GenerateIconTooltip(true);
+                Avalonia.Controls.ToolTip.SetTip(_iconLabel, tooltip);
+            }
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uti.py:332-352
