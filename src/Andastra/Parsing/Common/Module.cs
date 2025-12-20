@@ -725,6 +725,25 @@ namespace Andastra.Parsing.Common
             return foundId;
         }
 
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:575-582
+        // Original: def capsules(self) -> list[ModulePieceResource]:
+        /// <summary>
+        /// Returns a copy of the capsules used by the module.
+        /// </summary>
+        /// <returns>A list of linked capsules.</returns>
+        public List<ModulePieceResource> Capsules()
+        {
+            var capsules = new List<ModulePieceResource>();
+            foreach (var capsule in _capsules.Values)
+            {
+                if (capsule != null)
+                {
+                    capsules.Add(capsule);
+                }
+            }
+            return capsules;
+        }
+
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:892-909
         // Original: def resource(self, resname: str, restype: ResourceType) -> ModuleResource | None:
         /// <summary>

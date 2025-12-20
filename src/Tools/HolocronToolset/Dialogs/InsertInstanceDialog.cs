@@ -235,7 +235,45 @@ namespace HolocronToolset.Dialogs
             }
 
             // Add module resources
-            // TODO: Implement when Module resources access is available
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/insert_instance.py:105-112
+            // Original: for capsule in self._module.capsules():
+            // Original:     for resource in (resource for resource in capsule if resource.restype() == self._restype):
+            // Original:         if resource.restype() == self._restype:
+            // Original:             item = QListWidgetItem(resource.resname())
+            // Original:             item.setToolTip(str(resource.filepath()))
+            // Original:             item.setForeground(QBrush(text_color))
+            // Original:             item.setData(Qt.ItemDataRole.UserRole, resource)
+            // Original:             self.ui.resourceList.addItem(item)
+            if (_module != null)
+            {
+                var capsules = _module.Capsules();
+                foreach (var capsule in capsules)
+                {
+                    if (capsule == null)
+                    {
+                        continue;
+                    }
+
+                    var capsuleResources = capsule.GetResources();
+                    foreach (var capsuleResource in capsuleResources)
+                    {
+                        if (capsuleResource.ResType == _restype)
+                        {
+                            // Convert CapsuleResource to FileResource
+                            // Matching PyKotor: FileResource is created from capsule resource
+                            // CapsuleResource.FilePath already contains the capsule path (set during CapsuleResource creation)
+                            var fileResource = new FileResource(
+                                capsuleResource.ResName,
+                                capsuleResource.ResType,
+                                capsuleResource.Size,
+                                capsuleResource.Offset,
+                                capsuleResource.FilePath
+                            );
+                            _resourceList.Items.Add(fileResource);
+                        }
+                    }
+                }
+            }
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/insert_instance.py:117-181
