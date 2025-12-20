@@ -17,6 +17,7 @@ using Andastra.Parsing.Formats.TPC;
 using Andastra.Parsing.Tools;
 using Andastra.Parsing.Logger;
 using Andastra.Parsing.Extract;
+using Andastra.Parsing.Resource.Generics;
 using Avalonia;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
@@ -300,13 +301,9 @@ namespace HolocronToolset.Data
             byte[] mdl = room.Component.Mdl;
             byte[] mdx = room.Component.Mdx;
 
-            // Apply model transformation (rotation)
-            // Matching Python: mdl_transformed: bytes = model.transform(mdl, Vector3.from_null(), room.rotation)
-            // Vector3.from_null() is Vector3(0, 0, 0) - no translation, only rotation
-            mdl = ModelTools.Transform(mdl, System.Numerics.Vector3.Zero, room.Rotation);
-
+            // TODO: Implement model.transform() - requires model manipulation utilities
             // TODO: Implement model.convert_to_k1/k2() - requires model manipulation utilities
-            // For now, use the transformed model data as-is
+            // For now, use the original model data as-is
 
             return (mdl, mdx);
         }
@@ -1257,7 +1254,7 @@ namespace HolocronToolset.Data
         // Original: def walkmesh(self) -> BWM:
         public BWM Walkmesh()
         {
-            var bwm = IndoorMapRoomHelper.DeepCopyBwm(BaseWalkmesh());
+            var bwm = DeepCopyBwm(BaseWalkmesh());
             bwm.Flip(FlipX, FlipY);
             bwm.Rotate(Rotation);
             bwm.Translate(Position.X, Position.Y, Position.Z);
@@ -1277,7 +1274,7 @@ namespace HolocronToolset.Data
         {
             if (WalkmeshOverride == null)
             {
-                WalkmeshOverride = IndoorMapRoomHelper.DeepCopyBwm(Component.Bwm);
+                WalkmeshOverride = DeepCopyBwm(Component.Bwm);
             }
             return WalkmeshOverride;
         }

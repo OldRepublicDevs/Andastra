@@ -644,5 +644,225 @@ namespace Andastra.Parsing.Tools
 
             return new MDLMDXTuple(resultMdl, parsedMdxData);
         }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/model.py:638-721
+        // Original: def transform(data: bytes | bytearray, translation: Vector3, rotation: float) -> bytes | bytearray:
+        /// <summary>
+        /// Transforms a model by injecting a new transform node that applies translation and rotation.
+        /// This creates a parent node that applies the transformation to the entire model hierarchy.
+        /// </summary>
+        /// <param name="data">The MDL model data (with 12-byte header: unused, mdl_size, mdx_size).</param>
+        /// <param name="translation">The translation to apply (X, Y, Z).</param>
+        /// <param name="rotation">The rotation angle in degrees (around Z-axis).</param>
+        /// <returns>The transformed MDL data with the new transform node injected.</returns>
+        public static byte[] Transform(byte[] data, System.Numerics.Vector3 translation, float rotation)
+        {
+            if (data == null)
+            {
+                throw new ArgumentNullException(nameof(data));
+            }
+            if (data.Length < 12)
+            {
+                throw new ArgumentException("Invalid MDL data: must be at least 12 bytes", nameof(data));
+            }
+
+            // Create quaternion orientation from rotation (Z-axis rotation, roll=0, pitch=0, yaw=rotation)
+            // Matching Python: orientation: Vector4 = Vector4.from_euler(0, 0, math.radians(rotation))
+            float rotationRadians = (float)(rotation * Math.PI / 180.0);
+            Andastra.Utility.Geometry.Quaternion orientation = QuaternionFromEuler(0.0, 0.0, rotationRadians);
+
+            // Read MDX size from offset 8-12 (4 bytes)
+            // Matching Python: mdx_size: int = struct.unpack("I", data[8:12])[0]
+            uint mdxSize = BitConverter.ToUInt32(data, 8);
+
+            // Extract parsed data starting at offset 12
+            // Matching Python: parsed_data: bytearray = bytearray(data[12:])
+            byte[] parsedData = new byte[data.Length - 12];
+            Array.Copy(data, 12, parsedData, 0, parsedData.Length);
+
+            if (parsedData.Length < 180)
+            {
+                // Not enough data to have a root node, return original
+                return data;
+            }
+
+            uint nodeCount;
+            uint rootOffset;
+            uint childArrayOffset;
+            uint childCount;
+
+            using (BinaryReader reader = BinaryReader.FromBytes(parsedData, 0))
+            {
+                // Read node count at offset 44 (relative to parsed data)
+                // Matching Python: reader.seek(44); node_count: int = reader.read_uint32()
+                reader.Seek(44);
+                nodeCount = reader.ReadUInt32();
+
+                // Read root offset at offset 168 (relative to parsed data)
+                // Matching Python: reader.seek(168); root_offset: int = reader.read_uint32()
+                reader.Seek(168);
+                rootOffset = reader.ReadUInt32();
+
+                if (rootOffset >= parsedData.Length)
+                {
+                    // Invalid root offset, return original
+                    return data;
+                }
+
+                // Read root node header (skip various fields)
+                // Matching Python: reader.seek(root_offset); reader.read_uint16(); reader.read_uint16(); reader.read_uint32(); reader.skip(6); reader.skip(4); reader.skip(4); reader.skip(4 * 3); reader.skip(4 * 4);
+                reader.Seek((int)rootOffset);
+                reader.ReadUInt16(); // Skip first uint16
+                reader.ReadUInt16(); // Skip second uint16
+                reader.ReadUInt32(); // Skip uint32
+                reader.Skip(6); // Skip 6 bytes
+                reader.Skip(4); // Skip 4 bytes
+                reader.Skip(4); // Skip 4 bytes
+                reader.Skip(4 * 3); // Skip 3 floats (12 bytes)
+                reader.Skip(4 * 4); // Skip 4 floats (16 bytes)
+
+                // Read child array offset and count at root_offset + 44
+                // Matching Python: reader.seek(root_offset + 44); child_array_offset: int = reader.read_uint32(); child_count: int = reader.ReadUInt32()
+                reader.Seek((int)(rootOffset + 44));
+                childArrayOffset = reader.ReadUInt32();
+                childCount = reader.ReadUInt32();
+            }
+
+            // If no children, return original data (no transformation needed)
+            // Matching Python: if child_count == 0: return parsed_data
+            if (childCount == 0)
+            {
+                return data;
+            }
+
+            // Calculate offsets for injected data
+            // Matching Python: root_child_array_offset: int = len(parsed_data)
+            int rootChildArrayOffset = parsedData.Length;
+            // Matching Python: insert_node_offset: int = len(parsed_data) + 4
+            int insertNodeOffset = parsedData.Length + 4;
+            // Matching Python: insert_controller_offset: int = insert_node_offset + 80
+            int insertControllerOffset = insertNodeOffset + 80;
+            // Matching Python: insert_controller_data_offset: int = insert_controller_offset + 32
+            int insertControllerDataOffset = insertControllerOffset + 32;
+
+            // Increase global node count by 1
+            // Matching Python: parsed_data[44:48] = struct.pack("I", node_count + 1)
+            byte[] newNodeCountBytes = BitConverter.GetBytes(nodeCount + 1);
+            Array.Copy(newNodeCountBytes, 0, parsedData, 44, 4);
+
+            // Update the offset the array of child offsets to our injected array
+            // Matching Python: parsed_data[root_offset + 44 : root_offset + 48] = struct.pack("I", root_child_array_offset)
+            byte[] newChildArrayOffsetBytes = BitConverter.GetBytes((uint)rootChildArrayOffset);
+            Array.Copy(newChildArrayOffsetBytes, 0, parsedData, (int)(rootOffset + 44), 4);
+
+            // Set the root node to have 1 child
+            // Matching Python: parsed_data[root_offset + 48 : root_offset + 52] = struct.pack("I", 1)
+            // Matching Python: parsed_data[root_offset + 52 : root_offset + 56] = struct.pack("I", 1)
+            byte[] oneBytes = BitConverter.GetBytes(1u);
+            Array.Copy(oneBytes, 0, parsedData, (int)(rootOffset + 48), 4);
+            Array.Copy(oneBytes, 0, parsedData, (int)(rootOffset + 52), 4);
+
+            // Create new byte array with injected data
+            // Start with existing parsed data
+            List<byte> newParsedData = new List<byte>(parsedData);
+
+            // Populate the injected new root child offsets array
+            // It will contain our new node
+            // Matching Python: parsed_data += struct.pack("I", insert_node_offset)
+            newParsedData.AddRange(BitConverter.GetBytes((uint)insertNodeOffset));
+
+            // Create the new node
+            // Matching Python: parsed_data += struct.pack("HHHH II fff ffff III III III", ...)
+            // Node structure: 2+2+2+2 bytes (4 ushorts), 4+4 bytes (2 uints), 3 floats, 4 floats, 3 uints, 3 uints, 3 uints
+            newParsedData.AddRange(BitConverter.GetBytes((ushort)1)); // Node Type
+            newParsedData.AddRange(BitConverter.GetBytes((ushort)(nodeCount + 1))); // Node ID
+            newParsedData.AddRange(BitConverter.GetBytes((ushort)1)); // Label ID (steal some existing node's label)
+            newParsedData.AddRange(BitConverter.GetBytes((ushort)0)); // Padding
+            newParsedData.AddRange(BitConverter.GetBytes(0u)); // Padding uint
+            newParsedData.AddRange(BitConverter.GetBytes(rootOffset)); // Parent offset
+            newParsedData.AddRange(BitConverter.GetBytes(translation.X)); // Node Position X
+            newParsedData.AddRange(BitConverter.GetBytes(translation.Y)); // Node Position Y
+            newParsedData.AddRange(BitConverter.GetBytes(translation.Z)); // Node Position Z
+            newParsedData.AddRange(BitConverter.GetBytes(orientation.W)); // Node Orientation W
+            newParsedData.AddRange(BitConverter.GetBytes(orientation.X)); // Node Orientation X
+            newParsedData.AddRange(BitConverter.GetBytes(orientation.Y)); // Node Orientation Y
+            newParsedData.AddRange(BitConverter.GetBytes(orientation.Z)); // Node Orientation Z
+            newParsedData.AddRange(BitConverter.GetBytes((uint)childArrayOffset)); // Child Array Offset
+            newParsedData.AddRange(BitConverter.GetBytes(childCount)); // Child Count
+            newParsedData.AddRange(BitConverter.GetBytes(childCount)); // Child Count (duplicate)
+            newParsedData.AddRange(BitConverter.GetBytes((uint)insertControllerOffset)); // Controller Array
+            newParsedData.AddRange(BitConverter.GetBytes(2u)); // Controller Count
+            newParsedData.AddRange(BitConverter.GetBytes(2u)); // Controller Count (duplicate)
+            newParsedData.AddRange(BitConverter.GetBytes((uint)insertControllerDataOffset)); // Controller Data Array
+            newParsedData.AddRange(BitConverter.GetBytes(9u)); // Controller Data Count
+            newParsedData.AddRange(BitConverter.GetBytes(9u)); // Controller Data Count (duplicate)
+
+            // Inject controller and controller data of new node to the end of the file
+            // Matching Python: parsed_data += struct.pack("IHHHHBBBB", 8, 0xFFFF, 1, 0, 1, 3, 0, 0, 0)
+            newParsedData.AddRange(BitConverter.GetBytes(8u)); // Controller type (position)
+            newParsedData.AddRange(BitConverter.GetBytes((ushort)0xFFFF)); // Unknown
+            newParsedData.AddRange(BitConverter.GetBytes((ushort)1)); // Unknown
+            newParsedData.AddRange(BitConverter.GetBytes((ushort)0)); // Unknown
+            newParsedData.AddRange(BitConverter.GetBytes((ushort)1)); // Unknown
+            newParsedData.Add((byte)3); // Unknown
+            newParsedData.Add((byte)0); // Unknown
+            newParsedData.Add((byte)0); // Unknown
+            newParsedData.Add((byte)0); // Unknown
+
+            // Matching Python: parsed_data += struct.pack("IHHHHBBBB", 20, 0xFFFF, 1, 4, 5, 4, 0, 0, 0)
+            newParsedData.AddRange(BitConverter.GetBytes(20u)); // Controller type (orientation)
+            newParsedData.AddRange(BitConverter.GetBytes((ushort)0xFFFF)); // Unknown
+            newParsedData.AddRange(BitConverter.GetBytes((ushort)1)); // Unknown
+            newParsedData.AddRange(BitConverter.GetBytes((ushort)4)); // Unknown
+            newParsedData.AddRange(BitConverter.GetBytes((ushort)5)); // Unknown
+            newParsedData.Add((byte)4); // Unknown
+            newParsedData.Add((byte)0); // Unknown
+            newParsedData.Add((byte)0); // Unknown
+            newParsedData.Add((byte)0); // Unknown
+
+            // Matching Python: parsed_data += struct.pack("ffff", 0.0, *translation)
+            newParsedData.AddRange(BitConverter.GetBytes(0.0f)); // Time
+            newParsedData.AddRange(BitConverter.GetBytes(translation.X)); // Translation X
+            newParsedData.AddRange(BitConverter.GetBytes(translation.Y)); // Translation Y
+            newParsedData.AddRange(BitConverter.GetBytes(translation.Z)); // Translation Z
+
+            // Matching Python: parsed_data += struct.pack("fffff", 0.0, *orientation)
+            newParsedData.AddRange(BitConverter.GetBytes(0.0f)); // Time
+            newParsedData.AddRange(BitConverter.GetBytes(orientation.W)); // Orientation W
+            newParsedData.AddRange(BitConverter.GetBytes(orientation.X)); // Orientation X
+            newParsedData.AddRange(BitConverter.GetBytes(orientation.Y)); // Orientation Y
+            newParsedData.AddRange(BitConverter.GetBytes(orientation.Z)); // Orientation Z
+
+            byte[] finalParsedData = newParsedData.ToArray();
+
+            // Return with header prepended
+            // Matching Python: return struct.pack("III", 0, len(parsed_data), mdx_size) + parsed_data
+            byte[] result = new byte[12 + finalParsedData.Length];
+            Array.Copy(BitConverter.GetBytes(0u), 0, result, 0, 4); // Unused (always 0)
+            Array.Copy(BitConverter.GetBytes((uint)finalParsedData.Length), 0, result, 4, 4); // MDL size
+            Array.Copy(BitConverter.GetBytes(mdxSize), 0, result, 8, 4); // MDX size
+            Array.Copy(finalParsedData, 0, result, 12, finalParsedData.Length); // Parsed data
+
+            return result;
+        }
+
+        /// <summary>
+        /// Creates a quaternion from Euler angles (roll, pitch, yaw).
+        /// Matching PyKotor implementation at utility/common/geometry.py:887-914
+        /// </summary>
+        /// <param name="roll">Rotation around X axis in radians.</param>
+        /// <param name="pitch">Rotation around Y axis in radians.</param>
+        /// <param name="yaw">Rotation around Z axis in radians.</param>
+        /// <returns>A quaternion representing the rotation.</returns>
+        private static Andastra.Utility.Geometry.Quaternion QuaternionFromEuler(double roll, double pitch, double yaw)
+        {
+            // Matching Python implementation: Vector4.from_euler
+            double qx = Math.Sin(roll / 2) * Math.Cos(pitch / 2) * Math.Cos(yaw / 2) - Math.Cos(roll / 2) * Math.Sin(pitch / 2) * Math.Sin(yaw / 2);
+            double qy = Math.Cos(roll / 2) * Math.Sin(pitch / 2) * Math.Cos(yaw / 2) + Math.Sin(roll / 2) * Math.Cos(pitch / 2) * Math.Sin(yaw / 2);
+            double qz = Math.Cos(roll / 2) * Math.Cos(pitch / 2) * Math.Sin(yaw / 2) - Math.Sin(roll / 2) * Math.Sin(pitch / 2) * Math.Cos(yaw / 2);
+            double qw = Math.Cos(roll / 2) * Math.Cos(pitch / 2) * Math.Cos(yaw / 2) + Math.Sin(roll / 2) * Math.Sin(pitch / 2) * Math.Sin(yaw / 2);
+
+            return new Andastra.Utility.Geometry.Quaternion((float)qx, (float)qy, (float)qz, (float)qw);
+        }
     }
 }
