@@ -61,7 +61,7 @@ namespace HolocronToolset.Editors
             _functions = new List<ScriptFunction>();
             _constants = new List<ScriptConstant>();
             _globalSettings = new GlobalSettings();
-            
+
             // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:164-167
             // Original: self.owner: str = "KOTORCommunityPatches"
             _owner = "KOTORCommunityPatches";
@@ -150,50 +150,47 @@ namespace HolocronToolset.Editors
             // Connect compile action (if available via menu or shortcut)
             // Note: In Avalonia, actions are typically handled via menu items or keyboard shortcuts
             // This will be connected when actionCompile menu item is available
-            
+
             // Connect constant list double-click
             if (_constantList != null)
             {
                 _constantList.DoubleTapped += (s, e) => InsertSelectedConstant();
             }
-            
+
             // Connect function list double-click
             if (_functionList != null)
             {
                 _functionList.DoubleTapped += (s, e) => InsertSelectedFunction();
             }
-            
+
             // Connect function search text changed
             if (_functionSearchEdit != null)
             {
                 _functionSearchEdit.TextChanged += (s, e) => OnFunctionSearch(_functionSearchEdit.Text ?? "");
             }
-            
+
             // Connect constant search text changed
             if (_constantSearchEdit != null)
             {
                 _constantSearchEdit.TextChanged += (s, e) => OnConstantSearch(_constantSearchEdit.Text ?? "");
             }
-            
+
             // Connect code editor text changed events
             if (_codeEdit != null)
             {
                 // Update status bar on text change
                 _codeEdit.TextChanged += (s, e) => UpdateStatusBar();
-                
-                // Update status bar on cursor position change
-                _codeEdit.SelectionChanged += (s, e) => UpdateStatusBar();
-                
+
                 // Validate bookmarks when text changes
                 _codeEdit.TextChanged += (s, e) => ValidateBookmarks();
-                
+
                 // Update bookmark visualization when text changes
                 _codeEdit.TextChanged += (s, e) => UpdateBookmarkVisualization();
-                
+
                 // Connect text changed to code editor's internal handler (if available)
                 // Note: CodeEditor.on_text_changed equivalent would be handled internally
             }
-            
+
             // Connect game selector changed
             if (_gameSelector != null)
             {
@@ -205,7 +202,7 @@ namespace HolocronToolset.Editors
                     }
                 };
             }
-            
+
             // Connect context menu (if available)
             // Note: Avalonia handles context menus differently than Qt
             // Context menu setup would be done in SetupUI or via XAML
@@ -460,7 +457,7 @@ namespace HolocronToolset.Editors
         {
             base.Load(filepath, resref, restype, data);
             _isDecompiled = false;
-            
+
             // Reload bookmarks when file is loaded
             LoadBookmarks();
 
@@ -652,7 +649,7 @@ namespace HolocronToolset.Editors
         private void SetupBookmarks()
         {
             _bookmarkTree = new TreeView();
-            
+
             // Load bookmarks when editor is initialized
             LoadBookmarks();
         }
@@ -729,7 +726,7 @@ namespace HolocronToolset.Editors
 
             int cursorPosition = _codeEdit.SelectionStart;
             string text = _codeEdit.Text;
-            
+
             // Count newlines before cursor position (1-indexed)
             int lineNumber = 1;
             for (int i = 0; i < cursorPosition && i < text.Length; i++)
@@ -783,7 +780,7 @@ namespace HolocronToolset.Editors
 
             var bookmarks = new List<BookmarkData>();
             var itemsList = _bookmarkTree.Items as IEnumerable<TreeViewItem> ?? new List<TreeViewItem>();
-            
+
             foreach (var item in itemsList)
             {
                 if (item?.Tag is BookmarkData bookmarkData)
@@ -794,10 +791,10 @@ namespace HolocronToolset.Editors
 
             // Save to application settings (using a simple JSON approach)
             // In a full implementation, this would use Avalonia's settings system
-            string fileKey = !string.IsNullOrEmpty(_resname) 
-                ? $"nss_editor/bookmarks/{_resname}" 
+            string fileKey = !string.IsNullOrEmpty(_resname)
+                ? $"nss_editor/bookmarks/{_resname}"
                 : "nss_editor/bookmarks/untitled";
-            
+
             try
             {
                 string json = JsonSerializer.Serialize(bookmarks);
@@ -819,8 +816,8 @@ namespace HolocronToolset.Editors
                 return;
             }
 
-            string fileKey = !string.IsNullOrEmpty(_resname) 
-                ? $"nss_editor/bookmarks/{_resname}" 
+            string fileKey = !string.IsNullOrEmpty(_resname)
+                ? $"nss_editor/bookmarks/{_resname}"
                 : "nss_editor/bookmarks/untitled";
 
             // Load from application settings (simplified for testing)
@@ -945,7 +942,7 @@ namespace HolocronToolset.Editors
 
             // Insert function name with parentheses: "FunctionName()"
             string insert = $"{function.Name}()";
-            
+
             // Insert text at cursor position
             InsertTextAtCursor(insert, insert.IndexOf("(") + 1);
         }
@@ -991,24 +988,24 @@ namespace HolocronToolset.Editors
         private void SetupFunctionList()
         {
             _functionList = new ListBox();
-            
+
             // Initialize constant list if not already initialized
             if (_constantList == null)
             {
                 _constantList = new ListBox();
             }
-            
+
             // Initialize search edit boxes if not already initialized
             if (_functionSearchEdit == null)
             {
                 _functionSearchEdit = new TextBox();
             }
-            
+
             if (_constantSearchEdit == null)
             {
                 _constantSearchEdit = new TextBox();
             }
-            
+
             // Initialize game selector if not already initialized
             if (_gameSelector == null)
             {
@@ -1017,13 +1014,13 @@ namespace HolocronToolset.Editors
                 _gameSelector.Items.Add("TSL");
                 _gameSelector.SelectedIndex = _isTsl ? 1 : 0;
             }
-            
+
             // Initialize status label if not already initialized
             if (_statusLabel == null)
             {
                 _statusLabel = new Label();
             }
-            
+
             // Update game-specific data when function list is set up
             UpdateGameSpecificData();
         }
@@ -1097,7 +1094,7 @@ namespace HolocronToolset.Editors
         {
             // Create outline view TreeView
             _outlineView = new TreeView();
-            
+
             // Initially clear outline
             _outlineView.ItemsSource = new List<TreeViewItem>();
         }
@@ -1129,7 +1126,7 @@ namespace HolocronToolset.Editors
 
             // Extract symbols from code
             var symbols = ExtractSymbolsFromCode(code);
-            
+
             // Populate TreeView with symbols
             var outlineItems = new List<TreeViewItem>();
             foreach (var symbol in symbols)
@@ -1177,11 +1174,11 @@ namespace HolocronToolset.Editors
             // Pattern for function declarations: returnType functionName(parameters) { ... }
             // Examples: "void main()", "int GetValue(int x, int y)", "string GetName()"
             var functionPattern = new Regex(@"^\s*(?:const\s+)?(\w+)\s+(\w+)\s*\([^)]*\)\s*\{?", RegexOptions.Multiline | RegexOptions.IgnoreCase);
-            
+
             // Pattern for global variable declarations: type variableName [= value];
             // Examples: "int g_globalVar = 10;", "string name;"
             var globalVarPattern = new Regex(@"^\s*(?:const\s+)?(\w+)\s+(\w+)\s*(?:=\s*[^;]+)?\s*;", RegexOptions.Multiline | RegexOptions.IgnoreCase);
-            
+
             // Pattern for struct declarations: struct StructName { ... }
             var structPattern = new Regex(@"^\s*struct\s+(\w+)\s*\{", RegexOptions.Multiline | RegexOptions.IgnoreCase);
 
@@ -1190,7 +1187,7 @@ namespace HolocronToolset.Editors
             {
                 string returnType = match.Groups[1].Value;
                 string functionName = match.Groups[2].Value;
-                
+
                 // Skip if it's a variable declaration that looks like a function (e.g., "int x()" as variable)
                 if (IsVariableDeclaration(processedCode, match.Index))
                 {
@@ -1199,7 +1196,7 @@ namespace HolocronToolset.Editors
 
                 // Get line number
                 int lineNumber = GetLineNumberFromIndex(code, match.Index);
-                
+
                 // Extract function signature detail
                 string fullMatch = match.Value;
                 int parenStart = fullMatch.IndexOf('(');
@@ -1224,7 +1221,7 @@ namespace HolocronToolset.Editors
             {
                 string varType = match.Groups[1].Value;
                 string varName = match.Groups[2].Value;
-                
+
                 // Skip if it's inside a function or struct
                 if (IsInsideFunctionOrStruct(processedCode, match.Index))
                 {
@@ -1285,7 +1282,7 @@ namespace HolocronToolset.Editors
             foreach (string line in lines)
             {
                 string processedLine = line;
-                
+
                 // Handle block comments
                 if (inBlockComment)
                 {
@@ -1424,7 +1421,7 @@ namespace HolocronToolset.Editors
                     {
                         string paramType = parts[parts.Length - 2];
                         string paramName = parts[parts.Length - 1];
-                        
+
                         var paramSymbol = new OutlineSymbol
                         {
                             Name = paramName,
@@ -1472,7 +1469,7 @@ namespace HolocronToolset.Editors
         private TreeViewItem CreateOutlineItem(OutlineSymbol symbol)
         {
             string displayText = GetSymbolDisplayText(symbol);
-            
+
             var item = new TreeViewItem
             {
                 Header = displayText,
@@ -1629,7 +1626,7 @@ namespace HolocronToolset.Editors
                         };
                         symbolStartLine = i;
                         braceDepth = 0;
-                        
+
                         // Check if opening brace is on the same line
                         foreach (char c in line)
                         {
@@ -1639,7 +1636,7 @@ namespace HolocronToolset.Editors
                                 break; // Found opening brace on same line
                             }
                         }
-                        
+
                         // If we found the opening brace, continue to next iteration to track closing
                         if (braceDepth > 0)
                         {
@@ -1662,7 +1659,7 @@ namespace HolocronToolset.Editors
                         };
                         symbolStartLine = i;
                         braceDepth = 0;
-                        
+
                         // Check if opening brace is on the same line
                         foreach (char c in line)
                         {
@@ -1672,7 +1669,7 @@ namespace HolocronToolset.Editors
                                 break; // Found opening brace on same line
                             }
                         }
-                        
+
                         // If we found the opening brace, continue to next iteration to track closing
                         if (braceDepth > 0)
                         {
@@ -1774,8 +1771,8 @@ namespace HolocronToolset.Editors
 
                 // Look for function definition
                 // Check for: void symbolName(, int symbolName(, float symbolName(, etc.
-                if (line.Contains($"void {symbolName}(") || 
-                    line.Contains($"int {symbolName}(") || 
+                if (line.Contains($"void {symbolName}(") ||
+                    line.Contains($"int {symbolName}(") ||
                     line.Contains($"float {symbolName}(") ||
                     line.Contains($"string {symbolName}(") ||
                     line.Contains($"object {symbolName}("))
@@ -1796,8 +1793,8 @@ namespace HolocronToolset.Editors
                 if (line.Contains(symbolName) && (line.Contains("=") || line.Contains(";")))
                 {
                     // Check if line contains a type keyword (more specific check)
-                    if (line.Contains("int ") || line.Contains("float ") || 
-                        line.Contains("string ") || line.Contains("object ") || 
+                    if (line.Contains("int ") || line.Contains("float ") ||
+                        line.Contains("string ") || line.Contains("object ") ||
                         line.Contains("void "))
                     {
                         GotoLine(lineNumber);
@@ -1830,7 +1827,7 @@ namespace HolocronToolset.Editors
                 exceptionMessage,
                 ButtonEnum.Ok,
                 MsBox.Avalonia.Enums.Icon.Error);
-            
+
             // Show dialog asynchronously (non-blocking)
             errorBox.ShowAsync();
 
@@ -1857,7 +1854,7 @@ namespace HolocronToolset.Editors
             // Show dialog asking user to decompile or download
             var dialog = new DecompileOrDownloadDialog(_sourcerepoUrl);
             dialog.ShowDialogAsync(this).GetAwaiter().GetResult();
-            
+
             string source = null;
             bool errorOccurred = false;
 
@@ -1925,10 +1922,10 @@ namespace HolocronToolset.Editors
         {
             string scriptFilename = $"{resref.ToLowerInvariant()}.nss";
             var selectedFiles = new List<string> { scriptFilename };
-            
+
             var dialog = new GitHubSelectorDialog(_owner, _repo, selectedFiles, this);
             dialog.ShowDialogAsync(this).GetAwaiter().GetResult();
-            
+
             string selectedPath = dialog.SelectedPath;
             if (string.IsNullOrEmpty(selectedPath) || !selectedPath.Trim().Any())
             {
@@ -1949,11 +1946,11 @@ namespace HolocronToolset.Editors
         {
             // Determine script path using GitHub selector dialog
             string scriptPath = DetermineScriptPath(resref);
-            
+
             // Get log directory for download location
             string logDir = LogDirectoryHelper.GetLogDirectory(null, _globalSettings.ExtractPath);
             string localPath = Path.Combine(logDir, Path.GetFileName(scriptPath));
-            
+
             System.Console.WriteLine($"Local path: {localPath}");
 
             // Download the script from GitHub
@@ -2009,7 +2006,7 @@ namespace HolocronToolset.Editors
             {
                 // Set resource type to NCS for compilation
                 _restype = ResourceType.NCS;
-                
+
                 // Determine filepath for saving
                 string filepath = _filepath;
                 if (string.IsNullOrEmpty(filepath))
@@ -2148,14 +2145,14 @@ namespace HolocronToolset.Editors
             // Get current line and column from cursor position
             int lineNumber = GetCurrentLineNumber();
             int columnNumber = GetCurrentColumnNumber();
-            
+
             // Calculate total lines
             int totalLines = GetTotalLineCount();
-            
+
             // Get selection info
             string selectedText = _codeEdit.SelectedText ?? "";
             int selectedCount = selectedText.Length;
-            
+
             // Format like VS Code: "Ln 1, Col 1" or "Ln 1, Col 1 (5 selected)"
             string statusText;
             if (selectedCount > 0)
@@ -2175,7 +2172,7 @@ namespace HolocronToolset.Editors
             {
                 statusText = $"Ln {lineNumber}, Col {columnNumber} | {totalLines} lines";
             }
-            
+
             _statusLabel.Content = statusText;
         }
 
@@ -2189,7 +2186,7 @@ namespace HolocronToolset.Editors
 
             int cursorPosition = _codeEdit.SelectionStart;
             string text = _codeEdit.Text;
-            
+
             // Find the start of the current line
             int lineStart = 0;
             for (int i = cursorPosition - 1; i >= 0; i--)
@@ -2200,7 +2197,7 @@ namespace HolocronToolset.Editors
                     break;
                 }
             }
-            
+
             // Column number is 1-indexed (cursor position - line start + 1)
             return cursorPosition - lineStart + 1;
         }
@@ -2240,7 +2237,7 @@ namespace HolocronToolset.Editors
 
             int maxLines = GetTotalLineCount();
             var itemsToRemove = new List<TreeViewItem>();
-            
+
             var itemsList = _bookmarkTree.ItemsSource as List<TreeViewItem> ?? new List<TreeViewItem>();
             foreach (var item in itemsList)
             {
@@ -2253,13 +2250,13 @@ namespace HolocronToolset.Editors
                     }
                 }
             }
-            
+
             // Remove invalid bookmarks
             foreach (var item in itemsToRemove)
             {
                 itemsList.Remove(item);
             }
-            
+
             if (itemsToRemove.Count > 0)
             {
                 _bookmarkTree.ItemsSource = itemsList;
@@ -2279,7 +2276,7 @@ namespace HolocronToolset.Editors
         {
             // Update game flag (0 = K1, 1 = TSL)
             _isTsl = index == 1;
-            
+
             // Update game-specific data
             UpdateGameSpecificData();
         }

@@ -32,6 +32,7 @@ namespace HolocronToolset.Dialogs
         private byte[] _data;
         private string _filepath;
         private GlobalSettings _globalSettings;
+        private Widgets.ModelRenderer _previewRenderer;
 
         // Public parameterless constructor for XAML
         public InsertInstanceDialog() : this(null, null, null, ResourceType.UTC)
@@ -330,7 +331,7 @@ namespace HolocronToolset.Dialogs
                     Localization.Translate("You must choose an instance, use the radial buttons to determine where/how to create the GIT instance."),
                     ButtonEnum.Ok,
                     MsBox.Avalonia.Enums.Icon.Error);
-                await msgBox.ShowDialogAsync(this);
+                await msgBox.ShowAsync();
                 return;
             }
 

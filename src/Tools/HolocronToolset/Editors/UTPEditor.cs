@@ -76,7 +76,7 @@ namespace HolocronToolset.Editors
         private List<string> _relevantScriptResnames;
 
         // UI Controls - Comments
-        private TextBlock _commentsEdit;
+        private TextBox _commentsEdit;
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utp.py:39-84
         // Original: def __init__(self, parent, installation):

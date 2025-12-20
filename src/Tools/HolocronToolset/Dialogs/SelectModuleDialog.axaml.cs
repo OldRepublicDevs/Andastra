@@ -382,16 +382,18 @@ namespace HolocronToolset.Dialogs
                 }
             }
 
-            // ShowDialogAsync<bool> will handle setting the parent relationship
+            // ShowDialogAsync will handle setting the parent relationship
             // We return true if dialog was closed with true result (user clicked Open) and a module was selected
             bool result = false;
             if (dialogParent != null)
             {
-                result = await ShowDialogAsync<bool>(dialogParent);
+                var resultObj = await ShowDialogAsync(dialogParent);
+                result = resultObj is bool b ? b : false;
             }
             else
             {
-                result = await ShowDialogAsync<bool>(this);
+                var resultObj = await ShowDialogAsync(this);
+                result = resultObj is bool b ? b : false;
             }
 
             // Return true if dialog was closed with true result and a module was selected
