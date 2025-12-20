@@ -4166,6 +4166,148 @@ namespace HolocronToolset.Editors
 
             // Filter files matching search text
             _fileSystemModel.SetFilter(searchText);
+
+            // Update TreeView to reflect filter
+            UpdateFileExplorerTreeView();
+        }
+
+        /// <summary>
+        /// Updates the file explorer TreeView with current file system data.
+        /// Builds a tree structure from the file system and binds it to the TreeView.
+        /// </summary>
+        private void UpdateFileExplorerTreeView()
+        {
+            if (_fileExplorerView == null || _fileSystemModel == null)
+            {
+                return;
+            }
+
+            string rootPath = _fileSystemModel.RootPath;
+            if (string.IsNullOrEmpty(rootPath) || !Directory.Exists(rootPath))
+            {
+                _fileExplorerView.ItemsSource = new List<TreeViewItem>();
+                return;
+            }
+
+            string filter = _fileSystemModel.RootPath; // Get filter from model (if exposed)
+            // Note: FileSystemModel.SetFilter stores filter but doesn't expose it
+            // For now, we'll get filter from _fileSearchEdit if available
+            string searchFilter = (_fileSearchEdit?.Text ?? "").ToLowerInvariant();
+
+            var rootItems = new List<TreeViewItem>();
+            try
+            {
+                // Build tree structure from directory
+                BuildFileSystemTree(rootPath, null, rootItems, searchFilter);
+            }
+            catch (Exception ex)
+            {
+                // Log error but don't crash
+                System.Console.WriteLine($"Error updating file explorer: {ex.Message}");
+                rootItems = new List<TreeViewItem>();
+            }
+
+            _fileExplorerView.ItemsSource = rootItems;
+        }
+
+        /// <summary>
+        /// Recursively builds a tree structure from the file system.
+        /// </summary>
+        /// <param name="directoryPath">The directory path to build from.</param>
+        /// <param name="parentItem">The parent TreeViewItem (null for root).</param>
+        /// <param name="itemsList">The list to add items to.</param>
+        /// <param name="filter">Optional filter string to match file/directory names.</param>
+        private void BuildFileSystemTree(string directoryPath, TreeViewItem parentItem, List<TreeViewItem> itemsList, string filter = "")
+        {
+            if (string.IsNullOrEmpty(directoryPath) || !Directory.Exists(directoryPath))
+            {
+                return;
+            }
+
+            try
+            {
+                // Get directories and files
+                var directories = Directory.GetDirectories(directoryPath);
+                var files = Directory.GetFiles(directoryPath);
+
+                // Apply filter if provided
+                bool hasFilter = !string.IsNullOrEmpty(filter);
+                if (hasFilter)
+                {
+                    directories = directories.Where(d => Path.GetFileName(d).ToLowerInvariant().Contains(filter)).ToArray();
+                    files = files.Where(f => Path.GetFileName(f).ToLowerInvariant().Contains(filter)).ToArray();
+                }
+
+                // Add directories first
+                foreach (var dir in directories.OrderBy(d => Path.GetFileName(d)))
+                {
+                    string dirName = Path.GetFileName(dir);
+                    var dirItem = new TreeViewItem
+                    {
+                        Header = dirName,
+                        Tag = dir, // Store full path in Tag
+                        IsExpanded = false
+                    };
+
+                    // Recursively build children (only if not filtered, to avoid performance issues)
+                    if (!hasFilter)
+                    {
+                        var childItems = new List<TreeViewItem>();
+                        BuildFileSystemTree(dir, dirItem, childItems, filter);
+                        if (childItems.Count > 0)
+                        {
+                            dirItem.ItemsSource = childItems;
+                        }
+                    }
+
+                    if (parentItem == null)
+                    {
+                        itemsList.Add(dirItem);
+                    }
+                    else
+                    {
+                        if (parentItem.ItemsSource == null)
+                        {
+                            parentItem.ItemsSource = new List<TreeViewItem>();
+                        }
+                        ((List<TreeViewItem>)parentItem.ItemsSource).Add(dirItem);
+                    }
+                }
+
+                // Add files
+                foreach (var file in files.OrderBy(f => Path.GetFileName(f)))
+                {
+                    string fileName = Path.GetFileName(file);
+                    var fileItem = new TreeViewItem
+                    {
+                        Header = fileName,
+                        Tag = file, // Store full path in Tag
+                        IsExpanded = false
+                    };
+
+                    if (parentItem == null)
+                    {
+                        itemsList.Add(fileItem);
+                    }
+                    else
+                    {
+                        if (parentItem.ItemsSource == null)
+                        {
+                            parentItem.ItemsSource = new List<TreeViewItem>();
+                        }
+                        ((List<TreeViewItem>)parentItem.ItemsSource).Add(fileItem);
+                    }
+                }
+            }
+            catch (UnauthorizedAccessException)
+            {
+                // Skip directories we don't have access to
+            }
+            catch (Exception ex)
+            {
+                // Log but continue
+                System.Console.WriteLine($"Error building file system tree for {directoryPath}: {ex.Message}");
+            }
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:1455-1461
