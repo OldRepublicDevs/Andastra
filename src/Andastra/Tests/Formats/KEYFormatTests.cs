@@ -93,14 +93,14 @@ namespace Andastra.Parsing.Tests.Formats
             KEY key = new KEYBinaryReader(BinaryTestFile).Load();
 
             // Validate file table structure
-            key.BifEntries.Count.Should().BeGreaterOrEqualTo(0, "BIF entries count should be non-negative");
+            key.BifEntries.Count.Should().BeGreaterThanOrEqualTo(0, "BIF entries count should be non-negative");
 
             // Validate each entry has required fields (matching file_entry in KEY.ksy)
             foreach (var bifEntry in key.BifEntries)
             {
-                bifEntry.Filesize.Should().BeGreaterOrEqualTo(0, "File size should be non-negative");
+                bifEntry.Filesize.Should().BeGreaterThanOrEqualTo(0, "File size should be non-negative");
                 bifEntry.Filename.Should().NotBeNull("Filename should not be null");
-                bifEntry.Drives.Should().BeGreaterOrEqualTo(0, "Drives should be non-negative");
+                bifEntry.Drives.Should().BeGreaterThanOrEqualTo(0, "Drives should be non-negative");
             }
         }
 
@@ -115,14 +115,14 @@ namespace Andastra.Parsing.Tests.Formats
             KEY key = new KEYBinaryReader(BinaryTestFile).Load();
 
             // Validate KEY table structure
-            key.KeyEntries.Count.Should().BeGreaterOrEqualTo(0, "KEY entries count should be non-negative");
+            key.KeyEntries.Count.Should().BeGreaterThanOrEqualTo(0, "KEY entries count should be non-negative");
 
             // Validate each entry has required fields (matching key_entry in KEY.ksy)
             foreach (var keyEntry in key.KeyEntries)
             {
                 keyEntry.ResRef.Should().NotBeNull("ResRef should not be null");
                 keyEntry.ResType.Should().NotBeNull("Resource type should not be null");
-                keyEntry.ResourceId.Should().BeGreaterOrEqualTo(0, "Resource ID should be non-negative");
+                keyEntry.ResourceId.Should().BeGreaterThanOrEqualTo(0, "Resource ID should be non-negative");
             }
         }
 
@@ -233,7 +233,7 @@ namespace Andastra.Parsing.Tests.Formats
             string longResRef = new string('a', 20);
             key.AddKeyEntry(longResRef, ResourceType.TXT, 0, 0);
 
-            key.KeyEntries[0].ResRef.ToString().Length.Should().BeLessOrEqualTo(16, "ResRef should be max 16 characters as per KEY.ksy");
+            key.KeyEntries[0].ResRef.ToString().Length.Should().BeLessThanOrEqualTo(16, "ResRef should be max 16 characters as per KEY.ksy");
         }
 
         [Fact(Timeout = 120000)]
@@ -252,7 +252,7 @@ namespace Andastra.Parsing.Tests.Formats
             for (int i = 0; i < key.BifEntries.Count; i++)
             {
                 int offset = key.CalculateFilenameOffset(i);
-                offset.Should().BeGreaterOrEqualTo(filenameTableOffset);
+                offset.Should().BeGreaterThanOrEqualTo(filenameTableOffset);
             }
         }
 
@@ -270,7 +270,7 @@ namespace Andastra.Parsing.Tests.Formats
 
             fileTableOffset.Should().Be(KEY.HeaderSize);
             filenameTableOffset.Should().Be(fileTableOffset + (key.BifEntries.Count * KEY.BifEntrySize));
-            keyTableOffset.Should().BeGreaterOrEqualTo(filenameTableOffset);
+            keyTableOffset.Should().BeGreaterThanOrEqualTo(filenameTableOffset);
         }
 
         [Fact(Timeout = 120000)]

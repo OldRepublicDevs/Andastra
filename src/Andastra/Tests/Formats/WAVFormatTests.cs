@@ -64,7 +64,7 @@ namespace Andastra.Parsing.Tests.Formats
 
             // Validate audio format
             wav.AudioFormat.Should().BeOneOf(AudioFormat.Wave, AudioFormat.MP3, "Audio format should be Wave or MP3");
-            wav.Encoding.Should().BeGreaterOrEqualTo(0, "Encoding should be non-negative");
+            wav.Encoding.Should().BeGreaterThanOrEqualTo(0, "Encoding should be non-negative");
             wav.Channels.Should().BeGreaterThan(0, "Channels should be positive");
             wav.SampleRate.Should().BeGreaterThan(0, "Sample rate should be positive");
             wav.BitsPerSample.Should().BeGreaterThan(0, "Bits per sample should be positive");
@@ -161,7 +161,7 @@ namespace Andastra.Parsing.Tests.Formats
 
             // Validate data chunk
             wav.Data.Should().NotBeNull("Data chunk should not be null");
-            wav.Data.Length.Should().BeGreaterOrEqualTo(0, "Data length should be non-negative");
+            wav.Data.Length.Should().BeGreaterThanOrEqualTo(0, "Data length should be non-negative");
         }
 
         [Fact(Timeout = 120000)]
@@ -382,7 +382,7 @@ namespace Andastra.Parsing.Tests.Formats
             // Write RIFF header
             byte[] riff = System.Text.Encoding.ASCII.GetBytes("RIFF");
             fs.Write(riff, 0, 4);
-            
+
             // Calculate size: WAVE (4) + fmt chunk (8 + 16) + data chunk (8 + data size)
             uint dataSize = 100; // Minimal data
             uint totalSize = 4 + 8 + 16 + 8 + dataSize;
@@ -397,7 +397,7 @@ namespace Andastra.Parsing.Tests.Formats
             fs.Write(fmt, 0, 4);
             byte[] fmtSize = BitConverter.GetBytes(16u);
             fs.Write(fmtSize, 0, 4);
-            
+
             // PCM format
             byte[] audioFormat = BitConverter.GetBytes((ushort)1);
             fs.Write(audioFormat, 0, 2);

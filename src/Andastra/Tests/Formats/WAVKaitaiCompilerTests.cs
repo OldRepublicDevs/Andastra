@@ -238,7 +238,7 @@ namespace Andastra.Parsing.Tests.Formats
             }
 
             // Verify at least 12 languages compiled (as required)
-            successful.Count.Should().BeGreaterOrEqualTo(12,
+            successful.Count.Should().BeGreaterThanOrEqualTo(12,
                 $"At least 12 languages should compile successfully. Only {successful.Count} succeeded: {string.Join(", ", successful.Select(s => s.Key))}");
         }
 

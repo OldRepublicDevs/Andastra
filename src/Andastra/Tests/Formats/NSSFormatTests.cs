@@ -219,7 +219,7 @@ namespace Andastra.Parsing.Tests.Formats
             }
 
             FileInfo fileInfo = new FileInfo(TextTestFile);
-            fileInfo.Length.Should().BeGreaterOrEqualTo(0, "NSS file size should be non-negative");
+            fileInfo.Length.Should().BeGreaterThanOrEqualTo(0, "NSS file size should be non-negative");
         }
 
         private static void CreateTestNssFile(string path)

@@ -314,7 +314,7 @@ namespace Andastra.Parsing.Tests.Formats
             var failed = results.Where(r => !r.Value.Success).ToList();
 
             // At least 12 languages should compile successfully
-            successful.Count.Should().BeGreaterOrEqualTo(12,
+            successful.Count.Should().BeGreaterThanOrEqualTo(12,
                 $"At least 12 languages should compile successfully. " +
                 $"Successful: {string.Join(", ", successful.Select(s => s.Key))}. " +
                 $"Failed: {string.Join(", ", failed.Select(f => $"{f.Key}: {f.Value.ErrorMessage}"))}");
@@ -605,7 +605,7 @@ namespace Andastra.Parsing.Tests.Formats
                 return; // Skip if file doesn't exist
             }
 
-            SupportedLanguages.Length.Should().BeGreaterOrEqualTo(12,
+            SupportedLanguages.Length.Should().BeGreaterThanOrEqualTo(12,
                 "Should support at least a dozen languages for testing");
 
             string compilerPath = FindKaitaiCompiler();
@@ -682,7 +682,7 @@ namespace Andastra.Parsing.Tests.Formats
             }
 
             // We should be able to compile to at least a dozen languages
-            compiledCount.Should().BeGreaterOrEqualTo(12,
+            compiledCount.Should().BeGreaterThanOrEqualTo(12,
                 $"Should successfully compile IFO.ksy to at least 12 languages. Compiled to {compiledCount} languages.");
         }
 

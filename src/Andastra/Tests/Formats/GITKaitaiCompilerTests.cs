@@ -234,7 +234,7 @@ namespace Andastra.Parsing.Tests.Formats
                 $"At least one language should compile successfully. Failed: {string.Join(", ", failed.Select(f => $"{f.Key}: {f.Value.ErrorMessage}"))}");
 
             // Verify we tested at least 12 languages (as required)
-            results.Count.Should().BeGreaterOrEqualTo(12,
+            results.Count.Should().BeGreaterThanOrEqualTo(12,
                 "Should test compilation to at least 12 languages");
 
             // Log successful compilations

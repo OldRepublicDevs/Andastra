@@ -59,7 +59,7 @@ namespace Andastra.Parsing.Tests.Formats
             uint mdlSize = BitConverter.ToUInt32(header, 4);
             uint mdxSize = BitConverter.ToUInt32(header, 8);
             mdlSize.Should().BeGreaterThan(0, "MDL size should be greater than 0");
-            mdxSize.Should().BeGreaterOrEqualTo(0, "MDX size should be non-negative");
+            mdxSize.Should().BeGreaterThanOrEqualTo(0, "MDX size should be non-negative");
         }
 
         [Fact(Timeout = 120000)]
@@ -83,20 +83,20 @@ namespace Andastra.Parsing.Tests.Formats
             uint functionPointer1 = BitConverter.ToUInt32(geomHeader, 4);
 
             // Function pointers should be valid (non-zero for KotOR models)
-            functionPointer0.Should().BeGreaterOrEqualTo(0, "Function pointer 0 should be non-negative");
-            functionPointer1.Should().BeGreaterOrEqualTo(0, "Function pointer 1 should be non-negative");
+            functionPointer0.Should().BeGreaterThanOrEqualTo(0, "Function pointer 0 should be non-negative");
+            functionPointer1.Should().BeGreaterThanOrEqualTo(0, "Function pointer 1 should be non-negative");
 
             // Model name (32 bytes at offset 8)
             string modelName = System.Text.Encoding.ASCII.GetString(geomHeader, 8, 32).TrimEnd('\0');
-            modelName.Length.Should().BeLessOrEqualTo(32, "Model name should be max 32 bytes as per MDL.ksy");
+            modelName.Length.Should().BeLessThanOrEqualTo(32, "Model name should be max 32 bytes as per MDL.ksy");
 
             // Root node offset (offset 40)
             uint rootNodeOffset = BitConverter.ToUInt32(geomHeader, 40);
-            rootNodeOffset.Should().BeGreaterOrEqualTo(0, "Root node offset should be non-negative");
+            rootNodeOffset.Should().BeGreaterThanOrEqualTo(0, "Root node offset should be non-negative");
 
             // Node count (offset 44)
             uint nodeCount = BitConverter.ToUInt32(geomHeader, 44);
-            nodeCount.Should().BeGreaterOrEqualTo(0, "Node count should be non-negative");
+            nodeCount.Should().BeGreaterThanOrEqualTo(0, "Node count should be non-negative");
 
             // Geometry type (offset 76)
             byte geometryType = geomHeader[76];
@@ -141,13 +141,13 @@ namespace Andastra.Parsing.Tests.Formats
             float bboxMaxZ = BitConverter.ToSingle(modelHeader, 44);
 
             // Bounding box max should be >= min
-            bboxMaxX.Should().BeGreaterOrEqualTo(bboxMinX, "Bounding box max X should be >= min X");
-            bboxMaxY.Should().BeGreaterOrEqualTo(bboxMinY, "Bounding box max Y should be >= min Y");
-            bboxMaxZ.Should().BeGreaterOrEqualTo(bboxMinZ, "Bounding box max Z should be >= min Z");
+            bboxMaxX.Should().BeGreaterThanOrEqualTo(bboxMinX, "Bounding box max X should be >= min X");
+            bboxMaxY.Should().BeGreaterThanOrEqualTo(bboxMinY, "Bounding box max Y should be >= min Y");
+            bboxMaxZ.Should().BeGreaterThanOrEqualTo(bboxMinZ, "Bounding box max Z should be >= min Z");
 
             // Radius (offset 48)
             float radius = BitConverter.ToSingle(modelHeader, 48);
-            radius.Should().BeGreaterOrEqualTo(0, "Radius should be non-negative");
+            radius.Should().BeGreaterThanOrEqualTo(0, "Radius should be non-negative");
 
             // Animation scale (offset 52)
             float animationScale = BitConverter.ToSingle(modelHeader, 52);
@@ -155,7 +155,7 @@ namespace Andastra.Parsing.Tests.Formats
 
             // Supermodel name (offset 56, 32 bytes)
             string supermodelName = System.Text.Encoding.ASCII.GetString(modelHeader, 56, 32).TrimEnd('\0');
-            supermodelName.Length.Should().BeLessOrEqualTo(32, "Supermodel name should be max 32 bytes as per MDL.ksy");
+            supermodelName.Length.Should().BeLessThanOrEqualTo(32, "Supermodel name should be max 32 bytes as per MDL.ksy");
         }
 
         [Fact(Timeout = 120000)]
@@ -180,7 +180,7 @@ namespace Andastra.Parsing.Tests.Formats
             namesCount.Should().Be(namesCountDup, "Names count duplicate should match as per MDL.ksy");
 
             uint mdxDataSize = BitConverter.ToUInt32(namesHeader, 8);
-            mdxDataSize.Should().BeGreaterOrEqualTo(0, "MDX data size should be non-negative");
+            mdxDataSize.Should().BeGreaterThanOrEqualTo(0, "MDX data size should be non-negative");
         }
 
         [Fact(Timeout = 120000)]

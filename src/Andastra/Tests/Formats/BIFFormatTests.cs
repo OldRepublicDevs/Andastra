@@ -91,15 +91,15 @@ namespace Andastra.Parsing.Tests.Formats
             BIF bif = new BIFBinaryReader(BinaryTestFile).Load();
 
             // Validate variable resource table structure
-            bif.VarCount.Should().BeGreaterOrEqualTo(0, "Variable resource count should be non-negative");
+            bif.VarCount.Should().BeGreaterThanOrEqualTo(0, "Variable resource count should be non-negative");
             bif.FixedCount.Should().Be(0, "Fixed resource count should be 0 as per BIF.ksy validation");
 
             // Validate each entry has required fields (matching var_resource_entry in BIF.ksy)
             foreach (var resource in bif.Resources)
             {
-                resource.ResnameKeyIndex.Should().BeGreaterOrEqualTo(0, "Resource ID should be non-negative");
-                resource.Offset.Should().BeGreaterOrEqualTo(0, "Offset should be non-negative");
-                resource.Size.Should().BeGreaterOrEqualTo(0, "File size should be non-negative");
+                resource.ResnameKeyIndex.Should().BeGreaterThanOrEqualTo(0, "Resource ID should be non-negative");
+                resource.Offset.Should().BeGreaterThanOrEqualTo(0, "Offset should be non-negative");
+                resource.Size.Should().BeGreaterThanOrEqualTo(0, "File size should be non-negative");
                 resource.ResType.Should().NotBeNull("Resource type should not be null");
             }
         }
@@ -297,7 +297,7 @@ namespace Andastra.Parsing.Tests.Formats
             // Basic validation
             bif.Should().NotBeNull();
             bif.BifType.Should().Be(BIFType.BIF);
-            bif.VarCount.Should().BeGreaterOrEqualTo(0);
+            bif.VarCount.Should().BeGreaterThanOrEqualTo(0);
             bif.FixedCount.Should().Be(0);
         }
 

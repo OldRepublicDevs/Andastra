@@ -690,7 +690,7 @@ namespace Andastra.Parsing.Tests.Formats
             bwm.Should().NotBeNull();
             bwm.WalkmeshType.Should().BeOneOf(BWMType.AreaModel, BWMType.PlaceableOrDoor);
             bwm.Faces.Should().NotBeNull();
-            bwm.Faces.Count.Should().BeGreaterOrEqualTo(0);
+            bwm.Faces.Count.Should().BeGreaterThanOrEqualTo(0);
         }
 
         private static void CreateTestWokFile(string path)

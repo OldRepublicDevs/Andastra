@@ -3,28 +3,32 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using Andastra.Parsing.Formats.TwoDA;
 using Andastra.Parsing.Tests.Common;
 using FluentAssertions;
 using Xunit;
+using TwoDABinaryWriter = Andastra.Parsing.Formats.TwoDA.TwoDABinaryWriter;
+using TwoDABinaryReader = Andastra.Parsing.Formats.TwoDA.TwoDABinaryReader;
 
 namespace Andastra.Parsing.Tests.Formats
 {
     /// <summary>
-    /// Comprehensive tests for GIT format using Kaitai Struct generated parsers.
-    /// Tests validate that the GIT.ksy definition compiles correctly to multiple languages
-    /// (at least a dozen) and that the generated parsers correctly parse GIT files.
+    /// Comprehensive tests for TwoDA format using Kaitai Struct generated parsers.
+    /// Tests validate that the TwoDA.ksy definition compiles correctly to multiple languages
+    /// and that the generated parsers correctly parse TwoDA files.
     /// </summary>
-    public class GITKaitaiStructTests
+    public class TwoDAKaitaiStructTests
     {
         private static readonly string KsyFile = Path.Combine(
             AppContext.BaseDirectory, "..", "..", "..", "..", "..",
-            "src", "Andastra", "Parsing", "Resource", "Formats", "GFF", "Generics", "GIT", "GIT.ksy");
+            "src", "Andastra", "Parsing", "Resource", "Formats", "TwoDA", "TwoDA.ksy");
 
+        private static readonly string TestTwoDAFile = TestFileHelper.GetPath("test.2da");
         private static readonly string KaitaiOutputDir = Path.Combine(
             AppContext.BaseDirectory, "..", "..", "..", "..", "..",
-            "kaitai_compiled", "git");
+            "kaitai_compiled", "twoda");
 
-        // Languages supported by Kaitai Struct (at least a dozen as required)
+        // Languages supported by Kaitai Struct (at least a dozen)
         private static readonly string[] SupportedLanguages = new[]
         {
             "python", "java", "javascript", "csharp", "cpp_stl", "go", "ruby",
@@ -76,10 +80,10 @@ namespace Andastra.Parsing.Tests.Formats
             {
                 ksyPath = new FileInfo(Path.Combine(
                     AppContext.BaseDirectory, "..", "..", "..", "..",
-                    "src", "Andastra", "Parsing", "Resource", "Formats", "GFF", "Generics", "GIT", "GIT.ksy"));
+                    "src", "Andastra", "Parsing", "Resource", "Formats", "TwoDA", "TwoDA.ksy"));
             }
 
-            ksyPath.Exists.Should().BeTrue($"GIT.ksy should exist at {ksyPath.FullName}");
+            ksyPath.Exists.Should().BeTrue($"TwoDA.ksy should exist at {ksyPath.FullName}");
         }
 
         [Fact(Timeout = 300000)]
@@ -87,7 +91,7 @@ namespace Andastra.Parsing.Tests.Formats
         {
             if (!File.Exists(KsyFile))
             {
-                Assert.True(true, "GIT.ksy not found - skipping validation");
+                Assert.True(true, "TwoDA.ksy not found - skipping validation");
                 return;
             }
 
@@ -135,7 +139,7 @@ namespace Andastra.Parsing.Tests.Formats
 
                 if (testProcess.ExitCode != 0 && stderr.Contains("error") && !stderr.Contains("import"))
                 {
-                    Assert.True(false, $"GIT.ksy has syntax errors: {stderr}");
+                    Assert.True(false, $"TwoDA.ksy has syntax errors: {stderr}");
                 }
             }
             catch (System.ComponentModel.Win32Exception)
@@ -150,7 +154,7 @@ namespace Andastra.Parsing.Tests.Formats
         {
             if (!File.Exists(KsyFile))
             {
-                Assert.True(true, "GIT.ksy not found - skipping compilation test");
+                Assert.True(true, "TwoDA.ksy not found - skipping compilation test");
                 return;
             }
 
@@ -183,12 +187,12 @@ namespace Andastra.Parsing.Tests.Formats
                     }
                     else
                     {
-                        Assert.True(false, $"Failed to compile GIT.ksy to {language}: {stderr}");
+                        Assert.True(false, $"Failed to compile TwoDA.ksy to {language}: {stderr}");
                     }
                 }
                 else
                 {
-                    Assert.True(true, $"Successfully compiled GIT.ksy to {language}");
+                    Assert.True(true, $"Successfully compiled TwoDA.ksy to {language}");
                 }
             }
             catch (System.ComponentModel.Win32Exception)
@@ -202,7 +206,7 @@ namespace Andastra.Parsing.Tests.Formats
         {
             if (!File.Exists(KsyFile))
             {
-                Assert.True(true, "GIT.ksy not found - skipping compilation test");
+                Assert.True(true, "TwoDA.ksy not found - skipping compilation test");
                 return;
             }
 
@@ -290,49 +294,51 @@ namespace Andastra.Parsing.Tests.Formats
         }
 
         [Fact(Timeout = 300000)]
+        public void TestKaitaiStructGeneratedParserConsistency()
+        {
+            if (!File.Exists(TestTwoDAFile))
+            {
+                var twoda = new TwoDA(new List<string> { "col1", "col2", "col3" });
+                twoda.AddRow("0", new Dictionary<string, object> { { "col1", "abc" }, { "col2", "def" }, { "col3", "ghi" } });
+                twoda.AddRow("1", new Dictionary<string, object> { { "col1", "def" }, { "col2", "ghi" }, { "col3", "123" } });
+                twoda.AddRow("2", new Dictionary<string, object> { { "col1", "123" }, { "col2", "" }, { "col3", "abc" } });
+
+                Directory.CreateDirectory(Path.GetDirectoryName(TestTwoDAFile));
+                byte[] data = new TwoDABinaryWriter(twoda).Write();
+                File.WriteAllBytes(TestTwoDAFile, data);
+            }
+
+            TwoDA twodaParsed = new TwoDABinaryReader(TestTwoDAFile).Load();
+
+            FileInfo fileInfo = new FileInfo(TestTwoDAFile);
+            fileInfo.Length.Should().BeGreaterThan(0, "TwoDA file should have content");
+
+            twodaParsed.GetHeight().Should().BeGreaterThan(0, "TwoDA should have rows");
+            twodaParsed.GetWidth().Should().BeGreaterThan(0, "TwoDA should have columns");
+        }
+
+        [Fact(Timeout = 300000)]
         public void TestKaitaiStructDefinitionCompleteness()
         {
             if (!File.Exists(KsyFile))
             {
-                Assert.True(true, "GIT.ksy not found - skipping completeness test");
+                Assert.True(true, "TwoDA.ksy not found - skipping completeness test");
                 return;
             }
 
             string ksyContent = File.ReadAllText(KsyFile);
 
-            // Meta section
             ksyContent.Should().Contain("meta:", "Should have meta section");
-            ksyContent.Should().Contain("id: git", "Should have id: git");
-            ksyContent.Should().Contain("file-extension: git", "Should have file-extension: git");
-            ksyContent.Should().Contain("endian: le", "Should specify little-endian");
-
-            // GFF structure components
-            ksyContent.Should().Contain("gff_header", "Should define gff_header type");
-            ksyContent.Should().Contain("file_type", "Should define file_type field");
-            ksyContent.Should().Contain("valid: \"GIT \"", "Should validate GIT file signature");
-            ksyContent.Should().Contain("label_array", "Should define label_array type");
-            ksyContent.Should().Contain("struct_array", "Should define struct_array type");
-            ksyContent.Should().Contain("field_array", "Should define field_array type");
-            ksyContent.Should().Contain("field_data_section", "Should define field_data_section type");
-            ksyContent.Should().Contain("field_indices_array", "Should define field_indices_array type");
-            ksyContent.Should().Contain("list_indices_array", "Should define list_indices_array type");
-
-            // GFF field types enum
-            ksyContent.Should().Contain("gff_field_type", "Should define gff_field_type enum");
-            ksyContent.Should().Contain("uint8", "Should have uint8 field type");
-            ksyContent.Should().Contain("int32", "Should have int32 field type");
-            ksyContent.Should().Contain("single", "Should have single (float) field type");
-            ksyContent.Should().Contain("string", "Should have string field type");
-            ksyContent.Should().Contain("resref", "Should have resref field type");
-            ksyContent.Should().Contain("localized_string", "Should have localized_string field type");
-            ksyContent.Should().Contain("vector3", "Should have vector3 field type");
-            ksyContent.Should().Contain("vector4", "Should have vector4 field type");
-            ksyContent.Should().Contain("struct", "Should have struct field type");
-            ksyContent.Should().Contain("list", "Should have list field type");
-
-            // Localized string support
-            ksyContent.Should().Contain("localized_string_data", "Should define localized_string_data type");
-            ksyContent.Should().Contain("localized_substring", "Should define localized_substring type");
+            ksyContent.Should().Contain("id: twoda", "Should have id: twoda");
+            ksyContent.Should().Contain("header", "Should define header field");
+            ksyContent.Should().Contain("column_headers_raw", "Should define column_headers_raw field");
+            ksyContent.Should().Contain("row_count", "Should define row_count field");
+            ksyContent.Should().Contain("row_labels_section", "Should define row_labels_section");
+            ksyContent.Should().Contain("cell_offsets_array", "Should define cell_offsets_array");
+            ksyContent.Should().Contain("data_size", "Should define data_size field");
+            ksyContent.Should().Contain("cell_values_section", "Should define cell_values_section");
+            ksyContent.Should().Contain("twoda_header", "Should define twoda_header type");
+            ksyContent.Should().Contain("row_label_entry", "Should define row_label_entry type");
         }
 
         [Fact(Timeout = 300000)]
@@ -340,7 +346,7 @@ namespace Andastra.Parsing.Tests.Formats
         {
             if (!File.Exists(KsyFile))
             {
-                Assert.True(true, "GIT.ksy not found - skipping test");
+                Assert.True(true, "TwoDA.ksy not found - skipping test");
                 return;
             }
 
@@ -378,8 +384,6 @@ namespace Andastra.Parsing.Tests.Formats
             }
 
             int compiledCount = 0;
-            var compilationResults = new List<string>();
-
             foreach (string lang in SupportedLanguages)
             {
                 var compileProcess = new Process
@@ -403,65 +407,16 @@ namespace Andastra.Parsing.Tests.Formats
                     if (compileProcess.ExitCode == 0)
                     {
                         compiledCount++;
-                        compilationResults.Add($"{lang}: ✓");
-                    }
-                    else
-                    {
-                        string error = compileProcess.StandardError.ReadToEnd();
-                        compilationResults.Add($"{lang}: ✗ ({error.Substring(0, Math.Min(50, error.Length)).Trim()})");
                     }
                 }
-                catch (Exception ex)
+                catch
                 {
-                    compilationResults.Add($"{lang}: ✗ (Exception: {ex.Message.Substring(0, Math.Min(30, ex.Message.Length))})");
+                    // Ignore individual failures
                 }
-            }
-
-            // Output results for debugging
-            Console.WriteLine($"Compilation results for GIT.ksy:");
-            foreach (string result in compilationResults)
-            {
-                Console.WriteLine($"  {result}");
             }
 
             compiledCount.Should().BeGreaterThanOrEqualTo(12,
-                $"Should successfully compile GIT.ksy to at least 12 languages. Compiled to {compiledCount}/{SupportedLanguages.Length} languages. Results: {string.Join(", ", compilationResults)}");
-        }
-
-        [Fact(Timeout = 300000)]
-        public void TestGITKsyFileStructure()
-        {
-            if (!File.Exists(KsyFile))
-            {
-                Assert.True(true, "GIT.ksy not found - skipping structure test");
-                return;
-            }
-
-            string ksyContent = File.ReadAllText(KsyFile);
-
-            // Verify sequence structure
-            ksyContent.Should().Contain("seq:", "Should have seq section");
-            ksyContent.Should().Contain("gff_header", "Should read gff_header first");
-            ksyContent.Should().Contain("label_array", "Should read label_array");
-            ksyContent.Should().Contain("struct_array", "Should read struct_array");
-            ksyContent.Should().Contain("field_array", "Should read field_array");
-            ksyContent.Should().Contain("field_data", "Should read field_data");
-            ksyContent.Should().Contain("field_indices", "Should read field_indices");
-            ksyContent.Should().Contain("list_indices", "Should read list_indices");
-
-            // Verify types section
-            ksyContent.Should().Contain("types:", "Should have types section");
-
-            // Verify struct_entry definition
-            ksyContent.Should().Contain("struct_entry", "Should define struct_entry type");
-            ksyContent.Should().Contain("struct_id", "Should have struct_id field");
-            ksyContent.Should().Contain("field_count", "Should have field_count field");
-
-            // Verify field_entry definition
-            ksyContent.Should().Contain("field_entry", "Should define field_entry type");
-            ksyContent.Should().Contain("field_type", "Should have field_type field");
-            ksyContent.Should().Contain("label_index", "Should have label_index field");
-            ksyContent.Should().Contain("data_or_offset", "Should have data_or_offset field");
+                $"Should successfully compile TwoDA.ksy to at least 12 languages. Compiled to {compiledCount} languages.");
         }
 
         public static IEnumerable<object[]> GetSupportedLanguages()

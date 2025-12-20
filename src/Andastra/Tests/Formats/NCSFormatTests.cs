@@ -131,8 +131,8 @@ namespace Andastra.Parsing.Tests.Formats
 
             // Validate size field
             FileInfo fileInfo = new FileInfo(BinaryTestFile);
-            totalSize.Should().BeLessOrEqualTo((uint)fileInfo.Length, "Size field should not exceed actual file size");
-            totalSize.Should().BeGreaterOrEqualTo((uint)NCS_HEADER_SIZE, "Size field should be at least header size");
+            totalSize.Should().BeLessThanOrEqualTo((uint)fileInfo.Length, "Size field should not exceed actual file size");
+            totalSize.Should().BeGreaterThanOrEqualTo((uint)NCS_HEADER_SIZE, "Size field should be at least header size");
         }
 
         [Fact(Timeout = 120000)]
@@ -417,7 +417,7 @@ namespace Andastra.Parsing.Tests.Formats
             // Basic validation
             ncs.Should().NotBeNull();
             ncs.Instructions.Should().NotBeNull();
-            ncs.Instructions.Count.Should().BeGreaterOrEqualTo(0);
+            ncs.Instructions.Count.Should().BeGreaterThanOrEqualTo(0);
         }
 
         private static void CreateTestNcsFile(string path)

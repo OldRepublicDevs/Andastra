@@ -51,7 +51,7 @@ namespace Andastra.Parsing.Tests.Formats
             // Validate basic structure matches PCC.ksy expectations
             pcc.Should().NotBeNull("PCC should load successfully");
             pcc.PackageType.Should().NotBeNull("Package type should be set");
-            pcc.Count.Should().BeGreaterOrEqualTo(0, "Resource count should be non-negative");
+            pcc.Count.Should().BeGreaterThanOrEqualTo(0, "Resource count should be non-negative");
         }
 
         [Fact(Timeout = 120000)]
@@ -89,7 +89,7 @@ namespace Andastra.Parsing.Tests.Formats
             // Validate that PCC can be loaded and has resources
             // Name table structure is validated through Kaitai Struct definition
             pcc.Should().NotBeNull("PCC should load successfully");
-            pcc.Count.Should().BeGreaterOrEqualTo(0, "PCC should have non-negative resource count");
+            pcc.Count.Should().BeGreaterThanOrEqualTo(0, "PCC should have non-negative resource count");
         }
 
         [Fact(Timeout = 120000)]
@@ -177,7 +177,7 @@ namespace Andastra.Parsing.Tests.Formats
             byte[] data = new PCCBinaryWriter(pcc).Write();
             PCC loaded = new PCCBinaryReader(data).Load();
 
-            loaded.Header.ExportCount.Should().BeGreaterOrEqualTo(0);
+            loaded.Header.ExportCount.Should().BeGreaterThanOrEqualTo(0);
         }
 
         [Fact(Timeout = 120000)]
@@ -312,7 +312,7 @@ namespace Andastra.Parsing.Tests.Formats
 
             // Validate version encoding
             // Version structure is validated through Kaitai Struct definition
-            pcc.PackageVersion.Should().BeGreaterOrEqualTo(0, "Package version should be non-negative");
+            pcc.PackageVersion.Should().BeGreaterThanOrEqualTo(0, "Package version should be non-negative");
         }
 
         private static void ValidateIO(PCC pcc)
@@ -320,7 +320,7 @@ namespace Andastra.Parsing.Tests.Formats
             // Basic validation
             pcc.Should().NotBeNull();
             pcc.PackageType.Should().NotBeNull();
-            pcc.Count.Should().BeGreaterOrEqualTo(0);
+            pcc.Count.Should().BeGreaterThanOrEqualTo(0);
         }
 
         private static void CreateTestPccFile(string path)
