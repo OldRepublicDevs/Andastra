@@ -58,17 +58,26 @@ namespace Andastra.Parsing.Tests.Formats
                 return;
             }
 
+            // Try the specific Windows installation path first
+            var windowsPath = @"C:\Program Files (x86)\kaitai-struct-compiler\bin\kaitai-struct-compiler.bat";
+            if (File.Exists(windowsPath))
+            {
+                var kscCheck = RunCommand(windowsPath, "--version");
+                kscCheck.ExitCode.Should().Be(0, "Kaitai Struct compiler should be available");
+                return;
+            }
+
             // Try to find Kaitai Struct compiler
             // Check common locations or try to run it
-            var kscCheck = RunCommand("kaitai-struct-compiler", "--version");
-            if (kscCheck.ExitCode != 0)
+            var kscCheck2 = RunCommand("kaitai-struct-compiler", "--version");
+            if (kscCheck2.ExitCode != 0)
             {
                 // Try with .jar extension or check if it's in PATH
                 // For now, we'll skip if not found - in CI/CD this should be installed
                 return;
             }
 
-            kscCheck.ExitCode.Should().Be(0, "Kaitai Struct compiler should be available");
+            kscCheck2.ExitCode.Should().Be(0, "Kaitai Struct compiler should be available");
         }
 
         [Fact(Timeout = 300000)]
@@ -371,6 +380,17 @@ namespace Andastra.Parsing.Tests.Formats
         private (int ExitCode, string Output, string Error) RunKaitaiCompiler(
             string ksyPath, string arguments, string outputDir)
         {
+            // Try the specific Windows installation path first
+            var windowsPath = @"C:\Program Files (x86)\kaitai-struct-compiler\bin\kaitai-struct-compiler.bat";
+            if (File.Exists(windowsPath))
+            {
+                var windowsResult = RunCommand(windowsPath, $"{arguments} \"{ksyPath}\" -d \"{outputDir}\"");
+                if (windowsResult.ExitCode == 0)
+                {
+                    return windowsResult;
+                }
+            }
+
             // Try different ways to invoke Kaitai Struct compiler
             // 1. As a command (if installed via package manager)
             var result = RunCommand("kaitai-struct-compiler", $"{arguments} -d \"{outputDir}\" \"{ksyPath}\"");
@@ -400,6 +420,9 @@ namespace Andastra.Parsing.Tests.Formats
             var commonPaths = new[]
             {
                 Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".local", "bin", "kaitai-struct-compiler"),
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "kaitai-struct-compiler", "bin", "kaitai-struct-compiler.exe"),
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "kaitai-struct-compiler", "bin", "kaitai-struct-compiler.exe"),
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "kaitai-struct-compiler", "bin", "kaitai-struct-compiler.bat"),
                 Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "kaitai-struct-compiler", "kaitai-struct-compiler.jar"),
                 Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "kaitai-struct-compiler", "kaitai-struct-compiler.jar"),
             };
@@ -414,7 +437,7 @@ namespace Andastra.Parsing.Tests.Formats
                     }
                     else
                     {
-                        result = RunCommand(path, $"{arguments} -d \"{outputDir}\" \"{ksyPath}\"");
+                        result = RunCommand(path, $"{arguments} \"{ksyPath}\" -d \"{outputDir}\"");
                     }
 
                     if (result.ExitCode == 0)
