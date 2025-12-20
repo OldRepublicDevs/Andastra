@@ -87,6 +87,22 @@ namespace Andastra.Runtime.Core.Interfaces.Components
         string LinkedToModule { get; set; }
 
         /// <summary>
+        /// Transition destination waypoint tag for positioning after transition.
+        /// </summary>
+        /// <remarks>
+        /// Transition Destination:
+        /// - Common across all engines that support door transitions
+        /// - Based on nwmain.exe: CNWSDoor::LoadDoor loads TransitionDestin field from GIT
+        /// - Based on swkotor2.exe: FUN_005838d0 @ 0x005838d0 reads TransitionDestination from UTD template
+        /// - Located via string references: "TransitionDestin" @ 0x007bd7a4 (swkotor2.exe), "TransitionDestin" in GIT format
+        /// - Original implementation: TransitionDestin/TransitionDestination specifies waypoint tag where party spawns after transition
+        /// - For module transitions: Waypoint tag in destination module where party spawns
+        /// - For area transitions: Waypoint tag in destination area where party spawns
+        /// - Empty string means use default entry waypoint (STARTWAYPOINT)
+        /// </remarks>
+        string TransitionDestination { get; set; }
+
+        /// <summary>
         /// Whether this door is a module transition.
         /// </summary>
         bool IsModuleTransition { get; }

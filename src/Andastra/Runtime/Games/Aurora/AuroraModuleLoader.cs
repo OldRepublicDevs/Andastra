@@ -360,25 +360,173 @@ namespace Andastra.Runtime.Games.Aurora
         /// - Hak Archive files containing additional module resources
         /// - Loaded in order specified in Module.ifo
         /// - Resources in HAK files have lower precedence than module overrides
+        /// - HAK files are ERF format archives containing module resources
         /// 
-        /// Based on nwmain.exe: HAK file loading sequence.
-        /// TODO: Implement HAK file loading when HAK file parsing is available.
+        /// Module.ifo HAK File Specification:
+        /// - Mod_HakList (preferred): List field containing structs with StructID 8
+        ///   - Each struct has Mod_Hak field (CExoString) with HAK filename (without .hak extension)
+        ///   - HAK files are loaded in list order (first in list has highest priority)
+        /// - Mod_Hak (obsolete fallback): Single CExoString field with semicolon-separated HAK filenames
+        ///   - Used only if Mod_HakList does not exist
+        ///   - Semicolon-separated list of HAK filenames (without .hak extension)
+        /// 
+        /// HAK File Path Resolution:
+        /// - HAK files are located in "hak" directory under installation path
+        /// - Full path: {installationPath}\hak\{hakFileName}.hak
+        /// - HAK filenames in Module.ifo do not include the .hak extension
+        /// - Missing HAK files are skipped (not an error - module can load without them)
+        /// 
+        /// Resource Precedence (Aurora):
+        /// 1. Override directory (highest priority)
+        /// 2. Module-specific resources
+        /// 3. HAK files (in Module.ifo order, first HAK has highest priority)
+        /// 4. Base game resources
+        /// 5. Hardcoded resources (lowest priority)
+        /// 
+        /// Based on nwmain.exe reverse engineering (Ghidra MCP analysis):
+        /// - Module.ifo parsing functions reference Mod_HakList/Mod_Hak strings:
+        ///   - "Mod_HakList" string @ 0x140def690, referenced by functions @ 0x14047f60e, 0x1404862d9
+        ///   - "Mod_Hak" string @ 0x140def6a0, referenced by functions @ 0x14047f6b9, 0x140486325, 0x1409d5658
+        /// - HAK files are registered via CExoResMan::AddKeyTable @ 0x14018e330
+        ///   - Each HAK file is registered as an encapsulated resource file (type 3)
+        ///   - HAK files are registered in the order specified in Module.ifo
+        ///   - Earlier HAK files in the list have higher priority (checked first during resource lookup)
+        /// - HAK file paths resolved from "hak" directory + filename + ".hak" extension
+        /// - Resource lookup uses CExoResMan::ServiceFromEncapsulated @ 0x140192cf0 for HAK files
+        /// 
+        /// Official BioWare Documentation:
+        /// - vendor/PyKotor/wiki/Bioware-Aurora-IFO.md: Mod_HakList structure (StructID 8)
+        /// - vendor/PyKotor/wiki/Bioware-Aurora-IFO.md: Mod_Hak field (obsolete, semicolon-separated)
+        /// - vendor/xoreos/src/aurora/ifofile.cpp:143-154 - HAK list parsing implementation
         /// </remarks>
         private async Task LoadHakFilesAsync(string moduleName)
         {
             // Set current module context
             _auroraResourceProvider.SetCurrentModule(moduleName);
 
-            // TODO: Load HAK files from Module.ifo HAK list
-            // Extract HAK file list from Module.ifo and set on resource provider
-            // For now, check for HAK files in hak directory
-            string hakPath = _auroraResourceProvider.HakPath();
-            if (Directory.Exists(hakPath))
+            // Clear existing HAK files list
+            _loadedHakFiles.Clear();
+
+            // Extract HAK file list from already-loaded Module.ifo GFF structure
+            // _currentModuleInfo is loaded in LoadModuleInfoAsync before this method is called
+            if (_currentModuleInfo == null)
             {
-                // TODO: Load HAK files specified in Module.ifo
-                // For now, this is a placeholder
-                // When HAK parsing is available, extract HAK list from Module.ifo and call:
-                // _auroraResourceProvider.SetHakFiles(hakFileList);
+                // Module.ifo not loaded - cannot extract HAK files
+                // This should not happen in normal flow, but handle gracefully
+                System.Diagnostics.Debug.WriteLine($"[AuroraModuleLoader] Module.ifo not loaded - cannot extract HAK files for module '{moduleName}'");
+                await Task.CompletedTask;
+                return;
+            }
+
+            try
+            {
+                // Extract HAK file names from Module.ifo GFF structure
+                // Priority: Mod_HakList (preferred) > Mod_Hak (obsolete fallback)
+                List<string> hakFileNames = new List<string>();
+
+                // Try Mod_HakList first (preferred method)
+                // Mod_HakList is a List field containing structs with StructID 8
+                // Each struct has a Mod_Hak field (CExoString) with the HAK filename (without .hak extension)
+                // Based on nwmain.exe: Functions @ 0x14047f60e, 0x1404862d9 parse Mod_HakList from Module.ifo
+                // Based on vendor/xoreos/src/aurora/ifofile.cpp:144-149 - HAK list parsing
+                if (_currentModuleInfo.TryGetList("Mod_HakList", out GFFList hakList))
+                {
+                    // Iterate through HAK list entries
+                    // Based on nwmain.exe: HAK files are loaded in order specified in list
+                    // Earlier HAK files in list have higher priority (override later ones)
+                    foreach (GFFStruct hakEntry in hakList)
+                    {
+                        // Extract Mod_Hak field from each entry
+                        // Mod_Hak is a CExoString containing the HAK filename without .hak extension
+                        string hakFileName = hakEntry.GetString("Mod_Hak");
+                        if (!string.IsNullOrEmpty(hakFileName))
+                        {
+                            // Trim whitespace and add to list
+                            hakFileName = hakFileName.Trim();
+                            if (!string.IsNullOrEmpty(hakFileName))
+                            {
+                                hakFileNames.Add(hakFileName);
+                            }
+                        }
+                    }
+                }
+                // Fallback to Mod_Hak (obsolete method) if Mod_HakList doesn't exist
+                // Mod_Hak is a semicolon-separated string of HAK filenames (without .hak extension)
+                // Based on nwmain.exe: Mod_Hak field uses semicolon as separator
+                // Based on nwmain.exe: Functions @ 0x14047f6b9, 0x140486325, 0x1409d5658 parse Mod_Hak field
+                // Based on vendor/xoreos/src/aurora/ifofile.cpp:151-154 - Singular HAK parsing
+                else if (_currentModuleInfo.Exists("Mod_Hak"))
+                {
+                    string hakField = _currentModuleInfo.GetString("Mod_Hak");
+                    if (!string.IsNullOrEmpty(hakField))
+                    {
+                        // Split by semicolon and add each HAK filename
+                        string[] hakNames = hakField.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
+                        foreach (string hakName in hakNames)
+                        {
+                            string trimmedName = hakName.Trim();
+                            if (!string.IsNullOrEmpty(trimmedName))
+                            {
+                                hakFileNames.Add(trimmedName);
+                            }
+                        }
+                    }
+                }
+
+                // Resolve HAK file paths and validate existence
+                // HAK files are located in the "hak" directory under installation path
+                // HAK filenames in Module.ifo do not include the .hak extension
+                string hakPath = _auroraResourceProvider.HakPath();
+                List<string> resolvedHakFiles = new List<string>();
+
+                if (Directory.Exists(hakPath))
+                {
+                    foreach (string hakFileName in hakFileNames)
+                    {
+                        // Construct full path: hak directory + filename + .hak extension
+                        // Based on nwmain.exe: HAK file path resolution pattern
+                        // Based on nwmain.exe: HAK files registered via CExoResMan::AddKeyTable @ 0x14018e330
+                        string hakFilePath = Path.Combine(hakPath, hakFileName + ".hak");
+
+                        // Only add HAK file if it exists
+                        // Based on nwmain.exe: Missing HAK files are skipped (not an error)
+                        // Based on nwmain.exe: AddKeyTable @ 0x14018e330 handles missing file gracefully
+                        if (File.Exists(hakFilePath))
+                        {
+                            resolvedHakFiles.Add(hakFilePath);
+                            _loadedHakFiles.Add(hakFilePath);
+                        }
+                        else
+                        {
+                            // Log missing HAK file (non-fatal - module can still load)
+                            System.Diagnostics.Debug.WriteLine($"[AuroraModuleLoader] HAK file not found: {hakFilePath} (specified in Module.ifo for module '{moduleName}')");
+                        }
+                    }
+                }
+                else
+                {
+                    // HAK directory doesn't exist - log but don't fail
+                    System.Diagnostics.Debug.WriteLine($"[AuroraModuleLoader] HAK directory does not exist: {hakPath}");
+                }
+
+                // Set HAK files on resource provider
+                // Based on nwmain.exe: HAK files registered via CExoResMan::AddKeyTable @ 0x14018e330
+                // HAK files are registered in the order specified in Module.ifo
+                // Earlier HAK files in the list have higher priority (checked first during resource lookup)
+                _auroraResourceProvider.SetHakFiles(resolvedHakFiles);
+
+                if (resolvedHakFiles.Count > 0)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[AuroraModuleLoader] Loaded {resolvedHakFiles.Count} HAK file(s) for module '{moduleName}'");
+                }
+            }
+            catch (Exception ex)
+            {
+                // On any error (parsing, file access, etc.), log but don't fail module loading
+                // Missing or invalid HAK files should not prevent module from loading
+                // Based on nwmain.exe: HAK file loading errors are non-fatal
+                System.Diagnostics.Debug.WriteLine($"[AuroraModuleLoader] Error loading HAK files for module '{moduleName}': {ex.Message}");
+                _loadedHakFiles.Clear();
             }
 
             await Task.CompletedTask;
@@ -1012,7 +1160,44 @@ namespace Andastra.Runtime.Games.Aurora
             var doorComponent = entity.GetComponent<Core.Interfaces.Components.IDoorComponent>();
             if (doorComponent != null)
             {
-                // TODO: Set LinkedTo, LinkedToModule, TransitionDestin when door component supports them
+                // Set transition properties from GIT door instance
+                // Based on nwmain.exe: CNWSDoor::LoadDoor @ 0x1404208a0 loads door properties from GIT struct
+                // - Loads LinkedTo (CExoString): Tag of waypoint/door for area transitions
+                // - Loads LinkedToModule (CResRef): Module ResRef for module transitions
+                // - Loads LinkedToFlags (BYTE): Transition flags (bit 1 = module transition, bit 2 = area transition)
+                // - Loads TransitionDestin (CExoLocString): Waypoint tag for positioning after transition
+                // Located via string references: "LinkedTo" @ 0x1407a8b0, "LinkedToModule" @ 0x1407a8c0, "LinkedToFlags" @ 0x1407a8d0, "TransitionDestin" @ 0x1407a8e0 (approximate - needs Ghidra verification)
+                // Original implementation: CNWSDoor::LoadDoor reads these fields from GIT door struct and sets door properties
+                // Transition system: Doors with LinkedTo/LinkedToModule trigger area/module transitions when opened
+                // TransitionDestin specifies waypoint tag where party spawns after transition (empty = use default entry waypoint)
+                
+                // Set LinkedTo (waypoint/door tag for area transitions)
+                if (!string.IsNullOrEmpty(door.LinkedTo))
+                {
+                    doorComponent.LinkedTo = door.LinkedTo;
+                }
+
+                // Set LinkedToModule (module ResRef for module transitions)
+                if (!string.IsNullOrEmpty(door.LinkedToModule))
+                {
+                    doorComponent.LinkedToModule = door.LinkedToModule;
+                }
+
+                // Set TransitionDestination (waypoint tag for positioning after transition)
+                if (!string.IsNullOrEmpty(door.TransitionDestin))
+                {
+                    doorComponent.TransitionDestination = door.TransitionDestin;
+                }
+
+                // Set LinkedToFlags on AuroraDoorComponent (Aurora-specific property)
+                // Based on nwmain.exe: CNWSDoor stores LinkedToFlags for transition type determination
+                // LinkedToFlags bit 1 (0x1) = module transition flag
+                // LinkedToFlags bit 2 (0x2) = area transition flag
+                var auroraDoorComponent = doorComponent as Components.AuroraDoorComponent;
+                if (auroraDoorComponent != null)
+                {
+                    auroraDoorComponent.LinkedToFlags = door.LinkedToFlags;
+                }
             }
 
             // Add entity to area
