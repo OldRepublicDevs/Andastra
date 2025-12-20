@@ -31,8 +31,6 @@ namespace Andastra.Parsing.Formats.MDL
         // Track animation nodes separately from geometry nodes
         private List<MDLNode> _animNodes;
         private Dictionary<string, int> _animNodeIndex;
-        // Track animation nodes that have model nodes as parents (by node name -> parent model node name)
-        private Dictionary<string, string> _animNodeModelParents;
         // Track animation nodes that have model node parents (animation node index -> model node parent name)
         private Dictionary<int, string> _animNodeModelParents;
 
@@ -1713,21 +1711,37 @@ namespace Andastra.Parsing.Formats.MDL
                 return;
             }
 
-            // Find root animation node (parent_id == -1)
+            // Find root animation node (parent_id == -1 and not in _animNodeModelParents)
+            // Animation nodes with model node parents are not considered root nodes
             MDLNode animRootNode = null;
-            foreach (var node in _animNodes)
+            for (int i = 0; i < _animNodes.Count; i++)
             {
-                if (node.ParentId == -1)
+                var node = _animNodes[i];
+                if (node.ParentId == -1 && !_animNodeModelParents.ContainsKey(i))
                 {
                     animRootNode = node;
                     break;
                 }
             }
 
+            // If no root found, use first node that doesn't have a model node parent
             if (animRootNode == null && _animNodes.Count > 0)
             {
-                animRootNode = _animNodes[0];
-                animRootNode.ParentId = -1;
+                for (int i = 0; i < _animNodes.Count; i++)
+                {
+                    if (!_animNodeModelParents.ContainsKey(i))
+                    {
+                        animRootNode = _animNodes[i];
+                        animRootNode.ParentId = -1;
+                        break;
+                    }
+                }
+                // If all nodes have model node parents, use first node as root
+                if (animRootNode == null)
+                {
+                    animRootNode = _animNodes[0];
+                    animRootNode.ParentId = -1;
+                }
             }
 
             if (animRootNode != null)
@@ -1739,40 +1753,29 @@ namespace Andastra.Parsing.Formats.MDL
                 anim.Root = new MDLNode();
             }
 
-            // Build parent-child relationships (same logic as BuildNodeHierarchy)
+            // Build parent-child relationships
+            // Animation nodes with model node parents are treated as root-level nodes in the animation hierarchy
+            // The model node parent reference is preserved in _animNodeModelParents for animation application
             for (int i = 0; i < _animNodes.Count; i++)
             {
                 var node = _animNodes[i];
                 
+                // Skip if this is the root node itself
+                if (node == anim.Root)
+                {
+                    continue;
+                }
+                
                 if (node.ParentId == -1)
                 {
-                    // Check if this node has a model node parent
-                    if (_animNodeModelParents.ContainsKey(i))
-                    {
-                        // Parent is a model node - look it up by name and attach this animation node to it
-                        string modelParentName = _animNodeModelParents[i];
-                        if (_nodeIndex.ContainsKey(modelParentName))
-                        {
-                            int modelParentIndex = _nodeIndex[modelParentName];
-                            if (modelParentIndex >= 0 && modelParentIndex < _nodes.Count)
-                            {
-                                var modelParent = _nodes[modelParentIndex];
-                                modelParent.Children.Add(node);
-                            }
-                        }
-                    }
-                    else
-                    {
-                        // No parent - attach to animation root (but not if it IS the root)
-                        if (anim.Root != null && node != anim.Root)
-                        {
-                            anim.Root.Children.Add(node);
-                        }
-                    }
+                    // Node has no parent in the animation tree (either truly root-level or has model node parent)
+                    // Both cases: attach to animation root
+                    // The model node parent reference (if any) is stored in _animNodeModelParents for later use
+                    anim.Root.Children.Add(node);
                 }
                 else if (node.ParentId >= 0 && node.ParentId < _animNodes.Count)
                 {
-                    // Parent is an animation node (by index)
+                    // Parent is an animation node (by index in _animNodes)
                     var parent = _animNodes[node.ParentId];
                     parent.Children.Add(node);
                 }
@@ -1811,30 +1814,3 @@ namespace Andastra.Parsing.Formats.MDL
             // Build parent-child relationships
             foreach (var node in _nodes)
             {
-                if (node.ParentId == -1)
-                {
-                    // Attach to root
-                    if (_mdl.Root != null && node != _mdl.Root)
-                    {
-                        _mdl.Root.Children.Add(node);
-                    }
-                }
-                else if (node.ParentId >= 0 && node.ParentId < _nodes.Count)
-                {
-                    var parent = _nodes[node.ParentId];
-                    parent.Children.Add(node);
-                }
-            }
-        }
-
-        public void Dispose()
-        {
-            _reader?.Dispose();
-        }
-    }
-}
-        {
-            _reader?.Dispose();
-        }
-    }
-}
