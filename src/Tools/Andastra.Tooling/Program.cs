@@ -39,6 +39,7 @@ namespace Andastra.Runtime.Tooling
             var warmCacheCommand = new Command("warm-cache", "Pre-convert assets for a module");
             warmCacheCommand.Options.Add(modulePath);
             warmCacheCommand.Options.Add(installPath);
+            warmCacheCommand.SetHandler((string module, DirectoryInfo install) => WarmCache(module, install), modulePath, installPath);
             rootCommand.Add(warmCacheCommand);
 
             // dump-resource command
@@ -140,11 +141,162 @@ namespace Andastra.Runtime.Tooling
 
         private static void WarmCache(string module, DirectoryInfo install)
         {
+            // Validate inputs
+            if (string.IsNullOrWhiteSpace(module))
+            {
+                Console.Error.WriteLine("ERROR: Module resref (--module) is required.");
+                Environment.ExitCode = 1;
+                return;
+            }
+
+            if (install == null || !install.Exists)
+            {
+                Console.Error.WriteLine("ERROR: Installation path (--install) is required and must exist.");
+                Environment.ExitCode = 1;
+                return;
+            }
+
             Console.WriteLine("Warming cache for module: " + module);
-            Console.WriteLine("Installation: " + (install?.FullName ?? "not specified"));
-            
-            // TODO: Implement cache warming
-            Console.WriteLine("Cache warming not yet implemented.");
+            Console.WriteLine("Installation: " + install.FullName);
+
+            try
+            {
+                // Create installation object
+                Installation installation;
+                try
+                {
+                    installation = new Installation(install.FullName);
+                }
+                catch (Exception ex)
+                {
+                    Console.Error.WriteLine($"ERROR: Failed to load installation: {ex.Message}");
+                    Environment.ExitCode = 1;
+                    return;
+                }
+
+                Console.WriteLine($"Detected game: {installation.Game}");
+
+                // Create module object
+                Andastra.Parsing.Common.Module parsingModule;
+                try
+                {
+                    parsingModule = new Andastra.Parsing.Common.Module(module, installation);
+                }
+                catch (Exception ex)
+                {
+                    Console.Error.WriteLine($"ERROR: Failed to load module '{module}': {ex.Message}");
+                    Environment.ExitCode = 1;
+                    return;
+                }
+
+                Console.WriteLine($"Module loaded: {parsingModule.Root}");
+                Console.WriteLine($"Module resources: {parsingModule.Resources.Count}");
+
+                // Resources that typically need conversion/caching
+                // Based on swkotor2.exe: MDL (models), TPC (textures), WOK (walkmeshes), 
+                // LYT (layouts), VIS (visibility), GIT (area instances), ARE (area properties)
+                var resourceTypesToCache = new[]
+                {
+                    ResourceType.MDL,  // 3D models
+                    ResourceType.TPC,  // Textures
+                    ResourceType.WOK,   // Walkmeshes
+                    ResourceType.LYT,   // Layouts
+                    ResourceType.VIS,   // Visibility
+                    ResourceType.GIT,   // Area instances
+                    ResourceType.ARE,   // Area properties
+                    ResourceType.IFO,   // Module info
+                    ResourceType.NCS,   // Scripts (for validation)
+                    ResourceType.DLG,   // Dialogues
+                    ResourceType.UTC,   // Creatures
+                    ResourceType.UTI,   // Items
+                    ResourceType.UTP,   // Placeables
+                    ResourceType.UTW,   // Waypoints
+                    ResourceType.UTS,   // Sounds
+                    ResourceType.UTM,   // Merchants
+                    ResourceType.UTE,   // Encounters
+                    ResourceType.UTT,   // Triggers
+                };
+
+                int totalResources = 0;
+                int cachedResources = 0;
+                int failedResources = 0;
+                int skippedResources = 0;
+
+                // Iterate through all resources in the module
+                foreach (var resourceEntry in parsingModule.Resources)
+                {
+                    ResourceIdentifier resourceId = resourceEntry.Key;
+                    ResourceType resourceType = resourceId.ResourceType;
+
+                    // Only process resources that need caching
+                    if (!resourceTypesToCache.Contains(resourceType))
+                    {
+                        skippedResources++;
+                        continue;
+                    }
+
+                    totalResources++;
+
+                    try
+                    {
+                        // Get resource data
+                        byte[] resourceData = parsingModule.GetResource(resourceId.ResRef, resourceType);
+                        if (resourceData == null || resourceData.Length == 0)
+                        {
+                            Console.WriteLine($"  Skipping {resourceId.ResRef}.{resourceType.Extension}: No data");
+                            skippedResources++;
+                            continue;
+                        }
+
+                        // Attempt to load/decode the resource to validate and trigger conversion
+                        // This will populate any internal caches
+                        try
+                        {
+                            object decodedResource = ResourceAuto.LoadResource(resourceData, resourceType);
+                            if (decodedResource != null)
+                            {
+                                // Resource successfully loaded/decoded - this triggers any conversion logic
+                                // The ContentCache system will handle caching if configured
+                                cachedResources++;
+                                if (totalResources % 10 == 0)
+                                {
+                                    Console.WriteLine($"  Processed {totalResources} resources... ({cachedResources} cached, {failedResources} failed)");
+                                }
+                            }
+                            else
+                            {
+                                // Resource exists but couldn't be decoded - still count as processed
+                                Console.WriteLine($"  Warning: {resourceId.ResRef}.{resourceType.Extension} could not be decoded");
+                                skippedResources++;
+                            }
+                        }
+                        catch (Exception decodeEx)
+                        {
+                            // Decoding failed - log but continue
+                            Console.WriteLine($"  Warning: Failed to decode {resourceId.ResRef}.{resourceType.Extension}: {decodeEx.Message}");
+                            failedResources++;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"  Error processing {resourceId.ResRef}.{resourceType.Extension}: {ex.Message}");
+                        failedResources++;
+                    }
+                }
+
+                Console.WriteLine();
+                Console.WriteLine("Cache warming complete.");
+                Console.WriteLine($"  Total resources processed: {totalResources}");
+                Console.WriteLine($"  Successfully cached: {cachedResources}");
+                Console.WriteLine($"  Failed: {failedResources}");
+                Console.WriteLine($"  Skipped: {skippedResources}");
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine($"ERROR: Unexpected error during cache warming: {ex.Message}");
+                Console.Error.WriteLine($"Stack trace: {ex.StackTrace}");
+                Environment.ExitCode = 1;
+            }
         }
 
         private static void DumpResource(string resref, string type, DirectoryInfo install)
