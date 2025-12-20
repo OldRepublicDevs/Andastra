@@ -5053,29 +5053,21 @@ namespace Andastra.Runtime.Engines.Odyssey.EngineApi
             if (source != null && target != null)
             {
                 // Get FactionManager from GameServicesContext
+                // FactionManager should always be available through GameServicesContext
                 if (ctx is VMExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
                 {
                     if (services.FactionManager is FactionManager factionManager)
                     {
+                        // Proper friendliness calculation using FactionManager
+                        // Handles: faction reputation, personal reputation overrides, temporary hostility
+                        // Friendly if reputation >= FriendlyThreshold (90)
                         bool isFriendly = factionManager.IsFriendly(source, target);
                         return Variable.FromInt(isFriendly ? 1 : 0);
                     }
                 }
 
-                // Fallback: Simple faction check if FactionManager not available
-                IFactionComponent sourceFaction = source.GetComponent<IFactionComponent>();
-                IFactionComponent targetFaction = target.GetComponent<IFactionComponent>();
-
-                if (sourceFaction != null && targetFaction != null)
-                {
-                    // TODO: SIMPLIFIED - Would need FactionManager for proper friendliness calculation (allies, enemies, neutrals)
-                    // TODO: SIMPLIFIED - Check if same faction (simplified - would need FactionManager for proper friendliness)
-                    if (sourceFaction.FactionId == targetFaction.FactionId)
-                    {
-                        // Same faction are friends by default
-                        return Variable.FromInt(1);
-                    }
-                }
+                // FactionManager should always be available - if not, return not friendly as safe default
+                // This should not happen in normal operation
             }
             return Variable.FromInt(0);
         }
