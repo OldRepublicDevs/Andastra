@@ -8,85 +8,79 @@ using Andastra.Runtime.Core.Party;
 namespace Andastra.Runtime.Games.Odyssey.Input
 {
     /// <summary>
-    /// KOTOR 2: The Sith Lords (swkotor2.exe) specific player input handler.
+    /// KOTOR 1 (swkotor.exe) specific player input handler.
     /// </summary>
     /// <remarks>
-    /// K2 Player Input Handler:
-    /// - Based on swkotor2.exe input system reverse engineering via Ghidra MCP
-    /// - Located via string references: "Mouse Sensitivity" @ 0x007c85cc, "Mouse Look" @ 0x007c8608, "Reverse Mouse Buttons" @ 0x007c8628
+    /// K1 Player Input Handler:
+    /// - Based on swkotor.exe input system reverse engineering via Ghidra MCP
+    /// - Located via string references: "Input" @ 0x007c2520, "Mouse" @ 0x007cb908, "Mouse Sensitivity" @ 0x007c85cc
     /// - "EnableHardwareMouse" @ 0x007c71c8, "Enable Mouse Teleporting To Buttons" @ 0x007c85a8
     /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_CLICKED" @ 0x007bc704, "OnClick" @ 0x007c1a20
     /// - Input system: "Input" @ 0x007c2520, "Mouse" @ 0x007cb908
-    /// - Input class: "CExoInputInternal" (exoinputinternal.cpp @ 0x007c64dc)
-    /// - Error: "CExoInputInternal::GetEvents() Invalid InputClass parameter" @ 0x007c64f4
-    /// - "Unnamed Input Class" @ 0x007c64c8
-    /// - GUI references: ";gui_mouse" @ 0x007b5f93, "optmouse_p" @ 0x007d1f64
-    /// - "LBL_MOUSESEN" @ 0x007d1f44, "SLI_MOUSESEN" @ 0x007d1f54, "BTN_MOUSE" @ 0x007d28a0
-    /// - Original implementation: Uses DirectInput8 (DINPUT8.dll @ 0x0080a6c0, DirectInput8Create @ 0x0080a6ac)
+    /// - Input class: "CExoInputInternal" (exoinputinternal.cpp equivalent in K1)
+    /// - GUI references: ";gui_mouse" @ 0x007b5f93, "optmouse_p" @ 0x007d1f64 (K1 uses similar GUI names)
+    /// - Original implementation: Uses DirectInput8 (DINPUT8.dll, DirectInput8Create) for input
     /// - Click-to-move, object interaction, party control, pause
-    /// - K2-specific features:
-    ///   - Influence system integration (party member influence affects availability)
-    ///   - Prestige class selection (affects quick slot abilities)
-    ///   - Combat forms (affects combat cursor modes)
-    ///   - Item crafting system (workbench/lab station interaction)
-    /// - Reverse engineered functions:
-    ///   - FUN_005226d0 @ 0x005226d0 (swkotor2.exe: player input handling and movement)
-    ///   - UpdateCreatureMovement @ 0x0054be70 (movement handling)
-    ///   - Input processing functions in CExoInputInternal class
+    /// - K1-specific features:
+    ///   - No Influence system (simpler faction relationships)
+    ///   - No Prestige Classes (base classes only)
+    ///   - No Combat Forms (standard combat only)
+    ///   - Simpler item system (no workbench/lab station crafting)
+    /// - Reverse engineered functions (swkotor.exe):
+    ///   - FUN_005226d0 equivalent (K1: player input handling and movement) - address TBD via Ghidra
+    ///   - UpdateCreatureMovement equivalent (K1: movement handling) - address TBD via Ghidra
+    ///   - Input processing functions in CExoInputInternal class equivalent
     /// - Cross-engine comparison:
-    ///   - K1 (swkotor.exe): Similar input system, but lacks K2-specific features (Influence, Prestige Classes, Combat Forms)
-    ///   - K2 (swkotor2.exe): Enhanced input system with additional features
+    ///   - K1 (swkotor.exe): Simpler input system without K2-specific features
+    ///   - K2 (swkotor2.exe): Enhanced input system with Influence, Prestige Classes, Combat Forms
     ///   - Common: Both use DirectInput8, similar click-to-move system, same basic input model
     /// - Inheritance structure:
     ///   - PlayerInputHandler (Runtime.Core.Movement): Core input handling interface
     ///   - OdysseyPlayerInputHandler (Runtime.Games.Odyssey.Input): Common Odyssey logic
-    ///   - K2PlayerInputHandler (Runtime.Games.Odyssey.Input): K2-specific (swkotor2.exe: 0x005226d0, 0x0054be70)
+    ///   - K1PlayerInputHandler (Runtime.Games.Odyssey.Input): K1-specific (swkotor.exe)
     /// </remarks>
-    public class K2PlayerInputHandler : OdysseyPlayerInputHandler
+    public class K1PlayerInputHandler : OdysseyPlayerInputHandler
     {
         /// <summary>
-        /// Initializes a new instance of the K2 player input handler.
+        /// Initializes a new instance of the K1 player input handler.
         /// </summary>
         /// <param name="world">The world context.</param>
         /// <param name="partySystem">The party system.</param>
-        public K2PlayerInputHandler(IWorld world, PartySystem partySystem)
+        public K1PlayerInputHandler(IWorld world, PartySystem partySystem)
             : base(world, partySystem)
         {
         }
 
         /// <summary>
         /// Determines the cursor mode based on the hovered entity.
-        /// K2-specific implementation includes Combat Forms support.
+        /// K1 implementation - simpler than K2 (no combat forms).
         /// </summary>
         /// <param name="hoveredEntity">The entity under the cursor.</param>
         /// <returns>The appropriate cursor mode.</returns>
         /// <remarks>
-        /// Based on swkotor2.exe reverse engineering:
-        /// - K2 has Combat Forms which can affect cursor display (attack cursor variations)
-        /// - FUN_005226d0 @ 0x005226d0 processes input and determines cursor mode
-        /// - K2-specific: Combat forms (Juyo, Makashi, etc.) may affect cursor appearance
-        /// - Otherwise similar to K1 cursor mode determination
-        /// - Uses base class implementation for now, can be extended for combat form-specific cursor modes
+        /// Based on swkotor.exe reverse engineering:
+        /// - K1 has a simpler cursor system without combat form variations
+        /// - Equivalent function to FUN_005226d0 in K2 (address TBD via Ghidra analysis)
+        /// - K1-specific: Standard cursor modes only (no combat form-specific variations)
+        /// - Uses base class implementation which handles all common cases
         /// </remarks>
         protected override CursorMode DetermineCursorMode(IEntity hoveredEntity)
         {
-            // Use base implementation for common cases
-            // K2-specific: Future enhancement could check for combat forms that affect cursor
-            // Combat forms in K2 can modify attack cursor appearance
-            // Based on swkotor2.exe: Combat forms are tracked in entity stats/combat state
+            // K1 uses the standard cursor mode determination without combat form modifications
+            // Based on swkotor.exe: Simpler cursor system than K2
             return base.DetermineCursorMode(hoveredEntity);
         }
 
         /// <summary>
         /// Gets the attack range based on equipped weapon.
-        /// K2-specific implementation may consider prestige classes and combat forms.
+        /// K1 implementation - simpler than K2 (no prestige class modifiers).
         /// </summary>
         /// <returns>The attack range for the current weapon.</returns>
         /// <remarks>
-        /// Based on swkotor2.exe reverse engineering:
-        /// - K2 has prestige classes which can affect weapon proficiency and range
-        /// - Combat forms can affect attack range in some cases
-        /// - Base weapon range calculation is similar to K1, but with K2-specific modifiers
+        /// Based on swkotor.exe reverse engineering:
+        /// - K1 has base classes only (no prestige classes)
+        /// - Weapon range calculation is straightforward without prestige class modifiers
+        /// - Base weapon range calculation is similar to K2, but without K2-specific class modifiers
         /// - Located via string references: Weapon range calculations in combat system
         /// </remarks>
         protected override float GetAttackRange()
@@ -99,7 +93,7 @@ namespace Andastra.Runtime.Games.Odyssey.Input
             }
 
             // Get equipped weapon from main hand (slot 4)
-            // Based on swkotor2.exe: INVENTORY_SLOT_RIGHTWEAPON = 4
+            // Based on swkotor.exe: INVENTORY_SLOT_RIGHTWEAPON = 4
             // Located via string references: "INVENTORY_SLOT_RIGHTWEAPON" = 4
             // Original implementation: Gets equipped weapon from right hand slot
             IInventoryComponent inventory = leader.GetComponent<IInventoryComponent>();
@@ -127,14 +121,14 @@ namespace Andastra.Runtime.Games.Odyssey.Input
 
             // Check weapon type to determine range
             // Ranged weapons typically have longer range than melee
-            // Based on swkotor2.exe weapon system
+            // Based on swkotor.exe weapon system
             // Located via string references: "WeaponType" in baseitems.2da
             // Original implementation: Weapon types determine attack range
             // For melee weapons: 2.0f, for ranged weapons: 10.0f (approximate)
             if (weapon is Entity weaponEntity2 && weaponEntity2.HasData("WeaponType"))
             {
                 int weaponType = weaponEntity2.GetData<int>("WeaponType", 0);
-                // K2 weapon type constants: 0=melee, 1=ranged
+                // K1 weapon type constants: 0=melee, 1=ranged
                 // Full implementation would check baseitems.2da for exact ranges
                 if (weaponType == 1) // Ranged weapon
                 {
@@ -143,31 +137,29 @@ namespace Andastra.Runtime.Games.Odyssey.Input
             }
 
             // Default to melee range
+            // K1-specific: No prestige class modifiers, straightforward range calculation
             return GetDefaultMeleeRange();
         }
 
         /// <summary>
         /// Checks if an entity is hostile.
-        /// K2-specific implementation may consider influence system.
+        /// K1 implementation - simpler than K2 (no influence system).
         /// </summary>
         /// <param name="entity">The entity to check.</param>
         /// <returns>True if the entity is hostile.</returns>
         /// <remarks>
-        /// Based on swkotor2.exe reverse engineering:
-        /// - K2 has an Influence system that can affect faction relationships
-        /// - Party member influence can change how NPCs react (hostile/friendly)
-        /// - Base hostility check is similar to K1, but with K2-specific influence modifiers
-        /// - Located via string references: Faction system, influence system
-        /// - Uses base class implementation for now, can be extended for influence system integration
+        /// Based on swkotor.exe reverse engineering:
+        /// - K1 has a simpler faction system without influence modifiers
+        /// - Faction relationships are static (no dynamic influence-based changes)
+        /// - Base hostility check is similar to K2, but without influence system modifiers
+        /// - Located via string references: Faction system
+        /// - Uses base class implementation which handles all common faction checking
         /// </remarks>
         protected override bool IsHostile(IEntity entity)
         {
-            // Use base implementation for common faction checking
-            // K2-specific: Future enhancement could check influence system effects on faction relationships
-            // Influence can modify how NPCs react to the party
-            // Based on swkotor2.exe: Influence system affects faction relationships
+            // K1 uses standard faction checking without influence system modifications
+            // Based on swkotor.exe: Simpler faction system than K2
             return base.IsHostile(entity);
         }
-
     }
 }

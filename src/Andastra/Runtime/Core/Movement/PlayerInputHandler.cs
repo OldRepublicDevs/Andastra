@@ -11,7 +11,8 @@ namespace Andastra.Runtime.Core.Movement
     /// </summary>
     /// <remarks>
     /// Player Input Handler:
-    /// - Based on swkotor2.exe input system (TODO: swkotor.exe and subclasses for k1/k2 specifics)
+    /// - Base class for player input handling across all engines
+    /// - Odyssey-specific implementations: K1PlayerInputHandler (swkotor.exe) and K2PlayerInputHandler (swkotor2.exe) in Runtime.Games.Odyssey.Input
     /// - Located via string references: "Mouse Sensitivity" @ 0x007c85cc, "Mouse Look" @ 0x007c8608, "Reverse Mouse Buttons" @ 0x007c8628
     /// - "EnableHardwareMouse" @ 0x007c71c8, "Enable Mouse Teleporting To Buttons" @ 0x007c85a8
     /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_CLICKED" @ 0x007bc704, "OnClick" @ 0x007c1a20
@@ -36,7 +37,7 @@ namespace Andastra.Runtime.Core.Movement
     public class PlayerInputHandler
     {
         private readonly IWorld _world;
-        private readonly Party.PartySystem _partySystem;
+        protected readonly Party.PartySystem _partySystem;
         private CharacterController _currentController;
 
         /// <summary>
@@ -329,7 +330,7 @@ namespace Andastra.Runtime.Core.Movement
 
         #region Cursor Mode Logic
 
-        private CursorMode DetermineCursorMode(IEntity hoveredEntity)
+        protected virtual CursorMode DetermineCursorMode(IEntity hoveredEntity)
         {
             if (hoveredEntity == null)
             {
@@ -395,7 +396,7 @@ namespace Andastra.Runtime.Core.Movement
             }
         }
 
-        private bool IsHostile(IEntity entity)
+        protected virtual bool IsHostile(IEntity entity)
         {
             if (entity == null)
             {
@@ -491,7 +492,7 @@ namespace Andastra.Runtime.Core.Movement
             return false;
         }
 
-        private float GetAttackRange()
+        protected virtual float GetAttackRange()
         {
             // Get current party leader
             var leader = (IEntity)(_partySystem?.Leader);

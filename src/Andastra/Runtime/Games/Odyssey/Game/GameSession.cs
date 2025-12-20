@@ -12,6 +12,7 @@ using Andastra.Runtime.Core.Party;
 using Andastra.Runtime.Core.Actions;
 using Andastra.Runtime.Core.Combat;
 using Andastra.Runtime.Core.Movement;
+using Andastra.Runtime.Games.Odyssey.Input;
 using Andastra.Runtime.Engines.Odyssey.Combat;
 using Andastra.Runtime.Engines.Odyssey.Systems;
 using Andastra.Runtime.Engines.Odyssey.Dialogue;
@@ -294,10 +295,14 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
             );
 
             // Initialize input handler for player control
-            // Based on swkotor2.exe: Input system handles click-to-move, object interaction, party control
+            // Based on swkotor.exe (K1) vs swkotor2.exe (K2) input system differences
             // Located via string references: "Input" @ 0x007c2520, "Mouse" @ 0x007cb908, "OnClick" @ 0x007c1a20
             // Original implementation: DirectInput8-based input system with click-to-move, object selection, party control
-            _inputHandler = new PlayerInputHandler(_world, _partySystem);
+            // K1 (swkotor.exe): Simpler input system without K2-specific features (Influence, Prestige Classes, Combat Forms)
+            // K2 (swkotor2.exe): Enhanced input system with additional features
+            _inputHandler = _settings.Game == KotorGame.K1
+                ? (PlayerInputHandler)new K1PlayerInputHandler(_world, _partySystem)
+                : (PlayerInputHandler)new K2PlayerInputHandler(_world, _partySystem);
 
             // Wire up input handler events
             _inputHandler.OnMoveCommand += OnMoveCommand;
