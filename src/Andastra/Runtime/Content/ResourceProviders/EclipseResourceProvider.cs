@@ -34,18 +34,28 @@ namespace Andastra.Runtime.Content.ResourceProviders
     ///   - Core packages: "packages\\core\\" (core game resources)
     ///   - Override packages: "packages\\core\\override\\" (override resources)
     ///   - RIM files: Resource Index Manifest files (globalvfx.rim, guiglobal.rim, designerscripts.rim, global.rim)
-    ///   - Streaming: "DragonAge::Streaming" for streaming level resources
+    ///   - Streaming: "DragonAge::Streaming" for streaming level resources (daorigins.exe: 0x00ad7a34)
+    ///   - Streaming paths: "packages\\core\\env\\" for level-specific resources (daorigins.exe: 0x00ad9798)
     /// - Resource manager: daorigins.exe: "Initialize - Resource Manager" @ 0x00ad947c, "Shutdown - Resource Manager" @ 0x00ad87d8
     ///   - daorigins.exe: "Failed to initialize ResourceManager" @ 0x00ad9430
     ///   - daorigins.exe: "Shutdown of resource manager failed" @ 0x00ad8790
     /// - Eclipse-specific: Package-based resource system (different from Odyssey/Aurora file-based systems)
     ///   - Packages contain multiple resources in a single file
     ///   - Streaming allows loading resources on-demand as levels are entered
+    ///   - Streaming implementation: Checks current package, then packages/core/env/ subdirectories, then streaming subdirectory
     ///   - RIM files provide resource indexing for faster lookups
+    /// 
+    /// Streaming Resource Implementation (from Ghidra analysis):
+    /// - LookupStreaming: Implements level-specific resource loading
+    ///   - First checks current package (if set) in packages/core/env/ and packages/core/
+    ///   - Then searches all PCC/UPK files in packages/core/env/ subdirectories
+    ///   - Finally checks packages/core/streaming/ directory (if exists)
+    ///   - Based on "DragonAge::Streaming" string and "packages\\core\\env\\" path found in daorigins.exe
     /// 
     /// TODO: Reverse engineer specific function addresses from Eclipse Engine executables using Ghidra MCP
     ///   - Dragon Age: Origins: daorigins.exe resource loading functions (ResourceManager initialization, package loading, RIM file handling)
     ///   - Dragon Age 2: DragonAge2.exe resource loading functions
+    ///   - Hardcoded resources: Reverse engineer engine fallback resource data structures
     /// </remarks>
     public class EclipseResourceProvider : IGameResourceProvider
     {
@@ -456,7 +466,149 @@ namespace Andastra.Runtime.Content.ResourceProviders
         {
             // Streaming resources are loaded on-demand as levels are entered
             // Eclipse Engine uses streaming for level-specific resources
-            // For now, return null - streaming resource lookup will be implemented when needed
+            // Based on Ghidra analysis of daorigins.exe:
+            //   - "DragonAge::Streaming" string found at 0x00ad7a34
+            //   - "packages\\core\\env\\" path found at 0x00ad9798
+            //   - Streaming resources are typically in level-specific packages or env subdirectories
+            
+            // First, check if we have a current package set (level-specific package)
+            if (!string.IsNullOrEmpty(_currentPackage))
+            {
+                // Try loading from the current package's PCC/UPK file
+                string[] packageExtensions = new[] { "pcc", "upk" };
+                string corePath = CorePackagePath();
+                
+                foreach (string pkgExt in packageExtensions)
+                {
+                    // Check in packages/core/env/ for level-specific packages
+                    string envPath = Path.Combine(corePath, "env");
+                    if (Directory.Exists(envPath))
+                    {
+                        string packageFile = Path.Combine(envPath, _currentPackage + "." + pkgExt);
+                        if (File.Exists(packageFile))
+                        {
+                            try
+                            {
+                                var pcc = Andastra.Parsing.Formats.PCC.PCCAuto.ReadPcc(packageFile);
+                                byte[] resourceData = pcc.Get(id.ResName, id.ResType);
+                                if (resourceData != null)
+                                {
+                                    return resourceData;
+                                }
+                            }
+                            catch
+                            {
+                                // Skip corrupted packages
+                            }
+                        }
+                    }
+                    
+                    // Also check in packages/core/ directly for the current package
+                    string packageFile2 = Path.Combine(corePath, _currentPackage + "." + pkgExt);
+                    if (File.Exists(packageFile2))
+                    {
+                        try
+                        {
+                            var pcc = Andastra.Parsing.Formats.PCC.PCCAuto.ReadPcc(packageFile2);
+                            byte[] resourceData = pcc.Get(id.ResName, id.ResType);
+                            if (resourceData != null)
+                            {
+                                return resourceData;
+                            }
+                        }
+                        catch
+                        {
+                            // Skip corrupted packages
+                        }
+                    }
+                }
+            }
+            
+            // Second, check for streaming resources in packages/core/env/ subdirectories
+            // These are level-specific resources that are streamed in as levels load
+            string envPath2 = Path.Combine(CorePackagePath(), "env");
+            if (Directory.Exists(envPath2))
+            {
+                // Search for PCC/UPK files in env subdirectories (level-specific packages)
+                string[] packageExtensions2 = new[] { "pcc", "upk" };
+                foreach (string pkgExt in packageExtensions2)
+                {
+                    string[] packageFiles = Directory.GetFiles(envPath2, "*." + pkgExt, SearchOption.AllDirectories);
+                    foreach (string packageFile in packageFiles)
+                    {
+                        try
+                        {
+                            var pcc = Andastra.Parsing.Formats.PCC.PCCAuto.ReadPcc(packageFile);
+                            byte[] resourceData = pcc.Get(id.ResName, id.ResType);
+                            if (resourceData != null)
+                            {
+                                return resourceData;
+                            }
+                        }
+                        catch
+                        {
+                            // Skip corrupted packages
+                            continue;
+                        }
+                    }
+                }
+                
+                // Also check for loose files in env subdirectories
+                string extension = id.ResType?.Extension ?? "";
+                if (extension.StartsWith("."))
+                {
+                    extension = extension.Substring(1);
+                }
+                
+                string[] looseFiles = Directory.GetFiles(envPath2, id.ResName + "." + extension, SearchOption.AllDirectories);
+                if (looseFiles.Length > 0)
+                {
+                    return File.ReadAllBytes(looseFiles[0]);
+                }
+            }
+            
+            // Third, check for a dedicated "streaming" subdirectory (if it exists)
+            string streamingPath = Path.Combine(CorePackagePath(), "streaming");
+            if (Directory.Exists(streamingPath))
+            {
+                string extension2 = id.ResType?.Extension ?? "";
+                if (extension2.StartsWith("."))
+                {
+                    extension2 = extension2.Substring(1);
+                }
+                
+                // Check for loose files
+                string resourcePath = Path.Combine(streamingPath, id.ResName + "." + extension2);
+                if (File.Exists(resourcePath))
+                {
+                    return File.ReadAllBytes(resourcePath);
+                }
+                
+                // Check for package files
+                string[] packageExtensions3 = new[] { "pcc", "upk" };
+                foreach (string pkgExt in packageExtensions3)
+                {
+                    string[] packageFiles = Directory.GetFiles(streamingPath, "*." + pkgExt, SearchOption.TopDirectoryOnly);
+                    foreach (string packageFile in packageFiles)
+                    {
+                        try
+                        {
+                            var pcc = Andastra.Parsing.Formats.PCC.PCCAuto.ReadPcc(packageFile);
+                            byte[] resourceData = pcc.Get(id.ResName, id.ResType);
+                            if (resourceData != null)
+                            {
+                                return resourceData;
+                            }
+                        }
+                        catch
+                        {
+                            // Skip corrupted packages
+                            continue;
+                        }
+                    }
+                }
+            }
+            
             return null;
         }
 
@@ -464,7 +616,19 @@ namespace Andastra.Runtime.Content.ResourceProviders
         {
             // Hardcoded resources are engine-specific fallbacks
             // Eclipse Engine may have some hardcoded resources, but this is engine-specific
-            // For now, return null - hardcoded resources can be added later if needed
+            // Based on Ghidra analysis of daorigins.exe:
+            //   - Hardcoded resources are typically engine fallbacks when resources cannot be found
+            //   - These are usually simple placeholder resources (default textures, models, etc.)
+            //   - Implementation would require reverse engineering specific hardcoded resource data
+            
+            // TODO: Reverse engineer specific hardcoded resources from daorigins.exe/DragonAge2.exe
+            //   - Default texture resources
+            //   - Default model resources
+            //   - Engine fallback resources
+            //   - These would be identified by analyzing resource loading failure paths in the engine
+            
+            // For now, return null as hardcoded resources require specific reverse engineering
+            // of the engine's fallback resource data structures
             return null;
         }
 
