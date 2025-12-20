@@ -4,7 +4,7 @@
     <!-- Use Windows-specific target framework on Windows to satisfy SDK requirements -->
     <OutputType Condition="'$(OS)' == 'Windows_NT'">WinExe</OutputType>
     <OutputType Condition="'$(OS)' != 'Windows_NT'">Exe</OutputType>
-    <TargetFrameworks>net9.0-windows</TargetFrameworks>
+    <TargetFrameworks>net9.0</TargetFrameworks>
     <LangVersion>7.3</LangVersion>
     <Nullable>disable</Nullable>
     <ImplicitUsings>disable</ImplicitUsings>
@@ -31,13 +31,8 @@
     <PackageReference Include="Eto.Forms" Version="2.10.2" />
     <PackageReference Include="Eto.Platform.Gtk" Version="2.7.4" Condition="$([MSBuild]::IsOSPlatform('Linux'))" />
     <PackageReference Include="Eto.Platform.Mac" Version="2.7.4" Condition="$([MSBuild]::IsOSPlatform('OSX'))" />
-    <!-- Eto.Platform.Windows is referenced but its Windows Forms dependency should be ignored by SDK -->
-    <PackageReference Include="Eto.Platform.Windows" Version="2.10.2" Condition="$([MSBuild]::IsOSPlatform('Windows'))">
-      <!-- Exclude compile assets to prevent SDK from evaluating Windows Forms dependency -->
-      <!-- Runtime assets are still included for Eto.Platform.Detect to work -->
-      <IncludeAssets>runtime;native;contentfiles</IncludeAssets>
-      <ExcludeAssets>compile;build;analyzers</ExcludeAssets>
-    </PackageReference>
+    <!-- Eto.Platform.Windows cannot be referenced here due to NETSDK1136 (Windows Forms dependency) -->
+    <!-- It will be included via a target that runs after SDK dependency analysis -->
     <PackageReference Include="JetBrains.Annotations" Version="2025.2.4" />
     <PackageReference Include="MonoGame.Content.Builder.Task" Version="3.8.4.1" />
     <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.4.1" />
