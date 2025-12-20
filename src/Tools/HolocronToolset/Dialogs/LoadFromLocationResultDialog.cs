@@ -154,9 +154,64 @@ namespace HolocronToolset.Dialogs
             }
         }
 
+        // Matching PyKotor implementation pattern for resource filtering
+        // Filters resources based on search text, checking ResRef, Type, and Path columns
+        // Case-insensitive substring matching similar to ResourceProxyModel.filterAcceptsRow
         private void OnSearchChanged()
         {
-            // TODO: Filter resources based on search text
+            if (_tableWidget == null || _resources == null)
+            {
+                return;
+            }
+
+            string searchText = _searchEdit?.Text ?? "";
+            string filterText = searchText.ToLowerInvariant();
+
+            // If search text is empty, show all resources
+            IEnumerable<FileResource> filteredResources = _resources;
+            if (!string.IsNullOrWhiteSpace(filterText))
+            {
+                // Filter resources where search text appears in ResRef, Type, or Path
+                // Matching PyKotor ResourceProxyModel.filterAcceptsRow pattern:
+                // Checks if filter_string is a substring of filename or resname
+                filteredResources = _resources.Where(r =>
+                {
+                    // Check ResRef (resource name)
+                    string resRef = r.ResName?.ToLowerInvariant() ?? "";
+                    if (resRef.Contains(filterText))
+                    {
+                        return true;
+                    }
+
+                    // Check Type (resource type extension)
+                    string type = r.ResType?.Extension?.ToLowerInvariant() ?? "";
+                    if (type.Contains(filterText))
+                    {
+                        return true;
+                    }
+
+                    // Check Path (file path)
+                    string path = r.FilePath?.ToLowerInvariant() ?? "";
+                    if (path.Contains(filterText))
+                    {
+                        return true;
+                    }
+
+                    return false;
+                });
+            }
+
+            // Create ResourceItem objects from filtered resources
+            var items = filteredResources.Select(r => new ResourceItem
+            {
+                ResRef = r.ResName,
+                Type = r.ResType.Extension,
+                Path = r.FilePath,
+                Resource = r
+            }).ToList();
+
+            // Update DataGrid with filtered items
+            _tableWidget.ItemsSource = items;
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/load_from_location_result.py:927-936
