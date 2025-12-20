@@ -13,7 +13,9 @@ namespace Andastra.Runtime.Games.Odyssey
     /// 
     /// Odyssey-Specific Details:
     /// - Fixed timestep: 60 Hz (1/60s = 0.01667s per tick) - verified in swkotor2.exe
-    /// - Game time storage: Stored in module IFO file (GameTime field)
+
+    /// - Game time storage: Stored in module IFO file as Mod_StartMinute/Second/MiliSec and Mod_PauseDay/PauseTime fields
+    ///   Based on swkotor2.exe: FUN_00500290 @ 0x00500290 (IFO serialization) lines 96-100
     /// - Time played tracking: TIMEPLAYED field in save game NFO.res file
     /// - Frame timing: NOTE - Previously documented addresses (frameStart @ 0x007ba698, frameEnd @ 0x007ba668) are string constants, not functions.
     ///   VERIFIED via Ghidra MCP: These addresses contain string data used in particle system configuration, not frame timing functions.
@@ -31,9 +33,11 @@ namespace Andastra.Runtime.Games.Odyssey
     /// - "TIMEPLAYED" @ 0x007be1c4 (time played field in save game)
     /// - "TIMESTAMP" @ 0x007be19c (timestamp field)
     /// - "TimeElapsed" @ 0x007bed5c (time elapsed field)
-    /// - "Mod_PauseTime" @ 0x007be89c (module pause time field)
-    /// - "GameTime" @ 0x007c1a78 (game time field)
-    /// - "GameTimeScale" @ 0x007c1a80 (game time scaling factor)
+    /// - "Mod_PauseTime" @ 0x007be89c (module pause time field in IFO)
+    /// - "Mod_PauseDay" @ 0x007be8ac (module pause day field in IFO)
+    /// - "Mod_StartMinute" @ 0x007be8e0 (game time minute field in IFO)
+    /// - "Mod_StartSecond" @ 0x007be8d0 (game time second field in IFO)
+    /// - "Mod_StartMiliSec" @ 0x007be8bc (game time millisecond field in IFO)
     /// 
     /// Function Addresses (REVERSE ENGINEERED via Ghidra MCP):
     /// 
@@ -201,11 +205,18 @@ namespace Andastra.Runtime.Games.Odyssey
         /// <param name="millisecond">Millisecond (0-999)</param>
         /// <remarks>
         /// Odyssey-specific: Sets game time (stored in module IFO file).
-        /// Based on swkotor.exe and swkotor2.exe: Game time is stored in module IFO file (GameTime field).
+        /// Based on swkotor2.exe: FUN_00500290 @ 0x00500290 (IFO serialization function)
         /// 
-        /// Original engine behavior:
-        /// - Game time is stored in module IFO file (GameTime field, string reference @ 0x007c1a78)
-        /// - Game time can be set via module system or script functions
+        /// Original engine behavior (swkotor2.exe: FUN_00500290 @ 0x00500290):
+        /// - Lines 79-80: Gets current game time (day, time in milliseconds) via FUN_004db710
+        /// - Lines 85-86: Converts time to minute/second/millisecond via FUN_004db660
+        /// - Lines 88-90: Gets pause day/time from time system object offsets +0x28 and +0x2c
+        /// - Line 96: Writes Mod_StartMinute (UInt16) - current game time minute component
+        /// - Line 97: Writes Mod_StartSecond (UInt16) - current game time second component
+        /// - Line 98: Writes Mod_StartMiliSec (UInt16) - current game time millisecond component
+        /// - Line 99: Writes Mod_PauseDay (UInt32) - pause day from time system object +0x28
+        /// - Line 100: Writes Mod_PauseTime (UInt32) - pause time from time system object +0x2c
+        /// - Game time is stored in IFO file using these fields when module is saved
         /// - Base class SetGameTime() clamps values to valid ranges (matches original behavior)
         /// 
         /// Time played tracking:
@@ -214,6 +225,9 @@ namespace Andastra.Runtime.Games.Odyssey
         /// - FUN_0057a300 @ 0x0057a300 (swkotor2.exe) calculates time played in seconds
         /// - Time played = (current FILETIME - game start FILETIME) / 10,000,000 + stored time
         /// - Used by SerializeSaveNfo @ 0x004eb750 to save TIMEPLAYED field
+        /// 
+        /// NOTE: The module system must populate IFO game time fields (StartMinute, StartSecond, StartMiliSec, PauseDay, PauseTime)
+        /// from the time manager when saving the module IFO file to match original engine behavior.
         /// </remarks>
         public override void SetGameTime(int hour, int minute, int second, int millisecond)
         {
@@ -224,9 +238,11 @@ namespace Andastra.Runtime.Games.Odyssey
             base.SetGameTime(hour, minute, second, millisecond);
 
             // Odyssey-specific: Game time persistence integration
-            // In original engine, game time is stored in module IFO file (GameTime field)
-            // The time manager provides the game time values (GameTimeHour, GameTimeMinute, etc.)
-            // The module system persists these values to the IFO file when saving
+            // In original engine (swkotor2.exe: FUN_00500290 @ 0x00500290), game time is stored in module IFO file as:
+            // - Mod_StartMinute, Mod_StartSecond, Mod_StartMiliSec (current game time components)
+            // - Mod_PauseDay, Mod_PauseTime (pause time from time system object)
+            // The time manager provides the game time values (GameTimeHour, GameTimeMinute, GameTimeSecond, GameTimeMillisecond)
+            // The module system must populate these IFO fields when saving the module to match original engine behavior
             // This separation matches the original engine architecture
         }
     }
