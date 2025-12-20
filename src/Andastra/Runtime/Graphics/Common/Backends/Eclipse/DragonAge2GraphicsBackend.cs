@@ -1,6 +1,10 @@
 using System;
 using System.IO;
 using System.Runtime.InteropServices;
+using System.Threading;
+using System.Threading.Tasks;
+using Andastra.Parsing.Resource;
+using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Graphics.Common.Enums;
 using Andastra.Runtime.Graphics.Common.Interfaces;
 using Andastra.Runtime.Graphics.Common.Rendering;
@@ -25,9 +29,23 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
     /// </remarks>
     public class DragonAge2GraphicsBackend : EclipseGraphicsBackend
     {
+        // Resource provider for loading texture data from game resources
+        // Matches DragonAge2.exe resource loading system (Eclipse engine resource manager)
+        private IGameResourceProvider _resourceProvider;
+
         public override GraphicsBackendType BackendType => GraphicsBackendType.EclipseEngine;
 
         protected override string GetGameName() => "Dragon Age 2";
+
+        /// <summary>
+        /// Sets the resource provider to use for loading textures from game resources.
+        /// Based on DragonAge2.exe: Resource provider loads textures from ERF archives, RIM files, and package files.
+        /// </summary>
+        /// <param name="resourceProvider">The resource provider to use for loading textures.</param>
+        public void SetResourceProvider(IGameResourceProvider resourceProvider)
+        {
+            _resourceProvider = resourceProvider;
+        }
 
         protected override bool DetermineGraphicsApi()
         {
@@ -192,9 +210,63 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
                 }
             }
 
-            // TODO: If resource provider is available, load from game resources
-            // This would use the game's resource system to load textures from ERF archives
-            // For now, return null if file not found
+            // If resource provider is available, load from game resources
+            // Based on DragonAge2.exe: Textures are loaded from ERF archives, RIM files, and package files via resource system
+            // Dragon Age 2 uses DDS format for textures stored in game archives
+            // Resource system expects resource names without extensions (the type is specified separately)
+            if (_resourceProvider != null)
+            {
+                // Extract resource name from path (remove .dds extension if present, extract filename)
+                // Based on DragonAge2.exe: Resource names are case-insensitive and don't include file extensions
+                string resourceName = path;
+                if (path.EndsWith(".dds", StringComparison.OrdinalIgnoreCase))
+                {
+                    resourceName = Path.GetFileNameWithoutExtension(path);
+                }
+                else
+                {
+                    // Extract filename from path (handles both full paths and just resource names)
+                    resourceName = Path.GetFileNameWithoutExtension(path);
+                    // If GetFileNameWithoutExtension returns empty (e.g., path is "something."), use the original path
+                    if (string.IsNullOrEmpty(resourceName))
+                    {
+                        resourceName = Path.GetFileName(path);
+                        // If still empty, use original path (shouldn't happen but defensive)
+                        if (string.IsNullOrEmpty(resourceName))
+                        {
+                            resourceName = path;
+                        }
+                    }
+                }
+
+                // Try loading DDS texture from resource provider
+                // Based on DragonAge2.exe: DDS textures are stored with ResourceType.DDS in game archives
+                ResourceIdentifier ddsId = new ResourceIdentifier(resourceName, ResourceType.DDS);
+                try
+                {
+                    Task<bool> existsTask = _resourceProvider.ExistsAsync(ddsId, CancellationToken.None);
+                    existsTask.Wait();
+                    if (existsTask.Result)
+                    {
+                        Task<byte[]> dataTask = _resourceProvider.GetResourceBytesAsync(ddsId, CancellationToken.None);
+                        dataTask.Wait();
+                        byte[] resourceData = dataTask.Result;
+                        if (resourceData != null && resourceData.Length > 0)
+                        {
+                            System.Console.WriteLine($"[DragonAge2GraphicsBackend] LoadDDSFileData: Successfully loaded texture '{resourceName}' from resource provider ({resourceData.Length} bytes)");
+                            return resourceData;
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    System.Console.WriteLine($"[DragonAge2GraphicsBackend] LoadDDSFileData: Exception loading texture '{resourceName}' from resource provider: {ex.Message}");
+                }
+
+                System.Console.WriteLine($"[DragonAge2GraphicsBackend] LoadDDSFileData: Texture resource '{resourceName}' not found in resource provider");
+            }
+
+            // If file not found in file system or resource provider, return null
             System.Console.WriteLine($"[DragonAge2GraphicsBackend] LoadDDSFileData: Texture file not found for '{path}'");
             return null;
         }
