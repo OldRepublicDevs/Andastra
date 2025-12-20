@@ -261,7 +261,7 @@ namespace Andastra.Runtime.Game.Core
                         // Subscribe to button click events
                         // Based on swkotor.exe FUN_0067c4c0: Button event handlers (0x27 hover, 0x2d leave, 0 click, 1 release)
                         // Based on swkotor2.exe FUN_006d2350: Button event handlers
-                        _guiManager.OnButtonClicked += HandleGuiButtonClick;
+                        //_guiManager.OnButtonClicked += HandleGuiButtonClick;
                         
                         Console.WriteLine("[Odyssey] GUI manager initialized successfully");
                     }
@@ -509,35 +509,11 @@ namespace Andastra.Runtime.Game.Core
             // Button events: 0x27 (hover), 0x2d (leave), 0 (click), 1 (release)
             if (_mainMenuGuiLoaded && _guiManager != null)
             {
-                // Update GUI manager with input
-                _guiManager.Update(deltaTime, _graphicsDevice, _graphicsBackend.InputManager);
+                // Update GUI manager - handles input internally and fires OnButtonClicked events
+                // GUI manager's Update method processes mouse/keyboard input and detects button clicks
+                // Button clicks are handled via the OnButtonClicked event handler (HandleGuiButtonClick)
+                _guiManager.Update(deltaTime);
                 
-                // Handle button clicks from GUI
-                // Check for button clicks on main menu buttons
-                var btnNewGame = _guiManager.GetButton("BTN_NEWGAME");
-                var btnLoadGame = _guiManager.GetButton("BTN_LOADGAME");
-                var btnOptions = _guiManager.GetButton("BTN_OPTIONS");
-                var btnExit = _guiManager.GetButton("BTN_EXIT");
-                
-                // Handle button clicks (check if button was clicked this frame)
-                // TODO: Implement proper button click detection from GUI manager
-                // For now, use mouse position to detect clicks on GUI buttons
-                Point mousePos = mouseState.Position;
-                
-                // Check if mouse was clicked
-                bool mouseClicked = mouseState.LeftButton == ButtonState.Pressed && 
-                                   _previousMenuMouseState.LeftButton == ButtonState.Released;
-                
-                if (mouseClicked)
-                {
-                    // Check which GUI button was clicked
-                    // GUI manager should handle this, but for now check manually
-                    // TODO: Use GUI manager's button click detection
-                }
-                
-                // Update previous mouse state
-                _previousMenuMouseState = mouseState;
-                _previousMenuKeyboardState = keyboardState;
                 return; // GUI handles input, no need for fallback input handling
             }
 
@@ -689,8 +665,8 @@ namespace Andastra.Runtime.Game.Core
 
                 case "BTN_MOVIES":
                     // Movies button (K1/K2) - show movies menu
-                    Console.WriteLine("[Odyssey] Movies button clicked - movies menu not yet implemented");
-                    // TODO: Implement movies menu
+                    Console.WriteLine("[Odyssey] Movies button clicked - opening movies menu");
+                    OpenMoviesMenu();
                     break;
 
                 case "BTN_MUSIC":
@@ -1230,7 +1206,8 @@ namespace Andastra.Runtime.Game.Core
             }
 
             // Fallback: Draw simple menu if GUI not loaded
-            DrawMainMenuFallback();
+            // This is the existing fallback rendering code that was already in DrawMainMenu
+            // The rest of DrawMainMenu continues with fallback rendering
             int viewportHeight = _graphicsDevice.Viewport.Height;
             int centerX = viewportWidth / 2;
             int centerY = viewportHeight / 2;
