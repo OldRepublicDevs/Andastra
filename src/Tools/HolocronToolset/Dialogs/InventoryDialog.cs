@@ -190,38 +190,30 @@ namespace HolocronToolset.Dialogs
                     // Column 2: Droppable (for non-store inventories) or Infinite (for store inventories)
                     // Matching PyKotor implementation: droppable is shown for non-stores, infinite for stores
                     // In PyKotor, the context menu shows either "Droppable" or "Infinite" based on is_store flag
-                    // For DataGrid, we'll show both columns but they can be conditionally visible if needed
-                    var droppableColumn = new DataGridCheckBoxColumn
-                    {
-                        Header = "Droppable",
-                        Binding = new Avalonia.Data.Binding("Droppable"),
-                        Width = new DataGridLength(100),
-                        IsReadOnly = false
-                    };
-                    _contentsTable.Columns.Add(droppableColumn);
-
-                    var infiniteColumn = new DataGridCheckBoxColumn
-                    {
-                        Header = "Infinite",
-                        Binding = new Avalonia.Data.Binding("Infinite"),
-                        Width = new DataGridLength(100),
-                        IsReadOnly = false
-                    };
-                    _contentsTable.Columns.Add(infiniteColumn);
-
-                    // Hide columns based on store type (matching PyKotor behavior)
-                    // In PyKotor, stores show "Infinite" in context menu, non-stores show "Droppable"
-                    // For simplicity, we'll show both columns, but in a full implementation,
-                    // these could be conditionally visible based on _isStore flag
+                    // In Avalonia DataGrid, columns don't have Visibility property, so we conditionally add columns
                     if (_isStore)
                     {
-                        droppableColumn.Visibility = Avalonia.Visibility.Collapsed;
-                        infiniteColumn.Visibility = Avalonia.Visibility.Visible;
+                        // For stores, show Infinite column
+                        var infiniteColumn = new DataGridCheckBoxColumn
+                        {
+                            Header = "Infinite",
+                            Binding = new Avalonia.Data.Binding("Infinite"),
+                            Width = new DataGridLength(100),
+                            IsReadOnly = false
+                        };
+                        _contentsTable.Columns.Add(infiniteColumn);
                     }
                     else
                     {
-                        droppableColumn.Visibility = Avalonia.Visibility.Visible;
-                        infiniteColumn.Visibility = Avalonia.Visibility.Collapsed;
+                        // For non-stores, show Droppable column
+                        var droppableColumn = new DataGridCheckBoxColumn
+                        {
+                            Header = "Droppable",
+                            Binding = new Avalonia.Data.Binding("Droppable"),
+                            Width = new DataGridLength(100),
+                            IsReadOnly = false
+                        };
+                        _contentsTable.Columns.Add(droppableColumn);
                     }
                 }
             }
@@ -311,7 +303,7 @@ namespace HolocronToolset.Dialogs
         {
             // Clear existing inventory and rebuild from contents table
             _inventory.Clear();
-            if (_contentsTable != null && _contentsTable.Items != null)
+            if (_contentsTable != null && _contentsTable.ItemsSource != null)
             {
                 // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/dialogs/inventory.py:208-212
                 // Original: for i in range(self.ui.contentsTable.rowCount()):
@@ -323,53 +315,57 @@ namespace HolocronToolset.Dialogs
                 // and has resname, droppable, and infinite properties.
                 // In Avalonia DataGrid, each item in ItemsSource represents a row, so we iterate through ItemsSource
                 // and extract ResRef, Droppable, and Infinite from each row item.
-                foreach (var rowItem in _contentsTable.Items.OfType<object>())
+                var itemsSource = _contentsTable.ItemsSource as System.Collections.IEnumerable;
+                if (itemsSource != null)
                 {
-                    // Try to extract from InventoryTableRowItem (our custom row item class)
-                    if (rowItem is InventoryTableRowItem tableRowItem)
+                    foreach (var rowItem in itemsSource.OfType<object>())
                     {
-                        // Extract ResRef, Droppable, and Infinite from the row item
-                        // Matching PyKotor: InventoryItem(ResRef(table_item.resname), table_item.droppable, table_item.infinite)
-                        if (tableRowItem.ResRef != null && !string.IsNullOrEmpty(tableRowItem.ResRef.ToString()))
+                        // Try to extract from InventoryTableRowItem (our custom row item class)
+                        if (rowItem is InventoryTableRowItem tableRowItem)
                         {
-                            _inventory.Add(new InventoryItem(tableRowItem.ResRef, tableRowItem.Droppable, tableRowItem.Infinite));
-                        }
-                    }
-                    // Fallback: Try to extract using reflection for compatibility with other row item types
-                    else if (rowItem != null)
-                    {
-                        var rowType = rowItem.GetType();
-                        var resRefProperty = rowType.GetProperty("ResRef");
-                        var droppableProperty = rowType.GetProperty("Droppable");
-                        var infiniteProperty = rowType.GetProperty("Infinite");
-
-                        if (resRefProperty != null)
-                        {
-                            var resRefValue = resRefProperty.GetValue(rowItem) as ResRef;
-                            if (resRefValue != null && !string.IsNullOrEmpty(resRefValue.ToString()))
+                            // Extract ResRef, Droppable, and Infinite from the row item
+                            // Matching PyKotor: InventoryItem(ResRef(table_item.resname), table_item.droppable, table_item.infinite)
+                            if (tableRowItem.ResRef != null && !string.IsNullOrEmpty(tableRowItem.ResRef.ToString()))
                             {
-                                bool droppable = false;
-                                bool infinite = false;
+                                _inventory.Add(new InventoryItem(tableRowItem.ResRef, tableRowItem.Droppable, tableRowItem.Infinite));
+                            }
+                        }
+                        // Fallback: Try to extract using reflection for compatibility with other row item types
+                        else if (rowItem != null)
+                        {
+                            var rowType = rowItem.GetType();
+                            var resRefProperty = rowType.GetProperty("ResRef");
+                            var droppableProperty = rowType.GetProperty("Droppable");
+                            var infiniteProperty = rowType.GetProperty("Infinite");
 
-                                if (droppableProperty != null)
+                            if (resRefProperty != null)
+                            {
+                                var resRefValue = resRefProperty.GetValue(rowItem) as ResRef;
+                                if (resRefValue != null && !string.IsNullOrEmpty(resRefValue.ToString()))
                                 {
-                                    var droppableValue = droppableProperty.GetValue(rowItem);
-                                    if (droppableValue is bool droppableBool)
-                                    {
-                                        droppable = droppableBool;
-                                    }
-                                }
+                                    bool droppable = false;
+                                    bool infinite = false;
 
-                                if (infiniteProperty != null)
-                                {
-                                    var infiniteValue = infiniteProperty.GetValue(rowItem);
-                                    if (infiniteValue is bool infiniteBool)
+                                    if (droppableProperty != null)
                                     {
-                                        infinite = infiniteBool;
+                                        var droppableValue = droppableProperty.GetValue(rowItem);
+                                        if (droppableValue is bool droppableBool)
+                                        {
+                                            droppable = droppableBool;
+                                        }
                                     }
-                                }
 
-                                _inventory.Add(new InventoryItem(resRefValue, droppable, infinite));
+                                    if (infiniteProperty != null)
+                                    {
+                                        var infiniteValue = infiniteProperty.GetValue(rowItem);
+                                        if (infiniteValue is bool infiniteBool)
+                                        {
+                                            infinite = infiniteBool;
+                                        }
+                                    }
+
+                                    _inventory.Add(new InventoryItem(resRefValue, droppable, infinite));
+                                }
                             }
                         }
                     }
