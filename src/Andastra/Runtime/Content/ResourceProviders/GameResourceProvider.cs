@@ -161,9 +161,9 @@ namespace Andastra.Runtime.Content.ResourceProviders
                 yield break;
             }
 
-            // Use HashSet to track unique resources (case-insensitive comparison)
+            // Use HashSet to track unique resources (ResourceIdentifier already implements case-insensitive comparison)
             // Later resources from higher-priority locations will overwrite earlier ones
-            var uniqueResources = new HashSet<ResourceIdentifier>(ResourceIdentifierComparer.Instance);
+            var uniqueResources = new HashSet<ResourceIdentifier>();
 
             string installPath = _installation.Path;
 
@@ -422,30 +422,6 @@ namespace Andastra.Runtime.Content.ResourceProviders
             foreach (ResourceIdentifier identifier in uniqueResources)
             {
                 yield return identifier;
-            }
-        }
-
-        /// <summary>
-        /// Comparer for ResourceIdentifier that performs case-insensitive comparison.
-        /// </summary>
-        private class ResourceIdentifierComparer : IEqualityComparer<ResourceIdentifier>
-        {
-            public static readonly ResourceIdentifierComparer Instance = new ResourceIdentifierComparer();
-
-            public bool Equals(ResourceIdentifier x, ResourceIdentifier y)
-            {
-                if (x.ResType != y.ResType)
-                {
-                    return false;
-                }
-                return string.Equals(x.ResName, y.ResName, StringComparison.OrdinalIgnoreCase);
-            }
-
-            public int GetHashCode(ResourceIdentifier obj)
-            {
-                int hash = obj.ResType?.GetHashCode() ?? 0;
-                hash = hash * 31 + (obj.ResName?.ToLowerInvariant().GetHashCode() ?? 0);
-                return hash;
             }
         }
 
