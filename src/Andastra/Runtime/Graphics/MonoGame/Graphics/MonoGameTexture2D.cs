@@ -22,7 +22,8 @@ namespace Andastra.Runtime.Graphics.MonoGame.Graphics
 
         public int Height => _texture.Height;
 
-        public IntPtr NativeHandle => _texture.Handle;
+        // MonoGame Texture2D doesn't expose Handle directly - return IntPtr.Zero as fallback
+        public IntPtr NativeHandle => IntPtr.Zero;
 
         public void SetData(byte[] data)
         {
