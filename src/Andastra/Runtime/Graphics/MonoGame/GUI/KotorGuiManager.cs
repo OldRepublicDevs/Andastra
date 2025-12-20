@@ -749,8 +749,42 @@ namespace Andastra.Runtime.MonoGame.GUI
         /// </summary>
         private void RenderCheckBox(GUICheckBox checkBox, Vector2 position, Vector2 size)
         {
+            // Check if checkbox is selected
+            bool isSelected = checkBox.IsSelected.HasValue && checkBox.IsSelected.Value != 0;
+            
+            // Check if checkbox is highlighted (mouse over) - similar to buttons
+            bool isHighlighted = IsCheckBoxHighlighted(checkBox);
+
+            // Determine which border state to use (normal, hilight, selected, hilight+selected)
+            // Priority: hilight+selected > selected > hilight > normal
+            GUIBorder borderToUse = checkBox.Border;
+            if (isHighlighted && isSelected && checkBox.HilightSelected != null)
+            {
+                // Checkbox is both highlighted and selected - use hilight+selected border
+                borderToUse = ConvertHilightSelectedToBorder(checkBox.HilightSelected);
+            }
+            else if (isSelected && checkBox.Selected != null)
+            {
+                // Checkbox is selected (but not highlighted) - use selected border
+                borderToUse = ConvertSelectedToBorder(checkBox.Selected);
+            }
+            else if (isHighlighted && checkBox.Hilight != null)
+            {
+                // Checkbox is highlighted (but not selected) - use hilight border
+                borderToUse = checkBox.Hilight;
+            }
+
             // Render checkbox background
-            if (checkBox.Border != null && !checkBox.Border.Fill.IsBlank)
+            if (borderToUse != null && !borderToUse.Fill.IsBlank)
+            {
+                Texture2D fillTexture = LoadTexture(borderToUse.Fill.ToString());
+                if (fillTexture != null)
+                {
+                    Color tint = Microsoft.Xna.Framework.Color.White;
+                    _spriteBatch.Draw(fillTexture, new Rectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), tint);
+                }
+            }
+            else if (checkBox.Border != null && !checkBox.Border.Fill.IsBlank)
             {
                 Texture2D fillTexture = LoadTexture(checkBox.Border.Fill.ToString());
                 if (fillTexture != null)
@@ -759,8 +793,145 @@ namespace Andastra.Runtime.MonoGame.GUI
                     _spriteBatch.Draw(fillTexture, new Rectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), tint);
                 }
             }
+            else
+            {
+                // Render solid color background
+                Color bgColor = checkBox.Color;
+                if (bgColor.A > 0)
+                {
+                    Texture2D pixel = GetPixelTexture();
+                    Color tint = new Microsoft.Xna.Framework.Color(bgColor.R, bgColor.G, bgColor.B, bgColor.A);
+                    _spriteBatch.Draw(pixel, new Rectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), tint);
+                }
+            }
 
-            // TODO: Render checkmark if IsSelected is true
+            // Render checkmark if IsSelected is true
+            if (isSelected)
+            {
+                RenderCheckmark(checkBox, position, size);
+            }
+        }
+
+        /// <summary>
+        /// Checks if a checkbox is currently highlighted (mouse over).
+        /// </summary>
+        private bool IsCheckBoxHighlighted(GUICheckBox checkBox)
+        {
+            if (checkBox == null || string.IsNullOrEmpty(checkBox.Tag))
+            {
+                return false;
+            }
+
+            // Check if mouse is over this checkbox
+            MouseState currentMouseState = Mouse.GetState();
+            int mouseX = currentMouseState.X;
+            int mouseY = currentMouseState.Y;
+
+            int left = (int)checkBox.Position.X;
+            int top = (int)checkBox.Position.Y;
+            int right = left + (int)checkBox.Size.X;
+            int bottom = top + (int)checkBox.Size.Y;
+
+            return mouseX >= left && mouseX <= right && mouseY >= top && mouseY <= bottom;
+        }
+
+        /// <summary>
+        /// Renders a checkmark for a selected checkbox.
+        /// </summary>
+        private void RenderCheckmark(GUICheckBox checkBox, Vector2 position, Vector2 size)
+        {
+            // Try to load checkmark texture from Selected or HilightSelected if available
+            Texture2D checkmarkTexture = null;
+            
+            if (checkBox.Selected != null && !checkBox.Selected.Fill.IsBlank)
+            {
+                // Try Selected.Fill as checkmark texture
+                checkmarkTexture = LoadTexture(checkBox.Selected.Fill.ToString());
+            }
+            
+            if (checkmarkTexture == null && checkBox.HilightSelected != null && !checkBox.HilightSelected.Fill.IsBlank)
+            {
+                // Try HilightSelected.Fill as checkmark texture
+                checkmarkTexture = LoadTexture(checkBox.HilightSelected.Fill.ToString());
+            }
+
+            if (checkmarkTexture != null)
+            {
+                // Render checkmark texture centered in checkbox
+                int checkmarkSize = Math.Min((int)size.X, (int)size.Y);
+                int checkmarkX = (int)(position.X + (size.X - checkmarkSize) / 2);
+                int checkmarkY = (int)(position.Y + (size.Y - checkmarkSize) / 2);
+                
+                Color tint = Microsoft.Xna.Framework.Color.White;
+                _spriteBatch.Draw(checkmarkTexture, new Rectangle(checkmarkX, checkmarkY, checkmarkSize, checkmarkSize), tint);
+            }
+            else
+            {
+                // Draw a simple checkmark shape using lines
+                // Calculate checkmark size (80% of checkbox size)
+                float checkmarkSize = Math.Min(size.X, size.Y) * 0.8f;
+                float centerX = position.X + size.X / 2;
+                float centerY = position.Y + size.Y / 2;
+                
+                // Draw checkmark as two lines forming a check
+                // Line 1: from bottom-left to center
+                // Line 2: from center to top-right
+                float lineThickness = Math.Max(2.0f, checkmarkSize * 0.1f);
+                float offset = checkmarkSize * 0.3f;
+                
+                // Calculate checkmark points
+                Vector2 point1 = new Vector2(centerX - offset, centerY);
+                Vector2 point2 = new Vector2(centerX - offset * 0.3f, centerY + offset * 0.5f);
+                Vector2 point3 = new Vector2(centerX + offset, centerY - offset * 0.5f);
+                
+                // Draw checkmark using pixel texture
+                Texture2D pixel = GetPixelTexture();
+                Color checkmarkColor = Microsoft.Xna.Framework.Color.White;
+                
+                // Draw line 1 (bottom-left to center)
+                DrawLine(pixel, point1, point2, lineThickness, checkmarkColor);
+                
+                // Draw line 2 (center to top-right)
+                DrawLine(pixel, point2, point3, lineThickness, checkmarkColor);
+            }
+        }
+
+        /// <summary>
+        /// Draws a line using a pixel texture (simplified approach using rectangles).
+        /// </summary>
+        private void DrawLine(Texture2D pixel, Vector2 start, Vector2 end, float thickness, Color color)
+        {
+            // Calculate line properties
+            Vector2 direction = end - start;
+            float length = direction.Length();
+            
+            if (length <= 0)
+            {
+                return;
+            }
+            
+            // Normalize direction
+            direction = Vector2.Normalize(direction);
+            
+            // Calculate angle for rotation
+            float angle = (float)Math.Atan2(direction.Y, direction.X);
+            
+            // Draw line as rotated rectangle
+            // Use a small rectangle and rotate it
+            Rectangle sourceRect = new Rectangle(0, 0, 1, 1);
+            Vector2 origin = new Vector2(0.5f, 0.5f);
+            Vector2 scale = new Vector2(length, thickness);
+            
+            _spriteBatch.Draw(
+                pixel,
+                start,
+                sourceRect,
+                color,
+                angle,
+                origin,
+                scale,
+                SpriteEffects.None,
+                0);
         }
 
         /// <summary>
