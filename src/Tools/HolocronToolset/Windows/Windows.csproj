@@ -12,7 +12,6 @@
     <PackageReference Include="Avalonia.Desktop" Version="11.3.10" />
     <ProjectReference Include="..\..\..\Andastra\Parsing\Andastra.Parsing.csproj" />
     <ProjectReference Include="..\Data\Data.csproj" />
-    <ProjectReference Include="..\HolocronToolset.csproj" />
   </ItemGroup>
 
 </Project>

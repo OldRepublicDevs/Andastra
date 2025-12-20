@@ -10,13 +10,12 @@
   <ItemGroup>
     <PackageReference Include="Avalonia" Version="11.3.10" />
     <PackageReference Include="Avalonia.Desktop" Version="11.3.10" />
-    <PackageReference Include="Avalonia.Controls.DataGrid" Version="11.3.9" />
+    <PackageReference Include="Avalonia.Controls.DataGrid" Version="11.3.10" />
     <PackageReference Include="MessageBox.Avalonia" Version="3.3.1" />
     <PackageReference Include="JetBrains.Annotations" Version="2025.2.4" />
     <ProjectReference Include="..\..\..\Andastra\Parsing\Andastra.Parsing.csproj" />
     <ProjectReference Include="..\Data\Data.csproj" />
     <ProjectReference Include="..\Widgets\Widgets.csproj" />
-    <ProjectReference Include="..\HolocronToolset.csproj" />
   </ItemGroup>
 
 </Project>

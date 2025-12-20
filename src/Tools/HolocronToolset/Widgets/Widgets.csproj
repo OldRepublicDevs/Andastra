@@ -16,7 +16,6 @@
     <PackageReference Include="JetBrains.Annotations" Version="2025.2.4" />
     <ProjectReference Include="..\..\..\Andastra\Parsing\Andastra.Parsing.csproj" />
     <ProjectReference Include="..\Data\Data.csproj" />
-    <ProjectReference Include="..\HolocronToolset.csproj" />
   </ItemGroup>
 
 </Project>
