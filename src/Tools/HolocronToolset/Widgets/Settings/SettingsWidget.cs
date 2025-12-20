@@ -8,6 +8,7 @@ using HolocronToolset.Data;
 using HolocronToolset.Widgets.Edit;
 using HolocronToolset.Common;
 using Andastra.Parsing.Common;
+using Andastra.Utility;
 using SettingsBase = HolocronToolset.Data.Settings;
 
 namespace HolocronToolset.Widgets.Settings

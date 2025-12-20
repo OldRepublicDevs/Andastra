@@ -10,6 +10,26 @@ namespace HolocronToolset.Data
     // Original: class GlobalSettings(Settings):
     public class GlobalSettings : Settings
     {
+        private static GlobalSettings _instance;
+        private static readonly object _lock = new object();
+
+        public static GlobalSettings Instance
+        {
+            get
+            {
+                if (_instance == null)
+                {
+                    lock (_lock)
+                    {
+                        if (_instance == null)
+                        {
+                            _instance = new GlobalSettings();
+                        }
+                    }
+                }
+                return _instance;
+            }
+        }
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/settings/installations.py:GlobalSettings
         // Original: gffSpecializedEditors: SettingsProperty[bool] = SettingsProperty("gffSpecializedEditors", True)
         public SettingsProperty<bool> GffSpecializedEditors { get; } = new SettingsProperty<bool>("GffSpecializedEditors", true);
