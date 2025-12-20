@@ -25,6 +25,7 @@ using Andastra.Parsing.Resource.Generics.UTI;
 using Andastra.Parsing.Resource.Generics.UTM;
 using Andastra.Parsing.Resource.Generics.UTC;
 using AREHelpers = Andastra.Parsing.Resource.Generics.ARE.AREHelpers;
+using Andastra.Parsing.Resource.Generics;
 using Andastra.Parsing.Common;
 using JetBrains.Annotations;
 
@@ -306,8 +307,7 @@ namespace Andastra.Parsing.Resource
             }
             if (resource is JRL jrl)
             {
-                // TODO: JRL.BytesJrl method needs to be implemented
-                throw new System.NotImplementedException("JRL.BytesJrl not yet implemented");
+                return JRLHelpers.BytesJrl(jrl);
             }
             if (resource is PTH pth)
             {
