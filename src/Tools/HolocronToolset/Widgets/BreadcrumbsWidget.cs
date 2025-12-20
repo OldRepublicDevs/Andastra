@@ -130,5 +130,8 @@ namespace HolocronToolset.Widgets
         {
             SetPath(new List<string>());
         }
+
+        // Public property to expose path for testing
+        public List<string> Path => _path ?? new List<string>();
     }
 }

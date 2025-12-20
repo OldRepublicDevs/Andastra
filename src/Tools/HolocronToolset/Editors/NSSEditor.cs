@@ -1086,6 +1086,206 @@ namespace HolocronToolset.Editors
         // Public property to access breadcrumbs for testing
         public BreadcrumbsWidget Breadcrumbs => _breadcrumbs;
 
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:2663-2671
+        // Original: def _update_breadcrumbs(self):
+        /// <summary>
+        /// Update breadcrumbs when cursor position changes.
+        /// Parses the script to find functions/structs and determines which one contains the current cursor line.
+        /// </summary>
+        public void UpdateBreadcrumbs()
+        {
+            if (_breadcrumbs == null || _codeEdit == null)
+            {
+                return;
+            }
+
+            string text = _codeEdit.ToPlainText();
+            if (string.IsNullOrEmpty(text))
+            {
+                _breadcrumbs.Clear();
+                return;
+            }
+
+            // Get current line number (0-indexed to match Python implementation)
+            int currentLine = GetCurrentLineNumber() - 1; // Convert to 0-indexed
+
+            // Parse script to find functions and structs
+            var symbols = ParseSymbols(text);
+
+            // Build breadcrumb path
+            var breadcrumbPath = new List<string>();
+
+            // Add filename
+            if (!string.IsNullOrEmpty(_resname))
+            {
+                breadcrumbPath.Add(_resname);
+            }
+            else if (!string.IsNullOrEmpty(_filepath))
+            {
+                breadcrumbPath.Add(System.IO.Path.GetFileName(_filepath));
+            }
+            else
+            {
+                breadcrumbPath.Add("Untitled");
+            }
+
+            // Find containing symbol
+            foreach (var symbol in symbols)
+            {
+                if (symbol.StartLine <= currentLine && currentLine <= symbol.EndLine)
+                {
+                    string kind = symbol.Kind;
+                    string name = symbol.Name;
+                    if (!string.IsNullOrEmpty(kind) && !string.IsNullOrEmpty(name))
+                    {
+                        // Capitalize first letter of kind (Function -> Function, Struct -> Struct)
+                        string kindTitle = char.ToUpper(kind[0]) + (kind.Length > 1 ? kind.Substring(1).ToLower() : "");
+                        breadcrumbPath.Add($"{kindTitle}: {name}");
+                    }
+                    break;
+                }
+            }
+
+            // Update breadcrumbs widget
+            _breadcrumbs.SetPath(breadcrumbPath);
+        }
+
+        // Helper class to represent a symbol (function, struct, variable)
+        private class SymbolInfo
+        {
+            public string Kind { get; set; } // "function", "struct", "variable"
+            public string Name { get; set; }
+            public int StartLine { get; set; } // 0-indexed
+            public int EndLine { get; set; } // 0-indexed
+        }
+
+        // Parse script to find functions, structs, and variables
+        // Returns list of symbols with their line ranges
+        private List<SymbolInfo> ParseSymbols(string text)
+        {
+            var symbols = new List<SymbolInfo>();
+            if (string.IsNullOrEmpty(text))
+            {
+                return symbols;
+            }
+
+            string[] lines = text.Split(new[] { '\n', '\r' }, StringSplitOptions.None);
+            int braceDepth = 0;
+            SymbolInfo currentSymbol = null;
+            int symbolStartLine = -1;
+
+            for (int i = 0; i < lines.Length; i++)
+            {
+                string line = lines[i];
+                string trimmedLine = line.Trim();
+
+                // Check for function definition: void funcName(, int funcName(, etc.
+                if (currentSymbol == null)
+                {
+                    // Pattern: returnType funcName(
+                    // Match: void, int, float, string, object followed by identifier and (
+                    // Use original line (not trimmed) to preserve position for brace tracking
+                    var functionMatch = System.Text.RegularExpressions.Regex.Match(trimmedLine, @"^\s*(void|int|float|string|object)\s+(\w+)\s*\(");
+                    if (functionMatch.Success)
+                    {
+                        string funcName = functionMatch.Groups[2].Value;
+                        currentSymbol = new SymbolInfo
+                        {
+                            Kind = "function",
+                            Name = funcName,
+                            StartLine = i
+                        };
+                        symbolStartLine = i;
+                        braceDepth = 0;
+                        
+                        // Check if opening brace is on the same line
+                        foreach (char c in line)
+                        {
+                            if (c == '{')
+                            {
+                                braceDepth++;
+                                break; // Found opening brace on same line
+                            }
+                        }
+                        
+                        // If we found the opening brace, continue to next iteration to track closing
+                        if (braceDepth > 0)
+                        {
+                            continue;
+                        }
+                        // Otherwise, continue to next line to look for opening brace
+                        continue;
+                    }
+
+                    // Check for struct definition: struct StructName
+                    var structMatch = System.Text.RegularExpressions.Regex.Match(trimmedLine, @"^\s*struct\s+(\w+)");
+                    if (structMatch.Success)
+                    {
+                        string structName = structMatch.Groups[1].Value;
+                        currentSymbol = new SymbolInfo
+                        {
+                            Kind = "struct",
+                            Name = structName,
+                            StartLine = i
+                        };
+                        symbolStartLine = i;
+                        braceDepth = 0;
+                        
+                        // Check if opening brace is on the same line
+                        foreach (char c in line)
+                        {
+                            if (c == '{')
+                            {
+                                braceDepth++;
+                                break; // Found opening brace on same line
+                            }
+                        }
+                        
+                        // If we found the opening brace, continue to next iteration to track closing
+                        if (braceDepth > 0)
+                        {
+                            continue;
+                        }
+                        // Otherwise, continue to next line to look for opening brace
+                        continue;
+                    }
+                }
+
+                // Track brace depth to find end of function/struct
+                if (currentSymbol != null)
+                {
+                    foreach (char c in line)
+                    {
+                        if (c == '{')
+                        {
+                            braceDepth++;
+                        }
+                        else if (c == '}')
+                        {
+                            braceDepth--;
+                            if (braceDepth == 0)
+                            {
+                                // Found end of function/struct
+                                currentSymbol.EndLine = i;
+                                symbols.Add(currentSymbol);
+                                currentSymbol = null;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+
+            // If we have an unclosed symbol (malformed code), set end line to last line
+            if (currentSymbol != null)
+            {
+                currentSymbol.EndLine = lines.Length - 1;
+                symbols.Add(currentSymbol);
+            }
+
+            return symbols;
+        }
+
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:2672-2684
         // Original: def _on_breadcrumb_clicked(self, segment: str):
         /// <summary>
