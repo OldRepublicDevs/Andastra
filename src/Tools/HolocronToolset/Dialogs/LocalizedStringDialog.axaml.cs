@@ -1,8 +1,11 @@
 using Andastra.Parsing.Common;
 using System;
+using System.IO;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using Andastra.Parsing;
+using Andastra.Parsing.Resource;
+using Andastra.Parsing.Formats.TLK;
 using HolocronToolset.Data;
 
 namespace HolocronToolset.Dialogs
@@ -232,8 +235,55 @@ namespace HolocronToolset.Dialogs
         // Original: def accept(self):
         private void Accept()
         {
-            // TODO: Save to TLK if stringref != -1
-            // For now, just close
+            if (LocString != null && LocString.StringRef != -1 && _installation != null && _stringEdit != null)
+            {
+                try
+                {
+                    // Get the TLK file path from installation
+                    // Matching PyKotor: tlk_path: CaseAwarePath = CaseAwarePath(self._installation.path(), "dialog.tlk")
+                    string tlkPath = System.IO.Path.Combine(_installation.Path, "dialog.tlk");
+                    
+                    // Check if TLK file exists
+                    if (!File.Exists(tlkPath))
+                    {
+                        // If TLK doesn't exist, we can't save - just close the dialog
+                        // In a full implementation, we might want to create a new TLK file
+                        Close();
+                        return;
+                    }
+
+                    // Read the TLK file
+                    // Matching PyKotor: tlk: TLK = read_tlk(tlk_path)
+                    TLK tlk = TLKAuto.ReadTlk(tlkPath);
+                    
+                    // Resize if needed to accommodate the stringref
+                    // Matching PyKotor: if len(tlk) <= self.locstring.stringref: tlk.resize(self.locstring.stringref + 1)
+                    int stringref = LocString.StringRef;
+                    if (tlk.Count <= stringref)
+                    {
+                        tlk.Resize(stringref + 1);
+                    }
+                    
+                    // Get the text from the edit control
+                    // Matching PyKotor: tlk[self.locstring.stringref].text = self.ui.stringEdit.toPlainText()
+                    string text = _stringEdit.Text ?? "";
+                    tlk[stringref].Text = text;
+                    
+                    // Save the TLK file back to disk
+                    // Matching PyKotor: write_tlk(tlk, tlk_path)
+                    TLKAuto.WriteTlk(tlk, tlkPath, ResourceType.TLK);
+                }
+                catch (Exception ex)
+                {
+                    // Log the error - in a full implementation, this would show an error dialog
+                    // Matching PyKotor: errors are typically shown via MessageBox, but we'll log for now
+                    System.Console.WriteLine($"Error saving TLK file: {ex.Message}");
+                    System.Console.WriteLine($"Stack trace: {ex.StackTrace}");
+                    // Continue to close the dialog even if save failed
+                }
+            }
+            
+            // Matching PyKotor: super().accept()
             Close();
         }
 
