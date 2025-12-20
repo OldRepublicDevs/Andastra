@@ -51,6 +51,13 @@ namespace HolocronToolset.Editors
         private Label _statusLabel;
         private Border _statusBar;
 
+        // Error and warning line tracking
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:178-179
+        // Original: self._error_lines: set[int] = set()  # Line numbers with errors (1-indexed)
+        // Original: self._warning_lines: set[int] = set()  # Line numbers with warnings (1-indexed)
+        private HashSet<int> _errorLines;  // Line numbers with errors (1-indexed)
+        private HashSet<int> _warningLines;  // Line numbers with warnings (1-indexed)
+
         // Command palette
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:2535
         // Original: self._command_palette = CommandPalette(self)
@@ -111,6 +118,11 @@ namespace HolocronToolset.Editors
             _constants = new List<ScriptConstant>();
             _globalSettings = new GlobalSettings();
             _completionMap = new Dictionary<string, object>();
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:178-179
+            // Original: self._error_lines: set[int] = set()  # Line numbers with errors (1-indexed)
+            // Original: self._warning_lines: set[int] = set()  # Line numbers with warnings (1-indexed)
+            _errorLines = new HashSet<int>();  // Line numbers with errors (1-indexed)
+            _warningLines = new HashSet<int>();  // Line numbers with warnings (1-indexed)
 
             // Initialize UI wrapper
             _ui = new NSSEditorUi();
@@ -3793,6 +3805,20 @@ namespace HolocronToolset.Editors
         /// Exposed for testing purposes to match Python test behavior.
         /// </summary>
         public TreeView FileExplorerView => _fileExplorerView;
+
+        /// <summary>
+        /// Gets the error lines set.
+        /// Exposed for testing purposes to match Python test behavior.
+        /// Matching PyKotor implementation: editor._error_lines
+        /// </summary>
+        public HashSet<int> ErrorLines => _errorLines;
+
+        /// <summary>
+        /// Gets the warning lines set.
+        /// Exposed for testing purposes to match Python test behavior.
+        /// Matching PyKotor implementation: editor._warning_lines
+        /// </summary>
+        public HashSet<int> WarningLines => _warningLines;
 
         // Helper class to store bookmark data
         // Internal class for bookmark data (accessible to tests)
