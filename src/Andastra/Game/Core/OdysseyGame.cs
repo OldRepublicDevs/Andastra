@@ -533,6 +533,10 @@ namespace Andastra.Runtime.Game.Core
             {
                 DrawOptionsMenu();
             }
+            else if (_currentState == GameState.GraphicsOptionsMenu)
+            {
+                DrawGraphicsOptionsMenu();
+            }
             else if (_currentState == GameState.MoviesMenu)
             {
                 DrawMoviesMenu();
