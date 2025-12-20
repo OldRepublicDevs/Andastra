@@ -13,7 +13,7 @@ namespace Andastra.Parsing.Tests.Formats
     /// <summary>
     /// Comprehensive tests for Kaitai Struct compiler functionality with LIP.ksy.
     /// Tests compilation to multiple target languages and verifies compiler output.
-    /// 
+    ///
     /// Tests compilation to at least 12 languages as required:
     /// - Python, Java, JavaScript, C#, C++, Ruby, PHP, Go, Rust, Swift, Lua, Nim, Perl, Kotlin, TypeScript
     /// </summary>
@@ -106,7 +106,7 @@ namespace Andastra.Parsing.Tests.Formats
             content.Should().Contain("entry_count", "LIP.ksy should define entry_count field");
             content.Should().Contain("keyframes", "LIP.ksy should define keyframes field");
             content.Should().Contain("keyframe_entry", "LIP.ksy should define keyframe_entry type");
-            content.Should().Contain("lip_shape", "LIP.ksy should define lip_shape enum");
+            content.Should().Contain("lip_shapes", "LIP.ksy should define lip_shapes enum");
             content.Should().Contain("LIP ", "LIP.ksy should validate LIP file type");
             content.Should().Contain("V1.0", "LIP.ksy should validate V1.0 version");
         }
