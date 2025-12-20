@@ -571,6 +571,7 @@ namespace HolocronToolset.Tests.Formats
         [Fact]
         public void TestDlgReplySerializationWithLinks()
         {
+            // Matching PyKotor test_dlg_reply_serialization_with_links
             var reply = new DLGReply();
             reply.Text = LocalizedString.FromEnglish("Reply with links");
             var entry = new DLGEntry();
@@ -585,6 +586,178 @@ namespace HolocronToolset.Tests.Formats
             deserialized.Text.GetString(Language.English, Gender.Male).Should().Be("Reply with links");
             deserialized.Links.Count.Should().Be(1);
             deserialized.Links[0].ListIndex.Should().Be(2);
+        }
+
+        [Fact]
+        public void TestDlgReplySerializationAllAttributes()
+        {
+            // Matching PyKotor test_dlg_reply_serialization_all_attributes
+            var reply = new DLGReply();
+            reply.Text = LocalizedString.FromEnglish("Reply with all attributes");
+            reply.VoResRef = new ResRef("vo_resref");
+            reply.WaitFlags = 5;
+
+            var serialized = reply.ToDict();
+            var deserializedNode = DLGNode.FromDict(serialized);
+            var deserialized = deserializedNode as DLGReply;
+            deserialized.Should().NotBeNull();
+
+            deserialized.Text.GetString(Language.English, Gender.Male).Should().Be("Reply with all attributes");
+            deserialized.VoResRef.Should().Be(new ResRef("vo_resref"));
+            deserialized.WaitFlags.Should().Be(5);
+        }
+
+        [Fact]
+        public void TestDlgReplyWithNestedEntries()
+        {
+            // Matching PyKotor test_dlg_reply_with_nested_entries
+            var reply1 = new DLGReply();
+            reply1.Text.SetData(Language.English, Gender.Male, "R222");
+            var reply2 = new DLGReply();
+            reply2.Text.SetData(Language.English, Gender.Male, "R223");
+            var reply3 = new DLGReply();
+            reply3.Text.SetData(Language.English, Gender.Male, "R249");
+
+            var entry1 = new DLGEntry { Comment = "E248" };
+            var entry2 = new DLGEntry { Comment = "E221" };
+
+            reply1.Links.Add(new DLGLink(entry1));
+            entry1.Links.Add(new DLGLink(reply2));
+            reply2.Links.Add(new DLGLink(entry2));
+            entry2.Links.Add(new DLGLink(reply3));
+
+            var serialized = reply1.ToDict();
+            var deserializedNode = DLGNode.FromDict(serialized);
+            var deserialized = deserializedNode as DLGReply;
+            deserialized.Should().NotBeNull();
+
+            deserialized.Text.GetString(Language.English, Gender.Male).Should().Be("R222");
+            deserialized.Links.Count.Should().Be(1);
+            deserialized.Links[0].Node.Comment.Should().Be("E248");
+            deserialized.Links[0].Node.Links.Count.Should().Be(1);
+            var deserializedReply2 = deserialized.Links[0].Node.Links[0].Node as DLGReply;
+            deserializedReply2.Should().NotBeNull();
+            deserializedReply2.Text.GetString(Language.English, Gender.Male).Should().Be("R223");
+            deserializedReply2.Links.Count.Should().Be(1);
+            var deserializedEntry2 = deserializedReply2.Links[0].Node as DLGEntry;
+            deserializedEntry2.Should().NotBeNull();
+            deserializedEntry2.Comment.Should().Be("E221");
+            deserializedEntry2.Links.Count.Should().Be(1);
+            var deserializedReply3 = deserializedEntry2.Links[0].Node as DLGReply;
+            deserializedReply3.Should().NotBeNull();
+            deserializedReply3.Text.GetString(Language.English, Gender.Male).Should().Be("R249");
+        }
+
+        [Fact]
+        public void TestDlgReplyWithCircularReference()
+        {
+            // Matching PyKotor test_dlg_reply_with_circular_reference
+            var reply1 = new DLGReply { Text = LocalizedString.FromEnglish("R222") };
+            var reply2 = new DLGReply { Text = LocalizedString.FromEnglish("R249") };
+
+            var entry1 = new DLGEntry { Comment = "E248" };
+            var entry2 = new DLGEntry { Comment = "E221" };
+
+            reply1.Links.Add(new DLGLink(entry1));
+            entry1.Links.Add(new DLGLink(reply2));
+            reply2.Links.Add(new DLGLink(entry2));
+            entry2.Links.Add(new DLGLink(reply1)); // Circular reference
+
+            var serialized = reply1.ToDict();
+            var deserializedNode = DLGNode.FromDict(serialized);
+            var deserialized = deserializedNode as DLGReply;
+            deserialized.Should().NotBeNull();
+
+            deserialized.Text.GetString(Language.English, Gender.Male).Should().Be("R222");
+            deserialized.Links.Count.Should().Be(1);
+            deserialized.Links[0].Node.Comment.Should().Be("E248");
+            deserialized.Links[0].Node.Links.Count.Should().Be(1);
+            var deserializedReply2 = deserialized.Links[0].Node.Links[0].Node as DLGReply;
+            deserializedReply2.Should().NotBeNull();
+            deserializedReply2.Text.GetString(Language.English, Gender.Male).Should().Be("R249");
+            deserializedReply2.Links.Count.Should().Be(1);
+            var deserializedEntry2 = deserializedReply2.Links[0].Node as DLGEntry;
+            deserializedEntry2.Should().NotBeNull();
+            deserializedEntry2.Comment.Should().Be("E221");
+            deserializedEntry2.Links.Count.Should().Be(1);
+            var deserializedReply1Circular = deserializedEntry2.Links[0].Node as DLGReply;
+            deserializedReply1Circular.Should().NotBeNull();
+            deserializedReply1Circular.Text.GetString(Language.English, Gender.Male).Should().Be("R222");
+        }
+
+        [Fact]
+        public void TestDlgReplyWithMultipleLevels()
+        {
+            // Matching PyKotor test_dlg_reply_with_multiple_levels
+            var reply1 = new DLGReply { Text = LocalizedString.FromEnglish("R222") };
+            var reply2 = new DLGReply { Text = LocalizedString.FromEnglish("R223") };
+            var reply3 = new DLGReply { Text = LocalizedString.FromEnglish("R249") };
+            var reply4 = new DLGReply { Text = LocalizedString.FromEnglish("R225") };
+
+            var entry1 = new DLGEntry { Comment = "E248" };
+            var entry2 = new DLGEntry { Comment = "E221" };
+            var entry3 = new DLGEntry { Comment = "E250" };
+            var entry4 = new DLGEntry { Comment = "E224" };
+
+            reply1.Links.Add(new DLGLink(entry1));
+            reply2.Links.Add(new DLGLink(entry2));
+            entry1.Links.Add(new DLGLink(reply2));
+            entry2.Links.Add(new DLGLink(reply3)); // Reuse R249
+            reply3.Links.Add(new DLGLink(entry3));
+            entry3.Links.Add(new DLGLink(reply4));
+            reply4.Links.Add(new DLGLink(entry4));
+
+            var serialized = reply1.ToDict();
+            var deserializedNode = DLGNode.FromDict(serialized);
+            var deserialized = deserializedNode as DLGReply;
+            deserialized.Should().NotBeNull();
+
+            deserialized.Text.GetString(Language.English, Gender.Male).Should().Be("R222");
+            deserialized.Links.Count.Should().Be(1);
+            deserialized.Links[0].Node.Comment.Should().Be("E248");
+            deserialized.Links[0].Node.Links.Count.Should().Be(1);
+            var deserializedReply2 = deserialized.Links[0].Node.Links[0].Node as DLGReply;
+            deserializedReply2.Should().NotBeNull();
+            deserializedReply2.Text.GetString(Language.English, Gender.Male).Should().Be("R223");
+            deserializedReply2.Links.Count.Should().Be(1);
+            var deserializedEntry2 = deserializedReply2.Links[0].Node as DLGEntry;
+            deserializedEntry2.Should().NotBeNull();
+            deserializedEntry2.Comment.Should().Be("E221");
+            deserializedEntry2.Links.Count.Should().Be(1);
+            var deserializedReply3 = deserializedEntry2.Links[0].Node as DLGReply;
+            deserializedReply3.Should().NotBeNull();
+            deserializedReply3.Text.GetString(Language.English, Gender.Male).Should().Be("R249");
+
+            // Traverse the deserialized graph to ensure all expected nodes survived
+            var entryComments = new HashSet<string>();
+            var replyTexts = new HashSet<string>();
+            var stack = new Stack<DLGNode>();
+            stack.Push(deserialized);
+            while (stack.Count > 0)
+            {
+                var node = stack.Pop();
+                if (node is DLGEntry entry)
+                {
+                    entryComments.Add(entry.Comment);
+                }
+                else if (node is DLGReply reply)
+                {
+                    replyTexts.Add(reply.Text.GetString(Language.English, Gender.Male));
+                }
+                foreach (var childLink in node.Links)
+                {
+                    stack.Push(childLink.Node);
+                }
+            }
+
+            entryComments.Should().Contain("E248");
+            entryComments.Should().Contain("E221");
+            entryComments.Should().Contain("E250");
+            entryComments.Should().Contain("E224");
+            replyTexts.Should().Contain("R222");
+            replyTexts.Should().Contain("R223");
+            replyTexts.Should().Contain("R249");
+            replyTexts.Should().Contain("R225");
         }
 
         [Fact]
