@@ -19,6 +19,9 @@ using Andastra.Parsing.Resource;
 using HolocronToolset.Common;
 using HolocronToolset.Data;
 using HolocronToolset.Dialogs;
+using Window = Avalonia.Controls.Window;
+using TLK = Andastra.Parsing.Formats.TLK.TLK;
+using TLKEntryViewModel = HolocronToolset.Editors.TLKEntryViewModel;
 
 namespace HolocronToolset.Editors
 {

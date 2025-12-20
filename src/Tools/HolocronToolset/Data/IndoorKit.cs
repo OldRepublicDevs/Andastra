@@ -1,10 +1,18 @@
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Numerics;
+using System.IO;
 using Andastra.Parsing;
+using Andastra.Parsing.Common;
 using Andastra.Parsing.Formats.BWM;
 using Andastra.Parsing.Formats.GFF;
+using Andastra.Parsing.Formats.LYT;
 using Andastra.Parsing.Formats.MDL;
+using Andastra.Parsing.Resource;
 using Andastra.Parsing.Resource.Generics;
+using Andastra.Parsing.Logger;
+using Vector3 = System.Numerics.Vector3;
 
 namespace HolocronToolset.Data
 {
@@ -140,6 +148,7 @@ namespace HolocronToolset.Data
         public string SourceModule { get; set; }
         private HTInstallation _installation;
         private bool _loaded;
+        private Andastra.Parsing.Common.Module _module;
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/data/indoorkit/module_converter.py:59-74
         // Original: def ensure_loaded(self) -> bool:
@@ -153,12 +162,12 @@ namespace HolocronToolset.Data
             _loaded = true;
             try
             {
-                // TODO: Implement _load_module_components() when Module class is available
-                // TODO: STUB - For now, return false to indicate components weren't loaded
-                return false;
+                _LoadModuleComponents();
+                return Components.Count > 0;
             }
-            catch
+            catch (Exception ex)
             {
+                new RobustLogger().Warning($"Failed to load module kit for '{ModuleRoot}': {ex.Message}");
                 return false;
             }
         }
@@ -257,8 +266,4 @@ namespace HolocronToolset.Data
         public void ClearCache()
         {
             _cache.Clear();
-            _moduleNames = null;
-        }
-    }
-}
-
+      

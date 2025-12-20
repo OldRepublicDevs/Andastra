@@ -28,12 +28,12 @@ namespace Andastra.Runtime.Engines.Odyssey.Data
     public class GameDataManager
     {
         private readonly Installation _installation;
-        private readonly Dictionary<string, 2DA> _tableCache;
+        private readonly Dictionary<string, TwoDA> _tableCache;
 
         public GameDataManager(Installation installation)
         {
             _installation = installation ?? throw new ArgumentNullException("installation");
-            _tableCache = new Dictionary<string, 2DA>(StringComparer.OrdinalIgnoreCase);
+            _tableCache = new Dictionary<string, TwoDA>(StringComparer.OrdinalIgnoreCase);
         }
 
         #region Table Access
@@ -44,7 +44,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Data
         /// <param name="tableName">Table name without extension (e.g., "appearance")</param>
         /// <returns>The loaded 2DA, or null if not found</returns>
         [CanBeNull]
-        public 2DA GetTable(string tableName)
+        public TwoDA GetTable(string tableName)
         {
             if (string.IsNullOrEmpty(tableName))
             {
@@ -52,7 +52,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Data
             }
 
             // Check cache first
-            2DA cached;
+            TwoDA cached;
             if (_tableCache.TryGetValue(tableName, out cached))
             {
                 return cached;
@@ -67,7 +67,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Data
                     return null;
                 }
 
-                2DA table = 2DA.FromBytes(resource.Data);
+                TwoDA table = TwoDA.FromBytes(resource.Data);
                 _tableCache[tableName] = table;
                 return table;
             }
@@ -104,7 +104,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Data
         [CanBeNull]
         public AppearanceData GetAppearance(int appearanceType)
         {
-            2DA table = GetTable("appearance");
+            TwoDA table = GetTable("appearance");
             if (table == null || appearanceType < 0 || appearanceType >= table.GetHeight())
             {
                 return null;
@@ -139,7 +139,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Data
         [CanBeNull]
         public ClassData GetClass(int classId)
         {
-            2DA table = GetTable("classes");
+            TwoDA table = GetTable("classes");
             if (table == null || classId < 0 || classId >= table.GetHeight())
             {
                 return null;
@@ -172,7 +172,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Data
         [CanBeNull]
         public BaseItemData GetBaseItem(int baseItem)
         {
-            2DA table = GetTable("baseitems");
+            TwoDA table = GetTable("baseitems");
             if (table == null || baseItem < 0 || baseItem >= table.GetHeight())
             {
                 return null;
@@ -207,7 +207,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Data
         [CanBeNull]
         public FeatData GetFeat(int featId)
         {
-            2DA table = GetTable("feat");
+            TwoDA table = GetTable("feat"););
             if (table == null || featId < 0 || featId >= table.GetHeight())
             {
                 return null;
@@ -241,7 +241,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Data
         [CanBeNull]
         public SurfaceMatData GetSurfaceMaterial(int surfaceId)
         {
-            2DA table = GetTable("surfacemat");
+            TwoDA table = GetTable("surfacemat");
             if (table == null || surfaceId < 0 || surfaceId >= table.GetHeight())
             {
                 return null;
@@ -280,7 +280,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Data
         [CanBeNull]
         public PlaceableData GetPlaceable(int placeableType)
         {
-            2DA table = GetTable("placeables");
+            TwoDA table = GetTable("placeables");
             if (table == null || placeableType < 0 || placeableType >= table.GetHeight())
             {
                 return null;
@@ -307,7 +307,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Data
         [CanBeNull]
         public DoorData GetDoor(int doorType)
         {
-            2DA table = GetTable("genericdoors");
+            TwoDA table = GetTable("genericdoors");
             if (table == null || doorType < 0 || doorType >= table.GetHeight())
             {
                 return null;
@@ -342,7 +342,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Data
         [CanBeNull]
         public SpellData GetSpell(int spellId)
         {
-            2DA table = GetTable("spells");
+            TwoDA table = GetTable("spells");
             if (table == null || spellId < 0 || spellId >= table.GetHeight())
             {
                 return null;
@@ -398,7 +398,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Data
                 FeatData feat = GetFeat(spell.FeatId);
                 if (feat != null)
                 {
-                    2DA featTable = GetTable("feat");
+                    TwoDA featTable = GetTable("feat");
                     if (featTable != null)
                     {
                         TwoDARow featRow = featTable.GetRow(spell.FeatId);

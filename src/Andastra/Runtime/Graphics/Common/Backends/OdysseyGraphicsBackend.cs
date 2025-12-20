@@ -336,6 +336,9 @@ namespace Andastra.Runtime.Graphics.Common.Backends
         protected delegate void GlProgramLocalParameter4dvArbDelegate(uint target, uint index, double[] @params);
 
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        protected delegate void GlDisableDelegate(uint cap);
+
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         protected delegate bool WglMakeCurrentDelegate(IntPtr hdc, IntPtr hglrc);
 
         // OpenGL constants (common to both KOTOR1 and KOTOR2)

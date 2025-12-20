@@ -73,7 +73,7 @@ namespace Andastra.Parsing.Tests.Formats
 
             // Test writing to directory (should raise PermissionError on Windows, IsADirectoryError on Unix)
             // Python: write_2da(TwoDA(), ".", ResourceType.TwoDA)
-            Action act1 = () => WriteTwoDA(twoda, ".", ResourceType.TwoDA);
+            Action act1 = () => Write2DA(twoda, ".", ResourceType.TwoDA);
             if (System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Windows))
             {
                 act1.Should().Throw<UnauthorizedAccessException>();
@@ -85,7 +85,7 @@ namespace Andastra.Parsing.Tests.Formats
 
             // Test invalid resource type (Python raises ValueError for ResourceType.INVALID)
             // Python: write_2da(2DA(), ".", ResourceType.INVALID)
-            Action act2 = () => WriteTwoDA(twoda, ".", ResourceType.INVALID);
+            Action act2 = () => Write2DA(twoda, ".", ResourceType.INVALID);
             act2.Should().Throw<ArgumentException>().WithMessage("*Unsupported format*");
         }
 

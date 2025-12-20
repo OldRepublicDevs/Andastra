@@ -48,7 +48,7 @@ namespace KotorDiff.Diff
 
             if (ext == "2da" || ext == "twoda")
             {
-                var result = _structuredEngine.Compare2Da(resA.Data, resB.Data, resA.Identifier, resB.Identifier);
+                var result = _structuredEngine.Compare2DA(resA.Data, resB.Data, resA.Identifier, resB.Identifier);
                 diffResult = new DiffResult<object>
                 {
                     DiffType = result.DiffType,

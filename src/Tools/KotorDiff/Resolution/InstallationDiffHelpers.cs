@@ -350,7 +350,7 @@ namespace KotorDiff.Resolution
                 if (extLower == "2da")
                 {
                     var empty2da = new Andastra.Parsing.Formats.TwoDA.TwoDA();
-                    return Andastra.Parsing.Formats.TwoDA.TwoDAAuto.BytesTwoDA(empty2da, ResourceType.TwoDA);
+                    return Andastra.Parsing.Formats.TwoDA.TwoDAAuto.Bytes2DA(empty2da, ResourceType.TwoDA);
                 }
 
                 // For SSF files, create empty SSF

@@ -62,7 +62,7 @@ namespace Andastra.Utility
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/utility/common/more_collections.py:235-256
         // Original: def __eq__(self, other: object) -> bool:
-        public override bool Equals(object obj)
+        public override bool Equals([CanBeNull] object obj)
         {
             if (ReferenceEquals(this, obj))
             {

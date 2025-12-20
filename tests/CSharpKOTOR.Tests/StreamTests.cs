@@ -2,7 +2,7 @@
 using System.IO;
 using System.Text;
 using NUnit.Framework;
-using AuroraEngine.Common.Common;
+using Andastra.Parsing.Common;
 
 namespace AuroraEngine.Common.Tests
 {
@@ -62,28 +62,28 @@ namespace AuroraEngine.Common.Tests
         [Test]
         public void TestRead()
         {
-            Assert.AreEqual(1, _reader1.ReadUInt8());
-            Assert.AreEqual(2, _reader1.ReadUInt16());
-            Assert.AreEqual(3U, _reader1.ReadUInt32());
-            Assert.AreEqual(4UL, _reader1.ReadUInt64());
+            Assert.That(_reader1.ReadUInt8(), Is.EqualTo(1));
+            Assert.That(_reader1.ReadUInt16(), Is.EqualTo(2));
+            Assert.That(_reader1.ReadUInt32(), Is.EqualTo(3U));
+            Assert.That(_reader1.ReadUInt64(), Is.EqualTo(4UL));
 
-            Assert.AreEqual(3U, _reader1b.ReadUInt32());
-            Assert.AreEqual(4UL, _reader1b.ReadUInt64());
+            Assert.That(_reader1b.ReadUInt32(), Is.EqualTo(3U));
+            Assert.That(_reader1b.ReadUInt64(), Is.EqualTo(4UL));
 
             var reader2 = RawBinaryReader.FromBytes(_data2);
-            Assert.AreEqual("helloworld", reader2.ReadString(10));
+            Assert.That(reader2.ReadString(10), Is.EqualTo("helloworld"));
             reader2.Dispose();
 
             var reader3 = RawBinaryReader.FromBytes(_data3);
-            Assert.AreEqual(-1, reader3.ReadInt8());
-            Assert.AreEqual(-2, reader3.ReadInt16());
-            Assert.AreEqual(-3, reader3.ReadInt32());
-            Assert.AreEqual(-4, reader3.ReadInt64());
+            Assert.That(reader3.ReadInt8(), Is.EqualTo(-1));
+            Assert.That(reader3.ReadInt16(), Is.EqualTo(-2));
+            Assert.That(reader3.ReadInt32(), Is.EqualTo(-3));
+            Assert.That(reader3.ReadInt64(), Is.EqualTo(-4));
             reader3.Dispose();
 
             var reader4 = RawBinaryReader.FromBytes(_data4);
-            Assert.AreEqual(-123.456f, reader4.ReadSingle(), 0.001f);
-            Assert.AreEqual(123.457, reader4.ReadDouble(), 0.000001);
+            Assert.That(reader4.ReadSingle(), Is.EqualTo(-123.456f).Within(0.001f));
+            Assert.That(reader4.ReadDouble(), Is.EqualTo(123.457).Within(0.000001));
             reader4.Dispose();
         }
 
@@ -91,26 +91,26 @@ namespace AuroraEngine.Common.Tests
         public void TestSize()
         {
             _reader1.ReadBytes(4);
-            Assert.AreEqual(15, _reader1.Size);
+            Assert.That(_reader1.Size, Is.EqualTo(15));
 
             _reader1b.ReadBytes(4);
-            Assert.AreEqual(12, _reader1b.Size);
+            Assert.That(_reader1b.Size, Is.EqualTo(12));
 
             _reader1c.ReadBytes(1);
-            Assert.AreEqual(4, _reader1c.Size);
+            Assert.That(_reader1c.Size, Is.EqualTo(4));
         }
 
         [Test]
         public void TestTrueSize()
         {
             _reader1.ReadBytes(4);
-            Assert.AreEqual(15, _reader1.TrueSize());
+            Assert.That(_reader1.TrueSize(), Is.EqualTo(15));
 
             _reader1b.ReadBytes(4);
-            Assert.AreEqual(15, _reader1b.TrueSize());
+            Assert.That(_reader1b.TrueSize(), Is.EqualTo(15));
 
             _reader1c.ReadBytes(4);
-            Assert.AreEqual(15, _reader1c.TrueSize());
+            Assert.That(_reader1c.TrueSize(), Is.EqualTo(15));
         }
 
         [Test]
@@ -118,15 +118,15 @@ namespace AuroraEngine.Common.Tests
         {
             _reader1.ReadBytes(3);
             _reader1.ReadBytes(3);
-            Assert.AreEqual(6, _reader1.Position);
+            Assert.That(_reader1.Position, Is.EqualTo(6));
 
             _reader1b.ReadBytes(1);
             _reader1b.ReadBytes(2);
-            Assert.AreEqual(3, _reader1b.Position);
+            Assert.That(_reader1b.Position, Is.EqualTo(3));
 
             _reader1c.ReadBytes(1);
             _reader1c.ReadBytes(2);
-            Assert.AreEqual(3, _reader1c.Position);
+            Assert.That(_reader1c.Position, Is.EqualTo(3));
         }
 
         [Test]
@@ -134,18 +134,18 @@ namespace AuroraEngine.Common.Tests
         {
             _reader1.ReadBytes(4);
             _reader1.Seek(7);
-            Assert.AreEqual(7, _reader1.Position);
-            Assert.AreEqual(4UL, _reader1.ReadUInt64());
+            Assert.That(_reader1.Position, Is.EqualTo(7));
+            Assert.That(_reader1.ReadUInt64(), Is.EqualTo(4UL));
 
             _reader1b.ReadBytes(3);
             _reader1b.Seek(4);
-            Assert.AreEqual(4, _reader1b.Position);
-            Assert.AreEqual(4U, _reader1b.ReadUInt32());
+            Assert.That(_reader1b.Position, Is.EqualTo(4));
+            Assert.That(_reader1b.ReadUInt32(), Is.EqualTo(4U));
 
             _reader1c.ReadBytes(3);
             _reader1c.Seek(2);
-            Assert.AreEqual(2, _reader1c.Position);
-            Assert.AreEqual(0, _reader1c.ReadUInt16());
+            Assert.That(_reader1c.Position, Is.EqualTo(2));
+            Assert.That(_reader1c.ReadUInt16(), Is.EqualTo(0));
         }
 
         [Test]
@@ -154,13 +154,13 @@ namespace AuroraEngine.Common.Tests
             _reader1.ReadUInt32();
             _reader1.Skip(2);
             _reader1.Skip(1);
-            Assert.AreEqual(4UL, _reader1.ReadUInt64());
+            Assert.That(_reader1.ReadUInt64(), Is.EqualTo(4UL));
 
             _reader1b.Skip(4);
-            Assert.AreEqual(4UL, _reader1b.ReadUInt64());
+            Assert.That(_reader1b.ReadUInt64(), Is.EqualTo(4UL));
 
             _reader1c.Skip(2);
-            Assert.AreEqual(0, _reader1c.ReadUInt16());
+            Assert.That(_reader1c.ReadUInt16(), Is.EqualTo(0));
         }
 
         [Test]
@@ -169,13 +169,13 @@ namespace AuroraEngine.Common.Tests
             _reader1.ReadUInt32();
             _reader1.Skip(2);
             _reader1.Skip(1);
-            Assert.AreEqual(8, _reader1.Remaining);
+            Assert.That(_reader1.Remaining, Is.EqualTo(8));
 
             _reader1b.ReadUInt32();
-            Assert.AreEqual(8, _reader1b.Remaining);
+            Assert.That(_reader1b.Remaining, Is.EqualTo(8));
 
             _reader1c.ReadUInt16();
-            Assert.AreEqual(2, _reader1c.Remaining);
+            Assert.That(_reader1c.Remaining, Is.EqualTo(2));
         }
 
         [Test]
@@ -183,14 +183,14 @@ namespace AuroraEngine.Common.Tests
         {
             _reader1.Skip(3);
             byte[] peeked = _reader1.Peek(1);
-            Assert.AreEqual(new byte[] { 0x03 }, peeked);
+            Assert.That(peeked, Is.EqualTo(new byte[] { 0x03 }));
 
             _reader1b.Skip(4);
             byte[] peeked2 = _reader1b.Peek(1);
-            Assert.AreEqual(new byte[] { 0x04 }, peeked2);
+            Assert.That(peeked2, Is.EqualTo(new byte[] { 0x04 }));
 
             byte[] peeked3 = _reader1c.Peek(1);
-            Assert.AreEqual(new byte[] { 0x03 }, peeked3);
+            Assert.That(peeked3, Is.EqualTo(new byte[] { 0x03 }));
         }
 
         [Test]
@@ -204,7 +204,7 @@ namespace AuroraEngine.Common.Tests
                 reader.Seek(5);
                 reader.Skip(2);
                 int actualPos = reader.Position;
-                Assert.AreEqual(expectedPos, actualPos);
+                Assert.That(actualPos, Is.EqualTo(expectedPos));
             }
         }
 
@@ -230,19 +230,19 @@ namespace AuroraEngine.Common.Tests
             using (var stream = new MemoryStream(inputData))
             using (var reader = RawBinaryReader.FromStream(stream))
             {
-                Assert.AreEqual(255, reader.ReadUInt8());
-                Assert.AreEqual(65281, reader.ReadUInt16());
-                Assert.AreEqual(4294967042U, reader.ReadUInt32());
-                Assert.AreEqual(18446744073709551363UL, reader.ReadUInt64());
-                Assert.AreEqual(-255, reader.ReadInt16());
-                Assert.AreEqual(-254, reader.ReadInt32());
-                Assert.AreEqual(-253, reader.ReadInt64());
-                Assert.AreEqual(1.0f, reader.ReadSingle(), 0.00001f);
-                Assert.AreEqual(1.0, reader.ReadDouble(), 0.0000001);
-                Assert.AreEqual("Hello, world!", reader.ReadString(13));
-                Assert.AreEqual("Hello, world!", reader.ReadTerminatedString('\0'));
+                Assert.That(reader.ReadUInt8(), Is.EqualTo(255));
+                Assert.That(reader.ReadUInt16(), Is.EqualTo(65281));
+                Assert.That(reader.ReadUInt32(), Is.EqualTo(4294967042U));
+                Assert.That(reader.ReadUInt64(), Is.EqualTo(18446744073709551363UL));
+                Assert.That(reader.ReadInt16(), Is.EqualTo(-255));
+                Assert.That(reader.ReadInt32(), Is.EqualTo(-254));
+                Assert.That(reader.ReadInt64(), Is.EqualTo(-253));
+                Assert.That(reader.ReadSingle(), Is.EqualTo(1.0f).Within(0.00001f));
+                Assert.That(reader.ReadDouble(), Is.EqualTo(1.0).Within(0.0000001));
+                Assert.That(reader.ReadString(13), Is.EqualTo("Hello, world!"));
+                Assert.That(reader.ReadTerminatedString('\0'), Is.EqualTo("Hello, world!"));
                 byte[] bytes = reader.ReadBytes(4);
-                Assert.AreEqual(new byte[] { 0x01, 0x02, 0x03, 0x04 }, bytes);
+                Assert.That(bytes, Is.EqualTo(new byte[] { 0x01, 0x02, 0x03, 0x04 }));
             }
         }
 
@@ -264,14 +264,14 @@ namespace AuroraEngine.Common.Tests
             using (var stream = new MemoryStream(inputData))
             using (var reader = RawBinaryReader.FromStream(stream))
             {
-                Assert.AreEqual(65281, reader.ReadUInt16(true));
-                Assert.AreEqual(4294967042U, reader.ReadUInt32(true));
-                Assert.AreEqual(18446744073709551363UL, reader.ReadUInt64(true));
-                Assert.AreEqual(-255, reader.ReadInt16(true));
-                Assert.AreEqual(-254, reader.ReadInt32(true));
-                Assert.AreEqual(-253, reader.ReadInt64(true));
-                Assert.AreEqual(1.0f, reader.ReadSingle(true), 0.00001f);
-                Assert.AreEqual(1.0, reader.ReadDouble(true), 0.0000001);
+                Assert.That(reader.ReadUInt16(true), Is.EqualTo(65281));
+                Assert.That(reader.ReadUInt32(true), Is.EqualTo(4294967042U));
+                Assert.That(reader.ReadUInt64(true), Is.EqualTo(18446744073709551363UL));
+                Assert.That(reader.ReadInt16(true), Is.EqualTo(-255));
+                Assert.That(reader.ReadInt32(true), Is.EqualTo(-254));
+                Assert.That(reader.ReadInt64(true), Is.EqualTo(-253));
+                Assert.That(reader.ReadSingle(true), Is.EqualTo(1.0f).Within(0.00001f));
+                Assert.That(reader.ReadDouble(true), Is.EqualTo(1.0).Within(0.0000001));
             }
         }
 
@@ -293,9 +293,9 @@ namespace AuroraEngine.Common.Tests
                 {
                     LocalizedString readLocString = reader.ReadLocalizedString();
 
-                    Assert.AreEqual(originalLocString.StringRef, readLocString.StringRef);
-                    Assert.AreEqual("Hello World", readLocString.Get(Language.English, Gender.Male));
-                    Assert.AreEqual("Bonjour le monde", readLocString.Get(Language.French, Gender.Female));
+                    Assert.That(originalLocString.StringRef, Is.EqualTo(readLocString.StringRef));
+                    Assert.That(readLocString.Get(Language.English, Gender.Male), Is.EqualTo("Hello World"));
+                    Assert.That(readLocString.Get(Language.French, Gender.Female), Is.EqualTo("Bonjour le monde"));
                 }
             }
         }

@@ -7,6 +7,7 @@ using System.Linq;
 using Andastra.Parsing;
 using Andastra.Parsing.Common;
 using JetBrains.Annotations;
+using Game = Andastra.Parsing.Common.Game;
 
 namespace KotorDiff.Cache
 {
@@ -120,7 +121,7 @@ namespace KotorDiff.Cache
         [CanBeNull]
         public static object RestoreStrrefCacheFromCache(
             DiffCache cache,
-            Game? game = null)
+            [CanBeNull] Game game = null)
         {
             if (cache.StrrefCacheData == null)
             {

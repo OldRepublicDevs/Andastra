@@ -11,7 +11,8 @@
     <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
     <IsPackable>false</IsPackable>
-    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
     <TargetFrameworks></TargetFrameworks>
     <!-- Helper to append without duplicate semicolons -->
     <TargetFrameworks Condition="'$(TargetFrameworks)' != ''">
@@ -22,7 +23,7 @@
       $(TargetFrameworks);net10
     </TargetFrameworks>
     <TargetFrameworks Condition="$([MSBuild]::VersionGreaterThanOrEquals('$(NETCoreSdkVersion)', '9.0.0'))">
-      $(TargetFrameworks);net9
+      $(TargetFrameworks);net9.0
     </TargetFrameworks>
     <TargetFrameworks Condition="'$(TargetFrameworks)' == ''">net9.0</TargetFrameworks>
   </PropertyGroup>

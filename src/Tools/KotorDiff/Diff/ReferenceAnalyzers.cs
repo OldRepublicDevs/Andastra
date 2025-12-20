@@ -280,16 +280,16 @@ namespace KotorDiff.Diff
                 bool isK1 = game.IsK1();
                 bool isK2 = game.IsK2();
                 logFunc($"Determining game-specific 2DA columns: game={game}, is_k1={isK1}, is_k2={isK2}");
-                Dictionary<string, HashSet<string>> relevant2DaFilenames;
+                Dictionary<string, HashSet<string>> relevant2DAFilenames;
                 if (isK1)
                 {
-                    relevant2DaFilenames = TwoDARegistry.ColumnsFor("strref", useK2: false);
-                    logFunc($"Using K1 2DA definitions: game={game}, num_2da_files={relevant2DaFilenames.Count}");
+                    relevant2DAFilenames = TwoDARegistry.ColumnsFor("strref", useK2: false);
+                    logFunc($"Using K1 2DA definitions: game={game}, num_2da_files={relevant2DAFilenames.Count}");
                 }
                 else if (isK2)
                 {
-                    relevant2DaFilenames = TwoDARegistry.ColumnsFor("strref", useK2: true);
-                    logFunc($"Using K2 2DA definitions: game={game}, num_2da_files={relevant2DaFilenames.Count}");
+                    relevant2DAFilenames = TwoDARegistry.ColumnsFor("strref", useK2: true);
+                    logFunc($"Using K2 2DA definitions: game={game}, num_2da_files={relevant2DAFilenames.Count}");
                 }
                 else
                 {
@@ -298,7 +298,7 @@ namespace KotorDiff.Diff
                 }
 
                 string searchType = isInstallation ? "installation" : "folder";
-                int twodaCount = relevant2DaFilenames.Count;
+                int twodaCount = relevant2DAFilenames.Count;
                 logFunc($"Searching for StrRef references: search_type={searchType}, path={installationOrFolderPath}, game={game}, twoda_file_count={twodaCount}");
 
                 // For each modified/new StrRef, find all references in the ENTIRE installation/folder
@@ -345,11 +345,11 @@ namespace KotorDiff.Diff
                                 try
                                 {
                                     string fileNameLower = Path.GetFileName(filePath).ToLowerInvariant();
-                                    if (restype == ResourceType.TwoDA && relevant2DaFilenames.ContainsKey(fileNameLower))
+                                    if (restype == ResourceType.TwoDA && relevant2DAFilenames.ContainsKey(fileNameLower))
                                     {
                                         byte[] fileData = File.ReadAllBytes(filePath);
-                                        2DA twodaObj = new TwoDABinaryReader(fileData).Load();
-                                        HashSet<string> columnsWithStrrefs = relevant2DaFilenames[fileNameLower];
+                                        TwoDA twodaObj = new TwoDABinaryReader(fileData).Load();
+                                        HashSet<string> columnsWithStrrefs = relevant2DAFilenames[fileNameLower];
 
                                         for (int rowIdx = 0; rowIdx < twodaObj.GetHeight(); rowIdx++)
                                         {
@@ -436,13 +436,13 @@ namespace KotorDiff.Diff
                             logFunc($"  [{idx}/{foundResources.Count}] Patching {filename} (StrRef {oldStrref} → StrRef{tokenId})");
 
                             // Handle 2DA files
-                            if (relevant2DaFilenames.ContainsKey(filename) && restype == ResourceType.TwoDA)
+                            if (relevant2DAFilenames.ContainsKey(filename) && restype == ResourceType.TwoDA)
                             {
                                 try
                                 {
                                     byte[] resourceData = resource.GetData();
-                                    2DA twodaObj = new TwoDABinaryReader(resourceData).Load();
-                                    HashSet<string> columnsWithStrrefs = relevant2DaFilenames[filename];
+                                    TwoDA twodaObj = new TwoDABinaryReader(resourceData).Load();
+                                    HashSet<string> columnsWithStrrefs = relevant2DAFilenames[filename];
 
                                     // Find all cells containing this StrRef
                                     for (int rowIdx = 0; rowIdx < twodaObj.GetHeight(); rowIdx++)
@@ -650,7 +650,7 @@ namespace KotorDiff.Diff
 
         // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/analyzers.py:1333-1508
         // Original: def analyze_2da_memory_references(...): ...
-        public static void Analyze2DaMemoryReferences(
+        public static void Analyze2DAMemoryReferences(
             List<Modifications2DA> twodaModifications,
             string installationOrFolderPath,
             List<ModificationsGFF> gffModifications,
@@ -714,7 +714,7 @@ namespace KotorDiff.Diff
                         try
                         {
                             // Try to find the modded 2DA file
-                            string modded2daPath = Find2DaFile(installationOrFolderPath, twodaFilename);
+                            string modded2daPath = Find2DAFile(installationOrFolderPath, twodaFilename);
                             if (!string.IsNullOrEmpty(modded2daPath) && File.Exists(modded2daPath))
                             {
                                 var modded2da = new TwoDABinaryReader(modded2daPath).Load();
@@ -970,7 +970,7 @@ namespace KotorDiff.Diff
                             GFF gffObj = new GFFBinaryReader(data).Load();
 
                             // Search for fields matching this 2DA reference
-                            List<PurePath> fieldPaths = Find2DaRefInGffStruct(
+                            List<PurePath> fieldPaths = Find2DARefInGffStruct(
                                 gffObj.Root,
                                 fieldNames,
                                 rowIndex,
@@ -1022,7 +1022,7 @@ namespace KotorDiff.Diff
 
         // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/analyzers.py:1510-1549
         // Original: def _find_2da_ref_in_gff_struct(...): ...
-        private static List<PurePath> Find2DaRefInGffStruct(
+        private static List<PurePath> Find2DARefInGffStruct(
             GFFStruct gffStruct,
             List<string> fieldNames,
             int targetValue,
@@ -1086,7 +1086,7 @@ namespace KotorDiff.Diff
                 bool isStructValue = value is GFFStruct;
                 if (isStruct && isStructValue)
                 {
-                    var nestedLocations = Find2DaRefInGffStruct((GFFStruct)value, fieldNames, targetValue, fieldPath);
+                    var nestedLocations = Find2DARefInGffStruct((GFFStruct)value, fieldNames, targetValue, fieldPath);
                     locations.AddRange(nestedLocations);
                 }
 
@@ -1102,7 +1102,7 @@ namespace KotorDiff.Diff
                         if (item != null)
                         {
                             var itemPath = fieldPath / idx.ToString();
-                            var itemLocations = Find2DaRefInGffStruct(item, fieldNames, targetValue, itemPath);
+                            var itemLocations = Find2DARefInGffStruct(item, fieldNames, targetValue, itemPath);
                             locations.AddRange(itemLocations);
                         }
                         idx++;
@@ -1163,7 +1163,7 @@ namespace KotorDiff.Diff
         }
 
         // Helper method to find a 2DA file in the installation/folder
-        private static string Find2DaFile(string installationOrFolderPath, string twodaFilename)
+        private static string Find2DAFile(string installationOrFolderPath, string twodaFilename)
         {
             if (string.IsNullOrEmpty(installationOrFolderPath) || string.IsNullOrEmpty(twodaFilename))
             {

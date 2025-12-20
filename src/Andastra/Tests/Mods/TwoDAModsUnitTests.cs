@@ -18,7 +18,7 @@ namespace Andastra.Parsing.Tests.Mods
     /// </summary>
     public class TwoDAModsUnitTests
     {
-        private static TwoDAFile CreateTestTwoDA(string[] columns, params (string label, string[] values)[] rows)
+        private static TwoDAFile CreateTest2DA(string[] columns, params (string label, string[] values)[] rows)
         {
             var twoda = new TwoDAFile(columns.ToList());
             foreach ((string label, string[] values) in rows)
@@ -36,7 +36,7 @@ namespace Andastra.Parsing.Tests.Mods
         [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ChangeRow_ByRowIndex_ShouldModifyCorrectRow()
         {
-            TwoDAFile twoda = CreateTestTwoDA(
+            TwoDAFile twoda = CreateTest2DA(
                 new[] { "Col1", "Col2", "Col3" },
                 ("0", new[] { "a", "b", "c" }),
                 ("1", new[] { "d", "e", "f" })
@@ -61,7 +61,7 @@ namespace Andastra.Parsing.Tests.Mods
         [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ChangeRow_ByRowLabel_ShouldModifyCorrectRow()
         {
-            TwoDAFile twoda = CreateTestTwoDA(
+            TwoDAFile twoda = CreateTest2DA(
                 new[] { "Col1", "Col2", "Col3" },
                 ("0", new[] { "a", "b", "c" }),
                 ("1", new[] { "d", "e", "f" })
@@ -86,7 +86,7 @@ namespace Andastra.Parsing.Tests.Mods
         [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ChangeRow_ByLabelIndex_ShouldModifyCorrectRow()
         {
-            TwoDAFile twoda = CreateTestTwoDA(
+            TwoDAFile twoda = CreateTest2DA(
                 new[] { "label", "Col2", "Col3" },
                 ("0", new[] { "a", "b", "c" }),
                 ("1", new[] { "d", "e", "f" })
@@ -111,7 +111,7 @@ namespace Andastra.Parsing.Tests.Mods
         [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ChangeRow_WithTLKMemory_ShouldUseMemoryValue()
         {
-            TwoDAFile twoda = CreateTestTwoDA(
+            TwoDAFile twoda = CreateTest2DA(
                 new[] { "Col1", "Col2", "Col3" },
                 ("0", new[] { "a", "b", "c" }),
                 ("1", new[] { "d", "e", "f" })
@@ -145,7 +145,7 @@ namespace Andastra.Parsing.Tests.Mods
         [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ChangeRow_With2DAMemory_ShouldUseMemoryValue()
         {
-            TwoDAFile twoda = CreateTestTwoDA(
+            TwoDAFile twoda = CreateTest2DA(
                 new[] { "Col1", "Col2", "Col3" },
                 ("0", new[] { "a", "b", "c" }),
                 ("1", new[] { "d", "e", "f" })
@@ -178,7 +178,7 @@ namespace Andastra.Parsing.Tests.Mods
         [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ChangeRow_WithHigh_ShouldCalculateHighestValue()
         {
-            TwoDAFile twoda = CreateTestTwoDA(
+            TwoDAFile twoda = CreateTest2DA(
                 new[] { "Col1", "Col2", "Col3" },
                 ("0", new[] { " ", "3", "5" }),
                 ("1", new[] { "2", "4", "6" })
@@ -209,7 +209,7 @@ namespace Andastra.Parsing.Tests.Mods
         [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ChangeRow_Store2DAMemoryRowIndex_ShouldStoreIndex()
         {
-            TwoDAFile twoda = CreateTestTwoDA(
+            TwoDAFile twoda = CreateTest2DA(
                 new[] { "Col1", "Col2", "Col3" },
                 ("0", new[] { "a", "b", "c" }),
                 ("1", new[] { "d", "e", "f" })
@@ -238,7 +238,7 @@ namespace Andastra.Parsing.Tests.Mods
         [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ChangeRow_Store2DAMemoryRowLabel_ShouldStoreLabel()
         {
-            TwoDAFile twoda = CreateTestTwoDA(
+            TwoDAFile twoda = CreateTest2DA(
                 new[] { "Col1", "Col2", "Col3" },
                 ("0", new[] { "a", "b", "c" }),
                 ("r1", new[] { "d", "e", "f" })
@@ -267,7 +267,7 @@ namespace Andastra.Parsing.Tests.Mods
         [Fact(Timeout = 120000)] // 2 minutes timeout
         public void ChangeRow_Store2DAMemoryColumnLabel_ShouldStoreValue()
         {
-            TwoDAFile twoda = CreateTestTwoDA(
+            TwoDAFile twoda = CreateTest2DA(
                 new[] { "label", "Col2", "Col3" },
                 ("0", new[] { "a", "b", "c" }),
                 ("1", new[] { "d", "e", "f" })
@@ -296,7 +296,7 @@ namespace Andastra.Parsing.Tests.Mods
         [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddRow_AutoRowLabel_ShouldIncrementFromMax()
         {
-            TwoDAFile twoda = CreateTestTwoDA(new[] { "Col1" }, ("0", new string[0]));
+            TwoDAFile twoda = CreateTest2DA(new[] { "Col1" }, ("0", new string[0]));
 
             var memory = new PatcherMemory();
             var logger = new PatchLogger();
@@ -316,7 +316,7 @@ namespace Andastra.Parsing.Tests.Mods
         [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddRow_ExplicitRowLabel_ShouldUseProvidedLabel()
         {
-            TwoDAFile twoda = CreateTestTwoDA(new[] { "Col1" });
+            TwoDAFile twoda = CreateTest2DA(new[] { "Col1" });
 
             var memory = new PatcherMemory();
             var logger = new PatchLogger();
@@ -333,7 +333,7 @@ namespace Andastra.Parsing.Tests.Mods
         [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddRow_ExclusiveColumnNotExists_ShouldAddRow()
         {
-            TwoDAFile twoda = CreateTestTwoDA(
+            TwoDAFile twoda = CreateTest2DA(
                 new[] { "Col1", "Col2", "Col3" },
                 ("0", new[] { "a", "b", "c" }),
                 ("1", new[] { "d", "e", "f" })
@@ -367,7 +367,7 @@ namespace Andastra.Parsing.Tests.Mods
         [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddRow_ExclusiveColumnExists_ShouldUpdateExisting()
         {
-            TwoDAFile twoda = CreateTestTwoDA(
+            TwoDAFile twoda = CreateTest2DA(
                 new[] { "Col1", "Col2", "Col3" },
                 ("0", new[] { "a", "b", "c" }),
                 ("1", new[] { "d", "e", "f" })
@@ -400,7 +400,7 @@ namespace Andastra.Parsing.Tests.Mods
         [Fact(Timeout = 120000)] // 2 minutes timeout
         public void AddRow_NoExclusiveColumn_ShouldAlwaysAdd()
         {
-            TwoDAFile twoda = CreateTestTwoDA(
+            TwoDAFile twoda = CreateTest2DA(
                 new[] { "Col1", "Col2", "Col3" },
                 ("0", new[] { "a", "b", "c" }),
                 ("1", new[] { "d", "e", "f" })

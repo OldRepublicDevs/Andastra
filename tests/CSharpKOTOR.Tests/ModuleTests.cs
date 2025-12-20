@@ -1,9 +1,9 @@
 ﻿using System;
 using System.IO;
 using NUnit.Framework;
-using AuroraEngine.Common.Common;
-using AuroraEngine.Common.Installation;
-using AuroraEngine.Common.Resources;
+using Andastra.Parsing.Common;
+using Andastra.Parsing.Installation;
+using Andastra.Parsing.Resource;
 
 namespace AuroraEngine.Common.Tests
 {

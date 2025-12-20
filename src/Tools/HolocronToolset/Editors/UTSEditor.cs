@@ -12,6 +12,22 @@ using Andastra.Parsing.Resource;
 using HolocronToolset.Data;
 using HolocronToolset.Dialogs;
 using GFFAuto = Andastra.Parsing.Formats.GFF.GFFAuto;
+using Window = Avalonia.Controls.Window;
+using TextBlock = Avalonia.Controls.TextBlock;
+using UTS = Andastra.Parsing.Resource.Generics.UTS;
+using UTSHelpers = Andastra.Parsing.Resource.Generics.UTSHelpers;
+using NumericUpDown = Avalonia.Controls.NumericUpDown;
+using Slider = Avalonia.Controls.Slider;
+using RadioButton = Avalonia.Controls.RadioButton;
+using CheckBox = Avalonia.Controls.CheckBox;
+using Button = Avalonia.Controls.Button;
+using TextBox = Avalonia.Controls.TextBox;
+using ListBox = Avalonia.Controls.ListBox;
+using ScrollViewer = Avalonia.Controls.ScrollViewer;
+using StackPanel = Avalonia.Controls.StackPanel;
+using Expander = Avalonia.Controls.Expander;
+using ResourceTYpe = Andastra.Parsing.Resource.ResourceType;
+using GFF = Andastra.Parsing.Formats.GFF.GFF;
 
 namespace HolocronToolset.Editors
 {
@@ -62,7 +78,7 @@ namespace HolocronToolset.Editors
         private NumericUpDown _eastRandomSpin;
 
         // UI Controls - Comments
-        private TextBox _commentsEdit;
+        private TextBlock _commentsEdit;
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/uts.py:29-73
         // Original: def __init__(self, parent, installation):

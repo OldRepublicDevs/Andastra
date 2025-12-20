@@ -49,7 +49,7 @@ namespace KotorDiff.Formatters
             }
             if (diffResult is TwoDADiffResult twodaDiff)
             {
-                return Format2DaDiff(twodaDiff);
+                return Format2DADiff(twodaDiff);
             }
             if (diffResult is TLKDiffResult tlkDiff)
             {
@@ -85,7 +85,7 @@ namespace KotorDiff.Formatters
             return baseMsg;
         }
 
-        private string Format2DaDiff(TwoDADiffResult diffResult)
+        private string Format2DADiff(TwoDADiffResult diffResult)
         {
             string baseMsg = $"2DA '{diffResult.LeftIdentifier}' differs from '{diffResult.RightIdentifier}'";
 

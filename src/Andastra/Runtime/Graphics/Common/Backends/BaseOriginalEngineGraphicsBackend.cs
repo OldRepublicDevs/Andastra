@@ -342,7 +342,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends
             try
             {
                 Guid iidDevice = IID_IDirect3DDevice9;
-                int hr = CreateDevice(_d3d, _adapterIndex, D3DDEVTYPE_HAL, IntPtr.Zero,
+                int hr = CreateDevice(_d3d, (uint)_adapterIndex, D3DDEVTYPE_HAL, IntPtr.Zero,
                     D3DCREATE_HARDWARE_VERTEXPROCESSING | D3DCREATE_MULTITHREADED,
                     ref presentParams, ref iidDevice, devicePtr);
 
@@ -378,8 +378,8 @@ namespace Andastra.Runtime.Graphics.Common.Backends
         {
             return new D3DPRESENT_PARAMETERS
             {
-                BackBufferWidth = _settings.Width,
-                BackBufferHeight = _settings.Height,
+                BackBufferWidth = (uint)_settings.Width,
+                BackBufferHeight = (uint)_settings.Height,
                 BackBufferFormat = displayMode.Format,
                 BackBufferCount = 1,
                 MultiSampleType = D3DMULTISAMPLE_NONE,
@@ -390,7 +390,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends
                 EnableAutoDepthStencil = 1,
                 AutoDepthStencilFormat = D3DFMT_D24S8,
                 Flags = 0,
-                FullScreen_RefreshRateInHz = _fullscreen ? _refreshRate : 0,
+                FullScreen_RefreshRateInHz = _fullscreen ? (uint)_refreshRate : 0,
                 PresentationInterval = D3DPRESENT_INTERVAL_ONE
             };
         }
@@ -417,12 +417,12 @@ namespace Andastra.Runtime.Graphics.Common.Backends
             try
             {
                 uint format = ConvertTextureFormatToD3D9(desc.Format);
-                int levels = desc.MipLevels > 0 ? desc.MipLevels : 0; // 0 = auto-generate mipmaps
+                uint levels = desc.MipLevels > 0 ? (uint)desc.MipLevels : 0; // 0 = auto-generate mipmaps
                 uint usage = 0;
-                D3DRESOURCETYPE pool = D3DPOOL_DEFAULT;
+                D3DPOOL pool = D3DPOOL_DEFAULT;
 
                 Guid iidTexture = IID_IDirect3DTexture9;
-                int hr = CreateTexture(_d3dDevice, desc.Width, desc.Height, levels, usage, format, pool, ref iidTexture, texturePtr);
+                int hr = CreateTexture(_d3dDevice, (uint)desc.Width, (uint)desc.Height, levels, usage, format, pool, ref iidTexture, texturePtr);
 
                 if (hr < 0)
                 {
@@ -494,7 +494,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends
                 if ((desc.Usage & BufferUsage.Vertex) != 0)
                 {
                     Guid iidVertexBuffer = IID_IDirect3DVertexBuffer9;
-                    int hr = CreateVertexBuffer(_d3dDevice, desc.SizeInBytes, usage, 0, pool, ref iidVertexBuffer, bufferPtr);
+                    int hr = CreateVertexBuffer(_d3dDevice, (uint)desc.SizeInBytes, usage, 0, pool, ref iidVertexBuffer, bufferPtr);
                     if (hr >= 0)
                     {
                         buffer = Marshal.ReadIntPtr(bufferPtr);
@@ -504,7 +504,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends
                 {
                     uint indexFormat = desc.SizeInBytes / 4 == 2 ? D3DFMT_INDEX16 : D3DFMT_INDEX32;
                     Guid iidIndexBuffer = IID_IDirect3DIndexBuffer9;
-                    int hr = CreateIndexBuffer(_d3dDevice, desc.SizeInBytes, usage, indexFormat, pool, ref iidIndexBuffer, bufferPtr);
+                    int hr = CreateIndexBuffer(_d3dDevice, (uint)desc.SizeInBytes, usage, indexFormat, pool, ref iidIndexBuffer, bufferPtr);
                     if (hr >= 0)
                     {
                         buffer = Marshal.ReadIntPtr(bufferPtr);

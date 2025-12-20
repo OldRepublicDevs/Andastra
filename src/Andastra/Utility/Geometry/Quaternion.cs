@@ -1,6 +1,7 @@
 using System;
 using JetBrains.Annotations;
 
+
 namespace Andastra.Utility.Geometry
 {
     /// <summary>

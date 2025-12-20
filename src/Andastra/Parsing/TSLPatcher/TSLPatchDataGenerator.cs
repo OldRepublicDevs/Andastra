@@ -66,7 +66,7 @@ namespace Andastra.Parsing.TSLPatcher
             // Generate 2DA files
             if (modifications.Twoda != null && modifications.Twoda.Count > 0)
             {
-                var twodaFiles = Generate2DaFiles(modifications.Twoda, baseDataPath);
+                var twodaFiles = Generate2DAFiles(modifications.Twoda, baseDataPath);
                 foreach (var kvp in twodaFiles)
                 {
                     generatedFiles[kvp.Key] = kvp.Value;
@@ -159,7 +159,7 @@ namespace Andastra.Parsing.TSLPatcher
 
         // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/generator.py:340-391
         // Original: def _generate_2da_files(...): ...
-        private Dictionary<string, FileInfo> Generate2DaFiles(
+        private Dictionary<string, FileInfo> Generate2DAFiles(
             List<Modifications2DA> twodaModifications,
             DirectoryInfo baseDataPath)
         {
@@ -194,7 +194,7 @@ namespace Andastra.Parsing.TSLPatcher
                             {
                                 // Copy using 2DA reader/writer to ensure proper format
                                 var twodaObj = new TwoDABinaryReader(potentialPath.FullName).Load();
-                                TwoDAAuto.WriteTwoDA(twodaObj, outputPath.FullName, ResourceType.TwoDA);
+                                TwoDAAuto.Write2DA(twodaObj, outputPath.FullName, ResourceType.TwoDA);
                                 generated[filename] = outputPath;
                                 found = true;
                                 break;
@@ -509,7 +509,7 @@ namespace Andastra.Parsing.TSLPatcher
                 {
                     // 2DA file - use io_2da
                     var twodaObj = new TwoDABinaryReader(data).Load();
-                    TwoDAAuto.WriteTwoDA(twodaObj, destPath, ResourceType.TwoDA);
+                    TwoDAAuto.Write2DA(twodaObj, destPath, ResourceType.TwoDA);
                 }
                 else if (fileExt == "tlk")
                 {

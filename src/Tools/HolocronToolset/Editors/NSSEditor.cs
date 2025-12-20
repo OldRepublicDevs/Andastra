@@ -32,6 +32,10 @@ namespace HolocronToolset.Editors
         private BreadcrumbsWidget _breadcrumbs;
         private bool _isTsl;
         private List<ScriptFunction> _functions;
+        private GlobalSettings _globalSettings;
+        private string _owner;
+        private string _repo;
+        private string _sourcerepoUrl;
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:119-199
         // Original: def __init__(self, parent: QWidget | None = None, installation: HTInstallation | None = None):
@@ -45,6 +49,13 @@ namespace HolocronToolset.Editors
             _isDecompiled = false;
             _isTsl = installation?.Tsl ?? false;
             _functions = new List<ScriptFunction>();
+            _globalSettings = new GlobalSettings();
+            
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:164-167
+            // Original: self.owner: str = "KOTORCommunityPatches"
+            _owner = "KOTORCommunityPatches";
+            _repo = "Vanilla_KOTOR_Script_Source";
+            _sourcerepoUrl = $"https://github.com/{_owner}/{_repo}";
 
             InitializeComponent();
             SetupUI();

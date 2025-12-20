@@ -304,7 +304,7 @@ namespace Andastra.Parsing.Mods
             {
                 if (modifier is ChangeRow2DA || modifier is AddRow2DA || modifier is AddColumn2DA)
                 {
-                    lines.AddRange(Serialize2DaModifier(modifier));
+                    lines.AddRange(Serialize2DAModifier(modifier));
                 }
             }
 
@@ -313,7 +313,7 @@ namespace Andastra.Parsing.Mods
 
         // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/writer.py:365-463
         // Original: def _serialize_2da_modifier(...): ...
-        private List<string> Serialize2DaModifier(object modifier)
+        private List<string> Serialize2DAModifier(object modifier)
         {
             var lines = new List<string>();
             string sectionName = "";

@@ -125,7 +125,7 @@ namespace Andastra.Parsing.TSLPatcher
         private const int WriteBatchSize = 50;
 
         // Track global 2DAMEMORY token allocation
-        private int _next2DaTokenId = 0;
+        private int _next2DATokenId = 0;
 
         // StrRef and 2DA memory reference caches for linking patches
         [CanBeNull] private readonly StrRefReferenceCache _strrefCache;
@@ -142,7 +142,7 @@ namespace Andastra.Parsing.TSLPatcher
 
         // Track pending 2DA row references that will be applied when GFF files are diffed
         // Key: gff_filename (lowercase) -> list of Pending2DARowReference
-        private readonly Dictionary<string, List<Pending2DARowReference>> _pending2DaRowReferences = new Dictionary<string, List<Pending2DARowReference>>();
+        private readonly Dictionary<string, List<Pending2DARowReference>> _pending2DARowReferences = new Dictionary<string, List<Pending2DARowReference>>();
 
         /// <summary>
         /// Initialize incremental writer.
@@ -269,13 +269,13 @@ namespace Andastra.Parsing.TSLPatcher
             // Check for and apply pending 2DA row references before writing (for GFF files)
             if (modification is ModificationsGFF)
             {
-                ApplyPending2DaRowReferences(filenameLower, modification, sourceData, sourcePath);
+                ApplyPending2DARowReferences(filenameLower, modification, sourceData, sourcePath);
             }
 
             // Determine modification type and dispatch
             if (modification is Modifications2DA mod2da)
             {
-                Write2DaModification(mod2da, sourceData, sourcePath, moddedSourcePath);
+                Write2DAModification(mod2da, sourceData, sourcePath, moddedSourcePath);
             }
             else if (modification is ModificationsGFF modGff)
             {
@@ -328,7 +328,7 @@ namespace Andastra.Parsing.TSLPatcher
         /// Write 2DA resource file and INI section.
         /// Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/writer.py:1507-1587
         /// </summary>
-        private void Write2DaModification(Modifications2DA mod2da, byte[] sourceData = null, object sourcePath = null, object moddedSourcePath = null)
+        private void Write2DAModification(Modifications2DA mod2da, byte[] sourceData = null, object sourcePath = null, object moddedSourcePath = null)
         {
             string filename = mod2da.SourceFile;
 
@@ -568,7 +568,7 @@ namespace Andastra.Parsing.TSLPatcher
                 // Apply the reference to the modification object being written
                 if (pendingRef.LocationType == "2da")
                 {
-                    CreateImmediate2DaStrrefPatchSingle(
+                    CreateImmediate2DAStrrefPatchSingle(
                         filename,
                         pendingRef.OldStrref,
                         pendingRef.TokenId,
@@ -614,14 +614,14 @@ namespace Andastra.Parsing.TSLPatcher
         /// Check and apply pending 2DA row references for a GFF file being diffed.
         /// Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/writer.py:3294-3362
         /// </summary>
-        private void ApplyPending2DaRowReferences(string filename, PatcherModifications modification, byte[] sourceData, object sourcePath)
+        private void ApplyPending2DARowReferences(string filename, PatcherModifications modification, byte[] sourceData, object sourcePath)
         {
-            if (!_pending2DaRowReferences.ContainsKey(filename))
+            if (!_pending2DARowReferences.ContainsKey(filename))
             {
                 return;
             }
 
-            var pendingRefs = _pending2DaRowReferences[filename];
+            var pendingRefs = _pending2DARowReferences[filename];
             if (pendingRefs == null || pendingRefs.Count == 0)
             {
                 return;
@@ -651,7 +651,7 @@ namespace Andastra.Parsing.TSLPatcher
                 // Also verify the 2DA row still exists at the expected location in the source data
                 if (shouldApply && sourceData != null)
                 {
-                    shouldApply = Verify2DaRowLocation(sourceData, pendingRef);
+                    shouldApply = Verify2DARowLocation(sourceData, pendingRef);
                 }
 
                 if (!shouldApply)
@@ -660,7 +660,7 @@ namespace Andastra.Parsing.TSLPatcher
                 }
 
                 // Apply the reference to the modification object being written
-                CreateGff2DaPatch(
+                CreateGff2DAPatch(
                     filename,
                     pendingRef.FieldPaths,
                     pendingRef.TokenId,
@@ -675,7 +675,7 @@ namespace Andastra.Parsing.TSLPatcher
             }
             if (pendingRefs.Count == 0)
             {
-                _pending2DaRowReferences.Remove(filename);
+                _pending2DARowReferences.Remove(filename);
             }
         }
 
@@ -782,7 +782,7 @@ namespace Andastra.Parsing.TSLPatcher
         /// Verify that a 2DA row still exists at the expected location in source data.
         /// Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/writer.py:3363-3392
         /// </summary>
-        private bool Verify2DaRowLocation(byte[] sourceData, Pending2DARowReference pendingRef)
+        private bool Verify2DARowLocation(byte[] sourceData, Pending2DARowReference pendingRef)
         {
             try
             {
@@ -811,7 +811,7 @@ namespace Andastra.Parsing.TSLPatcher
                 // Verify all field paths in the pending reference still have the row index
                 foreach (string fieldPath in pendingRef.FieldPaths)
                 {
-                    if (!CheckGffField2DaRow(gff.Root, fieldPath, pendingRef.RowIndex, relevantFieldNames))
+                    if (!CheckGffField2DARow(gff.Root, fieldPath, pendingRef.RowIndex, relevantFieldNames))
                     {
                         return false;
                     }
@@ -829,7 +829,7 @@ namespace Andastra.Parsing.TSLPatcher
         /// Check if a GFF field at the given path contains the 2DA row index.
         /// Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/writer.py:3393-3452
         /// </summary>
-        private bool CheckGffField2DaRow(GFFStruct gffStruct, string fieldPath, int rowIndex, List<string> relevantFieldNames)
+        private bool CheckGffField2DARow(GFFStruct gffStruct, string fieldPath, int rowIndex, List<string> relevantFieldNames)
         {
             // Parse field path (handle array indices)
             string[] parts = fieldPath.Split('.');
@@ -882,7 +882,7 @@ namespace Andastra.Parsing.TSLPatcher
         /// Create a single 2DA patch for a StrRef reference immediately.
         /// Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/writer.py:3508-3569
         /// </summary>
-        private void CreateImmediate2DaStrrefPatchSingle(
+        private void CreateImmediate2DAStrrefPatchSingle(
             string filename,
             int oldStrref,
             int tokenId,
@@ -933,7 +933,7 @@ namespace Andastra.Parsing.TSLPatcher
             // Write to INI
             if (isNewMod)
             {
-                Write2DaModification(existingMod, null);
+                Write2DAModification(existingMod, null);
             }
             else
             {
@@ -1062,7 +1062,7 @@ namespace Andastra.Parsing.TSLPatcher
         /// Create GFF patches that replace 2DA row references with 2DAMEMORY tokens.
         /// Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/writer.py:3454-3506
         /// </summary>
-        private void CreateGff2DaPatch(
+        private void CreateGff2DAPatch(
             string gffFilename,
             List<string> fieldPaths,
             int tokenId,
@@ -1235,7 +1235,7 @@ namespace Andastra.Parsing.TSLPatcher
                 {
                     var reader = new TwoDABinaryReader(data);
                     TwoDA twoda = reader.Load();
-                    TwoDAAuto.WriteTwoDA(twoda, destPath, ResourceType.TwoDA);
+                    TwoDAAuto.Write2DA(twoda, destPath, ResourceType.TwoDA);
                 }
                 else if (extUpper == "TLK")
                 {
@@ -1321,10 +1321,10 @@ namespace Andastra.Parsing.TSLPatcher
         /// Allocate a new 2DAMEMORY token ID.
         /// Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/writer.py:1673-1677
         /// </summary>
-        private int Allocate2DaToken()
+        private int Allocate2DAToken()
         {
-            int tokenId = _next2DaTokenId;
-            _next2DaTokenId++;
+            int tokenId = _next2DATokenId;
+            _next2DATokenId++;
             return tokenId;
         }
 
@@ -1336,9 +1336,9 @@ namespace Andastra.Parsing.TSLPatcher
         {
             foreach (int tokenId in tokenIds)
             {
-                if (tokenId >= _next2DaTokenId)
+                if (tokenId >= _next2DATokenId)
                 {
-                    _next2DaTokenId = tokenId + 1;
+                    _next2DATokenId = tokenId + 1;
                 }
             }
         }
@@ -1461,7 +1461,7 @@ namespace Andastra.Parsing.TSLPatcher
                     if (!existingTokenId.HasValue)
                     {
                         // Allocate new token
-                        tokenIdToUse = Allocate2DaToken();
+                        tokenIdToUse = Allocate2DAToken();
 
                         // Store in AddColumn: 2DAMEMORY#=I{row_idx}
                         // Note: store_2da for AddColumn uses string values, not RowValue objects

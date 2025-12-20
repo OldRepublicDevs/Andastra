@@ -290,7 +290,7 @@ namespace HolocronToolset.Editors
             }
 
             ResourceType twodaType = _restype ?? ResourceType.TwoDA;
-            byte[] data = TwoDAAuto.BytesTwoDA(twoda, twodaType);
+            byte[] data = TwoDAAuto.Bytes2DA(twoda, twodaType);
             return Tuple.Create(data, new byte[0]);
         }
 

@@ -167,16 +167,16 @@ namespace KotorDiff.Diff.Objects
         {
             try
             {
-                if (!(left is 2DA left2da) || !(right is 2DA right2da))
+                if (!(left is TwoDA left2da) || !(right is TwoDA right2da))
                 {
                     throw new ArgumentException("Both arguments must be 2DA objects");
                 }
 
                 // Use StructuredDiffEngine for 2DA comparison
                 var structuredEngine = new StructuredDiffEngine();
-                var result = structuredEngine.Compare2Da(
-                    Andastra.Parsing.Formats.TwoDA.TwoDAAuto.BytesTwoDA(left2da, Andastra.Parsing.Resource.ResourceType.TwoDA),
-                    Andastra.Parsing.Formats.TwoDA.TwoDAAuto.BytesTwoDA(right2da, Andastra.Parsing.Resource.ResourceType.TwoDA),
+                var result = structuredEngine.Compare2DA(
+                    Andastra.Parsing.Formats.TwoDA.TwoDAAuto.Bytes2DA(left2da, Andastra.Parsing.Resource.ResourceType.TwoDA),
+                    Andastra.Parsing.Formats.TwoDA.TwoDAAuto.Bytes2DA(right2da, Andastra.Parsing.Resource.ResourceType.TwoDA),
                     leftId,
                     rightId);
 

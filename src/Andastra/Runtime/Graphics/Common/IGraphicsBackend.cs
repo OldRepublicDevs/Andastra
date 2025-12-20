@@ -27,6 +27,11 @@ namespace Andastra.Runtime.Graphics
         GraphicsBackendType BackendType { get; }
 
         /// <summary>
+        /// Gets whether the graphics backend has been initialized.
+        /// </summary>
+        bool IsInitialized { get; }
+
+        /// <summary>
         /// Gets the graphics device.
         /// </summary>
         IGraphicsDevice GraphicsDevice { get; }

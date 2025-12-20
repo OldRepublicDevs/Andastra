@@ -75,7 +75,7 @@ namespace Andastra.Parsing.Tools
             byte[] data = File.ReadAllBytes(inputPath);
             TwoDABinaryReader reader = new TwoDABinaryReader(data);
             TwoDA twoda = reader.Load();
-            TwoDAAuto.WriteTwoDA(twoda, outputPath, ResourceType.TwoDA_CSV);
+            TwoDAAuto.Write2DA(twoda, outputPath, ResourceType.TwoDA_CSV);
         }
 
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/conversions.py:137-151

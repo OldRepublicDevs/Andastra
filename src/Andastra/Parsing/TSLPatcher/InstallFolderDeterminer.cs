@@ -24,7 +24,7 @@ namespace Andastra.Parsing.TSLPatcher
 
             // Process each modification type
             ProcessTlkModifications(modifications.Tlk, installFolders);
-            Process2DaModifications(modifications.Twoda, installFolders);
+            Process2DAModifications(modifications.Twoda, installFolders);
             ProcessGffModifications(modifications.Gff, installFolders);
             ProcessSsfModifications(modifications.Ssf, installFolders);
             MergeExistingInstallFiles(modifications.Install, installFolders);
@@ -83,7 +83,7 @@ namespace Andastra.Parsing.TSLPatcher
 
         // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/generator.py:1152-1164
         // Original: def _process_2da_modifications(...): ...
-        private static void Process2DaModifications(List<Modifications2DA> modifications, Dictionary<string, List<string>> installFolders)
+        private static void Process2DAModifications(List<Modifications2DA> modifications, Dictionary<string, List<string>> installFolders)
         {
             if (modifications == null)
             {

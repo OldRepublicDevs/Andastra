@@ -246,7 +246,7 @@ namespace KotorDiff.Differ
             }
             else if (ext == "2da")
             {
-                return Diff2DaFiles(file1, file2, relativePath);
+                return Diff2DAFiles(file1, file2, relativePath);
             }
             else if (ext == "tlk")
             {
@@ -297,7 +297,7 @@ namespace KotorDiff.Differ
         }
 
         [CanBeNull]
-        private FileChange Diff2DaFiles(string file1, string file2, string relativePath)
+        private FileChange Diff2DAFiles(string file1, string file2, string relativePath)
         {
             try
             {
@@ -493,7 +493,7 @@ namespace KotorDiff.Differ
             }
         }
 
-        private string TwoDaToText(2DA twoda)
+        private string TwoDaToText(TwoDA twoda)
         {
             var sb = new StringBuilder();
             // Write headers

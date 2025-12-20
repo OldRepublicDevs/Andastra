@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using HolocronToolset.Data;
+using IndoorMap = HolocronToolset.Data.IndoorMap;
+using IndoorMapRoom = HolocronToolset.Data.IndoorMapRoom;
 
 namespace HolocronToolset.Windows
 {
@@ -12,10 +14,18 @@ namespace HolocronToolset.Windows
         private readonly Stack<IUndoCommand> _undoStack = new Stack<IUndoCommand>();
         private readonly Stack<IUndoCommand> _redoStack = new Stack<IUndoCommand>();
 
+        // Clean index tracking (matching Qt QUndoStack behavior)
+        // The clean index represents the position in the undo stack that corresponds to the "saved" state.
+        // -1 means no clean state is set (document has unsaved changes or was never saved)
+        // 0 means the initial state (no commands) is clean
+        // N means the state after N commands is clean
+        private int _cleanIndex = 0;
+
         public event EventHandler<bool> CanUndoChanged;
         public event EventHandler<bool> CanRedoChanged;
         public event EventHandler<string> UndoTextChanged;
         public event EventHandler<string> RedoTextChanged;
+        public event EventHandler<bool> CleanChanged;
 
         // Matching Python: def canUndo(self) -> bool
         public bool CanUndo()
@@ -29,6 +39,27 @@ namespace HolocronToolset.Windows
             return _redoStack.Count > 0;
         }
 
+        // Matching Qt QUndoStack: bool isClean() const
+        // Returns true if the current state matches the clean (saved) state
+        public bool IsClean()
+        {
+            // Current index is the number of commands in the undo stack
+            // The document is clean if the current index matches the clean index
+            int currentIndex = GetCurrentIndex();
+            return _cleanIndex >= 0 && currentIndex == _cleanIndex;
+        }
+
+        // Get the current index in the command history
+        // Index 0 = initial state (no commands)
+        // Index 1 = after first command
+        // Index N = after Nth command
+        private int GetCurrentIndex()
+        {
+            // The current index is always the number of commands in the undo stack
+            // This represents how many commands have been executed from the initial state
+            return _undoStack.Count;
+        }
+
         // Matching Python: def undo(self)
         public void Undo()
         {
@@ -37,6 +68,7 @@ namespace HolocronToolset.Windows
                 return;
             }
 
+            bool wasClean = IsClean();
             var command = _undoStack.Pop();
             command.Undo();
             _redoStack.Push(command);
@@ -45,6 +77,12 @@ namespace HolocronToolset.Windows
             OnCanRedoChanged();
             OnUndoTextChanged(GetUndoText());
             OnRedoTextChanged(GetRedoText());
+            
+            // Check if clean state changed after undo
+            if (wasClean != IsClean())
+            {
+                OnCleanChanged();
+            }
         }
 
         // Matching Python: def redo(self)
@@ -55,6 +93,7 @@ namespace HolocronToolset.Windows
                 return;
             }
 
+            bool wasClean = IsClean();
             try
             {
                 var command = _redoStack.Pop();
@@ -65,6 +104,12 @@ namespace HolocronToolset.Windows
                 OnCanRedoChanged();
                 OnUndoTextChanged(GetUndoText());
                 OnRedoTextChanged(GetRedoText());
+                
+                // Check if clean state changed after redo
+                if (wasClean != IsClean())
+                {
+                    OnCleanChanged();
+                }
             }
             catch (Exception ex)
             {
@@ -92,35 +137,92 @@ namespace HolocronToolset.Windows
                 return;
             }
 
+            bool wasClean = IsClean();
+            
+            // Calculate current index before push (needed for clean index tracking)
+            int currentIndexBeforePush = GetCurrentIndex();
+            
             // Matching Python QUndoStack behavior: redo() is called automatically when command is pushed
             command.Redo();
 
             _undoStack.Push(command);
             _redoStack.Clear();
 
+            // In Qt QUndoStack, if we push a new command when not at the clean index,
+            // the clean index becomes invalid (-1) because the saved state is no longer reachable
+            // If we're at the clean index, the clean index moves forward with the new command
+            if (_cleanIndex >= 0)
+            {
+                if (currentIndexBeforePush != _cleanIndex)
+                {
+                    // We're not at the clean index, so the clean state is invalidated
+                    _cleanIndex = -1;
+                }
+                else
+                {
+                    // We're at the clean index, so it moves forward with the new command
+                    _cleanIndex = GetCurrentIndex();
+                }
+            }
+            else
+            {
+                // Clean index was already invalid, keep it invalid
+                _cleanIndex = -1;
+            }
+
             OnCanUndoChanged();
             OnCanRedoChanged();
             OnUndoTextChanged(GetUndoText());
             OnRedoTextChanged(GetRedoText());
+            
+            // Check if clean state changed after push
+            if (wasClean != IsClean())
+            {
+                OnCleanChanged();
+            }
         }
 
         // Matching Python: def clear(self)
         public void Clear()
         {
+            bool wasClean = IsClean();
+            
             _undoStack.Clear();
             _redoStack.Clear();
+            
+            // After clearing, we're back to the initial state (index 0)
+            // If the clean index was 0, it remains 0 (initial state is still clean)
+            // Otherwise, reset to 0 to indicate initial state is clean after clear
+            _cleanIndex = 0;
 
             OnCanUndoChanged();
             OnCanRedoChanged();
             OnUndoTextChanged(GetUndoText());
             OnRedoTextChanged(GetRedoText());
+            
+            // Check if clean state changed after clear
+            if (wasClean != IsClean())
+            {
+                OnCleanChanged();
+            }
         }
 
         // Matching Python: def setClean(self)
+        // Matching Qt QUndoStack: void setClean()
+        // Marks the current state as "clean" (saved). The clean index is set to the current index.
         public void SetClean()
         {
-            // In Qt, this marks the current state as "clean" (saved)
-            // TODO: SIMPLIFIED - For now, we just track the state - full implementation would track clean index
+            bool wasClean = IsClean();
+            
+            // Set the clean index to the current index
+            // This marks the current state as the "saved" state
+            _cleanIndex = GetCurrentIndex();
+            
+            // Notify if clean state changed
+            if (wasClean != IsClean())
+            {
+                OnCleanChanged();
+            }
         }
 
         private string GetUndoText()
@@ -159,6 +261,11 @@ namespace HolocronToolset.Windows
         private void OnRedoTextChanged(string text)
         {
             RedoTextChanged?.Invoke(this, text);
+        }
+
+        private void OnCleanChanged()
+        {
+            CleanChanged?.Invoke(this, IsClean());
         }
     }
 
