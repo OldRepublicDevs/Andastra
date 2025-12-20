@@ -179,6 +179,24 @@ namespace Andastra.Parsing.Resource.Generics
         public List<ResRef> MapList { get; set; } = new List<ResRef>();
 
         /// <summary>
+        /// List of room definitions for audio zones and minimap regions.
+        /// </summary>
+        /// <remarks>
+        /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/are.py:267
+        /// Original: self.rooms: list[ARERoom] = []
+        /// 
+        /// Reference: vendor/reone/src/libs/resource/parser/gff/are.cpp:244-251 - parseARE_Rooms function
+        /// Reference: vendor/reone/include/reone/resource/parser/gff/are.h:185-191 - ARE_Rooms struct
+        /// Reference: vendor/Kotor.NET/Kotor.NET/Resources/KotorARE/ARE.cs:96 - Rooms property
+        /// Reference: vendor/KotOR.js/src/module/ModuleArea.ts:120 - rooms array
+        /// 
+        /// Rooms define audio properties, weather behavior, and force rating for specific
+        /// regions within an area. Rooms are referenced by VIS (visibility) files and
+        /// used for audio occlusion and weather control.
+        /// </remarks>
+        public List<ARERoom> Rooms { get; set; } = new List<ARERoom>();
+
+        /// <summary>
         /// Dirty formula 1 (KotOR 2 Only).
         /// </summary>
         /// <remarks>
