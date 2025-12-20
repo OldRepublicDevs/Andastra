@@ -785,8 +785,10 @@ namespace Andastra.Runtime.Game.Core
                     // Based on swkotor2.exe: CSWGuiOptionsMain::OnSoundOpt @ 0x006e3e00
                     if (_currentState == GameState.OptionsMenu)
                     {
-                        Console.WriteLine("[Odyssey] Sound options button clicked - sound options submenu not yet implemented");
-                        // TODO: Implement sound options submenu
+                        // Navigate to Audio category in options menu
+                        _selectedOptionsCategoryIndex = (int)Andastra.Runtime.Game.GUI.OptionsMenu.OptionsCategory.Audio;
+                        _selectedOptionsItemIndex = 0; // Reset to first option in Audio category
+                        Console.WriteLine("[Odyssey] Sound options submenu opened - navigating to Audio category");
                     }
                     break;
 
