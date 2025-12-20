@@ -261,14 +261,81 @@ namespace HolocronToolset.Tests.Editors
             }
         }
 
-        // TODO: STUB - Implement test_nss_editor_load_real_ncs_file (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:166-184)
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:166-184
         // Original: def test_nss_editor_load_real_ncs_file(qtbot, installation: HTInstallation, ncs_test_file: Path | None): Test loading real NCS file
         [Fact]
         public void TestNssEditorLoadRealNcsFile()
         {
-            // TODO: STUB - Implement load real NCS file test
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:166-184
-            throw new NotImplementedException("TestNssEditorLoadRealNcsFile: Load real NCS file test not yet implemented");
+            // Get test files directory
+            string testFilesDir = System.IO.Path.Combine(
+                System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+
+            // Try to find 90sk99.ncs file
+            string ncsFile = System.IO.Path.Combine(testFilesDir, "90sk99.ncs");
+            if (!System.IO.File.Exists(ncsFile))
+            {
+                // Try alternative location
+                testFilesDir = System.IO.Path.Combine(
+                    System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                    "..", "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+                ncsFile = System.IO.Path.Combine(testFilesDir, "90sk99.ncs");
+            }
+
+            // Matching Python: if ncs_test_file is None: pytest.skip("90sk99.ncs not found in test files")
+            if (!System.IO.File.Exists(ncsFile))
+            {
+                // Skip if test file not available (matching Python pytest.skip behavior)
+                return;
+            }
+
+            // Get installation if available (K2 preferred for NSS files)
+            string k2Path = Environment.GetEnvironmentVariable("K2_PATH");
+            if (string.IsNullOrEmpty(k2Path))
+            {
+                k2Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor2";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k2Path) && System.IO.File.Exists(System.IO.Path.Combine(k2Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k2Path, "Test Installation", tsl: true);
+            }
+
+            // If K2 not available, try K1
+            if (installation == null)
+            {
+                string k1Path = Environment.GetEnvironmentVariable("K1_PATH");
+                if (string.IsNullOrEmpty(k1Path))
+                {
+                    k1Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor";
+                }
+
+                if (System.IO.Directory.Exists(k1Path) && System.IO.File.Exists(System.IO.Path.Combine(k1Path, "chitin.key")))
+                {
+                    installation = new HTInstallation(k1Path, "Test Installation", tsl: false);
+                }
+            }
+
+            // Matching Python: editor = NSSEditor(None, installation)
+            var editor = new NSSEditor(null, installation);
+
+            // Matching Python: data = ncs_test_file.read_bytes()
+            byte[] data = System.IO.File.ReadAllBytes(ncsFile);
+
+            // Matching Python: editor.load(ncs_test_file, "90sk99", ResourceType.NCS, data)
+            editor.Load(ncsFile, "90sk99", ResourceType.NCS, data);
+
+            // Matching Python: assert editor._filepath == ncs_test_file
+            editor.Filepath.Should().Be(ncsFile, "Filepath should match the loaded NCS file");
+
+            // Matching Python: assert editor._resname == "90sk99"
+            editor.Resname.Should().Be("90sk99", "Resname should be '90sk99'");
+
+            // Matching Python: assert editor.ui.codeEdit is not None
+            // Code editor should exist (decompiled content may or may not be available)
+            editor.Ui.Should().NotBeNull("UI should not be null");
+            editor.Ui.CodeEdit.Should().NotBeNull("Code editor should exist after loading NCS file");
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:206-232
