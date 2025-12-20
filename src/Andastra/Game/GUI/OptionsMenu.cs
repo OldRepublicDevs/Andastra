@@ -35,6 +35,7 @@ namespace Andastra.Runtime.Game.GUI
             Audio,
             Game,
             Feedback,
+            Autopause,
             Controls
         }
 
