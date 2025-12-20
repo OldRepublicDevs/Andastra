@@ -292,18 +292,27 @@ namespace HolocronToolset.Data
         // Original: def process_model(self, room: IndoorMapRoom, installation: HTInstallation) -> tuple[bytes, bytes]:
         private (byte[] mdl, byte[] mdx) ProcessModel(IndoorMapRoom room, HTInstallation installation)
         {
-            // TODO: Implement model.flip() - requires model manipulation utilities
-            // For now, use the original model data
-            byte[] mdl = room.Component.Mdl;
-            byte[] mdx = room.Component.Mdx;
+            // Apply model flip transformation
+            // Matching Python: mdl, mdx = model.flip(room.component.mdl, room.component.mdx, flip_x=room.flip_x, flip_y=room.flip_y)
+            var flipped = ModelTools.Flip(room.Component.Mdl, room.Component.Mdx, room.FlipX, room.FlipY);
+            byte[] mdl = flipped.Mdl;
+            byte[] mdx = flipped.Mdx;
 
             // Apply model transformation (rotation)
             // Matching Python: mdl_transformed: bytes = model.transform(mdl, Vector3.from_null(), room.rotation)
             // Vector3.from_null() is Vector3(0, 0, 0) - no translation, only rotation
             mdl = ModelTools.Transform(mdl, System.Numerics.Vector3.Zero, room.Rotation);
 
-            // TODO: Implement model.convert_to_k1/k2() - requires model manipulation utilities
-            // For now, use the transformed model data as-is
+            // Convert model to target game format (K1 or K2)
+            // Matching Python: mdl_converted: bytes = model.convert_to_k2(mdl_transformed) if installation.tsl else model.convert_to_k1(mdl_transformed)
+            if (installation.Tsl)
+            {
+                mdl = ModelTools.ConvertToK2(mdl);
+            }
+            else
+            {
+                mdl = ModelTools.ConvertToK1(mdl);
+            }
 
             return (mdl, mdx);
         }
