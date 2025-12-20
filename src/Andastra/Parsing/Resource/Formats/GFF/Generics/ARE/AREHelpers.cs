@@ -194,6 +194,64 @@ namespace Andastra.Parsing.Resource.Generics.ARE
             // Original: are.dirty_formula_3 = root.acquire("DirtyFormulaThre", 0)
             // Engine default: 1, but engine inverts value (1->0, 0->1) (swkotor2.exe: 0x004e3ff0 line 572-579)
             are.DirtyFormula3 = root.Acquire<int>("DirtyFormulaThre", 0);
+            // Extract K2-specific dirty ARGB, Size, and Func fields (KotOR 2 Only) - all optional
+            // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/are.py:472-480,510-512
+            // Original: are.dirty_argb_1 = Color.from_rgb_integer(root.acquire("DirtyARGBOne", 0))
+            // Engine default: 0 (swkotor2.exe: 0x004e3ff0 line 540)
+            are.DirtyArgb1 = Color.FromRgbInteger(root.Acquire<int>("DirtyARGBOne", 0));
+            // Original: are.dirty_argb_2 = Color.from_rgb_integer(root.acquire("DirtyARGBTwo", 0))
+            // Engine default: 0 (swkotor2.exe: 0x004e3ff0 line 554)
+            are.DirtyArgb2 = Color.FromRgbInteger(root.Acquire<int>("DirtyARGBTwo", 0));
+            // Original: are.dirty_argb_3 = Color.from_rgb_integer(root.acquire("DirtyARGBThree", 0))
+            // Engine default: 0 (swkotor2.exe: 0x004e3ff0 line 568)
+            are.DirtyArgb3 = Color.FromRgbInteger(root.Acquire<int>("DirtyARGBThree", 0));
+            // Original: are.dirty_size_1 = root.acquire("DirtySizeOne", 0)
+            // Engine default: 0x10 (16) (swkotor2.exe: 0x004e3ff0 line 542)
+            are.DirtySize1 = root.Acquire<int>("DirtySizeOne", 16);
+            // Original: are.dirty_size_2 = root.acquire("DirtySizeTwo", 0)
+            // Engine default: 0x10 (16) (swkotor2.exe: 0x004e3ff0 line 556)
+            are.DirtySize2 = root.Acquire<int>("DirtySizeTwo", 16);
+            // Original: are.dirty_size_3 = root.acquire("DirtySizeThree", 0)
+            // Engine default: 0x10 (16) (swkotor2.exe: 0x004e3ff0 line 570)
+            are.DirtySize3 = root.Acquire<int>("DirtySizeThree", 16);
+            // Original: are.dirty_func_1 = root.acquire("DirtyFuncOne", 0)
+            // Engine default: 0 (swkotor2.exe: 0x004e3ff0 line 552)
+            are.DirtyFunc1 = root.Acquire<int>("DirtyFuncOne", 0);
+            // Original: are.dirty_func_2 = root.acquire("DirtyFuncTwo", 0)
+            // Engine default: 0 (swkotor2.exe: 0x004e3ff0 line 566)
+            are.DirtyFunc2 = root.Acquire<int>("DirtyFuncTwo", 0);
+            // Original: are.dirty_func_3 = root.acquire("DirtyFuncThree", 0)
+            // Engine default: 0 (swkotor2.exe: 0x004e3ff0 line 580)
+            are.DirtyFunc3 = root.Acquire<int>("DirtyFuncThree", 0);
+            // Extract K2-specific dirty ARGB, Size, and Func fields (KotOR 2 Only) - all optional
+            // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/are.py:472-480,510-512
+            // Original: are.dirty_size_1 = root.acquire("DirtySizeOne", 0)
+            // Engine default: 0 (swkotor2.exe: 0x004e3ff0) - K2 only, not in K1
+            are.DirtySize1 = root.Acquire<int>("DirtySizeOne", 0);
+            // Original: are.dirty_func_1 = root.acquire("DirtyFuncOne", 0)
+            // Engine default: 0 (swkotor2.exe: 0x004e3ff0) - K2 only, not in K1
+            are.DirtyFunc1 = root.Acquire<int>("DirtyFuncOne", 0);
+            // Original: are.dirty_size_2 = root.acquire("DirtySizeTwo", 0)
+            // Engine default: 0 (swkotor2.exe: 0x004e3ff0) - K2 only, not in K1
+            are.DirtySize2 = root.Acquire<int>("DirtySizeTwo", 0);
+            // Original: are.dirty_func_2 = root.acquire("DirtyFuncTwo", 0)
+            // Engine default: 0 (swkotor2.exe: 0x004e3ff0) - K2 only, not in K1
+            are.DirtyFunc2 = root.Acquire<int>("DirtyFuncTwo", 0);
+            // Original: are.dirty_size_3 = root.acquire("DirtySizeThree", 0)
+            // Engine default: 0 (swkotor2.exe: 0x004e3ff0) - K2 only, not in K1
+            are.DirtySize3 = root.Acquire<int>("DirtySizeThree", 0);
+            // Original: are.dirty_func_3 = root.acquire("DirtyFuncThree", 0)
+            // Engine default: 0 (swkotor2.exe: 0x004e3ff0) - K2 only, not in K1
+            are.DirtyFunc3 = root.Acquire<int>("DirtyFuncThree", 0);
+            // Original: are.dirty_argb_1 = Color.from_rgb_integer(root.acquire("DirtyARGBOne", 0))
+            // Engine default: 0 (swkotor2.exe: 0x004e3ff0) - K2 only, not in K1
+            are.DirtyArgb1 = Color.FromRgbInteger(root.Acquire<int>("DirtyARGBOne", 0));
+            // Original: are.dirty_argb_2 = Color.from_rgb_integer(root.acquire("DirtyARGBTwo", 0))
+            // Engine default: 0 (swkotor2.exe: 0x004e3ff0) - K2 only, not in K1
+            are.DirtyArgb2 = Color.FromRgbInteger(root.Acquire<int>("DirtyARGBTwo", 0));
+            // Original: are.dirty_argb_3 = Color.from_rgb_integer(root.acquire("DirtyARGBThree", 0))
+            // Engine default: 0 (swkotor2.exe: 0x004e3ff0) - K2 only, not in K1
+            are.DirtyArgb3 = Color.FromRgbInteger(root.Acquire<int>("DirtyARGBThree", 0));
 
             // Extract Comments field (toolset-only, not used by game engine)
             // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/are.py:356
@@ -359,18 +417,27 @@ namespace Andastra.Parsing.Resource.Generics.ARE
                 root.SetInt32("ChanceRain", are.ChanceRain);
                 root.SetInt32("ChanceSnow", are.ChanceSnow);
                 root.SetInt32("ChanceLightning", are.ChanceLightning);
-                // TODO: Add remaining K2-specific properties to ARE class (DirtyArgb1-3, DirtySize/Func1-3)
-                // When ARE class has these properties, uncomment:
-                // root.SetInt32("DirtyARGBOne", (int)are.DirtyArgb1.ToRgbInteger());
-                // root.SetInt32("DirtyARGBTwo", (int)are.DirtyArgb2.ToRgbInteger());
-                // root.SetInt32("DirtyARGBThree", (int)are.DirtyArgb3.ToRgbInteger());
-                // root.SetInt32("DirtySizeOne", are.DirtySize1);
-                // root.SetInt32("DirtyFuncOne", are.DirtyFunc1);
-                // root.SetInt32("DirtySizeTwo", are.DirtySize2);
-                // root.SetInt32("DirtyFuncTwo", are.DirtyFunc2);
-                // root.SetInt32("DirtySizeThree", are.DirtySize3);
-                // root.SetInt32("DirtyFuncThree", are.DirtyFunc3);
-                // Dirty formula fields are now implemented:
+                // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/are.py:636-652
+                // Original: root.set_int32("DirtyARGBOne", are.dirty_argb_1.rgb_integer())
+                // Original: root.set_int32("DirtyARGBTwo", are.dirty_argb_2.rgb_integer())
+                // Original: root.set_int32("DirtyARGBThree", are.dirty_argb_3.rgb_integer())
+                // Original: root.set_int32("DirtySizeOne", are.dirty_size_1)
+                // Original: root.set_int32("DirtyFuncOne", are.dirty_func_1)
+                // Original: root.set_int32("DirtySizeTwo", are.dirty_size_2)
+                // Original: root.set_int32("DirtyFuncTwo", are.dirty_func_2)
+                // Original: root.set_int32("DirtySizeThree", are.dirty_size_3)
+                // Original: root.set_int32("DirtyFuncThree", are.dirty_func_3)
+                // K2-specific dirty ARGB, Size, and Func fields (KotOR 2 Only)
+                root.SetInt32("DirtyARGBOne", (int)are.DirtyArgb1.ToRgbInteger());
+                root.SetInt32("DirtyARGBTwo", (int)are.DirtyArgb2.ToRgbInteger());
+                root.SetInt32("DirtyARGBThree", (int)are.DirtyArgb3.ToRgbInteger());
+                root.SetInt32("DirtySizeOne", are.DirtySize1);
+                root.SetInt32("DirtyFuncOne", are.DirtyFunc1);
+                root.SetInt32("DirtySizeTwo", are.DirtySize2);
+                root.SetInt32("DirtyFuncTwo", are.DirtyFunc2);
+                root.SetInt32("DirtySizeThree", are.DirtySize3);
+                root.SetInt32("DirtyFuncThree", are.DirtyFunc3);
+                // Dirty formula fields
                 root.SetInt32("DirtyFormulaOne", are.DirtyFormula1);
                 root.SetInt32("DirtyFormulaTwo", are.DirtyFormula2);
                 root.SetInt32("DirtyFormulaThre", are.DirtyFormula3);
