@@ -215,10 +215,12 @@ namespace Andastra.Parsing.Tests.Formats
             var successful = results.Where(r => r.Value.Success).ToList();
             var failed = results.Where(r => !r.Value.Success).ToList();
 
-            // At least some languages should compile successfully
+            // At least 12 languages should compile successfully (as required)
             // (We allow some failures as not all languages may be fully supported in all environments)
-            successful.Count.Should().BeGreaterThan(0,
-                $"At least one language should compile successfully. Failed: {string.Join(", ", failed.Select(f => $"{f.Key}: {f.Value.ErrorMessage}"))}");
+            successful.Count.Should().BeGreaterOrEqualTo(12,
+                $"At least 12 languages should compile successfully (compiled to {successful.Count}). " +
+                $"Failed: {string.Join(", ", failed.Select(f => $"{f.Key}: {f.Value.ErrorMessage}"))}. " +
+                $"Successful: {string.Join(", ", successful.Select(s => s.Key))}");
 
             // Log successful compilations
             foreach (var success in successful)
@@ -316,6 +318,56 @@ namespace Andastra.Parsing.Tests.Formats
             ksyContent.Should().Contain("field_array", "Should define field_array type");
             ksyContent.Should().Contain("field_data_section", "Should define field_data_section type");
             ksyContent.Should().Contain("UTS ", "Should specify UTS file type signature");
+        }
+
+        [Fact(Timeout = 600000)] // 10 minute timeout
+        public void TestCompileUTSToAtLeastDozenLanguages()
+        {
+            // Explicitly test that UTS.ksy compiles to at least 12 languages (a dozen)
+            var normalizedKsyPath = Path.GetFullPath(UTSKsyPath);
+            if (!File.Exists(normalizedKsyPath))
+            {
+                return;
+            }
+
+            var javaCheck = RunCommand("java", "-version");
+            if (javaCheck.ExitCode != 0)
+            {
+                return; // Skip if Java not available
+            }
+
+            Directory.CreateDirectory(TestOutputDir);
+
+            int compiledCount = 0;
+            var compiledLanguages = new List<string>();
+            var failedLanguages = new List<string>();
+
+            foreach (var language in SupportedLanguages)
+            {
+                try
+                {
+                    var result = CompileToLanguage(normalizedKsyPath, language);
+                    if (result.Success)
+                    {
+                        compiledCount++;
+                        compiledLanguages.Add(language);
+                    }
+                    else
+                    {
+                        failedLanguages.Add($"{language}: {result.ErrorMessage}");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    failedLanguages.Add($"{language}: {ex.Message}");
+                }
+            }
+
+            // Verify at least a dozen (12) languages compiled successfully
+            compiledCount.Should().BeGreaterOrEqualTo(12,
+                $"UTS.ksy should compile to at least 12 languages (a dozen). " +
+                $"Successfully compiled to {compiledCount} languages: {string.Join(", ", compiledLanguages)}. " +
+                $"Failed languages: {string.Join("; ", failedLanguages)}");
         }
 
         [Theory(Timeout = 300000)]
