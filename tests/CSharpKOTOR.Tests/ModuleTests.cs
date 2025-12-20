@@ -11,7 +11,7 @@ using Andastra.Parsing.Resource.Formats.LYT;
 using Andastra.Parsing.Resource.Formats.VIS;
 using Assert = NUnit.Framework.Legacy.ClassicAssert;
 
-namespace AuroraEngine.Common.Tests
+namespace Andastra.Parsing.Tests
 {
     [TestFixture]
     public class ModuleTests
