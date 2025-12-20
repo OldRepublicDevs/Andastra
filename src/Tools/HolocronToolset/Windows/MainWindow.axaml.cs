@@ -413,7 +413,9 @@ namespace HolocronToolset.Windows
                 var actionNewTLK = this.FindControl<MenuItem>("actionNewTLK");
                 if (actionNewTLK != null)
                 {
-                    actionNewTLK.Click += (s, e) => { /* TODO: Open TLK editor */ };
+                    // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:569
+                    // Original: self.ui.actionNewTLK.triggered.connect(lambda: add_window(TLKEditor(self, self.active)))
+                    actionNewTLK.Click += (s, e) => OpenNewTLKEditor();
                 }
 
                 var actionSettings = this.FindControl<MenuItem>("actionSettings");
@@ -1370,6 +1372,17 @@ namespace HolocronToolset.Windows
 
             var dialog = new Dialogs.CloneModuleDialog(this, _active, installations);
             dialog.ShowDialog(this);
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/main.py:569
+        // Original: self.ui.actionNewTLK.triggered.connect(lambda: add_window(TLKEditor(self, self.active)))
+        private void OpenNewTLKEditor()
+        {
+            // Create a new TLK editor with this window as parent and active installation
+            var tlkEditor = new Editors.TLKEditor(this, _active);
+            
+            // Add to window manager (matching PyKotor's add_window function)
+            WindowUtils.AddWindow(tlkEditor, show: true);
         }
     }
 

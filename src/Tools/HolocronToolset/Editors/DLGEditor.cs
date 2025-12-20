@@ -172,6 +172,16 @@ namespace HolocronToolset.Editors
             var panel = new StackPanel();
             Content = panel;
 
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/dlg/editor.py:436-467
+            // Original: def setup_extra_widgets(self):
+            // Find bar - must be added first (before dialog tree) to match PyKotor layout
+            // Matching PyKotor: self.ui.verticalLayout_main.insertWidget(0, self.find_bar)
+            SetupFindBar();
+            if (_findBar != null)
+            {
+                panel.Children.Insert(0, _findBar);
+            }
+
             // Initialize dialog tree view
             // Matching PyKotor implementation at Tools/HolocronToolset/src/ui/editors/dlg.ui
             _dialogTree = new TreeView();
