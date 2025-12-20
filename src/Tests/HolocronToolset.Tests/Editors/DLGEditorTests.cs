@@ -631,14 +631,86 @@ namespace HolocronToolset.Tests.Editors
             modifiedDlg.AmbientTrack.ToString().Should().Be("test_ambient", "AmbientTrack should be saved correctly");
         }
 
-        // TODO: STUB - Implement test_dlg_editor_manipulate_file_level_checkboxes (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:664-734)
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:664-734
         // Original: def test_dlg_editor_manipulate_file_level_checkboxes(qtbot, installation: HTInstallation, test_files_dir: Path): Test manipulating file-level checkboxes
         [Fact]
         public void TestDlgEditorManipulateFileLevelCheckboxes()
         {
-            // TODO: STUB - Implement file-level checkboxes manipulation test
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:664-734
-            throw new NotImplementedException("TestDlgEditorManipulateFileLevelCheckboxes: File-level checkboxes manipulation test not yet implemented");
+            // Get test files directory
+            string testFilesDir = System.IO.Path.Combine(
+                System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                "..", "..", "..", "..", "..", "vendor", "PyKotor", "Tools", "HolocronToolset", "tests", "test_files");
+            string dlgFile = System.IO.Path.Combine(testFilesDir, "ORIHA.dlg");
+
+            if (!System.IO.File.Exists(dlgFile))
+            {
+                // Skip if test file not found (matching Python: pytest.skip("ORIHA.dlg not found"))
+                return;
+            }
+
+            var editor = new DLGEditor(null, null);
+            byte[] originalData = System.IO.File.ReadAllBytes(dlgFile);
+            editor.Load(dlgFile, "ORIHA", ResourceType.DLG, originalData);
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:676-685
+            // Original: Test unequipHandsCheckbox
+            editor.UnequipHandsCheckbox.IsChecked = true;
+            var (savedData1, _) = editor.Build();
+            DLG modifiedDlg1 = DLGHelper.ReadDlg(savedData1);
+            modifiedDlg1.UnequipHands.Should().BeTrue("UnequipHands should be true when checkbox is checked");
+
+            editor.UnequipHandsCheckbox.IsChecked = false;
+            var (savedData2, _) = editor.Build();
+            DLG modifiedDlg2 = DLGHelper.ReadDlg(savedData2);
+            modifiedDlg2.UnequipHands.Should().BeFalse("UnequipHands should be false when checkbox is unchecked");
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:687-696
+            // Original: Test unequipAllCheckbox
+            editor.UnequipAllCheckbox.IsChecked = true;
+            var (savedData3, _) = editor.Build();
+            DLG modifiedDlg3 = DLGHelper.ReadDlg(savedData3);
+            modifiedDlg3.UnequipItems.Should().BeTrue("UnequipItems should be true when checkbox is checked");
+
+            editor.UnequipAllCheckbox.IsChecked = false;
+            var (savedData4, _) = editor.Build();
+            DLG modifiedDlg4 = DLGHelper.ReadDlg(savedData4);
+            modifiedDlg4.UnequipItems.Should().BeFalse("UnequipItems should be false when checkbox is unchecked");
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:698-707
+            // Original: Test skippableCheckbox
+            editor.SkippableCheckbox.IsChecked = true;
+            var (savedData5, _) = editor.Build();
+            DLG modifiedDlg5 = DLGHelper.ReadDlg(savedData5);
+            modifiedDlg5.Skippable.Should().BeTrue("Skippable should be true when checkbox is checked");
+
+            editor.SkippableCheckbox.IsChecked = false;
+            var (savedData6, _) = editor.Build();
+            DLG modifiedDlg6 = DLGHelper.ReadDlg(savedData6);
+            modifiedDlg6.Skippable.Should().BeFalse("Skippable should be false when checkbox is unchecked");
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:709-718
+            // Original: Test animatedCutCheckbox
+            editor.AnimatedCutCheckbox.IsChecked = true;
+            var (savedData7, _) = editor.Build();
+            DLG modifiedDlg7 = DLGHelper.ReadDlg(savedData7);
+            modifiedDlg7.AnimatedCut.Should().Be(1, "AnimatedCut should be 1 when checkbox is checked");
+
+            editor.AnimatedCutCheckbox.IsChecked = false;
+            var (savedData8, _) = editor.Build();
+            DLG modifiedDlg8 = DLGHelper.ReadDlg(savedData8);
+            modifiedDlg8.AnimatedCut.Should().Be(0, "AnimatedCut should be 0 when checkbox is unchecked");
+
+            // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:720-729
+            // Original: Test oldHitCheckbox
+            editor.OldHitCheckbox.IsChecked = true;
+            var (savedData9, _) = editor.Build();
+            DLG modifiedDlg9 = DLGHelper.ReadDlg(savedData9);
+            modifiedDlg9.OldHitCheck.Should().BeTrue("OldHitCheck should be true when checkbox is checked");
+
+            editor.OldHitCheckbox.IsChecked = false;
+            var (savedData10, _) = editor.Build();
+            DLG modifiedDlg10 = DLGHelper.ReadDlg(savedData10);
+            modifiedDlg10.OldHitCheck.Should().BeFalse("OldHitCheck should be false when checkbox is unchecked");
         }
 
         // TODO: STUB - Implement test_dlg_editor_all_node_widgets_interactions (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_dlg_editor.py:736-936)
