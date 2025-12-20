@@ -13,6 +13,7 @@ using Andastra.Parsing.Formats.BWM;
 using Andastra.Parsing.Formats.ERF;
 using Andastra.Parsing.Formats.RIM;
 using Andastra.Parsing.Formats.TPC;
+using Andastra.Parsing.Formats.TwoDA;
 using Andastra.Parsing.Installation;
 using Andastra.Parsing.Logger;
 using Andastra.Parsing.Resource.Generics;
@@ -1705,7 +1706,7 @@ namespace Andastra.Parsing.Tools
                 Bitmap image = new Bitmap(256, 256);
                 using (Graphics g = Graphics.FromImage(image))
                 {
-                    g.Clear(Color.Black);
+                    g.Clear(System.Drawing.Color.Black);
                 }
                 return image;
             }
@@ -1747,7 +1748,7 @@ namespace Andastra.Parsing.Tools
             Bitmap image2 = new Bitmap(width, height);
             using (Graphics g = Graphics.FromImage(image2))
             {
-                g.Clear(Color.Black);
+                g.Clear(System.Drawing.Color.Black);
                 g.SmoothingMode = SmoothingMode.AntiAlias;
 
                 // Draw walkable faces in white, non-walkable in gray
@@ -1755,7 +1756,7 @@ namespace Andastra.Parsing.Tools
                 {
                     // Determine if face is walkable based on material
                     bool isWalkable = face.Material.Walkable();
-                    Color color = isWalkable ? Color.White : Color.Gray;
+                    System.Drawing.Color color = isWalkable ? System.Drawing.Color.White : System.Drawing.Color.Gray;
 
                     // Get face vertices
                     Vector2 v1 = new Vector2(face.V1.X, face.V1.Y);
