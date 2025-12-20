@@ -441,11 +441,131 @@ namespace Andastra.Runtime.Games.Eclipse
         /// <remarks>
         /// Sounds have audio playback, spatial positioning.
         /// Based on sound component structure in daorigins.exe and DragonAge2.exe.
+        /// 
+        /// Sound Component Attachment:
+        /// - Based on daorigins.exe and DragonAge2.exe: Sound components are attached during entity creation from area templates (SAV files)
+        /// - Component provides: Active, Continuous, Looping, Positional, Random, RandomPosition, Volume, VolumeVrtn, MaxDistance, MinDistance, Interval, IntervalVrtn, PitchVariation, SoundFiles, Hours, IsPlaying, TimeSinceLastPlay, GeneratedType
+        /// - Eclipse-specific: Uses EclipseSoundComponent for Eclipse-specific sound system
+        /// - Sound properties are loaded from area SAV files (SoundList entries) and can be modified at runtime
+        /// - Sound entities emit positional audio in the game world (Positional field for 3D audio)
+        /// - Volume: 0-127 range (Volume field), distance falloff: MinDistance (full volume) to MaxDistance (zero volume)
+        /// - Continuous sounds: Play continuously when active (Continuous field)
+        /// - Random sounds: Can play random sounds from SoundFiles list (Random field), randomize position (RandomPosition field)
+        /// - Interval: Time between plays for non-looping sounds (Interval field, IntervalVrtn for variation)
+        /// - Volume variation: VolumeVrtn field for random volume variation
+        /// - Hours: Bitmask for time-based activation (Hours field, 0-23 hour range)
+        /// - Pitch variation: PitchVariation field for random pitch variation in sound playback
+        /// - Uses UTS file format (GFF with "UTS " signature) for sound templates, same as Odyssey/Aurora
+        /// 
+        /// Cross-engine analysis:
+        /// - Odyssey (swkotor.exe, swkotor2.exe): Uses SoundComponent with UTS GFF templates
+        ///   - SoundList @ 0x007bd080 (GIT sound list), Sound @ 0x007bc500 (sound entity type)
+        ///   - FUN_004e08e0 @ 0x004e08e0 loads sound instances from GIT
+        ///   - ComponentInitializer attaches sound component during entity creation
+        /// - Aurora (nwmain.exe, nwn2main.exe): Uses AuroraSoundComponent with similar UTS format
+        ///   - CNWSSoundObject class for sound entities
+        /// - Eclipse (daorigins.exe, DragonAge2.exe): Uses EclipseSoundComponent with UTS format
+        ///   - Sound entities loaded from area files (SAV format) SoundList
+        ///   - Sound properties stored in SAV area files, similar structure to Odyssey/Aurora
+        ///   - Both games use identical sound system with same properties and behavior
+        /// 
+        /// Reverse Engineering Notes (requires Ghidra MCP verification):
+        /// - daorigins.exe: Sound entity creation and loading functions need to be located
+        ///   - Search for: "SoundList", "Sound", "SoundResRef", "PlaySound", "Volume", "MaxDistance", "MinDistance"
+        ///   - Expected locations: Area loading functions in SAV file parsing
+        ///   - Sound properties: Active, Continuous, Looping, Positional, Random, RandomPosition, Volume, VolumeVrtn, MaxDistance, MinDistance, Interval, IntervalVrtn, PitchVariation, Sounds list, Hours, GeneratedType
+        /// - DragonAge2.exe: Enhanced sound system (may have additional properties)
+        ///   - Search for: Same string references as daorigins.exe
+        ///   - Expected locations: Area loading functions in SAV file parsing
+        ///   - Binary format: Compatible with daorigins.exe but may have additional fields
+        /// - Function addresses: To be determined via Ghidra MCP reverse engineering
+        ///   - daorigins.exe: Sound entity creation/loading function addresses (TBD)
+        ///   - DragonAge2.exe: Sound entity creation/loading function addresses (TBD)
         /// </remarks>
         private void AttachSoundComponents()
         {
-            // TODO: Attach sound-specific components
-            // SoundComponent with audio playback capabilities
+            // Attach sound component if not already present
+            // Based on daorigins.exe and DragonAge2.exe: Sound component is attached during entity creation
+            // ComponentInitializer also handles this, but we ensure it's attached here for consistency
+            if (!HasComponent<ISoundComponent>())
+            {
+                var soundComponent = new Components.EclipseSoundComponent();
+                soundComponent.Owner = this;
+                
+                // Initialize sound component properties from entity data if available (loaded from SAV area files)
+                // Based on Eclipse area loading: Sound properties are stored in entity data when loaded from SAV SoundList
+                // Sound properties match UTS file format structure (same as Odyssey/Aurora)
+                if (GetData("Active") is bool active)
+                {
+                    soundComponent.Active = active;
+                }
+                if (GetData("Continuous") is bool continuous)
+                {
+                    soundComponent.Continuous = continuous;
+                }
+                if (GetData("Looping") is bool looping)
+                {
+                    soundComponent.Looping = looping;
+                }
+                if (GetData("Positional") is bool positional)
+                {
+                    soundComponent.Positional = positional;
+                }
+                if (GetData("Random") is bool random)
+                {
+                    soundComponent.Random = random;
+                }
+                if (GetData("RandomPosition") is bool randomPosition)
+                {
+                    soundComponent.RandomPosition = randomPosition;
+                }
+                if (GetData("Volume") is int volume)
+                {
+                    soundComponent.Volume = volume;
+                }
+                if (GetData("VolumeVrtn") is int volumeVrtn)
+                {
+                    soundComponent.VolumeVrtn = volumeVrtn;
+                }
+                if (GetData("MaxDistance") is float maxDistance)
+                {
+                    soundComponent.MaxDistance = maxDistance;
+                }
+                if (GetData("MinDistance") is float minDistance)
+                {
+                    soundComponent.MinDistance = minDistance;
+                }
+                if (GetData("Interval") is uint interval)
+                {
+                    soundComponent.Interval = interval;
+                }
+                if (GetData("IntervalVrtn") is uint intervalVrtn)
+                {
+                    soundComponent.IntervalVrtn = intervalVrtn;
+                }
+                if (GetData("PitchVariation") is float pitchVariation)
+                {
+                    soundComponent.PitchVariation = pitchVariation;
+                }
+                if (GetData("Sounds") is List<string> sounds)
+                {
+                    soundComponent.SoundFiles = sounds;
+                }
+                if (GetData("Hours") is uint hours)
+                {
+                    soundComponent.Hours = hours;
+                }
+                if (GetData("GeneratedType") is int generatedType)
+                {
+                    soundComponent.GeneratedType = generatedType;
+                }
+                if (GetData("TemplateResRef") is string templateResRef)
+                {
+                    soundComponent.TemplateResRef = templateResRef;
+                }
+                
+                AddComponent<ISoundComponent>(soundComponent);
+            }
         }
 
         /// <summary>
@@ -625,6 +745,7 @@ namespace Andastra.Runtime.Games.Eclipse
         /// - Stats component (HP, FP, abilities, skills, saves, level)
         /// - Door component (open/locked state, HP, transitions)
         /// - Placeable component (open/locked state, HP, useability)
+        /// - Sound component (active, looping, positional, volume, distance, timing, sound files)
         /// - Inventory component (equipped items and inventory bag)
         /// - Script hooks component (script ResRefs and local variables)
         /// - Custom data dictionary (arbitrary key-value pairs)
@@ -642,6 +763,7 @@ namespace Andastra.Runtime.Games.Eclipse
         /// - ScriptHooks component (if present: flag int32, then scripts and local variables)
         /// - Door component (if present: flag int32, then door state data)
         /// - Placeable component (if present: flag int32, then placeable state data)
+        /// - Sound component (if present: flag int32, then sound properties and sound files list)
         /// - Custom data dictionary (count int32, then key-value pairs with type indicators)
         ///
         /// Note: This implementation matches the binary format used by EclipseSaveSerializer.SerializeEntity
@@ -895,6 +1017,47 @@ namespace Andastra.Runtime.Games.Eclipse
                     writer.Write(placeableComponent.AnimationState);
                 }
 
+                // Serialize Sound component
+                // Based on daorigins.exe and DragonAge2.exe: Sound component properties are serialized to binary save format
+                // Sound properties match UTS file format structure (same as Odyssey/Aurora)
+                var soundComponent = GetComponent<ISoundComponent>();
+                writer.Write(soundComponent != null ? 1 : 0);
+                if (soundComponent != null)
+                {
+                    WriteString(writer, soundComponent.TemplateResRef ?? "");
+                    writer.Write(soundComponent.Active ? 1 : 0);
+                    writer.Write(soundComponent.Continuous ? 1 : 0);
+                    writer.Write(soundComponent.Looping ? 1 : 0);
+                    writer.Write(soundComponent.Positional ? 1 : 0);
+                    writer.Write(soundComponent.Random ? 1 : 0);
+                    writer.Write(soundComponent.RandomPosition ? 1 : 0);
+                    writer.Write(soundComponent.Volume);
+                    writer.Write(soundComponent.VolumeVrtn);
+                    writer.Write(soundComponent.MaxDistance);
+                    writer.Write(soundComponent.MinDistance);
+                    writer.Write(soundComponent.Interval);
+                    writer.Write(soundComponent.IntervalVrtn);
+                    writer.Write(soundComponent.PitchVariation);
+                    writer.Write(soundComponent.Hours);
+                    writer.Write(soundComponent.GeneratedType);
+                    writer.Write(soundComponent.TimeSinceLastPlay);
+                    writer.Write(soundComponent.IsPlaying ? 1 : 0);
+
+                    // Serialize sound files list
+                    if (soundComponent.SoundFiles != null)
+                    {
+                        writer.Write(soundComponent.SoundFiles.Count);
+                        foreach (string soundFile in soundComponent.SoundFiles)
+                        {
+                            WriteString(writer, soundFile ?? "");
+                        }
+                    }
+                    else
+                    {
+                        writer.Write(0);
+                    }
+                }
+
                 // Serialize custom data dictionary
                 // Access custom data via BaseEntity's internal _data dictionary using reflection
                 // Note: This is necessary because GetData/SetData don't provide enumeration
@@ -1026,6 +1189,7 @@ namespace Andastra.Runtime.Games.Eclipse
         /// - ScriptHooks component (if present: flag int32, then scripts and local variables)
         /// - Door component (if present: flag int32, then door state data)
         /// - Placeable component (if present: flag int32, then placeable state data)
+        /// - Sound component (if present: flag int32, then sound properties and sound files list)
         /// - Custom data dictionary (count int32, then key-value pairs with type indicators)
         ///
         /// Note: This implementation matches the binary format used by Serialize method
@@ -1351,6 +1515,91 @@ namespace Andastra.Runtime.Games.Eclipse
                         placeableComponent.MaxHitPoints = maxHitPoints;
                         placeableComponent.Hardness = hardness;
                         placeableComponent.AnimationState = animationState;
+                    }
+                }
+
+                // Deserialize Sound component
+                // Based on daorigins.exe and DragonAge2.exe: Sound component properties are deserialized from binary save format
+                // Sound properties match UTS file format structure (same as Odyssey/Aurora)
+                bool hasSound = reader.ReadInt32() != 0;
+                if (hasSound)
+                {
+                    string templateResRef = ReadString(reader);
+                    bool active = reader.ReadInt32() != 0;
+                    bool continuous = reader.ReadInt32() != 0;
+                    bool looping = reader.ReadInt32() != 0;
+                    bool positional = reader.ReadInt32() != 0;
+                    bool random = reader.ReadInt32() != 0;
+                    bool randomPosition = reader.ReadInt32() != 0;
+                    int volume = reader.ReadInt32();
+                    int volumeVrtn = reader.ReadInt32();
+                    float maxDistance = reader.ReadSingle();
+                    float minDistance = reader.ReadSingle();
+                    uint interval = reader.ReadUInt32();
+                    uint intervalVrtn = reader.ReadUInt32();
+                    float pitchVariation = reader.ReadSingle();
+                    uint hours = reader.ReadUInt32();
+                    int generatedType = reader.ReadInt32();
+                    float timeSinceLastPlay = reader.ReadSingle();
+                    bool isPlaying = reader.ReadInt32() != 0;
+
+                    int soundFileCount = reader.ReadInt32();
+                    var soundFiles = new List<string>();
+                    for (int i = 0; i < soundFileCount; i++)
+                    {
+                        string soundFile = ReadString(reader);
+                        soundFiles.Add(soundFile);
+                    }
+
+                    var soundComponent = GetComponent<ISoundComponent>();
+                    if (soundComponent != null)
+                    {
+                        soundComponent.TemplateResRef = templateResRef;
+                        soundComponent.Active = active;
+                        soundComponent.Continuous = continuous;
+                        soundComponent.Looping = looping;
+                        soundComponent.Positional = positional;
+                        soundComponent.Random = random;
+                        soundComponent.RandomPosition = randomPosition;
+                        soundComponent.Volume = volume;
+                        soundComponent.VolumeVrtn = volumeVrtn;
+                        soundComponent.MaxDistance = maxDistance;
+                        soundComponent.MinDistance = minDistance;
+                        soundComponent.Interval = interval;
+                        soundComponent.IntervalVrtn = intervalVrtn;
+                        soundComponent.PitchVariation = pitchVariation;
+                        soundComponent.Hours = hours;
+                        soundComponent.GeneratedType = generatedType;
+                        soundComponent.TimeSinceLastPlay = timeSinceLastPlay;
+                        soundComponent.IsPlaying = isPlaying;
+                        soundComponent.SoundFiles = soundFiles;
+                    }
+                    else
+                    {
+                        // If sound component doesn't exist, create it and attach it
+                        // This can happen if entity was created without proper component initialization
+                        var newSoundComponent = new Components.EclipseSoundComponent();
+                        newSoundComponent.Owner = this;
+                        newSoundComponent.TemplateResRef = templateResRef;
+                        newSoundComponent.Active = active;
+                        newSoundComponent.Continuous = continuous;
+                        newSoundComponent.Looping = looping;
+                        newSoundComponent.Positional = positional;
+                        newSoundComponent.Random = random;
+                        newSoundComponent.RandomPosition = randomPosition;
+                        newSoundComponent.Volume = volume;
+                        newSoundComponent.VolumeVrtn = volumeVrtn;
+                        newSoundComponent.MaxDistance = maxDistance;
+                        newSoundComponent.MinDistance = minDistance;
+                        newSoundComponent.Interval = interval;
+                        newSoundComponent.IntervalVrtn = intervalVrtn;
+                        newSoundComponent.PitchVariation = pitchVariation;
+                        newSoundComponent.Hours = hours;
+                        newSoundComponent.GeneratedType = generatedType;
+                        newSoundComponent.TimeSinceLastPlay = timeSinceLastPlay;
+                        newSoundComponent.IsPlaying = isPlaying;
+                        newSoundComponent.SoundFiles = soundFiles;
+                        AddComponent<ISoundComponent>(newSoundComponent);
                     }
                 }
 
