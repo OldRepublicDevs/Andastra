@@ -5522,10 +5522,15 @@ namespace Andastra.Runtime.Engines.Odyssey.EngineApi
             if (targetFaction == null)
             {
                 // Create faction component if it doesn't exist
-                // TODO: SIMPLIFIED - For now, we'll just set the data - proper component creation would require EntityFactory
+                // Based on swkotor2.exe: Faction component creation during entity faction change
+                // Original implementation: Creates new faction component and assigns it to entity
+                // Located via string references: "FactionID" @ 0x007c40b4 (swkotor2.exe)
                 if (objectToChange is Andastra.Runtime.Core.Entities.Entity concreteEntity)
                 {
-                    concreteEntity.SetData("FactionID", memberFaction.FactionId);
+                    var factionComponent = new OdysseyFactionComponent();
+                    factionComponent.Owner = concreteEntity;
+                    factionComponent.FactionId = memberFaction.FactionId;
+                    concreteEntity.AddComponent<IFactionComponent>(factionComponent);
                 }
             }
             else
