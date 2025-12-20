@@ -7,6 +7,7 @@ using Avalonia.Markup.Xaml;
 using Andastra.Parsing.Resource;
 using HolocronToolset.Data;
 using HolocronToolset.Utils;
+using HolocronToolset.Editors;
 using FileResource = Andastra.Parsing.Extract.FileResource;
 
 namespace HolocronToolset.Dialogs

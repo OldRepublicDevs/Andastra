@@ -6,6 +6,8 @@ using System.IO;
 using Andastra.Parsing.Installation;
 using Andastra.Parsing.Resource;
 using KotorDiff.Resolution;
+using ResolvedResource = KotorDiff.Resolution.ResolvedResource;
+using ResourceResolver = KotorDiff.Resolution.ResourceResolver;
 using Xunit;
 
 namespace KotorDiff.Tests.Resolution

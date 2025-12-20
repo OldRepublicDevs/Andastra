@@ -21,6 +21,7 @@ using Andastra.Runtime.Content.Converters;
 using Andastra.Runtime.Games.Eclipse.Loading;
 using Andastra.Runtime.Core.Module;
 using Andastra.Runtime.Games.Eclipse.Lighting;
+using Andastra.Runtime.Games.Eclipse.Physics;
 
 namespace Andastra.Runtime.Games.Eclipse
 {

@@ -12,6 +12,7 @@ using Avalonia.Markup.Xaml;
 using Avalonia.Platform.Storage;
 using HolocronToolset.Data;
 using HolocronToolset.Utils;
+using HolocronToolset.Editors;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Enums;
 using Andastra.Parsing.Mods;

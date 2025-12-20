@@ -922,7 +922,7 @@ namespace Andastra.Runtime.Games.Eclipse
         /// Note: Temporary obstacles use IDs in the range [-1000000, -1000000 + obstacleCount) to avoid conflicts
         /// with permanent obstacles which typically use positive IDs.
         /// </remarks>
-        public override System.Collections.Generic.IList<Vector3> FindPathAroundObstacles(Vector3 start, Vector3 goal, IList<Interfaces.ObstacleInfo> obstacles)
+        public override System.Collections.Generic.IList<Vector3> FindPathAroundObstacles(Vector3 start, Vector3 goal, IList<ObstacleInfo> obstacles)
         {
             // Handle null or empty obstacles list - delegate to standard FindPath
             if (obstacles == null || obstacles.Count == 0)

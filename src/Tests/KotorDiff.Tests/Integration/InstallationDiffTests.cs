@@ -7,6 +7,7 @@ using Andastra.Parsing.Installation;
 using Andastra.Parsing.Mods;
 using KotorDiff.Resolution;
 using KotorDiff.Diff;
+using InstallationDiffWithResolution = KotorDiff.Resolution.InstallationDiffWithResolution;
 using Xunit;
 
 namespace KotorDiff.Tests.Integration

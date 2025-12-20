@@ -315,7 +315,7 @@ namespace Andastra.Runtime.Games.Eclipse.Lighting
         /// </summary>
         /// <param name="type">Type of light to create.</param>
         /// <returns>The created light, or null if max lights reached.</returns>
-        public IDynamicLight CreateLight(LightType type)
+        public IDynamicLight CreateLight(Andastra.Runtime.Graphics.MonoGame.Enums.LightType type)
         {
             if (_lights.Count >= MaxLights)
             {

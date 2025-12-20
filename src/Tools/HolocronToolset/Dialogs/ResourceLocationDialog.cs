@@ -276,7 +276,7 @@ namespace HolocronToolset.Dialogs
 
                 // Open in editor using WindowUtils
                 var parentWindow = this.Parent as Window ?? this;
-                HolocronToolset.Utils.WindowUtils.OpenResourceEditor(fileResource, _installation, parentWindow);
+                HolocronToolset.Editors.WindowUtils.OpenResourceEditor(fileResource, _installation, parentWindow);
 
                 // Close the dialog after opening
                 Close();
