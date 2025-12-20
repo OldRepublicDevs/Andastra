@@ -681,6 +681,24 @@ namespace Andastra.Parsing.Resource.Generics.DLG
         public DLGReply() : base()
         {
         }
+
+        // Matching PyKotor API: DLGReply.from_dict() calls DLGNode.from_dict() but returns DLGReply
+        // In Python, static methods can be called from subclasses. For C# API compatibility, we add convenience methods.
+        /// <summary>
+        /// Deserializes a DLGReply from a dictionary representation.
+        /// </summary>
+        /// <param name="data">The dictionary data</param>
+        /// <param name="nodeMap">Optional map to track deserialized nodes and handle references</param>
+        /// <returns>A DLGReply instance</returns>
+        public static DLGReply FromDict(Dictionary<string, object> data, Dictionary<string, object> nodeMap = null)
+        {
+            DLGNode node = DLGNode.FromDict(data, nodeMap);
+            if (node is DLGReply reply)
+            {
+                return reply;
+            }
+            throw new ArgumentException("Dictionary data does not represent a DLGReply node");
+        }
     }
 
     /// <summary>
@@ -701,6 +719,24 @@ namespace Andastra.Parsing.Resource.Generics.DLG
         {
             get => CameraAnim;
             set => CameraAnim = value;
+        }
+
+        // Matching PyKotor API: DLGEntry.from_dict() calls DLGNode.from_dict() but returns DLGEntry
+        // In Python, static methods can be called from subclasses. For C# API compatibility, we add convenience methods.
+        /// <summary>
+        /// Deserializes a DLGEntry from a dictionary representation.
+        /// </summary>
+        /// <param name="data">The dictionary data</param>
+        /// <param name="nodeMap">Optional map to track deserialized nodes and handle references</param>
+        /// <returns>A DLGEntry instance</returns>
+        public static DLGEntry FromDict(Dictionary<string, object> data, Dictionary<string, object> nodeMap = null)
+        {
+            DLGNode node = DLGNode.FromDict(data, nodeMap);
+            if (node is DLGEntry entry)
+            {
+                return entry;
+            }
+            throw new ArgumentException("Dictionary data does not represent a DLGEntry node");
         }
     }
 }
