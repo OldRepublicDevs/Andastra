@@ -4,8 +4,7 @@
         Title="Help"
         Width="900" Height="700"
         WindowStartupLocation="CenterOwner">
-    <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
-        <TextBox Name="textBrowser" IsReadOnly="True" AcceptsReturn="True" AcceptsTab="False"
-                 TextWrapping="Wrap" FontFamily="Consolas" />
+    <ScrollViewer Name="scrollViewer" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+        <StackPanel Name="htmlContainer" Orientation="Vertical" Margin="24" />
     </ScrollViewer>
 </Window>

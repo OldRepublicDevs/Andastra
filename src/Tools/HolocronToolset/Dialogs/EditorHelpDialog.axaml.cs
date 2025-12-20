@@ -616,17 +616,105 @@ namespace HolocronToolset.Dialogs
                 Foreground = new SolidColorBrush(Color.FromRgb(51, 51, 51))
             };
 
-            var textBuilder = new StringBuilder();
-            foreach (var child in node.ChildNodes)
-            {
-                ExtractTextFromNode(child, textBuilder);
-            }
-            paragraph.Text = textBuilder.ToString();
+            // Build Inlines collection for mixed formatting
+            paragraph.Inlines.Clear();
+            BuildInlinesFromNode(node, paragraph.Inlines);
 
-            // Apply inline formatting
-            ApplyInlineFormatting(node, paragraph);
+            // If no inlines were created, use plain text as fallback
+            if (paragraph.Inlines.Count == 0)
+            {
+                paragraph.Text = node.InnerText;
+            }
 
             parent.Children.Add(paragraph);
+        }
+
+        private void BuildInlinesFromNode(HtmlNode node, InlineCollection inlines)
+        {
+            foreach (var child in node.ChildNodes)
+            {
+                if (child.NodeType == HtmlNodeType.Text)
+                {
+                    string text = child.InnerText;
+                    if (!string.IsNullOrEmpty(text))
+                    {
+                        inlines.Add(new Run { Text = text });
+                    }
+                }
+                else if (child.NodeType == HtmlNodeType.Element)
+                {
+                    string tagName = child.Name.ToLowerInvariant();
+                    Inline inline = null;
+
+                    switch (tagName)
+                    {
+                        case "strong":
+                        case "b":
+                            var strongText = child.InnerText;
+                            if (!string.IsNullOrEmpty(strongText))
+                            {
+                                inline = new Run
+                                {
+                                    Text = strongText,
+                                    FontWeight = FontWeight.SemiBold,
+                                    Foreground = new SolidColorBrush(Color.FromRgb(36, 41, 46))
+                                };
+                            }
+                            break;
+
+                        case "em":
+                        case "i":
+                            var emText = child.InnerText;
+                            if (!string.IsNullOrEmpty(emText))
+                            {
+                                inline = new Run
+                                {
+                                    Text = emText,
+                                    FontStyle = FontStyle.Italic
+                                };
+                            }
+                            break;
+
+                        case "code":
+                            var codeText = child.InnerText;
+                            if (!string.IsNullOrEmpty(codeText))
+                            {
+                                inline = new Run
+                                {
+                                    Text = codeText,
+                                    FontFamily = new FontFamily("Consolas, 'Courier New', monospace"),
+                                    FontSize = 14.4,
+                                    Foreground = new SolidColorBrush(Color.FromRgb(232, 62, 140)),
+                                    Background = new SolidColorBrush(Color.FromRgb(246, 248, 250))
+                                };
+                            }
+                            break;
+
+                        case "a":
+                            var linkText = child.InnerText;
+                            if (!string.IsNullOrEmpty(linkText))
+                            {
+                                inline = new Run
+                                {
+                                    Text = linkText,
+                                    Foreground = new SolidColorBrush(Color.FromRgb(3, 102, 214))
+                                };
+                                // Note: Click handling for links would need to be implemented separately
+                            }
+                            break;
+
+                        default:
+                            // For other inline elements, recursively build inlines
+                            BuildInlinesFromNode(child, inlines);
+                            break;
+                    }
+
+                    if (inline != null)
+                    {
+                        inlines.Add(inline);
+                    }
+                }
+            }
         }
 
         private void RenderList(HtmlNode node, Panel parent, bool isOrdered)
@@ -672,14 +760,15 @@ namespace HolocronToolset.Dialogs
                 Foreground = new SolidColorBrush(Color.FromRgb(51, 51, 51))
             };
 
-            var textBuilder = new StringBuilder();
-            foreach (var child in node.ChildNodes)
-            {
-                ExtractTextFromNode(child, textBuilder);
-            }
-            content.Text = textBuilder.ToString();
+            // Build Inlines collection for mixed formatting
+            content.Inlines.Clear();
+            BuildInlinesFromNode(node, content.Inlines);
 
-            ApplyInlineFormatting(node, content);
+            // If no inlines were created, use plain text as fallback
+            if (content.Inlines.Count == 0)
+            {
+                content.Text = node.InnerText;
+            }
 
             itemPanel.Children.Add(content);
             parent.Children.Add(itemPanel);
@@ -1043,56 +1132,5 @@ namespace HolocronToolset.Dialogs
             }
         }
 
-        private void ApplyInlineFormatting(HtmlNode node, TextBlock textBlock)
-        {
-            // This is a simplified version - full implementation would parse inline HTML
-            // For now, we extract text and apply basic formatting
-            var runs = new List<Inline>();
-            foreach (var child in node.ChildNodes)
-            {
-                if (child.NodeType == HtmlNodeType.Text)
-                {
-                    runs.Add(new Run { Text = child.InnerText });
-                }
-                else if (child.NodeType == HtmlNodeType.Element)
-                {
-                    string tagName = child.Name.ToLowerInvariant();
-                    var run = new Run { Text = child.InnerText };
-
-                    switch (tagName)
-                    {
-                        case "strong":
-                        case "b":
-                            run.FontWeight = FontWeight.SemiBold;
-                            break;
-
-                        case "em":
-                        case "i":
-                            run.FontStyle = FontStyle.Italic;
-                            break;
-
-                        case "code":
-                            run.FontFamily = new FontFamily("Consolas, 'Courier New', monospace");
-                            run.Foreground = new SolidColorBrush(Color.FromRgb(232, 62, 140));
-                            break;
-
-                        case "a":
-                            run.Foreground = new SolidColorBrush(Color.FromRgb(3, 102, 214));
-                            break;
-                    }
-
-                    runs.Add(run);
-                }
-            }
-
-            if (runs.Count > 0)
-            {
-                textBlock.Inlines.Clear();
-                foreach (var run in runs)
-                {
-                    textBlock.Inlines.Add(run);
-                }
-            }
-        }
     }
 }
