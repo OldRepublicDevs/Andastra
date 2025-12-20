@@ -22,15 +22,15 @@ namespace Andastra.Parsing.Tests.Formats
         private static readonly string TpcKsyPath = Path.Combine(
             Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
             "..", "..", "..", "..", "src", "Andastra", "Parsing", "Resource", "Formats", "TPC", "TPC.ksy");
-        
+
         private static readonly string DdsKsyPath = Path.Combine(
             Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
             "..", "..", "..", "..", "src", "Andastra", "Parsing", "Resource", "Formats", "TPC", "DDS.ksy");
-        
+
         private static readonly string TgaKsyPath = Path.Combine(
             Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
             "..", "..", "..", "..", "src", "Andastra", "Parsing", "Resource", "Formats", "TPC", "TGA.ksy");
-        
+
         private static readonly string TxiKsyPath = Path.Combine(
             Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
             "..", "..", "..", "..", "src", "Andastra", "Parsing", "Resource", "Formats", "TPC", "TXI.ksy");
@@ -193,16 +193,36 @@ namespace Andastra.Parsing.Tests.Formats
             Directory.CreateDirectory(langOutputDir);
 
             // Compile KSY to target language
-            var processInfo = new ProcessStartInfo
+            ProcessStartInfo processInfo;
+            if (compilerPath.StartsWith("JAR:"))
             {
-                FileName = compilerPath,
-                Arguments = $"-t {language} \"{ksyPath}\" -d \"{langOutputDir}\"",
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false,
-                CreateNoWindow = true,
-                WorkingDirectory = Path.GetDirectoryName(ksyPath)
-            };
+                // JAR file - use java -jar
+                string jarPath = compilerPath.Substring(4);
+                processInfo = new ProcessStartInfo
+                {
+                    FileName = "java",
+                    Arguments = $"-jar \"{jarPath}\" -t {language} \"{ksyPath}\" -d \"{langOutputDir}\"",
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true,
+                    WorkingDirectory = Path.GetDirectoryName(ksyPath)
+                };
+            }
+            else
+            {
+                // Executable command
+                processInfo = new ProcessStartInfo
+                {
+                    FileName = compilerPath,
+                    Arguments = $"-t {language} \"{ksyPath}\" -d \"{langOutputDir}\"",
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true,
+                    WorkingDirectory = Path.GetDirectoryName(ksyPath)
+                };
+            }
 
             string stdout = "";
             string stderr = "";
@@ -269,16 +289,36 @@ namespace Andastra.Parsing.Tests.Formats
                         }
                         Directory.CreateDirectory(langOutputDir);
 
-                        var processInfo = new ProcessStartInfo
+                        ProcessStartInfo processInfo;
+                        if (compilerPath.StartsWith("JAR:"))
                         {
-                            FileName = compilerPath,
-                            Arguments = $"-t {language} \"{ksyFile.Path}\" -d \"{langOutputDir}\"",
-                            RedirectStandardOutput = true,
-                            RedirectStandardError = true,
-                            UseShellExecute = false,
-                            CreateNoWindow = true,
-                            WorkingDirectory = Path.GetDirectoryName(ksyFile.Path)
-                        };
+                            // JAR file - use java -jar
+                            string jarPath = compilerPath.Substring(4);
+                            processInfo = new ProcessStartInfo
+                            {
+                                FileName = "java",
+                                Arguments = $"-jar \"{jarPath}\" -t {language} \"{ksyFile.Path}\" -d \"{langOutputDir}\"",
+                                RedirectStandardOutput = true,
+                                RedirectStandardError = true,
+                                UseShellExecute = false,
+                                CreateNoWindow = true,
+                                WorkingDirectory = Path.GetDirectoryName(ksyFile.Path)
+                            };
+                        }
+                        else
+                        {
+                            // Executable command
+                            processInfo = new ProcessStartInfo
+                            {
+                                FileName = compilerPath,
+                                Arguments = $"-t {language} \"{ksyFile.Path}\" -d \"{langOutputDir}\"",
+                                RedirectStandardOutput = true,
+                                RedirectStandardError = true,
+                                UseShellExecute = false,
+                                CreateNoWindow = true,
+                                WorkingDirectory = Path.GetDirectoryName(ksyFile.Path)
+                            };
+                        }
 
                         using (var process = Process.Start(processInfo))
                         {
@@ -527,19 +567,14 @@ namespace Andastra.Parsing.Tests.Formats
 
         private static string FindKaitaiCompiler()
         {
-            // Try common locations and PATH
-            string[] possiblePaths = new[]
+            // Try as command first (if installed via package manager)
+            string[] commandPaths = new[]
             {
                 "kaitai-struct-compiler",
-                "ksc",
-                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "kaitai-struct-compiler", "kaitai-struct-compiler.exe"),
-                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "kaitai-struct-compiler", "kaitai-struct-compiler.exe"),
-                "/usr/bin/kaitai-struct-compiler",
-                "/usr/local/bin/kaitai-struct-compiler",
-                "C:\\Program Files\\kaitai-struct-compiler\\kaitai-struct-compiler.exe"
+                "ksc"
             };
 
-            foreach (string path in possiblePaths)
+            foreach (string path in commandPaths)
             {
                 try
                 {
@@ -563,6 +598,98 @@ namespace Andastra.Parsing.Tests.Formats
                                 return path;
                             }
                         }
+                    }
+                }
+                catch
+                {
+                    // Continue searching
+                }
+            }
+
+            // Try as Java JAR (common installation method)
+            string jarPath = FindKaitaiCompilerJar();
+            if (!string.IsNullOrEmpty(jarPath) && File.Exists(jarPath))
+            {
+                // Return special marker for JAR - callers will use java -jar
+                return "JAR:" + jarPath;
+            }
+
+            // Try common installation locations
+            string[] commonPaths = new[]
+            {
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "kaitai-struct-compiler", "kaitai-struct-compiler.exe"),
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "kaitai-struct-compiler", "kaitai-struct-compiler.exe"),
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".local", "bin", "kaitai-struct-compiler"),
+                "C:\\Program Files\\kaitai-struct-compiler\\kaitai-struct-compiler.exe",
+                "/usr/bin/kaitai-struct-compiler",
+                "/usr/local/bin/kaitai-struct-compiler"
+            };
+
+            foreach (string path in commonPaths)
+            {
+                try
+                {
+                    if (File.Exists(path))
+                    {
+                        var processInfo = new ProcessStartInfo
+                        {
+                            FileName = path,
+                            Arguments = "--version",
+                            RedirectStandardOutput = true,
+                            RedirectStandardError = true,
+                            UseShellExecute = false,
+                            CreateNoWindow = true
+                        };
+
+                        using (var process = Process.Start(processInfo))
+                        {
+                            if (process != null)
+                            {
+                                process.WaitForExit(5000);
+                                if (process.ExitCode == 0)
+                                {
+                                    return path;
+                                }
+                            }
+                        }
+                    }
+                }
+                catch
+                {
+                    // Continue searching
+                }
+            }
+
+            return null;
+        }
+
+        private static string FindKaitaiCompilerJar()
+        {
+            // Check environment variable first
+            string envJar = Environment.GetEnvironmentVariable("KAITAI_COMPILER_JAR");
+            if (!string.IsNullOrEmpty(envJar) && File.Exists(envJar))
+            {
+                return envJar;
+            }
+
+            // Check common locations for Kaitai Struct compiler JAR
+            string[] searchPaths = new[]
+            {
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".kaitai", "kaitai-struct-compiler.jar"),
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "kaitai-struct-compiler.jar"),
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "kaitai-struct-compiler.jar"),
+                Path.Combine(AppContext.BaseDirectory, "kaitai-struct-compiler.jar"),
+                Path.Combine(Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location), "kaitai-struct-compiler.jar")
+            };
+
+            foreach (string path in searchPaths)
+            {
+                try
+                {
+                    string normalizedPath = Path.GetFullPath(path);
+                    if (File.Exists(normalizedPath))
+                    {
+                        return normalizedPath;
                     }
                 }
                 catch
