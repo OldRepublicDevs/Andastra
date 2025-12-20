@@ -1243,7 +1243,7 @@ namespace HolocronToolset.Data
             {
                 if (int.TryParse(prop.Name, out int substringId))
                 {
-                    var (language, gender) = LocalizedString.SubstringPair(substringId);
+                    LocalizedString.SubstringPair(substringId, out Language language, out Gender gender);
                     Name.SetData(language, gender, prop.Value.GetString());
                 }
             }

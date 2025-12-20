@@ -30,13 +30,62 @@ namespace Andastra.Parsing.Tools
     public static class ModelTools
     {
         // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/model.py:34-78
+        // Geometry root function pointer constants
+        private const uint _GEOM_ROOT_FP0_K1 = 4273776;
+        private const uint _GEOM_ROOT_FP1_K1 = 4216096;
+        private const uint _GEOM_ROOT_FP0_K2 = 4285200;
+        private const uint _GEOM_ROOT_FP1_K2 = 4216320;
+
+        // Geometry animation function pointer constants
+        private const uint _GEOM_ANIM_FP0_K1 = 4273392;
+        private const uint _GEOM_ANIM_FP1_K1 = 4451552;
+        private const uint _GEOM_ANIM_FP0_K2 = 4284816;
+        private const uint _GEOM_ANIM_FP1_K2 = 4522928;
+
         // Mesh type constants for determining TSL vs K1
         private const uint _MESH_FP0_K1 = 4216656;
+        private const uint _MESH_FP1_K1 = 4216672;
+        private const uint _MESH_FP0_K2 = 4216880;
+        private const uint _MESH_FP1_K2 = 4216896;
+        private const int _MESH_HEADER_SIZE_K1 = 332;
+        private const int _MESH_HEADER_SIZE_K2 = 340;
+
+        // Skin constants
         private const uint _SKIN_FP0_K1 = 4216592;
+        private const uint _SKIN_FP1_K1 = 4216608;
+        private const uint _SKIN_FP0_K2 = 4216816;
+        private const uint _SKIN_FP1_K2 = 4216832;
+        private const int _SKIN_HEADER_SIZE = 108;
+
+        // Dangly constants
+        private const uint _DANGLY_FP0_K1 = 4216640;
+        private const uint _DANGLY_FP1_K1 = 4216624;
         private const uint _DANGLY_FP0_K2 = 4216864;
-        private const uint _AABB_FP0_K1 = 4216656;
+        private const uint _DANGLY_FP1_K2 = 4216848;
+        private const int _DANGLY_HEADER_SIZE = 28;
+
+        // Saber constants
         private const uint _SABER_FP0_K1 = 4216656;
+        private const uint _SABER_FP1_K1 = 4216672;
+        private const uint _SABER_FP0_K2 = 4216880;
+        private const uint _SABER_FP1_K2 = 4216896;
+        private const int _SABER_HEADER_SIZE = 20;
+
+        // AABB constants
+        private const uint _AABB_FP0_K1 = 4216656;
+        private const uint _AABB_FP1_K1 = 4216672;
+        private const uint _AABB_FP0_K2 = 4216880;
+        private const uint _AABB_FP1_K2 = 4216896;
+        private const int _AABB_HEADER_SIZE = 4;
+
+        // Node type constants
         private const int _NODE_TYPE_MESH = 32;
+        private const int _NODE_TYPE_SKIN = 64;
+        private const int _NODE_TYPE_DANGLY = 256;
+        private const int _NODE_TYPE_SABER = 2048;
+        private const int _NODE_TYPE_AABB = 512;
+        private const int _NODE_TYPE_LIGHT = 2;
+        private const int _NODE_TYPE_EMITTER = 4;
         /// <summary>
         /// Extracts texture and lightmap names from MDL model data.
         /// </summary>
@@ -863,6 +912,631 @@ namespace Andastra.Parsing.Tools
             double qw = Math.Cos(roll / 2) * Math.Cos(pitch / 2) * Math.Cos(yaw / 2) + Math.Sin(roll / 2) * Math.Sin(pitch / 2) * Math.Sin(yaw / 2);
 
             return new Andastra.Utility.Geometry.Quaternion((float)qx, (float)qy, (float)qz, (float)qw);
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/model.py:305-310
+        // Original: def detect_version(data: bytes | bytearray) -> Game:
+        /// <summary>
+        /// Detects whether an MDL model is K1 or K2 format by checking the geometry root function pointer.
+        /// </summary>
+        /// <param name="data">The binary MDL data (with 12-byte header).</param>
+        /// <returns>True if K2 (TSL), false if K1.</returns>
+        private static bool DetectVersion(byte[] data)
+        {
+            if (data == null || data.Length < 16)
+            {
+                throw new ArgumentException("Invalid MDL data: must be at least 16 bytes", nameof(data));
+            }
+
+            // Read pointer at offset 12-16 (after 12-byte header)
+            // Matching Python: pointer: int = struct.unpack("I", data[12:16])[0]
+            uint pointer = BitConverter.ToUInt32(data, 12);
+            // Matching Python: return Game.K1 if pointer == _GEOM_ROOT_FP0_K1 else Game.K2
+            return pointer != _GEOM_ROOT_FP0_K1;
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/model.py:312-375
+        // Original: def convert_to_k1(data: bytes | bytearray) -> bytes | bytearray:
+        /// <summary>
+        /// Converts a K2 (TSL) model to K1 format by updating function pointers and adjusting mesh headers.
+        /// </summary>
+        /// <param name="data">The binary MDL data (with 12-byte header).</param>
+        /// <returns>The converted MDL data in K1 format.</returns>
+        public static byte[] ConvertToK1(byte[] data)
+        {
+            if (data == null)
+            {
+                throw new ArgumentNullException(nameof(data));
+            }
+            if (data.Length < 12)
+            {
+                throw new ArgumentException("Invalid MDL data: must be at least 12 bytes", nameof(data));
+            }
+
+            // If already K1, return as-is
+            // Matching Python: if detect_version(data) == Game.K1: return data
+            if (!DetectVersion(data))
+            {
+                return data;
+            }
+
+            var trim = new List<Tuple<int, int>>(); // List of (node_type, node_offset) tuples
+
+            // First pass: collect all mesh nodes that need trimming
+            // Matching Python: with BinaryReader.from_bytes(data, 12) as reader:
+            using (BinaryReader reader = BinaryReader.FromBytes(data, 12))
+            {
+                reader.Seek(168);
+                uint rootOffset = reader.ReadUInt32();
+
+                var nodes = new Stack<uint>();
+                nodes.Push(rootOffset);
+
+                while (nodes.Count > 0)
+                {
+                    uint nodeOffset = nodes.Pop();
+                    reader.Seek((int)nodeOffset);
+                    ushort nodeType = reader.ReadUInt16();
+
+                    // If this is a mesh node, add it to trim list
+                    // Matching Python: if node_type & 32: trim.append((node_type, node_offset))
+                    if ((nodeType & _NODE_TYPE_MESH) != 0)
+                    {
+                        trim.Add(new Tuple<int, int>(nodeType, (int)nodeOffset));
+                    }
+
+                    reader.Seek((int)nodeOffset + 44);
+                    uint childOffsetsOffset = reader.ReadUInt32();
+                    uint childOffsetsCount = reader.ReadUInt32();
+
+                    reader.Seek((int)childOffsetsOffset);
+                    for (uint i = 0; i < childOffsetsCount; i++)
+                    {
+                        nodes.Push(reader.ReadUInt32());
+                    }
+                }
+            }
+
+            // Extract header and parsed data
+            // Matching Python: start: bytes | bytearray = data[:12]
+            byte[] start = new byte[12];
+            Array.Copy(data, 0, start, 0, 12);
+            // Matching Python: parsed_data: bytearray = bytearray(data[12:])
+            byte[] parsedData = new byte[data.Length - 12];
+            Array.Copy(data, 12, parsedData, 0, parsedData.Length);
+
+            // Update geometry root function pointers to K1 values
+            // Matching Python: parsed_data[:4] = struct.pack("I", _GEOM_ROOT_FP0_K1)
+            byte[] fp0Bytes = BitConverter.GetBytes(_GEOM_ROOT_FP0_K1);
+            Array.Copy(fp0Bytes, 0, parsedData, 0, 4);
+            // Matching Python: parsed_data[4:8] = struct.pack("I", _GEOM_ROOT_FP1_K1)
+            byte[] fp1Bytes = BitConverter.GetBytes(_GEOM_ROOT_FP1_K1);
+            Array.Copy(fp1Bytes, 0, parsedData, 4, 4);
+
+            // Process each mesh node that needs trimming
+            // Matching Python: for node_type, node_offset in trim:
+            foreach (var tuple in trim)
+            {
+                int nodeType = tuple.Item1;
+                int nodeOffset = tuple.Item2;
+                // Matching Python: mesh_start: int = node_offset + 80  # Start of mesh header
+                int meshStart = nodeOffset + 80;
+
+                // Matching Python: offset_start: int = node_offset + 80 + 332  # Location of start of bytes to be shifted
+                int offsetStart = nodeOffset + 80 + 332;
+                // Matching Python: offset_size: int = 8  # How many bytes we have to shift
+                int offsetSize = 8;
+
+                // Handle different node types and update function pointers
+                // Matching Python: if node_type & _NODE_TYPE_SKIN:
+                if ((nodeType & _NODE_TYPE_SKIN) != 0)
+                {
+                    offsetSize += _SKIN_HEADER_SIZE;
+                    byte[] meshFp0Bytes = BitConverter.GetBytes(_MESH_FP0_K1);
+                    Array.Copy(meshFp0Bytes, 0, parsedData, meshStart, 4);
+                    byte[] meshFp1Bytes = BitConverter.GetBytes(_MESH_FP1_K1);
+                    Array.Copy(meshFp1Bytes, 0, parsedData, meshStart + 4, 4);
+                }
+
+                // Matching Python: if node_type & _NODE_TYPE_DANGLY:
+                if ((nodeType & _NODE_TYPE_DANGLY) != 0)
+                {
+                    offsetSize += _DANGLY_HEADER_SIZE;
+                    byte[] danglyFp0Bytes = BitConverter.GetBytes(_DANGLY_FP0_K1);
+                    Array.Copy(danglyFp0Bytes, 0, parsedData, meshStart, 4);
+                    byte[] danglyFp1Bytes = BitConverter.GetBytes(_DANGLY_FP1_K1);
+                    Array.Copy(danglyFp1Bytes, 0, parsedData, meshStart + 4, 4);
+                }
+
+                // Matching Python: if node_type & _NODE_TYPE_SABER:
+                if ((nodeType & _NODE_TYPE_SABER) != 0)
+                {
+                    offsetSize += _SABER_HEADER_SIZE;
+                    byte[] saberFp0Bytes = BitConverter.GetBytes(_SABER_FP0_K1);
+                    Array.Copy(saberFp0Bytes, 0, parsedData, meshStart, 4);
+                    byte[] saberFp1Bytes = BitConverter.GetBytes(_SABER_FP1_K1);
+                    Array.Copy(saberFp1Bytes, 0, parsedData, meshStart + 4, 4);
+                }
+
+                // Matching Python: if node_type & _NODE_TYPE_AABB:
+                if ((nodeType & _NODE_TYPE_AABB) != 0)
+                {
+                    offsetSize += _AABB_HEADER_SIZE;
+                    byte[] aabbFp0Bytes = BitConverter.GetBytes(_AABB_FP0_K1);
+                    Array.Copy(aabbFp0Bytes, 0, parsedData, meshStart, 4);
+                    byte[] aabbFp1Bytes = BitConverter.GetBytes(_AABB_FP1_K1);
+                    Array.Copy(aabbFp1Bytes, 0, parsedData, meshStart + 4, 4);
+                }
+
+                // Shift data to remove 8 bytes (K2 has 8 extra bytes in mesh header)
+                // Matching Python: shifting: bytearray = parsed_data[offset_start : offset_start + offset_size]
+                byte[] shifting = new byte[offsetSize];
+                Array.Copy(parsedData, offsetStart, shifting, 0, offsetSize);
+                // Matching Python: parsed_data[offset_start - 8 : offset_start - 8 + offset_size] = shifting
+                Array.Copy(shifting, 0, parsedData, offsetStart - 8, offsetSize);
+            }
+
+            // Reconstruct full data with header
+            // Matching Python: return bytes(start + parsed_data)
+            byte[] result = new byte[start.Length + parsedData.Length];
+            Array.Copy(start, 0, result, 0, start.Length);
+            Array.Copy(parsedData, 0, result, start.Length, parsedData.Length);
+            return result;
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/model.py:378-635
+        // Original: def convert_to_k2(data: bytes | bytearray) -> bytes | bytearray:
+        /// <summary>
+        /// Converts a K1 model to K2 (TSL) format by updating function pointers and adding extra bytes to mesh headers.
+        /// This is a complex operation that requires tracking and updating all offsets in the file.
+        /// </summary>
+        /// <param name="data">The binary MDL data (with 12-byte header).</param>
+        /// <returns>The converted MDL data in K2 format.</returns>
+        public static byte[] ConvertToK2(byte[] data)
+        {
+            if (data == null)
+            {
+                throw new ArgumentNullException(nameof(data));
+            }
+            if (data.Length < 12)
+            {
+                throw new ArgumentException("Invalid MDL data: must be at least 12 bytes", nameof(data));
+            }
+
+            // If already K2, return as-is
+            // Matching Python: if detect_version(data) == Game.K2: return data
+            if (DetectVersion(data))
+            {
+                return data;
+            }
+
+            // Maps offset location to offset value (for tracking all offsets that need updating)
+            // Matching Python: offsets: dict[int, int] = {}  # Maps the offset for an offset to its offset
+            var offsets = new Dictionary<int, int>();
+            // List of mesh node offsets and types
+            // Matching Python: mesh_offsets: list[list[int]] = []  # tuple of (Offset to every mesh node, Node type)
+            var meshOffsets = new List<Tuple<int, int>>();
+            // List of animation offsets
+            // Matching Python: anim_offsets: list[int] = []
+            var animOffsets = new List<int>();
+
+            // First pass: build dictionary of all offsets in the file
+            // Matching Python: with BinaryReader.from_bytes(data, 12) as reader:
+            using (BinaryReader reader = BinaryReader.FromBytes(data, 12))
+            {
+                // Recursive function to traverse nodes and collect offsets
+                // Matching Python: def node_recursive(offset_to_root_offset: int) -> None:
+                Action<int> nodeRecursive = null;
+                nodeRecursive = (offsetToRootOffset) =>
+                {
+                    // Matching Python: nodes: list[int] = [offset_to_root_offset]
+                    // Use a mutable container to allow reassignment within the lambda
+                    var nodesContainer = new List<int> { offsetToRootOffset };
+
+                    while (nodesContainer.Count > 0)
+                    {
+                        // Matching Python: offset_to_node_offset: int = nodes.pop()
+                        int offsetToNodeOffset = nodesContainer[nodesContainer.Count - 1];
+                        nodesContainer.RemoveAt(nodesContainer.Count - 1);
+                        reader.Seek(offsetToNodeOffset);
+                        int nodeOffset = (int)reader.ReadUInt32();
+                        // Matching Python: offsets[offset_to_node_offset] = node_offset
+                        offsets[offsetToNodeOffset] = nodeOffset;
+
+                        reader.Seek(nodeOffset);
+                        ushort nodeType = reader.ReadUInt16();
+
+                        int baseOffset = nodeOffset + 80;
+
+                        // Matching Python: if node_type & _NODE_TYPE_MESH:
+                        if ((nodeType & _NODE_TYPE_MESH) != 0)
+                        {
+                            // Matching Python: mesh_offsets.append([node_offset, node_type])
+                            meshOffsets.Add(new Tuple<int, int>(nodeOffset, nodeType));
+
+                            reader.Seek(baseOffset + 8);
+                            offsets[baseOffset + 8] = (int)reader.ReadUInt32(); // Face array offset
+
+                            reader.Seek(baseOffset + 176);
+                            offsets[baseOffset + 176] = (int)reader.ReadUInt32(); // Vertex indices count array
+                            uint indicesArrayCount = reader.ReadUInt32();
+
+                            reader.Seek(baseOffset + 188);
+                            offsets[baseOffset + 188] = (int)reader.ReadUInt32(); // Vertex indices locations array
+                            if (indicesArrayCount == 1)
+                            {
+                                int indicesLocationsOffset = offsets[baseOffset + 188];
+                                reader.Seek(indicesLocationsOffset);
+                                offsets[indicesLocationsOffset] = (int)reader.ReadUInt32(); // Vertex indices array
+                            }
+
+                            reader.Seek(baseOffset + 200);
+                            offsets[baseOffset + 200] = (int)reader.ReadUInt32(); // Inverted counter array
+
+                            reader.Seek(baseOffset + 328);
+                            offsets[baseOffset + 328] = (int)reader.ReadUInt32(); // Vertex array
+
+                            baseOffset += _MESH_HEADER_SIZE_K1;
+                        }
+
+                        // Matching Python: if node_type & _NODE_TYPE_LIGHT:
+                        if ((nodeType & _NODE_TYPE_LIGHT) != 0)
+                        {
+                            reader.Seek(baseOffset + 4);
+                            offsets[baseOffset + 4] = (int)reader.ReadUInt32(); // Lens flare size array
+
+                            reader.Seek(baseOffset + 16);
+                            offsets[baseOffset + 16] = (int)reader.ReadUInt32(); // Lens flare size array
+
+                            reader.Seek(baseOffset + 28);
+                            offsets[baseOffset + 28] = (int)reader.ReadUInt32(); // Lens flare positions array
+
+                            reader.Seek(baseOffset + 40);
+                            offsets[baseOffset + 40] = (int)reader.ReadUInt32(); // Flare colour shifts array
+
+                            reader.Seek(baseOffset + 52);
+                            offsets[baseOffset + 52] = (int)reader.ReadUInt32(); // Flare texture names offsets array
+                            uint textureCount = reader.ReadUInt32();
+
+                            for (uint i = 0; i < textureCount; i++)
+                            {
+                                reader.Seek(offsets[baseOffset + 52] + (int)(i * 4));
+                                offsets[offsets[baseOffset + 52] + (int)(i * 4)] = (int)reader.ReadUInt32();
+                            }
+                        }
+
+                        // Matching Python: if node_type & _NODE_TYPE_EMITTER:
+                        // No offsets to track for emitters
+
+                        // Matching Python: if node_type & _NODE_TYPE_SKIN:
+                        if ((nodeType & _NODE_TYPE_SKIN) != 0)
+                        {
+                            reader.Seek(baseOffset + 20);
+                            offsets[baseOffset + 20] = (int)reader.ReadUInt32(); // Bone map array
+
+                            reader.Seek(baseOffset + 28);
+                            offsets[baseOffset + 28] = (int)reader.ReadUInt32(); // QBones array
+
+                            reader.Seek(baseOffset + 40);
+                            offsets[baseOffset + 40] = (int)reader.ReadUInt32(); // TBones Array
+
+                            reader.Seek(baseOffset + 52);
+                            offsets[baseOffset + 52] = (int)reader.ReadUInt32(); // Array8
+
+                            baseOffset += _SKIN_HEADER_SIZE;
+                        }
+
+                        // Matching Python: if node_type & _NODE_TYPE_DANGLY:
+                        if ((nodeType & _NODE_TYPE_DANGLY) != 0)
+                        {
+                            reader.Seek(baseOffset + 0);
+                            offsets[baseOffset + 0] = (int)reader.ReadUInt32(); // Dangly constraint array
+
+                            reader.Seek(baseOffset + 24);
+                            offsets[baseOffset + 24] = (int)reader.ReadUInt32(); // Unknown
+
+                            baseOffset += _DANGLY_HEADER_SIZE;
+                        }
+
+                        // Matching Python: if node_type & _NODE_TYPE_AABB:
+                        if ((nodeType & _NODE_TYPE_AABB) != 0)
+                        {
+                            reader.Seek(baseOffset + 0);
+                            offsets[baseOffset + 0] = (int)reader.ReadUInt32(); // AABB root node
+
+                            var aabbs = new Stack<int>();
+                            aabbs.Push(offsets[baseOffset + 0]);
+
+                            while (aabbs.Count > 0)
+                            {
+                                int aabb = aabbs.Pop();
+
+                                reader.Seek(aabb + 24);
+                                int leaf0 = (int)reader.ReadUInt32();
+                                if (leaf0 != 0)
+                                {
+                                    aabbs.Push(leaf0);
+                                    offsets[aabb + 24] = leaf0; // AABB child node
+                                }
+
+                                reader.Seek(aabb + 28);
+                                int leaf1 = (int)reader.ReadUInt32();
+                                if (leaf1 != 0)
+                                {
+                                    aabbs.Push(leaf1);
+                                    offsets[aabb + 28] = leaf1; // AABB child node
+                                }
+                            }
+
+                            baseOffset += _AABB_HEADER_SIZE;
+                        }
+
+                        // Matching Python: if node_type & _NODE_TYPE_SABER:
+                        if ((nodeType & _NODE_TYPE_SABER) != 0)
+                        {
+                            reader.Seek(baseOffset + 0);
+                            offsets[baseOffset + 0] = (int)reader.ReadUInt32(); // Saber Verts array
+
+                            reader.Seek(baseOffset + 4);
+                            offsets[baseOffset + 4] = (int)reader.ReadUInt32(); // Saber UVs array
+
+                            reader.Seek(baseOffset + 8);
+                            offsets[baseOffset + 8] = (int)reader.ReadUInt32(); // Saber Normals array
+
+                            baseOffset += _SABER_HEADER_SIZE;
+                        }
+
+                        reader.Seek(nodeOffset + 8);
+                        offsets[nodeOffset + 8] = (int)reader.ReadUInt32(); // Geometry header
+
+                        reader.Seek(nodeOffset + 12);
+                        offsets[nodeOffset + 12] = (int)reader.ReadUInt32(); // Parent node
+
+                        reader.Seek(nodeOffset + 56);
+                        offsets[nodeOffset + 56] = (int)reader.ReadUInt32(); // Controller array offset
+
+                        reader.Seek(nodeOffset + 68);
+                        offsets[nodeOffset + 68] = (int)reader.ReadUInt32(); // Controller data offset
+
+                        reader.Seek(nodeOffset + 44);
+                        int childOffsetsOffset = (int)reader.ReadUInt32();
+                        int childOffsetsCount = (int)reader.ReadUInt32();
+                        offsets[nodeOffset + 44] = childOffsetsOffset; // Child node offsets array
+
+                        // Matching Python: nodes = [child_offsets_offset + i * 4 for i in range(child_offsets_count)]
+                        // Matching Python: nodes.insert(0, offset_to_root_offset)
+                        // Note: The Python code replaces the nodes list and adds the current offset back
+                        // This continues the while loop to process child nodes
+                        nodesContainer.Clear();
+                        for (int i = 0; i < childOffsetsCount; i++)
+                        {
+                            nodesContainer.Add(childOffsetsOffset + i * 4);
+                        }
+                        nodesContainer.Insert(0, offsetToRootOffset); // Add current offset back to continue processing
+                    }
+                };
+
+                // Process animations
+                // Matching Python: reader.seek(88)
+                reader.Seek(88);
+                int animLocationsOffset = (int)reader.ReadUInt32();
+                int animCount = (int)reader.ReadUInt32();
+
+                reader.Seek(168);
+                reader.ReadUInt32();
+                reader.ReadUInt32();
+
+                reader.Seek(184);
+                reader.ReadUInt32();
+                int nameCount = (int)reader.ReadUInt32();
+
+                reader.Seek(40);
+                offsets[40] = (int)reader.ReadUInt32(); // Root node
+
+                reader.Seek(88);
+                offsets[88] = (int)reader.ReadUInt32(); // Animation array
+
+                reader.Seek(168);
+                offsets[168] = (int)reader.ReadUInt32(); // Head root
+
+                reader.Seek(184);
+                offsets[184] = (int)reader.ReadUInt32(); // Name offsets array
+
+                for (int i = 0; i < nameCount; i++)
+                {
+                    reader.Seek(offsets[184] + i * 4);
+                    offsets[offsets[184] + i * 4] = (int)reader.ReadUInt32(); // Name
+                }
+
+                for (int i = 0; i < animCount; i++)
+                {
+                    reader.Seek(animLocationsOffset + i * 4);
+                    int animationOffset = (int)reader.ReadUInt32();
+                    offsets[animLocationsOffset + i * 4] = animationOffset; // Offset to event
+                    animOffsets.Add(animationOffset);
+
+                    reader.Seek(animationOffset + 120);
+                    offsets[animationOffset + 120] = (int)reader.ReadUInt32(); // Offset to event array
+
+                    reader.Seek(animationOffset + 40);
+                    nodeRecursive(animationOffset + 40);
+                }
+
+                // Process root node
+                nodeRecursive(168);
+            }
+
+            // Second pass: update function pointers to K2 values
+            // Matching Python: mdx_size: bytes | bytearray = data[8:12]
+            byte[] mdxSizeBytes = new byte[4];
+            Array.Copy(data, 8, mdxSizeBytes, 0, 4);
+            // Matching Python: parsed_data: bytearray = bytearray(data[12:])
+            byte[] parsedData = new byte[data.Length - 12];
+            Array.Copy(data, 12, parsedData, 0, parsedData.Length);
+
+            // Update geometry root function pointers
+            // Matching Python: parsed_data[:4] = struct.pack("I", _GEOM_ROOT_FP0_K2)
+            byte[] fp0Bytes = BitConverter.GetBytes(_GEOM_ROOT_FP0_K2);
+            Array.Copy(fp0Bytes, 0, parsedData, 0, 4);
+            // Matching Python: parsed_data[4:8] = struct.pack("I", _GEOM_ROOT_FP1_K2)
+            byte[] fp1Bytes = BitConverter.GetBytes(_GEOM_ROOT_FP1_K2);
+            Array.Copy(fp1Bytes, 0, parsedData, 4, 4);
+
+            // Update animation function pointers
+            // Matching Python: for anim_offset in anim_offsets:
+            foreach (int animOffset in animOffsets)
+            {
+                byte[] animFp0Bytes = BitConverter.GetBytes(_GEOM_ANIM_FP0_K2);
+                Array.Copy(animFp0Bytes, 0, parsedData, animOffset, 4);
+                byte[] animFp1Bytes = BitConverter.GetBytes(_GEOM_ANIM_FP1_K2);
+                Array.Copy(animFp1Bytes, 0, parsedData, animOffset + 4, 4);
+            }
+
+            // Update mesh function pointers
+            // Matching Python: for node_offset, node_type in mesh_offsets:
+            foreach (var tuple in meshOffsets)
+            {
+                int nodeOffset = tuple.Item1;
+                int nodeType = tuple.Item2;
+                // Matching Python: mesh_start: int = node_offset + 80  # Start of mesh header
+                int meshStart = nodeOffset + 80;
+
+                // Matching Python: if node_type & _NODE_TYPE_SKIN:
+                if ((nodeType & _NODE_TYPE_SKIN) != 0)
+                {
+                    byte[] meshFp0Bytes = BitConverter.GetBytes(_MESH_FP0_K2);
+                    Array.Copy(meshFp0Bytes, 0, parsedData, meshStart, 4);
+                    byte[] meshFp1Bytes = BitConverter.GetBytes(_MESH_FP1_K2);
+                    Array.Copy(meshFp1Bytes, 0, parsedData, meshStart + 4, 4);
+                }
+
+                // Matching Python: if node_type & _NODE_TYPE_DANGLY:
+                if ((nodeType & _NODE_TYPE_DANGLY) != 0)
+                {
+                    byte[] danglyFp0Bytes = BitConverter.GetBytes(_DANGLY_FP0_K2);
+                    Array.Copy(danglyFp0Bytes, 0, parsedData, meshStart, 4);
+                    byte[] danglyFp1Bytes = BitConverter.GetBytes(_DANGLY_FP1_K2);
+                    Array.Copy(danglyFp1Bytes, 0, parsedData, meshStart + 4, 4);
+                }
+
+                // Matching Python: if node_type & _NODE_TYPE_SABER:
+                if ((nodeType & _NODE_TYPE_SABER) != 0)
+                {
+                    byte[] saberFp0Bytes = BitConverter.GetBytes(_SABER_FP0_K1); // Note: K1 value for FP0
+                    Array.Copy(saberFp0Bytes, 0, parsedData, meshStart, 4);
+                    byte[] saberFp1Bytes = BitConverter.GetBytes(_SABER_FP1_K2);
+                    Array.Copy(saberFp1Bytes, 0, parsedData, meshStart + 4, 4);
+                }
+
+                // Matching Python: if node_type & _NODE_TYPE_AABB:
+                if ((nodeType & _NODE_TYPE_AABB) != 0)
+                {
+                    byte[] aabbFp0Bytes = BitConverter.GetBytes(_AABB_FP0_K2);
+                    Array.Copy(aabbFp0Bytes, 0, parsedData, meshStart, 4);
+                    byte[] aabbFp1Bytes = BitConverter.GetBytes(_AABB_FP1_K2);
+                    Array.Copy(aabbFp1Bytes, 0, parsedData, meshStart + 4, 4);
+                }
+            }
+
+            // Sort offsets in reverse order for processing
+            // Matching Python: offsets = dict(sorted(offsets.items(), reverse=True))
+            var sortedOffsets = new List<KeyValuePair<int, int>>(offsets);
+            sortedOffsets.Sort((a, b) => b.Key.CompareTo(a.Key));
+
+            // Third pass: add 8 extra bytes to each mesh header and update all offsets
+            // Matching Python: shifted: int = 0
+            int shifted = 0;
+            // Matching Python: for i in range(len(mesh_offsets)):
+            for (int i = 0; i < meshOffsets.Count; i++)
+            {
+                var tuple = meshOffsets[i];
+                int nodeOffset = tuple.Item1;
+                // Matching Python: insert_location: int = node_offset + 80 + 324
+                int insertLocation = nodeOffset + 80 + 324;
+
+                // Insert 8 zero bytes at insert location
+                // Matching Python: parsed_data = bytearray(parsed_data[:insert_location] + bytes([0] * 8) + parsed_data[insert_location:])
+                byte[] beforeInsert = new byte[insertLocation];
+                Array.Copy(parsedData, 0, beforeInsert, 0, insertLocation);
+                byte[] insertBytes = new byte[8]; // 8 zero bytes
+                byte[] afterInsert = new byte[parsedData.Length - insertLocation];
+                Array.Copy(parsedData, insertLocation, afterInsert, 0, afterInsert.Length);
+                byte[] newParsedData = new byte[beforeInsert.Length + insertBytes.Length + afterInsert.Length];
+                Array.Copy(beforeInsert, 0, newParsedData, 0, beforeInsert.Length);
+                Array.Copy(insertBytes, 0, newParsedData, beforeInsert.Length, insertBytes.Length);
+                Array.Copy(afterInsert, 0, newParsedData, beforeInsert.Length + insertBytes.Length, afterInsert.Length);
+                parsedData = newParsedData;
+
+                // Update offsets that come after the insert location
+                // Matching Python: for offset_location, offset_value in deepcopy(offsets).items():
+                var offsetsCopy = new Dictionary<int, int>(offsets);
+                foreach (var kvp in offsetsCopy)
+                {
+                    int offsetLocation = kvp.Key;
+                    int offsetValue = kvp.Value;
+
+                    // Matching Python: if insert_location < offset_location:
+                    if (insertLocation < offsetLocation)
+                    {
+                        offsets.Remove(offsetLocation);
+                        // Matching Python: if offset_location + 8 in offsets: raise ValueError("whoops")
+                        if (offsets.ContainsKey(offsetLocation + 8))
+                        {
+                            throw new InvalidOperationException("Offset collision detected during K2 conversion");
+                        }
+                        offsets[offsetLocation + 8] = offsetValue;
+                    }
+                }
+
+                // Update offset values that point to data after insert location
+                // Matching Python: for offset_location, offset_value in deepcopy(offsets).items():
+                var offsetsCopy2 = new Dictionary<int, int>(offsets);
+                foreach (var kvp in offsetsCopy2)
+                {
+                    int offsetLocation = kvp.Key;
+                    int offsetValue = kvp.Value;
+
+                    // Matching Python: if insert_location < offset_value:
+                    if (insertLocation < offsetValue)
+                    {
+                        offsets[offsetLocation] = offsetValue + 8;
+                    }
+                }
+
+                // Update mesh offsets that come after insert location
+                // Matching Python: for j in range(len(mesh_offsets)):
+                for (int j = 0; j < meshOffsets.Count; j++)
+                {
+                    var meshTuple = meshOffsets[j];
+                    // Matching Python: if insert_location < mesh_offsets[j][0]:
+                    if (insertLocation < meshTuple.Item1)
+                    {
+                        meshOffsets[j] = new Tuple<int, int>(meshTuple.Item1 + 8, meshTuple.Item2);
+                    }
+                }
+
+                shifted += 8;
+            }
+
+            // Final pass: update all offsets in the file
+            // Matching Python: for offset_location, offset_value in offsets.items():
+            foreach (var kvp in offsets)
+            {
+                int offsetLocation = kvp.Key;
+                int offsetValue = kvp.Value;
+                // Matching Python: parsed_data[offset_location : offset_location + 4] = struct.pack("I", offset_value)
+                byte[] offsetBytes = BitConverter.GetBytes((uint)offsetValue);
+                Array.Copy(offsetBytes, 0, parsedData, offsetLocation, 4);
+            }
+
+            // Reconstruct full data with header
+            // Matching Python: return struct.pack("I", 0) + struct.pack("I", len(parsed_data)) + mdx_size + parsed_data
+            byte[] result = new byte[4 + 4 + 4 + parsedData.Length];
+            Array.Copy(BitConverter.GetBytes(0u), 0, result, 0, 4); // Unused (always 0)
+            Array.Copy(BitConverter.GetBytes((uint)parsedData.Length), 0, result, 4, 4); // MDL size
+            Array.Copy(mdxSizeBytes, 0, result, 8, 4); // MDX size
+            Array.Copy(parsedData, 0, result, 12, parsedData.Length); // Parsed data
+            return result;
         }
     }
 }
