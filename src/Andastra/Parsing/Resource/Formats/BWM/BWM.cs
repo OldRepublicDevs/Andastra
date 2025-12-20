@@ -8,16 +8,83 @@ using Vector3 = System.Numerics.Vector3;
 
 namespace Andastra.Parsing.Formats.BWM
 {
-    // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/bwm/bwm_data.py:127-1843
-    // Original: class BWM(ComparableMixin)
+    /// <summary>
+    /// Represents a BioWare Walkmesh (BWM) file. This is the data structure that stores walkmesh information
+    /// for areas, placeables, and doors in the game.
+    /// 
+    /// WHAT IS A BWM FILE?
+    /// 
+    /// A BWM file is a file format used by BioWare games to store walkmesh data. A walkmesh is a simplified
+    /// 3D model made of triangles that defines where characters can walk, where they cannot walk, and how
+    /// high the ground is at different locations.
+    /// 
+    /// BWM files come in three types:
+    /// - WOK (Area Walkmesh): Used for entire areas/modules. Contains vertices in world coordinates,
+    ///   includes an AABB tree for fast spatial queries, has walkable adjacency information, and
+    ///   perimeter edges for transitions between areas.
+    /// - PWK (Placeable Walkmesh): Used for placeable objects (chests, tables, etc.). Contains vertices
+    ///   in local coordinates (relative to the placeable's position), collision-only (no pathfinding),
+    ///   typically no AABB tree.
+    /// - DWK (Door Walkmesh): Used for doors. Similar to PWK, contains vertices in local coordinates,
+    ///   collision-only, typically no AABB tree.
+    /// 
+    /// THE DATA STRUCTURE:
+    /// 
+    /// WalkmeshType: Tells us whether this is an AreaModel (WOK) or PlaceableOrDoor (PWK/DWK).
+    /// 
+    /// Faces: A list of triangles. Each triangle has three vertices (V1, V2, V3), a surface material
+    /// (which determines if it's walkable), and optional transition indices (Trans1, Trans2, Trans3) for
+    /// connecting to other areas.
+    /// 
+    /// Position: The position of the walkmesh in world space. For area walkmeshes, this is usually (0,0,0).
+    /// For placeable/door walkmeshes, this is the position of the object in the world.
+    /// 
+    /// RelativeHook1/RelativeHook2: Hook points relative to the walkmesh's local coordinate system.
+    /// These are used for connecting walkmeshes together (e.g., connecting a door to a room).
+    /// 
+    /// AbsoluteHook1/AbsoluteHook2: Hook points in world coordinates. These are the actual positions
+    /// where connections happen in the game world.
+    /// 
+    /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/bwm/bwm_data.py:127-1843
+    /// Original: class BWM(ComparableMixin)
+    /// </summary>
     public class BWM : IEquatable<BWM>
     {
+        /// <summary>
+        /// The type of walkmesh: AreaModel (WOK file) or PlaceableOrDoor (PWK/DWK file).
+        /// </summary>
         public BWMType WalkmeshType { get; set; }
+        
+        /// <summary>
+        /// List of all triangles (faces) in the walkmesh. Each face has three vertices, a material,
+        /// and optional transition indices.
+        /// </summary>
         public List<BWMFace> Faces { get; set; }
+        
+        /// <summary>
+        /// The position of the walkmesh in world space. For area walkmeshes, usually (0,0,0).
+        /// For placeable/door walkmeshes, this is the object's position.
+        /// </summary>
         public Vector3 Position { get; set; }
+        
+        /// <summary>
+        /// First hook point in relative (local) coordinates. Used for connecting walkmeshes together.
+        /// </summary>
         public Vector3 RelativeHook1 { get; set; }
+        
+        /// <summary>
+        /// Second hook point in relative (local) coordinates. Used for connecting walkmeshes together.
+        /// </summary>
         public Vector3 RelativeHook2 { get; set; }
+        
+        /// <summary>
+        /// First hook point in absolute (world) coordinates. This is where connections actually happen.
+        /// </summary>
         public Vector3 AbsoluteHook1 { get; set; }
+        
+        /// <summary>
+        /// Second hook point in absolute (world) coordinates. This is where connections actually happen.
+        /// </summary>
         public Vector3 AbsoluteHook2 { get; set; }
 
         public BWM()
@@ -73,8 +140,28 @@ namespace Andastra.Parsing.Formats.BWM
             return hash.ToHashCode();
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/bwm/bwm_data.py:254-273
-        // Original: def walkable_faces(self) -> list[BWMFace]
+        /// <summary>
+        /// Returns a list of all faces that are walkable (characters can stand on them).
+        /// 
+        /// HOW DOES IT WORK?
+        /// 
+        /// This method filters the Faces list to only include faces whose Material property
+        /// is walkable. A material is walkable if it's in the WalkableMaterials set defined
+        /// in SurfaceMaterialExtensions.Walkable().
+        /// 
+        /// WHY IS THIS IMPORTANT?
+        /// 
+        /// Pathfinding algorithms only work on walkable faces. Non-walkable faces (like walls,
+        /// water, or lava) are ignored during pathfinding. The Indoor Map Builder also uses
+        /// this method to determine which areas are accessible.
+        /// 
+        /// CRITICAL: This method must use the same walkability rules as NavigationMesh.IsWalkable().
+        /// Any mismatch will cause bugs where faces are marked as walkable in one place but
+        /// non-walkable in another.
+        /// 
+        /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/bwm/bwm_data.py:254-273
+        /// Original: def walkable_faces(self) -> list[BWMFace]
+        /// </summary>
         public List<BWMFace> WalkableFaces()
         {
             return Faces.Where(face => face.Material.Walkable()).ToList();
@@ -379,8 +466,57 @@ namespace Andastra.Parsing.Formats.BWM
             return edges;
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/bwm/bwm_data.py:564-640
-        // Original: def raycast(self, origin: Vector3, direction: Vector3, max_distance: float = float("inf"), materials: set[SurfaceMaterial] | None = None) -> tuple[BWMFace, float] | None
+        /// <summary>
+        /// Performs a raycast against the walkmesh. Shoots an invisible ray and finds the first triangle it hits.
+        /// 
+        /// WHAT IS A RAYCAST?
+        /// 
+        /// A raycast is like shooting an invisible laser and seeing what it hits. The ray starts at the origin
+        /// point and travels in the direction specified, up to maxDistance units away. If the ray hits a
+        /// triangle, this function returns which triangle was hit and how far away it was.
+        /// 
+        /// HOW IT WORKS:
+        /// 
+        /// For Area Walkmeshes (WOK):
+        /// - Uses the AABB tree to quickly find which triangles might be hit
+        /// - Traverses the tree, testing the ray against bounding boxes
+        /// - Only tests triangles that are in boxes the ray passes through
+        /// - Much faster than checking every triangle
+        /// 
+        /// For Placeable/Door Walkmeshes (PWK/DWK):
+        /// - Uses brute force: checks every triangle
+        /// - This is fine because these walkmeshes are small (usually only a few triangles)
+        /// 
+        /// MATERIAL FILTERING:
+        /// 
+        /// By default, only tests triangles with walkable materials. You can specify a different set of
+        /// materials to test against if needed (e.g., to test only non-walkable materials for collision).
+        /// 
+        /// THE ALGORITHM:
+        /// 
+        /// 1. If no materials specified, default to walkable materials
+        /// 2. If this is a placeable/door walkmesh, use brute force (check all triangles)
+        /// 3. If this is an area walkmesh:
+        ///    a. Build or get the AABB tree
+        ///    b. Find the root node (node with no parent)
+        ///    c. Recursively traverse the tree, testing ray against bounding boxes
+        ///    d. When we reach a leaf node (single triangle), test ray against that triangle
+        ///    e. Return the closest hit (shortest distance)
+        /// 
+        /// RETURN VALUE:
+        /// 
+        /// Returns a tuple containing:
+        /// - The triangle that was hit (BWMFace), or null if nothing was hit
+        /// - The distance from the origin to the hit point, or 0 if nothing was hit
+        /// 
+        /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/bwm/bwm_data.py:564-640
+        /// Original: def raycast(self, origin: Vector3, direction: Vector3, max_distance: float = float("inf"), materials: set[SurfaceMaterial] | None = None) -> tuple[BWMFace, float] | None
+        /// </summary>
+        /// <param name="origin">Starting point of the ray</param>
+        /// <param name="direction">Direction the ray travels (does not need to be normalized)</param>
+        /// <param name="maxDistance">Maximum distance the ray can travel</param>
+        /// <param name="materials">Set of materials to test against (null = default to walkable materials)</param>
+        /// <returns>Tuple of (hit triangle, distance) or null if nothing was hit</returns>
         public Tuple<BWMFace, float> Raycast(Vector3 origin, Vector3 direction, float maxDistance = float.MaxValue, HashSet<SurfaceMaterial> materials = null)
         {
             if (Faces.Count == 0)
@@ -686,8 +822,46 @@ namespace Andastra.Parsing.Formats.BWM
             return !(hasNeg && hasPos);
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/bwm/bwm_data.py:882-935
-        // Original: def get_height_at(self, x: float, y: float, materials: set[SurfaceMaterial] | None = None) -> float | None
+        /// <summary>
+        /// Gets the height (Z coordinate) of the walkmesh surface at a given (x, y) position.
+        /// 
+        /// WHAT THIS FUNCTION DOES:
+        /// 
+        /// This function takes an x and y coordinate and finds the height (z coordinate) of the walkmesh
+        /// surface at that position. It's like asking "how high is the ground at this location?"
+        /// 
+        /// HOW IT WORKS:
+        /// 
+        /// STEP 1: Find the Triangle
+        /// - Uses FindFaceAt to find which triangle contains the (x, y) point
+        /// - If no triangle is found, returns null (point is not on walkmesh)
+        /// 
+        /// STEP 2: Check if Triangle is Flat
+        /// - If all three vertices of the triangle have the same Z coordinate, the triangle is flat
+        /// - In this case, we can just return that Z coordinate directly (no calculation needed)
+        /// 
+        /// STEP 3: Calculate Height Using Plane Equation
+        /// - If the triangle is not flat, we need to calculate the height using the triangle's plane equation
+        /// - Uses the face's DetermineZ method, which solves the plane equation for z
+        /// - The plane equation is: ax + by + cz + d = 0, where (a,b,c) is the triangle's normal vector
+        /// - Solving for z: z = (-d - ax - by) / c
+        /// 
+        /// STEP 4: Handle Degenerate Cases
+        /// - If DetermineZ fails (e.g., division by zero for vertical triangles), return the average
+        ///   height of the three vertices as a fallback
+        /// 
+        /// MATERIAL FILTERING:
+        /// 
+        /// By default, only searches triangles with walkable materials. You can specify a different set
+        /// of materials if needed.
+        /// 
+        /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/bwm/bwm_data.py:882-935
+        /// Original: def get_height_at(self, x: float, y: float, materials: set[SurfaceMaterial] | None = None) -> float | None
+        /// </summary>
+        /// <param name="x">X coordinate of the point</param>
+        /// <param name="y">Y coordinate of the point</param>
+        /// <param name="materials">Set of materials to search (null = default to walkable materials)</param>
+        /// <returns>The height (Z coordinate) at the given point, or null if no triangle was found</returns>
         public float? GetHeightAt(float x, float y, HashSet<SurfaceMaterial> materials = null)
         {
             // Default to walkable materials if not specified
@@ -728,8 +902,47 @@ namespace Andastra.Parsing.Formats.BWM
             }
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/bwm/bwm_data.py:937-1004
-        // Original: def find_face_at(self, x: float, y: float, materials: set[SurfaceMaterial] | None = None) -> BWMFace | None
+        /// <summary>
+        /// Finds which triangle (face) contains a given (x, y) point.
+        /// 
+        /// WHAT THIS FUNCTION DOES:
+        /// 
+        /// This function takes an x and y coordinate and finds which triangle in the walkmesh contains
+        /// that point. The z coordinate is ignored - we only care about the 2D position (x, y).
+        /// 
+        /// HOW IT WORKS:
+        /// 
+        /// For Area Walkmeshes (WOK):
+        /// - Uses the AABB tree to quickly find which triangles might contain the point
+        /// - Traverses the tree, testing the point against bounding boxes (only X and Y, not Z)
+        /// - Only tests triangles that are in boxes that contain the point
+        /// - For each candidate triangle, uses a 2D point-in-triangle test
+        /// - Much faster than checking every triangle
+        /// 
+        /// For Placeable/Door Walkmeshes (PWK/DWK):
+        /// - Uses brute force: checks every triangle
+        /// - This is fine because these walkmeshes are small
+        /// 
+        /// THE 2D POINT-IN-TRIANGLE TEST:
+        /// 
+        /// For each triangle, we test if the point is inside it using a "same-side test":
+        /// - We check which side of each edge the point is on
+        /// - If the point is on the same side of all three edges (all positive or all negative),
+        ///   it's inside the triangle
+        /// - If the point is on different sides of different edges, it's outside the triangle
+        /// 
+        /// MATERIAL FILTERING:
+        /// 
+        /// By default, only searches triangles with walkable materials. You can specify a different set
+        /// of materials if needed.
+        /// 
+        /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/bwm/bwm_data.py:937-1004
+        /// Original: def find_face_at(self, x: float, y: float, materials: set[SurfaceMaterial] | None = None) -> BWMFace | None
+        /// </summary>
+        /// <param name="x">X coordinate of the point</param>
+        /// <param name="y">Y coordinate of the point</param>
+        /// <param name="materials">Set of materials to search (null = default to walkable materials)</param>
+        /// <returns>The triangle containing the point, or null if no triangle was found</returns>
         public BWMFace FindFaceAt(float x, float y, HashSet<SurfaceMaterial> materials = null)
         {
             Vector3 point = new Vector3(x, y, 0.0f);
@@ -1100,8 +1313,40 @@ namespace Andastra.Parsing.Formats.BWM
             return null;
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/bwm/bwm_data.py:1305-1322
-        // Original: def translate(self, x: float, y: float, z: float)
+        /// <summary>
+        /// Moves all vertices of the walkmesh by the specified amounts in X, Y, and Z directions.
+        /// 
+        /// WHAT THIS FUNCTION DOES:
+        /// 
+        /// This function translates (moves) every vertex in the walkmesh by adding the specified
+        /// amounts to their X, Y, and Z coordinates. It's like picking up the entire walkmesh and
+        /// moving it to a new location.
+        /// 
+        /// HOW IT WORKS:
+        /// 
+        /// For each triangle in the walkmesh:
+        /// - Takes vertex V1 and adds (x, y, z) to it: new V1 = (V1.X + x, V1.Y + y, V1.Z + z)
+        /// - Takes vertex V2 and adds (x, y, z) to it: new V2 = (V2.X + x, V2.Y + y, V2.Z + z)
+        /// - Takes vertex V3 and adds (x, y, z) to it: new V3 = (V3.X + x, V3.Y + y, V3.Z + z)
+        /// 
+        /// OPTIMIZATION:
+        /// 
+        /// Since vertices may be shared between multiple triangles, we use a dictionary to track
+        /// which vertices we've already processed. This prevents us from processing the same vertex
+        /// multiple times.
+        /// 
+        /// USAGE:
+        /// 
+        /// This is commonly used when placing room walkmeshes in a module. Each room has its own
+        /// walkmesh, and when building the module, we translate each room's walkmesh to its
+        /// correct position in the world.
+        /// 
+        /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/bwm/bwm_data.py:1305-1322
+        /// Original: def translate(self, x: float, y: float, z: float)
+        /// </summary>
+        /// <param name="x">Amount to move in the X direction</param>
+        /// <param name="y">Amount to move in the Y direction</param>
+        /// <param name="z">Amount to move in the Z direction</param>
         public void Translate(float x, float y, float z)
         {
             // In Python, Vector3 is a class, so modifying vertex.x modifies the actual object
@@ -1130,8 +1375,44 @@ namespace Andastra.Parsing.Formats.BWM
             }
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/bwm/bwm_data.py:1324-1341
-        // Original: def rotate(self, degrees: float)
+        /// <summary>
+        /// Rotates the walkmesh around the Z axis (vertical axis) by the specified number of degrees.
+        /// 
+        /// WHAT THIS FUNCTION DOES:
+        /// 
+        /// This function rotates every vertex in the walkmesh around the Z axis (the vertical axis).
+        /// The rotation is applied in 2D (only X and Y coordinates change), leaving Z (height) unchanged.
+        /// 
+        /// HOW IT WORKS:
+        /// 
+        /// The rotation formula for a point (x, y) rotated by angle θ (in radians) is:
+        /// - new_x = x * cos(θ) - y * sin(θ)
+        /// - new_y = x * sin(θ) + y * cos(θ)
+        /// 
+        /// For each triangle in the walkmesh:
+        /// - Converts degrees to radians: radians = degrees * π / 180
+        /// - Calculates cos(radians) and sin(radians)
+        /// - Applies the rotation formula to V1, V2, and V3
+        /// 
+        /// OPTIMIZATION:
+        /// 
+        /// Since vertices may be shared between multiple triangles, we use a dictionary to track
+        /// which vertices we've already processed. This prevents us from processing the same vertex
+        /// multiple times.
+        /// 
+        /// USAGE:
+        /// 
+        /// This is commonly used when placing room walkmeshes in a module at different angles.
+        /// Each room can be rotated to face different directions, and the walkmesh must be rotated
+        /// to match.
+        /// 
+        /// CRITICAL: This function only modifies vertex positions. The Material property of each
+        /// face is preserved. This ensures that walkability is maintained after rotation.
+        /// 
+        /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/bwm/bwm_data.py:1324-1341
+        /// Original: def rotate(self, degrees: float)
+        /// </summary>
+        /// <param name="degrees">Number of degrees to rotate (positive = counter-clockwise, negative = clockwise)</param>
         public void Rotate(float degrees)
         {
             float radians = (float)(degrees * Math.PI / 180.0);
@@ -1190,8 +1471,47 @@ namespace Andastra.Parsing.Formats.BWM
             }
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/bwm/bwm_data.py:1369-1394
-        // Original: def flip(self, x: bool, y: bool)
+        /// <summary>
+        /// Flips (mirrors) all vertices of the walkmesh along the X and/or Y axes.
+        /// 
+        /// WHAT THIS FUNCTION DOES:
+        /// 
+        /// This function flips (mirrors) every vertex in the walkmesh along the specified axes.
+        /// It's like looking at the walkmesh in a mirror.
+        /// 
+        /// HOW IT WORKS:
+        /// 
+        /// For each vertex:
+        /// - If x is true: new X = -old X (flip along Y-axis, mirror left/right)
+        /// - If y is true: new Y = -old Y (flip along X-axis, mirror front/back)
+        /// - Z stays the same (height doesn't change)
+        /// 
+        /// FIXING FACE NORMALS:
+        /// 
+        /// After flipping, if we flipped along only one axis (x != y), we need to fix the face normals.
+        /// Face normals determine which side of the triangle is "up" and which is "down". When we flip
+        /// along one axis, the normal points in the wrong direction, so we need to swap two vertices
+        /// of each triangle to fix it.
+        /// 
+        /// The fix: Swap V1 and V3 for each triangle. This reverses the triangle's winding order,
+        /// which flips the normal direction.
+        /// 
+        /// OPTIMIZATION:
+        /// 
+        /// Since vertices may be shared between multiple triangles, we use a dictionary to track
+        /// which vertices we've already processed. This prevents us from processing the same vertex
+        /// multiple times.
+        /// 
+        /// USAGE:
+        /// 
+        /// This is commonly used when placing room walkmeshes in a module. Rooms can be flipped to
+        /// create mirror images, and their walkmeshes need to be flipped to match.
+        /// 
+        /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/bwm/bwm_data.py:1369-1394
+        /// Original: def flip(self, x: bool, y: bool)
+        /// </summary>
+        /// <param name="x">If true, flip along the Y-axis (mirror left/right)</param>
+        /// <param name="y">If true, flip along the X-axis (mirror front/back)</param>
         public void Flip(bool x, bool y)
         {
             if (!x && !y)
