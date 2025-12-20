@@ -94,12 +94,12 @@ namespace Andastra.Parsing.Formats.MDLData
             {
                 var node = nodes[nodes.Count - 1];
                 nodes.RemoveAt(nodes.Count - 1);
-                
+
                 if (node.Name == nodeName)
                 {
                     return node;
                 }
-                
+
                 if (node.Children != null)
                 {
                     nodes.AddRange(node.Children);
@@ -418,6 +418,11 @@ namespace Andastra.Parsing.Formats.MDLData
         public int SurfaceLight { get; set; }
         public float PlaneDistance { get; set; }
         public Vector3 Normal { get; set; }
+        // Binary MDL format properties (matching PyKotor mdl_data.py:MDLFace)
+        public int A1 { get; set; }  // Adjacent face 1 index
+        public int A2 { get; set; }  // Adjacent face 2 index
+        public int A3 { get; set; }  // Adjacent face 3 index
+        public int Coefficient { get; set; }  // Plane coefficient (stored as int in binary, but can be float)
 
         public MDLFace()
         {
@@ -433,10 +438,11 @@ namespace Andastra.Parsing.Formats.MDLData
             return V1 == other.V1 && V2 == other.V2 && V3 == other.V3 &&
                    Material == other.Material && SmoothingGroup == other.SmoothingGroup &&
                    SurfaceLight == other.SurfaceLight && PlaneDistance.Equals(other.PlaneDistance) &&
-                   Normal.Equals(other.Normal);
+                   Normal.Equals(other.Normal) && A1 == other.A1 && A2 == other.A2 && A3 == other.A3 &&
+                   Coefficient == other.Coefficient;
         }
 
-        public override int GetHashCode() => HashCode.Combine(V1, V2, V3, Material, SmoothingGroup, SurfaceLight, PlaneDistance, Normal);
+        public override int GetHashCode() => HashCode.Combine(V1, V2, V3, Material, SmoothingGroup, SurfaceLight, PlaneDistance, Normal, A1, A2, A3, Coefficient);
     }
 
     public class MDLConstraint : IEquatable<MDLConstraint>
@@ -580,7 +586,7 @@ namespace Andastra.Parsing.Formats.MDLData
         public string DepthTexture { get; set; }
         public int UpdateFlags { get; set; }
         public int RenderFlags { get; set; }
-        
+
         // ASCII MDL format compatibility property
         public int Flags { get; set; }
 
@@ -690,7 +696,7 @@ namespace Andastra.Parsing.Formats.MDLData
         public float Hardness { get; set; }
         public string Texture { get; set; }
         public string EnvTexture { get; set; }
-        
+
         // ASCII MDL format compatibility properties
         public int SaberType { get; set; }
         public int SaberColor { get; set; }
@@ -733,7 +739,7 @@ namespace Andastra.Parsing.Formats.MDLData
         public string ModelName { get; set; }
         public string SupermodelName { get; set; }
         public int DummyRot { get; set; }
-        
+
         // ASCII MDL format compatibility properties
         public string Model { get; set; }
         public bool Reattachable { get; set; }
@@ -766,7 +772,7 @@ namespace Andastra.Parsing.Formats.MDLData
         public List<MDLBoneVertex> BoneWeights { get; set; }
         public List<int> BoneWeightIndices { get; set; }
         public int NodeCount { get; set; }
-        
+
         // ASCII MDL format compatibility properties
         public List<Vector4> Qbones { get; set; }
         public List<Vector3> Tbones { get; set; }
@@ -860,6 +866,29 @@ namespace Andastra.Parsing.Formats.MDLData
         // ASCII MDL format compatibility properties
         public int TransparencyHint { get; set; }
         public bool HasLightmap { get; set; }
+        // Binary MDL format properties (matching PyKotor mdl_data.py:MDLMesh)
+        public Vector3 AveragePoint { get; set; }  // Average point of mesh
+        public float Area { get; set; }  // Total surface area
+        public float Radius { get; set; }  // Bounding sphere radius
+        public Vector3 BbMin { get; set; }  // Bounding box minimum (alternative to BBoxMinX/Y/Z)
+        public Vector3 BbMax { get; set; }  // Bounding box maximum (alternative to BBoxMaxX/Y/Z)
+        // UV animation properties (matching PyKotor mdl_data.py:MDLMesh)
+        // Reference: vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/formats/mdl/mdl_data.py:1243-1249
+        public float UvDirectionX { get; set; }  // UV scroll direction X component
+        public float UvDirectionY { get; set; }  // UV scroll direction Y component
+        public float UvJitter { get; set; }  // UV jitter amount
+        public float UvJitterSpeed { get; set; }  // UV jitter animation speed
+        // Texture and rendering properties (matching PyKotor mdl_data.py:MDLMesh)
+        // Reference: vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/formats/mdl/mdl_data.py:1255-1256,1284-1286
+        public bool RotateTexture { get; set; }  // Rotate texture 90 degrees
+        public bool BackgroundGeometry { get; set; }  // Render in background pass
+        // Dirt/weathering properties (matching PyKotor mdl_data.py:MDLMesh)
+        // Reference: vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/formats/mdl/mdl_data.py:1284-1286
+        public bool DirtEnabled { get; set; }  // Dirt/weathering overlay texture enabled
+        public string DirtTexture { get; set; }  // Dirt texture name
+        // Saber-specific properties (matching PyKotor mdl_data.py:MDLMesh)
+        // Reference: vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/formats/mdl/mdl_data.py:1223
+        public byte[] SaberUnknowns { get; set; }  // Saber-specific unknown data (8 bytes, default: 3,0,0,0,0,0,0,0)
         public List<Vector3> VertexPositions
         {
             get { return Vertices; }
@@ -899,6 +928,19 @@ namespace Andastra.Parsing.Formats.MDLData
             Ambient = Vector3.Zero;
             TexOffset = new Vector2(0, 0);
             TexScale = new Vector2(1, 1);
+            // Initialize UV animation properties (matching PyKotor defaults)
+            UvDirectionX = 0.0f;
+            UvDirectionY = 0.0f;
+            UvJitter = 0.0f;
+            UvJitterSpeed = 0.0f;
+            // Initialize texture and rendering properties (matching PyKotor defaults)
+            RotateTexture = false;
+            BackgroundGeometry = false;
+            // Initialize dirt properties (matching PyKotor defaults)
+            DirtEnabled = false;
+            DirtTexture = string.Empty;
+            // Initialize saber unknowns (matching PyKotor default: 3,0,0,0,0,0,0,0)
+            SaberUnknowns = new byte[] { 3, 0, 0, 0, 0, 0, 0, 0 };
         }
 
         public override bool Equals(object obj) => obj is MDLMesh other && Equals(other);
@@ -1030,7 +1072,7 @@ namespace Andastra.Parsing.Formats.MDLData
         public MDLMesh Mesh { get; set; }
         public MDLReference Reference { get; set; }
         public MDLWalkmesh Walkmesh { get; set; }
-        
+
         // ASCII MDL format compatibility fields (matching PyKotor mdl_data.py)
         public MDLNodeType NodeType { get; set; }
         public int ParentId { get; set; }
@@ -1038,6 +1080,10 @@ namespace Andastra.Parsing.Formats.MDLData
         public MDLEmitter Emitter { get; set; }
         public MDLSaber Saber { get; set; }
         public MDLWalkmesh Aabb { get; set; }
+        // Direct node properties matching PyKotor mdl_data.py:MDLNode structure
+        // Reference: vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/formats/mdl/mdl_data.py:627,631
+        public MDLSkin Skin { get; set; }
+        public MDLDangly Dangly { get; set; }
 
         public MDLNode()
         {
@@ -1119,7 +1165,7 @@ namespace Andastra.Parsing.Formats.MDLData
         public List<Vector3> Normals { get; set; }
         public List<int> Adjacency { get; set; }
         public List<int> Adjacency2 { get; set; }
-        
+
         // ASCII MDL format compatibility property
         public List<MDLNode> Aabbs { get; set; }
 

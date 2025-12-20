@@ -875,11 +875,18 @@ namespace Andastra.Parsing.Formats.MDL
                 // Reference: vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/formats/mdl/io_mdl.py:2030
                 binNode.Trimesh.TotalArea2 = mdlNode.Mesh.Area;
 
-                // Saber unknowns: default is [3, 0, 0, 0, 0, 0, 0, 0] per PyKotor
-                // Reference: vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/formats/mdl/mdl_data.py:539
+                // Saber unknowns (matching PyKotor io_mdl.py:2033)
                 // Reference: vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/formats/mdl/io_mdl.py:2033
-                // Note: If mesh has saber data, saber_unknowns would be set from mdlNode.Mesh.saber_unknowns
-                // For now, we use the default value since saber_unknowns is not available in MDLMesh
+                // Reference: vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/formats/mdl/mdl_data.py:1223 (default: (3, 0, 0, 0, 0, 0, 0, 0))
+                if (mdlNode.Mesh.SaberUnknowns != null && mdlNode.Mesh.SaberUnknowns.Length == 8)
+                {
+                    binNode.Trimesh.SaberUnknowns = mdlNode.Mesh.SaberUnknowns;
+                }
+                else
+                {
+                    // Default: (3, 0, 0, 0, 0, 0, 0, 0) as per PyKotor mdl_data.py:1223
+                    binNode.Trimesh.SaberUnknowns = new byte[] { 3, 0, 0, 0, 0, 0, 0, 0 };
+                }
                 if (binNode.Trimesh.SaberUnknowns == null || binNode.Trimesh.SaberUnknowns.Length != 8)
                 {
                     binNode.Trimesh.SaberUnknowns = new byte[] { 3, 0, 0, 0, 0, 0, 0, 0 };
