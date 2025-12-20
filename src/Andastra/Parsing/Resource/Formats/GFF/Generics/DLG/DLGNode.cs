@@ -581,13 +581,16 @@ namespace Andastra.Parsing.Resource.Generics.DLG
                         // Matching PyKotor implementation: always deserialize links, even if empty
                         List<DLGLink> links = new List<DLGLink>();
                         // Handle both List<object> and List<Dictionary<string, object>> cases
-                        if (actualValue is System.Collections.IEnumerable linksEnumerable)
+                        // When serialized, linksList is List<Dictionary<string, object>>, but stored as object
+                        // So we need to check for both List<object> and the actual type
+                        if (actualValue != null)
                         {
-                            foreach (object linkObj in linksEnumerable)
+                            // Try List<object> first (common case)
+                            if (actualValue is List<object> linksListObj)
                             {
-                                if (linkObj is Dictionary<string, object> linkDict)
+                                foreach (object linkObj in linksListObj)
                                 {
-                                    try
+                                    if (linkObj is Dictionary<string, object> linkDict)
                                     {
                                         DLGLink deserializedLink = DLGLink.FromDict(linkDict, nodeMap);
                                         if (deserializedLink != null)
@@ -595,11 +598,32 @@ namespace Andastra.Parsing.Resource.Generics.DLG
                                             links.Add(deserializedLink);
                                         }
                                     }
-                                    catch (Exception ex)
+                                }
+                            }
+                            // Try List<Dictionary<string, object>> (actual serialized type)
+                            else if (actualValue is List<Dictionary<string, object>> linksListDict)
+                            {
+                                foreach (Dictionary<string, object> linkDict in linksListDict)
+                                {
+                                    DLGLink deserializedLink = DLGLink.FromDict(linkDict, nodeMap);
+                                    if (deserializedLink != null)
                                     {
-                                        // Log exception for debugging but continue processing
-                                        // This matches PyKotor behavior of continuing on errors
-                                        System.Diagnostics.Debug.WriteLine($"Error deserializing link: {ex.Message}");
+                                        links.Add(deserializedLink);
+                                    }
+                                }
+                            }
+                            // Fallback to IEnumerable for any other collection type
+                            else if (actualValue is System.Collections.IEnumerable linksEnumerable)
+                            {
+                                foreach (object linkObj in linksEnumerable)
+                                {
+                                    if (linkObj is Dictionary<string, object> linkDict)
+                                    {
+                                        DLGLink deserializedLink = DLGLink.FromDict(linkDict, nodeMap);
+                                        if (deserializedLink != null)
+                                        {
+                                            links.Add(deserializedLink);
+                                        }
                                     }
                                 }
                             }
