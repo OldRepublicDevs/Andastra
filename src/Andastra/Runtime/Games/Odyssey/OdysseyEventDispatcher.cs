@@ -104,7 +104,7 @@ namespace Andastra.Runtime.Games.Odyssey
                         // eventSubtype 4 = CSWSSCRIPTEVENT_EVENTTYPE_ON_DAMAGED (swkotor2.exe: 0x004dcfb0 line 137)
                         if (eventSubtype == 4)
                         {
-                            HandleCombatEvent(targetEntity, eventType);
+                            HandleCombatEvent(targetEntity, eventType, sourceEntity);
                         }
                         else
                         {
@@ -116,7 +116,7 @@ namespace Andastra.Runtime.Games.Odyssey
                 case 0xb: // EVENT_DESTROY_OBJECT (swkotor2.exe: 0x004dcfb0 line 69)
                 case 0xf: // EVENT_ON_MELEE_ATTACKED (swkotor2.exe: 0x004dcfb0 line 81)
                     if (targetEntity != null)
-                        HandleCombatEvent(targetEntity, eventType);
+                        HandleCombatEvent(targetEntity, eventType, sourceEntity);
                     break;
 
                 default:
@@ -765,20 +765,186 @@ namespace Andastra.Runtime.Games.Odyssey
         /// <summary>
         /// Handles combat-related events.
         /// </summary>
+        /// <param name="entity">The entity receiving the combat event.</param>
+        /// <param name="eventType">The combat event type (EVENT_ON_MELEE_ATTACKED, EVENT_DESTROY_OBJECT, etc.).</param>
+        /// <param name="sourceEntity">The entity that triggered the combat event (attacker, damager, etc.). May be null if not available.</param>
         /// <remarks>
-        /// Based on combat events: ON_DAMAGED (4), ON_DEATH (10), ON_ATTACKED (0xf).
-        /// Triggers combat scripts and AI behaviors.
-        /// Updates combat state and effects.
+        /// Based on swkotor2.exe: DispatchEvent @ 0x004dcfb0 handles combat events by firing appropriate script events.
+        /// Located via string references:
+        /// - "EVENT_ON_MELEE_ATTACKED" @ 0x007bccf4 (case 0xf) - fires OnPhysicalAttacked script
+        /// - "EVENT_DESTROY_OBJECT" @ 0x007bcd48 (case 0xb) - fires OnDeath script if entity is dead, or handles object destruction
+        /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_DAMAGED" @ 0x007bcb14 (eventSubtype 4) - fires OnDamaged script
+        /// 
+        /// Combat event handling flow (based on swkotor2.exe: DispatchEvent @ 0x004dcfb0):
+        /// 1. EVENT_ON_MELEE_ATTACKED (0xf): Fires OnPhysicalAttacked script on target entity with attacker as triggerer
+        ///    - Script fires regardless of hit/miss (before damage is applied)
+        ///    - Located via "OnMeleeAttacked" @ 0x007c1a5c, "ScriptAttacked" @ 0x007bee80
+        /// 2. EVENT_DESTROY_OBJECT (0xb): Handles object destruction or entity death
+        ///    - If entity is dead (CurrentHP <= 0), fires OnDeath script with killer as triggerer
+        ///    - If entity is not dead, handles object destruction (doors, placeables, etc.)
+        ///    - Located via "OnDeath" script field, death event handling
+        /// 3. EVENT_SIGNAL_EVENT with ON_DAMAGED (eventSubtype 4): Fires OnDamaged script on target entity
+        ///    - Script fires when entity takes damage (after damage is applied)
+        ///    - Located via "ScriptDamaged" @ 0x007bee70, "OnDamaged" @ 0x007c1a80
+        /// 
+        /// Script execution:
+        /// - Scripts are retrieved from entity's IScriptHooksComponent for the appropriate ScriptEvent
+        /// - Scripts are executed via world's EventBus.FireScriptEvent, which queues and processes script execution
+        /// - Source entity (attacker/damager/killer) is passed as triggerer to script execution context
+        /// - Scripts can use GetLastAttacker(), GetLastDamager(), GetLastHostileActor() to retrieve source entity
+        /// 
+        /// AI behavior:
+        /// - Combat events trigger AI responses (aggression, fleeing, etc.)
+        /// - AI systems are notified via EventBus events and script execution
+        /// - Combat state is updated by CombatManager when attacks/damage occur
         /// </remarks>
-        protected override void HandleCombatEvent(IEntity entity, int eventType)
+        protected override void HandleCombatEvent(IEntity entity, int eventType, IEntity sourceEntity = null)
         {
+            if (entity == null)
+            {
+                Console.WriteLine("[OdysseyEventDispatcher] HandleCombatEvent: Entity is null, aborting combat event handling");
+                return;
+            }
+
+            // Get world and event bus
+            IWorld world = entity.World;
+            if (world == null || world.EventBus == null)
+            {
+                Console.WriteLine($"[OdysseyEventDispatcher] HandleCombatEvent: Entity {entity.Tag ?? "null"} ({entity.ObjectId}) has no world or EventBus");
+                return;
+            }
+
             string eventName = GetEventName(eventType);
-            string entityInfo = entity != null ? $"{entity.Tag ?? "null"} ({entity.ObjectId})" : "null";
-            Console.WriteLine($"[OdysseyEventDispatcher] HandleCombatEvent: Handling {eventName} ({eventType}) for entity {entityInfo}");
-            // TODO: Implement combat event handling
-            // Update combat state
-            // Trigger AI behaviors and scripts
-            // Apply damage/effects
+            string entityInfo = $"{entity.Tag ?? "null"} ({entity.ObjectId})";
+            string sourceInfo = sourceEntity != null ? $"{sourceEntity.Tag ?? "null"} ({sourceEntity.ObjectId})" : "null";
+            Console.WriteLine($"[OdysseyEventDispatcher] HandleCombatEvent: Handling {eventName} ({eventType}) for entity {entityInfo}, source: {sourceInfo}");
+
+            // Handle different combat event types
+            switch (eventType)
+            {
+                case 0xf: // EVENT_ON_MELEE_ATTACKED (swkotor2.exe: 0x004dcfb0 case 0xf, line 89)
+                    // Fire OnPhysicalAttacked script event on target entity
+                    // Based on swkotor2.exe: EVENT_ON_MELEE_ATTACKED fires OnMeleeAttacked script
+                    // Located via string references: "EVENT_ON_MELEE_ATTACKED" @ 0x007bccf4 (case 0xf), "OnMeleeAttacked" @ 0x007c1a5c, "ScriptAttacked" @ 0x007bee80
+                    // Original implementation: EVENT_ON_MELEE_ATTACKED fires on target entity when attacked (before damage is applied)
+                    // Script fires regardless of hit/miss - this allows scripts to react to being targeted
+                    // Source entity (attacker) is passed as triggerer to script execution context
+                    // Scripts can use GetLastAttacker() to retrieve the attacker if sourceEntity is null
+                    HandleMeleeAttackedEvent(entity, sourceEntity, world);
+                    break;
+
+                case 0xb: // EVENT_DESTROY_OBJECT (swkotor2.exe: 0x004dcfb0 case 0xb, line 77)
+                    // Handle object destruction or entity death
+                    // Based on swkotor2.exe: EVENT_DESTROY_OBJECT can indicate entity death or object destruction
+                    // Located via string references: "EVENT_DESTROY_OBJECT" @ 0x007bcd48 (case 0xb)
+                    // Original implementation: EVENT_DESTROY_OBJECT fires when entity dies or object is destroyed
+                    // For creatures: If entity is dead (CurrentHP <= 0), fires OnDeath script with killer as triggerer
+                    // For objects (doors, placeables): Handles object destruction and cleanup
+                    // Source entity (killer/destroyer) is passed as triggerer to script execution context
+                    HandleDestroyObjectEvent(entity, sourceEntity, world);
+                    break;
+
+                case 0xa: // EVENT_SIGNAL_EVENT with ON_DAMAGED (eventSubtype 4)
+                    // This case is handled in DispatchEvent before calling HandleCombatEvent
+                    // But if called directly, fire OnDamaged script event
+                    // Based on swkotor2.exe: CSWSSCRIPTEVENT_EVENTTYPE_ON_DAMAGED fires when entity takes damage
+                    // Located via string references: "CSWSSCRIPTEVENT_EVENTTYPE_ON_DAMAGED" @ 0x007bcb14 (0x4), "ScriptDamaged" @ 0x007bee70, "OnDamaged" @ 0x007c1a80
+                    // Original implementation: OnDamaged script fires on target entity when damage is dealt (after damage is applied)
+                    // Source entity (damager) is passed as triggerer to script execution context
+                    // Scripts can use GetLastDamager() to retrieve the damager if sourceEntity is null
+                    HandleDamagedEvent(entity, sourceEntity, world);
+                    break;
+
+                default:
+                    // Unknown combat event type - log and ignore
+                    Console.WriteLine($"[OdysseyEventDispatcher] HandleCombatEvent: Unknown combat event type {eventType} ({eventName}) for entity {entityInfo}");
+                    break;
+            }
+        }
+
+        /// <summary>
+        /// Handles EVENT_ON_MELEE_ATTACKED (0xf) combat event.
+        /// </summary>
+        /// <param name="entity">The entity being attacked.</param>
+        /// <param name="attacker">The entity attacking (may be null).</param>
+        /// <param name="world">The world containing the entities.</param>
+        /// <remarks>
+        /// Based on swkotor2.exe: EVENT_ON_MELEE_ATTACKED fires OnPhysicalAttacked script
+        /// (swkotor2.exe: DispatchEvent @ 0x004dcfb0 case 0xf, line 89)
+        /// </remarks>
+        private void HandleMeleeAttackedEvent(IEntity entity, IEntity attacker, IWorld world)
+        {
+            Console.WriteLine($"[OdysseyEventDispatcher] HandleMeleeAttackedEvent: Entity {entity.Tag ?? "null"} ({entity.ObjectId}) attacked by {attacker?.Tag ?? "null"} ({attacker?.ObjectId ?? 0})");
+
+            // Fire OnPhysicalAttacked script event on target entity
+            // Based on swkotor2.exe: EVENT_ON_MELEE_ATTACKED fires OnMeleeAttacked script
+            // Script fires regardless of hit/miss - this allows scripts to react to being targeted
+            // Source entity (attacker) is passed as triggerer to script execution context
+            world.EventBus.FireScriptEvent(entity, Core.Enums.ScriptEvent.OnPhysicalAttacked, attacker);
+            Console.WriteLine($"[OdysseyEventDispatcher] HandleMeleeAttackedEvent: Fired OnPhysicalAttacked script event on entity {entity.Tag ?? "null"} ({entity.ObjectId})");
+        }
+
+        /// <summary>
+        /// Handles EVENT_DESTROY_OBJECT (0xb) combat event.
+        /// </summary>
+        /// <param name="entity">The entity being destroyed.</param>
+        /// <param name="killer">The entity that destroyed/killed (may be null).</param>
+        /// <param name="world">The world containing the entities.</param>
+        /// <remarks>
+        /// Based on swkotor2.exe: EVENT_DESTROY_OBJECT handles entity death or object destruction
+        /// (swkotor2.exe: DispatchEvent @ 0x004dcfb0 case 0xb, line 77)
+        /// </remarks>
+        private void HandleDestroyObjectEvent(IEntity entity, IEntity killer, IWorld world)
+        {
+            Console.WriteLine($"[OdysseyEventDispatcher] HandleDestroyObjectEvent: Entity {entity.Tag ?? "null"} ({entity.ObjectId}) destroyed by {killer?.Tag ?? "null"} ({killer?.ObjectId ?? 0})");
+
+            // Check if entity is dead (creature death)
+            IStatsComponent stats = entity.GetComponent<IStatsComponent>();
+            if (stats != null && stats.IsDead)
+            {
+                // Entity is dead - fire OnDeath script event
+                // Based on swkotor2.exe: CSWSSCRIPTEVENT_EVENTTYPE_ON_DEATH fires when entity dies
+                // Located via string references: "OnDeath" script field, death event handling
+                // Original implementation: OnDeath script fires on victim entity with killer as triggerer
+                world.EventBus.FireScriptEvent(entity, Core.Enums.ScriptEvent.OnDeath, killer);
+                Console.WriteLine($"[OdysseyEventDispatcher] HandleDestroyObjectEvent: Entity {entity.Tag ?? "null"} ({entity.ObjectId}) is dead, fired OnDeath script event");
+            }
+            else
+            {
+                // Entity is not dead - this is object destruction (door, placeable, etc.)
+                // Handle object destruction cleanup
+                // Based on swkotor2.exe: Object destruction removes entity from world and cleans up components
+                // For doors/placeables: May fire OnDestroy script if available
+                Console.WriteLine($"[OdysseyEventDispatcher] HandleDestroyObjectEvent: Entity {entity.Tag ?? "null"} ({entity.ObjectId}) is not dead, handling object destruction");
+                
+                // Check if entity has OnDestroy script (if supported by object type)
+                // For now, object destruction is handled by the entity's destruction system
+                // Future: May fire OnDestroy script event if entity type supports it
+            }
+        }
+
+        /// <summary>
+        /// Handles ON_DAMAGED combat event (EVENT_SIGNAL_EVENT with eventSubtype 4).
+        /// </summary>
+        /// <param name="entity">The entity being damaged.</param>
+        /// <param name="damager">The entity that damaged (may be null).</param>
+        /// <param name="world">The world containing the entities.</param>
+        /// <remarks>
+        /// Based on swkotor2.exe: CSWSSCRIPTEVENT_EVENTTYPE_ON_DAMAGED fires when entity takes damage
+        /// (swkotor2.exe: DispatchEvent @ 0x004dcfb0, eventSubtype 4, line 145)
+        /// </remarks>
+        private void HandleDamagedEvent(IEntity entity, IEntity damager, IWorld world)
+        {
+            Console.WriteLine($"[OdysseyEventDispatcher] HandleDamagedEvent: Entity {entity.Tag ?? "null"} ({entity.ObjectId}) damaged by {damager?.Tag ?? "null"} ({damager?.ObjectId ?? 0})");
+
+            // Fire OnDamaged script event on target entity
+            // Based on swkotor2.exe: CSWSSCRIPTEVENT_EVENTTYPE_ON_DAMAGED fires when entity takes damage
+            // Located via string references: "CSWSSCRIPTEVENT_EVENTTYPE_ON_DAMAGED" @ 0x007bcb14 (0x4), "ScriptDamaged" @ 0x007bee70, "OnDamaged" @ 0x007c1a80
+            // Original implementation: OnDamaged script fires on target entity when damage is dealt (after damage is applied)
+            // Source entity (damager) is passed as triggerer to script execution context
+            // Scripts can use GetLastDamager() to retrieve the damager if sourceEntity is null
+            world.EventBus.FireScriptEvent(entity, Core.Enums.ScriptEvent.OnDamaged, damager);
+            Console.WriteLine($"[OdysseyEventDispatcher] HandleDamagedEvent: Fired OnDamaged script event on entity {entity.Tag ?? "null"} ({entity.ObjectId})");
         }
 
         /// <summary>
