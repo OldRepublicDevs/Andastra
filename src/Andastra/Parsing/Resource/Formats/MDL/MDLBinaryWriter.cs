@@ -1141,31 +1141,57 @@ namespace Andastra.Parsing.Formats.MDL
             }
 
             // SKIN flag (0x0040) - Skinned mesh with bone weighting
+            // Reference: vendor/mdlops/MDLOpsM.pm:307, vendor/PyKotor:mdl_data.py:536-540
             // Note: SKIN requires MESH flag to be set (skin mesh = HEADER + MESH + SKIN = 0x061 = 97)
-            if (node.Skin != null)
+            // Check both node.Skin (direct property) and node.Mesh.Skin (mesh property)
+            if (node.Skin != null || (node.Mesh != null && node.Mesh.Skin != null))
             {
                 typeId |= (int)MDLNodeFlags.SKIN;
+                // Ensure MESH flag is set when SKIN is present
+                if ((typeId & (int)MDLNodeFlags.MESH) == 0)
+                {
+                    typeId |= (int)MDLNodeFlags.MESH;
+                }
             }
 
             // DANGLY flag (0x0100) - Cloth/hair physics mesh with constraints
+            // Reference: vendor/mdlops/MDLOpsM.pm:309, vendor/PyKotor:mdl_data.py:542-546
             // Note: DANGLY requires MESH flag to be set (dangly mesh = HEADER + MESH + DANGLY = 0x121 = 289)
-            if (node.Dangly != null)
+            // Check both node.Dangly (direct property) and node.Mesh.Dangly (mesh property)
+            if (node.Dangly != null || (node.Mesh != null && node.Mesh.Dangly != null))
             {
                 typeId |= (int)MDLNodeFlags.DANGLY;
+                // Ensure MESH flag is set when DANGLY is present
+                if ((typeId & (int)MDLNodeFlags.MESH) == 0)
+                {
+                    typeId |= (int)MDLNodeFlags.MESH;
+                }
             }
 
             // SABER flag (0x0800) - Lightsaber blade mesh with special rendering
+            // Reference: vendor/mdlops/MDLOpsM.pm:311, vendor/PyKotor:mdl_data.py:554-558
             // Note: SABER requires MESH flag to be set (saber mesh = HEADER + MESH + SABER = 0x821 = 2081)
-            if (node.Saber != null)
+            if (node.Saber != null || (node.Mesh != null && node.Mesh.Saber != null))
             {
                 typeId |= (int)MDLNodeFlags.SABER;
+                // Ensure MESH flag is set when SABER is present
+                if ((typeId & (int)MDLNodeFlags.MESH) == 0)
+                {
+                    typeId |= (int)MDLNodeFlags.MESH;
+                }
             }
 
             // AABB flag (0x0200) - Axis-aligned bounding box tree for walkmesh collision
+            // Reference: vendor/mdlops/MDLOpsM.pm:310, vendor/PyKotor:mdl_data.py:548-552
             // Note: AABB requires MESH flag to be set (aabb mesh = HEADER + MESH + AABB = 0x221 = 545)
             if (node.Aabb != null)
             {
                 typeId |= (int)MDLNodeFlags.AABB;
+                // Ensure MESH flag is set when AABB is present
+                if ((typeId & (int)MDLNodeFlags.MESH) == 0)
+                {
+                    typeId |= (int)MDLNodeFlags.MESH;
+                }
             }
 
             // EMITTER flag (0x0004) - Particle emitter data
@@ -1194,7 +1220,199 @@ namespace Andastra.Parsing.Formats.MDL
 
         private void _UpdateMdx(_Node binNode, MDLData.MDLNode mdlNode)
         {
-            // TODO: Update MDX data (vertex normals, UVs, skinning)
+            // Reference: vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/formats/mdl/io_mdl.py:2119-2176
+            // Reference: vendor/mdlops/MDLOpsM.pm:6003-8112 (MDX writing)
+            // Reference: vendor/PyKotor/wiki/MDL-MDX-File-Format.md (MDX data structure)
+            if (binNode.Trimesh == null || mdlNode.Mesh == null)
+            {
+                return;
+            }
+
+            // Set MDX data offset to current position in MDX writer
+            binNode.Trimesh.MdxDataOffset = (uint)_mdxWriter.Position();
+
+            // Initialize offsets to 0xFFFFFFFF (invalid) and bitmap to 0
+            binNode.Trimesh.MdxVertexOffset = 0xFFFFFFFF;
+            binNode.Trimesh.MdxNormalOffset = 0xFFFFFFFF;
+            binNode.Trimesh.MdxTexture1Offset = 0xFFFFFFFF;
+            binNode.Trimesh.MdxTexture2Offset = 0xFFFFFFFF;
+            binNode.Trimesh.MdxColorOffset = 0xFFFFFFFF;
+            binNode.Trimesh.MdxDataBitmap = 0;
+
+            // Calculate suboffsets for each data type
+            uint suboffset = 0;
+
+            // Vertex positions (always present if mesh exists)
+            if (mdlNode.Mesh.VertexPositions != null && mdlNode.Mesh.VertexPositions.Count > 0)
+            {
+                binNode.Trimesh.MdxVertexOffset = suboffset;
+                binNode.Trimesh.MdxDataBitmap |= MDXDataFlags.VERTEX;
+                suboffset += 12; // 3 floats * 4 bytes = 12 bytes
+            }
+
+            // Vertex normals
+            if (mdlNode.Mesh.VertexNormals != null && mdlNode.Mesh.VertexNormals.Count > 0)
+            {
+                binNode.Trimesh.MdxNormalOffset = suboffset;
+                binNode.Trimesh.MdxDataBitmap |= MDXDataFlags.NORMAL;
+                suboffset += 12; // 3 floats * 4 bytes = 12 bytes
+            }
+
+            // Texture coordinates 1 (UV1)
+            if (mdlNode.Mesh.VertexUv1 != null && mdlNode.Mesh.VertexUv1.Count > 0)
+            {
+                binNode.Trimesh.MdxTexture1Offset = suboffset;
+                binNode.Trimesh.MdxDataBitmap |= MDXDataFlags.TEXTURE1;
+                suboffset += 8; // 2 floats * 4 bytes = 8 bytes
+            }
+
+            // Texture coordinates 2 (UV2)
+            if (mdlNode.Mesh.VertexUv2 != null && mdlNode.Mesh.VertexUv2.Count > 0)
+            {
+                binNode.Trimesh.MdxTexture2Offset = suboffset;
+                binNode.Trimesh.MdxDataBitmap |= MDXDataFlags.TEXTURE2;
+                suboffset += 8; // 2 floats * 4 bytes = 8 bytes
+            }
+
+            // Handle skinning data if present
+            uint skinBoneWeightsOffset = 0xFFFFFFFF;
+            uint skinBoneIndicesOffset = 0xFFFFFFFF;
+            if (mdlNode.Skin != null && mdlNode.Skin.VertexBones != null && mdlNode.Skin.VertexBones.Count > 0)
+            {
+                // Bone weights come after texture coordinates
+                skinBoneWeightsOffset = suboffset;
+                suboffset += 16; // 4 floats * 4 bytes = 16 bytes
+
+                // Bone indices come after bone weights
+                skinBoneIndicesOffset = suboffset;
+                suboffset += 16; // 4 floats * 4 bytes = 16 bytes (stored as floats, cast to uint16 when used)
+            }
+
+            // Set the MDX data size (size of one vertex's data block)
+            binNode.Trimesh.MdxDataSize = suboffset;
+
+            // Get vertex count
+            int vertexCount = mdlNode.Mesh.VertexPositions != null ? mdlNode.Mesh.VertexPositions.Count : 0;
+            if (vertexCount == 0)
+            {
+                return;
+            }
+
+            // Write interleaved vertex data for each vertex
+            for (int i = 0; i < vertexCount; i++)
+            {
+                // Write vertex position
+                if (mdlNode.Mesh.VertexPositions != null && i < mdlNode.Mesh.VertexPositions.Count)
+                {
+                    _mdxWriter.WriteVector3(mdlNode.Mesh.VertexPositions[i]);
+                }
+
+                // Write vertex normal
+                if (mdlNode.Mesh.VertexNormals != null && i < mdlNode.Mesh.VertexNormals.Count)
+                {
+                    _mdxWriter.WriteVector3(mdlNode.Mesh.VertexNormals[i]);
+                }
+
+                // Write texture coordinates 1
+                if (mdlNode.Mesh.VertexUv1 != null && i < mdlNode.Mesh.VertexUv1.Count)
+                {
+                    _mdxWriter.WriteVector2(mdlNode.Mesh.VertexUv1[i]);
+                }
+
+                // Write texture coordinates 2
+                if (mdlNode.Mesh.VertexUv2 != null && i < mdlNode.Mesh.VertexUv2.Count)
+                {
+                    _mdxWriter.WriteVector2(mdlNode.Mesh.VertexUv2[i]);
+                }
+
+                // Write skinning data if present
+                if (mdlNode.Skin != null && mdlNode.Skin.VertexBones != null && i < mdlNode.Skin.VertexBones.Count)
+                {
+                    var boneVertex = mdlNode.Skin.VertexBones[i];
+                    // Write bone weights (4 floats)
+                    if (boneVertex.VertexWeights != null)
+                    {
+                        _mdxWriter.WriteSingle((float)boneVertex.VertexWeights.Item1);
+                        _mdxWriter.WriteSingle((float)boneVertex.VertexWeights.Item2);
+                        _mdxWriter.WriteSingle((float)boneVertex.VertexWeights.Item3);
+                        _mdxWriter.WriteSingle((float)boneVertex.VertexWeights.Item4);
+                    }
+                    else
+                    {
+                        // Default weights if not present
+                        _mdxWriter.WriteSingle(1.0f);
+                        _mdxWriter.WriteSingle(0.0f);
+                        _mdxWriter.WriteSingle(0.0f);
+                        _mdxWriter.WriteSingle(0.0f);
+                    }
+
+                    // Write bone indices (4 floats, stored as floats but represent uint16 indices)
+                    if (boneVertex.VertexIndices != null)
+                    {
+                        _mdxWriter.WriteSingle((float)boneVertex.VertexIndices.Item1);
+                        _mdxWriter.WriteSingle((float)boneVertex.VertexIndices.Item2);
+                        _mdxWriter.WriteSingle((float)boneVertex.VertexIndices.Item3);
+                        _mdxWriter.WriteSingle((float)boneVertex.VertexIndices.Item4);
+                    }
+                    else
+                    {
+                        // Default indices if not present
+                        _mdxWriter.WriteSingle(0.0f);
+                        _mdxWriter.WriteSingle(0.0f);
+                        _mdxWriter.WriteSingle(0.0f);
+                        _mdxWriter.WriteSingle(0.0f);
+                    }
+                }
+            }
+
+            // Write padding/sentinel values (required by MDX format)
+            // Reference: vendor/mdlops/MDLOpsM.pm:8099-8109 (padding logic)
+            // Reference: vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/formats/mdl/io_mdl.py:2168-2176
+            if (mdlNode.Mesh.VertexPositions != null && mdlNode.Mesh.VertexPositions.Count > 0)
+            {
+                // Write sentinel vector for positions (10000000, 10000000, 10000000)
+                _mdxWriter.WriteVector3(new Vector3(10000000.0f, 10000000.0f, 10000000.0f));
+            }
+
+            if (mdlNode.Mesh.VertexNormals != null && mdlNode.Mesh.VertexNormals.Count > 0)
+            {
+                // Write null vector for normals (0, 0, 0)
+                _mdxWriter.WriteVector3(Vector3.Zero);
+            }
+
+            if (mdlNode.Mesh.VertexUv1 != null && mdlNode.Mesh.VertexUv1.Count > 0)
+            {
+                // Write null vector2 for UV1 (0, 0)
+                _mdxWriter.WriteVector2(Vector2.Zero);
+            }
+
+            if (mdlNode.Mesh.VertexUv2 != null && mdlNode.Mesh.VertexUv2.Count > 0)
+            {
+                // Write null vector2 for UV2 (0, 0)
+                _mdxWriter.WriteVector2(Vector2.Zero);
+            }
+
+            // For skin meshes, write additional padding
+            if (mdlNode.Skin != null && mdlNode.Skin.VertexBones != null && mdlNode.Skin.VertexBones.Count > 0)
+            {
+                // Reference: vendor/mdlops/MDLOpsM.pm:8102-8105 (skin padding)
+                // Skin nodes have different padding: (1000000, 1000000, 1000000, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0)
+                _mdxWriter.WriteSingle(1000000.0f);
+                _mdxWriter.WriteSingle(1000000.0f);
+                _mdxWriter.WriteSingle(1000000.0f);
+                _mdxWriter.WriteSingle(0.0f);
+                _mdxWriter.WriteSingle(0.0f);
+                _mdxWriter.WriteSingle(0.0f);
+                _mdxWriter.WriteSingle(0.0f);
+                _mdxWriter.WriteSingle(1.0f);
+                _mdxWriter.WriteSingle(0.0f);
+                _mdxWriter.WriteSingle(0.0f);
+                _mdxWriter.WriteSingle(0.0f);
+                _mdxWriter.WriteSingle(0.0f);
+                _mdxWriter.WriteSingle(0.0f);
+                _mdxWriter.WriteSingle(0.0f);
+                _mdxWriter.WriteSingle(0.0f);
+            }
         }
 
         private void _WriteAll()
