@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Text;
 using System.Text.RegularExpressions;
 using Avalonia.Controls;
@@ -18,6 +19,14 @@ namespace HolocronToolset.Widgets
         private bool _columnSelectionMode = false;
         private Point? _columnSelectionAnchor = null;
 
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/common/widgets/code_editor.py:162-163
+        // Original: self._folded_block_numbers: set[int] = set()  # Block numbers that are folded (blocks that start foldable regions)
+        // Original: self._foldable_regions: dict[int, int] = {}  # Map start block number to end block number for foldable regions
+        // Code folding tracking fields
+        private HashSet<int> _foldedBlockNumbers = new HashSet<int>(); // Block numbers that are folded (blocks that start foldable regions)
+        private Dictionary<int, int> _foldableRegions = new Dictionary<int, int>(); // Map start block number to end block number for foldable regions
+        private Dictionary<int, string> _foldedContentCache = new Dictionary<int, string>(); // Cache of folded content for restoration (for future use)
+
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/common/widgets/code_editor.py:95-121
         // Original: def __init__(self, parent: QWidget):
         public CodeEditor()
@@ -26,6 +35,9 @@ namespace HolocronToolset.Widgets
             AcceptsReturn = true;
             AcceptsTab = true;
             TextWrapping = Avalonia.Media.TextWrapping.NoWrap;
+
+            // Update foldable regions when text changes
+            this.TextChanged += (s, e) => UpdateFoldableRegions();
         }
 
         private void InitializeComponent()
@@ -196,11 +208,10 @@ namespace HolocronToolset.Widgets
             return char.IsLetterOrDigit(c) || c == '_';
         }
 
-        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:2459-2461
-        // Original: select_next_shortcut = QShortcut(QKeySequence("Ctrl+D"), self)
-        // Original: select_next_shortcut.activated.connect(self.ui.codeEdit.select_next_occurrence)
-        // Handle keyboard shortcuts for word selection (Ctrl+D for select next occurrence)
-        // Based on VS Code behavior: Ctrl+D selects next occurrence of word at cursor
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:2459-2483
+        // Original: Code folding shortcuts and other keyboard shortcuts
+        // Handle keyboard shortcuts for word selection and code folding
+        // Based on VS Code behavior
         protected override void OnKeyDown(KeyEventArgs e)
         {
             // Handle Ctrl+D shortcut for select next occurrence
@@ -208,6 +219,51 @@ namespace HolocronToolset.Widgets
             if (e.KeyModifiers.HasFlag(KeyModifiers.Control) && e.Key == Key.D)
             {
                 SelectNextOccurrence();
+                e.Handled = true;
+                return;
+            }
+
+            // Code folding shortcuts
+            // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/nss.py:2475-2483
+            // Original: fold_shortcut = QShortcut(QKeySequence("Ctrl+Shift+["), self)
+            // Original: unfold_shortcut = QShortcut(QKeySequence("Ctrl+Shift+]"), self)
+            // Original: fold_all_shortcut = QShortcut(QKeySequence("Ctrl+K, Ctrl+0"), self)
+            // Original: unfold_all_shortcut = QShortcut(QKeySequence("Ctrl+K, Ctrl+J"), self)
+            if (e.KeyModifiers.HasFlag(KeyModifiers.Control) && e.KeyModifiers.HasFlag(KeyModifiers.Shift))
+            {
+                // Ctrl+Shift+[ for fold region
+                if (e.Key == Key.OemOpenBrackets || e.Key == Key.BracketLeft)
+                {
+                    FoldRegion();
+                    e.Handled = true;
+                    return;
+                }
+
+                // Ctrl+Shift+] for unfold region
+                if (e.Key == Key.OemCloseBrackets || e.Key == Key.BracketRight)
+                {
+                    UnfoldRegion();
+                    e.Handled = true;
+                    return;
+                }
+            }
+
+            // Note: Ctrl+K, Ctrl+0 and Ctrl+K, Ctrl+J require key sequence handling
+            // For now, we'll handle them as single key combinations
+            // In a full implementation, you'd track the Ctrl+K press and then handle the second key
+            // For simplicity, we'll use alternative shortcuts or handle them in a key sequence manager
+            // Ctrl+K Ctrl+0 for fold all (using Ctrl+Shift+0 as alternative)
+            if (e.KeyModifiers.HasFlag(KeyModifiers.Control) && e.KeyModifiers.HasFlag(KeyModifiers.Shift) && e.Key == Key.D0)
+            {
+                FoldAll();
+                e.Handled = true;
+                return;
+            }
+
+            // Ctrl+K Ctrl+J for unfold all (using Ctrl+Shift+J as alternative)
+            if (e.KeyModifiers.HasFlag(KeyModifiers.Control) && e.KeyModifiers.HasFlag(KeyModifiers.Shift) && e.Key == Key.J)
+            {
+                UnfoldAll();
                 e.Handled = true;
                 return;
             }
@@ -866,6 +922,270 @@ namespace HolocronToolset.Widgets
             }
 
             return position;
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/common/widgets/code_editor.py:482-570
+        // Original: def _update_foldable_regions(self):
+        /// <summary>
+        /// Updates the foldable regions based on braces in the document.
+        /// Detects brace pairs ({}) and marks regions between them as foldable.
+        /// </summary>
+        private void UpdateFoldableRegions()
+        {
+            if (string.IsNullOrEmpty(Text))
+            {
+                _foldableRegions.Clear();
+                return;
+            }
+
+            // Preserve existing folded state
+            HashSet<int> oldFolded = new HashSet<int>(_foldedBlockNumbers);
+            _foldableRegions.Clear();
+
+            // Track brace pairs to find foldable regions
+            List<(int blockNumber, int braceCount)> braceStack = new List<(int, int)>();
+            int braceCount = 0;
+
+            string[] lines = Text.Split(new[] { "\r\n", "\n", "\r" }, StringSplitOptions.None);
+            string newline = Text.Contains("\r\n") ? "\r\n" : (Text.Contains("\n") ? "\n" : "\r");
+
+            for (int blockNumber = 0; blockNumber < lines.Length; blockNumber++)
+            {
+                string text = lines[blockNumber];
+
+                // Count braces in this line (ignore braces in strings/comments)
+                int openBraces = 0;
+                int closeBraces = 0;
+                bool inString = false;
+                bool inSingleLineComment = false;
+
+                for (int i = 0; i < text.Length; i++)
+                {
+                    char c = text[i];
+
+                    // Handle string literals
+                    if (c == '"' && (i == 0 || (i > 0 && text[i - 1] != '\\')))
+                    {
+                        inString = !inString;
+                    }
+                    else if (!inString)
+                    {
+                        // Handle comments
+                        if (i < text.Length - 1 && text.Substring(i, 2) == "//")
+                        {
+                            inSingleLineComment = true;
+                            break;
+                        }
+                        else if (!inSingleLineComment)
+                        {
+                            if (c == '{')
+                            {
+                                openBraces++;
+                            }
+                            else if (c == '}')
+                            {
+                                closeBraces++;
+                            }
+                        }
+                    }
+                }
+
+                // Track when we enter a new brace level
+                for (int i = 0; i < openBraces; i++)
+                {
+                    braceCount++;
+                    braceStack.Add((blockNumber, braceCount));
+                }
+
+                // When closing braces, match with opening braces
+                for (int i = 0; i < closeBraces; i++)
+                {
+                    braceCount--;
+                    if (braceCount < 0)
+                    {
+                        braceCount = 0;
+                        continue;
+                    }
+
+                    // Find matching opening brace
+                    while (braceStack.Count > 0)
+                    {
+                        var (startBlock, startCount) = braceStack[braceStack.Count - 1];
+                        if (startCount == braceCount + 1)
+                        {
+                            // Found matching brace pair
+                            braceStack.RemoveAt(braceStack.Count - 1);
+                            // Only create foldable region if there are multiple lines
+                            if (blockNumber > startBlock + 1)
+                            {
+                                _foldableRegions[startBlock] = blockNumber;
+                            }
+                            break;
+                        }
+                        braceStack.RemoveAt(braceStack.Count - 1);
+                    }
+                }
+            }
+
+            // Restore folded state for regions that still exist
+            _foldedBlockNumbers.Clear();
+            foreach (int startBlock in oldFolded)
+            {
+                if (_foldableRegions.ContainsKey(startBlock))
+                {
+                    _foldedBlockNumbers.Add(startBlock);
+                    // Re-apply folding if it was folded before
+                    // Note: In Avalonia TextBox, we can't directly hide lines like Qt,
+                    // so we maintain the folded state for API compatibility
+                }
+            }
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/common/widgets/code_editor.py:1479-1493
+        // Original: def _find_foldable_region_at_cursor(self) -> tuple[int, int] | None:
+        /// <summary>
+        /// Finds the foldable region that contains or starts at the current cursor position.
+        /// </summary>
+        /// <returns>Tuple of (start_block, end_block) if found, null otherwise.</returns>
+        private (int startBlock, int endBlock)? FindFoldableRegionAtCursor()
+        {
+            if (string.IsNullOrEmpty(Text))
+            {
+                return null;
+            }
+
+            int currentLine = GetLineFromPosition(SelectionStart);
+
+            // Check if cursor is on a foldable region start
+            if (_foldableRegions.ContainsKey(currentLine))
+            {
+                return (currentLine, _foldableRegions[currentLine]);
+            }
+
+            // Find the closest foldable region that contains this line
+            foreach (var kvp in _foldableRegions)
+            {
+                int startBlock = kvp.Key;
+                int endBlock = kvp.Value;
+                if (startBlock <= currentLine && currentLine <= endBlock)
+                {
+                    return (startBlock, endBlock);
+                }
+            }
+
+            return null;
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/common/widgets/code_editor.py:1495-1524
+        // Original: def fold_region(self):
+        /// <summary>
+        /// Folds the current code region (VS Code Ctrl+Shift+[ behavior).
+        /// Note: In Avalonia TextBox, we can't directly hide lines like Qt's QPlainTextEdit.
+        /// This implementation tracks folded state for API compatibility.
+        /// </summary>
+        public void FoldRegion()
+        {
+            var region = FindFoldableRegionAtCursor();
+            if (!region.HasValue)
+            {
+                return;
+            }
+
+            int startBlock = region.Value.startBlock;
+            int endBlock = region.Value.endBlock;
+
+            if (_foldedBlockNumbers.Contains(startBlock))
+            {
+                return; // Already folded
+            }
+
+            // Mark as folded
+            // Note: In a full implementation with a proper code editor control,
+            // we would hide the lines here. For TextBox, we maintain state for API compatibility.
+            _foldedBlockNumbers.Add(startBlock);
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/common/widgets/code_editor.py:1526-1555
+        // Original: def unfold_region(self):
+        /// <summary>
+        /// Unfolds the current code region (VS Code Ctrl+Shift+] behavior).
+        /// Note: In Avalonia TextBox, we can't directly show hidden lines like Qt's QPlainTextEdit.
+        /// This implementation tracks unfolded state for API compatibility.
+        /// </summary>
+        public void UnfoldRegion()
+        {
+            var region = FindFoldableRegionAtCursor();
+            if (!region.HasValue)
+            {
+                return;
+            }
+
+            int startBlock = region.Value.startBlock;
+            int endBlock = region.Value.endBlock;
+
+            if (!_foldedBlockNumbers.Contains(startBlock))
+            {
+                return; // Not folded
+            }
+
+            // Mark as unfolded
+            // Note: In a full implementation with a proper code editor control,
+            // we would show the lines here. For TextBox, we maintain state for API compatibility.
+            _foldedBlockNumbers.Remove(startBlock);
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/common/widgets/code_editor.py:1557-1570
+        // Original: def fold_all(self):
+        /// <summary>
+        /// Folds all code regions (VS Code Ctrl+K Ctrl+0 behavior).
+        /// </summary>
+        public void FoldAll()
+        {
+            UpdateFoldableRegions();
+            foreach (int startBlock in _foldableRegions.Keys)
+            {
+                if (!_foldedBlockNumbers.Contains(startBlock))
+                {
+                    // Temporarily set cursor to this block to reuse fold logic
+                    int pos = GetPositionFromLine(startBlock);
+                    if (pos >= 0 && pos <= Text.Length)
+                    {
+                        SelectionStart = pos;
+                        SelectionEnd = pos;
+                        FoldRegion();
+                    }
+                }
+            }
+        }
+
+        // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/common/widgets/code_editor.py:1572-1586
+        // Original: def unfold_all(self):
+        /// <summary>
+        /// Unfolds all code regions (VS Code Ctrl+K Ctrl+J behavior).
+        /// </summary>
+        public void UnfoldAll()
+        {
+            // Clear folded blocks
+            _foldedBlockNumbers.Clear();
+            _foldedContentCache.Clear();
+        }
+
+        /// <summary>
+        /// Gets whether a block number is folded.
+        /// Exposed for testing purposes.
+        /// </summary>
+        public bool IsBlockFolded(int blockNumber)
+        {
+            return _foldedBlockNumbers.Contains(blockNumber);
+        }
+
+        /// <summary>
+        /// Gets the foldable regions dictionary.
+        /// Exposed for testing purposes.
+        /// </summary>
+        public Dictionary<int, int> GetFoldableRegions()
+        {
+            return new Dictionary<int, int>(_foldableRegions);
         }
     }
 }

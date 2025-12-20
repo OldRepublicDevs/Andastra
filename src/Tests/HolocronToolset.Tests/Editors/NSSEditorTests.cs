@@ -2307,14 +2307,139 @@ xyz uvw";
             // that simulates the full pointer event with proper Avalonia input system setup
         }
 
-        // TODO: STUB - Implement test_nss_editor_code_folding_shortcuts (vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1755-1783)
+        // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1755-1783
         // Original: def test_nss_editor_code_folding_shortcuts(qtbot, installation: HTInstallation, foldable_nss_script: str): Test code folding shortcuts
         [Fact]
         public void TestNssEditorCodeFoldingShortcuts()
         {
-            // TODO: STUB - Implement code folding shortcuts test
-            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1755-1783
-            throw new NotImplementedException("TestNssEditorCodeFoldingShortcuts: Code folding shortcuts test not yet implemented");
+            // Get installation if available (K2 preferred for NSS files)
+            string k2Path = Environment.GetEnvironmentVariable("K2_PATH");
+            if (string.IsNullOrEmpty(k2Path))
+            {
+                k2Path = @"C:\Program Files (x86)\Steam\steamapps\common\Knights of the Old Republic II";
+            }
+
+            HTInstallation installation = null;
+            if (System.IO.Directory.Exists(k2Path) && System.IO.File.Exists(System.IO.Path.Combine(k2Path, "chitin.key")))
+            {
+                installation = new HTInstallation(k2Path, "Test Installation", tsl: true);
+            }
+            else
+            {
+                // Fallback to K1
+                string k1Path = Environment.GetEnvironmentVariable("K1_PATH");
+                if (string.IsNullOrEmpty(k1Path))
+                {
+                    k1Path = @"C:\Program Files (x86)\Steam\steamapps\common\swkotor";
+                }
+
+                if (System.IO.Directory.Exists(k1Path) && System.IO.File.Exists(System.IO.Path.Combine(k1Path, "chitin.key")))
+                {
+                    installation = new HTInstallation(k1Path, "Test Installation", tsl: false);
+                }
+            }
+
+            // Foldable NSS script matching Python fixture
+            // Based on vendor/PyKotor/Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1235-1258
+            string foldableNssScript = @"// Global variable
+int g_var = 10;
+
+void main() {
+    int local = 5;
+    
+    if (local > 0) {
+        int nested = 10;
+        if (nested > 5) {
+            // Nested block
+            local += nested;
+        }
+    }
+    
+    for (int i = 0; i < 10; i++) {
+        local += i;
+    }
+}
+
+void helper() {
+    int helper_var = 20;
+}";
+
+            var editor = new NSSEditor(null, installation);
+            editor.New();
+
+            // Get the code editor using reflection (matching Python: editor.ui.codeEdit)
+            var codeEditorField = typeof(NSSEditor).GetField("_codeEdit",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            codeEditorField.Should().NotBeNull("NSSEditor should have _codeEdit field");
+
+            if (codeEditorField == null)
+            {
+                return; // Can't test without code editor
+            }
+
+            var codeEditor = codeEditorField.GetValue(editor) as HolocronToolset.Widgets.CodeEditor;
+            codeEditor.Should().NotBeNull("CodeEditor should be accessible");
+
+            if (codeEditor == null)
+            {
+                return; // Can't test without code editor
+            }
+
+            // Set the foldable script text
+            codeEditor.SetPlainText(foldableNssScript);
+
+            // Wait a bit for foldable regions to be detected (matching Python: qtbot.wait(200))
+            System.Threading.Thread.Sleep(200);
+
+            // Move cursor to foldable region (line 2, which is inside the main() function)
+            // Based on Python: block = doc.findBlockByLineNumber(2)
+            string[] lines = foldableNssScript.Split(new[] { "\r\n", "\n", "\r" }, StringSplitOptions.None);
+            if (lines.Length > 2)
+            {
+                // Calculate position for line 2 (0-indexed, so line 2 is index 2)
+                int line2Position = 0;
+                for (int i = 0; i < 2 && i < lines.Length; i++)
+                {
+                    line2Position += lines[i].Length;
+                    if (i < 2 - 1)
+                    {
+                        line2Position += foldableNssScript.Contains("\r\n") ? 2 : 1; // newline length
+                    }
+                }
+
+                codeEditor.SelectionStart = line2Position;
+                codeEditor.SelectionEnd = line2Position;
+
+                // Test fold shortcut (Ctrl+Shift+[)
+                // Based on Python: fold_key_event = QKeyEvent(QKeyEvent.Type.KeyPress, Qt.Key.Key_BracketLeft, Qt.KeyboardModifier.ControlModifier | Qt.KeyboardModifier.ShiftModifier)
+                // In Avalonia, we simulate the key press by calling FoldRegion directly
+                // since we can't easily simulate KeyEventArgs in a unit test
+                codeEditor.FoldRegion();
+
+                // Should have folded regions
+                // Based on Python: assert hasattr(editor.ui.codeEdit, '_folded_block_numbers')
+                // We check if the foldable regions were detected and if folding occurred
+                var foldableRegions = codeEditor.GetFoldableRegions();
+                foldableRegions.Should().NotBeEmpty("Foldable regions should be detected");
+
+                // Verify that a region was folded (check if any block is marked as folded)
+                // Note: The actual folding behavior depends on the implementation
+                // In our implementation, we track folded blocks, so we can verify that
+                bool hasFoldedBlock = false;
+                foreach (int startBlock in foldableRegions.Keys)
+                {
+                    if (codeEditor.IsBlockFolded(startBlock))
+                    {
+                        hasFoldedBlock = true;
+                        break;
+                    }
+                }
+
+                // The test verifies that the shortcut mechanism works
+                // Even if no block is currently folded (due to cursor position), the method should be callable
+                // The important part is that FoldRegion() can be called without errors
+                hasFoldedBlock.Should().BeTrue("At least one region should be foldable and potentially folded");
+            }
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/tests/gui/editors/test_nss_editor.py:1785-1816
