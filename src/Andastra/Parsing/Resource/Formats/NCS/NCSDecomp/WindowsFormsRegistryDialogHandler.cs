@@ -236,6 +236,170 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
             ConstructorInfo ctor = sizeType.GetConstructor(new Type[] { typeof(int), typeof(int) });
             return ctor?.Invoke(new object[] { width, height });
         }
+
+        /// <summary>
+        /// Shows a dialog with Yes/No buttons for user confirmation using Windows Forms via reflection.
+        /// Used for elevation prompts and other confirmation dialogs.
+        /// </summary>
+        /// <param name="title">The dialog title</param>
+        /// <param name="message">The message to display</param>
+        /// <param name="userChoice">Output parameter indicating whether the user clicked Yes (true) or No (false)</param>
+        /// <returns>True if the dialog was shown successfully and user made a choice, false otherwise</returns>
+        public bool ShowYesNoDialog(string title, string message, out bool userChoice)
+        {
+            userChoice = false;
+
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                Debug("[INFO] WindowsFormsRegistryDialogHandler: Not on Windows, cannot show dialog");
+                return false;
+            }
+
+            if (!IsWindowsFormsAvailable)
+            {
+                Debug("[INFO] WindowsFormsRegistryDialogHandler: System.Windows.Forms not available");
+                return false;
+            }
+
+            try
+            {
+                // Load Windows Forms types via reflection
+                Assembly winFormsAssembly = Assembly.Load("System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089");
+                Type formType = winFormsAssembly.GetType("System.Windows.Forms.Form");
+                Type labelType = winFormsAssembly.GetType("System.Windows.Forms.Label");
+                Type buttonType = winFormsAssembly.GetType("System.Windows.Forms.Button");
+                Type panelType = winFormsAssembly.GetType("System.Windows.Forms.Panel");
+                Type flowLayoutPanelType = winFormsAssembly.GetType("System.Windows.Forms.FlowLayoutPanel");
+                Type dialogResultType = winFormsAssembly.GetType("System.Windows.Forms.DialogResult");
+                Type dockStyleType = winFormsAssembly.GetType("System.Windows.Forms.DockStyle");
+                Type formBorderStyleType = winFormsAssembly.GetType("System.Windows.Forms.FormBorderStyle");
+                Type formStartPositionType = winFormsAssembly.GetType("System.Windows.Forms.FormStartPosition");
+                Type contentAlignmentType = Type.GetType("System.Drawing.ContentAlignment, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a");
+                Type paddingType = Type.GetType("System.Windows.Forms.Padding, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089");
+                Type sizeType = Type.GetType("System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a");
+                Type flowDirectionType = winFormsAssembly.GetType("System.Windows.Forms.FlowDirection");
+
+                if (formType == null || labelType == null || buttonType == null || panelType == null)
+                {
+                    Debug("[INFO] WindowsFormsRegistryDialogHandler: Failed to load required Windows Forms types");
+                    return false;
+                }
+
+                // Use FlowLayoutPanel if available for better button layout, otherwise fall back to Panel
+                bool useFlowLayout = flowLayoutPanelType != null;
+
+                // Create form instance
+                object dialog = Activator.CreateInstance(formType);
+                SetProperty(dialog, "Text", title);
+                SetProperty(dialog, "FormBorderStyle", GetEnumValue(formBorderStyleType, "FixedDialog"));
+                SetProperty(dialog, "MaximizeBox", false);
+                SetProperty(dialog, "MinimizeBox", false);
+                SetProperty(dialog, "StartPosition", GetEnumValue(formStartPositionType, "CenterScreen"));
+                SetProperty(dialog, "Width", 500);
+                SetProperty(dialog, "Height", 200);
+                SetProperty(dialog, "Padding", CreatePadding(paddingType, 15));
+
+                // Create label
+                object messageLabel = Activator.CreateInstance(labelType);
+                SetProperty(messageLabel, "Text", message);
+                SetProperty(messageLabel, "Dock", GetEnumValue(dockStyleType, "Fill"));
+                SetProperty(messageLabel, "AutoSize", false);
+                if (contentAlignmentType != null)
+                {
+                    SetProperty(messageLabel, "TextAlign", GetEnumValue(contentAlignmentType, "TopLeft"));
+                }
+                if (sizeType != null)
+                {
+                    SetProperty(messageLabel, "MaximumSize", CreateSize(sizeType, 470, 0));
+                }
+
+                // Create Yes button
+                object yesButton = Activator.CreateInstance(buttonType);
+                SetProperty(yesButton, "Text", "Yes");
+                SetProperty(yesButton, "DialogResult", GetEnumValue(dialogResultType, "Yes"));
+                SetProperty(yesButton, "Width", 75);
+                SetProperty(yesButton, "Height", 30);
+                if (paddingType != null)
+                {
+                    SetProperty(yesButton, "Margin", CreatePadding(paddingType, 0, 0, 5, 0));
+                }
+
+                // Create No button
+                object noButton = Activator.CreateInstance(buttonType);
+                SetProperty(noButton, "Text", "No");
+                SetProperty(noButton, "DialogResult", GetEnumValue(dialogResultType, "No"));
+                SetProperty(noButton, "Width", 75);
+                SetProperty(noButton, "Height", 30);
+
+                // Create panels
+                object contentPanel = Activator.CreateInstance(panelType);
+                SetProperty(contentPanel, "Dock", GetEnumValue(dockStyleType, "Fill"));
+                SetProperty(contentPanel, "Padding", CreatePadding(paddingType, 0, 0, 0, 10));
+
+                // Create button container - use FlowLayoutPanel if available for better layout
+                object buttonPanel = null;
+                if (useFlowLayout)
+                {
+                    buttonPanel = Activator.CreateInstance(flowLayoutPanelType);
+                    SetProperty(buttonPanel, "Dock", GetEnumValue(dockStyleType, "Bottom"));
+                    SetProperty(buttonPanel, "Height", 50);
+                    SetProperty(buttonPanel, "Padding", CreatePadding(paddingType, 0, 10, 15, 0));
+                    // Set FlowLayoutPanel to flow right-to-left so buttons appear on the right
+                    if (flowDirectionType != null)
+                    {
+                        SetProperty(buttonPanel, "FlowDirection", GetEnumValue(flowDirectionType, "RightToLeft"));
+                    }
+                }
+                else
+                {
+                    // Fall back to regular Panel
+                    buttonPanel = Activator.CreateInstance(panelType);
+                    SetProperty(buttonPanel, "Dock", GetEnumValue(dockStyleType, "Bottom"));
+                    SetProperty(buttonPanel, "Height", 50);
+                    SetProperty(buttonPanel, "Padding", CreatePadding(paddingType, 0, 10, 15, 0));
+                }
+
+                // Add controls to panels
+                object buttonPanelControls = GetProperty(buttonPanel, "Controls");
+                object contentPanelControls = GetProperty(contentPanel, "Controls");
+                object dialogControls = GetProperty(dialog, "Controls");
+                
+                // Add buttons in order: Yes first, then No (will appear as No, Yes if FlowLayoutPanel is RightToLeft)
+                InvokeMethod(buttonPanelControls, "Add", yesButton);
+                InvokeMethod(buttonPanelControls, "Add", noButton);
+                InvokeMethod(contentPanelControls, "Add", messageLabel);
+                InvokeMethod(contentPanelControls, "Add", buttonPanel);
+                InvokeMethod(dialogControls, "Add", contentPanel);
+
+                // Set Yes button as default, No as cancel
+                SetProperty(dialog, "AcceptButton", yesButton);
+                SetProperty(dialog, "CancelButton", noButton);
+
+                // Show dialog
+                object result = InvokeMethod(dialog, "ShowDialog");
+
+                // Determine user choice based on dialog result
+                object yesResult = GetEnumValue(dialogResultType, "Yes");
+                userChoice = result != null && result.Equals(yesResult);
+
+                // Dispose form
+                IDisposable disposable = dialog as IDisposable;
+                if (disposable != null)
+                {
+                    disposable.Dispose();
+                }
+
+                // Return true if dialog was shown and user made a choice (Yes or No)
+                object noResult = GetEnumValue(dialogResultType, "No");
+                bool userMadeChoice = (result != null && (result.Equals(yesResult) || result.Equals(noResult)));
+                return userMadeChoice;
+            }
+            catch (Exception e)
+            {
+                Debug("[INFO] WindowsFormsRegistryDialogHandler: Failed to show Yes/No dialog: " + e.Message);
+                return false;
+            }
+        }
     }
 }
 
