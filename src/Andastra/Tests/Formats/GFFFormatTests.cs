@@ -310,7 +310,7 @@ namespace Andastra.Parsing.Tests.Formats
                         uint dataOrOffset = ReadUInt32(fs);
 
                         // Validate field type is within valid range (0-17 as per GFF.ksy enum)
-                        fieldType.Should().BeLessOrEqualTo(17u, "Field type should be 0-17 as defined in GFF.ksy gff_field_type enum");
+                        fieldType.Should().BeLessThanOrEqualTo(17u, "Field type should be 0-17 as defined in GFF.ksy gff_field_type enum");
 
                         // Validate field entry structure (12 bytes total)
                         long currentPos = fs.Position;

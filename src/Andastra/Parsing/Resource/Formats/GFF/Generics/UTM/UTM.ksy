@@ -462,7 +462,7 @@ types:
           Used to override or supplement the string_ref text.
     instances:
       string_ref_value:
-        value: string_ref == 0xFFFFFFFF ? -1 : string_ref
+        value: 'string_ref == 0xFFFFFFFF ? -1 : string_ref'
         doc: String reference as signed integer (-1 if none)
 
   localized_substring:
@@ -500,54 +500,20 @@ types:
 enums:
   gff_field_type:
     0: uint8
-    doc: |
-      8-bit unsigned integer (byte).
-      Used in UTM for: BuySellFlag (bit flags), ID (deprecated), Infinite (0/1 boolean),
-      Dropable (0/1 boolean).
     1: int8
-    doc: 8-bit signed integer (char)
     2: uint16
-    doc: |
-      16-bit unsigned integer (word).
-      Used in UTM for: Repos_PosX, Repos_PosY (inventory grid coordinates).
     3: int16
-    doc: 16-bit signed integer (short)
     4: uint32
-    doc: 32-bit unsigned integer (dword)
     5: int32
-    doc: |
-      32-bit signed integer (int).
-      Used in UTM for: MarkUp, MarkDown (pricing percentages, typically 0-200).
     6: uint64
-    doc: 64-bit unsigned integer (stored in field_data section)
     7: int64
-    doc: 64-bit signed integer (stored in field_data section)
     8: single
-    doc: 32-bit floating point (float)
     9: double
-    doc: 64-bit floating point (stored in field_data section)
     10: string
-    doc: |
-      Null-terminated string (CExoString, stored in field_data section).
-      Used in UTM for: Tag (merchant tag identifier), Comment (developer comment).
     11: resref
-    doc: |
-      Resource reference (ResRef, max 16 chars, stored in field_data section).
-      Used in UTM for: ResRef (merchant template name), OnOpenStore (script name),
-      InventoryRes (item template name in ItemList entries).
     12: localized_string
-    doc: |
-      Localized string (CExoLocString, stored in field_data section).
-      Used in UTM for: LocName (localized merchant name with multiple language/gender support).
     13: binary
-    doc: Binary data blob (Void, stored in field_data section)
     14: struct
-    doc: Nested struct (struct index stored inline)
     15: list
-    doc: |
-      List of structs (offset to list_indices stored inline).
-      Used in UTM for: ItemList (array of ItemList entry structs containing merchant inventory items).
     16: vector4
-    doc: Quaternion/Orientation (4×float, stored in field_data as Vector4)
     17: vector3
-    doc: 3D vector (3×float, stored in field_data)

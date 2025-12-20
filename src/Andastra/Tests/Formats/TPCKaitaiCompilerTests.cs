@@ -5,9 +5,6 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using Andastra.Parsing.Tests.Common;
-
-
-
 using Andastra.Parsing.Formats.TPC;
 using Andastra.Parsing;
 using FluentAssertions;

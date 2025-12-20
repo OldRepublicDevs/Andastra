@@ -306,7 +306,7 @@ namespace Andastra.Parsing.Tests.Formats
                         // This is likely a syntax error, fail the test
                         compileResult.Error.Should().NotContainAny(
                             new[] { "syntax", "parse", "yaml", "invalid" },
-                            $"BWM.ksy should not have syntax errors. Error: {compileResult.Error}");
+                            because: $"BWM.ksy should not have syntax errors. Error: {compileResult.Error}");
                     }
                     // Otherwise, it might be a dependency issue, which is OK for syntax validation
                 }

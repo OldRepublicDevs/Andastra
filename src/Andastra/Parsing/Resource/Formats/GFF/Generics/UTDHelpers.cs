@@ -1,7 +1,9 @@
+using System;
 using Andastra.Parsing;
 using Andastra.Parsing.Formats.GFF;
 using Andastra.Parsing.Resource;
 using static Andastra.Parsing.Common.GameExtensions;
+using GFFAuto = Andastra.Parsing.Formats.GFF.GFFAuto;
 using Andastra.Parsing.Common;
 
 namespace Andastra.Parsing.Resource.Generics
@@ -183,6 +185,32 @@ namespace Andastra.Parsing.Resource.Generics
             root.SetResRef("OnSpellCastAt", utd.OnPower);
 
             return gff;
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/utd.py:635-641
+        // Original: def read_utd(source: SOURCE_TYPES, offset: int = 0, size: int | None = None) -> UTD:
+        public static UTD ReadUtd(byte[] data, int offset = 0, int size = -1)
+        {
+            byte[] dataToRead = data;
+            if (size > 0 && offset + size <= data.Length)
+            {
+                dataToRead = new byte[size];
+                System.Array.Copy(data, offset, dataToRead, 0, size);
+            }
+            GFF gff = GFF.FromBytes(dataToRead);
+            return ConstructUtd(gff);
+        }
+
+        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/utd.py:656-664
+        // Original: def bytes_utd(utd: UTD, game: Game = Game.K2, file_format: ResourceType = ResourceType.GFF) -> bytes:
+        public static byte[] BytesUtd(UTD utd, Game game = Game.K2, ResourceType fileFormat = null)
+        {
+            if (fileFormat == null)
+            {
+                fileFormat = ResourceType.UTD;
+            }
+            GFF gff = DismantleUtd(utd, game);
+            return GFFAuto.BytesGff(gff, fileFormat);
         }
     }
 }

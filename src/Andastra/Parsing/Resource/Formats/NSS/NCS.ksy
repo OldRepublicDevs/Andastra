@@ -13,13 +13,13 @@ doc: |
   NCS (NWScript Compiled Script) files contain compiled bytecode for NWScript,
   the scripting language used in KotOR and TSL. Scripts run inside a stack-based
   virtual machine shared across Aurora engine games.
-  
+
   The format consists of:
   - Header (13 bytes): File signature, version, size marker, and total file size
   - Instruction stream: Variable-length bytecode instructions
-  
+
   All multi-byte values are stored in big-endian (network byte order).
-  
+
   References:
   - vendor/PyKotor/wiki/NCS-File-Format.md
   - vendor/reone/src/libs/script/format/ncsreader.cpp:28-195
@@ -33,28 +33,28 @@ seq:
     size: 4
     doc: File type signature. Must be "NCS " (0x4E 0x43 0x53 0x20).
     valid: "NCS "
-  
+
   - id: file_version
     type: str
     encoding: ASCII
     size: 4
     doc: File format version. Must be "V1.0" (0x56 0x31 0x2E 0x30).
     valid: "V1.0"
-  
+
   - id: size_marker
     type: u1
     doc: |
       Program size marker opcode. Must be 0x42 (not a real instruction).
       This is a metadata field that all implementations validate before reading the size field.
     valid: 0x42
-  
+
   - id: total_file_size
     type: u4
     doc: |
       Total file size in bytes (big-endian).
       This includes the header (13 bytes) plus all instructions.
       The actual instruction stream begins at offset 13 (0x0D).
-  
+
   - id: instructions
     type: instruction
     repeat: until
@@ -72,7 +72,7 @@ types:
         doc: |
           Instruction opcode byte. Identifies the fundamental instruction type
           (stack manipulation, arithmetic, logic, control flow, etc.).
-          
+
           Common opcodes:
           - 0x01: CPDOWNSP (Copy Down Stack Pointer)
           - 0x02: RSADDx (Reserve Stack Add)
@@ -112,19 +112,19 @@ types:
           - 0x2B: RESTOREBP (Restore Base Pointer)
           - 0x2C: STORE_STATE (Store stack state)
           - 0x2D: NOP (No operation)
-      
+
       - id: qualifier
         type: u1
         doc: |
           Type qualifier byte. Refines the instruction to specific operand types.
-          
+
           Unary types (single operand):
           - 0x03: Integer (I) - 4 bytes
           - 0x04: Float (F) - 4 bytes
           - 0x05: String (S) - 4 bytes (pointer)
           - 0x06: Object (O) - 4 bytes (object ID)
           - 0x10-0x1F: Engine types (Effect, Event, Location, Talent, etc.)
-          
+
           Binary types (two operands):
           - 0x20: Integer, Integer (II)
           - 0x21: Float, Float (FF)
@@ -136,14 +136,14 @@ types:
           - 0x3A: Vector, Vector (VV) - 12 bytes each
           - 0x3B: Vector, Float (VF)
           - 0x3C: Float, Vector (FV)
-    
+
     doc-ref: |
       Instruction arguments follow the qualifier byte. Format varies by instruction type.
       All multi-byte values are big-endian.
-      
+
       Note: Kaitai Struct cannot easily handle variable-length fields based on parent field values.
       Application code (NCSBinaryReader) handles argument parsing based on bytecode and qualifier.
-      
+
       Common argument formats:
       - No args (0 bytes): RSADDx, LOGANDxx, RETN, SAVEBP, RESTOREBP, NOP
       - 4 bytes signed int: MOVSP, INCxSP, DECxSP, INCxBP, DECxBP, JMP, JSR, JZ, JNZ
@@ -227,7 +227,7 @@ types:
       Stack copy operation arguments (8 bytes total):
       - 4-byte signed integer offset (big-endian)
       - 2-byte unsigned integer size (big-endian)
-      
+
       Used by: CPDOWNSP, CPTOPSP, CPDOWNBP, CPTOPBP
     seq:
       - id: offset
@@ -256,9 +256,9 @@ types:
     doc: |
       Jump instruction arguments (4 bytes total):
       - 4-byte signed integer relative offset (big-endian)
-      
+
       Used by: JMP, JSR, JZ, JNZ
-      
+
       The offset is relative to the start of the jump instruction itself,
       not the next instruction. Allows both forward and backward jumps.
     seq:
@@ -273,7 +273,7 @@ types:
       ACTION (engine function call) arguments (3 bytes total):
       - 2-byte unsigned integer routine number (big-endian)
       - 1-byte unsigned integer argument count
-      
+
       Routine number indexes into the engine's function table.
       Argument count specifies how many stack elements (not bytes) to pass.
     seq:
@@ -294,7 +294,7 @@ types:
       - 2-byte unsigned integer size (big-endian)
       - 2-byte signed integer stack offset (big-endian)
       - 2-byte unsigned integer size_no_destroy (big-endian)
-      
+
       Performs complex stack cleanup by removing size bytes from the stack
       starting at stackOffset, but preserves sizeNoDestroy bytes within that range.
     seq:
@@ -316,7 +316,7 @@ types:
     doc: |
       Increment/Decrement instruction arguments (4 bytes total):
       - 4-byte signed integer offset (big-endian)
-      
+
       Used by: INCxSP, DECxSP, INCxBP, DECxBP
     seq:
       - id: offset
@@ -330,7 +330,7 @@ types:
       STORE_STATE (save stack state) arguments (8 bytes total):
       - 4-byte signed integer size (big-endian)
       - 4-byte signed integer size_locals (big-endian)
-      
+
       Used with DelayCommand. Separates temp values from persistent locals.
     seq:
       - id: size
@@ -347,7 +347,7 @@ types:
       Comparison instruction arguments. Format depends on qualifier:
       - For TT (structure) qualifier (0x24): 2-byte unsigned integer size (big-endian)
       - For other qualifiers: no arguments
-      
+
       Used by: EQUALxx, NEQUALxx
     seq:
       - id: struct_size

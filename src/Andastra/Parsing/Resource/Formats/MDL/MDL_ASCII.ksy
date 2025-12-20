@@ -8,7 +8,7 @@ meta:
 doc: |
   MDL ASCII format is a human-readable ASCII text representation of MDL (Model) binary files.
   Used by modding tools for easier editing than binary MDL format.
-  
+
   The ASCII format represents the model structure using plain text with keyword-based syntax.
 
 seq:

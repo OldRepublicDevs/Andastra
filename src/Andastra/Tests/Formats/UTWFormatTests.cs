@@ -129,8 +129,8 @@ namespace Andastra.Parsing.Tests.Formats
             UTW utw = UTWAuto.ReadUtw(File.ReadAllBytes(BinaryTestFile));
 
             // Validate appearance properties exist
-            utw.AppearanceId.Should().BeGreaterOrEqualTo(0, "AppearanceId should be non-negative");
-            utw.PaletteId.Should().BeGreaterOrEqualTo(0, "PaletteId should be non-negative");
+            utw.AppearanceId.Should().BeGreaterThanOrEqualTo(0, "AppearanceId should be non-negative");
+            utw.PaletteId.Should().BeGreaterThanOrEqualTo(0, "PaletteId should be non-negative");
         }
 
         [Fact(Timeout = 120000)]
@@ -260,8 +260,8 @@ namespace Andastra.Parsing.Tests.Formats
 
             // Validate map note functionality
             // HasMapNote and MapNoteEnabled are boolean flags
-            utw.HasMapNote.Should().BeOfType<bool>();
-            utw.MapNoteEnabled.Should().BeOfType<bool>();
+            utw.HasMapNote.Should().BeTrue().Or.BeFalse();
+            utw.MapNoteEnabled.Should().BeTrue().Or.BeFalse();
 
             // If HasMapNote is true, MapNote should typically be set
             if (utw.HasMapNote)
@@ -443,8 +443,8 @@ namespace Andastra.Parsing.Tests.Formats
 
             // Validate boolean fields are properly set
             // These are stored as Byte (0 or 1) in GFF but exposed as bool in UTW class
-            utw.HasMapNote.Should().BeOfType<bool>();
-            utw.MapNoteEnabled.Should().BeOfType<bool>();
+            utw.HasMapNote.Should().BeTrue().Or.BeFalse();
+            utw.MapNoteEnabled.Should().BeTrue().Or.BeFalse();
         }
 
         [Fact(Timeout = 120000)]
