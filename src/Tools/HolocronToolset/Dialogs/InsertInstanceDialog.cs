@@ -107,7 +107,7 @@ namespace HolocronToolset.Dialogs
             _resrefEdit.TextChanged += (s, e) => OnResrefEdited(_resrefEdit.Text);
             _resourceFilter.TextChanged += (s, e) => OnResourceFilterChanged();
             _resourceList.SelectionChanged += (s, e) => OnResourceSelected();
-            _okButton.Click += (s, e) => Accept();
+            _okButton.Click += async (s, e) => await Accept();
             _cancelButton.Click += (s, e) => Close();
 
             panel.Children.Add(titleLabel);
