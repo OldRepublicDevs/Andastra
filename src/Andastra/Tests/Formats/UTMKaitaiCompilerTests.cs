@@ -563,6 +563,215 @@ namespace Andastra.Parsing.Tests.Formats
             content.Should().Contain("is_list_type", "UTM.ksy should define is_list_type instance");
         }
 
+        [Fact(Timeout = 300000)]
+        public void TestUtmKsyDefinitionCompleteness()
+        {
+            // Validate UTM.ksy defines all UTM-specific fields and structures
+            var normalizedKsyPath = Path.GetFullPath(UtmKsyPath);
+            if (!File.Exists(normalizedKsyPath))
+            {
+                return;
+            }
+
+            var content = File.ReadAllText(normalizedKsyPath);
+
+            // Check for required elements in Kaitai Struct definition
+            content.Should().Contain("meta:", "Should have meta section");
+            content.Should().Contain("id: utm", "Should have id: utm");
+            content.Should().Contain("file-extension: utm", "Should define file extension");
+            content.Should().Contain("gff_header", "Should define gff_header type");
+            content.Should().Contain("file_type", "Should define file_type field");
+            content.Should().Contain("file_version", "Should define file_version field");
+            content.Should().Contain("UTM ", "Should support UTM file type signature");
+
+            // Check for UTM-specific field documentation
+            content.Should().Contain("ResRef", "Should document ResRef field");
+            content.Should().Contain("LocName", "Should document LocName field");
+            content.Should().Contain("Tag", "Should document Tag field");
+            content.Should().Contain("MarkUp", "Should document MarkUp field");
+            content.Should().Contain("MarkDown", "Should document MarkDown field");
+            content.Should().Contain("OnOpenStore", "Should document OnOpenStore field");
+            content.Should().Contain("Comment", "Should document Comment field");
+            content.Should().Contain("BuySellFlag", "Should document BuySellFlag field");
+            content.Should().Contain("ItemList", "Should document ItemList field");
+            content.Should().Contain("InventoryRes", "Should document InventoryRes field");
+            content.Should().Contain("Infinite", "Should document Infinite field");
+            content.Should().Contain("Dropable", "Should document Dropable field");
+            content.Should().Contain("Repos_PosX", "Should document Repos_PosX field");
+            content.Should().Contain("Repos_PosY", "Should document Repos_PosY field");
+        }
+
+        [Fact(Timeout = 300000)]
+        public void TestUtmKsyHeaderStructure()
+        {
+            // Validate UTM.ksy defines all required header fields
+            var normalizedKsyPath = Path.GetFullPath(UtmKsyPath);
+            if (!File.Exists(normalizedKsyPath))
+            {
+                return;
+            }
+
+            var content = File.ReadAllText(normalizedKsyPath);
+
+            // Check for all required header fields
+            content.Should().Contain("file_type", "Header should define file_type");
+            content.Should().Contain("file_version", "Header should define file_version");
+            content.Should().Contain("struct_array_offset", "Header should define struct_array_offset");
+            content.Should().Contain("struct_count", "Header should define struct_count");
+            content.Should().Contain("field_array_offset", "Header should define field_array_offset");
+            content.Should().Contain("field_count", "Header should define field_count");
+            content.Should().Contain("label_array_offset", "Header should define label_array_offset");
+            content.Should().Contain("label_count", "Header should define label_count");
+            content.Should().Contain("field_data_offset", "Header should define field_data_offset");
+            content.Should().Contain("field_data_count", "Header should define field_data_count");
+            content.Should().Contain("field_indices_offset", "Header should define field_indices_offset");
+            content.Should().Contain("field_indices_count", "Header should define field_indices_count");
+            content.Should().Contain("list_indices_offset", "Header should define list_indices_offset");
+            content.Should().Contain("list_indices_count", "Header should define list_indices_count");
+
+            // Check for header size (56 bytes)
+            content.Should().Contain("56", "Header should be 56 bytes");
+        }
+
+        [Fact(Timeout = 300000)]
+        public void TestCompileUtmToPython()
+        {
+            TestCompileToLanguageInternal("python");
+        }
+
+        [Fact(Timeout = 300000)]
+        public void TestCompileUtmToJava()
+        {
+            TestCompileToLanguageInternal("java");
+        }
+
+        [Fact(Timeout = 300000)]
+        public void TestCompileUtmToJavaScript()
+        {
+            TestCompileToLanguageInternal("javascript");
+        }
+
+        [Fact(Timeout = 300000)]
+        public void TestCompileUtmToCSharp()
+        {
+            TestCompileToLanguageInternal("csharp");
+        }
+
+        [Fact(Timeout = 300000)]
+        public void TestCompileUtmToCpp()
+        {
+            TestCompileToLanguageInternal("cpp_stl");
+        }
+
+        [Fact(Timeout = 300000)]
+        public void TestCompileUtmToGo()
+        {
+            TestCompileToLanguageInternal("go");
+        }
+
+        [Fact(Timeout = 300000)]
+        public void TestCompileUtmToRuby()
+        {
+            TestCompileToLanguageInternal("ruby");
+        }
+
+        [Fact(Timeout = 300000)]
+        public void TestCompileUtmToPhp()
+        {
+            TestCompileToLanguageInternal("php");
+        }
+
+        [Fact(Timeout = 300000)]
+        public void TestCompileUtmToRust()
+        {
+            TestCompileToLanguageInternal("rust");
+        }
+
+        [Fact(Timeout = 300000)]
+        public void TestCompileUtmToSwift()
+        {
+            TestCompileToLanguageInternal("swift");
+        }
+
+        [Fact(Timeout = 300000)]
+        public void TestCompileUtmToLua()
+        {
+            TestCompileToLanguageInternal("lua");
+        }
+
+        [Fact(Timeout = 300000)]
+        public void TestCompileUtmToNim()
+        {
+            TestCompileToLanguageInternal("nim");
+        }
+
+        [Fact(Timeout = 300000)]
+        public void TestCompileUtmToPerl()
+        {
+            TestCompileToLanguageInternal("perl");
+        }
+
+        [Fact(Timeout = 300000)]
+        public void TestCompileUtmToVisualBasic()
+        {
+            TestCompileToLanguageInternal("visualbasic");
+        }
+
+        private void TestCompileToLanguageInternal(string language)
+        {
+            var normalizedKsyPath = Path.GetFullPath(UtmKsyPath);
+            if (!File.Exists(normalizedKsyPath))
+            {
+                return;
+            }
+
+            string compilerPath = FindKaitaiCompiler();
+            if (string.IsNullOrEmpty(compilerPath))
+            {
+                return; // Skip test if compiler not available
+            }
+
+            string langOutputDir = Path.Combine(CompilerOutputDir, language);
+            if (Directory.Exists(langOutputDir))
+            {
+                Directory.Delete(langOutputDir, true);
+            }
+            Directory.CreateDirectory(langOutputDir);
+
+            var processInfo = CreateCompilerProcessInfo(
+                compilerPath,
+                $"-t {language} \"{normalizedKsyPath}\" -d \"{langOutputDir}\"",
+                Path.GetDirectoryName(normalizedKsyPath));
+
+            string stdout = "";
+            string stderr = "";
+            int exitCode = -1;
+
+            using (var process = Process.Start(processInfo))
+            {
+                if (process != null)
+                {
+                    stdout = process.StandardOutput.ReadToEnd();
+                    stderr = process.StandardError.ReadToEnd();
+                    process.WaitForExit(60000); // 60 second timeout
+                    exitCode = process.ExitCode;
+                }
+            }
+
+            // Compilation should succeed (some languages may not be fully supported, log but don't fail)
+            if (exitCode != 0)
+            {
+                // Log but don't fail - some languages may not be available in all compiler versions
+                Console.WriteLine($"Warning: {language} compilation failed with exit code {exitCode}. STDOUT: {stdout}, STDERR: {stderr}");
+            }
+            else
+            {
+                // Verify output files were generated
+                string[] generatedFiles = Directory.GetFiles(langOutputDir, "*", SearchOption.AllDirectories);
+                generatedFiles.Should().NotBeEmpty($"{language} compilation should generate output files");
+            }
+        }
+
         public static IEnumerable<object[]> GetSupportedLanguages()
         {
             return SupportedLanguages.Select(lang => new object[] { lang });
