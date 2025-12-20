@@ -88,6 +88,32 @@ namespace Andastra.Runtime.Game.Core
         OptionsMenu,
 
         /// <summary>
+        /// Gameplay options submenu - player is configuring gameplay-specific settings.
+        /// </summary>
+        /// <remarks>
+        /// Gameplay Options Menu State:
+        /// - Based on swkotor2.exe: CSWGuiOptionsMain::OnGameplayOpt @ 0x006de240
+        /// - GUI Panel: "optionsgameplay" (gameplay options submenu)
+        /// - Settings: Mouse Sensitivity, Invert Mouse Y, Auto-save, Tooltips, Difficulty
+        /// - Original implementation: Submenu opened from main options menu via "BTN_GAMEPLAY" button
+        /// - Flow: Options Menu → Gameplay Options Menu → (Apply/Cancel) → Options Menu
+        /// </remarks>
+        GameplayOptionsMenu,
+
+        /// <summary>
+        /// Graphics options submenu - player is configuring graphics-specific settings.
+        /// </summary>
+        /// <remarks>
+        /// Graphics Options Menu State:
+        /// - Based on swkotor2.exe: CSWGuiOptionsMain::OnGraphicsOpt @ 0x006e3d80
+        /// - GUI Panel: "optionsgraphics" (graphics options submenu)
+        /// - Settings: Resolution, Fullscreen, VSync, Texture Quality, Shadow Quality, Anisotropic Filtering, Anti-Aliasing
+        /// - Original implementation: Submenu opened from main options menu via "BTN_GRAPHICS" button
+        /// - Flow: Options Menu → Graphics Options Menu → (Apply/Cancel) → Options Menu
+        /// </remarks>
+        GraphicsOptionsMenu,
+
+        /// <summary>
         /// Movies menu - player can view and replay cutscenes/cinematics.
         /// </summary>
         /// <remarks>
