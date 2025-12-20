@@ -2875,10 +2875,8 @@ namespace HolocronToolset.Tests.Editors
             editor.New();
 
             // Matching Python: editor.model.add_root_node()
-            editor.Model.AddRootNode();
-
             // Matching Python: root_item = editor.model.item(0, 0)
-            var rootItem = editor.Model.GetItem(0, 0) as DLGStandardItem;
+            var rootItem = editor.Model.AddRootNode();
             rootItem.Should().NotBeNull("Root item should exist");
 
             // Matching Python: editor.ui.dialogTree.setCurrentIndex(root_item.index())
