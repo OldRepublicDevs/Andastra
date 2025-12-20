@@ -46,7 +46,7 @@ namespace Andastra.Runtime.Content.MDL
     /// Reference: KotOR.js MDLLoader.ts, reone mdlmdxreader.cpp, MDLOps
     /// Based on MDL file format documentation in vendor/PyKotor/wiki/MDL-MDX-File-Format.md
     /// </remarks>
-    public sealed class MDLLoader
+    public sealed class MDLLoader : IMDLLoader
     {
         private readonly IResourceProvider _resourceProvider;
         private bool _useCache;
